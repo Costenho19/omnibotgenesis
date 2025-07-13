@@ -426,25 +426,35 @@ class OmnixBotRender:
         thread.start()
         print("🔄 Auto-trading iniciado cada 10 minutos")
     
-    def get_ai_response(self, message, user_id):
+        def get_ai_response(self, message, user_id):
         """Obtener respuesta de IA"""
         try:
             # Obtener memoria de conversación
             memory = self.get_conversation_memory(user_id)
+
             if self.gemini_api_key:
-            try:
-        import google.generativeai as genai
-        genai.configure(api_key=self.gemini_api_key)
+                try:
+                    import google.generativeai as genai
+                    genai.configure(api_key=self.gemini_api_key)
 
-        model = genai.GenerativeModel("gemini-pro")
-        texto = f"{context}\nMensaje del usuario: {message}"
-        response = model.generate_content(texto)
+                    model = genai.GenerativeModel("gemini-pro")
+                    texto = f"{memory}\nMensaje del usuario: {message}"
+                    response = model.generate_content(texto)
 
-        print("🔁 RESPUESTA DE GEMINI:", response.text)
-        return response.text
+                    print("🧠 RESPUESTA DE GEMINI:", response.text)
+                    return response.text
 
-    except Exception as e:
-        logger.error(f"Error con Gemini: {e}")
+                except Exception as e:
+                    print(f"❌ Error generando respuesta con Gemini: {e}")
+                    return "Error al generar respuesta con Gemini."
+
+            else:
+                return "No se encontró la clave API de Gemini."
+
+        except Exception as e:
+            print(f"❌ Error general en get_ai_response: {e}")
+            return "Error general al obtener respuesta de IA."
+
 
             # Contexto especializado
             context = f"""
