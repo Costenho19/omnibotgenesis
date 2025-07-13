@@ -426,7 +426,7 @@ class OmnixBotRender:
         thread.start()
         print("🔄 Auto-trading iniciado cada 10 minutos")
     
-        def get_ai_response(self, message, user_id):
+            def get_ai_response(self, message, user_id):
         """Obtener respuesta de IA"""
         try:
             # Obtener memoria de conversación
@@ -447,6 +447,14 @@ class OmnixBotRender:
                 except Exception as e:
                     print(f"❌ Error generando respuesta con Gemini: {e}")
                     return "Error al generar respuesta con Gemini."
+
+            else:
+                return "No se encontró la clave API de Gemini."
+
+        except Exception as e:
+            print(f"❌ Error general en get_ai_response: {e}")
+            return "Error general al obtener respuesta de IA."
+
 
             else:
                 return "No se encontró la clave API de Gemini."
