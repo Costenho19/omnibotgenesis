@@ -747,3 +747,23 @@ def main():
 # Ejecutar bot
 if __name__ == "__main__":
     main()
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+
+async def start(update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🤖 ¡Hola! Soy OMNIX y estoy listo para ayudarte.")
+
+async def responder(update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
+    await update.message.reply_text(f"Tú dijiste: {texto}")
+
+if __name__ == "__main__":
+    import os
+    import asyncio
+
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    app = ApplicationBuilder().token(token).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
+
+    asyncio.run(app.run_polling())
