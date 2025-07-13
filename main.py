@@ -432,7 +432,7 @@ class OmnixBotRender:
             # Obtener memoria de conversación
             memory = self.get_conversation_memory(user_id)
             if self.gemini_api_key:
-    try:
+            try:
         import google.generativeai as genai
         genai.configure(api_key=self.gemini_api_key)
 
