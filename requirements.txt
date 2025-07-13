@@ -1,7 +1,7 @@
-python-telegram-bot==13.15
-gTTS==2.3.2
-SpeechRecognition==3.10.0
-pydub==0.25.1
+python-telegram-bot==20.3
 requests
-aiohttp
-pyjokes
+pydub
+openai
+gTTS
+python-dotenv
+
