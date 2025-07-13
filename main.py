@@ -431,7 +431,21 @@ class OmnixBotRender:
         try:
             # Obtener memoria de conversación
             memory = self.get_conversation_memory(user_id)
-            
+            if self.gemini_api_key:
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=self.gemini_api_key)
+
+        model = genai.GenerativeModel("gemini-pro")
+        texto = f"{context}\nMensaje del usuario: {message}"
+        response = model.generate_content(texto)
+
+        print("🔁 RESPUESTA DE GEMINI:", response.text)
+        return response.text
+
+    except Exception as e:
+        logger.error(f"Error con Gemini: {e}")
+
             # Contexto especializado
             context = f"""
             Eres OMNIX, un asistente de trading de criptomonedas profesional.
