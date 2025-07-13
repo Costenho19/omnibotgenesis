@@ -705,9 +705,14 @@ Hola {user.first_name}, soy tu asistente de trading crypto profesional.
             self.track_user_activity(user_id, username, 'voice')
             
             # Respuesta por defecto para voz
-            response = "He recibido tu mensaje de voz. Estoy analizando el contenido y te responderé con información actualizada del mercado crypto."
+            # Generar respuesta con Gemini
+texto = "Mensaje de voz recibido. ¿Qué puedo ayudarte?"
+response = self.get_ai_response(texto, user_id=user_id)
+
+await update.message.reply_text(response)
+
             
-            await update.message.reply_text(response)
+            
             
             # Respuesta de voz
             try:
