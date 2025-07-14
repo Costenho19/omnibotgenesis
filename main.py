@@ -527,29 +527,32 @@ try:
         bot.infinity_polling()                                                                                                                                                                                                          try:
    bot.infinity_polling()
 
-try:  ◀️ 4 espacios a la derecha del margen
-
-    cursor.execute("""  ◀️ otros 4 espacios (total 8)
-        INSERT OR IGNORE INTO user_tracking (user_id, username)
-        VALUES (?, ?)
-    """, (user_id, username))
-
-    if activity_type == 'message':  ◀️ también dentro del try (8 espacios)
+        try:
         cursor.execute("""
-            UPDATE user_tracking
-            SET total_messages = total_messages + 1
-            WHERE user_id = ?
-        """, (user_id,))
+            INSERT OR IGNORE INTO user_tracking (user_id, username)
+            VALUES (?, ?)
+        """, (user_id, username))
 
-    elif activity_type == 'trade':  ◀️ igual que el if
-        cursor.execute("""
-            UPDATE user_tracking
-            SET total_trades = total_trades + 1
-            WHERE user_id = ?
-        """, (user_id,))
+        if activity_type == 'message':
+            cursor.execute("""
+                UPDATE user_tracking
+                SET total_messages = total_messages + 1
+                WHERE user_id = ?
+            """, (user_id,))
 
-    conn.commit()  ◀️ dentro del try (8 espacios)
-    conn.close()   ◀️ dentro del try (8 espacios)
+        elif activity_type == 'trade':
+            cursor.execute("""
+                UPDATE user_tracking
+                SET total_trades = total_trades + 1
+                WHERE user_id = ?
+            """, (user_id,))
+
+        conn.commit()
+        conn.close()
+
+    except Exception as e:
+        print(f"Error al registrar actividad: {e}")
+
 
 except Exception as e:  ◀️ al mismo nivel del try (4 espacios)
     print(f"Error al registrar actividad: {e}")  ◀️ 8 espacios
