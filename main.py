@@ -528,7 +528,7 @@ try:
         bot.infinity_polling()
 
 
-   try:
+    try:
     cursor.execute("""
         INSERT OR IGNORE INTO user_tracking (user_id, username)
         VALUES (?, ?)
