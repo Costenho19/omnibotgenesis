@@ -518,7 +518,7 @@ try:
         bot_omnix = OmnixBot()
         bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
 
-             try:  # línea 530, con 4 espacios a la derecha del margen
+        try:  
 
         @bot.message_handler(func=lambda m: True)
 def handle_message(message):
