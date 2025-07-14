@@ -554,8 +554,8 @@ try:
         print(f"Error al registrar actividad: {e}")
 
 
-except Exception as e:  ◀️ al mismo nivel del try (4 espacios)
-    print(f"Error al registrar actividad: {e}")  ◀️ 8 espacios
+
+    
  
 
         except Exception as e:
