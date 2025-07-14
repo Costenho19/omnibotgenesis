@@ -486,18 +486,18 @@ class OmnixBotRender:
             return "Lo siento, hubo un error al generar la respuesta."
 
               
-                            def enviar_mensaje_telegram(self, chat_id, texto):
-            """Envía un mensaje al usuario por Telegram"""
-            try:
-                import requests
-                url = f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage"
-                payload = {
-                    "chat_id": chat_id,
-                    "text": texto
-                }
-                requests.post(url, json=payload)
-            except Exception as e:
-                print(f"❌ Error al enviar mensaje a Telegram: {e}")
+             def enviar_mensaje_telegram(self, chat_id, texto):
+                    """Envía un mensaje al usuario por Telegram"""
+                    try:
+                        import requests
+                        url = f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage"
+                        payload = {
+                            "chat_id": chat_id,
+                            "text": texto
+                        }
+                        requests.post(url, json=payload)
+                    except Exception as e:
+                        print(f"❌ Error al enviar mensaje a Telegram: {e}")
 
         """Generar respuesta de voz"""
         try:
