@@ -527,30 +527,32 @@ try:
 
         bot.infinity_polling()
 
-except Exception as e:
-    print(f"Error al generar respuesta de voz: {e}")
 
-                INSERT OR IGNORE INTO user_tracking (user_id, username)
-                VALUES (?, ?)
-            ''', (user_id, username))
-            
-            if activity_type == 'message':
-                cursor.execute('''
-                    UPDATE user_tracking 
-                    SET total_messages = total_messages + 1
-                    WHERE user_id = ?
-                ''', (user_id,))
-            
-            elif activity_type == 'trade':
-                cursor.execute('''
-                    UPDATE user_tracking 
-                    SET total_trades = total_trades + 1
-                    WHERE user_id = ?
-                ''', (user_id,))
-            
-            conn.commit()
-            conn.close()
-            
+   try:
+    cursor.execute("""
+        INSERT OR IGNORE INTO user_tracking (user_id, username)
+        VALUES (?, ?)
+    """, (user_id, username))
+
+    if activity_type == 'message':
+        cursor.execute("""
+            UPDATE user_tracking
+            SET total_messages = total_messages + 1
+            WHERE user_id = ?
+        """, (user_id,))
+    elif activity_type == 'trade':
+        cursor.execute("""
+            UPDATE user_tracking
+            SET total_trades = total_trades + 1
+            WHERE user_id = ?
+        """, (user_id,))
+
+    conn.commit()
+    conn.close()
+
+except Exception as e:
+    print(f"Error al registrar actividad: {e}")
+
         except Exception as e:
             logger.error(f"Error tracking usuario: {e}")
     
