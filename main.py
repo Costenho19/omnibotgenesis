@@ -426,7 +426,7 @@ class OmnixBotRender:
         thread.start()
         print("🔄 Auto-trading iniciado cada 10 minutos")
     
-               def get_ai_response(self, message, user_id):
+                   def get_ai_response(self, message, user_id):
         """Obtener respuesta de IA"""
         try:
             # Obtener memoria de conversación
@@ -441,81 +441,14 @@ class OmnixBotRender:
                     texto = f"{memory}\nMensaje del usuario: {message}"
                     response = model.generate_content(texto)
 
-                    print("💬 RESPUESTA DE GEMINI:", response.text)
+                    print("🟣 RESPUESTA DE GEMINI:", response.text)
                     return response.text
 
                 except Exception as e:
                     print(f"❌ Error generando respuesta con Gemini: {e}")
                     return "Error al generar respuesta con Gemini."
 
-                          elif self.openai_api_key:
-        try:
-            context = f"""
-Eres OMNIX, un asistente conversacional avanzado.
-
-Funciones:
-- Puedes responder sobre cualquier tema: finanzas, salud, ciencia, historia, tecnología, etc.
-- Tu enfoque principal es ayudar en análisis de criptomonedas, bolsa, economía y estrategias de inversión.
-- Eres profesional, directo y fácil de entender.
-
-Memoria previa: {memory}
-Mensaje del usuario: {message}
-"""
-            import openai
-            openai.api_key = self.openai_api_key
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": context}],
-                max_tokens=300
-            )
-            return response.choices[0].message['content']
-        except Exception as e:
-            return f"⚠️ Error al generar respuesta con OpenAI: {e}"
-
-        logger.error(f"Error generando respuesta con OpenAI: {e}")
-        return "Error al generar respuesta con OpenAI."
- 
-            logger.error(f"Error general en get_ai_response: {e}")
-            return "Error general en respuesta de IA."
-
-- Recomendaciones breves y claras
-- Máximo 150 palabras
-
-Historial:
-{memory}
-
-Mensaje del usuario: {message}
-                    """
-                    response = openai.chat.completions.create(
-                        model="gpt-4o",
-                        messages=[{"role": "user", "content": context}],
-                        max_tokens=200
-                    )
-                    return response.choices[0].message.content
-
-                except Exception as e:
-                    logger.error(f"❌ Error OpenAI: {e}")
-                    return "Error al generar respuesta con OpenAI."
-
-            else:
-                return "No se encontró ninguna clave API válida (Gemini u OpenAI)."
-
-        except Exception as e:
-            logger.error(f"❌ Error general en get_ai_response: {e}")
-            return "Error general al procesar tu mensaje."
-
-            print(f"❌ Error general en get_ai_response: {e}")
-            return "Error general al obtener respuesta de IA."
-
-
-            else:
-                return "No se encontró la clave API de Gemini."
-
-        except Exception as e:
-            print(f"❌ Error general en get_ai_response: {e}")
-            return "Error general al obtener respuesta de IA."
-
-
+      
             # Contexto especializado
             context = f"""
             Eres OMNIX, un asistente de trading de criptomonedas profesional.
