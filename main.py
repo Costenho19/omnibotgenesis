@@ -453,43 +453,50 @@ class OmnixBotRender:
                 print(f"❌ Error general en obtener_respuesta_ia: {e}")
                 return "Error interno al procesar la solicitud de IA."
  
-      
-            # Contexto especializado
-            context = f"""
-            Eres OMNIX, un asistente de trading de criptomonedas profesional.
-            
-            {memory}
-            
-            Características:
-            - Respuestas en español
-            - Información actualizada de crypto
-            - Consejos de trading inteligentes
-            - Análisis de mercado
-            - Máximo 150 palabras
-            
-            Mensa del usuario: {message}
-            """
-            
-            # Usar OpenAI sije está disponible
-            if self.openai_api_key:
-                try:
-                    response = openai.chat.completions.create(
-                        model="gpt-4o",
-                        messages=[{"role": "user", "content": context}],
-                        max_tokens=200
-                    )
+              def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
+            """Guarda el mensaje del usuario y la respuesta generada"""
+            try:
+                if not hasattr(self, "memoria_conversaciones"):
+                    self.memoria_conversaciones = {}
+
+                if user_id not in self.memoria_conversaciones:
+                    self.memoria_conversaciones[user_id] = []
+
+                self.memoria_conversaciones[user_id].append({
+                    "usuario": mensaje_usuario,
+                    "ia": respuesta_ia
+                })
+
+                # Limitar memoria a los últimos 10 mensajes
+                if len(self.memoria_conversaciones[user_id]) > 10:
+                    self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
+
+                    def get_conversation_memory(self, user_id):
+            """Devuelve la memoria como texto para alimentar a la IA"""
+            if hasattr(self, "memoria_conversaciones") and user_id in self.memoria_conversaciones:
+                historial = self.memoria_conversaciones[user_id]
+                texto = ""
+                for entrada in historial:
+                    texto += f"Usuario: {entrada['usuario']}\nIA: {entrada['ia']}\n"
+                return texto
+            return ""
+
                     return response.choices[0].message.content
                 except Exception as e:
-                    logger.error(f"Error OpenAI: {e}")
-            
-            # Respuesta por defecto inteligente
-            return f"¡Hola! Soy OMNIX, tu asistente de trading crypto. He recibido tu mensaje: '{message[:50]}...' y estoy procesando tu consulta. ¿En qué más puedo ayudarte?"
-            
-        except Exception as e:
-            logger.error(f"Error obteniendo respuesta IA: {e}")
-            return "Sistema procesando tu consulta. Intenta nuevamente."
-    
-    def generate_voice_response(self, text):
+              
+                                         def enviar_mensaje_telegram(self, chat_id, texto):
+            """Envía un mensaje al usuario por Telegram"""
+            try:
+                import requests
+                url = f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": texto
+                }
+                requests.post(url, json=payload)
+            except Exception as e:
+                print(f"❌ Error al enviar mensaje a Telegram: {e}")
+
         """Generar respuesta de voz"""
         try:
             # Limpiar texto para TTS
