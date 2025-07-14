@@ -452,8 +452,8 @@ class OmnixBotRender:
             except Exception as e:
                 print(f"❌ Error general en obtener_respuesta_ia: {e}")
                 return "Error interno al procesar la solicitud de IA."
-            def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
-                """Guarda el mensaje del usuario y la respuesta generada"""
+               def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
+        """Guarda el mensaje del usuario y la respuesta generada"""
         try:
             if not hasattr(self, "memoria_conversaciones"):
                 self.memoria_conversaciones = {}
@@ -473,15 +473,17 @@ class OmnixBotRender:
         except Exception as e:
             print(f"❌ Error en guardar_memoria: {e}")
 
+    def obtener_respuesta(self, prompt):
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"❌ Error generando respuesta: {e}")
+            return "Lo siento, hubo un error al generar la respuesta."
 
-                   
-  
-
-        
-
-
-                return response.choices[0].message.content
-                except Exception as e:
               
                             def enviar_mensaje_telegram(self, chat_id, texto):
             """Envía un mensaje al usuario por Telegram"""
