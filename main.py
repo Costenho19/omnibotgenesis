@@ -518,13 +518,33 @@ try:
         bot_omnix = OmnixBot()
         bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
 
-        @bot.message_handler(func=lambda m: True)
-        def handle_message(message):
-            user_id = message.chat.id
-            texto = message.text
-            respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
-        bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
-        bot.infinity_polling()                                                                                                                                                                                                          try:
+             try:  # línea 530, con 4 espacios a la derecha del margen
+
+        cursor.execute("""  # línea 531, con 8 espacios en total
+            INSERT OR IGNORE INTO user_tracking (user_id, username)
+            VALUES (?, ?)
+        """, (user_id, username))
+
+        if activity_type == 'message':
+            cursor.execute("""
+                UPDATE user_tracking
+                SET total_messages = total_messages + 1
+                WHERE user_id = ?
+            """, (user_id,))
+        
+        elif activity_type == 'trade':
+            cursor.execute("""
+                UPDATE user_tracking
+                SET total_trades = total_trades + 1
+                WHERE user_id = ?
+            """, (user_id,))
+
+        conn.commit()
+        conn.close()
+
+    except Exception as e:
+        print(f"Error al registrar actividad: {e}")
+                                                                                                                                                                                                         try:
         
 
         try:
