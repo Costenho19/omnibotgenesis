@@ -426,7 +426,7 @@ class OmnixBotRender:
         thread.start()
         print("🔄 Auto-trading iniciado cada 10 minutos")
     
-                   def get_ai_response(self, message, user_id):
+        def get_ai_response(self, message, user_id):
         """Obtener respuesta de IA"""
         try:
             # Obtener memoria de conversación
