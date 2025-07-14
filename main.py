@@ -453,38 +453,32 @@ class OmnixBotRender:
                 print(f"❌ Error general en obtener_respuesta_ia: {e}")
                 return "Error interno al procesar la solicitud de IA."
  
-            def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
-            """Guarda el mensaje del usuario y la respuesta generada"""
-            try:
-                if not hasattr(self, "memoria_conversaciones"):
-                    self.memoria_conversaciones = {}
+               def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
+        """Guarda el mensaje del usuario y la respuesta generada"""
+        try:
+            if not hasattr(self, "memoria_conversaciones"):
+                self.memoria_conversaciones = {}
 
-                if user_id not in self.memoria_conversaciones:
-                    self.memoria_conversaciones[user_id] = []
+            if user_id not in self.memoria_conversaciones:
+                self.memoria_conversaciones[user_id] = []
 
-                self.memoria_conversaciones[user_id].append({
-                    "usuario": mensaje_usuario,
-                    "ia": respuesta_ia
-                })
+            self.memoria_conversaciones[user_id].append({
+                "usuario": mensaje_usuario,
+                "ia": respuesta_ia
+            })
 
-                # Limitar memoria a los últimos 10 mensajes
-                if len(self.memoria_conversaciones[user_id]) > 10:
-                    self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
+            # Limitar memoria a los últimos 10 mensajes
+            if len(self.memoria_conversaciones[user_id]) > 10:
+                self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
 
-                    def get_conversation_memory(self, user_id):
-            """Devuelve la memoria como texto para alimentar a la IA"""
-            if hasattr(self, "memoria_conversaciones") and user_id in self.memoria_conversaciones:
-                historial = self.memoria_conversaciones[user_id]
-                texto = ""
-                for entrada in historial:
-                    texto += f"Usuario: {entrada['usuario']}\nIA: {entrada['ia']}\n"
-                return texto
-            return ""
+        except Exception as e:
+        print(f"❌ Error en guardar_memoria: {e}")
+
 
                     return response.choices[0].message.content
                 except Exception as e:
               
-                                         def enviar_mensaje_telegram(self, chat_id, texto):
+                            def enviar_mensaje_telegram(self, chat_id, texto):
             """Envía un mensaje al usuario por Telegram"""
             try:
                 import requests
