@@ -425,10 +425,11 @@ class OmnixBotRender:
         thread = threading.Thread(target=auto_trading_loop, daemon=True)
         thread.start()
         print("🔄 Auto-trading iniciado cada 10 minutos")
-    
-      def obtener_respuesta_ia():
-    """Obtener respuesta de IA"""
-    pass
+                def obtener_respuesta_ia(self, user_id, message):
+                            """Obtener respuesta de IA"""
+                            pass
+
+                     
  
         try:
             # Obtener memoria de conversación
