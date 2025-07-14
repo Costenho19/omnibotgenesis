@@ -472,7 +472,7 @@ class OmnixBotRender:
 472                 self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
 473
 474         except Exception as e:
-475             print(f"❌ Error en guardar_memoria: {e}")
+475                 print(f"❌ Error en guardar_memoria: {e}")
 
         print(f"❌ Error en guardar_memoria: {e}")
 
