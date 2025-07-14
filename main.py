@@ -524,34 +524,36 @@ try:
             texto = message.text
             respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
             bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+        bot.infinity_polling()                                                                                                                                                                                                          try:
+   bot.infinity_polling()
 
-        bot.infinity_polling()
+try:  ◀️ 4 espacios a la derecha del margen
 
-
-    try:
-    cursor.execute("""
+    cursor.execute("""  ◀️ otros 4 espacios (total 8)
         INSERT OR IGNORE INTO user_tracking (user_id, username)
         VALUES (?, ?)
     """, (user_id, username))
 
-    if activity_type == 'message':
+    if activity_type == 'message':  ◀️ también dentro del try (8 espacios)
         cursor.execute("""
             UPDATE user_tracking
             SET total_messages = total_messages + 1
             WHERE user_id = ?
         """, (user_id,))
-    elif activity_type == 'trade':
+
+    elif activity_type == 'trade':  ◀️ igual que el if
         cursor.execute("""
             UPDATE user_tracking
             SET total_trades = total_trades + 1
             WHERE user_id = ?
         """, (user_id,))
 
-    conn.commit()
-    conn.close()
+    conn.commit()  ◀️ dentro del try (8 espacios)
+    conn.close()   ◀️ dentro del try (8 espacios)
 
-except Exception as e:
-    print(f"Error al registrar actividad: {e}")
+except Exception as e:  ◀️ al mismo nivel del try (4 espacios)
+    print(f"Error al registrar actividad: {e}")  ◀️ 8 espacios
+ 
 
         except Exception as e:
             logger.error(f"Error tracking usuario: {e}")
