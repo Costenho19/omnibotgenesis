@@ -486,7 +486,7 @@ class OmnixBotRender:
             return "Lo siento, hubo un error al generar la respuesta."
 
               
-             def enviar_mensaje_telegram(self, chat_id, texto):
+            def enviar_mensaje_telegram(self, chat_id, texto):
                     """Envía un mensaje al usuario por Telegram"""
                     try:
                         import requests
