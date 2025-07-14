@@ -452,8 +452,8 @@ class OmnixBotRender:
             except Exception as e:
                 print(f"❌ Error general en obtener_respuesta_ia: {e}")
                 return "Error interno al procesar la solicitud de IA."
-              def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
-        """Guarda el mensaje del usuario y la respuesta generada"""
+            def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
+                """Guarda el mensaje del usuario y la respuesta generada"""
         try:
             if not hasattr(self, "memoria_conversaciones"):
                 self.memoria_conversaciones = {}
