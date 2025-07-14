@@ -520,30 +520,36 @@ try:
 
              try:  # línea 530, con 4 espacios a la derecha del margen
 
-        cursor.execute("""  # línea 531, con 8 espacios en total
+        @bot.message_handler(func=lambda m: True)
+def handle_message(message):
+    user_id = message.chat.id
+    texto = message.text
+    respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
+    bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+    
+        try:                                ← 4 espacios desde el margen
+                cursor.execute("""              ← 8 espacios
             INSERT OR IGNORE INTO user_tracking (user_id, username)
             VALUES (?, ?)
-        """, (user_id, username))
-
-        if activity_type == 'message':
-            cursor.execute("""
+                """, (user_id, username))       ← 8 espacios
+                                        ↑
+                if activity_type == 'message':  ← 8 espacios
+                        cursor.execute("""          ← 12 espacios
                 UPDATE user_tracking
                 SET total_messages = total_messages + 1
                 WHERE user_id = ?
-            """, (user_id,))
-        
-        elif activity_type == 'trade':
-            cursor.execute("""
+                        """, (user_id,))            ← 12 espacios
+
+                elif activity_type == 'trade':  ← 8 espacios
+                        cursor.execute("""          ← 12 espacios
                 UPDATE user_tracking
                 SET total_trades = total_trades + 1
                 WHERE user_id = ?
-            """, (user_id,))
+                        """, (user_id,))            ← 12 espacios
 
-        conn.commit()
-        conn.close()
-
-    except Exception as e:
+     except Exception as e:              ← 4 espacios
         print(f"Error al registrar actividad: {e}")
+
                                                                                                                                                                                                          try:
         
 
