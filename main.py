@@ -480,7 +480,7 @@ class OmnixBotRender:
         
 
 
-                    return response.choices[0].message.content
+                return response.choices[0].message.content
                 except Exception as e:
               
                             def enviar_mensaje_telegram(self, chat_id, texto):
