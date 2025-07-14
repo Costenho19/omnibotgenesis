@@ -453,25 +453,27 @@ class OmnixBotRender:
                 print(f"❌ Error general en obtener_respuesta_ia: {e}")
                 return "Error interno al procesar la solicitud de IA."
  
-               def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
-        """Guarda el mensaje del usuario y la respuesta generada"""
-        try:
-            if not hasattr(self, "memoria_conversaciones"):
-                self.memoria_conversaciones = {}
+              456     def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
+457         """Guarda el mensaje del usuario y la respuesta generada"""
+458         try:
+459             if not hasattr(self, "memoria_conversaciones"):
+460                 self.memoria_conversaciones = {}
+461
+462             if user_id not in self.memoria_conversaciones:
+463                 self.memoria_conversaciones[user_id] = []
+464
+465             self.memoria_conversaciones[user_id].append({
+466                 "usuario": mensaje_usuario,
+467                 "ia": respuesta_ia
+468             })
+469
+470             # Limitar memoria a los últimos 10 mensajes
+471             if len(self.memoria_conversaciones[user_id]) > 10:
+472                 self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
+473
+474         except Exception as e:
+475             print(f"❌ Error en guardar_memoria: {e}")
 
-            if user_id not in self.memoria_conversaciones:
-                self.memoria_conversaciones[user_id] = []
-
-            self.memoria_conversaciones[user_id].append({
-                "usuario": mensaje_usuario,
-                "ia": respuesta_ia
-            })
-
-            # Limitar memoria a los últimos 10 mensajes
-            if len(self.memoria_conversaciones[user_id]) > 10:
-                self.memoria_conversaciones[user_id] = self.memoria_conversaciones[user_id][-10:]
-
-        except Exception as e:
         print(f"❌ Error en guardar_memoria: {e}")
 
 
