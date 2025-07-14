@@ -523,9 +523,9 @@ try:
             user_id = message.chat.id
             texto = message.text
             respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
-            bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+        bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
         bot.infinity_polling()                                                                                                                                                                                                          try:
-   bot.infinity_polling()
+        
 
         try:
         cursor.execute("""
