@@ -507,21 +507,22 @@ class OmnixBotRender:
             
             # Guardar archivo temporal
             with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
-                tts.save(tmp_file.name)
-                return tmp_file.name
-                
-        except Exception as e:
-            logger.error(f"Error generando voz: {e}")
-            return None
-    
-    def track_user_activity(self, user_id, username, activity_type, details=None):
-        """Tracking de actividad de usuario"""
-        try:
-            conn = sqlite3.connect('omnix_render.db')
-            cursor = conn.cursor()
-            
-            # Insertar o actualizar usuario
-            cursor.execute('''
+              if __name__ == "__main__":
+    import telebot
+    bot_omnix = OmnixBot()
+
+    bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
+
+
+    @bot.message_handler(func=lambda m: True)
+    def handle_message(message):
+        user_id = message.chat.id
+        texto = message.text
+        respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
+        bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+
+    bot.infinity_polling()
+
                 INSERT OR IGNORE INTO user_tracking (user_id, username)
                 VALUES (?, ?)
             ''', (user_id, username))
