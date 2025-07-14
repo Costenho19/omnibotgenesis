@@ -527,7 +527,7 @@ def handle_message(message):
     respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
     bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
     
-        try:                                ← 4 espacios desde el margen
+    try:                                ← 4 espacios desde el margen
                 cursor.execute("""              ← 8 espacios
             INSERT OR IGNORE INTO user_tracking (user_id, username)
             VALUES (?, ?)
