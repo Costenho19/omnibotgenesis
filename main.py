@@ -423,34 +423,36 @@ class OmnixBotRender:
                     time.sleep(60)  # Esperar 1 minuto si hay error
         
         thread = threading.Thread(target=auto_trading_loop, daemon=True)
-        thread.start()
-        print("🔄 Auto-trading iniciado cada 10 minutos")
-                def obtener_respuesta_ia(self, user_id, message):
-                            """Obtener respuesta de IA"""
-                            pass
+                thread.start()
+                print("🔄 Auto-trading iniciado cada 10 minutos")
+                             def obtener_respuesta_ia(self, user_id, message):
+            """Obtener respuesta de IA"""
+            try:
+                # Obtener memoria de conversación
+                memory = self.get_conversation_memory(user_id)
 
-                     
+                if self.gemini_api_key:
+                    try:
+                        import google.generativeai as genai
+                        genai.configure(api_key=self.gemini_api_key)
+
+                        model = genai.GenerativeModel("gemini-pro")
+                        texto = f"{memory}\nMensaje del usuario: {message}"
+                        response = model.generate_content(texto)
+
+                        print("🔵 RESPUESTA DE GEMINI:", response.text)
+                        return response.text
+
+                    except Exception as e:
+                        print(f"❌ Error generando respuesta con Gemini: {e}")
+                        return "Error al generar respuesta con Gemini."
+                else:
+                    return "Clave de Gemini no encontrada."
+
+            except Exception as e:
+                print(f"❌ Error general en obtener_respuesta_ia: {e}")
+                return "Error interno al procesar la solicitud de IA."
  
-        try:
-            # Obtener memoria de conversación
-            memory = self.get_conversation_memory(user_id)
-
-            if self.gemini_api_key:
-                try:
-                    import google.generativeai as genai
-                    genai.configure(api_key=self.gemini_api_key)
-
-                    model = genai.GenerativeModel("gemini-pro")
-                    texto = f"{memory}\nMensaje del usuario: {message}"
-                    response = model.generate_content(texto)
-
-                    print("🟣 RESPUESTA DE GEMINI:", response.text)
-                    return response.text
-
-                except Exception as e:
-                    print(f"❌ Error generando respuesta con Gemini: {e}")
-                    return "Error al generar respuesta con Gemini."
-
       
             # Contexto especializado
             context = f"""
