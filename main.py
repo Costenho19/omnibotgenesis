@@ -423,8 +423,8 @@ class OmnixBotRender:
                     time.sleep(60)  # Esperar 1 minuto si hay error
         
         thread = threading.Thread(target=auto_trading_loop, daemon=True)
-                thread.start()
-                print("🔄 Auto-trading iniciado cada 10 minutos")
+        thread.start()
+        print("🔄 Auto-trading iniciado cada 10 minutos")
                              def obtener_respuesta_ia(self, user_id, message):
             """Obtener respuesta de IA"""
             try:
