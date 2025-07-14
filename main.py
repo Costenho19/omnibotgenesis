@@ -500,30 +500,35 @@ class OmnixBotRender:
                         print(f"❌ Error al enviar mensaje a Telegram: {e}")
 
         """Generar respuesta de voz"""
-        try:
-            # Limpiar texto para TTS
-            clean_text = re.sub(r'[^\w\s.,!?¿¡]', '', text)
-            
-            # Generar audio
-            tts = gTTS(text=clean_text, lang='es', slow=True)
-            
-            # Guardar archivo temporal
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
-                if __name__ == "__main__":
-                    import telebot
-                    bot_omnix = OmnixBot()
+       # Generar respuesta de voz
+try:
+    # Limpiar texto para TTS
+    clean_text = re.sub(r'[^\w\s.,!?¿¡]', '', text)
 
-                    bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
+    # Generar audio
+    tts = gTTS(text=clean_text, lang='es', slow=True)
 
- 
-    @bot.message_handler(func=lambda m: True)
-    def handle_message(message):
-        user_id = message.chat.id
-        texto = message.text
-        respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
-        bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+    # Guardar archivo temporal
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
+        tts.save(tmp_file.name)
 
-    bot.infinity_polling()
+    # Crear bot y manejar mensajes
+    if __name__ == "__main__":
+        import telebot
+        bot_omnix = OmnixBot()
+        bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
+
+        @bot.message_handler(func=lambda m: True)
+        def handle_message(message):
+            user_id = message.chat.id
+            texto = message.text
+            respuesta = bot_omnix.obtener_respuesta_ia(user_id, texto)
+            bot_omnix.enviar_mensaje_telegram(user_id, respuesta)
+
+        bot.infinity_polling()
+
+except Exception as e:
+    print(f"Error al generar respuesta de voz: {e}")
 
                 INSERT OR IGNORE INTO user_tracking (user_id, username)
                 VALUES (?, ?)
