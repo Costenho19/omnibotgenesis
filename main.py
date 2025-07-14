@@ -454,7 +454,7 @@ class OmnixBotRender:
                 return "Error interno al procesar la solicitud de IA."
  
                 def guardar_memoria(self, user_id, mensaje_usuario, respuesta_ia):
-457         """Guarda el mensaje del usuario y la respuesta generada"""
+457             """Guarda el mensaje del usuario y la respuesta generada"""
 458         try:
 459             if not hasattr(self, "memoria_conversaciones"):
 460                 self.memoria_conversaciones = {}
