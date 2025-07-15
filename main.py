@@ -32,7 +32,7 @@ class KrakenModule:
         logger.info("Kraken inicializado")
 
 def _generate_nonce(self) -> str:
-return str(int(time.time() * 1000))
+    return str(int(time.time() * 1000))
 
 def _get_kraken_signature(self, urlpath: str, data: Dict) -> str:
 postdata = urlencode(data)
