@@ -62,8 +62,8 @@ def _make_request(self, endpoint: str, data: Dict = None) -> Dict:
             return {'success': False, 'error': str(e)}
 
 def get_balance(self) -> Dict:
-response = self._make_request('0/private/Balance')
-return response['result'] if response['success'] else {}
+    response = self._make_request('0/private/Balance')
+    return response['result'] if response['success'] else {}
 
 def get_ticker_price(self, pair: str) -> Optional[float]:
 try:
