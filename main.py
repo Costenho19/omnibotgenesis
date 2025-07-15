@@ -216,8 +216,8 @@ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.han
 application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
 logger.info("Bot iniciado con polling")
             application.run_polling(allowed_updates=Update.ALL_TYPES)
-        except Exception as e:
-            logger.error(f"Error iniciando bot: {e}")
+                    except Exception as e:
+                        logger.error(f"Error iniciando bot: {e}")
 
 class AutoTrading:
 def __init__(self, kraken_module):
