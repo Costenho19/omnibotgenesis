@@ -114,9 +114,9 @@ counts = {'es': spanish_count, 'en': english_count, 'ar': arabic_count, 'zh': ch
 return max(counts, key=counts.get)
 
 async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-username = update.effective_user.username or "Usuario"
-welcome = f"Hola {username}! OMNIX Global Bot - Trading Cuadrilingue\n\nComandos:\n/balance - Ver balance\n/prices - Precios crypto\n\nEjemplos:\ncompra 20 dolares bitcoin\nvende ethereum\nprecio solana"
-await update.message.reply_text(welcome)
+    username = update.effective_user.username or "Usuario"
+    welcome = f"Hola {username}! OMNIX Global Bot - Trading Cuadrilingue\n\nComandos:\n/balance - Ver balance\n/prices - Precios crypto\n\nEjemplos:\ncompra 20 dolares bitcoin\nvende ethereum\nprecio solana"
+    await update.message.reply_text(welcome)
 
 async def balance_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 balance = self.kraken.get_balance()
