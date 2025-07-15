@@ -204,7 +204,7 @@ async def handle_sell(self, update: Update, lang: str):
             await update.message.reply_text(f"Error: {str(e)}")
 
 async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-await self.handle_buy(update, 'es')
+        await self.handle_buy(update, 'es')
 
 def start_polling(self):
 try:
