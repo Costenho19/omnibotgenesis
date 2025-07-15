@@ -66,16 +66,16 @@ def get_balance(self) -> Dict:
     return response['result'] if response['success'] else {}
 
 def get_ticker_price(self, pair: str) -> Optional[float]:
-try:
-response = requests.get(f"{self.base_url}/0/public/Ticker?pair={pair}", timeout=30)
-result = response.json()
-if result.get('result'):
-pair_data = list(result['result'].values())[0]
-return float(pair_data['c'][0])
-return None
-except Exception as e:
-logger.error(f"Error precio {pair}: {e}")
-return None
+    try:
+        response = requests.get(f"{self.base_url}/0/public/Ticker?pair={pair}", timeout=30)
+        result = response.json()
+        if result.get('result'):
+            pair_data = list(result['result'].values())[0]
+            return float(pair_data['c'][0])
+        return None
+    except Exception as e:
+        logger.error(f"Error precio {pair}: {e}")
+        return None
 
 def place_order(self, pair: str, side: str, volume: float) -> Dict:
 data = {
