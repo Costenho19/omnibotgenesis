@@ -135,20 +135,20 @@ async def prices_command(self, update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(message)
 
 async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-message = update.message.text.lower()
-lang = self.detect_language(message)
-if any(word in message for word in ['compra', 'buy', 'شراء', '购买']):
-await self.handle_buy(update, lang)
-elif any(word in message for word in ['vende', 'sell', 'بيع', '出售']):
-await self.handle_sell(update, lang)
-else:
-responses = {
+        message = update.message.text.lower()
+        lang = self.detect_language(message)
+        if any(word in message for word in ['compra', 'buy', 'شراء', '购买']):
+            await self.handle_buy(update, lang)
+        elif any(word in message for word in ['vende', 'sell', 'بيع', '出售']):
+           await self.handle_sell(update, lang)
+       else:
+           responses = {
 'es': "Hola! Soy OMNIX, tu asistente de trading crypto. Puedo ayudarte con precios, balances y operaciones.",
 'en': "Hello! I'm OMNIX, your crypto trading assistant. I can help with prices, balances and operations.",
 'ar': "مرحبا! أنا OMNIX، مساعد تداول العملات المشفرة.",
 'zh': "你好！我是OMNIX，你的加密货币交易助手。"
-}
-await update.message.reply_text(responses.get(lang, responses['es']))
+           }
+           await update.message.reply_text(responses.get(lang, responses['es']))
 
 async def handle_buy(self, update: Update, lang: str):
 try:
