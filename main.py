@@ -512,13 +512,13 @@ try:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
         tts.save(tmp_file.name)
 
-    # Crear bot y manejar mensajes
-    if __name__ == "__main__":
+    # Crear bot y manejar mensajes 
++if __name__ == "__main__":
+       
         import telebot
         bot_omnix = OmnixBot()
         bot = telebot.TeleBot(bot_omnix.telegram_bot_token)
-
-       @bot.message_handler(func=lambda m: True)
+@bot.message_handler(func=lambda m: True)
 def handle_message(message):
     user_id = message.chat.id
     texto = message.text
