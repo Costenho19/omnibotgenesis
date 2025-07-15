@@ -129,10 +129,10 @@ async def balance_command(self, update: Update, context: ContextTypes.DEFAULT_TY
     await update.message.reply_text(message)
 
 async def prices_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-sol_price = self.kraken.get_ticker_price('SOLUSD')
-btc_price = self.kraken.get_ticker_price('XBTUSD')
-message = f"Precios:\nSOL: ${sol_price:.2f}\nBTC: ${btc_price:.2f}" if sol_price and btc_price else "Error obteniendo precios"
-await update.message.reply_text(message)
+        sol_price = self.kraken.get_ticker_price('SOLUSD')
+        btc_price = self.kraken.get_ticker_price('XBTUSD')
+        message = f"Precios:\nSOL: ${sol_price:.2f}\nBTC: ${btc_price:.2f}" if sol_price and btc_price else "Error obteniendo precios"
+        await update.message.reply_text(message)
 
 async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 message = update.message.text.lower()
