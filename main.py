@@ -54,7 +54,7 @@ def _make_request(self, endpoint: str, data: Dict = None) -> Dict:
             response = requests.post(url, headers=headers, data=data, timeout=30)
             result = response.json()
             if result.get('error'):
-             logger.error(f"Error Kraken: {result['error']}")
+                logger.error(f"Error Kraken: {result['error']}")
                 return {'success': False, 'error': result['error']}
             return {'success': True, 'result': result.get('result', {})}
         except Exception as e:
