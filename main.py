@@ -94,11 +94,11 @@ def place_order(self, pair: str, side: str, volume: float) -> Dict:
         return {'success': False, 'error': response['error']}
 
 class TelegramBot:
-def __init__(self, kraken_module):
-self.token = TELEGRAM_TOKEN
-self.kraken = kraken_module
-self.bot = Bot(self.token)
-logger.info("Telegram Bot inicializado")
+    def __init__(self, kraken_module):
+        self.token = TELEGRAM_TOKEN
+        self.kraken = kraken_module
+        self.bot = Bot(self.token)
+        logger.info("Telegram Bot inicializado")
 
 def detect_language(self, message: str) -> str:
 message_lower = message.lower()
