@@ -78,20 +78,20 @@ def get_ticker_price(self, pair: str) -> Optional[float]:
         return None
 
 def place_order(self, pair: str, side: str, volume: float) -> Dict:
-data = {
-'pair': pair,
-'type': side,
-'ordertype': 'market',
-'volume': str(volume)
-}
-response = self._make_request('0/private/AddOrder', data)
-if response['success']:
-result = response['result']
-txid = result.get('txid', [''])[0]
-logger.info(f"Orden ejecutada: {txid}")
-return {'success': True, 'txid': txid}
-else:
-return {'success': False, 'error': response['error']}
+    data = {
+        'pair': pair,
+        'type': side,
+        'ordertype': 'market',
+        'volume': str(volume)
+    }
+    response = self._make_request('0/private/AddOrder', data)
+    if response['success']:
+        result = response['result']
+        txid = result.get('txid', [''])[0]
+        logger.info(f"Orden ejecutada: {txid}")
+        return {'success': True, 'txid': txid}
+    else:
+        return {'success': False, 'error': response['error']}
 
 class TelegramBot:
 def __init__(self, kraken_module):
