@@ -207,7 +207,7 @@ async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE)
         await self.handle_buy(update, 'es')
 
     def start_polling(self):
-        try:
+            try:
 application = Application.builder().token(self.token).build()
 application.add_handler(CommandHandler("start", self.start_command))
 application.add_handler(CommandHandler("balance", self.balance_command))
