@@ -175,33 +175,33 @@ async def handle_buy(self, update: Update, lang: str):
         await update.message.reply_text(f"Error: {str(e)}")
 
 async def handle_sell(self, update: Update, lang: str):
-    try:
-        balance = self.kraken.get_balance()
-        sol_balance = float(balance.get('SOL', 0))
-        if sol_balance >= 0.1:
-            result = self.kraken.place_order('SOLUSD', 'sell', sol_balance)
-            if result['success']:
-                sol_price = self.kraken.get_ticker_price('SOLUSD')
-                usd_value = sol_balance * sol_price if sol_price else 0
+        try:
+            balance = self.kraken.get_balance()
+            sol_balance = float(balance.get('SOL', 0))
+            if sol_balance >= 0.1:
+                result = self.kraken.place_order('SOLUSD', 'sell', sol_balance)
+                if result['success']:
+                    sol_price = self.kraken.get_ticker_price('SOLUSD')
+                    usd_value = sol_balance * sol_price if sol_price else 0
+                    messages = {
+                        'es': f"Venta ejecutada: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
+                        'en': f"Sale executed: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
+                        'ar': f"تم البيع: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
+                        'zh': f"出售已执行: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}"
+                    }
+                    await update.message.reply_text(messages.get(lang, messages['es']))
+                else:
+                    await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
+            else:
                 messages = {
-                    'es': f"Venta ejecutada: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
-                    'en': f"Sale executed: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
-                    'ar': f"تم البيع: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}",
-                    'zh': f"出售已执行: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}"
+                    'es': f"Balance SOL insuficiente: {sol_balance:.6f}",
+                     'en': f"Insufficient SOL balance: {sol_balance:.6f}",
+                     'ar': f"رصيد SOL غير كافي: {sol_balance:.6f}",
+                     'zh': f"SOL余额不足: {sol_balance:.6f}"
                 }
-await update.message.reply_text(messages.get(lang, messages['es']))
-else:
-await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
-else:
-messages = {
-'es': f"Balance SOL insuficiente: {sol_balance:.6f}",
-'en': f"Insufficient SOL balance: {sol_balance:.6f}",
-'ar': f"رصيد SOL غير كافي: {sol_balance:.6f}",
-'zh': f"SOL余额不足: {sol_balance:.6f}"
-}
-await update.message.reply_text(messages.get(lang, messages['es']))
-except Exception as e:
-await update.message.reply_text(f"Error: {str(e)}")
+                await update.message.reply_text(messages.get(lang, messages['es']))
+        except Exception as e:
+            await update.message.reply_text(f"Error: {str(e)}")
 
 async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 await self.handle_buy(update, 'es')
