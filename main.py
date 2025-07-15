@@ -35,11 +35,11 @@ def _generate_nonce(self) -> str:
     return str(int(time.time() * 1000))
 
 def _get_kraken_signature(self, urlpath: str, data: Dict) -> str:
-postdata = urlencode(data)
-encoded = (str(data['nonce']) + postdata).encode()
-message = urlpath.encode() + hashlib.sha256(encoded).digest()
-signature = hmac.new(base64.b64decode(self.secret), message, hashlib.sha512)
-return base64.b64encode(signature.digest()).decode()
+    postdata = urlencode(data)
+    encoded = (str(data['nonce']) + postdata).encode()
+    message = urlpath.encode() + hashlib.sha256(encoded).digest()
+    signature = hmac.new(base64.b64decode(self.secret), message, hashlib.sha512)
+    return base64.b64encode(signature.digest()).decode()
 
 def _make_request(self, endpoint: str, data: Dict = None) -> Dict:
 try:
