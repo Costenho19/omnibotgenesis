@@ -528,7 +528,8 @@ def handle_message(message):
   
 
 
-    except Exception as e:              ← 4 espacios
+        except Exception as e:
+             ← 4 espacios
         print(f"Error al registrar actividad: {e}")
    
 
