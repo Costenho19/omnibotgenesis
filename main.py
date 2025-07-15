@@ -42,24 +42,24 @@ def _get_kraken_signature(self, urlpath: str, data: Dict) -> str:
     return base64.b64encode(signature.digest()).decode()
 
 def _make_request(self, endpoint: str, data: Dict = None) -> Dict:
-    try:
-        url = f"{self.base_url}/{endpoint}"
-        if not data:
-            data = {}
-        data['nonce'] = self._generate_nonce()
-        headers = {
-            'API-Key': self.api_key,
-            'API-Sign': self._get_kraken_signature(f"/{endpoint}", data)
-        }
-        response = requests.post(url, headers=headers, data=data, timeout=30)
-        result = response.json()
-       if result.get('error'):
-           logger.error(f"Error Kraken: {result['error']}")
-           return {'success': False, 'error': result['error']}
-       return {'success': True, 'result': result.get('result', {})}
-     except Exception as e:
-         logger.error(f"Error conexion: {e}")
-         return {'success': False, 'error': str(e)}
+        try:
+            url = f"{self.base_url}/{endpoint}"
+            if not data:
+                data = {}
+            data['nonce'] = self._generate_nonce()
+            headers = {
+                'API-Key': self.api_key,
+                'API-Sign': self._get_kraken_signature(f"/{endpoint}", data)
+            }
+            response = requests.post(url, headers=headers, data=data, timeout=30)
+            result = response.json()
+                if result.get('error'):
+             logger.error(f"Error Kraken: {result['error']}")
+                return {'success': False, 'error': result['error']}
+            return {'success': True, 'result': result.get('result', {})}
+        except Exception as e:
+            logger.error(f"Error conexion: {e}")
+            return {'success': False, 'error': str(e)}
 
 def get_balance(self) -> Dict:
 response = self._make_request('0/private/Balance')
