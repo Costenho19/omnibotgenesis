@@ -151,28 +151,28 @@ async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(responses.get(lang, responses['es']))
 
 async def handle_buy(self, update: Update, lang: str):
-try:
-sol_price = self.kraken.get_ticker_price('SOLUSD')
-if sol_price:
-volume = 20 / sol_price
-if volume >= 0.1:
-result = self.kraken.place_order('SOLUSD', 'buy', volume)
-if result['success']:
-messages = {
-'es': f"Compra ejecutada: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
-'en': f"Buy executed: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
-'ar': f"تم التنفيذ: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
-'zh': f"购买已执行: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}"
-}
-await update.message.reply_text(messages.get(lang, messages['es']))
-else:
-await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
-else:
-await update.message.reply_text(f"Volumen muy pequeño: {volume:.6f}")
-else:
-await update.message.reply_text("No se pudo obtener precio de SOL")
-except Exception as e:
-await update.message.reply_text(f"Error: {str(e)}")
+    try:
+        sol_price = self.kraken.get_ticker_price('SOLUSD')
+        if sol_price:
+            volume = 20 / sol_price
+            if volume >= 0.1:
+                result = self.kraken.place_order('SOLUSD', 'buy', volume)
+                if result['success']:
+                    messages = {
+                        'es': f"Compra ejecutada: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
+                        'en': f"Buy executed: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
+                        'ar': f"تم التنفيذ: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
+                        'zh': f"购买已执行: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}"
+                    }
+                    await update.message.reply_text(messages.get(lang, messages['es']))
+                else:
+                    await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
+            else:
+                await update.message.reply_text(f"Volumen muy pequeño: {volume:.6f}")
+        else:
+            await update.message.reply_text("No se pudo obtener precio de SOL")
+    except Exception as e:
+        await update.message.reply_text(f"Error: {str(e)}")
 
 async def handle_sell(self, update: Update, lang: str):
 try:
