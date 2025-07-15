@@ -101,15 +101,15 @@ class TelegramBot:
         logger.info("Telegram Bot inicializado")
 
 def detect_language(self, message: str) -> str:
-message_lower = message.lower()
-spanish_words = ['hola', 'compra', 'vende', 'precio', 'balance']
-english_words = ['hello', 'buy', 'sell', 'price', 'balance']
-arabic_words = ['مرحبا', 'شراء', 'بيع', 'سعر', 'رصيد']
-chinese_words = ['你好', '购买', '出售', '价格', '余额']
-spanish_count = sum(1 for word in spanish_words if word in message_lower)
-english_count = sum(1 for word in english_words if word in message_lower)
-arabic_count = sum(1 for word in arabic_words if word in message_lower)
-chinese_count = sum(1 for word in chinese_words if word in message_lower)
+    message_lower = message.lower()
+    spanish_words = ['hola', 'compra', 'vende', 'precio', 'balance']
+    english_words = ['hello', 'buy', 'sell', 'price', 'balance']
+    arabic_words = ['مرحبا', 'شراء', 'بيع', 'سعر', 'رصيد']
+    chinese_words = ['你好', '购买', '出售', '价格', '余额']
+    spanish_count = sum(1 for word in spanish_words if word in message_lower)
+    english_count = sum(1 for word in english_words if word in message_lower)
+    arabic_count = sum(1 for word in arabic_words if word in message_lower)
+    chinese_count = sum(1 for word in chinese_words if word in message_lower)
 counts = {'es': spanish_count, 'en': english_count, 'ar': arabic_count, 'zh': chinese_count}
 return max(counts, key=counts.get)
 
