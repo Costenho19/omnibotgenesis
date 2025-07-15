@@ -25,11 +25,11 @@ KRAKEN_SECRET = os.getenv('KRAKEN_SECRET')
 PORT = int(os.getenv('PORT', 10000))
 
 class KrakenModule:
-def __init__(self):
-self.api_key = KRAKEN_API_KEY
-self.secret = KRAKEN_SECRET
-self.base_url = "https://api.kraken.com"
-logger.info("Kraken inicializado")
+    def __init__(self):
+        self.api_key = KRAKEN_API_KEY
+        self.secret = KRAKEN_SECRET
+        self.base_url = "https://api.kraken.com"
+        logger.info("Kraken inicializado")
 
 def _generate_nonce(self) -> str:
 return str(int(time.time() * 1000))
