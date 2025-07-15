@@ -119,14 +119,14 @@ async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(welcome)
 
 async def balance_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-balance = self.kraken.get_balance()
-if balance:
-usd_balance = float(balance.get('ZUSD', 0))
-sol_balance = float(balance.get('SOL', 0))
-message = f"Balance:\nUSD: ${usd_balance:.2f}\nSOL: {sol_balance:.6f}"
-else:
-message = "Error obteniendo balance"
-await update.message.reply_text(message)
+    balance = self.kraken.get_balance()
+    if balance:
+        usd_balance = float(balance.get('ZUSD', 0))
+        sol_balance = float(balance.get('SOL', 0))
+        message = f"Balance:\nUSD: ${usd_balance:.2f}\nSOL: {sol_balance:.6f}"
+    else:
+        message = "Error obteniendo balance"
+    await update.message.reply_text(message)
 
 async def prices_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 sol_price = self.kraken.get_ticker_price('SOLUSD')
