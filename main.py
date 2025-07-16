@@ -161,29 +161,27 @@ class TelegramBot:
         except Exception as e:
             print(f"❌ Error guardando conversación: {e}")
 
-    def get_conversation_memory(self, user_id, limit=15):
-        """Obtiene el historial de conversaciones recientes de un usuario."""
-        import sqlite3
+        async def get_ai_response(self, message, user_id, username):
+        """Obtener respuesta de IA. Usa memoria para contexto."""
+        # Obtener contexto de memoria
+        memory = self.get_conversation_memory(user_id)
+        context = f"Conversaciones anteriores:\n{memory}\nUsuario pregunta: {message}"
+        # INTENTA GEMINI/OPENAI
         try:
-            conn = sqlite3.connect(self.db_name)
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT message, response FROM conversations
-                WHERE user_id = ?
-                ORDER BY timestamp DESC
-                LIMIT ?
-            ''', (user_id, limit))
-            results = cursor.fetchall()
-            conn.close()
-            if results:
-                memory = "Conversaciones anteriores con este usuario:\n"
-                for q, a in reversed(results):  # Más antiguas primero
-                    memory += f"Usuario: {q}\nOMNIX: {a}\n\n"
-                return memory
-            return ""
+            import openai
+            openai.api_key = os.getenv('OPENAI_API_KEY')
+            completion = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": context}],
+                max_tokens=120
+            )
+            response = completion.choices[0].message.content
+            return response.strip()
         except Exception as e:
-            print(f"❌ Error obteniendo memoria: {e}")
-            return ""
+            print(f"❌ Error IA: {e}")
+            # Fallback simple
+            return "Hola! Soy OMNIX, tu asistente. ¿En qué te ayudo hoy?"
+
 
                 response TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
