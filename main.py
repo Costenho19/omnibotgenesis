@@ -237,17 +237,46 @@ class TelegramBot:
         # ...
 
 def detect_language(self, message: str) -> str:
+    # Detecta idioma por caracteres únicos
+    if any('\u4e00' <= char <= '\u9fff' for char in message):  # Chino
+        return 'zh'
+    if any('\u0600' <= char <= '\u06FF' for char in message):  # Árabe
+        return 'ar'
+
     message_lower = message.lower()
-    spanish_words = ['hola', 'compra', 'vende', 'precio', 'balance']
-    english_words = ['hello', 'buy', 'sell', 'price', 'balance']
-    arabic_words = ['مرحبا', 'شراء', 'بيع', 'سعر', 'رصيد']
-    chinese_words = ['你好', '购买', '出售', '价格', '余额']
-    spanish_count = sum(1 for word in spanish_words if word in message_lower)
-    english_count = sum(1 for word in english_words if word in message_lower)
-    arabic_count = sum(1 for word in arabic_words if word in message_lower)
-    chinese_count = sum(1 for word in chinese_words if word in message_lower)
-    counts = {'es': spanish_count, 'en': english_count, 'ar': arabic_count, 'zh': chinese_count}
-    return max(counts, key=counts.get)
+    # Palabras clave EXPANDIDAS
+    spanish_words = [
+        'hola', 'compra', 'vender', 'precio', 'cuánto', 'por favor', 'gracias',
+        'ayuda', 'trading', 'cuál', 'quiero', 'dólar', 'bitcoin', 'solana', 'vende', 'saludo', 'buenos días'
+    ]
+    english_words = [
+        'hello', 'buy', 'sell', 'price', 'how much', 'please', 'thanks',
+        'help', 'trading', 'which', 'i want', 'dollar', 'bitcoin', 'solana', 'good morning'
+    ]
+    arabic_words = [
+        'مرحبا', 'شراء', 'بيع', 'سعر', 'كم', 'من فضلك', 'شكرا',
+        'مساعدة', 'تداول', 'بيتكوين', 'سولانا', 'دولار'
+    ]
+    chinese_words = [
+        '你好', '购买', '出售', '价格', '多少', '请', '谢谢',
+        '帮助', '交易', '比特币', '索拉纳', '美元'
+    ]
+    # Scoring
+    counts = {
+        'es': sum(1 for w in spanish_words if w in message_lower),
+        'en': sum(1 for w in english_words if w in message_lower),
+        'ar': sum(1 for w in arabic_words if w in message_lower),
+        'zh': sum(1 for w in chinese_words if w in message_lower)
+    }
+    # Prioridad: Español sobre inglés en empate
+    max_score = max(counts.values())
+    candidates = [lang for lang, score in counts.items() if score == max_score and score > 0]
+    if not candidates:
+        return 'es'  # Default español
+
+    if 'es' in candidates and 'en' in candidates:
+        return 'es'
+    return candidates[0]
 
 async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username or "Usuario"
@@ -302,7 +331,13 @@ async def handle_buy(self, update: Update, lang: str):
                         'zh': f"购买已执行: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}"
                     } 
                     await update.message.reply_text(messages.get(lang, messages['es']))
-               self.save_conversation(
+               voice_file = self.generate_voice_response(messages.get(lang, messages['es']), lang)
+if voice_file and os.path.exists(voice_file):
+    with open(voice_file, 'rb') as audio:
+        await update.message.reply_voice(audio)
+    os.remove(voice_file)
+
+            self.save_conversation(
     update.effective_user.id,
     update.effective_user.username,
     f"Compra {volume:.6f} SOL",
