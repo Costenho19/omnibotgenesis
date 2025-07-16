@@ -100,6 +100,15 @@ class TelegramBot:
         self.bot = Bot(self.token)
         logger.info("Telegram Bot inicializado")
 
+
+    # ← PEGA AQUÍ
+    def start_polling(self):
+        pass
+
+    def detect_language(self, message: str) -> str:
+        message_lower = message.lower()
+        # ...
+
 def detect_language(self, message: str) -> str:
     message_lower = message.lower()
     spanish_words = ['hola', 'compra', 'vende', 'precio', 'balance']
