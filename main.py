@@ -183,10 +183,7 @@ class TelegramBot:
 
                 response TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-         )
-         ''')
-        conn.commit()
-        conn.close()
+         
 
     def save_conversation(self, user_id, username, message, response):
         """Guarda una conversación en la base de datos."""
