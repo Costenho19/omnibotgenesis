@@ -265,9 +265,9 @@ def health():
 
 def main():
     logger.info("Iniciando OMNIX Global Bot...")
-if not all([TELEGRAM_TOKEN, KRAKEN_API_KEY, KRAKEN_SECRET]):
-logger.error("Variables de entorno faltantes")
-return
+    if not all([TELEGRAM_TOKEN, KRAKEN_API_KEY, KRAKEN_SECRET]):
+        logger.error("Variables de entorno faltantes")
+        return
 kraken = KrakenModule()
 telegram_bot = TelegramBot(kraken)
 auto_trading = AutoTrading(kraken)
