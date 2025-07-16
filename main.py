@@ -133,16 +133,16 @@ class TelegramBot:
         import sqlite3
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-       cursor.execute('''
-                   CREATE TABLE IF NOT EXISTS conversations (
-                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       user_id INTEGER,
-                       username TEXT,
-                       message TEXT,
-                       response TEXT,
-                       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                   )
-               ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                message TEXT,
+                response TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
         conn.commit()
         conn.close()
