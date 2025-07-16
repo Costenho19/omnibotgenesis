@@ -241,13 +241,13 @@ class AutoTrading:
                             volume = 20 / sol_price
                             if volume >= 0.1:
                                 result = self.kraken.place_order('SOLUSD', 'buy', volume)
-if result['success']:
-self.trades_today += 1
+                                 if result['success']:
+                                     self.trades_today += 1
 logger.info(f"Auto-compra: {result['txid']}")
-time.sleep(300)
-except Exception as e:
-logger.error(f"Error auto-trading: {e}")
-time.sleep(60)
+                                 time.sleep(300)
+        except Exception as e:
+            logger.error(f"Error auto-trading: {e}")
+            time.sleep(60)
 
 app = Flask(__name__)
 
