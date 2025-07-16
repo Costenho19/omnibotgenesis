@@ -253,11 +253,11 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-return jsonify({
-'status': 'OMNIX Global Bot Running',
-'version': '1.0.0',
-'features': ['Trading Cuadrilingue', 'Auto-trading', 'Voice Commands']
-})
+    return jsonify({
+        'status': 'OMNIX Global Bot Running',
+        'version': '1.0.0',
+        'features': ['Trading Cuadrilingue', 'Auto-trading', 'Voice Commands']
+    })
 
 @app.route('/health')
 def health():
