@@ -15,6 +15,7 @@ from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask, jsonify
 from datetime import datetime
+import sqlite3
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -115,7 +116,67 @@ class TelegramBot:
         logger.info("Telegram Bot inicializado")
 
 
-    # ← PEGA AQUÍ
+            # ---- Memoria de conversaciones (PRO, con SQLite) ----
+        self.db_name = "omnix_memory.db"
+        self.init_database()
+
+    def init_database(self):
+        """Inicializa la base de datos SQLite para memoria conversacional."""
+        import sqlite3
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                message TEXT,
+                response TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
+    def save_conversation(self, user_id, username, message, response):
+        """Guarda una conversación en la base de datos."""
+        import sqlite3
+        try:
+            conn = sqlite3.connect(self.db_name)
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO conversations (user_id, username, message, response)
+                VALUES (?, ?, ?, ?)
+            ''', (user_id, username, message, response))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"❌ Error guardando conversación: {e}")
+
+    def get_conversation_memory(self, user_id, limit=15):
+        """Obtiene el historial de conversaciones recientes de un usuario."""
+        import sqlite3
+        try:
+            conn = sqlite3.connect(self.db_name)
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT message, response FROM conversations
+                WHERE user_id = ?
+                ORDER BY timestamp DESC
+                LIMIT ?
+            ''', (user_id, limit))
+            results = cursor.fetchall()
+            conn.close()
+            if results:
+                memory = "Conversaciones anteriores con este usuario:\n"
+                for q, a in reversed(results):  # Más antiguas primero
+                    memory += f"Usuario: {q}\nOMNIX: {a}\n\n"
+                return memory
+            return ""
+        except Exception as e:
+            print(f"❌ Error obteniendo memoria: {e}")
+            return ""
+# ← PEGA AQUÍ
     def start_polling(self):
         pass
 
