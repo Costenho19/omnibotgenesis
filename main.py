@@ -110,8 +110,8 @@ def detect_language(self, message: str) -> str:
     english_count = sum(1 for word in english_words if word in message_lower)
     arabic_count = sum(1 for word in arabic_words if word in message_lower)
     chinese_count = sum(1 for word in chinese_words if word in message_lower)
-counts = {'es': spanish_count, 'en': english_count, 'ar': arabic_count, 'zh': chinese_count}
-return max(counts, key=counts.get)
+    counts = {'es': spanish_count, 'en': english_count, 'ar': arabic_count, 'zh': chinese_count}
+    return max(counts, key=counts.get)
 
 async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username or "Usuario"
