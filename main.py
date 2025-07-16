@@ -185,7 +185,7 @@ class TelegramBot:
 
                 response TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+        )
         ''')
         conn.commit()
         conn.close()
