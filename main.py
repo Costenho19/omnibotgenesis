@@ -205,20 +205,19 @@ async def handle_sell(self, update: Update, lang: str):
 
 async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await self.handle_buy(update, 'es')
-
-        def start_polling(self):
-
-            try:
-                application = Application.builder().token(self.token).build()
-                application.add_handler(CommandHandler("start", self.start_command))
-                application.add_handler(CommandHandler("balance", self.balance_command))
-                application.add_handler(CommandHandler("prices", self.prices_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_text))
-    application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
+def start_polling(self):
+        try:
+            application = Application.builder().token(self.token).build()
+            application.add_handler(CommandHandler("start", self.start_command))
+            application.add_handler(CommandHandler("balance", self.balance_command))
+            application.add_handler(CommandHandler("prices", self.prices_command))
+            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_text))
+            application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
             logger.info("Bot iniciado con polling")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-            except Exception as e:
-             logger.error(f"Error iniciando bot: {e}")
+            application.run_polling(allowed_updates=Update.ALL_TYPES)
+🔻
+         except Exception as e:   ⬅️ QUÍTALA DE AQUÍ Y PONLA A ESTE NIVEL
+                 logger.error(f"Error iniciando bot: {e}")
 
 
 class AutoTrading:
