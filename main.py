@@ -244,7 +244,7 @@ class AutoTrading:
                                 if result['success']:
                                     self.trades_today += 1
 logger.info(f"Auto-compra: {result['txid']}")
-                        time.sleep(300)
+                                     time.sleep(300)
             except Exception as e:
                 logger.error(f"Error auto-trading: {e}")
                 time.sleep(60)
