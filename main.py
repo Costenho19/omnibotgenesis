@@ -121,7 +121,7 @@ class TelegramBot:
         self.init_database()
 
     def init_database(self):
-        """Inicializa la base de datos SQLite para memoria conversacional."""
+        
         import sqlite3
         conn = sqlite3.connect(self.db_name)
                # ---- Memoria de conversaciones (PRO, con SQLite) ----
@@ -134,15 +134,18 @@ class TelegramBot:
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         cursor.execute('''
-    CREATE TABLE IF NOT EXISTS conversations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        username TEXT,
-        message TEXT,
-        response TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-''')
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                message TEXT,
+                response TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
 
 
     def save_conversation(self, user_id, username, message, response):
