@@ -30,6 +30,20 @@ class KrakenModule:
         self.secret = KRAKEN_SECRET
         self.base_url = "https://api.kraken.com"
         logger.info("Kraken inicializado")
+    def get_balance(self):
+        # TODO: Aquí va la lógica real para obtener el balance de Kraken
+        # Solo ejemplo de retorno simulado
+        return {"ZUSD": 1000, "SOL": 20}
+
+    def place_order(self, pair, side, volume):
+        # TODO: Aquí va la lógica real para colocar una orden en Kraken
+        # Solo ejemplo de retorno simulado de éxito
+        return {"success": True, "txid": ["TXID_EJEMPLO"]}
+
+    def get_ticker_price(self, pair):
+        # TODO: Aquí va la lógica real para obtener el precio de un par (ej: SOLUSD)
+        # Solo ejemplo: Retorna un precio simulado
+        return 150.0
 
 def _generate_nonce(self) -> str:
     return str(int(time.time() * 1000))
