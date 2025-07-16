@@ -116,7 +116,7 @@ class TelegramBot:
         logger.info("Telegram Bot inicializado")
 
 
-            # ---- Memoria de conversaciones (PRO, con SQLite) ----
+        # ---- Memoria de conversaciones (PRO, con SQLite) ----
         self.db_name = "omnix_memory.db"
         self.init_database()
 
@@ -124,23 +124,23 @@ class TelegramBot:
         
         
 
-   def init_database(self):
-    """Inicializa la base de datos SQLite para memoria conversacional."""
-    import sqlite3
-    conn = sqlite3.connect(self.db_name)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS conversations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            username TEXT,
-            message TEXT,
-            response TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    def init_database(self):
+        """Inicializa la base de datos SQLite para memoria conversacional."""
+        import sqlite3
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                message TEXT,
+                response TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
 
 
