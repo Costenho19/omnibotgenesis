@@ -120,13 +120,9 @@ class TelegramBot:
         self.db_name = "omnix_memory.db"
         self.init_database()
 
-    def init_database(self):
+    
         
-        import sqlite3
-        conn = sqlite3.connect(self.db_name)
-               # ---- Memoria de conversaciones (PRO, con SQLite) ----
-        self.db_name = "omnix_memory.db"
-        self.init_database()
+        
 
    def init_database(self):
     """Inicializa la base de datos SQLite para memoria conversacional."""
