@@ -5,5 +5,5 @@ gunicorn==21.2.0
 gtts
 openai
 google-generativeai
-sqlite3-binary
+
 
