@@ -335,6 +335,19 @@ async def handle_sell(self, update: Update, lang: str):
                         'zh': f"出售已执行: {result['txid']}\n{sol_balance:.6f} SOL -> ${usd_value:.2f}"
                     }
                     await update.message.reply_text(messages.get(lang, messages['es']))
+               voice_file = self.generate_voice_response(messages.get(lang, messages['es']), lang)
+if voice_file and os.path.exists(voice_file):
+    with open(voice_file, 'rb') as audio:
+        await update.message.reply_voice(audio)
+    os.remove(voice_file)
+
+                self.save_conversation(
+    update.effective_user.id,
+    update.effective_user.username,
+    f"Venta {sol_balance:.6f} SOL",
+    messages.get(lang, messages['es'])
+)
+
                 else:
                     await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
             else:
