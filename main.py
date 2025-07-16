@@ -264,7 +264,7 @@ def health():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 def main():
-logger.info("Iniciando OMNIX Global Bot...")
+    logger.info("Iniciando OMNIX Global Bot...")
 if not all([TELEGRAM_TOKEN, KRAKEN_API_KEY, KRAKEN_SECRET]):
 logger.error("Variables de entorno faltantes")
 return
