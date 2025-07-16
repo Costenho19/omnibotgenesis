@@ -307,13 +307,10 @@ async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYP
     elif any(word in message for word in ['vende', 'sell', 'بيع', '出售']):
         await self.handle_sell(update, lang)
     else:
-        responses = {
-'es': "Hola! Soy OMNIX, tu asistente de trading crypto. Puedo ayudarte con precios, balances y operaciones.",
-'en': "Hello! I'm OMNIX, your crypto trading assistant. I can help with prices, balances and operations.",
-'ar': "مرحبا! أنا OMNIX، مساعد تداول العملات المشفرة.",
-'zh': "你好！我是OMNIX，你的加密货币交易助手。"
-        }
-        await update.message.reply_text(responses.get(lang, responses['es']))
+       
+            response = await self.get_ai_response(message, update.effective_user.id, update.effective_user.username)
+    await update.message.reply_text(response)
+
 
 
 async def handle_buy(self, update: Update, lang: str):
