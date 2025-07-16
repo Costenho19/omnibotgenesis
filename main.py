@@ -286,6 +286,7 @@ async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYP
         }
         await update.message.reply_text(responses.get(lang, responses['es']))
 
+
 async def handle_buy(self, update: Update, lang: str):
     try:
         sol_price = self.kraken.get_ticker_price('SOLUSD')
@@ -299,9 +300,17 @@ async def handle_buy(self, update: Update, lang: str):
                         'en': f"Buy executed: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
                         'ar': f"تم التنفيذ: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}",
                         'zh': f"购买已执行: {result['txid']}\n{volume:.6f} SOL @ ${sol_price:.2f}"
-                    }
+                    } 
                     await update.message.reply_text(messages.get(lang, messages['es']))
+               self.save_conversation(
+    update.effective_user.id,
+    update.effective_user.username,
+    f"Compra {volume:.6f} SOL",
+    messages.get(lang, messages['es'])
+)
+
                 else:
+                    
                     await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
             else:
                 await update.message.reply_text(f"Volumen muy pequeño: {volume:.6f}")
