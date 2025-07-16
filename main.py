@@ -215,7 +215,7 @@ def start_polling(self):
             application.add_handler(MessageHandler(filters.VOICE, self.handle_voice))
             logger.info("Bot iniciado con polling")
             application.run_polling(allowed_updates=Update.ALL_TYPES)
-🔻
+
          except Exception as e:   ⬅️ QUÍTALA DE AQUÍ Y PONLA A ESTE NIVEL
                  logger.error(f"Error iniciando bot: {e}")
 
