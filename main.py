@@ -308,8 +308,8 @@ async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYP
         await self.handle_sell(update, lang)
     else:
        
-            response = await self.get_ai_response(message, update.effective_user.id, update.effective_user.username)
-    await update.message.reply_text(response)
+        response = await self.get_ai_response(message, update.effective_user.id, update.effective_user.username)
+        await update.message.reply_text(response)
 
 
 
