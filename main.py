@@ -261,7 +261,7 @@ def home():
 
 @app.route('/health')
 def health():
-return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 def main():
 logger.info("Iniciando OMNIX Global Bot...")
