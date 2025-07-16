@@ -221,26 +221,26 @@ def start_polling(self):
 
 
 class AutoTrading:
-def __init__(self, kraken_module):
-self.kraken = kraken_module
-self.running = True
-self.trades_today = 0
-self.max_trades = 15
-logger.info("Auto-trading inicializado")
+    def __init__(self, kraken_module):
+        self.kraken = kraken_module
+        self.running = True
+        self.trades_today = 0
+        self.max_trades = 15
+        logger.info("Auto-trading inicializado")
 
-def run(self):
-while self.running:
-try:
-balance = self.kraken.get_balance()
-if balance:
-usd_balance = float(balance.get('ZUSD', 0))
-logger.info(f"Balance: ${usd_balance:.2f}")
-if usd_balance > 160 and self.trades_today < self.max_trades:
-sol_price = self.kraken.get_ticker_price('SOLUSD')
-if sol_price:
-volume = 20 / sol_price
-if volume >= 0.1:
-result = self.kraken.place_order('SOLUSD', 'buy', volume)
+    def run(self):
+        while self.running:
+            try:
+                balance = self.kraken.get_balance()
+                if balance:
+                    usd_balance = float(balance.get('ZUSD', 0))
+                    logger.info(f"Balance: ${usd_balance:.2f}")
+                    if usd_balance > 160 and self.trades_today < self.max_trades:
+                        sol_price = self.kraken.get_ticker_price('SOLUSD')
+                        if sol_price:
+                            volume = 20 / sol_price
+                            if volume >= 0.1:
+                                result = self.kraken.place_order('SOLUSD', 'buy', volume)
 if result['success']:
 self.trades_today += 1
 logger.info(f"Auto-compra: {result['txid']}")
