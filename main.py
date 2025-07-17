@@ -181,8 +181,7 @@ class TelegramBot:
                 return "Hola! Soy OMNIX, tu asistente. ¿En qué te ayudo hoy?"
 
 
-                response TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+               
          
 
     def save_conversation(self, user_id, username, message, response):
