@@ -335,18 +335,18 @@ async def handle_buy(self, update: Update, lang: str):
     messages.get(lang, messages['es'])
 )
 
-                else:
+                
                     
-                    await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
-            else:
-                await update.message.reply_text(f"Volumen muy pequeño: {volume:.6f}")
-        else:
-            await update.message.reply_text("No se pudo obtener precio de SOL")
+                    
+            
+                
+        
+           
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
 
 async def handle_sell(self, update: Update, lang: str):
-        try:
+        try:º
             balance = self.kraken.get_balance()
             sol_balance = float(balance.get('SOL', 0))
             if sol_balance >= 0.1:
