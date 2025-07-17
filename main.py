@@ -464,4 +464,10 @@ logger.info("OMNIX Global Bot iniciado completamente")
 app.run(host='0.0.0.0', port=PORT, debug=False)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR AL INICIAR BOT: {e}")
+        traceback.print_exc()
+
