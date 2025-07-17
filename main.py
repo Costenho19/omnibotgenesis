@@ -372,7 +372,7 @@ async def handle_sell(self, update: Update, lang: str):
                     f"Venta {sol_balance:.6f} SOL",
                     messages.get(lang, messages['es'])
                 )
-            else:
+             else:
                 await update.message.reply_text(f"Error: {result.get('error', 'Unknown error')}")
         else:
             await update.message.reply_text(f"Volumen muy pequeño: {sol_balance:.6f}")
