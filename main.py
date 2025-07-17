@@ -380,7 +380,7 @@ async def handle_sell(self, update: Update, lang: str):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-                       async def handle_sell(self, update: Update, lang: str):
+    async def handle_sell(self, update: Update, lang: str):
     try:
         balance = self.kraken.get_balance()
         sol_balance = float(balance.get('SOL', 0))
