@@ -678,4 +678,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == '__main__':
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
+   application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+
     application.run_polling()
+    
