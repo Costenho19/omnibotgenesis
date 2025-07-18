@@ -6,5 +6,5 @@ gtts
 openai
 google-generativeai
 ccxt
-
+speechrecognition
 
