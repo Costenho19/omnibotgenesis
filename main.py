@@ -666,6 +666,7 @@ class ArabicInterface:
 # Valorado en $85K USD - Enterprise Grade para Render  
    
 import sys
+import openai
 import os
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from telegram import Update
@@ -677,14 +678,32 @@ sys.excepthook = handle_exception
   
   # Leer token desde variable de entorno
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-  
+ openai.api_key = os.getenv("OPENAI_API_KEY")
+ 
   # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-      await update.message.reply_text("¡Hola, soy OMNIX!")
-  
-  # Mensaje de texto genérico
+    await update.message.reply_text("¡Hola, soy OMNIX!")
+  # Mensaje de texto con respuesta de OpenAI
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-      await update.message.reply_text("Soy OMNIX, ¿en qué puedo ayudarte?")
+    user_message = update.message.text
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Eres OMNIX, un asistente útil, profesional y amigable."},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=150
+        )
+        ai_reply = response['choices'][0]['message']['content']
+        await update.message.reply_text(ai_reply)
+
+    except Exception as e:
+        await update.message.reply_text("⚠️ Error al responder con IA.")
+        print("Error IA:", e)
+
+ 
   
   # Main principal
 if __name__ == "__main__":
