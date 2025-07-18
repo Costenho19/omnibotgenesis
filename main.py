@@ -658,11 +658,11 @@ class ArabicInterface:
                     // Simula datos en tiempo real
                 const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
-            """
-            import sys
+"""
+import sys
 
-            def handle_exception(exc_type, exc_value, exc_traceback):
-                print("ERROR CRÍTICO: ", exc_value)
+def handle_exception(exc_type, exc_value, exc_traceback):
+        print("ERROR CRÍTICO: ", exc_value)
 
-            sys.excepthook = handle_exception
+sys.excepthook = handle_exception
    
