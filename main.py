@@ -673,7 +673,7 @@ from telegram import Update
 def handle_exception(exc_type, exc_value, exc_traceback):
     print("ERROR CRÍTICO: ", exc_value)
   
-  sys.excepthook = handle_exception
+sys.excepthook = handle_exception
   
   # Leer token desde variable de entorno
   TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
