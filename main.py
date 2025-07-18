@@ -509,18 +509,14 @@ class ArabicInterface:
     
     def get_arabic_dashboard_html(self) -> str:
         """Genera HTML para dashboard árabe RTL"""
-        return """
-        <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>أومنيكس - منصة التداول الإسلامية</title>
-            <style>
-                * {
-                    font-family: 'Noto Sans Arabic', Arial, sans-serif;
-                    direction: rtl;
-                    text-align: right;
+        return"""<!DOCTYPE html> 
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>أومنيكس - منصة التداول الإسلامية</title>
+        <style>
+              
                 }
                 body {
                     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
