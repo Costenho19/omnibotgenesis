@@ -665,10 +665,10 @@ class ArabicInterface:
 # Trading Automático 24/7 - Compliance Sharia  
 # Valorado en $85K USD - Enterprise Grade para Render  
    
-  import sys
-  import os
-  from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-  from telegram import Update
+import sys
+import os
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update
   
   def handle_exception(exc_type, exc_value, exc_traceback):
       print("ERROR CRÍTICO: ", exc_value)
