@@ -679,7 +679,8 @@ sys.excepthook = handle_exception
   # Leer token desde variable de entorno
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 openai.api_key = os.getenv("OPENAI_API_KEY")
- 
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
   # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("¡Hola, soy OMNIX!")
