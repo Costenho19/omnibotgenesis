@@ -659,7 +659,7 @@ class ArabicInterface:
                 const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
 
-    """
+"""
 OMNIX Global Bot - Sistema Profesional Completo  
 Cuadrilingüe: Español, Inglés, Árabe, Chino  
 Trading Automático 24/7 - Compliance Sharia  
