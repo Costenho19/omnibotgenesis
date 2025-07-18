@@ -1,4 +1,4 @@
-eprint("===== ARRANCANDO OMNIBOTGENESIS =====")
+print("===== ARRANCANDO OMNIBOTGENESIS =====")
 #!/usr/bin/env python3
 """
 OMNIX Global Bot - Sistema Profesional Completo
