@@ -656,4 +656,3 @@ class ArabicInterface:
                     // Simula datos en tiempo real
                     const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
-
