@@ -8,3 +8,4 @@ google-generativeai
 ccxt
 speechrecognition
 yfinance
+arabic-reshaper
