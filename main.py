@@ -643,7 +643,7 @@ class ArabicInterface:
                 <div class="zakat-calculator">
                     <h3>💎 حاسبة الزكاة</h3>
                     <p>معدل الزكاة: 2.5% سنوياً على إجمالي المحفظة</p>
-                    <p>الزكاة واجبة على كل مسلم يملك النصاب لمدة عام هجري كامل</p>
+                    <p>الزكاة واجبة على كل مسلم يملك النصاب لمدة عام هجري كامل</p>j
                 </div>
                 
                 <h3>🪙 العملات الرقمية المدعومة</h3>
@@ -658,7 +658,7 @@ class ArabicInterface:
                     // Simula datos en tiempo real
                 const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
-             """
+            """
             import sys
 
             def handle_exception(exc_type, exc_value, exc_traceback):
