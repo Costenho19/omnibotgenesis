@@ -666,9 +666,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 sys.excepthook = handle_exception
 TELEGRAM_TOKEN = "7478164319:AAGfUem9c1V3SIqddGkPK60a30alZU2E1Dw"
-
-
-   if __name__ == "__main__":
+if __name__ == "__main__":
     from telegram.ext import Application, CommandHandler
 
     application = Application.builder().token(TELEGRAM_TOKEN).build()
