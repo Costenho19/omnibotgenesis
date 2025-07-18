@@ -666,7 +666,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 sys.excepthook = handle_exception
 import os
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler,MessageHandler, ContextTypes,filters
 from telegram import Update
 
 # Leer token desde variable de entorno
