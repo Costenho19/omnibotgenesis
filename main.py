@@ -665,4 +665,11 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         print("ERROR CRÍTICO: ", exc_value)
 
 sys.excepthook = handle_exception
-   
+ if __name__ == "__main__":
+    from telegram.ext import Updater
+
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    updater.start_polling()
+    updater.idle()  
