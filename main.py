@@ -667,10 +667,15 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 sys.excepthook = handle_exception
 TELEGRAM_TOKEN = "7478164319:AAGfUem9c1V3SIqddGkPK60a30alZU2E1Dw"
 if __name__ == "__main__":
-    from telegram.ext import Updater
+    from telegram.ext import Application
 
-    updater = Updater(TELEGRAM_TOKEN, use_context=True)
-    dp = updater.dispatcher
+    # Ya debes tener tu token más arriba
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    updater.start_polling()
-    updater.idle()  
+    # Ejemplo de comando /start
+    # from telegram.ext import CommandHandler
+    # def start(update, context):
+    #     update.message.reply_text("¡Hola, soy tu bot actualizado!")
+    # application.add_handler(CommandHandler("start", start))
+
+    application.run_polling()
