@@ -659,28 +659,33 @@ class ArabicInterface:
                 const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
 """
-import sys
+  import sys
+  import os
+  from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+  from telegram import Update
+  
+  def handle_exception(exc_type, exc_value, exc_traceback):
+      print("ERROR CRÍTICO: ", exc_value)
+  
+  sys.excepthook = handle_exception
+  
+  # Leer token desde variable de entorno
+  TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+  
+  # Comando /start
+  async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+      await update.message.reply_text("¡Hola, soy OMNIX!")
+  
+  # Mensaje de texto genérico
+  async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+      await update.message.reply_text("Soy OMNIX, ¿en qué puedo ayudarte?")
+  
+  # Main principal
+  if __name__ == "__main__":
+      application = Application.builder().token(TELEGRAM_TOKEN).build()
+  
+      application.add_handler(CommandHandler("start", start))
+      application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+  
+          application.run_polling()
 
-def handle_exception(exc_type, exc_value, exc_traceback):
-        print("ERROR CRÍTICO: ", exc_value)
-
-sys.excepthook = handle_exception
-import os
-from telegram.ext import Application, CommandHandler,MessageHandler, ContextTypes,filters
-from telegram import Update
-
-# Leer token desde variable de entorno
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("¡Hola, soy OMNIX!")
-    async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("Soy OMNIX, ¿en qué puedo ayudarte?")
-
-if __name__ == '__main__':
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-
-    application.run_polling()
-    
