@@ -676,7 +676,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 sys.excepthook = handle_exception
   
   # Leer token desde variable de entorno
-  TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
   
   # Comando /start
   async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
