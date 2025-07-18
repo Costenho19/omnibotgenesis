@@ -670,8 +670,8 @@ import os
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from telegram import Update
   
-  def handle_exception(exc_type, exc_value, exc_traceback):
-      print("ERROR CRÍTICO: ", exc_value)
+def handle_exception(exc_type, exc_value, exc_traceback):
+    print("ERROR CRÍTICO: ", exc_value)
   
   sys.excepthook = handle_exception
   
