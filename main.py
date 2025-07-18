@@ -665,7 +665,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         print("ERROR CRÍTICO: ", exc_value)
 
 sys.excepthook = handle_exception
-TELEGRAM_TOKEN = "7478164319:AAGfUem9c1V3SIqddGkPK60a30alZU2E1Dw"
+TELEGRAM_TOKEN = "7478164319:AAHwo7PZeLL3lmA139sD4icFHXJnm7Dgugg"
 if __name__ == "__main__":
     from telegram.ext import Application, CommandHandler
 
