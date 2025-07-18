@@ -678,7 +678,7 @@ sys.excepthook = handle_exception
   
   # Leer token desde variable de entorno
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
- openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
  
   # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
