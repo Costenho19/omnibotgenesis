@@ -687,22 +687,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # Mensaje de texto con respuesta de OpenAI
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Eres OMNIX, un asistente útil, profesional y amigable."},
-                {"role": "user", "content": user_message}
-            ],
-            max_tokens=150
-        )
-        ai_reply = response['choices'][0]['message']['content']
-        await update.message.reply_text(ai_reply)
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(user_message)
+         await update.message.reply_text(response.text)
+     except Exception as e:
+        await update.message.reply_text("⚠️ Error con Gemini.")
+|         print("Error Gemini:", e)
 
-    except Exception as e:
-        await update.message.reply_text("⚠️ Error al responder con IA.")
-        print("Error IA:", e)
 
  
   
