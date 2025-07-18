@@ -674,6 +674,8 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("¡Hola, soy OMNIX!")
+    async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text("Soy OMNIX, ¿en qué puedo ayudarte?")
 
 if __name__ == '__main__':
     application = Application.builder().token(TELEGRAM_TOKEN).build()
