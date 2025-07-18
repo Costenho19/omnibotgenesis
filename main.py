@@ -672,10 +672,10 @@ if __name__ == "__main__":
     # Ya debes tener tu token más arriba
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Ejemplo de comando /start
-    # from telegram.ext import CommandHandler
-    # def start(update, context):
-    #     update.message.reply_text("¡Hola, soy tu bot actualizado!")
-    # application.add_handler(CommandHandler("start", start))
+     Ejemplo de comando /start
+     from telegram.ext import CommandHandler
+     def start(update, context):
+         update.message.reply_text("¡Hola, soy tu bot actualizado!")
+     application.add_handler(CommandHandler("start", start))
 
     application.run_polling()
