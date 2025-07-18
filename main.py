@@ -1,4 +1,4 @@
-print("===== ARRANCANDO OMNIBOTGENESIS =====")
+eprint("===== ARRANCANDO OMNIBOTGENESIS =====")
 #!/usr/bin/env python3
 """
 OMNIX Global Bot - Sistema Profesional Completo
@@ -665,6 +665,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         print("ERROR CRÍTICO: ", exc_value)
 
 sys.excepthook = handle_exception
+TELEGRAM_TOKEN = "7478164319:AAGfUem9c1V3SIqddGkPK60a30alZU2E1Dw"
 if __name__ == "__main__":
     from telegram.ext import Updater
 
