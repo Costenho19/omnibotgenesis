@@ -665,17 +665,17 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         print("ERROR CRÍTICO: ", exc_value)
 
 sys.excepthook = handle_exception
-TELEGRAM_TOKEN = "7478164319:AAHwo7PZeLL3lmA139sD4icFHXJnm7Dgugg"
-if __name__ == "__main__":
-    from telegram.ext import Application, CommandHandler
+import os
+from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram import Update
 
+# Leer token desde variable de entorno
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("¡Hola, soy OMNIX!")
+
+if __name__ == '__main__':
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    def start(update, context):
-        update.message.reply_text("¡Hola, soy tu bot actualizado y funcional!")
-
-application.add_handler(CommandHandler("start", start))
-
-    
-
-application.run_polling()
+    application.add_handler(CommandHandler("start", start))
+    application.run_polling()
