@@ -9,4 +9,4 @@ ccxt
 speechrecognition
 yfinance
 arabic-reshaper
-bidi
+python-bidi
