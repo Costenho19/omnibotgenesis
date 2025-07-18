@@ -1,3 +1,4 @@
+print("===== ARRANCANDO OMNIBOTGENESIS =====")
 #!/usr/bin/env python3
 """
 OMNIX Global Bot - Sistema Profesional Completo
@@ -658,3 +659,10 @@ class ArabicInterface:
                     const portfolioValue = (Math.random() * 10000 + 5000).toFixed(2);
                     const zakatDue = (portfolioValue * 0.025).to
              """
+             import sys
+
+             def handle_exception(exc_type, exc_value, exc_traceback):
+                 print("ERROR CRÍTICO: ", exc_value)
+
+             sys.excepthook = handle_exception
+   
