@@ -696,6 +696,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await update.message.reply_text("⚠️ Error con Gemini.")
             print("Error Gemini:", e)
+            traceback.print_exc()
 
 
  
