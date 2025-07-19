@@ -688,22 +688,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("¡Hola, soy OMNIX!")
   # Mensaje de texto con respuesta de OpenAI
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-   except Exception as e:
-    await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
-     try:
+      try:
         model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(user_message)
         await update.message.reply_text(response.text)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
-        import traceback
         traceback.print_exc()
 
-
-
- 
-  
-  # Main principal
+# Main principal
 if __name__ == "__main__":
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
