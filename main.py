@@ -664,10 +664,12 @@ class ArabicInterface:
 # Cuadrilingüe: Español, Inglés, Árabe, Chino  
 # Trading Automático 24/7 - Compliance Sharia  
 # Valorado en $85K USD - Enterprise Grade para Render  
-   
+
 import sys
 import openai
 import os
+import traceback
+
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from telegram import Update
   
