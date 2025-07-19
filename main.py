@@ -697,7 +697,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     try:
-        700 | model = genai.GenerativeModel("models/gemini-pro")
+        model = genai.GenerativeModel("models/gemini-pro")
 
         response = model.generate_content([
             {"role": "user", "parts": [f"Responde como un asistente llamado OMNIX. Sé natural, amable y útil. Este es el mensaje del usuario: {user_message}"]}
