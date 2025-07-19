@@ -686,6 +686,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("¡Hola, soy OMNIX!")
+
     # Mensaje de texto con respuesta de OpenAI
     try:
         model = genai.GenerativeModel('gemini-pro')
@@ -694,22 +695,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
         traceback.print_exc()
+
+# Manejo de cualquier mensaje de texto
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-           try:
-            model = genai.GenerativeModel("models/gemini-pro")
-            response = model.generate_content([
-                {
-                    "role": "user",
-                    "parts": [f"Responde como un asistente llamado OMNIX: {user_message}"]
-                }
-            ])
-            await update.message.reply_text(response.text)
-        except Exception as e:
-            await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
-            traceback.print_exc()
-
-
+    try:
+        model = genai.GenerativeModel("models/gemini-pro")
+        response = model.generate_content([
+            {
+                "role": "user",
+                "parts": [f"Responde como un asistente llamado OMNIX: {user_message}"]
+            }
+        ])
+        await update.message.reply_text(response.text)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
+        traceback.print_exc()
 
 # Main principal
 if __name__ == "__main__":
