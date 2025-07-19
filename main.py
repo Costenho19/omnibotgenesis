@@ -694,7 +694,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
         traceback.print_exc()
- async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
      user_message = update.message.text
     try:
          model = genai.GenerativeModel("gemini-pro")
