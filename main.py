@@ -696,19 +696,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         traceback.print_exc()
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-    try:
-     model = genai.GenerativeModel("models/gemini-pro")
+           try:
+            model = genai.GenerativeModel("models/gemini-pro")
+            response = model.generate_content([
+                {
+                    "role": "user",
+                    "parts": [f"Responde como un asistente llamado OMNIX: {user_message}"]
+                }
+            ])
+            await update.message.reply_text(response.text)
+        except Exception as e:
+            await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
+            traceback.print_exc()
 
- 
-
-        response = model.generate_content([
-        {"role": "user", "parts": [f"Responde como un asistente llamado OMNIX. Sé natural, amable y útil. Este es el mensaje del usuario: {user_message}"]}
-        ])
-
-        await update.message.reply_text(response.text)
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
-        traceback.print_exc()
 
 
 # Main principal
