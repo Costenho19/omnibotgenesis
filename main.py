@@ -700,7 +700,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     try:
-        model = genai.GenerativeModel("models/gemini-pro")
+        model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content([
             {
                 "role": "user",
