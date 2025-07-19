@@ -711,12 +711,26 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
         traceback.print_exc()
+from flask import Flask, request
 
-# Main principal
+app = Flask(__name__)
+application = Application.builder().token(TELEGRAM_TOKEN).build()
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+
+@app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put(update)
+    return "ok", 200
+
+@app.route("/", methods=["GET"])
+def index():
+    return "OMNIX está vivo con Gemini Webhook."
+
 if __name__ == "__main__":
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    application.run_polling()
+    application.bot.set_webhook(url=f"{os.environ['BOT_URL']}/{TELEGRAM_TOKEN}")
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
