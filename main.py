@@ -711,26 +711,31 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
         traceback.print_exc()
+import asyncio
 from flask import Flask, request
+from telegram.ext import ApplicationBuilder
 
 app = Flask(__name__)
-application = Application.builder().token(TELEGRAM_TOKEN).build()
-application.add_handler(CommandHandler("start", start))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+application = ApplicationBuilder().token(os.environ["TELEGRAM_TOKEN"]).build()
 
-@app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
+@app.route(f"/{os.environ['TELEGRAM_TOKEN']}", methods=["POST"])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put(update)
-    return "ok", 200
+    update = request.get_json(force=True)
+    asyncio.run(application.process_update(update))
+    return "OK"
 
-@app.route("/", methods=["GET"])
-def index():
-    return "OMNIX está vivo con Gemini Webhook."
+async def set_webhook():
+    webhook_url = f"{os.environ['BOT_URL']}/{os.environ['TELEGRAM_TOKEN']}"
+    await application.bot.set_webhook(url=webhook_url)
+    print(f"✅ Webhook set to: {webhook_url}")
+
+@app.route('/')
+def home():
+    return "OmniBot está activo 🚀"
 
 if __name__ == "__main__":
-    application.bot.set_webhook(url=f"{os.environ['BOT_URL']}/{TELEGRAM_TOKEN}")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    asyncio.run(set_webhook())
+    app.run(host="0.0.0.0", port=5000)
 
 
 
