@@ -700,7 +700,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     try:
-             openai.api_key = os.getenv("OPENAI_API_KEY")
+        openai.api_key = os.getenv("OPENAI_API_KEY")
         response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
@@ -709,9 +709,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
         )
         await update.message.reply_text(response["choices"][0]["message"]["content"])
-
-        await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
+        except Exception as e:
+        await update.message.reply_text(f"⚠️ Error con OpenAI: {e}")
         traceback.print_exc()
+
+
 import asyncio
 from flask import Flask, request
 from telegram.ext import ApplicationBuilder
