@@ -709,7 +709,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
         )
         await update.message.reply_text(response["choices"][0]["message"]["content"])
-        except Exception as e:
+    except Exception as e:
         await update.message.reply_text(f"⚠️ Error con OpenAI: {e}")
         traceback.print_exc()
 
