@@ -24,7 +24,7 @@ import ccxt
 from flask import Flask, request, jsonify, render_template_string
 from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-import google.generativeai as genai
+
 from openai import OpenAI
 import gtts
 import speech_recognition as sr
@@ -700,15 +700,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content([
-            {
-                "role": "user",
-                "parts": [f"Responde como un asistente llamado OMNIX: {user_message}"]
-            }
-        ])
-        await update.message.reply_text(response.text)
-    except Exception as e:
+             openai.api_key = os.getenv("OPENAI_API_KEY")
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Eres un asistente llamado OMNIX, amable, experto y confiable."},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        await update.message.reply_text(response["choices"][0]["message"]["content"])
+
         await update.message.reply_text(f"⚠️ Error con Gemini: {e}")
         traceback.print_exc()
 import asyncio
