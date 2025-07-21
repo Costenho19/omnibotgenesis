@@ -749,6 +749,75 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 747     asyncio.run(set_webhook())
 748     app.run(host="0.0.0.0", port=10000)
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
+
+# /start
+async def start(update, context):
+    keyboard = [
+        [InlineKeyboardButton("🧠 Trading", callback_data="trading")],
+        [InlineKeyboardButton("📊 Estado", callback_data="estado")],
+        [InlineKeyboardButton("🌐 Idioma", callback_data="idioma")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="👋 ¡Bienvenido a OMNIX!\n🤖 El primer bot de trading crypto cuadrilingüe.\nSelecciona una opción:",
+        reply_markup=reply_markup
+    )
+
+# /estado
+async def estado(update, context):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="📡 OMNIX está operativo ✅")
+
+# /trading
+async def trading(update, context):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="⚙️ Módulo de trading en desarrollo. Próximamente...")
+
+# /idioma
+async def idioma(update, context):
+    keyboard = [
+        [InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es"),
+         InlineKeyboardButton("🇺🇸 English", callback_data="lang_en")],
+        [InlineKeyboardButton("🇸🇦 عربي", callback_data="lang_ar"),
+         InlineKeyboardButton("🇨🇳 中文", callback_data="lang_zh")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="🌐 Elige tu idioma:", reply_markup=reply_markup)
+
+# Mensaje libre
+async def responder_mensaje(update, context):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ OMNIX está funcionando correctamente.")
+
+# Callbacks de botones
+async def handle_callback(update, context):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data == "trading":
+        await query.edit_message_text("⚙️ Iniciando módulo de trading... (simulado)")
+    elif data == "estado":
+        await query.edit_message_text("📡 Estado actual: ✅ OMNIX está activo.")
+    elif data == "idioma":
+        await idioma(update, context)
+    elif data.startswith("lang_"):
+        lang_map = {
+            "lang_es": "Español",
+            "lang_en": "English",
+            "lang_ar": "العربية",
+            "lang_zh": "中文"
+        }
+        idioma_seleccionado = lang_map.get(data, "desconocido")
+        await query.edit_message_text(f"🌐 Idioma cambiado a: {idioma_seleccionado} ✅")
+
+# Handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("estado", estado))
+application.add_handler(CommandHandler("trading", trading))
+application.add_handler(CommandHandler("idioma", idioma))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder_mensaje))
+application.add_handler(CallbackQueryHandler(handle_callback))
 
 
 
