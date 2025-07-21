@@ -718,23 +718,23 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         traceback.print_exc()
 
 
-726 import asyncio
-727 from flask import Flask, request
-728 from telegram.ext import ApplicationBuilder, MessageHandler, filters
+ import asyncio
+ from flask import Flask, request
+ from telegram.ext import ApplicationBuilder, MessageHandler, filters
 
-729 app = Flask(__name__)
-730 application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+ app = Flask(__name__)
+ application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-731 def responder_mensaje(update, context):
-732     context.bot.send_message(chat_id=update.effective_chat.id, text="✅ OMNIX está funcionando correctamente")
+ def responder_mensaje(update, context):
+     context.bot.send_message(chat_id=update.effective_chat.id, text="✅ OMNIX está funcionando correctamente")
 
-733 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder_mensaje))
+ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder_mensaje))
 
-734 @app.route(f"/{TELEGRAM_BOT_TOKEN}", methods=["POST"])
-735 def webhook():
-736     update = request.get_json(force=True)
-737     asyncio.run(application.process_update(Update.de_json(update, application.bot)))
-738     return "OK"
+ @app.route(f"/{TELEGRAM_BOT_TOKEN}", methods=["POST"])
+ def webhook():
+     update = request.get_json(force=True)
+     asyncio.run(application.process_update(Update.de_json(update, application.bot)))
+     return "OK"
 
 739 @app.route("/")
 740 def home():
