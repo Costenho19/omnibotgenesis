@@ -24,7 +24,7 @@ import ccxt
 from flask import Flask, request, jsonify, render_template_string
 from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-
+import asyncio
 from openai import OpenAI
 import gtts
 import speech_recognition as sr
