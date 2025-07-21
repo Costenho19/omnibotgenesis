@@ -771,8 +771,17 @@ async def estado(update, context):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="📡 OMNIX está operativo ✅")
 
 # /trading
-async def trading(update, context):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="⚙️ Módulo de trading en desarrollo. Próximamente...")
+async def responder_mensaje(update, context):
+    user_message = update.message.text
+
+    try:
+        response = gemini_model.generate_content(user_message)
+        reply_text = response.text
+    except Exception as e:
+        reply_text = "⚠️ Error al responder con la IA."
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=reply_text)
+
 
 # /idioma
 async def idioma(update, context):
