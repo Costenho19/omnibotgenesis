@@ -38,8 +38,10 @@ from collections import defaultdict
 import re
 from functools import wraps
 import arabic_reshaper
-from bidi.algorithm import get_display import google.generativeai as genai
+from bidi.algorithm import get_display 
 import google.generativeai as genai
+
+
 
 
 # =============================================================================
