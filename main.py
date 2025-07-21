@@ -718,7 +718,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         traceback.print_exc()
 
 
- import asyncio
+ 
  from flask import Flask, request
  from telegram.ext import ApplicationBuilder, MessageHandler, filters
 
