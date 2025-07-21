@@ -717,9 +717,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⚠️ Error con OpenAI: {e}")
         traceback.print_exc()
 
-
- 
- from flask import Flask, request
+ from flask import flask,request
  from telegram.ext import ApplicationBuilder, MessageHandler, filters
 
  app = Flask(__name__)
