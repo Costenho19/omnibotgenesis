@@ -38,7 +38,9 @@ from collections import defaultdict
 import re
 from functools import wraps
 import arabic_reshaper
-from bidi.algorithm import get_display
+from bidi.algorithm import get_display import google.generativeai as genai
+import google.generativeai as genai
+
 
 # =============================================================================
 # CONFIGURACIÓN PROFESIONAL
@@ -56,7 +58,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Variables de entorno
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '7478164319:AAHWxXBiKrE3DInwt_pNFCQAeHcdO6wP-fI')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 KRAKEN_API_KEY = os.getenv('KRAKEN_API_KEY')
