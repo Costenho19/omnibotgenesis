@@ -1,1 +1,10 @@
-
+python-telegram-bot[ext]
+yfinance
+pandas
+numpy
+requests
+gtts
+scikit-learn
+google-generativeai
+ccxt
+psycopg2-binary
