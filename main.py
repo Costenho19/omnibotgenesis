@@ -100,30 +100,30 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     msg = "✅ Estado del sistema enviado correctamente."
 
-    await update.message.reply_text(msg, parse_mode="Markdown")
-104  # Comando /trading real
-105  async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-106      try:
-107          message = update.message.text.split()
-108          if len(message) != 3:
-109              await update.message.reply_text("Uso correcto: /trading [BUY/SELL] [cantidad] (Ej: /trading BUY 0.01)")
-110              return
-111  
-112          side = message[1].upper()
-113          amount = float(message[2])
-114  
-115          # Ejecuta orden real con el sistema de trading
-116          from trading_system import KrakenTradingSystem
-117          trading_system = KrakenTradingSystem()
-118          result = trading_system.execute_market_order(pair="XXBTZUSD", side=side, volume=amount)
-119  
-120          if result.get("error"):
-121              await update.message.reply_text(f"Error al ejecutar orden: {result['error']}")
-122          else:
-123              await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
-124  
-125      except Exception as e:
-126          await update.message.reply_text(f"❌ Error en el comando: {str(e)}")
+     await update.message.reply_text(msg, parse_mode="Markdown")
+  # Comando /trading real
+  async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+      try:
+          message = update.message.text.split()
+          if len(message) != 3:
+              await update.message.reply_text("Uso correcto: /trading [BUY/SELL] [cantidad] (Ej: /trading BUY 0.01)")
+              return
+  
+          side = message[1].upper()
+          amount = float(message[2])
+  
+          # Ejecuta orden real con el sistema de trading
+          from trading_system import KrakenTradingSystem
+          trading_system = KrakenTradingSystem()
+          result = trading_system.execute_market_order(pair="XXBTZUSD", side=side, volume=amount)
+  
+          if result.get("error"):
+              await update.message.reply_text(f"Error al ejecutar orden: {result['error']}")
+          else:
+              await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
+  
+      except Exception as e:
+         await update.message.reply_text(f"❌ Error en el comando: {str(e)}")
 
     """Esta función responde a cualquier mensaje que no sea un comando."""
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
@@ -155,6 +155,8 @@ async def main() -> None:
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("ask", ask_command))
     application.add_handler(CommandHandler("estado", estado_command))
+    application.add_handler(CommandHandler("trading", trading_command))
+
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # --- Limpieza y Arranque Controlado ---
