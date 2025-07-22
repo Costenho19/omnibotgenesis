@@ -72,6 +72,35 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado al procesar tu solicitud. Por favor, intenta de nuevo.")
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+     """Muestra el estado actual del sistema (IA, BD, claves)"""
+     try:
+         # Verifica si la IA está instanciada
+         ia_ok = "✅" if analysis_engine else "❌"
+ 
+         # Verifica si la BD está conectada
+         import psycopg2
+         import os
+         conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
+         conn_ok = "✅"
+         conn.close()
+     except:
+         conn_ok = "❌"
+ 
+     # Verifica si hay claves API
+     gemini_ok = "✅" if os.environ.get("GEMINI_API_KEY") else "❌"
+     kraken_ok = "✅" if os.environ.get("KRAKEN_API_KEY") else "❌"
+ 
+     msg = (
+         "*📡 Estado del Sistema OMNIX:*\n\n"
+         f"*🧠 IA:* {ia_ok}\n"
+         f"*🗄️ Base de Datos:* {conn_ok}\n"
+         f"*🔐 API Gemini:* {gemini_ok}\n"
+         f"*🔐 API Kraken:* {kraken_ok}"
+    )
+101. 
+102.    await update.message.reply_text(msg, parse_mode="Markdown")
+
     """Esta función responde a cualquier mensaje que no sea un comando."""
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
     await update.message.reply_text("He recibido tu mensaje. El comando /start está en desarrollo.")
