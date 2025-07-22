@@ -139,7 +139,7 @@ async def main() -> None:
     
     if not BOT_TOKEN or not DATABASE_URL:
         logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
-        return
+        
 
     setup_premium_database()
     add_premium_assets(premium_assets_list)
