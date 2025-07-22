@@ -84,28 +84,38 @@ async def main() -> None:
     if not BOT_TOKEN:
         logger.critical("FATAL: No se ha encontrado el BOT_TOKEN. El bot no puede iniciar.")
         return
-    
     if not DATABASE_URL:
         logger.critical("FATAL: No se ha encontrado la DATABASE_URL. El bot no puede iniciar.")
         return
 
     # 1. Nos aseguramos de que las tablas de la base de datos existan
     setup_premium_database()
-    # 2. Poblamos la base de datos con los activos iniciales de nuestra lista
+    # 2. Poblamos la base de datos con los activos iniciales
     add_premium_assets(premium_assets_list)
 
     # Creamos la aplicación del bot
     application = Application.builder().token(BOT_TOKEN).build()
-    await application.bot.delete_webhook()
-    # Añadimos los manejadores de comandos (le decimos al bot qué hacer con cada comando)
+
+    # Añadimos los manejadores de comandos (los "botones")
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
+    application.add_handler(CommandHandler("ask", ask_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-    logger.info("✅ Bot listo y escuchando peticiones...")
+
+    # --- Limpieza y Arranque Controlado ---
+    logger.info("Limpiando cualquier sesión antigua de Telegram...")
+    await application.bot.delete_webhook()
+
+    logger.info("Inicializando la aplicación...")
+    await application.initialize()
+
+    logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
+    await application.start()
     
-    # Arrancamos el bot para que escuche mensajes de Telegram
-    application.run_polling()
+    # Mantenemos el bot activo para siempre
+    await asyncio.Event().wait()
+
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    # Esta es la forma moderna y correcta de ejecutar un programa asíncrono
+    asyncio.run(main())
