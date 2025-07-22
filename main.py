@@ -101,6 +101,29 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     msg = "✅ Estado del sistema enviado correctamente."
 
     await update.message.reply_text(msg, parse_mode="Markdown")
+104  # Comando /trading real
+105  async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+106      try:
+107          message = update.message.text.split()
+108          if len(message) != 3:
+109              await update.message.reply_text("Uso correcto: /trading [BUY/SELL] [cantidad] (Ej: /trading BUY 0.01)")
+110              return
+111  
+112          side = message[1].upper()
+113          amount = float(message[2])
+114  
+115          # Ejecuta orden real con el sistema de trading
+116          from trading_system import KrakenTradingSystem
+117          trading_system = KrakenTradingSystem()
+118          result = trading_system.execute_market_order(pair="XXBTZUSD", side=side, volume=amount)
+119  
+120          if result.get("error"):
+121              await update.message.reply_text(f"Error al ejecutar orden: {result['error']}")
+122          else:
+123              await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
+124  
+125      except Exception as e:
+126          await update.message.reply_text(f"❌ Error en el comando: {str(e)}")
 
     """Esta función responde a cualquier mensaje que no sea un comando."""
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
