@@ -130,6 +130,7 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("ask", ask_command))
+    application.add_handler(CommandHandler("estado", estado_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # --- Limpieza y Arranque Controlado ---
