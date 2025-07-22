@@ -63,10 +63,10 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
        - 7d: ${analysis_result.prediction_7d:,.2f}
          """
          # Usamos reply_markdown para que los asteriscos (*) pongan el texto en negrita
-         await update.message.reply_text(message, parse_mode="Markdown")
-     else:
+            await update.message.reply_text(message, parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}")
 
-         await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}. Revisa si el ticker es correcto (ej. AAPL, BTC-USD).")
 
     except Exception as e:
         logger.error(f"Error durante el análisis para {symbol}: {e}")
