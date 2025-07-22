@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Importa nuestras clases, funciones y configuración desde los otros archivos
 from config import BOT_TOKEN, DATABASE_URL
@@ -70,7 +70,10 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     except Exception as e:
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado al procesar tu solicitud. Por favor, intenta de nuevo.")
-
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Esta función responde a cualquier mensaje que no sea un comando."""
+    logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
+    await update.message.reply_text("He recibido tu mensaje. El comando /start está en desarrollo.")
 # --- Función Principal que Arranca Todo ---
 
 def main() -> None:
@@ -97,7 +100,7 @@ def main() -> None:
     # Añadimos los manejadores de comandos (le decimos al bot qué hacer con cada comando)
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
-
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     logger.info("✅ Bot listo y escuchando peticiones...")
     
     # Arrancamos el bot para que escuche mensajes de Telegram
