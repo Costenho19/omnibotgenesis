@@ -133,26 +133,32 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
     await update.message.reply_text("He recibido tu mensaje. Para interactuar conmigo, usa los comandos: /start, /analyze, /ask, /estado, /trading.")
 
-# L136
 async def main() -> None:
     """Función principal que arranca todo."""
-    # L139
-    print(f"BOT_TOKEN: {BOT_TOKEN[:5]}...")
-    print(f"DATABASE_URL: {DATABASE_URL}")
-
-    # L143  (deja comentado este chequeo por ahora)
-    # if not BOT_TOKEN or not DATABASE_URL:
-    #     logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
-    #     return
-
-    # L148
+    # ===== INICIO DE PRUEBAS DE DIAGNÓSTICO =====
+    print("--- PASO 1: LA FUNCIÓN 'MAIN' HA ARRANCADO ---")
+    
+    bot_token_test = os.environ.get('BOT_TOKEN')
+    database_url_test = os.environ.get('DATABASE_URL')
+    
+    if bot_token_test:
+        print(f"--- PASO 2: BOT_TOKEN encontrado. Empieza con: {bot_token_test[:5]}...")
+    else:
+        print("--- ERROR FATAL: BOT_TOKEN NO ENCONTRADO ---")
+        return
+        
+    if database_url_test:
+        print(f"--- PASO 3: DATABASE_URL encontrada. ---")
+    else:
+        print("--- ERROR FATAL: DATABASE_URL NO ENCONTRADA ---")
+        return
+    # ===== FIN DE PRUEBAS DE DIAGNÓSTICO =====
+    
     setup_premium_database()
     add_premium_assets(premium_assets_list)
 
-    # L152
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # L155 – Handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("ask", ask_command))
@@ -160,22 +166,16 @@ async def main() -> None:
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    # L163
-    logger.info("🧹 Limpiando cualquier sesión antigua de Telegram...")
+    logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
 
-    # L166
-    logger.info("⚙️ Inicializando la aplicación...")
+    logger.info("Inicializando la aplicación...")
     await application.initialize()
 
-    # L169
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.start()
 
-    # L172
     await asyncio.Event().wait()
 
-# L176
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
