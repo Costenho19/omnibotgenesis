@@ -76,7 +76,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("He recibido tu mensaje. El comando /start está en desarrollo.")
 # --- Función Principal que Arranca Todo ---
 
-def main() -> None:
+async def main() -> None:
     """Inicia el bot y lo mantiene corriendo."""
     logger.info("🚀 Iniciando OMNIX Bot...")
 
@@ -96,7 +96,7 @@ def main() -> None:
 
     # Creamos la aplicación del bot
     application = Application.builder().token(BOT_TOKEN).build()
-
+    await application.bot.delete_webhook()
     # Añadimos los manejadores de comandos (le decimos al bot qué hacer con cada comando)
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
@@ -107,4 +107,4 @@ def main() -> None:
     application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
