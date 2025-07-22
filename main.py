@@ -133,20 +133,26 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
     await update.message.reply_text("He recibido tu mensaje. Para interactuar conmigo, usa los comandos: /start, /analyze, /ask, /estado, /trading.")
 
+# L136
 async def main() -> None:
     """Función principal que arranca todo."""
-    logger.info("🚀 Iniciando OMNIX Bot...")
-    
-    if not BOT_TOKEN or not DATABASE_URL:
-        logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
-        
+    # L139
+    print(f"BOT_TOKEN: {BOT_TOKEN[:5]}...")
+    print(f"DATABASE_URL: {DATABASE_URL}")
 
+    # L143  (deja comentado este chequeo por ahora)
+    # if not BOT_TOKEN or not DATABASE_URL:
+    #     logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
+    #     return
+
+    # L148
     setup_premium_database()
     add_premium_assets(premium_assets_list)
 
+    # L152
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Añadimos los manejadores de comandos
+    # L155 – Handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("ask", ask_command))
@@ -154,17 +160,22 @@ async def main() -> None:
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    logger.info("Limpiando cualquier sesión antigua de Telegram...")
+    # L163
+    logger.info("🧹 Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
 
-    logger.info("Inicializando la aplicación...")
+    # L166
+    logger.info("⚙️ Inicializando la aplicación...")
     await application.initialize()
 
+    # L169
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.start()
-    
+
+    # L172
     await asyncio.Event().wait()
 
+# L176
 if __name__ == "__main__":
-    asyncio.run(main())
+    import asyncio
     asyncio.run(main())
