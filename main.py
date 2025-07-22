@@ -98,8 +98,9 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
          f"*🔐 API Gemini:* {gemini_ok}\n"
          f"*🔐 API Kraken:* {kraken_ok}"
     )
-101. 
-102.    await update.message.reply_text(msg, parse_mode="Markdown")
+    msg = "✅ Estado del sistema enviado correctamente."
+
+    await update.message.reply_text(msg, parse_mode="Markdown")
 
     """Esta función responde a cualquier mensaje que no sea un comando."""
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
