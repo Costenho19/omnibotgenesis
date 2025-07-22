@@ -50,23 +50,23 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if analysis_result:
             # Formateamos el mensaje de respuesta con los resultados
             message = f"""
-📈 *Análisis para {analysis_result.symbol}* 📈
+            *Análisis para {analysis_result.symbol}* 📈
 
-*Precio Actual:* ${analysis_result.current_price:,.2f}
-*Recomendación:* *{analysis_result.recommendation}*
-*Confianza:* {analysis_result.confidence:.0%}
-*Riesgo:* {analysis_result.risk_score:.0%}
+            *Precio Actual:* ${analysis_result.current_price:,.2f}
+            *Recomendación:* *{analysis_result.recommendation}*
+            *Confianza:* {analysis_result.confidence:.0%}
+            *Riesgo:* {analysis_result.risk_score:.0%}
 
-*Predicciones (Simuladas):*
-  - 1h: ${analysis_result.prediction_1h:,.2f}
-  - 24h: ${analysis_result.prediction_24h:,.2f}
-  - 7d: ${analysis_result.prediction_7d:,.2f}
-            """
-            # Usamos reply_markdown para que los asteriscos (*) pongan el texto en negrita
-                    await update.message.reply_text(message, parse_mode="Markdown")
-              else:
+            *Predicciones (Simuladas):*
+       - 1h: ${analysis_result.prediction_1h:,.2f}
+       - 24h: ${analysis_result.prediction_24h:,.2f}
+       - 7d: ${analysis_result.prediction_7d:,.2f}
+         """
+         # Usamos reply_markdown para que los asteriscos (*) pongan el texto en negrita
+         await update.message.reply_text(message, parse_mode="Markdown")
+     else:
 
-            await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}. Revisa si el ticker es correcto (ej. AAPL, BTC-USD).")
+         await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}. Revisa si el ticker es correcto (ej. AAPL, BTC-USD).")
 
     except Exception as e:
         logger.error(f"Error durante el análisis para {symbol}: {e}")
