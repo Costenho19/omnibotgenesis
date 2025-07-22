@@ -1,4 +1,4 @@
-import logging
+mport logging
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -25,7 +25,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     """Envía un mensaje de bienvenida cuando el comando /start es ejecutado."""
     user = update.effective_user
     await update.message.reply_html(
-        rf"¡Hola {user.mention_html()}! Soy OMNIX, tu asistente de trading. Usa /analyze <SÍMBOLO> para empezar (ej: /analyze AAPL).",
+        f"¡Hola {user.mention_html()}! Soy OMNIX, tu asistente de trading. Usa /analyze <SÍMBOLO> para empezar (ej: /analyze AAPL).",
     )
 
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
