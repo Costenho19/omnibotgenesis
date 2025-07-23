@@ -78,6 +78,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # ------------------ MAIN ------------------
 
+# ------------------- MAIN -------------------
 async def main():
     logger.info("Iniciando OMNIX Bot...")
 
@@ -94,11 +95,12 @@ async def main():
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(CommandHandler("ask", ask_command))
 
-    # Texto libre
+    # Texto libre (IA y voz)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    logger.info("OMNIX activo 🚀")
+    logger.info("✅ OMNIX activo 🔥")
     await application.run_polling()
+
 
 # ------------------ RUN ------------------
 
