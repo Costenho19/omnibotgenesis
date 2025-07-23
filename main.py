@@ -170,7 +170,7 @@ async def main() -> None:
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.run_polling()
 
-   if __name__ == "__main__":
+if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
 
