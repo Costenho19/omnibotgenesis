@@ -48,21 +48,22 @@ class ConversationalAI:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
 
+    import os
+from gtts import gTTS
+from google.generativeai import configure, GenerativeModel
+from config import GEMINI_API_KEY
 
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=response_text
-        )
-
-        if audio_file:
-            with open(audio_file, 'rb') as audio:
-                await context.bot.send_voice(
-                    chat_id=update.effective_chat.id,
-                    voice=audio
-                )
-    
-    
 # Configuración de la API de Gemini
+configure(api_key=GEMINI_API_KEY)
+
+# Lista de idiomas soportados para TTS
+VOICE_LANGUAGES = {
+    'es': 'es',
+    'en': 'en',
+    'ar': 'ar',
+    'zh': 'zh'
+}
+
 configure(api_key=GEMINI_API_KEY)
 
 # Lista de idiomas soportados para TTS
