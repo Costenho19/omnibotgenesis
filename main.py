@@ -85,6 +85,10 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         with open(audio_file, 'rb') as audio:
             await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
 
+    if audio_file:
+        with open(audio_file, 'rb') as audio:
+            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+
 
 # L84 ---------------- MAIN -------------------
 async def main():
