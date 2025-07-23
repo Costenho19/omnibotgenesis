@@ -45,7 +45,6 @@ class ConversationalAI:
 
             return response_text, audio_path
 
-        except Exception as e:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
 
@@ -61,7 +60,7 @@ class ConversationalAI:
                     chat_id=update.effective_chat.id,
                     voice=audio
                 )
-    except Exception as e:
+    
     
 # Configuración de la API de Gemini
 configure(api_key=GEMINI_API_KEY)
