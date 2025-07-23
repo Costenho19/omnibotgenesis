@@ -1,62 +1,54 @@
-import logging
-import nest_asyncio
-import asyncio
-from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
-from conversational_ai import ConversationalAI
-from analysis_engine import OmnixPremiumAnalysisEngine
-from trading_system import KrakenTradingSystem
-from database import save_analysis_to_db
+import os
+from gtts import gTTS
+from google.generativeai import configure, GenerativeModel
+from config import GEMINI_API_KEY
 
-from config import BOT_TOKEN
+# Configuración de la API de Gemini
+configure(api_key=GEMINI_API_KEY)
 
-# Logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Lista de idiomas soportados para TTS
+VOICE_LANGUAGES = {
+    'es': 'es',
+    'en': 'en',
+    'ar': 'ar',
+    'zh': 'zh'
+}
 
-# ------------------ COMANDOS ------------------
+class ConversationalAI:
+    def __init__(self):
+        self.model = GenerativeModel("gemini-pro")
+        self.memory = {}  # Memoria por usuario
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Hola, soy OMNIX 🤖. Tu asistente de trading inteligente.")
+    def get_response(self, user_id, message, language='es'):
+        try:
+            # Crear historial si no existe
+            if user_id not in self.memory:
+                self.memory[user_id] = []
 
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("✅ OMNIX está operativo y listo para ayudarte.")
+            # Añadir nuevo mensaje del usuario al historial
+            self.memory[user_id].append({"role": "user", "parts": [message]})
 
-async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    engine = OmnixPremiumAnalysisEngine()
-    result = engine.run_full_analysis("BTC-USD")
-    await update.message.reply_text(f"📊 Análisis completo:\n\n{result.summary}")
-    save_analysis_to_db("BTC-USD", result)
+            # Obtener respuesta del modelo
+            response = self.model.generate_content(self.memory[user_id])
 
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    trader = KrakenTradingSystem()
-    buy_price = trader.get_price("XBTUSD")
-    trader.place_order("XBTUSD", "buy", 0.001)
-    await update.message.reply_text(f"🛒 Compra ejecutada de 0.001 BTC a precio {buy_price}")
+            # Extraer texto de la respuesta
+            response_text = response.text
 
-async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_message = update.message.text
-    user_id = update.effective_user.id
-    ai = ConversationalAI()
-    response_text, audio_file = ai.get_response(user_id, user_message)
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
-    if audio_file:
-        with open(audio_file, 'rb') as audio:
-            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+            # Añadir respuesta del bot al historial
+            self.memory[user_id].append({"role": "model", "parts": [response_text]})
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        user_message = update.message.text
-        user_id = update.effective_user.id
+            # Generar archivo de audio con gTTS
+            tts_lang = VOICE_LANGUAGES.get(language, 'es')
+            tts = gTTS(text=response_text, lang=tts_lang)
+            audio_path = f"response_{user_id}.mp3"
+            tts.save(audio_path)
 
-        ai = ConversationalAI()
-        response_text, audio_file = ai.get_response(user_id, user_message)
+            return response_text, audio_path
+
+        except Exception as e:
+            print(f"[ConversationalAI] Error: {e}")
+            return "Lo siento, ocurrió un error al procesar tu mensaje.", None
+
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
