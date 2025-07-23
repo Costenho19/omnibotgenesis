@@ -108,7 +108,7 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await update.message.reply_markdown(msg)
 
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Ejecuta una orden de trading."""
+    """Ejecuta una orden de trading con validación mejorada."""
     try:
         args = context.args
         if len(args) != 2:
@@ -116,17 +116,25 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
   
         side = args[0].upper()
+        # MEJORA 1: Validación de entrada explícita
+        if side not in ["BUY", "SELL"]:
+            await update.message.reply_text("Orden inválida. El primer argumento debe ser BUY o SELL.")
+            return
+
         amount = float(args[1])
         
-        # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
         result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
 
-        if result.get("error"):
-            await update.message.reply_text(f"Error al ejecutar orden: {result['error']}")
+        # MEJORA 2: Control de errores mejorado
+        if not result or result.get("error"):
+            error_message = result.get('error', 'Respuesta desconocida del exchange.') if result else 'No se recibió respuesta del exchange.'
+            await update.message.reply_text(f"Error al ejecutar orden: {error_message}")
         else:
             await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
+    except ValueError:
+        await update.message.reply_text("❌ Error: La cantidad debe ser un número.")
     except Exception as e:
-        await update.message.reply_text(f"❌ Error en el comando: {str(e)}")
+        await update.message.reply_text(f"❌ Error inesperado en el comando: {str(e)}")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Responde a cualquier mensaje que no sea un comando."""
@@ -166,5 +174,12 @@ async def main() -> None:
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # MEJORA 3: Airbag final para capturar errores de arranque
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        # Usamos print() porque el logger puede no estar inicializado si el error es muy temprano
+        print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
+        print(f"Error: {e}")
+
 
