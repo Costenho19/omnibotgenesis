@@ -11,19 +11,19 @@ from analysis_engine import OmnixPremiumAnalysisEngine
 from trading_system import KrakenTradingSystem
 from database import save_analysis_to_db
 
-# L13 --------------- INSTANCIAS --------------
+#  --------------- INSTANCIAS --------------
 ai = ConversationalAI()
 analyzer = OmnixPremiumAnalysisEngine()
 trader = KrakenTradingSystem()
 
-# L17 --------------- LOGGING -----------------
+#  --------------- LOGGING -----------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# L23 --------------- HANDLERS ----------------
+#  --------------- HANDLERS ----------------
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     logger.info(f"/start de {user.name}")
@@ -103,9 +103,8 @@ async def main():
     await application.run_polling()
 
 #  ---------------- RUN -------------------
- if __name__ == "__main__":
-     import nest_asyncio
-     import asyncio
-    nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())
-
+106 | if __name__ == "__main__":
+107 |     import nest_asyncio
+108 |     import asyncio
+109 |     nest_asyncio.apply()
+110 |     asyncio.get_event_loop().run_until_complete(main())
