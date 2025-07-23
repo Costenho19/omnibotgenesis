@@ -102,10 +102,10 @@ async def main():
     logger.info("OMNIX activo 🚀")
     await application.run_polling()
 
-# L101 ---------------- RUN -------------------
-106 | if __name__ == "__main__":
-107 |     import nest_asyncio
-108 |     import asyncio
-109 |     nest_asyncio.apply()
-110 |     asyncio.get_event_loop().run_until_complete(main())
+#  ---------------- RUN -------------------
+ if __name__ == "__main__":
+     import nest_asyncio
+     import asyncio
+    nest_asyncio.apply()
+    asyncio.get_event_loop().run_until_complete(main())
 
