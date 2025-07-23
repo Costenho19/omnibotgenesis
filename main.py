@@ -1,98 +1,70 @@
-# L01 ---------------- IMPORTS ----------------
 import logging
+import nest_asyncio
 import asyncio
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-
-# OMNIX Módulos Propios
-from config import BOT_TOKEN
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 from conversational_ai import ConversationalAI
 from analysis_engine import OmnixPremiumAnalysisEngine
 from trading_system import KrakenTradingSystem
 from database import save_analysis_to_db
 
-#  --------------- INSTANCIAS --------------
-ai = ConversationalAI()
-analyzer = OmnixPremiumAnalysisEngine()
-trader = KrakenTradingSystem()
+from config import BOT_TOKEN
 
-#  --------------- LOGGING -----------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Logger
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-#  --------------- HANDLERS ----------------
+# ------------------ COMANDOS ------------------
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    logger.info(f"/start de {user.name}")
-    await update.message.reply_html(
-        f"🤖 ¡Hola {user.mention_html()}! Soy OMNIX, tu asistente crypto cuadrilingüe. Usa /estado para diagnóstico o /trading para comenzar."
-    )
+    await update.message.reply_text("Hola, soy OMNIX 🤖. Tu asistente de trading inteligente.")
 
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    msg = (
-        "✅ OMNIX está operativo\n"
-        f"• IA: Gemini ✅\n"
-        f"• Kraken: activo ✅\n"
-        f"• DB: conectada ✅\n"
-        "Comandos: /start, /estado, /trading, /analyze\n"
-        "💬 También puedes hablarme libremente."
-    )
-    await update.message.reply_text(msg)
+    await update.message.reply_text("✅ OMNIX está operativo y listo para ayudarte.")
 
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        logger.info("Análisis solicitado")
-        result = analyzer.analyze_assets()
-        await update.message.reply_text(result.summary)
-        save_analysis_to_db(result)  # Guarda en la DB
-    except Exception as e:
-        logger.error(f"Error en /analyze: {e}")
-        await update.message.reply_text("❌ Error al analizar el mercado.")
+    engine = OmnixPremiumAnalysisEngine()
+    result = engine.run_full_analysis("BTC-USD")
+    await update.message.reply_text(f"📊 Análisis completo:\n\n{result.summary}")
+    save_analysis_to_db("BTC-USD", result)
 
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        logger.info("Trading solicitado")
-        res = trader.execute_strategy()
-        await update.message.reply_text(f"📈 {res}")
-    except Exception as e:
-        logger.error(f"Error en /trading: {e}")
-        await update.message.reply_text("❌ No se pudo ejecutar trading.")
+    trader = KrakenTradingSystem()
+    buy_price = trader.get_price("XBTUSD")
+    trader.place_order("XBTUSD", "buy", 0.001)
+    await update.message.reply_text(f"🛒 Compra ejecutada de 0.001 BTC a precio {buy_price}")
 
 async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_input = " ".join(context.args)
-    if not user_input:
-        await update.message.reply_text("Escribe algo después de /ask.")
-        return
-    logger.info(f"Pregunta: {user_input}")
-    response_text, response_voice = ai.get_response(user_input)
-    await update.message.reply_text(response_text)
-    if response_voice:
-        await update.message.reply_voice(voice=response_voice)
+    user_message = update.message.text
+    user_id = update.effective_user.id
+    ai = ConversationalAI()
+    response_text, audio_file = ai.get_response(user_id, user_message)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
+    if audio_file:
+        with open(audio_file, 'rb') as audio:
+            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
     user_id = update.effective_user.id
-
     ai = ConversationalAI()
     response_text, audio_file = ai.get_response(user_id, user_message)
-
     await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
-
     if audio_file:
         with open(audio_file, 'rb') as audio:
             await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
 
-    if audio_file:
-        with open(audio_file, 'rb') as audio:
-            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+# ------------------ MAIN ------------------
 
-
-# L84 ---------------- MAIN -------------------
 async def main():
     logger.info("Iniciando OMNIX Bot...")
+
     if not BOT_TOKEN:
         logger.critical("FATAL: BOT_TOKEN no encontrado.")
         return
@@ -112,9 +84,11 @@ async def main():
     logger.info("OMNIX activo 🚀")
     await application.run_polling()
 
-#  ---------------- RUN -------------------
+# ------------------ RUN ------------------
+
 if __name__ == "__main__":
     import nest_asyncio
     import asyncio
     nest_asyncio.apply()
     asyncio.get_event_loop().run_until_complete(main())
+
