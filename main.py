@@ -44,7 +44,7 @@ class ConversationalAI:
             tts.save(audio_path)
 
             return response_text, audio_path
-
+except Exception as e:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
 
