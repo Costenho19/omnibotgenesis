@@ -19,8 +19,7 @@ class ConversationalAI:
         self.model = GenerativeModel("gemini-pro")
         self.memory = {}  # Memoria por usuario
 
-    def get_response(self, user_id, message, language='es'):
-    try:
+           try:
             # Crear historial si no existe
             if user_id not in self.memory:
                 self.memory[user_id] = []
@@ -30,12 +29,7 @@ class ConversationalAI:
 
             # Obtener respuesta del modelo
             response = self.model.generate_content(self.memory[user_id])
-
-            # Extraer texto de la respuesta
             response_text = response.text
-
-            # Añadir respuesta del bot al historial
-            self.memory[user_id].append({"role": "model", "parts": [response_text]})
 
             # Generar archivo de audio con gTTS
             tts_lang = VOICE_LANGUAGES.get(language, 'es')
@@ -43,7 +37,8 @@ class ConversationalAI:
             audio_path = f"response_{user_id}.mp3"
             tts.save(audio_path)
 
-return response_text, audio_path
+            return response_text, audio_path
+
         except Exception as e:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
