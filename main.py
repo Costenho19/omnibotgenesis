@@ -42,9 +42,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db_ok, db_msg = check_db()
     msg = (
-        "🟢 Bot activo (polling)\n"
-        f"🔐 BOT_TOKEN cargado: {'Sí' if BOT_TOKEN else 'No'}\n"
-        f"🗄️ DB: {db_msg}\n"
+        "  Bot activo (polling)\n"
+        f" BOT_TOKEN cargado: {'Sí' if BOT_TOKEN else 'No'}\n"
+        f" DB: {db_msg}\n"
         "Comandos activos: /start, /estado\n"
         "Próximos: /analyze, /trading, botones, voz..."
     )
@@ -55,7 +55,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"Echo de {update.effective_user.name}: {txt}")
     await update.message.reply_text("Recibido ✅ (modo diagnóstico). Usa /estado o /start.")
 
-# L55 ----------------- MAIN -------------------
+#  ----------------- MAIN -------------------
 async def main() -> None:
     logger.info("🚀 Iniciando OMNIX Bot (Diagnóstico V2)...")
 
@@ -73,11 +73,11 @@ async def main() -> None:
     # Limpia webhook por si acaso
     await application.bot.delete_webhook()
     await application.initialize()
-[L71] logger.info("🔄 Iniciando POLLING...")
-[L72] await application.run_polling()
+    logger.info("🔄 Iniciando POLLING...")
+    await application.run_polling()
 
   
 
-# L78 ----------------- RUN --------------------
+# ----------------- RUN --------------------
 if __name__ == "__main__":
     asyncio.run(main())
