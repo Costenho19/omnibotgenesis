@@ -1,84 +1,77 @@
 # L01 ---------------- IMPORTS ----------------
 import logging
 import asyncio
-import os
-import psycopg2  # test rápido de DB
 from telegram import Update
 from telegram.ext import (
-    Application, CommandHandler, ContextTypes,
-    MessageHandler, filters
+    Application, CommandHandler, MessageHandler, ContextTypes, filters
 )
+from config import BOT_TOKEN
+from conversational_ai import ConversationalAI
+from analysis_engine import OmnixPremiumAnalysisEngine
+from trading_system import KrakenTradingSystem
+from database import setup_premium_database
 
-# L12 --------------- ENV VARS ----------------
-from config import BOT_TOKEN, DATABASE_URL
+# L15 --------------- INSTANCIAS ---------------
+ai_engine = ConversationalAI()
+analysis_engine = OmnixPremiumAnalysisEngine()
+trading_engine = KrakenTradingSystem()
 
-# L15 --------------- LOGGING -----------------
+# L20 ---------------- LOGGING -----------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# L22 --------------- HELPER DB ---------------
-def check_db():
-    """Devuelve (ok: bool, msg: str) sobre el estado de la DB."""
-    if not DATABASE_URL:
-        return False, "DATABASE_URL no está definida."
-    try:
-        conn = psycopg2.connect(DATABASE_URL, connect_timeout=5)
-        conn.close()
-        return True, "Conexión OK ✅"
-    except Exception as e:
-        return False, f"Error al conectar: {e}"
+# L27 --------------- COMANDOS -----------------
 
-# L33 --------------- HANDLERS ----------------
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    logger.info(f"/start de {user.name}")
-    await update.message.reply_html(
-        f"¡Hola {user.mention_html()}! OMNIX está vivo (modo diagnóstico). Usa /estado."
-    )
+    await update.message.reply_text("🤖 OMNIX está activo. Usa /estado para más detalles.")
 
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    db_ok, db_msg = check_db()
-    msg = (
-        "  Bot activo (polling)\n"
-        f" BOT_TOKEN cargado: {'Sí' if BOT_TOKEN else 'No'}\n"
-        f" DB: {db_msg}\n"
-        "Comandos activos: /start, /estado\n"
-        "Próximos: /analyze, /trading, botones, voz..."
-    )
-    await update.message.reply_text(msg)
+    await update.message.reply_text("✅ Bot activo y escuchando. Todo en orden.")
+
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    msg = await update.message.reply_text("📊 Analizando mercado...")
+    result = await analysis_engine.analyze_assets()
+    await msg.edit_text(f"✅ Análisis completado:\n{result}")
+
+async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_input = update.message.text.replace("/ask", "").strip()
+    if not user_input:
+        await update.message.reply_text("❗ Por favor escribe una pregunta después de /ask.")
+        return
+    reply_text, voice_path = await ai_engine.get_response(user_input, update.effective_user.id)
+    await update.message.reply_text(reply_text)
+    if voice_path:
+        await update.message.reply_voice(voice=open(voice_path, "rb"))
+
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("💸 Ejecutando estrategia de trading...")
+    result = trading_engine.execute_strategy()
+    await update.message.reply_text(f"✅ Resultado:\n{result}")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    txt = update.message.text
-    logger.info(f"Echo de {update.effective_user.name}: {txt}")
-    await update.message.reply_text("Recibido ✅ (modo diagnóstico). Usa /estado o /start.")
+    await update.message.reply_text("🔄 Usa comandos como /analyze o /trading.")
 
-# --------------- MAIN ----------------
-def main() -> None:
+# L70 ---------------- MAIN --------------------
+
+async def main():
     logger.info("Iniciando OMNIX Bot...")
-    if not BOT_TOKEN:
-        logger.critical("FATAL: BOT_TOKEN no encontrado.")
-        return
+    setup_premium_database()
 
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("estado", estado_command))
-    # Solo agrega estos si EXISTEN en tu archivo:
-    # application.add_handler(CommandHandler("analyze", analyze_command))
-    # application.add_handler(CommandHandler("ask", ask_command))
-    # application.add_handler(CommandHandler("trading", trading_command))
+    application.add_handler(CommandHandler("analyze", analyze_command))
+    application.add_handler(CommandHandler("ask", ask_command))
+    application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    logger.info("Iniciando POLLING...")
-    application.run_polling(drop_pending_updates=True)
+    logger.info("Bot escuchando...")
+    await application.run_polling()
 
-# --------------- RUN ----------------
+# L85 ---------------- RUN ---------------------
 if __name__ == "__main__":
-    main()
-
-
-
+    asyncio.run(main())
