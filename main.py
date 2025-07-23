@@ -163,15 +163,14 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
-    await application.bot.delete_webhook()
+    
 
     logger.info("Inicializando la aplicación...")
     await application.initialize()
-
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
-    await application.start()
-    
-    await asyncio.Event().wait()
+    await application.run_polling()
+
+   
 
 if __name__ == "__main__":
     # MEJORA 3: Airbag final para capturar errores de arranque
