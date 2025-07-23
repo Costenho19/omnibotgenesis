@@ -103,5 +103,9 @@ async def main():
     await application.run_polling()
 
 # L101 ---------------- RUN -------------------
-if __name__ == "__main__":
-    asyncio.run(main())
+106 | if __name__ == "__main__":
+107 |     import nest_asyncio
+108 |     import asyncio
+109 |     nest_asyncio.apply()
+110 |     asyncio.get_event_loop().run_until_complete(main())
+
