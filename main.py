@@ -20,7 +20,7 @@ class ConversationalAI:
         self.memory = {}  # Memoria por usuario
 
     def get_response(self, user_id, message, language='es'):
-        try:
+    try:
             # Crear historial si no existe
             if user_id not in self.memory:
                 self.memory[user_id] = []
@@ -43,8 +43,8 @@ class ConversationalAI:
             audio_path = f"response_{user_id}.mp3"
             tts.save(audio_path)
 
-            return response_text, audio_path
-except Exception as e:
+return response_text, audio_path
+        except Exception as e:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
 
@@ -81,7 +81,7 @@ class ConversationalAI:
 
     def get_response(self, user_id, message, language='es'):
                
-                    try:
+        try:
             # Crear historial si no existe
             if user_id not in self.memory:
                 self.memory[user_id] = []
