@@ -51,14 +51,30 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_message = update.message.text
-    user_id = update.effective_user.id
-    ai = ConversationalAI()
-    response_text, audio_file = ai.get_response(user_id, user_message)
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
-    if audio_file:
-        with open(audio_file, 'rb') as audio:
-            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+    try:
+        user_message = update.message.text
+        user_id = update.effective_user.id
+
+        ai = ConversationalAI()
+        response_text, audio_file = ai.get_response(user_id, user_message)
+
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=response_text
+        )
+
+        if audio_file:
+            with open(audio_file, 'rb') as audio:
+                await context.bot.send_voice(
+                    chat_id=update.effective_chat.id,
+                    voice=audio
+                )
+    except Exception as e:
+        logger.error(f"Error en echo(): {e}")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="⚠️ Ocurrió un error al procesar tu mensaje."
+        )
 
 # ------------------ MAIN ------------------
 
