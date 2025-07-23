@@ -109,7 +109,7 @@ class ConversationalAI:
             print(f"[ConversationalAI] Error: {e}")
             return "Lo siento, ocurrió un error al procesar tu mensaje.", None
 
-        )
+        
 
 # ------------------ MAIN ------------------
 
