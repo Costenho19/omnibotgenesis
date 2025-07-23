@@ -73,12 +73,18 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await update.message.reply_voice(voice=response_voice)
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_input = update.message.text
-    logger.info(f"Texto libre: {user_input}")
-    response_text, response_voice = ai.get_response(user_input)
-    await update.message.reply_text(response_text)
-    if response_voice:
-        await update.message.reply_voice(voice=response_voice)
+    user_message = update.message.text
+    user_id = update.effective_user.id
+
+    ai = ConversationalAI()
+    response_text, audio_file = ai.get_response(user_id, user_message)
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
+
+    if audio_file:
+        with open(audio_file, 'rb') as audio:
+            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+
 
 # L84 ---------------- MAIN -------------------
 async def main():
