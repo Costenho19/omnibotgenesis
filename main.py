@@ -55,9 +55,6 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"Echo de {update.effective_user.name}: {txt}")
     await update.message.reply_text("Recibido ✅ (modo diagnóstico). Usa /estado o /start.")
 
-#  ----------------- MAIN -------------------
-async def main() -> None:
-   [L60] # --------------- MAIN ----------------
 # --------------- MAIN ----------------
 def main() -> None:
     logger.info("Iniciando OMNIX Bot...")
@@ -70,9 +67,10 @@ def main() -> None:
     # Handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("estado", estado_command))
-    application.add_handler(CommandHandler("analyze", analyze_command))
-    application.add_handler(CommandHandler("ask", ask_command))
-    application.add_handler(CommandHandler("trading", trading_command))
+    # Solo agrega estos si EXISTEN en tu archivo:
+    # application.add_handler(CommandHandler("analyze", analyze_command))
+    # application.add_handler(CommandHandler("ask", ask_command))
+    # application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     logger.info("Iniciando POLLING...")
@@ -81,5 +79,6 @@ def main() -> None:
 # --------------- RUN ----------------
 if __name__ == "__main__":
     main()
+
 
 
