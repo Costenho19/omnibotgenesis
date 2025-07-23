@@ -57,27 +57,26 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 #  ----------------- MAIN -------------------
 async def main() -> None:
-    logger.info("🚀 Iniciando OMNIX Bot (Diagnóstico V2)...")
+   [L60] # --------------- MAIN ----------------
+[L61] def main() -> None:
+[L62]     logger.info("Iniciando OMNIX Bot (diag v2)...")
+[L63]     if not BOT_TOKEN:
+[L64]         logger.critical("FATAL: BOT_TOKEN no encontrado.")
+[L65]         return
+[L66]
+[L67]     application = Application.builder().token(BOT_TOKEN).build()
+[L68]
+[L69]     application.add_handler(CommandHandler("start", start_command))
+[L70]     application.add_handler(CommandHandler("estado", estado_command))
+[L71]     application.add_handler(CommandHandler("analyze", analyze_command))
+[L72]     application.add_handler(CommandHandler("ask", ask_command))
+[L73]     application.add_handler(CommandHandler("trading", trading_command))
+[L74]     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+[L75]
+[L76]     logger.info("Iniciando POLLING...")
+[L77]     application.run_polling(drop_pending_updates=True)
+[L78]
+[L79] # --------------- RUN ----------------
+[L80] if __name__ == "__main__":
+[L81]     main()
 
-    if not BOT_TOKEN:
-        logger.critical("FATAL: BOT_TOKEN no encontrado.")
-        return
-
-    application = Application.builder().token(BOT_TOKEN).build()
-
-    # Handlers básicos
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("estado", estado_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    # Limpia webhook por si acaso
-    await application.bot.delete_webhook()
-    await application.initialize()
-    logger.info("🔄 Iniciando POLLING...")
-    await application.run_polling()
-
-  
-
-# ----------------- RUN --------------------
-if __name__ == "__main__":
-    asyncio.run(main())
