@@ -170,15 +170,17 @@ async def main() -> None:
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.run_polling()
 
-   
+   if __name__ == "__main__":
+    import nest_asyncio
+    nest_asyncio.apply()
 
-if __name__ == "__main__":
-    # MEJORA 3: Airbag final para capturar errores de arranque
     try:
-        asyncio.run(main())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except Exception as e:
-        # Usamos print() porque el logger puede no estar inicializado si el error es muy temprano
-        print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
+        print(f"!!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
         print(f"Error: {e}")
+
+
 
 
