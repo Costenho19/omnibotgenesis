@@ -1,12 +1,10 @@
-import os
-from dotenv import load_dotenv
+from decouple import config
 
-# Carga las variables de un archivo .env si existe (útil para pruebas locales)
-load_dotenv()
-
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-KRAKEN_API_KEY = os.environ.get('KRAKEN_API_KEY')
-KRAKEN_SECRET_KEY = os.environ.get('KRAKEN_SECRET_KEY')
-DATABASE_URL = os.environ.get('DATABASE_URL') # Nuestra nueva URL de Neon
+# decouple buscará las variables en Railway de forma más robusta.
+# Si no las encuentra, el valor por defecto será None.
+BOT_TOKEN = config('BOT_TOKEN', default=None)
+DATABASE_URL = config('DATABASE_URL', default=None)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default=None)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default=None)
+KRAKEN_API_KEY = config('KRAKEN_API_KEY', default=None)
+KRAKEN_SECRET_KEY = config('KRAKEN_SECRET_KEY', default=None)
