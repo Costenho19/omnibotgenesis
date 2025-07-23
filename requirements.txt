@@ -10,3 +10,4 @@ ccxt
 psycopg2-binary
 python-dotenv
 nest_asyncio
+python-decouple
