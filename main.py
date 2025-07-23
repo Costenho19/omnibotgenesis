@@ -73,11 +73,10 @@ async def main() -> None:
     # Limpia webhook por si acaso
     await application.bot.delete_webhook()
     await application.initialize()
+[L71] logger.info("🔄 Iniciando POLLING...")
+[L72] await application.run_polling()
 
-    logger.info("✅ Bot listo, escuchando mensajes...")
-    await application.start()
-
-    await asyncio.Event().wait()
+  
 
 # L78 ----------------- RUN --------------------
 if __name__ == "__main__":
