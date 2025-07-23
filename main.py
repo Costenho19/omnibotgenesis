@@ -103,7 +103,7 @@ async def main():
     await application.run_polling()
 
 # L101 ---------------- RUN -------------------
-106 | if __name__== "__main__":
+106 | if __name__ == "__main__":
 107 |     import nest_asyncio
 108 |     import asyncio
 109 |     nest_asyncio.apply()
