@@ -1,153 +1,170 @@
+import logging
+import asyncio
 import os
-from gtts import gTTS
-from google.generativeai import configure, GenerativeModel
-from config import GEMINI_API_KEY
+import psycopg2
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-# Configuración de la API de Gemini
-configure(api_key=GEMINI_API_KEY)
+# Importa nuestras clases, funciones y configuración desde los otros archivos
+from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY
+from database import setup_premium_database, add_premium_assets
+from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
+from conversational_ai import ConversationalAI
+from trading_system import KrakenTradingSystem
 
-# Lista de idiomas soportados para TTS
-VOICE_LANGUAGES = {
-    'es': 'es',
-    'en': 'en',
-    'ar': 'ar',
-    'zh': 'zh'
-}
+# Configuración del logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-class ConversationalAI:
-    def __init__(self):
-        self.model = GenerativeModel("gemini-pro")
-        self.memory = {}  # Memoria por usuario
+# --- Instanciamos nuestros sistemas ---
+analysis_engine = OmnixPremiumAnalysisEngine()
+conversational_ai = ConversationalAI()
+trading_system = KrakenTradingSystem()
 
-           try:
-            # Crear historial si no existe
-            if user_id not in self.memory:
-                self.memory[user_id] = []
+# --- Definición de los Comandos del Bot ---
 
-            # Añadir nuevo mensaje del usuario al historial
-            self.memory[user_id].append({"role": "user", "parts": [message]})
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Envía un mensaje de bienvenida."""
+    user = update.effective_user
+    await update.message.reply_html(
+        f"¡Hola {user.mention_html()}! Soy OMNIX, tu asistente de trading. Usa /analyze <SÍMBOLO> para empezar.",
+    )
 
-            # Obtener respuesta del modelo
-            response = self.model.generate_content(self.memory[user_id])
-            response_text = response.text
-
-            # Generar archivo de audio con gTTS
-            tts_lang = VOICE_LANGUAGES.get(language, 'es')
-            tts = gTTS(text=response_text, lang=tts_lang)
-            audio_path = f"response_{user_id}.mp3"
-            tts.save(audio_path)
-
-            return response_text, audio_path
-
-        except Exception as e:
-            print(f"[ConversationalAI] Error: {e}")
-            return "Lo siento, ocurrió un error al procesar tu mensaje.", None
-
-    import os
-from gtts import gTTS
-from google.generativeai import configure, GenerativeModel
-from config import GEMINI_API_KEY
-
-# Configuración de la API de Gemini
-configure(api_key=GEMINI_API_KEY)
-
-# Lista de idiomas soportados para TTS
-VOICE_LANGUAGES = {
-    'es': 'es',
-    'en': 'en',
-    'ar': 'ar',
-    'zh': 'zh'
-}
-
-configure(api_key=GEMINI_API_KEY)
-
-# Lista de idiomas soportados para TTS
-VOICE_LANGUAGES = {
-    'es': 'es',
-    'en': 'en',
-    'ar': 'ar',
-    'zh': 'zh'
-}
-
-class ConversationalAI:
-    def __init__(self):
-        self.model = GenerativeModel("gemini-pro")
-        self.memory = {}  # Memoria por usuario
-
-    def get_response(self, user_id, message, language='es'):
-               
-        try:
-            # Crear historial si no existe
-            if user_id not in self.memory:
-                self.memory[user_id] = []
-
-            # Añadir nuevo mensaje del usuario al historial
-            self.memory[user_id].append({"role": "user", "parts": [message]})
-
-            # Obtener respuesta del modelo
-            response = self.model.generate_content(self.memory[user_id])
-            response_text = response.text
-
-            # Generar archivo de audio con gTTS
-            tts_lang = VOICE_LANGUAGES.get(language, 'es')
-            tts = gTTS(text=response_text, lang=tts_lang)
-            audio_path = f"response_{user_id}.mp3"
-            tts.save(audio_path)
-
-            return response_text, audio_path
-
-        except Exception as e:
-            print(f"[ConversationalAI] Error: {e}")
-            return "Lo siento, ocurrió un error al procesar tu mensaje.", None
-
-                    
-            self.memory[user_id].append({"role": "model", "parts": [response_text]})
-
-            # Generar archivo de audio con gTTS
-            tts_lang = VOICE_LANGUAGES.get(language, 'es')
-            tts = gTTS(text=response_text, lang=tts_lang)
-            audio_path = f"response_{user_id}.mp3"
-            tts.save(audio_path)
-
-            return response_text, audio_path
-
-        except Exception as e:
-            print(f"[ConversationalAI] Error: {e}")
-            return "Lo siento, ocurrió un error al procesar tu mensaje.", None
-
-        
-
-# ------------------ MAIN ------------------
-
-# ------------------- MAIN -------------------
-async def main():
-    logger.info("Iniciando OMNIX Bot...")
-
-    if not BOT_TOKEN:
-        logger.critical("FATAL: BOT_TOKEN no encontrado.")
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Realiza un análisis de un activo."""
+    if not context.args:
+        await update.message.reply_text("Uso: /analyze <SÍMBOLO>")
         return
+
+    symbol = context.args[0].upper()
+    await update.message.reply_text(f"Analizando {symbol}, por favor espera...")
+    loop = asyncio.get_running_loop()
+    try:
+        analysis_result = await loop.run_in_executor(
+            None, analysis_engine.analyze_with_ai, symbol
+        )
+        if analysis_result:
+            message = f"""
+📈 *Análisis para {analysis_result.symbol}*
+
+*Precio Actual:* ${analysis_result.current_price:,.2f}
+*Recomendación:* *{analysis_result.recommendation}*
+*Confianza:* {analysis_result.confidence:.0%}
+*Riesgo:* {analysis_result.risk_score:.0%}
+
+*Predicciones (Simuladas):*
+  - 1h: ${analysis_result.prediction_1h:,.2f}
+  - 24h: ${analysis_result.prediction_24h:,.2f}
+  - 7d: ${analysis_result.prediction_7d:,.2f}
+            """
+            await update.message.reply_markdown(message)
+        else:
+            await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}.")
+    except Exception as e:
+        logger.error(f"Error durante el análisis para {symbol}: {e}")
+        await update.message.reply_text("Ocurrió un error inesperado durante el análisis.")
+
+async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Maneja las preguntas a la IA conversacional."""
+    user_id = str(update.effective_user.id)
+    if not context.args:
+        await update.message.reply_text("Uso: /ask <tu pregunta>")
+        return
+
+    question = ' '.join(context.args)
+    logger.info(f"RECIBIDA PREGUNTA de {update.effective_user.name}: {question}")
+    await update.message.reply_text("Pensando... 🤔", quote=True)
+
+    loop = asyncio.get_running_loop()
+    ai_response = await loop.run_in_executor(
+        None, conversational_ai.get_ai_response, question, user_id
+    )
+    await update.message.reply_text(ai_response, quote=True)
+
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Muestra el estado actual del sistema."""
+    ia_ok = "✅" if analysis_engine else "❌"
+    gemini_ok = "✅" if GEMINI_API_KEY else "❌"
+    kraken_ok = "✅" if KRAKEN_API_KEY else "❌"
+    
+    conn_ok = "❌"
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn_ok = "✅"
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error de conexión a la BD para /estado: {e}")
+
+    msg = (
+        "*📡 Estado del Sistema OMNIX:*\n\n"
+        f"*🧠 IA:* {ia_ok}\n"
+        f"*🗄️ Base de Datos:* {conn_ok}\n"
+        f"*🔐 API Gemini:* {gemini_ok}\n"
+        f"*🔐 API Kraken:* {kraken_ok}"
+    )
+    await update.message.reply_markdown(msg)
+
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Ejecuta una orden de trading."""
+    try:
+        args = context.args
+        if len(args) != 2:
+            await update.message.reply_text("Uso: /trading <BUY/SELL> <cantidad>")
+            return
+  
+        side = args[0].upper()
+        amount = float(args[1])
+        
+        # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
+        result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
+
+        if result.get("error"):
+            await update.message.reply_text(f"Error al ejecutar orden: {result['error']}")
+        else:
+            await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error en el comando: {str(e)}")
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Responde a cualquier mensaje que no sea un comando."""
+    logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
+    await update.message.reply_text("He recibido tu mensaje. Para interactuar conmigo, usa los comandos disponibles como /start o /analyze.")
+
+async def main() -> None:
+    """Función principal que arranca todo."""
+    logger.info("🚀 Iniciando OMNIX Bot...")
+    
+    if not BOT_TOKEN or not DATABASE_URL:
+        logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
+        return
+
+    setup_premium_database()
+    add_premium_assets(premium_assets_list)
 
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Comandos
+    # Añadimos los manejadores de comandos
     application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("estado", estado_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
-    application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(CommandHandler("ask", ask_command))
-
-    # Texto libre (IA y voz)
+    application.add_handler(CommandHandler("estado", estado_command))
+    application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    logger.info("✅ OMNIX activo 🔥")
-    await application.run_polling()
+    logger.info("Limpiando cualquier sesión antigua de Telegram...")
+    await application.bot.delete_webhook()
 
+    logger.info("Inicializando la aplicación...")
+    await application.initialize()
 
-# ------------------ RUN ------------------
+    logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
+    await application.start()
+    
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    import nest_asyncio
-    import asyncio
-    nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())
 
