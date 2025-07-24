@@ -37,7 +37,7 @@ class ConversationalAI:
         if user_id not in self.conversation_memory:
             self.conversation_memory[user_id] = []
         
-              prompt = (
+        prompt = (
             f"Eres OMNIX, un bot de trading experto y amigable. Un usuario te ha dicho: {text}\n"
             f"Tu historial de conversación reciente con este usuario es: {self.conversation_memory[user_id]}\n"
             f"Responde de manera concisa, útil y amigable."
