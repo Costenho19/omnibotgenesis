@@ -165,13 +165,29 @@ logger.info(f"🖋️ Firma cuántica generada: {firma}")
         return
         # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
         result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
-
+        # 🔒 Validación cuántica de identidad por voz (simulada)
+    user_voice_id = str(update.effective_user.id)
+    if not voice_signer.verify_voice_signature(user_voice_id, firma):
+        await update.message.reply_text("⚠️ Validación de identidad por voz fallida. Operación cancelada.")
+        return 
         if not result or result.get("error"):
             error_message = result.get('error', 'Respuesta desconocida del exchange.') if result else 'No se recibió respuesta del exchange.'
             await update.message.reply_text(f"Error al ejecutar orden: {error_message}")
         else:
             await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
-    except ValueError:
+        # Confirmación por voz antes de ejecutar
+         await update.message.reply_text(
+             f"🔊 Vas a ejecutar una orden de {side} de {amount} USDT. Por favor confirma con tu voz..."
+    
+ 
+        # Simulamos validación por voz (puede integrarse biometría real)
+              confirm_voice = voice_signer.verify_voice_signature(user_voice_id, firma)
+
+              if not confirm_voice:
+                  await update.message.reply_text("❌ Confirmación de voz no válida. Orden cancelada.")
+                  return
+
+except ValueError:
         await update.message.reply_text("❌ Error: La cantidad debe ser un número.")
     except Exception as e:
         await update.message.reply_text(f"❌ Error inesperado en el comando: {str(e)}")
