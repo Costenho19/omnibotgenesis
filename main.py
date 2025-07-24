@@ -188,15 +188,13 @@ async def main() -> None:
 
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
+        await application.run_polling()
 
     logger.info("Inicializando la aplicación...")
     await application.initialize()
 
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
-    await application.start()
     
-    await asyncio.Event().wait()
-
 if __name__ == "__main__":
     try:
         asyncio.run(main())
