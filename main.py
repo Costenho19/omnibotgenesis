@@ -126,34 +126,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 
-async def main() -> None:
-    """Función principal que arranca todo."""
-    logger.info("🚀 Iniciando OMNIX Bot...")
-    
-    if not BOT_TOKEN or not DATABASE_URL:
-        logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
-        return
 
-    setup_premium_database()
-    add_premium_assets(premium_assets_list)
-
-    application = Application.builder().token(BOT_TOKEN).build()
-
-    # Añadimos los manejadores de comandos
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("analyze", analyze_command))
-    application.add_handler(CommandHandler("ask", ask_command))
-    application.add_handler(CommandHandler("estado", estado_command))
-    application.add_handler(CommandHandler("trading", trading_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    logger.info("Limpiando cualquier sesión antigua de Telegram...")
-    
-
-    logger.info("Inicializando la aplicación...")
-    await application.initialize()
-    logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
-    await application.run_polling()
 
 async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
