@@ -251,4 +251,3 @@ async def main() -> None:
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     
     
-
