@@ -12,7 +12,7 @@ from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
 from conversational_ai import ConversationalAI
 from trading_system import KrakenTradingSystem
 from pqc_encryption import encrypt_message, decrypt_message
-
+from voice_signature import VoiceSignature
 # Configuración del logging
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 analysis_engine = OmnixPremiumAnalysisEngine()
 conversational_ai = ConversationalAI()
 trading_system = KrakenTradingSystem()
+voice_signer = VoiceSignature("frase_secreta_omni2025")
 
 # --- Definición de los Comandos del Bot ---
 
