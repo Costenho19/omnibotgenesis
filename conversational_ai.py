@@ -44,15 +44,20 @@ class ConversationalAI:
         Responde de manera concisa, útil y amigable.
         """
         
-        try:
+               try:
             response = self.model.generate_content(prompt)
             ai_text = response.text
-            
+
             # Actualizamos el historial
             self.conversation_memory[user_id].append(f"User: {text}\nAI: {ai_text}")
-            
-            voice_fp = self.text_to_speech(ai_text, lang='es')  # puedes usar lang='en' si prefieres
-return {"text": ai_text, "voice": voice_fp}
+
+            voice_fp = self.text_to_speech(ai_text, lang='es')
+            return {"text": ai_text, "voice": voice_fp}
+
+        except Exception as e:
+            logger.error(f"Error al generar respuesta de Gemini: {e}")
+            return {"text": "Lo siento, tuve un problema al procesar tu pregunta.", "voice": None}
+
 
         except Exception as e:
             logger.error(f"Error al generar respuesta de Gemini: {e}")
