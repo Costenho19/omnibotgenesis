@@ -62,6 +62,7 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
   - 24h: ${analysis_result.prediction_24h:,.2f}
   - 7d: ${analysis_result.prediction_7d:,.2f}
             """
+            save_analysis_to_db(user.id, symbol, message, analysis_result.__dict__)
             await update.message.reply_markdown(message)
         else:
             await update.message.reply_text(f"Lo siento, no pude obtener datos para {symbol}.")
