@@ -174,9 +174,32 @@ logger.info(f"🖋️ Firma cuántica generada: {firma}")
             error_message = result.get('error', 'Respuesta desconocida del exchange.') if result else 'No se recibió respuesta del exchange.'
             await update.message.reply_text(f"Error al ejecutar orden: {error_message}")
         else:
-            await update.message.reply_text(f"✅ Orden ejecutada:\n{result}")
-        # Confirmación por voz antes de ejecutar
-         await update.message.reply_text(
+           # 🗣️ Respuesta por voz con idioma del usuario
+        user_lang = user_data.get("lang", "es")  # idioma por defecto: español
+
+        if user_lang == "en":
+            voice_text = "Your order has been executed successfully. Good job."
+            lang_code = "en"
+        elif user_lang == "ar":
+            voice_text = "تم تنفيذ طلبك بنجاح. عمل رائع."
+            lang_code = "ar"
+        elif user_lang == "zh":
+            voice_text = "您的订单已成功执行。干得好。"
+            lang_code = "zh-cn"
+        else:
+            voice_text = "La orden ha sido ejecutada con éxito. Buen trabajo."
+            lang_code = "es"
+
+        tts = gTTS(text=voice_text, lang=lang_code)
+        audio_path = "voz_ejecutada.mp3"
+        tts.save(audio_path)
+
+        with open(audio_path, "rb") as audio:
+            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
+
+        os.remove(audio_path)
+ 
+       await update.message.reply_text(
              f"🔊 Vas a ejecutar una orden de {side} de {amount} USDT. Por favor confirma con tu voz..."
     
  
