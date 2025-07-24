@@ -91,8 +91,10 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         voice_fp = response_dict.get("voice")
 
         # Enviamos la respuesta de texto
-        if ai_text:
-            await update.message.reply_text(f"🤖 OMNIX:\n{ai_text}")
+       if ai_text:
+           encrypted = encrypt_message(ai_text)
+           await update.message.reply_text(f"🔐 OMNIX cifrado:\n{encrypted}")
+
 
         # Enviamos la respuesta de voz si existe
         if voice_fp:
