@@ -11,10 +11,10 @@ HTML_TEMPLATE = """
 <head>
     <title>OMNIX Panel</title>
     <style>
-        body { font-family: Arial; background-color: #0c0c0c; color: white; padding: 2rem; }
+        body { font-family: Arial; background-color: #0c0c0c; color: white; }
         h1 { color: #00ff99; }
         table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-        th, td { border: 1px solid #333; padding: 0.5rem; text-align: left; }
+        th, td { border: 1px solid #333; padding: 0.5rem; text-align: center; }
         th { background-color: #111; }
     </style>
 </head>
@@ -22,11 +22,17 @@ HTML_TEMPLATE = """
     <h1>📊 Panel OMNIX - Análisis Recientes</h1>
     <table>
         <tr>
-            <th>Usuario</th><th>Asset</th><th>Análisis</th><th>Fecha</th>
+            <th>Usuario</th>
+            <th>Asset</th>
+            <th>Análisis</th>
+            <th>Fecha</th>
         </tr>
         {% for row in rows %}
         <tr>
-            <td>{{ row[0] }}</td><td>{{ row[1] }}</td><td>{{ row[2] }}</td><td>{{ row[3] }}</td>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -35,18 +41,14 @@ HTML_TEMPLATE = """
 """
 
 @app.route("/")
-def home():
-    try:
-        conn = psycopg2.connect(DATABASE_URL)
-        cursor = conn.cursor()
-        cursor.execute("SELECT user_id, asset, ai_text, created_at FROM ai_analysis ORDER BY created_at DESC LIMIT 20")
-        rows = cursor.fetchall()
-        conn.close()
-    except Exception as e:
-        rows = [(0, "ERROR", str(e), "-")]
-    
+def panel():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT usuario, asset, analisis, fecha FROM ai_analysis ORDER BY fecha DESC LIMIT 20")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
     return render_template_string(HTML_TEMPLATE, rows=rows)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(debug=False, host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
