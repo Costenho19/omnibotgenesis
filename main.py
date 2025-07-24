@@ -188,7 +188,7 @@ async def main() -> None:
 
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
-        await application.run_polling()
+    await application.run_polling()
 
     logger.info("Inicializando la aplicación...")
     await application.initialize()
