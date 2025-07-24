@@ -70,40 +70,38 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado durante el análisis.")
 
-async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja las preguntas a la IA, incluyendo la respuesta de voz."""
-    user_id = str(update.effective_user.id)
-    question = " ".join(context.args)
+# 👋 Comando /start con detección de idioma y bienvenida por voz
+@app.on_message(filters.command("start"))
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_lang = update.effective_user.language_code
 
-    if not question:
-        await update.message.reply_text("❗️Por favor, escribe tu pregunta después del comando /ask.")
-        return
+    if user_lang.startswith("en"):
+        lang_code = "en"
+        welcome_text = "Welcome to Omnix Global Bot. Ready for voice trading!"
+    elif user_lang.startswith("ar"):
+        lang_code = "ar"
+        welcome_text = "مرحبًا بك في Omnix Global Bot. جاهز للتداول الصوتي!"
+    elif user_lang.startswith("zh"):
+        lang_code = "zh-cn"
+        welcome_text = "欢迎使用 Omnix Global Bot，准备好语音交易吧！"
+    else:
+        lang_code = "es"
+        welcome_text = "Bienvenido a Omnix Global Bot. ¡Listo para operar por voz!"
 
-    try:
-        await update.message.reply_text("Pensando... 🤔", quote=True)
-        
-        # Obtenemos la respuesta de texto y voz desde la IA
-        # NOTA: La función en conversational_ai.py debe devolver un diccionario {"text": ..., "voice": ...}
-        response_dict = await asyncio.get_running_loop().run_in_executor(
-            None, conversational_ai.get_ai_response, question, user_id
-        )
-        
-        ai_text = response_dict.get("text")
-        voice_fp = response_dict.get("voice")
+    context.user_data["lang"] = lang_code
 
-        # Enviamos la respuesta de texto
-       if ai_text:
-           encrypted = encrypt_message(ai_text)
-           await update.message.reply_text(f"🔐 OMNIX cifrado:\n{encrypted}")
+    # 🔊 Bienvenida por voz
+    tts = gTTS(text=welcome_text, lang=lang_code)
+    audio_path = "bienvenida.mp3"
+    tts.save(audio_path)
 
+    with open(audio_path, "rb") as audio:
+        await context.bot.send_voice(chat_id=update.effective_chat.id, voice=audio)
 
-        # Enviamos la respuesta de voz si existe
-        if voice_fp:
-            voice_fp.seek(0)
-            await update.message.reply_voice(voice=voice_fp)
+    os.remove(audio_path)
 
-    except Exception as e:
-        logger.error(f"Error en /ask: {e}")
+    await update.message.reply_text(welcome_text)
+
         await update.message.reply_text("⚠️ Ocurrió un error al procesar tu pregunta.")
 # 🔍 Función temporal para debug
 async def debug_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
