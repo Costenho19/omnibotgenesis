@@ -1,6 +1,8 @@
 import psycopg2
 import logging
 import json
+from quantum_security import encrypt_message, decrypt_message
+
 from config import DATABASE_URL
 
 logger = logging.getLogger(__name__)
@@ -73,27 +75,28 @@ def add_premium_assets(premium_assets: list):
 
 def save_analysis_to_db(result):
     """Guarda un resultado de análisis en la base de datos."""
-    conn = get_db_connection()
-    if not conn: return
-    
-    sql = '''
-        INSERT INTO ai_analysis 
-        (symbol, current_price, ai_prediction_1h, ai_prediction_24h, ai_prediction_7d,
-         confidence_score, risk_score, support_levels, resistance_levels, recommendation)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    '''
-    
+   def save_analysis_to_db(user_id, asset, analysis_text, result_dict):
+    from datetime import datetime
+
+    # 🔐 Ciframos los datos con seguridad cuántica
+    encrypted_analysis = encrypt_message(analysis_text)
+    encrypted_result = encrypt_message(json.dumps(result_dict))
+
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (
-                result.symbol, result.current_price, result.prediction_1h, result.prediction_24h,
-                result.prediction_7d, result.confidence, result.risk_score,
-                json.dumps(result.support_levels), json.dumps(result.resistance_levels),
-                result.recommendation
-            ))
+        conn = get_db_connection()
+        if not conn:
+            return
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO ai_analysis (user_id, asset, analysis, result, timestamp)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (user_id, asset, encrypted_analysis, encrypted_result, datetime.utcnow())
+        )
         conn.commit()
+        cursor.close()
+        conn.close()
     except Exception as e:
-        logger.error(f"Error guardando análisis en la BD: {e}")
-        conn.rollback()
-    finally:
-        if conn: conn.close()
+        logger.error(f"❌ Error al guardar análisis cifrado: {e}")
+
