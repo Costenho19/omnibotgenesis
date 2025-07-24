@@ -137,9 +137,8 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_text(f"❌ Error inesperado en el comando: {str(e)}")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Responde a cualquier mensaje que no sea un comando."""
-    logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
-    await update.message.reply_text("He recibido tu mensaje. Para interactuar conmigo, usa los comandos disponibles como /start o /analyze.")
+
+
 
 async def main() -> None:
     """Función principal que arranca todo."""
