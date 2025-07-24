@@ -148,7 +148,11 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
 
         amount = float(args[1])
-        
+        voice_signer = VoiceSignature("frase_secreta_omni2025")
+        orden = f"{side} {amount} USDT"
+        firma = voice_signer.sign_message(orden)
+        logger.info(f"🖋️ Firma digital (voz+orden): {firma}")
+
         # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
         result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
 
