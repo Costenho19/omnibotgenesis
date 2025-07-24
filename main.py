@@ -11,6 +11,7 @@ from database import setup_premium_database, add_premium_assets
 from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
 from conversational_ai import ConversationalAI
 from trading_system import KrakenTradingSystem
+from pqc_encryption import encrypt_message, decrypt_message
 
 # Configuración del logging
 logging.basicConfig(
