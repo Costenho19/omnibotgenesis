@@ -37,8 +37,7 @@ class ConversationalAI:
         if user_id not in self.conversation_memory:
             self.conversation_memory[user_id] = []
         
-        # Creamos el prompt para la IA
-               prompt = (
+              prompt = (
             f"Eres OMNIX, un bot de trading experto y amigable. Un usuario te ha dicho: {text}\n"
             f"Tu historial de conversación reciente con este usuario es: {self.conversation_memory[user_id]}\n"
             f"Responde de manera concisa, útil y amigable."
@@ -52,6 +51,10 @@ class ConversationalAI:
 
             voice_fp = self.text_to_speech(ai_text, lang='es')
             return {"text": ai_text, "voice": voice_fp}
+        except Exception as e:
+            logger.error(f"Error al generar respuesta de Gemini: {e}")
+            return {"text": "Lo siento, tuve un problema al procesar tu pregunta."}
+
        
             
 
