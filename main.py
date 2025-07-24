@@ -195,9 +195,5 @@ async def main() -> None:
 
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
-        print(f"Error: {e}")
+    
+
