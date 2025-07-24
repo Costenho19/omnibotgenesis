@@ -153,13 +153,16 @@ logger.info(f"🖋️ Firma cuántica generada: {firma}")
         if side not in ["BUY", "SELL"]:
             await update.message.reply_text("Orden inválida. El primer argumento debe ser BUY o SELL.")
             return
-
         amount = float(args[1])
         voice_signer = VoiceSignature("frase_secreta_omni2025")
         orden = f"{side} {amount} USDT"
         firma = voice_signer.sign_message(orden)
         logger.info(f"🖋️ Firma digital (voz+orden): {firma}")
-
+         # 🔒 Validación cuántica de identidad por voz (simulada)
+    user_voice_id = str(update.effective_user.id)
+    if not voice_signer.verify_voice_signature(user_voice_id, firma):
+        await update.message.reply_text("⚠️ Validación de identidad por voz fallida. Operación cancelada.")
+        return
         # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
         result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
 
