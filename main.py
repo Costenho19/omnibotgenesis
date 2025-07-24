@@ -67,22 +67,8 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado durante el análisis.")
 
-async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja las preguntas a la IA conversacional."""
-    user_id = str(update.effective_user.id)
-    if not context.args:
-        await update.message.reply_text("Uso: /ask <tu pregunta>")
-        return
-
-    question = ' '.join(context.args)
-    logger.info(f"RECIBIDA PREGUNTA de {update.effective_user.name}: {question}")
-    await update.message.reply_text("Pensando... 🤔", quote=True)
-
-    loop = asyncio.get_running_loop()
-    ai_response = await loop.run_in_executor(
-        None, conversational_ai.get_ai_response, question, user_id
-    )
-    await update.message.reply_text(ai_response, quote=True)
+voice_fp = self.text_to_speech(ai_text, lang='es')  # puedes usar lang='en' si prefieres
+return {"text": ai_text, "voice": voice_fp}
 
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra el estado actual del sistema."""
