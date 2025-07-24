@@ -100,6 +100,14 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     except Exception as e:
         logger.error(f"Error en /ask: {e}")
         await update.message.reply_text("⚠️ Ocurrió un error al procesar tu pregunta.")
+# 🔍 Función temporal para debug
+async def debug_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("📩 MENSAJE RECIBIDO:")
+    print(update)
+    if update.message:
+        await update.message.reply_text("📍 OMNIX recibió tu mensaje correctamente.")
+    else:
+        print("❌ No se recibió mensaje de texto.")
 
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra el estado actual del sistema."""
