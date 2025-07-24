@@ -67,8 +67,39 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado durante el análisis.")
 
-voice_fp = self.text_to_speech(ai_text, lang='es')  # puedes usar lang='en' si prefieres
-return {"text": ai_text, "voice": voice_fp}
+async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Maneja las preguntas a la IA, incluyendo la respuesta de voz."""
+    user_id = str(update.effective_user.id)
+    question = " ".join(context.args)
+
+    if not question:
+        await update.message.reply_text("❗️Por favor, escribe tu pregunta después del comando /ask.")
+        return
+
+    try:
+        await update.message.reply_text("Pensando... 🤔", quote=True)
+        
+        # Obtenemos la respuesta de texto y voz desde la IA
+        # NOTA: La función en conversational_ai.py debe devolver un diccionario {"text": ..., "voice": ...}
+        response_dict = await asyncio.get_running_loop().run_in_executor(
+            None, conversational_ai.get_ai_response, question, user_id
+        )
+        
+        ai_text = response_dict.get("text")
+        voice_fp = response_dict.get("voice")
+
+        # Enviamos la respuesta de texto
+        if ai_text:
+            await update.message.reply_text(f"🤖 OMNIX:\n{ai_text}")
+
+        # Enviamos la respuesta de voz si existe
+        if voice_fp:
+            voice_fp.seek(0)
+            await update.message.reply_voice(voice=voice_fp)
+
+    except Exception as e:
+        logger.error(f"Error en /ask: {e}")
+        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu pregunta.")
 
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra el estado actual del sistema."""
@@ -102,16 +133,15 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
   
         side = args[0].upper()
-        # MEJORA 1: Validación de entrada explícita
         if side not in ["BUY", "SELL"]:
             await update.message.reply_text("Orden inválida. El primer argumento debe ser BUY o SELL.")
             return
 
         amount = float(args[1])
         
+        # NOTA: Asegúrate de que tu función en trading_system se llama place_market_order
         result = trading_system.place_market_order(pair="XXBTZUSD", order_type=side.lower(), volume=amount)
 
-        # MEJORA 2: Control de errores mejorado
         if not result or result.get("error"):
             error_message = result.get('error', 'Respuesta desconocida del exchange.') if result else 'No se recibió respuesta del exchange.'
             await update.message.reply_text(f"Error al ejecutar orden: {error_message}")
@@ -123,37 +153,45 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_text(f"❌ Error inesperado en el comando: {str(e)}")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Responde a cualquier mensaje que no sea un comando."""
+    logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
+    await update.message.reply_text("He recibido tu mensaje. Para interactuar conmigo, usa los comandos disponibles.")
 
-
-
-
-
-async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    user_message = " ".join(context.args)
-
-    if not user_message:
-        await update.message.reply_text("❗️Por favor, escribe tu pregunta después del comando /ask.")
+async def main() -> None:
+    """Función principal que arranca todo."""
+    logger.info("🚀 Iniciando OMNIX Bot...")
+    
+    if not BOT_TOKEN or not DATABASE_URL:
+        logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL. El bot no puede iniciar.")
         return
 
+    setup_premium_database()
+    add_premium_assets(premium_assets_list)
+
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    # Añadimos los manejadores de comandos
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("analyze", analyze_command))
+    application.add_handler(CommandHandler("ask", ask_command))
+    application.add_handler(CommandHandler("estado", estado_command))
+    application.add_handler(CommandHandler("trading", trading_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+    logger.info("Limpiando cualquier sesión antigua de Telegram...")
+    await application.bot.delete_webhook()
+
+    logger.info("Inicializando la aplicación...")
+    await application.initialize()
+
+    logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
+    await application.start()
+    
+    await asyncio.Event().wait()
+
+if __name__ == "__main__":
     try:
-        result = ai.generate_response(user_id, user_message)
-        ai_text = result.get("text")
-        voice_fp = result.get("voice")
-
-        await update.message.reply_text(f"🤖 OMNIX:\n{ai_text}")
-
-        if voice_fp:
-            voice_fp.seek(0)
-            await update.message.reply_voice(voice=voice_fp)
+        asyncio.run(main())
     except Exception as e:
-        logger.error(f"Error en /ask: {e}")
-        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu pregunta.")
- if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
-
- 
-
-
-
+        print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
+        print(f"Error: {e}")
