@@ -141,6 +141,10 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Ejecuta una orden de trading con validación mejorada."""
     try:
         args = context.args
+           # Firma cuántica antes de ejecutar
+firma = voice_signer.sign_message(text)
+logger.info(f"🖋️ Firma cuántica generada: {firma}") 
+
         if len(args) != 2:
             await update.message.reply_text("Uso: /trading <BUY/SELL> <cantidad>")
             return
