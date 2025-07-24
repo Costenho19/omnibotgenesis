@@ -51,7 +51,9 @@ class ConversationalAI:
             # Actualizamos el historial
             self.conversation_memory[user_id].append(f"User: {text}\nAI: {ai_text}")
             
-            return ai_text
+            voice_fp = self.text_to_speech(ai_text, lang='es')  # puedes usar lang='en' si prefieres
+return {"text": ai_text, "voice": voice_fp}
+
         except Exception as e:
             logger.error(f"Error al generar respuesta de Gemini: {e}")
             return "Lo siento, tuve un problema al procesar tu pregunta."
