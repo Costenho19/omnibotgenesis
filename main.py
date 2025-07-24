@@ -2,6 +2,8 @@ import logging
 import asyncio
 import os
 import psycopg2
+from flask import Flask, render_template_string
+import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
