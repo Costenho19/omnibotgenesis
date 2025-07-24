@@ -155,17 +155,31 @@ async def main() -> None:
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.run_polling()
 
-if __name__ == "__main__":
-    import nest_asyncio
-    nest_asyncio.apply()
+async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    user_message = " ".join(context.args)
+
+    if not user_message:
+        await update.message.reply_text("❗️Por favor, escribe tu pregunta después del comando /ask.")
+        return
 
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
-    except Exception as e:
-        print(f"!!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
-        print(f"Error: {e}")
+        result = ai.generate_response(user_id, user_message)
+        ai_text = result.get("text")
+        voice_fp = result.get("voice")
 
+        await update.message.reply_text(f"🤖 OMNIX:\n{ai_text}")
+
+        if voice_fp:
+            voice_fp.seek(0)
+            await update.message.reply_voice(voice=voice_fp)
+    except Exception as e:
+        logger.error(f"Error en /ask: {e}")
+        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu pregunta.")
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+ 
 
 
 
