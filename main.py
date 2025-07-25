@@ -241,10 +241,19 @@ async def main() -> None:
     application.add_handler(CommandHandler("estado", estado_command))
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
+    # Comando para activar cuenta premium
+async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    clave_ingresada = ' '.join(context.args)
+    user_id = update.effective_user.id
+    if clave_ingresada == "omni2025premium":
+        await update.message.reply_text("✅ ¡Clave correcta! Acceso premium activado.")
+        await guardar_usuario_premium(user_id)
+    else:
+        await update.message.reply_text("❌ Clave incorrecta. Intenta nuevamente.")
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
-    # Iniciar Flask en hilo paralelothreading.Thread(target=flask_app.run, kwargs={"host": "0.0.0.0", "port": 5000}).start()
+    # Iniciar Flask en hilo paralelo
+    threading.Thread(target=flask_app.run, kwargs={"host": "0.0.0.0", "port": 5000}).start()
 
     await application.run_polling()
 
