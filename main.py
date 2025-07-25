@@ -76,6 +76,11 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # 👋 Comando /start con detección de idioma y bienvenida por voz
 @app.on_message(filters.command("start"))
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+   user_id = update.effective_user.id
+    if not await es_usuario_premium(user_id):
+        await update.message.reply_text("🚫 Este comando es solo para usuarios *Premium*.")
+        return
+
     user_lang = update.effective_user.language_code
 
     if user_lang.startswith("en"):
