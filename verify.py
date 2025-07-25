@@ -46,3 +46,17 @@ def validate_voice_signature(update, context):
     finally:
         if os.path.exists(file_path):
             os.remove(file_path)
+  import psycopg2
+from config import DATABASE_URL
+
+def is_premium_user(user_id: str) -> bool:
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM premium_users WHERE id = %s", (user_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return result is not None
+    except Exception as e:
+        return False
