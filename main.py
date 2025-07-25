@@ -178,6 +178,31 @@ async def voz_validar_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     # Firma cuántica con Dilithium
     signature = voice_signer.sign_message(user.username or str(user.id))
+async def ver_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT voice_signature, dilithium_signature 
+            FROM voice_signatures 
+            WHERE user_id = %s
+        """, (user.id,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if result:
+            voice_sig, dilithium_sig = result
+            await update.message.reply_text(
+                f"🔐 Firma de voz encontrada:\n\n"
+                f"🗣️ Voice Signature:\n{voice_sig}\n\n"
+                f"🔒 Dilithium Signature:\n{dilithium_sig}"
+            )
+        else:
+            await update.message.reply_text("❌ No se encontró ninguna firma registrada para tu usuario.")
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al consultar la firma: {e}")
 
     await message.reply_text(
         f"✅ Voz verificada correctamente.\n"
