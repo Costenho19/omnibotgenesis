@@ -120,6 +120,21 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # (Aquí iría tu lógica completa de trading con voz...)
     await update.message.reply_text("Función de trading en desarrollo.")
 
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from telegram import ReplyKeyboardMarkup
+
+    keyboard = [
+        ["📊 Estado", "🔍 Análisis"],
+        ["📈 Trading", "🛡️ Seguridad"],
+        ["🌐 Idioma", "👤 Cuenta"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+    await update.message.reply_text(
+        "👋 ¡Bienvenido a OMNIX!\nSelecciona una opción del menú:",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
 
 async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra la lista de usuarios premium al administrador."""
