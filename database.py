@@ -100,3 +100,26 @@ def save_analysis_to_db(result):
     except Exception as e:
         logger.error(f"❌ Error al guardar análisis cifrado: {e}")
 
+    def crear_tabla_voice_signatures():
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS voice_signatures (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                texto_transcrito TEXT NOT NULL,
+                firma_dilithium TEXT NOT NULL,
+                hash_vocal TEXT NOT NULL,
+                biometria_valida BOOLEAN DEFAULT FALSE,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("✅ Tabla 'voice_signatures' creada correctamente.")
+    except Exception as e:
+        print(f"❌ Error al crear la tabla 'voice_signatures': {e}")
