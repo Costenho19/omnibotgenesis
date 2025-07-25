@@ -6,6 +6,7 @@ from flask import Flask, render_template_string
 import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from web_dashboard import app as flask_app
 
 # Importa nuestras clases, funciones y configuración desde los otros archivos
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY
@@ -243,6 +244,8 @@ async def main() -> None:
 
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
+    # Iniciar Flask en hilo paralelothreading.Thread(target=flask_app.run, kwargs={"host": "0.0.0.0", "port": 5000}).start()
+
     await application.run_polling()
 
     logger.info("Inicializando la aplicación...")
