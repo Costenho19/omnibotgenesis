@@ -275,6 +275,67 @@ async def main() -> None:
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
     application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
+
+    from telegram.ext import MessageHandler, filters
+from langdetect import detect
+from gtts import gTTS
+import tempfile
+
+async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.message.from_user.id)
+    user_input = update.message.text
+
+    # Detectar idioma
+    language = detect(user_input)
+
+    # Obtener respuesta con memoria
+    response = await generate_response_with_memory(user_id, user_input, language)
+
+    # Enviar respuesta escrita
+    await update.message.reply_text(response)
+
+    # Convertir a voz tipo Alexa
+    tts = gTTS(text=response, lang=language)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
+
+# Añadir este handler al final
+application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), general_response_handler))
+
+from telegram.ext import MessageHandler, filters
+from langdetect import detect
+from gtts import gTTS
+import tempfile
+
+async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.message.from_user.id)
+    user_input = update.message.text
+
+    # Detectar idioma
+    language = detect(user_input)
+
+    # Obtener respuesta con memoria
+    response = await generate_response_with_memory(user_id, user_input, language)
+
+    # Enviar respuesta escrita
+    await update.message.reply_text(response)
+
+    # Convertir a voz tipo Alexa
+    tts = gTTS(text=response, lang=language)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
+
+# Añadir este handler al final
+application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), general_response_handler))
 
     logger.info("Limpiando sesión antigua de Telegram...")
     await application.bot.delete_webhook()
@@ -309,4 +370,5 @@ async def boton_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif "cuenta" in text:
         await update.message.reply_text("👤 Esta es tu cuenta de usuario OMNIX.")
 
+@dp.message_handler(lambda message: message.text not in ["/start", "/analyze", "/estado", "/trading"])
 
