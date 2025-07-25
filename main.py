@@ -109,6 +109,19 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"🗣️ Voz autenticada: {user.full_name}\n"
         f"🔐 Firma cuántica: {signature[:15]}... ✅"
     )
+# Comando /estado para verificar estado del bot y del usuario
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    is_premium = await es_usuario_premium(user.id)
+
+    status_msg = "🟢 *Bot activo*\n"
+    if is_premium:
+        status_msg += "✅ *Usuario premium activado*\n"
+    else:
+        status_msg += "⚠️ *Usuario sin acceso premium*\n"
+
+    await update.message.reply_text(status_msg, parse_mode="Markdown")
+application.add_handler(CommandHandler("estado", estado_command))
 
 # Manejador para mensajes de voz (validación biométrica + firma Dilithium)
 voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
