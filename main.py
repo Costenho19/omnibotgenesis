@@ -50,6 +50,13 @@ application.add_handler(voice_handler)
 # --- Definición de los Comandos del Bot ---
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        user_id = str(update.effective_user.id)
+
+    if is_premium_user(user_id):
+        await update.message.reply_text("🌟 Bienvenido usuario Premium. Tienes acceso completo a las funciones avanzadas.")
+    else:
+        await update.message.reply_text("🔒 Estás usando la versión gratuita. Escribe /premium para ver cómo acceder a las funciones exclusivas.")
+
     """Envía un mensaje de bienvenida."""
     user = update.effective_user
     await update.message.reply_html(
