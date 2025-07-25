@@ -139,6 +139,10 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await update.message.reply_markdown(msg)
 
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    if not await es_usuario_premium(user_id):
+        await update.message.reply_text("🚫 Este comando es solo para usuarios *Premium*.\nUsa /clave para activarlo.")
+        return
     """Ejecuta una orden de trading con validación mejorada."""
     try:
         args = context.args
