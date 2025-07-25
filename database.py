@@ -128,25 +128,16 @@ def setup_voice_signature_table():
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     cur.execute('''
-        CREATE TABLE IF NOT EXISTS voice_signatures (
-            user_id TEXT PRIMARY KEY,
-            encrypted_signature TEXT
-        );
-    ''')
+    CREATE TABLE IF NOT EXISTS voice_signatures (
+        user_id TEXT PRIMARY KEY,
+        voice_signature TEXT,
+        dilithium_signature TEXT
+    );
+''')
+
     conn.commit()
     cur.close()
     conn.close()
 
-# Guardar firma de voz cifrada en la base de datos
-def save_voice_signature(user_id: str, encrypted_signature: str):
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO voice_signatures (user_id, encrypted_signature)
-        VALUES (%s, %s)
-        ON CONFLICT (user_id) DO UPDATE
-        SET encrypted_signature = EXCLUDED.encrypted_signature;
-    ''', (user_id, encrypted_signature))
-    conn.commit()
-    cur.close()
-    conn.close()
+
+
