@@ -38,8 +38,40 @@ from verify import validate_voice_signature
 from telegram.ext import MessageHandler, filters
 
 # Comando /voz_firma para verificar identidad con firma por voz
-async def voice_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🎙️ Por favor, envíame un mensaje de voz para validar tu identidad.")
+# Comando /voz_firma para verificar identidad con firma biométrica + post-cuántica
+async def voice_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+
+    if not message.voice:
+        await message.reply_text("🔊 Por favor, envíame un mensaje de voz para verificar tu identidad.")
+        return
+
+    file = await context.bot.get_file(message.voice.file_id)
+    voice_path = f"voice_{user.id}.ogg"
+    await file.download_to_drive(voice_path)
+
+    # Validación biométrica
+    try:
+        is_valid = validate_voice_signature(voice_path)
+    except Exception as e:
+        await message.reply_text("⚠️ Error en la validación biométrica.")
+        return
+
+    if not is_valid:
+        await message.reply_text("🚫 Voz no reconocida. Inténtalo de nuevo.")
+        return
+
+    # Firma post-cuántica con Dilithium (simulada)
+    signature = voice_signer.sign_message(user.username or str(user.id))
+
+    await message.reply_text(
+        f"✅ Identidad verificada con éxito.\n"
+        f"🧬 Firma Dilithium:\n`{signature}`",
+        parse_mode='Markdown'
+    )
+
+    os.remove(voice_path)
 
 # Manejador para mensajes de voz (validación biométrica + firma Dilithium)
 voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
