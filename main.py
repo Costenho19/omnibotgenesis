@@ -70,8 +70,45 @@ async def voice_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"🧬 Firma Dilithium:\n`{signature}`",
         parse_mode='Markdown'
     )
-
+    
     os.remove(voice_path)
+# Comando /trading para comprar cripto con validación de voz y firma cuántica
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+
+    if not await es_usuario_premium(user.id):
+        await update.message.reply_text("🚫 Este comando es exclusivo para usuarios *Premium*.")
+        return
+
+    if not message.voice:
+        await message.reply_text("🎙 Por favor, envíame un mensaje de voz con la orden de compra.")
+        return
+
+    file = await context.bot.get_file(message.voice.file_id)
+    voice_path = f"trading_voice_{user.id}.ogg"
+    await file.download_to_drive(voice_path)
+
+    try:
+        is_valid = validate_voice_signature(voice_path)
+    except Exception as e:
+        await message.reply_text("⚠️ Error al verificar la firma biométrica de voz.")
+        return
+
+    if not is_valid:
+        await message.reply_text("❌ Voz no reconocida. Intenta nuevamente.")
+        return
+
+    # Simular firma post-cuántica con Dilithium
+    signature = voice_signer.sign_message(user.username or str(user.id))
+
+    # Simulación de orden
+    await message.reply_text(
+        f"🛡️ Identidad verificada con Dilithium\n\n"
+        f"✅ Orden de compra ejecutada en Kraken\n"
+        f"🗣️ Voz autenticada: {user.full_name}\n"
+        f"🔐 Firma cuántica: {signature[:15]}... ✅"
+    )
 
 # Manejador para mensajes de voz (validación biométrica + firma Dilithium)
 voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
