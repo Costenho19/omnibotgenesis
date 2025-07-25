@@ -180,5 +180,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
         print(f"Error: {e}")
-    
-    
+  
+
+
