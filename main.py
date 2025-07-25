@@ -7,6 +7,7 @@ import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from web_dashboard import app as flask_app
+from config import CLAVE_PREMIUM, ADMIN_ID
 
 # Importa nuestras clases, funciones y configuración desde los otros archivos
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY
@@ -261,13 +262,15 @@ async def main() -> None:
 async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     clave_ingresada = " ".join(context.args)
     user_id = update.effective_user.id
-    if clave_ingresada == "omnix2025premium":
+    if clave_ingresada == CLAVE_PREMIUM:
+
         await update.message.reply_text("✅ Clave correcta: Acceso premium activado.")
         guardar_usuario_premium(user_id, clave_ingresada)
     else:
         await update.message.reply_text("❌ Clave incorrecta. Intenta nuevamente.")
     async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    admin_id = 123456789  # 🔁 Reemplaza con tu verdadero user ID de Telegram
+    admin_id = ADMIN_ID
+  # 🔁 Reemplaza con tu verdadero user ID de Telegram
     user_id = update.effective_user.id
 
     if user_id != admin_id:
