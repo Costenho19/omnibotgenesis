@@ -285,6 +285,20 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "[Activar Premium](https://t.me/omnixglobal2025_bot)\n"
     )
     await update.message.reply_markdown_v2(mensaje)
+# Comando general para respuestas inteligentes con voz
+@application.message_handler(filters.TEXT & (~filters.COMMAND))
+async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = str(update.effective_user.id)
+    user_input = update.message.text
+
+    ai = ConversationalAI()
+    reply_text, audio_file = ai.get_voice_response(user_input, user_id)
+
+    await update.message.reply_text(reply_text)
+
+    if audio_file:
+        await update.message.reply_voice(voice=open(audio_file, 'rb'))
+        os.remove(audio_file)
 
 # 👋 Comando /start con detección de idioma y bienvenida por voz
 @app.on_message(filters.command("start"))
