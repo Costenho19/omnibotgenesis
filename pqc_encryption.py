@@ -1,22 +1,21 @@
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-import base64
+from pqcrypto.sign.dilithium2 import generate_keypair, sign, verify
+from pqcrypto.exceptions import SignatureError
 
 class PQCEncryption:
-    def __init__(self, key: bytes):
-        self.key = key[:32]  # Usamos los primeros 32 bytes para AES-256
+    def __init__(self, private_key=None, public_key=None):
+        if private_key and public_key:
+            self.public_key = public_key
+            self.private_key = private_key
+        else:
+            self.public_key, self.private_key = generate_keypair()
 
-    def encrypt(self, plaintext: str) -> str:
-        cipher = AES.new(self.key, AES.MODE_CBC)
-        ct_bytes = cipher.encrypt(pad(plaintext.encode('utf-8'), AES.block_size))
-        iv = cipher.iv
-        ciphertext = base64.b64encode(iv + ct_bytes).decode('utf-8')
-        return ciphertext
+    def sign_message(self, message: str) -> bytes:
+        return sign(message.encode(), self.private_key)
 
-    def decrypt(self, ciphertext: str) -> str:
-        raw = base64.b64decode(ciphertext)
-        iv = raw[:16]
-        ct = raw[16:]
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        plaintext = unpad(cipher.decrypt(ct), AES.block_size).decode('utf-8')
-        return plaintext
+    def verify_signature(self, message: str, signature: bytes) -> bool:
+        try:
+            verify(message.encode(), signature, self.public_key)
+            return True
+        except SignatureError:
+            return False
+
