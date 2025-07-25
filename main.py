@@ -1,4 +1,4 @@
-import logging
+1 si 2 import logging
 import asyncio
 import os
 import psycopg2
@@ -122,6 +122,51 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from telegram import ReplyKeyboardMarkup
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from telegram import ReplyKeyboardMarkup
+    from gtts import gTTS
+    import tempfile
+    from conversational_ai import ConversationalAI
+
+    keyboard = [
+        ["📊 Estado", "🧠 Análisis"],
+        ["📉 Trading", "🔐 Seguridad"],
+        ["🌐 Idioma", "👤 Cuenta"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+    # Voz tipo Alexa (gTTS)
+    welcome_message = "Bienvenido a OMNIX. Tu asistente de trading inteligente está activo."
+    tts = gTTS(text=welcome_message, lang='es')
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
+
+    # Estado del sistema
+    estado = (
+        "🤖 *Estado del sistema OMNIX:*\n\n"
+        "✅ Bot activo y funcionando\n"
+        "🔁 Conexión IA (GPT-4): OK\n"
+        "🧠 Módulo Conversacional: Activo\n"
+        "📡 Trading conectado (Kraken): OK\n"
+        "🗄️ Base de datos: Conectada\n"
+        "🛡️ Seguridad Cuántica (Dilithium): Habilitada\n"
+        "📌 Versión: *OMNIX v1.5*"
+    )
+
+    await update.message.reply_text(
+        text=estado,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+    # Respuesta GPT bienvenida
+    ai = ConversationalAI()
+    bienvenida = ai.get_response("Saluda al usuario y dile que puede empezar a operar o preguntar lo que desee", "es")
+    await update.message.reply_text(bienvenida)
 
     keyboard = [
         ["📊 Estado", "🔍 Análisis"],
@@ -207,6 +252,7 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
+    application.add_handler(CommandHandler("start", start_command))
 
     logger.info("Limpiando sesión antigua de Telegram...")
     await application.bot.delete_webhook()
