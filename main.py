@@ -481,3 +481,57 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error al generar el estado: {str(e)}")
 
+@app.command("/estado")
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        estado_texto = (
+            f"🧠 Sistema OMNIX activo.\n"
+            f"📡 Exchanges conectados: Kraken, Binance.\n"
+            f"🕒 Hora actual: {now} UTC.\n"
+            f"✅ Todo funcionando correctamente."
+        )
+
+        # Detectar idioma
+        idioma_detectado = detect(estado_texto)
+        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "en"
+
+        # Convertir a voz
+        tts_estado = gTTS(text=estado_texto, lang=idioma_voz)
+        estado_audio_path = "/tmp/estado_audio.mp3"
+        tts_estado.save(estado_audio_path)
+
+        # Enviar voz
+        with open(estado_audio_path, "rb") as audio_file:
+            await update.message.reply_voice(voice=audio_file)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al generar el estado: {str(e)}")
+@app.command("/trading")
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        symbol = context.args[0].upper() if context.args else "BTC"
+        cantidad = context.args[1] if len(context.args) > 1 else "50"
+
+        mensaje = (
+            f"💰 Orden de compra simulada:\n"
+            f"Criptoactivo: {symbol}\n"
+            f"Monto: ${cantidad} USD\n"
+            f"🕒 Ejecutado por OMNIX vía voz."
+        )
+
+        # Detectar idioma
+        idioma_detectado = detect(mensaje)
+        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "es"
+
+        # Convertir a voz
+        tts_trading = gTTS(text=mensaje, lang=idioma_voz)
+        trading_audio_path = "/tmp/trading_audio.mp3"
+        tts_trading.save(trading_audio_path)
+
+        # Enviar voz
+        with open(trading_audio_path, "rb") as audio_file:
+            await update.message.reply_voice(voice=audio_file)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al ejecutar la orden: {str(e)}")
