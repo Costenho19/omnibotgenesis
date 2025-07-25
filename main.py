@@ -255,6 +255,8 @@ async def main() -> None:
     application.add_handler(CommandHandler("estado", estado_command))
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+   application.add_handler(CommandHandler("premium_panel", premium_panel_command))
+
     # Comando para activar cuenta premium
 async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     clave_ingresada = " ".join(context.args)
@@ -264,7 +266,33 @@ async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         guardar_usuario_premium(user_id, clave_ingresada)
     else:
         await update.message.reply_text("❌ Clave incorrecta. Intenta nuevamente.")
+    async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    admin_id = 123456789  # 🔁 Reemplaza con tu verdadero user ID de Telegram
+    user_id = update.effective_user.id
 
+    if user_id != admin_id:
+        await update.message.reply_text("⛔ No tienes permisos para ver esta información.")
+        return
+
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT user_id, clave FROM premium_users;")
+        rows = cursor.fetchall()
+
+        if not rows:
+            await update.message.reply_text("🗂️ No hay usuarios premium registrados aún.")
+        else:
+            mensaje = "📋 Lista de usuarios premium:\n\n"
+            for row in rows:
+                mensaje += f"👤 ID: {row[0]} | Clave: {row[1]}\n"
+            await update.message.reply_text(mensaje)
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error al consultar usuarios premium: {e}")
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
     # Iniciar Flask en hilo paralelo
