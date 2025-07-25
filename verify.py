@@ -35,6 +35,8 @@ def validate_voice_signature(update, context):
         if voice_signer.verify_signature(encoded_voice, firma):
             encrypted_firma = pqc.encrypt(firma)
             update.message.reply_text(f"✅ Identidad verificada por voz.\n🔐 Firma cifrada:\n{encrypted_firma[:100]}...")
+        save_voice_signature(str(update.effective_user.id), encrypted_firma)
+
         else:
             update.message.reply_text("❌ No se pudo validar tu identidad. Intenta de nuevo.")
 
