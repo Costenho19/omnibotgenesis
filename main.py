@@ -276,6 +276,7 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
+await setup_memory_table()
 
     from telegram.ext import MessageHandler, filters
 from langdetect import detect
