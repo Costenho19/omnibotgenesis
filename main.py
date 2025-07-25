@@ -129,10 +129,10 @@ voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
 application.add_handler(CommandHandler("voz_firma", voice_firma_command))
 application.add_handler(voice_handler)
 application.add_handler(CommandHandler("premium", premium_command))
-application.add_handler(CommandHandler("premium", premium_command))
 application.add_handler(CommandHandler("voz_validar", voz_validar_command))
 application.add_handler(CommandHandler("verificar_identidad", verificar_identidad_command))
 application.add_handler(CommandHandler("voz_borrar", voz_borrar_command))
+application.add_handler(CallbackQueryHandler(manejar_callback))
 
 # --- Definición de los Comandos del Bot ---
 # Comando /voz_firma para validar identidad por voz y firmar digitalmente
@@ -147,6 +147,14 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if not message.voice:
         await message.reply_text("🎙️ Por favor, envíame un mensaje de voz con la orden.")
         return
+    voice_signer = VoiceSignature()
+    voice_signature = voice_signer.sign_voice(voice_path, user.id)
+
+    pqc_signature = PQCEncryption().sign_with_dilithium(voice_signature)
+
+    await message.reply_text(f"✅ Firma de voz completada.\n🔐 Firma Dilithium: `{pqc_signature}`", parse_mode="Markdown")
+
+    os.remove(voice_path)
 
     file = await context.bot.get_file(message.voice.file_id)
     voice_path = f"voz_firma_{user.id}.ogg"
@@ -290,6 +298,24 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
     user_input = update.message.text
+from telegram.ext import CallbackQueryHandler
+
+async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == "estado":
+        await estado_command(update, context)
+    elif query.data == "analyze":
+        await analyze_command(update, context)
+    elif query.data == "voz_firma":
+        await voz_firma_command(update, context)
+    elif query.data == "verificar_identidad":
+        await verificar_identidad_command(update, context)
+    elif query.data == "premium":
+        await premium_command(update, context)
+    else:
+        await query.edit_message_text("⚠️ Opción no reconocida.")
 
     ai = ConversationalAI()
     reply_text, audio_file = ai.get_voice_response(user_input, user_id)
