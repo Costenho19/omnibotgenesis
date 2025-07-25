@@ -3,8 +3,8 @@ import asyncio
 import os
 import psycopg2
 import threading
+from telegram import ReplyKeyboardMarkup
 from langdetect import detect
-
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from gtts import gTTS
@@ -535,3 +535,15 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error al ejecutar la orden: {str(e)}")
+@app.message()
+async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip().lower()
+
+    if text == "📊 análisis":
+        await analyze_command(update, context)
+    elif text == "📈 estado":
+        await estado_command(update, context)
+    elif text == "🎯 trading":
+        await update.message.reply_text("Por favor usa el comando: `/trading BTC 50`")
+    else:
+        await update.message.reply_text("Por favor, selecciona una opción válida del menú.")
