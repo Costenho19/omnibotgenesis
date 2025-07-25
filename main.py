@@ -3,6 +3,8 @@ import asyncio
 import os
 import psycopg2
 import threading
+from langdetect import detect
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from gtts import gTTS
@@ -435,9 +437,15 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         plt.close()
 
         await update.message.reply_photo(photo=InputFile(buf, filename="grafico.png"))
-        texto_resumen = f"Análisis completo de {symbol}. El gráfico muestra los precios de los últimos 7 días. Revisa la tendencia y actúa con precaución."
+       texto_resumen = f"Análisis completo de {symbol}. El gráfico muestra los precios de cierre durante los últimos 7 días."
 
-        tts = gTTS(text=texto_resumen, lang="es")
+        # Detectar idioma del texto (langdetect)
+        idioma_detectado = detect(texto_resumen)
+
+        # gTTS solo acepta ciertos idiomas, así que filtramos
+        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "es"
+
+        tts = gTTS(text=texto_resumen, lang=idioma_voz)
         audio_path = "/tmp/analisis_audio.mp3"
         tts.save(audio_path)
 
@@ -446,4 +454,30 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error al generar el análisis: {str(e)}")
+@app.command("/estado")
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        estado_texto = (
+            f"🧠 Sistema OMNIX activo.\n"
+            f"📡 Exchanges conectados: Kraken, Binance.\n"
+            f"🕒 Hora actual: {now} UTC.\n"
+            f"✅ Todo funcionando correctamente."
+        )
+
+        # Detectar idioma
+        idioma_detectado = detect(estado_texto)
+        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "en"
+
+        # Convertir a voz
+        tts_estado = gTTS(text=estado_texto, lang=idioma_voz)
+        estado_audio_path = "/tmp/estado_audio.mp3"
+        tts_estado.save(estado_audio_path)
+
+        # Enviar voz
+        with open(estado_audio_path, "rb") as audio_file:
+            await update.message.reply_voice(voice=audio_file)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al generar el estado: {str(e)}")
 
