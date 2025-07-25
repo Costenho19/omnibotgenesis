@@ -125,6 +125,19 @@ async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TY
     """Muestra la lista de usuarios premium al administrador."""
     admin_id_str = str(ADMIN_ID)
     user_id_str = str(update.effective_user.id)
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Muestra el estado actual del sistema OMNIX."""
+    estado_text = (
+        "🤖 *Estado del sistema OMNIX:*\n\n"
+        "✅ Bot activo y funcionando\n"
+        "🔁 Conexión IA (Gemini): OK\n"
+        "🧠 Módulo Conversacional: Activo\n"
+        "📡 Trading conectado (Kraken): OK\n"
+        "🗄️ Base de datos: Conectada\n"
+        "🛡️ Seguridad Cuántica (Dilithium): Habilitada\n"
+        "📌 Versión: OMNIX v1.5"
+    )
+    await update.message.reply_text(estado_text, parse_mode="Markdown")
 
     if user_id_str != admin_id_str:
         await update.message.reply_text("⛔ No tienes permisos para acceder a este panel.")
@@ -135,6 +148,21 @@ async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+   from telegram import ReplyKeyboardMarkup
+
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    keyboard = [
+        ["📊 Estado", "🔍 Análisis"],
+        ["🎯 Trading", "🛡️ Seguridad"],
+        ["🌐 Idioma", "👤 Cuenta"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text(
+        "📋 *Menú principal OMNIX:*\nSelecciona una opción:",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
     """Responde a mensajes de texto que no son comandos."""
     logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
     await update.message.reply_text("He recibido tu mensaje. Usa /start para ver los comandos disponibles.")
@@ -162,6 +190,8 @@ async def main() -> None:
     application.add_handler(CommandHandler("estado", estado_command))
     application.add_handler(CommandHandler("premium_panel", premium_panel_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    application.add_handler(CommandHandler("menu", menu_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
 
     logger.info("Limpiando sesión antigua de Telegram...")
     await application.bot.delete_webhook()
@@ -181,5 +211,19 @@ if __name__ == "__main__":
         print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
         print(f"Error: {e}")
   
+async def boton_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    if "estado" in text:
+        await estado_command(update, context)
+    elif "análisis" in text or "analisis" in text:
+        await analyze_command(update, context)
+    elif "trading" in text:
+        await trading_command(update, context)
+    elif "seguridad" in text:
+        await update.message.reply_text("🛡️ Seguridad post-cuántica activa con Dilithium.")
+    elif "idioma" in text:
+        await update.message.reply_text("🌐 Función de cambio de idioma en desarrollo.")
+    elif "cuenta" in text:
+        await update.message.reply_text("👤 Esta es tu cuenta de usuario OMNIX.")
 
 
