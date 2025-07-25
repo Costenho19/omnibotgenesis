@@ -257,13 +257,14 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     # Comando para activar cuenta premium
 async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    clave_ingresada = ' '.join(context.args)
+    clave_ingresada = " ".join(context.args)
     user_id = update.effective_user.id
-    if clave_ingresada == "omni2025premium":
-        await update.message.reply_text("✅ ¡Clave correcta! Acceso premium activado.")
-        await guardar_usuario_premium(user_id)
+    if clave_ingresada == "omnix2025premium":
+        await update.message.reply_text("✅ Clave correcta: Acceso premium activado.")
+        guardar_usuario_premium(user_id, clave_ingresada)
     else:
         await update.message.reply_text("❌ Clave incorrecta. Intenta nuevamente.")
+
     logger.info("Limpiando cualquier sesión antigua de Telegram...")
     await application.bot.delete_webhook()
     # Iniciar Flask en hilo paralelo
