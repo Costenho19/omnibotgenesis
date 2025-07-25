@@ -8,6 +8,9 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from web_dashboard import app as flask_app
 from config import CLAVE_PREMIUM, ADMIN_ID
+from pqc_encryption import PQCEncryption
+ # Inicializa la clase de cifrado post-cuántico
+pqc = PQCEncryption()
 
 # Importa nuestras clases, funciones y configuración desde los otros archivos
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY
@@ -29,6 +32,18 @@ analysis_engine = OmnixPremiumAnalysisEngine()
 conversational_ai = ConversationalAI()
 trading_system = KrakenTradingSystem()
 voice_signer = VoiceSignature("frase_secreta_omni2025")
+from verify import validate_voice_signature
+from telegram.ext import MessageHandler, filters
+
+# Comando /voz_firma para verificar identidad con firma por voz
+async def voice_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🎙️ Por favor, envíame un mensaje de voz para validar tu identidad.")
+
+# Manejador para mensajes de voz (validación biométrica + firma Dilithium)
+voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
+
+application.add_handler(CommandHandler("voz_firma", voice_firma_command))
+application.add_handler(voice_handler)
 
 # --- Definición de los Comandos del Bot ---
 
