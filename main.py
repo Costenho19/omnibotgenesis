@@ -10,6 +10,7 @@ from web_dashboard import app as flask_app
 from config import CLAVE_PREMIUM, ADMIN_ID
 from pqc_encryption import PQCEncryption
 from verify import is_premium_user
+from database import save_dilithium_signature
 
 # Inicializa la clase de cifrado post-cuántico
 pqc = PQCEncryption()
@@ -177,10 +178,16 @@ async def voz_validar_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # Firma cuántica con Dilithium
-    signature = voice_signer.sign_message(user.username or str(user.id))
+    
 async def ver_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     try:
+       signature = voice_signer.sign_message(user.username or str(user.id))
+
+# Guardar la firma cuántica en la base de datos
+save_dilithium_signature(str(user.id), signature)
+await update.message.reply_text("✅ Firma cuántica registrada exitosamente.")
+
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         cur.execute("""
