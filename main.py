@@ -132,6 +132,42 @@ application.add_handler(CommandHandler("premium", premium_command))
 application.add_handler(CommandHandler("premium", premium_command))
 
 # --- Definición de los Comandos del Bot ---
+# Comando /voz_firma para validar identidad por voz y firmar digitalmente
+async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    message = update.message
+
+    if not await es_usuario_premium(user.id):
+        await message.reply_text("🚫 Este comando es exclusivo para usuarios premium.")
+        return
+
+    if not message.voice:
+        await message.reply_text("🎙️ Por favor, envíame un mensaje de voz con la orden.")
+        return
+
+    file = await context.bot.get_file(message.voice.file_id)
+    voice_path = f"voz_firma_{user.id}.ogg"
+    await file.download_to_drive(voice_path)
+
+    try:
+        is_valid = validate_voice_signature(voice_path)
+    except Exception as e:
+        await message.reply_text("⚠️ Error al verificar la firma biométrica.")
+        return
+
+    if not is_valid:
+        await message.reply_text("❌ Voz no reconocida. Intenta nuevamente.")
+        return
+
+    signature = voice_signer.sign_message(user.username or str(user.id))
+
+    await message.reply_text(
+        f"✅ Identidad confirmada por voz.\n"
+        f"🧬 Firma cuántica Dilithium:\n`{signature}`",
+        parse_mode="Markdown"
+    )
+
+    os.remove(voice_path)
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         user_id = str(update.effective_user.id)
