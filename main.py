@@ -39,6 +39,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
 
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+   user_id = update.effective_user.id
+    if not await es_usuario_premium(user_id):
+        await update.message.reply_text("🚫 Este comando es solo para usuarios *Premium*.")
+        return
+
     """Realiza un análisis de un activo."""
     if not context.args:
         await update.message.reply_text("Uso: /analyze <SÍMBOLO>")
