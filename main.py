@@ -46,6 +46,7 @@ voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
 
 application.add_handler(CommandHandler("voz_firma", voice_firma_command))
 application.add_handler(voice_handler)
+application.add_handler(CommandHandler("premium", premium_command))
 
 # --- Definición de los Comandos del Bot ---
 
@@ -102,6 +103,18 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     except Exception as e:
         logger.error(f"Error durante el análisis para {symbol}: {e}")
         await update.message.reply_text("Ocurrió un error inesperado durante el análisis.")
+async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    mensaje = (
+        "🌟 *OMNIX Premium* 🌟\n\n"
+        "Accede a funciones exclusivas:\n"
+        "🔐 Trading 24/7 con IA\n"
+        "📊 Análisis técnico avanzado\n"
+        "🧠 IA emocional y multilingüe\n"
+        "🛡️ Seguridad con firma Dilithium\n\n"
+        "💳 Para activar tu cuenta Premium, contacta al equipo o visita:\n"
+        "[Activar Premium](https://t.me/omnixglobal2025_bot)\n"
+    )
+    await update.message.reply_markdown_v2(mensaje)
 
 # 👋 Comando /start con detección de idioma y bienvenida por voz
 @app.on_message(filters.command("start"))
