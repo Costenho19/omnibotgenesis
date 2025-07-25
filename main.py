@@ -47,6 +47,7 @@ voice_handler = MessageHandler(filters.VOICE, validate_voice_signature)
 application.add_handler(CommandHandler("voz_firma", voice_firma_command))
 application.add_handler(voice_handler)
 application.add_handler(CommandHandler("premium", premium_command))
+application.add_handler(CommandHandler("premium", premium_command))
 
 # --- Definición de los Comandos del Bot ---
 
