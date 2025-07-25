@@ -6,7 +6,11 @@ import threading
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from gtts import gTTS
-
+await save_user_memory(user_id, ai_response)
+import io
+import matplotlib.pyplot as plt
+import yfinance as yf
+from telegram import InputFile
 # Importa nuestras clases y configuración
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY, CLAVE_PREMIUM, ADMIN_ID
 from database import setup_premium_database, add_premium_assets, save_analysis_to_db, guardar_usuario_premium, es_usuario_premium, save_dilithium_signature
@@ -372,4 +376,74 @@ async def boton_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("👤 Esta es tu cuenta de usuario OMNIX.")
 
 @dp.message_handler(lambda message: message.text not in ["/start", "/analyze", "/estado", "/trading"])
+@app.command("/analyze")
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if len(context.args) == 0:
+            await update.message.reply_text("Por favor, indica el símbolo del activo. Ejemplo: /analyze BTC-USD")
+            return
+
+        symbol = context.args[0].upper()
+        data = yf.download(symbol, period="7d", interval="1h")
+
+        if data.empty:
+            await update.message.reply_text("No se encontraron datos para ese símbolo.")
+            return
+
+        plt.figure(figsize=(10, 4))
+        plt.plot(data.index, data["Close"], label="Precio")
+        plt.title(f"Precio de {symbol} (últimos 7 días)")
+        plt.xlabel("Fecha")
+        plt.ylabel("Precio")
+        plt.legend()
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        plt.close()
+
+        await update.message.reply_photo(photo=InputFile(buf, filename="grafico.png"))
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al generar el análisis: {str(e)}")
+@app.command("/analyze")
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if len(context.args) == 0:
+            await update.message.reply_text("Por favor, indica el símbolo del activo. Ejemplo: /analyze BTC-USD")
+            return
+
+        symbol = context.args[0].upper()
+        data = yf.download(symbol, period="7d", interval="1h")
+
+        if data.empty:
+            await update.message.reply_text("No se encontraron datos para ese símbolo.")
+            return
+
+        plt.figure(figsize=(10, 4))
+        plt.plot(data.index, data["Close"], label="Precio")
+        plt.title(f"Precio de {symbol} (últimos 7 días)")
+        plt.xlabel("Fecha")
+        plt.ylabel("Precio")
+        plt.legend()
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        plt.close()
+
+        await update.message.reply_photo(photo=InputFile(buf, filename="grafico.png"))
+        texto_resumen = f"Análisis completo de {symbol}. El gráfico muestra los precios de los últimos 7 días. Revisa la tendencia y actúa con precaución."
+
+        tts = gTTS(text=texto_resumen, lang="es")
+        audio_path = "/tmp/analisis_audio.mp3"
+        tts.save(audio_path)
+
+        with open(audio_path, "rb") as audio_file:
+            await update.message.reply_voice(voice=audio_file)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al generar el análisis: {str(e)}")
 
