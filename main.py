@@ -130,6 +130,7 @@ application.add_handler(CommandHandler("voz_firma", voice_firma_command))
 application.add_handler(voice_handler)
 application.add_handler(CommandHandler("premium", premium_command))
 application.add_handler(CommandHandler("premium", premium_command))
+application.add_handler(CommandHandler("voz_validar", voz_validar_command))
 
 # --- Definición de los Comandos del Bot ---
 # Comando /voz_firma para validar identidad por voz y firmar digitalmente
@@ -148,6 +149,31 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     file = await context.bot.get_file(message.voice.file_id)
     voice_path = f"voz_firma_{user.id}.ogg"
     await file.download_to_drive(voice_path)
+   # Comando /voz_validar para validar voz con firma Dilithium
+async def voz_validar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    message = update.message
+
+    voice_path = f"voz_firma_{user.id}.ogg"
+
+    try:
+        is_valid = validate_voice_signature(voice_path)
+    except Exception as e:
+        await message.reply_text("⚠️ Error al validar la firma de voz.")
+        return
+
+    if not is_valid:
+        await message.reply_text("❌ Voz no coincide. Por favor, vuelve a intentarlo.")
+        return
+
+    # Firma cuántica con Dilithium
+    signature = voice_signer.sign_message(user.username or str(user.id))
+
+    await message.reply_text(
+        f"✅ Voz verificada correctamente.\n"
+        f"🪪 Usuario: {user.full_name}\n"
+        f"🔐 Firma Dilithium: {signature[:15]}... ✅"
+    )
 
     try:
         is_valid = validate_voice_signature(voice_path)
