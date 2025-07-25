@@ -139,5 +139,64 @@ def setup_voice_signature_table():
     cur.close()
     conn.close()
 
+# 🧠 Memoria contextual por usuario (IA)
+def create_user_memory_table():
+    conn = get_db_connection()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_memory (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    user_input TEXT,
+                    ai_response TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.commit()
+            logger.info("Tabla user_memory creada correctamente.")
+    except Exception as e:
+        logger.error(f"❌ Error al crear la tabla de memoria contextual: {e}")
+    finally:
+        conn.close()
+
+def save_user_memory(user_id, user_input, ai_response):
+    conn = get_db_connection()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO user_memory (user_id, user_input, ai_response)
+                VALUES (%s, %s, %s);
+            """, (user_id, user_input, ai_response))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"❌ Error al guardar memoria del usuario: {e}")
+    finally:
+        conn.close()
+
+def get_user_memory(user_id, limit=5):
+    conn = get_db_connection()
+    if not conn:
+        return []
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT user_input, ai_response
+                FROM user_memory
+                WHERE user_id = %s
+                ORDER BY timestamp DESC
+                LIMIT %s;
+            """, (user_id, limit))
+            rows = cursor.fetchall()
+            return rows[::-1]  # orden cronológico
+    except Exception as e:
+        logger.error(f"❌ Error al obtener memoria del usuario: {e}")
+        return []
+    finally:
+        conn.close()
 
 
