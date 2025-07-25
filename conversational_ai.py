@@ -1,75 +1,80 @@
-import logging
-import gtts
-import io
+# conversational_ai.py
 
-# Importamos las claves desde nuestro archivo de configuración central
-from config import GEMINI_API_KEY
-import google.generativeai as genai
+from googletrans import Translator
+from gtts import gTTS
+import tempfile
+import os
+from openai import OpenAI
+from config import OPENAI_API_KEY
 
-logger = logging.getLogger(__name__)
+translator = Translator()
+openai = OpenAI(api_key=OPENAI_API_KEY)
 
-# Configuramos la API de Gemini si la clave existe
-if GEMINI_API_KEY:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-    except Exception as e:
-        logger.error(f"Error al configurar la API de Gemini: {e}")
+# Memoria simple por usuario
+user_memory = {}
 
 class ConversationalAI:
-    """Sistema de IA conversacional cuadrilingüe"""
-    
     def __init__(self):
-        self.conversation_memory = {}
-        self.supported_languages = ['es', 'en', 'ar', 'zh']
-        # Inicializamos el modelo de Gemini aquí para poder reutilizarlo
-        if GEMINI_API_KEY:
-            self.model = genai.GenerativeModel('gemini-pro')
-        else:
-            self.model = None
-            logger.warning("Clave de API de Gemini no encontrada. La IA conversacional avanzada está deshabilitada.")
-        
-    def get_ai_response(self, text: str, user_id: str) -> str:
-        """Generar respuesta de IA usando Gemini."""
-        if not self.model:
-            return "Lo siento, la función de chat no está disponible en este momento."
+        self.default_lang = "es"
 
-        # Mantenemos un historial simple de la conversación
-        if user_id not in self.conversation_memory:
-            self.conversation_memory[user_id] = []
-        
-        prompt = (
-            f"Eres OMNIX, un bot de trading experto y amigable. Un usuario te ha dicho: {text}\n"
-            f"Tu historial de conversación reciente con este usuario es: {self.conversation_memory[user_id]}\n"
-            f"Responde de manera concisa, útil y amigable."
-        )
+    def detect_language(self, message: str) -> str:
         try:
-            response = self.model.generate_content(prompt)
-            ai_text = response.text
+            lang = translator.detect(message).lang
+            return lang if lang in ['es', 'en', 'ar', 'zh-cn'] else self.default_lang
+        except:
+            return self.default_lang
 
-            # Actualizamos el historial
-            self.conversation_memory[user_id].append(f"User: {text}\nAI: {ai_text}")
-
-            voice_fp = self.text_to_speech(ai_text, lang='es')
-            return {"text": ai_text, "voice": voice_fp}
-        except Exception as e:
-            logger.error(f"Error al generar respuesta de Gemini: {e}")
-            return {"text": "Lo siento, tuve un problema al procesar tu pregunta."}
-
-       
-            
-
-    def text_to_speech(self, text: str, lang: str = 'es') -> io.BytesIO:
-        """Convierte texto a un archivo de audio en memoria."""
-        if lang not in self.supported_languages:
-            lang = 'es' # Usamos español por defecto
-        
+    def translate_input(self, message: str, target_lang: str = "en") -> str:
         try:
-            # Creamos un objeto de audio en memoria
-            audio_fp = io.BytesIO()
-            tts = gtts.gTTS(text, lang=lang)
-            tts.write_to_fp(audio_fp)
-            audio_fp.seek(0) # Rebobinamos el archivo para que pueda ser leído desde el principio
-            return audio_fp
+            return translator.translate(message, dest=target_lang).text
+        except:
+            return message
+
+    def translate_output(self, message: str, target_lang: str) -> str:
+        try:
+            return translator.translate(message, dest=target_lang).text
+        except:
+            return message
+
+    def update_memory(self, user_id: int, message: str):
+        if user_id not in user_memory:
+            user_memory[user_id] = []
+        user_memory[user_id].append(message)
+        if len(user_memory[user_id]) > 5:
+            user_memory[user_id] = user_memory[user_id][-5:]
+
+    def get_memory(self, user_id: int) -> str:
+        if user_id in user_memory:
+            return "\n".join(user_memory[user_id])
+        return ""
+
+    def generate_response(self, user_id: int, message: str, lang: str) -> str:
+        self.update_memory(user_id, message)
+        history = self.get_memory(user_id)
+
+        prompt = f"Historial:\n{history}\nUsuario: {message}\nAsistente:"
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Eres un asistente útil y multilingüe."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7
+            )
+            reply = response.choices[0].message.content.strip()
         except Exception as e:
-            logger.error(f"Error al convertir texto a voz: {e}")
+            reply = "Lo siento, hubo un problema al generar la respuesta."
+
+        translated_reply = self.translate_output(reply, target_lang=lang)
+        return translated_reply
+
+    def generate_voice(self, message: str, lang: str) -> str:
+        try:
+            tts = gTTS(text=message, lang=lang if lang != "zh-cn" else "zh")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+                tts.save(f.name)
+                return f.name
+        except Exception as e:
             return None
+
