@@ -161,6 +161,22 @@ def create_user_memory_table():
         logger.error(f"❌ Error al crear la tabla de memoria contextual: {e}")
     finally:
         conn.close()
+# L140 - Manejo de memoria contextual del usuario
+
+async def save_user_memory(user_id: str, memory: str):
+    conn = await asyncpg.connect(DATABASE_URL)
+    await conn.execute("""
+        INSERT INTO user_memory (user_id, memory)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE SET memory = EXCLUDED.memory
+    """, user_id, memory)
+    await conn.close()
+
+async def get_user_memory(user_id: str) -> str:
+    conn = await asyncpg.connect(DATABASE_URL)
+    row = await conn.fetchrow("SELECT memory FROM user_memory WHERE user_id = $1", user_id)
+    await conn.close()
+    return row["memory"] if row else ""
 
 def save_user_memory(user_id, user_input, ai_response):
     conn = get_db_connection()
