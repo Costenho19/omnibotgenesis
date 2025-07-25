@@ -127,6 +127,29 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     from gtts import gTTS
     import tempfile
     from conversational_ai import ConversationalAI
+    # 🔍 Detectar idioma del usuario
+    language_code = update.message.from_user.language_code or 'en'
+
+    if language_code.startswith('es'):
+        lang = 'es'
+        welcome_text = "¡Bienvenido a OMNIX!\nSelecciona una opción del menú:"
+        welcome_voice = "Bienvenido a OMNIX. Tu asistente de trading inteligente está activo."
+    elif language_code.startswith('en'):
+        lang = 'en'
+        welcome_text = "Welcome to OMNIX!\nPlease select an option from the menu:"
+        welcome_voice = "Welcome to OMNIX. Your smart trading assistant is now active."
+    elif language_code.startswith('ar'):
+        lang = 'ar'
+        welcome_text = "مرحبًا بك في أومنيكس!\nاختر خيارًا من القائمة:"
+        welcome_voice = "مرحبًا بك في أومنيكس. مساعد التداول الذكي جاهز الآن."
+    elif language_code.startswith('zh'):
+        lang = 'zh'
+        welcome_text = "欢迎使用OMNIX！\n请选择菜单中的一个选项："
+        welcome_voice = "欢迎使用OMNIX。您的智能交易助手已激活。"
+    else:
+        lang = 'en'
+        welcome_text = "Welcome to OMNIX!\nPlease select an option from the menu:"
+        welcome_voice = "Welcome to OMNIX. Your smart trading assistant is now active."
 
     keyboard = [
         ["📊 Estado", "🧠 Análisis"],
@@ -136,8 +159,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     # Voz tipo Alexa (gTTS)
-    welcome_message = "Bienvenido a OMNIX. Tu asistente de trading inteligente está activo."
-    tts = gTTS(text=welcome_message, lang='es')
+    2
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         tts.save(f.name)
         audio_path = f.name
