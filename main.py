@@ -194,6 +194,29 @@ async def voz_validar_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
     os.remove(voice_path)
+# Comando /verificar_identidad - Verifica identidad y muestra firma
+async def verificar_identidad_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    user_id = str(user.id)
+    voice_path = f"voz_firma_{user_id}.ogg"
+
+    try:
+        is_valid = validate_voice_signature(voice_path)
+    except Exception as e:
+        await update.message.reply_text("⚠️ Error al verificar identidad por voz.")
+        return
+
+    if not is_valid:
+        await update.message.reply_text("❌ No se pudo verificar la identidad.")
+        return
+
+    signature = voice_signer.sign_message(user.username or user_id)
+
+    await update.message.reply_text(
+        f"✅ Identidad verificada con éxito.\n\n"
+        f"👤 Usuario: {user.full_name}\n"
+        f"🧬 Firma digital: {signature[:16]}..."
+    )
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         user_id = str(update.effective_user.id)
