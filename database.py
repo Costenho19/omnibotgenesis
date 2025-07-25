@@ -198,5 +198,16 @@ def get_user_memory(user_id, limit=5):
         return []
     finally:
         conn.close()
+import asyncpg
+
+async def setup_memory_table():
+    conn = await asyncpg.connect(DATABASE_URL)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_memory (
+            user_id TEXT PRIMARY KEY,
+            memory TEXT
+        )
+    """)
+    await conn.close()
 
 
