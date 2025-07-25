@@ -36,48 +36,82 @@ class ConversationalAI:
         except:
             return message
 
-    def update_memory(self, user_id: int, message: str):
-        if user_id not in user_memory:
-            user_memory[user_id] = []
-        user_memory[user_id].append(message)
-        if len(user_memory[user_id]) > 5:
-            user_memory[user_id] = user_memory[user_id][-5:]
+ # Guardar la memoria del usuario (IA contextual)
+async def save_user_memory(user_id: str, memory: str):
+    conn = await asyncpg.connect(DATABASE_URL)
+    await conn.execute("""
+        INSERT INTO user_memory (user_id, ai_response)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE SET ai_response = EXCLUDED.ai_response
+    """, user_id, memory)
+    await conn.close()
 
-    def get_memory(self, user_id: int) -> str:
-        if user_id in user_memory:
-            return "\n".join(user_memory[user_id])
-        return ""
+# Recuperar la memoria previa del usuario
+async def generate_response_with_memory(user_id: str, user_input: str, language: str) -> str:
+    # Obtener memoria previa
+    memory = await get_user_memory(user_id)
 
-    def generate_response(self, user_id: int, message: str, lang: str) -> str:
-        self.update_memory(user_id, message)
-        history = self.get_memory(user_id)
+    # Preparar contexto para GPT-4
+    context = f"""Eres OMNIX, un asistente inteligente. Este es el historial del usuario:
+{memory}
 
-        prompt = f"Historial:\n{history}\nUsuario: {message}\nAsistente:"
-        try:
-            response = openai.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "Eres un asistente útil y multilingüe."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7
-            )
-            reply = response.choices[0].message.content.strip()
-        except Exception as e:
-            reply = "Lo siento, hubo un problema al generar la respuesta."
+Ahora el usuario dice: {user_input}
+Responde de forma útil, clara y profesional."""
 
-        translated_reply = self.translate_output(reply, target_lang=lang)
-        return translated_reply
+    # Generar respuesta con OpenAI GPT-4
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Eres un asistente profesional con memoria contextual."},
+                {"role": "user", "content": context}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        ai_response = response.choices[0].message.content.strip()
+    except Exception as e:
+        ai_response = "⚠️ Ocurrió un error al generar la respuesta con memoria."
+async def generate_response_with_memory(user_id: str, user_input: str, language: str) -> str:
+    # Obtener memoria previa
+    memory = await get_user_memory(user_id)
 
-    def generate_voice(self, message: str, lang: str) -> str:
-        try:
-            tts = gTTS(text=message, lang=lang if lang != "zh-cn" else "zh")
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-                tts.save(f.name)
-                return f.name
-        except Exception as e:
-            return None
-# 🧠 Memoria contextual por usuario (IA)
+    # Preparar contexto para GPT-4
+    context = f"""Eres OMNIX, un asistente inteligente. Este es el historial del usuario:
+{memory}
+
+Ahora el usuario dice: {user_input}
+Responde de forma útil, clara y profesional."""
+
+    # Generar respuesta con OpenAI GPT-4
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Eres un asistente profesional con memoria contextual."},
+                {"role": "user", "content": context}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        ai_response = response.choices[0].message.content.strip()
+   await save_user_memory(user_id, ai_response)
+
+    except Exception as e:
+        ai_response = "⚠️ Ocurrió un error al generar la respuesta con memoria."
+
+    # Guardar la nueva interacción en memoria
+    new_memory = memory + f"\nUsuario: {user_input}\nOMNIX: {ai_response}"
+    await save_user_memory(user_id, new_memory)
+
+    return ai_response
+
+    # Guardar la nueva interacción en memoria
+    new_memory = memory + f"\nUsuario: {user_input}\nOMNIX: {ai_response}"
+    await save_user_memory(user_id, new_memory)
+
+    return ai_response
+
 def create_user_memory_table():
     conn = get_db_connection()
     if not conn:
