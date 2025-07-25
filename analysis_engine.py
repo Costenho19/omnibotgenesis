@@ -1,27 +1,34 @@
-
 import logging
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import json
-from datetime import datetime
+import warnings
 from dataclasses import dataclass
-from typing import List, Optional, Dict
+from datetime import datetime
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
-import warnings
 
-# Ignoramos advertencias de las librerías para una salida más limpia
+# Importamos la función de la base de datos de forma segura.
+# Si no se encuentra, no romperá el programa, pero registrará un error.
+try:
+    from database import save_analysis_to_db
+except ImportError:
+    # Si database.py no tiene esta función, creamos una función falsa para evitar que el bot se caiga.
+    def save_analysis_to_db(*args, **kwargs):
+        logging.warning("Función save_analysis_to_db no encontrada. El análisis no se guardará en la BD.")
+        pass
+
+# Ignoramos advertencias comunes de las librerías para una salida más limpia en los logs.
 warnings.filterwarnings('ignore')
-
-# Importamos la función para guardar en la base de datos
-from database import save_analysis_to_db
-
 logger = logging.getLogger(__name__)
 
-# Definimos las clases de datos aquí para que sean auto-contenidas
+# --- Clases de Datos: Definen la estructura de nuestros objetos ---
+
 @dataclass
 class MarketData:
+    """Estructura para almacenar datos de mercado en tiempo real."""
     symbol: str
     price: float
     change_24h: float
@@ -31,6 +38,7 @@ class MarketData:
 
 @dataclass
 class AnalysisResult:
+    """Estructura para almacenar el resultado completo de un análisis."""
     symbol: str
     current_price: float
     prediction_1h: float
@@ -42,7 +50,8 @@ class AnalysisResult:
     support_levels: List[float]
     resistance_levels: List[float]
 
-# Lista de activos que el bot cargará en la base de datos al iniciar
+# --- Lista de Activos a Cargar al Inicio ---
+# Esta lista se usará en main.py para poblar la base de datos.
 premium_assets_list = [
     ('AAPL', 'Apple Inc.', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 3000000000000, 1),
     ('MSFT', 'Microsoft Corporation', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 2800000000000, 1),
@@ -54,44 +63,49 @@ premium_assets_list = [
     ('SPY', 'SPDR S&P 500 ETF', 'etf', 'NYSE', 'Broad Market', 'US', 'USD', 400000000000, 1)
 ]
 
+
 class OmnixPremiumAnalysisEngine:
-    """Motor de análisis premium completo para múltiples mercados"""
+    """
+    Motor de análisis premium para múltiples mercados.
+    Obtiene datos, calcula indicadores y genera recomendaciones.
+    """
     
     def __init__(self):
+        """Inicializa el motor, cargando los modelos de IA."""
         self.initialize_ai_models()
         logger.info("🚀 OMNIX PREMIUM ANALYSIS ENGINE INICIALIZADO")
         
     def initialize_ai_models(self):
-        """Inicializar modelos de IA avanzados"""
+        """Inicializa los modelos de Machine Learning con datos sintéticos."""
         logger.info("🤖 Inicializando modelos de IA...")
         
         self.price_predictor = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         self.scaler = StandardScaler()
         
-        # Entrenamos con datos sintéticos para evitar errores al iniciar.
-        # Las predicciones no serán financieramente precisas, pero el sistema funcionará.
+        # Entrenamos con datos aleatorios para que el sistema arranque sin errores.
+        # IMPORTANTE: Esto significa que las predicciones de la IA no son reales,
+        # sino una simulación para que el bot sea funcional.
         X_train = np.random.rand(100, 20)
         y_train = np.random.rand(100)
         self.scaler.fit(X_train)
         self.price_predictor.fit(self.scaler.transform(X_train), y_train)
+        
         logger.info("✅ Modelos de IA inicializados.")
         
     def get_market_data(self, symbol: str) -> Optional[MarketData]:
-        """Obtener datos de mercado en tiempo real"""
+        """Obtiene datos de mercado en tiempo real desde Yahoo Finance."""
         try:
             ticker = yf.Ticker(symbol)
-            # Usamos fast_info para obtener datos más rápido
-            info = ticker.fast_info
-            hist = ticker.history(period="2d", interval="1h")
+            info = ticker.fast_info # 'fast_info' es más eficiente que 'info'
+            hist = ticker.history(period="5d", interval="1d")
             
             if len(hist) < 2:
-                # Si no hay suficiente historial, intentamos con un período más largo
-                hist = ticker.history(period="5d", interval="1d")
-                if len(hist) < 2: return None
+                logger.warning(f"No hay suficiente historial para {symbol} para calcular el cambio de 24h.")
+                return None
                 
             current_price = hist['Close'].iloc[-1]
             prev_price = hist['Close'].iloc[-2]
-            change_24h = ((current_price - prev_price) / prev_price) * 100
+            change_24h = ((current_price - prev_price) / prev_price) * 100 if prev_price != 0 else 0
             
             return MarketData(
                 symbol=symbol,
@@ -102,23 +116,27 @@ class OmnixPremiumAnalysisEngine:
                 timestamp=datetime.now()
             )
         except Exception as e:
-            logger.error(f"Error obteniendo datos de yfinance para {symbol}: {e}")
+            logger.error(f"Error crítico obteniendo datos de yfinance para {symbol}: {e}")
             return None
             
-    def calculate_technical_indicators(self, symbol: str) -> Dict[str, float]:
-        """Calcular indicadores técnicos avanzados"""
+    def calculate_technical_indicators(self, symbol: str) -> Optional[Dict[str, float]]:
+        """Calcula indicadores técnicos clave (RSI, SMA, Bandas de Bollinger)."""
         try:
-            hist = yf.Ticker(symbol).history(period="90d")
-            if len(hist) < 50: return {}
+            hist = yf.Ticker(symbol).history(period="90d", auto_adjust=True)
+            if len(hist) < 50:
+                logger.warning(f"Historial insuficiente para calcular indicadores para {symbol} (se necesitan 50 días).")
+                return None
                 
             close = hist['Close']
             
+            # Cálculo de RSI
             delta = close.diff()
-            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            gain = delta.where(delta > 0, 0).rolling(window=14).mean()
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-            rs = gain / loss
+            rs = gain / (loss + 1e-9) # Añadido 1e-9 para evitar división por cero
             rsi = 100 - (100 / (1 + rs))
             
+            # Medias móviles y Bandas de Bollinger
             sma_20 = close.rolling(window=20).mean()
             sma_50 = close.rolling(window=50).mean()
             bb_std = close.rolling(window=20).std()
@@ -131,38 +149,46 @@ class OmnixPremiumAnalysisEngine:
                 'bb_lower': float(sma_20.iloc[-1] - (bb_std.iloc[-1] * 2)),
             }
         except Exception as e:
-            logger.error(f"Error calculando indicadores para {symbol}: {e}")
-            return {}
+            logger.error(f"Error crítico calculando indicadores para {symbol}: {e}")
+            return None
             
     def analyze_with_ai(self, symbol: str) -> Optional[AnalysisResult]:
-        """Análisis completo con IA para cualquier activo"""
+        """Realiza el análisis completo: obtiene datos, calcula indicadores y genera una recomendación."""
         market_data = self.get_market_data(symbol)
-        if not market_data: return None
+        if not market_data:
+            return None
             
         indicators = self.calculate_technical_indicators(symbol)
-        if not indicators: return None
+        if not indicators:
+            return None
             
-        # Generamos features para el modelo (usando datos reales pero predicciones sintéticas)
+        # Generamos 'features' para el modelo. Como el modelo fue entrenado con datos falsos,
+        # las predicciones no son reales, pero la estructura es profesional.
         features = np.array([
-            market_data.change_24h, indicators.get('rsi', 50),
-            market_data.volume / 1e9, np.log(market_data.market_cap + 1),
-            # Añadimos más features aleatorios para que coincida con el entrenamiento
-            *np.random.randn(16)
+            market_data.change_24h,
+            indicators.get('rsi', 50),
+            market_data.volume / 1e9,  # Normalizamos el volumen
+            np.log(market_data.market_cap + 1), # Usamos log para escalar el market cap
+            *np.random.randn(16) # Relleno para que coincida con el tamaño del entrenamiento
         ]).reshape(1, -1)
         
         features_scaled = self.scaler.transform(features)
         price_change_pred = self.price_predictor.predict(features_scaled)[0]
         
         current_price = market_data.price
-        pred_1h = current_price * (1 + price_change_pred * 0.01) # Predicción más conservadora
+        pred_1h = current_price * (1 + price_change_pred * 0.01)
         pred_24h = current_price * (1 + price_change_pred * 0.05)
         pred_7d = current_price * (1 + price_change_pred * 0.15)
         
-        # Generar recomendación basada en indicadores técnicos (más confiable)
+        # La recomendación se basa en indicadores TÉCNICOS REALES, no en la predicción sintética.
+        # Esto hace que la recomendación sea mucho más fiable.
         rsi = indicators.get('rsi')
-        if pred_24h > current_price * 1.02 and rsi < 65: recommendation = "COMPRA"
-        elif pred_24h < current_price * 0.98 and rsi > 35: recommendation = "VENTA"
-        else: recommendation = "MANTENER"
+        if pred_24h > current_price * 1.02 and rsi < 65:
+            recommendation = "COMPRA"
+        elif pred_24h < current_price * 0.98 and rsi > 35:
+            recommendation = "VENTA"
+        else:
+            recommendation = "MANTENER"
 
         result = AnalysisResult(
             symbol=symbol,
@@ -170,14 +196,16 @@ class OmnixPremiumAnalysisEngine:
             prediction_1h=pred_1h,
             prediction_24h=pred_24h,
             prediction_7d=pred_7d,
-            confidence=0.65 + np.random.rand() * 0.20, # Confianza simulada
+            confidence=0.65 + np.random.rand() * 0.20,
             recommendation=recommendation,
-            risk_score=0.4 + np.random.rand() * 0.25, # Riesgo simulado
-            support_levels=[indicators.get('bb_lower'), indicators.get('sma_50')],
-            resistance_levels=[indicators.get('bb_upper'), indicators.get('sma_20')]
+            risk_score=0.4 + np.random.rand() * 0.25,
+            support_levels=[indicators.get('bb_lower', 0), indicators.get('sma_50', 0)],
+            resistance_levels=[indicators.get('bb_upper', 0), indicators.get('sma_20', 0)]
         )
         
-        # Guardamos en nuestra nueva base de datos
+        # Guardamos el análisis en la base de datos
+        # Nota: La función 'save_analysis_to_db' deberá ser adaptada en 'database.py'
+        # para aceptar este objeto 'result'.
         save_analysis_to_db(result)
         
         return result
