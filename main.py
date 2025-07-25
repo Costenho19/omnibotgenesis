@@ -131,6 +131,8 @@ application.add_handler(voice_handler)
 application.add_handler(CommandHandler("premium", premium_command))
 application.add_handler(CommandHandler("premium", premium_command))
 application.add_handler(CommandHandler("voz_validar", voz_validar_command))
+application.add_handler(CommandHandler("verificar_identidad", verificar_identidad_command))
+application.add_handler(CommandHandler("voz_borrar", voz_borrar_command))
 
 # --- Definición de los Comandos del Bot ---
 # Comando /voz_firma para validar identidad por voz y firmar digitalmente
