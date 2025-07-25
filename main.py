@@ -9,7 +9,9 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from web_dashboard import app as flask_app
 from config import CLAVE_PREMIUM, ADMIN_ID
 from pqc_encryption import PQCEncryption
- # Inicializa la clase de cifrado post-cuántico
+from verify import is_premium_user
+
+# Inicializa la clase de cifrado post-cuántico
 pqc = PQCEncryption()
 
 # Importa nuestras clases, funciones y configuración desde los otros archivos
