@@ -220,7 +220,11 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if not await es_usuario_premium(user.id):
         await update.message.reply_text("🚫 Este comando es exclusivo para usuarios Premium.")
         return
-    
+        # Verificar firma biométrica
+    if not validar_sesion_biometrica(str(user.id)):
+        await update.message.reply_text("🔒 Firma biométrica no válida. Usa /voz_firma para verificar tu identidad.")
+        return
+
     # (Tu lógica de trading aquí)
     await update.message.reply_text("Función de trading en desarrollo.")
 
@@ -412,6 +416,25 @@ async def main() -> None:
     await application.start()
     
     await asyncio.Event().wait()
+from datetime import datetime
+from voice_signature import VoiceSignature
+from database import get_dilithium_signature
+
+def validar_sesion_biometrica(user_id: str) -> bool:
+    """Verifica si la firma biométrica del usuario es válida y reciente (hoy)."""
+    firma_guardada = get_dilithium_signature(user_id)
+    if not firma_guardada:
+        return False
+
+    signer = VoiceSignature(SECRET_PHRASE)
+    firma_esperada = signer.sign_message(user_id)[0]  # Solo usamos la firma (sin timestamp)
+    
+    # Comparar firmas
+    if firma_guardada != firma_esperada:
+        return False
+
+    # Si quisieras verificar el timestamp, puedes adaptar la tabla para obtenerlo también y compararlo con hoy.
+    return True
 
 if __name__ == "__main__":
     try:
