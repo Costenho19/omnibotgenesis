@@ -284,7 +284,7 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
 await setup_memory_table()
 
-    from telegram.ext import MessageHandler, filters
+from telegram.ext import MessageHandler, filters
 from langdetect import detect
 from gtts import gTTS
 import tempfile
