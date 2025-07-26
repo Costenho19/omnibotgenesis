@@ -31,6 +31,8 @@ from conversational_ai import ConversationalAI # Asegúrate que aquí esté tu f
 from trading_system import KrakenTradingSystem
 from pqc_encryption import PQCEncryption
 from voice_signature import VoiceSignature, validate_voice_signature
+from langdetect import detect
+from conversational_ai import traducir_mensaje
 
 # --- Configuración Inicial ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -44,7 +46,23 @@ voice_signer = VoiceSignature("frase_secreta_omni2025")
 pqc = PQCEncryption()
 
 # --- FUNCIONES AUXILIARES ---
+from functools import wraps
 
+def solo_premium(func):
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
+        if not es_usuario_premium(user_id):
+            mensaje = "🚫 Esta función es exclusiva para usuarios premium. Usa /premium para activar tu cuenta."
+            tts = gTTS(mensaje, lang='es')
+            voz = BytesIO()
+            tts.write_to_fp(voz)
+            voz.seek(0)
+            await update.message.reply_text(mensaje)
+            await update.message.reply_voice(voice=voz)
+            return
+        return await func(update, context, *args, **kwargs)
+    return wrapper
 async def enviar_grafico(message, simbolo="BTC-USD"):
     """Genera y envía un gráfico de precios."""
     try:
@@ -419,6 +437,10 @@ async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TY
         mensaje = f"🔐 Tu cuenta está protegida con firma biométrica cuántica.\n🗓️ Último registro: Hoy"
     else:
         mensaje = "⚠️ No se ha encontrado una firma biométrica válida.\nUsa /voz_firma para registrar tu voz."
+     # Detectar idioma del usuario y traducir
+    idioma_usuario = detect(mensaje)
+    if idioma_usuario != 'es':
+        mensaje = traducir_mensaje(mensaje, idioma_usuario)
 
     # Convertir a voz
     tts = gTTS(mensaje, lang='es')
