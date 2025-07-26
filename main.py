@@ -12,6 +12,12 @@ from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKe
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from gtts import gTTS
 from langdetect import detect
+from database import (
+    ...
+    save_dilithium_signature,  # ya la tienes
+    get_dilithium_signature,   # <-- AGREGA ESTA si aún no está
+    ...
+)
 
 # --- Importaciones de tus Módulos ---
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY, CLAVE_PREMIUM, ADMIN_ID
