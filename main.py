@@ -544,7 +544,36 @@ async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
     await update.message.reply_photo(photo=InputFile(img, filename="mercado.png"))
+   from gtts import gTTS
+from io import BytesIO
 
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = str(update.effective_user.id)
+
+    # Estado simulado (puedes conectar estos valores a tu sistema real)
+    estado_kraken = "🟢 Kraken conectado"
+    estado_ia = "🤖 GPT-4 activo"
+    estado_trading = "📈 Trading automático: activo"
+    estado_memoria = "🧠 Memoria contextual: activada"
+
+    mensaje = (
+        f"📊 Estado del sistema OMNIX:\n"
+        f"{estado_kraken}\n"
+        f"{estado_ia}\n"
+        f"{estado_trading}\n"
+        f"{estado_memoria}"
+    )
+
+    # Convertir a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar mensaje y voz
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
+ 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
