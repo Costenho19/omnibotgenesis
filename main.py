@@ -127,7 +127,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Selecciona una opción del menú avanzado:", reply_markup=reply_markup)
-
+@solo_premium
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Realiza un análisis de texto de un activo (solo premium)."""
     user = update.effective_user
@@ -231,7 +231,7 @@ class VoiceSignature:
         payload = f"{ts}|{message}".encode("utf-8")
         expected = hmac.new(self.key, payload, hashlib.sha3_512).hexdigest()
         return hmac.compare_digest(expected, signature)
-
+@solo_premium
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Ejecuta una orden de trading."""
     user = update.effective_user
@@ -245,7 +245,7 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     # (Tu lógica de trading aquí)
     await update.message.reply_text("Función de trading en desarrollo.")
-
+@solo_premium
 async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra el estado del sistema y del usuario."""
     user = update.effective_user
@@ -531,7 +531,7 @@ from io import BytesIO
 from gtts import gTTS
 import yfinance as yf
 import matplotlib.pyplot as plt
-
+@solo_premium
 async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     cryptos = {
         "BTC-USD": "Bitcoin",
@@ -547,7 +547,7 @@ async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         last_price = data['Close'].iloc[-1]
         mensaje += f"• {nombre}: ${last_price:.2f}\n"
         plt.plot(data.index, data['Close'], label=nombre)
-
+    @solo_premium 
     plt.title("Precios Criptomonedas (24h)")
     plt.xlabel("Hora")
     plt.ylabel("Precio (USD)")
