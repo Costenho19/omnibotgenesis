@@ -3,10 +3,11 @@ import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
-
 import numpy as np
 import pandas as pd
 import yfinance as yf
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 
