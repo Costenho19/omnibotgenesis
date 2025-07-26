@@ -589,3 +589,41 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error con los botones: {str(e)}")
 
+# LÍNEAS FINALES DE main.py
+@application.command_handler("trading")
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user_id = str(update.effective_user.id)
+        if not is_premium_user(user_id):
+            await update.message.reply_text("🔒 Este comando es solo para usuarios premium.")
+            return
+
+        user_input = update.message.text.lower()
+
+        # Detectar acción (comprar o vender)
+        if "comprar" in user_input:
+            side = "buy"
+        elif "vender" in user_input:
+            side = "sell"
+        else:
+            await update.message.reply_text("❗Por favor indica si deseas comprar o vender.")
+            return
+
+        # Extraer cantidad y símbolo
+        parts = user_input.split()
+        amount = float([p for p in parts if p.replace('.', '', 1).isdigit()][0])
+        symbol = [p.upper() for p in parts if p.lower() in ["btc", "eth", "sol", "ada"]][0]
+
+        # Ejecutar trade con Kraken
+        trading_system = KrakenTradingSystem()
+        result = trading_system.place_order(symbol, amount, side)
+
+        # Confirmación visual y por voz
+        confirm_msg = f"✅ Trade ejecutado: {side.upper()} {amount} de {symbol}.\nID: {result.get('txid', 'sin id')}"
+        await update.message.reply_text(confirm_msg)
+        
+        voice = text_to_speech(f"Operación completada: {side} {amount} de {symbol}.")
+        await update.message.reply_voice(voice)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al ejecutar el trade: {str(e)}")
