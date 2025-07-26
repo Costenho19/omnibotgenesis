@@ -8,6 +8,8 @@ from langdetect import detect
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 from gtts import gTTS
+from database import save_user_memory, get_user_memory
+
 await save_user_memory(user_id, ai_response)
 import io
 import matplotlib.pyplot as plt
@@ -432,8 +434,86 @@ async def general_response_handler(update: Update, context: ContextTypes.DEFAULT
 
     with open(audio_path, 'rb') as audio:
         await update.message.reply_voice(voice=audio)
+from database import es_usuario_premium, get_user_language
+from langdetect import detect
 
-# Añadir este handler al final
+async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Ver tipo de cuenta
+    es_premium = await es_usuario_premium(user_id)
+    tipo_cuenta = "🌟 Premium" if es_premium else "🆓 Gratuita"
+
+    # Idioma guardado
+    idioma = await get_user_language(user_id) or detect(update.message.text or "es")
+
+    # Mensaje personalizado
+    mensaje = (
+        f"👤 *Información de tu cuenta OMNIX*\n\n"
+        f"🧾 Tipo de cuenta: {tipo_cuenta}\n"
+        f"🌐 Idioma preferido: `{idioma}`\n"
+        f"🕒 Última actividad: disponible pronto\n"
+        f"\nGracias por usar OMNIX, tu asistente de trading con IA."
+    )
+
+    await update.message.reply_markdown(mensaje)
+
+    # Voz tipo Alexa
+    tts = gTTS(text=mensaje.replace("*", ""), lang=idioma if idioma in ["es", "en", "ar", "zh-cn"] else "es")
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
+async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    opcion = query.data
+application.add_handler(CallbackQueryHandler(menu_callback_handler))
+
+    respuesta = {
+        "analisis": "🔍 Pronto verás análisis inteligentes...",
+        "chat_ia": "🤖 Estoy aquí para chatear contigo con IA.",
+        "panel": "📊 Accede al panel web premium pronto.",
+        "educacion": "🎓 Módulo educativo disponible próximamente.",
+        "configuracion": "⚙️ Configuraciones avanzadas disponibles pronto."
+    }.get(opcion, "❓ Opción no reconocida.")
+
+    await query.edit_message_text(text=respuesta)
+
+# Añasync def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    idioma = detect(update.message.text)
+    user_id = str(update.message.from_user.id)
+
+    texto = {
+        "es": "📋 Menú principal de OMNIX:\nSelecciona una opción:",
+        "en": "📋 Main menu of OMNIX:\nChoose an option:",
+        "ar": "📋 القائمة الرئيسية لـ OMNIX:\nاختر خيارًا:",
+        "zh-cn": "📋 OMNIX 主菜单：\n请选择一个选项："
+    }.get(idioma, "📋 OMNIX Main Menu:\nChoose an option:")
+
+    keyboard = [
+        [InlineKeyboardButton("📊 Análisis", callback_data="analisis")],
+        [InlineKeyboardButton("🤖 Chat IA", callback_data="chat_ia")],
+        [InlineKeyboardButton("🎛️ Panel", callback_data="panel")],
+        [InlineKeyboardButton("🎓 Educación", callback_data="educacion")],
+        [InlineKeyboardButton("⚙️ Configuración", callback_data="configuracion")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(texto, reply_markup=reply_markup)
+
+    # Voz Alexa
+    tts = gTTS(text=texto, lang=idioma)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, "rb") as audio:
+        await update.message.reply_voice(voice=audio)
+adir este handler al final
 application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), general_response_handler))
 
     logger.info("Limpiando sesión antigua de Telegram...")
