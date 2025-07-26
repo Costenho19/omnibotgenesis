@@ -334,4 +334,26 @@ async def get_user_language(user_id: str) -> str:
     conn.close()
     return result[0] if result else None
 
+import psycopg2
+from config import DATABASE_URL
+
+def save_dilithium_signature(user_id: str, signature: str, timestamp: int):
+    """Guarda la firma digital junto con el timestamp en la base de datos."""
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS dilithium_signatures (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT,
+            signature TEXT,
+            timestamp BIGINT
+        )
+    """)
+    cur.execute("""
+        INSERT INTO dilithium_signatures (user_id, signature, timestamp)
+        VALUES (%s, %s, %s)
+    """, (user_id, signature, timestamp))
+    conn.commit()
+    cur.close()
+    conn.close()
 
