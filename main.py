@@ -553,12 +553,19 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         if text == "📊 análisis":
-            mensaje = "Ejecutando análisis, por favor espera..."
+            mensaje = "📈 Generando gráfico de análisis de BTC, por favor espera..."
             idioma = detect(mensaje)
             tts = gTTS(text=mensaje, lang=idioma)
-            ruta_audio = "/tmp/audio_respuesta.mp3"
+            ruta_audio = "/tmp/analisis_respuesta.mp3"
             tts.save(ruta_audio)
-            await analyze_command(update, context)
+            await update.message.reply_voice(voice=open(ruta_audio, "rb"))
+
+            try:
+                from analysis_engine import generar_grafico_btc
+                await generar_grafico_btc(update)
+            except Exception as e:
+                await update.message.reply_text(f"⚠️ Error al generar el gráfico: {str(e)}")
+
 
         elif text == "📈 estado":
             mensaje = "Mostrando el estado actual del sistema."
