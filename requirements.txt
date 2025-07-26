@@ -21,3 +21,5 @@ requests==2.31.0
 nest_asyncio
 # --- Web Panel ---
 flask==2.3.3
+flask
+python-dotenv
