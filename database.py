@@ -356,4 +356,20 @@ def save_dilithium_signature(user_id: str, signature: str, timestamp: int):
     conn.commit()
     cur.close()
     conn.close()
+def get_dilithium_signature(user_id: str) -> str:
+    """
+    Recupera la última firma digital registrada para el usuario.
+    """
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT signature FROM dilithium_signatures
+        WHERE user_id = %s
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """, (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row[0] if row else None
 
