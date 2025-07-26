@@ -283,6 +283,8 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
 await setup_memory_table()
+setup_language_table()
+
 # 📍 Comando /trading con voz + validación + extracción de datos
 
 from langdetect import detect
