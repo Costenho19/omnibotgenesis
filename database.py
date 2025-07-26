@@ -225,5 +225,45 @@ async def setup_memory_table():
         )
     """)
     await conn.close()
+import psycopg2
+from config import DATABASE_URL
+
+def setup_memory_table():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_memory (
+            user_id TEXT PRIMARY KEY,
+            memory TEXT
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+async def save_user_memory(user_id: str, new_message: str):
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT memory FROM user_memory WHERE user_id = %s;", (user_id,))
+    result = cur.fetchone()
+
+    if result:
+        updated_memory = result[0] + "\n" + new_message
+        cur.execute("UPDATE user_memory SET memory = %s WHERE user_id = %s;", (updated_memory, user_id))
+    else:
+        cur.execute("INSERT INTO user_memory (user_id, memory) VALUES (%s, %s);", (user_id, new_message))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+async def get_user_memory(user_id: str) -> str:
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT memory FROM user_memory WHERE user_id = %s;", (user_id,))
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+    return result[0] if result else ""
 
 
