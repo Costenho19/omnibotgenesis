@@ -172,6 +172,41 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     
     await update.message.reply_text("✅ Identidad verificada. Tu firma de voz y cuántica han sido registradas.", parse_mode='Markdown')
     os.remove(voice_path)
+# voice_signature.py
+import time
+import hmac
+import hashlib
+from typing import Tuple
+
+class VoiceSignature:
+    """
+    Firma ligera basada en HMAC + timestamp (NO sustituye a Dilithium).
+    Úsala como 2º factor rápido. Para no repudio usa pqc.sign_with_dilithium().
+    """
+    def __init__(self, secret_phrase: str):
+        # Derivamos una clave HMAC a partir de la frase secreta
+        self.key = hashlib.sha3_512(secret_phrase.encode("utf-8")).digest()
+
+    def sign_message(self, message: str, ts: int | None = None) -> Tuple[str, int]:
+        """
+        Devuelve (firma_hex, timestamp_usado)
+        """
+        if ts is None:
+            ts = int(time.time())
+        payload = f"{ts}|{message}".encode("utf-8")
+        mac = hmac.new(self.key, payload, hashlib.sha3_512).hexdigest()
+        return mac, ts
+
+    def verify_signature(self, message: str, signature: str, ts: int, max_age: int = 120) -> bool:
+        """
+        Verifica firma y que el timestamp no esté expirado.
+        """
+        now = int(time.time())
+        if now - ts > max_age:
+            return False
+        payload = f"{ts}|{message}".encode("utf-8")
+        expected = hmac.new(self.key, payload, hashlib.sha3_512).hexdigest()
+        return hmac.compare_digest(expected, signature)
 
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Ejecuta una orden de trading."""
@@ -200,6 +235,54 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"👤 Tu Cuenta: {tipo_cuenta}"
     )
     await update.message.reply_text(estado_texto, parse_mode="Markdown")
+# --- COMANDO /voz_firma ---
+from telegram.constants import ChatAction
+import os
+import uuid
+import tempfile
+import requests
+from voice_signature import VoiceSignature
+from database import save_dilithium_signature
+
+SECRET_PHRASE = "mi frase secreta de firma biométrica"  # Cámbiala por tu frase real
+
+async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Verifica que haya mensaje de voz
+    if not update.message.voice:
+        await update.message.reply_text("🎙️ Por favor, envía un mensaje de voz para verificar tu identidad.")
+        return
+
+    await update.message.reply_text("🎧 Procesando tu firma de voz...")
+
+    # Descargar audio
+    voice_file = await context.bot.get_file(update.message.voice.file_id)
+    voice_path = f"/tmp/{uuid.uuid4()}.ogg"
+    await voice_file.download_to_drive(voice_path)
+
+    # Convertir con Whisper API (requiere tu clave OpenAI)
+    import openai
+    openai.api_key = OPENAI_API_KEY
+    with open(voice_path, "rb") as f:
+        transcript = openai.Audio.transcribe("whisper-1", f)["text"]
+
+    os.remove(voice_path)
+
+    if SECRET_PHRASE.lower() not in transcript.lower():
+        await update.message.reply_text("❌ Tu frase secreta no coincide. Intenta de nuevo.")
+        return
+
+    # Firmar la sesión
+    signer = VoiceSignature(SECRET_PHRASE)
+   signature, timestamp = signer.sign_message(transcript)
+
+
+    # Guardar en base de datos
+    save_dilithium_signature(user_id, signature)
+
+    await update.message.reply_text("✅ Identidad verificada y firma registrada exitosamente.")
 
 async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra información detallada de la cuenta del usuario."""
