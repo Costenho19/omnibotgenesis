@@ -1,96 +1,123 @@
+
 import logging
 import asyncio
 import os
 import psycopg2
 import threading
-from telegram import ReplyKeyboardMarkup
-from langdetect import detect
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
-from gtts import gTTS
-from database import save_user_memory, get_user_memory
-
-await save_user_memory(user_id, ai_response)
 import io
+import tempfile
 import matplotlib.pyplot as plt
 import yfinance as yf
-from telegram import InputFile
-# Importa nuestras clases y configuración
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
+from gtts import gTTS
+from langdetect import detect
+
+# --- Importaciones de tus Módulos ---
 from config import BOT_TOKEN, DATABASE_URL, GEMINI_API_KEY, KRAKEN_API_KEY, CLAVE_PREMIUM, ADMIN_ID
-from database import setup_premium_database, add_premium_assets, save_analysis_to_db, guardar_usuario_premium, es_usuario_premium, save_dilithium_signature
+from database import (
+    setup_premium_database, add_premium_assets, save_analysis_to_db, 
+    guardar_usuario_premium, es_usuario_premium, save_dilithium_signature,
+    save_user_memory, get_user_memory, get_user_language, setup_memory_table, setup_language_table
+)
 from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
-from conversational_ai import ConversationalAI
+from conversational_ai import ConversationalAI # Asegúrate que aquí esté tu función generate_response_with_memory
 from trading_system import KrakenTradingSystem
 from pqc_encryption import PQCEncryption
-from voice_signature import VoiceSignature, validate_voice_signature # Asegúrate que validate_voice_signature esté en este archivo
+from voice_signature import VoiceSignature, validate_voice_signature
 
-# Configuración del logging
+# --- Configuración Inicial ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-async def enviar_grafico(update: Update, simbolo="BTC-USD"):
-    import datetime
-    import matplotlib.pyplot as plt
-    import yfinance as yf
-    from telegram import InputFile
-    import io
 
-    # Obtener datos históricos
-    hoy = datetime.datetime.now()
-    inicio = hoy - datetime.timedelta(days=30)
-    datos = yf.download(simbolo, start=inicio.strftime('%Y-%m-%d'), end=hoy.strftime('%Y-%m-%d'))
-
-    if datos.empty:
-        await update.message.reply_text(f"⚠️ No se encontraron datos para {simbolo}.")
-        return
-
-    # Crear gráfico
-    fig, ax = plt.subplots(figsize=(10, 5))
-    datos["Close"].plot(ax=ax, label="Precio cierre", color="cyan")
-    ax.set_title(f"📊 Precio de {simbolo} (últimos 30 días)")
-    ax.set_xlabel("Fecha")
-    ax.set_ylabel("Precio en USD")
-    ax.legend()
-    ax.grid(True)
-
-    # Guardar en buffer
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    buffer.name = f"{simbolo}_grafico.png"
-    plt.close()
-
-    # Enviar imagen
-    await update.message.reply_photo(photo=InputFile(buffer), caption=f"📈 Análisis de {simbolo}")
-
-# --- Instanciamos nuestros sistemas ---
+# --- Instancias Globales de tus Sistemas ---
 analysis_engine = OmnixPremiumAnalysisEngine()
 conversational_ai = ConversationalAI()
 trading_system = KrakenTradingSystem()
 voice_signer = VoiceSignature("frase_secreta_omni2025")
 pqc = PQCEncryption()
 
-# --- Definición de los Comandos del Bot ---
+# --- FUNCIONES AUXILIARES ---
+
+async def enviar_grafico(message, simbolo="BTC-USD"):
+    """Genera y envía un gráfico de precios."""
+    try:
+        import datetime
+        hoy = datetime.datetime.now()
+        inicio = hoy - datetime.timedelta(days=30)
+        datos = yf.download(simbolo, start=inicio.strftime('%Y-%m-%d'), end=hoy.strftime('%Y-%m-%d'))
+
+        if datos.empty:
+            await message.reply_text(f"⚠️ No se encontraron datos para {simbolo}.")
+            return
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        datos["Close"].plot(ax=ax, label="Precio de cierre", color="cyan")
+        ax.set_title(f"📊 Precio de {simbolo} (últimos 30 días)")
+        ax.set_xlabel("Fecha")
+        ax.set_ylabel("Precio en USD")
+        ax.legend(); ax.grid(True)
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        plt.close(fig)
+
+        await message.reply_photo(photo=InputFile(buffer, filename=f"{simbolo}_grafico.png"), caption=f"📈 Análisis de {simbolo}")
+    except Exception as e:
+        logger.error(f"Error al generar gráfico: {e}")
+        await message.reply_text("Lo siento, ocurrió un error al generar el gráfico.")
+
+# --- DEFINICIÓN DE COMANDOS (/start, /analyze, etc.) ---
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Envía un mensaje de bienvenida con menú y diferenciación de usuario."""
+    """Envía un mensaje de bienvenida con menú de botones y diferenciación de usuario."""
     user = update.effective_user
     user_id = str(user.id)
+    language_code = user.language_code or 'es'
     
     if await es_usuario_premium(user_id):
-        welcome_text = "🌟 Bienvenido de nuevo, Usuario Premium. Tienes acceso a todas las funciones avanzadas."
+        welcome_text = "🌟 ¡Bienvenido de nuevo, Usuario Premium!"
     else:
-        welcome_text = "🔒 Bienvenido a OMNIX. Estás usando la versión gratuita. Usa /premium para descubrir las funciones exclusivas."
+        welcome_text = "🔒 ¡Bienvenido a OMNIX! Estás usando la versión gratuita."
     
-    await update.message.reply_html(f"¡Hola {user.mention_html()}!\n{welcome_text}")
+    keyboard = [
+        ["📊 Análisis", "📈 Estado"],
+        ["🎯 Trading", "🔐 Seguridad"],
+        ["👤 Cuenta", "❓ Ayuda"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
+
+    await update.message.reply_html(
+        f"¡Hola {user.mention_html()}!\n{welcome_text}\n\nSelecciona una opción del menú de abajo:",
+        reply_markup=reply_markup
+    )
+
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Muestra un menú con botones en línea (inline)."""
+    keyboard = [
+        [InlineKeyboardButton("🤖 Chat con IA", callback_data="chat_ia")],
+        [InlineKeyboardButton("📊 Análisis Gráfico", callback_data="analisis_grafico")],
+        [InlineKeyboardButton("📚 Educación (Pronto)", callback_data="educacion")],
+        [InlineKeyboardButton("⚙️ Configuración (Pronto)", callback_data="configuracion")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Selecciona una opción del menú avanzado:", reply_markup=reply_markup)
 
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Realiza un análisis de un activo (solo para usuarios premium)."""
+    """Realiza un análisis de texto de un activo (solo premium)."""
     user = update.effective_user
     if not await es_usuario_premium(user.id):
-        await update.message.reply_text("🚫 Este comando es exclusivo para usuarios *Premium*. Usa /premium para más información.", parse_mode="Markdown")
+        await update.message.reply_text("🚫 Este comando es exclusivo para usuarios Premium.", parse_mode="Markdown")
         return
         
-    # (El resto de tu código de análisis va aquí...)
+    if not context.args:
+        await update.message.reply_text("Uso: /analyze <SÍMBOLO>")
+        return
+    
+    symbol = context.args[0].upper()
+    await update.message.reply_text(f"Análisis de texto para {symbol} en desarrollo.")
+    # (Aquí iría tu lógica de análisis de texto)
 
 async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra información sobre la membresía Premium."""
@@ -98,15 +125,15 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "🌟 *OMNIX Premium* 🌟\n\n"
         "Accede a funciones exclusivas:\n"
         "🔐 Trading 24/7 con IA y seguridad biométrica\n"
-        "📊 Análisis técnico avanzado\n"
-        "🧠 IA conversacional multilingüe\n"
+        "📊 Análisis técnico avanzado y gráficos\n"
+        "🧠 IA conversacional multilingüe con memoria\n"
         "🛡️ Seguridad con firma post-cuántica Dilithium\n\n"
         "Para activar tu cuenta, usa el comando `/clave <tu_clave_premium>`."
     )
     await update.message.reply_markdown(mensaje)
 
 async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Permite a un usuario activar su cuenta Premium con una clave."""
+    """Permite a un usuario activar su cuenta Premium."""
     user_id = str(update.effective_user.id)
     if not context.args:
         await update.message.reply_text("Uso: /clave <tu_clave_premium>")
@@ -115,9 +142,9 @@ async def clave_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     clave_ingresada = context.args[0]
     if clave_ingresada == CLAVE_PREMIUM:
         await guardar_usuario_premium(user_id, clave_ingresada)
-        await update.message.reply_text("✅ ¡Clave correcta! Tu acceso premium ha sido activado. ¡Disfruta de todas las funciones!")
+        await update.message.reply_text("✅ ¡Clave correcta! Tu acceso premium ha sido activado.")
     else:
-        await update.message.reply_text("❌ Clave incorrecta. Por favor, inténtalo de nuevo.")
+        await update.message.reply_text("❌ Clave incorrecta.")
 
 async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Verifica la identidad con firma biométrica + post-cuántica."""
@@ -127,519 +154,164 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     if not update.message.voice:
-        await update.message.reply_text("🔊 Por favor, envíame un mensaje de voz para verificar tu identidad.")
+        await update.message.reply_text("🔊 Por favor, envíame un mensaje de voz para registrar tu firma.")
         return
 
     file = await context.bot.get_file(update.message.voice.file_id)
-    voice_path = f"voice_{user.id}.ogg"
+    voice_path = f"voice_reg_{user.id}.ogg"
     await file.download_to_drive(voice_path)
 
-    # Simulación de validación biométrica
-    if not validate_voice_signature(voice_path):
+    if not validate_voice_signature(voice_path): # Simulación
         await update.message.reply_text("🚫 Voz no reconocida. La verificación ha fallado.")
         os.remove(voice_path)
         return
 
-    # Firma post-cuántica con Dilithium
-    signature_message = f"Verificado: {user.username or user.id}"
+    signature_message = f"Verificado:{user.id}"
     signature = pqc.sign_with_dilithium(signature_message.encode())
     await save_dilithium_signature(str(user.id), signature)
     
-    await update.message.reply_text(
-        f"✅ Identidad verificada con éxito.\n"
-        f"🧬 Tu firma post-cuántica Dilithium ha sido registrada.",
-        parse_mode='Markdown'
-    )
+    await update.message.reply_text("✅ Identidad verificada. Tu firma de voz y cuántica han sido registradas.", parse_mode='Markdown')
     os.remove(voice_path)
 
 async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Ejecuta una orden de trading con validación por voz."""
+    """Ejecuta una orden de trading."""
     user = update.effective_user
     if not await es_usuario_premium(user.id):
         await update.message.reply_text("🚫 Este comando es exclusivo para usuarios Premium.")
         return
     
-    # (Aquí iría tu lógica completa de trading con voz...)
+    # (Tu lógica de trading aquí)
     await update.message.reply_text("Función de trading en desarrollo.")
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from telegram import ReplyKeyboardMarkup
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from telegram import ReplyKeyboardMarkup
-    from gtts import gTTS
-    import tempfile
-    from conversational_ai import ConversationalAI
-    # 🔍 Detectar idioma del usuario
-    language_code = update.message.from_user.language_code or 'en'
-
-    if language_code.startswith('es'):
-        lang = 'es'
-        welcome_text = "¡Bienvenido a OMNIX!\nSelecciona una opción del menú:"
-        welcome_voice = "Bienvenido a OMNIX. Tu asistente de trading inteligente está activo."
-    elif language_code.startswith('en'):
-        lang = 'en'
-        welcome_text = "Welcome to OMNIX!\nPlease select an option from the menu:"
-        welcome_voice = "Welcome to OMNIX. Your smart trading assistant is now active."
-    elif language_code.startswith('ar'):
-        lang = 'ar'
-        welcome_text = "مرحبًا بك في أومنيكس!\nاختر خيارًا من القائمة:"
-        welcome_voice = "مرحبًا بك في أومنيكس. مساعد التداول الذكي جاهز الآن."
-    elif language_code.startswith('zh'):
-        lang = 'zh'
-        welcome_text = "欢迎使用OMNIX！\n请选择菜单中的一个选项："
-        welcome_voice = "欢迎使用OMNIX。您的智能交易助手已激活。"
-    else:
-        lang = 'en'
-        welcome_text = "Welcome to OMNIX!\nPlease select an option from the menu:"
-        welcome_voice = "Welcome to OMNIX. Your smart trading assistant is now active."
-
-    keyboard = [
-        ["📊 Estado", "🧠 Análisis"],
-        ["📉 Trading", "🔐 Seguridad"],
-        ["🌐 Idioma", "👤 Cuenta"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    # Voz tipo Alexa (gTTS)
-    2
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-
-    with open(audio_path, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-
-    # Estado del sistema
-    estado = (
-        "🤖 *Estado del sistema OMNIX:*\n\n"
-        "✅ Bot activo y funcionando\n"
-        "🔁 Conexión IA (GPT-4): OK\n"
-        "🧠 Módulo Conversacional: Activo\n"
-        "📡 Trading conectado (Kraken): OK\n"
-        "🗄️ Base de datos: Conectada\n"
-        "🛡️ Seguridad Cuántica (Dilithium): Habilitada\n"
-        "📌 Versión: *OMNIX v1.5*"
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Muestra el estado del sistema y del usuario."""
+    user = update.effective_user
+    es_premium = await es_usuario_premium(user.id)
+    tipo_cuenta = "🌟 Premium" if es_premium else "🆓 Gratuita"
+    
+    estado_texto = (
+        f"🤖 *Estado del sistema OMNIX:*\n\n"
+        f"✅ Bot: Activo y funcionando\n"
+        f"🧠 IA (Gemini): Conectada\n"
+        f"📡 Trading (Kraken): Conectado\n"
+        f"🗄️ Base de datos: Conectada\n"
+        f"🛡️ Seguridad Cuántica: Habilitada\n"
+        f"----------\n"
+        f"👤 Tu Cuenta: {tipo_cuenta}"
     )
+    await update.message.reply_text(estado_texto, parse_mode="Markdown")
 
-    await update.message.reply_text(
-        text=estado,
-        parse_mode="Markdown",
-        reply_markup=reply_markup
+async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Muestra información detallada de la cuenta del usuario."""
+    user = update.effective_user
+    es_premium = await es_usuario_premium(user.id)
+    tipo_cuenta = "🌟 Premium" if es_premium else "🆓 Gratuita"
+    idioma_pref = await get_user_language(user.id) or "No definido"
+    
+    mensaje = (
+        f"👤 *Información de tu cuenta OMNIX*\n\n"
+        f"🧾 Tipo de cuenta: {tipo_cuenta}\n"
+        f"🌐 Idioma preferido: `{idioma_pref}`\n"
+        f"\nGracias por usar OMNIX."
     )
-
-    # Respuesta GPT bienvenida
-    ai = ConversationalAI()
-    bienvenida = ai.get_response("Saluda al usuario y dile que puede empezar a operar o preguntar lo que desee", "es")
-    await update.message.reply_text(bienvenida)
-
-    keyboard = [
-        ["📊 Estado", "🔍 Análisis"],
-        ["📈 Trading", "🛡️ Seguridad"],
-        ["🌐 Idioma", "👤 Cuenta"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    await update.message.reply_text(
-        "👋 ¡Bienvenido a OMNIX!\nSelecciona una opción del menú:",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
+    await update.message.reply_markdown(mensaje)
 
 async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra la lista de usuarios premium al administrador."""
-    admin_id_str = str(ADMIN_ID)
-    user_id_str = str(update.effective_user.id)
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra el estado actual del sistema OMNIX."""
-    estado_text = (
-        "🤖 *Estado del sistema OMNIX:*\n\n"
-        "✅ Bot activo y funcionando\n"
-        "🔁 Conexión IA (Gemini): OK\n"
-        "🧠 Módulo Conversacional: Activo\n"
-        "📡 Trading conectado (Kraken): OK\n"
-        "🗄️ Base de datos: Conectada\n"
-        "🛡️ Seguridad Cuántica (Dilithium): Habilitada\n"
-        "📌 Versión: OMNIX v1.5"
-    )
-    await update.message.reply_text(estado_text, parse_mode="Markdown")
-
-    if user_id_str != admin_id_str:
+    if str(update.effective_user.id) != str(ADMIN_ID):
         await update.message.reply_text("⛔ No tienes permisos para acceder a este panel.")
         return
-
+        
     # (Aquí iría tu código para consultar y mostrar los usuarios premium...)
     await update.message.reply_text("Panel de administración en desarrollo.")
 
+# --- MANEJADORES DE MENSAJES Y BOTONES ---
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-   from telegram import ReplyKeyboardMarkup
+async def general_text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Maneja cualquier mensaje de texto, incluyendo los botones del menú principal."""
+    user_id = str(update.message.from_user.id)
+    user_input = update.message.text
+    
+    # Manejo de botones del menú principal (ReplyKeyboardMarkup)
+    if "📊 Análisis" in user_input:
+        await update.message.reply_text("Por favor, usa el comando /analyze <SÍMBOLO> para un análisis de texto, o /menu para ver el análisis gráfico.")
+        return
+    elif "📈 Estado" in user_input:
+        await estado_command(update, context)
+        return
+    elif "🎯 Trading" in user_input:
+        await trading_command(update, context)
+        return
+    elif "🔐 Seguridad" in user_input:
+        await update.message.reply_text("Usa /voz_firma para registrar tu identidad biométrica.")
+        return
+    elif "👤 Cuenta" in user_input:
+        await cuenta_command(update, context)
+        return
+    elif "❓ Ayuda" in user_input:
+        await premium_command(update, context) # El comando premium sirve como ayuda
+        return
 
-async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [
-        ["📊 Estado", "🔍 Análisis"],
-        ["🎯 Trading", "🛡️ Seguridad"],
-        ["🌐 Idioma", "👤 Cuenta"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(
-        "📋 *Menú principal OMNIX:*\nSelecciona una opción:",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
+    # Si no es un botón, es un chat con la IA
+    logger.info(f"RECIBIDO CHAT de {update.effective_user.name}: {user_input}")
+    historial = await get_user_memory(user_id)
+    prompt = historial + "\nUsuario: " + user_input + "\nOMNIX:"
+    language = await get_user_language(user_id) or detect(user_input)
 
-    """Responde a mensajes de texto que no son comandos."""
-    logger.info(f"RECIBIDO MENSAJE de {update.effective_user.name}: {update.message.text}")
-    await update.message.reply_text("He recibido tu mensaje. Usa /start para ver los comandos disponibles.")
+    #respuesta = await generate_response_with_memory(user_id, prompt, language)
+    respuesta = conversational_ai.generate_response(user_id, prompt) # Usando la clase directamente
+    await save_user_memory(user_id, f"Usuario: {user_input}\nOMNIX: {respuesta}")
+
+    await update.message.reply_text(respuesta)
+
+async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Maneja los botones del menú inline (/menu)."""
+    query = update.callback_query
+    await query.answer()
+    opcion = query.data
+
+    if opcion == "analisis_grafico":
+        await query.message.reply_text("Generando gráfico de BTC-USD...")
+        await enviar_grafico(query.message, simbolo="BTC-USD")
+    else:
+        respuesta = {
+            "chat_ia": "🤖 Puedes chatear conmigo directamente. Escribe lo que quieras.",
+            "educacion": "📚 Módulo educativo disponible próximamente.",
+            "configuracion": "⚙️ Configuraciones avanzadas disponibles pronto."
+        }.get(opcion, "❓ Opción no reconocida.")
+        await query.edit_message_text(text=respuesta)
+
+# --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
 
 async def main() -> None:
-    """Función principal que arranca todo."""
+    """Función principal que configura y arranca el bot."""
     logger.info("🚀 Iniciando OMNIX Bot...")
     
     if not BOT_TOKEN or not DATABASE_URL:
         logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL.")
         return
 
+    # Preparamos las tablas de la BD que no existan
     setup_premium_database()
+    setup_memory_table()
+    setup_language_table()
     add_premium_assets(premium_assets_list)
 
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Añadimos los manejadores de comandos
+    # Añadimos los manejadores de comandos y mensajes
     application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("premium", premium_command))
     application.add_handler(CommandHandler("clave", clave_command))
     application.add_handler(CommandHandler("voz_firma", voz_firma_command))
     application.add_handler(CommandHandler("trading", trading_command))
     application.add_handler(CommandHandler("estado", estado_command))
+    application.add_handler(CommandHandler("cuenta", cuenta_command))
     application.add_handler(CommandHandler("premium_panel", premium_panel_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-    application.add_handler(CommandHandler("menu", menu_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
-    application.add_handler(CommandHandler("trading", trading_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_text_handler))
     application.add_handler(CallbackQueryHandler(menu_callback_handler))
-
-await setup_memory_table()
-setup_language_table()
-
-# 📍 Comando /trading con voz + validación + extracción de datos
-
-from langdetect import detect
-from gtts import gTTS
-import tempfile
-
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    user_id = str(user.id)
-
-    if not await es_usuario_premium(user_id):
-        await update.message.reply_text("🔒 Este comando es solo para usuarios premium.")
-        return
-
-    try:
-        user_input = " ".join(context.args).lower()
-        if not user_input:
-            await update.message.reply_text("Uso correcto: /trading comprar BTC 50")
-            return
-
-        # Detectar acción
-        if "comprar" in user_input:
-            action = "compra"
-            side = "buy"
-        elif "vender" in user_input:
-            action = "venta"
-            side = "sell"
-        else:
-            await update.message.reply_text("❗ Indica si deseas *comprar* o *vender*.")
-            return
-
-        # Detectar símbolo y monto
-        partes = user_input.split()
-        symbol = next((p.upper() for p in partes if p.upper() in ["BTC", "ETH", "SOL", "ADA", "XRP"]), None)
-        amount = next((float(p) for p in partes if p.replace('.', '', 1).isdigit()), None)
-
-        if not symbol or not amount:
-            await update.message.reply_text("❗ Formato incorrecto. Ejemplo: /trading comprar BTC 50")
-            return
-
-        # Simulación de orden (puedes conectar Kraken aquí)
-        mensaje = (
-            f"✅ Orden simulada de {action} ejecutada:\n"
-            f"📈 Activo: {symbol}\n"
-            f"💰 Monto: {amount} USD\n"
-            f"🤖 Ejecutado por OMNIX IA"
-        )
-from database import save_user_memory, get_user_memory
-
-async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.message.from_user.id)
-    user_input = update.message.text
-
-    # Obtener historial anterior
-    historial = await get_user_memory(user_id)
-
-    # Crear mensaje contextual
-    prompt = historial + "\nUsuario: " + user_input + "\nOMNIX:"
-    
-    # Obtener respuesta de IA
-    respuesta = await generate_response_with_memory(user_id, prompt, detect(user_input))
-
-    # Guardar en la memoria del usuario
-    await save_user_memory(user_id, f"Usuario: {user_input}\nOMNIX: {respuesta}")
-
-    await update.message.reply_text(respuesta)
-
-    # Voz estilo Alexa
-    tts = gTTS(text=respuesta, lang=detect(user_input))
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-
-    with open(audio_path, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-
-        await update.message.reply_text(mensaje)
-
-        # Voz tipo Alexa (gTTS)
-        idioma = detect(mensaje)
-        tts = gTTS(text=mensaje, lang=idioma if idioma in ["es", "en", "ar", "zh-cn"] else "es")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-            tts.save(f.name)
-            audio_path = f.name
-
-        with open(audio_path, "rb") as audio:
-            await update.message.reply_voice(voice=audio)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error en el comando /trading: {str(e)}")
-
-from telegram.ext import MessageHandler, filters
-from langdetect import detect
-from gtts import gTTS
-import tempfile
-
-async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.message.from_user.id)
-    user_input = update.message.text
-
-    # Detectar idioma
-    language = detect(user_input)
-
-    # Obtener respuesta con memoria
-    response = await generate_response_with_memory(user_id, user_input, language)
-
-    # Enviar respuesta escrita
-    await update.message.reply_text(response)
-
-    # Convertir a voz tipo Alexa
-    tts = gTTS(text=response, lang=language)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-
-    with open(audio_path, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-
-# Añadir este handler al final
-application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), general_response_handler))
-
-from telegram.ext import MessageHandler, filters
-from langdetect import detect
-from gtts import gTTS
-import tempfile
-
-async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.message.from_user.id)
-    user_input = update.message.text
-
-    # Detectar idioma
-    language = detect(user_input)
-
-    # Obtener respuesta con memoria
-    response = await generate_response_with_memory(user_id, user_input, language)
-
-    # Enviar respuesta escrita
-    await update.message.reply_text(response)
-
-    # Convertir a voz tipo Alexa
-    tts = gTTS(text=response, lang=language)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-# CALLBACK DEL MENÚ - RESPUESTA Y ANÁLISIS
-async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    opcion = query.data
-
-    if opcion == "analisis":
-        await enviar_grafico(update, símbolo="BTC-USD")
-        return
-
-    respuesta = {
-        "chat_ia": "🤖 Estoy aquí para chatear contigo con IA.",
-        "panel": "🧩 Accede al panel web premium pronto.",
-        "educacion": "📚 Módulo educativo disponible próximamente.",
-        "configuracion": "⚙️ Configuraciones avanzadas disponibles pronto."
-    }.get(opcion, "❓ Opción no reconocida.")
-
-    await query.edit_message_text(text=respuesta)
-
-    with open(audio_path, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-from database import es_usuario_premium, get_user_language
-from langdetect import detect
-application.add_handler(CallbackQueryHandler(menu_callback_handler))
-
-async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    user_id = str(user.id)
-
-    # Ver tipo de cuenta
-    es_premium = await es_usuario_premium(user_id)
-    tipo_cuenta = "🌟 Premium" if es_premium else "🆓 Gratuita"
-
-    # Idioma guardado
-    idioma = await get_user_language(user_id) or detect(update.message.text or "es")
-
-    # Mensaje personalizado
-    mensaje = (
-        f"👤 *Información de tu cuenta OMNIX*\n\n"
-        f"🧾 Tipo de cuenta: {tipo_cuenta}\n"
-        f"🌐 Idioma preferido: `{idioma}`\n"
-        f"🕒 Última actividad: disponible pronto\n"
-        f"\nGracias por usar OMNIX, tu asistente de trading con IA."
-    )
-
-    await update.message.reply_markdown(mensaje)
-
-    # Voz tipo Alexa
-    tts = gTTS(text=mensaje.replace("*", ""), lang=idioma if idioma in ["es", "en", "ar", "zh-cn"] else "es")
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-# --- COMANDO /trading ---        # 495
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):  # 496
-    user = update.effective_user               # 497
-    user_id = str(user.id)                     # 498
-
-    # Verificamos si es usuario premium        # 499
-    if not await es_usuario_premium(user_id):  # 500
-        await update.message.reply_text("🔒 Esta función es solo para usuarios Premium.")  # 501
-        return                                 # 502
-
-    # Extraemos el símbolo de trading desde el mensaje  # 503
-    if not context.args:                       # 504
-        await update.message.reply_text("💱 Usa el comando así: /trading BTC/USD")  # 505
-        return                                 # 506
-
-    simbolo = context.args[0].upper()          # 507
-
-    try:                                       # 508
-        resultado = trading_system.realizar_operacion(simbolo)  # 509
-        mensaje = f"✅ Operación ejecutada para {simbolo}.\n\n📊 Resultado: {resultado}"  # 510
-    except Exception as e:                     # 511
-        mensaje = f"❌ Error al ejecutar trading:\n`{e}`"  # 512
-
-    await update.message.reply_text(mensaje, parse_mode="Markdown")  # 513
-# --- COMANDO /estado --- 
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    user_id = str(user.id)
-
-    # Verificamos si es usuario premium
-    es_premium = await es_usuario_premium(user_id)
-    tipo_cuenta = "🌟 Premium" if es_premium else "🔓 Gratuita"
-
-    # Idioma detectado
-    idioma = await get_user_language(user_id) or detect(update.message.text or "es")
-
-    # Mensaje con voz incluida
-    mensaje = (
-        f"🧠 Estado de tu cuenta OMNIX\n\n"
-        f"🔐 Tipo de cuenta: {tipo_cuenta}\n"
-        f"🌐 Idioma preferido: {idioma}\n"
-        f"📈 Último análisis disponible: BTC/USD\n"
-        f"\nGracias por usar OMNIX, el asistente de trading inteligente."
-    )
-
-    # Enviar mensaje escrito
-    await update.message.reply_markdown(mensaje)
-
-    # Generar voz
-    tts = gTTS(text=mensaje.replace("**", ""), lang=idioma if idioma in ["es", "en", "ar", "zh"] else "es")
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-# --- COMANDO /menu ---
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
-async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("🤖 Chat con IA", callback_data="chat_ia")],
-        [InlineKeyboardButton("📊 Análisis", callback_data="analisis")],
-        [InlineKeyboardButton("📚 Educación", callback_data="educacion")],
-        [InlineKeyboardButton("⚙️ Configuración", callback_data="configuracion")],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Selecciona una opción del menú:", reply_markup=reply_markup)
-
-    # Enviar mensaje de voz
-    with open(audio_path, "rb") as audio:
-        await update.message.reply_voice(voice=audio)
-
-    with open(audio_path, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    opcion = query.data
-application.add_handler(CallbackQueryHandler(menu_callback_handler))
-
-    respuesta = {
-        "analisis": "🔍 Pronto verás análisis inteligentes...",
-        "chat_ia": "🤖 Estoy aquí para chatear contigo con IA.",
-        "panel": "📊 Accede al panel web premium pronto.",
-        "educacion": "🎓 Módulo educativo disponible próximamente.",
-        "configuracion": "⚙️ Configuraciones avanzadas disponibles pronto."
-    }.get(opcion, "❓ Opción no reconocida.")
-
-    await query.edit_message_text(text=respuesta)
-
-# Añasync def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    idioma = detect(update.message.text)
-    user_id = str(update.message.from_user.id)
-
-    texto = {
-        "es": "📋 Menú principal de OMNIX:\nSelecciona una opción:",
-        "en": "📋 Main menu of OMNIX:\nChoose an option:",
-        "ar": "📋 القائمة الرئيسية لـ OMNIX:\nاختر خيارًا:",
-        "zh-cn": "📋 OMNIX 主菜单：\n请选择一个选项："
-    }.get(idioma, "📋 OMNIX Main Menu:\nChoose an option:")
-
-    keyboard = [
-        [InlineKeyboardButton("📊 Análisis", callback_data="analisis")],
-        [InlineKeyboardButton("🤖 Chat IA", callback_data="chat_ia")],
-        [InlineKeyboardButton("🎛️ Panel", callback_data="panel")],
-        [InlineKeyboardButton("🎓 Educación", callback_data="educacion")],
-        [InlineKeyboardButton("⚙️ Configuración", callback_data="configuracion")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await update.message.reply_text(texto, reply_markup=reply_markup)
-
-    # Voz Alexa
-    tts = gTTS(text=texto, lang=idioma)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-        tts.save(f.name)
-        audio_path = f.name
-
-    with open(audio_path, "rb") as audio:
-        await update.message.reply_voice(voice=audio)
-adir este handler al final
-application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), general_response_handler))
 
     logger.info("Limpiando sesión antigua de Telegram...")
     await application.bot.delete_webhook()
@@ -658,269 +330,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!")
         print(f"Error: {e}")
-  
-async def boton_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.lower()
-    if "estado" in text:
-        await estado_command(update, context)
-    elif "análisis" in text or "analisis" in text:
-        await analyze_command(update, context)
-    elif "trading" in text:
-        await trading_command(update, context)
-    elif "seguridad" in text:
-        await update.message.reply_text("🛡️ Seguridad post-cuántica activa con Dilithium.")
-    elif "idioma" in text:
-        await update.message.reply_text("🌐 Función de cambio de idioma en desarrollo.")
-    elif "cuenta" in text:
-        await update.message.reply_text("👤 Esta es tu cuenta de usuario OMNIX.")
-
-@dp.message_handler(lambda message: message.text not in ["/start", "/analyze", "/estado", "/trading"])
-@app.command("/analyze")
-async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if len(context.args) == 0:
-            await update.message.reply_text("Por favor, indica el símbolo del activo. Ejemplo: /analyze BTC-USD")
-            return
-
-        symbol = context.args[0].upper()
-        data = yf.download(symbol, period="7d", interval="1h")
-
-        if data.empty:
-            await update.message.reply_text("No se encontraron datos para ese símbolo.")
-            return
-
-        plt.figure(figsize=(10, 4))
-        plt.plot(data.index, data["Close"], label="Precio")
-        plt.title(f"Precio de {symbol} (últimos 7 días)")
-        plt.xlabel("Fecha")
-        plt.ylabel("Precio")
-        plt.legend()
-        plt.tight_layout()
-
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png")
-        buf.seek(0)
-        plt.close()
-
-        await update.message.reply_photo(photo=InputFile(buf, filename="grafico.png"))
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al generar el análisis: {str(e)}")
-@app.command("/analyze")
-async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if len(context.args) == 0:
-            await update.message.reply_text("Por favor, indica el símbolo del activo. Ejemplo: /analyze BTC-USD")
-            return
-
-        symbol = context.args[0].upper()
-        data = yf.download(symbol, period="7d", interval="1h")
-
-        if data.empty:
-            await update.message.reply_text("No se encontraron datos para ese símbolo.")
-            return
-
-        plt.figure(figsize=(10, 4))
-        plt.plot(data.index, data["Close"], label="Precio")
-        plt.title(f"Precio de {symbol} (últimos 7 días)")
-        plt.xlabel("Fecha")
-        plt.ylabel("Precio")
-        plt.legend()
-        plt.tight_layout()
-
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png")
-        buf.seek(0)
-        plt.close()
-
-        await update.message.reply_photo(photo=InputFile(buf, filename="grafico.png"))
-       texto_resumen = f"Análisis completo de {symbol}. El gráfico muestra los precios de cierre durante los últimos 7 días."
-
-        # Detectar idioma del texto (langdetect)
-        idioma_detectado = detect(texto_resumen)
-
-        # gTTS solo acepta ciertos idiomas, así que filtramos
-        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "es"
-
-        tts = gTTS(text=texto_resumen, lang=idioma_voz)
-        audio_path = "/tmp/analisis_audio.mp3"
-        tts.save(audio_path)
-
-        with open(audio_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al generar el análisis: {str(e)}")
-@app.command("/estado")
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        estado_texto = (
-            f"🧠 Sistema OMNIX activo.\n"
-            f"📡 Exchanges conectados: Kraken, Binance.\n"
-            f"🕒 Hora actual: {now} UTC.\n"
-            f"✅ Todo funcionando correctamente."
-        )
-
-        # Detectar idioma
-        idioma_detectado = detect(estado_texto)
-        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "en"
-
-        # Convertir a voz
-        tts_estado = gTTS(text=estado_texto, lang=idioma_voz)
-        estado_audio_path = "/tmp/estado_audio.mp3"
-        tts_estado.save(estado_audio_path)
-
-        # Enviar voz
-        with open(estado_audio_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al generar el estado: {str(e)}")
-
-@app.command("/estado")
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        estado_texto = (
-            f"🧠 Sistema OMNIX activo.\n"
-            f"📡 Exchanges conectados: Kraken, Binance.\n"
-            f"🕒 Hora actual: {now} UTC.\n"
-            f"✅ Todo funcionando correctamente."
-        )
-
-        # Detectar idioma
-        idioma_detectado = detect(estado_texto)
-        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "en"
-
-        # Convertir a voz
-        tts_estado = gTTS(text=estado_texto, lang=idioma_voz)
-        estado_audio_path = "/tmp/estado_audio.mp3"
-        tts_estado.save(estado_audio_path)
-
-        # Enviar voz
-        with open(estado_audio_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al generar el estado: {str(e)}")
-@app.command("/trading")
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        symbol = context.args[0].upper() if context.args else "BTC"
-        cantidad = context.args[1] if len(context.args) > 1 else "50"
-
-        mensaje = (
-            f"💰 Orden de compra simulada:\n"
-            f"Criptoactivo: {symbol}\n"
-            f"Monto: ${cantidad} USD\n"
-            f"🕒 Ejecutado por OMNIX vía voz."
-        )
-
-        # Detectar idioma
-        idioma_detectado = detect(mensaje)
-        idioma_voz = idioma_detectado if idioma_detectado in ["es", "en", "ar", "zh-cn"] else "es"
-
-        # Convertir a voz
-        tts_trading = gTTS(text=mensaje, lang=idioma_voz)
-        trading_audio_path = "/tmp/trading_audio.mp3"
-        tts_trading.save(trading_audio_path)
-@app.command("/menu")
-async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        keyboard = [
-            ["📊 Análisis", "📈 Estado"],
-            ["🎯 Trading"]
-        ]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("Selecciona una opción:", reply_markup=reply_markup)
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al mostrar el menú: {str(e)}")
-
-        # Enviar voz
-        with open(trading_audio_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al ejecutar la orden: {str(e)}")
-@app.message()
-@app.message()
-async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip().lower()
-
-    try:
-        if text == "📊 análisis":
-            mensaje = "📈 Generando gráfico de análisis de BTC, por favor espera..."
-            idioma = detect(mensaje)
-            tts = gTTS(text=mensaje, lang=idioma)
-            ruta_audio = "/tmp/analisis_respuesta.mp3"
-            tts.save(ruta_audio)
-            await update.message.reply_voice(voice=open(ruta_audio, "rb"))
-
-            try:
-                from analysis_engine import generar_grafico_btc
-                await generar_grafico_btc(update)
-            except Exception as e:
-                await update.message.reply_text(f"⚠️ Error al generar el gráfico: {str(e)}")
-
-
-        elif text == "📈 estado":
-            mensaje = "Mostrando el estado actual del sistema."
-            idioma = detect(mensaje)
-            tts = gTTS(text=mensaje, lang=idioma)
-            ruta_audio = "/tmp/audio_respuesta.mp3"
-            tts.save(ruta_audio)
-            await estado_command(update, context)
-
-        elif text == "🎯 trading":
-            mensaje = "Por favor usa el comando: /trading BTC 50"
-            idioma = detect(mensaje)
-            tts = gTTS(text=mensaje, lang=idioma)
-            ruta_audio = "/tmp/audio_respuesta.mp3"
-            tts.save(ruta_audio)
-
-        # Enviar respuesta en voz
-        with open(ruta_audio, "rb") as audio:
-            await update.message.reply_voice(voice=audio)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error con los botones: {str(e)}")
-
-# LÍNEAS FINALES DE main.py
-@application.command_handler("trading")
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        user_id = str(update.effective_user.id)
-        if not is_premium_user(user_id):
-            await update.message.reply_text("🔒 Este comando es solo para usuarios premium.")
-            return
-
-        user_input = update.message.text.lower()
-
-        # Detectar acción (comprar o vender)
-        if "comprar" in user_input:
-            side = "buy"
-        elif "vender" in user_input:
-            side = "sell"
-        else:
-            await update.message.reply_text("❗Por favor indica si deseas comprar o vender.")
-            return
-
-        # Extraer cantidad y símbolo
-        parts = user_input.split()
-        amount = float([p for p in parts if p.replace('.', '', 1).isdigit()][0])
-        symbol = [p.upper() for p in parts if p.lower() in ["btc", "eth", "sol", "ada"]][0]
-
-        # Ejecutar trade con Kraken
-        trading_system = KrakenTradingSystem()
-        result = trading_system.place_order(symbol, amount, side)
-
-        # Confirmación visual y por voz
-        confirm_msg = f"✅ Trade ejecutado: {side.upper()} {amount} de {symbol}.\nID: {result.get('txid', 'sin id')}"
-        await update.message.reply_text(confirm_msg)
-        
-        voice = text_to_speech(f"Operación completada: {side} {amount} de {symbol}.")
-        await update.message.reply_voice(voice)
-
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Error al ejecutar el trade: {str(e)}")
