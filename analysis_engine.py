@@ -210,3 +210,34 @@ class OmnixPremiumAnalysisEngine:
         save_analysis_to_db(result)
         
         return result
+# LÍNEA FINAL
+async def generar_grafico_btc(update):
+    try:
+        from datetime import datetime, timedelta
+        import yfinance as yf
+        import matplotlib.pyplot as plt
+
+        # Obtener datos históricos (7 días)
+        fin = datetime.now()
+        inicio = fin - timedelta(days=7)
+        datos = yf.download("BTC-USD", start=inicio, end=fin, interval="1h")
+
+        # Crear gráfico
+        plt.figure(figsize=(10, 5))
+        plt.plot(datos.index, datos["Close"], label="Precio BTC", color="blue")
+        plt.title("BTC-USD - Últimos 7 días")
+        plt.xlabel("Fecha")
+        plt.ylabel("Precio en USD")
+        plt.grid(True)
+        plt.legend()
+        ruta = "/tmp/btc_grafico.png"
+        plt.savefig(ruta)
+        plt.close()
+
+        # Enviar imagen por Telegram
+        with open(ruta, "rb") as imagen:
+            await update.message.reply_photo(photo=imagen, caption="📈 Análisis de BTC completado.")
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error generando gráfico: {str(e)}")
+
