@@ -405,6 +405,28 @@ async def main() -> None:
     application.add_handler(CommandHandler("premium_panel", premium_panel_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_text_handler))
     application.add_handler(CallbackQueryHandler(menu_callback_handler))
+    application.add_handler(CommandHandler("validar", voz_validar_command))
+    application.add_handler(CommandHandler("cuenta_segura", cuenta_segura_command))
+
+    
+
+async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = str(update.effective_user.id)
+    firma_guardada = get_dilithium_signature(user_id)
+
+    if firma_guardada:
+        mensaje = f"🔐 Tu cuenta está protegida con firma biométrica cuántica.\n🗓️ Último registro: Hoy"
+    else:
+        mensaje = "⚠️ No se ha encontrado una firma biométrica válida.\nUsa /voz_firma para registrar tu voz."
+
+    # Convertir a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
 
     logger.info("Limpiando sesión antigua de Telegram...")
     await application.bot.delete_webhook()
@@ -435,6 +457,51 @@ def validar_sesion_biometrica(user_id: str) -> bool:
 
     # Si quisieras verificar el timestamp, puedes adaptar la tabla para obtenerlo también y compararlo con hoy.
     return True
+from telegram import Update
+from telegram.ext import ContextTypes
+from gtts import gTTS
+from io import BytesIO
+
+async def voz_validar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = str(update.effective_user.id)
+    es_valida = validar_sesion_biometrica(user_id)
+
+    if es_valida:
+        mensaje = "✅ Tu firma biométrica es válida."
+    else:
+        mensaje = "❌ Firma biométrica inválida. Usa /voz_firma para registrar una nueva."
+
+    # Generar respuesta en voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar mensaje y voz
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
+from telegram import Update
+from telegram.ext import ContextTypes
+from gtts import gTTS
+from io import BytesIO
+
+async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = str(update.effective_user.id)
+    firma_guardada = get_dilithium_signature(user_id)
+
+    if firma_guardada:
+        mensaje = f"🔐 Tu cuenta está protegida con firma biométrica cuántica.\n🗓️ Último registro: Hoy"
+    else:
+        mensaje = "⚠️ No se ha encontrado una firma biométrica válida.\nUsa /voz_firma para registrar tu voz."
+
+    # Convertir a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
 
 if __name__ == "__main__":
     try:
