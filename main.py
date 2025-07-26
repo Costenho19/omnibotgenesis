@@ -319,6 +319,7 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
     application.add_handler(CommandHandler("trading", trading_command))
+    application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
 await setup_memory_table()
 setup_language_table()
@@ -572,6 +573,18 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         tts.save(f.name)
         audio_path = f.name
+# --- COMANDO /menu ---
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🤖 Chat con IA", callback_data="chat_ia")],
+        [InlineKeyboardButton("📊 Análisis", callback_data="analisis")],
+        [InlineKeyboardButton("📚 Educación", callback_data="educacion")],
+        [InlineKeyboardButton("⚙️ Configuración", callback_data="configuracion")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Selecciona una opción del menú:", reply_markup=reply_markup)
 
     # Enviar mensaje de voz
     with open(audio_path, "rb") as audio:
