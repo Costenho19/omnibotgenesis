@@ -318,6 +318,8 @@ async def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, boton_handler))
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
+    application.add_handler(CommandHandler("trading", trading_command))
+
 await setup_memory_table()
 setup_language_table()
 
@@ -517,6 +519,63 @@ async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         tts.save(f.name)
         audio_path = f.name
+# --- COMANDO /trading ---        # 495
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):  # 496
+    user = update.effective_user               # 497
+    user_id = str(user.id)                     # 498
+
+    # Verificamos si es usuario premium        # 499
+    if not await es_usuario_premium(user_id):  # 500
+        await update.message.reply_text("🔒 Esta función es solo para usuarios Premium.")  # 501
+        return                                 # 502
+
+    # Extraemos el símbolo de trading desde el mensaje  # 503
+    if not context.args:                       # 504
+        await update.message.reply_text("💱 Usa el comando así: /trading BTC/USD")  # 505
+        return                                 # 506
+
+    simbolo = context.args[0].upper()          # 507
+
+    try:                                       # 508
+        resultado = trading_system.realizar_operacion(simbolo)  # 509
+        mensaje = f"✅ Operación ejecutada para {simbolo}.\n\n📊 Resultado: {resultado}"  # 510
+    except Exception as e:                     # 511
+        mensaje = f"❌ Error al ejecutar trading:\n`{e}`"  # 512
+
+    await update.message.reply_text(mensaje, parse_mode="Markdown")  # 513
+# --- COMANDO /estado --- 
+async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Verificamos si es usuario premium
+    es_premium = await es_usuario_premium(user_id)
+    tipo_cuenta = "🌟 Premium" if es_premium else "🔓 Gratuita"
+
+    # Idioma detectado
+    idioma = await get_user_language(user_id) or detect(update.message.text or "es")
+
+    # Mensaje con voz incluida
+    mensaje = (
+        f"🧠 Estado de tu cuenta OMNIX\n\n"
+        f"🔐 Tipo de cuenta: {tipo_cuenta}\n"
+        f"🌐 Idioma preferido: {idioma}\n"
+        f"📈 Último análisis disponible: BTC/USD\n"
+        f"\nGracias por usar OMNIX, el asistente de trading inteligente."
+    )
+
+    # Enviar mensaje escrito
+    await update.message.reply_markdown(mensaje)
+
+    # Generar voz
+    tts = gTTS(text=mensaje.replace("**", ""), lang=idioma if idioma in ["es", "en", "ar", "zh"] else "es")
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    # Enviar mensaje de voz
+    with open(audio_path, "rb") as audio:
+        await update.message.reply_voice(voice=audio)
 
     with open(audio_path, 'rb') as audio:
         await update.message.reply_voice(voice=audio)
