@@ -407,6 +407,7 @@ async def main() -> None:
     application.add_handler(CallbackQueryHandler(menu_callback_handler))
     application.add_handler(CommandHandler("validar", voz_validar_command))
     application.add_handler(CommandHandler("cuenta_segura", cuenta_segura_command))
+    application.add_handler(CommandHandler("mercado", mercado_command))
 
     
 
@@ -502,6 +503,47 @@ async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
+from telegram import Update, InputFile
+from telegram.ext import ContextTypes
+from io import BytesIO
+from gtts import gTTS
+import yfinance as yf
+import matplotlib.pyplot as plt
+
+async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    cryptos = {
+        "BTC-USD": "Bitcoin",
+        "ETH-USD": "Ethereum",
+        "SOL-USD": "Solana"
+    }
+
+    mensaje = "📊 Resumen del mercado:\n"
+    plt.figure(figsize=(10, 6))
+
+    for symbol, nombre in cryptos.items():
+        data = yf.download(symbol, period="1d", interval="15m")
+        last_price = data['Close'].iloc[-1]
+        mensaje += f"• {nombre}: ${last_price:.2f}\n"
+        plt.plot(data.index, data['Close'], label=nombre)
+
+    plt.title("Precios Criptomonedas (24h)")
+    plt.xlabel("Hora")
+    plt.ylabel("Precio (USD)")
+    plt.legend()
+    plt.tight_layout()
+
+    img = BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
+    await update.message.reply_photo(photo=InputFile(img, filename="mercado.png"))
 
 if __name__ == "__main__":
     try:
