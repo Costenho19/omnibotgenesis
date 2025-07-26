@@ -265,5 +265,39 @@ async def get_user_memory(user_id: str) -> str:
     cur.close()
     conn.close()
     return result[0] if result else ""
+def setup_language_table():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_language (
+            user_id TEXT PRIMARY KEY,
+            language TEXT
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+async def set_user_language(user_id: str, language: str):
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT language FROM user_language WHERE user_id = %s;", (user_id,))
+    result = cur.fetchone()
+    if result:
+        cur.execute("UPDATE user_language SET language = %s WHERE user_id = %s;", (language, user_id))
+    else:
+        cur.execute("INSERT INTO user_language (user_id, language) VALUES (%s, %s);", (user_id, language))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+async def get_user_language(user_id: str) -> str:
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT language FROM user_language WHERE user_id = %s;", (user_id,))
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+    return result[0] if result else "es"
 
 
