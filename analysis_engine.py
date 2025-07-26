@@ -212,32 +212,65 @@ class OmnixPremiumAnalysisEngine:
         return result
 # LÍNEA FINAL
 async def generar_grafico_btc(update):
+   # LÍNEA 215
+async def generar_grafico_btc(update):
     try:
         from datetime import datetime, timedelta
         import yfinance as yf
         import matplotlib.pyplot as plt
+        import pandas as pd
 
         # Obtener datos históricos (7 días)
         fin = datetime.now()
         inicio = fin - timedelta(days=7)
         datos = yf.download("BTC-USD", start=inicio, end=fin, interval="1h")
 
+        # Calcular indicadores técnicos
+        datos["MA20"] = datos["Close"].rolling(window=20).mean()
+        delta = datos["Close"].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+        RS = gain / loss
+        datos["RSI"] = 100 - (100 / (1 + RS))
+        datos["Upper"] = datos["MA20"] + 2 * datos["Close"].rolling(20).std()
+        datos["Lower"] = datos["MA20"] - 2 * datos["Close"].rolling(20).std()
+
         # Crear gráfico
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(12, 8))
+
+        # Subplot 1: Precio y MA + Bollinger
+        plt.subplot(2, 1, 1)
         plt.plot(datos.index, datos["Close"], label="Precio BTC", color="blue")
-        plt.title("BTC-USD - Últimos 7 días")
+        plt.plot(datos.index, datos["MA20"], label="Media Móvil 20", color="orange")
+        plt.plot(datos.index, datos["Upper"], label="Bollinger Alta", linestyle="--", color="green")
+        plt.plot(datos.index, datos["Lower"], label="Bollinger Baja", linestyle="--", color="red")
+        plt.title("BTC/USD - Últimos 7 días")
         plt.xlabel("Fecha")
-        plt.ylabel("Precio en USD")
-        plt.grid(True)
+        plt.ylabel("Precio USD")
         plt.legend()
+        plt.grid(True)
+
+        # Subplot 2: RSI
+        plt.subplot(2, 1, 2)
+        plt.plot(datos.index, datos["RSI"], label="RSI", color="purple")
+        plt.axhline(70, color='red', linestyle='--')
+        plt.axhline(30, color='green', linestyle='--')
+        plt.xlabel("Fecha")
+        plt.ylabel("RSI")
+        plt.title("Índice de Fuerza Relativa (RSI)")
+        plt.grid(True)
+
+        # Guardar gráfico
         ruta = "/tmp/btc_grafico.png"
+        plt.tight_layout()
         plt.savefig(ruta)
         plt.close()
 
         # Enviar imagen por Telegram
         with open(ruta, "rb") as imagen:
-            await update.message.reply_photo(photo=imagen, caption="📈 Análisis de BTC completado.")
+            await update.message.reply_photo(photo=imagen, caption="📈 Análisis técnico de BTC completado ✅")
+except Exception as e:
+    await update.message.reply_text(f"⚠️ Error generando gráfico premium: {str(e)}")
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error generando gráfico: {str(e)}")
-
