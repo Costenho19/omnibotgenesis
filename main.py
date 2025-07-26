@@ -27,6 +27,40 @@ from voice_signature import VoiceSignature, validate_voice_signature # Asegúrat
 # Configuración del logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+async def enviar_grafico(update: Update, simbolo="BTC-USD"):
+    import datetime
+    import matplotlib.pyplot as plt
+    import yfinance as yf
+    from telegram import InputFile
+    import io
+
+    # Obtener datos históricos
+    hoy = datetime.datetime.now()
+    inicio = hoy - datetime.timedelta(days=30)
+    datos = yf.download(simbolo, start=inicio.strftime('%Y-%m-%d'), end=hoy.strftime('%Y-%m-%d'))
+
+    if datos.empty:
+        await update.message.reply_text(f"⚠️ No se encontraron datos para {simbolo}.")
+        return
+
+    # Crear gráfico
+    fig, ax = plt.subplots(figsize=(10, 5))
+    datos["Close"].plot(ax=ax, label="Precio cierre", color="cyan")
+    ax.set_title(f"📊 Precio de {simbolo} (últimos 30 días)")
+    ax.set_xlabel("Fecha")
+    ax.set_ylabel("Precio en USD")
+    ax.legend()
+    ax.grid(True)
+
+    # Guardar en buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    buffer.name = f"{simbolo}_grafico.png"
+    plt.close()
+
+    # Enviar imagen
+    await update.message.reply_photo(photo=InputFile(buffer), caption=f"📈 Análisis de {simbolo}")
 
 # --- Instanciamos nuestros sistemas ---
 analysis_engine = OmnixPremiumAnalysisEngine()
@@ -431,11 +465,30 @@ async def general_response_handler(update: Update, context: ContextTypes.DEFAULT
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         tts.save(f.name)
         audio_path = f.name
+# CALLBACK DEL MENÚ - RESPUESTA Y ANÁLISIS
+async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    opcion = query.data
+
+    if opcion == "analisis":
+        await enviar_grafico(update, símbolo="BTC-USD")
+        return
+
+    respuesta = {
+        "chat_ia": "🤖 Estoy aquí para chatear contigo con IA.",
+        "panel": "🧩 Accede al panel web premium pronto.",
+        "educacion": "📚 Módulo educativo disponible próximamente.",
+        "configuracion": "⚙️ Configuraciones avanzadas disponibles pronto."
+    }.get(opcion, "❓ Opción no reconocida.")
+
+    await query.edit_message_text(text=respuesta)
 
     with open(audio_path, 'rb') as audio:
         await update.message.reply_voice(voice=audio)
 from database import es_usuario_premium, get_user_language
 from langdetect import detect
+application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
 async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
