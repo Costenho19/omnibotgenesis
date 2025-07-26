@@ -273,7 +273,7 @@ from voice_signature import VoiceSignature
 from database import save_dilithium_signature
 
 SECRET_PHRASE = "mi frase secreta de firma biométrica"  # Cámbiala por tu frase real
-
+@solo_premium
 async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = str(user.id)
