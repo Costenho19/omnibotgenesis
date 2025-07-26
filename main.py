@@ -280,7 +280,7 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # Guardar en base de datos
-    save_dilithium_signature(user_id, signature)
+    save_dilithium_signature(user_id, signature,timestamp)
 
     await update.message.reply_text("✅ Identidad verificada y firma registrada exitosamente.")
 
