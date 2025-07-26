@@ -1,4 +1,4 @@
-1 si 2 import logging
+import logging
 import asyncio
 import os
 import psycopg2
