@@ -283,6 +283,68 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, general_response_handler))
 await setup_memory_table()
+# 📍 Comando /trading con voz + validación + extracción de datos
+
+from langdetect import detect
+from gtts import gTTS
+import tempfile
+
+async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    user_id = str(user.id)
+
+    if not await es_usuario_premium(user_id):
+        await update.message.reply_text("🔒 Este comando es solo para usuarios premium.")
+        return
+
+    try:
+        user_input = " ".join(context.args).lower()
+        if not user_input:
+            await update.message.reply_text("Uso correcto: /trading comprar BTC 50")
+            return
+
+        # Detectar acción
+        if "comprar" in user_input:
+            action = "compra"
+            side = "buy"
+        elif "vender" in user_input:
+            action = "venta"
+            side = "sell"
+        else:
+            await update.message.reply_text("❗ Indica si deseas *comprar* o *vender*.")
+            return
+
+        # Detectar símbolo y monto
+        partes = user_input.split()
+        symbol = next((p.upper() for p in partes if p.upper() in ["BTC", "ETH", "SOL", "ADA", "XRP"]), None)
+        amount = next((float(p) for p in partes if p.replace('.', '', 1).isdigit()), None)
+
+        if not symbol or not amount:
+            await update.message.reply_text("❗ Formato incorrecto. Ejemplo: /trading comprar BTC 50")
+            return
+
+        # Simulación de orden (puedes conectar Kraken aquí)
+        mensaje = (
+            f"✅ Orden simulada de {action} ejecutada:\n"
+            f"📈 Activo: {symbol}\n"
+            f"💰 Monto: {amount} USD\n"
+            f"🤖 Ejecutado por OMNIX IA"
+        )
+
+        await update.message.reply_text(mensaje)
+
+        # Voz tipo Alexa (gTTS)
+        idioma = detect(mensaje)
+        tts = gTTS(text=mensaje, lang=idioma if idioma in ["es", "en", "ar", "zh-cn"] else "es")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+            tts.save(f.name)
+            audio_path = f.name
+
+        with open(audio_path, "rb") as audio:
+            await update.message.reply_voice(voice=audio)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error en el comando /trading: {str(e)}")
 
 from telegram.ext import MessageHandler, filters
 from langdetect import detect
