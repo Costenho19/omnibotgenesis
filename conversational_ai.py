@@ -170,4 +170,17 @@ def get_user_memory(user_id, limit=5):
         return []
     finally:
         conn.close()
+# LÍNEA 121
+from googletrans import Translator
+from langdetect import detect
+
+# LÍNEA 124
+translator = Translator()
+
+# LÍNEA 126
+def traducir_mensaje(texto: str, idioma_destino: str) -> str:
+    try:
+        return translator.translate(texto, dest=idioma_destino).text
+    except:
+        return texto  # Si falla, devuelve el original
 
