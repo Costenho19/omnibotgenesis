@@ -12,7 +12,24 @@ openai = OpenAI(api_key=OPENAI_API_KEY)
 
 # Memoria simple por usuario
 user_memory = {}
+def generate_response_with_memory(user_id, user_message, user_lang="es"):
+    # Recuperar memoria previa
+    previous_memory = get_user_memory(user_id)
 
+    # Crear prompt con contexto previo
+    if previous_memory:
+        prompt = f"Conversación previa:\n{previous_memory}\n\nUsuario: {user_message}\nIA:"
+    else:
+        prompt = f"Usuario: {user_message}\nIA:"
+
+    # Generar respuesta
+    response = chat_with_gpt(prompt, user_lang)
+
+    # Actualizar memoria
+    updated_memory = f"{previous_memory}\nUsuario: {user_message}\nIA: {response}" if previous_memory else f"Usuario: {user_message}\nIA: {response}"
+    save_user_memory(user_id, updated_memory)
+
+    return response
 class ConversationalAI:
     def __init__(self):
         self.default_lang = "es"
