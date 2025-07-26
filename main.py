@@ -330,6 +330,34 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             f"💰 Monto: {amount} USD\n"
             f"🤖 Ejecutado por OMNIX IA"
         )
+from database import save_user_memory, get_user_memory
+
+async def general_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.message.from_user.id)
+    user_input = update.message.text
+
+    # Obtener historial anterior
+    historial = await get_user_memory(user_id)
+
+    # Crear mensaje contextual
+    prompt = historial + "\nUsuario: " + user_input + "\nOMNIX:"
+    
+    # Obtener respuesta de IA
+    respuesta = await generate_response_with_memory(user_id, prompt, detect(user_input))
+
+    # Guardar en la memoria del usuario
+    await save_user_memory(user_id, f"Usuario: {user_input}\nOMNIX: {respuesta}")
+
+    await update.message.reply_text(respuesta)
+
+    # Voz estilo Alexa
+    tts = gTTS(text=respuesta, lang=detect(user_input))
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        tts.save(f.name)
+        audio_path = f.name
+
+    with open(audio_path, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
 
         await update.message.reply_text(mensaje)
 
