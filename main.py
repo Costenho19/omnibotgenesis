@@ -528,6 +528,17 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tts_trading = gTTS(text=mensaje, lang=idioma_voz)
         trading_audio_path = "/tmp/trading_audio.mp3"
         tts_trading.save(trading_audio_path)
+@app.command("/menu")
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        keyboard = [
+            ["📊 Análisis", "📈 Estado"],
+            ["🎯 Trading"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text("Selecciona una opción:", reply_markup=reply_markup)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error al mostrar el menú: {str(e)}")
 
         # Enviar voz
         with open(trading_audio_path, "rb") as audio_file:
@@ -536,14 +547,38 @@ async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error al ejecutar la orden: {str(e)}")
 @app.message()
+@app.message()
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip().lower()
 
-    if text == "📊 análisis":
-        await analyze_command(update, context)
-    elif text == "📈 estado":
-        await estado_command(update, context)
-    elif text == "🎯 trading":
-        await update.message.reply_text("Por favor usa el comando: `/trading BTC 50`")
-    else:
-        await update.message.reply_text("Por favor, selecciona una opción válida del menú.")
+    try:
+        if text == "📊 análisis":
+            mensaje = "Ejecutando análisis, por favor espera..."
+            idioma = detect(mensaje)
+            tts = gTTS(text=mensaje, lang=idioma)
+            ruta_audio = "/tmp/audio_respuesta.mp3"
+            tts.save(ruta_audio)
+            await analyze_command(update, context)
+
+        elif text == "📈 estado":
+            mensaje = "Mostrando el estado actual del sistema."
+            idioma = detect(mensaje)
+            tts = gTTS(text=mensaje, lang=idioma)
+            ruta_audio = "/tmp/audio_respuesta.mp3"
+            tts.save(ruta_audio)
+            await estado_command(update, context)
+
+        elif text == "🎯 trading":
+            mensaje = "Por favor usa el comando: /trading BTC 50"
+            idioma = detect(mensaje)
+            tts = gTTS(text=mensaje, lang=idioma)
+            ruta_audio = "/tmp/audio_respuesta.mp3"
+            tts.save(ruta_audio)
+
+        # Enviar respuesta en voz
+        with open(ruta_audio, "rb") as audio:
+            await update.message.reply_voice(voice=audio)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error con los botones: {str(e)}")
+
