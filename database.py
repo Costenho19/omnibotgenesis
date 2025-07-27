@@ -74,10 +74,16 @@ def add_premium_assets(premium_assets: list):
         if conn: conn.close()
 
 
-   def save_analysis_to_db(user_id, asset, analysis_text, result_dict):
-    from datetime import datetime
+   
+ from datetime import datetime
+import json
+from pqc_encryption import encrypt_message
 
-    # 🔐 Ciframos los datos con seguridad cuántica
+def save_analysis_to_db(user_id, asset, analysis_text, result_dict):
+    """
+    Guarda un resultado de análisis en la base de datos.
+    Aplica cifrado post-cuántico antes de insertar.
+    """
     encrypted_analysis = encrypt_message(analysis_text)
     encrypted_result = encrypt_message(json.dumps(result_dict))
 
@@ -87,17 +93,18 @@ def add_premium_assets(premium_assets: list):
             return
         cursor = conn.cursor()
         cursor.execute(
-            """
+            \"\"\"
             INSERT INTO ai_analysis (user_id, asset, analysis, result, timestamp)
             VALUES (%s, %s, %s, %s, %s)
-            """,
+            \"\"\",
             (user_id, asset, encrypted_analysis, encrypted_result, datetime.utcnow())
         )
         conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
-        logger.error(f"❌ Error al guardar análisis cifrado: {e}")
+        logger.error(f\"❌ Error guardando análisis en DB: {e}\")
+ 
 
     def crear_tabla_voice_signatures():
     try:
