@@ -560,7 +560,9 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(CommandHandler("cuenta_segura", cuenta_segura_command))
     application.add_handler(CommandHandler("mercado", mercado_command))
     application.add_handler(CommandHandler("menu_botones", menu_botones_command))
-
+    application.add_handler(CallbackQueryHandler(responder_botones))
+    application.add_handler(CommandHandler("menu_botones", menu_botones_command))
+    application.add_handler(CallbackQueryHandler(responder_botones))
     
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -729,7 +731,21 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Enviar mensaje y voz
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
- 
+ async def responder_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "analyze":
+        await query.edit_message_text("📊 Has seleccionado *Análisis*.")
+    elif query.data == "trading":
+        await query.edit_message_text("🤖 Has seleccionado *Trading*.")
+    elif query.data == "cuenta":
+        await query.edit_message_text("👤 Has seleccionado *Cuenta*.")
+    elif query.data == "premium":
+        await query.edit_message_text("⭐ Has seleccionado *Premium*.")
+    else:
+        await query.edit_message_text("❓ Opción no reconocida.")
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
