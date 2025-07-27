@@ -496,7 +496,22 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 async def main() -> None:
     """Función principal que configura y arranca el bot."""
     logger.info("🚀 Iniciando OMNIX Bot...")
-    
+    def generar_grafico_precio(simbolo: str) -> io.BytesIO:
+    data = yf.download(simbolo, period="7d", interval="1h")
+    plt.figure(figsize=(10, 4))
+    plt.plot(data["Close"], label="Precio", linewidth=2)
+    plt.title(f"Precio de {simbolo} (últimos 7 días)")
+    plt.xlabel("Fecha")
+    plt.ylabel("USD")
+    plt.legend()
+    plt.tight_layout()
+
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    plt.close()
+    buffer.seek(0)
+    return buffer
+
     if not BOT_TOKEN or not DATABASE_URL:
         logger.critical("FATAL: Faltan BOT_TOKEN o DATABASE_URL.")
         return
