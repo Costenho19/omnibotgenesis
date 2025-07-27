@@ -15,9 +15,35 @@ class VoiceSignature:
         expected_signature = self.sign_message(message)
         return signature == expected_signature
 
-# ✅ Esta es la función que esperaba tu main.py
 def validate_voice_biometrics(message: str, signature: str) -> bool:
-    secret = "omni_secret_key"  # Puedes cambiarlo por una variable segura
+    """
+    Valida una firma biométrica de voz simulada.
+    Utiliza la clave secreta del sistema para verificar la firma del mensaje.
+
+    Parámetros:
+        message (str): El mensaje original.
+        signature (str): La firma recibida.
+
+    Retorna:
+        bool: True si la firma es válida, False en caso contrario.
+    """
+    secret = "omni_secret_key"
+    verifier = VoiceSignature(secret)
+    return verifier.verify_signature(message, signature)
+
+def validate_voice_biometrics(message: str, signature: str) -> bool:
+    """
+    Valida una firma biométrica de voz simulada.
+    Utiliza la clave secreta del sistema para verificar la firma del mensaje.
+
+    Parámetros:
+        message (str): El mensaje original.
+        signature (str): La firma recibida.
+
+    Retorna:
+        bool: True si la firma es válida, False en caso contrario.
+    """
+    secret = "omni_secret_key"
     verifier = VoiceSignature(secret)
     return verifier.verify_signature(message, signature)
 
