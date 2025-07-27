@@ -13,6 +13,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from gtts import gTTS
 from langdetect import detect
 from database import (
+from io import BytesIO 
     ...
     save_dilithium_signature,  # ya la tienes
     get_dilithium_signature,   # <-- AGREGA ESTA si aún no está
@@ -671,6 +672,34 @@ await update.message.reply_voice(voice=voz)
 
     logger.info("Inicializando la aplicación...")
     await application.initialize()
+@solo_premium
+async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Lista de activos a mostrar
+    activos = ['BTC-USD', 'ETH-USD', 'BNB-USD', 'SOL-USD', 'XRP-USD']
+    resumen = "📊 *Resumen del Mercado Cripto:*\n\n"
+
+    for activo in activos:
+        try:
+            data = yf.download(activo, period="1d", interval="1h")
+            precio_actual = round(data["Close"][-1], 2)
+            resumen += f"• {activo.split('-')[0]}: {precio_actual} USD\n"
+        except Exception as e:
+            resumen += f"• {activo.split('-')[0]}: ❌ Error\n"
+
+    resumen += "\n🔁 Datos actualizados en tiempo real."
+
+    # Convertir texto a voz
+    tts = gTTS(resumen, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar respuesta
+    await update.message.reply_text(resumen, parse_mode="Markdown")
+    await update.message.reply_voice(voice=voz)
 
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.start()
