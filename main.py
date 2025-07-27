@@ -567,6 +567,7 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("premium_panel", premium_panel_command))
+    application.add_handler(CallbackQueryHandler(handle_buttons))
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
@@ -617,6 +618,23 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_photo(photo=InputFile(graph_path))
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
+@solo_premium
+async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    mensaje = "🎙️ Por favor, envíame un mensaje de voz para generar tu firma biométrica cuántica."
+
+    # Convertir a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
+
+    context.user_data["esperando_firma"] = True
 
     # Convertir a voz
     tts = gTTS(mensaje, lang='es')
@@ -700,6 +718,22 @@ async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Enviar respuesta
     await update.message.reply_text(resumen, parse_mode="Markdown")
     await update.message.reply_voice(voice=voz)
+# Línea 705 en adelante (fuera de cualquier función)
+async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data == 'analyze':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="/analyze")
+    elif data == 'mercado':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="/mercado")
+    elif data == 'premium':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="/clave premium")
+    elif data == 'idioma':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="🌐 Próximamente disponible.")
+    elif data == 'voz_firma':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="/voz_firma")
 
     logger.info("✅ Bot listo, iniciando la escucha de peticiones...")
     await application.start()
