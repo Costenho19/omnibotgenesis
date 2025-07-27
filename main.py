@@ -2,6 +2,7 @@
 # === OMNIX GLOBAL BOT V2.0 - ARCHIVO PRINCIPAL (main.py) ===
 # ==============================================================================
 # Arquitectura refactorizada para simplicidad, potencia y escalabilidad.
+from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
 
 # --- SECCIÓN 1: IMPORTACIONES ---
 import logging
@@ -22,7 +23,7 @@ from config import BOT_TOKEN
 from conversational_ai import ConversationalAI
 ai = ConversationalAI()
 
-from analysis_engine import OmnixPremiumAnalysisEngine
+
 from database import setup_premium_database
 from quantum_engine import QuantumEngine
 from pqc_encryption import generate_dilithium_signature
