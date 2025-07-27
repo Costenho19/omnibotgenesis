@@ -23,3 +23,7 @@ nest_asyncio
 flask==2.3.3
 flask
 python-dotenv
+matplotlib
+aiohttp
+langdetect==1.0.9
+openai==1.30.1
