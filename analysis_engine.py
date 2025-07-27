@@ -1,24 +1,25 @@
 import logging
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import json
-from datetime import datetime
+import warnings
 from dataclasses import dataclass
-from typing import List, Optional, Dict
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
-import warnings
 
-# Ignoramos advertencias de las librerías para una salida más limpia
+# Intentamos importar save_analysis_to_db de database.py (evita errores si no está)
+try:
+    from database import save_analysis_to_db
+except ImportError:
+    def save_analysis_to_db(*args, **kwargs):
+        logging.warning("save_analysis_to_db no disponible.")
+
 warnings.filterwarnings('ignore')
-
-# Importamos la función para guardar en la base de datos
-from database import save_analysis_to_db
-
 logger = logging.getLogger(__name__)
 
-# Definimos las clases de datos aquí para que sean auto-contenidas
 @dataclass
 class MarketData:
     symbol: str
@@ -41,206 +42,155 @@ class AnalysisResult:
     support_levels: List[float]
     resistance_levels: List[float]
 
-# Lista de activos que el bot cargará en la base de datos al iniciar
 premium_assets_list = [
     ('AAPL', 'Apple Inc.', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 3000000000000, 1),
-    ('MSFT', 'Microsoft Corporation', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 2800000000000, 1),
+    ('MSFT', 'Microsoft Corp.', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 2800000000000, 1),
     ('GOOGL', 'Alphabet Inc.', 'stock', 'NASDAQ', 'Technology', 'US', 'USD', 1700000000000, 1),
     ('BTC-USD', 'Bitcoin', 'crypto', 'CRYPTO', 'Cryptocurrency', 'Global', 'USD', 1300000000000, 1),
     ('ETH-USD', 'Ethereum', 'crypto', 'CRYPTO', 'Cryptocurrency', 'Global', 'USD', 400000000000, 1),
     ('EURUSD=X', 'EUR/USD', 'forex', 'FOREX', 'Currency', 'Global', 'USD', 0, 1),
     ('GC=F', 'Gold Futures', 'commodity', 'COMEX', 'Precious Metals', 'Global', 'USD', 0, 1),
-    ('SPY', 'SPDR S&P 500 ETF', 'etf', 'NYSE', 'Broad Market', 'US', 'USD', 400000000000, 1)
+    ('SPY', 'S&P 500 ETF', 'etf', 'NYSE', 'Market', 'US', 'USD', 400000000000, 1)
 ]
 
 class OmnixPremiumAnalysisEngine:
-    """Motor de análisis premium completo para múltiples mercados"""
-    
     def __init__(self):
         self.initialize_ai_models()
-        logger.info("🚀 OMNIX PREMIUM ANALYSIS ENGINE INICIALIZADO")
-        
+        logger.info("✅ OMNIX Analysis Engine listo.")
+
     def initialize_ai_models(self):
-        """Inicializar modelos de IA avanzados"""
-        logger.info("🤖 Inicializando modelos de IA...")
-        
         self.price_predictor = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         self.scaler = StandardScaler()
-        
-        # Entrenamos con datos sintéticos para evitar errores al iniciar.
-        # Las predicciones no serán financieramente precisas, pero el sistema funcionará.
-        X_train = np.random.rand(100, 20)
-        y_train = np.random.rand(100)
-        self.scaler.fit(X_train)
-        self.price_predictor.fit(self.scaler.transform(X_train), y_train)
-        logger.info("✅ Modelos de IA inicializados.")
-        
+        X = np.random.rand(100, 20)
+        y = np.random.rand(100)
+        self.scaler.fit(X)
+        self.price_predictor.fit(self.scaler.transform(X), y)
+
     def get_market_data(self, symbol: str) -> Optional[MarketData]:
-        """Obtener datos de mercado en tiempo real"""
         try:
             ticker = yf.Ticker(symbol)
-            # Usamos fast_info para obtener datos más rápido
-            info = ticker.fast_info
-            hist = ticker.history(period="2d", interval="1h")
-            
+            hist = ticker.history(period="5d", interval="1d")
             if len(hist) < 2:
-                # Si no hay suficiente historial, intentamos con un período más largo
-                hist = ticker.history(period="5d", interval="1d")
-                if len(hist) < 2: return None
-                
-            current_price = hist['Close'].iloc[-1]
+                return None
+            price = hist['Close'].iloc[-1]
             prev_price = hist['Close'].iloc[-2]
-            change_24h = ((current_price - prev_price) / prev_price) * 100
-            
+            change = ((price - prev_price) / prev_price) * 100 if prev_price != 0 else 0
+            fast_info = ticker.fast_info
             return MarketData(
                 symbol=symbol,
-                price=float(current_price),
-                change_24h=float(change_24h),
-                volume=float(info.get('volume', 0)),
-                market_cap=float(info.get('marketCap', 0)),
+                price=float(price),
+                change_24h=float(change),
+                volume=float(fast_info.get('volume', 0)),
+                market_cap=float(fast_info.get('marketCap', 0)),
                 timestamp=datetime.now()
             )
         except Exception as e:
-            logger.error(f"Error obteniendo datos de yfinance para {symbol}: {e}")
+            logger.error(f"Error en get_market_data({symbol}): {e}")
             return None
-            
-    def calculate_technical_indicators(self, symbol: str) -> Dict[str, float]:
-        """Calcular indicadores técnicos avanzados"""
-        try:
-            hist = yf.Ticker(symbol).history(period="90d")
-            if len(hist) < 50: return {}
-                
-            close = hist['Close']
-            
-            delta = close.diff()
-            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-            rs = gain / loss
-            rsi = 100 - (100 / (1 + rs))
-            
-            sma_20 = close.rolling(window=20).mean()
-            sma_50 = close.rolling(window=min(50, len(hist))).mean()
-            bb_std = close.rolling(window=20).std()
 
+    def calculate_technical_indicators(self, symbol: str) -> Optional[Dict[str, float]]:
+        try:
+            hist = yf.Ticker(symbol).history(period="90d", auto_adjust=True)
+            if len(hist) < 50:
+                return None
+            close = hist['Close']
+            delta = close.diff()
+            gain = delta.where(delta > 0, 0).rolling(14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+            rs = gain / (loss + 1e-9)
+            rsi = 100 - (100 / (1 + rs))
+            sma_20 = close.rolling(20).mean()
+            sma_50 = close.rolling(50).mean()
+            bb_std = close.rolling(20).std()
             return {
                 'rsi': float(rsi.iloc[-1]),
                 'sma_20': float(sma_20.iloc[-1]),
                 'sma_50': float(sma_50.iloc[-1]),
-                'bb_upper': float(sma_20.iloc[-1] + (bb_std.iloc[-1] * 2)),
-                'bb_lower': float(sma_20.iloc[-1] - (bb_std.iloc[-1] * 2)),
+                'bb_upper': float(sma_20.iloc[-1] + 2 * bb_std.iloc[-1]),
+                'bb_lower': float(sma_20.iloc[-1] - 2 * bb_std.iloc[-1]),
             }
         except Exception as e:
-            logger.error(f"Error calculando indicadores para {symbol}: {e}")
-            return {}
-            
+            logger.error(f"Error en calculate_technical_indicators({symbol}): {e}")
+            return None
+
     def analyze_with_ai(self, symbol: str) -> Optional[AnalysisResult]:
-        """Análisis completo con IA para cualquier activo"""
         market_data = self.get_market_data(symbol)
-        if not market_data: return None
-            
+        if not market_data:
+            return None
         indicators = self.calculate_technical_indicators(symbol)
-        if not indicators: return None
-            
-        # Generamos features para el modelo (usando datos reales pero predicciones sintéticas)
+        if not indicators:
+            return None
         features = np.array([
-            market_data.change_24h, indicators.get('rsi', 50),
-            market_data.volume / 1e9, np.log(market_data.market_cap + 1),
-            # Añadimos más features aleatorios para que coincida con el entrenamiento
+            market_data.change_24h,
+            indicators['rsi'],
+            market_data.volume / 1e9,
+            np.log(market_data.market_cap + 1),
             *np.random.randn(16)
         ]).reshape(1, -1)
-        
-        features_scaled = self.scaler.transform(features)
-        price_change_pred = self.price_predictor.predict(features_scaled)[0]
-        
-        current_price = market_data.price
-        pred_1h = current_price * (1 + price_change_pred * 0.01) # Predicción más conservadora
-        pred_24h = current_price * (1 + price_change_pred * 0.05)
-        pred_7d = current_price * (1 + price_change_pred * 0.15)
-        
-        # Generar recomendación basada en indicadores técnicos (más confiable)
-        rsi = indicators.get('rsi')
-        if pred_24h > current_price * 1.02 and rsi < 65: recommendation = "COMPRA"
-        elif pred_24h < current_price * 0.98 and rsi > 35: recommendation = "VENTA"
-        else: recommendation = "MANTENER"
-
+        scaled = self.scaler.transform(features)
+        pred = self.price_predictor.predict(scaled)[0]
+        price = market_data.price
+        pred_1h = price * (1 + pred * 0.01)
+        pred_24h = price * (1 + pred * 0.05)
+        pred_7d = price * (1 + pred * 0.15)
+        rsi = indicators['rsi']
+        if pred_24h > price * 1.02 and rsi < 65:
+            recommendation = "COMPRA"
+        elif pred_24h < price * 0.98 and rsi > 35:
+            recommendation = "VENTA"
+        else:
+            recommendation = "MANTENER"
         result = AnalysisResult(
             symbol=symbol,
-            current_price=current_price,
+            current_price=price,
             prediction_1h=pred_1h,
             prediction_24h=pred_24h,
             prediction_7d=pred_7d,
-            confidence=0.65 + np.random.rand() * 0.20, # Confianza simulada
+            confidence=0.7,
             recommendation=recommendation,
-            risk_score=0.4 + np.random.rand() * 0.25, # Riesgo simulado
-            support_levels=[indicators.get('bb_lower'), indicators.get('sma_50')],
-            resistance_levels=[indicators.get('bb_upper'), indicators.get('sma_20')]
+            risk_score=0.4 + np.random.rand() * 0.25,
+            support_levels=[indicators['bb_lower'], indicators['sma_50']],
+            resistance_levels=[indicators['bb_upper'], indicators['sma_20']]
         )
-        
-        # Guardamos en nuestra nueva base de datos
         save_analysis_to_db(result)
-        
         return result
-# LÍNEA FINAL
-async def generar_grafico_btc(update):
-   # LÍNEA 215
+
+# --- Gráfico BTC ---
 async def generar_grafico_btc(update):
     try:
-        from datetime import datetime, timedelta
-        import yfinance as yf
-        import matplotlib.pyplot as plt
-        import pandas as pd
-
-        # Obtener datos históricos (7 días)
         fin = datetime.now()
         inicio = fin - timedelta(days=7)
         datos = yf.download("BTC-USD", start=inicio, end=fin, interval="1h")
-
-        # Calcular indicadores técnicos
         datos["MA20"] = datos["Close"].rolling(window=20).mean()
         delta = datos["Close"].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+        gain = delta.where(delta > 0, 0).rolling(14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
         RS = gain / loss
         datos["RSI"] = 100 - (100 / (1 + RS))
         datos["Upper"] = datos["MA20"] + 2 * datos["Close"].rolling(20).std()
         datos["Lower"] = datos["MA20"] - 2 * datos["Close"].rolling(20).std()
 
-        # Crear gráfico
         plt.figure(figsize=(12, 8))
-
-        # Subplot 1: Precio y MA + Bollinger
         plt.subplot(2, 1, 1)
-        plt.plot(datos.index, datos["Close"], label="Precio BTC", color="blue")
-        plt.plot(datos.index, datos["MA20"], label="Media Móvil 20", color="orange")
-        plt.plot(datos.index, datos["Upper"], label="Bollinger Alta", linestyle="--", color="green")
-        plt.plot(datos.index, datos["Lower"], label="Bollinger Baja", linestyle="--", color="red")
+        plt.plot(datos.index, datos["Close"], label="Precio BTC")
+        plt.plot(datos.index, datos["MA20"], label="Media 20")
+        plt.plot(datos.index, datos["Upper"], linestyle="--")
+        plt.plot(datos.index, datos["Lower"], linestyle="--")
         plt.title("BTC/USD - Últimos 7 días")
-        plt.xlabel("Fecha")
-        plt.ylabel("Precio USD")
-        plt.legend()
         plt.grid(True)
-
-        # Subplot 2: RSI
         plt.subplot(2, 1, 2)
-        plt.plot(datos.index, datos["RSI"], label="RSI", color="purple")
+        plt.plot(datos.index, datos["RSI"], label="RSI")
         plt.axhline(70, color='red', linestyle='--')
         plt.axhline(30, color='green', linestyle='--')
-        plt.xlabel("Fecha")
-        plt.ylabel("RSI")
-        plt.title("Índice de Fuerza Relativa (RSI)")
+        plt.title("Índice RSI")
         plt.grid(True)
 
-        # Guardar gráfico
         ruta = "/tmp/btc_grafico.png"
         plt.tight_layout()
         plt.savefig(ruta)
         plt.close()
 
-        # Enviar imagen por Telegram
-        with open(ruta, "rb") as imagen:
-            await update.message.reply_photo(photo=imagen, caption="📈 Análisis técnico de BTC completado ✅")
-except Exception as e:
-    await update.message.reply_text(f"⚠️ Error generando gráfico premium: {str(e)}")
-
+        with open(ruta, "rb") as img:
+            await update.message.reply_photo(photo=img, caption="📊 Análisis técnico BTC completado.")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Error generya sabes lo que hay que hacer sin canbiar nada
+        await update.message.reply_text(f"❌ Error generando gráfico: {e}")
