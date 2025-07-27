@@ -649,13 +649,17 @@ async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TY
 🕒 Último Análisis: {ultimo_analisis if ultimo_analisis else 'Sin datos'}
 🟢 Estado del Sistema: Operativo ✅
 """.strip()
+# Convertir a voz
+tts = gTTS(mensaje, lang='es')
+voz = BytesIO()
+tts.write_to_fp(voz)
+voz.seek(0)
 
-    # Convertir a voz
-    tts = gTTS(mensaje, lang='es')
-    voz = BytesIO()
-    tts.write_to_fp(voz)
-    voz.seek(0)
+# Enviar respuesta
+await update.message.reply_text(mensaje)
+await update.message.reply_voice(voice=voz)
 
+   
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
 
