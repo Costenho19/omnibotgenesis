@@ -568,6 +568,7 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(CommandHandler("analyze", analyze_command))
     application.add_handler(CommandHandler("premium_panel", premium_panel_command))
     application.add_handler(CallbackQueryHandler(handle_buttons))
+    application.add_handler(MessageHandler(filters.VOICE, voice_handler))
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
@@ -635,6 +636,44 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_voice(voice=voz)
 
     context.user_data["esperando_firma"] = True
+@solo_premium
+async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    if context.user_data.get("esperando_firma"):
+        # Descargar archivo de voz
+        voice_file = await update.message.voice.get_file()
+        file_path = f"/tmp/voz_{user_id}.ogg"
+        await voice_file.download_to_drive(file_path)
+
+        # Llamar a Whisper API para transcripción (OpenAI)
+        import openai
+        openai.api_key = OPENAI_API_KEY
+        with open(file_path, "rb") as audio:
+            transcript = openai.Audio.transcribe("whisper-1", audio)
+
+        texto_firma = transcript["text"]
+        
+        # Generar firma con Dilithium
+        signer = VoiceSignature(SECRET_PHRASE)
+        firma = signer.sign_message(texto_firma)[0]
+
+        # Guardar firma en DB
+        save_dilithium_signature(user_id, firma)
+
+        # Confirmar al usuario
+        mensaje = "✅ Tu firma biométrica de voz ha sido registrada correctamente."
+        tts = gTTS(mensaje, lang='es')
+        voz = BytesIO()
+        tts.write_to_fp(voz)
+        voz.seek(0)
+
+        await update.message.reply_text(mensaje)
+        await update.message.reply_voice(voice=voz)
+
+        # Desactivar modo escucha
+        context.user_data["esperando_firma"] = False
 
     # Convertir a voz
     tts = gTTS(mensaje, lang='es')
