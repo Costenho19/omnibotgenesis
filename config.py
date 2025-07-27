@@ -1,5 +1,5 @@
+import os 
 from decouple import config
-
 # decouple buscará las variables en Railway de forma más robusta.
 # Si no las encuentra, el valor por defecto será None.
 BOT_TOKEN = config('BOT_TOKEN', default=None)
