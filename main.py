@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # --- Instancias Globales de los Motores del Bot ---
 # Se inicializan una sola vez al arrancar el bot para máxima eficiencia.
 engine = OmnixPremiumAnalysisEngine()
-qe = QuantumEngine()
+qe = QuantumEngine(historical_data=[])
 
 # --- SECCIÓN 3: FUNCIONES AUXILIARES (HERRAMIENTAS) ---
 
