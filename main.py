@@ -289,7 +289,8 @@ async def general_text_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     prompt = historial + "\nUsuario: " + user_input + "\nOMNIX:"
     language = await get_user_language(user_id) or detect(user_input)
 
-    respuesta = conversational_ai.generate_response(user_id, prompt)
+  respuesta = conversational_ai.generate_response_with_memory(user_id, prompt)
+
     await save_user_memory(user_id, f"Usuario: {user_input}\nOMNIX: {respuesta}")
     await update.message.reply_text(respuesta)
 
