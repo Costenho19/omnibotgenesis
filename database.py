@@ -73,8 +73,7 @@ def add_premium_assets(premium_assets: list):
     finally:
         if conn: conn.close()
 
-def save_analysis_to_db(result):
-    """Guarda un resultado de análisis en la base de datos."""
+
    def save_analysis_to_db(user_id, asset, analysis_text, result_dict):
     from datetime import datetime
 
