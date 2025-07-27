@@ -564,6 +564,7 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(CommandHandler("menu_botones", menu_botones_command))
     application.add_handler(CallbackQueryHandler(responder_botones))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("analyze", analyze_command))
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
@@ -577,6 +578,43 @@ async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TY
     idioma_usuario = detect(mensaje)
     if idioma_usuario != 'es':
         mensaje = traducir_mensaje(mensaje, idioma_usuario)
+@solo_premium
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Activo por defecto (puedes cambiarlo)
+    symbol = "BTC-USD"
+    data = yf.download(symbol, period="7d", interval="1h")
+
+    # Crear gráfico con matplotlib
+    plt.figure(figsize=(10, 4))
+    plt.plot(data.index, data["Close"], label=f"{symbol} Precio", color='blue')
+    plt.title(f"Análisis de {symbol} (Últimos 7 días)")
+    plt.xlabel("Fecha")
+    plt.ylabel("Precio (USD)")
+    plt.grid(True)
+    plt.legend()
+
+    # Guardar imagen temporal
+    graph_path = f"/tmp/graph_{uuid.uuid4()}.png"
+    plt.tight_layout()
+    plt.savefig(graph_path)
+    plt.close()
+
+    # Mensaje explicativo
+    mensaje = f"📈 Aquí tienes el gráfico de {symbol} en los últimos 7 días. El precio actual ronda los {round(data['Close'][-1], 2)} USD."
+
+    # Convertir texto a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar imagen + texto + voz
+    await update.message.reply_photo(photo=InputFile(graph_path))
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
 
     # Convertir a voz
     tts = gTTS(mensaje, lang='es')
