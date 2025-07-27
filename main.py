@@ -10,7 +10,7 @@ import asyncio
 import os
 import psycopg2
 import threading
-import io import BytesIO
+from io import BytesIO
 import tempfile
 import uuid
 import datetime
