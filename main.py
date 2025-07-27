@@ -563,7 +563,7 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(CallbackQueryHandler(responder_botones))
     application.add_handler(CommandHandler("menu_botones", menu_botones_command))
     application.add_handler(CallbackQueryHandler(responder_botones))
-    
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
@@ -745,7 +745,31 @@ async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.edit_message_text("⭐ Has seleccionado *Premium*.")
     else:
         await query.edit_message_text("❓ Opción no reconocida.")
+# Handler para mensajes de texto normales
+@solo_premium
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+    user_message = update.message.text
 
+    # Detectar idioma automáticamente
+    lang = detect(user_message)
+
+    # Generar respuesta con memoria desde conversational_ai
+    from conversational_ai import generate_response_with_memory
+    respuesta = await generate_response_with_memory(user_id, user_message, lang)
+
+    # Convertir respuesta a voz con gTTS
+    from gtts import gTTS
+    from io import BytesIO
+    tts = gTTS(text=respuesta, lang=lang)
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar respuesta en texto y voz
+    await update.message.reply_text(respuesta)
+    await update.message.reply_voice(voice=voz)
 if __name__ == "__main__":
     try:
         asyncio.run(main())
