@@ -671,9 +671,95 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(mensaje)
         await update.message.reply_voice(voice=voz)
+@solo_premium
+async def mercado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+
+    resumen = "📊 Precios actuales de tus criptomonedas premium:\n\n"
+    errores = []
+
+    for symbol in premium_assets_list:
+        try:
+            ticker = yf.Ticker(symbol)
+            data = ticker.history(period="1d")
+            precio = data["Close"].iloc[-1]
+            resumen += f"🔹 {symbol}: ${precio:.2f} USD\n"
+        except Exception as e:
+            errores.append(symbol)
+
+    if errores:
+        resumen += "\n❗ No se pudo obtener el precio de: " + ", ".join(errores)
+
+    # Convertir texto a voz
+    tts = gTTS(resumen, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar respuesta
+    await update.message.reply_text(resumen)
+    await update.message.reply_voice(voice=voz)
 
         # Desactivar modo escucha
         context.user_data["esperando_firma"] = False
+@solo_premium
+async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    user_id = str(user.id)
+
+    # Verificar si es usuario premium
+    premium = await es_usuario_premium(user_id)
+
+    # Obtener número de análisis realizados por el usuario
+    total_analisis = await get_user_analysis_count(user_id)
+
+    # Verificar si tiene firma biométrica registrada
+    firma = get_dilithium_signature(user_id)
+    tiene_firma = firma is not None
+
+    # Construir mensaje resumen
+    mensaje = f"🔐 Cuenta de {user.first_name}:\n"
+    mensaje += "👑 Estado: Premium\n" if premium else "🔓 Estado: No Premium\n"
+    mensaje += f"📊 Análisis realizados: {total_analisis}\n"
+    mensaje += "🖊️ Firma biométrica: Registrada\n" if tiene_firma else "🖊️ Firma biométrica: No registrada\n"
+
+    # Convertir mensaje a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    # Enviar texto y voz
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
+
+# ---------------- FUNCIONES AUXILIARES ----------------
+
+# Obtener firma desde la base de datos (ya debes tener esto en database.py)
+def get_dilithium_signature(user_id: str) -> str | None:
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT firma FROM firmas_biometricas WHERE user_id = %s", (user_id,))
+        result = cur.fetchone()
+        conn.close()
+        return result[0] if result else None
+    except Exception as e:
+        print(f"Error obteniendo firma: {e}")
+        return None
+
+# Contar análisis realizados por usuario (asegúrate que ai_analysis tiene user_id)
+async def get_user_analysis_count(user_id: str) -> int:
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM ai_analysis WHERE user_id = %s", (user_id,))
+        result = cur.fetchone()
+        conn.close()
+        return result[0] if result else 0
+    except Exception as e:
+        print(f"Error obteniendo análisis: {e}")
+        return 0
 
     # Convertir a voz
     tts = gTTS(mensaje, lang='es')
