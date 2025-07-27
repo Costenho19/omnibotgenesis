@@ -26,16 +26,15 @@ def setup_premium_database(premium_assets):
     try:
         with conn.cursor() as cursor:
             sql = """
-            INSERT INTO premium_assets (symbol, name, sector, added_at)
-            VALUES (%s, %s, %s, NOW())
+                INSERT INTO premium_assets (symbol, name, sector, added_at)
+                VALUES (%s, %s, %s, NOW())
             """
             cursor.executemany(sql, premium_assets)
             conn.commit()
-            logger.info(f"{cursor.rowcount} nuevos activos premium fueron insertados.")
+            logger.info(f"✅ {cursor.rowcount} nuevos activos premium fueron insertados.")
     except Exception as e:
-       logger.error(f"❌ Error agregando activos premium: {e}")
-
-       conn.rollback()
+        logger.error(f"❌ Error agregando activos premium: {e}")
+        conn.rollback()
     finally:
         if conn:
             conn.close()
