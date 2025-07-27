@@ -19,7 +19,9 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 # --- Módulos Internos del Proyecto ---
 # Se asume que estos archivos existen en el repositorio con las clases/funciones correspondientes.
 from config import BOT_TOKEN
-from conversational_ai import generate_response
+from conversational_ai import ConversationalAI
+ai = ConversationalAI()
+
 from analysis_engine import OmnixPremiumAnalysisEngine
 from database import setup_premium_database
 from quantum_engine import QuantumEngine
