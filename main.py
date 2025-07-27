@@ -33,6 +33,7 @@ from pqc_encryption import PQCEncryption
 from voice_signature import VoiceSignature, validate_voice_signature
 from langdetect import detect
 from conversational_ai import traducir_mensaje
+from voice_verification import compare_voice_signatures
 
 # --- Configuración Inicial ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -311,6 +312,104 @@ async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_dilithium_signature(user_id, signature,timestamp)
 
     await update.message.reply_text("✅ Identidad verificada y firma registrada exitosamente.")
+@solo_premium
+async def verificar_voz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    if not update.message.voice:
+        await update.message.reply_text("🎙️ Por favor, envía un mensaje de voz para verificar tu identidad.")
+        return
+
+    await update.message.reply_text("🔍 Verificando tu voz...")
+
+    # Guardar archivo temporal
+    voice_file = await context.bot.get_file(update.message.voice.file_id)
+    voice_path = f"/tmp/voice_check_{uuid.uuid4()}.ogg"
+    await voice_file.download_to_drive(voice_path)
+
+    # Obtener firma anterior de base de datos
+    firma_guardada = get_saved_signature(user_id)  # <- Asegúrate de tener esta función en database.py
+
+    if not firma_guardada:
+        await update.message.reply_text("⚠️ No hay firma de voz registrada. Usa /voz_firma primero.")
+        return
+
+    # Comparar firmas biométricas
+    coincide = compare_voice_signatures(firma_guardada, voice_path)
+
+    if coincide:
+        await update.message.reply_text("✅ Voz verificada. Identidad confirmada.")
+    else:
+        await update.message.reply_text("❌ La voz no coincide. Acceso denegado.")
+@solo_premium
+async def firma_visual_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    if not update.message.voice:
+        await update.message.reply_text("🎙️ Por favor, envía un mensaje de voz para generar tu firma visual.")
+        return
+
+    await update.message.reply_text("🧬 Generando firma visual de tu voz...")
+
+    # Guardar archivo de voz
+    voice_file = await context.bot.get_file(update.message.voice.file_id)
+    voice_path = f"/tmp/firma_visual_{uuid.uuid4()}.ogg"
+    await voice_file.download_to_drive(voice_path)
+
+    # Transcribir con Whisper
+    import openai
+    openai.api_key = OPENAI_API_KEY
+    with open(voice_path, "rb") as f:
+        transcript = openai.Audio.transcribe("whisper-1", f)["text"]
+
+    os.remove(voice_path)
+
+    # Firmar la transcripción
+    from voice_signature import VoiceSignature
+    signer = VoiceSignature(SECRET_PHRASE)
+    signature, timestamp = signer.sign_message(transcript)
+@solo_premium
+async def verificar_voz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+
+    if not update.message.voice:
+        await update.message.reply_text("🎙️ Por favor, envía un mensaje de voz para verificar tu identidad.")
+        return
+
+    await update.message.reply_text("🔍 Verificando tu voz...")
+
+    # Guardar archivo temporal
+    voice_file = await context.bot.get_file(update.message.voice.file_id)
+    voice_path = f"/tmp/voice_check_{uuid.uuid4()}.ogg"
+    await voice_file.download_to_drive(voice_path)
+
+    # Obtener firma anterior de base de datos
+    firma_guardada = get_saved_signature(user_id)  # <- Asegúrate de tener esta función en database.py
+
+    if not firma_guardada:
+        await update.message.reply_text("⚠️ No hay firma de voz registrada. Usa /voz_firma primero.")
+        return
+
+    # Comparar firmas biométricas
+    coincide = compare_voice_signatures(firma_guardada, voice_path)
+
+    if coincide:
+        await update.message.reply_text("✅ Voz verificada. Identidad confirmada.")
+    else:
+        await update.message.reply_text("❌ La voz no coincide. Acceso denegado.")
+
+    # Mostrar firma al usuario
+    firma_formateada = f"""
+🧾 Firma Visual Generada:
+------------------------------
+🗣 Texto detectado: "{transcript}"
+🔏 Firma Dilithium: {signature[:64]}...
+🕓 Tiempo: {timestamp}
+"""
+    await update.message.reply_text(firma_formateada)
 
 async def cuenta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra información detallada de la cuenta del usuario."""
