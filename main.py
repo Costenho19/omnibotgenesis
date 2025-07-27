@@ -565,6 +565,7 @@ async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYP
     application.add_handler(CallbackQueryHandler(responder_botones))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CommandHandler("analyze", analyze_command))
+    application.add_handler(CommandHandler("premium_panel", premium_panel_command))
 
 async def cuenta_segura_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = str(update.effective_user.id)
@@ -621,6 +622,42 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     voz = BytesIO()
     tts.write_to_fp(voz)
     voz.seek(0)
+@solo_premium
+async def premium_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+
+    # Contar usuarios premium
+    cur.execute("SELECT COUNT(*) FROM premium_users")
+    total_premium = cur.fetchone()[0]
+
+    # Contar análisis realizados
+    cur.execute("SELECT COUNT(*) FROM ai_analysis")
+    total_analisis = cur.fetchone()[0]
+
+    # Último análisis
+    cur.execute("SELECT MAX(timestamp) FROM ai_analysis")
+    ultimo_analisis = cur.fetchone()[0]
+
+    conn.close()
+
+    mensaje = f"""
+📊 Panel Premium OMNIX:
+👥 Usuarios Premium: {total_premium}
+📈 Análisis Realizados: {total_analisis}
+🕒 Último Análisis: {ultimo_analisis if ultimo_analisis else 'Sin datos'}
+🟢 Estado del Sistema: Operativo ✅
+""".strip()
+
+    # Convertir a voz
+    tts = gTTS(mensaje, lang='es')
+    voz = BytesIO()
+    tts.write_to_fp(voz)
+    voz.seek(0)
+
+    await update.message.reply_text(mensaje)
+    await update.message.reply_voice(voice=voz)
 
     await update.message.reply_text(mensaje)
     await update.message.reply_voice(voice=voz)
