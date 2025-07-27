@@ -128,21 +128,30 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Selecciona una opción del menú avanzado:", reply_markup=reply_markup)
+
 @solo_premium
-async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Realiza un análisis de texto de un activo (solo premium)."""
-    user = update.effective_user
-    if not await es_usuario_premium(user.id):
-        await update.message.reply_text("🚫 Este comando es exclusivo para usuarios Premium.", parse_mode="Markdown")
+async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    args = context.args
+
+    if not args:
+        await update.message.reply_text("❗Por favor indica el símbolo del activo (por ejemplo: BTC-USD)")
         return
-        
-    if not context.args:
-        await update.message.reply_text("Uso: /analyze <SÍMBOLO>")
-        return
-    
-    symbol = context.args[0].upper()
-    await update.message.reply_text(f"Análisis de texto para {symbol} en desarrollo.")
-    # (Aquí iría tu lógica de análisis de texto)
+
+    simbolo = args[0].upper()
+
+    await update.message.reply_text(f"📊 Analizando {simbolo} con IA y generando gráfico...")
+
+    # 1. Análisis con IA
+    engine = OmnixPremiumAnalysisEngine(simbolo)
+    resultado = engine.realizar_analisis()
+    texto_analisis = resultado.resumen
+
+    # 2. Generar gráfico
+    grafico = generar_grafico_precio(simbolo)
+
+    # 3. Enviar análisis + gráfico
+    await update.message.reply_photo(photo=grafico, caption=texto_analisis)
 
 async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Muestra información sobre la membresía Premium."""
@@ -505,6 +514,16 @@ async def main() -> None:
     plt.ylabel("USD")
     plt.legend()
     plt.tight_layout()
+async def menu_botones_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Muestra un menú con botones interactivos."""
+    keyboard = [
+        [InlineKeyboardButton("📊 Análisis", callback_data="analyze")],
+        [InlineKeyboardButton("🤖 Trading", callback_data="trading")],
+        [InlineKeyboardButton("👤 Cuenta", callback_data="cuenta")],
+        [InlineKeyboardButton("⭐ Premium", callback_data="premium")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("📍 Selecciona una opción del menú:", reply_markup=reply_markup)
 
     buffer = io.BytesIO()
     plt.savefig(buffer, format="png")
@@ -540,6 +559,7 @@ async def main() -> None:
     application.add_handler(CommandHandler("validar", voz_validar_command))
     application.add_handler(CommandHandler("cuenta_segura", cuenta_segura_command))
     application.add_handler(CommandHandler("mercado", mercado_command))
+    application.add_handler(CommandHandler("menu_botones", menu_botones_command))
 
     
 
