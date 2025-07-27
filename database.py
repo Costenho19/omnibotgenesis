@@ -33,7 +33,8 @@ def setup_premium_database(premium_assets):
             conn.commit()
             logger.info(f"{cursor.rowcount} nuevos activos premium fueron insertados.")
     except Exception as e:
-        logger.error(f"Error agregando activos premium: {e}")
+       logger.error(f"❌ Error agregando activos premium: {e}")
+
         conn.rollback()
     finally:
         if conn:
