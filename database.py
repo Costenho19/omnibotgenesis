@@ -35,7 +35,7 @@ def setup_premium_database(premium_assets):
     except Exception as e:
        logger.error(f"❌ Error agregando activos premium: {e}")
 
-        conn.rollback()
+       conn.rollback()
     finally:
         if conn:
             conn.close()
