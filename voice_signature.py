@@ -14,3 +14,10 @@ class VoiceSignature:
     def verify_signature(self, message: str, signature: str) -> bool:
         expected_signature = self.sign_message(message)
         return signature == expected_signature
+
+# ✅ Esta es la función que esperaba tu main.py
+def validate_voice_biometrics(message: str, signature: str) -> bool:
+    secret = "omni_secret_key"  # Puedes cambiarlo por una variable segura
+    verifier = VoiceSignature(secret)
+    return verifier.verify_signature(message, signature)
+
