@@ -531,5 +531,5 @@ if __name__ == "__main__":
     except Exception as e:
         logging.critical(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!\n{e}")
 
-    )
+    
 
