@@ -55,6 +55,8 @@ def setup_premium_database(premium_assets):
                 INSERT INTO premium_assets (symbol, name, sector, added_at)
                 VALUES (%s, %s, %s, NOW())
             """
+           logger.info(f"🔍 Lista de activos recibida: {premium_assets}")
+
             cursor.executemany(sql, premium_assets)
             conn.commit()
             logger.info(f"✅ nuevos activos premium insertados: {cursor.rowcount or 0}")
