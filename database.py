@@ -57,7 +57,9 @@ def setup_premium_database(premium_assets):
             """
             cursor.executemany(sql, premium_assets)
             conn.commit()
-            logger.info(f"✅ {cursor.rowcount} nuevos activos premium fueron insertados.")
+            logger.info(f"✅ nuevos activos premium insertados: {cursor.rowcount or 0}")
+
+
     except Exception as e:
         logger.error(f"❌ Error agregando activos premium: {e}")
         conn.rollback()
