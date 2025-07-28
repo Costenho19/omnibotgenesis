@@ -41,7 +41,14 @@ def crear_tabla_premium_assets():
         if conn:
             conn.close()
 
-def setup_premium_database(premium_assets):
+
+      def setup_premium_database(premium_assets):
+        premium_assets = [(x["symbol"], x["name"], x["sector"]) for x in premium_assets]
+        conn = get_db_connection()
+        if not conn:
+            return
+        try:
+
     """
     Inserta los activos premium iniciales en la base de datos.
     """
