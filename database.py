@@ -47,7 +47,7 @@ def crear_tabla_premium_assets():
         conn = get_db_connection()
         if not conn:
             return
-        try:
+     try:
         with conn.cursor() as cursor:
             sql = """
             INSERT INTO premium_assets (symbol, name, sector, added_at)
@@ -63,6 +63,7 @@ def crear_tabla_premium_assets():
     finally:
         if conn:
             conn.close()
+
 
 
 
