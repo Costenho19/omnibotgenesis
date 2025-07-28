@@ -524,18 +524,12 @@ async def main() -> None:
     application.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     logging.info("🔁 Iniciando OMNIX Bot V2.0 (async)...")
-    await application.run_polling(allowed_updates=Update.ALL_TYPES)
-
+   
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logging.critical(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!\n{e}")
 
-    await application.run_polling(allowed_updates=Update.ALL_TYPES)
+    )
 
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        logging.critical(f"!!!!!!!!!! ERROR FATAL AL INICIAR EL BOT !!!!!!!!!!!\n{e}")
