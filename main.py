@@ -36,6 +36,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Se inicializan una sola vez al arrancar el bot para máxima eficiencia.
 engine = OmnixPremiumAnalysisEngine()
 qe = QuantumEngine(historical_data=[])
+crear_tabla_premium_assets()
+
 setup_premium_database(premium_assets_list)
 
 # --- SECCIÓN 3: FUNCIONES AUXILIARES (HERRAMIENTAS) ---
