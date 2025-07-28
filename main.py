@@ -24,7 +24,8 @@ from conversational_ai import ConversationalAI
 ai = ConversationalAI()
 
 
-from database import setup_premium_database
+from database import setup_premium_database, crear_tabla_premium_assets
+
 from quantum_engine import QuantumEngine
 from pqc_encryption import generate_dilithium_signature
 from voice_signature import validate_voice_biometrics
