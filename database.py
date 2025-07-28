@@ -14,6 +14,32 @@ def get_db_connection():
     except Exception as e:
         logger.error(f"❌ Error al conectar con la base de datos: {e}")
         return None
+def crear_tabla_premium_assets():
+    """
+    Crea la tabla premium_assets si no existe.
+    """
+    conn = get_db_connection()
+    if not conn:
+        return
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS premium_assets (
+                    symbol TEXT,
+                    name TEXT,
+                    sector TEXT,
+                    added_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            conn.commit()
+            logger.info("✅ Tabla premium_assets creada correctamente.")
+    except Exception as e:
+        logger.error(f"❌ Error al crear la tabla premium_assets: {e}")
+        conn.rollback()
+    finally:
+        if conn:
+            conn.close()
 
 def setup_premium_database(premium_assets):
     """
