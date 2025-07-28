@@ -28,7 +28,7 @@ from langdetect import detect
 from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
 from config import BOT_TOKEN
 from conversational_ai import ConversationalAI
-from database import setup_premium_database, crear_tabla_premium_assets
+from database import setup_premium_database
 from quantum_engine import QuantumEngine
 from pqc_encryption import generate_dilithium_signature
 from voice_signature import validate_voice_biometrics
