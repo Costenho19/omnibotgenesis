@@ -2,6 +2,8 @@
 # === OMNIX GLOBAL BOT V2.0 - ARCHIVO PRINCIPAL (main.py)
 # ==============================================================================
 # Arquitectura refactorizada para simplicidad, potencia y escalabilidad.
+import uvloop
+uvloop.install()
 
 # --- SECCIÓN 1: IMPORTACIONES ---
 import logging
