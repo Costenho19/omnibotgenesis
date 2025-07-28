@@ -1,31 +1,32 @@
 # --- Telegram Bot ---
 python-telegram-bot[ext]==20.8
+aiohttp==3.9.5
+nest_asyncio==1.6.0
 
 # --- Data & Finance ---
 yfinance==0.2.37
 pandas==2.2.2
 numpy==1.26.4
+matplotlib==3.8.4
 
 # --- AI / ML ---
 scikit-learn==1.4.2
-google-generativeai==0.5.4
+langdetect==1.0.9
 gtts==2.5.1
+openai==1.30.1
+google-generativeai==0.5.4
 
-# --- Database & Config ---
-psycopg2-binary==2.9.9
-python-decouple==3.8
+# --- Crypto / Seguridad (reemplazo de pqcrypto) ---
+cryptography==42.0.5
 
 # --- Trading & Network ---
 ccxt==4.3.35
 requests==2.31.0
-nest_asyncio
-# --- Web Panel ---
-flask==2.3.3
-flask
-python-dotenv
-matplotlib
-aiohttp
-langdetect==1.0.9
-openai==1.30.1
 
-cryptography
+# --- Database & Config ---
+psycopg2-binary==2.9.9
+python-decouple==3.8
+python-dotenv==1.0.1
+
+# --- Web Panel (opcional, si lo usarás luego) ---
+Flask==2.3.3
