@@ -48,25 +48,22 @@ def crear_tabla_premium_assets():
         if not conn:
             return
         try:
-
-    """
-    Inserta los activos premium iniciales en la base de datos.
-    """
-   
-    if not conn:
-        return
-
-    try:
         with conn.cursor() as cursor:
             sql = """
-                INSERT INTO premium_assets (symbol, name, sector, added_at)
-                VALUES (%s, %s, %s, NOW())
+            INSERT INTO premium_assets (symbol, name, sector, added_at)
+            VALUES (%s, %s, %s, NOW())
             """
-            logger.info(f"🔍 Lista de activos recibida: {premium_assets}")
-
+            logger.info(f"📊 Lista de activos recibida: {premium_assets}")
             cursor.executemany(sql, premium_assets)
             conn.commit()
-            logger.info(f"✅ nuevos activos premium insertados: {cursor.rowcount or 0}")
+            logger.info(f"✅ Nuevos activos premium insertados: {cursor.rowcount or 0}")
+    except Exception as e:
+        logger.error(f"❌ Error agregando activos premium: {e}")
+        conn.rollback()
+    finally:
+        if conn:
+            conn.close()
+
 
 
     except Exception as e:
