@@ -32,7 +32,7 @@ class ConversationalAI:
     def _update_chat_history(self, user_id: str, role: str, content: str):
         if user_id not in self.user_memory:
             self.user_memory[user_id] = [
-                {"role": "system", "content": "Eres OMNIX, un asistente de trading profesional, empático y preciso. Responde con claridad, educación y seguridad, adaptando tu lenguaje al idioma del usuario."}
+                {"role": "system", "content": "Eres OMNIX, un asistente de trading profesional, empático y preciso. Responde con claridad, educación y seguridad, adaptando tu lenguaje al idioma y emociones del usuario."}
             ]
         self.user_memory[user_id].append({"role": role, "content": content})
         self.user_memory[user_id] = self.user_memory[user_id][-11:]
@@ -47,11 +47,9 @@ class ConversationalAI:
     def generate_response(self, user_id: str, message: str) -> str:
         if not self.client:
             return "La función de IA está inactiva por falta de clave."
-
         try:
             self._update_chat_history(user_id, "user", message)
             messages = self._get_chat_history(user_id)
-
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -64,6 +62,31 @@ class ConversationalAI:
         except Exception as e:
             logger.error(f"❌ Error al generar respuesta: {e}")
             return "Ocurrió un error al procesar tu mensaje. Intenta de nuevo."
+
+    def generate_emotional_response(self, text: str, user_id: str = "default") -> str:
+        if not self.client:
+            return "La IA emocional está inactiva por falta de clave."
+        try:
+            prompt = (
+                f"Responde con empatía, calidez y un toque humano al siguiente mensaje del usuario:\n"
+                f"{text}\n\n"
+                f"Tu rol: Asistente de IA empático especializado en trading, emociones humanas y ayuda positiva.\n"
+                f"Responde de forma cercana, clara y emocionalmente adaptada al tono del mensaje original."
+            )
+            self._update_chat_history(user_id, "user", prompt)
+            messages = self._get_chat_history(user_id)
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=0.85,
+                max_tokens=250
+            )
+            reply = response.choices[0].message.content.strip()
+            self._update_chat_history(user_id, "assistant", reply)
+            return reply
+        except Exception as e:
+            logger.error(f"💬 Error en respuesta emocional: {e}")
+            return "Estoy aquí para ayudarte con lo que necesites, aunque hubo un pequeño error procesando tu mensaje."
 
     def generate_voice_response(self, text: str, lang: str = "es") -> str:
         try:
@@ -84,4 +107,3 @@ class ConversationalAI:
             "voice": audio_path,
             "lang": lang
         }
-
