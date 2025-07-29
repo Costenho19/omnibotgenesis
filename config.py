@@ -16,6 +16,7 @@ KRAKEN_SECRET_KEY   = config('KRAKEN_SECRET_KEY', default=None)
 
 # --- Base de Datos PostgreSQL ---
 DATABASE_URL        = config('DATABASE_URL', default=None)
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 # --- Seguridad y Control ---
 CLAVE_PREMIUM       = config('CLAVE_PREMIUM', default="omnix2025premium")
