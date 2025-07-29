@@ -8,7 +8,7 @@ from flask import Flask
 from threading import Thread
 
 from config import BOT_TOKEN
-from conversational_ai import generar_respuesta
+from conversational_ai import generate_response
 from voice_engine import generar_audio
 from database import save_analysis_to_db, get_user_memory
 from analysis_engine import generar_analisis_completo, generar_grafico_btc
