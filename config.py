@@ -4,7 +4,7 @@
 # Lee de forma segura las claves desde .env o desde el entorno del servidor.
 # Compatible con Railway, Render, Vercel y ejecución local.
 # ==============================================================================
-
+import os 
 from decouple import config
 
 # --- Claves del Bot Telegram y APIs Externas ---
