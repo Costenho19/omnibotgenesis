@@ -31,3 +31,4 @@ python-dotenv==1.0.1
 # --- Web Panel (opcional, si lo usarás luego) ---
 Flask==2.3.3
 uvloop==0.19.0
+elevenlabs
