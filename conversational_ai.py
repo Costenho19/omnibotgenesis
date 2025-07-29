@@ -114,3 +114,36 @@ ai = ConversationalAI()
 
 def generate_response(user_id: str, message: str) -> str:
     return ai.generate_response(user_id, message)
+import os
+import tempfile
+import requests
+
+def generar_audio(texto, idioma="es"):
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    voice_id = "EXAVITQu4vr4xnSDxMaL"  # Puedes cambiar la voz aquí
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "text": texto,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.6,
+            "similarity_boost": 0.75
+        }
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    
+    if response.status_code == 200:
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        temp_file.write(response.content)
+        temp_file.close()
+        return temp_file.name
+    else:
+        print("❌ Error al generar voz:", response.text)
+        return None
