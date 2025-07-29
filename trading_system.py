@@ -88,3 +88,13 @@ class KrakenTradingSystem:
         }
         logger.info(f"Simulando orden de mercado en Kraken: {order_type} {volume} de {pair}")
         return self.kraken_request('/0/private/AddOrder', data)
+# Función externa para ejecutar trading directo
+def ejecutar_trade(symbol="BTC/USD", side="buy", amount=0.001):
+    try:
+        trader = KrakenTradingSystem()
+        result = trader.place_market_order(pair=symbol, order_type=side, volume=amount)
+        return f"✅ Trade ejecutado: {side.upper()} {amount} {symbol} \n{result}"
+    except Exception as e:
+        return f"❌ Error al ejecutar trade real: {str(e)}"
+
+        
