@@ -121,7 +121,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("quantum_predict", quantum_predict))
     app.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    app.add_handler(CommandHandler("quantum_real_demo", quantum_real_demo))
     app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get('PORT', 8443)),
