@@ -169,3 +169,9 @@ def save_analysis_to_db(user_id, asset, analysis_text, result_dict):
 
 # Aquí puedes añadir más funciones para interactuar con la base de datos en el futuro,
 # como 'save_dilithium_signature', 'guardar_usuario_premium', 'es_usuario_premium', etc.
+# database.py
+
+def get_user_memory(user_id: str) -> str:
+    # Aquí va la lógica real para obtener memoria del usuario desde PostgreSQL o lo que uses
+    # Ejemplo básico para evitar que el bot falle:
+    return ""
