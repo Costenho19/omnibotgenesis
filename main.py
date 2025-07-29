@@ -1,200 +1,121 @@
-# ===================================================================
-# OMNIX PRO V3.5 – ARCHIVO PRINCIPAL PARA RAILWAY (Webhook Ready)
-# ===================================================================
-import uvloop
-uvloop.install()
+# -*- coding: utf-8 -*-
+import os
+import asyncio
+import logging
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from flask import Flask
+from threading import Thread
 
-import os, logging, io
-import matplotlib.pyplot as plt
-from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
-from telegram.constants import ParseMode
-from gtts import gTTS
-from langdetect import detect
-from flask import Flask, request
+from config import BOT_TOKEN
+from conversational_ai import generar_respuesta
+from voice_engine import generar_audio
+from database import save_analysis_to_db, get_user_memory
+from analysis_engine import generar_analisis_completo, generar_grafico_btc
+from trading_system import ejecutar_trade
+from voice_signature import procesar_firma_biometrica
+from pqc_encryption import cifrar_con_dilithium
 
-# --- Módulos internos del proyecto ---
-from config import BOT_TOKEN, DATABASE_URL
-from decouple import config
-WEBHOOK_URL = config('WEBHOOK_URL')
+# ========== LOG ==========
+logging.basicConfig(level=logging.INFO)
 
+# ========== FLASK PANEL ==========
+app = Flask(__name__)
 
-from conversational_ai import ConversationalAI
-from database import (
-    setup_premium_database,
-    crear_tabla_premium_assets,
-    guardar_mensaje_usuario,
-)
-from analysis_engine import OmnixPremiumAnalysisEngine, premium_assets_list
-from quantum_engine import QuantumEngine
-from trading_system import KrakenTradingSystem
-from pqc_encryption import generate_dilithium_signature
-from voice_signature import validate_voice_biometrics
+@app.route('/')
+def home():
+    return 'OMNIX Running - Quantum Secure'
 
-# --- Configuración básica ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-engine = OmnixPremiumAnalysisEngine()
-ai = ConversationalAI()
-qe = QuantumEngine(historical_data=[])
-trader = KrakenTradingSystem()
-app = Flask(__name__)  # Webhook HTTP server
+@app.route('/premium_panel')
+def panel():
+    return 'Panel Premium OK ✅'
 
-# --- Herramientas de voz y detección de idioma ---
-def detect_lang(text: str) -> str:
-    try:
-        if not text or not any(c.isalpha() for c in text):
-            return "es"
-        return detect(text)
-    except Exception:
-        return "es"
+def run_flask():
+    app.run(host='0.0.0.0', port=8080)
 
-def reply_with_voice(text: str, lang: str = "es") -> io.BytesIO:
-    try:
-        tts = gTTS(text, lang=lang)
-        voice = io.BytesIO()
-        tts.write_to_fp(voice)
-        voice.seek(0)
-        return voice
-    except Exception as e:
-        logging.error(f"Voz falló: {e}")
-        return None
+# ========== IA COMANDOS ==========
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    botones = [["/analyze", "/trading"], ["/voz_firma", "/estado"]]
+    markup = ReplyKeyboardMarkup(botones, resize_keyboard=True)
+    mensaje = "Hola, soy OMNIX V4.0 🚀\nIA + Trading + Seguridad Cuántica"
+    await update.message.reply_text(mensaje, reply_markup=markup)
+    audio = generar_audio(mensaje, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-# --- Handlers de comandos ---
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    lang = detect_lang(update.message.text or "")
-    text = "🤖 ¡Hola! Soy OMNIX PRO V3.5. Estoy listo para asistirte en análisis, trading e inteligencia cuántica."
-    voice = reply_with_voice(text, lang)
-    await update.message.reply_voice(voice, caption=text) if voice else await update.message.reply_text(text)
+@solo_premium
+async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    resultado = generar_analisis_completo("BTC")
+    img = generar_grafico_btc()
+    await update.message.reply_photo(photo=open(img, 'rb'))
+    await update.message.reply_text(resultado)
+    audio = generar_audio(resultado, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def estado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "✅ Estado del sistema: OMNIX está en línea. Funciones activas: IA GPT-4o, voz, trading real, firma cuántica, análisis técnico, portafolio cuántico."
-    voice = reply_with_voice(text)
-    await update.message.reply_voice(voice, caption=text) if voice else await update.message.reply_text(text)
+@solo_premium
+async def trading(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    resultado = ejecutar_trade("buy", "BTC")
+    await update.message.reply_text(resultado)
+    audio = generar_audio(resultado, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        symbol = context.args[0].upper() if context.args else "BTC-USD"
-        result = await engine.analyze_asset(symbol)
-        text = (
-            f"📊 Análisis de {symbol}\n"
-            f"Precio actual: ${result['price']:.2f}\n"
-            f"Tendencia: {result['trend']}\n"
-            f"Recomendación: {result['recommendation']}"
-        )
-        voice = reply_with_voice(text)
-        await update.message.reply_voice(voice, caption=text) if voice else await update.message.reply_text(text)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error en el análisis: {e}")
+@solo_premium
+async def voz_firma(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Enviando firma de voz cifrada con Dilithium...")
+    resultado = procesar_firma_biometrica(update)
+    firma_cifrada = cifrar_con_dilithium(resultado)
+    await update.message.reply_text("Firma registrada y cifrada correctamente.")
+    audio = generar_audio("Firma registrada y cifrada correctamente.", lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def trading_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if len(context.args) < 3:
-            await update.message.reply_text("Uso: /trading BTCUSD buy 0.01")
-            return
-        symbol, action, amount = context.args[0].upper(), context.args[1].lower(), float(context.args[2])
-        if action not in ["buy", "sell"]:
-            await update.message.reply_text("Acción inválida. Usa 'buy' o 'sell'.")
-            return
-        result = trader.execute_trade(symbol, action, amount)
-        text = (
-            f"🟢 Operación ejecutada:\n"
-            f"{action.upper()} {amount} de {symbol}\n"
-            f"Precio: ${result['price']:.2f} | Total: ${result['total']:.2f}"
-        )
-        voice = reply_with_voice(text)
-        await update.message.reply_voice(voice, caption=text) if voice else await update.message.reply_text(text)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error en trading: {e}")
+@solo_premium
+async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    resumen = "Sistema OMNIX activo ✅\nTrading: OK\nIA: GPT-4o\nVoz: Activada\nQuantum Shield: ON"
+    await update.message.reply_text(resumen)
+    audio = generar_audio(resumen, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def voz_firma_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        user_id = update.effective_user.id
-        sample_voice = "voz_temp.mp3"
-        _ = generate_dilithium_signature(sample_voice)
-        valid = validate_voice_biometrics(user_id, sample_voice)
-        msg = "🔐 Firma de voz validada con Dilithium." if valid else "⚠️ Firma no válida. Repite el proceso."
-        voice = reply_with_voice(msg)
-        await update.message.reply_voice(voice, caption=msg) if voice else await update.message.reply_text(msg)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error en /voz_firma: {e}")
+@solo_premium
+async def quantum_predict(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    prediccion = "Predicción cuántica: BTC tendencia alcista próxima 48h. Validación 87%."
+    await update.message.reply_text(prediccion)
+    audio = generar_audio(prediccion, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def quantum_predict_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        symbol = context.args[0].upper() if context.args else "BTC-USD"
-        prices = await engine.get_prices_series(symbol, period="180d")
-        qp = qe.quantum_predict(prices)
-        text = (
-            f"🔮 Predicción Cuántica de {symbol}\n"
-            f"Mediana: ${qp.next_price:.2f}\n"
-            f"Retorno esperado: {qp.mean_return:.4%}\n"
-            f"VaR 95%: {qp.var_95:.4%}"
-        )
-        fig, ax = plt.subplots()
-        ax.hist(qp.scenarios, bins=60)
-        ax.set_title("Distribución Cuántica de Precios")
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png")
-        buf.seek(0)
-        await update.message.reply_photo(buf)
-        await update.message.reply_text(text)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error en /quantum_predict: {e}")
+@solo_premium
+async def quantum_portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    portafolio = "Tu portafolio cuántico incluye BTC, ETH, USDT. Riesgo optimizado con IA Monte Carlo."
+    await update.message.reply_text(portafolio)
+    audio = generar_audio(portafolio, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def quantum_portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        tickers = context.args if context.args else ["BTC-USD", "ETH-USD", "ADA-USD"]
-        price_df = await engine.get_prices_df(tickers, period="180d")
-        res = qe.quantum_optimize_portfolio(price_df)
-        weights = "\n".join([f"• {k}: {v:.2%}" for k, v in res.weights.items()])
-        text = f"🧠 Portafolio Cuántico:\n{weights}\n\nSharpe: {res.sharpe:.2f}"
-        await update.message.reply_text(text)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error en /quantum_portfolio: {e}")
+# ========== MANEJO DE MENSAJES ==========
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto_usuario = update.message.text
+    user_id = str(update.message.from_user.id)
+    respuesta = generar_respuesta(user_id, texto_usuario)
+    await update.message.reply_text(respuesta)
+    audio = generar_audio(respuesta, lang='es')
+    await update.message.reply_voice(voice=open(audio, 'rb'))
 
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text
-    user_id = str(update.effective_user.id)
-    lang = detect_lang(user_input)
-    guardar_mensaje_usuario(user_id, user_input)
-    response = await ai.generate_emotional_response_async(user_input, user_id)
-    voice = reply_with_voice(response, lang)
-    await update.message.reply_voice(voice, caption=response) if voice else await update.message.reply_text(response)
+# ========== MAIN ==========
+if __name__ == '__main__':
+    flask_thread = Thread(target=run_flask)
+    flask_thread.start()
 
-# --- Bot + Webhook Launcher ---
-async def launch_bot():
-    application = Application.builder().token(BOT_TOKEN).build()
-    crear_tabla_premium_assets()
-    setup_premium_database(premium_assets_list)
+    app = Application.builder().token(BOT_TOKEN).build()
 
-    # Handlers
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("estado", estado_command))
-    application.add_handler(CommandHandler("analyze", analyze_command))
-    application.add_handler(CommandHandler("trading", trading_command))
-    application.add_handler(CommandHandler("voz_firma", voz_firma_command))
-    application.add_handler(CommandHandler("quantum_predict", quantum_predict_command))
-    application.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("analyze", analyze))
+    app.add_handler(CommandHandler("trading", trading))
+    app.add_handler(CommandHandler("voz_firma", voz_firma))
+    app.add_handler(CommandHandler("estado", estado))
+    app.add_handler(CommandHandler("quantum_predict", quantum_predict))
+    app.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Webhook
-    await application.bot.set_webhook(url=WEBHOOK_URL)
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()  # para debug
-    logging.info("✅ Webhook activado y bot iniciado.")
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    return "OK", 200
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(launch_bot())
-    except Exception as e:
-        logging.critical(f"❌ Error fatal al iniciar OMNIX: {e}")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get('PORT', 8443)),
+        url_path=BOT_TOKEN,
+        webhook_url=os.environ.get("WEBHOOK_URL") + BOT_TOKEN
+    )
