@@ -46,4 +46,8 @@ def validate_voice_biometrics(message: str, signature: str) -> bool:
     secret = "omni_secret_key"
     verifier = VoiceSignature(secret)
     return verifier.verify_signature(message, signature)
+def procesar_firma_biometrica(audio_path):
+    # lógica para analizar, extraer y cifrar la firma biométrica de la voz
+    firma = f"firma_{hash(audio_path)}"
+    return firma
 
