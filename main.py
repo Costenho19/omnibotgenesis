@@ -58,6 +58,49 @@ async def trading(update: Update, context: ContextTypes.DEFAULT_TYPE):
     audio = generar_audio(resultado, lang='es')
     await update.message.reply_voice(voice=open(audio, 'rb'))
 
+from qiskit import QuantumCircuit, execute, IBMQ
+from qiskit.providers.ibmq import least_busy
+from dotenv import load_dotenv
+
+@solo_premium
+async def quantum_real_demo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Conectando a IBM Quantum...")
+
+    try:
+        load_dotenv()
+        IBMQ_API_KEY = os.getenv("IBMQ_API_KEY")
+        if not IBMQ_API_KEY:
+            await update.message.reply_text("⚠️ Clave IBMQ_API_KEY no encontrada en .env")
+            return
+
+        IBMQ.save_account(IBMQ_API_KEY, overwrite=True)
+        provider = IBMQ.load_account()
+
+        # Elegir backend real disponible
+        backend = least_busy(provider.backends(filters=lambda b: b.configuration().n_qubits >= 1 and
+                                               not b.configuration().simulator and b.status().operational==True))
+        await update.message.reply_text(f"Ejecutando en: {backend.name()}")
+
+        # Crear circuito de superposición simple
+        qc = QuantumCircuit(1, 1)
+        qc.h(0)
+        qc.measure(0, 0)
+
+        job = execute(qc, backend=backend, shots=1024)
+        result = job.result()
+        counts = result.get_counts()
+
+        texto = f"✅ Resultados cuánticos reales:\n\n{counts}"
+        await update.message.reply_text(texto)
+
+        # Voz
+        audio = generar_audio(texto, lang="es")
+        if audio:
+            await update.message.reply_voice(voice=open(audio, "rb"))
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error al ejecutar demo cuántica: {str(e)}")
+
 @solo_premium
 async def voz_firma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Enviando firma de voz cifrada con Dilithium...")
