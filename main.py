@@ -20,7 +20,11 @@ from langdetect import detect
 from flask import Flask, request
 
 # --- Módulos internos del proyecto ---
-from config import BOT_TOKEN, WEBHOOK_URL, DATABASE_URL
+from config import BOT_TOKEN, DATABASE_URL
+from decouple import config
+WEBHOOK_URL = config('WEBHOOK_URL')
+
+
 from conversational_ai import ConversationalAI
 from database import (
     setup_premium_database,
