@@ -93,9 +93,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto_usuario = update.message.text
     user_id = str(update.message.from_user.id)
     respuesta = generar_respuesta(user_id, texto_usuario)
-    await update.message.reply_text(respuesta)
-    audio = generar_audio(respuesta, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+  respuesta = generate_respuesta(user_id, texto_usuario)
+
+# 🔊 Generar voz profesional con ElevenLabs
+archivo_audio = generar_audio(respuesta, idioma="es")  # puedes cambiar a idioma detectado si quieres
+
+if archivo_audio:
+    with open(archivo_audio, 'rb') as audio:
+        await update.message.reply_voice(voice=audio)
+
+# Enviar también por texto
+await update.message.reply_text(respuesta)
+ 
 
 # ========== MAIN ==========
 if __name__ == '__main__':
