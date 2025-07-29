@@ -107,3 +107,10 @@ class ConversationalAI:
             "voice": audio_path,
             "lang": lang
         }
+# === WRAPPER GLOBAL PARA IMPORTAR GENERATE_RESPONSE ===
+from conversational_ai import ConversationalAI
+
+ai = ConversationalAI()
+
+def generate_response(user_id: str, message: str) -> str:
+    return ai.generate_response(user_id, message)
