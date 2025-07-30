@@ -47,9 +47,6 @@ async def handle_message(update: Update, context): await generate_response(updat
 async def main():
     Thread(target=run_flask).start()
     app = Application.builder().token(BOT_TOKEN).build()
-
-    await app.bot.set_webhook(WEBHOOK_URL + BOT_TOKEN, drop_pending_updates=True)
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("analyze", analyze))
     app.add_handler(CommandHandler("trading", trading))
