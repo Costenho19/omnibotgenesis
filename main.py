@@ -214,7 +214,7 @@ async def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    await app.bot.set_webhook(WEBHOOK_URL + BOT_TOKEN)
+    await app.bot.set_webhook(WEBHOOK_URL + BOT_TOKEN, drop_pending_updates=True)
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("analyze", analyze))
@@ -248,3 +248,4 @@ if __name__ == "__main__":
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main())
+
