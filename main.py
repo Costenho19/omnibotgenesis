@@ -12,7 +12,8 @@ from threading import Thread
 from functools import partial
 from market_global_engine import obtener_datos_bolsa, datos_financieros_internacionales
 
-from config import BOT_TOKEN
+from config import WEBHOOK_URL, BOT_TOKEN
+
 from conversational_ai import generate_response
 from voice_engine import generar_audio
 from database import save_analysis_to_db, get_user_memory
