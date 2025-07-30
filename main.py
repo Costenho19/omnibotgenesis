@@ -1,5 +1,5 @@
-# -*- co
-ding: utf-8 -*-
+# -*- coding: utf-8 -*-
+
 import os
 import asyncio
 import logging
