@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# -*- co
+ding: utf-8 -*-
 import os
 import asyncio
 import logging
@@ -20,6 +21,7 @@ from voice_signature import procesar_firma_biometrica
 from pqc_encryption import cifrar_con_dilithium
 from sharia_validator import validar_sharia
 from quantum_engine import montecarlo_predict, quantum_portfolio_analysis
+from market_global_engine import obtener_datos_bolsa, datos_financieros_internacionales
 
 # ========== LOG ==========
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +32,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return 'OMNIX Running - Quantum Secure'
+    return 'OMNIX Running - Quantum Global Secure'
 
 @app.route('/premium_panel')
 def panel():
@@ -61,11 +63,11 @@ def solo_premium(func):
         return await func(update, context)
     return wrapper
 
-# ========== IA COMANDOS ==========
+# ========== COMANDOS IA ==========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    botones = [["/analyze BTC", "/trading BTC"], ["/voz_firma", "/estado"], ["/sharia_check BTC", "/quantum_predict"]]
+    botones = [["/analyze BTC", "/trading BTC"], ["/voz_firma", "/estado"], ["/sharia_check BTC", "/quantum_predict"], ["/bolsa", "/finanzas_globales"]]
     markup = ReplyKeyboardMarkup(botones, resize_keyboard=True)
-    mensaje = "Hola, soy OMNIX V4.0 \U0001F680\nIA + Trading + Seguridad Cuántica"
+    mensaje = "Hola, soy OMNIX V4.0 ENTERPRISE 🌍\nIA + Trading + Finanzas Globales + Seguridad Cuántica"
     await update.message.reply_text(mensaje, reply_markup=markup)
     audio = generar_audio(mensaje, lang='es', voice_id='elevenlabs_male')
     if audio:
@@ -123,7 +125,7 @@ async def voz_firma(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @solo_premium
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    resumen = "Sistema OMNIX activo ✅\nTrading: OK\nIA: GPT-4o\nVoz: ElevenLabs\nQuantum Shield: ON"
+    resumen = "Sistema OMNIX V4.0 Enterprise activo ✅\nTrading: OK\nIA: GPT-4o\nVoz: ElevenLabs\nQuantum Shield: ON\nMercados: Bolsa + Sharia + China + LATAM"
     await update.message.reply_text(resumen)
     audio = generar_audio(resumen, lang='es', voice_id='elevenlabs_male')
     if audio:
@@ -170,6 +172,24 @@ async def quantum_portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Error en quantum_portfolio: {e}")
         await update.message.reply_text("❌ Error al generar portafolio cuántico.")
 
+@solo_premium
+async def bolsa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        resumen = obtener_datos_bolsa()
+        await update.message.reply_text(resumen)
+    except Exception as e:
+        logger.error(f"Error en bolsa: {e}")
+        await update.message.reply_text("❌ Error al obtener datos de la bolsa de valores.")
+
+@solo_premium
+async def finanzas_globales(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        resumen = datos_financieros_internacionales()
+        await update.message.reply_text(resumen)
+    except Exception as e:
+        logger.error(f"Error en finanzas_globales: {e}")
+        await update.message.reply_text("❌ Error al obtener datos financieros internacionales.")
+
 # ========== MANEJO DE MENSAJES ==========
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.message.from_user.id)
@@ -200,6 +220,8 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("quantum_predict", quantum_predict))
     app.add_handler(CommandHandler("sharia_check", sharia_check))
     app.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio))
+    app.add_handler(CommandHandler("bolsa", bolsa))
+    app.add_handler(CommandHandler("finanzas_globales", finanzas_globales))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_webhook(
