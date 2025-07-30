@@ -1,68 +1,67 @@
-from __future__ import annotations
+
 import numpy as np
-import pandas as pd
-from dataclasses import dataclass
-from typing import Optional
+import matplotlib.pyplot as plt
+import yfinance as yf
+import datetime
+import tempfile
 
-@dataclass
-class QuantumPrediction:
-    mean_return: float
-    p50: float
-    p90: float
-    var_95: float
-    next_price: float
-    scenarios: np.ndarray
+# ========== MONTECARLO PREDICT ==========
+def montecarlo_predict(symbol: str, days: int = 30, simulations: int = 1000):
+    end_date = datetime.datetime.now()
+    start_date = end_date - datetime.timedelta(days=365)
+    data = yf.download(symbol, start=start_date, end=end_date)
 
-@dataclass
-class PortfolioOptimizationResult:
-    weights: pd.Series
-    exp_return: float
-    exp_risk: float
-    sharpe: float
+    if data.empty:
+        raise ValueError(f"No se encontraron datos para el símbolo {symbol}")
 
-class QuantumEngine:
-    def __init__(self, historical_data: pd.DataFrame):
-        self.historical_data = historical_data
+    close_prices = data['Close']
+    log_returns = np.log(close_prices / close_prices.shift(1)).dropna()
+    mean_return = log_returns.mean()
+    std_dev = log_returns.std()
+    last_price = close_prices.iloc[-1]
 
-    def simulate_quantum_predictions(self) -> QuantumPrediction:
-        returns = self.historical_data['Close'].pct_change().dropna()
-        mean_return = returns.mean()
-        std_dev = returns.std()
-        scenarios = np.random.normal(mean_return, std_dev, 1000)
+    simulations_matrix = np.zeros((days, simulations))
+    for i in range(simulations):
+        prices = [last_price]
+        for _ in range(days):
+            drift = mean_return - (0.5 * std_dev**2)
+            shock = np.random.normal(loc=0, scale=std_dev)
+            price = prices[-1] * np.exp(drift + shock)
+            prices.append(price)
+        simulations_matrix[:, i] = prices[1:]
 
-        p50 = np.percentile(scenarios, 50)
-        p90 = np.percentile(scenarios, 90)
-        var_95 = np.percentile(scenarios, 5)
-        last_price = self.historical_data['Close'].iloc[-1]
-        next_price = last_price * (1 + p50)
+    # Graficar
+    plt.figure(figsize=(10, 5))
+    plt.plot(simulations_matrix, color='gray', alpha=0.1)
+    plt.title(f"Simulación Monte Carlo: {symbol}")
+    plt.xlabel("Días")
+    plt.ylabel("Precio estimado")
+    plt.grid(True)
 
-        return QuantumPrediction(
-            mean_return=mean_return,
-            p50=p50,
-            p90=p90,
-            var_95=var_95,
-            next_price=next_price,
-            scenarios=scenarios
-        )
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    plt.savefig(temp_file.name)
+    plt.close()
 
-    def optimize_portfolio(self, assets_data: dict[str, pd.DataFrame]) -> PortfolioOptimizationResult:
-        returns = {symbol: data['Close'].pct_change().dropna() for symbol, data in assets_data.items()}
-        returns_df = pd.DataFrame(returns)
-        mean_returns = returns_df.mean()
-        cov_matrix = returns_df.cov()
+    return temp_file.name  # Ruta del gráfico generado
 
-        num_assets = len(mean_returns)
-        weights = np.random.random(num_assets)
-        weights /= np.sum(weights)
-
-        exp_return = np.dot(weights, mean_returns)
-        exp_risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-        sharpe_ratio = exp_return / exp_risk if exp_risk != 0 else 0
-
-        return PortfolioOptimizationResult(
-            weights=pd.Series(weights, index=mean_returns.index),
-            exp_return=exp_return,
-            exp_risk=exp_risk,
-            sharpe=sharpe_ratio
-        )
-
+# ========== QUANTUM PORTFOLIO ANALYSIS ==========
+def quantum_portfolio_analysis(symbols: list):
+    resultados = []
+    for symbol in symbols:
+        try:
+            data = yf.download(symbol, period="6mo", interval="1d")
+            returns = data['Close'].pct_change().dropna()
+            media = returns.mean()
+            volatilidad = returns.std()
+            resultados.append({
+                "activo": symbol,
+                "retorno_medio": round(media * 100, 2),
+                "riesgo": round(volatilidad * 100, 2)
+            })
+        except:
+            resultados.append({
+                "activo": symbol,
+                "retorno_medio": "Error",
+                "riesgo": "Error"
+            })
+    return resultados
