@@ -17,4 +17,6 @@ def decrypt_message(token: str) -> str:
 def generate_dilithium_signature(message: str) -> str:
     signature = encrypt_message(message)  # simulación de firma cifrada
     return signature
-
+def cifrar_con_dilithium(data: str) -> str:
+    # Simulación de cifrado post-cuántico
+    return f"DILITHIUM_CIFRADO::{data[::-1]}"
