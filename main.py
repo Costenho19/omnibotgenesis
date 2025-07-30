@@ -10,6 +10,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from flask import Flask
 from threading import Thread
 from functools import partial
+from market_global_engine import obtener_datos_bolsa, datos_financieros_internacionales
 
 from config import BOT_TOKEN
 from conversational_ai import generate_response
