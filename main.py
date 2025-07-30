@@ -67,6 +67,12 @@ async def main():
         url_path=BOT_TOKEN,
         webhook_url=WEBHOOK_URL + BOT_TOKEN,
     )
+# =================== CONSULTAR WALLET PREMIUM ===================
+@app.on_message(filters.command("wallet"))
+async def wallet_command(client, message):
+    from trading_system import consultar_wallet
+    resultado = consultar_wallet()
+    await message.reply_text(resultado, parse_mode="Markdown")
 
    
 
