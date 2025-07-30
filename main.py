@@ -71,10 +71,8 @@ async def main():
    
 
 # ========== EJECUCIÓN ==========
-    if __name__ == "__main__":
+if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
-
 
       
