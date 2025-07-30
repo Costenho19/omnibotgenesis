@@ -208,11 +208,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Error al procesar tu mensaje.")
 
 # ========== MAIN ==========
-if __name__ == '__main__':
+async def main():
     flask_thread = Thread(target=run_flask)
     flask_thread.start()
 
     app = Application.builder().token(BOT_TOKEN).build()
+
+    await app.bot.set_webhook(WEBHOOK_URL + BOT_TOKEN)
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("analyze", analyze))
@@ -226,17 +228,18 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("finanzas_globales", finanzas_globales))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    
-if WEBHOOK_URL is None or BOT_TOKEN is None:
-    raise ValueError("❌ WEBHOOK_URL o BOT_TOKEN no están definidos.")
+    if WEBHOOK_URL is None or BOT_TOKEN is None:
+        raise ValueError("❌ WEBHOOK_URL o BOT_TOKEN no están definidos.")
 
-webhook_url = WEBHOOK_URL + BOT_TOKEN
+    webhook_url = WEBHOOK_URL + BOT_TOKEN
 
-app.run_webhook(
-    listen="0.0.0.0",
-    port=int(os.environ.get('PORT', 8445)),
-    url_path=BOT_TOKEN,
-    webhook_url=webhook_url
-)
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8445)),
+        url_path=BOT_TOKEN,
+        webhook_url=webhook_url
+    )
 
-    
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
