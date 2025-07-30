@@ -71,15 +71,15 @@ async def main():
    
 
 # ========== EJECUCIÓN ==========
-if __name__ == "__main__":
-    import asyncio
+import asyncio
 
+if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()
         loop.create_task(main())
         loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-
-
-      
+    except RuntimeError as e:
+        if "already running" in str(e):
+            asyncio.get_event_loop().create_task(main())
+        else:
+            raise e
