@@ -225,9 +225,17 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("finanzas_globales", finanzas_globales))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get('PORT', 8443)),
-        url_path=BOT_TOKEN,
-        webhook_url=os.environ.get("WEBHOOK_URL") + BOT_TOKEN
+    
+if WEBHOOK_URL is None or BOT_TOKEN is None:
+    raise ValueError("❌ WEBHOOK_URL o BOT_TOKEN no están definidos.")
+
+webhook_url = WEBHOOK_URL + BOT_TOKEN
+
+app.run_webhook(
+    listen="0.0.0.0",
+    port=int(os.environ.get('PORT', 8443)),
+    url_path=BOT_TOKEN,
+    webhook_url=webhook_url
+)
+
     )
