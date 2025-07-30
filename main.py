@@ -2,10 +2,13 @@
 import os
 import asyncio
 import logging
+import json
+import tempfile
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask
 from threading import Thread
+from functools import partial
 
 from config import BOT_TOKEN
 from conversational_ai import generate_response
@@ -15,9 +18,12 @@ from analysis_engine import generar_analisis_completo, generar_grafico_btc
 from trading_system import ejecutar_trade
 from voice_signature import procesar_firma_biometrica
 from pqc_encryption import cifrar_con_dilithium
+from sharia_validator import validar_sharia
+from quantum_engine import montecarlo_predict, quantum_portfolio_analysis
 
 # ========== LOG ==========
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ========== FLASK PANEL ==========
 app = Flask(__name__)
@@ -33,121 +39,151 @@ def panel():
 def run_flask():
     app.run(host='0.0.0.0', port=8080)
 
+# ========== PERSISTENCIA PREMIUM ==========
+PREMIUM_FILE = "premium_users.json"
+
+if os.path.exists(PREMIUM_FILE):
+    with open(PREMIUM_FILE, 'r') as f:
+        premium_users = set(json.load(f))
+else:
+    premium_users = set()
+
+def guardar_premium():
+    with open(PREMIUM_FILE, 'w') as f:
+        json.dump(list(premium_users), f)
+
+def solo_premium(func):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_id = str(update.message.from_user.id)
+        if user_id not in premium_users:
+            await update.message.reply_text("⚠️ Esta función es solo para usuarios premium. Contacta al soporte para más información.")
+            return
+        return await func(update, context)
+    return wrapper
+
 # ========== IA COMANDOS ==========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    botones = [["/analyze", "/trading"], ["/voz_firma", "/estado"]]
+    botones = [["/analyze BTC", "/trading BTC"], ["/voz_firma", "/estado"], ["/sharia_check BTC", "/quantum_predict"]]
     markup = ReplyKeyboardMarkup(botones, resize_keyboard=True)
-    mensaje = "Hola, soy OMNIX V4.0 🚀\nIA + Trading + Seguridad Cuántica"
+    mensaje = "Hola, soy OMNIX V4.0 \U0001F680\nIA + Trading + Seguridad Cuántica"
     await update.message.reply_text(mensaje, reply_markup=markup)
-    audio = generar_audio(mensaje, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    audio = generar_audio(mensaje, lang='es', voice_id='elevenlabs_male')
+    if audio:
+        await update.message.reply_voice(voice=open(audio, 'rb'))
+        os.remove(audio)
 
 @solo_premium
 async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    resultado = generar_analisis_completo("BTC")
-    img = generar_grafico_btc()
-    await update.message.reply_photo(photo=open(img, 'rb'))
-    await update.message.reply_text(resultado)
-    audio = generar_audio(resultado, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    crypto = context.args[0].upper() if context.args else "BTC"
+    try:
+        loop = asyncio.get_running_loop()
+        resultado = await loop.run_in_executor(None, partial(generar_analisis_completo, crypto))
+        img = generar_grafico_btc()
+        await update.message.reply_photo(photo=open(img, 'rb'))
+        os.remove(img)
+        await update.message.reply_text(resultado)
+        audio = generar_audio(resultado, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en analyze: {e}")
+        await update.message.reply_text("❌ Error al generar análisis. Intenta de nuevo más tarde.")
 
 @solo_premium
 async def trading(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    resultado = ejecutar_trade("buy", "BTC")
-    await update.message.reply_text(resultado)
-    audio = generar_audio(resultado, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
-
-from qiskit import QuantumCircuit, execute, IBMQ
-from qiskit.providers.ibmq import least_busy
-from dotenv import load_dotenv
-
-@solo_premium
-async def quantum_real_demo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Conectando a IBM Quantum...")
-
+    crypto = context.args[0].upper() if context.args else "BTC"
     try:
-        load_dotenv()
-        IBMQ_API_KEY = os.getenv("IBMQ_API_KEY")
-        if not IBMQ_API_KEY:
-            await update.message.reply_text("⚠️ Clave IBMQ_API_KEY no encontrada en .env")
-            return
-
-        IBMQ.save_account(IBMQ_API_KEY, overwrite=True)
-        provider = IBMQ.load_account()
-
-        # Elegir backend real disponible
-        backend = least_busy(provider.backends(filters=lambda b: b.configuration().n_qubits >= 1 and
-                                               not b.configuration().simulator and b.status().operational==True))
-        await update.message.reply_text(f"Ejecutando en: {backend.name()}")
-
-        # Crear circuito de superposición simple
-        qc = QuantumCircuit(1, 1)
-        qc.h(0)
-        qc.measure(0, 0)
-
-        job = execute(qc, backend=backend, shots=1024)
-        result = job.result()
-        counts = result.get_counts()
-
-        texto = f"✅ Resultados cuánticos reales:\n\n{counts}"
-        await update.message.reply_text(texto)
-
-        # Voz
-        audio = generar_audio(texto, lang="es")
+        loop = asyncio.get_running_loop()
+        resultado = await loop.run_in_executor(None, partial(ejecutar_trade, "buy", crypto))
+        await update.message.reply_text(resultado)
+        audio = generar_audio(resultado, lang='es', voice_id='elevenlabs_male')
         if audio:
-            await update.message.reply_voice(voice=open(audio, "rb"))
-
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
     except Exception as e:
-        await update.message.reply_text(f"❌ Error al ejecutar demo cuántica: {str(e)}")
+        logger.error(f"Error en trading: {e}")
+        await update.message.reply_text("❌ Error al ejecutar operación de trading.")
 
 @solo_premium
 async def voz_firma(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Enviando firma de voz cifrada con Dilithium...")
-    resultado = procesar_firma_biometrica(update)
-    firma_cifrada = cifrar_con_dilithium(resultado)
-    await update.message.reply_text("Firma registrada y cifrada correctamente.")
-    audio = generar_audio("Firma registrada y cifrada correctamente.", lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    await update.message.reply_text("Procesando firma de voz cuántica...")
+    try:
+        resultado = procesar_firma_biometrica(update)
+        firma_cifrada = cifrar_con_dilithium(resultado)
+        mensaje = "Firma registrada y cifrada correctamente."
+        await update.message.reply_text(mensaje)
+        audio = generar_audio(mensaje, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en voz_firma: {e}")
+        await update.message.reply_text("❌ Error al procesar firma biométrica.")
 
 @solo_premium
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    resumen = "Sistema OMNIX activo ✅\nTrading: OK\nIA: GPT-4o\nVoz: Activada\nQuantum Shield: ON"
+    resumen = "Sistema OMNIX activo ✅\nTrading: OK\nIA: GPT-4o\nVoz: ElevenLabs\nQuantum Shield: ON"
     await update.message.reply_text(resumen)
-    audio = generar_audio(resumen, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    audio = generar_audio(resumen, lang='es', voice_id='elevenlabs_male')
+    if audio:
+        await update.message.reply_voice(voice=open(audio, 'rb'))
+        os.remove(audio)
 
 @solo_premium
 async def quantum_predict(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    prediccion = "Predicción cuántica: BTC tendencia alcista próxima 48h. Validación 87%."
-    await update.message.reply_text(prediccion)
-    audio = generar_audio(prediccion, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    try:
+        pred = montecarlo_predict("BTC")
+        await update.message.reply_text(pred)
+        audio = generar_audio(pred, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en quantum_predict: {e}")
+        await update.message.reply_text("❌ Error en predicción cuántica.")
+
+@solo_premium
+async def sharia_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    crypto = context.args[0].upper() if context.args else "BTC"
+    try:
+        resultado = validar_sharia(crypto)
+        await update.message.reply_text(resultado)
+        audio = generar_audio(resultado, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en sharia_check: {e}")
+        await update.message.reply_text("❌ Error en validación halal.")
 
 @solo_premium
 async def quantum_portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    portafolio = "Tu portafolio cuántico incluye BTC, ETH, USDT. Riesgo optimizado con IA Monte Carlo."
-    await update.message.reply_text(portafolio)
-    audio = generar_audio(portafolio, lang='es')
-    await update.message.reply_voice(voice=open(audio, 'rb'))
+    try:
+        resultado = quantum_portfolio_analysis()
+        await update.message.reply_text(resultado)
+        audio = generar_audio(resultado, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en quantum_portfolio: {e}")
+        await update.message.reply_text("❌ Error al generar portafolio cuántico.")
 
 # ========== MANEJO DE MENSAJES ==========
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texto_usuario = update.message.text
     user_id = str(update.message.from_user.id)
-    respuesta = generar_respuesta(user_id, texto_usuario)
-    respuesta = generate_respuesta(user_id, texto_usuario)
-
-# 🔊 Generar voz profesional con ElevenLabs
-archivo_audio = generar_audio(respuesta, idioma="es")  # puedes cambiar a idioma detectado si quieres
-
-if archivo_audio:
-    with open(archivo_audio, 'rb') as audio:
-        await update.message.reply_voice(voice=audio)
-
-# Enviar también por texto
-await update.message.reply_text(respuesta)
- 
+    texto_usuario = update.message.text
+    try:
+        respuesta = generate_response(user_id, texto_usuario)
+        await update.message.reply_text(respuesta)
+        audio = generar_audio(respuesta, lang='es', voice_id='elevenlabs_male')
+        if audio:
+            await update.message.reply_voice(voice=open(audio, 'rb'))
+            os.remove(audio)
+    except Exception as e:
+        logger.error(f"Error en handle_message: {e}")
+        await update.message.reply_text("❌ Error al procesar tu mensaje.")
 
 # ========== MAIN ==========
 if __name__ == '__main__':
@@ -162,9 +198,10 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("voz_firma", voz_firma))
     app.add_handler(CommandHandler("estado", estado))
     app.add_handler(CommandHandler("quantum_predict", quantum_predict))
+    app.add_handler(CommandHandler("sharia_check", sharia_check))
     app.add_handler(CommandHandler("quantum_portfolio", quantum_portfolio))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_handler(CommandHandler("quantum_real_demo", quantum_real_demo))
+
     app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get('PORT', 8443)),
