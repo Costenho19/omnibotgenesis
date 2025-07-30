@@ -61,17 +61,20 @@ async def main():
 
     if WEBHOOK_URL is None or BOT_TOKEN is None:
         raise ValueError("❌ WEBHOOK_URL o BOT_TOKEN no están definidos.")
-
-   
-
-# ========== EJECUCIÓN ==========
-if __name__ == "__main__":
-    app.run_webhook(
+    await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 8445)),
         url_path=BOT_TOKEN,
         webhook_url=WEBHOOK_URL + BOT_TOKEN,
     )
+
+   
+
+# ========== EJECUCIÓN ==========
+    if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+
 
 
       
