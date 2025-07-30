@@ -96,5 +96,30 @@ def ejecutar_trade(symbol="BTC/USD", side="buy", amount=0.001):
         return f"✅ Trade ejecutado: {side.upper()} {amount} {symbol} \n{result}"
     except Exception as e:
         return f"❌ Error al ejecutar trade real: {str(e)}"
+# ================== CONSULTAR WALLET PREMIUM =====================
+def consultar_wallet():
+    try:
+        trader = KrakenTradingSystem()
+        saldo = trader.get_account_balance()
+
+        if "error" in saldo:
+            return f"❌ Error al consultar la wallet: {saldo['error']}"
+
+        texto = "💰 *Saldo Disponible en Kraken:*\n"
+        for moneda, cantidad in saldo.items():
+            try:
+                cantidad_float = float(cantidad)
+                if cantidad_float > 0:
+                    texto += f"• {moneda.upper()}: `{cantidad}`\n"
+            except:
+                continue
+
+        if texto.strip() == "💰 *Saldo Disponible en Kraken:*":
+            return "📭 No hay fondos disponibles actualmente en tu cuenta Kraken."
+
+        return texto
+
+    except Exception as e:
+        return f"⚠️ Error inesperado al obtener la wallet: {str(e)}"
 
         
