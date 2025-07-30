@@ -79,7 +79,8 @@ if __name__ == "__main__":
         loop.create_task(main())
         loop.run_forever()
     except RuntimeError as e:
-        if "already running" in str(e):
+       if "Cannot close a running event loop" in str(e):
+
             asyncio.get_event_loop().create_task(main())
         else:
             raise e
