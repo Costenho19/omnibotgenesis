@@ -137,10 +137,10 @@ async def main():
 # --- SECCIÓN 5: PUNTO DE ENTRADA DEL PROGRAMA ---
 
 if __name__ == "__main__":
-    logger.info("Iniciando OMNIX...")
     try:
-       import nest_asyncio
-nest_asyncio.apply()
-asyncio.get_event_loop().run_until_complete(main())
+        logger.info("Iniciando OMNIX...")
+        import nest_asyncio
+        nest_asyncio.apply()
+        asyncio.get_event_loop().run_until_complete(main())
     except Exception as e:
         logger.critical(f"!!!!!!!!!! ERROR FATAL AL ARRANCAR EL BOT !!!!!!!!!!!\n{e}")
