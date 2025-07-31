@@ -99,7 +99,8 @@ async def main():
         os._exit(1)
         
     # Inicia el servidor Flask en un hilo separado.
-    flask_thread = Thread(target=run_flask_in_thread, daemon=True)
+    flask_thread = threading.Thread(target=run_flask_in_thread, daemon=True)
+
     flask_thread.start()
     logger.info("🌐 Servidor web Flask iniciado en un hilo paralelo.")
     
