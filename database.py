@@ -175,3 +175,31 @@ def get_user_memory(user_id: str) -> str:
     # Aquí va la lógica real para obtener memoria del usuario desde PostgreSQL o lo que uses
     # Ejemplo básico para evitar que el bot falle:
     return ""
+# ============================================================
+# === FUNCIÓN PARA GUARDAR SUGERENCIAS DE LOS USUARIOS ======
+# ============================================================
+
+import datetime
+
+async def guardar_sugerencia(user_id: int, sugerencia: str, db_pool=None):
+    try:
+        if db_pool is None:
+            from .config import DATABASE_URL
+            import asyncpg
+            db_pool = await asyncpg.create_pool(DATABASE_URL)
+
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS sugerencias (
+                    id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
+                    sugerencia TEXT,
+                    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            await conn.execute("""
+                INSERT INTO sugerencias (user_id, sugerencia, fecha)
+                VALUES ($1, $2, $3);
+            """, user_id, sugerencia, datetime.datetime.utcnow())
+    except Exception as e:
+        print(f"[ERROR] guardando sugerencia: {e}")
