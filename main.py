@@ -141,6 +141,7 @@ if __name__ == "__main__":
         import nest_asyncio
         nest_asyncio.apply()
         import asyncio
-        asyncio.run(main())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except Exception as e:
-        logger.critical(f"!!!!!!!!!!! ERROR FATAL AL ARRANCAR EL BOT !!!!!!!!!!!\n{e}")
+        logger.critical(f"‼️‼️‼️ ERROR FATAL AL ARRANCAR EL BOT ‼️‼️‼️\n{e}")
