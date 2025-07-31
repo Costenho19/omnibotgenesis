@@ -7,7 +7,7 @@
 import logging
 import asyncio
 import os
-from threading import Thread
+import threading
 from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
