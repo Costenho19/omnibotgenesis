@@ -135,16 +135,31 @@ async def main():
     )
     logger.info("✅ OMNIX V3.8 PRO SHIELDED está en línea y escuchando peticiones.")
 
-# --- SECCIÓN 5: PUNTO DE ENTRADA DEL PROGRAMA ---
+# === SECCIÓN 5: PUNTO DE ENTRADA DEL PROGRAMA ===
 if __name__ == "__main__":
-    import asyncio
     import nest_asyncio
+    import asyncio
+    from telegram.ext import Application, CommandHandler, ContextTypes, Update
 
-    logger.info("Iniciando OMNIX...")
+    logger.info("🚀 Iniciando OMNIX...")
 
     try:
         nest_asyncio.apply()
-        asyncio.get_event_loop().create_task(main())
-        asyncio.get_event_loop().run_forever()
+
+        app = Application.builder().token(BOT_TOKEN).build()
+
+        # --- Comando de prueba (/start) ---
+        async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            await update.message.reply_text("✅ OMNIX está en línea y responde correctamente.")
+
+        app.add_handler(CommandHandler("start", start))
+
+        # --- Ejecutar Webhook ---
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=8445,
+            webhook_url=WEBHOOK_URL,
+        )
+
     except Exception as e:
-        logger.critical(f"‼️‼️‼️ ERROR FATAL AL ARRANCAR EL BOT ‼️‼️‼️\n{e}")
+        logger.critical(f"❌❌❌ ERROR FATAL AL ARRANCAR EL BOT ❌❌❌\n{e}")
