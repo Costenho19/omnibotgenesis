@@ -139,13 +139,11 @@ async def main():
 if __name__ == "__main__":
     import nest_asyncio
     import asyncio
-    
 
     logger.info("🚀 Iniciando OMNIX...")
 
     try:
         nest_asyncio.apply()
-
         app = Application.builder().token(BOT_TOKEN).build()
 
         # --- Comando de prueba (/start) ---
@@ -153,22 +151,23 @@ if __name__ == "__main__":
             await update.message.reply_text("✅ OMNIX está en línea y responde correctamente.")
 
         app.add_handler(CommandHandler("start", start))
- # --- Activar la respuesta de IA conversacional a cualquier texto ---
-    
 
-    async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        text = update.message.text
-        respuesta = generate_response(update.effective_user.id, text)
-        await update.message.reply_text(respuesta)
+        # --- Activar la respuesta de IA conversacional a cualquier texto ---
+        from conversational_ai import generate_response
 
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_text))
+        async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            text = update.message.text
+            respuesta = generate_response(update.effective_user.id, text)
+            await update.message.reply_text(respuesta)
+
+        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_text))
 
         # --- Ejecutar Webhook ---
-        app.run_webhook(
+       app.run_webhook(
             listen="0.0.0.0",
             port=8445,
             webhook_url=WEBHOOK_URL,
         )
 
     except Exception as e:
-        logger.critical(f"❌❌❌ ERROR FATAL AL ARRANCAR EL BOT ❌❌❌\n{e}")
+        logger.critical(f"❌ Error al iniciar OMNIX:\n{e}")
