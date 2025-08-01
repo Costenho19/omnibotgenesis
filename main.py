@@ -100,16 +100,38 @@ async def main():
     application.add_handler(CommandHandler("sugerencia", sugerencia))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    port = int(os.environ.get("PORT", 8443))
-    logger.info(f"🚀 Iniciando Webhook en el puerto {port}...")
+  # === SECCIÓN FINAL - FUNCIONES Y HANDLERS ===
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    mensaje = "🚀 Bienvenido a OMNIX Quantum Assistant.\n\nEstoy listo para ayudarte con trading automático, análisis de mercado y más."
+    await update.message.reply_text(mensaje)
+
+async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
+    respuesta, audio_path = await generate_response(texto)
+    await update.message.reply_text(respuesta)
+    await update.message.reply_voice(voice=open(audio_path, 'rb'))
+
+async def main():
+    logging.basicConfig(level=logging.INFO)
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
 
     await application.run_webhook(
         listen="0.0.0.0",
-        port=port,
+        port=int(os.environ.get("PORT", 8443)),
         webhook_url=WEBHOOK_URL,
     )
 
-# === EJECUCIÓN ===
+# === PUNTO DE ENTRADA ===
+
 if __name__ == "__main__":
-    nest_asyncio.apply()
-    asyncio.run(main())
+    print("🚀 Iniciando OMNIX Quantum Assistant...")
+
+    try:
+        asyncio.run(main())
+    except RuntimeError:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
