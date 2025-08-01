@@ -127,47 +127,31 @@ async def main():
     # El puerto lo toma de la variable de entorno 'PORT' que asigna Railway.
     port = int(os.environ.get("PORT", 8443))
     logger.info(f"Iniciando Webhook en el puerto {port}...")
-    await application.run_webhook(
+    # === SECCIÓN FINAL - FUNCIONES Y HANDLERS ===
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    mensaje = "👋 Bienvenido a OMNIX Quantum Assistant.\n\nEstoy listo para ayudarte con trading automático, análisis y seguridad cuántica."
+    await update.message.reply_text(mensaje)
+
+async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
+    respuesta, audio_path = await generate_response(texto)
+    await update.message.reply_text(respuesta)
+    await update.message.reply_voice(voice=open(audio_path, 'rb'))
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
+
+    application.run_webhook(
         listen="0.0.0.0",
-        port=port,
-        url_path=BOT_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
-    )
-    logger.info("✅ OMNIX V3.8 PRO SHIELDED está en línea y escuchando peticiones.")
-
-# === SECCIÓN 5: PUNTO DE ENTRADA DEL PROGRAMA ===
-if __name__ == "__main__":
-    import nest_asyncio
-    import asyncio
-
-logger.info("🚀 Iniciando OMNIX...")
-
-try:
-    nest_asyncio.apply()
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    # --- Comando de prueba (/start) ---
-    async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("✅ OMNIX está en línea y responde correctamente.")
-
-    app.add_handler(CommandHandler("start", start))
-
-    # --- Activar la respuesta de IA conversacional ---
-    from conversational_ai import generate_response
-
-    async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        text = update.message.text
-        respuesta = generate_response(update.effective_user.id, text)
-        await update.message.reply_text(respuesta)
-
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_text))
-
-    # --- Ejecutar Webhook ---
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=8445,
+        port=int(os.environ.get("PORT", 8443)),
         webhook_url=WEBHOOK_URL,
     )
 
-except Exception as e:
-    logger.critical(f"❌ Error al iniciar OMNIX:\n{e}")
+if __name__ == '__main__':
+    print("🚀 Iniciando OMNIX Quantum Assistant...")
+    main()
