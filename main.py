@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
         app.add_handler(CommandHandler("start", start))
  # --- Activar la respuesta de IA conversacional a cualquier texto ---
-    from conversational_ai import generate_response
+    
 
     async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
