@@ -11,7 +11,7 @@ import threading
 import nest_asyncio
 from flask import Flask
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes 
+from telegram.ext import Application,CommandHandler, MessageHandler, filters, ContextTypes
 
 # --- Módulos Internos del Proyecto ---
 # Se asume que estos módulos y funciones existen en sus respectivos archivos.
