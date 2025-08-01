@@ -143,22 +143,22 @@ async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(respuesta)
     await update.message.reply_voice(voice=open(audio_path, 'rb'))
 
-if __name__ == "__main__":
+f __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
     try:
         import nest_asyncio
         nest_asyncio.apply()
 
-        from telegram.ext import ApplicationBuilder
-        application = ApplicationBuilder().token(BOT_TOKEN).build()
-from telegram.ext import CommandHandler
+        from telegram.ext import ApplicationBuilder, CommandHandler
 
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("analyze", analyze))
-application.add_handler(CommandHandler("trading", trading))
-application.add_handler(CommandHandler("voz_firma", voz_firma))
-application.add_handler(CommandHandler("estado", estado))
+        application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("analyze", analyze))
+        application.add_handler(CommandHandler("trading", trading))
+        application.add_handler(CommandHandler("voz_firma", voz_firma))
+        application.add_handler(CommandHandler("estado", estado))
 
         webhook_url = WEBHOOK_URL
         application.run_webhook(
