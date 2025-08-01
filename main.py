@@ -156,20 +156,21 @@ async def main():
         webhook_url=WEBHOOK_URL,
     )
 
-# === PUNTO DE ENTRADA ===
+# === PUNTO DE ENTRADA SEGURO PARA RAILWAY ===
 
 if __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
-  
-
     try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if "already running" in str(e):
-            loop = asyncio.get_event_loop()
+        import nest_asyncio
+        nest_asyncio.apply()
+
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
             loop.create_task(main())
-            loop.run_forever()
         else:
-            print("❌ Error inesperado:", e)
-            sys.exit(1) 
+            loop.run_until_complete(main())
+
+    except Exception as e:
+        print("❌ Error al iniciar OMNIX:", e)
+        sys.exit(1)
