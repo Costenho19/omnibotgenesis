@@ -143,13 +143,14 @@ async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(respuesta)
     await update.message.reply_voice(voice=open(audio_path, 'rb'))
 if __name__ == "__main__":
-    print("🚀 Iniciando OMNIX Quantum Assistant...")
+    import nest_asyncio
+    nest_asyncio.apply()
 
-    try:
-        import nest_asyncio
-        nest_asyncio.apply()
+    from telegram.ext import ApplicationBuilder, CommandHandler
+    import asyncio
 
-        from telegram.ext import ApplicationBuilder, CommandHandler
+    async def main():
+        print("🚀 Iniciando OMNIX Quantum Assistant...")
 
         application = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -158,15 +159,15 @@ if __name__ == "__main__":
         application.add_handler(CommandHandler("trading", trading))
         application.add_handler(CommandHandler("voz_firma", voz_firma))
         application.add_handler(CommandHandler("estado", estado))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
 
-        webhook_url = WEBHOOK_URL
-        application.run_webhook(
+        await application.run_webhook(
             listen="0.0.0.0",
             port=8445,
-            webhook_url=webhook_url,
+            webhook_url=WEBHOOK_URL,
         )
 
+    try:
+        asyncio.run(main())
     except Exception as e:
-        print("❌ Error inesperado en el arranque:", e)
-        import sys
-        sys.exit(1)
+        print("❌ Error lanzando OMNIX:", e)
