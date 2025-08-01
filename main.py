@@ -152,6 +152,13 @@ if __name__ == "__main__":
 
         from telegram.ext import ApplicationBuilder
         application = ApplicationBuilder().token(BOT_TOKEN).build()
+from telegram.ext import CommandHandler
+
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("analyze", analyze))
+application.add_handler(CommandHandler("trading", trading))
+application.add_handler(CommandHandler("voz_firma", voz_firma))
+application.add_handler(CommandHandler("estado", estado))
 
         webhook_url = WEBHOOK_URL
         application.run_webhook(
