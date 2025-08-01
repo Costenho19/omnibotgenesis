@@ -130,8 +130,45 @@ async def main():
 if __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
+   # === SECCIÓN FINAL - FUNCIONES Y HANDLERS ===
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    mensaje = "🚀 Bienvenido a OMNIX Quantum Assistant.\n\nEstoy listo para ayudarte con trading automático, análisis de mercado y más."
+    await update.message.reply_text(mensaje)
+
+async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
+    respuesta, audio_path = await generate_response(texto)
+    await update.message.reply_text(respuesta)
+    await update.message.reply_voice(voice=open(audio_path, 'rb'))
+
+async def main():
+    logging.basicConfig(level=logging.INFO)
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
+
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8443)),
+        webhook_url=WEBHOOK_URL,
+    )
+
+# === PUNTO DE ENTRADA ===
+
+if __name__ == "__main__":
+    print("🚀 Iniciando OMNIX Quantum Assistant...")
+
+  import sys
+
     try:
         asyncio.run(main())
-    except RuntimeError:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+    except RuntimeError as e:
+        if "already running" in str(e):
+            loop = asyncio.get_event_loop()
+            loop.create_task(main())
+            loop.run_forever()
+        else:
+            print("❌ Error inesperado:", e)
+            sys.exit(1) 
