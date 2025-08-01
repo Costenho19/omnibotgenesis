@@ -146,11 +146,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
 
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8443)),
-        webhook_url=WEBHOOK_URL,
-    )
+   
 
 if __name__ == '__main__':
     print("🚀 Iniciando OMNIX Quantum Assistant...")
