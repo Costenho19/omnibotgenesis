@@ -143,21 +143,6 @@ async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(respuesta)
     await update.message.reply_voice(voice=open(audio_path, 'rb'))
 
-async def main():
-    logging.basicConfig(level=logging.INFO)
-    application = Application.builder().token(BOT_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
-
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8443)),
-        webhook_url=WEBHOOK_URL,
-    )
-
-# === PUNTO DE ENTRADA SEGURO PARA RAILWAY ===
-
 if __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
@@ -165,12 +150,17 @@ if __name__ == "__main__":
         import nest_asyncio
         nest_asyncio.apply()
 
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            loop.create_task(main())
-        else:
-            loop.run_until_complete(main())
+        from telegram.ext import ApplicationBuilder
+        application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+        webhook_url = WEBHOOK_URL
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=8445,
+            webhook_url=webhook_url,
+        )
 
     except Exception as e:
-        print("❌ Error al iniciar OMNIX:", e)
+        print("❌ Error inesperado en el arranque:", e)
+        import sys
         sys.exit(1)
