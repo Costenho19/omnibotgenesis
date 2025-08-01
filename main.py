@@ -139,7 +139,7 @@ async def main():
 if __name__ == "__main__":
     import nest_asyncio
     import asyncio
-    from telegram.ext import Application, CommandHandler, ContextTypes, Update
+    
 
     logger.info("🚀 Iniciando OMNIX...")
 
