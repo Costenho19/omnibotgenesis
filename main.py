@@ -3,6 +3,7 @@
 import logging
 import asyncio
 import os
+import sys
 import threading
 import nest_asyncio
 from flask import Flask
@@ -160,7 +161,7 @@ async def main():
 if __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
-  import sys
+  
 
     try:
         asyncio.run(main())
