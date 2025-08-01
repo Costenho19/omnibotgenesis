@@ -143,7 +143,7 @@ async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(respuesta)
     await update.message.reply_voice(voice=open(audio_path, 'rb'))
 
-f __name__ == "__main__":
+ if __name__ == "__main__":
     print("🚀 Iniciando OMNIX Quantum Assistant...")
 
     try:
