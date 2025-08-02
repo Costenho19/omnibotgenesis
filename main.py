@@ -109,9 +109,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text
-    respuesta, audio_path = await generate_response(message=texto)
-    await update.message.reply_text(respuesta)
-    await update.message.reply_voice(voice=open(audio_path, 'rb'))
+    user_id = str(update.effective_user.id)
+
+    try:
+        respuesta = await asyncio.to_thread(generate_response, user_id, texto)
+        await update.message.reply_text(respuesta)
+
+        audio_path = await asyncio.to_thread(generar_audio, respuesta)
+        await update.message.reply_voice(voice=open(audio_path, 'rb'))
+
+    except Exception as e:
+        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu mensaje.")
+        logger.error(f"Error en manejar_mensaje: {e}")
 
 async def main():
     logging.basicConfig(level=logging.INFO)
