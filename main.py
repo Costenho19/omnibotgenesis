@@ -109,7 +109,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text
-    respuesta, audio_path = await generate_response(texto)
+    respuesta, audio_path = await generate_response(message=texto)
     await update.message.reply_text(respuesta)
     await update.message.reply_voice(voice=open(audio_path, 'rb'))
 
