@@ -99,7 +99,7 @@ async def main():
     application.add_handler(CommandHandler("sharia_check", sharia_check))
     application.add_handler(CommandHandler("wallet", wallet))
     application.add_handler(CommandHandler("sugerencia", sugerencia))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
 
   # === SECCIÓN FINAL - FUNCIONES Y HANDLERS ===
 
