@@ -36,10 +36,15 @@ def home():
     return '🧠 OMNIX V3.8 PRO SHIELDED - Quantum Ready & Actively Running'
 
 def run_flask_in_thread():
+    """Ejecuta la aplicación Flask en un hilo separado para no bloquear el bot."""
     port = int(os.environ.get("PORT", 8080))
-    app_flask.run(host="0.0.0.0", port=port)
+    # Usamos 'werkzeug' para un servidor de producción más estable que el de desarrollo de Flask
+    from werkzeug.serving import run_simple
+    run_simple(hostname="0.0.0.0", port=port, application=app_flask)
 
 # --- SECCIÓN 3: HANDLERS DE COMANDOS DE TELEGRAM ---
+# Cada función maneja un comando específico del bot.
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje = "🚀 Bienvenido a OMNIX Quantum Assistant.\n\nEstoy listo para ayudarte con trading automático, análisis de mercado y más."
     await update.message.reply_text(mensaje)
@@ -79,37 +84,34 @@ async def sugerencia(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- SECCIÓN 4: MANEJADOR GENERAL DE MENSAJES ---
 async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message.text:
+    if not update.message or not update.message.text:
         return
     
     texto = update.message.text
     user_id = str(update.effective_user.id)
     
     try:
-        # Asumiendo que generate_response es síncrono y debe ejecutarse en un hilo
         respuesta = await asyncio.to_thread(generate_response, user_id, texto)
         await update.message.reply_text(respuesta)
 
-        # Asumiendo que generar_audio es síncrono y debe ejecutarse en un hilo
         audio_path = await asyncio.to_thread(generar_audio, respuesta)
         if audio_path and os.path.exists(audio_path):
-            with open(audio_path, 'rb') as audio_file:
-                await update.message.reply_voice(voice=audio_file)
-            os.remove(audio_path)
+            try:
+                with open(audio_path, 'rb') as audio_file:
+                    await update.message.reply_voice(voice=audio_file)
+            finally:
+                os.remove(audio_path) # Aseguramos que el archivo se borre
         
     except Exception as e:
-        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu mensaje.")
         logger.error(f"Error en manejar_mensaje: {e}")
+        await update.message.reply_text("⚠️ Ocurrió un error al procesar tu mensaje.")
 
 # --- SECCIÓN 5: FUNCIÓN PRINCIPAL DE ARRANQUE ---
 async def main():
+    """Configura y arranca el bot de Telegram en modo Webhook."""
     if not BOT_TOKEN or not WEBHOOK_URL:
-        logger.critical("❌ FATAL: BOT_TOKEN o WEBHOOK_URL no están configurados.")
-        os._exit(1)
-        
-    flask_thread = threading.Thread(target=run_flask_in_thread, daemon=True)
-    flask_thread.start()
-    logger.info("🌐 Servidor web Flask iniciado en un hilo paralelo.")
+        logger.critical("❌ FATAL: BOT_TOKEN o WEBHOOK_URL no están configurados en el entorno.")
+        return # Usamos return para salir limpiamente
         
     application = Application.builder().token(BOT_TOKEN).build()
 
@@ -128,16 +130,25 @@ async def main():
 
     port = int(os.environ.get("PORT", 8443))
     logger.info(f"Iniciando Webhook en el puerto {port}...")
+    
+    # run_webhook es una función que bloquea, por lo que debe ser la última llamada en main()
     await application.run_webhook(
         listen="0.0.0.0",
         port=port,
-        url_path=BOT_TOKEN,
+        url_path=BOT_TOKEN, # Usar el token como path añade una capa de seguridad
         webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
     )
-    logger.info("✅ OMNIX V3.8 PRO SHIELDED está en línea y escuchando peticiones.")
 
+# --- SECCIÓN 6: PUNTO DE ENTRADA DEL PROGRAMA ---
 if __name__ == "__main__":
-    logger.info("Iniciando OMNIX...")
+    logger.info("Iniciando OMNIX V3.8 PRO SHIELDED...")
+    
+    # 1. Inicia el servidor Flask en un hilo separado ANTES de iniciar el bot.
+    flask_thread = threading.Thread(target=run_flask_in_thread, daemon=True)
+    flask_thread.start()
+    logger.info("🌐 Servidor web Flask iniciado en un hilo paralelo.")
+    
+    # 2. Inicia el bot de Telegram.
     try:
         asyncio.run(main())
     except Exception as e:
