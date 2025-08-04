@@ -13,7 +13,6 @@ import asyncio
 import logging
 import threading
 import time
-import sqlite3
 import json
 import numpy as np
 import ccxt
@@ -1230,6 +1229,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
