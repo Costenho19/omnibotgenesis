@@ -1216,7 +1216,7 @@ async def main():
     if TRADING_ENABLED:
         trading_task = asyncio.create_task(run_automated_trading())
 
- logger.info("✅ OMNIX V4 Ultimate Iniciado  Sistema enterprise operativo")
+logger.info("✅ OMNIX V4 Ultimate Iniciado  Sistema enterprise operativo")
     await application.run_webhook(
         listen="0.0.0.0",
         port=int(PORT),
@@ -1229,5 +1229,6 @@ if __name__ == "__main__":
         logger.info("🛑 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
