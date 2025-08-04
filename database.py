@@ -6,8 +6,10 @@ from datetime import datetime
 # --- Importaciones de Módulos Internos ---
 # Hacemos una importación segura para evitar que el programa se caiga si los otros archivos aún no están listos.
 try:
-    from config import DATABASE_URL
-    from pqc_encryption import encrypt_message
+    import os
+from pqc_encryption import encrypt_message
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
 except ImportError as e:
     print(f"ADVERTENCIA en database.py: No se pudieron importar módulos. {e}")
     # Definimos variables falsas para que el resto del archivo no de error al cargar.
