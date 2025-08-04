@@ -1209,26 +1209,28 @@ async def main():
     application.add_handler(CommandHandler("voice", telegram_handlers.voice_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, telegram_handlers.general_message_handler))
 
-    # Configurar comandos
+     # Configurar comandos
     await setup_bot_commands(application)
 
     # Iniciar trading automático
     if TRADING_ENABLED:
         trading_task = asyncio.create_task(run_automated_trading())
 
-logger.info("✅ OMNIX V4 Ultimate Iniciado  Sistema enterprise operativo")
+    logger.info("✅ OMNIX V4 Ultimate Iniciado  Sistema enterprise operativo")
     await application.run_webhook(
         listen="0.0.0.0",
         port=int(PORT),
         webhook_url=WEBHOOK_URL
     )
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("🛑 OMNIX V4 Ultimate detenido por usuario")
+        logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
