@@ -27,7 +27,7 @@ from telegram import BotCommand
 import google.generativeai as genai
 from gtts import gTTS
 import tempfile
-import sqlite3
+
 # ==========================================
 # CONFIGURACIÓN ENTERPRISE
 # ==========================================
@@ -1238,6 +1238,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
