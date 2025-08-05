@@ -40,6 +40,8 @@ COINBASE_API_KEY = os.getenv('COINBASE_API_KEY')
 COINBASE_PASSPHRASE = os.getenv('COINBASE_PASSPHRASE')
 COINBASE_SECRET = os.getenv('COINBASE_SECRET')
 DATABASE_URL = os.getenv('DATABASE_URL', 'omnix_enterprise.db')
+PORT = os.getenv('PORT', '5001')  # Si no está definido en Railway, usa 5001 por defecto
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://omnibotgenesis-production.up.railway.app')
 
 # Configuración avanzada
 TRADING_ENABLED = True
@@ -1229,6 +1231,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
