@@ -1198,7 +1198,7 @@ async def main():
 
     logger.info("🚀 OMNIX V4 ULTIMATE ENTERPRISE - RAILWAY PRODUCTION")
     logger.info("✨ Creado exclusivamente por Harold Nunes")
-await application.bot.set_my_commands(commands)
+    await application.bot.set_my_commands(commands)
     logger.info("✅ Menú de comandos enterprise configurado")
     await application.initialize()
     await application.start()
@@ -1241,6 +1241,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
