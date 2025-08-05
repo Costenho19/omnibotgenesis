@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from flask import Flask, render_template_string, jsonify
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from telegram import botcommand
+from telegram import BotCommand
 import google.generativeai as genai
 from gtts import gTTS
 import tempfile
@@ -1238,6 +1238,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
