@@ -17,11 +17,17 @@ def dashboard():
 
         html = "<h2>📊 Historial de Análisis OMNIX</h2><ul>"
         for row in rows:
-            html += f"<li><b>{row[1]}</b> - {row[2]}<br><small>Usuario: {row[0]} | Fecha: {row[3]}</small></li><br>"
+            html += f"<li><b>{row[1]}</b> — {row[2]}<br><small>Usuario: {row[0]} | Fecha: {row[3]}</small></li>"
         html += "</ul>"
         return render_template_string(html)
+
     except Exception as e:
         return f"<h3>❌ Error al acceder a la base de datos: {e}</h3>"
+
+# ✅ Ruta de verificación para el webhook
+@app.route("/ping")
+def ping():
+    return "✅ OMNIX online y webhook listo"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
