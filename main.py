@@ -1198,6 +1198,12 @@ async def main():
 
     logger.info("🚀 OMNIX V4 ULTIMATE ENTERPRISE - RAILWAY PRODUCTION")
     logger.info("✨ Creado exclusivamente por Harold Nunes")
+await application.bot.set_my_commands(commands)
+    logger.info("✅ Menú de comandos enterprise configurado")
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    await application.updater.idle( )
 
     # Iniciar Flask en thread separado
     flask_thread = threading.Thread(target=run_flask_app, daemon=True)
@@ -1235,6 +1241,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
