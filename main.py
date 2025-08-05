@@ -32,7 +32,7 @@ import tempfile
 # ==========================================
 
 # Configuración sistema
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '7478164319:AAGs0o4z4WVgS8e3ELHdRylwkDX5TYMcJpk')
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 KRAKEN_API_KEY = os.getenv('KRAKEN_API_KEY')
 KRAKEN_SECRET = os.getenv('KRAKEN_SECRET')
@@ -1229,6 +1229,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
