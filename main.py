@@ -1191,6 +1191,7 @@ async def main():
     if not BOT_TOKEN:
         logger.critical("❌ FATAL: TELEGRAM_BOT_TOKEN no configurado")
         return
+    application = Application.builder().token(BOT_TOKEN).build()
 
     logger.info("🚀 OMNIX V4 ULTIMATE ENTERPRISE - RAILWAY PRODUCTION")
     logger.info("✨ Creado exclusivamente por Harold Nunes")
@@ -1206,8 +1207,7 @@ async def main():
     flask_thread.start()
 
     # Configurar aplicación Telegram
-    application = Application.builder().token(BOT_TOKEN).build()
-
+    
     # Registrar handlers
     application.add_handler(CommandHandler("start", telegram_handlers.start_command))
     application.add_handler(CommandHandler("quantum", telegram_handlers.quantum_command))
@@ -1237,6 +1237,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
