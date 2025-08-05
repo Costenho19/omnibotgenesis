@@ -1183,12 +1183,8 @@ async def setup_bot_commands(application):
         ("voice", "🎤 IA Gemini conversacional + voz"),
     ]
     
-    await application.bot.set_my_commands(commands)
+    
     logger.info("✅ Menú de comandos enterprise configurado")
-await application.initialize()
-await application.start()
-await application.updater.start_polling()
-await application.updater.idle()
 
 async def main():
     """Función principal optimizada para Railway"""
@@ -1241,6 +1237,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
