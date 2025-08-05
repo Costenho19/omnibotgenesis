@@ -1199,10 +1199,11 @@ async def main():
     await setup_bot_commands(application)
     logger.info("✅ Menú de comandos enterprise configurado")
     await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    await application.updater.idle( )
-
+    await application.run_webhook(
+    listen="0.0.0.0",
+    port=int(PORT),
+    webhook_url=WEBHOOK_URL
+)
     # Iniciar Flask en thread separado
     flask_thread = threading.Thread(target=run_flask_app, daemon=True)
     flask_thread.start()
@@ -1238,6 +1239,7 @@ if __name__ == "__main__":
         logger.info("🔴 OMNIX V4 Ultimate detenido por usuario")
     except Exception as e:
         logger.critical(f"❌ ERROR CRÍTICO: {e}")
+
 
 
 
