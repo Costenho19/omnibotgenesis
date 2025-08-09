@@ -145,7 +145,33 @@ class AdvancedEmotionalIntelligence:
             'uncertainty': ['no se', 'tal vez', 'quizas', 'posible', 'creo'],
             'urgency': ['rapido', 'ya', 'ahora', 'urgente', 'inmediatamente']
         }
-    
+    # ===== STUBS PARA EVITAR NameError =====
+from telegram import Update
+from telegram.ext import ContextTypes
+
+async def counterfactual_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📊 Simulación contrafactual con sesgos… (stub)\n"
+        "Aversión a pérdida, manada, recency, confirmación, anclaje, overconfidence."
+    )
+
+async def adaptive_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🧠 Aprendizaje continuo activo… (stub)\n"
+        "Ajustando parámetros según régimen de mercado."
+    )
+
+# (opcional) deja listos los otros para que no vuelvan a romper:
+async def novel_hypothesis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("💡 Hipótesis novedosas… (stub)")
+
+async def strategic_communication_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🗣 Comunicación estratégica… (stub)")
+
+async def multimodal_analysis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🌐 Análisis multimodal… (stub)")
+# ===== FIN STUBS =====
+
     def detect_emotion(self, text):
         """Detectar emoción en el texto"""
         text_lower = text.lower()
@@ -732,6 +758,9 @@ def main():
         telegram_app.add_handler(CommandHandler("institucional", institutional_command))
         telegram_app.add_handler(CommandHandler("contrafactual", counterfactual_command))
         telegram_app.add_handler(CommandHandler("adaptativo", adaptive_command))
+        
+        telegram_app.add_handler(CommandHandler("adaptive_learning", adaptive_command))
+
         logger.info("✅ OMNIX V5 Bot configurado")
         
         # Iniciar web dashboard en thread separado
@@ -1012,6 +1041,7 @@ async def adaptive_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error sistema adaptativo: {str(e)}")
 if __name__ == "__main__":
     main()
+
 
 
 
