@@ -758,7 +758,10 @@ def main():
         telegram_app.add_handler(CommandHandler("institucional", institutional_command))
         telegram_app.add_handler(CommandHandler("contrafactual", counterfactual_command))
         telegram_app.add_handler(CommandHandler("adaptativo", adaptive_command))
-        
+        telegram_app.add_handler(CommandHandler("novel_hypothesis", novel_hypothesis_command))
+        telegram_app.add_handler(CommandHandler("strategic_communication", strategic_communication_command))
+        telegram_app.add_handler(CommandHandler("multimodal_analysis", multimodal_analysis_command))
+
         telegram_app.add_handler(CommandHandler("adaptive_learning", adaptive_command))
 
         logger.info("✅ OMNIX V5 Bot configurado")
@@ -1041,6 +1044,7 @@ async def adaptive_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error sistema adaptativo: {str(e)}")
 if __name__ == "__main__":
     main()
+
 
 
 
