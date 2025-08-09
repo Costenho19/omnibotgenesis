@@ -721,7 +721,6 @@ def main():
     try:
         # Crear aplicación Telegram
         telegram_app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-        
         # Agregar handlers
         telegram_app.add_handler(CommandHandler("start", start_command))
         telegram_app.add_handler(CommandHandler("balance", balance_command))
@@ -729,10 +728,10 @@ def main():
         telegram_app.add_handler(CommandHandler("estado", estado_command))
         telegram_app.add_handler(CommandHandler("memoria", memoria_command))
         telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-        application.add_handler(CommandHandler("ballenas", whales_command))
-        application.add_handler(CommandHandler("institucional", institutional_command))
-        application.add_handler(CommandHandler("contrafactual", contrafactual_command))
-        application.add_handler(CommandHandler("adaptativo", adaptive_command))
+        telegram_app.add_handler(CommandHandler("ballenas", whales_command))
+        telegram_app.add_handler(CommandHandler("institucional", institutional_command))
+        telegram_app.add_handler(CommandHandler("contrafactual", counterfactual_command))
+        telegram_app.add_handler(CommandHandler("adaptativo", adaptive_command))
         logger.info("✅ OMNIX V5 Bot configurado")
         
         # Iniciar web dashboard en thread separado
@@ -1013,6 +1012,7 @@ async def adaptive_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error sistema adaptativo: {str(e)}")
 if __name__ == "__main__":
     main()
+
 
 
 
