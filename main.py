@@ -396,8 +396,8 @@ class PersistentMemorySystem:
     def get_conversation_summary(self, user_id: str, last_n: int = 5) -> str:
         """Generar resumen inteligente de conversaciones recientes"""
         user_str = str(user_id)
-       class AdvancedTradingSystem:
-       """Sistema de Trading Automático y Manual 100% REAL con Kraken"""
+        class AdvancedTradingSystem:
+        """Sistema de Trading Automático y Manual 100% REAL con Kraken"""
     
     def __init__(self, kraken_exchange, memory_system):
         self.exchange = kraken_exchange
@@ -2077,6 +2077,7 @@ if __name__ == "__main__":
         asyncio.run(bot.run())
     except Exception as e:
         logger.error(f"❌ Error crítico: {e}")
+
 
 
 
