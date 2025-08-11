@@ -253,7 +253,244 @@ class QuantumInspiredAnalysis:
             'scipy_qmc_available': qmc_module is not None,
             'analysis_method': 'Sobol_QMC_Real' if self.qmc_real_active else 'Monte_Carlo_Clasico'
         }
-
+class PersistentMemorySystem:
+    """Sistema de Memoria Persistente Avanzado - NUNCA OLVIDA"""
+    
+    def __init__(self):
+        """Inicializar sistema de memoria de máximo nivel"""
+        self.memory_file = "omnix_memory_persistent.json"
+        self.user_profiles = {}
+        self.conversation_history = {}
+        self.learning_patterns = {}
+        self.relationship_graph = {}
+        self.temporal_memory = {}
+        self.emotional_memory = {}
+        self.context_memory = {}
+        
+        # Cargar memoria existente
+        self._load_memory()
+        logger.info("✅ Sistema de Memoria Persistente ACTIVADO")
+    
+    def _load_memory(self):
+        """Cargar memoria desde archivo permanente"""
+        try:
+            if os.path.exists(self.memory_file):
+                with open(self.memory_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    
+                self.user_profiles = data.get('user_profiles', {})
+                self.conversation_history = data.get('conversation_history', {})
+                self.learning_patterns = data.get('learning_patterns', {})
+                self.relationship_graph = data.get('relationship_graph', {})
+                self.temporal_memory = data.get('temporal_memory', {})
+                self.emotional_memory = data.get('emotional_memory', {})
+                self.context_memory = data.get('context_memory', {})
+                
+                logger.info(f"✅ Memoria cargada: {len(self.user_profiles)} usuarios")
+            else:
+                logger.info("✅ Memoria nueva inicializada")
+        except Exception as e:
+            logger.error(f"⚠️ Error cargando memoria: {e}")
+    
+    def _save_memory(self):
+        """Guardar memoria permanentemente"""
+        try:
+            data = {
+                'user_profiles': self.user_profiles,
+                'conversation_history': self.conversation_history,
+                'learning_patterns': self.learning_patterns,
+                'relationship_graph': self.relationship_graph,
+                'temporal_memory': self.temporal_memory,
+                'emotional_memory': self.emotional_memory,
+                'context_memory': self.context_memory,
+                'last_saved': datetime.now().isoformat()
+            }
+            
+            with open(self.memory_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            logger.error(f"❌ Error guardando memoria: {e}")
+           # SISTEMA DE MEMORIA PERSISTENTE AVANZADO
+        self.memory_system = PersistentMemorySystem() 
+    def remember_user(self, user_id: str, name: str, username: str = None):
+        """Recordar información del usuario PARA SIEMPRE"""
+        if str(user_id) not in self.user_profiles:
+            self.user_profiles[str(user_id)] = {
+                'name': name,
+                'username': username,
+                'first_interaction': datetime.now().isoformat(),
+                'interaction_count': 0,
+                'preferences': {},
+                'personality_profile': {},
+                'trading_style': {},
+                'favorite_topics': [],
+                'communication_style': 'normal',
+                'language': 'es'
+            }
+        
+        # Actualizar información
+        profile = self.user_profiles[str(user_id)]
+        profile['name'] = name
+        profile['username'] = username
+        profile['last_interaction'] = datetime.now().isoformat()
+        profile['interaction_count'] += 1
+        
+        self._save_memory()
+    
+    def remember_conversation(self, user_id: str, message: str, response: str, context: dict = None):
+        """Recordar conversación completa con contexto profundo"""
+        user_str = str(user_id)
+        
+        if user_str not in self.conversation_history:
+            self.conversation_history[user_str] = []
+        
+        conversation_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'user_message': message,
+            'bot_response': response,
+            'context': context or {},
+            'sentiment': self._analyze_sentiment(message),
+            'topics': self._extract_topics(message),
+            'intent': self._classify_intent(message)
+        }
+        
+        # Mantener últimas 100 conversaciones por usuario
+        self.conversation_history[user_str].append(conversation_entry)
+        if len(self.conversation_history[user_str]) > 100:
+            self.conversation_history[user_str] = self.conversation_history[user_str][-100:]
+        
+        self._save_memory()
+    
+    def get_user_context(self, user_id: str) -> dict:
+        """Obtener contexto completo del usuario"""
+        user_str = str(user_id)
+        
+        context = {
+            'profile': self.user_profiles.get(user_str, {}),
+            'recent_conversations': self.conversation_history.get(user_str, [])[-10:],
+            'learning_data': self.learning_patterns.get(user_str, {}),
+            'relationships': self.relationship_graph.get(user_str, {}),
+            'emotional_state': self.emotional_memory.get(user_str, {}),
+            'preferences': self.user_profiles.get(user_str, {}).get('preferences', {})
+        }
+        
+        return context
+    
+    def learn_preference(self, user_id: str, category: str, preference: str, strength: float = 1.0):
+        """Aprender preferencias del usuario"""
+        user_str = str(user_id)
+        
+        if user_str not in self.user_profiles:
+            self.remember_user(user_str, "Usuario", None)
+        
+        if 'preferences' not in self.user_profiles[user_str]:
+            self.user_profiles[user_str]['preferences'] = {}
+        
+        if category not in self.user_profiles[user_str]['preferences']:
+            self.user_profiles[user_str]['preferences'][category] = {}
+        
+        self.user_profiles[user_str]['preferences'][category][preference] = strength
+        self._save_memory()
+    
+    def get_conversation_summary(self, user_id: str, last_n: int = 5) -> str:
+        """Generar resumen inteligente de conversaciones recientes"""
+        user_str = str(user_id)
+        
+        if user_str not in self.conversation_history:
+            return "Primera conversación con este usuario."
+        
+        recent = self.conversation_history[user_str][-last_n:]
+        
+        topics = []
+        sentiments = []
+        
+        for conv in recent:
+            topics.extend(conv.get('topics', []))
+            sentiments.append(conv.get('sentiment', 'neutral'))
+        
+        # Análisis de patrones
+        common_topics = list(set(topics))[:3]
+        avg_sentiment = self._calculate_avg_sentiment(sentiments)
+        
+        summary = f"Historial: {len(recent)} conversaciones recientes. "
+        if common_topics:
+            summary += f"Temas frecuentes: {', '.join(common_topics)}. "
+        summary += f"Estado emocional: {avg_sentiment}."
+        
+        return summary
+    
+    def _analyze_sentiment(self, text: str) -> str:
+        """Análisis básico de sentimiento"""
+        positive_words = ['bien', 'bueno', 'excelente', 'genial', 'perfecto', 'gracias']
+        negative_words = ['mal', 'error', 'problema', 'falla', 'horrible']
+        
+        text_lower = text.lower()
+        pos_count = sum(1 for word in positive_words if word in text_lower)
+        neg_count = sum(1 for word in negative_words if word in text_lower)
+        
+        if pos_count > neg_count:
+            return 'positivo'
+        elif neg_count > pos_count:
+            return 'negativo'
+        else:
+            return 'neutral'
+    
+    def _extract_topics(self, text: str) -> list:
+        """Extraer temas principales del mensaje"""
+        keywords = {
+            'trading': ['trading', 'comprar', 'vender', 'precio', 'crypto', 'bitcoin'],
+            'analisis': ['analisis', 'análisis', 'quantum', 'estudio'],
+            'sharia': ['sharia', 'halal', 'haram', 'islam', 'musulman'],
+            'technical': ['pqc', 'quantum', 'seguridad', 'algoritmo']
+        }
+        
+        text_lower = text.lower()
+        found_topics = []
+        
+        for topic, words in keywords.items():
+            if any(word in text_lower for word in words):
+                found_topics.append(topic)
+        
+        return found_topics
+    
+    def _classify_intent(self, text: str) -> str:
+        """Clasificar intención del mensaje"""
+        if any(word in text.lower() for word in ['precio', 'cotización', 'valor']):
+            return 'consulta_precio'
+        elif any(word in text.lower() for word in ['comprar', 'vender', 'trade']):
+            return 'trading_intent'
+        elif any(word in text.lower() for word in ['analizar', 'análisis', 'estudiar']):
+            return 'analysis_request'
+        elif any(word in text.lower() for word in ['ayuda', 'help', 'como']):
+            return 'help_request'
+        else:
+            return 'general_conversation'
+    
+    def _calculate_avg_sentiment(self, sentiments: list) -> str:
+        """Calcular sentimiento promedio"""
+        if not sentiments:
+            return 'neutral'
+        
+        sentiment_scores = {'positivo': 1, 'neutral': 0, 'negativo': -1}
+        avg_score = sum(sentiment_scores.get(s, 0) for s in sentiments) / len(sentiments)
+        
+        if avg_score > 0.3:
+            return 'mayormente_positivo'
+        elif avg_score < -0.3:
+            return 'mayormente_negativo'
+        else:
+            return 'equilibrado'
+    
+    def get_memory_stats(self) -> dict:
+        """Obtener estadísticas del sistema de memoria"""
+        return {
+            'total_users': len(self.user_profiles),
+            'total_conversations': sum(len(convs) for convs in self.conversation_history.values()),
+            'memory_size_mb': os.path.getsize(self.memory_file) / 1024 / 1024 if os.path.exists(self.memory_file) else 0,
+            'active_users': len([u for u in self.user_profiles.values() if u.get('interaction_count', 0) > 0]),
+            'last_backup': datetime.now().isoformat()
+        }
 class OmnixBot:
     """OMNIX V5 QUANTUM READY - Bot principal con todas las funcionalidades"""
     
@@ -1012,7 +1249,12 @@ Gracias por ayudarme a mejorar continuamente."""
         
         if not feedback_data:
             respuesta = """🧠 SISTEMA DE APRENDIZAJE OMNIX IA
-
+            # GUARDAR CONVERSACIÓN EN MEMORIA PERSISTENTE
+            self.memory_system.remember_conversation(user_id, mensaje_usuario, respuesta_ia, {
+                'timestamp': datetime.now().isoformat(),
+                'ia_model': 'gemini' if self.gemini_api_key else 'openai',
+                'response_length': len(respuesta_ia)
+            })
 📊 Estado: Ningún feedback registrado aún
 🎯 Para empezar a aprender: Usa /feedback después de mis respuestas
 
@@ -1441,3 +1683,4 @@ if __name__ == "__main__":
         asyncio.run(bot.run())
     except Exception as e:
         logger.error(f"❌ Error crítico: {e}")
+
