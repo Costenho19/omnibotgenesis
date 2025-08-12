@@ -3627,8 +3627,8 @@ class ShariaValidator:
             'reasoning': reasoning,
             'alternatives': [
                        'BTC - Bitcoin',
-                                            'ETH - Ethereum',
-                'ADA - Cardano'
+                       'ETH - Ethereum',
+                       'ADA - Cardano'
             ],
             'most_common_requests': [],
             'response_satisfaction': [],
@@ -4701,6 +4701,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
