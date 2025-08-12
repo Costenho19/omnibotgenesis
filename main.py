@@ -1997,25 +1997,29 @@ class OmnixSistemaRailwayCompleto:
             raise
     
     def _run_telegram_bot(self):
-        """Ejecutar bot de Telegram - RAILWAY COMPATIBLE"""
+        """Ejecutar bot Telegram - RAILWAY FIXED"""
         try:
             app = self.setup_telegram()
             
-            # Railway compatible - polling con manejo correcto de eventos
-            logger.info("Iniciando bot Telegram en modo polling...")
+            # SOLUCIÓN RAILWAY: Crear event loop específico para este thread
+            logger.info("Iniciando bot Telegram con event loop propio...")
             
-            # Configurar event loop para este thread
+            # Crear y configurar event loop para thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
             try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            # Ejecutar polling de forma sincrónica (Railway compatible)
-            app.run_polling(
-                drop_pending_updates=True,
-                stop_signals=None
-            )
+                # Ejecutar polling con loop correcto
+                loop.run_until_complete(app.start())
+                loop.run_until_complete(app.updater.start_polling(
+                    drop_pending_updates=True,
+                    allowed_updates=Update.ALL_TYPES
+                ))
+                # Mantener el loop corriendo
+                loop.run_forever()
+            finally:
+                loop.run_until_complete(app.stop())
+                loop.close()
             
         except Exception as e:
             logger.error(f"Error ejecutando bot Telegram: {e}")
@@ -2065,6 +2069,7 @@ if __name__ == "__main__":
         sys.exit(0)
     
     main()
+
 
 
 
