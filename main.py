@@ -263,8 +263,15 @@ class ConfiguracionRailwayProfesional:
         self.STOP_LOSS_PERCENTAGE: float = float(os.getenv('STOP_LOSS_PERCENTAGE', 5.0))
         self.TAKE_PROFIT_PERCENTAGE: float = float(os.getenv('TAKE_PROFIT_PERCENTAGE', 10.0))
         
-        # System - Detectar Railway automáticamente
-        self.IS_RAILWAY: bool = bool(os.getenv('RAILWAY_ENVIRONMENT')) or bool(os.getenv('RAILWAY_STATIC_URL')) or 'railway' in os.getenv('HOSTNAME', '').lower()
+        # System - Detectar Railway automáticamente (MEJORADO)
+        railway_indicators = [
+            os.getenv('RAILWAY_ENVIRONMENT'),
+            os.getenv('RAILWAY_STATIC_URL'), 
+            os.getenv('RAILWAY_PUBLIC_DOMAIN'),
+            'railway' in os.getenv('HOSTNAME', '').lower(),
+            os.getenv('PORT') and not os.getenv('REPL_ID'),  # Railway usa PORT sin REPL_ID
+        ]
+        self.IS_RAILWAY: bool = any(railway_indicators)
         self.DEBUG: bool = False if self.IS_RAILWAY else os.getenv('DEBUG', 'false').lower() == 'true'
         self.LOG_LEVEL: str = os.getenv('LOG_LEVEL', 'INFO')
         self.TIMEZONE: str = os.getenv('TIMEZONE', 'UTC')
@@ -3146,43 +3153,61 @@ class OMNIXProfesionalRailway:
             # Iniciar servidor Flask con configuración Railway
             logger.info(f"🌐 Iniciando servidor profesional en puerto {config.PORT}")
             
-            # Configuración Railway Production Ready
-            if config.IS_RAILWAY:
-                # Estamos en Railway - FORZAR servidor de producción
-                logger.info("🚀 RAILWAY DETECTED - Production Mode Activated")
-                os.environ['FLASK_ENV'] = 'production'
-                self.flask_app.config['ENV'] = 'production'
-                self.flask_app.config['DEBUG'] = False
+            # CONFIGURACIÓN RAILWAY PRODUCTION FINAL
+            # Forzar modo producción si detectamos cualquier indicador Railway
+            if (config.IS_RAILWAY or 
+                os.getenv('PORT') or 
+                os.getenv('RAILWAY_ENVIRONMENT') or
+                os.getenv('RAILWAY_PUBLIC_DOMAIN')):
                 
+                logger.info("🚀 RAILWAY PRODUCTION MODE ACTIVATED")
+                
+                # CONFIGURAR FLASK PARA PRODUCCIÓN
+                os.environ['FLASK_ENV'] = 'production'
+                self.flask_app.config.update({
+                    'ENV': 'production',
+                    'DEBUG': False,
+                    'TESTING': False
+                })
+                
+                # USAR SERVIDOR DE PRODUCCIÓN
                 try:
                     from waitress import serve
-                    logger.info("✅ Using Waitress Production Server for Railway")
+                    logger.info("✅ Starting Waitress Production Server")
                     serve(
-                        self.flask_app, 
-                        host=config.HOST, 
-                        port=config.PORT,
-                        threads=8,
-                        max_request_body_size=1073741824,
-                        connection_limit=1000,
-                        cleanup_interval=30,
-                        url_scheme='https'
-                    )
-                except ImportError:
-                    logger.warning("⚠️ Waitress unavailable - Using Flask in Production Mode")
-                    self.flask_app.run(
+                        self.flask_app,
                         host=config.HOST,
                         port=config.PORT,
-                        debug=False,
-                        threaded=True,
-                        use_reloader=False
+                        threads=8
                     )
+                except ImportError:
+                    try:
+                        import gunicorn.app.wsgiapp
+                        logger.info("✅ Starting Gunicorn Production Server")
+                        sys.argv = [
+                            'gunicorn',
+                            '--bind', f'{config.HOST}:{config.PORT}',
+                            '--workers', '4',
+                            '--timeout', '120',
+                            'OMNIX_V5_RAILWAY_DEFINITIVO:flask_app'
+                        ]
+                        gunicorn.app.wsgiapp.WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
+                    except ImportError:
+                        logger.warning("⚠️ Production servers unavailable - Flask Production Mode")
+                        self.flask_app.run(
+                            host=config.HOST,
+                            port=config.PORT,
+                            debug=False,
+                            threaded=True,
+                            use_reloader=False
+                        )
             else:
                 # Desarrollo local
                 logger.info("🔧 Local Development Mode")
                 self.flask_app.run(
                     host=config.HOST,
                     port=config.PORT,
-                    debug=config.DEBUG,
+                    debug=True,
                     threaded=True,
                     use_reloader=False
                 )
@@ -3213,6 +3238,12 @@ class OMNIXProfesionalRailway:
 
 if __name__ == "__main__":
     try:
+        # FORZAR MODO PRODUCCIÓN PARA RAILWAY
+        if os.getenv('PORT') or 'railway' in str(os.environ).lower():
+            os.environ['FLASK_ENV'] = 'production'
+            os.environ['RAILWAY_ENVIRONMENT'] = 'production'
+            logger.info("🚀 RAILWAY ENVIRONMENT DETECTED - FORCING PRODUCTION MODE")
+        
         # Configurar manejo de señales para shutdown limpio
         def signal_handler(signum, frame):
             logger.info("🛑 Recibida señal de shutdown - Cerrando sistema limpiamente")
@@ -3235,6 +3266,7 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         logger.info("👋 OMNIX V5 QUANTUM READY finalizado")
+
 
 
 
