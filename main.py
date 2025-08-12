@@ -2001,11 +2001,20 @@ class OmnixSistemaRailwayCompleto:
         try:
             app = self.setup_telegram()
             
-            # Railway compatible - usar start_polling directo
+            # Railway compatible - polling con manejo correcto de eventos
             logger.info("Iniciando bot Telegram en modo polling...")
+            
+            # Configurar event loop para este thread
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Ejecutar polling de forma sincrónica (Railway compatible)
             app.run_polling(
                 drop_pending_updates=True,
-                close_loop=False
+                stop_signals=None
             )
             
         except Exception as e:
@@ -2056,6 +2065,7 @@ if __name__ == "__main__":
         sys.exit(0)
     
     main()
+
 
 
 
