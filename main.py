@@ -1871,7 +1871,7 @@ class UltraTradingSystem:
                 self.demo_mode = True
             
         except Exception as e:
-            logger.error(f"Error inicializando exchanges
+            logger.error(f"Error inicializando exchanges: {e}")
             from pqcrypto.kem.kyber512 import keypair as kyber_keygen, encrypt as kyber_encrypt, decrypt as kyber_decrypt
             from pqcrypto.sign.dilithium2 import keypair as dilithium_keygen, sign as dilithium_sign, verify as dilithium_verify
             
@@ -4697,4 +4697,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
