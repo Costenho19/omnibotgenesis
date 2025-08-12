@@ -3626,7 +3626,7 @@ class ShariaValidator:
             'confidence': 0.95,
             'reasoning': reasoning,
             'alternatives': [
-                'BTC - Bitcoin,
+                       'BTC - Bitcoin',
                             'most_common_requests': [],
                     'response_satisfaction': [],
                     'preferred_topics': [],
@@ -4697,6 +4697,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
