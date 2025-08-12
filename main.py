@@ -263,8 +263,9 @@ class ConfiguracionRailwayProfesional:
         self.STOP_LOSS_PERCENTAGE: float = float(os.getenv('STOP_LOSS_PERCENTAGE', 5.0))
         self.TAKE_PROFIT_PERCENTAGE: float = float(os.getenv('TAKE_PROFIT_PERCENTAGE', 10.0))
         
-        # System
-        self.DEBUG: bool = os.getenv('DEBUG', 'false').lower() == 'true'
+        # System - Detectar Railway automáticamente
+        self.IS_RAILWAY: bool = bool(os.getenv('RAILWAY_ENVIRONMENT')) or bool(os.getenv('RAILWAY_STATIC_URL')) or 'railway' in os.getenv('HOSTNAME', '').lower()
+        self.DEBUG: bool = False if self.IS_RAILWAY else os.getenv('DEBUG', 'false').lower() == 'true'
         self.LOG_LEVEL: str = os.getenv('LOG_LEVEL', 'INFO')
         self.TIMEZONE: str = os.getenv('TIMEZONE', 'UTC')
         
@@ -3145,31 +3146,39 @@ class OMNIXProfesionalRailway:
             # Iniciar servidor Flask con configuración Railway
             logger.info(f"🌐 Iniciando servidor profesional en puerto {config.PORT}")
             
-            # Configuración producción Railway con Gunicorn/Waitress
-            import os
-            if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+            # Configuración Railway Production Ready
+            if config.IS_RAILWAY:
+                # Estamos en Railway - FORZAR servidor de producción
+                logger.info("🚀 RAILWAY DETECTED - Production Mode Activated")
+                os.environ['FLASK_ENV'] = 'production'
+                self.flask_app.config['ENV'] = 'production'
+                self.flask_app.config['DEBUG'] = False
+                
                 try:
-                    from gunicorn.app.wsgiapp import WSGIApplication
-                    logger.info("🚀 Usando Gunicorn para producción Railway")
-                    # Configurar Gunicorn programáticamente
-                    sys.argv = ['gunicorn', '--bind', f'{config.HOST}:{config.PORT}', '--workers', '4', '--timeout', '120', 'app:app']
-                    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
+                    from waitress import serve
+                    logger.info("✅ Using Waitress Production Server for Railway")
+                    serve(
+                        self.flask_app, 
+                        host=config.HOST, 
+                        port=config.PORT,
+                        threads=8,
+                        max_request_body_size=1073741824,
+                        connection_limit=1000,
+                        cleanup_interval=30,
+                        url_scheme='https'
+                    )
                 except ImportError:
-                    try:
-                        from waitress import serve
-                        logger.info("🚀 Usando Waitress WSGI server para producción Railway")
-                        serve(self.flask_app, host=config.HOST, port=config.PORT, threads=8)
-                    except ImportError:
-                        logger.warning("⚠️ Servidores WSGI no disponibles - usando Flask")
-                        self.flask_app.run(
-                            host=config.HOST,
-                            port=config.PORT,
-                            debug=False,
-                            threaded=True,
-                            use_reloader=False
-                        )
+                    logger.warning("⚠️ Waitress unavailable - Using Flask in Production Mode")
+                    self.flask_app.run(
+                        host=config.HOST,
+                        port=config.PORT,
+                        debug=False,
+                        threaded=True,
+                        use_reloader=False
+                    )
             else:
                 # Desarrollo local
+                logger.info("🔧 Local Development Mode")
                 self.flask_app.run(
                     host=config.HOST,
                     port=config.PORT,
@@ -3226,6 +3235,7 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         logger.info("👋 OMNIX V5 QUANTUM READY finalizado")
+
 
 
 
