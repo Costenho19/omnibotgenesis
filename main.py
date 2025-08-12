@@ -1974,12 +1974,9 @@ class OmnixSistemaRailwayCompleto:
             logger.info("💫 Desarrollado por Harold Nunes")
             logger.info("🌟 Sistema COMPLETO optimizado para Railway")
             
-            # Iniciar API REST en thread principal (Railway requirement)
-            api_thread = threading.Thread(target=self.rest_api.run, daemon=False)
-            api_thread.start()
-            
-            # Iniciar bot de Telegram en thread separado
+            # Railway deployment - Flask en thread principal
             if self.config.TELEGRAM_BOT_TOKEN:
+                # Bot Telegram en background thread
                 telegram_thread = threading.Thread(target=self._run_telegram_bot, daemon=True)
                 telegram_thread.start()
                 logger.info("Bot Telegram iniciado en background")
@@ -1992,24 +1989,24 @@ class OmnixSistemaRailwayCompleto:
             
             self.sistema_iniciado = True
             
-            # Mantener API REST viva (Railway requirement)
-            api_thread.join()
+            # Flask en thread principal (Railway requirement)
+            self.rest_api.run()
             
         except Exception as e:
             logger.error(f"Error crítico sistema Railway: {e}")
             raise
     
     def _run_telegram_bot(self):
-        """Ejecutar bot de Telegram en thread separado"""
+        """Ejecutar bot de Telegram - RAILWAY COMPATIBLE"""
         try:
             app = self.setup_telegram()
             
-            # Crear loop para bot
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            # Ejecutar bot en polling mode
-            app.run_polling(drop_pending_updates=True)
+            # Railway compatible - usar start_polling directo
+            logger.info("Iniciando bot Telegram en modo polling...")
+            app.run_polling(
+                drop_pending_updates=True,
+                close_loop=False
+            )
             
         except Exception as e:
             logger.error(f"Error ejecutando bot Telegram: {e}")
@@ -2059,6 +2056,7 @@ if __name__ == "__main__":
         sys.exit(0)
     
     main()
+
 
 
 
