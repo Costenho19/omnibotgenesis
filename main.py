@@ -232,7 +232,7 @@ class ConfiguracionRailwayProfesional:
         self.TWILIO_AUTH_TOKEN: str = os.getenv('TWILIO_AUTH_TOKEN', '')
         self.TWILIO_PHONE_NUMBER: str = os.getenv('TWILIO_PHONE_NUMBER', '')
         
-        # Railway Configuration
+        # Railway Configuration - Puerto dinámico
         self.PORT: int = int(os.getenv('PORT', 8080))
         self.HOST: str = '0.0.0.0'
         self.RAILWAY_ENVIRONMENT: str = os.getenv('RAILWAY_ENVIRONMENT', 'production')
@@ -3142,15 +3142,41 @@ class OMNIXProfesionalRailway:
             # Iniciar bot Telegram
             self.start_telegram_bot()
             
-            # Iniciar servidor Flask
+            # Iniciar servidor Flask con configuración Railway
             logger.info(f"🌐 Iniciando servidor profesional en puerto {config.PORT}")
-            self.flask_app.run(
-                host=config.HOST,
-                port=config.PORT,
-                debug=config.DEBUG,
-                threaded=True,
-                use_reloader=False
-            )
+            
+            # Configuración producción Railway con Gunicorn/Waitress
+            import os
+            if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+                try:
+                    from gunicorn.app.wsgiapp import WSGIApplication
+                    logger.info("🚀 Usando Gunicorn para producción Railway")
+                    # Configurar Gunicorn programáticamente
+                    sys.argv = ['gunicorn', '--bind', f'{config.HOST}:{config.PORT}', '--workers', '4', '--timeout', '120', 'app:app']
+                    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
+                except ImportError:
+                    try:
+                        from waitress import serve
+                        logger.info("🚀 Usando Waitress WSGI server para producción Railway")
+                        serve(self.flask_app, host=config.HOST, port=config.PORT, threads=8)
+                    except ImportError:
+                        logger.warning("⚠️ Servidores WSGI no disponibles - usando Flask")
+                        self.flask_app.run(
+                            host=config.HOST,
+                            port=config.PORT,
+                            debug=False,
+                            threaded=True,
+                            use_reloader=False
+                        )
+            else:
+                # Desarrollo local
+                self.flask_app.run(
+                    host=config.HOST,
+                    port=config.PORT,
+                    debug=config.DEBUG,
+                    threaded=True,
+                    use_reloader=False
+                )
             
         except Exception as e:
             logger.error(f"❌ Error ejecutando sistema: {e}")
@@ -3200,6 +3226,7 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         logger.info("👋 OMNIX V5 QUANTUM READY finalizado")
+
 
 
 
