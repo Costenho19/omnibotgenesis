@@ -3627,12 +3627,15 @@ class ShariaValidator:
             'reasoning': reasoning,
             'alternatives': [
                        'BTC - Bitcoin',
-                            'most_common_requests': [],
-                    'response_satisfaction': [],
-                    'preferred_topics': [],
-                    'interaction_times': [],
-                    'emotional_states': [],
-                    'learning_curve': 'beginner'
+                                            'ETH - Ethereum',
+                'ADA - Cardano'
+            ],
+            'most_common_requests': [],
+            'response_satisfaction': [],
+            'preferred_topics': [],
+            'interaction_times': [],
+            'emotional_states': [],
+            'learning_curve': 'beginner'
                             ]
         }
             
@@ -4698,6 +4701,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
