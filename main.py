@@ -1387,19 +1387,35 @@ Let's start intelligent trading! 🚀""",
             logger.error(f"Error manejando callback: {e}")
     
     def iniciar_bot(self):
-        """Iniciar bot en modo polling"""
-        if self.app:
-            try:
-                logger.info("🤖 Iniciando bot Telegram...")
-                # RAILWAY FIX: Usar run_polling con configuración Railway-compatible
-                asyncio.set_event_loop(asyncio.new_event_loop())
-                self.app.run_polling(
-                    drop_pending_updates=True,
-                    allowed_updates=Update.ALL_TYPES,
-                    stop_signals=None
-                )
-            except Exception as e:
+        """Iniciar bot con manejo de conflictos para Railway"""
+        if not self.app:
+            logger.warning("Bot Telegram no configurado")
+            return
+            
+        try:
+            logger.info("🤖 Iniciando bot Telegram...")
+            
+            # RAILWAY FIX: Configuración especial para evitar conflictos
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            
+            # Configurar polling con manejo de conflictos
+            self.app.run_polling(
+                drop_pending_updates=True,     # Limpiar mensajes pendientes
+                allowed_updates=Update.ALL_TYPES,
+                stop_signals=None,             # No manejar señales del sistema
+                close_loop=False,              # No cerrar event loop
+                poll_interval=2.0,             # Intervalo más largo
+                timeout=30                     # Timeout más corto
+            )
+            
+        except Exception as e:
+            error_msg = str(e)
+            if "Conflict" in error_msg or "getUpdates" in error_msg:
+                logger.warning("⚠️ Conflicto Telegram detectado - Modo API continúa sin bot")
+                logger.info("💡 Sistema funcionará solo con API REST hasta resolver conflicto")
+            else:
                 logger.error(f"Error iniciando bot: {e}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
 
 # ==============================================
 # API REST RAILWAY
@@ -1696,14 +1712,22 @@ class OMNIXV5Railway:
             logger.error(f"Error creando app Flask: {e}")
     
     def _ejecutar_bot_telegram(self):
-        """Ejecutar bot Telegram en thread separado"""
+        """Ejecutar bot Telegram con manejo de conflictos"""
         try:
             if self.bot_telegram:
                 logger.info("🤖 OMNIX Bot Telegram iniciando - Railway Fix aplicado")
+                
+                # Intentar iniciar bot
                 self.bot_telegram.iniciar_bot()
+                
         except Exception as e:
-            logger.error(f"Error ejecutando bot Telegram: {e}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
+            error_msg = str(e)
+            if "Conflict" in error_msg:
+                logger.warning("⚠️ Conflicto Telegram - Sistema continúa en modo API")
+                logger.info("🌐 Acceso disponible vía: https://[dominio].railway.app")
+            else:
+                logger.error(f"Error ejecutando bot Telegram: {e}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
     
     def ejecutar_railway(self):
         """Ejecutar sistema completo en Railway"""
@@ -1769,6 +1793,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
