@@ -1361,11 +1361,71 @@ Para modificar configuraciones, usa los comandos específicos.
 
 # Instancia global del bot
 bot_telegram = OmnixTelegramBot()
+# === PTB event loop dedicado (para usar Flask + webhook) ===
+ptb_loop = None
+ptb_thread = None
+
+def _ptb_runner():
+    """
+    Hilo de fondo: crea un event loop, inicializa y arranca la Application
+    de python-telegram-bot para poder procesar updates desde Flask.
+    """
+    import asyncio
+    global ptb_loop
+    ptb_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(ptb_loop)
+    try:
+        # Inicializar y arrancar PTB v20+
+        ptb_loop.run_until_complete(bot_telegram.application.initialize())
+        ptb_loop.run_until_complete(bot_telegram.application.start())
+        # No usamos polling; Flask entrega los updates al loop:
+        ptb_loop.run_forever()
+    except Exception as e:
+        logger.error(f"[PTB Runner] Error iniciando loop: {e}")
 
 # ==============================================
 # API REST EMPRESARIAL
 # ==============================================
+# Iniciar PTB loop en background (para que Flask pueda enviar updates)
+if bot_telegram.application and config.TELEGRAM_BOT_TOKEN:
+    try:
+        global ptb_thread
+        if ptb_thread is None or not ptb_thread.is_alive():
+            ptb_thread = threading.Thread(target=_ptb_runner, daemon=True)
+            ptb_thread.start()
+            logger.info("✅ PTB loop iniciado en background (Flask + webhook)")
+        else:
+            logger.info("ℹ️ PTB loop ya estaba activo")
+    except Exception as e:
+        logger.error(f"❌ No se pudo iniciar el PTB loop: {e}")
+@app.route('/webhook/telegram', methods=['POST'])
+def webhook_telegram():
+    """Webhook para Telegram -> empuja el update al loop dedicado de PTB."""
+    try:
+        # Asegura que la Application de PTB existe
+        if not bot_telegram.application:
+            return jsonify({'success': False, 'error': 'PTB application no inicializada'}), 500
 
+        # Carga del update
+        data = request.get_json(force=True, silent=True) or {}
+        update = Update.de_json(data, bot_telegram.application.bot)
+
+        # Verifica que el loop dedicado está activo
+        if ptb_loop is None:
+            logger.warning("⚠️ Webhook recibió update pero ptb_loop es None")
+            return jsonify({'success': False, 'error': 'ptb_loop no iniciado'}), 500
+
+        # Inyecta el update al loop de PTB sin bloquear Flask
+        asyncio.run_coroutine_threadsafe(
+            bot_telegram.application.process_update(update),
+            ptb_loop
+        )
+
+        return jsonify({'success': True}), 200
+
+    except Exception as e:
+        logger.error(f"Error en webhook: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 def crear_app_flask():
     """Crear aplicación Flask con API REST"""
     
@@ -1703,6 +1763,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
