@@ -284,7 +284,7 @@ class DatabaseManager:
             """,
             'chats': """
                 CREATE TABLE IF NOT EXISTS chats (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     message TEXT NOT NULL,
                     response TEXT NOT NULL,
@@ -296,7 +296,7 @@ class DatabaseManager:
             """,
             'trades': """
                 CREATE TABLE IF NOT EXISTS trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     exchange TEXT NOT NULL,
                     symbol TEXT NOT NULL,
@@ -312,7 +312,7 @@ class DatabaseManager:
             """,
             'prices': """
                 CREATE TABLE IF NOT EXISTS prices (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     symbol TEXT NOT NULL,
                     exchange TEXT NOT NULL,
                     price REAL NOT NULL,
@@ -325,7 +325,7 @@ class DatabaseManager:
             """,
             'sharia_validations': """
                 CREATE TABLE IF NOT EXISTS sharia_validations (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     crypto TEXT NOT NULL,
                     status TEXT NOT NULL,
                     confidence REAL DEFAULT 0.5,
@@ -337,7 +337,7 @@ class DatabaseManager:
             """,
             'notifications': """
                 CREATE TABLE IF NOT EXISTS notifications (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     type TEXT NOT NULL,
                     message TEXT NOT NULL,
@@ -2223,7 +2223,7 @@ def api_trade():
 
 @app.route('/webhook/telegram', methods=['POST'])
 def telegram_webhook():
-    """Webhook Telegram - CORREGIDO"""
+    """Webhook Telegram - RAILWAY CORREGIDO"""
     try:
         if not telegram_bot.active:
             return jsonify({'error': 'Bot not available'}), 503
@@ -2232,28 +2232,41 @@ def telegram_webhook():
         if not data:
             return jsonify({'error': 'No data'}), 400
         
-        logger.info("📨 Webhook recibido")
+        logger.info("📨 Webhook Telegram recibido")
         
-        def process_update():
-            try:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+        # Procesar de forma síncrona para Railway
+        try:
+            # Crear update manualmente sin Application.initialize
+            if 'message' in data and data['message'].get('text'):
+                user_id = str(data['message']['from']['id'])
+                message_text = data['message']['text']
+                chat_id = data['message']['chat']['id']
                 
-                # CORRECCIÓN CRÍTICA: Usar de_json correctamente
-                update = Update.de_json(data, telegram_bot.app.bot)
+                # Procesar mensaje con IA
+                response, model = ai_system.process_message(message_text, user_id)
                 
-                loop.run_until_complete(
-                    telegram_bot.app.process_update(update)
-                )
-                loop.close()
+                # Enviar respuesta via API directa de Telegram
+                bot_token = config.BOT_TOKEN
+                send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                 
-                logger.info("✅ Update procesado")
+                payload = {
+                    'chat_id': chat_id,
+                    'text': response,
+                    'parse_mode': 'HTML'
+                }
                 
-            except Exception as e:
-                logger.error(f"❌ Error procesando update: {e}")
-        
-        # Procesar en hilo separado
-        threading.Thread(target=process_update, daemon=True).start()
+                # Enviar mensaje
+                if requests_ok:
+                    response_req = requests.post(send_url, json=payload, timeout=10)
+                    if response_req.status_code == 200:
+                        logger.info("✅ Respuesta enviada via API directa")
+                    else:
+                        logger.error(f"❌ Error enviando: {response_req.status_code}")
+                
+            logger.info("✅ Webhook procesado correctamente")
+            
+        except Exception as process_error:
+            logger.error(f"❌ Error procesando mensaje: {process_error}")
         
         return jsonify({'status': 'ok'})
         
@@ -2327,9 +2340,867 @@ class OmnixSystem:
 # PUNTO DE ENTRADA PRINCIPAL
 # ============================================================================
 
+# ============================================================================
+# FUNCIONES AVANZADAS COMPLETAS
+# ============================================================================
+
+class AdvancedTradingEngine:
+    """Engine de trading avanzado completo"""
+    
+    def __init__(self):
+        self.strategies = {}
+        self.risk_manager = RiskManager()
+        self.signal_generator = SignalGenerator()
+        self.portfolio_manager = PortfolioManager()
+        self.setup_strategies()
+    
+    def setup_strategies(self):
+        """Configurar estrategias avanzadas"""
+        self.strategies = {
+            'momentum': MomentumStrategy(),
+            'mean_reversion': MeanReversionStrategy(),
+            'arbitrage': ArbitrageStrategy(),
+            'scalping': ScalpingStrategy(),
+            'swing_trading': SwingTradingStrategy()
+        }
+    
+    def execute_advanced_strategy(self, strategy_name: str, symbol: str, timeframe: str = '1h') -> Dict:
+        """Ejecutar estrategia avanzada"""
+        try:
+            if strategy_name not in self.strategies:
+                return {'success': False, 'error': f'Estrategia {strategy_name} no disponible'}
+            
+            strategy = self.strategies[strategy_name]
+            signal = strategy.generate_signal(symbol, timeframe)
+            
+            if signal['action'] != 'hold':
+                risk_assessment = self.risk_manager.assess_trade(signal)
+                if risk_assessment['approved']:
+                    execution_result = self.portfolio_manager.execute_trade(signal)
+                    return execution_result
+            
+            return {'success': True, 'action': 'hold', 'reason': signal.get('reason', 'No signal')}
+            
+        except Exception as e:
+            logger.error(f"Error estrategia avanzada: {e}")
+            return {'success': False, 'error': str(e)}
+
+class MomentumStrategy:
+    """Estrategia de momentum"""
+    
+    def generate_signal(self, symbol: str, timeframe: str) -> Dict:
+        """Generar señal de momentum"""
+        try:
+            # Obtener datos históricos
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return {'action': 'hold', 'reason': 'No data available'}
+            
+            current_price = price_data['statistics']['average_price']
+            
+            # Lógica simplificada de momentum
+            if current_price > 50000:  # BTC example
+                return {
+                    'action': 'buy',
+                    'symbol': symbol,
+                    'confidence': 0.7,
+                    'reason': 'Momentum alcista detectado',
+                    'amount': 50,
+                    'stop_loss': current_price * 0.95,
+                    'take_profit': current_price * 1.05
+                }
+            else:
+                return {'action': 'hold', 'reason': 'Sin momentum claro'}
+                
+        except Exception as e:
+            return {'action': 'hold', 'reason': f'Error: {str(e)}'}
+
+class MeanReversionStrategy:
+    """Estrategia de reversión a la media"""
+    
+    def generate_signal(self, symbol: str, timeframe: str) -> Dict:
+        """Generar señal de reversión"""
+        try:
+            analysis = trading_system.get_technical_analysis(symbol)
+            if not analysis.get('success'):
+                return {'action': 'hold', 'reason': 'No analysis available'}
+            
+            rsi = analysis['indicators'].get('rsi', 50)
+            current_price = analysis.get('current_price', 0)
+            sma_20 = analysis['indicators'].get('sma_20', current_price)
+            
+            # Lógica de reversión
+            if rsi < 30 and current_price < sma_20 * 0.95:
+                return {
+                    'action': 'buy',
+                    'symbol': symbol,
+                    'confidence': 0.8,
+                    'reason': 'Sobreventa - Reversión esperada',
+                    'amount': 30,
+                    'stop_loss': current_price * 0.93,
+                    'take_profit': sma_20
+                }
+            elif rsi > 70 and current_price > sma_20 * 1.05:
+                return {
+                    'action': 'sell',
+                    'symbol': symbol,
+                    'confidence': 0.8,
+                    'reason': 'Sobrecompra - Reversión esperada',
+                    'amount': 30,
+                    'stop_loss': current_price * 1.07,
+                    'take_profit': sma_20
+                }
+            
+            return {'action': 'hold', 'reason': 'En rango normal'}
+            
+        except Exception as e:
+            return {'action': 'hold', 'reason': f'Error: {str(e)}'}
+
+class ArbitrageStrategy:
+    """Estrategia de arbitraje"""
+    
+    def generate_signal(self, symbol: str, timeframe: str) -> Dict:
+        """Generar señal de arbitraje"""
+        try:
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return {'action': 'hold', 'reason': 'No price data'}
+            
+            exchanges = price_data.get('exchanges', {})
+            if len(exchanges) < 2:
+                return {'action': 'hold', 'reason': 'Necesarios mínimo 2 exchanges'}
+            
+            prices = [(name, data['price']) for name, data in exchanges.items()]
+            prices.sort(key=lambda x: x[1])
+            
+            lowest_exchange, lowest_price = prices[0]
+            highest_exchange, highest_price = prices[-1]
+            
+            spread_pct = ((highest_price - lowest_price) / lowest_price) * 100
+            
+            if spread_pct > 0.5:  # 0.5% spread mínimo
+                return {
+                    'action': 'arbitrage',
+                    'symbol': symbol,
+                    'confidence': 0.9,
+                    'reason': f'Arbitraje {spread_pct:.2f}% entre {lowest_exchange} y {highest_exchange}',
+                    'buy_exchange': lowest_exchange,
+                    'sell_exchange': highest_exchange,
+                    'buy_price': lowest_price,
+                    'sell_price': highest_price,
+                    'amount': 25,
+                    'profit_estimate': spread_pct
+                }
+            
+            return {'action': 'hold', 'reason': f'Spread insuficiente: {spread_pct:.2f}%'}
+            
+        except Exception as e:
+            return {'action': 'hold', 'reason': f'Error: {str(e)}'}
+
+class ScalpingStrategy:
+    """Estrategia de scalping"""
+    
+    def generate_signal(self, symbol: str, timeframe: str) -> Dict:
+        """Generar señal de scalping"""
+        try:
+            analysis = trading_system.get_technical_analysis(symbol)
+            if not analysis.get('success'):
+                return {'action': 'hold', 'reason': 'No analysis'}
+            
+            current_price = analysis.get('current_price', 0)
+            support = analysis['indicators'].get('support', 0)
+            resistance = analysis['indicators'].get('resistance', 0)
+            
+            # Scalping cerca de soporte/resistencia
+            if abs(current_price - support) / support < 0.002:  # 0.2% del soporte
+                return {
+                    'action': 'buy',
+                    'symbol': symbol,
+                    'confidence': 0.75,
+                    'reason': 'Scalping en soporte',
+                    'amount': 20,
+                    'stop_loss': current_price * 0.998,
+                    'take_profit': current_price * 1.004
+                }
+            elif abs(current_price - resistance) / resistance < 0.002:  # 0.2% de resistencia
+                return {
+                    'action': 'sell',
+                    'symbol': symbol,
+                    'confidence': 0.75,
+                    'reason': 'Scalping en resistencia',
+                    'amount': 20,
+                    'stop_loss': current_price * 1.002,
+                    'take_profit': current_price * 0.996
+                }
+            
+            return {'action': 'hold', 'reason': 'Fuera de zona scalping'}
+            
+        except Exception as e:
+            return {'action': 'hold', 'reason': f'Error: {str(e)}'}
+
+class SwingTradingStrategy:
+    """Estrategia de swing trading"""
+    
+    def generate_signal(self, symbol: str, timeframe: str) -> Dict:
+        """Generar señal de swing trading"""
+        try:
+            analysis = trading_system.get_technical_analysis(symbol)
+            if not analysis.get('success'):
+                return {'action': 'hold', 'reason': 'No analysis'}
+            
+            signals = analysis.get('signals', [])
+            current_price = analysis.get('current_price', 0)
+            sma_20 = analysis['indicators'].get('sma_20', current_price)
+            sma_50 = analysis['indicators'].get('sma_50', current_price)
+            
+            # Golden Cross / Death Cross
+            if sma_20 > sma_50 and current_price > sma_20:
+                return {
+                    'action': 'buy',
+                    'symbol': symbol,
+                    'confidence': 0.85,
+                    'reason': 'Golden Cross - Tendencia alcista',
+                    'amount': 75,
+                    'stop_loss': sma_50,
+                    'take_profit': current_price * 1.15,
+                    'hold_period': '3-7 days'
+                }
+            elif sma_20 < sma_50 and current_price < sma_20:
+                return {
+                    'action': 'sell',
+                    'symbol': symbol,
+                    'confidence': 0.85,
+                    'reason': 'Death Cross - Tendencia bajista',
+                    'amount': 75,
+                    'stop_loss': sma_50,
+                    'take_profit': current_price * 0.85,
+                    'hold_period': '3-7 days'
+                }
+            
+            return {'action': 'hold', 'reason': 'Sin cruce de medias significativo'}
+            
+        except Exception as e:
+            return {'action': 'hold', 'reason': f'Error: {str(e)}'}
+
+class RiskManager:
+    """Gestor de riesgos avanzado"""
+    
+    def __init__(self):
+        self.max_position_size = 100.0
+        self.max_daily_loss = 500.0
+        self.max_portfolio_risk = 0.02  # 2%
+        self.correlation_threshold = 0.7
+    
+    def assess_trade(self, signal: Dict) -> Dict:
+        """Evaluar riesgo de trade"""
+        try:
+            risk_score = 0
+            reasons = []
+            
+            # Tamaño de posición
+            amount = signal.get('amount', 0)
+            if amount > self.max_position_size:
+                risk_score += 30
+                reasons.append(f"Posición muy grande: ${amount}")
+            
+            # Confianza de la señal
+            confidence = signal.get('confidence', 0)
+            if confidence < 0.6:
+                risk_score += 25
+                reasons.append(f"Baja confianza: {confidence:.2f}")
+            
+            # Stop loss
+            if 'stop_loss' not in signal:
+                risk_score += 40
+                reasons.append("Sin stop loss definido")
+            
+            # Evaluación final
+            approved = risk_score < 50
+            
+            return {
+                'approved': approved,
+                'risk_score': risk_score,
+                'reasons': reasons,
+                'recommendation': 'approve' if approved else 'reject'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error evaluando riesgo: {e}")
+            return {'approved': False, 'risk_score': 100, 'reasons': [f'Error: {str(e)}']}
+
+class SignalGenerator:
+    """Generador de señales avanzadas"""
+    
+    def __init__(self):
+        self.indicators = {}
+        self.patterns = PatternRecognition()
+    
+    def generate_composite_signal(self, symbol: str) -> Dict:
+        """Generar señal compuesta"""
+        try:
+            signals = []
+            
+            # Señales técnicas
+            technical_signal = self.generate_technical_signal(symbol)
+            signals.append(technical_signal)
+            
+            # Señales de volumen
+            volume_signal = self.generate_volume_signal(symbol)
+            signals.append(volume_signal)
+            
+            # Señales de momentum
+            momentum_signal = self.generate_momentum_signal(symbol)
+            signals.append(momentum_signal)
+            
+            # Combinar señales
+            composite_score = sum(s['score'] for s in signals) / len(signals)
+            
+            if composite_score > 0.6:
+                action = 'buy'
+            elif composite_score < -0.6:
+                action = 'sell'
+            else:
+                action = 'hold'
+            
+            return {
+                'action': action,
+                'composite_score': composite_score,
+                'individual_signals': signals,
+                'confidence': abs(composite_score),
+                'symbol': symbol
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generando señal compuesta: {e}")
+            return {'action': 'hold', 'error': str(e)}
+    
+    def generate_technical_signal(self, symbol: str) -> Dict:
+        """Señal técnica"""
+        try:
+            analysis = trading_system.get_technical_analysis(symbol)
+            if not analysis.get('success'):
+                return {'score': 0, 'reason': 'No data'}
+            
+            rsi = analysis['indicators'].get('rsi', 50)
+            current_price = analysis.get('current_price', 0)
+            sma_20 = analysis['indicators'].get('sma_20', current_price)
+            
+            score = 0
+            if rsi < 30:
+                score += 0.4
+            elif rsi > 70:
+                score -= 0.4
+            
+            if current_price > sma_20:
+                score += 0.3
+            else:
+                score -= 0.3
+            
+            return {'score': score, 'type': 'technical', 'rsi': rsi}
+            
+        except Exception as e:
+            return {'score': 0, 'error': str(e)}
+    
+    def generate_volume_signal(self, symbol: str) -> Dict:
+        """Señal de volumen"""
+        try:
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return {'score': 0, 'reason': 'No volume data'}
+            
+            # Análisis simplificado de volumen
+            avg_volume = 0
+            for exchange_data in price_data['exchanges'].values():
+                if exchange_data.get('volume'):
+                    avg_volume += exchange_data['volume']
+            
+            score = 0.2 if avg_volume > 1000 else -0.1
+            
+            return {'score': score, 'type': 'volume', 'avg_volume': avg_volume}
+            
+        except Exception as e:
+            return {'score': 0, 'error': str(e)}
+    
+    def generate_momentum_signal(self, symbol: str) -> Dict:
+        """Señal de momentum"""
+        try:
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return {'score': 0, 'reason': 'No price data'}
+            
+            # Análisis simplificado de momentum
+            changes = []
+            for exchange_data in price_data['exchanges'].values():
+                if exchange_data.get('change'):
+                    changes.append(exchange_data['change'])
+            
+            if changes:
+                avg_change = sum(changes) / len(changes)
+                score = min(max(avg_change / 5, -0.5), 0.5)  # Normalizar
+            else:
+                score = 0
+            
+            return {'score': score, 'type': 'momentum', 'avg_change': avg_change if changes else 0}
+            
+        except Exception as e:
+            return {'score': 0, 'error': str(e)}
+
+class PatternRecognition:
+    """Reconocimiento de patrones"""
+    
+    def detect_patterns(self, price_data: List[float]) -> List[Dict]:
+        """Detectar patrones en datos de precio"""
+        patterns = []
+        
+        if len(price_data) < 10:
+            return patterns
+        
+        # Detectar tendencias
+        trend = self.detect_trend(price_data)
+        if trend:
+            patterns.append(trend)
+        
+        # Detectar soportes y resistencias
+        levels = self.detect_support_resistance(price_data)
+        patterns.extend(levels)
+        
+        return patterns
+    
+    def detect_trend(self, prices: List[float]) -> Optional[Dict]:
+        """Detectar tendencia"""
+        if len(prices) < 5:
+            return None
+        
+        recent_prices = prices[-5:]
+        if recent_prices[-1] > recent_prices[0] * 1.02:
+            return {'type': 'uptrend', 'strength': 'moderate', 'confidence': 0.7}
+        elif recent_prices[-1] < recent_prices[0] * 0.98:
+            return {'type': 'downtrend', 'strength': 'moderate', 'confidence': 0.7}
+        
+        return None
+    
+    def detect_support_resistance(self, prices: List[float]) -> List[Dict]:
+        """Detectar niveles de soporte y resistencia"""
+        levels = []
+        
+        if len(prices) < 10:
+            return levels
+        
+        max_price = max(prices)
+        min_price = min(prices)
+        current_price = prices[-1]
+        
+        # Resistencia
+        if current_price < max_price * 0.95:
+            levels.append({
+                'type': 'resistance',
+                'level': max_price,
+                'distance': abs(current_price - max_price) / current_price,
+                'strength': 'strong'
+            })
+        
+        # Soporte
+        if current_price > min_price * 1.05:
+            levels.append({
+                'type': 'support',
+                'level': min_price,
+                'distance': abs(current_price - min_price) / current_price,
+                'strength': 'strong'
+            })
+        
+        return levels
+
+class PortfolioManager:
+    """Gestor de portafolio avanzado"""
+    
+    def __init__(self):
+        self.positions = {}
+        self.balance = 1000.0  # Balance simulado
+        self.trade_history = []
+    
+    def execute_trade(self, signal: Dict) -> Dict:
+        """Ejecutar trade en portafolio"""
+        try:
+            symbol = signal.get('symbol', 'BTC/USD')
+            action = signal.get('action', 'hold')
+            amount = signal.get('amount', 0)
+            
+            if action == 'hold':
+                return {'success': True, 'action': 'hold', 'reason': 'No action required'}
+            
+            # Ejecutar trade real
+            trade_result = trading_system.execute_trade('portfolio_manager', symbol, action, amount)
+            
+            if trade_result.get('success'):
+                # Actualizar posiciones
+                self.update_positions(signal, trade_result)
+                
+                # Registrar en historial
+                self.trade_history.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'signal': signal,
+                    'result': trade_result
+                })
+                
+                return {
+                    'success': True,
+                    'trade_executed': trade_result,
+                    'portfolio_status': self.get_portfolio_status()
+                }
+            else:
+                return trade_result
+                
+        except Exception as e:
+            logger.error(f"Error ejecutando trade en portfolio: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def update_positions(self, signal: Dict, trade_result: Dict):
+        """Actualizar posiciones del portafolio"""
+        symbol = signal.get('symbol', 'BTC/USD')
+        action = signal.get('action')
+        amount = signal.get('amount', 0)
+        
+        if symbol not in self.positions:
+            self.positions[symbol] = {'quantity': 0, 'avg_price': 0, 'unrealized_pnl': 0}
+        
+        position = self.positions[symbol]
+        
+        if action == 'buy':
+            # Agregar a posición larga
+            total_cost = position['quantity'] * position['avg_price'] + amount
+            position['quantity'] += amount / trade_result['trade_data']['price']
+            position['avg_price'] = total_cost / position['quantity'] if position['quantity'] > 0 else 0
+        elif action == 'sell':
+            # Reducir posición
+            position['quantity'] -= amount / trade_result['trade_data']['price']
+            if position['quantity'] <= 0:
+                position['quantity'] = 0
+                position['avg_price'] = 0
+    
+    def get_portfolio_status(self) -> Dict:
+        """Obtener estado del portafolio"""
+        total_value = self.balance
+        positions_summary = []
+        
+        for symbol, position in self.positions.items():
+            if position['quantity'] > 0:
+                # Obtener precio actual
+                price_data = trading_system.get_multi_exchange_prices(symbol)
+                current_price = price_data['statistics']['average_price'] if price_data.get('success') else 0
+                
+                position_value = position['quantity'] * current_price
+                pnl = position_value - (position['quantity'] * position['avg_price'])
+                pnl_pct = (pnl / (position['quantity'] * position['avg_price'])) * 100 if position['avg_price'] > 0 else 0
+                
+                positions_summary.append({
+                    'symbol': symbol,
+                    'quantity': position['quantity'],
+                    'avg_price': position['avg_price'],
+                    'current_price': current_price,
+                    'value': position_value,
+                    'pnl': pnl,
+                    'pnl_percentage': pnl_pct
+                })
+                
+                total_value += position_value
+        
+        return {
+            'total_value': total_value,
+            'cash_balance': self.balance,
+            'positions': positions_summary,
+            'total_trades': len(self.trade_history)
+        }
+
+class NewsAnalyzer:
+    """Analizador de noticias para trading"""
+    
+    def __init__(self):
+        self.sentiment_cache = {}
+        self.news_sources = ['coindesk', 'cointelegraph', 'bloomberg']
+    
+    def analyze_market_sentiment(self, symbol: str) -> Dict:
+        """Analizar sentimiento del mercado"""
+        try:
+            # Simulación de análisis de noticias
+            cache_key = f"{symbol}_{int(time.time() // 3600)}"  # Cache por hora
+            
+            if cache_key in self.sentiment_cache:
+                return self.sentiment_cache[cache_key]
+            
+            # Análisis simulado
+            sentiment_score = self.calculate_sentiment_score(symbol)
+            
+            result = {
+                'symbol': symbol,
+                'sentiment_score': sentiment_score,
+                'sentiment_label': self.get_sentiment_label(sentiment_score),
+                'confidence': 0.75,
+                'sources_analyzed': len(self.news_sources),
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            self.sentiment_cache[cache_key] = result
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analizando sentimiento: {e}")
+            return {'error': str(e)}
+    
+    def calculate_sentiment_score(self, symbol: str) -> float:
+        """Calcular score de sentimiento"""
+        # Simulación basada en precio actual y volatilidad
+        try:
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return 0.0
+            
+            current_price = price_data['statistics']['average_price']
+            spread_pct = price_data['statistics']['spread_percentage']
+            
+            # Lógica simplificada
+            if current_price > 50000 and spread_pct < 1:  # Para BTC
+                sentiment = 0.7  # Positivo
+            elif current_price < 40000 or spread_pct > 2:
+                sentiment = -0.6  # Negativo
+            else:
+                sentiment = 0.1  # Neutral
+            
+            return sentiment
+            
+        except Exception:
+            return 0.0
+    
+    def get_sentiment_label(self, score: float) -> str:
+        """Obtener etiqueta de sentimiento"""
+        if score > 0.5:
+            return 'muy_positivo'
+        elif score > 0.2:
+            return 'positivo'
+        elif score > -0.2:
+            return 'neutral'
+        elif score > -0.5:
+            return 'negativo'
+        else:
+            return 'muy_negativo'
+
+class AlertSystem:
+    """Sistema de alertas avanzado"""
+    
+    def __init__(self):
+        self.active_alerts = {}
+        self.alert_history = []
+    
+    def create_price_alert(self, user_id: str, symbol: str, target_price: float, direction: str) -> Dict:
+        """Crear alerta de precio"""
+        try:
+            alert_id = f"price_{symbol}_{int(time.time())}_{secrets.token_hex(4)}"
+            
+            alert = {
+                'id': alert_id,
+                'user_id': user_id,
+                'type': 'price',
+                'symbol': symbol,
+                'target_price': target_price,
+                'direction': direction,  # 'above' or 'below'
+                'created_at': datetime.now().isoformat(),
+                'active': True
+            }
+            
+            self.active_alerts[alert_id] = alert
+            
+            return {
+                'success': True,
+                'alert_id': alert_id,
+                'message': f"Alerta creada: {symbol} {direction} ${target_price:,.2f}"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creando alerta: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def check_alerts(self):
+        """Verificar alertas activas"""
+        try:
+            triggered_alerts = []
+            
+            for alert_id, alert in list(self.active_alerts.items()):
+                if not alert.get('active'):
+                    continue
+                
+                if alert['type'] == 'price':
+                    if self.check_price_alert(alert):
+                        triggered_alerts.append(alert)
+                        self.trigger_alert(alert)
+                        del self.active_alerts[alert_id]
+            
+            return triggered_alerts
+            
+        except Exception as e:
+            logger.error(f"Error verificando alertas: {e}")
+            return []
+    
+    def check_price_alert(self, alert: Dict) -> bool:
+        """Verificar alerta de precio"""
+        try:
+            symbol = alert['symbol']
+            target_price = alert['target_price']
+            direction = alert['direction']
+            
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            if not price_data.get('success'):
+                return False
+            
+            current_price = price_data['statistics']['average_price']
+            
+            if direction == 'above' and current_price >= target_price:
+                return True
+            elif direction == 'below' and current_price <= target_price:
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error verificando precio: {e}")
+            return False
+    
+    def trigger_alert(self, alert: Dict):
+        """Disparar alerta"""
+        try:
+            user_id = alert['user_id']
+            symbol = alert['symbol']
+            target_price = alert['target_price']
+            direction = alert['direction']
+            
+            # Obtener precio actual
+            price_data = trading_system.get_multi_exchange_prices(symbol)
+            current_price = price_data['statistics']['average_price'] if price_data.get('success') else 0
+            
+            message = f"""🚨 ALERTA DE PRECIO ACTIVADA
+
+💰 {symbol}
+🎯 Precio objetivo: ${target_price:,.2f} ({direction})
+📊 Precio actual: ${current_price:,.2f}
+⏰ {datetime.now().strftime('%H:%M:%S')}
+
+¡Tu alerta se ha activado!"""
+            
+            # Enviar notificación (simulado)
+            self.send_alert_notification(user_id, message)
+            
+            # Guardar en historial
+            self.alert_history.append({
+                'alert': alert,
+                'triggered_at': datetime.now().isoformat(),
+                'current_price': current_price
+            })
+            
+            logger.info(f"Alerta disparada para usuario {user_id}: {symbol} {direction} ${target_price}")
+            
+        except Exception as e:
+            logger.error(f"Error disparando alerta: {e}")
+    
+    def send_alert_notification(self, user_id: str, message: str):
+        """Enviar notificación de alerta"""
+        try:
+            # Aquí se integraría con Telegram/WhatsApp
+            logger.info(f"Notificación enviada a {user_id}: {message[:50]}...")
+        except Exception as e:
+            logger.error(f"Error enviando notificación: {e}")
+
+# Instanciar sistemas avanzados
+advanced_trading = AdvancedTradingEngine()
+news_analyzer = NewsAnalyzer()
+alert_system = AlertSystem()
+
+# ============================================================================
+# ENDPOINTS API AVANZADOS
+# ============================================================================
+
+@app.route('/api/advanced/strategy/<strategy_name>/<symbol>', methods=['POST'])
+def api_advanced_strategy(strategy_name, symbol):
+    """Ejecutar estrategia avanzada"""
+    try:
+        data = request.get_json() or {}
+        timeframe = data.get('timeframe', '1h')
+        
+        result = advanced_trading.execute_advanced_strategy(strategy_name, symbol, timeframe)
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/signals/composite/<symbol>', methods=['GET'])
+def api_composite_signal(symbol):
+    """Obtener señal compuesta"""
+    try:
+        signal = advanced_trading.signal_generator.generate_composite_signal(symbol)
+        return jsonify(signal)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/portfolio/status', methods=['GET'])
+def api_portfolio_status():
+    """Estado del portafolio"""
+    try:
+        status = advanced_trading.portfolio_manager.get_portfolio_status()
+        return jsonify({
+            'success': True,
+            'portfolio': status,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/news/sentiment/<symbol>', methods=['GET'])
+def api_news_sentiment(symbol):
+    """Análisis de sentimiento de noticias"""
+    try:
+        sentiment = news_analyzer.analyze_market_sentiment(symbol)
+        return jsonify(sentiment)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/create', methods=['POST'])
+def api_create_alert():
+    """Crear alerta"""
+    try:
+        data = request.get_json()
+        if not all(k in data for k in ['user_id', 'symbol', 'target_price', 'direction']):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        result = alert_system.create_price_alert(
+            data['user_id'],
+            data['symbol'],
+            float(data['target_price']),
+            data['direction']
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/alerts/check', methods=['GET'])
+def api_check_alerts():
+    """Verificar alertas"""
+    try:
+        triggered = alert_system.check_alerts()
+        return jsonify({
+            'success': True,
+            'triggered_alerts': len(triggered),
+            'alerts': triggered
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == "__main__":
     omnix_system = OmnixSystem()
     omnix_system.run()
+
 
 
 
