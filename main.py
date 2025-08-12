@@ -3153,16 +3153,14 @@ class OMNIXProfesionalRailway:
             # Iniciar servidor Flask con configuración Railway
             logger.info(f"🌐 Iniciando servidor profesional en puerto {config.PORT}")
             
-            # CONFIGURACIÓN RAILWAY PRODUCTION FINAL
-            # Forzar modo producción si detectamos cualquier indicador Railway
-            if (config.IS_RAILWAY or 
-                os.getenv('PORT') or 
-                os.getenv('RAILWAY_ENVIRONMENT') or
-                os.getenv('RAILWAY_PUBLIC_DOMAIN')):
+            # FORZAR WAITRESS ABSOLUTO PARA RAILWAY
+            port = config.PORT
+            
+            # RAILWAY DETECTADO - WAITRESS OBLIGATORIO
+            if os.getenv('PORT') or config.IS_RAILWAY:
+                logger.info("🚀 RAILWAY DETECTED - FORCING WAITRESS PRODUCTION SERVER")
                 
-                logger.info("🚀 RAILWAY PRODUCTION MODE ACTIVATED")
-                
-                # CONFIGURAR FLASK PARA PRODUCCIÓN
+                # CONFIGURACIÓN PRODUCTION FORZADA
                 os.environ['FLASK_ENV'] = 'production'
                 self.flask_app.config.update({
                     'ENV': 'production',
@@ -3170,43 +3168,100 @@ class OMNIXProfesionalRailway:
                     'TESTING': False
                 })
                 
-                # USAR SERVIDOR DE PRODUCCIÓN
+                # INSTALAR Y USAR WAITRESS AUTOMÁTICAMENTE
                 try:
+                    # Intentar importar Waitress
                     from waitress import serve
-                    logger.info("✅ Starting Waitress Production Server")
+                    logger.info(f"✅ WAITRESS PRODUCTION SERVER STARTED ON PORT {port}")
                     serve(
                         self.flask_app,
-                        host=config.HOST,
-                        port=config.PORT,
-                        threads=8
+                        host='0.0.0.0',
+                        port=port,
+                        threads=8,
+                        cleanup_interval=30,
+                        channel_timeout=120
                     )
+                    return  # ÉXITO - NO CONTINUAR
+                    
                 except ImportError:
+                    # INSTALAR WAITRESS AUTOMÁTICAMENTE
+                    logger.info("📦 Installing Waitress for Railway production...")
                     try:
-                        import gunicorn.app.wsgiapp
-                        logger.info("✅ Starting Gunicorn Production Server")
-                        sys.argv = [
-                            'gunicorn',
-                            '--bind', f'{config.HOST}:{config.PORT}',
-                            '--workers', '4',
-                            '--timeout', '120',
-                            'OMNIX_V5_RAILWAY_DEFINITIVO:flask_app'
-                        ]
-                        gunicorn.app.wsgiapp.WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
-                    except ImportError:
-                        logger.warning("⚠️ Production servers unavailable - Flask Production Mode")
-                        self.flask_app.run(
-                            host=config.HOST,
-                            port=config.PORT,
-                            debug=False,
-                            threaded=True,
-                            use_reloader=False
+                        import subprocess
+                        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'waitress'])
+                        
+                        # Intentar de nuevo después de instalación
+                        from waitress import serve
+                        logger.info(f"✅ WAITRESS INSTALLED & STARTED ON PORT {port}")
+                        serve(
+                            self.flask_app,
+                            host='0.0.0.0',
+                            port=port,
+                            threads=8,
+                            cleanup_interval=30,
+                            channel_timeout=120
                         )
+                        return  # ÉXITO
+                    except Exception as install_error:
+                        logger.error(f"❌ Cannot install Waitress: {install_error}")
+                        
+                        # FALLBACK: Gunicorn como última opción
+                        try:
+                            import gunicorn.app.wsgiapp
+                            logger.info("🔄 Using Gunicorn fallback for Railway")
+                            
+                            # Configurar Gunicorn
+                            import gunicorn.app.base
+                            
+                            class StandaloneApplication(gunicorn.app.base.BaseApplication):
+                                def __init__(self, app, options=None):
+                                    self.options = options or {}
+                                    self.application = app
+                                    super().__init__()
+                                
+                                def load_config(self):
+                                    for key, value in self.options.items():
+                                        self.cfg.set(key.lower(), value)
+                                
+                                def load(self):
+                                    return self.application
+                            
+                            options = {
+                                'bind': f'0.0.0.0:{port}',
+                                'workers': 4,
+                                'timeout': 120,
+                                'keepalive': 2,
+                                'max_requests': 1000,
+                                'preload_app': True
+                            }
+                            
+                            StandaloneApplication(self.flask_app, options).run()
+                            return
+                            
+                        except ImportError:
+                            logger.error("❌ CRITICAL: No production server available for Railway")
+                            logger.error("❌ Please add waitress or gunicorn to your Railway project")
+                            # FORZAR FLASK PRODUCTION MODE COMO ÚLTIMA OPCIÓN
+                            logger.warning("⚠️ Using Flask in production mode - NOT RECOMMENDED")
+                            self.flask_app.run(
+                                host='0.0.0.0',
+                                port=port,
+                                debug=False,
+                                threaded=True,
+                                use_reloader=False
+                            )
+                            return
+                
+                except Exception as e:
+                    logger.error(f"❌ PRODUCTION SERVER ERROR: {e}")
+                    sys.exit(1)
+            
+            # DESARROLLO LOCAL ÚNICAMENTE
             else:
-                # Desarrollo local
                 logger.info("🔧 Local Development Mode")
                 self.flask_app.run(
                     host=config.HOST,
-                    port=config.PORT,
+                    port=port,
                     debug=True,
                     threaded=True,
                     use_reloader=False
@@ -3266,6 +3321,7 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         logger.info("👋 OMNIX V5 QUANTUM READY finalizado")
+
 
 
 
