@@ -120,7 +120,7 @@ class ConfiguracionRailway:
         self.TRADING_ENABLED = True
         
         # Railway específico
-        self.PORT = int(os.getenv('PORT', 8080))  # Railway usa 8080 por defecto
+        self.PORT = int(os.getenv('PORT', 5000))  # Railway usa puerto 5000
         self.HOST = '0.0.0.0'  # Railway requiere binding a todas las interfaces
         self.RAILWAY_ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT', 'production')
         
@@ -1798,6 +1798,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
