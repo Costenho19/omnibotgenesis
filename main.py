@@ -1378,6 +1378,7 @@ def _ptb_runner():
         # Inicializar y arrancar PTB v20+
         ptb_loop.run_until_complete(bot_telegram.application.initialize())
         ptb_loop.run_until_complete(bot_telegram.application.start())
+        ptb_ready.set()
         # No usamos polling; Flask entrega los updates al loop:
         ptb_loop.run_forever()
     except Exception as e:
@@ -1389,6 +1390,7 @@ def _ptb_runner():
 # Iniciar PTB loop en background (para que Flask pueda enviar updates)
 if bot_telegram.application and config.TELEGRAM_BOT_TOKEN:
     try:
+        global ptb_ready
         global ptb_thread
         if ptb_thread is None or not ptb_thread.is_alive():
             ptb_thread = threading.Thread(target=_ptb_runner, daemon=True)
@@ -1605,6 +1607,7 @@ def crear_app_flask():
     @app.route('/webhook/telegram', methods=['POST'])
     def webhook_telegram():
         """Webhook para Telegram"""
+        ptb_ready.wait()
         try:
             if bot_telegram.application:
                 update = Update.de_json(request.get_json(), bot_telegram.application.bot)
@@ -1763,6 +1766,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
