@@ -1753,12 +1753,12 @@ class OMNIXV5Railway:
                 logger.info("🌐 Sistema accesible vía: https://[dominio].railway.app")
             
             # Información del sistema
-            logger.info("✅ OMNIX V5 OPERATIVO en puerto 8080")
+            logger.info(f"✅ OMNIX V5 OPERATIVO en puerto {config.PORT}")
             logger.info("📊 Trading: Kraken REAL")
             logger.info("🔬 Quantum: Preparado")
             logger.info("🧠 IA: Gemini")
             logger.info("🎙️ Voz: ElevenLabs")
-            logger.info("🌐 Iniciando API REST en puerto 8080")
+            logger.info(f"🌐 Iniciando API REST en puerto {config.PORT}")
             
             # Ejecutar Flask (bloquea el hilo principal)
             if self.app_flask:
@@ -1798,6 +1798,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
