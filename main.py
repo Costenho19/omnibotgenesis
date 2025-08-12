@@ -3633,7 +3633,8 @@ class ShariaValidator:
                     'interaction_times': [],
                     'emotional_states': [],
                     'learning_curve': 'beginner'
-                }
+                            ]
+        }
             
             patterns = self.learning_patterns[user_id]
             
@@ -4697,6 +4698,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
