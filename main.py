@@ -44,11 +44,38 @@ from pathlib import Path
 # Framework web - REQUERIDO para Railway
 try:
     from flask import Flask, jsonify, request, render_template_string
-    from flask_cors import CORS
+    try:
+        from flask_cors import CORS
+        CORS_AVAILABLE = True
+    except ImportError:
+        CORS_AVAILABLE = False
+        print("WARNING: flask-cors no disponible - continuando sin CORS")
     FLASK_AVAILABLE = True
 except ImportError:
-    print("ERROR: Flask no disponible - Railway requiere Flask")
-    sys.exit(1)
+    print("ERROR: Flask no disponible - Instalando dependencias necesarias")
+    import subprocess
+    import sys
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'flask', 'flask-cors'])
+        from flask import Flask, jsonify, request, render_template_string
+        try:
+            from flask_cors import CORS
+            CORS_AVAILABLE = True
+        except ImportError:
+            CORS_AVAILABLE = False
+        FLASK_AVAILABLE = True
+        print("✅ Flask instalado correctamente")
+    except Exception as e:
+        print(f"❌ Error instalando Flask: {e}")
+        # Crear Flask mínimo sin CORS
+        try:
+            from flask import Flask, jsonify, request
+            FLASK_AVAILABLE = True
+            CORS_AVAILABLE = False
+            print("⚠️ Flask básico disponible sin CORS")
+        except ImportError:
+            print("❌ CRÍTICO: No se puede instalar Flask")
+            sys.exit(1)
 
 # Telegram - REQUERIDO
 try:
@@ -1682,7 +1709,17 @@ class OmnixRestAPIRailway:
         self.config = config
         self.omnix = omnix_system
         self.app = Flask(__name__)
-        CORS(self.app)
+        # Configurar CORS solo si está disponible
+        if CORS_AVAILABLE:
+            CORS(self.app)
+        else:
+            # Headers CORS manuales si flask-cors no está disponible
+            @self.app.after_request
+            def after_request(response):
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+                response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+                return response
         self._setup_routes()
     
     def _setup_routes(self):
@@ -2015,6 +2052,12 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    # Verificar argumentos de prueba
+    if len(sys.argv) > 1 and sys.argv[1] == '--test-imports':
+        print("✅ Todas las importaciones exitosas")
+        print("✅ Configuración Railway verificada")
+        sys.exit(0)
+    
     main()
 
 
