@@ -1913,6 +1913,43 @@ def api_sharia(symbol):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e), 'railway': True}), 500
 
+@app.route('/webhook/telegram', methods=['POST'])
+def webhook_telegram():
+    """Webhook Telegram Railway"""
+    try:
+        if not telegram_bot.active:
+            return jsonify({'error': 'Bot not active'}), 400
+        
+        json_data = request.get_json()
+        if not json_data:
+            return '', 200
+        
+        # Procesar update de Telegram
+        update = Update.de_json(json_data, telegram_bot.application.bot)
+        
+        # Ejecutar handler en background
+        asyncio.create_task(process_telegram_update(update))
+        
+        return '', 200
+        
+    except Exception as e:
+        logger.error(f"Error webhook Telegram Railway: {e}")
+        return '', 200
+
+async def process_telegram_update(update: Update):
+    """Procesar update Telegram Railway"""
+    try:
+        # Crear context
+        context = ContextTypes.DEFAULT_TYPE(
+            application=telegram_bot.application
+        )
+        
+        # Procesar update
+        await telegram_bot.application.process_update(update)
+        
+    except Exception as e:
+        logger.error(f"Error procesando update Railway: {e}")
+
 @app.route('/api/ai/chat', methods=['POST'])
 def api_ai_chat():
     """API chat IA Railway"""
