@@ -1,1 +1,1 @@
-web: python main.py
+web: python OMNIX_V5_RAILWAY_FINAL_LIMPIO.py
