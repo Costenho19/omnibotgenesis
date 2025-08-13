@@ -1015,7 +1015,7 @@ Desarrollado por Harold Nunes"""
             message = update.message.text
             
             response, model_used = ai_system.process_message(message, user_id)
-            
+             await update.message.reply_text(response)
                    # Generar y enviar audio automatico
         try:
             audio_file = voice_system.text_to_speech(response)
@@ -1030,7 +1030,7 @@ Desarrollado por Harold Nunes"""
                 logger.warning("No se pudo generar archivo de audio")
         except Exception as e:
             logger.error(f"Error completo audio: {e}")
-            await update.message.reply_text(response)
+           
             
         except Exception as e:
             logger.error(f"Error mensaje: {e}")
@@ -1299,6 +1299,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
