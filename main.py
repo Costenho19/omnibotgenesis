@@ -785,12 +785,14 @@ Cambio 24h: {eth['change_24h']:+.2f}%
 # Crear instancias globales
 db = DatabaseManager()
 ai_system = AISystem()
+super_memory = SuperMemorySystem()
 trading_system = TradingSystem()
 sharia_validator = ShariaValidator()
 quantum_analyzer = QuantumAnalyzer()
 voice_system = VoiceSystem()
 telegram_bot = TelegramBotAdvanced()
-
+# Integrar memoria con IA
+integrate_super_memory_with_ai(ai_system, super_memory)
 # ============================================================================
 # FLASK API
 # ============================================================================
@@ -853,3 +855,4 @@ if __name__ == "__main__":
     
     # Ejecutar Flask
     app.run(host='0.0.0.0', port=5002, debug=False)
+
