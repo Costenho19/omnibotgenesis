@@ -379,21 +379,48 @@ class AITripleSystem:
         if gemini_ok and config.GEMINI_KEY:
             try:
                 genai.configure(api_key=config.GEMINI_KEY)
-                self.models['gemini'] = genai.GenerativeModel('gemini-pro')
+                self.models['gemini'] = genai.GenerativeModel('gemini-1.5-flash')
                 logger.info("✅ Gemini Pro configurado")
             except Exception as e:
                 logger.warning(f"⚠️ Gemini no disponible: {e}")
         
-        # OpenAI GPT-4o (nueva interfaz)
-        if openai_ok and config.OPENAI_KEY:
-            try:
-                self.models['openai'] = openai.OpenAI(api_key=config.OPENAI_KEY)
-                # Test de conexión
-                test_response = self.models['openai'].chat.completions.create(
+      # OpenAI (compatibilidad 0.28.x y 1.x)
+if openai_ok and config.OPENAI_KEY:
+    try:
+        
+            # SDK 1.x
+            from openai import OpenAI
+            self.models['openai'] = OpenAI(api_key=config.OPENAI_KEY)
+        except Exception:
+            # SDK 0.28.x (legacy)
+            import openai as openai_legacy
+            openai_legacy.api_key = config.OPENAI_KEY
+            self.models['openai'] = openai_legacy
+
+        # (opcional) test ultra corto y silencioso
+        try:
+            if hasattr(self.models['openai'], "chat"):  # SDK 1.x
+                _ = self.models['openai'].chat.completions.create(
                     model="gpt-4o",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=5
+                    messages=[{"role": "user", "content": "ping"}],
+                    max_tokens=1
                 )
+            else:  # SDK 0.28.x
+                _ = self.models['openai'].ChatCompletion.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": "ping"}],
+                    max_tokens=1
+                )
+        except Exception:
+            pass
+
+        logger.info("✅ OpenAI configurado (compat 0.28/1.x)")
+
+    except Exception as e:
+        logger.warning(f"⚠️ OpenAI no disponible: {e}")
+        if 'openai' in self.models:
+            del self.models['openai']
+
                 logger.info("✅ OpenAI GPT-4o configurado")
             except Exception as e:
                 logger.warning(f"⚠️ OpenAI no disponible: {e}")
@@ -1693,6 +1720,7 @@ class OmnixSystem:
 if __name__ == "__main__":
     omnix_system = OmnixSystem()
     omnix_system.run()
+
 
 
 
