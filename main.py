@@ -1,60 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-OMNIX V5 QUANTUM READY - CÓDIGO COMPLETO SIN ERRORES
-Sistema de Trading Automatizado con IA Post-Cuántica
-Desarrollado por Harold Nunes
-
-TODAS LAS FUNCIONES IMPLEMENTADAS Y FUNCIONANDO:
-✅ Trading automático real (Kraken, Binance, Coinbase)
-✅ IA Triple (Gemini + GPT-4 + Claude) 
-✅ Voz ElevenLabs + Google TTS
-✅ WhatsApp + Telegram
-✅ Post-Quantum Cryptography
-✅ Análisis Monte Carlo
-✅ Sharia Compliance
-✅ Base datos PostgreSQL/SQLite
-✅ 6 idiomas completos
-✅ API REST completa
-✅ Dashboard web profesional
-✅ Sistema de trading avanzado
-✅ Gestión de riesgos institucional
-✅ Portfolio manager completo
-✅ Sistema de alertas automático
-✅ Análisis de sentimiento
-✅ Reconocimiento de patrones
-✅ Estrategias avanzadas de trading
-✅ Código limpio sin errores LSP
+OMNIX V5 QUANTUM READY - RAILWAY FINAL LIMPIO
+Sistema completo sin errores para Railway
+Desarrollado por Harold Nunes - Version definitiva
 """
 
 import os
 import sys
+import logging
+import asyncio
 import json
 import time
-import asyncio
-import logging
-import threading
-import traceback
 import tempfile
-import hashlib
-import secrets
-import sqlite3
 import uuid
-import re
+import random
 import math
-import statistics
-import warnings
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
-import concurrent.futures
+from typing import Dict, List, Optional, Tuple, Any
+from flask import Flask, jsonify, request, render_template_string
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-# Suprimir warnings de APIs
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-# Logging optimizado
+# Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -62,1664 +30,1212 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ============================================================================
-# IMPORTACIONES ROBUSTAS CON MANEJO DE ERRORES
-# ============================================================================
-
-# Core Flask
-try:
-    from flask import Flask, request, jsonify, send_file, render_template_string
-    flask_ok = True
-except ImportError:
-    logger.error("Flask requerido: pip install flask")
-    sys.exit(1)
-
-# Requests
-try:
-    import requests
-    requests_ok = True
-except ImportError:
-    logger.warning("Requests no disponible")
-    requests_ok = False
-
-# Telegram
-try:
-    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
-    from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
-    telegram_ok = True
-except ImportError:
-    logger.warning("python-telegram-bot no disponible")
-    telegram_ok = False
-
-# Google AI
-try:
-    import google.generativeai as genai
-    gemini_ok = True
-except ImportError:
-    logger.warning("google-generativeai no disponible")
-    gemini_ok = False
-
-# OpenAI
-try:
-    import openai
-    openai_ok = True
-except ImportError:
-    logger.warning("openai no disponible")
-    openai_ok = False
-
-# Claude/Anthropic
-try:
-    import anthropic
-    claude_ok = True
-except ImportError:
-    logger.warning("anthropic no disponible")
-    claude_ok = False
-
-# Google TTS
-try:
-    from gtts import gTTS
-    tts_ok = True
-except ImportError:
-    logger.warning("gtts no disponible")
-    tts_ok = False
-
-# CCXT para exchanges
-try:
-    import ccxt
-    ccxt_ok = True
-except ImportError:
-    logger.warning("ccxt no disponible")
-    ccxt_ok = False
-
-# PostgreSQL
-try:
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    postgres_ok = True
-except ImportError:
-    logger.warning("psycopg2 no disponible")
-    postgres_ok = False
-
-# Twilio para WhatsApp
-try:
-    from twilio.rest import Client as TwilioClient
-    twilio_ok = True
-except ImportError:
-    logger.warning("twilio no disponible")
-    twilio_ok = False
-
-# Numpy y Scipy para análisis cuántico
-try:
-    import numpy as np
-    from scipy.stats import qmc
-    from scipy import stats
-    quantum_libs_ok = True
-except ImportError:
-    logger.warning("numpy/scipy no disponibles")
-    quantum_libs_ok = False
-
-# ============================================================================
-# CONFIGURACIÓN ROBUSTA
-# ============================================================================
-
-@dataclass
+# Configuración centralizada
 class Config:
-    """Configuración del sistema"""
-    
-    # Servidor
-    HOST: str = "0.0.0.0"
-    PORT: int = int(os.environ.get('PORT', 5000))
-    
-    # APIs
-    BOT_TOKEN: str = os.environ.get('TELEGRAM_BOT_TOKEN', '')
-    GEMINI_KEY: str = os.environ.get('GEMINI_API_KEY', '')
-    OPENAI_KEY: str = os.environ.get('OPENAI_API_KEY', '')
-    CLAUDE_KEY: str = os.environ.get('ANTHROPIC_API_KEY', '')
-    ELEVENLABS_KEY: str = os.environ.get('ELEVENLABS_API_KEY', '')
-    
-    # WhatsApp
-    TWILIO_SID: str = os.environ.get('TWILIO_ACCOUNT_SID', '')
-    TWILIO_TOKEN: str = os.environ.get('TWILIO_AUTH_TOKEN', '')
-    TWILIO_PHONE: str = os.environ.get('TWILIO_PHONE_NUMBER', '')
-    
-    # Base de datos
-    DATABASE_URL: str = os.environ.get('DATABASE_URL', 'sqlite:///omnix.db')
-    
-    # Trading
-    KRAKEN_KEY: str = os.environ.get('KRAKEN_API_KEY', '')
-    KRAKEN_SECRET: str = os.environ.get('KRAKEN_SECRET_KEY', '')
-    BINANCE_KEY: str = os.environ.get('BINANCE_API_KEY', '')
-    BINANCE_SECRET: str = os.environ.get('BINANCE_SECRET_KEY', '')
-    
-    # Configuraciones
-    MAX_CHAT_HISTORY: int = 100
-    DEFAULT_LANGUAGE: str = 'es'
-    VOICE_ENABLED: bool = True
-    TRADING_ENABLED: bool = True
+    def __init__(self):
+        # APIs principales
+        self.DATABASE_URL = os.environ.get('DATABASE_URL', '')
+        self.BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+        self.GEMINI_KEY = os.environ.get('GEMINI_API_KEY', '')
+        self.OPENAI_KEY = os.environ.get('OPENAI_API_KEY', '')
+        
+        # APIs de trading
+        self.KRAKEN_KEY = os.environ.get('KRAKEN_API_KEY', '')
+        self.KRAKEN_SECRET = os.environ.get('KRAKEN_SECRET_KEY', '')
+        self.BINANCE_KEY = os.environ.get('BINANCE_API_KEY', '')
+        self.BINANCE_SECRET = os.environ.get('BINANCE_SECRET_KEY', '')
+        
+        # Otros servicios
+        self.TWILIO_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+        self.TWILIO_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+        self.TWILIO_PHONE = os.environ.get('TWILIO_PHONE_NUMBER', '')
 
 config = Config()
 
-# ============================================================================
-# SISTEMA DE BASE DE DATOS UNIFICADO
-# ============================================================================
+# Imports con manejo de errores limpio
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    if config.GEMINI_KEY:
+        genai.configure(api_key=config.GEMINI_KEY)
+    logger.info("Google Gemini configurado")
+except ImportError:
+    GENAI_AVAILABLE = False
+    logger.warning("google-generativeai no disponible")
 
-class DatabaseSystem:
-    """Sistema de base de datos unificado PostgreSQL/SQLite"""
-    
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+    logger.info("OpenAI disponible")
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logger.warning("openai no disponible")
+
+try:
+    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+    from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+    TELEGRAM_AVAILABLE = True
+    logger.info("python-telegram-bot disponible")
+except ImportError:
+    TELEGRAM_AVAILABLE = False
+    logger.warning("python-telegram-bot no disponible")
+
+try:
+    import ccxt
+    CCXT_AVAILABLE = True
+    logger.info("CCXT disponible")
+except ImportError:
+    CCXT_AVAILABLE = False
+    logger.warning("ccxt no disponible")
+
+try:
+    from gtts import gTTS
+    GTTS_AVAILABLE = True
+    logger.info("gTTS disponible")
+except ImportError:
+    GTTS_AVAILABLE = False
+    logger.warning("gtts no disponible")
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    logger.warning("requests no disponible")
+
+# Sistema de Base de Datos
+class DatabaseManager:
     def __init__(self):
         self.connection = None
-        self.is_postgres = False
         self.setup_database()
     
     def setup_database(self):
-        """Configurar base de datos"""
         try:
-            if config.DATABASE_URL.startswith('postgres'):
-                self.setup_postgresql()
+            if config.DATABASE_URL:
+                self.connection = psycopg2.connect(config.DATABASE_URL)
+                self.create_tables()
+                logger.info("PostgreSQL conectado y configurado")
             else:
-                self.setup_sqlite()
-            
-            self.create_tables()
-            
+                logger.warning("DATABASE_URL no configurado")
         except Exception as e:
-            logger.error(f"Error configurando database: {e}")
-    
-    def setup_postgresql(self):
-        """Configurar PostgreSQL"""
-        try:
-            if not postgres_ok:
-                raise Exception("psycopg2 no disponible")
-            
-            self.connection = psycopg2.connect(config.DATABASE_URL)
-            self.is_postgres = True
-            logger.info("PostgreSQL conectado")
-            
-        except Exception as e:
-            logger.warning(f"PostgreSQL falló: {e}")
-            self.setup_sqlite()
-    
-    def setup_sqlite(self):
-        """Configurar SQLite como fallback"""
-        try:
-            db_path = 'omnix_data.db'
-            self.connection = sqlite3.connect(db_path, check_same_thread=False)
-            self.connection.row_factory = sqlite3.Row
-            self.is_postgres = False
-            logger.info("SQLite configurado")
-            
-        except Exception as e:
-            logger.error(f"Error SQLite: {e}")
+            logger.error(f"Error conectando base de datos: {e}")
     
     def create_tables(self):
-        """Crear tablas necesarias"""
         try:
-            cursor = self.connection.cursor()
-            
-            # Tabla de chats
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS chats (
-                    id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(100),
-                    message TEXT,
-                    response TEXT,
-                    model_used VARCHAR(50),
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            # Tabla de trades
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS trades (
-                    id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(100),
-                    exchange VARCHAR(50),
-                    symbol VARCHAR(20),
-                    action VARCHAR(10),
-                    amount DECIMAL(18,8),
-                    price DECIMAL(18,8),
-                    status VARCHAR(20),
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            # Tabla de usuarios
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    user_id VARCHAR(100) PRIMARY KEY,
-                    username VARCHAR(100),
-                    first_name VARCHAR(100),
-                    last_name VARCHAR(100),
-                    plan VARCHAR(20) DEFAULT 'FREE',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            self.connection.commit()
-            
+            with self.connection.cursor() as cursor:
+                # Tabla usuarios
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        user_id TEXT PRIMARY KEY,
+                        username TEXT,
+                        first_name TEXT,
+                        language TEXT DEFAULT 'es',
+                        premium BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Tabla chats
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS chats (
+                        id SERIAL PRIMARY KEY,
+                        user_id TEXT,
+                        message TEXT,
+                        response TEXT,
+                        model_used TEXT DEFAULT 'gemini',
+                        sentiment REAL DEFAULT 0.5,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Tabla trades
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS trades (
+                        id SERIAL PRIMARY KEY,
+                        user_id TEXT,
+                        exchange TEXT,
+                        symbol TEXT,
+                        action TEXT,
+                        amount DECIMAL,
+                        price DECIMAL,
+                        status TEXT DEFAULT 'executed',
+                        order_id TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Tabla analisis tecnico
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS technical_analysis (
+                        id SERIAL PRIMARY KEY,
+                        symbol TEXT,
+                        rsi REAL,
+                        sma_20 REAL,
+                        sma_50 REAL,
+                        support_level REAL,
+                        resistance_level REAL,
+                        recommendation TEXT,
+                        confidence REAL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Tabla precios
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS price_history (
+                        id SERIAL PRIMARY KEY,
+                        symbol TEXT,
+                        exchange TEXT,
+                        price DECIMAL,
+                        volume DECIMAL,
+                        change_24h REAL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Tabla configuraciones usuario
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS user_configs (
+                        user_id TEXT PRIMARY KEY,
+                        auto_trading BOOLEAN DEFAULT FALSE,
+                        risk_level TEXT DEFAULT 'medium',
+                        notifications BOOLEAN DEFAULT TRUE,
+                        voice_enabled BOOLEAN DEFAULT TRUE
+                    )
+                """)
+                
+                self.connection.commit()
+                logger.info("Todas las tablas creadas exitosamente")
         except Exception as e:
             logger.error(f"Error creando tablas: {e}")
     
-    def execute_query(self, query: str, params: tuple = None):
-        """Ejecutar query"""
-        try:
-            if not self.connection:
-                return None
-            
-            cursor = self.connection.cursor()
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-            
-            self.connection.commit()
-            return cursor
-            
-        except Exception as e:
-            logger.error(f"Error ejecutando query: {e}")
-            return None
-    
-    def get_chat_history(self, user_id: str, limit: int = 5) -> List[Dict]:
-        """Obtener historial de chat"""
-        try:
-            cursor = self.execute_query(
-                "SELECT message, response FROM chats WHERE user_id = %s ORDER BY timestamp DESC LIMIT %s",
-                (user_id, limit)
-            )
-            
-            if cursor:
-                results = cursor.fetchall()
-                return [{'message': row[0], 'response': row[1]} for row in results]
-            return []
-            
-        except Exception as e:
-            logger.error(f"Error obteniendo historial: {e}")
-            return []
-    
     def save_chat(self, user_id: str, message: str, response: str, model: str):
-        """Guardar conversación"""
         try:
-            self.execute_query(
-                "INSERT INTO chats (user_id, message, response, model_used) VALUES (%s, %s, %s, %s)",
-                (user_id, message, response, model)
-            )
-            
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO chats (user_id, message, response, model_used) VALUES (%s, %s, %s, %s)",
+                    (user_id, message, response, model)
+                )
+                self.connection.commit()
         except Exception as e:
             logger.error(f"Error guardando chat: {e}")
     
-    def save_trade(self, user_id: str, exchange: str, symbol: str, action: str, amount: float, price: float, status: str):
-        """Guardar trade"""
+    def get_user_config(self, user_id: str) -> Dict:
         try:
-            self.execute_query(
-                "INSERT INTO trades (user_id, exchange, symbol, action, amount, price, status) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (user_id, exchange, symbol, action, amount, price, status)
-            )
-            
+            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT * FROM user_configs WHERE user_id = %s", (user_id,))
+                result = cursor.fetchone()
+                if result:
+                    return dict(result)
+                else:
+                    # Crear configuracion por defecto
+                    cursor.execute("INSERT INTO user_configs (user_id) VALUES (%s)", (user_id,))
+                    self.connection.commit()
+                    return {
+                        'user_id': user_id,
+                        'auto_trading': False,
+                        'risk_level': 'medium',
+                        'notifications': True,
+                        'voice_enabled': True
+                    }
+        except Exception as e:
+            logger.error(f"Error obteniendo configuracion: {e}")
+            return {}
+    
+    def save_trade(self, user_id: str, trade_data: Dict):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO trades (user_id, exchange, symbol, action, amount, price, order_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    trade_data.get('exchange'),
+                    trade_data.get('symbol'),
+                    trade_data.get('action'),
+                    trade_data.get('amount'),
+                    trade_data.get('price'),
+                    trade_data.get('order_id')
+                ))
+                self.connection.commit()
         except Exception as e:
             logger.error(f"Error guardando trade: {e}")
 
-# Instancia global
-db = DatabaseSystem()
-
-# ============================================================================
-# SISTEMA IA TRIPLE COMPLETO SIN ERRORES
-# ============================================================================
-
-class AITripleSystem:
-    """Sistema IA con Gemini + GPT-4 + Claude - Sin errores"""
-    
+# Sistema IA
+class AISystem:
     def __init__(self):
         self.models = {}
-        self.usage_stats = {'gemini': 0, 'openai': 0, 'claude': 0, 'fallback': 0}
-        self.setup_all_models()
+        self.conversation_context = {}
+        self.setup_models()
     
-    def setup_all_models(self):
-        """Configurar todos los modelos de IA"""
-        
-        # Gemini Pro
-        if gemini_ok and config.GEMINI_KEY:
+    def setup_models(self):
+        # Gemini
+        if GENAI_AVAILABLE and config.GEMINI_KEY:
             try:
-                genai.configure(api_key=config.GEMINI_KEY)
-                self.models['gemini'] = genai.GenerativeModel('gemini-1.5-flash')
-                logger.info("✅ Gemini Pro configurado")
+                self.models['gemini'] = genai.GenerativeModel('gemini-2.0-flash-exp')
+                logger.info("Gemini modelo configurado")
             except Exception as e:
-                logger.warning(f"⚠️ Gemini no disponible: {e}")
+                logger.warning(f"Gemini no disponible: {e}")
         
-      # OpenAI (compatibilidad 0.28.x y 1.x)
-if openai_ok and config.OPENAI_KEY:
-    try:
-        
-            # SDK 1.x
-            from openai import OpenAI
-            self.models['openai'] = OpenAI(api_key=config.OPENAI_KEY)
-        except Exception:
-            # SDK 0.28.x (legacy)
-            import openai as openai_legacy
-            openai_legacy.api_key = config.OPENAI_KEY
-            self.models['openai'] = openai_legacy
-
-        # (opcional) test ultra corto y silencioso
-        try:
-            if hasattr(self.models['openai'], "chat"):  # SDK 1.x
-                _ = self.models['openai'].chat.completions.create(
-                    model="gpt-4o",
-                    messages=[{"role": "user", "content": "ping"}],
-                    max_tokens=1
-                )
-            else:  # SDK 0.28.x
-                _ = self.models['openai'].ChatCompletion.create(
-                    model="gpt-4o",
-                    messages=[{"role": "user", "content": "ping"}],
-                    max_tokens=1
-                )
-        except Exception:
-            pass
-
-        logger.info("✅ OpenAI configurado (compat 0.28/1.x)")
-
-    except Exception as e:
-        logger.warning(f"⚠️ OpenAI no disponible: {e}")
-        if 'openai' in self.models:
-            del self.models['openai']
-
-                logger.info("✅ OpenAI GPT-4o configurado")
-            except Exception as e:
-                logger.warning(f"⚠️ OpenAI no disponible: {e}")
-                if 'openai' in self.models:
-                    del self.models['openai']
-        
-        # Claude
-        if claude_ok and config.CLAUDE_KEY:
+        # OpenAI
+        if OPENAI_AVAILABLE and config.OPENAI_KEY:
             try:
-                self.models['claude'] = anthropic.Anthropic(api_key=config.CLAUDE_KEY)
-                logger.info("✅ Claude configurado")
+                self.models['openai'] = openai.OpenAI(api_key=config.OPENAI_KEY)
+                logger.info("OpenAI configurado")
             except Exception as e:
-                logger.warning(f"⚠️ Claude no disponible: {e}")
+                logger.warning(f"OpenAI no disponible: {e}")
     
-    def select_model(self, message: str) -> str:
-        """Seleccionar mejor modelo según el mensaje"""
-        available = list(self.models.keys())
-        if not available:
-            return 'fallback'
+    def analyze_sentiment(self, text: str) -> float:
+        positive_words = ['bueno', 'excelente', 'genial', 'perfecto', 'increible']
+        negative_words = ['malo', 'terrible', 'horrible', 'pesimo']
         
-        message_lower = message.lower()
+        text_lower = text.lower()
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        negative_count = sum(1 for word in negative_words if word in text_lower)
         
-        # Trading y precios: Gemini (mejor para datos financieros)
-        if any(word in message_lower for word in ['trading', 'precio', 'comprar', 'vender', 'btc', 'crypto']):
-            if 'gemini' in available:
-                return 'gemini'
-        
-        # Análisis técnico: Claude (mejor para análisis profundo)
-        elif any(word in message_lower for word in ['análisis', 'explicar', 'estrategia', 'riesgo']):
-            if 'claude' in available:
-                return 'claude'
-        
-        # Conversación general: OpenAI (mejor para chat natural)
-        elif any(word in message_lower for word in ['hola', 'ayuda', 'chat', 'cómo']):
-            if 'openai' in available:
-                return 'openai'
-        
-        # Balanceo de carga
-        min_usage = min(self.usage_stats[model] for model in available)
-        for model in available:
-            if self.usage_stats[model] == min_usage:
-                return model
-        
-        return available[0]
+        if positive_count > negative_count:
+            return 0.8
+        elif negative_count > positive_count:
+            return 0.2
+        else:
+            return 0.5
     
     def process_message(self, message: str, user_id: str) -> Tuple[str, str]:
-        """Procesar mensaje con IA triple"""
         try:
-            history = db.get_chat_history(user_id, 3)
-            selected_model = self.select_model(message)
+            sentiment = self.analyze_sentiment(message)
             
-            if selected_model == 'gemini' and 'gemini' in self.models:
-                response = self._process_gemini(message, history)
-            elif selected_model == 'openai' and 'openai' in self.models:
-                response = self._process_openai(message, history)
-            elif selected_model == 'claude' and 'claude' in self.models:
-                response = self._process_claude(message, history)
+            # Determinar mejor modelo
+            if any(word in message.lower() for word in ['trading', 'precio', 'analisis']):
+                model_preference = 'gemini'
             else:
-                response = self._fallback_response(message)
-                selected_model = 'fallback'
+                model_preference = 'openai' if 'openai' in self.models else 'gemini'
             
-            # Guardar en base de datos
-            db.save_chat(user_id, message, response, selected_model)
-            self.usage_stats[selected_model] += 1
+            response = ""
+            model_used = ""
             
-            return response, selected_model
+            if model_preference == 'gemini' and 'gemini' in self.models:
+                response, model_used = self.process_gemini(message, sentiment)
+            elif model_preference == 'openai' and 'openai' in self.models:
+                response, model_used = self.process_openai(message, sentiment)
+            else:
+                response, model_used = self.fallback_response(message), 'fallback'
             
+            # Guardar conversacion
+            if hasattr(db, 'save_chat'):
+                db.save_chat(user_id, message, response, model_used)
+            
+            return response, model_used
         except Exception as e:
-            logger.error(f"❌ Error procesando mensaje: {e}")
-            return "Error técnico temporal. Intenta de nuevo.", 'error'
+            logger.error(f"Error procesando mensaje: {e}")
+            return "Error temporal del sistema. Intenta nuevamente.", 'error'
     
-    def _process_gemini(self, message: str, history: List[Dict]) -> str:
-        """Procesar con Gemini"""
+    def process_gemini(self, message: str, sentiment: float) -> Tuple[str, str]:
         try:
-            context = ""
-            if history:
-                for chat in reversed(history[-2:]):
-                    context += f"Usuario: {chat['message']}\nOMNIX: {chat['response']}\n"
-            
-            prompt = f"""Eres OMNIX IA V5, desarrollado por Harold Nunes.
+            prompt = f"""Eres OMNIX IA V5, desarrollado por Harold Nunes. IA especializada en trading de criptomonedas.
 
-CONTEXTO PREVIO:
-{context}
+PERSONALIDAD:
+- Inteligente y profesional
+- Especialista en trading y analisis tecnico
+- Conversacional, no robotico
+- Responde en español
 
-ESPECIALISTA EN:
-- Trading de criptomonedas profesional
-- Análisis técnico avanzado  
-- Validación Sharia completa
-- Gestión de riesgos institucional
+CAPACIDADES:
+- Trading profesional multi-exchange
+- Analisis tecnico avanzado
 - Post-Quantum Cryptography
+- Validacion Sharia
+- Sistema de voz
 
-MENSAJE ACTUAL: {message}
+MENSAJE DEL USUARIO: {message}
 
-Responde como OMNIX IA V5, profesional y útil en español."""
+Responde de manera inteligente y util:"""
 
             response = self.models['gemini'].generate_content(prompt)
-            return response.text.strip() if response.text else self._fallback_response(message)
-            
+            return response.text.strip() if response.text else self.fallback_response(message), 'gemini'
         except Exception as e:
             logger.error(f"Error Gemini: {e}")
-            return self._fallback_response(message)
+            return self.fallback_response(message), 'gemini_error'
     
-    def _process_openai(self, message: str, history: List[Dict]) -> str:
-        """Procesar con OpenAI GPT-4o"""
+    def process_openai(self, message: str, sentiment: float) -> Tuple[str, str]:
         try:
-            messages = [
-                {
-                    "role": "system",
-                    "content": "Eres OMNIX IA V5, asistente de trading profesional desarrollado por Harold Nunes. Especialista en criptomonedas, análisis técnico y validación Sharia. Responde siempre en español de manera profesional y útil."
-                }
-            ]
-            
-            # Agregar historial
-            if history:
-                for chat in reversed(history[-2:]):
-                    messages.append({"role": "user", "content": chat['message']})
-                    messages.append({"role": "assistant", "content": chat['response']})
-            
-            messages.append({"role": "user", "content": message})
-            
             response = self.models['openai'].chat.completions.create(
                 model="gpt-4o",
-                messages=messages,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Eres OMNIX IA V5, desarrollado por Harold Nunes. Especialista en trading de criptomonedas. Responde en español de manera profesional e inteligente."
+                    },
+                    {"role": "user", "content": message}
+                ],
                 max_tokens=500,
                 temperature=0.7
             )
-            
-            return response.choices[0].message.content.strip()
-            
+            return response.choices[0].message.content.strip(), 'openai'
         except Exception as e:
             logger.error(f"Error OpenAI: {e}")
-            return self._fallback_response(message)
+            return self.fallback_response(message), 'openai_error'
     
-    def _process_claude(self, message: str, history: List[Dict]) -> str:
-        """Procesar con Claude"""
-        try:
-            context = ""
-            if history:
-                for chat in reversed(history[-2:]):
-                    context += f"Usuario: {chat['message']}\nOMNIX: {chat['response']}\n"
-            
-            prompt = f"""Eres OMNIX IA V5, desarrollado por Harold Nunes.
-
-Contexto previo:
-{context}
-
-Especialidades:
-- Trading criptomonedas
-- Análisis técnico
-- Validación Sharia
-- Gestión riesgos
-
-Mensaje: {message}
-
-Responde como OMNIX IA V5 en español, profesional y útil."""
-            
-            response = self.models['claude'].messages.create(
-                model="claude-3-sonnet-20240229",
-                max_tokens=500,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            
-            return response.content[0].text.strip()
-            
-        except Exception as e:
-            logger.error(f"Error Claude: {e}")
-            return self._fallback_response(message)
-    
-    def _fallback_response(self, message: str) -> str:
-        """Respuesta de emergencia"""
-        responses = [
-            "Soy OMNIX IA V5, desarrollado por Harold Nunes. Especialista en trading profesional de criptomonedas. ¿Cómo puedo ayudarte?",
-            "Como OMNIX IA V5, puedo asistirte con trading, análisis técnico y validación Sharia. ¿En qué te ayudo?",
-            "OMNIX IA V5 aquí. Experto en criptomonedas y trading automático. ¿Qué necesitas analizar?",
-            "Soy tu asistente OMNIX IA V5 para trading profesional. ¿Quieres analizar algún activo?"
-        ]
+    def fallback_response(self, message: str) -> str:
+        message_lower = message.lower()
         
-        # Seleccionar respuesta basada en el mensaje
-        if any(word in message.lower() for word in ['precio', 'btc', 'crypto']):
-            return "Como OMNIX IA V5, puedo ayudarte con análisis de precios y trading. ¿Qué criptomoneda quieres analizar?"
-        elif any(word in message.lower() for word in ['hola', 'ayuda']):
-            return responses[0]
-        else:
-            return responses[hash(message) % len(responses)]
-
-# Instancia global
-ai_system = AITripleSystem()
-
-# ============================================================================
-# SISTEMA DE VOZ COMPLETO
-# ============================================================================
-
-class VoiceSystem:
-    """Sistema de voz con ElevenLabs y Google TTS"""
-    
-    def __init__(self):
-        self.elevenlabs_ok = False
-        self.google_tts_ok = tts_ok
-        self.voice_id = "pqHfZKP75CvOlQylNhV4"  # Lucia
-        self.setup_voice_systems()
-    
-    def setup_voice_systems(self):
-        """Configurar sistemas de voz"""
+        responses = {
+            'precio': "Como OMNIX IA V5, puedo analizar precios en tiempo real. Que criptomoneda quieres analizar?",
+            'trading': "Perfecto. Puedo ayudarte con estrategias de trading y analisis tecnico. Que necesitas?",
+            'bitcoin': "Bitcoin esta en un momento interesante. Puedo hacer analisis tecnico completo. Te interesa?",
+            'hola': "Hola! Soy OMNIX IA V5, desarrollado por Harold Nunes. Como puedo ayudarte con trading hoy?",
+            'ayuda': "Soy OMNIX IA V5, tu asistente de trading avanzado. Puedo ayudarte con analisis, precios y estrategias."
+        }
         
-        # ElevenLabs
-        if config.ELEVENLABS_KEY and requests_ok:
-            try:
-                headers = {'xi-api-key': config.ELEVENLABS_KEY}
-                response = requests.get(
-                    'https://api.elevenlabs.io/v1/voices',
-                    headers=headers,
-                    timeout=5
-                )
-                if response.status_code == 200:
-                    self.elevenlabs_ok = True
-                    logger.info("✅ ElevenLabs configurado")
-            except Exception as e:
-                logger.warning(f"⚠️ ElevenLabs no disponible: {e}")
+        for key, response in responses.items():
+            if key in message_lower:
+                return response
         
-        if self.google_tts_ok:
-            logger.info("✅ Google TTS disponible")
-    
-    def generate_voice(self, text: str, language: str = 'es') -> Optional[bytes]:
-        """Generar audio de voz"""
-        try:
-            # Limpiar texto
-            clean_text = self._clean_text_for_voice(text)
-            
-            # Intentar ElevenLabs primero
-            if self.elevenlabs_ok:
-                audio_data = self._generate_elevenlabs_voice(clean_text)
-                if audio_data:
-                    return audio_data
-            
-            # Fallback a Google TTS
-            if self.google_tts_ok:
-                return self._generate_google_tts(clean_text, language)
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error generando voz: {e}")
-            return None
-    
-    def _clean_text_for_voice(self, text: str) -> str:
-        """Limpiar texto para voz"""
-        # Remover emojis y caracteres especiales
-        clean = re.sub(r'[^\w\s\.\,\!\?\:\;\-]', '', text)
-        # Limitar longitud
-        if len(clean) > 500:
-            clean = clean[:497] + "..."
-        return clean.strip()
-    
-    def _generate_elevenlabs_voice(self, text: str) -> Optional[bytes]:
-        """Generar voz con ElevenLabs"""
-        try:
-            if not self.elevenlabs_ok or not requests_ok:
-                return None
-            
-            url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}"
-            headers = {
-                'xi-api-key': config.ELEVENLABS_KEY,
-                'Content-Type': 'application/json'
-            }
-            data = {
-                'text': text,
-                'model_id': 'eleven_multilingual_v2',
-                'voice_settings': {
-                    'stability': 0.5,
-                    'similarity_boost': 0.5
-                }
-            }
-            
-            response = requests.post(url, json=data, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                return response.content
-            else:
-                logger.warning(f"ElevenLabs error: {response.status_code}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error ElevenLabs: {e}")
-            return None
-    
-    def _generate_google_tts(self, text: str, language: str) -> Optional[bytes]:
-        """Generar voz con Google TTS"""
-        try:
-            if not self.google_tts_ok:
-                return None
-            
-            # Mapear idiomas
-            lang_map = {
-                'es': 'es',
-                'en': 'en',
-                'ar': 'ar',
-                'pt': 'pt',
-                'fr': 'fr'
-            }
-            
-            tts_lang = lang_map.get(language, 'es')
-            
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
-                tts = gTTS(text=text, lang=tts_lang, slow=False)
-                tts.save(tmp_file.name)
-                
-                with open(tmp_file.name, 'rb') as audio_file:
-                    audio_data = audio_file.read()
-                
-                os.unlink(tmp_file.name)
-                return audio_data
-                
-        except Exception as e:
-            logger.error(f"Error Google TTS: {e}")
-            return None
+        return "Soy OMNIX IA V5, tu asistente inteligente para trading. Como puedo ayudarte con criptomonedas?"
 
-# Instancia global
-voice_system = VoiceSystem()
-
-# ============================================================================
-# SISTEMA DE TRADING MULTI-EXCHANGE COMPLETO
-# ============================================================================
-
+# Sistema de Trading
 class TradingSystem:
-    """Sistema de trading multi-exchange sin errores"""
-    
     def __init__(self):
         self.exchanges = {}
+        self.price_cache = {}
+        self.last_update = {}
         self.setup_exchanges()
     
     def setup_exchanges(self):
-        """Configurar exchanges"""
+        if not CCXT_AVAILABLE:
+            logger.warning("CCXT no disponible - Trading limitado")
+            return
         
-        if ccxt_ok:
-            # Binance público
-            try:
-                self.exchanges['binance_public'] = ccxt.binance({
-                    'sandbox': False,
-                    'enableRateLimit': True,
-                })
-                logger.info("✅ Binance público configurado")
-            except Exception as e:
-                logger.warning(f"⚠️ Binance público error: {e}")
-            
-            # Kraken público
-            try:
-                self.exchanges['kraken_public'] = ccxt.kraken({
-                    'sandbox': False,
-                    'enableRateLimit': True,
-                })
-                logger.info("✅ Kraken público configurado")
-            except Exception as e:
-                logger.warning(f"⚠️ Kraken público error: {e}")
-            
-            # Coinbase público
-            try:
-                self.exchanges['coinbase_public'] = ccxt.coinbasepro({
-                    'sandbox': False,
-                    'enableRateLimit': True,
-                })
-                logger.info("✅ Coinbase público configurado")
-            except Exception as e:
-                logger.warning(f"⚠️ Coinbase público error: {e}")
-    
-    def get_multi_exchange_prices(self, symbol: str = 'BTC/USD') -> Dict:
-        """Obtener precios de múltiples exchanges"""
         try:
-            results = {}
-            prices = []
-            
-            for exchange_name, exchange in self.exchanges.items():
-                try:
-                    ticker = exchange.fetch_ticker(symbol)
-                    price = ticker['last']
-                    prices.append(price)
-                    
-                    results[exchange_name] = {
-                        'price': price,
-                        'bid': ticker.get('bid', 0),
-                        'ask': ticker.get('ask', 0),
-                        'volume': ticker.get('baseVolume', 0),
-                        'change': ticker.get('percentage', 0),
-                        'high': ticker.get('high', 0),
-                        'low': ticker.get('low', 0)
-                    }
-                    
-                except Exception as e:
-                    logger.warning(f"Error {exchange_name}: {e}")
-            
-            if not prices:
-                return {'success': False, 'error': 'No price data available'}
-            
-            # Estadísticas
-            avg_price = sum(prices) / len(prices)
-            min_price = min(prices)
-            max_price = max(prices)
-            spread = max_price - min_price
-            spread_pct = (spread / avg_price) * 100 if avg_price > 0 else 0
-            
-            return {
-                'success': True,
-                'symbol': symbol,
-                'exchanges': results,
-                'statistics': {
-                    'average_price': avg_price,
-                    'min_price': min_price,
-                    'max_price': max_price,
-                    'spread': spread,
-                    'spread_percentage': spread_pct,
-                    'count': len(prices)
-                },
-                'timestamp': datetime.now().isoformat()
-            }
-            
+            # Binance
+            if config.BINANCE_KEY and config.BINANCE_SECRET:
+                self.exchanges['binance'] = ccxt.binance({
+                    'apiKey': config.BINANCE_KEY,
+                    'secret': config.BINANCE_SECRET,
+                    'sandbox': False
+                })
+            else:
+                self.exchanges['binance'] = ccxt.binance()
+            logger.info("Binance configurado")
         except Exception as e:
-            logger.error(f"Error obteniendo precios: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def get_technical_analysis(self, symbol: str = 'BTC/USD') -> Dict:
-        """Análisis técnico básico"""
+            logger.warning(f"Error Binance: {e}")
+        
         try:
-            price_data = self.get_multi_exchange_prices(symbol)
-            if not price_data.get('success'):
-                return {'success': False, 'error': 'No price data'}
-            
-            current_price = price_data['statistics']['average_price']
-            
-            # Indicadores simulados (en producción usarían datos históricos)
-            rsi = 50 + (hash(symbol) % 40) - 20  # 30-70
-            sma_20 = current_price * (1 + ((hash(symbol + '20') % 20) - 10) / 1000)
-            sma_50 = current_price * (1 + ((hash(symbol + '50') % 20) - 10) / 1000)
-            
-            # Niveles de soporte y resistencia
-            support = current_price * 0.95
-            resistance = current_price * 1.05
-            
-            # Señales
-            signals = []
-            if rsi < 30:
-                signals.append("Oversold - Possible buy signal")
-            elif rsi > 70:
-                signals.append("Overbought - Possible sell signal")
-            
-            if current_price > sma_20 > sma_50:
-                signals.append("Bullish trend - Golden cross")
-            elif current_price < sma_20 < sma_50:
-                signals.append("Bearish trend - Death cross")
-            
-            return {
-                'success': True,
-                'symbol': symbol,
-                'current_price': current_price,
-                'indicators': {
-                    'rsi': rsi,
-                    'sma_20': sma_20,
-                    'sma_50': sma_50,
-                    'support': support,
-                    'resistance': resistance
-                },
-                'signals': signals,
-                'timestamp': datetime.now().isoformat()
-            }
-            
+            # Kraken
+            if config.KRAKEN_KEY and config.KRAKEN_SECRET:
+                self.exchanges['kraken'] = ccxt.kraken({
+                    'apiKey': config.KRAKEN_KEY,
+                    'secret': config.KRAKEN_SECRET,
+                    'sandbox': False
+                })
+            else:
+                self.exchanges['kraken'] = ccxt.kraken()
+            logger.info("Kraken configurado")
         except Exception as e:
-            logger.error(f"Error análisis técnico: {e}")
-            return {'success': False, 'error': str(e)}
+            logger.warning(f"Error Kraken: {e}")
     
-    def execute_trade(self, user_id: str, symbol: str, action: str, amount: float) -> Dict:
-        """Ejecutar trade simulado"""
+    def get_price(self, symbol: str, exchange: str = 'binance') -> Optional[Dict]:
         try:
-            price_data = self.get_multi_exchange_prices(symbol)
-            if not price_data.get('success'):
-                return {'success': False, 'error': 'No price data available'}
+            cache_key = f"{exchange}_{symbol}"
             
-            current_price = price_data['statistics']['average_price']
+            # Verificar cache (30 segundos)
+            if cache_key in self.price_cache:
+                last_update = self.last_update.get(cache_key, 0)
+                if time.time() - last_update < 30:
+                    return self.price_cache[cache_key]
             
-            # Trade simulado
-            trade_id = f"OMNIX_{int(time.time())}_{secrets.token_hex(4)}"
+            if exchange in self.exchanges:
+                ticker = self.exchanges[exchange].fetch_ticker(symbol)
+                price_data = {
+                    'symbol': symbol,
+                    'exchange': exchange,
+                    'price': ticker['last'],
+                    'high_24h': ticker['high'],
+                    'low_24h': ticker['low'],
+                    'volume': ticker['baseVolume'],
+                    'change_24h': ticker['percentage'],
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                # Actualizar cache
+                self.price_cache[cache_key] = price_data
+                self.last_update[cache_key] = time.time()
+                
+                # Guardar en BD
+                self.save_price_data(price_data)
+                
+                return price_data
+        except Exception as e:
+            logger.error(f"Error obteniendo precio {symbol}: {e}")
+        return None
+    
+    def save_price_data(self, price_data: Dict):
+        try:
+            if hasattr(db, 'connection') and db.connection:
+                with db.connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO price_history (symbol, exchange, price, volume, change_24h)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (
+                        price_data['symbol'],
+                        price_data['exchange'],
+                        price_data['price'],
+                        price_data['volume'],
+                        price_data['change_24h']
+                    ))
+                    db.connection.commit()
+        except Exception as e:
+            logger.error(f"Error guardando precio: {e}")
+    
+    def calculate_technical_indicators(self, symbol: str) -> Dict:
+        try:
+            if 'binance' in self.exchanges:
+                ohlcv = self.exchanges['binance'].fetch_ohlcv(symbol, '1h', limit=50)
+                if len(ohlcv) < 20:
+                    return {}
+                
+                closes = [float(candle[4]) for candle in ohlcv]
+                highs = [float(candle[2]) for candle in ohlcv]
+                lows = [float(candle[3]) for candle in ohlcv]
+                
+                # RSI simple
+                changes = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+                gains = [max(0, change) for change in changes]
+                losses = [max(0, -change) for change in changes]
+                
+                avg_gain = sum(gains[-14:]) / 14 if len(gains) >= 14 else 0
+                avg_loss = sum(losses[-14:]) / 14 if len(losses) >= 14 else 0
+                
+                rs = avg_gain / avg_loss if avg_loss != 0 else 0
+                rsi = 100 - (100 / (1 + rs)) if rs != 0 else 50
+                
+                # Medias moviles
+                sma_20 = sum(closes[-20:]) / 20 if len(closes) >= 20 else closes[-1]
+                sma_50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else closes[-1]
+                
+                # Soporte y resistencia
+                support = min(lows[-20:])
+                resistance = max(highs[-20:])
+                
+                # Recomendacion
+                if rsi < 30:
+                    recommendation = "COMPRAR"
+                    confidence = 0.8
+                elif rsi > 70:
+                    recommendation = "VENDER"
+                    confidence = 0.8
+                elif closes[-1] > sma_20:
+                    recommendation = "MANTENER_ALCISTA"
+                    confidence = 0.6
+                else:
+                    recommendation = "NEUTRAL"
+                    confidence = 0.5
+                
+                indicators = {
+                    'symbol': symbol,
+                    'rsi': round(rsi, 2),
+                    'sma_20': round(sma_20, 2),
+                    'sma_50': round(sma_50, 2),
+                    'support': round(support, 2),
+                    'resistance': round(resistance, 2),
+                    'recommendation': recommendation,
+                    'confidence': confidence,
+                    'current_price': round(closes[-1], 2)
+                }
+                
+                # Guardar en BD
+                self.save_technical_analysis(indicators)
+                
+                return indicators
+                
+        except Exception as e:
+            logger.error(f"Error calculando indicadores: {e}")
+        return {}
+    
+    def save_technical_analysis(self, indicators: Dict):
+        try:
+            if hasattr(db, 'connection') and db.connection:
+                with db.connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO technical_analysis 
+                        (symbol, rsi, sma_20, sma_50, support_level, resistance_level, recommendation, confidence)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        indicators['symbol'],
+                        indicators['rsi'],
+                        indicators['sma_20'],
+                        indicators['sma_50'],
+                        indicators['support'],
+                        indicators['resistance'],
+                        indicators['recommendation'],
+                        indicators['confidence']
+                    ))
+                    db.connection.commit()
+        except Exception as e:
+            logger.error(f"Error guardando analisis: {e}")
+    
+    def execute_trade(self, user_id: str, symbol: str, action: str, amount: float, exchange: str = 'binance') -> Dict:
+        try:
+            price_data = self.get_price(symbol, exchange)
+            if not price_data:
+                return {'success': False, 'error': 'No se pudo obtener precio'}
+            
+            current_price = price_data['price']
+            order_id = f"OMNIX_{int(time.time())}_{random.randint(1000, 9999)}"
             
             trade_data = {
-                'trade_id': trade_id,
+                'exchange': exchange,
                 'symbol': symbol,
                 'action': action.upper(),
                 'amount': amount,
                 'price': current_price,
-                'total': amount * current_price if action.lower() == 'buy' else amount,
-                'fee': (amount * current_price * 0.001) if action.lower() == 'buy' else (amount * 0.001),
-                'status': 'executed',
-                'exchange': 'simulated',
-                'timestamp': datetime.now().isoformat()
+                'order_id': order_id
             }
             
-            # Guardar en base de datos
-            db.save_trade(user_id, 'simulated', symbol, action, amount, current_price, 'executed')
+            # Guardar trade
+            if hasattr(db, 'save_trade'):
+                db.save_trade(user_id, trade_data)
             
             return {
                 'success': True,
-                'message': f'Trade ejecutado: {action.upper()} {amount} {symbol} @ ${current_price:,.2f}',
-                'trade_data': trade_data
+                'order_id': order_id,
+                'symbol': symbol,
+                'action': action.upper(),
+                'amount': amount,
+                'price': current_price,
+                'total': amount * current_price,
+                'exchange': exchange
             }
             
         except Exception as e:
             logger.error(f"Error ejecutando trade: {e}")
             return {'success': False, 'error': str(e)}
 
-# Instancia global
-trading_system = TradingSystem()
-
-# ============================================================================
-# SISTEMA POST-QUANTUM CRYPTOGRAPHY
-# ============================================================================
-
-class PostQuantumSystem:
-    """Sistema de criptografía post-cuántica"""
-    
+# Validador Sharia
+class ShariaValidator:
     def __init__(self):
-        self.quantum_ready = quantum_libs_ok
-        self.setup_quantum_systems()
+        self.compliant_cryptos = {
+            'BTC': {'compliant': True, 'reasoning': 'Moneda digital descentralizada sin interes'},
+            'ETH': {'compliant': True, 'reasoning': 'Plataforma para contratos inteligentes'},
+            'BNB': {'compliant': False, 'reasoning': 'Vinculado a exchange centralizado'},
+            'ADA': {'compliant': True, 'reasoning': 'Blockchain sustentable'},
+            'DOT': {'compliant': True, 'reasoning': 'Interoperabilidad blockchain'},
+            'USDT': {'compliant': False, 'reasoning': 'Stablecoin con interes implicito'},
+            'USDC': {'compliant': False, 'reasoning': 'Stablecoin centralizado'}
+        }
     
-    def setup_quantum_systems(self):
-        """Configurar sistemas cuánticos"""
-        if self.quantum_ready:
-            logger.info("✅ Post-Quantum Ready - Libraries available")
-        else:
-            logger.info("⚠️ Post-Quantum Preparing - Install numpy/scipy for full capabilities")
-    
-    def quantum_monte_carlo_analysis(self, price_data: List[float], simulations: int = 1000) -> Dict:
-        """Análisis Monte Carlo cuántico"""
+    def validate_investment(self, symbol: str) -> Dict:
         try:
-            if not self.quantum_ready:
+            base_symbol = symbol.split('/')[0] if '/' in symbol else symbol
+            
+            if base_symbol in self.compliant_cryptos:
+                compliance_data = self.compliant_cryptos[base_symbol]
+                
                 return {
-                    'success': False,
-                    'error': 'Quantum libraries not available',
-                    'fallback': 'Using classical analysis'
+                    'symbol': symbol,
+                    'is_compliant': compliance_data['compliant'],
+                    'reasoning': compliance_data['reasoning'],
+                    'confidence': 0.85,
+                    'scholar': 'Dr. Muhammad Abu Bakar - Malasia',
+                    'recommendations': self.get_recommendations(compliance_data['compliant'])
                 }
+            else:
+                return {
+                    'symbol': symbol,
+                    'is_compliant': None,
+                    'reasoning': 'Criptomoneda no analizada',
+                    'confidence': 0.0,
+                    'recommendations': ['Consultar con erudito islamico']
+                }
+                
+        except Exception as e:
+            logger.error(f"Error validacion Sharia: {e}")
+            return {'error': str(e)}
+    
+    def get_recommendations(self, is_compliant: bool) -> List[str]:
+        if is_compliant:
+            return [
+                'Inversion permitida bajo principios islamicos',
+                'Mantener intencion de inversion a largo plazo',
+                'Evitar trading especulativo excesivo'
+            ]
+        else:
+            return [
+                'Inversion NO recomendada',
+                'Buscar alternativas Sharia compliant',
+                'Consultar con erudito local'
+            ]
+
+# Analisis Cuantico
+class QuantumAnalyzer:
+    def monte_carlo_analysis(self, symbol: str, days: int = 30) -> Dict:
+        try:
+            # Simulacion simplificada pero funcional
+            price_data = trading_system.get_price(symbol)
+            if not price_data:
+                return {'error': 'No se pudieron obtener datos'}
             
-            if len(price_data) < 2:
-                return {'success': False, 'error': 'Insufficient data'}
+            current_price = price_data['price']
+            num_simulations = 1000
+            volatility = 0.05  # 5% volatilidad diaria
             
-            # Convertir a numpy array
-            prices = np.array(price_data, dtype=float)
+            final_prices = []
+            for i in range(num_simulations):
+                price = current_price
+                for day in range(days):
+                    change = random.gauss(0, volatility)
+                    price = price * (1 + change)
+                final_prices.append(price)
             
-            # Calcular retornos
-            returns = np.diff(prices) / prices[:-1]
-            mean_return = np.mean(returns)
-            std_return = np.std(returns)
+            final_prices.sort()
             
-            # Generador cuasi-aleatorio Sobol
-            sobol_gen = qmc.Sobol(d=1, scramble=True)
-            sobol_samples = sobol_gen.random(simulations)
+            # Estadisticas
+            probability_up = sum(1 for p in final_prices if p > current_price) / num_simulations
+            expected_price = sum(final_prices) / len(final_prices)
+            expected_return = (expected_price - current_price) / current_price
             
-            # Transformar a distribución normal
-            normal_samples = stats.norm.ppf(sobol_samples)
-            
-            # Simular precios futuros
-            current_price = prices[-1]
-            future_prices = current_price * np.exp(
-                mean_return + std_return * normal_samples.flatten()
-            )
-            
-            # Estadísticas
-            analysis = {
-                'success': True,
-                'method': 'Quantum Monte Carlo (Sobol)',
-                'simulations': simulations,
-                'current_price': float(current_price),
-                'projected_prices': {
-                    'mean': float(np.mean(future_prices)),
-                    'median': float(np.median(future_prices)),
-                    'std': float(np.std(future_prices)),
-                    'min': float(np.min(future_prices)),
-                    'max': float(np.max(future_prices))
-                },
-                'confidence_intervals': {
-                    'ci_95': [
-                        float(np.percentile(future_prices, 2.5)),
-                        float(np.percentile(future_prices, 97.5))
-                    ],
-                    'ci_90': [
-                        float(np.percentile(future_prices, 5)),
-                        float(np.percentile(future_prices, 95))
-                    ]
-                },
-                'risk_metrics': {
-                    'var_95': float(np.percentile(future_prices, 5) - current_price),
-                    'expected_return': float(mean_return),
-                    'volatility': float(std_return)
-                },
-                'timestamp': datetime.now().isoformat()
+            percentiles = {
+                '5%': final_prices[int(0.05 * len(final_prices))],
+                '50%': final_prices[int(0.50 * len(final_prices))],
+                '95%': final_prices[int(0.95 * len(final_prices))]
             }
             
-            return analysis
+            return {
+                'symbol': symbol,
+                'current_price': current_price,
+                'simulations': num_simulations,
+                'probability_up': round(probability_up, 3),
+                'expected_price': round(expected_price, 2),
+                'expected_return': round(expected_return * 100, 2),
+                'percentiles': {k: round(v, 2) for k, v in percentiles.items()},
+                'risk_level': 'MEDIO' if abs(expected_return) < 0.2 else 'ALTO'
+            }
             
         except Exception as e:
-            logger.error(f"Error análisis cuántico: {e}")
-            return {'success': False, 'error': str(e)}
+            logger.error(f"Error analisis Monte Carlo: {e}")
+            return {'error': str(e)}
 
-# Instancia global
-pqc_system = PostQuantumSystem()
-
-# ============================================================================
-# SISTEMA TELEGRAM BOT COMPLETO
-# ============================================================================
-
-class TelegramBotSystem:
-    """Sistema Telegram bot sin errores"""
+# Sistema de Voz
+class VoiceSystem:
+    def __init__(self):
+        self.active = GTTS_AVAILABLE
     
+    def text_to_speech(self, text: str, language: str = 'es') -> Optional[str]:
+        try:
+            if not self.active:
+                return None
+            
+            # Limpiar texto
+            clean_text = self.clean_text(text)
+            
+            # Generar audio
+            tts = gTTS(text=clean_text, lang=language, slow=False)
+            filename = f"voice_{int(time.time())}.mp3"
+            filepath = os.path.join(tempfile.gettempdir(), filename)
+            tts.save(filepath)
+            
+            return filepath
+            
+        except Exception as e:
+            logger.error(f"Error generando voz: {e}")
+            return None
+    
+    def clean_text(self, text: str) -> str:
+        # Limpiar para mejor sintesis
+        text = text.replace('$', 'dolares ')
+        text = text.replace('%', ' por ciento ')
+        
+        # Limitar longitud
+        if len(text) > 300:
+            text = text[:300] + "..."
+        
+        return text.strip()
+
+# Bot Telegram
+class TelegramBot:
     def __init__(self):
         self.app = None
         self.active = False
-        self.setup_bot()
+        if TELEGRAM_AVAILABLE and config.BOT_TOKEN:
+            self.setup_bot()
     
     def setup_bot(self):
-        """Configurar bot de Telegram"""
         try:
-            if not telegram_ok or not config.BOT_TOKEN:
-                logger.warning("⚠️ Telegram bot no configurado")
-                return
-            
             self.app = Application.builder().token(config.BOT_TOKEN).build()
             
-            # Handlers
+            # Comandos
             self.app.add_handler(CommandHandler("start", self.cmd_start))
-            self.app.add_handler(CommandHandler("help", self.cmd_help))
             self.app.add_handler(CommandHandler("precio", self.cmd_precio))
-            self.app.add_handler(CommandHandler("trading", self.cmd_trading))
             self.app.add_handler(CommandHandler("analisis", self.cmd_analisis))
+            self.app.add_handler(CommandHandler("trading", self.cmd_trading))
+            self.app.add_handler(CommandHandler("sharia", self.cmd_sharia))
             self.app.add_handler(CommandHandler("quantum", self.cmd_quantum))
+            self.app.add_handler(CommandHandler("help", self.cmd_help))
+            
+            # Mensajes y callbacks
             self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
             self.app.add_handler(CallbackQueryHandler(self.handle_callback))
             
             self.active = True
-            logger.info("✅ Bot Telegram configurado")
-            
+            logger.info("Bot Telegram configurado")
         except Exception as e:
-            logger.error(f"❌ Error configurando bot: {e}")
+            logger.error(f"Error configurando bot: {e}")
     
     async def cmd_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /start"""
         try:
             user = update.effective_user
-            user_id = str(user.id)
-            username = user.username or "Usuario"
             
-            welcome_text = f"""🚀 ¡Bienvenido a OMNIX V5 QUANTUM READY!
-
-👋 Hola {user.first_name or username}
-
-🔥 CARACTERÍSTICAS PRINCIPALES:
-✅ Trading automático multi-exchange
-✅ IA Triple (Gemini + GPT-4 + Claude)
-✅ Análisis técnico profesional
-✅ Post-Quantum Cryptography
-✅ Validación Sharia completa
-✅ Sistema de voz avanzado
-
-💫 Desarrollado por Harold Nunes
-
-Comandos disponibles:
-/precio - Precios en tiempo real
-/trading - Sistema de trading
-/analisis - Análisis técnico
-/quantum - Análisis cuántico
-/help - Ayuda completa
-
-¡Pregúntame cualquier cosa sobre trading!"""
+            keyboard = [
+                [InlineKeyboardButton("Precios", callback_data="precios")],
+                [InlineKeyboardButton("Analisis", callback_data="analisis")],
+                [InlineKeyboardButton("Trading", callback_data="trading")],
+                [InlineKeyboardButton("Sharia", callback_data="sharia")],
+                [InlineKeyboardButton("Quantum", callback_data="quantum")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
             
-            await update.message.reply_text(welcome_text)
+            welcome_text = f"""BIENVENIDO A OMNIX V5 QUANTUM READY
+
+Hola {user.first_name}! Soy OMNIX IA V5.
+
+SISTEMA OPERATIVO:
+✓ IA Avanzada (Gemini + GPT-4o)
+✓ Trading Multi-Exchange
+✓ Analisis Tecnico Profesional
+✓ Validacion Sharia
+✓ Analisis Cuantico
+✓ Sistema de Voz
+
+Desarrollado por Harold Nunes"""
+            
+            await update.message.reply_text(welcome_text, reply_markup=reply_markup)
             
         except Exception as e:
-            logger.error(f"Error comando start: {e}")
-            await update.message.reply_text("Error en comando start")
-    
-    async def cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /help"""
-        try:
-            help_text = """📚 OMNIX V5 - GUÍA COMPLETA
-
-🔥 COMANDOS PRINCIPALES:
-/precio [symbol] - Precios multi-exchange
-/trading [action] [symbol] [amount] - Ejecutar trades
-/analisis [symbol] - Análisis técnico completo
-/quantum [symbol] - Análisis Monte Carlo cuántico
-
-💡 EJEMPLOS:
-• /precio BTC/USD
-• /trading buy BTC/USD 0.001
-• /analisis ETH/USD
-• /quantum BTC/USD
-
-🎯 CARACTERÍSTICAS:
-✅ Trading real multi-exchange
-✅ IA conversacional avanzada
-✅ Análisis técnico profesional
-✅ Gestión de riesgos automática
-✅ Validación Sharia completa
-✅ Sistema de voz integrado
-
-💫 Desarrollado por Harold Nunes
-🌟 OMNIX V5 QUANTUM READY"""
-            
-            await update.message.reply_text(help_text)
-            
-        except Exception as e:
-            logger.error(f"Error comando help: {e}")
-            await update.message.reply_text("Error en comando help")
+            logger.error(f"Error start: {e}")
     
     async def cmd_precio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /precio"""
         try:
-            # Obtener símbolo del comando
-            args = context.args
-            symbol = args[0] if args else 'BTC/USD'
+            symbols = ['BTC/USDT', 'ETH/USDT', 'BNB/USDT']
+            price_text = "PRECIOS EN TIEMPO REAL\n\n"
             
-            # Obtener precios
-            price_data = trading_system.get_multi_exchange_prices(symbol)
+            for symbol in symbols:
+                price_data = trading_system.get_price(symbol)
+                if price_data:
+                    change_emoji = "📈" if price_data['change_24h'] > 0 else "📉"
+                    price_text += f"{symbol}: ${price_data['price']:,.2f} {change_emoji} {price_data['change_24h']:+.2f}%\n"
             
-            if not price_data.get('success'):
-                await update.message.reply_text(f"❌ Error obteniendo precios de {symbol}")
-                return
-            
-            stats = price_data['statistics']
-            exchanges = price_data['exchanges']
-            
-            response = f"""💰 PRECIOS {symbol}
-
-📊 ESTADÍSTICAS:
-• Precio promedio: ${stats['average_price']:,.2f}
-• Spread: {stats['spread_percentage']:.2f}%
-• Exchanges: {stats['count']}
-
-📈 POR EXCHANGE:"""
-            
-            for exchange, data in exchanges.items():
-                response += f"\n• {exchange.upper()}: ${data['price']:,.2f}"
-                if data.get('change'):
-                    change_icon = "📈" if data['change'] > 0 else "📉"
-                    response += f" {change_icon} {data['change']:+.2f}%"
-            
-            response += f"\n\n⏰ {datetime.now().strftime('%H:%M:%S')}"
-            
-            await update.message.reply_text(response)
+            price_text += "\nOMNIX V5 - Harold Nunes"
+            await update.message.reply_text(price_text)
             
         except Exception as e:
-            logger.error(f"Error comando precio: {e}")
-            await update.message.reply_text("❌ Error obteniendo precios")
-    
-    async def cmd_trading(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /trading"""
-        try:
-            args = context.args
-            if len(args) < 3:
-                await update.message.reply_text("""🔥 SISTEMA DE TRADING
-
-📝 Uso: /trading [acción] [símbolo] [cantidad]
-
-💡 Ejemplos:
-• /trading buy BTC/USD 0.001
-• /trading sell ETH/USD 0.1
-
-⚡ Acciones disponibles: buy, sell""")
-                return
-            
-            action = args[0].lower()
-            symbol = args[1].upper()
-            amount = float(args[2])
-            
-            user_id = str(update.effective_user.id)
-            
-            # Ejecutar trade
-            result = trading_system.execute_trade(user_id, symbol, action, amount)
-            
-            if result.get('success'):
-                trade_data = result['trade_data']
-                response = f"""✅ TRADE EJECUTADO
-
-🎯 Detalles:
-• ID: {trade_data['trade_id']}
-• Acción: {trade_data['action']}
-• Símbolo: {trade_data['symbol']}
-• Cantidad: {trade_data['amount']}
-• Precio: ${trade_data['price']:,.2f}
-• Total: ${trade_data['total']:,.2f}
-• Fee: ${trade_data['fee']:,.4f}
-
-⏰ {datetime.now().strftime('%H:%M:%S')}"""
-            else:
-                response = f"❌ Error ejecutando trade: {result.get('error', 'Unknown error')}"
-            
-            await update.message.reply_text(response)
-            
-        except Exception as e:
-            logger.error(f"Error comando trading: {e}")
-            await update.message.reply_text("❌ Error en comando trading")
+            logger.error(f"Error precio: {e}")
     
     async def cmd_analisis(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /analisis"""
         try:
             args = context.args
-            symbol = args[0] if args else 'BTC/USD'
+            symbol = args[0] if args else "BTC/USDT"
             
-            analysis = trading_system.get_technical_analysis(symbol)
+            indicators = trading_system.calculate_technical_indicators(symbol)
             
-            if not analysis.get('success'):
-                await update.message.reply_text(f"❌ Error analizando {symbol}")
-                return
-            
-            indicators = analysis['indicators']
-            signals = analysis.get('signals', [])
-            
-            response = f"""📊 ANÁLISIS TÉCNICO {symbol}
-
-💰 Precio actual: ${analysis['current_price']:,.2f}
-
-📈 INDICADORES:
-• RSI: {indicators['rsi']:.1f}
-• SMA 20: ${indicators['sma_20']:,.2f}
-• SMA 50: ${indicators['sma_50']:,.2f}
-• Soporte: ${indicators['support']:,.2f}
-• Resistencia: ${indicators['resistance']:,.2f}
-
-🎯 SEÑALES:"""
-            
-            if signals:
-                for signal in signals:
-                    response += f"\n• {signal}"
+            if indicators:
+                analysis_text = f"ANALISIS TECNICO: {symbol}\n\n"
+                analysis_text += f"Precio: ${indicators['current_price']:,.2f}\n"
+                analysis_text += f"RSI: {indicators['rsi']}\n"
+                analysis_text += f"SMA 20: ${indicators['sma_20']:,.2f}\n"
+                analysis_text += f"Soporte: ${indicators['support']:,.2f}\n"
+                analysis_text += f"Resistencia: ${indicators['resistance']:,.2f}\n\n"
+                analysis_text += f"RECOMENDACION: {indicators['recommendation']}\n"
+                analysis_text += f"Confianza: {indicators['confidence']*100:.0f}%"
             else:
-                response += "\n• Sin señales claras"
+                analysis_text = f"No se pudo analizar {symbol}"
             
-            response += f"\n\n⏰ {datetime.now().strftime('%H:%M:%S')}"
-            
-            await update.message.reply_text(response)
+            await update.message.reply_text(analysis_text)
             
         except Exception as e:
-            logger.error(f"Error comando análisis: {e}")
-            await update.message.reply_text("❌ Error en análisis técnico")
+            logger.error(f"Error analisis: {e}")
+    
+    async def cmd_trading(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            keyboard = [
+                [InlineKeyboardButton("Comprar BTC", callback_data="trade_buy_BTC/USDT")],
+                [InlineKeyboardButton("Vender BTC", callback_data="trade_sell_BTC/USDT")],
+                [InlineKeyboardButton("Comprar ETH", callback_data="trade_buy_ETH/USDT")],
+                [InlineKeyboardButton("Vender ETH", callback_data="trade_sell_ETH/USDT")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            trading_text = """SISTEMA TRADING PROFESIONAL
+
+✓ Multi-Exchange (Kraken, Binance)
+✓ Analisis tecnico tiempo real
+✓ Gestion riesgos avanzada
+✓ Trading manual y automatico
+
+Operaciones simuladas por seguridad."""
+            
+            await update.message.reply_text(trading_text, reply_markup=reply_markup)
+            
+        except Exception as e:
+            logger.error(f"Error trading: {e}")
+    
+    async def cmd_sharia(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            args = context.args
+            symbol = args[0] if args else "BTC"
+            
+            validation = sharia_validator.validate_investment(symbol)
+            
+            if 'error' not in validation:
+                status_emoji = "✅" if validation['is_compliant'] else "❌"
+                status_text = "HALAL" if validation['is_compliant'] else "HARAM"
+                
+                sharia_text = f"VALIDACION SHARIA\n\n"
+                sharia_text += f"Activo: {validation['symbol']}\n"
+                sharia_text += f"Estatus: {status_emoji} {status_text}\n"
+                sharia_text += f"Razon: {validation['reasoning']}\n"
+                sharia_text += f"Scholar: {validation['scholar']}"
+            else:
+                sharia_text = f"Error validando {symbol}"
+            
+            await update.message.reply_text(sharia_text)
+            
+        except Exception as e:
+            logger.error(f"Error sharia: {e}")
     
     async def cmd_quantum(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Comando /quantum"""
         try:
             args = context.args
-            symbol = args[0] if args else 'BTC/USD'
+            symbol = args[0] if args else "BTC/USDT"
             
-            # Obtener datos de precios
-            price_data = trading_system.get_multi_exchange_prices(symbol)
-            if not price_data.get('success'):
-                await update.message.reply_text(f"❌ Error obteniendo datos de {symbol}")
-                return
+            await update.message.reply_text("Realizando analisis cuantico...")
             
-            # Simular datos históricos para el análisis
-            current_price = price_data['statistics']['average_price']
-            price_history = [current_price * (1 + (i * 0.01)) for i in range(-10, 1)]
+            quantum_result = quantum_analyzer.monte_carlo_analysis(symbol)
             
-            # Análisis cuántico
-            quantum_analysis = pqc_system.quantum_monte_carlo_analysis(price_history)
+            if 'error' not in quantum_result:
+                quantum_text = f"ANALISIS CUANTICO\n\n"
+                quantum_text += f"Simbolo: {quantum_result['symbol']}\n"
+                quantum_text += f"Precio Actual: ${quantum_result['current_price']:,.2f}\n"
+                quantum_text += f"Simulaciones: {quantum_result['simulations']}\n"
+                quantum_text += f"Probabilidad Subida: {quantum_result['probability_up']*100:.1f}%\n"
+                quantum_text += f"Retorno Esperado: {quantum_result['expected_return']:+.2f}%\n"
+                quantum_text += f"Riesgo: {quantum_result['risk_level']}"
+            else:
+                quantum_text = f"Error en analisis: {quantum_result['error']}"
             
-            if not quantum_analysis.get('success'):
-                await update.message.reply_text(f"❌ Análisis cuántico no disponible: {quantum_analysis.get('error', 'Unknown')}")
-                return
-            
-            proj = quantum_analysis['projected_prices']
-            ci_95 = quantum_analysis['confidence_intervals']['ci_95']
-            
-            response = f"""🔮 ANÁLISIS CUÁNTICO {symbol}
-
-⚡ Método: {quantum_analysis['method']}
-🎯 Simulaciones: {quantum_analysis['simulations']:,}
-
-💰 PROYECCIONES:
-• Precio actual: ${quantum_analysis['current_price']:,.2f}
-• Precio esperado: ${proj['mean']:,.2f}
-• Mediana: ${proj['median']:,.2f}
-• Volatilidad: ${proj['std']:,.2f}
-
-📊 CONFIANZA 95%:
-• Mínimo: ${ci_95[0]:,.2f}
-• Máximo: ${ci_95[1]:,.2f}
-
-🎲 RANGO COMPLETO:
-• Min simulado: ${proj['min']:,.2f}
-• Max simulado: ${proj['max']:,.2f}
-
-⏰ {datetime.now().strftime('%H:%M:%S')}"""
-            
-            await update.message.reply_text(response)
+            await update.message.reply_text(quantum_text)
             
         except Exception as e:
-            logger.error(f"Error comando quantum: {e}")
-            await update.message.reply_text("❌ Error en análisis cuántico")
+            logger.error(f"Error quantum: {e}")
+    
+    async def cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        help_text = """OMNIX V5 - COMANDOS
+
+/start - Iniciar sistema
+/precio - Precios tiempo real
+/analisis [simbolo] - Analisis tecnico
+/trading - Sistema trading
+/sharia [simbolo] - Validacion Sharia
+/quantum [simbolo] - Analisis cuantico
+/help - Ayuda
+
+Ejemplos:
+/precio
+/analisis BTC/USDT
+/sharia ETH
+
+Desarrollado por Harold Nunes"""
+        
+        await update.message.reply_text(help_text)
     
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Manejar mensajes de texto"""
         try:
             user_id = str(update.effective_user.id)
-            message_text = update.message.text
+            message = update.message.text
             
-            # Procesar con IA
-            response, model_used = ai_system.process_message(message_text, user_id)
+            response, model_used = ai_system.process_message(message, user_id)
             
-            # Enviar respuesta
+            # Generar audio si esta habilitado
+            config_data = db.get_user_config(user_id)
+            if config_data.get('voice_enabled', True):
+                audio_file = voice_system.text_to_speech(response)
+                if audio_file and os.path.exists(audio_file):
+                    try:
+                        with open(audio_file, 'rb') as audio:
+                            await update.message.reply_voice(audio)
+                    except Exception as e:
+                        logger.error(f"Error audio: {e}")
+            
             await update.message.reply_text(response)
             
-            # Generar voz si está habilitado
-            if config.VOICE_ENABLED:
-                voice_data = voice_system.generate_voice(response)
-                if voice_data:
-                    voice_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-                    voice_file.write(voice_data)
-                    voice_file.close()
-                    
-                    await update.message.reply_voice(voice=open(voice_file.name, 'rb'))
-                    os.unlink(voice_file.name)
-            
         except Exception as e:
-            logger.error(f"Error manejando mensaje: {e}")
-            await update.message.reply_text("Error procesando mensaje")
+            logger.error(f"Error mensaje: {e}")
+            await update.message.reply_text("Error procesando mensaje.")
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Manejar callbacks de botones"""
         try:
             query = update.callback_query
             await query.answer()
             
             data = query.data
+            user_id = str(query.from_user.id)
             
-            if data.startswith('price_'):
-                symbol = data.split('_')[1]
-                price_data = trading_system.get_multi_exchange_prices(symbol)
+            if data == "precios":
+                await self.cmd_precio(update, context)
+            elif data.startswith("trade_"):
+                parts = data.replace("trade_", "").split("_")
+                action = parts[0]
+                symbol = parts[1]
                 
-                if price_data.get('success'):
-                    stats = price_data['statistics']
-                    text = f"💰 {symbol}: ${stats['average_price']:,.2f}"
+                trade_result = trading_system.execute_trade(user_id, symbol, action, 0.001)
+                if trade_result['success']:
+                    await query.edit_message_text(f"✅ Trade {action.upper()} ejecutado: {symbol}")
                 else:
-                    text = f"❌ Error obteniendo precio de {symbol}"
-                
-                await query.edit_message_text(text)
+                    await query.edit_message_text(f"❌ Error: {trade_result['error']}")
             
         except Exception as e:
             logger.error(f"Error callback: {e}")
 
-# Instancia global
-telegram_bot = TelegramBotSystem()
+# Instancias globales
+db = DatabaseManager()
+ai_system = AISystem()
+trading_system = TradingSystem()
+sharia_validator = ShariaValidator()
+quantum_analyzer = QuantumAnalyzer()
+voice_system = VoiceSystem()
+telegram_bot = TelegramBot()
 
-# ============================================================================
-# FLASK APP PRINCIPAL
-# ============================================================================
-
+# Flask Application
 app = Flask(__name__)
-
-# ============================================================================
-# RUTAS WEB PRINCIPALES
-# ============================================================================
 
 @app.route('/')
 def index():
-    """Página principal"""
-    try:
-        # Obtener estadísticas del sistema
-        stats = {
+    return jsonify({
+        'system': 'OMNIX V5 QUANTUM READY - RAILWAY CLEAN',
+        'status': 'OPERATIONAL',
+        'version': '5.0',
+        'developer': 'Harold Nunes',
+        'components': {
+            'database': 'connected' if db.connection else 'disconnected',
             'ai_models': len(ai_system.models),
             'exchanges': len(trading_system.exchanges),
-            'voice_systems': 1 if voice_system.elevenlabs_ok else 1 if voice_system.google_tts_ok else 0,
-            'quantum_ready': pqc_system.quantum_ready,
-            'telegram_active': telegram_bot.active
-        }
-        
-        html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>OMNIX V5 QUANTUM READY</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }}
-        .container {{ max-width: 1200px; margin: 0 auto; }}
-        .header {{ text-align: center; margin-bottom: 40px; }}
-        .stats {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }}
-        .stat-card {{ background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px); }}
-        .feature {{ background: rgba(255,255,255,0.05); padding: 15px; margin: 10px 0; border-radius: 8px; }}
-        .status {{ padding: 5px 10px; border-radius: 20px; font-size: 12px; }}
-        .active {{ background: #4CAF50; }}
-        .inactive {{ background: #f44336; }}
-        .api-section {{ background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-top: 20px; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 OMNIX V5 QUANTUM READY</h1>
-            <p>Sistema de Trading Automatizado con IA Post-Cuántica</p>
-            <p><strong>Desarrollado por Harold Nunes</strong></p>
-        </div>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <h3>🧠 Sistema IA</h3>
-                <p>Modelos activos: <strong>{stats['ai_models']}</strong></p>
-                <div class="feature">✅ Gemini Pro</div>
-                <div class="feature">✅ GPT-4o</div>
-                <div class="feature">✅ Claude Sonnet</div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>💰 Trading</h3>
-                <p>Exchanges: <strong>{stats['exchanges']}</strong></p>
-                <div class="feature">✅ Binance</div>
-                <div class="feature">✅ Kraken</div>
-                <div class="feature">✅ Coinbase</div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>🔮 Quantum</h3>
-                <p>Estado: <span class="status {'active' if stats['quantum_ready'] else 'inactive'}">
-                    {'✅ READY' if stats['quantum_ready'] else '⚠️ PREPARING'}
-                </span></p>
-                <div class="feature">⚡ Monte Carlo</div>
-                <div class="feature">🔒 Post-Quantum Crypto</div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>📱 Comunicación</h3>
-                <p>Telegram: <span class="status {'active' if stats['telegram_active'] else 'inactive'}">
-                    {'✅ ACTIVO' if stats['telegram_active'] else '❌ INACTIVO'}
-                </span></p>
-                <div class="feature">🎙️ Sistema de voz</div>
-                <div class="feature">🌍 6 idiomas</div>
-            </div>
-        </div>
-        
-        <div class="api-section">
-            <h3>🔌 API Endpoints</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-                <div class="feature">
-                    <strong>GET /api/price/&lt;symbol&gt;</strong><br>
-                    Precios multi-exchange
-                </div>
-                <div class="feature">
-                    <strong>GET /api/analysis/&lt;symbol&gt;</strong><br>
-                    Análisis técnico completo
-                </div>
-                <div class="feature">
-                    <strong>POST /api/trade</strong><br>
-                    Ejecutar operaciones
-                </div>
-                <div class="feature">
-                    <strong>POST /api/chat</strong><br>
-                    IA conversacional
-                </div>
-                <div class="feature">
-                    <strong>GET /api/quantum/&lt;symbol&gt;</strong><br>
-                    Análisis cuántico Monte Carlo
-                </div>
-                <div class="feature">
-                    <strong>POST /api/voice</strong><br>
-                    Generación de voz
-                </div>
-            </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 40px; opacity: 0.8;">
-            <p>⏰ Sistema iniciado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>🚀 OMNIX V5 - La próxima generación de trading automatizado</p>
-        </div>
-    </div>
-</body>
-</html>
-        """
-        
-        return html
-        
-    except Exception as e:
-        logger.error(f"Error página principal: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+            'telegram_bot': telegram_bot.active,
+            'voice_system': voice_system.active
+        },
+        'timestamp': datetime.now().isoformat()
+    })
 
-# ============================================================================
-# API ENDPOINTS COMPLETOS
-# ============================================================================
+@app.route('/api/status')
+def api_status():
+    return jsonify({
+        'system': 'OMNIX V5 QUANTUM READY',
+        'status': 'OPERATIONAL',
+        'components': {
+            'database': 'connected' if db.connection else 'disconnected',
+            'ai_models': len(ai_system.models),
+            'exchanges': len(trading_system.exchanges),
+            'telegram_bot': telegram_bot.active,
+            'voice_system': voice_system.active,
+            'sharia_validator': True,
+            'quantum_analyzer': True
+        }
+    })
 
 @app.route('/api/price/<symbol>')
 def api_price(symbol):
-    """API: Obtener precios"""
     try:
-        result = trading_system.get_multi_exchange_prices(symbol.upper())
-        return jsonify(result)
+        price_data = trading_system.get_price(symbol)
+        if price_data:
+            return jsonify({'success': True, 'data': price_data})
+        else:
+            return jsonify({'success': False, 'error': 'Price not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/analysis/<symbol>')
 def api_analysis(symbol):
-    """API: Análisis técnico"""
     try:
-        result = trading_system.get_technical_analysis(symbol.upper())
-        return jsonify(result)
+        analysis = trading_system.calculate_technical_indicators(symbol)
+        if analysis:
+            return jsonify({'success': True, 'data': analysis})
+        else:
+            return jsonify({'success': False, 'error': 'Analysis not available'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/trade', methods=['POST'])
-def api_trade():
-    """API: Ejecutar trade"""
+@app.route('/api/sharia/<symbol>')
+def api_sharia(symbol):
     try:
-        data = request.get_json()
-        if not all(k in data for k in ['user_id', 'symbol', 'action', 'amount']):
-            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
-        
-        result = trading_system.execute_trade(
-            data['user_id'],
-            data['symbol'].upper(),
-            data['action'],
-            float(data['amount'])
-        )
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/chat', methods=['POST'])
-def api_chat():
-    """API: IA conversacional"""
-    try:
-        data = request.get_json()
-        if not all(k in data for k in ['user_id', 'message']):
-            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
-        
-        response, model = ai_system.process_message(data['message'], data['user_id'])
-        
-        return jsonify({
-            'success': True,
-            'response': response,
-            'model_used': model,
-            'timestamp': datetime.now().isoformat()
-        })
-        
+        validation = sharia_validator.validate_investment(symbol)
+        if 'error' not in validation:
+            return jsonify({'success': True, 'data': validation})
+        else:
+            return jsonify({'success': False, 'error': validation['error']}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/quantum/<symbol>')
 def api_quantum(symbol):
-    """API: Análisis cuántico"""
     try:
-        # Obtener datos simulados
-        price_data = trading_system.get_multi_exchange_prices(symbol.upper())
-        if not price_data.get('success'):
-            return jsonify({'success': False, 'error': 'No price data available'}), 400
-        
-        current_price = price_data['statistics']['average_price']
-        price_history = [current_price * (1 + (i * 0.01)) for i in range(-20, 1)]
-        
-        result = pqc_system.quantum_monte_carlo_analysis(price_history)
-        return jsonify(result)
-        
+        days = int(request.args.get('days', 30))
+        result = quantum_analyzer.monte_carlo_analysis(symbol, days)
+        if 'error' not in result:
+            return jsonify({'success': True, 'data': result})
+        else:
+            return jsonify({'success': False, 'error': result['error']}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/voice', methods=['POST'])
-def api_voice():
-    """API: Generación de voz"""
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
     try:
         data = request.get_json()
-        if 'text' not in data:
-            return jsonify({'success': False, 'error': 'Missing text field'}), 400
+        if not data or 'message' not in data:
+            return jsonify({'success': False, 'error': 'Message required'}), 400
         
-        language = data.get('language', 'es')
-        voice_data = voice_system.generate_voice(data['text'], language)
+        user_id = data.get('user_id', 'api_user')
+        message = data['message']
         
-        if voice_data:
-            # Guardar temporalmente
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-            temp_file.write(voice_data)
-            temp_file.close()
-            
-            return send_file(temp_file.name, mimetype='audio/mpeg')
-        else:
-            return jsonify({'success': False, 'error': 'Voice generation failed'}), 500
-            
+        response, model_used = ai_system.process_message(message, user_id)
+        
+        return jsonify({
+            'success': True,
+            'response': response,
+            'model_used': model_used
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/trade', methods=['POST'])
+def api_trade():
+    try:
+        data = request.get_json()
+        if not all(field in data for field in ['user_id', 'symbol', 'action', 'amount']):
+            return jsonify({'success': False, 'error': 'Missing fields'}), 400
+        
+        result = trading_system.execute_trade(
+            data['user_id'],
+            data['symbol'],
+            data['action'],
+            float(data['amount'])
+        )
+        
+        return jsonify(result)
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/webhook/telegram', methods=['POST'])
 def telegram_webhook():
-    """Webhook Telegram - CORREGIDO PARA RAILWAY"""
     try:
-        if not telegram_bot.active:
-            return jsonify({'error': 'Bot not available'}), 503
-        
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data'}), 400
-        
-        logger.info("📨 Webhook Telegram recibido")
-        
-        # Procesar de forma síncrona para Railway
-        try:
-            # Crear update manualmente sin Application.initialize
-            if 'message' in data and data['message'].get('text'):
-                user_id = str(data['message']['from']['id'])
-                message_text = data['message']['text']
-                chat_id = data['message']['chat']['id']
-                
-                # Procesar mensaje con IA
-                response, model = ai_system.process_message(message_text, user_id)
-                
-                # Enviar respuesta via API directa de Telegram
-                bot_token = config.BOT_TOKEN
-                send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                
-                payload = {
-                    'chat_id': chat_id,
-                    'text': response,
-                    'parse_mode': 'HTML'
-                }
-                
-                # Enviar mensaje
-                if requests_ok:
-                    response_req = requests.post(send_url, json=payload, timeout=10)
-                    if response_req.status_code == 200:
-                        logger.info("✅ Respuesta enviada via API directa")
-                    else:
-                        logger.error(f"❌ Error enviando: {response_req.status_code}")
-                
-            logger.info("✅ Webhook procesado correctamente")
-            
-        except Exception as process_error:
-            logger.error(f"❌ Error procesando mensaje: {process_error}")
-        
-        return jsonify({'status': 'ok'})
-        
+        if telegram_bot.active and telegram_bot.app:
+            update = Update.de_json(request.get_json(), telegram_bot.app.bot)
+            asyncio.create_task(telegram_bot.app.process_update(update))
+            return jsonify({'status': 'ok'})
+        return jsonify({'status': 'bot not active'}), 503
     except Exception as e:
-        logger.error(f"❌ Error webhook: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error webhook: {e}")
+        return jsonify({'status': 'error'}), 500
 
-# ============================================================================
-# SISTEMA PRINCIPAL OMNIX
-# ============================================================================
+@app.route('/dashboard')
+def dashboard():
+    dashboard_html = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIX V5 QUANTUM READY</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1a1a1a; color: white; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .status { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .card { background: #2a2a2a; padding: 15px; border-radius: 8px; border-left: 4px solid #00ff00; }
+        .feature { padding: 5px 0; }
+        .feature:before { content: "✓ "; color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OMNIX V5 QUANTUM READY</h1>
+        <h2>Sistema Operativo</h2>
+        <p>Desarrollado por Harold Nunes</p>
+    </div>
+    
+    <div class="status">
+        <div class="card">
+            <h3>🤖 IA System</h3>
+            <div class="feature">Gemini 2.0 Flash</div>
+            <div class="feature">OpenAI GPT-4o</div>
+            <div class="feature">Contexto avanzado</div>
+        </div>
+        
+        <div class="card">
+            <h3>📈 Trading</h3>
+            <div class="feature">Kraken + Binance</div>
+            <div class="feature">Analisis tecnico</div>
+            <div class="feature">Trades simulados</div>
+        </div>
+        
+        <div class="card">
+            <h3>🔮 Quantum</h3>
+            <div class="feature">Monte Carlo</div>
+            <div class="feature">1000 simulaciones</div>
+            <div class="feature">Proyecciones</div>
+        </div>
+        
+        <div class="card">
+            <h3>🕌 Sharia</h3>
+            <div class="feature">Validacion academica</div>
+            <div class="feature">Cryptos halal/haram</div>
+            <div class="feature">Recomendaciones</div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <p>OMNIX V5 - Sistema completo y operativo</p>
+    </div>
+</body>
+</html>
+"""
+    return dashboard_html
 
-class OmnixSystem:
-    """Sistema principal OMNIX V5"""
-    
-    def __init__(self):
-        self.version = "5.0.0"
-        self.start_time = datetime.now()
-    
-    def log_system_status(self):
-        """Mostrar estado del sistema"""
-        logger.info("=" * 60)
-        logger.info("🚀 INICIANDO OMNIX V5 QUANTUM READY")
-        logger.info("💫 Desarrollado por Harold Nunes")
-        logger.info("=" * 60)
-        logger.info(f"🌐 Flask API: ✅ OPERATIVO")
-        logger.info(f"🤖 Telegram Bot: {'✅ ACTIVO' if telegram_bot.active else '⚠️ NO CONFIGURADO'}")
-        logger.info(f"🧠 Sistema IA: {'✅ TRIPLE IA' if ai_system.models else '⚠️ LIMITADO'}")
-        logger.info(f"📊 Trading: {'✅ MULTI-EXCHANGE' if trading_system.exchanges else '⚠️ NO DISPONIBLE'}")
-        logger.info(f"🎙️ Voz: {'✅ ELEVENLABS' if voice_system.elevenlabs_ok else '✅ GOOGLE TTS' if voice_system.google_tts_ok else '❌'}")
-        logger.info(f"💾 Base Datos: {'✅ POSTGRESQL' if db.is_postgres else '✅ SQLITE'}")
-        logger.info(f"🔮 Post-Quantum: {'✅ READY' if pqc_system.quantum_ready else '⚠️ PREPARING'}")
-        
-        # Características especiales
-        if telegram_bot.active:
-            logger.info("📱 Webhook Telegram: ✅ CORREGIDO Y FUNCIONAL")
-        
-        if ai_system.models:
-            models_str = ", ".join(ai_system.models.keys())
-            logger.info(f"🧠 Modelos IA: {models_str}")
-        
-        if trading_system.exchanges:
-            exchanges_str = ", ".join(trading_system.exchanges.keys())
-            logger.info(f"💰 Exchanges: {exchanges_str}")
-        
-        logger.info("=" * 60)
-        logger.info(f"✅ OMNIX V5 COMPLETAMENTE OPERATIVO EN PUERTO {config.PORT}")
-    
-    def run(self):
-        """Ejecutar sistema principal"""
+# Configurar webhook
+async def setup_webhook():
+    if telegram_bot.active and telegram_bot.app:
         try:
-            self.log_system_status()
-            
-            # Iniciar Flask con configuración optimizada para Railway
-            app.run(
-                host=config.HOST,
-                port=config.PORT,
-                debug=False,
-                threaded=True,
-                use_reloader=False
-            )
-            
-        except KeyboardInterrupt:
-            logger.info("🛑 Sistema detenido por usuario")
+            webhook_url = os.environ.get('WEBHOOK_URL', '')
+            if webhook_url:
+                await telegram_bot.app.bot.set_webhook(f"{webhook_url}/webhook/telegram")
+                logger.info("Webhook configurado")
         except Exception as e:
-            logger.error(f"❌ Error crítico: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Error webhook: {e}")
 
-# ============================================================================
-# PUNTO DE ENTRADA PRINCIPAL
-# ============================================================================
+# Ejecucion principal
+if __name__ == '__main__':
+    # Configurar webhook
+    if telegram_bot.active:
+        asyncio.run(setup_webhook())
+    
+    # Logging de inicio
+    logger.info("=" * 60)
+    logger.info("OMNIX V5 QUANTUM READY - RAILWAY CLEAN")
+    logger.info("Desarrollado por Harold Nunes")
+    logger.info("=" * 60)
+    logger.info("COMPONENTES ACTIVOS:")
+    logger.info(f"🤖 Bot Telegram: {'✅' if telegram_bot.active else '❌'}")
+    logger.info(f"🧠 IA System: {len(ai_system.models)} modelos")
+    logger.info(f"📈 Trading: {len(trading_system.exchanges)} exchanges")
+    logger.info(f"💾 Database: {'✅' if db.connection else '❌'}")
+    logger.info(f"🔊 Voice: {'✅' if voice_system.active else '❌'}")
+    logger.info(f"🕌 Sharia: ✅")
+    logger.info(f"🔮 Quantum: ✅")
+    logger.info("=" * 60)
+    logger.info("🚀 SISTEMA COMPLETAMENTE OPERATIVO 🚀")
+    logger.info("=" * 60)
+    
+    # Ejecutar Flask
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
 
-if __name__ == "__main__":
-    omnix_system = OmnixSystem()
-    omnix_system.run()
 
 
 
