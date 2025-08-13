@@ -954,17 +954,20 @@ Desarrollado por Harold Nunes"""
             
             response, model_used = ai_system.process_message(message, user_id)
             
-            # Generar audio si esta habilitado
-            config_data = db.get_user_config(user_id)
-            if config_data.get('voice_enabled', True):
-                audio_file = voice_system.text_to_speech(response)
-                if audio_file and os.path.exists(audio_file):
-                    try:
-                        with open(audio_file, 'rb') as audio:
-                            await update.message.reply_voice(audio)
-                    except Exception as e:
-                        logger.error(f"Error audio: {e}")
-            
+                   # Generar y enviar audio automatico
+        try:
+            audio_file = voice_system.text_to_speech(response)
+            if audio_file and os.path.exists(audio_file):
+                logger.info(f"Enviando audio: {audio_file}")
+                with open(audio_file, 'rb') as audio_stream:
+                    await update.message.reply_voice(voice=audio_stream)
+                # Limpiar archivo temporal
+                os.remove(audio_file)
+                logger.info("Audio enviado y limpiado")
+            else:
+                logger.warning("No se pudo generar archivo de audio")
+        except Exception as e:
+            logger.error(f"Error completo audio: {e}")
             await update.message.reply_text(response)
             
         except Exception as e:
@@ -1246,6 +1249,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
