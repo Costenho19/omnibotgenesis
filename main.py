@@ -793,7 +793,7 @@ class VoiceSystem:
             # Generar audio
             tts = gTTS(text=clean_text, lang=language, slow=False)
             filename = f"voice_{int(time.time())}.mp3"
-            filepath = os.path.join(tempfile.gettempdir(), filename)
+            filepath = os.path.join(".", filename)
             tts.save(filepath)
             
             return filepath
@@ -1299,6 +1299,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
