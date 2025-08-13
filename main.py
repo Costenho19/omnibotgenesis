@@ -287,19 +287,25 @@ class AISystem:
                 logger.warning(f"OpenAI no disponible: {e}")
     
     def analyze_sentiment(self, text: str) -> float:
-        positive_words = ['bueno', 'excelente', 'genial', 'perfecto', 'increible']
-        negative_words = ['malo', 'terrible', 'horrible', 'pesimo']
-        
-        text_lower = text.lower()
-        positive_count = sum(1 for word in positive_words if word in text_lower)
-        negative_count = sum(1 for word in negative_words if word in text_lower)
-        
-        if positive_count > negative_count:
-            return 0.8
-        elif negative_count > positive_count:
-            return 0.2
-        else:
-            return 0.5
+    # Palabras expandidas para mejor análisis
+    positive_words = ['bueno', 'excelente', 'genial', 'perfecto', 'increible', 'fantástico', 'óptimo', 'beneficio', 'ganancia', 'éxito', 'rentable']
+    negative_words = ['malo', 'terrible', 'horrible', 'pésimo', 'pérdida', 'riesgo', 'peligroso', 'problema', 'error', 'fallo']
+    
+    # Análisis de redes sociales y noticias
+    market_positive = ['subida', 'alcista', 'bull', 'pump', 'moon', 'rally', 'breakout']
+    market_negative = ['bajada', 'bajista', 'bear', 'dump', 'crash', 'dip', 'correction']
+    
+    text_lower = text.lower()
+    positive_count = sum(1 for word in positive_words + market_positive if word in text_lower)
+    negative_count = sum(1 for word in negative_words + market_negative if word in text_lower)
+    
+    # Análisis más sofisticado
+    if positive_count > negative_count:
+        return min(0.9, 0.5 + (positive_count * 0.1))
+    elif negative_count > positive_count:
+        return max(0.1, 0.5 - (negative_count * 0.1))
+    else:
+        return 0.5
         def get_conversation_context(self, user_id: str) -> str:
         """Obtener historial de conversación"""
         try:
@@ -328,69 +334,55 @@ class AISystem:
         except Exception as e:
             logger.error(f"Error obteniendo contexto: {e}")
             return ""
-    def process_message(self, message: str, user_id: str) -> Tuple[str, str]:
-        try:
-            sentiment = self.analyze_sentiment(message)
-                    sentiment = self.analyze_sentiment(message)
+   def process_message(self, message: str, user_id: str) -> Tuple[str, str]:
+    try:
+        sentiment = self.analyze_sentiment(message)
         
         # ACTIVAR MEMORIA PERSISTENTE
         context = self.get_conversation_context(user_id)
         if context:
             message = f"{context}\nMensaje actual: {message}"
         
-        # Determinar mejor modelo
-            # Determinar mejor modelo
-            if any(word in message.lower() for word in ['trading', 'precio', 'analisis']):
-                model_preference = 'gemini'
-            else:
-                model_preference = 'openai' if 'openai' in self.models else 'gemini'
-            
-            response = ""
-            model_used = ""
-            
-            if model_preference == 'gemini' and 'gemini' in self.models:
-                response, model_used = self.process_gemini(message, sentiment)
-            elif model_preference == 'openai' and 'openai' in self.models:
-                response, model_used = self.process_openai(message, sentiment)
-            else:
-                response, model_used = self.fallback_response(message), 'fallback'
-            
-            # Guardar conversacion
-            if hasattr(db, 'save_chat'):
-                db.save_chat(user_id, message, response, model_used)
-            
-            return response, model_used
-        except Exception as e:
-            logger.error(f"Error procesando mensaje: {e}")
-            return "Error temporal del sistema. Intenta nuevamente.", 'error'
-    
-    def process_gemini(self, message: str, sentiment: float) -> Tuple[str, str]:
-        try:
-            prompt = f"""Eres OMNIX IA V5, desarrollado por Harold Nunes. IA especializada en trading de criptomonedas.
-
-PERSONALIDAD:
-- Inteligente y profesional
-- Especialista en trading y analisis tecnico
-- Conversacional, no robotico
-- Responde en español
-
-CAPACIDADES:
-- Trading profesional multi-exchange
-- Analisis tecnico avanzado
-- Post-Quantum Cryptography
-- Validacion Sharia
-- Sistema de voz
-
-MENSAJE DEL USUARIO: {message}
-
-Responde de manera inteligente y util:"""
-
-            response = self.models['gemini'].generate_content(prompt)
-            return response.text.strip() if response.text else self.fallback_response(message), 'gemini'
-        except Exception as e:
-            logger.error(f"Error Gemini: {e}")
-            return self.fallback_response(message), 'gemini_error'
-    
+        # Aprendizaje continuo - Análisis de patrones
+        trading_keywords = ['precio', 'comprar', 'vender', 'trading', 'btc', 'eth', 'análisis']
+        sharia_keywords = ['halal', 'haram', 'sharia', 'islámico', 'religioso']
+        risk_keywords = ['riesgo', 'seguro', 'conservador', 'agresivo', 'stop loss']
+        
+        message_lower = message.lower()
+        
+        # Determinar contexto inteligente
+        if any(word in message_lower for word in trading_keywords):
+            context_type = 'trading'
+            model_preference = 'gemini'
+        elif any(word in message_lower for word in sharia_keywords):
+            context_type = 'sharia'
+            model_preference = 'gemini'
+        elif any(word in message_lower for word in risk_keywords):
+            context_type = 'risk_management'
+            model_preference = 'openai' if 'openai' in self.models else 'gemini'
+        else:
+            context_type = 'general'
+            model_preference = 'gemini'
+        
+        response = ""
+        model_used = ""
+        
+        if model_preference == 'gemini' and 'gemini' in self.models:
+            response, model_used = self.process_gemini_enhanced(message, sentiment, context_type)
+        elif model_preference == 'openai' and 'openai' in self.models:
+            response, model_used = self.process_openai_enhanced(message, sentiment, context_type)
+        else:
+            response = self.generate_fallback_response(message, context_type)
+            model_used = 'fallback_enhanced'
+        
+        # Guardar para aprendizaje continuo
+        self.save_interaction_pattern(user_id, message, response, context_type, sentiment)
+        
+        return response, model_used
+        
+    except Exception as e:
+        logger.error(f"Error procesando mensaje: {e}")
+        return "Error procesando mensaje avanzado", 'error'
     def process_openai(self, message: str, sentiment: float) -> Tuple[str, str]:
         try:
             response = self.models['openai'].chat.completions.create(
@@ -1344,6 +1336,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
