@@ -300,11 +300,45 @@ class AISystem:
             return 0.2
         else:
             return 0.5
-    
+        def get_conversation_context(self, user_id: str) -> str:
+        """Obtener historial de conversación"""
+        try:
+            if not hasattr(db, 'connection') or not db.connection:
+                return ""
+            
+            with db.connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT message, response, created_at 
+                    FROM chats 
+                    WHERE user_id = %s 
+                    ORDER BY created_at DESC 
+                    LIMIT 10
+                """, (user_id,))
+                
+                history = cursor.fetchall()
+                if not history:
+                    return ""
+                
+                context = "Historial reciente:\n"
+                for msg, resp, timestamp in reversed(history):
+                    context += f"Usuario: {msg}\nOmnix: {resp}\n---\n"
+                
+                return context[:2000]
+                
+        except Exception as e:
+            logger.error(f"Error obteniendo contexto: {e}")
+            return ""
     def process_message(self, message: str, user_id: str) -> Tuple[str, str]:
         try:
             sentiment = self.analyze_sentiment(message)
-            
+                    sentiment = self.analyze_sentiment(message)
+        
+        # ACTIVAR MEMORIA PERSISTENTE
+        context = self.get_conversation_context(user_id)
+        if context:
+            message = f"{context}\nMensaje actual: {message}"
+        
+        # Determinar mejor modelo
             # Determinar mejor modelo
             if any(word in message.lower() for word in ['trading', 'precio', 'analisis']):
                 model_preference = 'gemini'
@@ -1249,6 +1283,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
