@@ -786,17 +786,36 @@ class VoiceSystem:
         except Exception as e:
             logger.error(f"PERMISOS DIRECTORIO ERROR: {e}")
     
-    def detect_language(self, text: str) -> str:
-        """Detectar idioma del texto"""
-        arabic_chars = any('\u0600' <= char <= '\u06FF' for char in text)
-        english_ratio = sum(1 for char in text if char.isascii()) / max(len(text), 1)
+       def detect_language(self, text: str) -> str:
+        """Detectar idioma del texto automáticamente - MEJORADO"""
+        text_lower = text.lower()
         
+        # Detectar árabe por caracteres Unicode
+        arabic_chars = any('\u0600' <= char <= '\u06FF' for char in text)
         if arabic_chars:
             return 'ar'
-        elif english_ratio > 0.7:
-            return 'en'
-        else:
+        
+        # Detectar por palabras clave específicas (más preciso)
+        spanish_words = ['hola', 'precio', 'bitcoin', 'trading', 'análisis', 'gracias', 'comprar', 'vender', 'dinero', 'mercado']
+        english_words = ['hello', 'price', 'analysis', 'thank', 'trade', 'buy', 'sell', 'money', 'market', 'crypto']
+        portuguese_words = ['olá', 'preço', 'negociação', 'análise', 'obrigado', 'comprar', 'vender', 'dinheiro']
+        
+
+        spanish_count = sum(1 for word in spanish_words if word in text_lower)
+        english_count = sum(1 for word in english_words if word in text_lower)
+        portuguese_count = sum(1 for word in portuguese_words if word in text_lower)
+        
+        # Decidir por mayor coincidencia
+        if spanish_count > english_count and spanish_count > portuguese_count:
             return 'es'
+        elif english_count > spanish_count and english_count > portuguese_count:
+            return 'en'
+        elif portuguese_count > 0:
+            return 'pt'
+        else:
+            # Fallback por ratio ASCII (mejorado)
+            english_ratio = sum(1 for char in text if char.isascii()) / max(len(text), 1)
+            return 'en' if english_ratio > 0.8 else 'es'
 
     def text_to_speech(self, text: str, language: str = 'es') -> Optional[str]:
         logger.info(f"text_to_speech iniciado - Active: {self.active}")
@@ -1379,6 +1398,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
