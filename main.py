@@ -781,35 +781,70 @@ class DMCCIntegration:
 class VoiceSystem:
     def __init__(self):
         self.active = GTTS_AVAILABLE
+        logger.info(f"VoiceSystem iniciado - Active: {self.active}")
+        
+        # Test permisos directorio
+        try:
+            test_file = os.path.join(".", "test_permissions.txt")
+            with open(test_file, 'w') as f:
+                f.write("test")
+            os.remove(test_file)
+            logger.info("PERMISOS DIRECTORIO: OK")
+        except Exception as e:
+            logger.error(f"PERMISOS DIRECTORIO ERROR: {e}")
     
     def text_to_speech(self, text: str, language: str = 'es') -> Optional[str]:
+        logger.info(f"text_to_speech iniciado - Active: {self.active}")
+        
         try:
             if not self.active:
+                logger.warning("Sistema voz INACTIVO")
+                return None
+            
+            if not text or len(text.strip()) == 0:
+                logger.warning("Texto vacio")
                 return None
             
             # Limpiar texto
             clean_text = self.clean_text(text)
+            logger.info(f"Texto limpiado longitud: {len(clean_text)}")
             
             # Generar audio
+            logger.info("Creando gTTS...")
             tts = gTTS(text=clean_text, lang=language, slow=False)
-            filename = f"voice_{int(time.time())}.mp3"
+            
+            filename = f"voice_{int(time.time())}_{random.randint(1000,9999)}.mp3"
             filepath = os.path.join(".", filename)
+            logger.info(f"Guardando en: {filepath}")
+            
             tts.save(filepath)
             
-            return filepath
+            # Verificar archivo
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                logger.info(f"Archivo creado - Tamaño: {file_size} bytes")
+                return filepath
+            else:
+                logger.error("Archivo NO existe después de guardar")
+                return None
             
         except Exception as e:
-            logger.error(f"Error generando voz: {e}")
+            logger.error(f"ERROR COMPLETO en text_to_speech: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
     
     def clean_text(self, text: str) -> str:
-        # Limpiar para mejor sintesis
-        text = text.replace('$', 'dolares ')
+        # Limpiar emojis y caracteres especiales
+        text = text.replace('🎯', '').replace('✅', '').replace('❌', '')
+        text = text.replace('🚀', '').replace('📊', '').replace('$', 'dolares ')
         text = text.replace('%', ' por ciento ')
         
         # Limitar longitud
         if len(text) > 300:
             text = text[:300] + "..."
+        
+        return text.strip()
         
         return text.strip()
 
@@ -1299,6 +1334,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
