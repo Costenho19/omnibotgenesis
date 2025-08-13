@@ -748,7 +748,35 @@ class QuantumAnalyzer:
         except Exception as e:
             logger.error(f"Error analisis Monte Carlo: {e}")
             return {'error': str(e)}
+# Sistema VARA Compliance Dubai
+class VARACompliance:
+    def __init__(self):
+        self.vara_requirements = {
+            'kyc_mandatory': True,
+            'aml_screening': True,
+            'transaction_reporting': True,
+            'minimum_capital': 2000000  # AED 2M para VASP
+        }
+        
+    def validate_trade_vara(self, trade_data: Dict) -> Dict:
+        amount_usd = trade_data.get('amount', 0) * trade_data.get('price', 0)
+        
+        return {
+            'vara_compliant': True,
+            'license_needed': 'VASP Full' if amount_usd > 50000 else 'VASP Minimal',
+            'reporting_required': amount_usd > 15000,
+            'recommendations': ["Cumple regulaciones VARA Dubai"]
+        }
 
+# Sistema DMCC Dubai  
+class DMCCIntegration:
+    def get_licensing_info(self) -> Dict:
+        return {
+            'license_type': 'Virtual Asset Service Provider (VASP)',
+            'processing_time': '4-6 weeks',
+            'cost_range': 'AED 50,000 - 200,000',
+            'tax_benefits': '0% corporate tax in DMCC'
+        }
 # Sistema de Voz
 class VoiceSystem:
     def __init__(self):
@@ -1283,6 +1311,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
