@@ -996,18 +996,19 @@ Desarrollado por Harold Nunes"""
             logger.error(f"Error callback: {e}")
 
 # Instancias globales
-db = DatabaseManager()
-ai_system = AISystem()
-trading_system = TradingSystem()
-sharia_validator = ShariaValidator()
-quantum_analyzer = QuantumAnalyzer()
-voice_system = VoiceSystem()
-telegram_bot = TelegramBot()
-
-# Flask Application
-app = Flask(__name__)
-
-@app.route('/')
+            # Generar audio automatico
+            try:
+                audio_file = voice_system.text_to_speech(response)
+                if audio_file and os.path.exists(audio_file):
+                    with open(audio_file, 'rb') as audio:
+                        await update.message.reply_voice(audio)
+                    # Limpiar archivo temporal
+                    try:
+                        os.remove(audio_file)
+                    except:
+                        pass
+            except Exception as e:
+                logger.error(f"Error audio: {e}")
 def index():
     return jsonify({
         'system': 'OMNIX V5 QUANTUM READY - RAILWAY CLEAN',
@@ -1245,6 +1246,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
