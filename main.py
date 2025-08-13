@@ -1044,33 +1044,43 @@ Desarrollado por Harold Nunes"""
         
         await update.message.reply_text(help_text)
     
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        try:
-            user_id = str(update.effective_user.id)
-            message = update.message.text
-            
-            response, model_used = ai_system.process_message(message, user_id)
-             await update.message.reply_text(response)
-                   # Generar y enviar audio automatico
+   async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user_id = str(update.effective_user.id)
+        message = update.message.text
+        
+        response, model_used = ai_system.process_message(message, user_id)
+        
+        # ENVIAR TEXTO PRIMERO
+        await update.message.reply_text(response)
+        
+        # Generar y enviar audio con DEBUGGING
+        logger.info("Iniciando generación de audio...")
         try:
             audio_file = voice_system.text_to_speech(response)
+            logger.info(f"Audio generado resultado: {audio_file}")
+            
             if audio_file and os.path.exists(audio_file):
-                logger.info(f"Enviando audio: {audio_file}")
+                file_size = os.path.getsize(audio_file)
+                logger.info(f"Archivo existe, tamaño: {file_size} bytes")
+                
                 with open(audio_file, 'rb') as audio_stream:
+                    logger.info("Enviando archivo de voz...")
                     await update.message.reply_voice(voice=audio_stream)
-                # Limpiar archivo temporal
+                
                 os.remove(audio_file)
-                logger.info("Audio enviado y limpiado")
+                logger.info("Audio enviado y limpiado correctamente")
             else:
-                logger.warning("No se pudo generar archivo de audio")
+                logger.warning(f"No se pudo generar archivo: {audio_file}")
+                
         except Exception as e:
             logger.error(f"Error completo audio: {e}")
-           
+            import traceback
+            logger.error(f"Audio traceback: {traceback.format_exc()}")
             
-        except Exception as e:
-            logger.error(f"Error mensaje: {e}")
-            await update.message.reply_text("Error procesando mensaje.")
-    
+    except Exception as e:
+        logger.error(f"Error mensaje: {e}")
+        await update.message.reply_text("Error procesando mensaje.")
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             query = update.callback_query
@@ -1334,6 +1344,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
