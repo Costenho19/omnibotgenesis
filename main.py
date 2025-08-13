@@ -869,24 +869,67 @@ class VoiceSystem:
             logger.error(f"Traceback: {traceback.format_exc()}")
             return None
     
-    def clean_text(self, text: str) -> str:
-        # Limpiar para síntesis multiidioma
-        text = text.replace('$', 'dólares ')
-        text = text.replace('%', ' por ciento ')
-        text = text.replace('BTC', 'Bitcoin ')
-        text = text.replace('ETH', 'Ethereum ')
-        
-        # Remover caracteres problemáticos
+       def clean_text(self, text: str, language: str = 'es') -> str:
+        """Limpiar texto para síntesis de voz - MEJORADO MULTIIDIOMA"""
         import re
-        text = re.sub(r'[^\w\s\.,;:¿?¡!áéíóúñü]', '', text)
         
-        # Limitar longitud
-        if len(text) > 280:
-            text = text[:280] + "..."
+        # Emojis más comunes en trading/crypto con reemplazos contextuales
+        emoji_replacements = {
+            '📈': {'es': 'subiendo', 'en': 'rising', 'ar': 'يرتفع', 'pt': 'subindo'},
+            '📉': {'es': 'bajando', 'en': 'falling', 'ar': 'ينخفض', 'pt': 'descendo'},
+            '💰': {'es': 'dinero', 'en': 'money', 'ar': 'مال', 'pt': 'dinheiro'},
+            '🔥': {'es': 'importante', 'en': 'hot', 'ar': 'مهم', 'pt': 'importante'},
+            '✅': {'es': 'confirmado', 'en': 'confirmed', 'ar': 'مؤكد', 'pt': 'confirmado'},
+            '❌': {'es': 'error', 'en': 'error', 'ar': 'خطأ', 'pt': 'erro'},
+            '🚀': {'es': 'excelente', 'en': 'excellent', 'ar': 'ممتاز', 'pt': 'excelente'},
+            '💎': {'es': 'valioso', 'en': 'diamond hands', 'ar': 'قيم', 'pt': 'valioso'},
+            '🌟': {'es': 'destacado', 'en': 'featured', 'ar': 'مميز', 'pt': 'destacado'},
+            '⚡': {'es': 'rápido', 'en': 'fast', 'ar': 'سريع', 'pt': 'rápido'},
+            '🎯': {'es': 'objetivo', 'en': 'target', 'ar': 'هدف', 'pt': 'alvo'}
+        }
+        
+        clean = text
+        
+        # Reemplazar emojis según idioma
+        for emoji, translations in emoji_replacements.items():
+            replacement = translations.get(language, translations['es'])
+            clean = clean.replace(emoji, f' {replacement} ')
+        
+        # Reemplazar símbolos y cryptocurrencias según idioma
+        if language == 'es':
+            clean = clean.replace('$', ' dólares ').replace('%', ' por ciento ')
+            clean = clean.replace('BTC', 'Bitcoin ').replace('ETH', 'Ethereum ')
+            clean = clean.replace('&', ' y ').replace('@', ' arroba ')
+        elif language == 'en':
+            clean = clean.replace('$', ' dollars ').replace('%', ' percent ')
+            clean = clean.replace('BTC', 'Bitcoin ').replace('ETH', 'Ethereum ')
+            clean = clean.replace('&', ' and ').replace('@', ' at ')
+        elif language == 'ar':
+            clean = clean.replace('$', ' دولار ').replace('%', ' في المائة ')
+            clean = clean.replace('BTC', 'بيتكوين ').replace('ETH', 'إيثيريوم ')
+            clean = clean.replace('&', ' و ').replace('@', ' في ')
+        elif language == 'pt':
+            clean = clean.replace('$', ' reais ').replace('%', ' por cento ')
+            clean = clean.replace('BTC', 'Bitcoin ').replace('ETH', 'Ethereum ')
+            clean = clean.replace('&', ' e ').replace('@', ' arroba ')
+        
+        # Remover markdown y formato
+        clean = clean.replace('*', '').replace('_', '').replace('#', '').replace('`', '')
+        clean = clean.replace('**', '').replace('__', '').replace('~~', '')
+        clean = clean.replace('[', '').replace(']', '').replace('(', '').replace(')', '')
+        
+        # Remover caracteres problemáticos para Railway TTS
+        clean = re.sub(r'[^\w\s\.,;:¿?¡!áéíóúñüأبتثجحخدذرزسشصضطظعغفقكلمنهويءآة]', '', clean)
+        
+        # Normalizar espacios múltiples
+        clean = ' '.join(clean.split())
+        
+        # Limitar longitud para Railway optimizado
+        max_length = 350 if language in ['ar', 'en'] else 300
+        if len(clean) > max_length:
+            clean = clean[:max_length] + "..."
             
-        return text.strip()
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            return None
+        return clean.strip()
     
     def clean_text(self, text: str) -> str:
         # Limpiar emojis y caracteres especiales
@@ -1398,6 +1441,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
