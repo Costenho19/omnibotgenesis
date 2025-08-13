@@ -1126,11 +1126,24 @@ def api_trade():
 @app.route('/webhook/telegram', methods=['POST'])
 def telegram_webhook():
     try:
-        if telegram_bot.active and telegram_bot.app:
-            update = Update.de_json(request.get_json(), telegram_bot.app.bot)
-            asyncio.create_task(telegram_bot.app.process_update(update))
+        if telegram_bot.active:
+            update_data = request.get_json()
+            # Procesar mensaje simple sin asyncio
+            if 'message' in update_data and 'text' in update_data['message']:
+                text = update_data['message']['text']
+                user_id = str(update_data['message']['from']['id'])
+                chat_id = update_data['message']['chat']['id']
+                
+                # Procesar con IA
+                response, model = ai_system.process_message(text, user_id)
+                
+                # Enviar respuesta directa
+                import requests
+                url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendMessage"
+                requests.post(url, json={"chat_id": chat_id, "text": response})
+                
             return jsonify({'status': 'ok'})
-        return jsonify({'status': 'bot not active'}), 503
+        return jsonify({'status': 'bot not configured'}), 503
     except Exception as e:
         logger.error(f"Error webhook: {e}")
         return jsonify({'status': 'error'}), 500
@@ -1210,11 +1223,8 @@ async def setup_webhook():
             logger.error(f"Error webhook: {e}")
 
 # Ejecucion principal
+# Ejecucion principal
 if __name__ == '__main__':
-    # Configurar webhook
-    if telegram_bot.active:
-        asyncio.run(setup_webhook())
-    
     # Logging de inicio
     logger.info("=" * 60)
     logger.info("OMNIX V5 QUANTUM READY - RAILWAY CLEAN")
@@ -1235,6 +1245,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
