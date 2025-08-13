@@ -786,8 +786,8 @@ class VoiceSystem:
         except Exception as e:
             logger.error(f"PERMISOS DIRECTORIO ERROR: {e}")
     
-       def detect_language(self, text: str) -> str:
-        """Detectar idioma del texto automáticamente - MEJORADO"""
+          def detect_language(self, text: str) -> str:
+        """Detectar idioma automáticamente - ULTRA MEJORADO"""
         text_lower = text.lower()
         
         # Detectar árabe por caracteres Unicode
@@ -795,27 +795,27 @@ class VoiceSystem:
         if arabic_chars:
             return 'ar'
         
-        # Detectar por palabras clave específicas (más preciso)
-        spanish_words = ['hola', 'precio', 'bitcoin', 'trading', 'análisis', 'gracias', 'comprar', 'vender', 'dinero', 'mercado']
-        english_words = ['hello', 'price', 'analysis', 'thank', 'trade', 'buy', 'sell', 'money', 'market', 'crypto']
-        portuguese_words = ['olá', 'preço', 'negociação', 'análise', 'obrigado', 'comprar', 'vender', 'dinheiro']
+        # Palabras clave específicas EXPANDIDAS
+        spanish_words = ['hola', 'precio', 'bitcoin', 'trading', 'análisis', 'gracias', 'comprar', 'vender', 'dinero', 'mercado', 'cómo', 'qué', 'cuánto', 'dólares', 'euros', 'invertir', 'ganar']
+        english_words = ['hello', 'price', 'analysis', 'thank', 'trade', 'buy', 'sell', 'money', 'market', 'crypto', 'how', 'what', 'dollars', 'invest', 'profit', 'exchange', 'wallet']
+        portuguese_words = ['olá', 'preço', 'negociação', 'análise', 'obrigado', 'comprar', 'vender', 'dinheiro', 'como', 'quanto', 'investir', 'ganhar', 'mercado']
         
-
-        spanish_count = sum(1 for word in spanish_words if word in text_lower)
-        english_count = sum(1 for word in english_words if word in text_lower)
-        portuguese_count = sum(1 for word in portuguese_words if word in text_lower)
+        # Contar coincidencias
+        spanish_count = sum(2 for word in spanish_words if word in text_lower)
+        english_count = sum(2 for word in english_words if word in text_lower)
+        portuguese_count = sum(2 for word in portuguese_words if word in text_lower)
         
         # Decidir por mayor coincidencia
-        if spanish_count > english_count and spanish_count > portuguese_count:
+        max_score = max(spanish_count, english_count, portuguese_count)
+        
+        if spanish_count == max_score and spanish_count > 0:
             return 'es'
-        elif english_count > spanish_count and english_count > portuguese_count:
+        elif english_count == max_score and english_count > 0:
             return 'en'
-        elif portuguese_count > 0:
+        elif portuguese_count == max_score and portuguese_count > 0:
             return 'pt'
         else:
-            # Fallback por ratio ASCII (mejorado)
-            english_ratio = sum(1 for char in text if char.isascii()) / max(len(text), 1)
-            return 'en' if english_ratio > 0.8 else 'es'
+            return 'es'  # Fallback a español
 
     def text_to_speech(self, text: str, language: str = 'es') -> Optional[str]:
         logger.info(f"text_to_speech iniciado - Active: {self.active}")
@@ -1441,6 +1441,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
