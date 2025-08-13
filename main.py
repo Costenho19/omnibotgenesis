@@ -769,11 +769,12 @@ class DMCCIntegration:
             'cost_range': 'AED 50,000 - 200,000',
             'tax_benefits': '0% corporate tax in DMCC'
         }
-# Sistema de Voz
+# Sistema de Voz Mejorado
 class VoiceSystem:
     def __init__(self):
         self.active = GTTS_AVAILABLE
-        logger.info(f"VoiceSystem iniciado - Active: {self.active}")
+        self.supported_languages = {'es': 'Spanish', 'en': 'English', 'ar': 'Arabic'}
+        logger.info(f"VoiceSystem mejorado iniciado - Active: {self.active}")
         
         # Test permisos directorio
         try:
@@ -785,6 +786,18 @@ class VoiceSystem:
         except Exception as e:
             logger.error(f"PERMISOS DIRECTORIO ERROR: {e}")
     
+    def detect_language(self, text: str) -> str:
+        """Detectar idioma del texto"""
+        arabic_chars = any('\u0600' <= char <= '\u06FF' for char in text)
+        english_ratio = sum(1 for char in text if char.isascii()) / max(len(text), 1)
+        
+        if arabic_chars:
+            return 'ar'
+        elif english_ratio > 0.7:
+            return 'en'
+        else:
+            return 'es'
+
     def text_to_speech(self, text: str, language: str = 'es') -> Optional[str]:
         logger.info(f"text_to_speech iniciado - Active: {self.active}")
         
@@ -792,37 +805,67 @@ class VoiceSystem:
             if not self.active:
                 logger.warning("Sistema voz INACTIVO")
                 return None
-            
+                
             if not text or len(text.strip()) == 0:
-                logger.warning("Texto vacio")
+                logger.warning("Texto vacío")
                 return None
+            
+            # Auto-detectar idioma
+            detected_lang = self.detect_language(text)
+            final_lang = detected_lang if language == 'es' else language
+            logger.info(f"Idioma final: {final_lang}")
             
             # Limpiar texto
             clean_text = self.clean_text(text)
-            logger.info(f"Texto limpiado longitud: {len(clean_text)}")
+            logger.info(f"Texto limpio: {clean_text[:50]}...")
             
-            # Generar audio
-            logger.info("Creando gTTS...")
-            tts = gTTS(text=clean_text, lang=language, slow=False)
+            # Verificar directorio actual
+            current_dir = os.getcwd()
+            can_write = os.access(current_dir, os.W_OK)
+            logger.info(f"Directorio: {current_dir}, Escritura: {can_write}")
             
-            filename = f"voice_{int(time.time())}_{random.randint(1000,9999)}.mp3"
+            # Crear archivo único
+            timestamp = int(time.time() * 1000)
+            filename = f"voice_{timestamp}.mp3"
             filepath = os.path.join(".", filename)
-            logger.info(f"Guardando en: {filepath}")
             
+            logger.info(f"Creando audio: {filepath}")
+            
+            # Generar con gTTS
+            tts = gTTS(text=clean_text, lang=final_lang, slow=False)
             tts.save(filepath)
             
-            # Verificar archivo
+            # Verificar creación
             if os.path.exists(filepath):
                 file_size = os.path.getsize(filepath)
-                logger.info(f"Archivo creado - Tamaño: {file_size} bytes")
+                logger.info(f"✅ Audio creado - {file_size} bytes")
                 return filepath
             else:
-                logger.error("Archivo NO existe después de guardar")
+                logger.error("❌ Archivo no existe después de save()")
                 return None
-            
+                
         except Exception as e:
-            logger.error(f"ERROR COMPLETO en text_to_speech: {e}")
+            logger.error(f"❌ Error TTS completo: {e}")
             import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return None
+    
+    def clean_text(self, text: str) -> str:
+        # Limpiar para síntesis multiidioma
+        text = text.replace('$', 'dólares ')
+        text = text.replace('%', ' por ciento ')
+        text = text.replace('BTC', 'Bitcoin ')
+        text = text.replace('ETH', 'Ethereum ')
+        
+        # Remover caracteres problemáticos
+        import re
+        text = re.sub(r'[^\w\s\.,;:¿?¡!áéíóúñü]', '', text)
+        
+        # Limitar longitud
+        if len(text) > 280:
+            text = text[:280] + "..."
+            
+        return text.strip()
             logger.error(f"Traceback: {traceback.format_exc()}")
             return None
     
@@ -1336,6 +1379,7 @@ if __name__ == '__main__':
     # Ejecutar Flask
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
