@@ -1318,18 +1318,27 @@ class EnterpriseTelegramBot:
                 "🤖 Disculpa, ocurrió un error procesando tu mensaje. ¿Puedes intentar de nuevo?"
             )
     
-    def run_bot(self):
-        """Ejecutar bot en modo polling"""
-        try:
-            # Crear nuevo event loop para el thread
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            # Ejecutar bot
-            loop.run_until_complete(self.application.run_polling())
-            
-        except Exception as e:
-            logger.error(f"Error ejecutando bot: {e}")
+   def run_bot(self):
+    """Ejecutar bot en modo polling Railway compatible"""
+    try:
+        import asyncio
+        
+        # Configurar event loop para Railway
+        if hasattr(asyncio, 'set_event_loop_policy'):
+            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+        
+        self.application.run_polling(
+            poll_interval=1.0,
+            timeout=10,
+            bootstrap_retries=3,
+            read_timeout=10,
+            write_timeout=10,
+            connect_timeout=10,
+            pool_timeout=10,
+            drop_pending_updates=True
+        )
+    except Exception as e:
+        logger.error(f"Error en bot polling: {e}")
 
 # === APLICACIÓN FLASK EMPRESARIAL ===
 def create_enterprise_app(db_manager: DatabaseManager) -> Flask:
@@ -1625,14 +1634,29 @@ def main():
         logger.info("🕌 Validador Sharia funcional")
         logger.info("=" * 60)
         
-        # Ejecutar Flask
-        flask_app.run(
-            host=config.HOST,
-            port=config.PORT,
-            debug=False,
-            threaded=True,
-            use_reloader=False
-        )
+       # RAILWAY PRODUCTION SERVER MODE
+if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
+    # Usar Gunicorn en producción Railway
+    import subprocess
+    import sys
+    
+    subprocess.run([
+        sys.executable, '-m', 'gunicorn',
+        '--bind', f'{config.HOST}:{config.PORT}',
+        '--workers', '1',
+        '--timeout', '120',
+        '--preload',
+        f'{__name__}:create_enterprise_app(DatabaseManager())',
+    ])
+else:
+    # Desarrollo local/testing
+    flask_app.run(
+        host=config.HOST,
+        port=config.PORT,
+        debug=config.DEBUG,
+        threaded=config.THREADED,
+        use_reloader=False
+    )
         
     except Exception as e:
         logger.error(f"❌ Error crítico empresarial: {e}")
@@ -1640,7 +1664,13 @@ def main():
     finally:
         logger.info("🔄 OMNIX V5.1 Enterprise Fusion finalizado")
 
+def create_app():
+    """Factory function para Gunicorn"""
+    db_manager = DatabaseManager()
+    return create_enterprise_app(db_manager)
+
 if __name__ == "__main__":
     main()
+
 
 
