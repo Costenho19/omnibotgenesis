@@ -1,1 +1,1 @@
-web: python OMNIX_V5_RAILWAY_FINAL_LIMPIO.py
+worker: python main.py
