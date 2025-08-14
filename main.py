@@ -2036,10 +2036,17 @@ Contacta con el soporte técnico o Harold Nunes directamente.
             )
     
     def run_bot(self):
+                    # Configurar asyncio para threading en Railway
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
         """Ejecutar bot con manejo mejorado de loops"""
         try:
             logger.info("🤖 Iniciando bot Telegram empresarial...")
-            
+                        
             # Configurar loop de asyncio
             try:
                 loop = asyncio.get_event_loop()
@@ -2407,7 +2414,7 @@ def create_enterprise_app(db_manager: DatabaseManager, auto_trading: AutoTrading
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
             'services': 'all_operational'
-        })
+      })
     
     return app
 
@@ -2536,6 +2543,7 @@ def create_app():
 
 if __name__ == "__main__":
     main()
+
 
 
 
