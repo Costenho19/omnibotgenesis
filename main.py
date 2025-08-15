@@ -7293,7 +7293,7 @@ class EnterpriseAnalyticsEngine:
     
     def _calculate_optimal_timing(self, market_data):
         return {'entry_signal': 'strong', 'timing_score': 0.88, 'window': '24-48h'}
-        def _combine_ml_insights(self, insights):
+    def _combine_ml_insights(self, insights):
         """Combinar insights de ML para compatibilidad"""
         # Extraer datos de market_patterns para compatibilidad
         if insights and 'market_patterns' in insights:
@@ -8356,6 +8356,7 @@ if __name__ == "__main__":
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
+
 
 
 
