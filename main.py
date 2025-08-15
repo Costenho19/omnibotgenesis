@@ -2015,7 +2015,7 @@ Contacta con el soporte técnico o Harold Nunes directamente.
             
             # Enviar respuesta
             await update.message.reply_text(ai_response['response'], parse_mode='Markdown')
-            
+         
             # Audio automático para consultas importantes
             important_keywords = ['precio', 'trading', 'comprar', 'vender', 'sharia', 'halal', 'análisis', 'auto']
             if any(keyword in message.lower() for keyword in important_keywords):
@@ -2072,11 +2072,32 @@ Contacta con el soporte técnico o Harold Nunes directamente.
             logger.error(f"❌ Error en bot Telegram: {e}")
 
 # === APLICACIÓN FLASK EMPRESARIAL COMPLETA ===
-def create_enterprise_app(db_manager: DatabaseManager, auto_trading: AutoTradingEngine) -> Flask:
+def create_enterprise_app(db_manager: DatabaseManager, auto_trading: AutoTradingEngine, bot_instance=None) -> Flask:
     """Crear aplicación Flask empresarial completa"""
     app = Flask(__name__)
-    
+       from flask import request
+    from telegram import Update
+    import json 
+       @app.route(f'/webhook/{config.TELEGRAM_BOT_TOKEN}', methods=['POST'])
+    def telegram_webhook():
+        """Webhook para Telegram en Railway"""
+        try:
+            json_str = request.get_data().decode('UTF-8')
+            update = Update.de_json(json.loads(json_str), bot_instance.application.bot)
+            
+            # Procesar update en background
+            import asyncio
+            asyncio.create_task(bot_instance.handle_message(update, None))
+            
+            return 'OK', 200
+        except Exception as e:
+            logger.error(f"Error en webhook Telegram: {e}")
+            return 'Error', 500
+
     @app.route('/')
+    def index():
+        """Dashboard principal"""
+@app.route('/')
     def index():
         """Dashboard principal"""
         auto_status = auto_trading.get_status()
@@ -2482,8 +2503,7 @@ def main():
         
         # 7. Crear y ejecutar aplicación Flask
         logger.info("🌐 Inicializando servidor web empresarial...")
-        flask_app = create_enterprise_app(db_manager, telegram_bot.auto_trading)
-        
+        flask_app = create_enterprise_app(db_manager, telegram_bot.auto_trading, telegram_bot)
         logger.info("=" * 70)
         logger.info("✅ OMNIX V5.1 ENTERPRISE FUSION COMPLETAMENTE OPERATIVO")
         logger.info("🤖 Auto-trading: ACTIVO")
@@ -2536,13 +2556,14 @@ def create_app():
         bot_thread = threading.Thread(target=run_bot, daemon=True)
         bot_thread.start()
         
-        return create_enterprise_app(db_manager, telegram_bot.auto_trading)
+       return create_enterprise_app(db_manager, telegram_bot.auto_trading, telegram_bot)
     except Exception as e:
         logger.error(f"Error en factory: {e}")
         return Flask(__name__)
 
 if __name__ == "__main__":
     main()
+
 
 
 
