@@ -3617,7 +3617,271 @@ Sistema operando con trading real en Kraken, APIs en tiempo real, análisis cuá
                     
         except Exception as e:
             logger.error(f"Error auto-aprendizaje: {e}")
+# ==================== SISTEMA MULTI-MONEDA AVANZADO ====================
 
+class MultiCurrencyTradingEngine:
+    """Sistema de trading multi-moneda para flujo constante"""
+    
+    def __init__(self, trading_system):
+        self.trading_system = trading_system
+        self.active_pairs = []
+        self.balance_threshold = 5.0  # $5 mínimo para tradear
+        self.rotation_strategy = 'smart_rotation'
+        
+        # Pares principales soportados por Kraken
+        self.supported_pairs = [
+            'BTC/USD', 'BTC/EUR', 'ETH/USD', 'ETH/EUR', 'ETH/BTC',
+            'XRP/USD', 'XRP/EUR', 'ADA/USD', 'ADA/EUR', 'DOT/USD',
+            'LINK/USD', 'LTC/USD', 'BCH/USD', 'ATOM/USD', 'ALGO/USD'
+        ]
+        
+        logger.info("🚀 Motor Multi-Moneda iniciado")
+    
+    def get_all_available_balances(self):
+        """Obtener todos los balances disponibles"""
+        try:
+            if not self.trading_system.exchange:
+                return {}
+            
+            balance = self.trading_system.exchange.fetch_balance()
+            available_balances = {}
+            
+            for currency, amounts in balance.items():
+                if currency == 'info':
+                    continue
+                    
+                free_amount = amounts.get('free', 0)
+                if free_amount and free_amount > 0:
+                    # Convertir a USD para evaluación
+                    usd_value = self.convert_to_usd_estimate(currency, free_amount)
+                    if usd_value >= self.balance_threshold:
+                        available_balances[currency] = {
+                            'amount': free_amount,
+                            'usd_value': usd_value,
+                            'tradeable': True
+                        }
+            
+            logger.info(f"💰 Balances detectados: {list(available_balances.keys())}")
+            return available_balances
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo balances: {e}")
+            return {}
+    
+    def convert_to_usd_estimate(self, currency, amount):
+        """Estimar valor en USD"""
+        try:
+            if currency == 'USD':
+                return amount
+            
+            # Intentar obtener precio actual
+            symbol = f"{currency}/USD"
+            if symbol in ['BTC/USD', 'ETH/USD', 'XRP/USD', 'ADA/USD']:
+                ticker = self.trading_system.exchange.fetch_ticker(symbol)
+                return amount * ticker['last']
+            
+            # Fallback con precios aproximados
+            price_estimates = {
+                'BTC': 60000, 'ETH': 2400, 'XRP': 0.5, 'ADA': 0.3,
+                'DOT': 5, 'LINK': 12, 'LTC': 70, 'BCH': 120,
+                'EUR': 1.1, 'GBP': 1.3
+            }
+            
+            return amount * price_estimates.get(currency, 1)
+            
+        except:
+            return amount  # Asumir valor 1:1 si falla
+    
+    def find_optimal_trading_pairs(self, available_balances):
+        """Encontrar los mejores pares para tradear"""
+        optimal_pairs = []
+        
+        for currency in available_balances.keys():
+            if currency == 'USD':
+                continue
+                
+            # Buscar pares disponibles para esta moneda
+            possible_pairs = [
+                f"{currency}/USD",
+                f"{currency}/EUR", 
+                f"{currency}/BTC"
+            ]
+            
+            for pair in possible_pairs:
+                if pair in self.supported_pairs:
+                    try:
+                        # Verificar liquidez del par
+                        ticker = self.trading_system.exchange.fetch_ticker(pair)
+                        if ticker['quoteVolume'] > 100000:  # Liquidez mínima
+                            optimal_pairs.append({
+                                'pair': pair,
+                                'base_currency': currency,
+                                'quote_currency': pair.split('/')[1],
+                                'volume': ticker['quoteVolume'],
+                                'price': ticker['last'],
+                                'available_amount': available_balances[currency]['amount']
+                            })
+                    except:
+                        continue
+        
+        # Ordenar por volumen (mayor liquidez primero)
+        optimal_pairs.sort(key=lambda x: x['volume'], reverse=True)
+        logger.info(f"🎯 Pares óptimos encontrados: {len(optimal_pairs)}")
+        
+        return optimal_pairs[:5]  # Top 5 pares
+    
+    def execute_multi_currency_rotation(self):
+        """Ejecutar rotación inteligente entre monedas"""
+        try:
+            # 1. Obtener balances disponibles
+            balances = self.get_all_available_balances()
+            if not balances:
+                logger.info("⚠️ No hay balances suficientes para trading multi-moneda")
+                return False
+            
+            # 2. Encontrar pares óptimos
+            optimal_pairs = self.find_optimal_trading_pairs(balances)
+            if not optimal_pairs:
+                logger.info("⚠️ No se encontraron pares óptimos")
+                return False
+            
+            # 3. Ejecutar trades rotativos
+            trades_executed = 0
+            for pair_info in optimal_pairs[:3]:  # Solo top 3 para no saturar
+                
+                trade_result = self.execute_smart_rotation_trade(pair_info)
+                if trade_result:
+                    trades_executed += 1
+                    
+                time.sleep(2)  # Pausa entre trades
+            
+            logger.info(f"🚀 Multi-Currency: {trades_executed} trades ejecutados")
+            return trades_executed > 0
+            
+        except Exception as e:
+            logger.error(f"Error en rotación multi-moneda: {e}")
+            return False
+    
+    def execute_smart_rotation_trade(self, pair_info):
+        """Ejecutar trade inteligente para rotación"""
+        try:
+            pair = pair_info['pair']
+            base_amount = pair_info['available_amount']
+            current_price = pair_info['price']
+            
+            # Determinar estrategia basada en análisis técnico rápido
+            strategy = self.get_quick_technical_signal(pair)
+            
+            if strategy == 'SELL' and base_amount > 0:
+                # Vender una porción (25% para mantener liquidez)
+                sell_amount = base_amount * 0.25
+                
+                order = self.trading_system.exchange.create_market_sell_order(
+                    pair, sell_amount
+                )
+                
+                logger.info(f"💰 VENTA MULTI: {sell_amount} {pair} a ${current_price}")
+                return order
+                
+            elif strategy == 'BUY':
+                # Buscar quote currency disponible para comprar
+                quote_currency = pair.split('/')[1]
+                quote_balance = self.get_available_quote_balance(quote_currency)
+                
+                if quote_balance >= 10:  # Mínimo $10 para comprar
+                    buy_amount_usd = min(quote_balance * 0.3, 50)  # Max $50 por trade
+                    buy_amount = buy_amount_usd / current_price
+                    
+                    order = self.trading_system.exchange.create_market_buy_order(
+                        pair, buy_amount
+                    )
+                    
+                    logger.info(f"💎 COMPRA MULTI: {buy_amount} {pair} por ${buy_amount_usd}")
+                    return order
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error ejecutando trade rotativo: {e}")
+            return None
+    
+    def get_quick_technical_signal(self, pair):
+        """Análisis técnico rápido para decisión de trade"""
+        try:
+            # Obtener datos de precios recientes
+            ohlcv = self.trading_system.exchange.fetch_ohlcv(pair, '5m', limit=20)
+            prices = [candle[4] for candle in ohlcv]  # Precios de cierre
+            
+            current_price = prices[-1]
+            sma_5 = sum(prices[-5:]) / 5
+            sma_10 = sum(prices[-10:]) / 10
+            
+            # Análisis de momentum
+            recent_change = (current_price - prices[-5]) / prices[-5]
+            
+            # Señales de trading
+            if current_price > sma_5 > sma_10 and recent_change > 0.02:
+                return 'BUY'
+            elif current_price < sma_5 < sma_10 and recent_change < -0.02:
+                return 'SELL'
+            else:
+                return 'HOLD'
+                
+        except:
+            return 'HOLD'  # Conservador si no se puede analizar
+    
+    def get_available_quote_balance(self, quote_currency):
+        """Obtener balance disponible de moneda quote"""
+        try:
+            balance = self.trading_system.exchange.fetch_balance()
+            return balance.get(quote_currency, {}).get('free', 0)
+        except:
+            return 0
+
+# ==================== SISTEMA MEJORADO ====================
+
+class EnhancedTradingSystem(TradingSystem):
+    """Sistema de trading mejorado con capacidades multi-moneda"""
+    
+    def __init__(self):
+        super().__init__()
+        self.multi_currency_engine = MultiCurrencyTradingEngine(self)
+        self.auto_rotation_enabled = True
+        self.rotation_interval = 300  # 5 minutos
+        self.last_rotation = 0
+        
+    def start_multi_currency_auto_trading(self):
+        """Iniciar trading automático multi-moneda"""
+        def rotation_loop():
+            while self.auto_rotation_enabled:
+                try:
+                    current_time = time.time()
+                    if current_time - self.last_rotation >= self.rotation_interval:
+                        
+                        logger.info("🔄 Iniciando rotación multi-moneda automática...")
+                        success = self.multi_currency_engine.execute_multi_currency_rotation()
+                        
+                        if success:
+                            logger.info("✅ Rotación multi-moneda completada")
+                        else:
+                            logger.info("⚠️ No se ejecutaron trades en esta rotación")
+                        
+                        self.last_rotation = current_time
+                    
+                    time.sleep(60)  # Verificar cada minuto
+                    
+                except Exception as e:
+                    logger.error(f"Error en loop multi-moneda: {e}")
+                    time.sleep(60)
+        
+        # Iniciar en hilo separado
+        rotation_thread = threading.Thread(target=rotation_loop, daemon=True)
+        rotation_thread.start()
+        
+        logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
+        return True
+
+# ==================== FIN SISTEMA MULTI-MONEDA ====================
 # Sistema de Trading
 class TradingSystem:
     def __init__(self):
@@ -8084,6 +8348,14 @@ def activate_continuous_adaptation(trading_system):
 
 if __name__ == "__main__":
     main()
+    # ==================== ACTIVAR MULTI-MONEDA AUTO-TRADING ====================
+    if TRADING_AVAILABLE and config.KRAKEN_API_KEY:
+        try:
+            enhanced_trading = EnhancedTradingSystem()
+            enhanced_trading.start_multi_currency_auto_trading()
+            logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
+        except Exception as e:
+            logger.error(f"Error activando multi-moneda: {e}")
 
 
 
