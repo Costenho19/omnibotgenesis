@@ -7306,14 +7306,14 @@ class EnterpriseAnalyticsEngine:
             'confidence': 'high'
         }
     
-    # Fallback si no hay datos
-    return {
-        'pattern_detected': 'bullish_trend',
-        'probability': 0.75,
-        'combined_score': 0.75, 
-        'recommendation': 'bullish', 
-        'confidence': 'medium'
-    }
+           # Fallback si no hay datos
+        return {
+            'pattern_detected': 'bullish_trend',
+            'probability': 0.75,
+            'combined_score': 0.75, 
+            'recommendation': 'bullish', 
+            'confidence': 'medium'
+        }
     
     def _determine_market_trend(self, market_data):
         change = market_data.get('change', 0)
@@ -8356,6 +8356,7 @@ if __name__ == "__main__":
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
+
 
 
 
