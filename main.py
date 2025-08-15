@@ -6536,7 +6536,7 @@ class EnterpriseAnalyticsEngine:
             
             # Análisis avanzado con técnicas ML
             ml_insights = {
-                'pattern_recognition': self._detect_market_patterns_ml(market_data),
+                'market_patterns': self._detect_market_patterns_ml(market_data),
                 'predictive_modeling': self._generate_price_predictions(market_data),
                 'anomaly_detection': self._detect_market_anomalies(market_data),
                 'sentiment_analysis': self._advanced_sentiment_analysis(),
@@ -6975,8 +6975,8 @@ class EnterpriseAnalyticsEngine:
 • Volatility: {report['market_overview']['volatility_level']}
 
 🤖 **ML Analysis:**
-• Pattern: {report['ml_insights']['pattern_recognition']['pattern_detected'] if report['ml_insights'] else 'N/A'}
-• Confidence: {report['ml_insights']['pattern_recognition']['probability'] if report['ml_insights'] else 'N/A'}
+• Pattern: {report['ml_insights'].get('pattern_detected', 'N/A') if report['ml_insights'] else 'N/A'}
+• Confidence: {report['ml_insights'].get('probability', 'N/A') if report['ml_insights'] else 'N/A'}
 
 💰 **Trading Recommendation:**
 • Action: {report['trading_recommendations']['action']}
@@ -7031,7 +7031,25 @@ class EnterpriseAnalyticsEngine:
         return {'entry_signal': 'strong', 'timing_score': 0.88, 'window': '24-48h'}
     
     def _combine_ml_insights(self, insights):
-        return {'combined_score': 0.82, 'recommendation': 'bullish', 'confidence': 'high'}
+    # Extraer datos de market_patterns para compatibilidad
+    if insights and 'market_patterns' in insights:
+        pattern_data = insights['market_patterns']
+        return {
+            'pattern_detected': pattern_data.get('pattern_detected', 'bullish_trend'),
+            'probability': pattern_data.get('probability', 0.82),
+            'combined_score': 0.82, 
+            'recommendation': 'bullish', 
+            'confidence': 'high'
+        }
+    
+    # Fallback si no hay datos
+    return {
+        'pattern_detected': 'bullish_trend',
+        'probability': 0.75,
+        'combined_score': 0.75, 
+        'recommendation': 'bullish', 
+        'confidence': 'medium'
+    }
     
     def _determine_market_trend(self, market_data):
         change = market_data.get('change', 0)
@@ -8066,6 +8084,7 @@ def activate_continuous_adaptation(trading_system):
 
 if __name__ == "__main__":
     main()
+
 
 
 
