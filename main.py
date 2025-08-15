@@ -2074,11 +2074,11 @@ Contacta con el soporte técnico o Harold Nunes directamente.
 # === APLICACIÓN FLASK EMPRESARIAL COMPLETA ===
 def create_enterprise_app(db_manager: DatabaseManager, auto_trading: AutoTradingEngine, bot_instance=None) -> Flask:
     """Crear aplicación Flask empresarial completa"""
-    app = Flask(__name__)
        from flask import request
     from telegram import Update
-    import json 
-       @app.route(f'/webhook/{config.TELEGRAM_BOT_TOKEN}', methods=['POST'])
+    import json
+    
+          @app.route(f'/webhook/{config.TELEGRAM_BOT_TOKEN}', methods=['POST'])
     def telegram_webhook():
         """Webhook para Telegram en Railway"""
         try:
@@ -2094,9 +2094,8 @@ def create_enterprise_app(db_manager: DatabaseManager, auto_trading: AutoTrading
             logger.error(f"Error en webhook Telegram: {e}")
             return 'Error', 500
 
-    @app.route('/')
-    def index():
-        """Dashboard principal"""
+  
+       
 @app.route('/')
     def index():
         """Dashboard principal"""
@@ -2563,6 +2562,7 @@ def create_app():
 
 if __name__ == "__main__":
     main()
+
 
 
 
