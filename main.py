@@ -5257,7 +5257,7 @@ def create_flask_app():
     def telegram_webhook():
         """Webhook ULTRA RÁPIDO - Sin demoras"""
         try:
-                        import requests
+            import requests
             from flask import jsonify
             data = request.get_json()
             
@@ -8378,6 +8378,7 @@ if config.TELEGRAM_BOT_TOKEN:
         logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
 
     logger.info("🤖 Bot Telegram iniciado y escuchando...")
+
 
 
 
