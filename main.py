@@ -8246,29 +8246,29 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
     
-    # ==================== CONFIGURAR WEBHOOK TELEGRAM ====================
-    if os.environ.get('TELEGRAM_BOT_TOKEN'):
-        try:
-            import requests
-            webhook_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/setWebhook"
-            # Railway usa RAILWAY_PUBLIC_DOMAIN, no RAILWAY_STATIC_URL
-            domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN') or os.environ.get('RAILWAY_STATIC_URL') or 'omnix-v51-enterprise-fusion-harold-original-production.up.railway.app'
-            webhook_data = {
-                'url': f"https://{domain}/webhook/{os.environ.get('TELEGRAM_BOT_TOKEN')}"
-            }
-            response = requests.post(webhook_url, json=webhook_data)
-            if response.status_code == 200:
-                logger.info("🤖 Webhook Telegram configurado correctamente")
-            else:
-                logger.error(f"Error configurando webhook: {response.text}")
-        except Exception as e:
-            logger.error(f"Error configurando webhook: {e}")
+       # ==================== CONFIGURAR WEBHOOK TELEGRAM ====================
+#     if os.environ.get('TELEGRAM_BOT_TOKEN'):
+#         try:
+#             import requests
+#             webhook_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/setWebhook"
+#             # Railway usa RAILWAY_PUBLIC_DOMAIN, no RAILWAY_STATIC_URL
+#             domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN') or os.environ.get('RAILWAY_STATIC_URL') or 'omnix-v51-enterprise-fusion-harold-original-production.up.railway.app'
+#             webhook_data = {
+#                 'url': f"https://{domain}/webhook/{os.environ.get('TELEGRAM_BOT_TOKEN')}"
+#             }
+#             response = requests.post(webhook_url, json=webhook_data)
+#             if response.status_code == 200:
+#                 logger.info("🤖 Webhook Telegram configurado correctamente")
+#             else:
+#                 logger.error(f"Error configurando webhook: {response.text}")
+#         except Exception as e:
+#             logger.error(f"Error configurando webhook: {e}")
     
     # ==================== INICIAR BOT TELEGRAM ====================
     if os.environ.get('TELEGRAM_BOT_TOKEN'):
         try:
             telegram_bot = EnterpriseTelegramBot()
-            success = telegram_bot.start_polling(drop_pending_updates=True)
+            success = telegram_bot.start_polling(drop_pending_updates=False)
             if success:
                 logger.info("✅ BOT TELEGRAM CONFIGURADO Y LISTO")
             else:
@@ -8276,6 +8276,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
