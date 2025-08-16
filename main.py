@@ -3840,7 +3840,7 @@ class MultiCurrencyTradingEngine:
 
 # ==================== SISTEMA MEJORADO ====================
 
-class EnhancedTradingSystem(TradingSystem):
+class EnhancedTradingSystem:
     """Sistema de trading mejorado con capacidades multi-moneda"""
     
     def __init__(self):
@@ -8356,6 +8356,7 @@ if __name__ == "__main__":
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
+
 
 
 
