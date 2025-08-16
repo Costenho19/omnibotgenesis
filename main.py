@@ -6250,7 +6250,7 @@ Ejemplo: /sell 50 ETH
                         
                         if audio_file and os.path.exists(audio_file):
                             # Enviar audio por Telegram
-                            voice_url = f"https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVoice"
+                            voice_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendVoice"
                             
                             with open(audio_file, 'rb') as audio:
                                 files = {'voice': audio}
@@ -8276,6 +8276,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
