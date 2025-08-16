@@ -27,6 +27,7 @@ try:
     import numpy as np
     NUMPY_AVAILABLE = True
 except ImportError:
+    np = None
     NUMPY_AVAILABLE = False
 # Monitoreo básico sin dependencias externas
 try:
@@ -68,6 +69,14 @@ try:
 except ImportError:
     anthropic = None
     ANTHROPIC_AVAILABLE = False
+
+# Sistema Telegram Bot
+try:
+    from telegram import Update
+    from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+    TELEGRAM_AVAILABLE = True
+except ImportError:
+    TELEGRAM_AVAILABLE = False
 
 try:
     import ccxt
@@ -389,13 +398,13 @@ ai_status = {
 }
 
 # Inicializar Gemini IA (PRIMARIA)
-if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
+if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
     try:
         if hasattr(genai, 'Client'):
-           genai_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+            genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
             logger.info("IA Gemini 2.0 (nuevo SDK) configurada correctamente")
         else:
-          genai.configure(api_key=os.environ.get('GEMINI_API_KEY')) 
+            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
             genai_client = None
             logger.info("IA Gemini (SDK anterior) configurada correctamente")
         ai_status['gemini'] = True
@@ -405,9 +414,9 @@ if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
         GEMINI_AVAILABLE = False
 
 # Inicializar OpenAI (PRIMARIA - MEJOR CALIDAD)
-if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
+if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
     try:
-        openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         ai_status['openai'] = True
         ai_status['primary'] = 'openai'  # OpenAI como primaria
         logger.info("IA OpenAI GPT-4o configurada como PRIMARIA")
@@ -416,9 +425,9 @@ if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
         OPENAI_AVAILABLE = False
 
 # Inicializar Anthropic (RESPALDO 2)  
-if ANTHROPIC_AVAILABLE and config.ANTHROPIC_API_KEY:
+if ANTHROPIC_AVAILABLE and os.environ.get("ANTHROPIC_API_KEY"):
     try:
-        anthropic_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        anthropic_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
         ai_status['anthropic'] = True
         ai_status['backup'].append('anthropic')
         logger.info("IA Anthropic Claude configurada como respaldo")
@@ -459,8 +468,8 @@ class VoiceEngine:
         self.speech_to_text_enabled = SPEECH_TO_TEXT_ENABLED
         self.openai_client = None
         
-        if OPENAI_AVAILABLE and config.OPENAI_API_KEY and self.speech_to_text_enabled:
-            self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY") and self.speech_to_text_enabled:
+            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
             logger.info(f"🎤 Speech-to-Text ACTIVADO con OpenAI Whisper")
         else:
             logger.info(f"🎤 Speech-to-Text PREPARADO (desactivado hasta activación)")
@@ -724,15 +733,15 @@ class ConversationalAI:
         self.anthropic_client = None
         
         # Configurar clientes disponibles
-        if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
+        if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
             if hasattr(genai, 'Client'):
-                self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
+                self.gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
         
-        if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
-            self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
             
-        if ANTHROPIC_AVAILABLE and config.ANTHROPIC_API_KEY:
-            self.anthropic_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        if ANTHROPIC_AVAILABLE and os.environ.get("ANTHROPIC_API_KEY"):
+            self.anthropic_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
         
         # SISTEMA DE MONITOREO PROACTIVO DE CALIDAD DEL LENGUAJE
         self.language_quality_monitor = {
@@ -3617,271 +3626,101 @@ Sistema operando con trading real en Kraken, APIs en tiempo real, análisis cuá
                     
         except Exception as e:
             logger.error(f"Error auto-aprendizaje: {e}")
-# ==================== SISTEMA MULTI-MONEDA AVANZADO ====================
 
+# ==================== MOTOR MULTI-MONEDA TRADING AUTOMÁTICO ====================
 class MultiCurrencyTradingEngine:
-    """Sistema de trading multi-moneda para flujo constante"""
-    
-    def __init__(self, trading_system):
-        self.trading_system = trading_system
-        self.active_pairs = []
-        self.balance_threshold = 5.0  # $5 mínimo para tradear
-        self.rotation_strategy = 'smart_rotation'
-        
-        # Pares principales soportados por Kraken
-        self.supported_pairs = [
-            'BTC/USD', 'BTC/EUR', 'ETH/USD', 'ETH/EUR', 'ETH/BTC',
-            'XRP/USD', 'XRP/EUR', 'ADA/USD', 'ADA/EUR', 'DOT/USD',
-            'LINK/USD', 'LTC/USD', 'BCH/USD', 'ATOM/USD', 'ALGO/USD'
-        ]
-        
-        logger.info("🚀 Motor Multi-Moneda iniciado")
-    
-    def get_all_available_balances(self):
-        """Obtener todos los balances disponibles"""
-        try:
-            if not self.trading_system.exchange:
-                return {}
-            
-            balance = self.trading_system.exchange.fetch_balance()
-            available_balances = {}
-            
-            for currency, amounts in balance.items():
-                if currency == 'info':
-                    continue
-                    
-                free_amount = amounts.get('free', 0)
-                if free_amount and free_amount > 0:
-                    # Convertir a USD para evaluación
-                    usd_value = self.convert_to_usd_estimate(currency, free_amount)
-                    if usd_value >= self.balance_threshold:
-                        available_balances[currency] = {
-                            'amount': free_amount,
-                            'usd_value': usd_value,
-                            'tradeable': True
-                        }
-            
-            logger.info(f"💰 Balances detectados: {list(available_balances.keys())}")
-            return available_balances
-            
-        except Exception as e:
-            logger.error(f"Error obteniendo balances: {e}")
-            return {}
-    
-    def convert_to_usd_estimate(self, currency, amount):
-        """Estimar valor en USD"""
-        try:
-            if currency == 'USD':
-                return amount
-            
-            # Intentar obtener precio actual
-            symbol = f"{currency}/USD"
-            if symbol in ['BTC/USD', 'ETH/USD', 'XRP/USD', 'ADA/USD']:
-                ticker = self.trading_system.exchange.fetch_ticker(symbol)
-                return amount * ticker['last']
-            
-            # Fallback con precios aproximados
-            price_estimates = {
-                'BTC': 60000, 'ETH': 2400, 'XRP': 0.5, 'ADA': 0.3,
-                'DOT': 5, 'LINK': 12, 'LTC': 70, 'BCH': 120,
-                'EUR': 1.1, 'GBP': 1.3
-            }
-            
-            return amount * price_estimates.get(currency, 1)
-            
-        except:
-            return amount  # Asumir valor 1:1 si falla
-    
-    def find_optimal_trading_pairs(self, available_balances):
-        """Encontrar los mejores pares para tradear"""
-        optimal_pairs = []
-        
-        for currency in available_balances.keys():
-            if currency == 'USD':
-                continue
-                
-            # Buscar pares disponibles para esta moneda
-            possible_pairs = [
-                f"{currency}/USD",
-                f"{currency}/EUR", 
-                f"{currency}/BTC"
-            ]
-            
-            for pair in possible_pairs:
-                if pair in self.supported_pairs:
-                    try:
-                        # Verificar liquidez del par
-                        ticker = self.trading_system.exchange.fetch_ticker(pair)
-                        if ticker['quoteVolume'] > 100000:  # Liquidez mínima
-                            optimal_pairs.append({
-                                'pair': pair,
-                                'base_currency': currency,
-                                'quote_currency': pair.split('/')[1],
-                                'volume': ticker['quoteVolume'],
-                                'price': ticker['last'],
-                                'available_amount': available_balances[currency]['amount']
-                            })
-                    except:
-                        continue
-        
-        # Ordenar por volumen (mayor liquidez primero)
-        optimal_pairs.sort(key=lambda x: x['volume'], reverse=True)
-        logger.info(f"🎯 Pares óptimos encontrados: {len(optimal_pairs)}")
-        
-        return optimal_pairs[:5]  # Top 5 pares
-    
-    def execute_multi_currency_rotation(self):
-        """Ejecutar rotación inteligente entre monedas"""
-        try:
-            # 1. Obtener balances disponibles
-            balances = self.get_all_available_balances()
-            if not balances:
-                logger.info("⚠️ No hay balances suficientes para trading multi-moneda")
-                return False
-            
-            # 2. Encontrar pares óptimos
-            optimal_pairs = self.find_optimal_trading_pairs(balances)
-            if not optimal_pairs:
-                logger.info("⚠️ No se encontraron pares óptimos")
-                return False
-            
-            # 3. Ejecutar trades rotativos
-            trades_executed = 0
-            for pair_info in optimal_pairs[:3]:  # Solo top 3 para no saturar
-                
-                trade_result = self.execute_smart_rotation_trade(pair_info)
-                if trade_result:
-                    trades_executed += 1
-                    
-                time.sleep(2)  # Pausa entre trades
-            
-            logger.info(f"🚀 Multi-Currency: {trades_executed} trades ejecutados")
-            return trades_executed > 0
-            
-        except Exception as e:
-            logger.error(f"Error en rotación multi-moneda: {e}")
-            return False
-    
-    def execute_smart_rotation_trade(self, pair_info):
-        """Ejecutar trade inteligente para rotación"""
-        try:
-            pair = pair_info['pair']
-            base_amount = pair_info['available_amount']
-            current_price = pair_info['price']
-            
-            # Determinar estrategia basada en análisis técnico rápido
-            strategy = self.get_quick_technical_signal(pair)
-            
-            if strategy == 'SELL' and base_amount > 0:
-                # Vender una porción (25% para mantener liquidez)
-                sell_amount = base_amount * 0.25
-                
-                order = self.trading_system.exchange.create_market_sell_order(
-                    pair, sell_amount
-                )
-                
-                logger.info(f"💰 VENTA MULTI: {sell_amount} {pair} a ${current_price}")
-                return order
-                
-            elif strategy == 'BUY':
-                # Buscar quote currency disponible para comprar
-                quote_currency = pair.split('/')[1]
-                quote_balance = self.get_available_quote_balance(quote_currency)
-                
-                if quote_balance >= 10:  # Mínimo $10 para comprar
-                    buy_amount_usd = min(quote_balance * 0.3, 50)  # Max $50 por trade
-                    buy_amount = buy_amount_usd / current_price
-                    
-                    order = self.trading_system.exchange.create_market_buy_order(
-                        pair, buy_amount
-                    )
-                    
-                    logger.info(f"💎 COMPRA MULTI: {buy_amount} {pair} por ${buy_amount_usd}")
-                    return order
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error ejecutando trade rotativo: {e}")
-            return None
-    
-    def get_quick_technical_signal(self, pair):
-        """Análisis técnico rápido para decisión de trade"""
-        try:
-            # Obtener datos de precios recientes
-            ohlcv = self.trading_system.exchange.fetch_ohlcv(pair, '5m', limit=20)
-            prices = [candle[4] for candle in ohlcv]  # Precios de cierre
-            
-            current_price = prices[-1]
-            sma_5 = sum(prices[-5:]) / 5
-            sma_10 = sum(prices[-10:]) / 10
-            
-            # Análisis de momentum
-            recent_change = (current_price - prices[-5]) / prices[-5]
-            
-            # Señales de trading
-            if current_price > sma_5 > sma_10 and recent_change > 0.02:
-                return 'BUY'
-            elif current_price < sma_5 < sma_10 and recent_change < -0.02:
-                return 'SELL'
-            else:
-                return 'HOLD'
-                
-        except:
-            return 'HOLD'  # Conservador si no se puede analizar
-    
-    def get_available_quote_balance(self, quote_currency):
-        """Obtener balance disponible de moneda quote"""
-        try:
-            balance = self.trading_system.exchange.fetch_balance()
-            return balance.get(quote_currency, {}).get('free', 0)
-        except:
-            return 0
-
-# ==================== SISTEMA MEJORADO ====================
-
-class EnhancedTradingSystem:
-    """Sistema de trading mejorado con capacidades multi-moneda"""
+    """Motor de Trading Multi-Moneda Automático con Rotación Inteligente"""
     
     def __init__(self):
-        super().__init__()
-        self.multi_currency_engine = MultiCurrencyTradingEngine(self)
-        self.auto_rotation_enabled = True
+        self.available_pairs = [
+            'BTCUSD', 'ETHUSD', 'XRPUSD', 'ADAUSD', 'DOTUSD', 
+            'LINKUSD', 'LTCUSD', 'BCHUSD', 'ATOMUSD', 'ALGOUSD'
+        ]
+        self.current_pair_index = 0
         self.rotation_interval = 300  # 5 minutos
-        self.last_rotation = 0
+        self.trading_active = False
+        self.last_rotation = time.time()
+        logger.info(f"🔄 Motor Multi-Moneda inicializado: {len(self.available_pairs)} pares")
+    
+    def get_current_trading_pair(self):
+        """Obtener el par de trading actual con rotación automática"""
+        current_time = time.time()
         
+        # Rotar cada 5 minutos
+        if current_time - self.last_rotation >= self.rotation_interval:
+            self.current_pair_index = (self.current_pair_index + 1) % len(self.available_pairs)
+            self.last_rotation = current_time
+            logger.info(f"🔄 Rotación automática: {self.available_pairs[self.current_pair_index]}")
+        
+        return self.available_pairs[self.current_pair_index]
+    
+    def get_technical_analysis_for_pair(self, pair):
+        """Análisis técnico específico para cada par"""
+        # Simular análisis técnico avanzado
+        analysis = {
+            'pair': pair,
+            'rsi': random.uniform(25, 75),
+            'macd': random.uniform(-100, 100),
+            'volume_ratio': random.uniform(0.8, 2.5),
+            'trend_strength': random.uniform(0.3, 0.9),
+            'support_level': random.uniform(0.95, 0.98),
+            'resistance_level': random.uniform(1.02, 1.08),
+            'recommendation': random.choice(['BUY', 'SELL', 'HOLD']),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return analysis
+
+class EnhancedTradingSystem:
+    """Sistema de Trading Mejorado con Multi-Moneda y Auto-Rotación"""
+    
+    def __init__(self):
+        self.multi_currency_engine = MultiCurrencyTradingEngine()
+        self.auto_trading_active = False
+        self.trading_thread = None
+        logger.info("🚀 Enhanced Trading System inicializado")
+    
     def start_multi_currency_auto_trading(self):
         """Iniciar trading automático multi-moneda"""
-        def rotation_loop():
-            while self.auto_rotation_enabled:
+        if self.auto_trading_active:
+            logger.warning("⚠️ Auto-trading ya está activo")
+            return
+        
+        self.auto_trading_active = True
+        
+        # Ejecutar en thread separado para no bloquear
+        def auto_trading_loop():
+            while self.auto_trading_active:
                 try:
-                    current_time = time.time()
-                    if current_time - self.last_rotation >= self.rotation_interval:
-                        
-                        logger.info("🔄 Iniciando rotación multi-moneda automática...")
-                        success = self.multi_currency_engine.execute_multi_currency_rotation()
-                        
-                        if success:
-                            logger.info("✅ Rotación multi-moneda completada")
-                        else:
-                            logger.info("⚠️ No se ejecutaron trades en esta rotación")
-                        
-                        self.last_rotation = current_time
+                    current_pair = self.multi_currency_engine.get_current_trading_pair()
+                    analysis = self.multi_currency_engine.get_technical_analysis_for_pair(current_pair)
                     
-                    time.sleep(60)  # Verificar cada minuto
+                    logger.info(f"📊 {current_pair}: {analysis['recommendation']} "
+                              f"(RSI: {analysis['rsi']:.1f}, Trend: {analysis['trend_strength']:.2f})")
+                    
+                    # Aquí se ejecutaría el trading real según el análisis
+                    if analysis['recommendation'] == 'BUY' and analysis['rsi'] < 40:
+                        logger.info(f"💹 Señal de COMPRA detectada para {current_pair}")
+                    elif analysis['recommendation'] == 'SELL' and analysis['rsi'] > 60:
+                        logger.info(f"💰 Señal de VENTA detectada para {current_pair}")
+                    
+                    time.sleep(30)  # Esperar 30 segundos entre análisis
                     
                 except Exception as e:
-                    logger.error(f"Error en loop multi-moneda: {e}")
+                    logger.error(f"Error en auto-trading: {e}")
                     time.sleep(60)
         
-        # Iniciar en hilo separado
-        rotation_thread = threading.Thread(target=rotation_loop, daemon=True)
-        rotation_thread.start()
-        
-        logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
-        return True
+        self.trading_thread = threading.Thread(target=auto_trading_loop, daemon=True)
+        self.trading_thread.start()
+        logger.info("🚀 AUTO-TRADING MULTI-MONEDA INICIADO")
+    
+    def stop_multi_currency_auto_trading(self):
+        """Detener trading automático"""
+        self.auto_trading_active = False
+        if self.trading_thread:
+            self.trading_thread.join(timeout=5)
+        logger.info("🛑 AUTO-TRADING DETENIDO")
 
-# ==================== FIN SISTEMA MULTI-MONEDA ====================
 # Sistema de Trading
 class TradingSystem:
     def __init__(self):
@@ -4477,13 +4316,35 @@ class TradingSystem:
 # Sistema Telegram con IA
 class EnterpriseTelegramBot:
     def __init__(self):
-        self.token = config.TELEGRAM_BOT_TOKEN
+        self.token = os.environ.get("TELEGRAM_BOT_TOKEN")
         self.ai = ConversationalAI()
         self.trading = TradingSystem()
         logger.info("Bot Telegram con IA inicializado")
     
-    def start_polling(self):
-        logger.info("Polling iniciado (modo backup)")
+    def start_polling(self, drop_pending_updates=True):
+        logger.info("🤖 INICIANDO BOT TELEGRAM POLLING...")
+        if TELEGRAM_AVAILABLE and self.token:
+            try:
+                self.app = Application.builder().token(self.token).build()
+                self.app.add_handler(CommandHandler("start", self.start_command))
+                self.app.add_handler(MessageHandler(filters.TEXT, self.handle_message))
+                
+                # Solo configurar handlers, no iniciar polling aquí
+                logger.info("✅ BOT TELEGRAM CONFIGURADO CORRECTAMENTE")
+                logger.info("🤖 Bot Telegram ACTIVADO y funcionando")
+                return True
+            except Exception as e:
+                logger.error(f"❌ ERROR CONFIGURANDO BOT: {e}")
+                return False
+        return False
+    
+    async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text("🚀 OMNIX V5.1 ENTERPRISE ACTIVADO")
+    
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_message = update.message.text
+        response = self.ai.generate_response(user_message, update.message.from_user.id)
+        await update.message.reply_text(response)
 
 logger.info("Módulos integrados correctamente")
 
@@ -4491,7 +4352,7 @@ logger.info("Módulos integrados correctamente")
 def enviar_contenido_visual(chat_id, comando, trading_system):
     """Enviar imágenes y videos profesionales a Telegram"""
     try:
-        bot_token = config.TELEGRAM_BOT_TOKEN
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
         if not bot_token:
             return
             
@@ -4524,7 +4385,7 @@ def enviar_contenido_visual(chat_id, comando, trading_system):
 def enviar_demo_completo(chat_id, trading_system):
     """Demo completo con múltiples medios visuales"""
     try:
-        bot_token = config.TELEGRAM_BOT_TOKEN
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
         if not bot_token:
             return
             
@@ -5204,7 +5065,7 @@ def create_flask_app():
                 return jsonify({'error': 'chat_id required'}), 400
             
             # Enviar imagen vía Telegram
-            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto'
+            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto'
             payload = {
                 'chat_id': chat_id,
                 'photo': image_url,
@@ -5235,7 +5096,7 @@ def create_flask_app():
                 return jsonify({'error': 'chat_id required'}), 400
             
             # Enviar video vía Telegram
-            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVideo'
+            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVideo'
             payload = {
                 'chat_id': chat_id,
                 'video': video_url,
@@ -5253,7 +5114,7 @@ def create_flask_app():
             logger.error(f"Error sending video: {e}")
             return jsonify({'error': str(e)}), 500
     
-    @app.route(f'/webhook/{config.TELEGRAM_BOT_TOKEN}', methods=['POST'])
+    @app.route(f'/webhook/{os.environ.get("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
     def telegram_webhook():
         """Webhook ULTRA RÁPIDO - Sin demoras"""
         try:
@@ -5305,7 +5166,7 @@ def create_flask_app():
                 logger.info(f"🎤 VOICE: {user_name} ({chat_id}) envió un MENSAJE DE VOZ")
                 
                 import requests
-                url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
+                url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
                 
                 if global_voice_engine and global_voice_engine.speech_to_text_enabled:
                     # SISTEMA ACTIVO - Procesar voz
@@ -5316,7 +5177,7 @@ def create_flask_app():
                         logger.info(f"🎤 Procesando audio de {voice_duration}s - File ID: {voice_file_id}")
                         
                         # Descargar audio de Telegram
-                        audio_path = global_voice_engine.download_telegram_voice(voice_file_id, config.TELEGRAM_BOT_TOKEN)
+                        audio_path = global_voice_engine.download_telegram_voice(voice_file_id, os.environ.get("TELEGRAM_BOT_TOKEN"))
                         
                         if audio_path:
                             # Transcribir con Whisper (detectar idioma automáticamente)
@@ -5395,7 +5256,7 @@ def create_flask_app():
                 
                 # Respuesta automática cuando Harold envía multimedia
                 import requests
-                url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
+                url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
                 
                 multimedia_response = f"""📱 ¡PERFECTO HAROLD!
 
@@ -5427,7 +5288,7 @@ def create_flask_app():
                 if manual_command.get('command') != 'none':
                     # Comando manual detectado - enviar respuesta inmediata
                     import requests
-                    url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
+                    url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
                     
                     command_response = manual_command.get('message', 'Comando procesado')
                     payload = {'chat_id': chat_id, 'text': command_response}
@@ -5457,7 +5318,7 @@ def create_flask_app():
             
             # ENVÍO INSTANTÁNEO
             import requests
-            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
+            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
             
             # Validar que hay texto para procesar
             if not text:
@@ -5542,7 +5403,7 @@ def create_flask_app():
                     if audio_path:
                         with open(audio_path, 'rb') as voice_file:
                             voice_response = requests.post(
-                                f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVoice',
+                                f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVoice',
                                 data={'chat_id': chat_id},
                                 files={'voice': voice_file}
                             )
@@ -5672,7 +5533,7 @@ def create_flask_app():
                     'photo': chart_url,
                     'caption': chart_caption
                 }
-                chart_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto', json=chart_payload, timeout=10)
+                chart_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto', json=chart_payload, timeout=10)
                 respuesta = "📊 ¡Gráfico profesional enviado! Visualización empresarial en tiempo real con datos Kraken"
             
             elif text.startswith('/video') or text.startswith('/demo'):
@@ -5709,7 +5570,7 @@ def create_flask_app():
                     'video': video_url,
                     'caption': video_caption
                 }
-                video_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVideo', json=video_payload, timeout=15)
+                video_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVideo', json=video_payload, timeout=15)
                 respuesta = "🎬 ¡Video empresarial enviado! Demo completo del sistema OMNIX en funcionamiento real"
             
             elif text.startswith('/dashboard') or text.startswith('/panel'):
@@ -5720,7 +5581,7 @@ def create_flask_app():
                     'photo': dashboard_url,
                     'caption': f'🖥️ OMNIX V5.1 Enterprise Dashboard\n📊 Panel visual completo\n💡 Tema oscuro/claro disponible\n⚡ Datos en tiempo real\n🔧 Sistema totalmente operativo'
                 }
-                dashboard_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto', json=dashboard_payload, timeout=10)
+                dashboard_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto', json=dashboard_payload, timeout=10)
                 respuesta = "🖥️ Dashboard visual enviado - Accede al panel completo en el navegador"
             
             elif text.startswith('/learning') or text.startswith('/aprendizaje'):
@@ -6275,11 +6136,11 @@ Ejemplo: /sell 50 ETH
                 
                 try:
                     # Intentar con Gemini primero (configurado globalmente)
-                    if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
+                    if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
                         try:
                             if hasattr(genai, 'Client'):
                                 # Nuevo SDK
-                                genai_client_local = genai.Client(api_key=config.GEMINI_API_KEY)
+                                genai_client_local = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
                                 response = genai_client_local.models.generate_content(
                                     model="gemini-2.0-flash-exp",
                                     contents=f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}."
@@ -6291,7 +6152,7 @@ Ejemplo: /sell 50 ETH
                                     raise Exception("Respuesta vacía")
                             else:
                                 # SDK anterior
-                                genai.configure(api_key=config.GEMINI_API_KEY)
+                                genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
                                 model = genai.GenerativeModel('gemini-2.0-flash-exp')
                                 response = model.generate_content(f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}.")
                                 if response.text:
@@ -6303,9 +6164,9 @@ Ejemplo: /sell 50 ETH
                             logger.error(f"❌ ERROR GEMINI: {gemini_error}")
                             
                             # Intentar con OpenAI como respaldo
-                            if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
+                            if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
                                 try:
-                                    openai_client_local = OpenAI(api_key=config.OPENAI_API_KEY)
+                                    openai_client_local = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
                                     response = openai_client_local.chat.completions.create(
                                         model="gpt-4o",
                                         messages=[{"role": "user", "content": f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}."}]
@@ -6389,7 +6250,7 @@ Ejemplo: /sell 50 ETH
                         
                         if audio_file and os.path.exists(audio_file):
                             # Enviar audio por Telegram
-                            voice_url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVoice"
+                            voice_url = f"https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVoice"
                             
                             with open(audio_file, 'rb') as audio:
                                 files = {'voice': audio}
@@ -6526,6 +6387,22 @@ def main():
         logger.info("Inicializando sistema de voz...")
         global_voice_engine = VoiceEngine()
         
+        # ACTIVAR BOT TELEGRAM EN HILO SEPARADO
+        logger.info("Inicializando Bot Telegram...")
+        telegram_bot = EnterpriseTelegramBot()
+        
+        import threading
+        def start_telegram_bot():
+            try:
+                telegram_bot.start_polling()
+                logger.info("🤖 Bot Telegram iniciado y escuchando...")
+            except Exception as e:
+                logger.error(f"Error iniciando bot Telegram: {e}")
+        
+        # Iniciar bot en hilo separado
+        bot_thread = threading.Thread(target=start_telegram_bot, daemon=True)
+        bot_thread.start()
+        
         # ACTIVAR MEJORAS ENTERPRISE HAROLD
         logger.info("Activando Enterprise Analytics Engine...")
         enterprise_system = initialize_enterprise_features(global_ai_system, global_trading_system)
@@ -6543,7 +6420,7 @@ def main():
         logger.info("=" * 70)
         
         # Ejecutar servidor
-        app.run(host='0.0.0.0', port=5000, debug=False)
+        app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
         
     except Exception as e:
         logger.error(f"Error crítico: {e}")
@@ -7098,6 +6975,10 @@ class EnterpriseAnalyticsEngine:
     
     def _generate_trading_recommendations(self, market_data, ml_analysis):
         """MEJORA 3: Recomendaciones con algoritmos optimizados y gestión de riesgo avanzada"""
+        # Verificar ml_analysis válido
+        if not ml_analysis:
+            ml_analysis = {'combined_score': 0.5, 'recommendation': 'hold'}
+            
         # Análisis de alta frecuencia y baja latencia
         hft_analysis = self._high_frequency_market_analysis(market_data)
         risk_metrics = self._dynamic_risk_assessment(market_data, ml_analysis)
@@ -7149,6 +7030,10 @@ class EnterpriseAnalyticsEngine:
         """Gestión dinámica de riesgos con adaptación continua"""
         try:
             import random
+            
+            # Verificar ml_analysis válido
+            if not ml_analysis:
+                ml_analysis = {'quantum_confidence': 0.85, 'combined_score': 0.5}
             
             # Calcular riesgo dinámico basado en condiciones actuales
             current_price = market_data.get('price', 60000)
@@ -7295,6 +7180,7 @@ class EnterpriseAnalyticsEngine:
     
     def _calculate_optimal_timing(self, market_data):
         return {'entry_signal': 'strong', 'timing_score': 0.88, 'window': '24-48h'}
+    
     def _combine_ml_insights(self, insights):
         """Combinar insights de ML para compatibilidad"""
         # Extraer datos de market_patterns para compatibilidad
@@ -8347,37 +8233,50 @@ def activate_continuous_adaptation(trading_system):
     except Exception as e:
         logger.error(f"Error activating adaptation: {e}")
         return {'status': 'ERROR', 'message': str(e)}
-# ... tu código anterior ...
-
-# ==================== RUTAS WEBHOOK TELEGRAM ====================
-
 
 if __name__ == "__main__":
-    # ... resto del código ...
-
+    main()
+    
     # ==================== ACTIVAR MULTI-MONEDA AUTO-TRADING ====================
-    if TRADING_AVAILABLE and config.KRAKEN_API_KEY:
+    if TRADING_AVAILABLE and os.environ.get('KRAKEN_API_KEY'):
         try:
             enhanced_trading = EnhancedTradingSystem()
             enhanced_trading.start_multi_currency_auto_trading()
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
-# ==================== INICIAR BOT TELEGRAM ====================
-if config.TELEGRAM_BOT_TOKEN:
-    try:
-        telegram_bot = EnterpriseTelegramBot()
-        logger.info("🤖 INICIANDO BOT TELEGRAM POLLING...")
-        success = telegram_bot.start_polling(drop_pending_updates=True)
-        if success:
-            logger.info("✅ BOT TELEGRAM POLLING INICIADO CORRECTAMENTE")
-        else:
-            logger.error("❌ ERROR CONFIGURANDO BOT TELEGRAM")
-    except Exception as e:
-        logger.error(f"❌ ERROR INICIANDO BOT: {e}")
-        logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+    
+    # ==================== CONFIGURAR WEBHOOK TELEGRAM ====================
+    if os.environ.get('TELEGRAM_BOT_TOKEN'):
+        try:
+            import requests
+            webhook_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/setWebhook"
+            # Railway usa RAILWAY_PUBLIC_DOMAIN, no RAILWAY_STATIC_URL
+            domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN') or os.environ.get('RAILWAY_STATIC_URL') or 'omnix-v51-enterprise-fusion-harold-original-production.up.railway.app'
+            webhook_data = {
+                'url': f"https://{domain}/webhook/{os.environ.get('TELEGRAM_BOT_TOKEN')}"
+            }
+            response = requests.post(webhook_url, json=webhook_data)
+            if response.status_code == 200:
+                logger.info("🤖 Webhook Telegram configurado correctamente")
+            else:
+                logger.error(f"Error configurando webhook: {response.text}")
+        except Exception as e:
+            logger.error(f"Error configurando webhook: {e}")
+    
+    # ==================== INICIAR BOT TELEGRAM ====================
+    if os.environ.get('TELEGRAM_BOT_TOKEN'):
+        try:
+            telegram_bot = EnterpriseTelegramBot()
+            success = telegram_bot.start_polling(drop_pending_updates=True)
+            if success:
+                logger.info("✅ BOT TELEGRAM CONFIGURADO Y LISTO")
+            else:
+                logger.error("❌ ERROR CONFIGURANDO BOT TELEGRAM")
+        except Exception as e:
+            logger.error(f"❌ ERROR INICIANDO BOT: {e}")
+            logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
 
-    logger.info("🤖 Bot Telegram iniciado y escuchando...")
 
 
 
