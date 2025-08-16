@@ -5420,7 +5420,7 @@ def create_flask_app():
             logger.info(f"INMEDIATO: {user_name} ({chat_id}): {text}")
             
             # PROCESAMIENTO COMANDOS MANUALES DE TRADING PARA HAROLD
-            if is_harold and global_ai_system:
+            if is_harold and global_ai_system and not text.startswith('/'):
                 manual_command = global_ai_system.process_manual_trading_command(text, user_id)
                 if manual_command.get('command') != 'none':
                     # Comando manual detectado - enviar respuesta inmediata
@@ -8364,6 +8364,7 @@ if __name__ == "__main__":
             logger.info("🤖 Bot Telegram iniciado y escuchando...")
         except Exception as e:
             logger.error(f"Error iniciando bot Telegram: {e}")
+
 
 
 
