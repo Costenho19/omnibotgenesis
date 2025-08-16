@@ -8360,10 +8360,17 @@ if __name__ == "__main__":
     if config.TELEGRAM_BOT_TOKEN:
         try:
             telegram_bot = EnterpriseTelegramBot()
-            telegram_bot.start_polling()
+            try:
+    logger.info("🤖 INICIANDO BOT TELEGRAM POLLING...")
+    telegram_bot.start_polling(drop_pending_updates=True)
+    logger.info("✅ BOT TELEGRAM POLLING INICIADO CORRECTAMENTE")
+except Exception as e:
+    logger.error(f"❌ ERROR INICIANDO BOT: {e}")
+    logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
             logger.info("🤖 Bot Telegram iniciado y escuchando...")
         except Exception as e:
             logger.error(f"Error iniciando bot Telegram: {e}")
+
 
 
 
