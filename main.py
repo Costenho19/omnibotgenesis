@@ -8264,25 +8264,42 @@ if __name__ == "__main__":
 #         except Exception as e:
 #             logger.error(f"Error configurando webhook: {e}")
     
-   # ==================== INICIAR BOT TELEGRAM ====================
+  # ==================== INICIAR BOT TELEGRAM SIMPLE ====================
 if os.environ.get('TELEGRAM_BOT_TOKEN'):
     try:
-        from telegram.ext import Application
+        import asyncio
+        from telegram.ext import Application, MessageHandler, CommandHandler, filters
         
-        # Crear aplicación directamente
+        async def handle_any_message(update, context):
+            """Maneja cualquier mensaje"""
+            chat_id = update.effective_chat.id
+            message_text = update.message.text
+            
+            # Respuesta básica para probar
+            if message_text.startswith('/'):
+                response = f"🤖 OMNIX RECIBIÓ: {message_text}"
+            else:
+                response = f"🤖 OMNIX IA: Hola Harold, recibí tu mensaje: {message_text}"
+            
+            await context.bot.send_message(chat_id=chat_id, text=response)
+        
+        # Crear aplicación
         app = Application.builder().token(os.environ.get('TELEGRAM_BOT_TOKEN')).build()
         
-        # Agregar handlers básicos
-        from telegram.ext import MessageHandler, filters
-        app.add_handler(MessageHandler(filters.TEXT, handle_message))
+        # Agregar handlers
+        app.add_handler(CommandHandler("start", handle_any_message))
+        app.add_handler(MessageHandler(filters.TEXT, handle_any_message))
         
-        # Iniciar polling directo
-        logger.info("🤖 INICIANDO POLLING DIRECTO...")
+        logger.info("🤖 INICIANDO BOT SIMPLE...")
+        
+        # Correr el bot
         app.run_polling(drop_pending_updates=False)
+        logger.info("✅ BOT SIMPLE FUNCIONANDO")
         
     except Exception as e:
-        logger.error(f"❌ ERROR INICIANDO BOT: {e}")
-
+        logger.error(f"❌ ERROR BOT SIMPLE: {e}")
+        import traceback
+        logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
 
 
 
