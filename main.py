@@ -389,13 +389,13 @@ ai_status = {
 }
 
 # Inicializar Gemini IA (PRIMARIA)
-if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
+if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
     try:
         if hasattr(genai, 'Client'):
-            genai_client = genai.Client(api_key=config.GEMINI_API_KEY)
+           genai_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
             logger.info("IA Gemini 2.0 (nuevo SDK) configurada correctamente")
         else:
-            genai.configure(api_key=config.GEMINI_API_KEY)
+          genai.configure(api_key=os.environ.get('GEMINI_API_KEY')) 
             genai_client = None
             logger.info("IA Gemini (SDK anterior) configurada correctamente")
         ai_status['gemini'] = True
@@ -405,7 +405,7 @@ if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
         GEMINI_AVAILABLE = False
 
 # Inicializar OpenAI (PRIMARIA - MEJOR CALIDAD)
-if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
+if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
     try:
         openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
         ai_status['openai'] = True
@@ -8378,6 +8378,7 @@ if config.TELEGRAM_BOT_TOKEN:
         logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
 
     logger.info("🤖 Bot Telegram iniciado y escuchando...")
+
 
 
 
