@@ -8264,47 +8264,39 @@ if __name__ == "__main__":
 #         except Exception as e:
 #             logger.error(f"Error configurando webhook: {e}")
     
-  # ==================== INICIAR BOT TELEGRAM SIMPLE ====================
+# ==================== INICIAR BOT TELEGRAM NO-BLOQUEANTE ====================
 if os.environ.get('TELEGRAM_BOT_TOKEN'):
     try:
+        import threading
         import asyncio
         from telegram.ext import Application, MessageHandler, CommandHandler, filters
         
-        async def handle_any_message(update, context):
-            """Maneja cualquier mensaje"""
-            chat_id = update.effective_chat.id
-            message_text = update.message.text
+        def bot_worker():
+            """Función que ejecuta el bot en thread separado"""
+            async def handle_message(update, context):
+                chat_id = update.effective_chat.id
+                text = update.message.text or ""
+                response = f"🤖 OMNIX: Recibí '{text}'"
+                await context.bot.send_message(chat_id=chat_id, text=response)
             
-            # Respuesta básica para probar
-            if message_text.startswith('/'):
-                response = f"🤖 OMNIX RECIBIÓ: {message_text}"
-            else:
-                response = f"🤖 OMNIX IA: Hola Harold, recibí tu mensaje: {message_text}"
+            # Crear app del bot
+            app = Application.builder().token(os.environ.get('TELEGRAM_BOT_TOKEN')).build()
+            app.add_handler(CommandHandler("start", handle_message))
+            app.add_handler(MessageHandler(filters.TEXT, handle_message))
             
-            await context.bot.send_message(chat_id=chat_id, text=response)
+            # Iniciar polling
+            logger.info("🤖 BOT THREAD INICIADO")
+            app.run_polling(drop_pending_updates=False)
         
-        # Crear aplicación
-        app = Application.builder().token(os.environ.get('TELEGRAM_BOT_TOKEN')).build()
-        
-        # Agregar handlers
-        app.add_handler(CommandHandler("start", handle_any_message))
-        app.add_handler(MessageHandler(filters.TEXT, handle_any_message))
-        
-        logger.info("🤖 INICIANDO BOT SIMPLE...")
-        
-        # Correr el bot
-        app.run_polling(drop_pending_updates=False)
-        logger.info("✅ BOT SIMPLE FUNCIONANDO")
+        # Ejecutar bot en thread separado
+        bot_thread = threading.Thread(target=bot_worker, daemon=True)
+        bot_thread.start()
+        logger.info("✅ BOT TELEGRAM EN BACKGROUND")
         
     except Exception as e:
-        logger.error(f"❌ ERROR BOT SIMPLE: {e}")
+        logger.error(f"❌ ERROR BOT: {e}")
         import traceback
         logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
-
-
-
-
-
 
 
 
