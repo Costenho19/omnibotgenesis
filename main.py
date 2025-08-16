@@ -8345,9 +8345,36 @@ def activate_continuous_adaptation(trading_system):
     except Exception as e:
         logger.error(f"Error activating adaptation: {e}")
         return {'status': 'ERROR', 'message': str(e)}
+# ... tu código anterior ...
+
+# ==================== RUTAS WEBHOOK TELEGRAM ====================
+@app.route('/webhook/<token>', methods=['POST'])
+def webhook(token):
+    try:
+        if token != config.TELEGRAM_BOT_TOKEN:
+            return jsonify({'error': 'Token inválido'}), 401
+        
+        update_data = request.get_json()
+        if 'message' in update_data:
+            message = update_data['message']
+            chat_id = message['chat']['id']
+            
+            import requests
+            send_url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage"
+            send_data = {
+                'chat_id': chat_id,
+                'text': "🤖 OMNIX V5.1 Enterprise\n💹 Trading: ACTIVO\n🔗 Kraken: CONECTADO",
+                'parse_mode': 'Markdown'
+            }
+            requests.post(send_url, json=send_data)
+        
+        return jsonify({'status': 'ok'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
-    main()
+    # ... resto del código ...
+
     # ==================== ACTIVAR MULTI-MONEDA AUTO-TRADING ====================
     if TRADING_AVAILABLE and config.KRAKEN_API_KEY:
         try:
@@ -8371,6 +8398,7 @@ if config.TELEGRAM_BOT_TOKEN:
         logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
 
     logger.info("🤖 Bot Telegram iniciado y escuchando...")
+
 
 
 
