@@ -398,13 +398,13 @@ ai_status = {
 }
 
 # Inicializar Gemini IA (PRIMARIA)
-if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
+if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
     try:
         if hasattr(genai, 'Client'):
-            genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+            genai_client = genai.Client(api_key=config.GEMINI_API_KEY)
             logger.info("IA Gemini 2.0 (nuevo SDK) configurada correctamente")
         else:
-            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+            genai.configure(api_key=config.GEMINI_API_KEY)
             genai_client = None
             logger.info("IA Gemini (SDK anterior) configurada correctamente")
         ai_status['gemini'] = True
@@ -414,9 +414,9 @@ if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
         GEMINI_AVAILABLE = False
 
 # Inicializar OpenAI (PRIMARIA - MEJOR CALIDAD)
-if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
     try:
-        openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
         ai_status['openai'] = True
         ai_status['primary'] = 'openai'  # OpenAI como primaria
         logger.info("IA OpenAI GPT-4o configurada como PRIMARIA")
@@ -425,9 +425,9 @@ if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
         OPENAI_AVAILABLE = False
 
 # Inicializar Anthropic (RESPALDO 2)  
-if ANTHROPIC_AVAILABLE and os.environ.get("ANTHROPIC_API_KEY"):
+if ANTHROPIC_AVAILABLE and config.ANTHROPIC_API_KEY:
     try:
-        anthropic_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        anthropic_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
         ai_status['anthropic'] = True
         ai_status['backup'].append('anthropic')
         logger.info("IA Anthropic Claude configurada como respaldo")
@@ -468,8 +468,8 @@ class VoiceEngine:
         self.speech_to_text_enabled = SPEECH_TO_TEXT_ENABLED
         self.openai_client = None
         
-        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY") and self.speech_to_text_enabled:
-            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        if OPENAI_AVAILABLE and config.OPENAI_API_KEY and self.speech_to_text_enabled:
+            self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
             logger.info(f"🎤 Speech-to-Text ACTIVADO con OpenAI Whisper")
         else:
             logger.info(f"🎤 Speech-to-Text PREPARADO (desactivado hasta activación)")
@@ -733,15 +733,15 @@ class ConversationalAI:
         self.anthropic_client = None
         
         # Configurar clientes disponibles
-        if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
+        if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
             if hasattr(genai, 'Client'):
-                self.gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+                self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
         
-        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
-            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
+            self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
             
-        if ANTHROPIC_AVAILABLE and os.environ.get("ANTHROPIC_API_KEY"):
-            self.anthropic_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        if ANTHROPIC_AVAILABLE and config.ANTHROPIC_API_KEY:
+            self.anthropic_client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
         
         # SISTEMA DE MONITOREO PROACTIVO DE CALIDAD DEL LENGUAJE
         self.language_quality_monitor = {
@@ -4316,7 +4316,7 @@ class TradingSystem:
 # Sistema Telegram con IA
 class EnterpriseTelegramBot:
     def __init__(self):
-        self.token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        self.token = config.TELEGRAM_BOT_TOKEN
         self.ai = ConversationalAI()
         self.trading = TradingSystem()
         logger.info("Bot Telegram con IA inicializado")
@@ -4352,7 +4352,7 @@ logger.info("Módulos integrados correctamente")
 def enviar_contenido_visual(chat_id, comando, trading_system):
     """Enviar imágenes y videos profesionales a Telegram"""
     try:
-        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        bot_token = config.TELEGRAM_BOT_TOKEN
         if not bot_token:
             return
             
@@ -4385,7 +4385,7 @@ def enviar_contenido_visual(chat_id, comando, trading_system):
 def enviar_demo_completo(chat_id, trading_system):
     """Demo completo con múltiples medios visuales"""
     try:
-        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        bot_token = config.TELEGRAM_BOT_TOKEN
         if not bot_token:
             return
             
@@ -5065,7 +5065,7 @@ def create_flask_app():
                 return jsonify({'error': 'chat_id required'}), 400
             
             # Enviar imagen vía Telegram
-            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto'
+            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto'
             payload = {
                 'chat_id': chat_id,
                 'photo': image_url,
@@ -5096,7 +5096,7 @@ def create_flask_app():
                 return jsonify({'error': 'chat_id required'}), 400
             
             # Enviar video vía Telegram
-            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVideo'
+            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVideo'
             payload = {
                 'chat_id': chat_id,
                 'video': video_url,
@@ -5114,7 +5114,7 @@ def create_flask_app():
             logger.error(f"Error sending video: {e}")
             return jsonify({'error': str(e)}), 500
     
-    @app.route(f'/webhook/{os.environ.get("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
+    @app.route('/webhook/telegram', methods=['POST'])
     def telegram_webhook():
         """Webhook ULTRA RÁPIDO - Sin demoras"""
         try:
@@ -5166,7 +5166,7 @@ def create_flask_app():
                 logger.info(f"🎤 VOICE: {user_name} ({chat_id}) envió un MENSAJE DE VOZ")
                 
                 import requests
-                url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
+                url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
                 
                 if global_voice_engine and global_voice_engine.speech_to_text_enabled:
                     # SISTEMA ACTIVO - Procesar voz
@@ -5177,7 +5177,7 @@ def create_flask_app():
                         logger.info(f"🎤 Procesando audio de {voice_duration}s - File ID: {voice_file_id}")
                         
                         # Descargar audio de Telegram
-                        audio_path = global_voice_engine.download_telegram_voice(voice_file_id, os.environ.get("TELEGRAM_BOT_TOKEN"))
+                        audio_path = global_voice_engine.download_telegram_voice(voice_file_id, config.TELEGRAM_BOT_TOKEN)
                         
                         if audio_path:
                             # Transcribir con Whisper (detectar idioma automáticamente)
@@ -5256,7 +5256,7 @@ def create_flask_app():
                 
                 # Respuesta automática cuando Harold envía multimedia
                 import requests
-                url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
+                url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
                 
                 multimedia_response = f"""📱 ¡PERFECTO HAROLD!
 
@@ -5288,7 +5288,7 @@ def create_flask_app():
                 if manual_command.get('command') != 'none':
                     # Comando manual detectado - enviar respuesta inmediata
                     import requests
-                    url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
+                    url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
                     
                     command_response = manual_command.get('message', 'Comando procesado')
                     payload = {'chat_id': chat_id, 'text': command_response}
@@ -5318,7 +5318,7 @@ def create_flask_app():
             
             # ENVÍO INSTANTÁNEO
             import requests
-            url = f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendMessage'
+            url = f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage'
             
             # Validar que hay texto para procesar
             if not text:
@@ -5403,7 +5403,7 @@ def create_flask_app():
                     if audio_path:
                         with open(audio_path, 'rb') as voice_file:
                             voice_response = requests.post(
-                                f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVoice',
+                                f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVoice',
                                 data={'chat_id': chat_id},
                                 files={'voice': voice_file}
                             )
@@ -5533,7 +5533,7 @@ def create_flask_app():
                     'photo': chart_url,
                     'caption': chart_caption
                 }
-                chart_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto', json=chart_payload, timeout=10)
+                chart_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto', json=chart_payload, timeout=10)
                 respuesta = "📊 ¡Gráfico profesional enviado! Visualización empresarial en tiempo real con datos Kraken"
             
             elif text.startswith('/video') or text.startswith('/demo'):
@@ -5570,7 +5570,7 @@ def create_flask_app():
                     'video': video_url,
                     'caption': video_caption
                 }
-                video_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendVideo', json=video_payload, timeout=15)
+                video_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVideo', json=video_payload, timeout=15)
                 respuesta = "🎬 ¡Video empresarial enviado! Demo completo del sistema OMNIX en funcionamiento real"
             
             elif text.startswith('/dashboard') or text.startswith('/panel'):
@@ -5581,7 +5581,7 @@ def create_flask_app():
                     'photo': dashboard_url,
                     'caption': f'🖥️ OMNIX V5.1 Enterprise Dashboard\n📊 Panel visual completo\n💡 Tema oscuro/claro disponible\n⚡ Datos en tiempo real\n🔧 Sistema totalmente operativo'
                 }
-                dashboard_resp = requests.post(f'https://api.telegram.org/bot{os.environ.get("TELEGRAM_BOT_TOKEN")}/sendPhoto', json=dashboard_payload, timeout=10)
+                dashboard_resp = requests.post(f'https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendPhoto', json=dashboard_payload, timeout=10)
                 respuesta = "🖥️ Dashboard visual enviado - Accede al panel completo en el navegador"
             
             elif text.startswith('/learning') or text.startswith('/aprendizaje'):
@@ -6136,11 +6136,11 @@ Ejemplo: /sell 50 ETH
                 
                 try:
                     # Intentar con Gemini primero (configurado globalmente)
-                    if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
+                    if GEMINI_AVAILABLE and config.GEMINI_API_KEY:
                         try:
                             if hasattr(genai, 'Client'):
                                 # Nuevo SDK
-                                genai_client_local = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+                                genai_client_local = genai.Client(api_key=config.GEMINI_API_KEY)
                                 response = genai_client_local.models.generate_content(
                                     model="gemini-2.0-flash-exp",
                                     contents=f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}."
@@ -6152,7 +6152,7 @@ Ejemplo: /sell 50 ETH
                                     raise Exception("Respuesta vacía")
                             else:
                                 # SDK anterior
-                                genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+                                genai.configure(api_key=config.GEMINI_API_KEY)
                                 model = genai.GenerativeModel('gemini-2.0-flash-exp')
                                 response = model.generate_content(f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}.")
                                 if response.text:
@@ -6164,9 +6164,9 @@ Ejemplo: /sell 50 ETH
                             logger.error(f"❌ ERROR GEMINI: {gemini_error}")
                             
                             # Intentar con OpenAI como respaldo
-                            if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+                            if OPENAI_AVAILABLE and config.OPENAI_API_KEY:
                                 try:
-                                    openai_client_local = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+                                    openai_client_local = OpenAI(api_key=config.OPENAI_API_KEY)
                                     response = openai_client_local.chat.completions.create(
                                         model="gpt-4o",
                                         messages=[{"role": "user", "content": f"Eres OMNIX V5.1 Enterprise, sistema de trading avanzado creado por Harold Nunes. Usuario: {user_name}. Mensaje: '{text}'. Trading real Kraken activo con $179.86 USD. Responde inteligentemente en {detected_language}."}]
@@ -6250,7 +6250,7 @@ Ejemplo: /sell 50 ETH
                         
                         if audio_file and os.path.exists(audio_file):
                             # Enviar audio por Telegram
-                            voice_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendVoice"
+                            voice_url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendVoice"
                             
                             with open(audio_file, 'rb') as audio:
                                 files = {'voice': audio}
@@ -8246,57 +8246,39 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
     
-       # ==================== CONFIGURAR WEBHOOK TELEGRAM ====================
-#     if os.environ.get('TELEGRAM_BOT_TOKEN'):
-#         try:
-#             import requests
-#             webhook_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/setWebhook"
-#             # Railway usa RAILWAY_PUBLIC_DOMAIN, no RAILWAY_STATIC_URL
-#             domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN') or os.environ.get('RAILWAY_STATIC_URL') or 'omnix-v51-enterprise-fusion-harold-original-production.up.railway.app'
-#             webhook_data = {
-#                 'url': f"https://{domain}/webhook/{os.environ.get('TELEGRAM_BOT_TOKEN')}"
-#             }
-#             response = requests.post(webhook_url, json=webhook_data)
-#             if response.status_code == 200:
-#                 logger.info("🤖 Webhook Telegram configurado correctamente")
-#             else:
-#                 logger.error(f"Error configurando webhook: {response.text}")
-#         except Exception as e:
-#             logger.error(f"Error configurando webhook: {e}")
+    # ==================== CONFIGURAR WEBHOOK TELEGRAM ====================
+    if os.environ.get('TELEGRAM_BOT_TOKEN'):
+        try:
+            from telegram import Bot
+            
+            # Configurar webhook URL
+            bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+            railway_url = 'https://omnibotgenesis-production.up.railway.app'
+            webhook_url = f"{railway_url}/webhook/telegram"
+            
+            # Crear bot y configurar webhook
+            bot = Bot(token=bot_token)
+            success = bot.set_webhook(url=webhook_url)
+            
+            if success:
+                logger.info(f"✅ WEBHOOK CONFIGURADO: {webhook_url}")
+            else:
+                logger.error("❌ ERROR CONFIGURANDO WEBHOOK")
+                
+        except Exception as e:
+            logger.error(f"❌ ERROR CONFIGURANDO WEBHOOK: {e}")
     
-# ==================== INICIAR BOT TELEGRAM NO-BLOQUEANTE ====================
-if os.environ.get('TELEGRAM_BOT_TOKEN'):
-    try:
-        import threading
-        import asyncio
-        from telegram.ext import Application, MessageHandler, CommandHandler, filters
-        
-        def bot_worker():
-            """Función que ejecuta el bot en thread separado"""
-            async def handle_message(update, context):
-                chat_id = update.effective_chat.id
-                text = update.message.text or ""
-                response = f"🤖 OMNIX: Recibí '{text}'"
-                await context.bot.send_message(chat_id=chat_id, text=response)
-            
-            # Crear app del bot
-            app = Application.builder().token(os.environ.get('TELEGRAM_BOT_TOKEN')).build()
-            app.add_handler(CommandHandler("start", handle_message))
-            app.add_handler(MessageHandler(filters.TEXT, handle_message))
-            
-            # Iniciar polling
-            logger.info("🤖 BOT THREAD INICIADO")
-            app.run_polling(drop_pending_updates=False)
-        
-        # Ejecutar bot en thread separado
-        bot_thread = threading.Thread(target=bot_worker, daemon=True)
-        bot_thread.start()
-        logger.info("✅ BOT TELEGRAM EN BACKGROUND")
-        
-    except Exception as e:
-        logger.error(f"❌ ERROR BOT: {e}")
-        import traceback
-        logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
+    # ==================== INICIAR BOT TELEGRAM WEBHOOK MODE ====================
+    if os.environ.get('TELEGRAM_BOT_TOKEN'):
+        try:
+            # No necesitamos inicializar polling aquí - el webhook maneja todo
+            logger.info("🤖 BOT TELEGRAM WEBHOOK MODE ACTIVADO")
+            logger.info("✅ BOT TELEGRAM CONFIGURADO Y LISTO - ESCUCHANDO WEBHOOKS")
+            logger.info(f"🔗 Webhook URL: https://omnibotgenesis-production.up.railway.app/webhook/telegram")
+        except Exception as e:
+            logger.error(f"❌ ERROR INICIANDO BOT: {e}")
+            logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
