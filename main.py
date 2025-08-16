@@ -8356,6 +8356,14 @@ if __name__ == "__main__":
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
+ # ==================== INICIAR BOT TELEGRAM ====================
+    if config.TELEGRAM_BOT_TOKEN:
+        try:
+            telegram_bot = EnterpriseTelegramBot()
+            telegram_bot.start_polling()
+            logger.info("🤖 Bot Telegram iniciado y escuchando...")
+        except Exception as e:
+            logger.error(f"Error iniciando bot Telegram: {e}")
 
 
 
