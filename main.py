@@ -8264,18 +8264,24 @@ if __name__ == "__main__":
 #         except Exception as e:
 #             logger.error(f"Error configurando webhook: {e}")
     
-    # ==================== INICIAR BOT TELEGRAM ====================
-    if os.environ.get('TELEGRAM_BOT_TOKEN'):
-        try:
-            telegram_bot = EnterpriseTelegramBot()
-            success = telegram_bot.start_polling(drop_pending_updates=False)
-            if success:
-                logger.info("✅ BOT TELEGRAM CONFIGURADO Y LISTO")
-            else:
-                logger.error("❌ ERROR CONFIGURANDO BOT TELEGRAM")
-        except Exception as e:
-            logger.error(f"❌ ERROR INICIANDO BOT: {e}")
-            logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+   # ==================== INICIAR BOT TELEGRAM ====================
+if os.environ.get('TELEGRAM_BOT_TOKEN'):
+    try:
+        from telegram.ext import Application
+        
+        # Crear aplicación directamente
+        app = Application.builder().token(os.environ.get('TELEGRAM_BOT_TOKEN')).build()
+        
+        # Agregar handlers básicos
+        from telegram.ext import MessageHandler, filters
+        app.add_handler(MessageHandler(filters.TEXT, handle_message))
+        
+        # Iniciar polling directo
+        logger.info("🤖 INICIANDO POLLING DIRECTO...")
+        app.run_polling(drop_pending_updates=False)
+        
+    except Exception as e:
+        logger.error(f"❌ ERROR INICIANDO BOT: {e}")
 
 
 
