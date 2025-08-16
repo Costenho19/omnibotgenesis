@@ -8356,20 +8356,21 @@ if __name__ == "__main__":
             logger.info("🚀 AUTO-TRADING MULTI-MONEDA ACTIVADO")
         except Exception as e:
             logger.error(f"Error activando multi-moneda: {e}")
- # ==================== INICIAR BOT TELEGRAM ====================
-    if config.TELEGRAM_BOT_TOKEN:
-        try:
-            telegram_bot = EnterpriseTelegramBot()
-            try:
-    logger.info("🤖 INICIANDO BOT TELEGRAM POLLING...")
-    telegram_bot.start_polling(drop_pending_updates=True)
-    logger.info("✅ BOT TELEGRAM POLLING INICIADO CORRECTAMENTE")
-except Exception as e:
-    logger.error(f"❌ ERROR INICIANDO BOT: {e}")
-    logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
-            logger.info("🤖 Bot Telegram iniciado y escuchando...")
-        except Exception as e:
-            logger.error(f"Error iniciando bot Telegram: {e}")
+# ==================== INICIAR BOT TELEGRAM ====================
+if config.TELEGRAM_BOT_TOKEN:
+    try:
+        telegram_bot = EnterpriseTelegramBot()
+        logger.info("🤖 INICIANDO BOT TELEGRAM POLLING...")
+        success = telegram_bot.start_polling(drop_pending_updates=True)
+        if success:
+            logger.info("✅ BOT TELEGRAM POLLING INICIADO CORRECTAMENTE")
+        else:
+            logger.error("❌ ERROR CONFIGURANDO BOT TELEGRAM")
+    except Exception as e:
+        logger.error(f"❌ ERROR INICIANDO BOT: {e}")
+        logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
+    logger.info("🤖 Bot Telegram iniciado y escuchando...")
 
 
 
