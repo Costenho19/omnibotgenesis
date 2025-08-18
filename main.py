@@ -4289,8 +4289,33 @@ class TradingSystem:
             
             # HAROLD PRUEBA: Primero verificar conexión con balance
             try:
-                balance = self.kraken.fetch_balance()
-                logger.info(f"🏦 Balance verificado - USD disponible: ${balance.get('USD', {}).get('free', 0):.2f}")
+               # MULTI-CURRENCY BALANCE DETECTION
+balance = self.kraken.fetch_balance()
+available_balances = {}
+total_portfolio_usd = 0
+
+for currency, amounts in balance.items():
+    if currency not in ['info', 'free', 'used', 'total'] and amounts.get('free', 0) > 0:
+        available_balances[currency] = amounts['free']
+        try:
+            if currency == 'USD':
+                usd_value = amounts['free']
+            else:
+                ticker = self.kraken.fetch_ticker(f'{currency}/USD')
+                usd_value = amounts['free'] * ticker['last']
+            total_portfolio_usd += usd_value
+        except:
+            if currency == 'BTC':
+                usd_value = amounts['free'] * 95000
+            elif currency == 'ETH':
+                usd_value = amounts['free'] * 3500
+            else:
+                usd_value = amounts['free'] * 100
+            total_portfolio_usd += usd_value
+
+currencies_available = list(available_balances.keys())
+logger.info(f"🏦 Portfolio Total: ${total_portfolio_usd:.2f} USD")
+logger.info(f"💰 Monedas disponibles: {', '.join(currencies_available)}")
             except Exception as balance_error:
                 logger.error(f"❌ Error verificando balance: {balance_error}")
                 return {
@@ -9633,6 +9658,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
