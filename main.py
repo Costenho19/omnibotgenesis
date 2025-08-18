@@ -467,8 +467,7 @@ class FreeEconomicCalendar:
             ]
             
             # Retornar 2-3 eventos aleatorios para simular calendario real
-            import random
-            selected_events = random.sample(major_events, min(3, len(major_events)))
+            selected_events = major_events[:3]  # Primeros 3 eventos reales
             
             return {
                 'date': today,
@@ -505,21 +504,32 @@ class MultiExchangeArbitrage:
             except:
                 pass
             
-            # Simular precios de otros exchanges para demostración
-            if 'kraken' in prices:
-                base_price = prices['kraken']['price']
-                # Coinbase típicamente 0.1-0.5% diferente
-                prices['coinbase'] = {
-                    'price': base_price * (1 + random.uniform(-0.005, 0.005)),
-                    'exchange': 'coinbase',
-                    'volume': random.uniform(50000, 200000)
-                }
-                # Binance típicamente 0.2-0.8% diferente  
-                prices['binance'] = {
-                    'price': base_price * (1 + random.uniform(-0.008, 0.008)),
-                    'exchange': 'binance',
-                    'volume': random.uniform(100000, 500000)
-                }
+          # Obtener precios REALES de otros exchanges
+# Coinbase Pro API real
+try:
+    coinbase = ccxt.coinbasepro()
+    cb_ticker = coinbase.fetch_ticker(symbol)
+    prices['coinbase'] = {
+        'price': cb_ticker['last'],
+        'exchange': 'coinbase',
+        'volume': cb_ticker['quoteVolume']
+    }
+except:
+    pass
+
+# Binance API real  
+try:
+    binance = ccxt.binance()
+    # Convertir USD a USDT para Binance
+    binance_symbol = symbol.replace('USD', 'USDT')
+    bin_ticker = binance.fetch_ticker(binance_symbol)
+    prices['binance'] = {
+        'price': bin_ticker['last'],
+        'exchange': 'binance', 
+        'volume': bin_ticker['quoteVolume']
+    }
+except:
+    pass
             
             # Calcular oportunidades
             opportunities = []
@@ -9642,6 +9652,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
