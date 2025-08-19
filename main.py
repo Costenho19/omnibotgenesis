@@ -273,8 +273,8 @@ class OmnixAdvancedIntelligence:
             if os.environ.get('OPENAI_API_KEY'):
                 self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
                 logger.info("✅ OPENAI CLIENT INICIALIZADO - GPT-4o SUPERINTELIGENCIA READY")
-            except Exception as e:
-                logger.error(f"❌ Error inicializando OpenAI: {e}")
+        except Exception as e:
+            logger.error(f"❌ Error inicializando OpenAI: {e}")
         
         # Configurar Gemini 2.0 - SUPERINTELIGENCIA RESPALDO
        
@@ -12026,6 +12026,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
