@@ -260,7 +260,7 @@ class AdvancedRiskManagement:
 # ===============================================================
 # 🌐 SISTEMA IA SUPERINTELIGENTE OMNIX V5.1 - BLOQUE RAILWAY
 # COPY-PASTE DIRECTO PARA HAROLD - GPT-4o + GEMINI 2.0 INTEGRADOS
-class OmnixAdvancedIntelligence:
+
     """🚀 SISTEMA IA SUPERINTELIGENTE - GPT-4o + GEMINI 2.0 PREMIUM"""
 
     def __init__(self):
@@ -12033,6 +12033,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
