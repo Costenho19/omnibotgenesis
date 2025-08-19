@@ -227,34 +227,34 @@ class AdvancedRiskManagement:
             return {'var_1d': 0, 'var_7d': 0, 'var_30d': 0, 'confidence_level': 0.95}
     
     def run_stress_test(self, position_btc, current_price):
-    """Ejecutar stress test de la posición"""
-    try:
-        scenarios = {
-            'flash_crash_50': -0.5,
-            'major_correction_30': -0.3,
-            'moderate_decline_15': -0.15,
-            'small_correction_5': -0.05,
-            'sideways': 0.0,
-        }
-
-        stress_results = {}
-        total_loss = 0
-
-        for name, drop in scenarios.items():
-            price_scenario = current_price * (1 + drop)
-            pnl = (price_scenario - current_price) * position_btc
-
-            stress_results[name] = {
-                'price': round(price_scenario, 2),
-                'pnl': round(pnl, 2),
-                'pnl_pct': (pnl / (current_price * position_btc)) * 100
-                if (current_price * position_btc) else 0
+        """Ejecutar stress test de la posición"""
+        try:
+            scenarios = {
+                'flash_crash_50': -0.5,
+                'major_correction_30': -0.3,
+                'moderate_decline_15': -0.15,
+                'small_correction_5': -0.05,
+                'sideways': 0.0,
             }
-
-            if pnl < 0:
-                total_loss += abs(pnl)
-
-        return {'stress_results': stress_results, 'total_loss': total_loss}
+    
+            stress_results = {}
+            total_loss = 0
+    
+            for name, drop in scenarios.items():
+                price_scenario = current_price * (1 + drop)
+                pnl = (price_scenario - current_price) * position_btc
+    
+                stress_results[name] = {
+                    'price': round(price_scenario, 2),
+                    'pnl': round(pnl, 2),
+                    'pnl_pct': (pnl / (current_price * position_btc)) * 100
+                    if (current_price * position_btc) else 0
+                }
+    
+                if pnl < 0:
+                    total_loss += abs(pnl)
+    
+            return {'stress_results': stress_results, 'total_loss': total_loss}
 
     except Exception as e:
         logger.error(f"Error en run_stress_test: {e}")
@@ -12044,6 +12044,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ ERROR INICIANDO BOT: {e}")
             logger.error(f"❌ DETALLES DEL ERROR: {str(e)}")
+
 
 
 
