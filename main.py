@@ -76,7 +76,7 @@ class OmnixRealSystem:
             # FORZAR CARGA DE VARIABLES CRÍTICAS
             if not self.kraken_secret:
                 # Cargar directamente desde .env si no existe
-                self.kraken_secret = "9eMCIfTvss022LKZk0F484rR1lwSD1bc5g/9O8nimZ6LjXcMIr7etmNMaCLQ0yVzPycVVGPo1cnIhtC5Mr8/jA=="
+                self.kraken_secret = 
                 os.environ['KRAKEN_API_SECRET'] = self.kraken_secret
             
             if self.kraken_key and self.kraken_secret:
@@ -2944,4 +2944,5 @@ if __name__ == '__main__':
     logger.info("⚡ APIs disponibles: /api/balance, /api/price, /api/buy, /api/sell")
     
     app.run(host='0.0.0.0', port=5000, debug=False)
+
 
