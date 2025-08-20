@@ -53,9 +53,21 @@ class OmnixRealSystem:
                     'enableRateLimit': True,
                     'timeout': 30000,  # 30 segundos timeout
                 })
-                # Configurar nonce personalizado con microsegundos únicos
+                # Configurar nonce mejorado para Railway
                 import random
-                self.kraken.nonce = lambda: int(time.time() * 1000000) + random.randint(1, 999)
+                import threading
+                self._nonce_lock = threading.Lock()
+                self._last_nonce = 0
+                
+                def generate_unique_nonce():
+                    with self._nonce_lock:
+                        current_time = int(time.time() * 1000000)
+                        if current_time <= self._last_nonce:
+                            current_time = self._last_nonce + 1
+                        self._last_nonce = current_time
+                        return current_time + random.randint(1, 999)
+                
+                self.kraken.nonce = generate_unique_nonce
             else:
                 logger.warning("⚠️ Kraken API keys no configuradas")
                 self.kraken = None
@@ -1464,10 +1476,15 @@ class OmnixRealSystem:
 def start_telegram_polling():
     """Inicia el sistema de polling para recibir mensajes"""
     omnix = OmnixRealSystem()
-    bot_token = '7478164319:AAGXR3z15UfkSwLrQYJSo_B27w2hk3hU4pY'
+    bot_token = omnix.telegram_token
+    
+    if not bot_token:
+        logger.error("❌ Token de Telegram no configurado")
+        return
+    
     offset = 0
     
-    print("🤖 OMNIX Nuevo Sistema Activado - Escuchando mensajes...")
+    logger.info("🤖 OMNIX Bot Telegram Activado - Escuchando mensajes...")
     
     while True:
         try:
