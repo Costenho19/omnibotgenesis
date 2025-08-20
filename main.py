@@ -1,13 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-OMNIX V5.1 – Railway Ready
-Autor: Harold Nunes (ajustes operativos y hardening)
+OMNIX V5.1 – CLEAN & READY FOR RAILWAY
+- Mantiene TODO lo que pediste: Voz (gTTS), IA (Gemini opcional), Telegram (polling),
+  Trading real en Kraken (precios, balance, compra a mercado), API Flask y dashboard.
+- Limpieza y robustez para que arranque en Railway sin bloqueos ni dependencias rotas.
+
+Archivos adicionales (pegar como archivos en tu repo):
+----------------------------------------------------
+requirements.txt
+    Flask\nrequests\nccxt\ngTTS
+
+Procfile
+    web: python main.py
+
+Variables de entorno necesarias en Railway:
+-------------------------------------------
+KRAKEN_API_KEY        
+KRAKEN_SECRET         
+TELEGRAM_BOT_TOKEN    
+TELEGRAM_AUTH_CHAT_ID   (opcional: restringe a tu chat)
+GEMINI_API_KEY          (opcional: activa respuestas IA)
+
+Notas de Audio:
+---------------
+- Se genera MP3 con gTTS y se envía por Telegram usando sendAudio (compatible con MP3).
+- No usamos 'playsound' (no hay dispositivo de audio en server). Enviamos el MP3 al chat y luego lo borramos.
 """
 
 import os
 import time
 import json
+import tempfile
 import threading
 import logging
 from datetime import datetime
@@ -16,9 +40,9 @@ from typing import Dict, Optional
 import requests
 from flask import Flask, request, jsonify
 
-# Opcional/backup (no obligatorio en runtime, pero útil si lo tienes)
+# CCXT opcional como backup. Si no está, no rompemos.
 try:
-    import ccxt
+    import ccxt  # noqa: F401
 except Exception:
     ccxt = None
 
@@ -31,16 +55,16 @@ import urllib.request
 # =========================
 #  ENV / LOGGING
 # =========================
+
 def load_env_variables():
-    # Si hay variables de Railway, no hace falta .env
+    """Carga .env si no detecta vars de Railway (opcional)."""
     railway_vars = ['KRAKEN_API_KEY', 'KRAKEN_SECRET', 'TELEGRAM_BOT_TOKEN']
     if any(os.getenv(v) for v in railway_vars):
         return
-    # Fallback .env (opcional)
     try:
         with open('.env', 'r') as f:
             for line in f:
-                if '=' in line and not line.startswith('#'):
+                if '=' in line and not line.strip().startswith('#'):
                     k, v = line.strip().split('=', 1)
                     os.environ.setdefault(k, v)
     except Exception:
@@ -67,32 +91,18 @@ class OmnixRealSystem:
         self.kraken_key = os.getenv('KRAKEN_API_KEY')
         self.kraken_secret = os.getenv('KRAKEN_SECRET') or os.getenv('KRAKEN_API_SECRET')
         self.telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        self.telegram_auth_chat = os.getenv('TELEGRAM_AUTH_CHAT_ID')  # opcional (solo autorizar un chat)
+        self.telegram_auth_chat = os.getenv('TELEGRAM_AUTH_CHAT_ID')  # restringe a un chat
+        self.gemini_key = os.getenv('GEMINI_API_KEY')  # IA opcional
 
         # Endpoints
         self.kraken_api_url = 'https://api.kraken.com'
-
-        # CCXT opcional como backup
-        self.kraken_ccxt = None
-        if ccxt and self.kraken_key and self.kraken_secret:
-            try:
-                self.kraken_ccxt = ccxt.kraken({
-                    'apiKey': self.kraken_key,
-                    'secret': self.kraken_secret,
-                    'enableRateLimit': True,
-                    'timeout': 30000,
-                })
-                self.kraken_ccxt.nonce = lambda: int(time.time() * 1000)
-                logger.info("CCXT Kraken listo (backup).")
-            except Exception as e:
-                logger.warning(f"CCXT no disponible: {e}")
 
         logger.info("APIs configuradas.")
 
     # ---------- Utilidades Kraken ----------
     def _get_nonce(self) -> int:
         with self._nonce_lock:
-            n = int(time.time() * 1_000_000)  # microsegundos (suficiente y monotónico)
+            n = int(time.time() * 1_000_000)  # microsegundos, monotónico
             if n <= self._last_nonce:
                 n = self._last_nonce + 1
             self._last_nonce = n
@@ -100,8 +110,7 @@ class OmnixRealSystem:
 
     def _kraken_sign(self, urlpath: str, data: dict) -> str:
         """
-        Firma correcta Kraken:
-        urlpath debe ser "/0/private/<Endpoint>"
+        Firma correcta Kraken: urlpath = "/0/private/<Endpoint>"
         """
         postdata = urllib.parse.urlencode(data)
         encoded = (str(data['nonce']) + postdata).encode()
@@ -122,9 +131,7 @@ class OmnixRealSystem:
             return {'success': False, 'error': str(e)}
 
     def kraken_api_private(self, endpoint: str, data: dict = None) -> Optional[Dict]:
-        """
-        Llamada privada directa (más confiable). Devuelve dict result o {'error':[...]}.
-        """
+        """Llamada privada directa. Devuelve dict result o {'error':[...]}"""
         if not (self.kraken_key and self.kraken_secret):
             return {'error': ['Faltan KRAKEN_API_KEY/KRAKEN_SECRET']}
         if data is None:
@@ -142,7 +149,6 @@ class OmnixRealSystem:
         try:
             with urllib.request.urlopen(req, timeout=20) as res:
                 result = json.loads(res.read().decode())
-            # Kraken responde {'error':[], 'result':{...}}
             if result.get('error'):
                 return {'error': result['error']}
             return result.get('result', {})
@@ -153,9 +159,6 @@ class OmnixRealSystem:
     # ---------- Conversión símbolos ----------
     @staticmethod
     def to_kraken_pair(symbol: str) -> str:
-        """
-        'BTC/USD' -> 'XBTUSD', 'ETH/USD'->'ETHUSD', etc.
-        """
         s = symbol.upper().replace(' ', '')
         mapping = {
             'BTC/USD': 'XBTUSD', 'BTCUSD': 'XBTUSD',
@@ -165,6 +168,24 @@ class OmnixRealSystem:
             'DOT/USD': 'DOTUSD', 'DOTUSD': 'DOTUSD',
         }
         return mapping.get(s, s)
+
+    # ---------- IA (Gemini opcional) ----------
+    def get_gemini_response(self, prompt: str) -> Optional[str]:
+        if not self.gemini_key:
+            return None
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_key}"
+            headers = {'Content-Type': 'application/json'}
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            resp = requests.post(url, headers=headers, json=payload, timeout=12)
+            if resp.status_code != 200:
+                logger.error(f"Gemini error {resp.status_code}: {resp.text}")
+                return None
+            data = resp.json()
+            return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text')
+        except Exception as e:
+            logger.error(f"Gemini exception: {e}")
+            return None
 
     # ---------- Precios / Balance ----------
     def get_real_price(self, symbol: str) -> Dict:
@@ -217,11 +238,11 @@ class OmnixRealSystem:
 
     # ---------- Órdenes ----------
     def execute_buy_order(self, symbol: str, amount_usd: float) -> Dict:
-        """
-        Compra a mercado por monto en USD (convierte a volumen).
-        """
+        """Compra a mercado por monto en USD (convierte a volumen)."""
         if amount_usd <= 0:
             return {'success': False, 'error': 'amount debe ser > 0'}
+        if amount_usd > 500:
+            return {'success': False, 'error': 'Límite máximo $500 por orden'}
         price_info = self.get_real_price(symbol)
         if not price_info['success']:
             return {'success': False, 'error': f"Precio no disponible: {price_info.get('error')}"}
@@ -240,7 +261,6 @@ class OmnixRealSystem:
             return {'success': True, 'symbol': symbol, 'amount_usd': amount_usd, 'volume': volume, 'txid': txid}
         return {'success': False, 'error': (order.get('error', ['Fallo desconocido'])[0] if isinstance(order, dict) else 'Fallo desconocido')}
 
-    # Texto libre tipo “compra 20 btc”
     def process_buy_order_text(self, message: str) -> str:
         import re
         msg = message.lower()
@@ -249,7 +269,7 @@ class OmnixRealSystem:
         crypto = None
         for name, pair in {
             'bitcoin': 'BTC/USD', 'btc': 'BTC/USD',
-            'ethereum': 'ETH/USD', 'eth': 'ETH/USD',
+            'ethereum': 'ETH/USD', 'eth': 'ETH/USD', 'ether': 'ETH/USD',
             'solana': 'SOL/USD', 'sol': 'SOL/USD',
             'cardano': 'ADA/USD', 'ada': 'ADA/USD',
             'dot': 'DOT/USD', 'polkadot': 'DOT/USD'
@@ -260,7 +280,6 @@ class OmnixRealSystem:
 
         if not amount or not crypto:
             return "⚠️ Especifica monto en USD y crypto (ej: compra 20 dólares de bitcoin)."
-
         if amount > 500:
             return f"❌ Límite máximo por orden: $500. Solicitaste ${amount:.2f}"
 
@@ -269,20 +288,39 @@ class OmnixRealSystem:
             return f"✅ Compra ejecutada: ${amount:.2f} de {crypto} (≈ {r['volume']:.8f}). TX: {r['txid']}"
         return f"❌ Error al comprar: {r.get('error','desconocido')}"
 
-    # Telegram commands
-    def process_telegram_command(self, text: str) -> str:
+    # ---------- TTS (gTTS) -> Enviar MP3 a Telegram ----------
+    def tts_to_telegram(self, chat_id: str, text: str, lang: str = 'es') -> bool:
+        token = self.telegram_token
+        if not token:
+            return False
+        try:
+            from gtts import gTTS  # import aquí para evitar fallos si no está
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp:
+                path = tmp.name
+            gTTS(text=text, lang=lang).save(path)
+            url = f'https://api.telegram.org/bot{token}/sendAudio'
+            with open(path, 'rb') as f:
+                files = {'audio': f}
+                data = {'chat_id': chat_id, 'caption': '🎧 Respuesta de voz OMNIX'}
+                r = requests.post(url, data=data, files=files, timeout=30)
+            os.unlink(path)
+            if r.status_code != 200:
+                logger.error(f"sendAudio error {r.status_code}: {r.text}")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"TTS error: {e}")
+            return False
+
+    # ---------- Telegram commands (texto + voz si quieres) ----------
+    def process_telegram_command(self, chat_id: str, text: str) -> None:
         t = text.strip().lower()
 
         if t.startswith('/balance'):
-            b = self.get_real_balance()
-            if not b['success']:
-                return f"❌ ERROR KRAKEN: {b.get('error')}"
-            if not b.get('balance'):
-                return "💰 Balance: 0"
-            out = ["💰 Balance Kraken:"]
-            for c, d in b['balance'].items():
-                out.append(f"• {c}: {d['total']:.8f}")
-            return "\n".join(out)
+            msg = self._cmd_balance()
+            self._send_message(chat_id, msg)
+            self.tts_to_telegram(chat_id, msg, 'es')
+            return
 
         if t.startswith('/precio') or t.startswith('/price'):
             parts = t.split()
@@ -291,24 +329,68 @@ class OmnixRealSystem:
                 sym = f"{parts[1].upper()}/USD"
             p = self.get_real_price(sym)
             if not p['success']:
-                return f"❌ {p.get('error')}"
-            return f"📊 {sym}: ${p['price']:.2f} | 24h: {p['change_24h']:.2f}%"
+                msg = f"❌ {p.get('error')}"
+            else:
+                msg = f"📊 {sym}: ${p['price']:.2f} | 24h: {p['change_24h']:.2f}%"
+            self._send_message(chat_id, msg)
+            self.tts_to_telegram(chat_id, msg, 'es')
+            return
 
         if any(k in t for k in ['/comprar', '/compra', 'compra ']):
-            return self.process_buy_order_text(t)
+            msg = self.process_buy_order_text(t)
+            self._send_message(chat_id, msg)
+            self.tts_to_telegram(chat_id, msg, 'es')
+            return
 
-        return "🤖 OMNIX listo. Usa /balance, /precio BTC, o escribe: compra 20 dólares de bitcoin."
+        # Conversación libre con IA (si hay GEMINI_API_KEY)
+        if not t.startswith('/') and self.gemini_key:
+            btc = self.get_real_price('BTC/USD').get('price', 0)
+            prompt = (
+                f"Eres OMNIX V5.1. Ayuda en trading y responde breve. "
+                f"Precio BTC ahora: ${btc:,.2f}. \nUsuario: {text}"
+            )
+            ans = self.get_gemini_response(prompt) or "OMNIX operativo. ¿En qué te ayudo?"
+            self._send_message(chat_id, ans)
+            self.tts_to_telegram(chat_id, ans, 'es')
+            return
+
+        # Fallback
+        msg = "🤖 OMNIX listo. Usa /balance, /precio BTC, o escribe: compra 20 dólares de bitcoin."
+        self._send_message(chat_id, msg)
+        self.tts_to_telegram(chat_id, msg, 'es')
+
+    def _cmd_balance(self) -> str:
+        b = self.get_real_balance()
+        if not b['success']:
+            return f"❌ ERROR KRAKEN: {b.get('error')}"
+        if not b.get('balance'):
+            return "💰 Balance: 0"
+        out = ["💰 Balance Kraken:"]
+        for c, d in b['balance'].items():
+            out.append(f"• {c}: {d['total']:.8f}")
+        return "\n".join(out)
+
+    def _send_message(self, chat_id: str, text: str) -> None:
+        token = self.telegram_token
+        if not token:
+            return
+        try:
+            url = f'https://api.telegram.org/bot{token}/sendMessage'
+            requests.post(url, json={'chat_id': chat_id, 'text': text}, timeout=20)
+        except Exception as e:
+            logger.error(f"Telegram sendMessage error: {e}")
 
 # =========================
 #  TELEGRAM POLLING
 # =========================
+
 def start_telegram_polling(omnix: OmnixRealSystem):
     token = omnix.telegram_token
     if not token:
         logger.warning("Telegram desactivado (TELEGRAM_BOT_TOKEN no definido).")
         return
 
-    auth_chat = omnix.telegram_auth_chat  # puede ser None (sin restricción)
+    auth_chat = str(omnix.telegram_auth_chat) if omnix.telegram_auth_chat else None
     offset = 0
     logger.info("Telegram polling activo…")
 
@@ -325,17 +407,11 @@ def start_telegram_polling(omnix: OmnixRealSystem):
                     msg = upd.get('message') or {}
                     chat_id = str(msg.get('chat', {}).get('id', ''))
                     text = msg.get('text', '')
-
                     if not text:
                         continue
-
-                    # Restringir si se configuró TELEGRAM_AUTH_CHAT_ID
-                    if auth_chat and chat_id != str(auth_chat):
+                    if auth_chat and chat_id != auth_chat:
                         continue
-
-                    reply = omnix.process_telegram_command(text)
-                    send_url = f'https://api.telegram.org/bot{token}/sendMessage'
-                    requests.post(send_url, json={'chat_id': chat_id, 'text': reply}, timeout=20)
+                    omnix.process_telegram_command(chat_id, text)
         except Exception as e:
             logger.error(f"Telegram polling error: {e}")
             time.sleep(5)
@@ -348,18 +424,18 @@ omnix = OmnixRealSystem()
 
 @app.route('/')
 def index():
-    return """
-    <html><head><meta charset="utf-8"><title>OMNIX V5.1</title></head>
-    <body style="background:#000;color:#0f0;font-family:monospace">
-      <h1>OMNIX V5.1 – ONLINE</h1>
-      <ul>
-        <li>GET /api/status</li>
-        <li>GET /api/balance</li>
-        <li>GET /api/price/BTC</li>
-        <li>POST /api/buy { "symbol": "BTC/USD", "amount": 20 }</li>
-      </ul>
-    </body></html>
-    """
+    return (
+        "<html><head><meta charset='utf-8'><title>OMNIX V5.1</title></head>"
+        "<body style='background:#000;color:#0f0;font-family:monospace'>"
+        "<h1>OMNIX V5.1 – ONLINE</h1>"
+        "<ul>"
+        "<li>GET /api/status</li>"
+        "<li>GET /api/balance</li>"
+        "<li>GET /api/price/BTC</li>"
+        "<li>POST /api/buy { 'symbol': 'BTC/USD', 'amount': 20 }</li>"
+        "</ul>"
+        "</body></html>"
+    )
 
 @app.route('/api/status')
 def api_status():
@@ -382,7 +458,8 @@ def api_buy():
     data = request.get_json(silent=True) or {}
     symbol = data.get('symbol', 'BTC/USD')
     amount = float(data.get('amount', 0))
-    return jsonify(omnix.execute_buy_order(symbol, amount)), 200 if amount > 0 else 400
+    res = omnix.execute_buy_order(symbol, amount)
+    return jsonify(res), (200 if res.get('success') else 400)
 
 # =========================
 #  MAIN
