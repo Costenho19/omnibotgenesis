@@ -76,7 +76,7 @@ class OmnixRealSystem:
             # FORZAR CARGA DE VARIABLES CRÍTICAS
             if not self.kraken_secret:
                 # Cargar directamente desde .env si no existe
-                self.kraken_secret = 
+                self.kraken_secret = "9eMCIfTvss022LKZk0F484rR1lwSD1bc5g/9O8nimZ6LjXcMIr7etmNMaCLQ0yVzPycVVGPo1cnIhtC5Mr8/jA=="
                 os.environ['KRAKEN_API_SECRET'] = self.kraken_secret
             
             if self.kraken_key and self.kraken_secret:
@@ -766,37 +766,136 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
             }
     
     def get_real_price(self, symbol: str) -> Dict:
-        """Obtener precio real de Kraken API directa"""
+        """MEJORA: Obtener precio real con múltiples APIs de respaldo"""
         try:
-            # Convertir símbolo a formato Kraken
-            kraken_pair = self._convert_symbol_to_kraken(symbol)
+            # API 1: CoinGecko (Gratuita y confiable)
+            if symbol in ['BTC/USD', 'BTC']:
+                try:
+                    url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'
+                    response = requests.get(url, timeout=8)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'bitcoin' in data and 'usd' in data['bitcoin']:
+                            price = data['bitcoin']['usd']
+                            change_24h = data['bitcoin'].get('usd_24h_change', 0)
+                            if price > 10000:  # Validar precio BTC razonable
+                                logger.info(f"💰 CoinGecko: ${price:,.2f}")
+                                return {
+                                    'success': True,
+                                    'symbol': symbol,
+                                    'price': price,
+                                    'change_24h': round(change_24h, 2),
+                                    'source': 'CoinGecko',
+                                    'timestamp': datetime.now().isoformat()
+                                }
+                except Exception as e:
+                    logger.warning(f"CoinGecko falló: {e}")
             
-            # Obtener ticker de Kraken
-            result = self.kraken_api_call_public('Ticker', {'pair': kraken_pair})
+            # API 2: Binance público (Sin autenticación)
+            if symbol in ['BTC/USD', 'BTC']:
+                try:
+                    url = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'
+                    response = requests.get(url, timeout=8)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'lastPrice' in data:
+                            price = float(data['lastPrice'])
+                            change_24h = float(data.get('priceChangePercent', 0))
+                            if price > 10000:
+                                logger.info(f"💰 Binance: ${price:,.2f}")
+                                return {
+                                    'success': True,
+                                    'symbol': symbol,
+                                    'price': price,
+                                    'change_24h': round(change_24h, 2),
+                                    'source': 'Binance',
+                                    'timestamp': datetime.now().isoformat()
+                                }
+                except Exception as e:
+                    logger.warning(f"Binance falló: {e}")
             
-            if result and 'error' in result and len(result['error']) == 0:
-                ticker_data = result['result']
-                pair_data = list(ticker_data.values())[0]  # Primer par
+            # API 3: CoinCap (Respaldo gratuito)
+            if symbol in ['BTC/USD', 'BTC']:
+                try:
+                    url = 'https://api.coincap.io/v2/assets/bitcoin'
+                    response = requests.get(url, timeout=8)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'data' in data and 'priceUsd' in data['data']:
+                            price = float(data['data']['priceUsd'])
+                            change_24h = float(data['data'].get('changePercent24Hr', 0))
+                            if price > 10000:
+                                logger.info(f"💰 CoinCap: ${price:,.2f}")
+                                return {
+                                    'success': True,
+                                    'symbol': symbol,
+                                    'price': price,
+                                    'change_24h': round(change_24h, 2),
+                                    'source': 'CoinCap',
+                                    'timestamp': datetime.now().isoformat()
+                                }
+                except Exception as e:
+                    logger.warning(f"CoinCap falló: {e}")
+            
+            # API 4: Kraken original (Como respaldo)
+            try:
+                # Convertir símbolo a formato Kraken
+                kraken_pair = self._convert_symbol_to_kraken(symbol)
                 
-                current_price = float(pair_data['c'][0])  # Last price
-                change_24h = ((current_price - float(pair_data['o'])) / float(pair_data['o'])) * 100
+                # Obtener ticker de Kraken
+                result = self.kraken_api_call_public('Ticker', {'pair': kraken_pair})
                 
-                return {
-                    'success': True,
-                    'symbol': symbol,
-                    'price': current_price,
-                    'bid': float(pair_data['b'][0]),
-                    'ask': float(pair_data['a'][0]),
-                    'change_24h': round(change_24h, 2),
-                    'volume': float(pair_data['v'][1]),  # 24h volume
-                    'timestamp': datetime.now().isoformat()
-                }
-            else:
-                error = result.get('error', ['Error desconocido'])[0] if result else 'Sin respuesta'
-                return {'success': False, 'error': f'Kraken: {error}'}
+                if result and 'error' in result and len(result['error']) == 0:
+                    ticker_data = result['result']
+                    pair_data = list(ticker_data.values())[0]  # Primer par
+                    
+                    current_price = float(pair_data['c'][0])  # Last price
+                    change_24h = ((current_price - float(pair_data['o'])) / float(pair_data['o'])) * 100
+                    
+                    if current_price > 10000:  # Validar precio BTC
+                        logger.info(f"💰 Kraken: ${current_price:,.2f}")
+                        return {
+                            'success': True,
+                            'symbol': symbol,
+                            'price': current_price,
+                            'bid': float(pair_data['b'][0]),
+                            'ask': float(pair_data['a'][0]),
+                            'change_24h': round(change_24h, 2),
+                            'volume': float(pair_data['v'][1]),
+                            'source': 'Kraken',
+                            'timestamp': datetime.now().isoformat()
+                        }
+            except Exception as e:
+                logger.warning(f"Kraken falló: {e}")
+            
+            # API 5: CryptoCompare (Respaldo final)
+            if symbol in ['BTC/USD', 'BTC']:
+                try:
+                    url = 'https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD'
+                    response = requests.get(url, timeout=8)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'USD' in data:
+                            price = float(data['USD'])
+                            if price > 10000:
+                                logger.info(f"💰 CryptoCompare: ${price:,.2f}")
+                                return {
+                                    'success': True,
+                                    'symbol': symbol,
+                                    'price': price,
+                                    'change_24h': 0,
+                                    'source': 'CryptoCompare',
+                                    'timestamp': datetime.now().isoformat()
+                                }
+                except Exception as e:
+                    logger.warning(f"CryptoCompare falló: {e}")
+            
+            # Si todas las APIs fallan
+            logger.error(f"❌ TODAS las APIs fallaron para {symbol}")
+            return {'success': False, 'error': 'Todas las APIs de precio fallaron'}
                 
         except Exception as e:
-            logger.error(f"❌ Error precio real {symbol}: {e}")
+            logger.error(f"❌ Error crítico precio {symbol}: {e}")
             return {'success': False, 'error': str(e)}
     
     def place_real_buy_order(self, symbol: str, amount_usd: float) -> Dict:
@@ -2944,5 +3043,6 @@ if __name__ == '__main__':
     logger.info("⚡ APIs disponibles: /api/balance, /api/price, /api/buy, /api/sell")
     
     app.run(host='0.0.0.0', port=5000, debug=False)
+
 
 
