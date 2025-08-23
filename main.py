@@ -71,6 +71,7 @@ class OmnixRealSystem:
         try:
             # Kraken API REAL - IMPLEMENTACIÓN DIRECTA FUNCIONAL
             self.kraken_key = os.getenv('KRAKEN_API_KEY')
+            # Nota: estandarizar a KRAKEN_API_SECRET; mantenemos compatibilidad con KRAKEN_SECRET por ahora
             self.kraken_secret = os.getenv('KRAKEN_SECRET') or os.getenv('KRAKEN_API_SECRET')
             
             # FORZAR CARGA DE VARIABLES CRÍTICAS
@@ -1283,90 +1284,7 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
         except Exception as e:
             return f"Error OpenAI: {str(e)}"
     
-    def get_comprehensive_market_context(self, symbol: str) -> Dict:
-        """Obtener contexto completo del mercado"""
-        try:
-            context = {}
-            
-            # Fear & Greed Index
-            try:
-                response = requests.get('https://api.alternative.me/fng/', timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    context['fear_greed_value'] = int(data['data'][0]['value'])
-                    if context['fear_greed_value'] > 75:
-                        context['market_sentiment'] = "Extreme Greed"
-                    elif context['fear_greed_value'] > 55:
-                        context['market_sentiment'] = "Greed"
-                    elif context['fear_greed_value'] > 45:
-                        context['market_sentiment'] = "Neutral"
-                    elif context['fear_greed_value'] > 25:
-                        context['market_sentiment'] = "Fear"
-                    else:
-                        context['market_sentiment'] = "Extreme Fear"
-            except:
-                context['fear_greed_value'] = 50
-                context['market_sentiment'] = "Neutral"
-            
-            # CoinGecko data
-            try:
-                response = requests.get(f"{self.coingecko_url}/global", timeout=5)
-                if response.status_code == 200:
-                    data = response.json()['data']
-                    context['btc_dominance'] = data.get('market_cap_percentage', {}).get('btc', 0)
-                    context['total_market_cap'] = data.get('total_market_cap', {}).get('usd', 0)
-            except:
-                context['btc_dominance'] = 45
-                context['total_market_cap'] = 2000000000000
-            
-            context['trending_coins'] = []
-            context['latest_news'] = []
-            context['stock_market'] = "Datos no disponibles"
-            
-            return context
-        except Exception as e:
-            logger.error(f"Error obteniendo contexto: {e}")
-            return {
-                'fear_greed_value': 50,
-                'market_sentiment': 'Neutral',
-                'btc_dominance': 45,
-                'total_market_cap': 2000000000000,
-                'trending_coins': [],
-                'latest_news': [],
-                'stock_market': 'N/A'
-            }
     
-    def call_gemini_with_market_data(self, message: str) -> str:
-        """Gemini con datos reales EN VIVO"""
-        try:
-            # Obtener datos EN VIVO cada vez
-            import requests
-            
-            # BTC en vivo
-            btc_price = 0
-            try:
-                resp = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', timeout=5)
-                btc_price = resp.json()['bitcoin']['usd']
-                logger.info(f"🔥 BTC EN VIVO: ${btc_price:,.0f}")
-            except:
-                btc_price = 113000  # Fallback conocido
-            
-            # Fear&Greed en vivo
-            fear_data = "50"
-            try:
-                resp = requests.get('https://api.alternative.me/fng/', timeout=5)
-                fear_data = resp.json()['data'][0]['value'] + " (" + resp.json()['data'][0]['value_classification'] + ")"
-                logger.info(f"🔥 FEAR&GREED EN VIVO: {fear_data}")
-            except:
-                fear_data = "44 (Fear)"  # Fallback conocido
-            
-            # USAR GEMINI IA REAL PARA TODAS LAS RESPUESTAS
-            prompt = f"Usuario dice: '{message}'. Contexto: BTC ${btc_price:,.0f}, Fear&Greed {fear_data}"
-            return self.get_gemini_response(prompt)
-            
-        except Exception as e:
-            logger.error(f"Error call_gemini_with_market_data: {e}")
-            return "OMNIX V5.1: Sistema operativo con conexiones en tiempo real."
     
     def get_complete_market_context(self) -> dict:
         """Obtener contexto completo de mercados + información OMNIX para la IA"""
@@ -1866,24 +1784,45 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                         message = f"🚨 ALERTA PRECIO: {alert['symbol']} está {alert['direction']} ${alert['target_price']}\n"
                         message += f"Precio actual: ${current_price:.2f}"
                         
-                        # Enviar a Harold
-                        self.send_telegram_message('7014748854', message)
+                        # Enviar al administrador desde variable de entorno
+                        admin_chat_id = os.getenv('ADMIN_CHAT_ID')
+                        if admin_chat_id:
+                            self.send_telegram_message(admin_chat_id, message)
+                        else:
+                            logger.warning("ADMIN_CHAT_ID no configurado; no se envía alerta por Telegram")
                         logger.info(f"🚨 Alerta disparada: {alert_id}")
                         
             except Exception as e:
                 logger.error(f"Error verificando alerta {alert_id}: {e}")
     
     def send_telegram_message(self, chat_id: str, text: str):
-        """Enviar mensaje a Telegram"""
+        """Enviar mensaje a Telegram (con timeout y parse_mode)"""
         try:
             url = f'https://api.telegram.org/bot{self.telegram_token}/sendMessage'
             payload = {
                 'chat_id': chat_id,
-                'text': text
+                'text': text,
+                'parse_mode': 'HTML'
             }
-            requests.post(url, json=payload)
+            requests.post(url, json=payload, timeout=15)
         except Exception as e:
             logger.error(f"Error enviando mensaje Telegram: {e}")
+    
+    def send_telegram_audio(self, chat_id: str, audio_file: str):
+        """Enviar audio a Telegram (como método de instancia)"""
+        try:
+            url = f"https://api.telegram.org/bot{self.telegram_token}/sendAudio"
+            with open(audio_file, 'rb') as audio:
+                files = {'audio': audio}
+                data = {'chat_id': chat_id}
+                requests.post(url, files=files, data=data, timeout=30)
+            # Limpiar archivo temporal si existe
+            try:
+                os.unlink(audio_file)
+            except Exception:
+                pass
+        except Exception as e:
+            logger.error(f"Error enviando audio por Telegram: {e}")
     
     def calculate_profit_loss(self) -> Dict:
         """Calcular profit/loss del día"""
@@ -2740,12 +2679,12 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
 
 # Sistema de polling para Telegram
 def start_telegram_polling():
-    """Inicia el sistema de polling para recibir mensajes - Token corregido"""
-    omnix = OmnixRealSystem()
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')  # Usar ENV en lugar de hardcodeo
-    
+    """Inicia el sistema de polling para recibir mensajes - usando instancia global"""
+    global omnix
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+
     if not bot_token:
-        logger.error("❌ Token de Telegram no configurado en ENV")
+        logger.error("❌ Token de Telegram no configurado en ENV (TELEGRAM_BOT_TOKEN)")
         return
     
     offset = 0
@@ -2756,10 +2695,11 @@ def start_telegram_polling():
         try:
             url = f'https://api.telegram.org/bot{bot_token}/getUpdates'
             params = {'offset': offset, 'timeout': 5}
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
             
             if data['ok']:
+                a = data
                 for update in data['result']:
                     offset = update['update_id'] + 1
                     
@@ -2782,7 +2722,7 @@ def start_telegram_polling():
                             'chat_id': chat_id,
                             'text': result['text']
                         }
-                        send_response = requests.post(send_url, json=payload)
+                        send_response = requests.post(send_url, json=payload, timeout=15)
                             
                         # VERIFICAR ENVÍO RESPUESTA
                         if send_response.status_code == 200:
@@ -2805,7 +2745,7 @@ def start_telegram_polling():
                                     with open(audio_file, 'rb') as audio:
                                         files = {'voice': audio}
                                         audio_payload = {'chat_id': chat_id}
-                                        audio_response = requests.post(audio_url, data=audio_payload, files=files)
+                                        audio_response = requests.post(audio_url, data=audio_payload, files=files, timeout=15)
                                         if audio_response.status_code == 200:
                                             print(f"🔊 Audio enviado a Harold: {audio_file}")
                                         else:
@@ -2824,61 +2764,6 @@ def start_telegram_polling():
 app = Flask(__name__)
 omnix = OmnixRealSystem()
 
-@app.route('/')
-def dashboard():
-    """Dashboard web OPERATIVO"""
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>OMNIX V5.1 ENTERPRISE - OPERATIVO</title>
-        <meta charset="utf-8">
-        <style>
-            body { font-family: Arial; margin: 40px; background: #000; color: #00ff00; text-align: center; }
-            .main { max-width: 600px; margin: 0 auto; padding: 30px; border: 2px solid #00ff00; }
-            .status { color: #00ff00; font-size: 18px; margin: 20px 0; }
-        </style>
-    </head>
-    <body>
-        <div class="main">
-            <h1>🚀 OMNIX V5.1 ENTERPRISE</h1>
-            <h2 class="status">✅ SISTEMA COMPLETAMENTE OPERATIVO</h2>
-            <div class="status">
-                <p><strong>Balance:</strong> $3,480.91 USD</p>
-                <p><strong>Bot Telegram:</strong> @omnixglobal2025_bot</p>
-                <p><strong>Estado:</strong> ACTIVO CON VOZ</p>
-                <p><strong>Puerto Dashboard:</strong> 5000 (FUNCIONANDO)</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-
-if __name__ == "__main__":
-    import sys
-    import threading
-    
-    if len(sys.argv) > 1 and sys.argv[1] == 'polling':
-        start_telegram_polling()
-    else:
-        # Iniciar sistema completo corregido
-        logger.info("🚀 INICIANDO OMNIX COMPLETO - CORREGIDO")
-        
-        # Thread para Telegram Bot
-        telegram_thread = threading.Thread(target=start_telegram_polling)
-        telegram_thread.daemon = True
-        telegram_thread.start()
-        logger.info("🤖 Bot Telegram iniciado en thread separado")
-        
-        # Thread para Trading Automático
-        trading_thread = threading.Thread(target=omnix.start_auto_trading_loop)
-        trading_thread.daemon = True
-        trading_thread.start()
-        logger.info("📈 Trading automático iniciado en thread separado")
-        
-        # Iniciar Flask (principal) - Puerto 5000 funcional
-        logger.info("🌐 Iniciando dashboard Flask en puerto 5000")
-        app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
 @app.route('/')
 def dashboard():
@@ -2900,14 +2785,13 @@ def dashboard():
         <div class="main">
             <h1>🚀 OMNIX V5.1 ENTERPRISE</h1>
             <h2 class="status">✅ SISTEMA COMPLETAMENTE OPERATIVO</h2>
-            
+
             <div class="status">
-                <p><strong>Balance:</strong> $3,480.91 USD</p>
-                <p><strong>Bot Telegram:</strong> @omnixglobal2025_bot</p>
-                <p><strong>Estado:</strong> ACTIVO Y RESPONDIENDO</p>
-                <p><strong>Puerto Dashboard:</strong> 5000 (FUNCIONANDO)</p>
+                <p><em>Demo:</em> Este dashboard muestra el estado general del sistema.</p>
+                <p>Bot de Telegram: configurable via TELEGRAM_BOT_TOKEN</p>
+                <p>Estado: Activo</p>
             </div>
-            
+
             <div class="status">
                 <h3>🎯 FUNCIONALIDADES ACTIVAS:</h3>
                 <p>✅ Trading manual y automático</p>
@@ -2938,8 +2822,12 @@ def api_status():
         'status': 'operational',
         'bot': 'active',
         'trading': 'enabled',
-        'balance': 'ERROR - usar /balance para datos reales'
+        'balance': None
     })
+
+@app.route('/healthz')
+def healthz():
+    return jsonify({'status': 'ok'})
 
 @app.route('/api/balance')
 def api_balance_endpoint():
@@ -2957,45 +2845,46 @@ def api_price_endpoint(symbol):
 def telegram_webhook():
     """Webhook para Telegram"""
     try:
+        # Validación del secreto de Telegram webhook
+        secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
+        expected = os.getenv('TELEGRAM_WEBHOOK_SECRET')
+        if expected and secret != expected:
+            return jsonify({'status': 'forbidden'}), 403
         data = request.get_json()
-        
+
         if not data or 'message' not in data:
             return jsonify({'status': 'ok'}), 200
-        
+
         message = data['message']
         chat_id = str(message['chat']['id'])
         text = message.get('text', '')
-        
+
         # Procesar comando
         result = omnix.process_telegram_command(text, chat_id)
-        
+
         if result['success']:
-            # Enviar respuesta de texto
-            send_telegram_message(chat_id, result['text'])
-            
-            # Enviar audio si está disponible
+            # Enviar respuesta de texto con método de instancia
+            omnix.send_telegram_message(chat_id, result['text'])
+
+            # Enviar audio si está disponible usando método de instancia
             if result.get('audio_file'):
-                send_telegram_audio(chat_id, result['audio_file'])
-        
+                omnix.send_telegram_audio(chat_id, result['audio_file'])
+
         return jsonify({'status': 'ok'}), 200
-        
+
     except Exception as e:
         logger.error(f"Error en webhook: {e}")
         return jsonify({'status': 'error'}), 500
 
-@app.route('/api/balance')
-def api_balance():
-    """API endpoint para balance"""
-    return jsonify(omnix.get_real_balance())
-
-@app.route('/api/price/<symbol>')
-def api_price(symbol):
-    """API endpoint para precios"""
-    return jsonify(omnix.get_real_price(f"{symbol}/USD"))
 
 @app.route('/api/buy', methods=['POST'])
 def api_buy():
     """API endpoint para compras"""
+    # Protección básica por API Key
+    api_key = request.headers.get('X-API-Key')
+    expected_key = os.getenv('INTERNAL_API_KEY')
+    if expected_key and api_key != expected_key:
+        return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json()
     symbol = data.get('symbol', 'BTC/USD')
     amount = float(data.get('amount', 0))
@@ -3004,45 +2893,39 @@ def api_buy():
 @app.route('/api/sell', methods=['POST'])
 def api_sell():
     """API endpoint para ventas"""
+    # Protección básica por API Key
+    api_key = request.headers.get('X-API-Key')
+    expected_key = os.getenv('INTERNAL_API_KEY')
+    if expected_key and api_key != expected_key:
+        return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json()
     symbol = data.get('symbol', 'BTC/USD')
     amount = float(data.get('amount', 0))
     return jsonify(omnix.execute_sell_order(symbol, amount))
 
-def send_telegram_message(chat_id: str, text: str):
-    """Enviar mensaje a Telegram"""
-    try:
-        url = f"https://api.telegram.org/bot{omnix.telegram_token}/sendMessage"
-        payload = {
-            'chat_id': chat_id,
-            'text': text,
-            'parse_mode': 'HTML'
-        }
-        requests.post(url, json=payload, timeout=10)
-    except Exception as e:
-        logger.error(f"Error enviando mensaje: {e}")
-
-def send_telegram_audio(chat_id: str, audio_file: str):
-    """Enviar audio a Telegram"""
-    try:
-        url = f"https://api.telegram.org/bot{omnix.telegram_token}/sendAudio"
-        with open(audio_file, 'rb') as audio:
-            files = {'audio': audio}
-            data = {'chat_id': chat_id}
-            requests.post(url, files=files, data=data, timeout=30)
-        
-        # Limpiar archivo temporal
-        os.unlink(audio_file)
-    except Exception as e:
-        logger.error(f"Error enviando audio: {e}")
 
 if __name__ == '__main__':
-    logger.info("🚀 Iniciando OMNIX Real Trading System...")
-    logger.info("📊 Dashboard disponible en: http://0.0.0.0:5000")
-    logger.info("🔗 Webhook Telegram: /webhook/telegram")
-    logger.info("⚡ APIs disponibles: /api/balance, /api/price, /api/buy, /api/sell")
-    
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    # Modo unificado compatible con Railway
+    run_mode = os.getenv('RUN_MODE', 'webhook').lower()
+    port = int(os.getenv('PORT', 5000))
+    logger.info(f"🚀 OMNIX iniciando en modo: {run_mode}")
+
+    if run_mode == 'polling':
+        # Solo polling de Telegram
+        start_telegram_polling()
+    elif run_mode == 'webhook':
+        # Solo Flask (webhook + dashboard + APIs)
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    elif run_mode == 'all':
+        # Polling + trading + Flask
+        tg_thread = threading.Thread(target=start_telegram_polling, daemon=True)
+        tg_thread.start()
+        trade_thread = threading.Thread(target=omnix.start_auto_trading_loop, daemon=True)
+        trade_thread.start()
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    else:
+        logger.warning(f"RUN_MODE desconocido: {run_mode}. Iniciando Flask por defecto.")
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 
 
