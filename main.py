@@ -20,39 +20,56 @@ from flask import Flask, request, jsonify
 from gtts import gTTS
 
 
-# Cargar variables de entorno (Railway primero, luego .env local como fallback)
 def load_env_variables():
-    """Cargar variables - Railway tiene prioridad"""
-    railway_vars = ['KRAKEN_API_KEY', 'KRAKEN_SECRET', 'KRAKEN_API_SECRET', 'COINBASE_API_KEY', 'COINBASE_API_SECRET',
-                    'COINBASE_PASSPHRASE', 'KUCOIN_API_KEY', 'KUCOIN_API_SECRET', 'KUCOIN_PASSPHRASE', 'GATEIO_API_KEY',
-                    'GATEIO_API_SECRET', 'BITGET_API_KEY', 'BITGET_API_SECRET', 'BITGET_PASSPHRASE', 'BYBIT_API_KEY',
-                    'BYBIT_API_SECRET', 'OKX_API_KEY', 'OKX_API_SECRET', 'OKX_PASSPHRASE', 'TELEGRAM_BOT_TOKEN',
-                    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ADMIN_CHAT_ID', 'TELEGRAM_WEBHOOK_SECRET', 'INTERNAL_API_KEY',
-                    'RUN_MODE', 'PORT']
+    """Cargar variables de entorno con prioridad a Railway"""
+    EXCHANGE_VARS = [
+        'KRAKEN_API_KEY', 'KRAKEN_SECRET', 'KRAKEN_API_SECRET',
+        'COINBASE_API_KEY', 'COINBASE_API_SECRET', 'COINBASE_PASSPHRASE',
+        'KUCOIN_API_KEY', 'KUCOIN_API_SECRET', 'KUCOIN_PASSPHRASE',
+        'GATEIO_API_KEY', 'GATEIO_API_SECRET',
+        'BITGET_API_KEY', 'BITGET_API_SECRET', 'BITGET_PASSPHRASE',
+        'BYBIT_API_KEY', 'BYBIT_API_SECRET',
+        'OKX_API_KEY', 'OKX_API_SECRET', 'OKX_PASSPHRASE',
+        'GEMINI_API_KEY'
+    ]
 
-    # Verificar si estamos en Railway (variables ya disponibles)
+    SERVICE_VARS = [
+        'TELEGRAM_BOT_TOKEN', 'OPENAI_API_KEY', 'ADMIN_CHAT_ID',
+        'TELEGRAM_WEBHOOK_SECRET', 'INTERNAL_API_KEY'
+    ]
+
+    SYSTEM_VARS = ['RUN_MODE', 'PORT']
+    RAILWAY_DETECTION_VARS = ['RAILWAY_ENVIRONMENT', 'RAILWAY_PROJECT_ID', 'RAILWAY_SERVICE_ID']
+
+    railway_vars = EXCHANGE_VARS + SERVICE_VARS + SYSTEM_VARS + RAILWAY_DETECTION_VARS
+
+    # Detectar si estamos en Railway verificando cualquier variable
     railway_detected = any(os.getenv(var) for var in railway_vars)
 
     if railway_detected:
-        print("🚀 RAILWAY DETECTADO - Usando variables de entorno Railway")
+        print("🚀 Usando variables de entorno de Railway")
         return
 
-    # Si no estamos en Railway, cargar .env local
+    # Si no estamos en Railway, cargar desde .env local
     try:
         with open('.new_env', 'r') as f:
             for line in f:
-                if '=' in line and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
-                    # Solo cargar si no existe ya
-                    if not os.getenv(key):
-                        os.environ[key] = value
-        # Cargar variables al inicio
-        load_env_variables()
-        print("✅ Variables locales .env cargadas como fallback")
+                # Ignorar comentarios y líneas vacías
+                if line.strip() and not line.startswith('#'):
+                    try:
+                        key, value = line.strip().split('=', 1)
+                        # Solo cargar si no existe ya en el entorno
+                        if not os.getenv(key):
+                            os.environ[key] = value.strip('"')
+                    except ValueError:
+                        # Si la línea no tiene valor, continuar
+                        continue
+        print("✅ Variables cargadas desde .env local")
     except Exception as e:
-        print(f"⚠️ Sin variables Railway ni .env local: {e}")
+        print(f"⚠️ Error cargando variables locales: {e}")
 
 
+load_env_variables()
 # Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
@@ -81,10 +98,10 @@ class OmnixRealSystem:
             self.kraken_secret = os.getenv('KRAKEN_SECRET') or os.getenv('KRAKEN_API_SECRET')
 
             # FORZAR CARGA DE VARIABLES CRÍTICAS
-            if not self.kraken_secret:
-                # Cargar directamente desde .env si no existe
-                # self.kraken_secret = "9eMCIfTvss022LKZk0F484rR1lwSD1bc5g/9O8nimZ6LjXcMIr7etmNMaCLQ0yVzPycVVGPo1cnIhtC5Mr8/jA=="
-                os.environ['KRAKEN_API_SECRET'] = self.kraken_secret
+            # if not self.kraken_secret:
+            #     # Cargar directamente desde .env si no existe
+            #     # self.kraken_secret = "9eMCIfTvss022LKZk0F484rR1lwSD1bc5g/9O8nimZ6LjXcMIr7etmNMaCLQ0yVzPycVVGPo1cnIhtC5Mr8/jA=="
+            #     # os.environ['KRAKEN_API_SECRET'] = self.kraken_secret
 
             if self.kraken_key and self.kraken_secret:
                 # Usar implementación directa más confiable que CCXT
@@ -287,8 +304,9 @@ class OmnixRealSystem:
             # IA APIs
             self.gemini_key = os.getenv('GEMINI_API_KEY')
             self.openai_key = os.getenv('OPENAI_API_KEY')
+            pass
 
-            logger.info(f"✅ APIs configuradas: {len(self.exchanges)} exchanges + {len(self.free_apis)} APIs gratuitas")
+            logger.info(f"✅ APIs configuradas: {len(self.exchanges)} + exchanges + {len(self.free_apis)} APIs gratuitas")
 
         except Exception as e:
             logger.error(
