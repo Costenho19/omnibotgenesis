@@ -6,24 +6,29 @@ Sistema de Trading Automático y Manual - 100% OPERATIVO
 Creado por Harold Nunes - Agosto 2025
 """
 
-import os
-import asyncio
 import logging
-import json
-import time
+import os
+import tempfile
 import threading
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+import time
+from datetime import datetime
+from typing import Dict
+
+import ccxt
 import requests
 from flask import Flask, request, jsonify
-import ccxt
 from gtts import gTTS
-import tempfile
+
 
 # Cargar variables de entorno (Railway primero, luego .env local como fallback)
 def load_env_variables():
     """Cargar variables - Railway tiene prioridad"""
-    railway_vars = ['KRAKEN_API_KEY', 'KRAKEN_SECRET', 'TELEGRAM_BOT_TOKEN', 'GEMINI_API_KEY']
+    railway_vars = ['KRAKEN_API_KEY', 'KRAKEN_SECRET', 'KRAKEN_API_SECRET', 'COINBASE_API_KEY', 'COINBASE_API_SECRET',
+                    'COINBASE_PASSPHRASE', 'KUCOIN_API_KEY', 'KUCOIN_API_SECRET', 'KUCOIN_PASSPHRASE', 'GATEIO_API_KEY',
+                    'GATEIO_API_SECRET', 'BITGET_API_KEY', 'BITGET_API_SECRET', 'BITGET_PASSPHRASE', 'BYBIT_API_KEY',
+                    'BYBIT_API_SECRET', 'OKX_API_KEY', 'OKX_API_SECRET', 'OKX_PASSPHRASE', 'TELEGRAM_BOT_TOKEN',
+                    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ADMIN_CHAT_ID', 'TELEGRAM_WEBHOOK_SECRET', 'INTERNAL_API_KEY',
+                    'RUN_MODE', 'PORT']
 
     # Verificar si estamos en Railway (variables ya disponibles)
     railway_detected = any(os.getenv(var) for var in railway_vars)
@@ -34,19 +39,19 @@ def load_env_variables():
 
     # Si no estamos en Railway, cargar .env local
     try:
-        with open('.env', 'r') as f:
+        with open('.new_env', 'r') as f:
             for line in f:
                 if '=' in line and not line.startswith('#'):
                     key, value = line.strip().split('=', 1)
                     # Solo cargar si no existe ya
                     if not os.getenv(key):
                         os.environ[key] = value
+        # Cargar variables al inicio
+        load_env_variables()
         print("✅ Variables locales .env cargadas como fallback")
     except Exception as e:
         print(f"⚠️ Sin variables Railway ni .env local: {e}")
 
-# Cargar variables al inicio
-load_env_variables()
 
 # Configuración de logging
 logging.basicConfig(
@@ -55,6 +60,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
 
 class OmnixRealSystem:
     """Sistema OMNIX con solo funcionalidades reales y operativas"""
@@ -239,28 +245,28 @@ class OmnixRealSystem:
 
             # APIs GRATUITAS DE DATOS - SIN KEYS REQUERIDAS
             self.free_apis = {
-                'coingecko': 'https://api.coingecko.com/api/v3',           # Precios, market cap, datos básicos
-                'coinpaprika': 'https://api.coinpaprika.com/v1',          # Precios alternativos, datos históricos
-                'cryptocompare': 'https://min-api.cryptocompare.com/data', # Precios múltiples, datos OHLC
-                'messari': 'https://data.messari.io/api/v1',              # Datos fundamentales, métricas
-                'coinapi_free': 'https://rest.coinapi.io/v1',             # Limitado pero funcional
-                'binance_public': 'https://api.binance.com/api/v3',       # API pública Binance (sin keys)
-                'kucoin_public': 'https://api.kucoin.com/api/v1',         # API pública KuCoin
-                'kraken_public': 'https://api.kraken.com/0/public',       # API pública Kraken
-                'fear_greed': 'https://api.alternative.me/fng/',          # Fear & Greed Index
-                'blockchain_info': 'https://blockchain.info/ticker',       # Datos Bitcoin básicos
-                'coindesk': 'https://api.coindesk.com/v1/bpi/currentprice.json', # Bitcoin Price Index
-                'yahoo_finance': 'https://query1.finance.yahoo.com/v8/finance/chart', # Datos financieros
-                'alpha_vantage_free': 'https://www.alphavantage.co/query', # Limitado pero gratis
-                'finhub_free': 'https://finnhub.io/api/v1',               # Datos financieros básicos
-                'twelve_data_free': 'https://api.twelvedata.com'          # Datos bursátiles limitados
+                'coingecko': 'https://api.coingecko.com/api/v3',  # Precios, market cap, datos básicos
+                'coinpaprika': 'https://api.coinpaprika.com/v1',  # Precios alternativos, datos históricos
+                'cryptocompare': 'https://min-api.cryptocompare.com/data',  # Precios múltiples, datos OHLC
+                'messari': 'https://data.messari.io/api/v1',  # Datos fundamentales, métricas
+                'coinapi_free': 'https://rest.coinapi.io/v1',  # Limitado pero funcional
+                'binance_public': 'https://api.binance.com/api/v3',  # API pública Binance (sin keys)
+                'kucoin_public': 'https://api.kucoin.com/api/v1',  # API pública KuCoin
+                'kraken_public': 'https://api.kraken.com/0/public',  # API pública Kraken
+                'fear_greed': 'https://api.alternative.me/fng/',  # Fear & Greed Index
+                'blockchain_info': 'https://blockchain.info/ticker',  # Datos Bitcoin básicos
+                'coindesk': 'https://api.coindesk.com/v1/bpi/currentprice.json',  # Bitcoin Price Index
+                'yahoo_finance': 'https://query1.finance.yahoo.com/v8/finance/chart',  # Datos financieros
+                'alpha_vantage_free': 'https://www.alphavantage.co/query',  # Limitado pero gratis
+                'finhub_free': 'https://finnhub.io/api/v1',  # Datos financieros básicos
+                'twelve_data_free': 'https://api.twelvedata.com'  # Datos bursátiles limitados
             }
 
             # APIs de noticias gratuitas
             self.news_apis = {
-                'newsapi_crypto': 'https://newsapi.org/v2/everything?q=bitcoin', # Con key pero tiene free tier
-                'reddit_crypto': 'https://www.reddit.com/r/cryptocurrency/.json', # Sin key
-                'cryptopanic': 'https://cryptopanic.com/api/v1/posts/',          # Free tier
+                'newsapi_crypto': 'https://newsapi.org/v2/everything?q=bitcoin',  # Con key pero tiene free tier
+                'reddit_crypto': 'https://www.reddit.com/r/cryptocurrency/.json',  # Sin key
+                'cryptopanic': 'https://cryptopanic.com/api/v1/posts/',  # Free tier
                 'rss_feeds': [
                     'https://cointelegraph.com/rss',
                     'https://decrypt.co/feed',
@@ -270,10 +276,10 @@ class OmnixRealSystem:
 
             # APIs técnicas gratuitas
             self.technical_apis = {
-                'tradingview_public': 'https://scanner.tradingview.com',     # Datos técnicos básicos
-                'investing_com': 'https://api.investing.com',                # Datos financieros
-                'marketwatch': 'https://api.marketwatch.com',                # Noticias y precios
-                'yahoo_finance_charts': 'https://query1.finance.yahoo.com'    # Charts y análisis
+                'tradingview_public': 'https://scanner.tradingview.com',  # Datos técnicos básicos
+                'investing_com': 'https://api.investing.com',  # Datos financieros
+                'marketwatch': 'https://api.marketwatch.com',  # Noticias y precios
+                'yahoo_finance_charts': 'https://query1.finance.yahoo.com'  # Charts y análisis
             }
 
             self.coingecko_url = self.free_apis['coingecko']  # Mantener compatibilidad
@@ -285,19 +291,8 @@ class OmnixRealSystem:
             logger.info(f"✅ APIs configuradas: {len(self.exchanges)} exchanges + {len(self.free_apis)} APIs gratuitas")
 
         except Exception as e:
-            logger.error(f"❌ Error configurando APIs: {e,
-                self.gemini_key,
-                self.openai_key,
-                self.kraken_key,
-                self.kraken_secret,
-                self.bitget_key,
-                self.bitget_secret,
-                self.bitget_passphrase,
-                self.gateio_key,
-                self.gateio_secret,
-                self.bybit_key,
-                self.bybit_secret,
-                self.okx_key,}")
+            logger.error(
+                f"❌ Error configurando APIs: {e}, {self.gemini_key}, {self.openai_key}, {self.kraken_key}, {self.kraken_secret}, {self.bitget_key}, {self.bitget_secret}, {self.bitget_passphrase}, {self.gateio_key}, {self.gateio_secret}, {self.bybit_key}, {self.bybit_secret}, {self.okx_key}")
 
     def get_gemini_response(self, prompt: str) -> str:
         """IA CONVERSACIONAL REAL CON GEMINI - ACTIVADA"""
@@ -317,7 +312,8 @@ class OmnixRealSystem:
             fear_greed = "44"
             try:
                 import requests
-                resp = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', timeout=3)
+                resp = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',
+                                    timeout=3)
                 btc_price = resp.json()['bitcoin']['usd']
 
                 resp2 = requests.get('https://api.alternative.me/fng/', timeout=3)
@@ -369,7 +365,6 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
         except Exception as e:
             logger.error(f"❌ Excepción Gemini: {e}")
             return "IA temporalmente no disponible"
-
 
     def _convert_symbol_to_kraken(self, symbol: str) -> str:
         """Convertir símbolo estándar a formato Kraken"""
@@ -559,30 +554,30 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
         self.trading_config = {
             # TRADING CRYPTO
             'max_trade_amount': 500.0,  # USD máximo por trade (ampliado para Gemini)
-            'stop_loss_percent': 5.0,   # 5% stop loss crypto
-            'take_profit_percent': 12.0, # 12% take profit (optimizado)
-            'risk_per_trade': 3.0,      # 3% del capital por trade (agresivo pero controlado)
+            'stop_loss_percent': 5.0,  # 5% stop loss crypto
+            'take_profit_percent': 12.0,  # 12% take profit (optimizado)
+            'risk_per_trade': 3.0,  # 3% del capital por trade (agresivo pero controlado)
             'supported_pairs': ['BTC/USD', 'ETH/USD', 'ADA/USD', 'DOT/USD', 'SOL/USD', 'AVAX/USD'],
-            'min_interval_seconds': 60,   # Mínimo 1 minuto entre trades
+            'min_interval_seconds': 60,  # Mínimo 1 minuto entre trades
 
             # TRADING ACCIONES
-            'stock_max_trade': 300.0,   # USD máximo por acción
-            'stock_stop_loss': 3.0,     # 3% stop loss acciones (más conservador)
+            'stock_max_trade': 300.0,  # USD máximo por acción
+            'stock_stop_loss': 3.0,  # 3% stop loss acciones (más conservador)
             'stock_symbols': ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
 
             # DEFI OPERATIONS
             'defi_max_allocation': 1000.0,  # USD máximo en DeFi
-            'defi_protocols': ['AAVE', 'Compound', 'Uniswap', 'Yearn'], # Solo auditados
-            'min_apy_defi': 5.0,        # APY mínimo 5% para DeFi
+            'defi_protocols': ['AAVE', 'Compound', 'Uniswap', 'Yearn'],  # Solo auditados
+            'min_apy_defi': 5.0,  # APY mínimo 5% para DeFi
 
             # NFT TRADING
-            'nft_max_budget': 200.0,    # USD máximo por NFT
-            'nft_collections': ['premium'], # Solo colecciones premium verificadas
+            'nft_max_budget': 200.0,  # USD máximo por NFT
+            'nft_collections': ['premium'],  # Solo colecciones premium verificadas
 
             # GEMINI OPERATIONAL AUTHORITY
             'ai_autonomous_limit': 500.0,  # Límite operaciones autónomas Gemini
             'daily_report_time': '20:00',  # Hora informe diario Harold
-            'emergency_stop_loss': 10.0,   # Stop-loss emergencia 10%
+            'emergency_stop_loss': 10.0,  # Stop-loss emergencia 10%
             # Estrategias automáticas REALES y operativas
             'strategies': {
                 'rsi_oversold': {'enabled': True, 'rsi_threshold': 30, 'confidence': 0.75},
@@ -931,7 +926,8 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
 
             # Verificar intervalo mínimo
             current_time = time.time()
-            if hasattr(self, 'last_trade_time') and current_time - self.last_trade_time < self.trading_config['min_interval_seconds']:
+            if hasattr(self, 'last_trade_time') and current_time - self.last_trade_time < self.trading_config[
+                'min_interval_seconds']:
                 return {'success': False, 'error': 'Espera 1 minuto entre trades'}
 
             # Convertir símbolo a formato Kraken
@@ -1082,11 +1078,11 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
                     for candle in ohlc_data[-50:]:  # Últimas 50 velas
                         ohlcv.append([
                             int(candle[0]) * 1000,  # timestamp
-                            float(candle[1]),       # open
-                            float(candle[2]),       # high
-                            float(candle[3]),       # low
-                            float(candle[4]),       # close
-                            float(candle[6])        # volume
+                            float(candle[1]),  # open
+                            float(candle[2]),  # high
+                            float(candle[3]),  # low
+                            float(candle[4]),  # close
+                            float(candle[6])  # volume
                         ])
                 else:
                     return {'success': False, 'error': 'Error obteniendo datos históricos'}
@@ -1105,7 +1101,7 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
                 losses = []
 
                 for i in range(1, len(prices)):
-                    change = prices[i] - prices[i-1]
+                    change = prices[i] - prices[i - 1]
                     if change > 0:
                         gains.append(change)
                         losses.append(0)
@@ -1212,7 +1208,7 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
             CONTEXTO DE MERCADO REAL:
             - Fear & Greed Index: {market_context.get('fear_greed_value', 'N/A')}/100 ({market_context.get('market_sentiment', 'Unknown')})
             - BTC Dominancia: {market_context.get('btc_dominance', 'N/A')}%
-            - Market Cap Total: ${market_context.get('total_market_cap', 0)/1e12:.2f}T
+            - Market Cap Total: ${market_context.get('total_market_cap', 0) / 1e12:.2f}T
             - Trending: {[coin['symbol'] for coin in market_context.get('trending_coins', [])][:3]}
             
             BOLSAS USA:
@@ -1295,8 +1291,6 @@ Responde como OMNIX V5.1 de forma natural, inteligente y conversacional. Mencion
             return response.choices[0].message.content
         except Exception as e:
             return f"Error OpenAI: {str(e)}"
-
-
 
     def get_complete_market_context(self) -> dict:
         """Obtener contexto completo de mercados + información OMNIX para la IA"""
@@ -1617,7 +1611,8 @@ Mantén la respuesta entre 150-200 palabras máximo."""
             logger.error(error_msg)
             await update.message.reply_text(error_msg)
 
-    def generate_intelligent_fallback_response(self, message: str, btc_price: dict, portfolio: dict, fear_greed: dict) -> str:
+    def generate_intelligent_fallback_response(self, message: str, btc_price: dict, portfolio: dict,
+                                               fear_greed: dict) -> str:
         """Respuesta inteligente SIEMPRE con Gemini IA"""
 
         # USAR GEMINI PARA TODOS LOS MENSAJES - HAROLD EXIGENCIA
@@ -2023,7 +2018,8 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                     results[name] = {
                         'price': meta['regularMarketPrice'],
                         'change': meta['regularMarketPrice'] - meta['previousClose'],
-                        'change_percent': ((meta['regularMarketPrice'] - meta['previousClose']) / meta['previousClose']) * 100
+                        'change_percent': ((meta['regularMarketPrice'] - meta['previousClose']) / meta[
+                            'previousClose']) * 100
                     }
 
             return {
@@ -2088,7 +2084,8 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                                 result = self.execute_buy_order(symbol, trade_amount)
 
                                 if result['success']:
-                                    logger.info(f"🤖 AUTO-BUY ejecutado: {symbol} ${trade_amount} (confianza {confidence*100:.0f}%)")
+                                    logger.info(
+                                        f"🤖 AUTO-BUY ejecutado: {symbol} ${trade_amount} (confianza {confidence * 100:.0f}%)")
 
                             elif signal == 'SELL':
                                 # Vender pequeña cantidad en automático
@@ -2102,7 +2099,8 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                                     if sell_amount > 0:
                                         result = self.execute_sell_order(symbol, sell_amount)
                                         if result['success']:
-                                            logger.info(f"🤖 AUTO-SELL ejecutado: {symbol} {sell_amount} (confianza {confidence*100:.0f}%)")
+                                            logger.info(
+                                                f"🤖 AUTO-SELL ejecutado: {symbol} {sell_amount} (confianza {confidence * 100:.0f}%)")
 
                     # Verificar alertas de precio
                     self.check_price_alerts()
@@ -2237,7 +2235,7 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                 'final_signal': final_signal,
                 'confidence': min(confidence, 1.0),
                 'individual_signals': signals,
-                'recommendation': f"{final_signal} con {confidence*100:.0f}% confianza",
+                'recommendation': f"{final_signal} con {confidence * 100:.0f}% confianza",
                 'active_strategies': len(signals),
                 'timestamp': datetime.now().isoformat()
             }
@@ -2298,7 +2296,7 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                                 signal = strategies['final_signal']
                                 confidence = strategies['confidence']
 
-                                logger.info(f"🎯 {symbol}: {signal} con {confidence*100:.0f}% confianza")
+                                logger.info(f"🎯 {symbol}: {signal} con {confidence * 100:.0f}% confianza")
 
                                 # Ejecutar trade si la confianza es alta
                                 if signal == 'BUY' and confidence >= 0.75:
@@ -2538,7 +2536,7 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                         response_text = f"🌐 Contexto Mercado {crypto}:\n\n"
                         response_text += f"😨 Fear & Greed: {context['fear_greed_value']}/100 ({context['market_sentiment']})\n"
                         response_text += f"₿ BTC Dominancia: {context['btc_dominance']:.1f}%\n"
-                        response_text += f"💰 Market Cap Total: ${context['total_market_cap']/1e12:.2f}T\n\n"
+                        response_text += f"💰 Market Cap Total: ${context['total_market_cap'] / 1e12:.2f}T\n\n"
 
                         if context['trending_coins']:
                             response_text += f"🔥 Trending: "
@@ -2689,6 +2687,7 @@ Responde de forma natural, inteligente y conversacional. Si pregunta qué sabes 
                 'audio_file': None
             }
 
+
 # Sistema de polling para Telegram
 def start_telegram_polling():
     """Inicia el sistema de polling para recibir mensajes - usando instancia global"""
@@ -2757,7 +2756,8 @@ def start_telegram_polling():
                                     with open(audio_file, 'rb') as audio:
                                         files = {'voice': audio}
                                         audio_payload = {'chat_id': chat_id}
-                                        audio_response = requests.post(audio_url, data=audio_payload, files=files, timeout=15)
+                                        audio_response = requests.post(audio_url, data=audio_payload, files=files,
+                                                                       timeout=15)
                                         if audio_response.status_code == 200:
                                             print(f"🔊 Audio enviado a Harold: {audio_file}")
                                         else:
@@ -2771,6 +2771,7 @@ def start_telegram_polling():
         except Exception as e:
             print(f"Error en polling: {e}")
             time.sleep(5)
+
 
 # Sistema Flask ÚNICO - Corrección de duplicación
 app = Flask(__name__)
@@ -2827,6 +2828,7 @@ def dashboard():
     </html>
     """
 
+
 @app.route('/api/status')
 def api_status():
     """API Status endpoint"""
@@ -2837,9 +2839,11 @@ def api_status():
         'balance': None
     })
 
+
 @app.route('/healthz')
 def healthz():
     return jsonify({'status': 'ok'})
+
 
 @app.route('/api/balance')
 def api_balance_endpoint():
@@ -2847,11 +2851,13 @@ def api_balance_endpoint():
     balance_data = omnix.get_real_balance()
     return jsonify(balance_data)
 
+
 @app.route('/api/price/<symbol>')
 def api_price_endpoint(symbol):
     """API Price endpoint"""
     price_data = omnix.get_real_price(f"{symbol}/USD")
     return jsonify(price_data)
+
 
 @app.route('/webhook/telegram', methods=['POST'])
 def telegram_webhook():
@@ -2902,6 +2908,7 @@ def api_buy():
     amount = float(data.get('amount', 0))
     return jsonify(omnix.execute_buy_order(symbol, amount))
 
+
 @app.route('/api/sell', methods=['POST'])
 def api_sell():
     """API endpoint para ventas"""
@@ -2938,6 +2945,3 @@ if __name__ == '__main__':
     else:
         logger.warning(f"RUN_MODE desconocido: {run_mode}. Iniciando Flask por defecto.")
         app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-
-
-
