@@ -23,7 +23,7 @@ from gtts import gTTS
 def load_env_variables():
     """Cargar variables de entorno con prioridad a Railway"""
     EXCHANGE_VARS = [
-        'KRAKEN_API_KEY', 'KRAKEN_SECRET', 'KRAKEN_API_SECRET',
+        'KRAKEN_API_KEY', 'KRAKEN_SECRET_KEY', 'KRAKEN_API_SECRET',
         'COINBASE_API_KEY', 'COINBASE_API_SECRET', 'COINBASE_PASSPHRASE',
         'KUCOIN_API_KEY', 'KUCOIN_API_SECRET', 'KUCOIN_PASSPHRASE',
         'GATEIO_API_KEY', 'GATEIO_API_SECRET',
@@ -95,7 +95,7 @@ class OmnixRealSystem:
             # Kraken API REAL - IMPLEMENTACIÓN DIRECTA FUNCIONAL
             self.kraken_key = os.getenv('KRAKEN_API_KEY')
             # Nota: estandarizar a KRAKEN_API_SECRET; mantenemos compatibilidad con KRAKEN_SECRET por ahora
-            self.kraken_secret = os.getenv('KRAKEN_SECRET') or os.getenv('KRAKEN_API_SECRET')
+            self.kraken_secret = os.getenv('KRAKEN_SECRET_KEY') or os.getenv('KRAKEN_API_SECRET')
 
             # FORZAR CARGA DE VARIABLES CRÍTICAS
             # if not self.kraken_secret:
@@ -2944,7 +2944,7 @@ def api_sell():
 if __name__ == '__main__':
     # Modo unificado compatible con Railway
     run_mode = os.getenv('RUN_MODE', 'webhook').lower()
-    port = int(os.getenv('PORT', 5001))
+    port = int(os.getenv('PORT', 5000))
     logger.info(f"🚀 OMNIX iniciando en modo: {run_mode}")
 
     if run_mode == 'polling':
