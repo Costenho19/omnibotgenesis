@@ -35,7 +35,7 @@ class AIConfig:
     openai_key: str = os.getenv('OPENAI_API_KEY', '')
     gemini_key: str = os.getenv('GEMINI_API_KEY', '')
     primary_model: str = 'gemini-2.0-flash-exp'
-    fallback_models: list = None
+    fallback_models: Optional[list] = None
     max_retries: int = 1
     timeout: int = 10
     
@@ -60,7 +60,7 @@ class CeleryConfig:
     broker_url: str = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
     result_backend: str = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
     task_serializer: str = 'json'
-    accept_content: list = None
+    accept_content: Optional[list] = None
     timezone: str = 'UTC'
     
     def __post_init__(self):
