@@ -1,0 +1,31 @@
+# OMNIX Trading - Configuración Optimizada para Máximas Ganancias
+# Generado: 2025-07-12 00:33:02
+
+# Configuración de Trading
+CICLO_MINUTOS = 2
+TRADES_MAX_DIA = 30
+MONTO_MINIMO_TRADE = 15
+MONTO_MAXIMO_TRADE = 50
+PERDIDA_MAXIMA_DIA = 80
+BALANCE_MINIMO = 180
+
+# Umbrales RSI Optimizados
+RSI_COMPRA_SOL = 50
+RSI_COMPRA_AVAX = 48
+RSI_COMPRA_ETH = 52
+RSI_COMPRA_BTC = 45
+
+RSI_VENTA_SOL = 55
+RSI_VENTA_AVAX = 55
+RSI_VENTA_ETH = 60
+RSI_VENTA_BTC = 65
+
+# Auto-venta Inteligente
+AUTO_VENTA_ACTIVADA = True
+GANANCIA_MINIMA_VENTA = 0.02
+TIEMPO_MAX_POSICION = 120
+
+# Proyección de Ganancias
+# Escenario Conservador: $8-12/día
+# Escenario Moderado: $15-20/día
+# Escenario Agresivo: $25-35/día

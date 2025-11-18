@@ -1,0 +1,99 @@
+modules = ["python-3.11", "python3", "nodejs-20", "postgresql-16"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "cairo", "cargo", "ffmpeg", "ffmpeg-full", "fontconfig", "freetype", "ghostscript", "glib", "glibcLocales", "gmp", "gobject-introspection", "gtk3", "harfbuzz", "imagemagick", "imagemagickBig", "lcms2", "libGL", "libGLU", "libffi", "libiconv", "libimagequant", "libjpeg", "libpng", "libsodium", "libtiff", "libuv", "libwebp", "libxcrypt", "openjpeg", "openssl", "pango", "pkg-config", "portaudio", "portmidi", "postgresql", "qhull", "rustc", "sqlite", "tcl", "tk", "xcodebuild", "xsimd", "zlib"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OMNIX Bot"
+
+[[workflows.workflow]]
+name = "OMNIX Bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5002
+externalPort = 3002
+
+[[ports]]
+localPort = 5003
+externalPort = 3003
+
+[[ports]]
+localPort = 5005
+externalPort = 4200
+
+[[ports]]
+localPort = 5006
+externalPort = 5000
+
+[[ports]]
+localPort = 5007
+externalPort = 5173
+
+[[ports]]
+localPort = 5008
+externalPort = 6800
+
+[[ports]]
+localPort = 5010
+externalPort = 8008
+
+[[ports]]
+localPort = 5011
+externalPort = 8099
+
+[[ports]]
+localPort = 5012
+externalPort = 8081
+
+[[ports]]
+localPort = 5555
+externalPort = 3001
+
+[[ports]]
+localPort = 6000
+externalPort = 6000
+
+[[ports]]
+localPort = 7000
+externalPort = 3000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 9000
+externalPort = 9000
+
+[deployment]
+deploymentTarget = "gce"
+run = ["sh", "-c", "python3 OMNIX_RAILWAY_FINAL_SEGURO.py"]
+
+[agent]
+expertMode = true

@@ -1,0 +1,11 @@
+{
+  "kraken_ready": true,
+  "timestamp": "2025-08-09T06:50:09.342377",
+  "tests_passed": {
+    "Conexi\u00f3n b\u00e1sica": true,
+    "Permisos trading": true,
+    "Pares de trading": true,
+    "Datos de mercado": true,
+    "Orden de prueba": true
+  }
+}
