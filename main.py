@@ -9653,7 +9653,7 @@ def main():
         # ==================== INICIAR BOT TELEGRAM ANTES DE FLASK ====================
         if os.environ.get('TELEGRAM_BOT_TOKEN'):
             try:
-                telegram_bot = EnterpriseTelegramBot()
+                telegram_bot = EnterpriseTelegramBot(db_manager=global_db_manager)
                 
                 # Guardar Video Learning Integration globalmente para uso en webhook
                 if hasattr(telegram_bot, 'video_learning_integration') and telegram_bot.video_learning_integration:
@@ -9762,7 +9762,7 @@ def start_telegram_bot_background():
         if use_polling:
             logger.info("🔄 Background: Modo POLLING activado")
             # Inicializar bot y arrancar polling
-            bot = EnterpriseTelegramBot()
+            bot = EnterpriseTelegramBot(db_manager=global_db_manager)
             bot.start_polling(drop_pending_updates=True)
             logger.info("✅ Background: Bot con polling iniciado")
         elif is_railway:
@@ -9808,7 +9808,7 @@ def ensure_global_telegram_bot():
         logger.info("🤖 Inicializando EnterpriseTelegramBot para Railway webhook...")
         
         # IMPORTANTE: Esta función se llama DESPUÉS de que EnterpriseTelegramBot está definida
-        global_telegram_bot = EnterpriseTelegramBot()
+        global_telegram_bot = EnterpriseTelegramBot(db_manager=global_db_manager)
         
         logger.info("✅ Bot Telegram inicializado exitosamente")
         logger.info("🚂 Configurando webhook para Railway...")
@@ -12018,9 +12018,10 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
 class EnterpriseTelegramBot:
     """Bot Telegram empresarial con todas las funcionalidades"""
     
-    def __init__(self):
+    def __init__(self, db_manager=None):
         self.application = None
         self.is_running = False
+        self.db_manager = db_manager  # MEMORIA PERSISTENTE POSTGRESQL
         self.ai = ConversationalAI()  # SUPERINTELIGENCIA PARA HAROLD
         
         # 🏦 TRADING SERVICE ENTERPRISE CON FALLBACK SEGURO
