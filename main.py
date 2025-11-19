@@ -1932,16 +1932,35 @@ class DatabaseManager:
     pero usa DatabaseServiceEnterprise internamente
     """
     def __init__(self):
+        logger.info("=" * 70)
+        logger.info("🔧 INICIALIZANDO DatabaseManager")
+        logger.info(f"📦 DATABASE_ENTERPRISE_AVAILABLE: {DATABASE_ENTERPRISE_AVAILABLE}")
+        
         if DATABASE_ENTERPRISE_AVAILABLE:
             logger.info("🚀 Inicializando DatabaseManager con ENTERPRISE backend")
             self.enterprise_service = DatabaseServiceEnterprise()
             self.connected = self.enterprise_service.connected
             self.using_enterprise = True
+            
+            # Health check detallado
+            health = self.enterprise_service.health_check()
+            logger.info(f"🏥 Health Check:")
+            logger.info(f"   - psycopg2_available: {health.get('psycopg2_available', False)}")
+            logger.info(f"   - database_url_configured: {health.get('database_url_configured', False)}")
+            logger.info(f"   - database_connected: {health.get('database_connected', False)}")
+            
+            if self.connected:
+                logger.info("✅ DatabaseManager CONECTADO exitosamente")
+            else:
+                logger.error("❌ DatabaseManager NO CONECTADO - Revisar logs arriba")
         else:
             logger.warning("⚠️ Fallback a sistema legacy - Database Enterprise no disponible")
             self.connected = True
             self.using_enterprise = False
-        logger.info(f"Base de datos inicializada - Enterprise: {self.using_enterprise}")
+        
+        logger.info(f"📊 Estado final - Enterprise: {self.using_enterprise}, Connected: {self.connected}")
+        logger.info("=" * 70)
+
     
     def save_balance_snapshot(self, user_id, balance_data):
         if self.using_enterprise:

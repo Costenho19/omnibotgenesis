@@ -42,20 +42,42 @@ class DatabaseServiceEnterprise:
         self.db_url = os.environ.get('DATABASE_URL')
         self.connected = False
         
-        if not PSYCOPG2_AVAILABLE:
-            logger.error("psycopg2 no disponible")
+        # 🔍 DEBUG LOGGING MEJORADO PARA RAILWAY
+        logger.info("=" * 70)
+        logger.info("🚀 INICIANDO DatabaseServiceEnterprise")
+        logger.info(f"📊 PSYCOPG2_AVAILABLE: {PSYCOPG2_AVAILABLE}")
+        
+        if self.db_url:
+            # Mostrar primeros 30 caracteres para confirmar presencia (sin exponer credenciales)
+            db_url_preview = self.db_url[:30] + "..." if len(self.db_url) > 30 else self.db_url
+            logger.info(f"✅ DATABASE_URL detectada: {db_url_preview}")
+            logger.info(f"📏 DATABASE_URL length: {len(self.db_url)} caracteres")
+        else:
+            logger.error("❌ DATABASE_URL NO ENCONTRADA en os.environ")
+            logger.info(f"🔑 Variables disponibles: {', '.join(sorted(os.environ.keys())[:10])}")
+            logger.info("=" * 70)
             return
         
-        if not self.db_url:
-            logger.warning("DATABASE_URL no configurada")
+        if not PSYCOPG2_AVAILABLE:
+            logger.error("❌ psycopg2 NO DISPONIBLE - No se puede conectar a PostgreSQL")
+            logger.info("=" * 70)
             return
         
         try:
+            logger.info("🔌 Intentando conectar a PostgreSQL...")
             self._init_tables()
             self.connected = True
-            logger.info("🗄️ DatabaseServiceEnterprise conectado a PostgreSQL")
+            logger.info("✅ PostgreSQL: 13 tablas inicializadas")
+            logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
+            logger.info("=" * 70)
         except Exception as e:
-            logger.error(f"Error conectando a DB: {e}")
+            logger.error("=" * 70)
+            logger.error(f"❌ ERROR CONECTANDO A POSTGRESQL:")
+            logger.error(f"   Tipo: {type(e).__name__}")
+            logger.error(f"   Mensaje: {str(e)}")
+            import traceback
+            logger.error(f"   Traceback completo:\n{traceback.format_exc()}")
+            logger.error("=" * 70)
     
     def health_check(self) -> Dict[str, bool]:
         """Health check del servicio"""
