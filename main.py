@@ -14981,22 +14981,16 @@ Los parámetros fueron ajustados automáticamente
                                     additional_context['price'] = real_market_data.get('btc_price', 0)
                                     additional_context['balance'] = real_market_data.get('balance_usd', 0)
                                 
-                                # 🧠 OBTENER HISTORIAL CONVERSACIONAL DE REDIS EN FORMATO CORRECTO
-                                global global_conversation_history
+                                # 🧠 OBTENER HISTORIAL CONVERSACIONAL DE POSTGRESQL (PERSISTENTE)
                                 conversation_hist = []
-                                if chat_id in global_conversation_history and len(global_conversation_history[chat_id]) > 0:
-                                    # Convertir historial en formato correcto para PromptsContextManager
-                                    raw_history = global_conversation_history[chat_id][-10:]  # Últimos 10 mensajes
-                                    for i in range(0, len(raw_history), 2):
-                                        if i + 1 < len(raw_history):
-                                            user_msg = raw_history[i].replace('Usuario: ', '')
-                                            ai_msg = raw_history[i + 1].replace('OMNIX: ', '')
-                                            conversation_hist.append({
-                                                'user': user_msg,
-                                                'ai': ai_msg,
-                                                'timestamp': datetime.now().isoformat()
-                                            })
-                                    logger.info(f"🧠 Memoria: {len(conversation_hist)} pares de conversación cargados")
+                                
+                                # Cargar historial de PostgreSQL (sobrevive reinicios de Railway/Replit)
+                                if self.db_manager:
+                                    pg_messages = self.db_manager.get_conversation_history(chat_id, limit=10)
+                                    if pg_messages and len(pg_messages) > 0:
+                                        # Formato ya es correcto para PromptsContextManager
+                                        conversation_hist = pg_messages
+                                        logger.info(f"🧠 Memoria PostgreSQL: {len(conversation_hist)} pares cargados (persistente)")
                                 
                                 # Generar prompt conversacional natural CON MEMORIA
                                 gemini_prompt = prompts_manager.build_system_prompt(
@@ -15111,20 +15105,21 @@ Harold pregunta: {text}"""
                         }
                         requests.post(send_url, json=data_backup)
                 
-                # GUARDAR HISTORIAL DE CONVERSACIÓN para memoria
-                if chat_id not in global_conversation_history:
-                    global_conversation_history[chat_id] = []
-                
-                # Agregar pregunta del usuario y respuesta del bot (solo si hay respuesta válida)
+                # GUARDAR HISTORIAL EN POSTGRESQL (PERSISTENTE - sobrevive reinicios)
                 if text and final_response_text:
-                    global_conversation_history[chat_id].append(f"Usuario: {text}")
-                    global_conversation_history[chat_id].append(f"OMNIX: {final_response_text[:200]}")  # Primeros 200 chars
-                    
-                    # Mantener solo últimos 20 mensajes (10 pares)
-                    if len(global_conversation_history[chat_id]) > 20:
-                        global_conversation_history[chat_id] = global_conversation_history[chat_id][-20:]
-                    
-                    logger.info(f"💾 Historial guardado: {len(global_conversation_history[chat_id])} mensajes totales")
+                    if self.db_manager:
+                        success = self.db_manager.save_conversation(
+                            user_id=str(chat_id),
+                            user_message=text,
+                            ai_response=final_response_text[:1000],  # Primeros 1000 chars
+                            language='es'
+                        )
+                        if success:
+                            logger.info(f"💾 Memoria PostgreSQL guardada: chat {chat_id} (persistente)")
+                        else:
+                            logger.warning(f"⚠️ Error guardando en PostgreSQL")
+                    else:
+                        logger.warning(f"⚠️ Database manager no disponible")
                 else:
                     logger.warning(f"⚠️ No se guardó historial - respuesta vacía o inválida")
             

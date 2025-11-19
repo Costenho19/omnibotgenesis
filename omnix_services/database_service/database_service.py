@@ -606,6 +606,53 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error guardando conversación: {e}")
             return False
     
+    def get_conversation_history(self, chat_id: int, limit: int = 10) -> list:
+        """
+        Obtener historial de conversación desde PostgreSQL (PERSISTENTE)
+        
+        Args:
+            chat_id: ID del chat
+            limit: Número de pares de mensajes a retornar (default: 10)
+            
+        Returns:
+            Lista de diccionarios con {'user': str, 'ai': str, 'timestamp': str}
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT user_message, ai_response, timestamp 
+                FROM conversations 
+                WHERE user_id = %s 
+                ORDER BY timestamp DESC 
+                LIMIT %s
+            ''', (str(chat_id), limit))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            # Convertir a formato esperado (más reciente primero, luego invertir)
+            history = []
+            for row in reversed(rows):  # Invertir para tener cronológico
+                history.append({
+                    'user': row[0],
+                    'ai': row[1],
+                    'timestamp': row[2].isoformat() if row[2] else None
+                })
+            
+            return history
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo historial: {e}")
+            return []
+    
     def save_trade_reasoning(self, reasoning: Dict) -> Optional[str]:
         """
         Guardar razonamiento pre-trade del Cerebro Conversacional
