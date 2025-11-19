@@ -1,0 +1,9 @@
+OMNIX V6.0 DEPLOYMENT TRIGGER
+Generated: 2025-11-19 21:30 UTC
+This file forces Railway to redeploy with latest PostgreSQL logging code.
+
+Changes included:
+- Enhanced DatabaseServiceEnterprise logging
+- PostgreSQL connection diagnostics
+- DATABASE_URL detection tracking
+- 13 table initialization logging
