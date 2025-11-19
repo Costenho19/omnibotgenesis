@@ -1000,9 +1000,39 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error en AI Risk Guardian (continuando): {e}")
             
-            # 🧬 ARES QUANTUM KILL-SWITCH - SEGUNDA LÍNEA DE DEFENSA
-            # SOLO se ejecuta en REAL TRADING (requiere datos de Kraken en vivo)
-            if action != 'HOLD' and not self.config.get('paper_mode', True):
+            # 🧬 ARES QUANTUM KILL-SWITCH - FAIL-SAFE CRÍTICO
+            # Validar disponibilidad de Kraken ANTES de cualquier lógica de trading
+            kraken_available = (
+                hasattr(self, 'trading_service') and 
+                self.trading_service is not None and
+                hasattr(self.trading_service, 'kraken') and
+                self.trading_service.kraken is not None
+            )
+            
+            is_real_trading = not self.config.get('paper_mode', True)
+            
+            # FAIL-SAFE ABSOLUTO: En REAL TRADING, Kraken DEBE estar disponible
+            # Este check se ejecuta PRIMERO, antes de evaluar la acción
+            if is_real_trading and not kraken_available:
+                logger.error(f"🚨 CRITICAL FAIL-SAFE: REAL TRADING sin datos de Kraken disponibles")
+                logger.error(f"   ARES Kill-Switch requiere datos de mercado en vivo - BLOQUEANDO todas las operaciones")
+                logger.error(f"   Acción solicitada: {action}, Monto: ${amount_usd:.2f}")
+                logger.error(f"   Sistema en modo degradado - requiere reconexión de Kraken para trading real")
+                return {
+                    'error': 'BLOQUEADO POR FAIL-SAFE CRÍTICO: Datos de Kraken no disponibles',
+                    'blocked': True,
+                    'fail_safe': True,
+                    'critical': True,
+                    'reason': 'Real trading requiere datos de Kraken en vivo para protecciones de ARES kill-switch',
+                    'action': action,
+                    'kraken_available': False,
+                    'timestamp': int(time.time()),
+                    'recommendation': 'Verificar conexión de Kraken o usar Paper Trading Mode'
+                }
+            
+            # ARES Kill-Switch - solo se ejecuta si pasó el fail-safe
+            # (Real trading CON Kraken disponible)
+            if action != 'HOLD' and is_real_trading:
                 try:
                     ares_blocked = False
                     ares_block_reason = []
