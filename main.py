@@ -14419,6 +14419,7 @@ Ejemplo: /risk_events 48
 
 💬 Pregúntame sobre criptomonedas y trading.
 *Desarrollado por Harold Nunes*"""
+                final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/precio'):
                 response_text += "📊 **PRECIO BITCOIN TIEMPO REAL**\n\n"
@@ -14433,6 +14434,7 @@ Ejemplo: /risk_events 48
                         response_text += "❌ Error obteniendo precio"
                 except:
                     response_text += "❌ Error conectando con Kraken"
+                final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/balance'):
                 response_text += "💳 **BALANCE KRAKEN REAL**\n\n"
@@ -14460,6 +14462,7 @@ Ejemplo: /risk_events 48
                         response_text += "❌ Error obteniendo balance"
                 except:
                     response_text += "❌ Error conectando con Kraken"
+                final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/status'):
                 response_text += "🔍 **ESTADO DEL SISTEMA**\n\n"
@@ -14468,6 +14471,7 @@ Ejemplo: /risk_events 48
                 response_text += "✅ Kraken API: CONECTADO\n"
                 response_text += "✅ Bot Telegram: RESPONDIENDO\n"
                 response_text += f"⏰ Hora: {datetime.now().strftime('%H:%M:%S')}"
+                final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/help'):
                 response_text += """❓ **AYUDA - COMANDOS OMNIX**
@@ -14491,6 +14495,7 @@ Pregúntame cualquier cosa sobre:
 • Recomendaciones
 
 *Sistema desarrollado por Harold Nunes*"""
+                final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/quantum_stats'):
                 # 🎲 QUANTUM ENHANCEMENTS V5.3 ULTRA - Estadísticas QRNG + QAOA
