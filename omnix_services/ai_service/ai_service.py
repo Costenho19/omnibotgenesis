@@ -119,11 +119,12 @@ class ConversationalAIService:
             if market_data:
                 additional_context.update(market_data)
             
-            # 5. Build system prompt
+            # 5. Build system prompt WITH CONVERSATION HISTORY
             system_prompt = self.prompts.build_system_prompt(
                 intent=intent,
                 user_name=user_name,
-                additional_context=additional_context
+                additional_context=additional_context,
+                conversation_history=history
             )
             
             # 6. Generate AI response (ASYNC VERDADERO)

@@ -147,7 +147,8 @@ class PromptsContextManager:
         self, 
         intent: str = 'general_conversation',
         user_name: str = 'Usuario',
-        additional_context: Optional[Dict[str, Any]] = None
+        additional_context: Optional[Dict[str, Any]] = None,
+        conversation_history: Optional[List[Dict]] = None
     ) -> str:
         """
         Build comprehensive system prompt for AI
@@ -156,6 +157,7 @@ class PromptsContextManager:
             intent: User intent category
             user_name: User's name
             additional_context: Additional context data
+            conversation_history: Previous conversation messages
             
         Returns:
             System prompt string
@@ -196,6 +198,25 @@ Eres OMNIX V5.4 ULTRA, un asistente de trading avanzado con personalidad natural
             
             if 'market_sentiment' in additional_context:
                 base_prompt += f"- Sentimiento: {additional_context['market_sentiment']}\n"
+        
+        # INJECT CONVERSATION MEMORY (últimos 10 mensajes = 5 pares)
+        if conversation_history and len(conversation_history) > 0:
+            base_prompt += f"\n\n💬 MEMORIA CONVERSACIONAL ({len(conversation_history)} mensajes):\n"
+            base_prompt += f"Estás en una conversación CONTINUA con {user_name}. Recuerda lo que han hablado:\n\n"
+            
+            # Tomar últimos 10 mensajes (5 pares)
+            recent_messages = conversation_history[-10:]
+            for idx, msg in enumerate(recent_messages, 1):
+                if 'user' in msg:
+                    base_prompt += f"{user_name}: {msg['user']}\n"
+                if 'ai' in msg:
+                    # Truncar respuesta AI a 150 chars para no saturar
+                    ai_msg = msg['ai'][:150] + "..." if len(msg.get('ai', '')) > 150 else msg.get('ai', '')
+                    base_prompt += f"OMNIX: {ai_msg}\n"
+            
+            base_prompt += f"\n🧠 IMPORTANTE: Ya has conversado con {user_name} antes. NO te presentes como si fuera la primera vez.\n"
+        else:
+            base_prompt += f"\n\n💬 ESTA ES LA PRIMERA CONVERSACIÓN con {user_name}.\n"
         
         # Critical response guidelines with NATURAL PERSONALITY
         base_prompt += """
