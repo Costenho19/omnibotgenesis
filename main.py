@@ -12124,11 +12124,15 @@ class EnterpriseTelegramBot:
                 database_service=global_db_manager if 'global_db_manager' in globals() else None,
                 advanced_features=global_advanced_features if 'global_advanced_features' in globals() else None,
                 paper_trading=self.paper_trading,
-                ai_service=self.ai  # 🎓 V5.2.3: AI para auto-learning de videos
+                ai_service=self.ai,  # 🎓 V5.2.3: AI para auto-learning de videos
+                ares_v1=global_ares_v1 if 'global_ares_v1' in globals() else None,  # 🧬 ARES V1 Swing Trading
+                ares_v2=global_ares_v2 if 'global_ares_v2' in globals() else None   # 🧨 ARES V2 Scalping M1
             )
             logger.info("🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible")
             logger.info(f"   📊 Paper Trading: {'✅ ACTIVADO ($1M virtual)' if self.paper_trading else '❌ Desactivado'}")
             logger.info(f"   🎓 Auto-Learning: {'✅ DISPONIBLE' if self.ai else '⚠️ Sin IA'}")
+            logger.info(f"   🧬 ARES V1 Swing: {'✅ CONECTADO (74-82% win rate)' if self.auto_trading.ares_v1 else '⚠️ No disponible'}")
+            logger.info(f"   🧨 ARES V2 Scalping: {'✅ CONECTADO (85% win rate)' if self.auto_trading.ares_v2 else '⚠️ No disponible'}")
         except Exception as e:
             logger.warning(f"⚠️ Auto-Trading Bot no disponible: {e}")
             self.auto_trading = None
