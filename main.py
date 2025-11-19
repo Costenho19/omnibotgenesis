@@ -14930,7 +14930,7 @@ Los parámetros fueron ajustados automáticamente
 ⚠️ CRÍTICO: USA SOLO ESTOS DATOS REALES - NUNCA INVENTES PRECIOS NI BALANCES
 """
                             
-                            # USAR SISTEMA DE PROMPTS CONVERSACIONAL NATURAL
+                            # USAR SISTEMA DE PROMPTS CONVERSACIONAL NATURAL CON MEMORIA
                             try:
                                 from omnix_services.ai_service.ai_prompts import PromptsContextManager
                                 prompts_manager = PromptsContextManager()
@@ -14942,25 +14942,34 @@ Los parámetros fueron ajustados automáticamente
                                     additional_context['price'] = real_market_data.get('btc_price', 0)
                                     additional_context['balance'] = real_market_data.get('balance_usd', 0)
                                 
-                                # Generar prompt conversacional natural
+                                # 🧠 OBTENER HISTORIAL CONVERSACIONAL DE REDIS EN FORMATO CORRECTO
+                                global global_conversation_history
+                                conversation_hist = []
+                                if chat_id in global_conversation_history and len(global_conversation_history[chat_id]) > 0:
+                                    # Convertir historial en formato correcto para PromptsContextManager
+                                    raw_history = global_conversation_history[chat_id][-10:]  # Últimos 10 mensajes
+                                    for i in range(0, len(raw_history), 2):
+                                        if i + 1 < len(raw_history):
+                                            user_msg = raw_history[i].replace('Usuario: ', '')
+                                            ai_msg = raw_history[i + 1].replace('OMNIX: ', '')
+                                            conversation_hist.append({
+                                                'user': user_msg,
+                                                'ai': ai_msg,
+                                                'timestamp': datetime.now().isoformat()
+                                            })
+                                    logger.info(f"🧠 Memoria: {len(conversation_hist)} pares de conversación cargados")
+                                
+                                # Generar prompt conversacional natural CON MEMORIA
                                 gemini_prompt = prompts_manager.build_system_prompt(
                                     intent=intent,
                                     user_name='Harold',
-                                    additional_context=additional_context
+                                    additional_context=additional_context,
+                                    conversation_history=conversation_hist
                                 )
                                 
                                 # Agregar datos reales de mercado si existen
                                 if real_data_context:
                                     gemini_prompt += f"\n\n{real_data_context}"
-                                
-                                # AGREGAR HISTORIAL DE CONVERSACIÓN PREVIO
-                                global global_conversation_history
-                                if chat_id in global_conversation_history and len(global_conversation_history[chat_id]) > 0:
-                                    recent_history = global_conversation_history[chat_id][-6:]  # Últimos 6 mensajes (3 pares)
-                                    gemini_prompt += "\n\n💬 HISTORIAL DE CONVERSACIÓN RECIENTE:\n"
-                                    gemini_prompt += "\n".join(recent_history)
-                                    gemini_prompt += "\n"
-                                    logger.info(f"📚 Incluido historial: {len(recent_history)} mensajes previos")
                                 
                                 # Agregar pregunta del usuario
                                 gemini_prompt += f"\n\nPregunta de Harold: {text}\n\nResponde de forma natural y conversacional:"
