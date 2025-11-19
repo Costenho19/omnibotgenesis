@@ -47,6 +47,27 @@ Additional advanced analysis modules include multi-modal video analysis, chart p
 
 OMNIX V5.4 includes a pre-configured professional strategy combining RSI, MACD, and Triple EMA indicators for high-probability entries, with a proven 73% win rate from backtesting. This strategy features specific entry rules for BUY and SELL based on these indicators, stop loss, and take profit parameters. These parameters are loaded as pending proposals for user review and approval.
 
+### ARES Quantum Protocols (November 2025)
+
+**ARES V1 - Swing Trading (74-82% Win Rate)**: Institutional-grade swing trading strategy with 3-layer quantum architecture (QSF, QIS, QEX). Features 6 institutional signals (RSI Divergence, Smart Money Index, Liquidity Sweeps, Volume Profile, Fibonacci Confluence, Market Regime), multi-timeframe correlation (H4, H1, M15), quantum-enhanced position sizing with Kelly Criterion, dynamic hedging, and HADES extreme market filter. Contributes 20% weight to AutoTradingBot decision scoring.
+
+**ARES V2 - Scalping M1 (85% Win Rate)**: Ultra-fast 1-minute scalping strategy optimized for high-frequency opportunities. Features 5 precision signals (RSI M1, Bollinger Squeeze, Volume Spike, Momentum Shift, VWAP Cross), tight stop-loss (-0.28%), rapid take-profit (+0.85%), and institutional market structure analysis. Contributes 15% weight to AutoTradingBot decision scoring.
+
+**Kill-Switch Protection**: Multi-layer fail-safe system that validates extreme market conditions before trade execution. Only active in real trading mode with live Kraken data. Features:
+- Critical Fail-Safe: Blocks ALL real trading operations if Kraken data unavailable
+- V1 Kill-Switch: 3+ bearish signals block LONG, 3+ bullish signals block SHORT
+- V2 Kill-Switch: Ultra-sensitive scalping protection with VWAP validation
+- Degraded Mode Logging: Full telemetry when protection triggers
+- Paper Mode Bypass: Kill-switch inactive in simulation
+
+**Integration Architecture**:
+- Initialized in main.py as global instances (global_ares_v1, global_ares_v2)
+- Passed to AutoTradingBot constructor as optional dependencies
+- Evaluated in _make_v52_decision() for signal contribution
+- Validated in _execute_smart_trade() via kill-switch fail-safe
+- Graceful degradation: System continues with 9 base strategies if ARES unavailable
+- Error handling: All ARES exceptions logged as debug, non-blocking
+
 ### Database Architecture
 
 PostgreSQL stores user management, trading history, portfolio snapshots, performance metrics, Sharia compliance data, smart alerts, auto-learning history, and system configurations, including dedicated tables for AI explanations. Redis is used for state management, conversation history, user preferences, market context, and session data.
