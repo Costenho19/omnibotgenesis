@@ -14383,8 +14383,30 @@ Ejemplo: /risk_events 48
             response_text = ""
             
             if text.startswith('/start'):
-                response_text += """🚀 **SISTEMA COMPLETAMENTE OPERATIVO**
-💰 Trading REAL con Kraken ($3,539 USD)
+                # Obtener balance REAL de Kraken
+                balance_usd = 0
+                try:
+                    real_balance = self.trading_system.get_real_balance()
+                    if real_balance:
+                        # Calcular total en USD aproximado
+                        for currency, amount in real_balance.items():
+                            if currency == 'USD':
+                                balance_usd += float(amount)
+                            elif currency == 'BTC':
+                                btc_price = self.trading_system.get_current_price('BTC/USD')
+                                if btc_price:
+                                    balance_usd += float(amount) * btc_price
+                            elif currency == 'ETH':
+                                eth_price = self.trading_system.get_current_price('ETH/USD')
+                                if eth_price:
+                                    balance_usd += float(amount) * eth_price
+                except:
+                    balance_usd = 0
+                
+                balance_display = f"${balance_usd:,.2f} USD" if balance_usd > 0 else "Conectando..."
+                
+                response_text += f"""🚀 **SISTEMA COMPLETAMENTE OPERATIVO**
+💰 Trading REAL con Kraken ({balance_display})
 🤖 IA Dual: Gemini 2.0 + OpenAI GPT-4o
 📊 Análisis técnico tiempo real
 
@@ -14418,10 +14440,22 @@ Ejemplo: /risk_events 48
                     balance = self.trading_system.get_real_balance()
                     if balance:
                         response_text += "💰 **BALANCES:**\n"
+                        total_usd = 0
                         for currency, amount in balance.items():
                             if float(amount) > 0:
                                 response_text += f"• {currency}: {amount}\n"
-                        response_text += f"\n📊 Total estimado: ~$3,539 USD"
+                                # Calcular total en USD
+                                if currency == 'USD':
+                                    total_usd += float(amount)
+                                elif currency == 'BTC':
+                                    btc_price = self.trading_system.get_current_price('BTC/USD')
+                                    if btc_price:
+                                        total_usd += float(amount) * btc_price
+                                elif currency == 'ETH':
+                                    eth_price = self.trading_system.get_current_price('ETH/USD')
+                                    if eth_price:
+                                        total_usd += float(amount) * eth_price
+                        response_text += f"\n📊 Total estimado: ~${total_usd:,.2f} USD"
                     else:
                         response_text += "❌ Error obteniendo balance"
                 except:
