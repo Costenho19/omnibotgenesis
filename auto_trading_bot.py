@@ -670,8 +670,9 @@ class AutoTradingBot:
             # ========== ESTRATEGIAS ARES QUANTUM (peso 35%) ==========
             
             # 8. ARES V1 Swing Trading (peso: 20 puntos - INSTITUCIONAL 74-82% win rate)
+            # NOTA: ARES es opcional - si no está disponible, el sistema continúa con las otras 9 estrategias
             try:
-                if self.ares_v1 is not None:
+                if self.ares_v1 is not None and hasattr(self.ares_v1, 'evaluate_qsf'):
                     # Necesitamos datos OHLCV para ARES - obtener del trading service
                     if hasattr(self, 'trading_service'):
                         try:
@@ -722,14 +723,19 @@ class AutoTradingBot:
                                 decision['reason'].append(f"⚠️ ARES V1: QSF filtró operación (ruido de mercado)")
                                 decision['v52_analysis']['ares_v1_filtered'] = qsf_result.get('reason', 'QSF filter')
                         except Exception as e:
-                            logger.warning(f"Error evaluando ARES V1: {e}")
+                            logger.debug(f"Error evaluando ARES V1: {e}")
                             decision['v52_analysis']['ares_v1_error'] = str(e)
+                else:
+                    # ARES V1 no disponible - continuar sin penalización
+                    logger.debug("ARES V1 no disponible - usando solo estrategias base")
             except Exception as e:
-                logger.warning(f"ARES V1 no disponible: {e}")
+                # Error no crítico - el sistema continúa sin ARES
+                logger.debug(f"ARES V1 error no crítico: {e}")
             
             # 9. ARES V2 Scalping M1 (peso: 15 puntos - ULTRA-RÁPIDO 85% win rate)
+            # NOTA: ARES V2 es opcional - sistema continúa sin él si no está disponible
             try:
-                if self.ares_v2 is not None:
+                if self.ares_v2 is not None and hasattr(self.ares_v2, 'evaluate_qsf_scalping'):
                     # ARES V2 usa datos M1 (1 minuto) - más granular
                     if hasattr(self, 'trading_service'):
                         try:
@@ -779,10 +785,14 @@ class AutoTradingBot:
                                 decision['reason'].append(f"⚠️ ARES V2: QSF filtró scalping (volatilidad baja)")
                                 decision['v52_analysis']['ares_v2_filtered'] = qsf_result.get('reason', 'QSF filter')
                         except Exception as e:
-                            logger.warning(f"Error evaluando ARES V2: {e}")
+                            logger.debug(f"Error evaluando ARES V2: {e}")
                             decision['v52_analysis']['ares_v2_error'] = str(e)
+                else:
+                    # ARES V2 no disponible - continuar sin penalización
+                    logger.debug("ARES V2 no disponible - usando solo estrategias base")
             except Exception as e:
-                logger.warning(f"ARES V2 no disponible: {e}")
+                # Error no crítico - el sistema continúa sin ARES
+                logger.debug(f"ARES V2 error no crítico: {e}")
             
             # ========== DECISIÓN FINAL ==========
             
@@ -991,13 +1001,14 @@ class AutoTradingBot:
                     logger.error(f"Error en AI Risk Guardian (continuando): {e}")
             
             # 🧬 ARES QUANTUM KILL-SWITCH - SEGUNDA LÍNEA DE DEFENSA
-            if action != 'HOLD':
+            # SOLO se ejecuta en REAL TRADING (requiere datos de Kraken en vivo)
+            if action != 'HOLD' and not self.config.get('paper_mode', True):
                 try:
                     ares_blocked = False
                     ares_block_reason = []
                     
                     # ARES V1 Kill-Switch
-                    if self.ares_v1 is not None:
+                    if self.ares_v1 is not None and hasattr(self.ares_v1, 'evaluate_kill_switch'):
                         try:
                             # Obtener datos del análisis previo
                             v52_analysis = analysis.get('v52_analysis', {})
@@ -1029,10 +1040,11 @@ class AutoTradingBot:
                                 ares_block_reason.append(f"🧬 ARES V1 KILL-SWITCH: {reason}")
                                 logger.error(f"🚨 ARES V1 KILL-SWITCH ACTIVADO: {reason}")
                         except Exception as e:
-                            logger.warning(f"Error en ARES V1 Kill-Switch: {e}")
+                            # Error no crítico - el kill-switch simplemente no se aplica
+                            logger.debug(f"Error en ARES V1 Kill-Switch (continuando): {e}")
                     
                     # ARES V2 Kill-Switch (más agresivo para scalping)
-                    if self.ares_v2 is not None and not ares_blocked:
+                    if self.ares_v2 is not None and not ares_blocked and hasattr(self.ares_v2, 'evaluate_kill_switch_scalping'):
                         try:
                             v52_analysis = analysis.get('v52_analysis', {})
                             ares_v2_data = {
@@ -1062,7 +1074,8 @@ class AutoTradingBot:
                                 ares_block_reason.append(f"🧨 ARES V2 SCALP KILL-SWITCH: {reason}")
                                 logger.error(f"🚨 ARES V2 SCALPING KILL-SWITCH ACTIVADO: {reason}")
                         except Exception as e:
-                            logger.warning(f"Error en ARES V2 Kill-Switch: {e}")
+                            # Error no crítico - el kill-switch simplemente no se aplica
+                            logger.debug(f"Error en ARES V2 Kill-Switch (continuando): {e}")
                     
                     # Si ARES bloqueó el trade
                     if ares_blocked:
@@ -1074,11 +1087,12 @@ class AutoTradingBot:
                             'action': action,
                             'timestamp': int(time.time())
                         }
-                    else:
-                        logger.info(f"✅ ARES Quantum Kill-Switch: Trade permitido - Sin riesgos detectados")
+                    elif not ares_blocked:
+                        logger.debug(f"✅ ARES Quantum Kill-Switch: Trade permitido - Sin riesgos detectados")
                     
                 except Exception as e:
-                    logger.error(f"Error en ARES Kill-Switch (continuando): {e}")
+                    # Error general del kill-switch - no bloquear el trade
+                    logger.debug(f"Error en ARES Kill-Switch (continuando sin bloqueo): {e}")
             
             # 🔴 VALIDACIÓN DE COHERENCE ENGINE - BLOQUEA TRADES PELIGROSOS
             if self.coherence_engine and action != 'HOLD':
