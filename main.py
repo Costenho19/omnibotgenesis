@@ -15493,5 +15493,6 @@ def activate_continuous_adaptation(trading_system):
 
 if __name__ == "__main__":
     app = main()
-    if app:
+    if a url
+    pp:
         run_dev_server(app)
