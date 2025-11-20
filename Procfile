@@ -1,1 +1,1 @@
-web: python -u wsgi.py
+web: python fix_railway_imports.py && python -u wsgi.py
