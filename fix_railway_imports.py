@@ -5,9 +5,43 @@ Ejecuta esto ANTES de main.py en Railway
 
 import sys
 import os
+import shutil
+
+# 🧹 LIMPIAR ARCHIVOS COMPILADOS VIEJOS (.pyc y __pycache__)
+print("=" * 70)
+print("🧹 LIMPIANDO ARCHIVOS COMPILADOS VIEJOS...")
+print("=" * 70)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+deleted_count = 0
+
+# Borrar todos los __pycache__ y .pyc
+for root, dirs, files in os.walk(current_dir):
+    # Borrar carpetas __pycache__
+    if '__pycache__' in dirs:
+        pycache_path = os.path.join(root, '__pycache__')
+        try:
+            shutil.rmtree(pycache_path)
+            deleted_count += 1
+            print(f"   🗑️ Borrado: {pycache_path}")
+        except Exception as e:
+            print(f"   ⚠️ No se pudo borrar {pycache_path}: {e}")
+    
+    # Borrar archivos .pyc
+    for file in files:
+        if file.endswith('.pyc'):
+            pyc_path = os.path.join(root, file)
+            try:
+                os.remove(pyc_path)
+                deleted_count += 1
+                print(f"   🗑️ Borrado: {pyc_path}")
+            except Exception as e:
+                print(f"   ⚠️ No se pudo borrar {pyc_path}: {e}")
+
+print(f"✅ Limpieza completada: {deleted_count} archivos/carpetas eliminados")
+print("=" * 70)
 
 # Asegurar que el directorio actual está en el path
-current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
