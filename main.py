@@ -34,6 +34,9 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+logger.info("=" * 70)
+logger.info("🔥 RAILWAY DEBUG - main.py CARGADO - VERSION ACTUALIZADA CON LOGGER")
+logger.info("=" * 70)
 
 # Stock Trading Module - Conditional Import (AFTER logger is configured)
 if STOCK_TRADING_ENABLED:
@@ -190,6 +193,7 @@ except ImportError as e:
 # =============================================================================
 # 🧬 ARES QUANTUM PROTOCOLS - ESTRATEGIAS INSTITUCIONALES
 # =============================================================================
+logger.info("🔥 RAILWAY DEBUG - INICIANDO BLOQUE IMPORT ARES")
 try:
     import sys
     import os
