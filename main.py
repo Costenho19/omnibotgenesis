@@ -191,6 +191,13 @@ except ImportError as e:
 # 🧬 ARES QUANTUM PROTOCOLS - ESTRATEGIAS INSTITUCIONALES
 # =============================================================================
 try:
+    import sys
+    import os
+    print(f"🔍 ARES DEBUG - Python Path: {sys.path[:3]}")
+    print(f"🔍 ARES DEBUG - CWD: {os.getcwd()}")
+    print(f"🔍 ARES DEBUG - ares_quantum_protocol exists: {os.path.exists('ares_quantum_protocol.py')}")
+    print(f"🔍 ARES DEBUG - ares_scalping_v2 exists: {os.path.exists('ares_scalping_v2.py')}")
+    
     from ares_quantum_protocol import AresQuantumProtocol
     from ares_scalping_v2 import AresScalpingV2
     ARES_STRATEGIES_AVAILABLE = True
@@ -201,7 +208,16 @@ except ImportError as e:
     AresQuantumProtocol = None
     AresScalpingV2 = None
     ARES_STRATEGIES_AVAILABLE = False
-    print(f"⚠️ ARES Strategies no disponibles: {e}")
+    print(f"❌ ARES ImportError COMPLETO: {type(e).__name__}: {str(e)}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    AresQuantumProtocol = None
+    AresScalpingV2 = None
+    ARES_STRATEGIES_AVAILABLE = False
+    print(f"❌ ARES Exception COMPLETO: {type(e).__name__}: {str(e)}")
+    import traceback
+    traceback.print_exc()
 
 # =============================================================================
 # 🔒 CONFIGURACIÓN DE SEGURIDAD CENTRALIZADA - MEJORAS CRÍTICAS
