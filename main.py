@@ -193,31 +193,31 @@ except ImportError as e:
 try:
     import sys
     import os
-    print(f"🔍 ARES DEBUG - Python Path: {sys.path[:3]}")
-    print(f"🔍 ARES DEBUG - CWD: {os.getcwd()}")
-    print(f"🔍 ARES DEBUG - ares_quantum_protocol exists: {os.path.exists('ares_quantum_protocol.py')}")
-    print(f"🔍 ARES DEBUG - ares_scalping_v2 exists: {os.path.exists('ares_scalping_v2.py')}")
+    logger.info(f"🔍 ARES DEBUG - Python Path: {sys.path[:3]}")
+    logger.info(f"🔍 ARES DEBUG - CWD: {os.getcwd()}")
+    logger.info(f"🔍 ARES DEBUG - ares_quantum_protocol exists: {os.path.exists('ares_quantum_protocol.py')}")
+    logger.info(f"🔍 ARES DEBUG - ares_scalping_v2 exists: {os.path.exists('ares_scalping_v2.py')}")
     
     from ares_quantum_protocol import AresQuantumProtocol
     from ares_scalping_v2 import AresScalpingV2
     ARES_STRATEGIES_AVAILABLE = True
-    print("✅ ARES QUANTUM PROTOCOLS LOADED:")
-    print("   🧬 ARES V1 - Swing Trading (74-82% win rate)")
-    print("   🧨 ARES V2 - Scalping M1 (85% win rate)")
+    logger.info("✅ ARES QUANTUM PROTOCOLS LOADED:")
+    logger.info("   🧬 ARES V1 - Swing Trading (74-82% win rate)")
+    logger.info("   🧨 ARES V2 - Scalping M1 (85% win rate)")
 except ImportError as e:
     AresQuantumProtocol = None
     AresScalpingV2 = None
     ARES_STRATEGIES_AVAILABLE = False
-    print(f"❌ ARES ImportError COMPLETO: {type(e).__name__}: {str(e)}")
+    logger.error(f"❌ ARES ImportError COMPLETO: {type(e).__name__}: {str(e)}")
     import traceback
-    traceback.print_exc()
+    logger.error(traceback.format_exc())
 except Exception as e:
     AresQuantumProtocol = None
     AresScalpingV2 = None
     ARES_STRATEGIES_AVAILABLE = False
-    print(f"❌ ARES Exception COMPLETO: {type(e).__name__}: {str(e)}")
+    logger.error(f"❌ ARES Exception COMPLETO: {type(e).__name__}: {str(e)}")
     import traceback
-    traceback.print_exc()
+    logger.error(traceback.format_exc())
 
 # =============================================================================
 # 🔒 CONFIGURACIÓN DE SEGURIDAD CENTRALIZADA - MEJORAS CRÍTICAS
