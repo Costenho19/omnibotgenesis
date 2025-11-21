@@ -33,6 +33,21 @@ class KrakenDataDownloader:
     
     KRAKEN_API_URL = "https://api.kraken.com/0/public/OHLC"
     
+    # Kraken pair name mapping (user-friendly → Kraken format)
+    PAIR_ALIASES = {
+        'XBTUSD': 'XXBTZUSD',
+        'BTC/USD': 'XXBTZUSD',
+        'BTCUSD': 'XXBTZUSD',
+        'ETHUSD': 'XETHZUSD',
+        'ETH/USD': 'XETHZUSD',
+        'SOLUSD': 'SOLUSD',
+        'SOL/USD': 'SOLUSD',
+        'ADAUSD': 'ADAUSD',
+        'ADA/USD': 'ADAUSD',
+        'DOTUSD': 'DOTUSD',
+        'DOT/USD': 'DOTUSD'
+    }
+    
     # Kraken interval mapping (minutes)
     INTERVALS = {
         '1m': 1,
@@ -70,7 +85,7 @@ class KrakenDataDownloader:
         Download OHLCV data from Kraken
         
         Args:
-            pair: Trading pair (e.g., 'XBTUSD', 'ETHUSD')
+            pair: Trading pair (e.g., 'XBTUSD', 'BTC/USD', 'ETHUSD')
             interval: Timeframe ('1m', '5m', '15m', '1h', '4h', '1d')
             start_date: Start datetime (default: 6 months ago)
             end_date: End datetime (default: now)
@@ -79,6 +94,9 @@ class KrakenDataDownloader:
         Returns:
             DataFrame with columns: timestamp, open, high, low, close, volume
         """
+        # Convert pair to Kraken format
+        kraken_pair = self.PAIR_ALIASES.get(pair.upper(), pair)
+        
         if not start_date:
             start_date = datetime.now() - timedelta(days=180)  # 6 months
         if not end_date:
@@ -86,24 +104,24 @@ class KrakenDataDownloader:
         
         logger.info("=" * 70)
         logger.info(f"📊 Descargando datos históricos de Kraken")
-        logger.info(f"   Par: {pair}")
+        logger.info(f"   Par: {pair} → {kraken_pair}")
         logger.info(f"   Intervalo: {interval}")
         logger.info(f"   Periodo: {start_date.date()} → {end_date.date()}")
         logger.info("=" * 70)
         
         # Check cache first
         if use_cache:
-            cached_df = self._load_from_cache(pair, interval, start_date, end_date)
+            cached_df = self._load_from_cache(kraken_pair, interval, start_date, end_date)
             if cached_df is not None:
                 logger.info(f"✅ Datos cargados desde cache ({len(cached_df)} candles)")
                 return cached_df
         
         # Download from Kraken API
-        df = self._download_from_api(pair, interval, start_date, end_date)
+        df = self._download_from_api(kraken_pair, interval, start_date, end_date)
         
         # Save to cache
         if use_cache and df is not None and len(df) > 0:
-            self._save_to_cache(df, pair, interval)
+            self._save_to_cache(df, kraken_pair, interval)
         
         logger.info(f"✅ Descarga completada: {len(df)} candles")
         return df
@@ -147,8 +165,16 @@ class KrakenDataDownloader:
                     logger.error(f"❌ Kraken API error: {data['error']}")
                     break
                 
-                # Extract OHLC data
-                pair_data = data.get('result', {}).get(pair, [])
+                # Extract OHLC data - Kraken returns pair key in result
+                result = data.get('result', {})
+                pair_data = None
+                
+                # Find the pair data (key might not be exactly what we sent)
+                for key, value in result.items():
+                    if key != 'last' and isinstance(value, list):
+                        pair_data = value
+                        break
+                
                 if not pair_data or len(pair_data) == 0:
                     logger.warning("⚠️ No hay más datos disponibles")
                     break
@@ -157,11 +183,13 @@ class KrakenDataDownloader:
                 total_candles += len(pair_data)
                 
                 # Update since to last timestamp
-                last_timestamp = int(data['result']['last'])
-                if last_timestamp <= since:
-                    break  # No new data
-                since = last_timestamp
+                last_timestamp = int(result.get('last', 0))
                 
+                # Break if no new data or reached end
+                if last_timestamp <= since or last_timestamp >= end_timestamp:
+                    break
+                
+                since = last_timestamp
                 requests_count += 1
                 
                 # Progress log every 5 requests
