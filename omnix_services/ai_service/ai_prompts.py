@@ -4,6 +4,9 @@ Intent Analysis, Context Building, Prompt Engineering
 Escalabilidad: 50K+ usuarios con context caching
 """
 
+# 🔥 RAILWAY DEBUG - Archivo actualizado para forzar recarga
+print("✅ ai_prompts.py V6.0 CARGADO - SIN IMPORTS DE 'config'")
+
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from omnix_core.cache.redis_cache import cache
