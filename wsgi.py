@@ -6,6 +6,7 @@ import os
 import sys
 import logging
 import threading
+import shutil
 
 # Configurar logging
 logging.basicConfig(
@@ -18,6 +19,33 @@ logger = logging.getLogger(__name__)
 
 logger.info("=" * 70)
 logger.info("🚀 WSGI: Iniciando Railway deployment")
+logger.info("=" * 70)
+
+# 🧹 LIMPIAR CACHE DE ARCHIVOS COMPILADOS VIEJOS
+logger.info("🧹 Limpiando archivos .pyc y __pycache__ viejos...")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+deleted_count = 0
+
+for root, dirs, files in os.walk(current_dir):
+    if '__pycache__' in dirs:
+        pycache_path = os.path.join(root, '__pycache__')
+        try:
+            shutil.rmtree(pycache_path)
+            deleted_count += 1
+            logger.info(f"   🗑️ Borrado: {pycache_path}")
+        except Exception as e:
+            logger.warning(f"   ⚠️ No se pudo borrar {pycache_path}: {e}")
+    
+    for file in files:
+        if file.endswith('.pyc'):
+            pyc_path = os.path.join(root, file)
+            try:
+                os.remove(pyc_path)
+                deleted_count += 1
+            except Exception as e:
+                logger.warning(f"   ⚠️ No se pudo borrar {pyc_path}: {e}")
+
+logger.info(f"✅ Limpieza completada: {deleted_count} archivos/carpetas eliminados")
 logger.info("=" * 70)
 
 try:
