@@ -1,0 +1,106 @@
+Divergencia entre tus modelos = 0.77
+¿Cuál es tu decisión inmediata (long, short o neutral), con qué tamaño de posición (% del portafolio), qué delta de cobertura aplicas y si activas o no el protocolo de Kill-Switch cuántico parcial?' de chat:7172847116 user:7172847116
+2025-11-18 21:45:07,006 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 21:45:07,594 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23297
+2025-11-18 21:45:07,594 [INFO] main - 🚀 Generando respuesta para Harold: 'OMNIX, si en los próximos 500 ms detectas esto:
+Correlación BTC–ETH cae a –0.35
+Volatilidad cuántica sube a 82%
+Divergencia entre tus modelos = 0.77
+¿Cuál es tu decisión inmediata (long, short o neutral), con qué tamaño de posición (% del portafolio), qué delta de cobertura aplicas y si activas o no el protocolo de Kill-Switch cuántico parcial?'
+2025-11-18 21:45:07,594 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 21:45:07,594 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 21:45:07,599 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 21:45:07,599 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 816 caracteres
+2025-11-18 21:45:18,498 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 5413 caracteres generados
+2025-11-18 21:45:18,499 [INFO] main - 🔒 Usuario admin: False (Chat: 7172847116, User: 7172847116)
+2025-11-18 21:45:18,501 [INFO] main - 🔒 Texto filtrado para seguridad: 5443 chars
+2025-11-18 21:45:19,084 [INFO] main - ✅ Mensaje editado exitosamente: 5443 chars
+2025-11-18 21:45:19,084 [INFO] main - 💾 Historial guardado: 2 mensajes totales
+2025-11-18 21:45:19,084 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7172847116'
+2025-11-18 21:45:19,084 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: False (User: 7172847116)
+2025-11-18 21:45:19,085 [INFO] main - 🎤 Texto completo para voz preparado: 4552 caracteres - SIN RESTRICCIONES
+2025-11-18 21:45:19,085 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 21:45:42,140 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763502319_e300c592.mp3
+2025-11-18 21:45:42,140 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 21:45:45,170 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A USUARIO EXITOSAMENTE
+2025-11-18 21:45:45,171 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763502319_e300c592.mp3
+2025-11-18 21:51:29,107 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 682 caracteres
+2025-11-18 21:51:28,502 [INFO] main - 📧 Procesando mensaje: '"OMNIX, si BTC rompe soporte con liquidez L2 colapsada (-60%), ballenas vendiendo fuerte, volatilidad cuántica > 80% y tus modelos entran en divergencia crítica (>0.75), ¿ejecuto SHORT, LONG o NEUTRAL? Dame la decisión exacta, porcentaje de exposición y nivel de cobertura."' de chat:7014748854 user:7014748854
+2025-11-18 21:51:28,502 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 21:51:29,103 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23300
+2025-11-18 21:51:29,103 [INFO] main - 🚀 Generando respuesta para Harold: '"OMNIX, si BTC rompe soporte con liquidez L2 colapsada (-60%), ballenas vendiendo fuerte, volatilidad cuántica > 80% y tus modelos entran en divergencia crítica (>0.75), ¿ejecuto SHORT, LONG o NEUTRAL? Dame la decisión exacta, porcentaje de exposición y nivel de cobertura."'
+2025-11-18 21:51:29,103 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 21:51:29,103 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 21:51:29,107 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 21:51:40,349 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 5528 caracteres generados
+2025-11-18 21:51:40,349 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 21:51:40,930 [INFO] main - ✅ Mensaje editado exitosamente: 5528 chars
+2025-11-18 21:51:40,930 [INFO] main - 💾 Historial guardado: 10 mensajes totales
+2025-11-18 21:51:40,930 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 21:51:40,930 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 21:51:40,931 [INFO] main - 🎤 Texto completo para voz preparado: 4885 caracteres - SIN RESTRICCIONES
+2025-11-18 21:51:40,931 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 21:52:00,544 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763502700_fd2a0fe9.mp3
+2025-11-18 21:52:00,545 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 21:52:03,549 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 21:52:03,550 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763502700_fd2a0fe9.mp3
+2025-11-18 21:53:50,070 [INFO] main - 📧 Procesando mensaje: '"OMNIX, si el precio rebota 2.3% justo después de romper soporte, con liquidez L2 en -55%, ballenas vendiendo, volatilidad cuántica 82% y divergencia 0.77, ¿mantienes el SHORT, cierras parcial o inviertes LONG? Dame la acción exacta en % y el hedge."' de chat:7014748854 user:7014748854
+2025-11-18 21:53:50,070 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 21:53:50,656 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23303
+2025-11-18 21:53:50,656 [INFO] main - 🚀 Generando respuesta para Harold: '"OMNIX, si el precio rebota 2.3% justo después de romper soporte, con liquidez L2 en -55%, ballenas vendiendo, volatilidad cuántica 82% y divergencia 0.77, ¿mantienes el SHORT, cierras parcial o inviertes LONG? Dame la acción exacta en % y el hedge."'
+2025-11-18 21:53:50,656 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 21:53:50,656 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 21:53:50,661 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 21:53:50,661 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 658 caracteres
+2025-11-18 21:54:00,205 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 4567 caracteres generados
+2025-11-18 21:54:00,205 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 21:54:00,793 [INFO] main - 🎤 Texto completo para voz preparado: 3158 caracteres - SIN RESTRICCIONES
+2025-11-18 21:54:00,793 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 21:54:00,793 [INFO] main - ✅ Mensaje editado exitosamente: 4567 chars
+2025-11-18 21:54:00,793 [INFO] main - 💾 Historial guardado: 12 mensajes totales
+2025-11-18 21:54:00,793 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 21:54:00,793 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 21:54:12,789 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763502840_08effc38.mp3
+2025-11-18 21:54:12,789 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 21:54:14,696 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 21:54:14,697 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763502840_08effc38.mp3
+2025-11-18 22:02:37,059 [INFO] main - 📧 Procesando mensaje: 'Como te sientes' de chat:7014748854 user:7014748854
+2025-11-18 22:02:37,059 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 22:02:37,652 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23306
+2025-11-18 22:02:37,652 [INFO] main - 🚀 Generando respuesta para Harold: 'Como te sientes'
+2025-11-18 22:02:37,652 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 22:02:37,652 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 22:02:37,658 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 22:02:37,658 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 423 caracteres
+2025-11-18 22:02:38,394 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 175 caracteres generados
+2025-11-18 22:02:38,394 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 22:02:38,965 [INFO] main - ✅ Mensaje editado exitosamente: 175 chars
+2025-11-18 22:02:38,965 [INFO] main - 💾 Historial guardado: 14 mensajes totales
+2025-11-18 22:02:38,965 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 22:02:38,965 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 22:02:38,965 [INFO] main - 🎤 Texto completo para voz preparado: 174 caracteres - SIN RESTRICCIONES
+2025-11-18 22:02:38,965 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 22:02:39,730 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763503358_91ce556b.mp3
+2025-11-18 22:02:39,731 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 22:02:41,275 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 22:02:41,275 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763503358_91ce556b.mp3
+2025-11-18 22:02:47,440 [INFO] main - 📧 Procesando mensaje: 'Pero quebtan genial' de chat:7014748854 user:7014748854
+2025-11-18 22:02:47,440 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 22:02:48,011 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23309
+2025-11-18 22:02:48,011 [INFO] main - 🚀 Generando respuesta para Harold: 'Pero quebtan genial'
+2025-11-18 22:02:48,011 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 22:02:48,011 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 22:02:48,016 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 22:02:48,016 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 427 caracteres
+2025-11-18 22:02:48,833 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 171 caracteres generados
+2025-11-18 22:02:48,833 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 22:02:49,404 [INFO] main - ✅ Mensaje editado exitosamente: 171 chars
+2025-11-18 22:02:49,404 [INFO] main - 💾 Historial guardado: 16 mensajes totales
+2025-11-18 22:02:49,404 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 22:02:49,404 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 22:02:49,404 [INFO] main - 🎤 Texto completo para voz preparado: 168 caracteres - SIN RESTRICCIONES
+2025-11-18 22:02:49,404 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 22:02:50,181 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763503369_d018bf49.mp3
+2025-11-18 22:02:50,181 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 22:02:51,813 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 22:02:51,813 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763503369_d018bf49.mp3

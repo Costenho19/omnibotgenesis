@@ -1,0 +1,38 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/e6dc85ec-08a2-47c9-bb6a-e6e3195dde59/vol_c23mkmaryr125mt2
+Starting Container
+2025-11-15 19:56:09.722 UTC [6] LOG:  listening on IPv6 address "::", port 5432
+2025-11-15 19:56:09.725 UTC [6] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-11-15 19:56:09.736 UTC [29] LOG:  database system was interrupted; last known up at 2025-11-15 19:49:37 UTC
+Certificate will not expire
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+2025-11-15 19:56:09.722 UTC [6] LOG:  starting PostgreSQL 17.6 (Debian 17.6-2.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2025-11-15 19:56:09.722 UTC [6] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2025-11-15 19:56:10.167 UTC [29] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-11-15 19:56:10.172 UTC [29] LOG:  redo starts at 0/1959180
+2025-11-15 19:56:10.172 UTC [29] LOG:  invalid record length at 0/1959288: expected at least 24, got 0
+2025-11-15 19:56:10.172 UTC [29] LOG:  redo done at 0/1959250 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2025-11-15 19:56:10.180 UTC [27] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-11-15 19:56:10.194 UTC [27] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.005 s, sync=0.002 s, total=0.017 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/1959288, redo lsn=0/1959288
+2025-11-15 19:56:10.201 UTC [6] LOG:  database system is ready to accept connections
+2025-11-19 17:57:48.619 UTC [5681] FATAL:  password authentication failed for user "postgres"
+2025-11-19 17:57:48.619 UTC [5681] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 17:57:49.041 UTC [5682] FATAL:  password authentication failed for user "postgres"
+2025-11-19 17:57:49.041 UTC [5682] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 17:58:05.478 UTC [5683] FATAL:  password authentication failed for user "postgres"
+2025-11-19 17:58:05.478 UTC [5683] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 17:58:05.910 UTC [5684] FATAL:  password authentication failed for user "postgres"
+2025-11-19 17:58:05.910 UTC [5684] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 18:16:48.116 UTC [5704] FATAL:  password authentication failed for user "postgres"
+2025-11-19 18:16:48.116 UTC [5704] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 18:16:48.484 UTC [5705] FATAL:  password authentication failed for user "postgres"
+2025-11-19 18:16:48.484 UTC [5705] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 18:17:04.853 UTC [5706] FATAL:  password authentication failed for user "postgres"
+2025-11-19 18:17:04.853 UTC [5706] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 18:17:05.215 UTC [5707] FATAL:  password authentication failed for user "postgres"
+2025-11-19 18:17:05.215 UTC [5707] DETAIL:  Connection matched file "/var/lib/postgresql/data/pgdata/pg_hba.conf" line 128: "host all all all scram-sha-256"
+2025-11-19 18:38:02.084 UTC [27] LOG:  checkpoint starting: time
+2025-11-19 18:38:16.701 UTC [27] LOG:  checkpoint complete: wrote 146 buffers (0.9%); 0 WAL file(s) added, 0 removed, 0 recycled; write=14.559 s, sync=0.043 s, total=14.618 s; sync files=137, longest=0.019 s, average=0.001 s; distance=731 kB, estimate=731 kB; lsn=0/1A10098, redo lsn=0/1A0FFF0
+2025-11-19 18:48:02.900 UTC [27] LOG:  checkpoint starting: time
+2025-11-19 18:48:03.823 UTC [27] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.904 s, sync=0.007 s, total=0.924 s; sync files=4, longest=0.007 s, average=0.002 s; distance=36 kB, estimate=661 kB; lsn=0/1A191F0, redo lsn=0/1A19198
+2025-11-19 20:43:05.081 UTC [27] LOG:  checkpoint starting: time
+2025-11-19 20:43:05.503 UTC [27] LOG:  checkpoint complete: wrote 4 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.402 s, sync=0.005 s, total=0.423 s; sync files=2, longest=0.005 s, average=0.003 s; distance=0 kB, estimate=595 kB; lsn=0/1A194E8, redo lsn=0/1A19458

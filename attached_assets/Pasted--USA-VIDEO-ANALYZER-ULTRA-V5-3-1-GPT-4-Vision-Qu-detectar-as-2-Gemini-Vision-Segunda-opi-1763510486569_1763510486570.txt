@@ -1,0 +1,103 @@
+🎥 USA VIDEO ANALYZER ULTRA V5.3:
+1. GPT-4 Vision: ¿Qué detectarías?
+2. Gemini Vision: Segunda opinión
+3. Compara ambos análisis
+4. ¿Coinciden o se contradicen?
+5. Tu recomendación final basada en ambos
+¿Cuál AI es más precisa para análisis técnico?'
+2025-11-18 23:56:59,837 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 23:56:59,837 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 23:56:59,842 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 23:56:59,842 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 867 caracteres
+2025-11-18 23:57:12,234 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 7620 caracteres generados
+2025-11-18 23:57:12,234 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 23:57:12,833 [INFO] main - ✅ Mensaje editado exitosamente: 7620 chars
+2025-11-18 23:57:12,833 [INFO] main - 💾 Historial guardado: 18 mensajes totales
+2025-11-18 23:57:12,833 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 23:57:12,833 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 23:57:12,833 [INFO] main - 🎤 Texto completo para voz preparado: 6735 caracteres - SIN RESTRICCIONES
+2025-11-18 23:57:12,833 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 23:57:35,376 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763510232_70d04c8f.mp3
+2025-11-18 23:57:35,376 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 23:57:37,471 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 23:57:37,472 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763510232_70d04c8f.mp3
+2025-11-18 23:57:40,517 [INFO] main - 📧 Procesando mensaje: 'OMNIX, valida si estas operaciones son Halal (permitidas):
+1. Comprar BTC y mantener (no trading)
+2. Staking ETH 2.0 con recompensas del 5% anual
+3. Trading de futuros con apalancamiento 10x
+4. Préstamos DeFi con interés compuesto
+☪️ SISTEMA SHARIA:
+- Marca cada una como Halal o Haram
+- Explica por qué según principios islámicos
+- Recomienda 3 estrategias 100% Halal
+- ¿Cómo evitas Riba (interés)?' de chat:7014748854 user:7014748854
+2025-11-18 23:57:40,517 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 23:57:41,096 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23340
+2025-11-18 23:57:41,096 [INFO] main - 🚀 Generando respuesta para Harold: 'OMNIX, valida si estas operaciones son Halal (permitidas):
+1. Comprar BTC y mantener (no trading)
+2. Staking ETH 2.0 con recompensas del 5% anual
+3. Trading de futuros con apalancamiento 10x
+4. Préstamos DeFi con interés compuesto
+☪️ SISTEMA SHARIA:
+- Marca cada una como Halal o Haram
+- Explica por qué según principios islámicos
+- Recomienda 3 estrategias 100% Halal
+- ¿Cómo evitas Riba (interés)?'
+2025-11-18 23:57:41,096 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 23:57:41,096 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 23:57:41,104 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 23:57:41,104 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 809 caracteres
+2025-11-18 23:57:49,462 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 4440 caracteres generados
+2025-11-18 23:57:49,462 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 23:57:50,054 [INFO] main - ✅ Mensaje editado exitosamente: 4440 chars
+2025-11-18 23:57:50,054 [INFO] main - 💾 Historial guardado: 20 mensajes totales
+2025-11-18 23:57:50,054 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 23:57:50,054 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 23:57:50,055 [INFO] main - 🎤 Texto completo para voz preparado: 3708 caracteres - SIN RESTRICCIONES
+2025-11-18 23:57:50,055 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 23:58:02,736 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763510270_1f599dc3.mp3
+2025-11-18 23:58:02,736 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 23:58:04,689 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 23:58:04,690 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763510270_1f599dc3.mp3
+2025-11-18 23:59:37,547 [INFO] main - 📧 Procesando mensaje: 'OMNIX, describe qué detectarías en un gráfico de BTC que muestre:
+📊 PATRONES TÉCNICOS:
+- Hombro-Cabeza-Hombro invertido
+- RSI divergencia alcista (precio baja, RSI sube)
+- Volumen creciente en cada mínimo
+🎥 USA TUS 2 AIs DE VISIÓN:
+1. GPT-4 Vision: ¿Qué verías y qué significaría?
+2. Gemini Vision: Segunda opinión del mismo patrón
+3. Compara: ¿Coinciden ambas AIs o se contradicen?
+4. Si discrepan, ¿cuál seguirías?
+5. Dame tu recomendación final (LONG/SHORT/HOLD)
+¿Cuál AI es mejor para análisis de gráficos técnicos?' de chat:7014748854 user:7014748854
+2025-11-18 23:59:37,547 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 23:59:38,142 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23343
+2025-11-18 23:59:38,142 [INFO] main - 🚀 Generando respuesta para Harold: 'OMNIX, describe qué detectarías en un gráfico de BTC que muestre:
+📊 PATRONES TÉCNICOS:
+- Hombro-Cabeza-Hombro invertido
+- RSI divergencia alcista (precio baja, RSI sube)
+- Volumen creciente en cada mínimo
+🎥 USA TUS 2 AIs DE VISIÓN:
+1. GPT-4 Vision: ¿Qué verías y qué significaría?
+2. Gemini Vision: Segunda opinión del mismo patrón
+3. Compara: ¿Coinciden ambas AIs o se contradicen?
+4. Si discrepan, ¿cuál seguirías?
+5. Dame tu recomendación final (LONG/SHORT/HOLD)
+¿Cuál AI es mejor para análisis de gráficos técnicos?'
+2025-11-18 23:59:38,142 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 23:59:38,142 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 23:59:38,149 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config.settings'; 'config' is not a package
+2025-11-18 23:59:38,149 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 930 caracteres
+2025-11-18 23:59:47,347 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 5317 caracteres generados
+2025-11-18 23:59:47,347 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 23:59:47,930 [INFO] main - ✅ Mensaje editado exitosamente: 5317 chars
+2025-11-18 23:59:47,930 [INFO] main - 💾 Historial guardado: 20 mensajes totales
+2025-11-18 23:59:47,931 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 23:59:47,931 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 23:59:47,931 [INFO] main - 🎤 Texto completo para voz preparado: 4769 caracteres - SIN RESTRICCIONES
+2025-11-18 23:59:47,931 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-19 00:00:03,316 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763510387_d4f9b8d4.mp3
+2025-11-19 00:00:03,316 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-19 00:00:05,250 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-19 00:00:05,251 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763510387_d4f9b8d4.mp3

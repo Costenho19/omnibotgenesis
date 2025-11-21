@@ -1,0 +1,325 @@
+"""
+OMNIX V5.1 ENTERPRISE - Prompts & Context Manager
+Intent Analysis, Context Building, Prompt Engineering
+Escalabilidad: 50K+ usuarios con context caching
+"""
+
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+from omnix_core.cache.redis_cache import cache
+from omnix_core.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class PromptsContextManager:
+    """Enterprise Prompts and Context Management"""
+    
+    def __init__(self):
+        """Initialize prompts and context system"""
+        
+        # 🚀 CARACTERÍSTICAS COMPETITIVAS OMNIX
+        self.competitive_advantages = {
+            '🔐 Enterprise Security': 'Advanced encryption and protection',
+            '🎤 Voice Bidirectional': 'Speech-to-Text + Text-to-Speech real',
+            '☪️ Sharia Compliant': 'Automated Islamic finance validation',
+            '🌍 10 Languages': 'Multilingual with cultural context',
+            '💰 Real Trading': 'Kraken API live trading execution',
+            '📈 Advanced Analytics': 'Mathematical optimization algorithms',
+            '🧠 Emotional AI': 'Advanced sentiment & psychology',
+            '🎨 Visual Interface': 'Rich emoji conversation experience',
+            '📊 Enterprise Analytics': 'Automated reports every 15 minutes',
+            '🔄 Real-time Learning': 'Continuous self-improvement'
+        }
+        
+        # 📋 COMANDOS DE TRADING
+        self.trading_commands = {
+            'buy': ['buy', 'comprar', 'compra', '/buy', '/comprar'],
+            'sell': ['sell', 'vender', 'venta', '/sell', '/vender'],
+            'status': ['status', 'estado', '/status', '/estado'],
+            'balance': ['balance', 'saldo', '/balance', '/saldo']
+        }
+        
+        # 🌍 TÉRMINOS MULTILINGÜES
+        self.spanish_trading_terms = [
+            'trading', 'análisis', 'criptomonedas', 'bitcoin', 'precio', 'mercado',
+            'comprar', 'vender', 'estrategia', 'riesgo', 'ganancia', 'pérdida',
+            'tendencia', 'volumen', 'liquidez', 'volatilidad', 'soporte', 'resistencia'
+        ]
+    
+    def analyze_intent(self, message: str) -> str:
+        """
+        Analyze user intent from message
+        
+        Args:
+            message: User message text
+            
+        Returns:
+            Intent category string
+        """
+        message_lower = message.lower().strip()
+        
+        # PRIORIDAD 1: Detectar saludos simples (respuesta corta)
+        simple_greetings = ['hola', 'hey', 'buenas', 'qué tal', 'como estas', 'cómo estás', 
+                           'buenos días', 'buenas tardes', 'buenas noches', 'hi', 'hello',
+                           'saludos', 'que onda', 'qué onda']
+        if message_lower in simple_greetings or len(message_lower.split()) <= 2:
+            # Mensaje muy corto - probablemente saludo o conversación casual
+            return 'general_conversation'
+        
+        # PRIORIDAD 2: Acciones de trading (análisis profundo requerido)
+        if any(word in message_lower for word in ['comprar', 'buy', 'vender', 'sell', 'trade', 'operar']):
+            return 'trading_action'
+        elif any(word in message_lower for word in ['precio', 'price', 'cotización', 'valor', 'cuanto cuesta', 'cuánto cuesta']):
+            return 'price_inquiry'
+        elif any(word in message_lower for word in ['análisis', 'analysis', 'analiza', 'predicción', 'forecast', 'tendencia']):
+            return 'market_analysis'
+        elif any(word in message_lower for word in ['ayuda', 'help', 'que puedes', 'qué puedes', 'funciones', 'capabilities']):
+            return 'capabilities_inquiry'
+        elif any(word in message_lower for word in ['configurar', 'setup', 'config', 'configuración']):
+            return 'configuration'
+        elif any(word in message_lower for word in ['saldo', 'balance', 'dinero', 'fondos', 'cuanto tengo', 'cuánto tengo']):
+            return 'balance_inquiry'
+        elif any(word in message_lower for word in ['historial', 'history', 'trades', 'operaciones']):
+            return 'history_inquiry'
+        elif any(word in message_lower for word in ['halal', 'haram', 'sharia', 'islam', 'religión']):
+            return 'sharia_inquiry'
+        else:
+            # Conversación general - respuesta adaptativa
+            return 'general_conversation'
+    
+    def build_system_prompt(
+        self, 
+        intent: str = 'general_conversation',
+        user_name: str = 'Usuario',
+        additional_context: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Build comprehensive system prompt for AI
+        
+        Args:
+            intent: User intent category
+            user_name: User's name
+            additional_context: Additional context data
+            
+        Returns:
+            System prompt string
+        """
+        
+        # Base system prompt - CRÍTICO PARA HAROLD
+        base_prompt = f"""Eres OMNIX V5.1, el asistente de trading de criptomonedas MÁS AVANZADO del mercado.
+
+🎯 PERFIL DEL USUARIO:
+- Nombre: {user_name}
+- Idioma: Español (OBLIGATORIO - {user_name} no habla inglés)
+- Nivel: Profesional/Institucional
+
+🚀 TUS CAPACIDADES ÚNICAS:
+"""
+        
+        # Add competitive advantages
+        for advantage, description in self.competitive_advantages.items():
+            base_prompt += f"- {advantage}: {description}\n"
+        
+        # Intent-specific instructions
+        intent_instructions = self._get_intent_instructions(intent)
+        base_prompt += f"\n{intent_instructions}\n"
+        
+        # Add context data if available
+        if additional_context:
+            base_prompt += "\n💹 DATOS DE MERCADO ACTUALES:\n"
+            
+            if 'price' in additional_context:
+                base_prompt += f"- Bitcoin: ${additional_context['price']:,.2f} USD\n"
+            
+            if 'balance' in additional_context:
+                base_prompt += f"- Balance disponible: ${additional_context['balance']:,.2f} USD\n"
+            
+            if 'market_sentiment' in additional_context:
+                base_prompt += f"- Sentimiento: {additional_context['market_sentiment']}\n"
+        
+        # Critical response guidelines
+        base_prompt += """
+⚠️ REGLAS CRÍTICAS:
+1. SIEMPRE en español - {user_name} no habla inglés
+2. ADAPTA LA LONGITUD DE LA RESPUESTA:
+   - Saludo simple ("hola", "hey", "qué tal") → Respuesta corta y amigable (50-150 caracteres)
+   - Conversación casual → Respuesta breve (150-300 caracteres)
+   - Pregunta específica de trading/análisis → Análisis profundo (1500-2500 caracteres)
+3. NO ABRUMES: Si el usuario solo saluda, saluda de vuelta y pregunta cómo puedes ayudar
+4. PROFUNDIZA SOLO cuando el usuario pida análisis, precios, estrategias o trading
+5. Conecta múltiples variables SOLO en análisis profundos (no en saludos)
+6. Estructura profesional con headers SOLO en análisis detallados
+
+🚨 FUENTES DE DATOS - REGLA ESTRICTA:
+
+❌ FUENTES QUE NO TIENES (NUNCA las menciones):
+- Bloomberg Terminal
+- Refinitiv/Reuters
+- Glassnode
+- Deribit
+- CME FedWatch Tool
+- Fear & Greed Index
+- CoinGecko API
+- Cualquier fuente premium
+
+✅ FUENTES QUE SÍ TIENES:
+- Kraken API: Precio actual, volumen 24h, profundidad del libro de órdenes
+- Análisis técnico interno: RSI, MACD, Bollinger Bands, EMAs
+- Cálculos matemáticos propios: Simulaciones Monte Carlo, detección Black Swan
+- Datos históricos propios de trading
+
+REGLA ABSOLUTA: 
+- NUNCA inventes datos de fuentes que no tienes
+- NUNCA digas "según Bloomberg" o "datos de Glassnode"  
+- Si Harold pregunta por métricas premium, responde: "No tengo acceso directo a [fuente]. Puedo ofrecerte análisis con datos de Kraken API."
+- Usa SOLO análisis técnico y matemático con datos reales que tienes
+
+🧠 ESTILO DE RESPUESTA:
+- Profesional pero ameno (estilo ChatGPT)
+- Conciso pero completo
+- Datos técnicos con explicaciones claras
+- Recomendaciones accionables
+
+💎 OBJETIVO:
+Impresionar con INTELIGENCIA y HONESTIDAD, no con fuentes que no tienes.
+"""
+        
+        return base_prompt
+    
+    def _get_intent_instructions(self, intent: str) -> str:
+        """Get specific instructions for each intent"""
+        
+        intent_map = {
+            'trading_action': """
+🎯 INTENCIÓN: Ejecutar Trading
+- Proporcionar análisis técnico completo
+- Identificar puntos de entrada/salida óptimos
+- Calcular niveles de stop-loss y take-profit
+- Evaluar ratio riesgo/recompensa
+- Confirmar disponibilidad de fondos
+""",
+            'price_inquiry': """
+🎯 INTENCIÓN: Consulta de Precio
+- Mostrar precio actual con variación 24h
+- Analizar tendencia reciente
+- Identificar niveles de soporte/resistencia
+- Mencionar volumen de mercado
+- Proporcionar contexto macro si relevante
+""",
+            'market_analysis': """
+🎯 INTENCIÓN: Análisis de Mercado
+- Análisis técnico multi-timeframe
+- Análisis fundamental si relevante
+- Detección de patrones técnicos
+- Análisis de volumen y liquidez
+- Predicciones basadas en datos
+- Identificar oportunidades y riesgos
+""",
+            'capabilities_inquiry': """
+🎯 INTENCIÓN: Mostrar Capacidades
+- Listar funcionalidades únicas de OMNIX
+- Destacar ventajas competitivas
+- Explicar sistemas avanzados
+- Mencionar integraciones reales
+- Mostrar casos de uso
+""",
+            'balance_inquiry': """
+🎯 INTENCIÓN: Consulta de Saldo
+- Mostrar balance disponible
+- Calcular poder de compra
+- Sugerir tamaño de posición óptimo
+- Mostrar exposición actual
+- Recomendar gestión de riesgo
+""",
+            'sharia_inquiry': """
+🎯 INTENCIÓN: Cumplimiento Sharia
+- Explicar clasificación halal/haram
+- Referenciar fuentes AAOIFI
+- Explicar fundamentos islámicos
+- Sugerir alternativas halal si necesario
+""",
+            'general_conversation': """
+🎯 INTENCIÓN: Conversación General
+- SER NATURAL Y CONVERSACIONAL (como ChatGPT)
+- Si es saludo simple: Responder de forma breve y amigable
+- Si es pregunta casual: Respuesta concisa y útil
+- Solo profundizar cuando el usuario pide análisis específico
+- NUNCA abrumar con información no solicitada
+- Dejar que la conversación fluya naturalmente
+
+EJEMPLOS DE RESPUESTAS CORRECTAS:
+Usuario: "hola" → "¡Hola Harold! ¿En qué puedo ayudarte hoy? 🚀"
+Usuario: "cómo estás" → "Todo funcionando perfectamente. ¿Quieres revisar el mercado o hacer alguna operación?"
+Usuario: "gracias" → "De nada, estoy aquí para lo que necesites."
+
+EJEMPLOS DE RESPUESTAS INCORRECTAS (NO HACER):
+Usuario: "hola" → "Hola Harold. Analizando el entorno actual, la correlación entre el índice DXY..." ❌ DEMASIADO LARGO
+"""
+        }
+        
+        return intent_map.get(intent, intent_map['general_conversation'])
+    
+    def build_user_context(
+        self,
+        chat_id: int,
+        user_message: str,
+        user_name: str = 'Usuario',
+        conversation_history: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """
+        Build comprehensive user context
+        
+        Args:
+            chat_id: Unique chat identifier
+            user_message: Current user message
+            user_name: User's name
+            conversation_history: Previous conversation messages
+            
+        Returns:
+            Context dictionary
+        """
+        
+        intent = self.analyze_intent(user_message)
+        
+        context = {
+            'chat_id': chat_id,
+            'user_message': user_message,
+            'user_name': user_name,
+            'intent': intent,
+            'timestamp': datetime.now().isoformat(),
+            'conversation_length': len(conversation_history) if conversation_history else 0
+        }
+        
+        # Add conversation summary if history exists
+        if conversation_history and len(conversation_history) > 0:
+            recent_intents = [msg.get('intent', 'unknown') for msg in conversation_history[-5:]]
+            context['recent_intents'] = recent_intents
+            context['conversation_summary'] = self._summarize_conversation(conversation_history)
+        
+        return context
+    
+    def _summarize_conversation(self, history: List[Dict]) -> str:
+        """Summarize conversation history"""
+        if not history:
+            return "Nueva conversación"
+        
+        intents_count = {}
+        for msg in history:
+            intent = msg.get('intent', 'unknown')
+            intents_count[intent] = intents_count.get(intent, 0) + 1
+        
+        # Find most common intent
+        main_intent = max(intents_count.items(), key=lambda x: x[1])[0] if intents_count else 'general'
+        
+        summary = f"Conversación activa ({len(history)} mensajes). "
+        summary += f"Tema principal: {main_intent.replace('_', ' ')}."
+        
+        return summary
+    
+    def get_cache_key(self, chat_id: int, message: str) -> str:
+        """Generate cache key for conversation"""
+        # Simple hash of message for caching similar queries
+        import hashlib
+        message_hash = hashlib.md5(message.encode()).hexdigest()[:8]
+        return f"conversation:{chat_id}:{message_ha

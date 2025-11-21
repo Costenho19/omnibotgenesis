@@ -1,0 +1,40 @@
+2025-11-21 07:32:56,764 [WARNING] main - ⚠️ Database manager no disponible
+2025-11-21 07:32:55,545 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23793
+2025-11-21 07:32:56,764 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-21 07:32:55,545 [INFO] main - 🚀 Generando respuesta para Harold: 'ho'
+2025-11-21 07:32:56,764 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-21 07:32:55,545 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-21 07:32:55,545 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-21 07:32:55,551 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config'
+2025-11-21 07:32:55,551 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 410 caracteres
+2025-11-21 07:32:56,192 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 103 caracteres generados
+2025-11-21 07:32:56,765 [INFO] main - 🎤 Texto completo para voz preparado: 100 caracteres - SIN RESTRICCIONES
+2025-11-21 07:32:56,765 [WARNING] main - 🎤 ⚠️ VoiceEngine perdido - REINICIALIZANDO...
+2025-11-21 07:33:00,750 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23796
+2025-11-21 07:32:56,776 [INFO] omnix_services.voice_service.voice_service - ✅ OpenAI Whisper STT configurado
+2025-11-21 07:33:00,750 [INFO] main - 🚀 Generando respuesta para Harold: 'jhg'
+2025-11-21 07:32:56,777 [INFO] omnix_services.voice_service.voice_service - ✅ VOICE SERVICE ENTERPRISE LOADED - TTS: True, STT: True
+2025-11-21 07:33:00,750 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-21 07:32:56,777 [INFO] main - 🎤 ✅ VoiceEngine reinicializado exitosamente
+2025-11-21 07:32:56,777 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-21 07:32:57,258 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763710376_a9956c0b.mp3
+2025-11-21 07:32:57,258 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-21 07:32:58,716 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-21 07:32:58,716 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763710376_a9956c0b.mp3
+2025-11-21 07:33:00,172 [INFO] main - 📧 Procesando mensaje: 'jhg' de chat:7014748854 user:7014748854
+2025-11-21 07:33:00,172 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-21 07:33:00,750 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-21 07:33:01,932 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-21 07:33:00,755 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'config'
+2025-11-21 07:33:00,755 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 411 caracteres
+2025-11-21 07:33:01,932 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-21 07:33:01,358 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 103 caracteres generados
+2025-11-21 07:33:01,932 [INFO] main - 🎤 Texto completo para voz preparado: 102 caracteres - SIN RESTRICCIONES
+2025-11-21 07:33:01,358 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-21 07:33:01,932 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-21 07:33:01,931 [INFO] main - ✅ Mensaje editado exitosamente: 103 chars
+2025-11-21 07:33:02,311 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763710381_2be6a8ec.mp3
+2025-11-21 07:33:01,932 [WARNING] main - ⚠️ Database manager no disponible
+2025-11-21 07:33:02,311 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-21 07:33:03,746 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-21 07:33:03,747 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763710381_2be6a8ec.mp3

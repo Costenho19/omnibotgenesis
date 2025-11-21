@@ -1,0 +1,115 @@
+2025-11-17 07:54:59,583 [INFO] main - ✅ MÓDULOS BÁSICOS ACTIVADOS: Análisis técnico, Risk management, Portfolio optimization
+2025-11-17 07:54:59,583 [INFO] main - 📊 SISTEMA MÉTRICAS AVANZADAS ACTIVADO - Tracking iniciado
+2025-11-17 07:54:59,583 [INFO] main - 💾 CACHE INTELIGENTE ACTIVADO - Max: 1000 items, TTL: 300s
+2025-11-17 07:54:59,584 [INFO] main - 🧵 CONCURRENCIA OPTIMIZADA: 16 workers, 48 cores detectados
+2025-11-17 07:54:59,584 [INFO] main - Módulos integrados correctamente
+2025-11-17 07:54:59,584 [INFO] __main__ - 🔧 Creando Flask app...
+2025-11-17 07:54:59,584 [INFO] main - 🔧 Inicializando sistemas globales para Railway...
+2025-11-17 07:54:59,588 [ERROR] main - ⚠️  Error inicializando AI: No module named 'decouple'
+2025-11-17 07:54:59,588 [INFO] main - 🧠 MÓDULOS AVANZADOS ACTIVADOS: Order Book, Volatilidad, Microestructura, Riesgo, Portfolio
+2025-11-17 07:55:07,747 [INFO] main - ✅ Conexión Kraken verificada - Trading real activo
+2025-11-17 07:55:07,747 [INFO] main - 🚀 Kraken API conectada - TRADING REAL ACTIVADO
+2025-11-17 07:55:10,754 [INFO] main - 💰 Monedas detectadas: ['ETH', 'BTC', 'USD']
+2025-11-17 07:55:10,754 [INFO] main - 🎯 Pares óptimos generados: ['BTC/USD', 'ETH/USD', 'ADA/USD', 'AVAX/USD', 'MATIC/USD', 'DOT/USD', 'LINK/USD', 'ETH/BTC']
+2025-11-17 07:55:10,754 [INFO] main - 🌍 SISTEMA MULTI-MONEDA ACTIVADO: 3 monedas, 5 pares
+2025-11-17 07:55:10,754 [INFO] main - 🎯 Par inicial: BTC/USD
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC - 📜 Estándar: FIPS 203 (ML-KEM) + FIPS 204 (ML-DSA)
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC - 🔑 Kyber-768 (ML-KEM-768) - Encriptación
+2025-11-17 07:55:14,699 [INFO] OMNIX - ✅ Rutas de Stripe configuradas
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC - ✍️ Dilithium-3 (ML-DSA-65) - Firmas Digitales
+2025-11-17 07:55:14,699 [INFO] main - 💳 Sistema de pagos Stripe configurado
+2025-11-17 07:55:14,699 [INFO] main - ======================================================================
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC - ✅ Par de claves Dilithium-3 generado
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC -    📏 Clave pública: 1952 bytes
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC -    📏 Clave secreta: 4032 bytes
+2025-11-17 07:55:14,693 [INFO] main - 🔐 SEGURIDAD POST-CUÁNTICA ACTIVADA en Trading System
+2025-11-17 07:55:14,693 [INFO] main - Sistema de trading inicializado
+2025-11-17 07:55:14,693 [INFO] main - ✅ Trading System inicializado para webhook
+2025-11-17 07:55:14,698 [WARNING] OMNIX - ⚠️ STRIPE_SECRET_KEY no configurada - Pagos desactivados
+2025-11-17 07:55:14,693 [INFO] main - 🏦 Balance real: 8 monedas, ~$1413.98 USD total
+2025-11-17 07:55:14,693 [INFO] main - ✅ Par inicial verificado con balance suficiente
+2025-11-17 07:55:14,693 [INFO] OMNIX.PQC - 🔐 POST-QUANTUM CRYPTOGRAPHY ACTIVADA
+2025-11-17 07:55:14,699 [INFO] main - 🚀 OMNIX V5.4 ULTRA - COMPLETAMENTE OPERATIVO
+2025-11-17 07:55:14,699 [INFO] main - ✅ Bot Telegram: INICIANDO CONFIGURACIÓN...
+2025-11-17 07:55:14,699 [INFO] main - ======================================================================
+2025-11-17 07:55:14,699 [INFO] main - 🚂 Railway Webhook Mode - Inicializando bot...
+2025-11-17 07:55:14,699 [INFO] main - 🤖 Inicializando EnterpriseTelegramBot para Railway webhook...
+2025-11-17 07:55:14,699 [INFO] main - ✅ Sistema IA Directo Activado - Gemini 2.0 Flash + GPT-4o
+2025-11-17 07:55:14,707 [INFO] main - ✅ OpenAI GPT-4o inicializado correctamente
+2025-11-17 07:55:14,707 [INFO] main - ✅ Gemini 2.0 Flash inicializado correctamente
+2025-11-17 07:55:14,707 [INFO] main - 🚀 Inicializando Trading Service Enterprise...
+2025-11-17 07:55:14,994 [ERROR] omnix_services.trading_service.trading_service - ❌ Kraken error: ['EAPI:Invalid nonce']
+2025-11-17 07:55:14,994 [WARNING] main - ⚠️ Trading Enterprise health check failed: {'service': 'TradingServiceEnterprise', 'requests_available': True, 'connected': False, 'api_configured': True}
+2025-11-17 07:55:14,994 [INFO] main - 📦 Usando Trading System legacy (fallback)
+2025-11-17 07:55:14,995 [INFO] main - 🧠 MÓDULOS AVANZADOS ACTIVADOS: Order Book, Volatilidad, Microestructura, Riesgo, Portfolio
+2025-11-17 07:55:23,158 [INFO] main - ✅ Conexión Kraken verificada - Trading real activo
+2025-11-17 07:55:23,158 [INFO] main - 🚀 Kraken API conectada - TRADING REAL ACTIVADO
+2025-11-17 07:55:26,162 [INFO] main - 💰 Monedas detectadas: ['ETH', 'BTC', 'USD']
+2025-11-17 07:55:26,162 [INFO] main - 🎯 Pares óptimos generados: ['BTC/USD', 'ETH/USD', 'ADA/USD', 'AVAX/USD', 'MATIC/USD', 'DOT/USD', 'LINK/USD', 'ETH/BTC']
+2025-11-17 07:55:26,162 [INFO] main - 🌍 SISTEMA MULTI-MONEDA ACTIVADO: 3 monedas, 5 pares
+2025-11-17 07:55:26,162 [INFO] main - 🎯 Par inicial: BTC/USD
+2025-11-17 07:55:29,160 [INFO] main - 🏦 Balance real: 8 monedas, ~$1413.98 USD total
+2025-11-17 07:55:29,160 [INFO] main - Sistema de trading inicializado
+2025-11-17 07:55:29,160 [INFO] main - ✅ Par inicial verificado con balance suficiente
+2025-11-17 07:55:29,166 [INFO] paper_trading - 📊 PaperTradingManager inicializado - Balance inicial: $1,000,000
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC - 🔐 POST-QUANTUM CRYPTOGRAPHY ACTIVADA
+2025-11-17 07:55:29,167 [INFO] main - 📊 Paper Trading Manager inicializado - $1,000,000 disponible para pruebas
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC - ✅ Par de claves Dilithium-3 generado
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC - 📜 Estándar: FIPS 203 (ML-KEM) + FIPS 204 (ML-DSA)
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC - 🔑 Kyber-768 (ML-KEM-768) - Encriptación
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC -    📏 Clave pública: 1952 bytes
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC - ✍️ Dilithium-3 (ML-DSA-65) - Firmas Digitales
+2025-11-17 07:55:29,160 [INFO] OMNIX.PQC -    📏 Clave secreta: 4032 bytes
+2025-11-17 07:55:29,160 [INFO] main - 🔐 SEGURIDAD POST-CUÁNTICA ACTIVADA en Trading System
+2025-11-17 07:55:29,195 [INFO] metrics_engine - 📊 MetricsEngine inicializado - Prometheus metrics activos
+2025-11-17 07:55:29,195 [INFO] metrics_engine - 📊 MetricsEngine singleton creado
+2025-11-17 07:55:29,200 [INFO] scripts.log_trades_for_investors - 🔐 Nueva clave secreta generada y guardada
+2025-11-17 07:55:29,215 [WARNING] auto_trading_bot - ⚠️ Coherence Engine no disponible - validación de coherencia desactivada
+2025-11-17 07:55:29,215 [INFO] adaptive_weight_system - ⚡ Adaptive Weight System inicializado - ω(0)=0.500, γ=0.1
+2025-11-17 07:55:29,215 [INFO] auto_trading_bot - ⚡ Adaptive Weight System ACTIVADO - Pesos dinámicos Kalman/Monte Carlo
+2025-11-17 07:55:29,215 [INFO] auto_learning_system - 🧠 Auto-Learning System inicializado - MODO SEGURO
+2025-11-17 07:55:29,215 [INFO] auto_learning_system - 📊 Parámetros ajustables: 10
+2025-11-17 07:55:29,215 [INFO] auto_learning_system - 🔐 Parámetros bloqueados: 9
+2025-11-17 07:55:29,216 [INFO] auto_learning_system - ⚙️ Estado: DESACTIVADO (requiere /activar_auto_ajuste)
+2025-11-17 07:55:29,216 [INFO] video_learning_analyzer - 🎓 Video Learning Analyzer inicializado
+2025-11-17 07:55:29,216 [INFO] auto_trading_bot - 🎓 Auto-Learning System ACTIVADO - Aprende de videos automáticamente
+2025-11-17 07:55:29,216 [INFO] auto_trading_bot - ⚠️ Auto-Learning desactivado
+2025-11-17 07:55:29,216 [INFO] auto_trading_bot - ⚠️ Coherence Engine desactivado
+2025-11-17 07:55:29,216 [INFO] auto_trading_bot - 🤖 AutoTradingBot V5.2 QUANTUM inicializado - Modo: 🚨 REAL TRADING (Kraken) 💰
+2025-11-17 07:55:29,216 [INFO] main - 🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible
+2025-11-17 07:55:29,216 [INFO] main -    📊 Paper Trading: ✅ ACTIVADO ($1M virtual)
+2025-11-17 07:55:29,216 [INFO] main -    🎓 Auto-Learning: ✅ DISPONIBLE
+2025-11-17 07:55:29,235 [INFO] video_analyzer_ultra - ✅ GPT-4 Vision API inicializada
+2025-11-17 07:55:29,236 [INFO] video_analyzer_ultra - ✅ Gemini Vision API inicializada
+2025-11-17 07:55:29,236 [INFO] video_analyzer_ultra - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 07:55:29,236 [INFO] video_analyzer_ultra -    🎬 GPT-4 Vision: ✅
+2025-11-17 07:55:29,236 [INFO] video_analyzer_ultra -    🧠 Gemini Vision: ✅
+2025-11-17 07:55:29,236 [INFO] main - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 07:55:29,236 [INFO] main -    🎬 GPT-4 Vision: ✅
+2025-11-17 07:55:29,236 [INFO] main -    🧠 Gemini Vision: ✅
+2025-11-17 07:55:29,236 [INFO] video_learning_integration - 🔗 Video Learning Integration inicializada
+2025-11-17 07:55:29,236 [INFO] main - 🔗 Video Learning Integration conectada al Auto-Learning System
+2025-11-17 07:55:29,257 [INFO] main - ✅ Bot Telegram empresarial configurado
+2025-11-17 07:55:29,258 [INFO] main - 🎤 Handler de voz premium activado - Whisper AI
+2025-11-17 07:55:29,258 [INFO] main - ✅ Bot Telegram inicializado exitosamente
+2025-11-17 07:55:29,258 [INFO] main - 🚂 Configurando webhook para Railway...
+2025-11-17 07:55:29,258 [INFO] main - 📡 Registrando webhook con Telegram (worker principal)...
+2025-11-17 07:55:29,720 [INFO] __main__ - 🔥 Waitress escuchando peticiones...
+2025-11-17 07:55:29,713 [INFO] main - 🤖 Background: Esperando 3 segundos para que HTTP arranque...
+2025-11-17 07:55:29,721 [INFO] waitress - Serving on http://0.0.0.0:8080
+2025-11-17 07:55:29,713 [INFO] __main__ -    📍 Port: 8080
+2025-11-17 07:55:29,713 [INFO] __main__ - ✅ Bot thread iniciado
+2025-11-17 07:55:29,713 [INFO] __main__ - ======================================================================
+2025-11-17 07:55:29,713 [INFO] __main__ - ======================================================================
+2025-11-17 07:55:29,713 [INFO] __main__ - 🌐 INICIANDO SERVIDOR WAITRESS
+2025-11-17 07:55:29,713 [INFO] __main__ -    📍 Host: 0.0.0.0
+2025-11-17 07:55:29,710 [INFO] main - ✅ WEBHOOK CONFIGURADO: https://omnibotgenesis-production.up.railway.app/webhook/telegram
+2025-11-17 07:55:29,712 [INFO] main - ✅ BOT TELEGRAM LISTO PARA RAILWAY WEBHOOK MODE
+2025-11-17 07:55:29,712 [INFO] main - ======================================================================
+2025-11-17 07:55:29,712 [INFO] main - ✅ FLASK APP LISTA PARA GUNICORN
+2025-11-17 07:55:29,712 [INFO] main - ======================================================================
+2025-11-17 07:55:29,712 [INFO] __main__ - ✅ Flask app lista: <class 'flask.app.Flask'>
+2025-11-17 07:55:29,712 [INFO] __main__ - 🤖 Iniciando bot de Telegram en background...
+2025-11-17 07:55:32,713 [INFO] main - 🤖 Background: Inicializando bot de Telegram para Railway...
+2025-11-17 07:55:32,713 [INFO] main - 🌐 Background: Modo WEBHOOK (Railway)
+2025-11-17 07:55:32,713 [INFO] main - ✅ Bot Telegram ya inicializado - reutilizando instancia

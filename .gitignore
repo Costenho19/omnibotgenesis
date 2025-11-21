@@ -66,4 +66,6 @@ logs/
 # Temp files
 temp/
 tmp/
-attached_assets/
+attached_assets/__pycache__/
+*.pyc
+*.pyo

@@ -1,0 +1,115 @@
+2025-11-18 10:46:31,214 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:46:31,219 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:46:31,220 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 425 caracteres
+2025-11-18 10:46:32,220 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 161 caracteres generados
+2025-11-18 10:46:32,220 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:46:32,954 [INFO] main - ✅ Mensaje editado exitosamente: 161 chars
+2025-11-18 10:46:32,954 [INFO] main - 💾 Historial guardado: 4 mensajes totales
+2025-11-18 10:46:32,955 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:46:32,955 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:46:32,955 [INFO] main - 🎤 Texto completo para voz preparado: 159 caracteres - SIN RESTRICCIONES
+2025-11-18 10:46:32,955 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:46:33,749 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462792_6f7064a5.mp3
+2025-11-18 10:46:33,749 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:46:35,048 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:46:35,048 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462792_6f7064a5.mp3
+2025-11-18 10:46:44,499 [INFO] main - 📧 Procesando mensaje: 'de que hablabamos antes' de chat:7014748854 user:7014748854
+2025-11-18 10:46:44,499 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 10:46:45,154 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23266
+2025-11-18 10:46:45,154 [INFO] main - 🚀 Generando respuesta para Harold: 'de que hablabamos antes'
+2025-11-18 10:46:45,154 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 10:46:45,154 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:46:45,159 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:46:45,159 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 431 caracteres
+2025-11-18 10:46:46,182 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 174 caracteres generados
+2025-11-18 10:46:46,183 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:46:46,956 [INFO] main - ✅ Mensaje editado exitosamente: 174 chars
+2025-11-18 10:46:46,956 [INFO] main - 💾 Historial guardado: 6 mensajes totales
+2025-11-18 10:46:46,956 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:46:46,956 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:46:46,956 [INFO] main - 🎤 Texto completo para voz preparado: 171 caracteres - SIN RESTRICCIONES
+2025-11-18 10:46:46,957 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:46:47,798 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462806_a1bf8a3d.mp3
+2025-11-18 10:46:47,799 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:46:49,087 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:46:49,087 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462806_a1bf8a3d.mp3
+2025-11-18 10:47:02,837 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:47:04,080 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462822_52bdc398.mp3
+2025-11-18 10:47:04,080 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:47:05,475 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:47:05,476 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462822_52bdc398.mp3
+2025-11-18 10:47:00,204 [INFO] main - 📧 Procesando mensaje: 'quiero saber de dubai' de chat:7014748854 user:7014748854
+2025-11-18 10:47:00,204 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 10:47:00,991 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23269
+2025-11-18 10:47:00,991 [INFO] main - 🚀 Generando respuesta para Harold: 'quiero saber de dubai'
+2025-11-18 10:47:00,991 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 10:47:00,991 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:47:00,996 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:47:00,996 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 429 caracteres
+2025-11-18 10:47:02,204 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 247 caracteres generados
+2025-11-18 10:47:02,204 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:47:02,837 [INFO] main - ✅ Mensaje editado exitosamente: 247 chars
+2025-11-18 10:47:02,837 [INFO] main - 💾 Historial guardado: 8 mensajes totales
+2025-11-18 10:47:02,837 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:47:02,837 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:47:02,837 [INFO] main - 🎤 Texto completo para voz preparado: 245 caracteres - SIN RESTRICCIONES
+2025-11-18 10:47:13,380 [INFO] main - 📧 Procesando mensaje: 'que te pregune' de chat:7014748854 user:7014748854
+2025-11-18 10:47:13,380 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 10:47:14,023 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23272
+2025-11-18 10:47:14,023 [INFO] main - 🚀 Generando respuesta para Harold: 'que te pregune'
+2025-11-18 10:47:14,023 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 10:47:14,023 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:47:14,029 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:47:14,030 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 422 caracteres
+2025-11-18 10:47:15,215 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 241 caracteres generados
+2025-11-18 10:47:15,215 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:47:15,989 [INFO] main - ✅ Mensaje editado exitosamente: 241 chars
+2025-11-18 10:47:15,989 [INFO] main - 💾 Historial guardado: 10 mensajes totales
+2025-11-18 10:47:15,989 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:47:15,989 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:47:15,990 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:47:15,990 [INFO] main - 🎤 Texto completo para voz preparado: 239 caracteres - SIN RESTRICCIONES
+2025-11-18 10:47:16,911 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462835_6cb51724.mp3
+2025-11-18 10:47:16,911 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:47:18,238 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:47:18,238 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462835_6cb51724.mp3
+2025-11-18 10:47:29,426 [INFO] main - 📧 Procesando mensaje: 'de dubai que te pregunte' de chat:7014748854 user:7014748854
+2025-11-18 10:47:29,426 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 10:47:30,186 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23275
+2025-11-18 10:47:30,186 [INFO] main - 🚀 Generando respuesta para Harold: 'de dubai que te pregunte'
+2025-11-18 10:47:30,186 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 10:47:30,186 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:47:30,191 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:47:30,192 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 432 caracteres
+2025-11-18 10:47:31,292 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 174 caracteres generados
+2025-11-18 10:47:31,292 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:47:31,974 [INFO] main - ✅ Mensaje editado exitosamente: 174 chars
+2025-11-18 10:47:31,974 [INFO] main - 💾 Historial guardado: 12 mensajes totales
+2025-11-18 10:47:31,974 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:47:31,974 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:47:31,974 [INFO] main - 🎤 Texto completo para voz preparado: 173 caracteres - SIN RESTRICCIONES
+2025-11-18 10:47:32,592 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:47:33,956 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:47:33,956 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462851_50c355a9.mp3
+2025-11-18 10:47:31,974 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:47:32,591 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462851_50c355a9.mp3
+2025-11-18 10:48:27,310 [INFO] main - 📧 Procesando mensaje: 'Afirman reducir el Model Drift con su $Quantum$ $Alpha$. ¿Con qué frecuencia se reoptimiza la simulación QAOA para la cartera, y qué tan rápido se degrada ese $Alpha$ si el mercado cambia de régimen bruscamente? Queremos ver la curva de degradación del $Alpha$."' de chat:7014748854 user:7014748854
+2025-11-18 10:48:27,310 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 10:48:27,947 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23278
+2025-11-18 10:48:27,947 [INFO] main - 🚀 Generando respuesta para Harold: 'Afirman reducir el Model Drift con su $Quantum$ $Alpha$. ¿Con qué frecuencia se reoptimiza la simulación QAOA para la cartera, y qué tan rápido se degrada ese $Alpha$ si el mercado cambia de régimen bruscamente? Queremos ver la curva de degradación del $Alpha$."'
+2025-11-18 10:48:27,947 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 10:48:27,947 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 10:48:27,952 [WARNING] main - ⚠️ Error usando PromptsContextManager: No module named 'decouple'
+2025-11-18 10:48:27,952 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 670 caracteres
+2025-11-18 10:48:40,653 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 6203 caracteres generados
+2025-11-18 10:48:40,653 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 10:48:41,292 [INFO] main - ✅ Mensaje editado exitosamente: 6203 chars
+2025-11-18 10:48:41,292 [INFO] main - 💾 Historial guardado: 14 mensajes totales
+2025-11-18 10:48:41,293 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 10:48:41,293 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 10:48:41,293 [INFO] main - 🎤 Texto completo para voz preparado: 5699 caracteres - SIN RESTRICCIONES
+2025-11-18 10:48:41,293 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 10:48:57,730 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763462921_91624e5b.mp3
+2025-11-18 10:48:57,730 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 10:49:01,004 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 10:49:01,005 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763462921_91624e5b.mp3

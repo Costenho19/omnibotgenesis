@@ -1,0 +1,107 @@
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+2025-11-17 07:51:12,821 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:12,822 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:12,822 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:12,822 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:12,822 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:12,822 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:12,822 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:12,825 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+2025-11-17 07:51:13,904 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:13,905 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:13,905 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:13,905 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:13,905 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:13,905 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:13,905 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:13,908 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+2025-11-17 07:51:15,699 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:15,699 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:15,699 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:15,699 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:15,700 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:15,700 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:15,700 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:15,703 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+2025-11-17 07:51:17,330 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:17,330 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:17,330 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:17,330 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:17,330 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:17,330 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:17,330 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:17,334 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+ModuleNotFoundError: No module named 'main_railway'
+2025-11-17 07:51:18,830 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:18,830 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:18,830 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:18,830 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:18,830 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:18,830 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:18,830 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:18,835 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+2025-11-17 07:51:20,134 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:20,134 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:20,134 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:20,134 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:20,134 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:20,134 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:20,134 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:20,138 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+2025-11-17 07:51:21,774 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:21,774 [INFO] __main__ - 🚀 WSGI: Iniciando Railway deployment
+2025-11-17 07:51:21,774 [INFO] __main__ - ======================================================================
+2025-11-17 07:51:21,774 [INFO] __main__ - 📦 Importando create_flask_app desde main_railway...
+2025-11-17 07:51:21,774 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:21,774 [ERROR] __main__ - ❌ ERROR FATAL: No module named 'main_railway'
+2025-11-17 07:51:21,774 [ERROR] __main__ - ======================================================================
+2025-11-17 07:51:21,777 [ERROR] __main__ - Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'
+Traceback (most recent call last):
+  File "/app/wsgi.py", line 26, in <module>
+    from main_railway import create_flask_app, start_telegram_bot_background
+ModuleNotFoundError: No module named 'main_railway'

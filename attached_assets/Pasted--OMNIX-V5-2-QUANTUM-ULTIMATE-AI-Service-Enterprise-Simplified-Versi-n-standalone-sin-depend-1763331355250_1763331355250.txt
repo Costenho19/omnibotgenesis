@@ -1,0 +1,173 @@
+"""
+OMNIX V5.2 QUANTUM ULTIMATE - AI Service Enterprise (Simplified)
+Versión standalone sin dependencias complejas para Railway
+"""
+
+import os
+import logging
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+
+# Configurar logging
+logger = logging.getLogger(__name__)
+
+# Intentar importar Gemini
+try:
+    from google import genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    try:
+        import google.generativeai as genai
+        GEMINI_AVAILABLE = True
+    except ImportError:
+        GEMINI_AVAILABLE = False
+        logger.warning("⚠️ Gemini no disponible")
+
+# Intentar importar OpenAI
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logger.warning("⚠️ OpenAI no disponible")
+
+
+class AIServiceEnterprise:
+    """
+    AI Service Enterprise - Versión simplificada para Railway
+    Gestiona Gemini 2.0 Flash + GPT-4o con fallback automático
+    """
+    
+    def __init__(self):
+        """Inicializar servicio de IA"""
+        self.gemini_client = None
+        self.openai_client = None
+        self.primary_model = "gemini"
+        
+        # Inicializar Gemini
+        if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
+            try:
+                if hasattr(genai, 'Client'):
+                    self.gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+                else:
+                    genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
+                    self.gemini_client = genai
+                logger.info("✅ GEMINI 2.0 FLASH INICIALIZADO")
+            except Exception as e:
+                logger.error(f"❌ Error inicializando Gemini: {e}")
+        
+        # Inicializar OpenAI
+        if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
+            try:
+                self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+                logger.info("✅ GPT-4o INICIALIZADO")
+            except Exception as e:
+                logger.error(f"❌ Error inicializando OpenAI: {e}")
+    
+    async def generate_response(
+        self,
+        user_message: str,
+        system_prompt: Optional[str] = None,
+        chat_id: Optional[int] = None
+    ) -> str:
+        """
+        Generar respuesta de IA usando Gemini o GPT-4o
+        
+        Args:
+            user_message: Mensaje del usuario
+            system_prompt: Prompt del sistema (opcional)
+            chat_id: ID del chat (opcional)
+            
+        Returns:
+            Respuesta generada por IA
+        """
+        
+        # Prompt del sistema por defecto
+        if not system_prompt:
+            system_prompt = """Eres OMNIX V5.2 QUANTUM ULTIMATE, un asistente de trading de criptomonedas profesional.
+Características:
+- Trading automático 24/7 con Kraken API
+- Análisis técnico avanzado en tiempo real
+- Gestión de riesgos institucional
+- Desarrollado por Harold Nunes
+
+IMPORTANTE: Siempre responde en ESPAÑOL a Harold.
+Sé conciso, profesional y directo."""
+        
+        # Intentar Gemini primero
+        if self.gemini_client:
+            try:
+                response = await self._generate_gemini(user_message, system_prompt)
+                if response:
+                    return response
+            except Exception as e:
+                logger.error(f"❌ Error Gemini: {e}")
+        
+        # Fallback a OpenAI
+        if self.openai_client:
+            try:
+                response = await self._generate_openai(user_message, system_prompt)
+                if response:
+                    return response
+            except Exception as e:
+                logger.error(f"❌ Error OpenAI: {e}")
+        
+        # Fallback final
+        return "⚠️ Sistema de IA temporalmente no disponible. Intenta de nuevo en unos segundos."
+    
+    async def _generate_gemini(self, user_message: str, system_prompt: str) -> Optional[str]:
+        """Generar respuesta con Gemini"""
+        try:
+            # Gemini 2.0 Flash
+            if hasattr(self.gemini_client, 'models'):
+                response = self.gemini_client.models.generate_content(
+                    model='gemini-2.0-flash-exp',
+                    contents=f"{system_prompt}\n\nUsuario: {user_message}"
+                )
+                return response.text
+            else:
+                # SDK anterior
+                model = self.gemini_client.GenerativeModel('gemini-pro')
+                response = model.generate_content(f"{system_prompt}\n\nUsuario: {user_message}")
+                return response.text
+        except Exception as e:
+            logger.error(f"❌ Error generando con Gemini: {e}")
+            return None
+    
+    async def _generate_openai(self, user_message: str, system_prompt: str) -> Optional[str]:
+        """Generar respuesta con OpenAI"""
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"❌ Error generando con OpenAI: {e}")
+            return None
+    
+    def health_check(self) -> Dict[str, Any]:
+        """Verificar estado del servicio"""
+        return {
+            'service': 'AIServiceEnterprise',
+            'gemini_available': self.gemini_client is not None,
+            'openai_available': self.openai_client is not None,
+            'primary_model': self.primary_model,
+            'status': 'healthy' if (self.gemini_client or self.openai_client) else 'degraded'
+        }
+
+
+# Instancia global
+_ai_service_instance = None
+
+def get_ai_service() -> AIServiceEnterprise:
+    """Obtener instancia singleton del servicio IA"""
+    global _ai_service_instance
+    if _ai_service_instance is None:
+        _ai_service_instance = AIServiceEnterprise()
+    return _ai_service_instance

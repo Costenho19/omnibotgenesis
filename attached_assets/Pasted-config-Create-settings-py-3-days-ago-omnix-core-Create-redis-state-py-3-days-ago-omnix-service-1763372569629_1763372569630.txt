@@ -1,0 +1,193 @@
+config
+Create settings.py
+3 days ago
+omnix_core
+Create redis_state.py
+3 days ago
+omnix_services
+Create stock_commands.py
+17 minutes ago
+scripts
+Add trade verification script for Railway
+last week
+.env
+Update .env
+4 months ago
+Procfile
+Update Procfile
+3 hours ago
+STOCK_TRADING_README.md
+Create STOCK_TRADING_README.md
+now
+__init__.py
+Create __init__.py
+28 minutes ago
+adaptive_weight_system.py
+Update adaptive_weight_system.py
+5 days ago
+advanced_features.py
+Update advanced_features.py
+yesterday
+ai_models.py
+Update ai_models.py
+8 hours ago
+ai_prompts.py
+Update ai_prompts.py
+11 hours ago
+ai_risk_guardian.py
+Create ai_risk_guardian.py
+20 hours ago
+ai_styles.py
+Create ai_styles.py
+11 hours ago
+analysis_engine.py
+Update analysis_engine.py
+4 months ago
+app.py
+Update app.py
+4 months ago
+auto_learning_system.py
+Create auto_learning_system.py
+3 days ago
+auto_trading_bot.py
+Update auto_trading_bot.py
+yesterday
+backtesting_engine.py
+Create backtesting_engine.py
+2 days ago
+chart_pattern_detector.py
+Create chart_pattern_detector.py
+3 days ago
+chatgpt_ai.py
+Update chatgpt_ai.py
+4 months ago
+config.py
+Update config.py
+4 months ago
+conversational_ai.py
+Update conversational_ai.py
+4 months ago
+conversational_brain.py
+Create conversational_brain.py
+3 days ago
+cuantico_ibm.py
+Update cuantico_ibm.py
+4 months ago
+dashboard.py
+Create dashboard.py
+4 months ago
+database.py
+Update database.py
+last week
+eb_trades_viewer.py
+Create eb_trades_viewer.py
+last week
+elevenlabs_tts.py
+Create elevenlabs_tts.py
+4 months ago
+gitignore
+Update .gitignore with comprehensive templates for Python, PyCharm,…
+3 months ago
+kelly_criterion.py
+Update kelly_criterion.py
+2 days ago
+kraken_client.py
+Create kraken_client.py
+2 days ago
+kraken_websocket.py
+Create kraken_websocket.py
+2 days ago
+main.py
+Update main.py
+1 hour ago
+market_global_engine.py
+Update market_global_engine.py
+4 months ago
+metrics_engine.py
+Create metrics_engine.py
+3 days ago
+paper_trading.py
+Integrate Kraken fees and improve trading logic
+last week
+pqc_encryption.py
+Update pqc_encryption.py
+3 days ago
+pqc_security.py
+Add post-quantum cryptography module
+last week
+prueba_simple.py
+Create prueba_simple.py
+4 months ago
+quantum_engine.py
+Update quantum_engine.py
+4 months ago
+quantum_enhancements.py
+Create quantum_enhancements.py
+yesterday
+quantum_features_backup.py
+Create quantum_features_backup.py
+4 months ago
+quantum_session.py
+Create quantum_session.py
+4 months ago
+railway.json
+Update railway.json
+2 hours ago
+requirements.txt
+Update requirements.txt
+3 hours ago
+runtime.txt
+Create runtime.txt
+4 months ago
+sentiment_analyzer_advanced.py
+Create sentiment_analyzer_advanced.py
+3 days ago
+sharia_validator.py
+Create sharia_validator.py
+4 months ago
+stripe_integration.py
+Update stripe_integration.py
+2 days ago
+test.py
+Create test.py
+4 months ago
+trading_service.py
+Create trading_service.py
+2 days ago
+trading_system.py
+Update trading_system.py
+4 months ago
+verify.py
+Update verify.py
+4 months ago
+video_analyzer_ultra.py
+Create video_analyzer_ultra.py
+3 days ago
+video_learning_analyzer.py
+Update video_learning_analyzer.py
+yesterday
+video_learning_integration.py
+Create video_learning_integration.py
+3 days ago
+voice_engine.py
+Create voice_engine.py
+4 months ago
+voice_service.py
+Update voice_service.py
+last week
+voice_signature.py
+Update voice_signature.py
+4 months ago
+voice_verification.py
+Create voice_verification.py
+4 months ago
+web_dashboard.py
+Update web_dashboard.py
+3 months ago
+web_panel.py
+Update web_panel.py
+4 months ago
+web_trades_viewer.py
+Refactor database queries and HTML generation
+last week
+wsgi.py

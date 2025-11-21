@@ -1,0 +1,114 @@
+2025-11-18 09:26:33,917 [INFO] __main__ - ✅ Flask app lista: <class 'flask.app.Flask'>
+2025-11-18 09:26:33,917 [INFO] __main__ - 🤖 Iniciando bot de Telegram en background...
+2025-11-18 09:26:33,918 [INFO] main - 🤖 Background: Esperando 3 segundos para que HTTP arranque...
+2025-11-18 09:26:33,918 [INFO] __main__ - ✅ Bot thread iniciado
+2025-11-18 09:26:33,918 [INFO] __main__ - ======================================================================
+2025-11-18 09:26:33,918 [INFO] __main__ - 🌐 INICIANDO SERVIDOR WAITRESS
+2025-11-18 09:26:33,918 [INFO] __main__ -    📍 Host: 0.0.0.0
+2025-11-18 09:26:33,918 [INFO] __main__ -    📍 Port: 8080
+2025-11-18 09:26:33,918 [INFO] __main__ - ======================================================================
+2025-11-18 09:26:33,923 [INFO] __main__ - 🔥 Waitress escuchando peticiones...
+2025-11-18 09:26:33,925 [INFO] waitress - Serving on http://0.0.0.0:8080
+2025-11-18 09:26:36,926 [INFO] main - 🚀 Inicializando Trading Service Enterprise...
+2025-11-18 09:26:36,918 [INFO] main - 🤖 Background: Iniciando bot de Telegram...
+2025-11-18 09:26:36,918 [INFO] main - 🔄 Background: Modo POLLING activado
+2025-11-18 09:26:36,918 [INFO] main - ✅ Sistema IA Directo Activado - Gemini 2.0 Flash + GPT-4o
+2025-11-18 09:26:36,926 [INFO] main - ✅ OpenAI GPT-4o inicializado correctamente
+2025-11-18 09:26:36,926 [INFO] main - ✅ Gemini 2.0 Flash inicializado correctamente
+2025-11-18 09:26:37,108 [ERROR] omnix_services.trading_service.trading_service - ❌ Kraken error: ['EAPI:Invalid nonce']
+2025-11-18 09:26:37,109 [WARNING] main - ⚠️ Trading Enterprise health check failed: {'service': 'TradingServiceEnterprise', 'requests_available': True, 'connected': False, 'api_configured': True}
+2025-11-18 09:26:37,109 [INFO] main - 📦 Usando Trading System legacy (fallback)
+2025-11-18 09:26:37,109 [INFO] main - 🧠 MÓDULOS AVANZADOS ACTIVADOS: Order Book, Volatilidad, Microestructura, Riesgo, Portfolio
+2025-11-18 09:26:45,266 [INFO] main - ✅ Conexión Kraken verificada - Trading real activo
+2025-11-18 09:26:45,267 [INFO] main - 🚀 Kraken API conectada - TRADING REAL ACTIVADO
+2025-11-18 09:26:48,337 [INFO] main - 💰 Monedas detectadas: ['ETH', 'BTC', 'USD']
+2025-11-18 09:26:48,338 [INFO] main - 🎯 Pares óptimos generados: ['BTC/USD', 'ETH/USD', 'ADA/USD', 'AVAX/USD', 'MATIC/USD', 'DOT/USD', 'LINK/USD', 'ETH/BTC']
+2025-11-18 09:26:48,338 [INFO] main - 🌍 SISTEMA MULTI-MONEDA ACTIVADO: 3 monedas, 5 pares
+2025-11-18 09:26:48,338 [INFO] main - 🎯 Par inicial: BTC/USD
+2025-11-18 09:26:51,266 [INFO] main - 🏦 Balance real: 8 monedas, ~$1348.57 USD total
+2025-11-18 09:26:51,266 [INFO] main - 📊 Paper Trading Manager inicializado - $1,000,000 disponible para pruebas
+2025-11-18 09:26:51,266 [INFO] main - ✅ Par inicial verificado con balance suficiente
+2025-11-18 09:26:51,266 [INFO] adaptive_weight_system - ⚡ Adaptive Weight System inicializado - ω(0)=0.500, γ=0.1
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC - 🔐 POST-QUANTUM CRYPTOGRAPHY ACTIVADA
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - ⚡ Adaptive Weight System ACTIVADO - Pesos dinámicos Kalman/Monte Carlo
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC - 📜 Estándar: FIPS 203 (ML-KEM) + FIPS 204 (ML-DSA)
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC - 🔑 Kyber-768 (ML-KEM-768) - Encriptación
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC - ✍️ Dilithium-3 (ML-DSA-65) - Firmas Digitales
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC - ✅ Par de claves Dilithium-3 generado
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC -    📏 Clave pública: 1952 bytes
+2025-11-18 09:26:51,266 [INFO] OMNIX.PQC -    📏 Clave secreta: 4032 bytes
+2025-11-18 09:26:51,266 [INFO] main - 🔐 SEGURIDAD POST-CUÁNTICA ACTIVADA en Trading System
+2025-11-18 09:26:51,266 [INFO] main - Sistema de trading inicializado
+2025-11-18 09:26:51,266 [INFO] paper_trading - 📊 PaperTradingManager inicializado - Balance inicial: $1,000,000
+2025-11-18 09:26:51,267 [INFO] auto_learning_system - 🧠 Auto-Learning System inicializado - MODO SEGURO
+2025-11-18 09:26:51,267 [INFO] auto_learning_system - 📊 Parámetros ajustables: 10
+2025-11-18 09:26:51,267 [INFO] auto_learning_system - 🔐 Parámetros bloqueados: 9
+2025-11-18 09:26:51,267 [INFO] auto_learning_system - ⚙️ Estado: DESACTIVADO (requiere /activar_auto_ajuste)
+2025-11-18 09:26:51,267 [INFO] video_learning_analyzer - 🎓 Video Learning Analyzer inicializado
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - 🎓 Auto-Learning System ACTIVADO - Aprende de videos automáticamente
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - ⚠️ Auto-Learning desactivado
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - ⚠️ Coherence Engine desactivado
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - ⚠️ AI Risk Guardian desactivado
+2025-11-18 09:26:51,267 [INFO] auto_trading_bot - 🤖 AutoTradingBot V5.2 QUANTUM inicializado - Modo: 🚨 REAL TRADING (Kraken) 💰
+2025-11-18 09:26:51,267 [INFO] main - 🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible
+2025-11-18 09:26:51,267 [INFO] main -    📊 Paper Trading: ✅ ACTIVADO ($1M virtual)
+2025-11-18 09:26:51,267 [INFO] main -    🎓 Auto-Learning: ✅ DISPONIBLE
+2025-11-18 09:26:51,273 [INFO] video_analyzer_ultra - ✅ GPT-4 Vision API inicializada
+2025-11-18 09:26:51,274 [INFO] video_learning_integration - 🔗 Video Learning Integration inicializada
+2025-11-18 09:26:51,274 [INFO] main - 🔗 Video Learning Integration conectada al Auto-Learning System
+2025-11-18 09:26:51,274 [INFO] video_analyzer_ultra - ✅ Gemini Vision API inicializada
+2025-11-18 09:26:51,274 [WARNING] main - 📊 Stock Trading solicitado pero módulo no disponible
+2025-11-18 09:26:51,274 [INFO] video_analyzer_ultra - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-18 09:26:51,274 [INFO] video_analyzer_ultra -    🎬 GPT-4 Vision: ✅
+2025-11-18 09:26:51,274 [INFO] video_analyzer_ultra -    🧠 Gemini Vision: ✅
+2025-11-18 09:26:51,274 [INFO] main - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-18 09:26:51,274 [INFO] main -    🎬 GPT-4 Vision: ✅
+2025-11-18 09:26:51,274 [INFO] main -    🧠 Gemini Vision: ✅
+2025-11-18 09:26:51,288 [INFO] main - ✅ Bot Telegram empresarial configurado
+2025-11-18 09:26:51,288 [INFO] main - 🎤 Handler de voz premium activado - Whisper AI
+2025-11-18 09:26:51,288 [INFO] main - 🚀 Iniciando bot Telegram...
+2025-11-18 09:26:51,732 [INFO] main - 🗑️ Webhook eliminado para usar polling
+2025-11-18 09:26:51,732 [INFO] main - 🔄 Iniciando polling directo...
+2025-11-18 09:26:51,733 [INFO] main - ✅ Bot Telegram iniciado con polling directo
+2025-11-18 09:26:51,734 [INFO] main - 📡 Hilo de polling activo: True
+2025-11-18 09:26:51,734 [INFO] main - ✅ Background: Bot con polling iniciado
+2025-11-18 09:27:31,054 [INFO] main - 📧 Procesando mensaje: 'que tal como estas' de chat:7014748854 user:7014748854
+2025-11-18 09:27:31,055 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 09:27:31,634 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23117
+2025-11-18 09:27:31,634 [INFO] main - 🚀 Generando respuesta para Harold: 'que tal como estas'
+2025-11-18 09:27:31,634 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 09:27:31,634 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 09:27:31,634 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 1361 caracteres
+2025-11-18 09:27:37,764 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 3064 caracteres generados
+2025-11-18 09:27:37,764 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 09:27:38,366 [INFO] main - ✅ Mensaje editado exitosamente: 3064 chars
+2025-11-18 09:27:38,366 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 09:27:38,366 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 09:27:38,367 [INFO] main - 🎤 Texto completo para voz preparado: 3004 caracteres - SIN RESTRICCIONES
+2025-11-18 09:27:38,367 [WARNING] main - 🎤 ⚠️ VoiceEngine perdido - REINICIALIZANDO...
+2025-11-18 09:27:38,374 [INFO] omnix_services.voice_service.voice_service - ✅ OpenAI Whisper STT configurado
+2025-11-18 09:27:38,374 [INFO] omnix_services.voice_service.voice_service - ✅ VOICE SERVICE ENTERPRISE LOADED - TTS: True, STT: True
+2025-11-18 09:27:38,374 [INFO] main - 🎤 ✅ VoiceEngine reinicializado exitosamente
+2025-11-18 09:27:38,374 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 09:27:49,388 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763458058_48ef96aa.mp3
+2025-11-18 09:27:49,388 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 09:27:51,218 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 09:27:51,218 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763458058_48ef96aa.mp3
+2025-11-18 09:27:56,822 [INFO] main - 📧 Procesando mensaje: 'que haces con la vida' de chat:7014748854 user:7014748854
+2025-11-18 09:27:56,822 [INFO] main - 🧠 HAROLD: Enviando indicador de pensamiento ANTES de Gemini
+2025-11-18 09:27:57,407 [INFO] main - ✅ HAROLD: Indicador enviado EXITOSAMENTE - Message ID: 23120
+2025-11-18 09:27:57,407 [INFO] main - 🚀 Generando respuesta para Harold: 'que haces con la vida'
+2025-11-18 09:27:57,407 [INFO] main - 🔍 Verificando métodos AI: ['_legacy_generate_response', 'generate_response']
+2025-11-18 09:27:57,407 [INFO] main - 🔑 Activando GEMINI 2.0 DIRECTO para Harold - FORZADO
+2025-11-18 09:27:57,407 [INFO] main - 🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de 1364 caracteres
+2025-11-18 09:28:05,753 [INFO] main - ✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: 3769 caracteres generados
+2025-11-18 09:28:05,753 [INFO] main - 🔒 Usuario admin: True (Chat: 7014748854, User: 7014748854)
+2025-11-18 09:28:06,336 [INFO] main - ✅ Mensaje editado exitosamente: 3769 chars
+2025-11-18 09:28:06,336 [INFO] main - 🎤 DEBUG: Generando voz para chat_id='7014748854'
+2025-11-18 09:28:06,336 [INFO] main - 🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: True (User: 7014748854)
+2025-11-18 09:28:06,336 [INFO] main - 🎤 Texto completo para voz preparado: 3541 caracteres - SIN RESTRICCIONES
+2025-11-18 09:28:06,336 [INFO] main - 🎤 VoiceEngine disponible - generando audio
+2025-11-18 09:28:24,348 [INFO] omnix_services.voice_service.voice_service - 🎤 Audio generado: omnix_voice_1763458086_337fefcf.mp3
+2025-11-18 09:28:24,348 [INFO] main - 🎤 Audio generado exitosamente - enviando a Telegram
+2025-11-18 09:28:26,390 [INFO] main - 🎤 ✅ VOZ AUTOMÁTICA ENVIADA A HAROLD EXITOSAMENTE
+2025-11-18 09:28:26,391 [INFO] main - 🎤 Archivo temporal limpiado: /tmp/omnix_voice_1763458086_337fefcf.mp3

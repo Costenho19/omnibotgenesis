@@ -1,0 +1,114 @@
+2025-11-17 05:58:45,179 [INFO] adaptive_weight_system - ⚡ Adaptive Weight System inicializado - ω(0)=0.500, γ=0.1
+2025-11-17 05:58:45,179 [INFO] auto_trading_bot - ⚡ Adaptive Weight System ACTIVADO - Pesos dinámicos Kalman/Monte Carlo
+2025-11-17 05:58:45,178 [INFO] main - 🏦 Balance real: 8 monedas, ~$1406.81 USD total
+2025-11-17 05:58:45,178 [INFO] main - ✅ Par inicial verificado con balance suficiente
+2025-11-17 05:58:45,178 [WARNING] main - ⚠️ No se encontraron pares de trading válidos
+2025-11-17 05:58:45,178 [INFO] OMNIX.PQC - 🔐 POST-QUANTUM CRYPTOGRAPHY ACTIVADA
+2025-11-17 05:58:45,178 [INFO] OMNIX.PQC - 📜 Estándar: FIPS 203 (ML-KEM) + FIPS 204 (ML-DSA)
+2025-11-17 05:58:45,178 [INFO] OMNIX.PQC - 🔑 Kyber-768 (ML-KEM-768) - Encriptación
+2025-11-17 05:58:45,178 [INFO] OMNIX.PQC - ✍️ Dilithium-3 (ML-DSA-65) - Firmas Digitales
+2025-11-17 05:58:45,179 [INFO] OMNIX.PQC - ✅ Par de claves Dilithium-3 generado
+2025-11-17 05:58:45,179 [INFO] OMNIX.PQC -    📏 Clave pública: 1952 bytes
+2025-11-17 05:58:45,179 [INFO] auto_learning_system - 🧠 Auto-Learning System inicializado - MODO SEGURO
+2025-11-17 05:58:45,190 [INFO] main -    🎬 GPT-4 Vision: ✅
+2025-11-17 05:58:45,179 [INFO] auto_learning_system - 📊 Parámetros ajustables: 10
+2025-11-17 05:58:45,190 [INFO] main -    🧠 Gemini Vision: ✅
+2025-11-17 05:58:45,179 [INFO] auto_learning_system - 🔐 Parámetros bloqueados: 9
+2025-11-17 05:58:45,190 [INFO] video_learning_integration - 🔗 Video Learning Integration inicializada
+2025-11-17 05:58:45,179 [INFO] auto_learning_system - ⚙️ Estado: DESACTIVADO (requiere /activar_auto_ajuste)
+2025-11-17 05:58:45,190 [INFO] main - 🔗 Video Learning Integration conectada al Auto-Learning System
+2025-11-17 05:58:45,179 [INFO] video_learning_analyzer - 🎓 Video Learning Analyzer inicializado
+2025-11-17 05:58:45,208 [INFO] main - ✅ Bot Telegram empresarial configurado
+2025-11-17 05:58:45,208 [INFO] main - 🎤 Handler de voz premium activado - Whisper AI
+2025-11-17 05:58:45,179 [INFO] auto_trading_bot - 🎓 Auto-Learning System ACTIVADO - Aprende de videos automáticamente
+2025-11-17 05:58:45,208 [INFO] main - 🔗 Video Learning Integration disponible globalmente
+2025-11-17 05:58:45,179 [INFO] auto_trading_bot - 🧠 Conversational Brain ACTIVADO - Bot que razona y aprende
+2025-11-17 05:58:45,208 [INFO] main - 🚂 RAILWAY DETECTADO - Forzando modo WEBHOOK
+2025-11-17 05:58:45,208 [INFO] main -    📍 RAILWAY_PUBLIC_DOMAIN: omnibotgenesis-production.up.railway.app
+2025-11-17 05:58:45,180 [INFO] auto_trading_bot - ⚠️ Coherence Engine desactivado
+2025-11-17 05:58:45,208 [INFO] main -    📍 RAILWAY_STATIC_URL: omnibotgenesis-production.up.railway.app
+2025-11-17 05:58:45,180 [INFO] auto_trading_bot - 🤖 AutoTradingBot V5.2 QUANTUM inicializado - Modo: 🚨 REAL TRADING (Kraken) 💰
+2025-11-17 05:58:45,208 [INFO] main -    📍 PORT: 8080
+2025-11-17 05:58:45,208 [INFO] main - 📡 Configurando webhook en Telegram...
+2025-11-17 05:58:45,180 [INFO] main - 🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible
+2025-11-17 05:58:45,208 [INFO] main -    🔗 URL: https://omnibotgenesis-production.up.railway.app/webhook/telegram
+2025-11-17 05:58:45,180 [INFO] main -    📊 Paper Trading: ✅ ACTIVADO ($1M virtual)
+2025-11-17 05:58:45,180 [INFO] main -    🎓 Auto-Learning: ✅ DISPONIBLE
+2025-11-17 05:58:45,189 [INFO] video_analyzer_ultra - ✅ GPT-4 Vision API inicializada
+2025-11-17 05:58:45,189 [INFO] video_analyzer_ultra - ✅ Gemini Vision API inicializada
+2025-11-17 05:58:45,189 [INFO] video_analyzer_ultra - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 05:58:45,190 [INFO] video_analyzer_ultra -    🎬 GPT-4 Vision: ✅
+2025-11-17 05:58:45,190 [INFO] video_analyzer_ultra -    🧠 Gemini Vision: ✅
+2025-11-17 05:58:45,190 [INFO] main - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 05:58:45,596 [INFO] main - 🏦 Balance real: 8 monedas, ~$1406.81 USD total
+2025-11-17 05:58:45,596 [INFO] main - ✅ Par inicial verificado con balance suficiente
+2025-11-17 05:58:45,596 [WARNING] main - ⚠️ No se encontraron pares de trading válidos
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC - 🔐 POST-QUANTUM CRYPTOGRAPHY ACTIVADA
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC - 📜 Estándar: FIPS 203 (ML-KEM) + FIPS 204 (ML-DSA)
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC - 🔑 Kyber-768 (ML-KEM-768) - Encriptación
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC - ✍️ Dilithium-3 (ML-DSA-65) - Firmas Digitales
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC - ✅ Par de claves Dilithium-3 generado
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC -    📏 Clave pública: 1952 bytes
+2025-11-17 05:58:45,597 [INFO] OMNIX.PQC -    📏 Clave secreta: 4032 bytes
+2025-11-17 05:58:45,597 [INFO] main - 🔐 SEGURIDAD POST-CUÁNTICA ACTIVADA en Trading System
+2025-11-17 05:58:45,597 [INFO] main - Sistema de trading inicializado
+2025-11-17 05:58:45,597 [INFO] paper_trading - 📊 PaperTradingManager inicializado - Balance inicial: $1,000,000
+2025-11-17 05:58:45,597 [INFO] main - 📊 Paper Trading Manager inicializado - $1,000,000 disponible para pruebas
+2025-11-17 05:58:45,597 [INFO] adaptive_weight_system - ⚡ Adaptive Weight System inicializado - ω(0)=0.500, γ=0.1
+2025-11-17 05:58:45,597 [INFO] auto_trading_bot - ⚡ Adaptive Weight System ACTIVADO - Pesos dinámicos Kalman/Monte Carlo
+2025-11-17 05:58:45,598 [INFO] main -    🎓 Auto-Learning: ✅ DISPONIBLE
+2025-11-17 05:58:45,598 [INFO] auto_learning_system - 🧠 Auto-Learning System inicializado - MODO SEGURO
+2025-11-17 05:58:45,598 [INFO] auto_learning_system - 📊 Parámetros ajustables: 10
+2025-11-17 05:58:45,598 [INFO] auto_learning_system - 🔐 Parámetros bloqueados: 9
+2025-11-17 05:58:45,598 [INFO] auto_learning_system - ⚙️ Estado: DESACTIVADO (requiere /activar_auto_ajuste)
+2025-11-17 05:58:45,598 [INFO] video_learning_analyzer - 🎓 Video Learning Analyzer inicializado
+2025-11-17 05:58:45,598 [INFO] auto_trading_bot - 🎓 Auto-Learning System ACTIVADO - Aprende de videos automáticamente
+2025-11-17 05:58:45,598 [INFO] auto_trading_bot - 🧠 Conversational Brain ACTIVADO - Bot que razona y aprende
+2025-11-17 05:58:45,598 [INFO] auto_trading_bot - ⚠️ Coherence Engine desactivado
+2025-11-17 05:58:45,598 [INFO] auto_trading_bot - 🤖 AutoTradingBot V5.2 QUANTUM inicializado - Modo: 🚨 REAL TRADING (Kraken) 💰
+2025-11-17 05:58:45,598 [INFO] main - 🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible
+2025-11-17 05:58:45,598 [INFO] main -    📊 Paper Trading: ✅ ACTIVADO ($1M virtual)
+2025-11-17 05:58:45,608 [INFO] video_analyzer_ultra - ✅ GPT-4 Vision API inicializada
+2025-11-17 05:58:45,608 [INFO] main - 🔗 Video Learning Integration conectada al Auto-Learning System
+2025-11-17 05:58:45,608 [INFO] video_analyzer_ultra - ✅ Gemini Vision API inicializada
+2025-11-17 05:58:45,608 [INFO] video_analyzer_ultra - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 05:58:45,608 [INFO] video_analyzer_ultra -    🎬 GPT-4 Vision: ✅
+2025-11-17 05:58:45,608 [INFO] video_analyzer_ultra -    🧠 Gemini Vision: ✅
+2025-11-17 05:58:45,608 [INFO] main - 🎥 Video Analyzer Ultra V5.3 inicializado
+2025-11-17 05:58:45,608 [INFO] main -    🎬 GPT-4 Vision: ✅
+2025-11-17 05:58:45,608 [INFO] main -    🧠 Gemini Vision: ✅
+2025-11-17 05:58:45,608 [INFO] video_learning_integration - 🔗 Video Learning Integration inicializada
+2025-11-17 05:58:45,632 [INFO] main - ✅ Bot Telegram empresarial configurado
+2025-11-17 05:58:45,632 [INFO] main - 🎤 Handler de voz premium activado - Whisper AI
+2025-11-17 05:58:45,632 [INFO] main - 🔗 Video Learning Integration disponible globalmente
+2025-11-17 05:58:45,632 [INFO] main - 🚂 RAILWAY DETECTADO - Forzando modo WEBHOOK
+2025-11-17 05:58:45,632 [INFO] main -    📍 RAILWAY_PUBLIC_DOMAIN: omnibotgenesis-production.up.railway.app
+2025-11-17 05:58:45,632 [INFO] main -    📍 RAILWAY_STATIC_URL: omnibotgenesis-production.up.railway.app
+2025-11-17 05:58:45,632 [INFO] main -    📍 PORT: 8080
+2025-11-17 05:58:45,632 [INFO] main - 📡 Configurando webhook en Telegram...
+2025-11-17 05:58:45,632 [INFO] main -    🔗 URL: https://omnibotgenesis-production.up.railway.app/webhook/telegram
+2025-11-17 05:58:45,805 [INFO] main - ✅ WEBHOOK CONFIGURADO EXITOSAMENTE
+2025-11-17 05:58:45,805 [INFO] main -    📋 Respuesta: {'ok': True, 'result': True, 'description': 'Webhook is already set'}
+2025-11-17 05:58:46,262 [INFO] wsgi - ======================================================================
+2025-11-17 05:58:46,262 [INFO] wsgi - ✅ WSGI: Flask app EXPORTADA a Gunicorn
+2025-11-17 05:58:46,261 [INFO] wsgi - 🔥 WSGI: PASO 5 - main() retornó
+2025-11-17 05:58:46,262 [INFO] wsgi - 🔥 WSGI: PASO 6 - App type: <class 'flask.app.Flask'>
+2025-11-17 05:58:46,262 [INFO] wsgi - 🔥 WSGI: PASO 7 - App name: main
+2025-11-17 05:58:46,262 [INFO] wsgi - ✅ WSGI: Gunicorn debería mostrar 'Listening at' ahora...
+2025-11-17 05:58:46,262 [INFO] wsgi - ======================================================================
+2025-11-17 05:58:46,093 [ERROR] main - ❌ ERROR CONFIGURANDO WEBHOOK
+2025-11-17 05:58:46,093 [ERROR] main -    Status: 429
+2025-11-17 05:58:46,093 [ERROR] main -    Response: {"ok":false,"error_code":429,"description":"Too Many Requests: retry after 1","parameters":{"retry_after":1}}
+2025-11-17 05:58:46,094 [INFO] wsgi - 🔥 WSGI: PASO 5 - main() retornó
+2025-11-17 05:58:46,094 [INFO] wsgi - 🔥 WSGI: PASO 6 - App type: <class 'flask.app.Flask'>
+2025-11-17 05:58:46,094 [INFO] wsgi - 🔥 WSGI: PASO 7 - App name: main
+2025-11-17 05:58:46,094 [INFO] wsgi - ======================================================================
+2025-11-17 05:58:46,094 [INFO] wsgi - ✅ WSGI: Flask app EXPORTADA a Gunicorn
+2025-11-17 05:58:46,094 [INFO] wsgi - ✅ WSGI: Gunicorn debería mostrar 'Listening at' ahora...
+2025-11-17 05:58:46,094 [INFO] wsgi - ======================================================================
+2025-11-17 05:58:46,258 [INFO] main - 🔍 Verificación de webhook:
+2025-11-17 05:58:46,258 [INFO] main -    ✅ URL configurada: https://omnibotgenesis-production.up.railway.app/webhook/telegram
+2025-11-17 05:58:46,258 [INFO] main -    📊 Pending updates: 2
+2025-11-17 05:58:46,258 [INFO] main -    🕐 Last error date: 1763359119
+2025-11-17 05:58:46,258 [INFO] main -    ⚠️ Last error: Wrong response from the webhook: 502 Bad Gateway
+2025-11-17 05:58:46,258 [INFO] main - ✅ BOT TELEGRAM CONFIGURADO PARA RAILWAY (WEBHOOK)
