@@ -8,7 +8,40 @@ Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
 Desarrollado por Harold Nunes - Noviembre 2025 - V6.0.0
 """
 
+# 🧹 LIMPIEZA DE CACHE RAILWAY - EJECUTAR ANTES DE CUALQUIER IMPORT
 import os
+import sys
+import shutil
+
+print("=" * 70)
+print("🧹 RAILWAY FIX: Limpiando cache Python ANTES de imports...")
+print("=" * 70)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+deleted_count = 0
+
+for root, dirs, files in os.walk(current_dir):
+    if '__pycache__' in dirs:
+        pycache_path = os.path.join(root, '__pycache__')
+        try:
+            shutil.rmtree(pycache_path)
+            deleted_count += 1
+            print(f"   🗑️ Cache borrado: {pycache_path}")
+        except Exception as e:
+            print(f"   ⚠️ No se pudo borrar {pycache_path}: {e}")
+    
+    for file in files:
+        if file.endswith('.pyc'):
+            pyc_path = os.path.join(root, file)
+            try:
+                os.remove(pyc_path)
+                deleted_count += 1
+            except Exception as e:
+                pass
+
+print(f"✅ Cache limpiado: {deleted_count} archivos/carpetas eliminados")
+print("=" * 70)
+
 import logging
 import time
 import threading
