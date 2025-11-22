@@ -137,7 +137,8 @@ class AutoTradingBot:
         # Configuración de trading - PROFESIONAL INSTITUCIONAL
         # Optimizado para generar track record de calidad como si tuvieras clientes Enterprise
         # Lee PAPER_MODE desde variable de entorno (Railway) o default a False
-        paper_mode_env = os.getenv('PAPER_MODE', 'false').lower() == 'true'
+        import os as os_module
+        paper_mode_env = os_module.getenv('PAPER_MODE', 'false').lower() == 'true'
         
         self.config = {
             'active': False,
