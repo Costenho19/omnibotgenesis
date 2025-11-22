@@ -27,6 +27,7 @@ Sistema de trading automático con IA, Risk Guardian y Coherence Engine
 import logging
 import time
 import asyncio
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List, Any
 import threading
@@ -135,9 +136,12 @@ class AutoTradingBot:
         
         # Configuración de trading - PROFESIONAL INSTITUCIONAL
         # Optimizado para generar track record de calidad como si tuvieras clientes Enterprise
+        # Lee PAPER_MODE desde variable de entorno (Railway) o default a False
+        paper_mode_env = os.getenv('PAPER_MODE', 'false').lower() == 'true'
+        
         self.config = {
             'active': False,
-            'paper_mode': False,  # TRUE = Simulado con $1M | FALSE = Real en Kraken ✅ TRADING REAL ACTIVADO
+            'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
             'trading_pair': 'BTC/USD',
             'check_interval_seconds': 30,  # Analizar cada 30 segundos (reactivo institucional)
             'min_trade_usd': 5.0,  # Mínimo $5 por trade (ajustado para balance actual ~$7.72)
