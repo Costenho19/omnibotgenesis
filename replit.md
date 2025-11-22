@@ -3,6 +3,11 @@
 ### Overview
 OMNIX V5.4 ULTRA is an enterprise-grade automated cryptocurrency trading system engineered for 24/7 operation on Kraken Exchange. Currently running in PAPER TRADING mode with $1,000,000 virtual capital, using institutional-grade position sizing ($1,000 minimum per trade, 25% maximum position size) to generate credible track records for investor presentations. It integrates AI, post-quantum cryptography, and real-time market analysis to deliver sophisticated automated trading, incorporating advanced strategy modules. The project's ambition is to secure seed funding ($400K at a $2.5M valuation), supported by a professional backtesting infrastructure for investor presentations.
 
+**Deployment Status (November 22, 2025):**
+- **Railway (Production)**: ✅ LIVE - Bot Telegram operativo, 7 estrategias base activas, Paper Trading $1M
+- **ARES Protocols**: ⚠️ Disponibles solo en Replit local (no desplegados en Railway por problemas de importación)
+- **Missing**: OpenAI API key en Railway (GPT-4 no disponible, Gemini 2.0 compensando)
+
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
 
