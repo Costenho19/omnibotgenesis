@@ -149,11 +149,11 @@ class AutoTradingBot:
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
             'trading_pair': 'BTC/USD',
             'check_interval_seconds': 30,  # Analizar cada 30 segundos (reactivo institucional)
-            'min_trade_usd': 5.0,  # Mínimo $5 por trade (ajustado para balance actual ~$7.72)
-            'max_position_pct': 0.80,  # Máximo 80% del balance por trade (agresivo para generar trades)
+            'min_trade_usd': 1000.0,  # Mínimo $1,000 por trade (GESTIÓN INSTITUCIONAL para portafolio $1M)
+            'max_position_pct': 0.25,  # Máximo 25% del balance por trade (conservador profesional)
             'stop_loss_pct': 0.025,  # Stop-loss 2.5% (protección tight profesional)
-            'max_daily_loss_pct': 0.10,  # Parada si pérdida diaria > 10% (ajustado para balance bajo)
-            'min_confidence': 0.15,  # Confianza mínima 15% (MÁS AGRESIVO para generar más trades)
+            'max_daily_loss_pct': 0.10,  # Parada si pérdida diaria > 10% (risk management estricto)
+            'min_confidence': 0.15,  # Confianza mínima 15% (balance entre selectividad y actividad)
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
         }
