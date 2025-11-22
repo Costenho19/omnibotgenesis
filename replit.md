@@ -88,6 +88,49 @@ The Neptuno Database System uses IndexedDB for offline-first storage and conflic
 
 Stripe integration manages subscription tiers, checkout sessions, and payment webhooks. Configuration uses centralized dataclass-based management for environment variables.
 
+### Professional Testing & Validation System (November 2025)
+
+**Purpose**: Institutional-grade backtesting infrastructure designed to demonstrate trading strategy performance to investors for seed funding ($400K at $2.5M valuation).
+
+**Chart Generator** (`omnix_testing/backtesting/chart_generator.py`, 520 lines):
+- Generates 5 institutional-quality Plotly visualizations in PNG format (240-450KB each)
+- Equity Curve: Capital evolution with trade entry/exit markers
+- Drawdown Chart: Maximum drawdown analysis with recovery zones
+- Trade Distribution: Win/loss visualization with statistical breakdown
+- Monthly Returns Heatmap: Calendar-style performance matrix
+- Rolling Sharpe Ratio: Risk-adjusted returns over time
+- Uses absolute paths (repo_root discovery) for consistent artifact generation
+- Output: `omnix_testing/reports/charts/`
+
+**PDF Report Generator** (`omnix_testing/backtesting/pdf_report_generator.py`, 700 lines):
+- Creates professional 25-35 page institutional reports with OMNIX branding
+- **Section 1**: Cover page with Executive Summary (6 key metrics highlighted)
+- **Section 2**: Methodology (9 base strategies + ARES V1/V2 + Coherence Engine 6-tier system)
+- **Section 3**: Results (embedded Plotly charts + performance tables)
+- **Section 4**: Risk Analysis (drawdown recovery, worst trades, benchmark comparison)
+- **Section 5**: Trade Log (paginated table with all operations, timestamps, PnL)
+- **Section 6**: Technical Appendix (mathematical formulas, legal disclaimers, transparency section)
+- Uses ReportLab for PDF generation, PyPDF2 for page count verification
+- Automatic warning if report <20 pages (target: 25-35 pages for investors)
+- Premium OMNIX color scheme: cyan primary (#00D4FF), success green (#00FF88), danger red (#FF3366)
+- Output: `omnix_testing/reports/pdf/`
+
+**Kraken Data Downloader** (`omnix_testing/backtesting/kraken_data_downloader.py`, 363 lines):
+- Downloads historical OHLCV data from Kraken API with local caching
+- Supports multiple pairs: BTC/USD, ETH/USD, SOL/USD, ADA/USD, DOT/USD
+- Automatic pair mapping (BTC/USD → XXBTZUSD, ETH/USD → XETHZUSD)
+- Multiple timeframes: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w
+- Rate limiting compliance (1 req/sec for Kraken public API)
+- Data validation and cleaning with progress tracking
+- Cache directory: `omnix_testing/data_cache/`
+- **Known Issue**: Currently returns 0 candles (requires debugging for production use)
+
+**Architecture**:
+- All paths use absolute resolution via `Path(__file__).resolve().parents[2]` to ensure consistent artifact generation regardless of execution context
+- .gitignore configured to exclude generated artifacts (charts, PDFs, cache)
+- Testing system approved by architect as "investor-ready"
+- Designed for audit compliance and transparency during investor due diligence
+
 ## External Dependencies
 
 ### APIs & Services
@@ -112,3 +155,6 @@ Stripe integration manages subscription tiers, checkout sessions, and payment we
 -   `requests`, `websockets`: HTTP and WebSocket clients.
 -   `python-dotenv`: Environment variable management.
 -   `redis`: Redis Python client.
+-   `pandas`, `plotly`, `kaleido`: Data analysis and visualization for backtesting.
+-   `reportlab`, `PyPDF2`: Professional PDF report generation.
+-   `matplotlib`, `seaborn`: Additional charting capabilities.
