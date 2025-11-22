@@ -679,129 +679,78 @@ class AutoTradingBot:
             # ========== ESTRATEGIAS ARES QUANTUM (peso 35%) ==========
             
             # 8. ARES V1 Swing Trading (peso: 20 puntos - INSTITUCIONAL 74-82% win rate)
-            # NOTA: ARES es opcional - si no está disponible, el sistema continúa con las otras 9 estrategias
             try:
-                if self.ares_v1 is not None and hasattr(self.ares_v1, 'evaluate_qsf'):
-                    # Necesitamos datos OHLCV para ARES - obtener del trading service
-                    if hasattr(self, 'trading_service'):
-                        try:
-                            # Obtener histórico de velas para análisis ARES
-                            import time
-                            current_timestamp = int(time.time())
-                            ohlcv_data = []
-                            
-                            # Simular datos OHLCV para ARES (en producción usar datos reales)
-                            for i in range(100):
-                                ohlcv_data.append({
-                                    'timestamp': current_timestamp - (i * 3600),  # Cada hora
-                                    'open': current_price * (1 + (i * 0.001)),
-                                    'high': current_price * (1 + (i * 0.002)),
-                                    'low': current_price * (1 - (i * 0.001)),
-                                    'close': current_price,
-                                    'volume': 1000000 * (1 + i * 0.1)
-                                })
-                            
-                            # CAPA 1: Quantum Structure Filter (QSF)
-                            qsf_result = self.ares_v1.evaluate_qsf(ohlcv_data, current_price)
-                            
-                            if qsf_result['passed']:
-                                # CAPA 2: Quantum Institutional Signals (QIS)
-                                qis_result = self.ares_v1.evaluate_qis(ohlcv_data, current_price)
-                                
-                                max_score += 20
-                                ares_signal = qis_result['signal']  # 'LONG', 'SHORT', 'NONE'
-                                ares_confidence = qis_result['confidence']
-                                
-                                if ares_signal == 'LONG' and ares_confidence > 0.7:
-                                    score += 20
-                                    decision['reason'].append(f"🧬 ARES V1: STRONG LONG (conf: {ares_confidence:.1%})")
-                                elif ares_signal == 'LONG':
-                                    score += 10
-                                    decision['reason'].append(f"✅ ARES V1: LONG (conf: {ares_confidence:.1%})")
-                                elif ares_signal == 'SHORT' and ares_confidence > 0.7:
-                                    score -= 20
-                                    decision['reason'].append(f"🧬 ARES V1: STRONG SHORT (conf: {ares_confidence:.1%})")
-                                elif ares_signal == 'SHORT':
-                                    score -= 10
-                                    decision['reason'].append(f"⚠️ ARES V1: SHORT (conf: {ares_confidence:.1%})")
-                                
-                                decision['v52_analysis']['ares_v1_signal'] = ares_signal
-                                decision['v52_analysis']['ares_v1_confidence'] = ares_confidence
-                                decision['v52_analysis']['ares_v1_active_signals'] = qis_result.get('active_signals', [])
-                            else:
-                                decision['reason'].append(f"⚠️ ARES V1: QSF filtró operación (ruido de mercado)")
-                                decision['v52_analysis']['ares_v1_filtered'] = qsf_result.get('reason', 'QSF filter')
-                        except Exception as e:
-                            logger.debug(f"Error evaluando ARES V1: {e}")
-                            decision['v52_analysis']['ares_v1_error'] = str(e)
+                if self.ares_v1 is not None and hasattr(self.ares_v1, 'analyze'):
+                    max_score += 20
+                    ares_result = self.ares_v1.analyze(analysis)
+                    
+                    if ares_result.get('approved', False):
+                        ares_signal = ares_result.get('signal', 'NONE')
+                        ares_strength = ares_result.get('strength', 'normal')
+                        signal_score = ares_result.get('signal_data', {}).get('score', 0)
+                        
+                        if ares_signal == 'LONG' and ares_strength in ['ares', 'strong']:
+                            score += 20
+                            decision['reason'].append(f"🧬 ARES V1: STRONG LONG ({signal_score}/6 signals)")
+                        elif ares_signal == 'LONG':
+                            score += 10
+                            decision['reason'].append(f"✅ ARES V1: LONG ({signal_score}/6 signals)")
+                        elif ares_signal == 'SHORT' and ares_strength in ['ares', 'strong']:
+                            score -= 20
+                            decision['reason'].append(f"🧬 ARES V1: STRONG SHORT ({signal_score}/6 signals)")
+                        elif ares_signal == 'SHORT':
+                            score -= 10
+                            decision['reason'].append(f"⚠️ ARES V1: SHORT ({signal_score}/6 signals)")
+                        
+                        decision['v52_analysis']['ares_v1_signal'] = ares_signal
+                        decision['v52_analysis']['ares_v1_strength'] = ares_strength
+                        decision['v52_analysis']['ares_v1_score'] = signal_score
+                    else:
+                        ares_reason = ares_result.get('reason', 'Sin señal')
+                        decision['reason'].append(f"⚠️ ARES V1: {ares_reason}")
+                        decision['v52_analysis']['ares_v1_filtered'] = ares_reason
                 else:
-                    # ARES V1 no disponible - continuar sin penalización
                     logger.debug("ARES V1 no disponible - usando solo estrategias base")
             except Exception as e:
-                # Error no crítico - el sistema continúa sin ARES
-                logger.debug(f"ARES V1 error no crítico: {e}")
+                logger.debug(f"ARES V1 error: {e}")
+                decision['v52_analysis']['ares_v1_error'] = str(e)
             
             # 9. ARES V2 Scalping M1 (peso: 15 puntos - ULTRA-RÁPIDO 85% win rate)
-            # NOTA: ARES V2 es opcional - sistema continúa sin él si no está disponible
             try:
-                if self.ares_v2 is not None and hasattr(self.ares_v2, 'evaluate_qsf_scalping'):
-                    # ARES V2 usa datos M1 (1 minuto) - más granular
-                    if hasattr(self, 'trading_service'):
-                        try:
-                            import time
-                            current_timestamp = int(time.time())
-                            m1_data = []
-                            
-                            # Simular datos M1 para scalping
-                            for i in range(60):  # Últimos 60 minutos
-                                m1_data.append({
-                                    'timestamp': current_timestamp - (i * 60),  # Cada minuto
-                                    'open': current_price * (1 + (i * 0.0001)),
-                                    'high': current_price * (1 + (i * 0.0002)),
-                                    'low': current_price * (1 - (i * 0.0001)),
-                                    'close': current_price,
-                                    'volume': 50000 * (1 + i * 0.05)
-                                })
-                            
-                            # CAPA 1: QSF Scalping
-                            qsf_result = self.ares_v2.evaluate_qsf_scalping(m1_data, current_price)
-                            
-                            if qsf_result['passed']:
-                                # CAPA 2: QIS Scalping (5 señales ultra-rápidas)
-                                qis_result = self.ares_v2.evaluate_qis_scalping(m1_data, current_price)
-                                
-                                max_score += 15
-                                scalp_signal = qis_result['signal']  # 'LONG', 'SHORT', 'NONE'
-                                scalp_confidence = qis_result['confidence']
-                                
-                                if scalp_signal == 'LONG' and scalp_confidence > 0.8:
-                                    score += 15
-                                    decision['reason'].append(f"🧨 ARES V2 SCALP: STRONG LONG (conf: {scalp_confidence:.1%})")
-                                elif scalp_signal == 'LONG':
-                                    score += 8
-                                    decision['reason'].append(f"✅ ARES V2 SCALP: LONG (conf: {scalp_confidence:.1%})")
-                                elif scalp_signal == 'SHORT' and scalp_confidence > 0.8:
-                                    score -= 15
-                                    decision['reason'].append(f"🧨 ARES V2 SCALP: STRONG SHORT (conf: {scalp_confidence:.1%})")
-                                elif scalp_signal == 'SHORT':
-                                    score -= 8
-                                    decision['reason'].append(f"⚠️ ARES V2 SCALP: SHORT (conf: {scalp_confidence:.1%})")
-                                
-                                decision['v52_analysis']['ares_v2_signal'] = scalp_signal
-                                decision['v52_analysis']['ares_v2_confidence'] = scalp_confidence
-                                decision['v52_analysis']['ares_v2_active_signals'] = qis_result.get('active_signals', [])
-                            else:
-                                decision['reason'].append(f"⚠️ ARES V2: QSF filtró scalping (volatilidad baja)")
-                                decision['v52_analysis']['ares_v2_filtered'] = qsf_result.get('reason', 'QSF filter')
-                        except Exception as e:
-                            logger.debug(f"Error evaluando ARES V2: {e}")
-                            decision['v52_analysis']['ares_v2_error'] = str(e)
+                if self.ares_v2 is not None and hasattr(self.ares_v2, 'analyze'):
+                    max_score += 15
+                    ares_v2_result = self.ares_v2.analyze(analysis)
+                    
+                    if ares_v2_result.get('approved', False):
+                        scalp_signal = ares_v2_result.get('signal', 'NONE')
+                        scalp_strength = ares_v2_result.get('strength', 'normal')
+                        scalp_score = ares_v2_result.get('score', 0)
+                        
+                        if scalp_signal == 'LONG' and scalp_strength in ['ultra', 'aggressive']:
+                            score += 15
+                            decision['reason'].append(f"🧨 ARES V2: STRONG LONG ({scalp_score}/5 signals)")
+                        elif scalp_signal == 'LONG':
+                            score += 8
+                            decision['reason'].append(f"✅ ARES V2: LONG ({scalp_score}/5 signals)")
+                        elif scalp_signal == 'SHORT' and scalp_strength in ['ultra', 'aggressive']:
+                            score -= 15
+                            decision['reason'].append(f"🧨 ARES V2: STRONG SHORT ({scalp_score}/5 signals)")
+                        elif scalp_signal == 'SHORT':
+                            score -= 8
+                            decision['reason'].append(f"⚠️ ARES V2: SHORT ({scalp_score}/5 signals)")
+                        
+                        decision['v52_analysis']['ares_v2_signal'] = scalp_signal
+                        decision['v52_analysis']['ares_v2_strength'] = scalp_strength
+                        decision['v52_analysis']['ares_v2_score'] = scalp_score
+                    else:
+                        scalp_reason = ares_v2_result.get('reason', 'Sin señal')
+                        decision['reason'].append(f"⚠️ ARES V2: {scalp_reason}")
+                        decision['v52_analysis']['ares_v2_filtered'] = scalp_reason
                 else:
-                    # ARES V2 no disponible - continuar sin penalización
                     logger.debug("ARES V2 no disponible - usando solo estrategias base")
             except Exception as e:
-                # Error no crítico - el sistema continúa sin ARES
-                logger.debug(f"ARES V2 error no crítico: {e}")
+                logger.debug(f"ARES V2 error: {e}")
+                decision['v52_analysis']['ares_v2_error'] = str(e)
             
             # ========== DECISIÓN FINAL ==========
             
