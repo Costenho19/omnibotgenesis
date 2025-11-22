@@ -69,3 +69,9 @@ tmp/
 attached_assets/__pycache__/
 *.pyc
 *.pyo
+
+# OMNIX Testing System - Generated Artifacts
+omnix_testing/reports/charts/*.png
+omnix_testing/reports/pdf/*.pdf
+omnix_testing/data_cache/
+*.pkl
