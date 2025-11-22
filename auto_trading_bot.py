@@ -138,7 +138,11 @@ class AutoTradingBot:
         # Optimizado para generar track record de calidad como si tuvieras clientes Enterprise
         # Lee PAPER_MODE desde variable de entorno (Railway) o default a False
         import os as os_module
-        paper_mode_env = os_module.getenv('PAPER_MODE', 'false').lower() == 'true'
+        paper_mode_raw = os_module.getenv('PAPER_MODE', 'false')
+        paper_mode_env = paper_mode_raw.lower() == 'true'
+        
+        # DEBUG: Logging para verificar PAPER_MODE en Railway
+        logger.info(f"🔍 PAPER_MODE env var: '{paper_mode_raw}' → paper_mode={paper_mode_env}")
         
         self.config = {
             'active': False,
