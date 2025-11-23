@@ -4,32 +4,8 @@ Funciones auxiliares de análisis de mercado
 """
 
 import logging
-import requests
 
 logger = logging.getLogger(__name__)
-
-
-def get_fear_greed_index():
-    """Obtener índice Fear & Greed actualizado"""
-    try:
-        # API real Fear & Greed Index
-        response = requests.get('https://api.alternative.me/fng/', timeout=5)
-        fear_greed_value = int(response.json()['data'][0]['value'])
-        
-        if fear_greed_value > 75:
-            sentiment = "Extreme Greed"
-        elif fear_greed_value > 55:
-            sentiment = "Greed"
-        elif fear_greed_value > 45:
-            sentiment = "Neutral"
-        elif fear_greed_value > 25:
-            sentiment = "Fear"
-        else:
-            sentiment = "Extreme Fear"
-        
-        return {'value': fear_greed_value, 'sentiment': sentiment}
-    except:
-        return {'value': 50, 'sentiment': 'Neutral'}
 
 
 def analyze_volume_patterns():
