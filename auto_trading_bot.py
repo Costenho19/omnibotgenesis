@@ -346,13 +346,14 @@ class AutoTradingBot:
                 # HAROLD FIX: Usar fetch_ticker (método ccxt) en lugar de get_ticker
                 ticker_data = self.trading_service.kraken.fetch_ticker(pair)
                 current_price = ticker_data.get('last', 0) if ticker_data else 0
-            except:
+            except Exception as e1:
                 # Fallback: intentar obtener precio directo
+                logger.warning(f"⚠️ fetch_ticker falló para {pair}: {str(e1)}")
                 try:
                     price_data = self.trading_service.get_current_price(pair)
                     current_price = price_data if price_data else 0
-                except:
-                    logger.error(f"❌ Error obteniendo precio de {pair}")
+                except Exception as e2:
+                    logger.error(f"❌ Error obteniendo precio de {pair}: {str(e2)}")
                     return None
             
             # Obtener histórico para análisis avanzados
