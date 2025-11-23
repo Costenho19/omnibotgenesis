@@ -7,13 +7,16 @@ from .ai_service import ConversationalAIService, get_ai_service
 from .ai_models import AIModelsManager
 from .ai_styles import VisualStylesManager
 from .ai_prompts import PromptsContextManager
+from .conversational_brain import ConversationalBrain, get_conversational_brain
 
 __all__ = [
     'ConversationalAIService',
     'get_ai_service',
     'AIModelsManager',
     'VisualStylesManager',
-    'PromptsContextManager'
+    'PromptsContextManager',
+    'ConversationalBrain',
+    'get_conversational_brain'
 ]
 
 __version__ = '5.1.0'
