@@ -285,10 +285,16 @@ from omnix_services.voice_service import (
     initialize_voice_engine
 )
 
+# Concurrency & Cache Services (migrated from monolithic main.py)
+from omnix_services.concurrency import (
+    IntelligentCacheSystem,
+    OptimizedConcurrencyManager
+)
+
 from omnix_services.telegram_service import EnterpriseTelegramBot
 from omnix_core import TradingSystem
 
-logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + TradingSystem")
+logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + concurrency + TradingSystem")
 
 # Global voice engine instance (managed by voice_controller)
 global_voice_engine = None
@@ -1841,237 +1847,12 @@ class AdvancedPerformanceTracker:
 # Instancia global del sistema de métricas
 performance_tracker = AdvancedPerformanceTracker()
 
-# 🚀 SISTEMA DE CACHÉ INTELIGENTE - MEJORA GRATUITA #2
-class IntelligentCacheSystem:
-    """Cache inteligente para optimizar rendimiento - IMPLEMENTADO AHORA"""
-    
-    def __init__(self, max_size: int = 1000, ttl_seconds: int = 300):
-        from functools import lru_cache
-        import time
-        
-        self.max_size = max_size
-        self.ttl_seconds = ttl_seconds
-        self.cache = {}
-        self.timestamps = {}
-        self.hit_count = 0
-        self.miss_count = 0
-        
-        logger.info(f"💾 CACHE INTELIGENTE ACTIVADO - Max: {max_size} items, TTL: {ttl_seconds}s")
-    
-    def get(self, key: str):
-        """Obtener valor del cache con verificación TTL"""
-        current_time = time.time()
-        
-        # Verificar si existe y no ha expirado
-        if key in self.cache and key in self.timestamps:
-            if current_time - self.timestamps[key] < self.ttl_seconds:
-                self.hit_count += 1
-                logger.debug(f"💾 CACHE HIT: {key}")
-                return self.cache[key]
-            else:
-                # Expirado - eliminar
-                self._remove_key(key)
-        
-        self.miss_count += 1
-        logger.debug(f"💾 CACHE MISS: {key}")
-        return None
-    
-    def set(self, key: str, value, force: bool = False):
-        """Guardar valor en cache con gestión de memoria"""
-        current_time = time.time()
-        
-        # Limpiar cache si está lleno
-        if len(self.cache) >= self.max_size:
-            self._cleanup_expired()
-            
-            # Si sigue lleno, eliminar más antiguos
-            if len(self.cache) >= self.max_size:
-                self._remove_oldest(int(self.max_size * 0.2))  # Eliminar 20%
-        
-        self.cache[key] = value
-        self.timestamps[key] = current_time
-        
-        logger.debug(f"💾 CACHE SET: {key} (Size: {len(self.cache)}/{self.max_size})")
-    
-    def _remove_key(self, key: str):
-        """Eliminar clave específica"""
-        if key in self.cache:
-            del self.cache[key]
-        if key in self.timestamps:
-            del self.timestamps[key]
-    
-    def _cleanup_expired(self):
-        """Limpiar entradas expiradas"""
-        current_time = time.time()
-        expired_keys = []
-        
-        for key, timestamp in self.timestamps.items():
-            if current_time - timestamp >= self.ttl_seconds:
-                expired_keys.append(key)
-        
-        for key in expired_keys:
-            self._remove_key(key)
-        
-        if expired_keys:
-            logger.info(f"💾 CACHE CLEANUP: {len(expired_keys)} items expirados eliminados")
-    
-    def _remove_oldest(self, count: int):
-        """Eliminar las entradas más antiguas"""
-        if not self.timestamps:
-            return
-        
-        # Ordenar por timestamp y eliminar los más antiguos
-        sorted_keys = sorted(self.timestamps.keys(), key=lambda k: self.timestamps[k])
-        keys_to_remove = sorted_keys[:count]
-        
-        for key in keys_to_remove:
-            self._remove_key(key)
-        
-        logger.info(f"💾 CACHE EVICTION: {len(keys_to_remove)} items más antiguos eliminados")
-    
-    def get_stats(self) -> dict:
-        """Estadísticas del cache"""
-        total_requests = self.hit_count + self.miss_count
-        hit_rate = (self.hit_count / total_requests * 100) if total_requests > 0 else 0
-        
-        return {
-            'size': len(self.cache),
-            'max_size': self.max_size,
-            'hit_count': self.hit_count,
-            'miss_count': self.miss_count,
-            'hit_rate': f"{hit_rate:.1f}%",
-            'utilization': f"{len(self.cache)/self.max_size*100:.1f}%"
-        }
-    
-    def invalidate_pattern(self, pattern: str):
-        """Invalidar cache por patrón"""
-        keys_to_remove = []
-        for key in self.cache.keys():
-            if pattern in key:
-                keys_to_remove.append(key)
-        
-        for key in keys_to_remove:
-            self._remove_key(key)
-        
-        logger.info(f"💾 CACHE INVALIDATE: {len(keys_to_remove)} items con patrón '{pattern}'")
-
 # Instancia global del cache
 intelligent_cache = IntelligentCacheSystem(max_size=1000, ttl_seconds=300)
 
-# 🚀 SISTEMA DE CONCURRENCIA OPTIMIZADA - MEJORA GRATUITA #3
-class OptimizedConcurrencyManager:
-    """Gestión inteligente de threads y concurrencia - IMPLEMENTADO AHORA"""
-    
-    def __init__(self, max_workers: int = None):
-        import concurrent.futures
-        import threading
-        import multiprocessing
-        
-        # Auto-detectar cores disponibles
-        self.available_cores = multiprocessing.cpu_count()
-        self.optimal_workers = min(max_workers or (self.available_cores * 2), 16)
-        
-        # Thread pool para tareas críticas (Harold priority)
-        self.critical_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=2, thread_name_prefix="OMNIX-Critical"
-        )
-        
-        # Thread pool para tareas normales
-        self.normal_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.optimal_workers, thread_name_prefix="OMNIX-Normal"
-        )
-        
-        # Thread pool para tareas de background
-        self.background_executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=4, thread_name_prefix="OMNIX-Background"
-        )
-        
-        # Contadores de rendimiento
-        self.critical_tasks = 0
-        self.normal_tasks = 0
-        self.background_tasks = 0
-        self.completed_tasks = 0
-        
-        logger.info(f"🧵 CONCURRENCIA OPTIMIZADA: {self.optimal_workers} workers, {self.available_cores} cores detectados")
-    
-    def execute_critical(self, func, *args, **kwargs):
-        """Ejecutar tarea crítica (Harold, trading real)"""
-        self.critical_tasks += 1
-        future = self.critical_executor.submit(self._track_execution, func, *args, **kwargs)
-        logger.debug(f"🔥 CRITICAL TASK: {func.__name__} - Total críticas: {self.critical_tasks}")
-        return future
-    
-    def execute_normal(self, func, *args, **kwargs):
-        """Ejecutar tarea normal (usuarios regulares)"""
-        self.normal_tasks += 1
-        future = self.normal_executor.submit(self._track_execution, func, *args, **kwargs)
-        logger.debug(f"⚡ NORMAL TASK: {func.__name__} - Total normales: {self.normal_tasks}")
-        return future
-    
-    def execute_background(self, func, *args, **kwargs):
-        """Ejecutar tarea background (limpieza, métricas)"""
-        self.background_tasks += 1
-        future = self.background_executor.submit(self._track_execution, func, *args, **kwargs)
-        logger.debug(f"🔄 BACKGROUND TASK: {func.__name__} - Total background: {self.background_tasks}")
-        return future
-    
-    def _track_execution(self, func, *args, **kwargs):
-        """Wrapper para tracking de ejecución"""
-        start_time = time.time()
-        thread_name = threading.current_thread().name
-        
-        try:
-            result = func(*args, **kwargs)
-            execution_time = time.time() - start_time
-            self.completed_tasks += 1
-            
-            # Track en performance tracker
-            performance_tracker.track_function_performance(
-                f"concurrent_{func.__name__}",
-                execution_time,
-                True,
-                {'thread': thread_name, 'args_count': len(args)}
-            )
-            
-            return result
-            
-        except Exception as e:
-            execution_time = time.time() - start_time
-            logger.error(f"❌ Error en {func.__name__} ({thread_name}): {e}")
-            
-            # Track error
-            performance_tracker.track_function_performance(
-                f"concurrent_{func.__name__}",
-                execution_time,
-                False,
-                {'thread': thread_name, 'error': str(e)}
-            )
-            
-            raise
-    
-    def get_status(self) -> dict:
-        """Estado actual de concurrencia"""
-        return {
-            'available_cores': self.available_cores,
-            'optimal_workers': self.optimal_workers,
-            'critical_tasks': self.critical_tasks,
-            'normal_tasks': self.normal_tasks,
-            'background_tasks': self.background_tasks,
-            'completed_tasks': self.completed_tasks,
-            'total_submitted': self.critical_tasks + self.normal_tasks + self.background_tasks,
-            'success_rate': f"{(self.completed_tasks / max(1, self.critical_tasks + self.normal_tasks + self.background_tasks) * 100):.1f}%"
-        }
-    
-    def shutdown_graceful(self):
-        """Cierre limpio de todos los executors"""
-        logger.info("🛑 Cerrando threads concurrencia...")
-        self.critical_executor.shutdown(wait=True)
-        self.normal_executor.shutdown(wait=True) 
-        self.background_executor.shutdown(wait=True)
-        logger.info("✅ Concurrencia cerrada exitosamente")
-
 # Instancia global del gestor de concurrencia
 concurrency_manager = OptimizedConcurrencyManager()
+
 
 def advanced_trading_enhancement_system():
     """SISTEMA DE MEJORAS AVANZADAS - Implementación de sugerencias Harold"""
