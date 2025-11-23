@@ -304,10 +304,16 @@ from omnix_services.market_data.intelligence import (
     MultiExchangeArbitrage
 )
 
+# Optimization Services (migrated from monolithic main.py)
+from omnix_services.optimization import MathematicalOptimizer
+
+# Database Services (migrated from monolithic main.py)
+from omnix_services.database_service import DatabaseManager
+
 from omnix_services.telegram_service import EnterpriseTelegramBot
 from omnix_core import TradingSystem
 
-logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + concurrency + analytics + intelligence + TradingSystem")
+logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + concurrency + analytics + intelligence + optimization + database + TradingSystem")
 
 # Global voice engine instance (managed by voice_controller)
 global_voice_engine = None
@@ -331,76 +337,6 @@ def is_admin(user_id):
 
 # =============================================================================
 # =============================================================================
-# 🧠 SISTEMA IA SUPERINTELIGENTE OMNIX V5.1 - BLOQUE RAILWAY
-# COPY-PASTE DIRECTO PARA HAROLD - GPT-4o + GEMINI 2.0 INTEGRADOS
-# =============================================================================
-class MathematicalOptimizer:
-    """Optimizador matemático avanzado para portfolios"""
-    
-    def portfolio_optimization(self, assets_data, risk_tolerance):
-        """Optimización matemática de portfolio usando Sharpe ratio"""
-        try:
-            num_assets = len(assets_data)
-            if num_assets == 0:
-                return {'optimal_weights': {}, 'expected_return': 0, 'risk': 0}
-            
-            # Algoritmo de optimización matemática
-            total_expected_return = 0
-            total_risk = 0
-            weights = {}
-            
-            # Distribución de pesos basada en risk/return
-            for asset, data in assets_data.items():
-                expected_return = data.get('expected_return', 0)
-                volatility = data.get('volatility', 0.02)
-                
-                # Score de atractivo (return ajustado por riesgo)
-                if volatility > 0:
-                    sharpe_like = expected_return / volatility
-                else:
-                    sharpe_like = 0
-                
-                total_expected_return += expected_return
-                total_risk += volatility
-            
-            # Normalizar pesos
-            for asset, data in assets_data.items():
-                expected_return = data.get('expected_return', 0)
-                volatility = data.get('volatility', 0.02)
-                
-                if volatility > 0:
-                    weight = (expected_return / volatility) / num_assets
-                else:
-                    weight = 1.0 / num_assets
-                
-                # Ajustar por tolerancia al riesgo
-                if risk_tolerance < 0.1:  # Conservador
-                    weight *= 0.8 if volatility > 0.03 else 1.2
-                elif risk_tolerance > 0.2:  # Agresivo
-                    weight *= 1.3 if expected_return > 0 else 0.7
-                
-                weights[asset] = max(0.1, min(0.9, weight))
-            
-            # Normalizar a 100%
-            total_weight = sum(weights.values())
-            if total_weight > 0:
-                weights = {k: v/total_weight for k, v in weights.items()}
-            
-            # Calcular métricas del portfolio
-            portfolio_return = sum([weights[asset] * data['expected_return'] for asset, data in assets_data.items()])
-            portfolio_risk = sum([weights[asset] * data['volatility'] for asset, data in assets_data.items()])
-            
-            sharpe_ratio = portfolio_return / portfolio_risk if portfolio_risk > 0 else 0
-            
-            return {
-                'optimal_weights': weights,
-                'expected_return': portfolio_return,
-                'risk': portfolio_risk,
-                'sharpe_ratio': sharpe_ratio,
-                'optimization_confidence': 0.85
-            }
-        except:
-            return {'optimal_weights': {}, 'expected_return': 0, 'risk': 0, 'sharpe_ratio': 0}
 
 # ACTIVAR MÓDULOS AVANZADOS
 ADVANCED_MODULES_AVAILABLE = True
@@ -568,78 +504,6 @@ logger.info(f"SISTEMA IA MÚLTIPLE: Primaria={ai_status['primary']}, Respaldos={
 # Módulos avanzados simplificados - SOLO LO QUE FUNCIONA
 ADVANCED_MODULES_AVAILABLE = True  # Módulos internos siempre disponibles
 logger.info("✅ MÓDULOS BÁSICOS ACTIVADOS: Análisis técnico, Risk management, Portfolio optimization")
-
-# 🗄️ DATABASE MANAGER ENTERPRISE ADAPTER
-class DatabaseManager:
-    """
-    Adapter class - mantiene compatibilidad con código legacy
-    pero usa DatabaseServiceEnterprise internamente
-    """
-    def __init__(self):
-        logger.info("=" * 70)
-        logger.info("🔧 INICIALIZANDO DatabaseManager")
-        logger.info(f"📦 DATABASE_ENTERPRISE_AVAILABLE: {DATABASE_ENTERPRISE_AVAILABLE}")
-        
-        if DATABASE_ENTERPRISE_AVAILABLE:
-            logger.info("🚀 Inicializando DatabaseManager con ENTERPRISE backend")
-            self.enterprise_service = DatabaseServiceEnterprise()
-            self.connected = self.enterprise_service.connected
-            self.using_enterprise = True
-            
-            # Health check detallado
-            health = self.enterprise_service.health_check()
-            logger.info(f"🏥 Health Check:")
-            logger.info(f"   - psycopg2_available: {health.get('psycopg2_available', False)}")
-            logger.info(f"   - database_url_configured: {health.get('database_url_configured', False)}")
-            logger.info(f"   - database_connected: {health.get('database_connected', False)}")
-            
-            if self.connected:
-                logger.info("✅ DatabaseManager CONECTADO exitosamente")
-            else:
-                logger.error("❌ DatabaseManager NO CONECTADO - Revisar logs arriba")
-        else:
-            logger.warning("⚠️ Fallback a sistema legacy - Database Enterprise no disponible")
-            self.connected = True
-            self.using_enterprise = False
-        
-        logger.info(f"📊 Estado final - Enterprise: {self.using_enterprise}, Connected: {self.connected}")
-        logger.info("=" * 70)
-
-    
-    def save_balance_snapshot(self, user_id, balance_data):
-        if self.using_enterprise:
-            return self.enterprise_service.save_balance_snapshot(user_id, balance_data)
-        return False
-    
-    def get_balance_history(self, user_id, days=30):
-        if self.using_enterprise:
-            return self.enterprise_service.get_balance_history(user_id, days)
-        return []
-    
-    def calculate_performance_metrics(self, history):
-        if self.using_enterprise:
-            return self.enterprise_service.calculate_performance_metrics(history)
-        return None
-    
-    def health_check(self):
-        if self.using_enterprise:
-            return self.enterprise_service.health_check()
-        return {'connected': self.connected, 'enterprise': False}
-    
-    def get_connection(self):
-        """
-        Retorna conexión PostgreSQL directa para módulos que la necesitan
-        como AI Risk Guardian
-        """
-        import psycopg2
-        import os
-        
-        database_url = os.getenv('DATABASE_URL')
-        if not database_url:
-            raise Exception("DATABASE_URL no configurado")
-        
-        return psycopg2.connect(database_url)
-
 
 # 🚀 OMNIX V5.1 ENTERPRISE - AI Service Adapter Premium
 # Reemplaza 1,131 líneas de código viejo con sistema modular enterprise
