@@ -277,10 +277,21 @@ from omnix_services.trading_service.analyzers import (
     MicrostructureAnalyzer,
     AdvancedRiskManagement
 )
+
+# Voice Controller Service (migrated from monolithic main.py)
+from omnix_services.voice_service import (
+    VoiceEngine,
+    send_telegram_response_with_voice,
+    initialize_voice_engine
+)
+
 from omnix_services.telegram_service import EnterpriseTelegramBot
 from omnix_core import TradingSystem
 
-logger.info("✅ Servicios modulares cargados: market_data + analyzers + TradingSystem")
+logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + TradingSystem")
+
+# Global voice engine instance (managed by voice_controller)
+global_voice_engine = None
 
 # =============================================================================
 # 🔒 CONFIGURACIÓN DE SEGURIDAD CENTRALIZADA - MEJORAS CRÍTICAS
@@ -1319,86 +1330,6 @@ class DatabaseManager:
             raise Exception("DATABASE_URL no configurado")
         
         return psycopg2.connect(database_url)
-
-# 🎤 VOICE ENGINE ENTERPRISE ADAPTER
-class VoiceEngine:
-    """
-    Adapter class - mantiene compatibilidad con código legacy
-    pero usa VoiceServiceEnterprise internamente
-    """
-    def __init__(self):
-        if VOICE_ENTERPRISE_AVAILABLE:
-            logger.info("🚀 Inicializando VoiceEngine con ENTERPRISE backend")
-            self.enterprise_service = VoiceServiceEnterprise()
-            health = self.enterprise_service.health_check()
-            self.active = health.get('tts_available', False)
-            self.using_enterprise = True
-        else:
-            logger.warning("⚠️ Fallback a sistema legacy - Voice Enterprise no disponible")
-            # HAROLD FIX: FORZAR ACTIVACIÓN porque gtts SIEMPRE está en requirements.txt
-            self.active = True  # ✅ Google TTS siempre disponible
-            self.temp_dir = tempfile.gettempdir()
-            self.voice_cache = {}
-            self.speech_to_text_enabled = SPEECH_TO_TEXT_ENABLED
-            self.openai_client = None
-            if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY') and SPEECH_TO_TEXT_ENABLED:
-                try:
-                    self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-                except:
-                    pass
-            self.using_enterprise = False
-        logger.info(f"🎤 VoiceEngine inicializado - Enterprise: {self.using_enterprise}, TTS: {self.active}")
-    
-    def text_to_speech(self, text, language='es'):
-        if self.using_enterprise:
-            return self.enterprise_service.text_to_speech(text, language)
-        
-        # Legacy mode: usar Google TTS directamente
-        try:
-            from gtts import gTTS
-            import tempfile
-            import os
-            
-            # Crear archivo temporal
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-            temp_path = temp_file.name
-            temp_file.close()
-            
-            # Generar audio con Google TTS
-            tts = gTTS(text=text, lang=language, slow=False)
-            tts.save(temp_path)
-            
-            logger.info(f"🎤 Audio generado con Google TTS: {temp_path}")
-            return temp_path
-            
-        except Exception as e:
-            logger.error(f"🎤 Error generando TTS legacy: {e}")
-            return None
-    
-    def speech_to_text(self, audio_file_path, language='es'):
-        if self.using_enterprise:
-            return self.enterprise_service.speech_to_text(audio_file_path, language)
-        return None
-    
-    def create_voice_signature(self, audio_file_path, user_id):
-        if self.using_enterprise:
-            return self.enterprise_service.create_voice_signature(audio_file_path, user_id)
-        return {'success': False, 'error': 'Enterprise not available'}
-    
-    def verify_voice_signature(self, audio_file_path, user_id, threshold=0.85):
-        if self.using_enterprise:
-            return self.enterprise_service.verify_voice_signature(audio_file_path, user_id, threshold)
-        return {'success': False, 'verified': False}
-    
-    def download_telegram_voice(self, file_id, bot_token):
-        if self.using_enterprise:
-            return self.enterprise_service.download_telegram_voice(file_id, bot_token)
-        return None
-    
-    def health_check(self):
-        if self.using_enterprise:
-            return self.enterprise_service.health_check()
-        return {'tts_available': self.active, 'stt_available': self.openai_client is not None, 'enterprise': False}
 
 
 # 🚀 OMNIX V5.1 ENTERPRISE - AI Service Adapter Premium
@@ -2660,96 +2591,6 @@ class ScalableResourceManager:
 # Instancias globales de optimización
 performance_optimizer = PerformanceOptimizer()
 resource_manager = ScalableResourceManager()
-
-def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario", user_id=None, is_admin_user=False, trading_system=None, reference_message=None):
-    """
-    Función compartida para enviar respuestas con voz automática
-    Usada tanto por polling (Replit) como por webhook (Railway)
-    """
-    try:
-        logger.info(f"🎤 DEBUG: Generando voz para chat_id='{chat_id}'")
-        
-        # 🔒 USAR USER_ID PARA DETECCIÓN ROBUSTA DE ADMIN EN VOZ
-        admin_id = user_id if user_id is not None else chat_id
-        is_admin_voice = is_admin(admin_id)
-        logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ - Admin: {is_admin_voice} (User: {admin_id})")
-        
-        # Aplicar filtros de seguridad si no es admin
-        if is_admin_voice:
-            voice_text = response_text  # Sin restricciones para admin
-        else:
-            # Filtrar contenido sensible para usuarios no-admin
-            import re
-            voice_text = response_text
-            voice_text = re.sub(r'\$[\d,]+\.?\d*', '$X.XX', voice_text)
-            voice_text = re.sub(r'[\d,]+\.?\d*\s*(BTC|ETH)', 'X.XX crypto', voice_text)
-        
-        # Limpiar texto para voz
-        import re
-        voice_text = re.sub(r'\*\*.*?\*\*', '', voice_text)  # Remover bold
-        voice_text = re.sub(r'\*.*?\*', '', voice_text)      # Remover italic
-        voice_text = re.sub(r'[🚀💰🤖📊📋💬📈⏰💲📰📅⚡🆓🎥🖥️📱🎭🏆🧠🎯🌍❓✅❌⚠️🔍💳📧🔄]', '', voice_text)  # Remover emojis
-        voice_text = voice_text.replace('\n', '. ')  # Convertir saltos en pausas
-        voice_text = voice_text.strip()
-        
-        logger.info(f"🎤 Texto completo para voz preparado: {len(voice_text)} caracteres - SIN RESTRICCIONES")
-        
-        # Verificar VoiceEngine - REINICIALIZAR SI ES NECESARIO (FIX RAILWAY)
-        global global_voice_engine
-        if not global_voice_engine or not hasattr(global_voice_engine, 'active'):
-            logger.warning("🎤 ⚠️ VoiceEngine perdido - REINICIALIZANDO...")
-            try:
-                from omnix_services.voice_service import VoiceServiceEnterprise
-                global_voice_engine = VoiceServiceEnterprise()
-                logger.info("🎤 ✅ VoiceEngine reinicializado exitosamente")
-            except Exception as reinit_error:
-                logger.error(f"🎤 ❌ Error reinicializando VoiceEngine: {reinit_error}")
-                global_voice_engine = None
-        
-        if global_voice_engine and global_voice_engine.active:
-            logger.info("🎤 VoiceEngine disponible - generando audio")
-            
-            # Generar audio con gTTS
-            audio_path = global_voice_engine.text_to_speech(voice_text, language='es')
-            
-            if audio_path and os.path.exists(audio_path):
-                logger.info("🎤 Audio generado exitosamente - enviando a Telegram")
-                
-                # Enviar voz a Telegram usando requests
-                bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
-                voice_url = f"https://api.telegram.org/bot{bot_token}/sendVoice"
-                
-                with open(audio_path, 'rb') as audio_file:
-                    files = {'voice': ('voice.ogg', audio_file, 'audio/ogg')}
-                    caption = "🎤 OMNIX Voz automática - Respuesta completa" if is_admin_voice else "🎤 OMNIX Voz automática"
-                    data = {
-                        'chat_id': chat_id,
-                        'caption': caption
-                    }
-                    
-                    voice_response = requests.post(voice_url, files=files, data=data)
-                    if voice_response.status_code == 200:
-                        user_type = "HAROLD" if is_admin_voice else "USUARIO"
-                        logger.info(f"🎤 ✅ VOZ AUTOMÁTICA ENVIADA A {user_type} EXITOSAMENTE")
-                    else:
-                        logger.error(f"🎤 ❌ Error enviando voz: {voice_response.text}")
-                
-                # Limpiar archivo temporal
-                try:
-                    os.remove(audio_path)
-                    logger.info(f"🎤 Archivo temporal limpiado: {audio_path}")
-                except Exception as cleanup_error:
-                    logger.warning(f"🎤 Error limpiando archivo: {cleanup_error}")
-            else:
-                logger.error(f"🎤 ❌ Error generando audio. Path: {audio_path}, Existe: {os.path.exists(audio_path) if audio_path else False}")
-        else:
-            logger.error(f"🎤 ❌ VoiceEngine no disponible. Engine: {global_voice_engine is not None}, Active: {global_voice_engine.active if global_voice_engine else 'N/A'}")
-            
-    except Exception as voice_error:
-        logger.error(f"🎤 ❌ Error crítico generando voz: {voice_error}")
-        import traceback
-        logger.error(f"🎤 ❌ TRACEBACK VOZ: {traceback.format_exc()}")
-        # Continuar sin enviar voz si hay error
 
 # ==================== TELEGRAM BOT INITIALIZATION ====================
 
