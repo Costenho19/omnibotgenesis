@@ -14831,7 +14831,7 @@ Balance inicial: ${stats.get('initial_balance', 0):.2f}
                         if 'error' in result:
                             response_text = f"❌ {result['error']}"
                         else:
-                            status = "🟢 ACTIVO" if result['is_running'] else "🔴 INACTIVO"
+                            status = "🟢 ACTIVO" if result.get('running', False) else "🔴 INACTIVO"
                             stats = result.get('stats', {})
                             
                             response_text = f"""🤖 **AUTO-TRADING BOT V5.2 STATUS**
