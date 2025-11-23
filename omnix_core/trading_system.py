@@ -1552,7 +1552,7 @@ def create_flask_app():
         Exporta todas las métricas de trading en formato Prometheus
         """
         try:
-            from metrics_engine import get_metrics_engine
+            from omnix_services.monitoring.metrics_engine import get_metrics_engine
             metrics_engine = get_metrics_engine()
             metrics_data = metrics_engine.get_metrics()
             

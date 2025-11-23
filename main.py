@@ -92,7 +92,7 @@ else:
 
 # Stripe payment integration
 try:
-    from stripe_integration import setup_stripe_routes
+    from omnix_api.payments.stripe_integration import setup_stripe_routes
     STRIPE_INTEGRATION_AVAILABLE = True
 except ImportError:
     STRIPE_INTEGRATION_AVAILABLE = False
@@ -203,7 +203,7 @@ except ImportError:
 # 🔐 SEGURIDAD POST-CUÁNTICA - INTEGRACIÓN COMPLETA NIST 2024
 # =============================================================================
 try:
-    from pqc_security import PostQuantumSecurity
+    from omnix_core.security.pqc_security import PostQuantumSecurity
     PQC_AVAILABLE = True
     print("✅ SEGURIDAD POST-CUÁNTICA DISPONIBLE (Kyber-768 + Dilithium-3)")
 except ImportError:
@@ -215,7 +215,7 @@ except ImportError:
 # 🚀 ADVANCED FEATURES ENTERPRISE - 100% REAL Y FUNCIONAL
 # =============================================================================
 try:
-    from advanced_features import AdvancedFeaturesEngine
+    from omnix_services.trading_service.advanced_features import AdvancedFeaturesEngine
     ADVANCED_FEATURES_AVAILABLE = True
     print("✅ ADVANCED FEATURES DISPONIBLES (Monte Carlo, Black Swan, Sentiment, Sharia, Order Book)")
 except ImportError as e:
@@ -232,11 +232,10 @@ try:
     print("🔥 RAILWAY DEBUG - INICIANDO BLOQUE IMPORT ARES")
     print(f"🔍 ARES DEBUG - Python Path: {sys.path[:3]}")
     print(f"🔍 ARES DEBUG - CWD: {os.getcwd()}")
-    print(f"🔍 ARES DEBUG - ares_quantum_protocol exists: {os.path.exists('ares_quantum_protocol.py')}")
-    print(f"🔍 ARES DEBUG - ares_scalping_v2 exists: {os.path.exists('ares_scalping_v2.py')}")
+    print(f"🔍 ARES DEBUG - omnix_core/strategies/ exists: {os.path.exists('omnix_core/strategies')}")
     
-    from ares_quantum_protocol import AresQuantumProtocol
-    from ares_scalping_v2 import AresScalpingV2
+    from omnix_core.strategies.ares_v1 import AresQuantumProtocol
+    from omnix_core.strategies.ares_v2 import AresScalpingV2
     ARES_STRATEGIES_AVAILABLE = True
     print("✅ ARES QUANTUM PROTOCOLS LOADED:")
     print("   🧬 ARES V1 - Swing Trading (74-82% win rate)")

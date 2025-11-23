@@ -14,6 +14,7 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - ✅ **Historical Events Validator**: Validación de rendimiento en crashes, rallies y eventos extremos
 - ✅ **Executive Summary Generator**: Reportes automáticos para inversionistas con datos verificables de Kraken
 - 🏆 **MAJOR REFACTORING ACHIEVEMENT**: main.py masivamente reducido de 15,175 líneas a 617 líneas (-95.9% reducción, -14,558 líneas) mediante extracción sistemática a arquitectura modular profesional con 75+ módulos especializados
+- 🗂️ **ROOT DIRECTORY CLEANUP**: Archivos Python en raíz reducidos de 24 a 2 (91.7% reducción) - Solo quedan main.py y test_railway_startup.py como entry points esenciales
 
 **Code Architecture Revolution (November 23, 2025):**
 **ENTERPRISE-GRADE REFACTORING COMPLETED** - Sistema transformado de monolito a arquitectura modular:
@@ -25,20 +26,27 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Zero Downtime**: Bot RUNNING continuamente durante todo el refactoring (ARES V1+V2 activos, $1M paper trading)
 
 **Arquitectura Modular Creada (75+ archivos Python):**
+- `omnix_core/strategies/`: ARES V1 (ares_v1.py), ARES V2 (ares_v2.py) - Estrategias quantum institucionales
+- `omnix_core/security/`: pqc_security.py, pqc_encryption.py - Post-Quantum Cryptography NIST 2024
+- `omnix_core/quantum/`: enhancements.py - QRNG, QAOA portfolio optimization
+- `omnix_core/bot/`: auto_trading_bot.py - Trading automático 24/7
 - `omnix_services/optimization/`: PerformanceOptimizer, MathematicalOptimizer, AdaptiveWeights, AutoLearner, GeneticOptimizer, ABTesting
 - `omnix_services/concurrency/`: IntelligentCacheSystem, OptimizedConcurrencyManager, ScalableResourceManager
 - `omnix_services/market_data/`: fetch_market_snapshot, sentiment_data, arbitrage detection, analysis_helpers
+- `omnix_services/market_data/sentiment/`: advanced_analyzer.py - Análisis de sentimiento de mercado
+- `omnix_services/market_data/intelligence/`: FreeNewsAnalyzer, FreeEconomicCalendar, MultiExchangeArbitrage
 - `omnix_services/ai_service/`: ConversationalAI adapter con multi-LLM support (Gemini 2.0, GPT-4o, Claude)
+- `omnix_services/ai_service/video/`: analyzer.py, integration.py, learning_analyzer.py - AI Vision para videos de trading
 - `omnix_services/database_service/`: DatabaseManager con PostgreSQL enterprise operations
-- `omnix_services/monitoring/`: AdvancedPerformanceTracker con métricas en tiempo real
-- `omnix_services/trading_service/`: EnhancedTradingSystem, MultiCurrencyEngine
+- `omnix_services/monitoring/`: AdvancedPerformanceTracker, metrics_engine.py, ai_risk_guardian.py
+- `omnix_services/trading_service/`: EnhancedTradingSystem, MultiCurrencyEngine, paper_trading_manager.py, advanced_features.py
 - `omnix_services/trading_service/analyzers/`: AdvancedOrderBookAnalyzer, AdvancedVolatilityAnalyzer, MicrostructureAnalyzer, AdvancedRiskManagement
-- `omnix_services/analytics/`: AutoFibonacciAnalyzer, VolumeProfileAnalyzer
+- `omnix_services/analytics/`: AutoFibonacciAnalyzer, VolumeProfileAnalyzer, chart_patterns.py
 - `omnix_services/voice_service/`: VoiceEngine, biometric authentication, TTS/STT
 - `omnix_services/telegram_service/`: EnterpriseTelegramBot
 - `omnix_services/coherence_service/`: CoherenceEngine para validación de estrategias
 - `omnix_services/stock_trading/`: Módulos de trading de acciones
-- `omnix_services/market_data/intelligence/`: FreeNewsAnalyzer, FreeEconomicCalendar, MultiExchangeArbitrage
+- `omnix_api/payments/`: stripe_integration.py - Integración de pagos Stripe
 
 **Benefits Empresariales:**
 - ✅ **Mantenibilidad**: Código organizado en módulos especializados y reutilizables

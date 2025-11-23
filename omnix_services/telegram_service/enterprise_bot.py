@@ -102,7 +102,7 @@ class EnterpriseTelegramBot:
         
         # 📊 PAPER TRADING MANAGER - Trading simulado con datos reales
         try:
-            from paper_trading import PaperTradingManager
+            from omnix_services.trading_service.paper_trading_manager import PaperTradingManager
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
             self.paper_trading = PaperTradingManager(
                 database_service=global_db_manager if 'global_db_manager' in globals() else None,
@@ -115,7 +115,7 @@ class EnterpriseTelegramBot:
         
         # 🤖 AUTO-TRADING BOT - Trading automático 24/7 con estrategia inteligente
         try:
-            from auto_trading_bot import AutoTradingBot
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
             self.auto_trading = AutoTradingBot(
                 trading_service=trading_service,
@@ -137,8 +137,8 @@ class EnterpriseTelegramBot:
         
         # 🎥 VIDEO ANALYZER ULTRA V5.3 - Análisis avanzado de videos con Vision AI
         try:
-            from video_analyzer_ultra import VideoAnalyzerUltra
-            from video_learning_integration import VideoLearningIntegration
+            from omnix_services.ai_service.video.analyzer import VideoAnalyzerUltra
+            from omnix_services.ai_service.video.integration import VideoLearningIntegration
             
             self.video_analyzer_ultra = VideoAnalyzerUltra()
             logger.info("🎥 Video Analyzer Ultra V5.3 inicializado")
