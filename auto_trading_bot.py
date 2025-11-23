@@ -1453,9 +1453,15 @@ class AutoTradingBot:
                 # REAL TRADING - Balance real en Kraken
                 if hasattr(self.trading_service, 'get_balance'):
                     balance = self.trading_service.get_balance()
-                    return float(balance.get('USD', {}).get('free', 0))
+                    
+                    # Kraken devuelve 'ZUSD' (formato Kraken) o 'USD'
+                    usd_balance = float(balance.get('ZUSD', balance.get('USD', 0)))
+                    
+                    print(f"💰 Balance detectado: ${usd_balance:.2f} (Kraken data: {balance})")
+                    return usd_balance
                 return 0.0
-        except:
+        except Exception as e:
+            print(f"❌ ERROR obteniendo balance: {e}")
             return 0.0
     
     def _get_price_history(self, pair: str, days: int = 100) -> Optional[List[float]]:
