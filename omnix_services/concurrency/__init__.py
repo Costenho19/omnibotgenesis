@@ -11,8 +11,10 @@ Incluye:
 
 from .cache_system import IntelligentCacheSystem
 from .concurrency_manager import OptimizedConcurrencyManager
+from .resource_manager import ScalableResourceManager
 
 __all__ = [
     'IntelligentCacheSystem',
-    'OptimizedConcurrencyManager'
+    'OptimizedConcurrencyManager',
+    'ScalableResourceManager'
 ]

@@ -267,7 +267,12 @@ from omnix_services.market_data import (
     get_btc_dominance,
     get_free_market_metrics,
     get_multi_exchange_prices,
-    detect_arbitrage_opportunities
+    detect_arbitrage_opportunities,
+    analyze_volume_patterns,
+    get_external_market_factors,
+    analyze_historical_patterns,
+    generate_predictive_insights,
+    calculate_confidence_score
 )
 
 # Advanced Trading Analyzers (migrated from monolithic main.py)
@@ -288,7 +293,8 @@ from omnix_services.voice_service import (
 # Concurrency & Cache Services (migrated from monolithic main.py)
 from omnix_services.concurrency import (
     IntelligentCacheSystem,
-    OptimizedConcurrencyManager
+    OptimizedConcurrencyManager,
+    ScalableResourceManager
 )
 
 # Analytics Services (migrated from monolithic main.py)
@@ -536,185 +542,6 @@ intelligent_cache = IntelligentCacheSystem(max_size=1000, ttl_seconds=300)
 
 # Instancia global del gestor de concurrencia
 concurrency_manager = OptimizedConcurrencyManager()
-
-
-def advanced_trading_enhancement_system():
-    """SISTEMA DE MEJORAS AVANZADAS - Implementación de sugerencias Harold"""
-    
-    enhancement_modules = {
-        'data_expansion': {
-            'multi_exchange': ['Kraken', 'Binance', 'Coinbase Pro', 'BitOasis'],
-            'news_sources': ['CoinDesk', 'Bloomberg Crypto', 'Reuters Digital Assets'],  
-            'social_sentiment': ['Twitter API', 'Reddit Crypto', 'Telegram Channels'],
-            'on_chain_data': ['Glassnode', 'CryptoQuant', 'Dune Analytics']
-        },
-        'ml_algorithms': {
-            'pattern_recognition': ['LSTM Networks', 'Transformer Models', 'GAN Predictions'],
-            'market_prediction': ['Monte Carlo Enhanced', 'Bayesian Networks', 'Ensemble Methods'],
-            'sentiment_analysis': ['BERT Financial', 'FinBERT', 'Crypto-specific NLP'],
-            'price_forecasting': ['Prophet Enhanced', 'ARIMA Advanced', 'Neural Prophet']
-        },
-        'risk_optimization': {
-            'granular_management': ['Dynamic Position Sizing', 'Correlation Analysis', 'Volatility Adjusted'],
-            'capital_protection': ['Smart Stop Loss', 'Trailing Mechanisms', 'Portfolio Hedging'],
-            'profit_maximization': ['Multi-timeframe Analysis', 'Momentum Indicators', 'Mean Reversion']
-        },
-        'strategy_development': {
-            'arbitrage': ['Cross-Exchange', 'Triangular', 'Statistical Arbitrage'],
-            'high_frequency': ['Latency Optimization', 'Co-location Ready', 'Microsecond Execution'],
-            'defi_integration': ['Uniswap V3', 'Curve Finance', 'Aave Lending'],
-            'advanced_ta': ['Elliott Wave', 'Harmonic Patterns', 'Volume Profile']
-        },
-        'interface_improvements': {
-            'visual_dashboard': ['Real-time Charts', 'Interactive Analysis', 'Multi-asset View'],
-            'user_experience': ['Natural Language Trading', 'Voice Commands', 'Mobile Optimized'],
-            'customization': ['Personal Preferences', 'Strategy Builder', 'Alert System']
-        }
-    }
-    
-    logger.info(f"🚀 ENHANCEMENT SYSTEM: Módulos avanzados preparados - {len(enhancement_modules)} categorías")
-    return enhancement_modules
-
-def _get_fear_greed_index():
-    """Obtener índice Fear & Greed actualizado"""
-    try:
-        # API real Fear & Greed Index
-        # requests ya importado globalmente (línea 16)
-        response = requests.get('https://api.alternative.me/fng/', timeout=5)
-        fear_greed_value = int(response.json()['data'][0]['value'])
-        
-        if fear_greed_value > 75:
-            sentiment = "Extreme Greed"
-        elif fear_greed_value > 55:
-            sentiment = "Greed"
-        elif fear_greed_value > 45:
-            sentiment = "Neutral"
-        elif fear_greed_value > 25:
-            sentiment = "Fear"
-        else:
-            sentiment = "Extreme Fear"
-        
-        return {'value': fear_greed_value, 'sentiment': sentiment}
-    except:
-        return {'value': 50, 'sentiment': 'Neutral'}
-
-def _analyze_volume_patterns():
-    """Análisis avanzado de patrones de volumen"""
-    return {
-        'volume_trend': 'increasing',
-        'institutional_flow': 'mixed',
-        'retail_sentiment': 'bullish',
-        'confidence': 0.75
-    }
-
-def _get_external_market_factors():
-    """Factores externos del mercado"""
-    return {
-        'global_markets': 'stable',
-        'regulatory_news': 'neutral',
-        'institutional_activity': 'high',
-        'correlation_traditional': 0.65
-    }
-
-def _analyze_historical_patterns(current_data):
-    """Análisis de patrones históricos para predicción"""
-    return {
-        'pattern_match': 0.82,
-        'historical_outcome': 'bullish',
-        'similar_periods': 3,
-        'success_rate': 0.74
-    }
-
-def _generate_predictive_insights(data):
-    """Generar insights predictivos basados en datos"""
-    return {
-        'short_term_outlook': 'bullish',
-        'medium_term_trend': 'neutral',
-        'key_levels': [60000, 65000, 70000],
-        'probability_scores': [0.65, 0.58, 0.42]
-    }
-
-def _calculate_confidence_score(data):
-    """Calcular puntuación de confianza del análisis"""
-    try:
-        # Combinar múltiples factores para confianza
-        base_confidence = 0.7
-        data_quality = 0.85 if data.get('btc_price') else 0.3
-        market_stability = 0.8
-        
-        total_confidence = (base_confidence + data_quality + market_stability) / 3
-        return min(0.95, max(0.1, total_confidence))
-    except:
-        return 0.7
-
-# HAROLD FIX: Generador de nonce único para Kraken
-_nonce_counter = 0
-_last_nonce_time = 0
-
-def generate_unique_nonce():
-    """Generar nonce único MEJORADO para evitar errores Kraken"""
-    global _nonce_counter, _last_nonce_time
-    import time
-    current_time = int(time.time() * 1000000)  # Microsegundos
-    
-    # SIEMPRE incrementar contador para garantizar unicidad
-    _nonce_counter += 1
-    nonce = current_time + _nonce_counter
-    
-    # Si el tiempo no avanzó, usar el anterior + contador
-    if nonce <= _last_nonce_time:
-        nonce = _last_nonce_time + _nonce_counter + 1
-        
-    _last_nonce_time = nonce
-    return nonce
-
-# Sistema de Trading
-class ScalableResourceManager:
-    """Escalamiento de recursos computacionales como sugiere OMNIX"""
-    
-    def __init__(self):
-        self.resource_thresholds = {
-            'cpu_high': 85.0,
-            'memory_high': 80.0,
-            'response_time_max': 2.0  # segundos
-        }
-        self.scaling_actions = []
-        
-    async def async_process_request(self, request_func, *args, **kwargs):
-        """Procesamiento asíncrono para reducir tiempos de respuesta"""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, request_func, *args, **kwargs)
-    
-    def monitor_and_scale(self):
-        """Monitoreo continuo y escalamiento automático"""
-        if PSUTIL_AVAILABLE:
-            metrics = psutil.virtual_memory()
-            cpu_percent = psutil.cpu_percent(interval=0.1)
-        else:
-            # Estimaciones básicas sin psutil
-            cpu_percent = 30.0  # Conservador
-            memory_percent = 45.0  # Conservador
-            metrics = type('obj', (object,), {'percent': memory_percent})
-        
-        recommendations = []
-        
-        if cpu_percent > self.resource_thresholds['cpu_high']:
-            recommendations.append({
-                'type': 'cpu_scaling',
-                'action': 'Escalar CPU o optimizar algoritmos',
-                'priority': 'high',
-                'current_usage': f"{cpu_percent:.1f}%"
-            })
-            
-        if metrics.percent > self.resource_thresholds['memory_high']:
-            recommendations.append({
-                'type': 'memory_scaling', 
-                'action': 'Escalar memoria o limpiar cache',
-                'priority': 'high',
-                'current_usage': f"{metrics.percent:.1f}%"
-            })
-            
-        return recommendations
 
 # Instancias globales de optimización
 performance_optimizer = PerformanceOptimizer()

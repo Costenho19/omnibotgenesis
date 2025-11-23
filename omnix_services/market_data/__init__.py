@@ -13,6 +13,13 @@ from .arbitrage import (
     get_multi_exchange_prices,
     detect_arbitrage_opportunities
 )
+from .analysis_helpers import (
+    analyze_volume_patterns,
+    get_external_market_factors,
+    analyze_historical_patterns,
+    generate_predictive_insights,
+    calculate_confidence_score
+)
 
 __all__ = [
     'fetch_market_snapshot',
@@ -20,5 +27,10 @@ __all__ = [
     'get_btc_dominance',
     'get_free_market_metrics',
     'get_multi_exchange_prices',
-    'detect_arbitrage_opportunities'
+    'detect_arbitrage_opportunities',
+    'analyze_volume_patterns',
+    'get_external_market_factors',
+    'analyze_historical_patterns',
+    'generate_predictive_insights',
+    'calculate_confidence_score'
 ]
