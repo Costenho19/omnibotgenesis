@@ -343,18 +343,19 @@ class AutoTradingBot:
             
             # 1. Obtener precio actual
             try:
-                # HAROLD FIX: Usar fetch_ticker (método ccxt) en lugar de get_ticker
-                ticker_data = self.trading_service.kraken.fetch_ticker(pair)
-                current_price = ticker_data.get('last', 0) if ticker_data else 0
-            except Exception as e1:
-                # Fallback: intentar obtener precio directo
-                logger.warning(f"⚠️ fetch_ticker falló para {pair}: {str(e1)}")
-                try:
-                    price_data = self.trading_service.get_current_price(pair)
-                    current_price = price_data if price_data else 0
-                except Exception as e2:
-                    logger.error(f"❌ Error obteniendo precio de {pair}: {str(e2)}")
+                # Convertir par de formato "BTC/USD" a "XBTUSD" (formato Kraken)
+                kraken_pair = pair.replace('BTC/USD', 'XBTUSD').replace('ETH/USD', 'ETHUSD').replace('/', '')
+                ticker_data = self.trading_service.kraken.get_ticker(kraken_pair)
+                
+                if not ticker_data or 'c' not in ticker_data:
+                    logger.error(f"❌ No se pudo obtener ticker para {pair} (Kraken: {kraken_pair})")
                     return None
+                
+                current_price = float(ticker_data['c'][0])
+                logger.info(f"💰 Precio actual de {pair}: ${current_price:,.2f}")
+            except Exception as e:
+                logger.error(f"❌ Error obteniendo precio de {pair}: {str(e)}")
+                return None
             
             # Obtener histórico para análisis avanzados
             prices = self._get_price_history(pair, days=100)
