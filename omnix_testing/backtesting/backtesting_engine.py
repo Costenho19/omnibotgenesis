@@ -391,7 +391,8 @@ class BacktestingEngine:
         # Calculate volatility
         volatility = 2.0
         if len(self.price_history) >= 20:
-            returns = np.diff(self.price_history[-20:]) / self.price_history[-21:-1] * 100
+            prices_array = np.array(self.price_history[-20:])
+            returns = np.diff(prices_array) / prices_array[:-1] * 100
             volatility = float(np.std(returns))
         
         # Calculate volume ratio if available
