@@ -33,7 +33,14 @@ except ImportError:
     PQC_AVAILABLE = False
     logger.warning("⚠️ Post-Quantum Security not available")
 
-# MathematicalOptimizer will be imported from main.py context when needed
+# Import Mathematical Optimizer and helper functions
+try:
+    from omnix_services.optimization import MathematicalOptimizer, generate_unique_nonce
+    MATH_OPTIMIZER_AVAILABLE = True
+except ImportError:
+    MATH_OPTIMIZER_AVAILABLE = False
+    logger.warning("⚠️ MathematicalOptimizer not available")
+
 TRADING_AVAILABLE = True
 
 class TradingSystem:
@@ -68,7 +75,9 @@ class TradingSystem:
         }
         
         # Inicializar sistema multi-moneda
-        self._init_multi_currency_system()
+        # TEMPORALMENTE DESACTIVADO - Causaba crash en init
+        # self._init_multi_currency_system()
+        logger.info("⚠️ Multi-currency system temporalmente desactivado (debugging)")
         
         
         # 🔐 SEGURIDAD POST-CUÁNTICA - INICIALIZACIÓN
@@ -3225,8 +3234,11 @@ Los siguientes módulos son necesarios:
             elif text.startswith('/fibonacci') or text.startswith('/fib'):
                 # COMANDO NUEVA MEJORA 1: ANÁLISIS FIBONACCI AUTOMÁTICO
                 try:
-                    # Inicializar analizador Fibonacci
-                    fib_analyzer = AutoFibonacciAnalyzer()
+                    # Inicializar analizador Fibonacci (check if available)
+                    try:
+                        fib_analyzer = AutoFibonacciAnalyzer()
+                    except NameError:
+                        raise ImportError("AutoFibonacciAnalyzer not available")
                     
                     # Obtener datos de precio recientes para calcular máximos/mínimos
                     current_price = global_trading_engine.get_current_price('BTC/USD')
@@ -3336,8 +3348,11 @@ Los siguientes módulos son necesarios:
             elif text.startswith('/volume_profile') or text.startswith('/volume'):
                 # COMANDO NUEVA MEJORA 2: VOLUME PROFILE ANALYSIS
                 try:
-                    # Inicializar analizador Volume Profile
-                    volume_analyzer = VolumeProfileAnalyzer()
+                    # Inicializar analizador Volume Profile (check if available)
+                    try:
+                        volume_analyzer = VolumeProfileAnalyzer()
+                    except NameError:
+                        raise ImportError("VolumeProfileAnalyzer not available")
                     
                     # Simular datos precio-volumen para análisis
                     current_price = global_trading_engine.get_current_price('BTC/USD')

@@ -2751,4 +2751,71 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
         logger.error(f"🎤 ❌ TRACEBACK VOZ: {traceback.format_exc()}")
         # Continuar sin enviar voz si hay error
 
-# CLASE TELEGRAM BOT EMPRESARIAL - AGREGADA PARA FUNCIONALIDAD COMPLETA
+# ==================== TELEGRAM BOT INITIALIZATION ====================
+
+if __name__ == "__main__":
+    import signal
+    import sys
+    
+    logger.info("=" * 80)
+    logger.info("🚀 OMNIX V6.0 ULTRA - INICIANDO SISTEMA PRINCIPAL")
+    logger.info("=" * 80)
+    
+    # Crear instancias de servicios necesarios
+    try:
+        logger.info("🔧 Instanciando servicios principales...")
+        
+        # 1. ConversationalAIService (sin parámetros - auto-configura)
+        conversational_ai = ConversationalAIService()
+        logger.info("✅ ConversationalAIService instanciado")
+        
+        # 2. TradingSystem (sin parámetros - usa configuración por defecto)
+        trading_system = TradingSystem()
+        logger.info("✅ TradingSystem instanciado")
+        
+        # 3. MetricsEngine (singleton)
+        metrics_engine = None  # Se auto-instancia como singleton
+        
+        # 4. Adaptive Weight System y Auto Learner (opcionales)
+        adaptive_weight_system = None
+        auto_learning_system = None
+        
+        logger.info("📱 Instanciando EnterpriseTelegramBot...")
+        # EnterpriseTelegramBot instancia ConversationalAI y TradingSystem internamente
+        telegram_bot = EnterpriseTelegramBot(db_manager=None)
+        logger.info("✅ EnterpriseTelegramBot instanciado correctamente")
+        
+        # Configurar signal handlers para shutdown limpio
+        def signal_handler(sig, frame):
+            logger.info(f"\n🛑 Señal {sig} recibida - Apagando bot...")
+            if hasattr(telegram_bot, 'is_running'):
+                telegram_bot.is_running = False
+            sys.exit(0)
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
+        # Iniciar bot en modo polling
+        logger.info("🔄 Iniciando bot Telegram en modo polling...")
+        success = telegram_bot.start_polling(drop_pending_updates=True)
+        
+        if success:
+            logger.info("=" * 80)
+            logger.info("✅ OMNIX V6.0 ULTRA - BOT TELEGRAM OPERATIVO")
+            logger.info("📡 Modo: PAPER TRADING - Capital Virtual: $1,000,000")
+            logger.info("🧬 ARES V1 (Swing 74-82%) + V2 (Scalping 85%) ACTIVOS")
+            logger.info("🤖 Gemini 2.0 Flash + GPT-4o LISTOS")
+            logger.info("=" * 80)
+            
+            # Mantener el proceso corriendo
+            logger.info("🔄 Entrando en loop de espera (presiona Ctrl+C para detener)...")
+            signal.pause()  # Esperar señales UNIX
+        else:
+            logger.error("❌ Error iniciando bot Telegram")
+            sys.exit(1)
+            
+    except Exception as e:
+        logger.error(f"❌ Error crítico en main: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        sys.exit(1)

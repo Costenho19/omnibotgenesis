@@ -9,6 +9,7 @@ import os
 import time
 import threading
 import asyncio
+import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from telegram import Update
@@ -38,6 +39,25 @@ except ImportError:
     PAPER_TRADING_AVAILABLE = False
     logger.warning("⚠️ Paper Trading Manager no disponible")
 
+# Stock Trading Module
+STOCK_TRADING_ENABLED = os.getenv('STOCK_TRADING_ENABLED', 'true').lower() == 'true'
+if STOCK_TRADING_ENABLED:
+    try:
+        from omnix_services.stock_trading.stock_commands import StockCommandsHandler
+        STOCK_MODULE_AVAILABLE = True
+    except ImportError:
+        STOCK_MODULE_AVAILABLE = False
+        logger.warning("⚠️ Stock Trading Module no disponible")
+else:
+    STOCK_MODULE_AVAILABLE = False
+
+# Telegram availability check
+try:
+    from telegram import __version__
+    TELEGRAM_AVAILABLE = True
+except ImportError:
+    TELEGRAM_AVAILABLE = False
+
 
 class EnterpriseTelegramBot:
     """Bot Telegram empresarial con todas las funcionalidades"""
@@ -46,7 +66,7 @@ class EnterpriseTelegramBot:
         self.application = None
         self.is_running = False
         self.db_manager = db_manager  # MEMORIA PERSISTENTE POSTGRESQL
-        self.ai = ConversationalAI()  # SUPERINTELIGENCIA PARA HAROLD
+        self.ai = ConversationalAIService()  # SUPERINTELIGENCIA PARA HAROLD
         
         # 🏦 TRADING SERVICE ENTERPRISE CON FALLBACK SEGURO
         self.trading_enterprise_enabled = False
