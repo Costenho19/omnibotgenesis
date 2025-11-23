@@ -1,12 +1,18 @@
-# OMNIX V5.4 ULTRA - Automated Trading System
+# OMNIX V6.0 ULTRA - Automated Trading System
 
 ### Overview
-OMNIX V5.4 ULTRA is an enterprise-grade automated cryptocurrency trading system engineered for 24/7 operation on Kraken Exchange. Currently running in PAPER TRADING mode with $1,000,000 virtual capital, using institutional-grade position sizing ($1,000 minimum per trade, 25% maximum position size) to generate credible track records for investor presentations. It integrates AI, post-quantum cryptography, and real-time market analysis to deliver sophisticated automated trading, incorporating advanced strategy modules. The project's ambition is to secure seed funding ($400K at a $2.5M valuation), supported by a professional backtesting infrastructure for investor presentations.
+OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system engineered for 24/7 operation on Kraken Exchange. Currently running in PAPER TRADING mode with $1,000,000 virtual capital, using institutional-grade position sizing ($1,000 minimum per trade, 25% maximum position size) to generate credible track records for investor presentations. It integrates AI, post-quantum cryptography, and real-time market analysis to deliver sophisticated automated trading, incorporating advanced strategy modules. The project's ambition is to secure seed funding ($400K at a $2.5M valuation), supported by a professional backtesting infrastructure for investor presentations.
 
-**Deployment Status (November 22, 2025):**
+**Deployment Status (November 23, 2025):**
 - **Railway (Production)**: ✅ LIVE - Bot Telegram operativo, 7 estrategias base activas, Paper Trading $1M
 - **ARES Protocols**: ⚠️ Disponibles solo en Replit local (no desplegados en Railway por problemas de importación)
 - **Missing**: OpenAI API key en Railway (GPT-4 no disponible, Gemini 2.0 compensando)
+
+**Recent Changes (November 23, 2025):**
+- ✅ **Premium Validation System**: Sistema completo de validación con 10 eventos históricos críticos (COVID crash, FTX collapse, etc.)
+- ✅ **Strategy Comparator**: Comparación automática ARES vs Buy & Hold con métricas institucionales
+- ✅ **Historical Events Validator**: Validación de rendimiento en crashes, rallies y eventos extremos
+- ✅ **Executive Summary Generator**: Reportes automáticos para inversionistas con datos verificables de Kraken
 
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
@@ -40,10 +46,13 @@ OMNIX V5.4 ULTRA is built around a robust architecture designed for high perform
 **6. Auto-Optimization Engine**:
     - Continuously improves strategies through a Genetic Algorithm Optimizer, A/B Testing Framework, and an Auto-Adjustment Engine for real-time parameter changes.
 
-**7. Professional Testing & Validation System**:
+**7. Professional Testing & Validation System** (UPGRADED V6.0):
     - **Chart Generator**: Produces 5 institutional-quality Plotly visualizations (Equity Curve, Drawdown Chart, Trade Distribution, Monthly Returns Heatmap, Rolling Sharpe Ratio).
     - **PDF Report Generator**: Creates professional 25-35 page institutional reports with executive summaries, methodology, results, risk analysis, and trade logs, using ReportLab and PyPDF2.
     - **Kraken Data Downloader**: Downloads historical OHLCV data from Kraken for selected pairs and timeframes, with local caching and rate limiting.
+    - **Historical Events Validator** (NEW): Validates strategy performance across 10 critical historical events (COVID-19 crash, Bull Run 2021, FTX collapse, etc.) with automated testing and crash survival metrics.
+    - **Strategy Comparator** (NEW): Automated comparison system for ARES V1/V2 vs Buy & Hold with side-by-side metrics, relative performance analysis, and competitive advantage demonstration.
+    - **Premium Validation Suite** (NEW): Complete investor-ready package generator (`run_premium_validation.py`) that produces historical validation reports, strategy comparisons, and executive summaries with verifiable Kraken timestamps.
 
 **8. Database Architecture**:
     - **PostgreSQL (Neon)**: Stores user data, trading history, portfolio snapshots, performance metrics, Sharia compliance data, alerts, auto-learning history, configurations, and AI explanations.
