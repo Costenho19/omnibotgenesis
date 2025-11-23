@@ -7199,8 +7199,16 @@ def create_flask_app():
                         respuesta = "❌ Auto-Trading Bot no disponible. Contacta al administrador."
                     else:
                         # Parsear sub-comando
-                        parts = text.lower().split()
-                        sub_cmd = parts[1] if len(parts) > 1 else 'status'
+                        # HAROLD FIX: Detectar /auto_start, /auto_stop, /auto_status con guión bajo
+                        if text.lower().startswith('/auto_start'):
+                            sub_cmd = 'start'
+                        elif text.lower().startswith('/auto_stop'):
+                            sub_cmd = 'stop'
+                        elif text.lower().startswith('/auto_status'):
+                            sub_cmd = 'status'
+                        else:
+                            parts = text.lower().split()
+                            sub_cmd = parts[1] if len(parts) > 1 else 'status'
                         
                         if sub_cmd == 'start':
                             # INICIAR AUTO-TRADING 24/7
