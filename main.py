@@ -13701,20 +13701,28 @@ ETH: {result['new_eth_balance']:.8f}
     async def auto_start_command(self, update, context):
         """Comando /auto_start - Activar trading automático 24/7 REAL"""
         try:
+            logger.info("🎯 COMANDO /auto_start RECIBIDO - Iniciando proceso...")
+            
             if not self.auto_trading:
+                logger.warning("⚠️ Auto-Trading Bot no disponible")
                 await update.message.reply_text("⚠️ Auto-Trading Bot no disponible")
                 return
             
             user_id = str(update.effective_user.id)
+            logger.info(f"🔐 Usuario autorizado: {user_id}")
             
             # Solo Harold puede activar auto-trading
             if user_id != "7014748854":
+                logger.warning(f"⚠️ Usuario no autorizado: {user_id}")
                 await update.message.reply_text("⚠️ Solo Harold puede activar auto-trading")
                 return
             
+            logger.info("✅ Validaciones OK - Activando bot...")
             await update.message.reply_text("🔄 Activando trading automático 24/7...")
             
+            logger.info("📞 Llamando a auto_trading.start()...")
             result = self.auto_trading.start()
+            logger.info(f"📊 Resultado de start(): {result}")
             
             if 'error' in result:
                 await update.message.reply_text(f"❌ {result['error']}")
