@@ -97,3 +97,8 @@ run = ["sh", "-c", "python3 OMNIX_RAILWAY_FINAL_SEGURO.py"]
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+PAPER_MODE = "TRUE"
