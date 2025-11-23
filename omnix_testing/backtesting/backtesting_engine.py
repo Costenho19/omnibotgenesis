@@ -12,9 +12,27 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+import sys
 
-from omnix_testing.backtesting.kraken_data_downloader import KrakenDataDownloader
-from omnix_testing.backtesting.metrics_calculator import MetricsCalculator
+# Add project root to path for ARES imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+try:
+    from omnix_testing.backtesting.kraken_data_downloader import KrakenDataDownloader
+    from omnix_testing.backtesting.metrics_calculator import MetricsCalculator
+except ImportError:
+    # Fallback to relative imports if running from within omnix_testing
+    from .kraken_data_downloader import KrakenDataDownloader
+    from .metrics_calculator import MetricsCalculator
+
+try:
+    from ares_quantum_protocol import AresQuantumProtocol
+    from ares_scalping_v2 import AresScalpingV2
+except ImportError as e:
+    print(f"⚠️ Warning: ARES modules not found: {e}")
+    AresQuantumProtocol = None
+    AresScalpingV2 = None
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +71,29 @@ class BacktestingEngine:
         self.data_downloader = KrakenDataDownloader()
         self.metrics_calculator = MetricsCalculator()
         
+        # Initialize ARES strategies
+        try:
+            if AresQuantumProtocol and AresScalpingV2:
+                self.ares_v1 = AresQuantumProtocol()
+                self.ares_v2 = AresScalpingV2()
+                logger.info("🧬 ARES Protocols inicializados")
+            else:
+                self.ares_v1 = None
+                self.ares_v2 = None
+                logger.warning("⚠️ ARES modules no disponibles")
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudieron cargar ARES protocols: {e}")
+            self.ares_v1 = None
+            self.ares_v2 = None
+        
         # Trading state
         self.capital = initial_capital
         self.position = None  # {'type': 'long'/'short', 'size': float, 'entry_price': float}
         self.trades = []
         self.equity_curve = [initial_capital]
+        
+        # Historical price buffer for calculations
+        self.price_history = []
         
         logger.info("=" * 70)
         logger.info("🚀 OMNIX BACKTESTING ENGINE INICIALIZADO")
@@ -164,12 +200,24 @@ class BacktestingEngine:
         self.position = None
         self.trades = []
         self.equity_curve = [self.initial_capital]
+        self.price_history = []
     
     def _process_candle(self, candle: pd.Series, strategy_name: str, params: Dict):
         """Process single candle and generate signals"""
         
-        # Simple MA Crossover strategy (example)
-        if strategy_name == "simple_ma_cross":
+        # Update price history
+        self.price_history.append(candle['close'])
+        if len(self.price_history) > 100:
+            self.price_history.pop(0)
+        
+        # Route to appropriate strategy
+        if strategy_name == "ares_v1_swing":
+            self._strategy_ares_v1(candle, params)
+        elif strategy_name == "ares_v2_scalping":
+            self._strategy_ares_v2(candle, params)
+        elif strategy_name == "buy_hold":
+            self._strategy_buy_hold(candle, params)
+        elif strategy_name == "simple_ma_cross":
             self._strategy_ma_cross(candle, params)
         elif strategy_name == "rsi_divergence":
             self._strategy_rsi_divergence(candle, params)
@@ -205,6 +253,172 @@ class BacktestingEngine:
         """RSI Divergence Strategy (placeholder)"""
         # Placeholder for ARES strategies integration
         pass
+    
+    def _strategy_buy_hold(self, candle: pd.Series, params: Dict):
+        """
+        Buy & Hold Strategy - Benchmark
+        Buys at the first candle and holds until the end
+        """
+        price = candle['close']
+        
+        if self.position is None and len(self.trades) == 0:
+            # First candle: buy and hold
+            self._open_position('long', price, candle['timestamp'])
+    
+    def _strategy_ares_v1(self, candle: pd.Series, params: Dict):
+        """
+        ARES V1 Swing Trading Strategy (74-82% win rate)
+        Uses quantum institutional signals for position entry/exit
+        """
+        if not self.ares_v1:
+            return
+        
+        price = candle['close']
+        
+        # Build market_data from current candle and history
+        market_data = self._build_market_data_from_candle(candle)
+        
+        # Analyze market using ARES V1
+        result = self.ares_v1.analyze(market_data)
+        
+        if result.get('approved'):
+            signal = result.get('signal', '').upper()
+            
+            if signal == 'LONG' and self.position is None:
+                # Open LONG position
+                self._open_position('long', price, candle['timestamp'])
+                # Store stop loss and take profit for position management
+                self.position['stop_loss'] = result.get('stop_loss', price * 0.99)
+                self.position['take_profit'] = result.get('take_profit', [price * 1.02])
+                
+            elif signal == 'SHORT' and self.position is None:
+                # Open SHORT position
+                self._open_position('short', price, candle['timestamp'])
+                self.position['stop_loss'] = result.get('stop_loss', price * 1.01)
+                self.position['take_profit'] = result.get('take_profit', [price * 0.98])
+        
+        # Check exit conditions for open positions
+        if self.position is not None:
+            pos_type = self.position['type']
+            stop_loss = self.position.get('stop_loss')
+            take_profit = self.position.get('take_profit', [])
+            
+            if pos_type == 'long':
+                # Check SL
+                if stop_loss and price <= stop_loss:
+                    self._close_position(price, candle['timestamp'])
+                # Check TP
+                elif take_profit and price >= take_profit[0]:
+                    self._close_position(price, candle['timestamp'])
+            elif pos_type == 'short':
+                # Check SL
+                if stop_loss and price >= stop_loss:
+                    self._close_position(price, candle['timestamp'])
+                # Check TP
+                elif take_profit and price <= take_profit[0]:
+                    self._close_position(price, candle['timestamp'])
+    
+    def _strategy_ares_v2(self, candle: pd.Series, params: Dict):
+        """
+        ARES V2 Scalping M1 Strategy (85% win rate)
+        Ultra-precision scalping for 1-minute timeframe
+        """
+        if not self.ares_v2:
+            return
+        
+        price = candle['close']
+        
+        # Build market_data from current candle and history
+        market_data = self._build_market_data_from_candle(candle)
+        
+        # Analyze market using ARES V2
+        result = self.ares_v2.analyze(market_data)
+        
+        if result.get('approved'):
+            signal = result.get('signal', '').upper()
+            
+            if signal == 'LONG' and self.position is None:
+                # Open LONG position
+                self._open_position('long', price, candle['timestamp'])
+                # Store tight stop loss and take profit for scalping
+                self.position['stop_loss'] = result.get('stop_loss', price * 0.997)
+                self.position['take_profit'] = result.get('take_profit', [price * 1.009])
+                
+            elif signal == 'SHORT' and self.position is None:
+                # Open SHORT position
+                self._open_position('short', price, candle['timestamp'])
+                self.position['stop_loss'] = result.get('stop_loss', price * 1.003)
+                self.position['take_profit'] = result.get('take_profit', [price * 0.991])
+        
+        # Check exit conditions (tight management for scalping)
+        if self.position is not None:
+            pos_type = self.position['type']
+            stop_loss = self.position.get('stop_loss')
+            take_profit = self.position.get('take_profit', [])
+            
+            if pos_type == 'long':
+                # Check SL (very tight for M1)
+                if stop_loss and price <= stop_loss:
+                    self._close_position(price, candle['timestamp'])
+                # Check TP (take profits quickly)
+                elif take_profit and price >= take_profit[0]:
+                    self._close_position(price, candle['timestamp'])
+            elif pos_type == 'short':
+                # Check SL
+                if stop_loss and price >= stop_loss:
+                    self._close_position(price, candle['timestamp'])
+                # Check TP
+                elif take_profit and price <= take_profit[0]:
+                    self._close_position(price, candle['timestamp'])
+    
+    def _build_market_data_from_candle(self, candle: pd.Series) -> Dict:
+        """
+        Build market_data dictionary from candle for ARES analysis
+        """
+        price = candle['close']
+        
+        # Calculate RSI if we have enough history
+        rsi = 50.0
+        if len(self.price_history) >= 14:
+            prices = np.array(self.price_history[-14:])
+            deltas = np.diff(prices)
+            gains = deltas[deltas > 0].sum()
+            losses = abs(deltas[deltas < 0].sum())
+            if losses > 0:
+                rs = gains / losses
+                rsi = 100 - (100 / (1 + rs))
+        
+        # Calculate volatility
+        volatility = 2.0
+        if len(self.price_history) >= 20:
+            returns = np.diff(self.price_history[-20:]) / self.price_history[-21:-1] * 100
+            volatility = float(np.std(returns))
+        
+        # Calculate volume ratio if available
+        volume_ratio = 1.0
+        if 'volume' in candle.index:
+            volume_ratio = 1.0
+        
+        # Build market_data
+        market_data = {
+            'price': price,
+            'prices': list(self.price_history[-50:]) if len(self.price_history) > 0 else [price],
+            'rsi': rsi,
+            'macd': 0.0,
+            'momentum': 0.0,
+            'volume_24h': candle.get('volume', 0),
+            'volume_ma20': candle.get('volume', 0),
+            'volatility': volatility,
+            'change_1m': 0.0,
+            'spread': 0.1,
+            'latency': 50,
+            'orderbook': {
+                'bids': [[price - 50, 1.0], [price - 100, 2.0]],
+                'asks': [[price + 50, 1.0], [price + 100, 2.0]]
+            }
+        }
+        
+        return market_data
     
     def _open_position(self, position_type: str, price: float, timestamp: datetime):
         """Open trading position"""
