@@ -188,6 +188,7 @@ class EnhancedTradingSystem:
             
             # Convertir símbolo correctamente para Binance
             # BTC/USD → BTC/USDT, ETH/USD → ETH/USDT
+            binance_symbol = symbol  # Default value
             parts = symbol.split('/')
             if len(parts) == 2:
                 base = parts[0]
@@ -196,10 +197,6 @@ class EnhancedTradingSystem:
                 # Binance usa USDT en lugar de USD
                 if quote == 'USD':
                     binance_symbol = f"{base}/USDT"
-                else:
-                    binance_symbol = symbol
-            else:
-                binance_symbol = symbol
             
             ticker = binance.fetch_ticker(binance_symbol)
             logger.info(f"✅ Precio obtenido desde Binance: {binance_symbol}")
@@ -211,7 +208,7 @@ class EnhancedTradingSystem:
                 'timestamp': datetime.now().isoformat()
             }
         except Exception as e:
-            logger.warning(f"⚠️ Binance falló para {binance_symbol if 'binance_symbol' in locals() else symbol}: {e}")
+            logger.warning(f"⚠️ Binance falló para {binance_symbol}: {e}")
         
         # SI TODO FALLA: Error claro
         logger.error(f"❌ TODAS las fuentes fallaron para {symbol}")
