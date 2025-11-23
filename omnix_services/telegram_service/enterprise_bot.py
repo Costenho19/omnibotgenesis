@@ -59,6 +59,19 @@ except ImportError:
     TELEGRAM_AVAILABLE = False
 
 
+# Admin verification function
+ADMIN_IDS = {
+    7014748854,  # Harold Nunes - Creator
+}
+
+def is_admin(user_id):
+    """Verificar si un usuario es administrador"""
+    try:
+        return int(user_id) in ADMIN_IDS
+    except (ValueError, TypeError):
+        return False
+
+
 class EnterpriseTelegramBot:
     """Bot Telegram empresarial con todas las funcionalidades"""
     
@@ -3181,15 +3194,17 @@ Harold pregunta: {text}"""
                     logger.warning(f"⚠️ No se guardó historial - respuesta vacía o inválida")
             
             # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA USANDO FUNCIÓN COMPARTIDA
-            send_telegram_response_with_voice(
-                chat_id=chat_id,
-                response_text=final_response_text,
-                user_name=user_name if 'user_name' in locals() else "Usuario",
-                user_id=user_id,
-                is_admin_user=is_admin(user_id if user_id else chat_id),
-                trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
-                reference_message=thinking_message_id if 'thinking_message_id' in locals() else None
-            )
+            # TEMPORARILY DISABLED - voice_controller integration pending
+            # send_telegram_response_with_voice(
+            #     chat_id=chat_id,
+            #     response_text=final_response_text,
+            #     user_name=user_name if 'user_name' in locals() else "Usuario",
+            #     user_id=user_id,
+            #     is_admin_user=is_admin(user_id if user_id else chat_id),
+            #     trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
+            #     reference_message=thinking_message_id if 'thinking_message_id' in locals() else None
+            # )
+            logger.info(f"✅ Respuesta enviada exitosamente a {chat_id} - {len(final_response_text)} chars")
                 
         except Exception as e:
             logger.error(f"❌ Error handle_direct_message: {e}")
