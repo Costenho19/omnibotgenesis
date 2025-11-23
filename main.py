@@ -297,10 +297,17 @@ from omnix_services.analytics import (
     VolumeProfileAnalyzer
 )
 
+# Market Intelligence Services (migrated from monolithic main.py)
+from omnix_services.market_data.intelligence import (
+    FreeNewsAnalyzer,
+    FreeEconomicCalendar,
+    MultiExchangeArbitrage
+)
+
 from omnix_services.telegram_service import EnterpriseTelegramBot
 from omnix_core import TradingSystem
 
-logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + concurrency + analytics + TradingSystem")
+logger.info("✅ Servicios modulares cargados: market_data + analyzers + voice_controller + concurrency + analytics + intelligence + TradingSystem")
 
 # Global voice engine instance (managed by voice_controller)
 global_voice_engine = None
@@ -425,208 +432,6 @@ try:
     ECONOMIC_CALENDAR_AVAILABLE = True
 except ImportError:
     ECONOMIC_CALENDAR_AVAILABLE = False
-
-# NUEVOS MÓDULOS GRATUITOS REALES
-class FreeNewsAnalyzer:
-    """Análisis gratuito de noticias crypto desde RSS feeds"""
-    
-    def __init__(self):
-        self.news_sources = [
-            'https://cointelegraph.com/rss',
-            'https://feeds.coindesk.com/coindesk/news',
-            'https://www.cryptocoinsnews.com/feed/',
-            'https://bitcoinmagazine.com/feed'
-        ]
-        
-    def get_crypto_news(self, limit=10):
-        """Obtener noticias crypto gratuitas"""
-        try:
-            all_news = []
-            for source in self.news_sources[:2]:  # Solo 2 fuentes para no saturar
-                try:
-                    if WEB_ANALYSIS_AVAILABLE:
-                        import feedparser
-                        feed = feedparser.parse(source)
-                        for entry in feed.entries[:limit//2]:
-                            all_news.append({
-                                'title': entry.title,
-                                'summary': entry.get('summary', '')[:200],
-                                'published': entry.get('published', ''),
-                                'source': source.split('//')[1].split('/')[0]
-                            })
-                except:
-                    continue
-            return all_news[:limit]
-        except:
-            return []
-    
-    def analyze_sentiment(self, text):
-        """Análisis sentiment gratuito"""
-        try:
-            if SENTIMENT_ANALYSIS_AVAILABLE:
-                from textblob import TextBlob
-                blob = TextBlob(text)
-                sentiment = blob.sentiment.polarity
-                
-                if sentiment > 0.1:
-                    return {'sentiment': 'POSITIVE', 'score': sentiment}
-                elif sentiment < -0.1:
-                    return {'sentiment': 'NEGATIVE', 'score': sentiment}
-                else:
-                    return {'sentiment': 'NEUTRAL', 'score': sentiment}
-            else:
-                # Análisis simple basado en palabras clave
-                positive_words = ['pump', 'moon', 'bullish', 'up', 'gain', 'rise', 'green']
-                negative_words = ['dump', 'crash', 'bearish', 'down', 'loss', 'fall', 'red']
-                
-                text_lower = text.lower()
-                positive_count = sum(1 for word in positive_words if word in text_lower)
-                negative_count = sum(1 for word in negative_words if word in text_lower)
-                
-                if positive_count > negative_count:
-                    return {'sentiment': 'POSITIVE', 'score': 0.5}
-                elif negative_count > positive_count:
-                    return {'sentiment': 'NEGATIVE', 'score': -0.5}
-                else:
-                    return {'sentiment': 'NEUTRAL', 'score': 0.0}
-        except:
-            return {'sentiment': 'NEUTRAL', 'score': 0.0}
-
-class FreeEconomicCalendar:
-    """Calendar económico gratuito para eventos que afectan crypto"""
-    
-    def __init__(self):
-        self.events_cache = {}
-        
-    def get_today_events(self):
-        """Obtener eventos económicos de hoy - GRATIS"""
-        try:
-            # Eventos hardcodeados más importantes que afectan crypto
-            from datetime import datetime
-            today = datetime.now().strftime('%Y-%m-%d')
-            
-            # Base de eventos que siempre afectan crypto
-            major_events = [
-                {'time': '14:30', 'event': 'US Employment Data', 'impact': 'HIGH', 'currency': 'USD'},
-                {'time': '16:00', 'event': 'Federal Reserve Speech', 'impact': 'MEDIUM', 'currency': 'USD'},
-                {'time': '20:00', 'event': 'SEC Crypto Announcement', 'impact': 'HIGH', 'currency': 'USD'},
-                {'time': '08:30', 'event': 'European Central Bank Decision', 'impact': 'MEDIUM', 'currency': 'EUR'},
-                {'time': '12:00', 'event': 'Bitcoin ETF Update', 'impact': 'HIGH', 'currency': 'BTC'}
-            ]
-            
-            # Retornar 2-3 eventos aleatorios para simular calendario real
-            # EVENTOS ECONÓMICOS REALES usando API ForexFactory o similar
-            try:
-                # API real de calendario económico (ejemplo con ForexFactory)
-                response = requests.get('https://www.forexfactory.com/calendar.php?format=json')
-                if response.status_code == 200:
-                    real_events = response.json()[:3]  # Top 3 eventos reales
-                    selected_events = real_events if real_events else major_events[:3]
-                else:
-                    selected_events = major_events[:3]  # Fallback a eventos predeterminados
-            except:
-                selected_events = major_events[:3]  # Fallback seguro
-            
-            return {
-                'date': today,
-                'events': selected_events,
-                'total_high_impact': len([e for e in selected_events if e['impact'] == 'HIGH'])
-            }
-        except:
-            return {'date': 'unknown', 'events': [], 'total_high_impact': 0}
-
-class MultiExchangeArbitrage:
-    """Arbitraje multi-exchange REAL (usando APIs gratuitas)"""
-    
-    def __init__(self):
-        self.exchanges = ['kraken', 'coinbase', 'binance']  # Solo los que tenemos disponibles
-        
-    def check_arbitrage_opportunities(self, symbol='BTC/USD'):
-        """Buscar oportunidades de arbitraje reales"""
-        try:
-            if not TRADING_AVAILABLE:
-                return {'opportunities': []}
-                
-            import ccxt
-            prices = {}
-            
-            # Kraken (ya conectado)
-            try:
-                kraken = ccxt.kraken()
-                ticker = kraken.fetch_ticker(symbol)
-                prices['kraken'] = {
-                    'price': ticker['last'],
-                    'exchange': 'kraken',
-                    'volume': ticker['quoteVolume']
-                }
-            except:
-                pass
-            
-            # PRECIOS REALES de otros exchanges
-            try:
-                # Coinbase Pro API REAL
-                coinbase_pro = ccxt.coinbasepro()
-                cb_ticker = coinbase_pro.fetch_ticker(symbol)
-                prices['coinbase'] = {
-                    'price': cb_ticker['last'],
-                    'exchange': 'coinbase',
-                    'volume': cb_ticker['quoteVolume']
-                }
-            except Exception as e:
-                logger.warning(f"No se pudo obtener precio real de Coinbase: {e}")
-                
-            try:
-                # Binance API REAL
-                binance = ccxt.binance()
-                binance_ticker = binance.fetch_ticker(symbol.replace('/', ''))  # Binance usa BTCUSDT format
-                prices['binance'] = {
-                    'price': binance_ticker['last'],
-                    'exchange': 'binance', 
-                    'volume': binance_ticker['quoteVolume']
-                }
-            except Exception as e:
-                logger.warning(f"No se pudo obtener precio real de Binance: {e}")
-            
-            # Calcular oportunidades
-            opportunities = []
-            exchanges = list(prices.keys())
-            
-            for i, ex1 in enumerate(exchanges):
-                for ex2 in exchanges[i+1:]:
-                    price1 = prices[ex1]['price']
-                    price2 = prices[ex2]['price']
-                    
-                    if price1 > price2:
-                        profit_pct = ((price1 - price2) / price2) * 100
-                        if profit_pct > 0.1:  # Solo oportunidades >0.1%
-                            opportunities.append({
-                                'buy_exchange': ex2,
-                                'sell_exchange': ex1,
-                                'buy_price': price2,
-                                'sell_price': price1,
-                                'profit_percentage': profit_pct,
-                                'estimated_profit_usd': profit_pct * 1000 / 100  # Para $1000
-                            })
-                    elif price2 > price1:
-                        profit_pct = ((price2 - price1) / price1) * 100
-                        if profit_pct > 0.1:
-                            opportunities.append({
-                                'buy_exchange': ex1,
-                                'sell_exchange': ex2,
-                                'buy_price': price1,
-                                'sell_price': price2,
-                                'profit_percentage': profit_pct,
-                                'estimated_profit_usd': profit_pct * 1000 / 100
-                            })
-            
-            return {
-                'symbol': symbol,
-                'opportunities': opportunities,
-                'total_opportunities': len(opportunities),
-                'max_profit': max([o['profit_percentage'] for o in opportunities], default=0)
-            }
-        except Exception as e:
-            return {'opportunities': [], 'error': str(e)}
 
 # ACTIVAR NUEVOS MÓDULOS GRATUITOS
 FREE_MODULES_ACTIVE = True
