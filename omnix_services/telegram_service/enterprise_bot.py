@@ -240,6 +240,7 @@ class EnterpriseTelegramBot:
             # Comandos principales
             self.application.add_handler(CommandHandler("start", self.start_command))
             self.application.add_handler(CommandHandler("precio", self.precio_command))
+            self.application.add_handler(CommandHandler("market", self.market_command))
             self.application.add_handler(CommandHandler("help", self.help_command))
             self.application.add_handler(CommandHandler("ayuda", self.help_command))
             self.application.add_handler(CommandHandler("legal", self.legal_command))
@@ -373,6 +374,7 @@ Opera bajo tu propio riesgo. /legal para detalles."""
 
 **INFORMACION DE MERCADO:**
 /precio [crypto] - Precio actual (ej: /precio BTC)
+/market - 📊 Dashboard premium del mercado (datos reales Kraken)
 /balance - Tu balance real en Kraken
 /convertir [cantidad] [CRYPTO] - Convertir cantidad específica a USD (ej: /convertir 50 BTC)
 /convertir_usd - Convertir todas las cryptos a USD
@@ -725,6 +727,126 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
             
         except Exception as e:
             logger.error(f"❌ Error comando precio: {e}")
+
+    async def market_command(self, update, context):
+        """Comando /market - Dashboard Premium del Mercado Cripto con datos 100% reales de Kraken"""
+        try:
+            # Lista de cryptos principales a monitorear
+            cryptos = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE']
+            
+            # Mensaje de carga
+            loading_msg = await update.message.reply_text("📊 Cargando dashboard del mercado desde Kraken...")
+            
+            # Obtener datos reales de Kraken para cada crypto
+            market_data = []
+            total_volume_usd = 0
+            
+            for symbol in cryptos:
+                try:
+                    if not global_trading_system:
+                        continue
+                    
+                    price_data = global_trading_system.get_real_market_data(f"{symbol}/USD")
+                    
+                    if price_data and 'precio_actual' in price_data:
+                        precio = price_data['precio_actual']
+                        volumen = price_data.get('volumen', 0)
+                        cambio_24h = price_data.get('cambio_24h', 0)
+                        
+                        # Determinar emoji de tendencia
+                        if cambio_24h > 0:
+                            trend = "🟢" if cambio_24h > 2 else "🔵"
+                        else:
+                            trend = "🔴" if cambio_24h < -2 else "🟡"
+                        
+                        market_data.append({
+                            'symbol': symbol,
+                            'price': precio,
+                            'volume': volumen,
+                            'change_24h': cambio_24h,
+                            'trend': trend
+                        })
+                        
+                        # Sumar volumen total (convertir a número si es string)
+                        try:
+                            vol_num = float(volumen.replace('M', '').replace('K', '')) if isinstance(volumen, str) else volumen
+                            total_volume_usd += vol_num
+                        except:
+                            pass
+                    
+                except Exception as e:
+                    logger.warning(f"No se pudo obtener datos para {symbol}: {e}")
+                    continue
+            
+            # Calcular estadísticas del mercado
+            if market_data:
+                avg_change = sum(d['change_24h'] for d in market_data) / len(market_data)
+                gainers = sorted([d for d in market_data if d['change_24h'] > 0], key=lambda x: x['change_24h'], reverse=True)[:3]
+                losers = sorted([d for d in market_data if d['change_24h'] < 0], key=lambda x: x['change_24h'])[:3]
+                
+                # Determinar sentimiento general del mercado
+                if avg_change > 2:
+                    market_sentiment = "🚀 BULLISH FUERTE"
+                elif avg_change > 0:
+                    market_sentiment = "🟢 BULLISH"
+                elif avg_change > -2:
+                    market_sentiment = "🟡 NEUTRAL"
+                else:
+                    market_sentiment = "🔴 BEARISH"
+                
+                # Construir mensaje premium
+                response = f"""
+📊 **OMNIX MARKET DASHBOARD PREMIUM**
+
+🌐 **OVERVIEW DEL MERCADO**
+   Sentimiento: {market_sentiment}
+   Cambio promedio: {avg_change:+.2f}%
+   Timestamp: {datetime.now().strftime('%H:%M:%S UTC')}
+
+💰 **PRECIOS EN TIEMPO REAL (KRAKEN)**
+"""
+                
+                # Agregar cada crypto con formato premium
+                for data in market_data:
+                    response += f"""
+{data['trend']} **{data['symbol']}/USD**
+   ${data['price']:,.2f} | {data['change_24h']:+.2f}% | Vol: {data['volume']}"""
+                
+                # Top Gainers
+                if gainers:
+                    response += "\n\n🏆 **TOP GAINERS 24H**\n"
+                    for g in gainers:
+                        response += f"   {g['symbol']}: {g['change_24h']:+.2f}%\n"
+                
+                # Top Losers
+                if losers:
+                    response += "\n📉 **TOP LOSERS 24H**\n"
+                    for l in losers:
+                        response += f"   {l['symbol']}: {l['change_24h']:+.2f}%\n"
+                
+                response += """
+⚡ **DATOS 100% REALES**
+   • Fuente: Kraken Exchange API
+   • Actualización: Tiempo real
+   • Sin datos mock ni simulados
+
+💡 **COMANDOS RELACIONADOS**
+   `/precio BTC` - Precio detallado
+   `/analisis ETH` - Análisis técnico completo
+   `/arbitrage_scan BTC/USD` - Buscar arbitraje
+
+*OMNIX V6.0 ULTRA - Market Intelligence*
+"""
+            else:
+                response = "❌ No se pudieron obtener datos del mercado. Verifica la conexión con Kraken."
+            
+            # Eliminar mensaje de carga y enviar respuesta
+            await loading_msg.delete()
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"❌ Error comando market: {e}")
+            await update.message.reply_text("❌ Error obteniendo dashboard del mercado")
 
     async def balance_command(self, update, context):
         """Comando /balance"""

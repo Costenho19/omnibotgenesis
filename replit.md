@@ -8,7 +8,8 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Replit (Development)**: ✅ LIVE - Bot Telegram operativo con ARES V1+V2, Paper Trading $1M, modular architecture validated
 - **Entry Point Unificado**: `python -u main.py` funciona idénticamente en Replit y Railway (zero config drift)
 
-**Recent Changes (November 23, 2025):**
+**Recent Changes (November 24, 2025):**
+- 📊 **MARKET DASHBOARD PREMIUM**: Comando `/market` con datos 100% reales de Kraken - Dashboard institucional con precios en tiempo real de 6 cryptos (BTC, ETH, SOL, XRP, ADA, DOGE), sentimiento de mercado, top gainers/losers, volúmenes 24h y tendencias visuales
 - 💱 **ARBITRAGE MULTI-EXCHANGE PREMIUM V6.0**: Sistema institucional de arbitraje con 8 exchanges (Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex) para generar ganancias continuas comprando barato/vendiendo caro automáticamente
 - ✅ **Premium Validation System**: Sistema completo de validación con 10 eventos históricos críticos (COVID crash, FTX collapse, etc.)
 - ✅ **Strategy Comparator**: Comparación automática ARES vs Buy & Hold con métricas institucionales
