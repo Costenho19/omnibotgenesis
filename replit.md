@@ -9,6 +9,7 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Entry Point Unificado**: `python -u main.py` funciona idénticamente en Replit y Railway (zero config drift)
 
 **Recent Changes (November 23, 2025):**
+- 💱 **ARBITRAGE MULTI-EXCHANGE PREMIUM V6.0**: Sistema institucional de arbitraje con 8 exchanges (Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex) para generar ganancias continuas comprando barato/vendiendo caro automáticamente
 - ✅ **Premium Validation System**: Sistema completo de validación con 10 eventos históricos críticos (COVID crash, FTX collapse, etc.)
 - ✅ **Strategy Comparator**: Comparación automática ARES vs Buy & Hold con métricas institucionales
 - ✅ **Historical Events Validator**: Validación de rendimiento en crashes, rallies y eventos extremos
@@ -34,7 +35,7 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - `omnix_services/concurrency/`: IntelligentCacheSystem, OptimizedConcurrencyManager, ScalableResourceManager
 - `omnix_services/market_data/`: fetch_market_snapshot, sentiment_data, arbitrage detection, analysis_helpers
 - `omnix_services/market_data/sentiment/`: advanced_analyzer.py - Análisis de sentimiento de mercado
-- `omnix_services/market_data/intelligence/`: FreeNewsAnalyzer, FreeEconomicCalendar, MultiExchangeArbitrage
+- `omnix_services/market_data/intelligence/`: FreeNewsAnalyzer, FreeEconomicCalendar, MultiExchangeArbitragePremium (8 exchanges), ArbitrageExecutorPremium (parallel execution)
 - `omnix_services/ai_service/`: ConversationalAI adapter con multi-LLM support (Gemini 2.0, GPT-4o, Claude)
 - `omnix_services/ai_service/video/`: analyzer.py, integration.py, learning_analyzer.py - AI Vision para videos de trading
 - `omnix_services/database_service/`: DatabaseManager con PostgreSQL enterprise operations

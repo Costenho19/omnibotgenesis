@@ -306,7 +306,8 @@ from omnix_services.analytics import (
 from omnix_services.market_data.intelligence import (
     FreeNewsAnalyzer,
     FreeEconomicCalendar,
-    MultiExchangeArbitrage
+    MultiExchangeArbitragePremium,
+    ArbitrageExecutorPremium
 )
 
 # Optimization Services (migrated from monolithic main.py)
@@ -387,7 +388,8 @@ except ImportError:
 FREE_MODULES_ACTIVE = True
 news_analyzer = FreeNewsAnalyzer()
 economic_calendar = FreeEconomicCalendar()
-arbitrage_scanner = MultiExchangeArbitrage()
+arbitrage_scanner = MultiExchangeArbitragePremium()
+arbitrage_executor = ArbitrageExecutorPremium(paper_trading=True)
 
 # Sistema de voz - FUNDAMENTAL PARA OMNIX
 try:

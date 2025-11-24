@@ -32,6 +32,15 @@ except ImportError:
     TRADING_ENTERPRISE_AVAILABLE = False
     logger.warning("⚠️ Trading Enterprise no disponible - usando fallback")
 
+# Arbitrage Multi-Exchange Premium
+try:
+    from omnix_services.market_data.intelligence.arbitrage_scanner import MultiExchangeArbitragePremium
+    from omnix_services.market_data.intelligence.arbitrage_executor import ArbitrageExecutorPremium
+    ARBITRAGE_AVAILABLE = True
+except ImportError:
+    ARBITRAGE_AVAILABLE = False
+    logger.warning("⚠️ Arbitrage modules no disponibles")
+
 try:
     from omnix_core.bot import PaperTradingManager
     PAPER_TRADING_AVAILABLE = True
@@ -195,6 +204,23 @@ class EnterpriseTelegramBot:
             if STOCK_TRADING_ENABLED:
                 logger.warning("📊 Stock Trading solicitado pero módulo no disponible")
         
+        # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM V6.0
+        if ARBITRAGE_AVAILABLE:
+            try:
+                self.arbitrage_scanner = MultiExchangeArbitragePremium()
+                self.arbitrage_executor = ArbitrageExecutorPremium(paper_trading=True)
+                logger.info("💱 Arbitrage System Premium ACTIVADO - 8 exchanges")
+                logger.info(f"   📊 Exchanges: Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex")
+                logger.info(f"   🎯 Mode: PAPER TRADING (set ARBITRAGE_LIVE_MODE=true for real trading)")
+                logger.info(f"   💰 Min Profit: {self.arbitrage_scanner.min_profit_threshold}%")
+            except Exception as e:
+                logger.warning(f"⚠️ Arbitrage System error: {e}")
+                self.arbitrage_scanner = None
+                self.arbitrage_executor = None
+        else:
+            self.arbitrage_scanner = None
+            self.arbitrage_executor = None
+        
         self.setup_bot()
     
     def setup_bot(self):
@@ -267,6 +293,14 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("comprar_bolsa", self.buy_stock_command))
                 self.application.add_handler(CommandHandler("vender_bolsa", self.sell_stock_command))
                 logger.info("📊 Stock Trading commands registrados: /balance_bolsa, /mercado, /analizar, /comprar_bolsa, /vender_bolsa")
+            
+            # 💱 Comandos Arbitrage Multi-Exchange Premium V6.0
+            if self.arbitrage_scanner:
+                self.application.add_handler(CommandHandler("arbitrage", self.arbitrage_command))
+                self.application.add_handler(CommandHandler("arbitrage_scan", self.arbitrage_scan_command))
+                self.application.add_handler(CommandHandler("arbitrage_execute", self.arbitrage_execute_command))
+                self.application.add_handler(CommandHandler("arbitrage_stats", self.arbitrage_stats_command))
+                logger.info("💱 Arbitrage commands registrados: /arbitrage, /arbitrage_scan, /arbitrage_execute, /arbitrage_stats")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -3489,6 +3523,264 @@ Harold pregunta: {text}"""
             await update.message.reply_text(response, parse_mode='Markdown')
         except Exception as e:
             logger.error(f"Error en sell_stock: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    # ==========================================
+    # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM V6.0
+    # ==========================================
+    
+    async def arbitrage_command(self, update, context):
+        """Comando /arbitrage - Información del sistema de arbitraje"""
+        if not self.arbitrage_scanner:
+            await update.message.reply_text("💱 Módulo de arbitraje no disponible")
+            return
+        
+        try:
+            response = f"""
+💱 **OMNIX ARBITRAGE PREMIUM V6.0**
+
+🏦 **Sistema Multi-Exchange Institucional**
+   • 8 Exchanges: Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex
+   • Profit mínimo: {self.arbitrage_scanner.min_profit_threshold}%
+   • Modo: {'📄 PAPER TRADING' if self.arbitrage_executor.paper_trading else '🔴 LIVE TRADING'}
+
+📊 **Comandos Disponibles:**
+   `/arbitrage_scan [SYMBOL]` - Escanear oportunidades
+   `/arbitrage_execute [AMOUNT]` - Ejecutar mejor oportunidad
+   `/arbitrage_stats` - Ver estadísticas
+
+🎯 **Cómo Funciona:**
+   1. Escanea precios en 8 exchanges simultáneamente
+   2. Detecta diferencias de precio (spreads)
+   3. Calcula profit neto (después de fees)
+   4. Ejecuta compra/venta paralela automática
+
+💰 **Ejemplo:**
+   BTC en Binance: $87,800
+   BTC en Kraken: $88,100
+   → Profit: $300 por BTC (0.34%)
+
+⚡ **Ultra-Rápido:**
+   • Latencia: <100ms por exchange
+   • Ejecución: Paralela (compra + venta simultánea)
+   • Kill-switch: Protección automática
+
+🔐 **Seguridad:**
+   • API keys gestionadas con Replit Secrets
+   • Paper trading por default (sin riesgo)
+   • Límites de trading configurables
+
+¡Usa /arbitrage_scan BTC/USD para buscar oportunidades ahora!
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en arbitrage_command: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def arbitrage_scan_command(self, update, context):
+        """Comando /arbitrage_scan [SYMBOL] - Escanear oportunidades de arbitraje"""
+        if not self.arbitrage_scanner:
+            await update.message.reply_text("💱 Módulo de arbitraje no disponible")
+            return
+        
+        try:
+            # Obtener símbolo (default: BTC/USD)
+            symbol = context.args[0] if context.args else 'BTC/USD'
+            
+            # Mensaje de carga
+            loading_msg = await update.message.reply_text(f"🔍 Escaneando {symbol} en 8 exchanges...")
+            
+            # Ejecutar escaneo
+            result = self.arbitrage_scanner.check_arbitrage_opportunities(symbol)
+            
+            if not result.get('success'):
+                await loading_msg.edit_text(f"❌ Error: {result.get('error', 'Unknown error')}")
+                return
+            
+            opportunities = result.get('opportunities', [])
+            stats = result.get('statistics', {})
+            prices = result.get('prices', {})
+            
+            # Formatear respuesta
+            if not opportunities:
+                response = f"""
+🔍 **Escaneo Completado - {symbol}**
+
+📊 **Resultado:**
+   ❌ No se encontraron oportunidades de arbitraje
+   
+📈 **Precios en Exchanges:**
+"""
+                for ex_name, price_data in prices.items():
+                    response += f"   • {ex_name.capitalize()}: ${price_data['price']:,.2f}\n"
+                
+                response += f"\n💡 Se escanearon {stats['exchanges_with_data']} exchanges"
+                response += f"\n⚠️ Profit mínimo requerido: {self.arbitrage_scanner.min_profit_threshold}%"
+                
+            else:
+                response = f"""
+🎯 **OPORTUNIDADES DETECTADAS - {symbol}**
+
+📊 **Estadísticas:**
+   ✅ Oportunidades encontradas: {stats['total_opportunities']}
+   🏆 Mejor profit: {stats['best_profit_pct']:.2f}%
+   📈 Profit promedio: {stats['avg_profit_pct']:.2f}%
+   💰 Profit potencial (con $10K): ${stats.get('total_potential_profit_10k', 0):,.2f}
+
+🥇 **TOP 3 OPORTUNIDADES:**
+"""
+                for i, opp in enumerate(opportunities[:3], 1):
+                    response += f"""
+**#{i}** - Profit: {opp['net_profit_pct']:.2f}%
+   🛒 COMPRAR: {opp['buy_exchange'].capitalize()} @ ${opp['buy_price']:,.2f}
+   💸 VENDER: {opp['sell_exchange'].capitalize()} @ ${opp['sell_price']:,.2f}
+   💵 Con $1,000 → ${opp['profit_per_1k_usd']:.2f}
+   💰 Con $10,000 → ${opp['profit_per_10k_usd']:.2f}
+"""
+                
+                response += f"\n⚡ Usa /arbitrage_execute 1000 para ejecutar la mejor oportunidad con $1,000"
+            
+            await loading_msg.edit_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en arbitrage_scan: {e}")
+            import traceback
+            traceback.print_exc()
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def arbitrage_execute_command(self, update, context):
+        """Comando /arbitrage_execute [AMOUNT_USD] - Ejecutar mejor oportunidad de arbitraje"""
+        if not self.arbitrage_scanner or not self.arbitrage_executor:
+            await update.message.reply_text("💱 Módulo de arbitraje no disponible")
+            return
+        
+        try:
+            # Validar admin
+            user_id = update.effective_user.id
+            if not is_admin(user_id):
+                await update.message.reply_text("🔒 Solo administradores pueden ejecutar arbitraje")
+                return
+            
+            # Obtener amount (default: $1000)
+            amount_usd = float(context.args[0]) if context.args else 1000.0
+            
+            # Validar amount
+            if amount_usd > self.arbitrage_executor.max_trade_size_usd:
+                await update.message.reply_text(
+                    f"❌ Amount ${amount_usd:,.2f} excede límite de ${self.arbitrage_executor.max_trade_size_usd:,.2f}"
+                )
+                return
+            
+            # Mensaje de carga
+            loading_msg = await update.message.reply_text(f"🔍 Buscando mejor oportunidad para ${amount_usd:,.2f}...")
+            
+            # Escanear oportunidades
+            scan_result = self.arbitrage_scanner.check_arbitrage_opportunities('BTC/USD')
+            
+            if not scan_result.get('success') or not scan_result.get('opportunities'):
+                await loading_msg.edit_text("❌ No hay oportunidades de arbitraje disponibles en este momento")
+                return
+            
+            # Obtener mejor oportunidad
+            best_opportunity = scan_result['opportunities'][0]
+            
+            # Confirmar ejecución
+            await loading_msg.edit_text(
+                f"""
+🎯 **Ejecutando Arbitraje**
+
+💰 Amount: ${amount_usd:,.2f}
+📊 Profit esperado: {best_opportunity['net_profit_pct']:.2f}%
+🛒 Comprar: {best_opportunity['buy_exchange'].capitalize()}
+💸 Vender: {best_opportunity['sell_exchange'].capitalize()}
+
+⏳ Ejecutando trade paralelo...
+"""
+            )
+            
+            # Ejecutar arbitraje
+            import asyncio
+            exec_result = await self.arbitrage_executor.execute_arbitrage_trade(
+                best_opportunity, 
+                amount_usd
+            )
+            
+            if not exec_result.get('success'):
+                await loading_msg.edit_text(f"❌ Error en ejecución: {exec_result.get('error', 'Unknown error')}")
+                return
+            
+            # Formatear resultado
+            mode = '📄 PAPER TRADING' if exec_result['mode'] == 'PAPER_TRADING' else '🔴 LIVE TRADING'
+            
+            response = f"""
+✅ **ARBITRAJE EJECUTADO - {mode}**
+
+💰 **Resultado:**
+   • Amount: ${exec_result['amount_usd']:,.2f}
+   • BTC: {exec_result['btc_amount']:.8f}
+   • Profit: ${exec_result['actual_profit_usd']:.2f} ({exec_result['actual_profit_pct']:.2f}%)
+
+📊 **Detalles:**
+   🛒 Compra @ {exec_result['buy_exchange'].capitalize()}: ${exec_result['buy_price_actual']:,.2f}
+   💸 Venta @ {exec_result['sell_exchange'].capitalize()}: ${exec_result['sell_price_actual']:,.2f}
+   
+💵 **Costos:**
+   • Fees: ${exec_result.get('fees_usd', 0):.2f}
+   • Slippage: {exec_result.get('slippage_pct', 0):.2f}%
+
+⚡ **Performance:**
+   • Tiempo de ejecución: {exec_result.get('execution_time_ms', 0):.0f}ms
+   • Timestamp: {exec_result['timestamp']}
+
+📈 **Estadísticas:**
+   • Total trades: {self.arbitrage_executor.total_trades}
+   • Profit acumulado: ${self.arbitrage_executor.total_profit_usd:.2f}
+   • Success rate: {self.arbitrage_executor.success_rate:.1f}%
+"""
+            
+            await loading_msg.edit_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en arbitrage_execute: {e}")
+            import traceback
+            traceback.print_exc()
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def arbitrage_stats_command(self, update, context):
+        """Comando /arbitrage_stats - Ver estadísticas de arbitraje"""
+        if not self.arbitrage_executor:
+            await update.message.reply_text("💱 Módulo de arbitraje no disponible")
+            return
+        
+        try:
+            stats = self.arbitrage_executor.get_performance_stats()
+            
+            response = f"""
+📊 **ESTADÍSTICAS DE ARBITRAJE**
+
+💰 **Performance:**
+   • Total trades: {stats['total_trades']}
+   • Profit acumulado: ${stats['total_profit_usd']:.2f}
+   • Success rate: {stats['success_rate_pct']:.1f}%
+   • Avg profit/trade: ${stats['avg_profit_per_trade']:.2f}
+
+⚙️ **Configuración:**
+   • Modo: {stats['mode']}
+   • Max trade size: ${self.arbitrage_executor.max_trade_size_usd:,.2f}
+   • Max daily volume: ${self.arbitrage_executor.max_daily_volume_usd:,.2f}
+   • Min profit: {self.arbitrage_executor.min_profit_threshold}%
+
+📈 **Historial:**
+   • Trades ejecutados: {len(self.arbitrage_executor.execution_history)}
+   • Última ejecución: {self.arbitrage_executor.execution_history[-1]['timestamp'] if self.arbitrage_executor.execution_history else 'N/A'}
+
+🔄 Usa /arbitrage_scan para buscar nuevas oportunidades
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en arbitrage_stats: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 # Funciones de integración para comandos Harold
