@@ -9,7 +9,13 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Entry Point Unificado**: `python -u main.py` funciona idénticamente en Replit y Railway (zero config drift)
 
 **Recent Changes (November 25, 2025):**
-- 🔧 **ENVIRONMENT CONFIGURATION REFACTORING**: Centralización completa de variables de entorno en `omnix_config/env_manager.py` (442 líneas) con precedencia Replit Secrets > .env.local > defaults. Eliminados 5 archivos .env duplicados (de 9 a 4 archivos). Main.py migrado de os.getenv() a EnvConfig centralizado. Sistema validado operacional con ARES V1+V2, Signal Contribution, Arbitrage 8 exchanges.
+- 🔧 **COMPLETE ENVIRONMENT REFACTORING FINISHED**: Sistema de configuración unificado completado con arquitectura híbrida enterprise-grade:
+  - **env_manager.py**: 580 líneas, 30 variables catalogadas, singleton thread-safe, validación automática, 8 categorías (TELEGRAM, AI_APIS, TRADING_APIS, DATABASE, SECURITY, APP_SETTINGS, MONITORING, CELERY)
+  - **settings.py refactorizado**: Ahora usa `env_config.get()` internamente (eliminados todos los `os.getenv()`), mantiene interfaz limpia con dataclasses
+  - **Hardcoded credentials extracted**: `enterprise_bot.py` ahora usa `settings.TELEGRAM_ADMIN_ID` (14 apariciones de ID hardcoded eliminadas)
+  - **.env cleanup**: 9 archivos → 2 archivos (.env protegido, .env.example único template oficial)
+  - **Security**: `.env.sanitized` como referencia, `.gitignore` actualizado, MIGRATION_GUIDE.md documenta rotación de credenciales
+  - **Validated operational**: Bot RUNNING con Signal Contribution, ARES V1+V2, Arbitrage 8 exchanges, Community Intelligence, Paper Trading $1M
 
 **Previous Changes (November 24, 2025):**
 - 📊 **MARKET DASHBOARD PREMIUM**: Comando `/market` con datos 100% reales de Kraken - Dashboard institucional con precios en tiempo real de 6 cryptos (BTC, ETH, SOL, XRP, ADA, DOGE), sentimiento de mercado, top gainers/losers, volúmenes 24h y tendencias visuales
