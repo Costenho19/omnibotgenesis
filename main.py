@@ -580,9 +580,13 @@ if __name__ == "__main__":
         adaptive_weight_system = None
         auto_learning_system = None
         
+        # 5. DatabaseManager para AI Risk Guardian y otros servicios
+        db_manager = DatabaseManager()
+        logger.info("✅ DatabaseManager instanciado")
+        
         logger.info("📱 Instanciando EnterpriseTelegramBot...")
         # EnterpriseTelegramBot instancia ConversationalAI y TradingSystem internamente
-        telegram_bot = EnterpriseTelegramBot(db_manager=None)
+        telegram_bot = EnterpriseTelegramBot(db_manager=db_manager)
         logger.info("✅ EnterpriseTelegramBot instanciado correctamente")
         
         # Configurar signal handlers para shutdown limpio

@@ -74,6 +74,18 @@ except ImportError:
     VOICE_SERVICE_AVAILABLE = False
     logger.warning("⚠️ Voice Service no disponible")
 
+# ARES Quantum Protocols - Variables globales desde trading_system
+try:
+    from omnix_core.trading_system import global_ares_v1, global_ares_v2
+    ARES_AVAILABLE = global_ares_v1 is not None and global_ares_v2 is not None
+    if ARES_AVAILABLE:
+        logger.info("🧬 ARES V1/V2 disponibles desde trading_system")
+except ImportError:
+    global_ares_v1 = None
+    global_ares_v2 = None
+    ARES_AVAILABLE = False
+    logger.warning("⚠️ ARES Quantum Protocols no disponibles")
+
 try:
     from omnix_core.bot import PaperTradingManager
     PAPER_TRADING_AVAILABLE = True
@@ -160,7 +172,7 @@ class EnterpriseTelegramBot:
             from omnix_services.trading_service.paper_trading_manager import PaperTradingManager
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
             self.paper_trading = PaperTradingManager(
-                database_service=global_db_manager if 'global_db_manager' in globals() else None,
+                database_service=self.db_manager,
                 trading_service=trading_service
             )
             logger.info("📊 Paper Trading Manager inicializado - $1,000,000 disponible para pruebas")
@@ -174,7 +186,7 @@ class EnterpriseTelegramBot:
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
             self.auto_trading = AutoTradingBot(
                 trading_service=trading_service,
-                database_service=global_db_manager if 'global_db_manager' in globals() else None,
+                database_service=self.db_manager,
                 advanced_features=global_advanced_features if 'global_advanced_features' in globals() else None,
                 paper_trading=self.paper_trading,
                 ai_service=self.ai,  # 🎓 V5.2.3: AI para auto-learning de videos
