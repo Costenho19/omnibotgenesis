@@ -397,7 +397,7 @@ class VoiceServiceEnterprise:
             
             file_hash = hashlib.md5(str(file_id).encode()).hexdigest()[:8]
             audio_filename = f"voice_input_{int(time.time())}_{file_hash}.ogg"
-            audio_path = os.path.join(self.tempaudio_filename)
+            audio_path = os.path.join(self.temp_dir, audio_filename)
             
             with open(audio_path, 'wb') as audio_file:
                 audio_file.write(file_response.content)

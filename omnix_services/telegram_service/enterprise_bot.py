@@ -65,6 +65,15 @@ except ImportError:
     SIGNAL_CONTRIBUTION_AVAILABLE = False
     logger.warning("⚠️ Signal Contribution module no disponible")
 
+# Voice Service - TTS con Google gTTS
+try:
+    from omnix_services.voice_service.voice_controller import send_telegram_response_with_voice
+    VOICE_SERVICE_AVAILABLE = True
+    logger.info("🎤 Voice Service disponible")
+except ImportError:
+    VOICE_SERVICE_AVAILABLE = False
+    logger.warning("⚠️ Voice Service no disponible")
+
 try:
     from omnix_core.bot import PaperTradingManager
     PAPER_TRADING_AVAILABLE = True
@@ -3632,17 +3641,23 @@ Harold pregunta: {text}"""
                 else:
                     logger.warning(f"⚠️ No se guardó historial - respuesta vacía o inválida")
             
-            # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA USANDO FUNCIÓN COMPARTIDA
-            # TEMPORARILY DISABLED - voice_controller integration pending
-            # send_telegram_response_with_voice(
-            #     chat_id=chat_id,
-            #     response_text=final_response_text,
-            #     user_name=user_name if 'user_name' in locals() else "Usuario",
-            #     user_id=user_id,
-            #     is_admin_user=is_admin(user_id if user_id else chat_id),
-            #     trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
-            #     reference_message=thinking_message_id if 'thinking_message_id' in locals() else None
-            # )
+            # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA CON gTTS
+            if VOICE_SERVICE_AVAILABLE and final_response_text:
+                try:
+                    send_telegram_response_with_voice(
+                        chat_id=chat_id,
+                        response_text=final_response_text,
+                        user_name=user_name if 'user_name' in locals() else "Usuario",
+                        user_id=user_id,
+                        is_admin_user=is_admin(user_id if user_id else chat_id),
+                        trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
+                        reference_message=thinking_message_id if 'thinking_message_id' in locals() else None,
+                        is_admin_func=is_admin
+                    )
+                    logger.info(f"🎤 Voz enviada a {chat_id}")
+                except Exception as voice_error:
+                    logger.warning(f"⚠️ Error generando voz: {voice_error}")
+            
             logger.info(f"✅ Respuesta enviada exitosamente a {chat_id} - {len(final_response_text)} chars")
                 
         except Exception as e:
