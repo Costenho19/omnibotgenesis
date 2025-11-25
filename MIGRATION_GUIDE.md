@@ -647,7 +647,9 @@ For Replit issues:
 
 ## 📊 EXECUTIVE SUMMARY
 
-### ✅ Environment Files Audit (FINAL)
+### ✅ Environment & Config Files Audit (FINAL)
+
+**Environment files (.env*):**
 ```bash
 $ ls -lah .env* 2>/dev/null
 -rw-r--r-- 1 runner runner  463 Aug 20 09:32 .env
@@ -655,9 +657,23 @@ $ ls -lah .env* 2>/dev/null
 -rw-r--r-- 1 runner runner 2.8K Nov 25 08:22 .env.sanitized
 ```
 
-**Status:** ✅ CLEAN - Solo 3 archivos (.env, .env.example, .env.sanitized)  
-**Removed:** 6+ archivos obsoletos (.env.railway, .env.kraken, .env.deployment, etc.)  
-**No sobrantes detected** - Auditoría completa realizada con `find` y `grep`
+**Config files sobrantes eliminados:**
+```bash
+✅ .kraken_ready (253 bytes)
+✅ .kraken_real_trading_enabled (7 bytes)
+✅ .kraken_status (33 bytes)
+✅ .omnix_secret_key (64 bytes)
+✅ .stock_trading_enabled (7 bytes)
+✅ .trading_config_optimizado (687 bytes)
+✅ .trading_config_optimo_comisiones (307 bytes)
+✅ .vault_local_key (44 bytes)
+```
+
+**Status:** ✅ CLEAN  
+**Environment files:** 3 archivos (.env, .env.example, .env.sanitized)  
+**Removed:** 14+ archivos obsoletos (6 .env.* + 8 config files)  
+**Total cleaned:** ~1.4 KB config basura eliminada  
+**No sobrantes detected** - Auditoría completa con `find` y verificación manual
 
 ### 🏗️ Configuration System
 - **env_manager.py**: 579 líneas, 30 variables, 8 categorías

@@ -9,12 +9,15 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Entry Point Unificado**: `python -u main.py` funciona idénticamente en Replit y Railway (zero config drift)
 
 **Recent Changes (November 25, 2025):**
-- 🔧 **COMPLETE ENVIRONMENT REFACTORING FINISHED**: Sistema de configuración unificado completado con arquitectura híbrida enterprise-grade:
-  - **env_manager.py**: 580 líneas, 30 variables catalogadas, singleton thread-safe, validación automática, 8 categorías (TELEGRAM, AI_APIS, TRADING_APIS, DATABASE, SECURITY, APP_SETTINGS, MONITORING, CELERY)
+- 🔧 **COMPLETE ENVIRONMENT REFACTORING + CLEANUP FINISHED**: Sistema de configuración unificado completado con arquitectura híbrida enterprise-grade:
+  - **env_manager.py**: 579 líneas, 30 variables catalogadas, singleton thread-safe, validación automática, 8 categorías (TELEGRAM, AI_APIS, TRADING_APIS, DATABASE, SECURITY, APP_SETTINGS, MONITORING, CELERY)
   - **settings.py refactorizado**: Ahora usa `env_config.get()` internamente (eliminados todos los `os.getenv()`), mantiene interfaz limpia con dataclasses
   - **Hardcoded credentials extracted**: `enterprise_bot.py` ahora usa `settings.TELEGRAM_ADMIN_ID` (14 apariciones de ID hardcoded eliminadas)
-  - **.env cleanup**: 9 archivos → 2 archivos (.env protegido, .env.example único template oficial)
-  - **Security**: `.env.sanitized` como referencia, `.gitignore` actualizado, MIGRATION_GUIDE.md documenta rotación de credenciales
+  - **Config files cleanup COMPLETE**: 14+ archivos eliminados:
+    - `.env.*` (6 files): .env.railway, .env.kraken, .env.deployment, .env.migracion, .env.persistent, .env.pro
+    - Config sobrantes (8 files): .kraken_ready, .kraken_real_trading_enabled, .kraken_status, .omnix_secret_key, .stock_trading_enabled, .trading_config_optimizado, .trading_config_optimo_comisiones, .vault_local_key
+  - **Final state**: 3 archivos (.env protegido, .env.example template oficial, .env.sanitized referencia)
+  - **Security**: `.gitignore` actualizado, MIGRATION_GUIDE.md (690 líneas) documenta rotación de credenciales, arquitectura, deployment workflows, troubleshooting
   - **Validated operational**: Bot RUNNING con Signal Contribution, ARES V1+V2, Arbitrage 8 exchanges, Community Intelligence, Paper Trading $1M
 
 **Previous Changes (November 24, 2025):**
