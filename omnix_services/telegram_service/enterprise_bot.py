@@ -54,6 +54,14 @@ except ImportError:
     COMMUNITY_INTELLIGENCE_AVAILABLE = False
     logger.warning("⚠️ Community Intelligence modules no disponibles")
 
+# Signal Contribution - Crowdsourcing de Alpha V6.0
+try:
+    from omnix_services.community_intelligence.signal_contribution import SignalContributionManager
+    SIGNAL_CONTRIBUTION_AVAILABLE = True
+except ImportError:
+    SIGNAL_CONTRIBUTION_AVAILABLE = False
+    logger.warning("⚠️ Signal Contribution module no disponible")
+
 try:
     from omnix_core.bot import PaperTradingManager
     PAPER_TRADING_AVAILABLE = True
@@ -258,6 +266,18 @@ class EnterpriseTelegramBot:
             self.reward_system = None
             self.community_dashboard = None
         
+        # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.0
+        if SIGNAL_CONTRIBUTION_AVAILABLE:
+            try:
+                self.signal_contribution = SignalContributionManager(reward_system=self.reward_system)
+                logger.info("🚀 Signal Contribution ACTIVADO - Crowdsourcing de Alpha")
+                logger.info(f"   📡 Signal Manager: {'✅ Connected' if self.signal_contribution.connected else '❌ Disconnected'}")
+            except Exception as e:
+                logger.warning(f"⚠️ Signal Contribution error: {e}")
+                self.signal_contribution = None
+        else:
+            self.signal_contribution = None
+        
         self.setup_bot()
     
     def setup_bot(self):
@@ -350,6 +370,15 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("leaderboard", self.leaderboard_command))
                 self.application.add_handler(CommandHandler("analyze_patterns", self.analyze_patterns_command))
                 logger.info("🧠 Community Intelligence commands registrados: /feedback, /community_stats, /top_strategies, /my_contributions, /vote_strategy, /leaderboard")
+            
+            # 🚀 Comandos Signal Contribution - Crowdsourcing de Alpha V6.0
+            if self.signal_contribution:
+                self.application.add_handler(CommandHandler("share_signal", self.share_signal_command))
+                self.application.add_handler(CommandHandler("community_signals", self.community_signals_command))
+                self.application.add_handler(CommandHandler("my_signals", self.my_signals_command))
+                self.application.add_handler(CommandHandler("alpha_leaderboard", self.alpha_leaderboard_command))
+                self.application.add_handler(CommandHandler("execute_signal", self.execute_signal_command))
+                logger.info("🚀 Signal Contribution commands registrados: /share_signal, /community_signals, /my_signals, /alpha_leaderboard")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -4355,6 +4384,342 @@ Usa `/my_contributions` para ver tus stats
             
         except Exception as e:
             logger.error(f"Error en analyze_patterns: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.0
+    # ═══════════════════════════════════════════════════════════════════
+    
+    async def share_signal_command(self, update, context):
+        """Comando /share_signal - Compartir señal con la comunidad"""
+        if not self.signal_contribution:
+            await update.message.reply_text("🚀 Signal Contribution no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            args = context.args
+            
+            if len(args) < 3:
+                await update.message.reply_text("""
+🚀 **COMPARTIR SEÑAL CON LA COMUNIDAD**
+
+**Formato:**
+`/share_signal SYMBOL TIPO ENTRADA [TARGET] [STOPLOSS]`
+
+**Ejemplos:**
+`/share_signal BTC LONG 95000 100000 92000`
+`/share_signal ETH SHORT 3500 3200 3700`
+`/share_signal SOL LONG 180`
+
+**Tipos:** LONG, SHORT, NEUTRAL
+
+🏆 Gana **10 puntos** por compartir
+💰 Gana **+50 puntos** si tu señal es exitosa
+📈 Los mejores contribuidores aparecen en `/alpha_leaderboard`
+""", parse_mode='Markdown')
+                return
+            
+            symbol = args[0].upper()
+            signal_type = args[1].upper()
+            entry_price = float(args[2])
+            target_price = float(args[3]) if len(args) > 3 else None
+            stop_loss = float(args[4]) if len(args) > 4 else None
+            
+            reasoning = ' '.join(args[5:]) if len(args) > 5 else None
+            
+            signal_data = {
+                'symbol': symbol,
+                'signal_type': signal_type,
+                'entry_price': entry_price,
+                'target_price': target_price,
+                'stop_loss': stop_loss,
+                'timeframe': '1h',
+                'confidence': 70,
+                'reasoning': reasoning
+            }
+            
+            result = self.signal_contribution.share_signal(
+                str(user.id),
+                user.username or user.first_name,
+                signal_data
+            )
+            
+            if result.get('success'):
+                response = f"""
+🚀 **SEÑAL COMPARTIDA EXITOSAMENTE**
+
+📊 **{symbol}/USD - {signal_type}**
+💵 Entrada: ${entry_price:,.2f}
+{'🎯 Target: $' + f'{target_price:,.2f}' if target_price else ''}
+{'🛡️ Stop Loss: $' + f'{stop_loss:,.2f}' if stop_loss else ''}
+
+🔑 ID: `{result['signal_id']}`
+⏰ Expira: {result['expires_at'][:10]}
+
+🏆 **+{result['points_earned']} puntos** ganados!
+
+📡 Tu señal ahora es visible para toda la comunidad.
+Usa `/community_signals` para ver todas las señales activas.
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+"""
+            else:
+                response = f"❌ Error: {result.get('error', 'Unknown error')}"
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except ValueError:
+            await update.message.reply_text("❌ Error: Los precios deben ser números válidos")
+        except Exception as e:
+            logger.error(f"Error en share_signal: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def community_signals_command(self, update, context):
+        """Comando /community_signals - Ver señales activas de la comunidad"""
+        if not self.signal_contribution:
+            await update.message.reply_text("🚀 Signal Contribution no disponible")
+            return
+        
+        try:
+            args = context.args
+            symbol = args[0].upper() if args else None
+            
+            signals = self.signal_contribution.get_community_signals(limit=10, symbol=symbol)
+            
+            if not signals:
+                await update.message.reply_text("""
+📡 **SEÑALES COMUNITARIAS**
+
+No hay señales activas en este momento.
+
+🚀 ¡Sé el primero en compartir una señal!
+Usa `/share_signal BTC LONG 95000` para empezar.
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+""", parse_mode='Markdown')
+                return
+            
+            response = """
+📡 **SEÑALES ACTIVAS DE LA COMUNIDAD**
+
+"""
+            for i, signal in enumerate(signals, 1):
+                emoji = '🟢' if signal['signal_type'] == 'LONG' else '🔴' if signal['signal_type'] == 'SHORT' else '⚪'
+                
+                response += f"""
+{i}. {emoji} **{signal['symbol']}/USD - {signal['signal_type']}**
+   👤 Por: {signal['contributor_name']}
+   💵 Entrada: ${signal['entry_price']:,.2f if signal['entry_price'] else 'N/A'}
+   📊 Confianza: {signal['confidence']}%
+   👍 {signal['upvotes']} | 👎 {signal['downvotes']} | 📈 {signal['executions_count']} ejecuciones
+   🔑 ID: `{signal['signal_id'][:8]}...`
+"""
+            
+            response += """
+━━━━━━━━━━━━━━━━━━━━━━
+**Comandos:**
+• `/execute_signal ID` - Ejecutar señal
+• `/share_signal` - Compartir tu propia señal
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en community_signals: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def my_signals_command(self, update, context):
+        """Comando /my_signals - Ver mis señales compartidas"""
+        if not self.signal_contribution:
+            await update.message.reply_text("🚀 Signal Contribution no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            
+            data = self.signal_contribution.get_user_signals(str(user.id))
+            
+            stats = data.get('stats', {})
+            signals = data.get('signals', [])
+            
+            tier_emoji = {
+                'Diamond': '💎',
+                'Platinum': '🏆',
+                'Gold': '🥇',
+                'Silver': '🥈',
+                'Bronze': '🥉'
+            }
+            
+            tier = stats.get('rank_tier', 'Bronze')
+            
+            response = f"""
+📊 **MIS SEÑALES - {user.first_name}**
+
+{tier_emoji.get(tier, '🥉')} **Tier: {tier}**
+
+📈 **Estadísticas:**
+   • Señales compartidas: {stats.get('signals_shared', 0)}
+   • Señales exitosas: {stats.get('signals_successful', 0)}
+   • Win Rate: {stats.get('win_rate', 0):.1f}%
+   • Ejecuciones totales: {stats.get('total_executions', 0)}
+   • Royalty Points: {stats.get('royalty_points', 0)}
+   • Reputación: {stats.get('reputation_score', 50):.0f}/100
+
+"""
+            if signals:
+                response += "**Últimas señales:**\n"
+                for s in signals[:5]:
+                    status_emoji = '✅' if s['status'] == 'closed' else '⏳'
+                    response += f"   {status_emoji} {s['symbol']} {s['signal_type']} | 👍{s['upvotes']} 👎{s['downvotes']} | +{s['royalties_earned']} pts\n"
+            
+            response += """
+━━━━━━━━━━━━━━━━━━━━━━
+💡 **Tips para subir de tier:**
+• Comparte señales de calidad
+• Las señales exitosas dan +50 puntos
+• Los fallos restan -10 puntos
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en my_signals: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def alpha_leaderboard_command(self, update, context):
+        """Comando /alpha_leaderboard - Top contribuidores de señales"""
+        if not self.signal_contribution:
+            await update.message.reply_text("🚀 Signal Contribution no disponible")
+            return
+        
+        try:
+            leaders = self.signal_contribution.get_alpha_leaderboard(10)
+            
+            if not leaders:
+                await update.message.reply_text("""
+🏆 **ALPHA LEADERBOARD**
+
+No hay contribuidores aún.
+
+🚀 ¡Sé el primero en compartir señales!
+Usa `/share_signal BTC LONG 95000` para empezar.
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+""", parse_mode='Markdown')
+                return
+            
+            medals = ['🥇', '🥈', '🥉']
+            tier_emoji = {
+                'Diamond': '💎',
+                'Platinum': '🏆',
+                'Gold': '🥇',
+                'Silver': '🥈',
+                'Bronze': '🥉'
+            }
+            
+            response = """
+🏆 **ALPHA LEADERBOARD - TOP CONTRIBUIDORES**
+
+"""
+            for leader in leaders:
+                pos = leader['position']
+                medal = medals[pos-1] if pos <= 3 else f"#{pos}"
+                tier = leader.get('rank_tier', 'Bronze')
+                
+                response += f"""
+{medal} **{leader['username']}** {tier_emoji.get(tier, '')}
+   📊 Señales: {leader['signals_shared']} | Win Rate: {leader['win_rate']:.0f}%
+   🏆 Royalties: {leader['royalty_points']} pts | Rep: {leader['reputation_score']:.0f}/100
+"""
+            
+            user = update.effective_user
+            user_data = self.signal_contribution.get_user_signals(str(user.id))
+            user_stats = user_data.get('stats', {})
+            
+            response += f"""
+━━━━━━━━━━━━━━━━━━━━━━
+📍 **Tu posición:** #{user_stats.get('rank_position', 'N/A')}
+💰 **Tus royalties:** {user_stats.get('royalty_points', 0)} pts
+
+💡 Comparte señales exitosas para subir en el ranking!
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en alpha_leaderboard: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def execute_signal_command(self, update, context):
+        """Comando /execute_signal - Ejecutar una señal de la comunidad"""
+        if not self.signal_contribution:
+            await update.message.reply_text("🚀 Signal Contribution no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            args = context.args
+            
+            if not args:
+                await update.message.reply_text("""
+▶️ **EJECUTAR SEÑAL COMUNITARIA**
+
+**Formato:**
+`/execute_signal SIGNAL_ID`
+
+**Ejemplo:**
+`/execute_signal abc123def`
+
+📡 Usa `/community_signals` para ver las señales disponibles.
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+""", parse_mode='Markdown')
+                return
+            
+            signal_id = args[0]
+            
+            result = self.signal_contribution.execute_signal(
+                signal_id,
+                str(user.id),
+                user.username or user.first_name
+            )
+            
+            if result.get('success'):
+                signal = result['signal']
+                
+                response = f"""
+▶️ **SEÑAL EJECUTADA**
+
+📊 **{signal['symbol']}/USD - {signal['signal_type']}**
+👤 Creada por: {signal['contributor_name']}
+
+💵 Entrada: ${signal['entry_price']:,.2f if signal['entry_price'] else 'Market'}
+{'🎯 Target: $' + f"{signal['target_price']:,.2f}" if signal['target_price'] else ''}
+{'🛡️ Stop Loss: $' + f"{signal['stop_loss']:,.2f}" if signal['stop_loss'] else ''}
+
+📈 Esta es la ejecución #{signal['executions_count'] + 1} de esta señal.
+
+⚠️ **Importante:** Cuando cierres la posición, reporta el resultado con:
+`/report_result {signal_id[:8]} success/failure PROFIT%`
+
+El contribuidor ganará royalties si la señal es exitosa.
+
+*OMNIX V6.0 - Crowdsourcing de Alpha*
+"""
+            else:
+                response = f"❌ Error: {result.get('error', 'Unknown error')}"
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en execute_signal: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 # Funciones de integración para comandos Harold
