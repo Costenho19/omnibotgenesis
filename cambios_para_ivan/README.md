@@ -21,10 +21,12 @@ Esta carpeta contiene el registro completo de todos los cambios, mejoras y nueva
 
 ```
 cambios_para_ivan/
-├── README.md                           # Este archivo (índice general)
-├── CHANGELOG_2025-11-24.md            # Registro detallado de cambios de hoy
-├── arbitrage_system_documentation.md  # Documentación del sistema de arbitraje
-└── market_dashboard_documentation.md  # Documentación del dashboard de mercado
+├── README.md                                # Este archivo (índice general)
+├── CHANGELOG_2025-11-24.md                 # Registro cambios 24 Nov
+├── CHANGELOG_2025-11-25.md                 # Registro cambios 25 Nov (Community Intelligence)
+├── arbitrage_system_documentation.md       # Documentación del sistema de arbitraje
+├── market_dashboard_documentation.md       # Documentación del dashboard de mercado
+└── community_intelligence_documentation.md # Documentación de Memoria Colectiva
 ```
 
 ---
@@ -44,6 +46,15 @@ cambios_para_ivan/
 - **Archivos modificados:** 1
 - **Líneas de código:** ~120 líneas nuevas
 
+### 3. **Community Intelligence (Memoria Colectiva)** ⭐ NUEVO
+- **Fecha:** 25 de Noviembre 2025
+- **Estado:** ✅ COMPLETADO Y OPERATIVO
+- **Archivos creados:** 5 nuevos
+- **Archivos modificados:** 1
+- **Líneas de código:** ~1,778 líneas nuevas
+- **Comandos nuevos:** 7 (/feedback, /vote_strategy, /community_stats, /top_strategies, /my_contributions, /leaderboard, /analyze_patterns)
+- **Tablas DB nuevas:** 5 (community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns)
+
 ---
 
 ## 📊 IMPACTO EN EL SISTEMA
@@ -57,6 +68,7 @@ cambios_para_ivan/
 - ✅ Sistema de trading con ARES V1 + V2
 - ✅ **NUEVO:** Arbitraje automático en 8 exchanges
 - ✅ **NUEVO:** Dashboard de mercado institucional
+- ✅ **NUEVO:** Community Intelligence (Memoria Colectiva)
 - ✅ Comandos básicos mejorados
 - ✅ Paper trading con $1M virtual
 
@@ -74,6 +86,15 @@ cambios_para_ivan/
 1. Abrir Telegram
 2. Enviar: `/market`
 3. Verificar que muestra datos reales de Kraken (no mock)
+
+### Community Intelligence:
+1. Abrir Telegram
+2. Enviar: `/feedback ARES_V1 success` (dar feedback)
+3. Enviar: `/vote_strategy ARES_V1 5` (votar estrategia)
+4. Enviar: `/community_stats` (ver estadísticas)
+5. Enviar: `/my_contributions` (ver tu perfil)
+6. Enviar: `/leaderboard` (ver ranking)
+7. Enviar: `/top_strategies` (ver mejores estrategias)
 
 ---
 
@@ -96,4 +117,4 @@ cambios_para_ivan/
 
 ---
 
-**Última actualización:** 24 de Noviembre 2025, 20:15 UTC
+**Última actualización:** 25 de Noviembre 2025

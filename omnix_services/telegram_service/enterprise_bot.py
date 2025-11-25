@@ -41,6 +41,19 @@ except ImportError:
     ARBITRAGE_AVAILABLE = False
     logger.warning("⚠️ Arbitrage modules no disponibles")
 
+# Community Intelligence - Memoria Colectiva V6.0
+try:
+    from omnix_services.community_intelligence import (
+        CommunityFeedbackManager,
+        CommunityAnalyzer,
+        RewardSystem,
+        CommunityDashboard
+    )
+    COMMUNITY_INTELLIGENCE_AVAILABLE = True
+except ImportError:
+    COMMUNITY_INTELLIGENCE_AVAILABLE = False
+    logger.warning("⚠️ Community Intelligence modules no disponibles")
+
 try:
     from omnix_core.bot import PaperTradingManager
     PAPER_TRADING_AVAILABLE = True
@@ -221,6 +234,30 @@ class EnterpriseTelegramBot:
             self.arbitrage_scanner = None
             self.arbitrage_executor = None
         
+        # 🧠 COMMUNITY INTELLIGENCE - MEMORIA COLECTIVA V6.0
+        if COMMUNITY_INTELLIGENCE_AVAILABLE:
+            try:
+                self.feedback_manager = CommunityFeedbackManager()
+                self.community_analyzer = CommunityAnalyzer()
+                self.reward_system = RewardSystem()
+                self.community_dashboard = CommunityDashboard()
+                logger.info("🧠 Community Intelligence ACTIVADO - Memoria Colectiva")
+                logger.info(f"   📝 Feedback Manager: {'✅ Connected' if self.feedback_manager.connected else '❌ Disconnected'}")
+                logger.info(f"   🔍 Community Analyzer: {'✅ AI Enabled' if self.community_analyzer.ai_available else '⚠️ AI Not Available'}")
+                logger.info(f"   🏆 Reward System: ✅ Ready")
+                logger.info(f"   📊 Community Dashboard: ✅ Ready")
+            except Exception as e:
+                logger.warning(f"⚠️ Community Intelligence error: {e}")
+                self.feedback_manager = None
+                self.community_analyzer = None
+                self.reward_system = None
+                self.community_dashboard = None
+        else:
+            self.feedback_manager = None
+            self.community_analyzer = None
+            self.reward_system = None
+            self.community_dashboard = None
+        
         self.setup_bot()
     
     def setup_bot(self):
@@ -302,6 +339,17 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("arbitrage_execute", self.arbitrage_execute_command))
                 self.application.add_handler(CommandHandler("arbitrage_stats", self.arbitrage_stats_command))
                 logger.info("💱 Arbitrage commands registrados: /arbitrage, /arbitrage_scan, /arbitrage_execute, /arbitrage_stats")
+            
+            # 🧠 Comandos Community Intelligence - Memoria Colectiva V6.0
+            if self.feedback_manager:
+                self.application.add_handler(CommandHandler("feedback", self.feedback_command))
+                self.application.add_handler(CommandHandler("community_stats", self.community_stats_command))
+                self.application.add_handler(CommandHandler("top_strategies", self.top_strategies_command))
+                self.application.add_handler(CommandHandler("my_contributions", self.my_contributions_command))
+                self.application.add_handler(CommandHandler("vote_strategy", self.vote_strategy_command))
+                self.application.add_handler(CommandHandler("leaderboard", self.leaderboard_command))
+                self.application.add_handler(CommandHandler("analyze_patterns", self.analyze_patterns_command))
+                logger.info("🧠 Community Intelligence commands registrados: /feedback, /community_stats, /top_strategies, /my_contributions, /vote_strategy, /leaderboard")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -3903,6 +3951,384 @@ Harold pregunta: {text}"""
             
         except Exception as e:
             logger.error(f"Error en arbitrage_stats: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 🧠 COMMUNITY INTELLIGENCE COMMANDS - MEMORIA COLECTIVA V6.0
+    # ═══════════════════════════════════════════════════════════════════════════
+    
+    async def feedback_command(self, update, context):
+        """Comando /feedback [strategy] [result] - Reportar feedback sobre señal/estrategia"""
+        if not self.feedback_manager:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            args = context.args
+            
+            if len(args) < 2:
+                help_text = """
+🧠 **REPORTAR FEEDBACK**
+
+**Uso:** `/feedback [estrategia] [resultado]`
+
+**Estrategias disponibles:**
+• `ARES_V1` - Swing Trading
+• `ARES_V2` - Scalping M1
+• `ARBITRAGE` - Multi-exchange
+
+**Resultados:**
+• `success` - Funcionó correctamente ✅
+• `failure` - No funcionó ❌
+• `partial` - Resultado parcial ⚡
+
+**Ejemplos:**
+`/feedback ARES_V1 success`
+`/feedback ARES_V2 failure Falló en mercado lateral`
+`/feedback ARBITRAGE partial Bajo profit`
+
+💡 **¿Por qué dar feedback?**
+• Ganas puntos de contribución 🏆
+• Ayudas a mejorar OMNIX para todos 🚀
+• Subiste en el leaderboard comunitario 📊
+"""
+                await update.message.reply_text(help_text, parse_mode='Markdown')
+                return
+            
+            strategy = args[0].upper()
+            result = args[1].lower()
+            comment = ' '.join(args[2:]) if len(args) > 2 else None
+            
+            if result not in ['success', 'failure', 'partial']:
+                await update.message.reply_text("❌ Resultado debe ser: success, failure, o partial")
+                return
+            
+            feedback_data = {
+                'feedback_type': 'strategy',
+                'strategy': strategy,
+                'result': result,
+                'comment': comment
+            }
+            
+            response = self.feedback_manager.submit_feedback(
+                str(user.id), 
+                user.username or user.first_name,
+                feedback_data
+            )
+            
+            if response.get('success'):
+                emoji = '✅' if result == 'success' else ('❌' if result == 'failure' else '⚡')
+                message = f"""
+🧠 **FEEDBACK REGISTRADO**
+
+{emoji} **{strategy}**: {result.capitalize()}
+💬 Comentario: {comment or 'Sin comentario'}
+
+🏆 **+{response['points_earned']} puntos**
+
+¡Gracias por contribuir a la mejora de OMNIX!
+Usa `/my_contributions` para ver tus stats
+"""
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(f"❌ Error: {response.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            logger.error(f"Error en feedback_command: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def community_stats_command(self, update, context):
+        """Comando /community_stats - Ver estadísticas de la comunidad"""
+        if not self.community_dashboard:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            loading_msg = await update.message.reply_text("📊 Cargando estadísticas comunitarias...")
+            
+            stats_text = self.community_dashboard.format_telegram_stats()
+            
+            await loading_msg.edit_text(stats_text, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en community_stats: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def top_strategies_command(self, update, context):
+        """Comando /top_strategies - Ver ranking de estrategias según la comunidad"""
+        if not self.community_dashboard:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            rankings = self.community_dashboard.get_strategy_rankings()
+            
+            if not rankings:
+                await update.message.reply_text("📊 No hay suficientes datos de la comunidad aún. ¡Sé el primero en dar feedback!")
+                return
+            
+            medals = ['🥇', '🥈', '🥉']
+            
+            response = """
+🏆 **TOP ESTRATEGIAS (Según Comunidad)**
+
+"""
+            for i, r in enumerate(rankings):
+                medal = medals[i] if i < len(medals) else f'{i+1}.'
+                response += f"""
+{medal} **{r['strategy']}**
+   ⭐ Rating: {r['avg_rating']}/5 ({r['vote_count']} votos)
+   ✅ Success Rate: {r['success_rate']}%
+   📝 Feedback: {r['feedback_count']}
+   📊 Score: {r['combined_score']}pts
+   Estado: {r['health_status']}
+"""
+            
+            response += """
+💡 **Comandos relacionados:**
+   `/feedback` - Dar feedback
+   `/vote_strategy` - Votar estrategia
+   `/my_contributions` - Ver tus stats
+
+*OMNIX V6.0 - Community Intelligence*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en top_strategies: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def my_contributions_command(self, update, context):
+        """Comando /my_contributions - Ver mis contribuciones y puntos"""
+        if not self.reward_system:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            profile = self.reward_system.get_user_profile(str(user.id))
+            
+            level_info = profile.get('level_info', {})
+            next_level = profile.get('next_level', {})
+            
+            badges_text = '\n'.join([f"   {b['name']}" for b in profile.get('badges', [])]) if profile.get('badges') else "   Ninguno aún - ¡sigue contribuyendo!"
+            
+            new_badges_text = ""
+            if profile.get('new_badges_earned'):
+                new_badges_text = "\n\n🎉 **¡NUEVOS BADGES GANADOS!**\n"
+                for badge_id in profile['new_badges_earned']:
+                    new_badges_text += f"   🏅 {badge_id}\n"
+            
+            response = f"""
+👤 **TU PERFIL DE CONTRIBUIDOR**
+
+🏆 **Nivel:** {level_info.get('emoji', '🌱')} {level_info.get('name', 'Nuevo')}
+💎 **Puntos:** {profile.get('points', 0)}
+📊 **Rank:** #{profile.get('rank', 'N/A')}
+
+📈 **Progreso al siguiente nivel:**
+   {profile.get('points', 0)}/{next_level.get('min_points', '∞')} pts → {next_level.get('emoji', '')} {next_level.get('name', 'Max Level')}
+
+📋 **Estadísticas:**
+   📝 Feedback enviados: {profile['stats']['total_feedback']}
+   ✅ Feedback útiles: {profile['stats']['helpful_feedback']}
+   💡 Propuestas enviadas: {profile['stats']['proposals_submitted']}
+   🚀 Propuestas aceptadas: {profile['stats']['proposals_accepted']}
+
+🏅 **Badges ({profile.get('badge_count', 0)}):**
+{badges_text}
+{new_badges_text}
+💡 **¿Cómo ganar más puntos?**
+   • Feedback: +10 pts
+   • Votar estrategias: +5 pts
+   • Propuestas: +25 pts
+   • Feedback útil: +15 pts bonus
+
+*OMNIX V6.0 - Community Intelligence*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en my_contributions: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def vote_strategy_command(self, update, context):
+        """Comando /vote_strategy [strategy] [1-5] - Votar por una estrategia"""
+        if not self.feedback_manager:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            args = context.args
+            
+            if len(args) < 2:
+                help_text = """
+⭐ **VOTAR ESTRATEGIA**
+
+**Uso:** `/vote_strategy [estrategia] [1-5]`
+
+**Estrategias:**
+• `ARES_V1` - Swing Trading
+• `ARES_V2` - Scalping M1
+• `ARBITRAGE` - Multi-exchange
+
+**Puntuación:** 1 (malo) a 5 (excelente)
+
+**Ejemplos:**
+`/vote_strategy ARES_V1 5`
+`/vote_strategy ARES_V2 4`
+
+💡 Cada voto vale +5 puntos
+"""
+                await update.message.reply_text(help_text, parse_mode='Markdown')
+                return
+            
+            strategy = args[0].upper()
+            try:
+                vote = int(args[1])
+            except ValueError:
+                await update.message.reply_text("❌ El voto debe ser un número entre 1 y 5")
+                return
+            
+            if vote < 1 or vote > 5:
+                await update.message.reply_text("❌ El voto debe ser entre 1 y 5")
+                return
+            
+            reason = ' '.join(args[2:]) if len(args) > 2 else None
+            
+            response = self.feedback_manager.vote_strategy(
+                str(user.id),
+                strategy,
+                vote,
+                reason
+            )
+            
+            if response.get('success'):
+                stars = '⭐' * vote + '☆' * (5 - vote)
+                message = f"""
+✅ **VOTO REGISTRADO**
+
+📊 **{strategy}**: {stars}
+💬 Razón: {reason or 'Sin comentario'}
+
+🏆 **+{response['points_earned']} puntos**
+
+¡Gracias por tu opinión!
+"""
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(f"❌ Error: {response.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            logger.error(f"Error en vote_strategy: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def leaderboard_command(self, update, context):
+        """Comando /leaderboard - Ver ranking de contribuidores"""
+        if not self.reward_system:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            leaderboard = self.reward_system.get_leaderboard(10)
+            
+            if not leaderboard:
+                await update.message.reply_text("📊 No hay contribuidores aún. ¡Sé el primero en dar feedback!")
+                return
+            
+            medals = ['🥇', '🥈', '🥉']
+            
+            response = """
+🏆 **LEADERBOARD DE CONTRIBUIDORES**
+
+"""
+            for entry in leaderboard:
+                medal = medals[entry['rank']-1] if entry['rank'] <= 3 else f"#{entry['rank']}"
+                response += f"""
+{medal} **{entry['username']}**
+   {entry['level_emoji']} {entry['level_name']} | {entry['points']} pts
+   📝 {entry['feedback_count']} feedback | 🏅 {entry['badge_count']} badges
+"""
+            
+            user = update.effective_user
+            user_profile = self.reward_system.get_user_profile(str(user.id))
+            
+            response += f"""
+━━━━━━━━━━━━━━━━━━━━━━
+📍 **Tu posición:** #{user_profile.get('rank', 'N/A')}
+💎 **Tus puntos:** {user_profile.get('points', 0)}
+
+💡 Usa `/feedback` para ganar más puntos
+
+*OMNIX V6.0 - Community Intelligence*
+"""
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en leaderboard: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def analyze_patterns_command(self, update, context):
+        """Comando /analyze_patterns - Analizar patrones en feedback (Solo Admin)"""
+        if not self.community_analyzer:
+            await update.message.reply_text("🧠 Community Intelligence no disponible")
+            return
+        
+        try:
+            user = update.effective_user
+            if not is_admin(user.id):
+                await update.message.reply_text("🔒 Solo administradores pueden analizar patrones")
+                return
+            
+            loading_msg = await update.message.reply_text("🔍 Analizando patrones de feedback con AI...")
+            
+            result = self.community_analyzer.analyze_feedback_patterns(days=30, min_samples=3)
+            
+            if not result.get('success'):
+                await loading_msg.edit_text(f"❌ Error: {result.get('error', 'Unknown error')}")
+                return
+            
+            response = f"""
+🔍 **ANÁLISIS DE PATRONES AI**
+
+📊 **Resumen:**
+   • Patrones analizados: {result['patterns_analyzed']}
+   • Patrones detectados: {result['patterns_detected']}
+   • Período: últimos {result['period_days']} días
+
+"""
+            if result.get('patterns'):
+                response += "🚨 **PATRONES PROBLEMÁTICOS:**\n"
+                for p in result['patterns'][:5]:
+                    response += f"""
+   • {p['description']}
+     Confianza: {p['confidence']*100:.0f}%
+     Sugerencia: {p['suggestion']}
+"""
+            else:
+                response += "✅ No se detectaron patrones problemáticos significativos\n"
+            
+            if result.get('ai_analysis'):
+                response += f"""
+🤖 **ANÁLISIS AI:**
+{result['ai_analysis'][:1000]}...
+"""
+            
+            response += f"""
+⏱️ Analizado: {result['analyzed_at']}
+
+*OMNIX V6.0 - Community Intelligence*
+"""
+            
+            await loading_msg.edit_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en analyze_patterns: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 # Funciones de integración para comandos Harold
