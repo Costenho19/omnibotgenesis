@@ -3085,6 +3085,183 @@ Usa /autotrading stop para detener"""
 
 ℹ️ EJEMPLO: /autotrading start"""
             
+            # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.0
+            elif text.startswith('/share_signal'):
+                if self.signal_contribution:
+                    parts = text.split()
+                    if len(parts) < 4:
+                        response_text = """🚀 **COMPARTIR SEÑAL CON LA COMUNIDAD**
+
+**Formato:**
+`/share_signal SYMBOL TIPO ENTRADA [TARGET] [STOPLOSS]`
+
+**Ejemplos:**
+`/share_signal BTC LONG 95000 100000 92000`
+`/share_signal ETH SHORT 3500 3200 3700`
+`/share_signal SOL LONG 180`
+
+**Tipos:** LONG, SHORT, NEUTRAL
+
+🏆 Gana **10 puntos** por compartir
+💰 Gana **+50 puntos** si tu señal es exitosa
+📈 Los mejores contribuidores aparecen en `/alpha_leaderboard`"""
+                    else:
+                        try:
+                            symbol = parts[1].upper()
+                            signal_type = parts[2].upper()
+                            entry_price = float(parts[3])
+                            target_price = float(parts[4]) if len(parts) > 4 else None
+                            stop_loss = float(parts[5]) if len(parts) > 5 else None
+                            
+                            signal_data = {
+                                'symbol': symbol,
+                                'signal_type': signal_type,
+                                'entry_price': entry_price,
+                                'target_price': target_price,
+                                'stop_loss': stop_loss,
+                                'timeframe': '1h',
+                                'confidence': 70
+                            }
+                            
+                            result = self.signal_contribution.share_signal(str(user_id), f"User_{user_id}", signal_data)
+                            
+                            if result.get('success'):
+                                response_text = f"""🚀 **SEÑAL COMPARTIDA EXITOSAMENTE**
+
+📊 **{symbol}/USD - {signal_type}**
+💵 Entrada: ${entry_price:,.2f}
+{'🎯 Target: $' + f'{target_price:,.2f}' if target_price else ''}
+{'🛡️ Stop Loss: $' + f'{stop_loss:,.2f}' if stop_loss else ''}
+
+🔑 ID: `{result['signal_id'][:12]}...`
+🏆 **+{result['points_earned']} puntos** ganados!
+
+📡 Tu señal ahora es visible para toda la comunidad."""
+                            else:
+                                response_text = f"❌ Error: {result.get('error', 'Unknown error')}"
+                        except ValueError:
+                            response_text = "❌ Error: Los precios deben ser números válidos"
+                        except Exception as e:
+                            response_text = f"❌ Error: {str(e)}"
+                else:
+                    response_text = "🚀 Signal Contribution no disponible"
+            
+            elif text.startswith('/community_signals'):
+                if self.signal_contribution:
+                    parts = text.split()
+                    symbol = parts[1].upper() if len(parts) > 1 else None
+                    
+                    signals = self.signal_contribution.get_community_signals(limit=10, symbol=symbol)
+                    
+                    if not signals:
+                        response_text = """📡 **SEÑALES COMUNITARIAS**
+
+No hay señales activas en este momento.
+
+🚀 ¡Sé el primero en compartir una señal!
+Usa `/share_signal BTC LONG 95000` para empezar."""
+                    else:
+                        response_text = "📡 **SEÑALES ACTIVAS DE LA COMUNIDAD**\n\n"
+                        for i, signal in enumerate(signals, 1):
+                            emoji = '🟢' if signal['signal_type'] == 'LONG' else '🔴' if signal['signal_type'] == 'SHORT' else '⚪'
+                            entry = signal.get('entry_price', 0)
+                            entry_str = f"${entry:,.2f}" if entry else 'N/A'
+                            response_text += f"{i}. {emoji} **{signal['symbol']}/USD - {signal['signal_type']}**\n"
+                            response_text += f"   👤 {signal['contributor_name']} | 💵 {entry_str}\n"
+                            response_text += f"   👍 {signal['upvotes']} | 👎 {signal['downvotes']} | 📈 {signal['executions_count']} ejecuciones\n\n"
+                        response_text += "\n💡 Usa `/share_signal` para compartir tu señal"
+                else:
+                    response_text = "🚀 Signal Contribution no disponible"
+            
+            elif text.startswith('/my_signals'):
+                if self.signal_contribution:
+                    data = self.signal_contribution.get_user_signals(str(user_id))
+                    stats = data.get('stats', {})
+                    signals = data.get('signals', [])
+                    
+                    tier_emoji = {'Diamond': '💎', 'Platinum': '🏆', 'Gold': '🥇', 'Silver': '🥈', 'Bronze': '🥉'}
+                    tier = stats.get('rank_tier', 'Bronze')
+                    
+                    response_text = f"""📊 **MIS SEÑALES**
+
+{tier_emoji.get(tier, '🥉')} **Tier: {tier}**
+
+📈 **Estadísticas:**
+• Señales compartidas: {stats.get('signals_shared', 0)}
+• Señales exitosas: {stats.get('signals_successful', 0)}
+• Win Rate: {stats.get('win_rate', 0):.1f}%
+• Royalty Points: {stats.get('royalty_points', 0)}
+• Reputación: {stats.get('reputation_score', 50):.0f}/100
+
+"""
+                    if signals:
+                        response_text += "**Últimas señales:**\n"
+                        for s in signals[:5]:
+                            status_emoji = '✅' if s['status'] == 'closed' else '⏳'
+                            response_text += f"   {status_emoji} {s['symbol']} {s['signal_type']} | 👍{s['upvotes']} | +{s['royalties_earned']} pts\n"
+                    
+                    response_text += "\n💡 Comparte señales exitosas para subir de tier!"
+                else:
+                    response_text = "🚀 Signal Contribution no disponible"
+            
+            elif text.startswith('/alpha_leaderboard'):
+                if self.signal_contribution:
+                    leaders = self.signal_contribution.get_alpha_leaderboard(10)
+                    
+                    if not leaders:
+                        response_text = """🏆 **ALPHA LEADERBOARD**
+
+No hay contribuidores aún.
+
+🚀 ¡Sé el primero en compartir señales!
+Usa `/share_signal BTC LONG 95000` para empezar."""
+                    else:
+                        medals = ['🥇', '🥈', '🥉']
+                        tier_emoji = {'Diamond': '💎', 'Platinum': '🏆', 'Gold': '🥇', 'Silver': '🥈', 'Bronze': '🥉'}
+                        
+                        response_text = "🏆 **ALPHA LEADERBOARD - TOP CONTRIBUIDORES**\n\n"
+                        for leader in leaders:
+                            pos = leader['position']
+                            medal = medals[pos-1] if pos <= 3 else f"#{pos}"
+                            tier = leader.get('rank_tier', 'Bronze')
+                            response_text += f"{medal} **{leader['username']}** {tier_emoji.get(tier, '')}\n"
+                            response_text += f"   📊 Señales: {leader['signals_shared']} | Win Rate: {leader['win_rate']:.0f}%\n"
+                            response_text += f"   🏆 Royalties: {leader['royalty_points']} pts\n\n"
+                        
+                        response_text += "\n💡 Comparte señales exitosas para subir en el ranking!"
+                else:
+                    response_text = "🚀 Signal Contribution no disponible"
+            
+            elif text.startswith('/execute_signal'):
+                if self.signal_contribution:
+                    parts = text.split()
+                    if len(parts) < 2:
+                        response_text = """▶️ **EJECUTAR SEÑAL COMUNITARIA**
+
+**Formato:**
+`/execute_signal SIGNAL_ID`
+
+📡 Usa `/community_signals` para ver las señales disponibles."""
+                    else:
+                        signal_id = parts[1]
+                        result = self.signal_contribution.execute_signal(signal_id, str(user_id), f"User_{user_id}")
+                        
+                        if result.get('success'):
+                            signal = result['signal']
+                            response_text = f"""▶️ **SEÑAL EJECUTADA**
+
+📊 **{signal['symbol']}/USD - {signal['signal_type']}**
+👤 Creada por: {signal['contributor_name']}
+💵 Entrada: ${signal['entry_price']:,.2f if signal['entry_price'] else 'Market'}
+
+📈 Esta es la ejecución #{signal['executions_count'] + 1} de esta señal.
+
+⚠️ El contribuidor ganará royalties si la señal es exitosa."""
+                        else:
+                            response_text = f"❌ Error: {result.get('error', 'Unknown error')}"
+                else:
+                    response_text = "🚀 Signal Contribution no disponible"
+            
             # CRÍTICO: Definir final_response_text para que el código de voz funcione
             if response_text:
                 final_response_text = response_text
