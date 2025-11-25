@@ -20,12 +20,12 @@ args = "OMNIX Bot"
 name = "OMNIX Bot"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python main.py"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -u main.py"
 
 [[ports]]
 localPort = 5000
@@ -92,8 +92,8 @@ localPort = 9000
 externalPort = 9000
 
 [deployment]
-deploymentTarget = "gce"
-run = ["sh", "-c", "python3 OMNIX_RAILWAY_FINAL_SEGURO.py"]
+deploymentTarget = "vm"
+run = ["python", "-u", "main.py"]
 
 [agent]
 expertMode = true
