@@ -108,6 +108,22 @@ class CallbackHandler:
             elif callback_data.startswith("setting_"):
                 await self._show_setting_detail(query, callback_data)
             
+            # COMMUNITY INTELLIGENCE - FEEDBACK BOTONES (using | delimiter)
+            elif callback_data.startswith("feedback|"):
+                await self._handle_trade_feedback(query, callback_data, bot_instance)
+            
+            elif callback_data.startswith("sigfb|"):
+                await self._handle_signal_feedback(query, callback_data, bot_instance)
+            
+            elif callback_data.startswith("vote|"):
+                await self._handle_strategy_vote(query, callback_data, bot_instance)
+            
+            elif callback_data.startswith("propose|"):
+                await self._handle_proposal_prompt(query, callback_data)
+            
+            elif callback_data.startswith("dovote|"):
+                await self._execute_strategy_vote(query, callback_data, bot_instance)
+            
             else:
                 # FALLBACK CON MENÚ - SIEMPRE mantener navegación
                 from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
@@ -508,3 +524,277 @@ Mantente atento! 🚀"""
             [InlineKeyboardButton("« Menú Principal", callback_data="back_main")],
         ]
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+    
+    async def _handle_trade_feedback(self, query, callback_data: str, bot_instance):
+        """
+        Procesar feedback de botones inline en trades
+        Format: feedback|trade_id|strategy|symbol|signal_type|result
+        """
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        try:
+            parts = callback_data.split("|")
+            if len(parts) < 6:
+                await query.edit_message_text("❌ Error: formato de feedback inválido")
+                return
+            
+            trade_id = parts[1]
+            strategy = parts[2]
+            symbol = parts[3]
+            signal_type = parts[4]
+            result = parts[5]
+            
+            user_id = str(query.from_user.id)
+            username = query.from_user.username or query.from_user.first_name
+            
+            if result == "suggest":
+                text = f"""💡 **SUGERENCIA PARA {strategy}**
+
+Escribe tu sugerencia como respuesta a este mensaje.
+Usa el comando:
+
+`/feedback {strategy} {symbol} - Tu sugerencia aquí`
+
+Tu feedback ayuda a mejorar OMNIX para todos! 🧠"""
+                
+                keyboard = [[InlineKeyboardButton("« Cerrar", callback_data="back_main")]]
+                await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+                return
+            
+            if bot_instance and hasattr(bot_instance, 'feedback_manager') and bot_instance.feedback_manager:
+                feedback_data = {
+                    'feedback_type': 'signal',
+                    'signal_type': signal_type,
+                    'strategy': strategy,
+                    'symbol': f"{symbol}/USD",
+                    'result': result,
+                    'market_condition': 'unknown',
+                    'btc_price': None,
+                    'volatility': 'medium',
+                    'timeframe': '1h',
+                    'comment': f"Quick feedback from inline button - Trade ID: {trade_id}"
+                }
+                
+                result_data = bot_instance.feedback_manager.submit_feedback(user_id, username, feedback_data)
+                
+                if result_data.get('success'):
+                    points = result_data.get('points_earned', 5)
+                    emoji = "👍" if result == "success" else "👎"
+                    
+                    text = f"""
+{emoji} **FEEDBACK REGISTRADO**
+
+Estrategia: {strategy}
+Par: {symbol}/USD
+Resultado: {'✅ Éxito' if result == 'success' else '❌ Fallo'}
+
+🏆 **+{points} puntos** ganados!
+📊 Tu feedback mejora OMNIX para todos.
+
+Usa `/my_contributions` para ver tu perfil."""
+                else:
+                    text = f"❌ Error guardando feedback: {result_data.get('error', 'desconocido')}"
+            else:
+                emoji = "👍" if result == "success" else "👎"
+                text = f"{emoji} Feedback recibido para {strategy} - {symbol}\n\n⚠️ Sistema de puntos no disponible"
+            
+            keyboard = [[InlineKeyboardButton("📊 Mis Contribuciones", callback_data="show_contributions")],
+                       [InlineKeyboardButton("« Menú Principal", callback_data="back_main")]]
+            await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+            
+        except Exception as e:
+            logger.error(f"❌ Error handling trade feedback: {e}")
+            await query.edit_message_text(f"❌ Error procesando feedback: {str(e)[:100]}")
+    
+    async def _handle_signal_feedback(self, query, callback_data: str, bot_instance):
+        """
+        Procesar feedback de señales ARES
+        Format: sigfb|signal_id|strategy|symbol|signal_type|market_condition|result
+        """
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        try:
+            parts = callback_data.split("|")
+            if len(parts) < 7:
+                await query.edit_message_text("❌ Error: formato de feedback inválido")
+                return
+            
+            signal_id = parts[1]
+            strategy = parts[2]
+            symbol = parts[3]
+            signal_type = parts[4]
+            market_condition = parts[5]
+            result = parts[6]
+            
+            user_id = str(query.from_user.id)
+            username = query.from_user.username or query.from_user.first_name
+            
+            if bot_instance and hasattr(bot_instance, 'feedback_manager') and bot_instance.feedback_manager:
+                feedback_data = {
+                    'feedback_type': 'signal',
+                    'signal_type': signal_type,
+                    'strategy': strategy,
+                    'symbol': f"{symbol}/USD",
+                    'result': result,
+                    'market_condition': market_condition,
+                    'btc_price': None,
+                    'volatility': 'medium',
+                    'timeframe': '1m' if 'V2' in strategy else '1h',
+                    'comment': f"Signal feedback - ID: {signal_id}"
+                }
+                
+                result_data = bot_instance.feedback_manager.submit_feedback(user_id, username, feedback_data)
+                
+                if result_data.get('success'):
+                    points = result_data.get('points_earned', 5)
+                    
+                    result_emoji = {'success': '✅', 'failure': '❌', 'partial': '⚖️'}.get(result, '❓')
+                    
+                    text = f"""
+{result_emoji} **FEEDBACK DE SEÑAL REGISTRADO**
+
+🎯 Estrategia: {strategy}
+📈 Par: {symbol}/USD
+📊 Tipo: {signal_type}
+🌡️ Mercado: {market_condition}
+📋 Resultado: {result.upper()}
+
+🏆 **+{points} puntos** ganados!
+
+Tu feedback entrena la IA para mejores señales.
+Usa `/community_stats` para ver estadísticas globales."""
+                else:
+                    text = f"❌ Error: {result_data.get('error', 'desconocido')}"
+            else:
+                text = f"⚠️ Feedback recibido pero sistema de puntos no disponible"
+            
+            keyboard = [[InlineKeyboardButton("📊 Stats Comunidad", callback_data="show_community_stats")],
+                       [InlineKeyboardButton("« Menú Principal", callback_data="back_main")]]
+            await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+            
+        except Exception as e:
+            logger.error(f"❌ Error handling signal feedback: {e}")
+            await query.edit_message_text(f"❌ Error: {str(e)[:100]}")
+    
+    async def _handle_strategy_vote(self, query, callback_data: str, bot_instance):
+        """
+        Mostrar menú de votación para estrategia
+        Format: vote|strategy
+        """
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        try:
+            parts = callback_data.split("|")
+            strategy = parts[1] if len(parts) > 1 else "UNKNOWN"
+            
+            text = f"""⭐ **VOTAR ESTRATEGIA: {strategy}**
+
+¿Cómo calificarías {strategy} hoy?
+
+Selecciona tu puntuación:"""
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton("⭐", callback_data=f"dovote|{strategy}|1"),
+                    InlineKeyboardButton("⭐⭐", callback_data=f"dovote|{strategy}|2"),
+                    InlineKeyboardButton("⭐⭐⭐", callback_data=f"dovote|{strategy}|3"),
+                ],
+                [
+                    InlineKeyboardButton("⭐⭐⭐⭐", callback_data=f"dovote|{strategy}|4"),
+                    InlineKeyboardButton("⭐⭐⭐⭐⭐", callback_data=f"dovote|{strategy}|5"),
+                ],
+                [InlineKeyboardButton("« Cancelar", callback_data="back_main")],
+            ]
+            await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+            
+        except Exception as e:
+            logger.error(f"❌ Error showing vote menu: {e}")
+            await query.edit_message_text(f"❌ Error: {str(e)[:100]}")
+    
+    async def _handle_proposal_prompt(self, query, callback_data: str):
+        """
+        Mostrar prompt para proponer mejora
+        Format: propose|strategy|symbol
+        """
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        try:
+            parts = callback_data.split("|")
+            strategy = parts[1] if len(parts) > 1 else "UNKNOWN"
+            symbol = parts[2] if len(parts) > 2 else "BTC"
+            
+            text = f"""💡 **PROPONER MEJORA PARA {strategy}**
+
+Para enviar una propuesta de mejora, usa el comando:
+
+`/feedback {strategy} {symbol} proposal - Tu propuesta aquí`
+
+**Ejemplos de buenas propuestas:**
+• "Añadir filtro RSI para evitar entradas en sobrecompra"
+• "Reducir position size cuando volatilidad > 50%"
+• "Considerar volumen antes de señales en M1"
+
+Las mejores propuestas ganan **+50 puntos** si se implementan!"""
+            
+            keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
+            await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+            
+        except Exception as e:
+            logger.error(f"❌ Error showing proposal prompt: {e}")
+            await query.edit_message_text(f"❌ Error: {str(e)[:100]}")
+    
+    async def _execute_strategy_vote(self, query, callback_data: str, bot_instance):
+        """
+        Ejecutar voto de estrategia
+        Format: dovote|strategy|vote
+        """
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        try:
+            parts = callback_data.split("|")
+            if len(parts) < 3:
+                await query.edit_message_text("❌ Error: formato de voto inválido")
+                return
+            
+            strategy = parts[1]
+            vote = int(parts[2])
+            
+            user_id = str(query.from_user.id)
+            
+            if bot_instance and hasattr(bot_instance, 'feedback_manager') and bot_instance.feedback_manager:
+                result = bot_instance.feedback_manager.vote_strategy(
+                    user_id=user_id,
+                    strategy=strategy,
+                    vote=vote,
+                    reason=f"Vote from inline button",
+                    market_condition=None
+                )
+                
+                if result.get('success'):
+                    points = result.get('points_earned', 3)
+                    stars = "⭐" * vote
+                    
+                    text = f"""
+{stars}
+
+✅ **VOTO REGISTRADO**
+
+Estrategia: {strategy}
+Puntuación: {vote}/5
+
+🏆 **+{points} puntos** ganados!
+
+Gracias por tu valoración. Tu feedback ayuda a mejorar las estrategias."""
+                else:
+                    text = f"❌ Error: {result.get('error', 'desconocido')}"
+            else:
+                stars = "⭐" * vote
+                text = f"{stars}\n\nVoto recibido para {strategy}: {vote}/5\n\n⚠️ Sistema de puntos no disponible"
+            
+            keyboard = [[InlineKeyboardButton("📊 Top Estrategias", callback_data="show_top_strategies")],
+                       [InlineKeyboardButton("« Menú Principal", callback_data="back_main")]]
+            await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+            
+        except Exception as e:
+            logger.error(f"❌ Error executing vote: {e}")
+            await query.edit_message_text(f"❌ Error: {str(e)[:100]}")

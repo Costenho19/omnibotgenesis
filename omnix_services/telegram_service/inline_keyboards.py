@@ -248,3 +248,63 @@ class InlineKeyboardsManager:
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def get_trade_feedback_buttons(trade_id: str, strategy: str = "PAPER", 
+                                   symbol: str = "BTC", signal_type: str = "BUY") -> InlineKeyboardMarkup:
+        """
+        Botones de feedback rápido para señales de trading
+        
+        Args:
+            trade_id: ID único del trade para tracking
+            strategy: Nombre de la estrategia (ARES_V1, ARES_V2, PAPER, etc.)
+            symbol: Símbolo del par (BTC, ETH, etc.)
+            signal_type: Tipo de señal (BUY, SELL)
+        
+        Returns:
+            InlineKeyboardMarkup con botones de feedback
+        """
+        callback_base = f"feedback|{trade_id}|{strategy}|{symbol}|{signal_type}"
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("👍 Buen Trade", callback_data=f"{callback_base}|success"),
+                InlineKeyboardButton("👎 Mal Trade", callback_data=f"{callback_base}|failure"),
+            ],
+            [
+                InlineKeyboardButton("💡 Sugerencia", callback_data=f"{callback_base}|suggest"),
+            ],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def get_signal_feedback_buttons(signal_id: str, strategy: str, 
+                                    symbol: str, signal_type: str,
+                                    market_condition: str = "unknown") -> InlineKeyboardMarkup:
+        """
+        Botones de feedback para señales ARES automáticas
+        
+        Args:
+            signal_id: ID único de la señal
+            strategy: ARES_V1, ARES_V2, etc.
+            symbol: Par de trading
+            signal_type: BUY/SELL
+            market_condition: bullish/bearish/sideways
+        
+        Returns:
+            InlineKeyboardMarkup con opciones de feedback detallado
+        """
+        callback_base = f"sigfb|{signal_id}|{strategy}|{symbol}|{signal_type}|{market_condition}"
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Funcionó", callback_data=f"{callback_base}|success"),
+                InlineKeyboardButton("❌ Falló", callback_data=f"{callback_base}|failure"),
+                InlineKeyboardButton("⚖️ Parcial", callback_data=f"{callback_base}|partial"),
+            ],
+            [
+                InlineKeyboardButton("⭐ Votar Estrategia", callback_data=f"vote|{strategy}"),
+                InlineKeyboardButton("💡 Proponer Mejora", callback_data=f"propose|{strategy}|{symbol}"),
+            ],
+        ]
+        return InlineKeyboardMarkup(keyboard)

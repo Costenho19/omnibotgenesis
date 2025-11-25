@@ -1779,6 +1779,9 @@ Inicial: ${balance['initial_balance']:,.2f}
                 await update.message.reply_text(f"❌ {result['error']}")
                 return
             
+            import time
+            trade_id = f"{int(time.time())}"[-6:]
+            
             msg = f"""
 ✅ **COMPRA EJECUTADA (SIMULADA)**
 
@@ -1792,9 +1795,19 @@ BTC: {result['new_btc_balance']:.8f}
 ETH: {result['new_eth_balance']:.8f}
 
 *Trade simulado con precio REAL de Kraken*
+
+👇 **¿Cómo resultó este trade?**
 """
             
-            await update.message.reply_text(msg, parse_mode='Markdown')
+            from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
+            feedback_buttons = InlineKeyboardsManager.get_trade_feedback_buttons(
+                trade_id=trade_id,
+                strategy="PAPER",
+                symbol=symbol,
+                signal_type="BUY"
+            )
+            
+            await update.message.reply_text(msg, parse_mode='Markdown', reply_markup=feedback_buttons)
             
         except Exception as e:
             logger.error(f"Error paper_buy: {e}")
@@ -1839,6 +1852,9 @@ ETH: {result['new_eth_balance']:.8f}
                 await update.message.reply_text(f"❌ {result['error']}")
                 return
             
+            import time
+            trade_id = f"{int(time.time())}"[-6:]
+            
             msg = f"""
 ✅ **VENTA EJECUTADA (SIMULADA)**
 
@@ -1852,9 +1868,19 @@ BTC: {result['new_btc_balance']:.8f}
 ETH: {result['new_eth_balance']:.8f}
 
 *Trade simulado con precio REAL de Kraken*
+
+👇 **¿Cómo resultó este trade?**
 """
             
-            await update.message.reply_text(msg, parse_mode='Markdown')
+            from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
+            feedback_buttons = InlineKeyboardsManager.get_trade_feedback_buttons(
+                trade_id=trade_id,
+                strategy="PAPER",
+                symbol=symbol,
+                signal_type="SELL"
+            )
+            
+            await update.message.reply_text(msg, parse_mode='Markdown', reply_markup=feedback_buttons)
             
         except Exception as e:
             logger.error(f"Error paper_sell: {e}")

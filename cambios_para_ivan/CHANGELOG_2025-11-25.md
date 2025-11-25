@@ -8,6 +8,40 @@ aprender de todos sus usuarios mediante feedback estructurado.
 
 ---
 
+## 🔘 BOTONES INLINE DE FEEDBACK (NUEVO)
+
+### Descripción
+Se añadieron botones inline (👍 Buen Trade / 👎 Mal Trade / 💡 Sugerencia) que aparecen
+automáticamente después de cada trade en Paper Trading, permitiendo feedback instantáneo.
+
+### Archivos Modificados
+
+#### omnix_services/telegram_service/inline_keyboards.py
+- **Nuevos métodos:**
+  - `get_trade_feedback_buttons()` - Botones para trades de paper trading
+  - `get_signal_feedback_buttons()` - Botones para señales ARES (✅ Funcionó / ❌ Falló / ⚖️ Parcial)
+
+#### omnix_services/telegram_service/callback_handler.py
+- **Nuevos handlers:**
+  - `_handle_trade_feedback()` - Procesa clicks en botones de trade
+  - `_handle_signal_feedback()` - Procesa feedback de señales ARES
+  - `_handle_strategy_vote()` - Muestra menú de votación (⭐ 1-5)
+  - `_execute_strategy_vote()` - Ejecuta el voto real
+  - `_handle_proposal_prompt()` - Muestra prompt para sugerencias
+
+#### omnix_services/telegram_service/enterprise_bot.py
+- **paper_buy_command:** Ahora incluye botones de feedback después del trade
+- **paper_sell_command:** Ahora incluye botones de feedback después del trade
+
+### Flujo de Usuario
+1. Usuario ejecuta `/paper_buy BTC 1000`
+2. Bot confirma la compra con mensaje + botones inline
+3. Usuario clickea 👍 o 👎
+4. Bot registra feedback en DB y otorga puntos
+5. Usuario puede ver sus puntos con `/my_contributions`
+
+---
+
 ## ✨ ARCHIVOS NUEVOS
 
 ### 1. omnix_services/community_intelligence/__init__.py
