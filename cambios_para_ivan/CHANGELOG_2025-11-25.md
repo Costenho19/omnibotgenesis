@@ -212,6 +212,198 @@ self.application.add_handler(CommandHandler("analyze_patterns", self.analyze_pat
 
 ---
 
+---
+
+## 🚀 NUEVA FEATURE: SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA
+
+### Resumen
+Sistema revolucionario que permite a los usuarios compartir sus propias señales de trading
+y ganar royalties cuando otros usuarios obtienen ganancias siguiéndolas. **Diferenciador competitivo único.**
+
+---
+
+## 📡 SISTEMA DE CONTRIBUCIÓN DE SEÑALES
+
+### Descripción
+Los usuarios pueden compartir señales de trading (LONG/SHORT) con la comunidad y ganar puntos
+cuando otros las ejecutan exitosamente. Sistema automático de tracking de rendimiento y royalties.
+
+### Archivo Nuevo
+
+#### omnix_services/community_intelligence/signal_contribution.py
+- **Líneas:** ~450
+- **Propósito:** Gestión de señales comunitarias y royalties
+- **Clase:** SignalContributionManager
+- **Métodos principales:**
+  - `share_signal()` - Compartir señal con la comunidad (+10 puntos)
+  - `get_community_signals()` - Ver señales activas
+  - `execute_signal()` - Ejecutar señal de otro usuario
+  - `get_user_signals()` - Ver mis señales y estadísticas
+  - `get_alpha_leaderboard()` - Top contribuidores
+  - `update_signal_result()` - Actualizar resultado de señal
+  - `calculate_royalties()` - Calcular royalties automáticamente
+
+### Sistema de Royalties
+
+| Acción | Puntos |
+|--------|--------|
+| Compartir señal | +10 |
+| Señal exitosa (cualquier ganancia) | +50 (2x multiplicador) |
+| Señal top performer (>15% ROI) | +125 (5x multiplicador) |
+| Señal fallida | -10 |
+| Otros ejecutan tu señal | +5 por ejecución |
+
+### Tiers de Contribuidor
+
+| Tier | Royalties Requeridos | Beneficios |
+|------|---------------------|------------|
+| Bronze 🥉 | 0 | Básico |
+| Silver 🥈 | 100 | +10% bonus |
+| Gold 🥇 | 500 | +20% bonus, badge especial |
+| Platinum 🏆 | 1500 | +30% bonus, prioridad |
+| Diamond 💎 | 5000 | +50% bonus, acceso VIP |
+
+---
+
+## 📱 NUEVOS COMANDOS TELEGRAM (SIGNAL CONTRIBUTION)
+
+| Comando | Descripción | Ejemplo |
+|---------|-------------|---------|
+| `/share_signal` | Compartir señal | `/share_signal BTC LONG 95000 100000 92000` |
+| `/community_signals` | Ver señales activas | `/community_signals` o `/community_signals BTC` |
+| `/my_signals` | Mis señales y stats | `/my_signals` |
+| `/alpha_leaderboard` | Top contribuidores | `/alpha_leaderboard` |
+| `/execute_signal` | Ejecutar señal | `/execute_signal abc123` |
+
+### Flujo de Usuario
+
+1. **Harold comparte señal:**
+   ```
+   /share_signal BTC LONG 95000 100000 92000
+   ```
+   → Gana +10 puntos, señal visible para todos
+
+2. **Otro usuario ve señales:**
+   ```
+   /community_signals
+   ```
+   → Lista de señales activas con estadísticas
+
+3. **Otro usuario ejecuta:**
+   ```
+   /execute_signal abc123...
+   ```
+   → Harold gana +5 puntos por ejecución
+
+4. **Señal exitosa:**
+   → Harold gana +50 puntos (royalties automáticos)
+
+---
+
+## 🗄️ NUEVA TABLA DE BASE DE DATOS
+
+### community_signals
+```sql
+CREATE TABLE IF NOT EXISTS community_signals (
+    id SERIAL PRIMARY KEY,
+    signal_id VARCHAR(50) UNIQUE NOT NULL,
+    contributor_id VARCHAR(50) NOT NULL,
+    contributor_name VARCHAR(100),
+    symbol VARCHAR(20) NOT NULL,
+    signal_type VARCHAR(10) NOT NULL,
+    entry_price DECIMAL(20, 8),
+    target_price DECIMAL(20, 8),
+    stop_loss DECIMAL(20, 8),
+    timeframe VARCHAR(10) DEFAULT '1h',
+    confidence INTEGER DEFAULT 70,
+    reasoning TEXT,
+    status VARCHAR(20) DEFAULT 'active',
+    upvotes INTEGER DEFAULT 0,
+    downvotes INTEGER DEFAULT 0,
+    executions_count INTEGER DEFAULT 0,
+    successful_executions INTEGER DEFAULT 0,
+    total_pnl DECIMAL(20, 2) DEFAULT 0,
+    royalties_earned DECIMAL(20, 2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    closed_at TIMESTAMP
+);
+```
+
+### signal_contributors
+```sql
+CREATE TABLE IF NOT EXISTS signal_contributors (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(100),
+    signals_shared INTEGER DEFAULT 0,
+    signals_successful INTEGER DEFAULT 0,
+    signals_failed INTEGER DEFAULT 0,
+    total_executions INTEGER DEFAULT 0,
+    royalty_points DECIMAL(20, 2) DEFAULT 0,
+    reputation_score DECIMAL(5, 2) DEFAULT 50,
+    rank_tier VARCHAR(20) DEFAULT 'Bronze',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 📊 MODIFICACIONES A enterprise_bot.py
+
+### Import agregado (líneas 60-66):
+```python
+from omnix_services.community_intelligence.signal_contribution import SignalContributionManager
+SIGNAL_CONTRIBUTION_AVAILABLE = True
+```
+
+### Inicialización (líneas 272-282):
+```python
+if SIGNAL_CONTRIBUTION_AVAILABLE:
+    self.signal_contribution = SignalContributionManager(reward_system=self.reward_system)
+```
+
+### Command handlers (líneas 377-384):
+```python
+self.application.add_handler(CommandHandler("share_signal", self.share_signal_command))
+self.application.add_handler(CommandHandler("community_signals", self.community_signals_command))
+self.application.add_handler(CommandHandler("my_signals", self.my_signals_command))
+self.application.add_handler(CommandHandler("alpha_leaderboard", self.alpha_leaderboard_command))
+self.application.add_handler(CommandHandler("execute_signal", self.execute_signal_command))
+```
+
+### Métodos de comandos (líneas 4396-4720):
+- `share_signal_command()` - ~85 líneas
+- `community_signals_command()` - ~50 líneas
+- `my_signals_command()` - ~60 líneas
+- `alpha_leaderboard_command()` - ~65 líneas
+- `execute_signal_command()` - ~60 líneas
+
+---
+
+## 📊 ESTADÍSTICAS DE CÓDIGO (SIGNAL CONTRIBUTION)
+
+| Componente | Líneas Nuevas |
+|------------|---------------|
+| signal_contribution.py | ~450 |
+| enterprise_bot.py (comandos) | ~320 |
+| **TOTAL** | **~770 líneas** |
+
+---
+
+## 🎯 VALOR PARA INVERSIONISTAS
+
+Este sistema es un **diferenciador competitivo único**:
+
+1. **Ningún otro trading bot** permite crowdsourcing de alpha
+2. **Monetización para usuarios**: Ganan royalties reales por sus señales
+3. **Network effects**: Más usuarios = más señales = más valor
+4. **Track record verificable**: Todas las señales tienen historial público
+5. **Gamification**: Tiers, leaderboards, badges motivan participación
+
+---
+
 ## 📞 CONTACTO
 
 Para preguntas sobre estos cambios:
