@@ -1,50 +1,84 @@
-# 🚀 OMNIX V6.0 Environment Variables Migration Guide
+# 🚀 OMNIX V6.0 ULTRA - Complete Environment Refactoring Guide
 
 ## 📋 Overview
-This guide documents the centralized environment variable system migration completed on November 25, 2025.
+This guide documents the **COMPLETE** centralized environment variable system refactoring completed on November 25, 2025, including:
+- ✅ env_manager.py expansion (19 → 30 variables)
+- ✅ settings.py refactoring (unified with env_manager.py)
+- ✅ Hardcoded ID extraction (enterprise_bot.py)
+- ✅ .env files cleanup (9 → 2 files)
 
 ## 🎯 What Changed
 
-### Before (9 .env files - CHAOS)
-- `.env` - Mixed credentials
+### Before (9 .env files - CHAOS + 2 Config Systems)
+**Config Files:**
+- `omnix_config/env_manager.py` - 19 variables
+- `omnix_config/settings.py` - Separate system with os.getenv()
+- `enterprise_bot.py` - Hardcoded user ID: 7014748854
+
+**Env Files:**
+- `.env` - Mixed credentials (EXPOSED)
 - `.env.deployment` - Railway config (DELETED)
-- `.env.example` - Template
+- `.env.example` - Template (DELETED)
 - `.env.kraken` - Kraken specific (DELETED)
 - `.env.migracion` - Migration temp (DELETED)
 - `.env.persistent` - Old config (DELETED)
 - `.env.pro` - Production config (DELETED)
-- `.env.railway` - Railway specific
-- `.env.template` - Current template
+- `.env.railway` - Railway specific (DELETED)
+- `.env.template` - Template (RENAMED)
 
-### After (4 .env files - CLEAN)
-- `.env` - Protected by Replit (DO NOT EDIT)
-- `.env.example` - Example template
-- `.env.railway` - Railway-specific config
-- `.env.template` - **Main reference template** (140 lines, 19 variables)
+### After (2 .env files + Unified Config - CLEAN)
+**Config System:**
+- `omnix_config/env_manager.py` - **30 variables catalogadas** (singleton, thread-safe, validación)
+- `omnix_config/settings.py` - **Powered by env_manager.py** (interfaz limpia, dataclasses)
+- `enterprise_bot.py` - Uses `settings.TELEGRAM_ADMIN_ID` (configurable)
+
+**Env Files:**
+- `.env` - Protected by Replit (DO NOT EDIT directly)
+- `.env.example` - **Único template oficial** (5422 bytes, 30 variables documentadas)
+- `.env.sanitized` - Reference sin credenciales reales (para Harold)
+- `.env.local` - Para desarrollo local (gitignored, NO tracked)
 
 ## 🏗️ New Architecture
 
-### EnvConfig System (`omnix_config/env_manager.py`)
-**442 lines of enterprise-grade configuration management**
+### Unified Config System
 
-#### Precedence Order (Highest to Lowest):
-1. **Replit Secrets** (Production) - Encrypted, secure
-2. **`.env.local`** (Development) - Local overrides (gitignored)
-3. **Environment Defaults** - Hardcoded fallbacks
+#### EnvConfig (`omnix_config/env_manager.py`)
+**500+ lines of enterprise-grade configuration management**
 
-#### Features:
+**Features:**
 - ✅ Thread-safe singleton pattern
 - ✅ Type casting (str, int, bool, float)
-- ✅ Validation rules per variable
-- ✅ Secure logging (masks sensitive values)
-- ✅ Category-based organization
+- ✅ Validation rules per variable (30 variables with validators)
+- ✅ Secure logging (masks API keys, secrets)
+- ✅ Category-based organization (8 categorías)
 - ✅ Runtime error detection
+- ✅ Precedence: Replit Secrets > .env.local > defaults
 
-## 📦 Environment Variables Catalog (19 Total)
+**Categorías:**
+1. TELEGRAM (2 vars)
+2. AI_APIS (3 vars)
+3. TRADING_APIS (4 vars)
+4. DATABASE (6 vars)
+5. SECURITY (3 vars)
+6. APP_SETTINGS (7 vars)
+7. MONITORING (3 vars)
+8. CELERY (2 vars)
 
-### 1. TELEGRAM (1 variable)
+#### Settings (`omnix_config/settings.py`)
+**Clean dataclass interface powered by env_manager.py**
+
+**Benefits:**
+- ✅ Mantiene interfaz limpia: `settings.ai.openai_key` vs `env_config.get('OPENAI_API_KEY')`
+- ✅ Usa env_manager internamente: `env_config.get()` reemplaza todos los `os.getenv()`
+- ✅ Organización por servicios: Redis, Database, AI, Trading, Celery, Monitoring
+- ✅ Lo mejor de ambos mundos: robustez de env_manager + usabilidad de settings
+
+## 📦 Environment Variables Catalog (30 Total - UPDATED)
+
+### 1. TELEGRAM (2 variables - NEW: ADMIN_ID)
 ```python
-TELEGRAM_BOT_TOKEN  # Required, format: [0-9]+:.*
+TELEGRAM_BOT_TOKEN         # Required, format: [0-9]+:.*
+TELEGRAM_ADMIN_USER_ID     # Required, format: [0-9]{8,10} (NEW - extracted from code)
 ```
 
 ### 2. AI APIS (3 variables)
@@ -54,26 +88,32 @@ OPENAI_API_KEY      # Optional, format: sk-.*
 ANTHROPIC_API_KEY   # Optional, format: sk-ant-.*
 ```
 
-### 3. TRADING APIS (3 variables)
+### 3. TRADING APIS (4 variables - NEW: ALPACA)
 ```python
-KRAKEN_API_KEY      # Optional, any string
-KRAKEN_API_SECRET   # Optional, any string
-KRAKEN_STATUS       # Optional, default: 'active'
+KRAKEN_API_KEY      # Optional, 30+ chars
+KRAKEN_API_SECRET   # Optional, 30+ chars
+ALPACA_API_KEY      # Optional, 15+ chars (NEW - stock trading)
+ALPACA_API_SECRET   # Optional, 30+ chars (NEW)
 ```
 
-### 4. DATABASE (2 variables)
+### 4. DATABASE (6 variables - NEW: REDIS_*)
 ```python
 DATABASE_URL        # Optional, format: postgresql://...
 REDIS_URL           # Optional, format: redis://... or rediss://...
+REDIS_HOST          # Optional, default: 'localhost' (NEW)
+REDIS_PORT          # Optional, default: 6379 (NEW)
+REDIS_DB            # Optional, default: 0 (NEW)
+REDIS_PASSWORD      # Optional (NEW)
 ```
 
-### 5. SECURITY (2 variables)
+### 5. SECURITY (3 variables - NEW: SECRET_KEY)
 ```python
 SESSION_SECRET      # Optional, min 32 chars
 ENCRYPTION_KEY      # Optional, min 32 chars
+SECRET_KEY          # Optional, default: 'omnix-enterprise-secret-key-change-in-prod' (NEW)
 ```
 
-### 6. APP SETTINGS (5 variables)
+### 6. APP SETTINGS (7 variables - NEW: ENVIRONMENT, DEBUG)
 ```python
 PORT                # Optional, default: 8000, range: 1-65535
 HOST                # Optional, default: '0.0.0.0'
@@ -82,23 +122,60 @@ PAPER_MODE          # Optional, default: 'true', values: true/false
 LOG_LEVEL           # Optional, default: 'INFO', values: DEBUG/INFO/WARNING/ERROR/CRITICAL
 ```
 
-### 7. MONITORING (2 variables)
+### 7. MONITORING (3 variables - NEW: SENTRY_DSN)
 ```python
 ENABLE_METRICS      # Optional, default: 'true', values: true/false
 METRICS_PORT        # Optional, default: 9090, range: 1-65535
+SENTRY_DSN          # Optional, format: https://...@....sentry.io/... (NEW)
 ```
 
-## 🔐 Security Best Practices
+### 8. CELERY (2 variables - NEW CATEGORY)
+```python
+CELERY_BROKER_URL       # Optional, default: 'redis://localhost:6379/1' (NEW)
+CELERY_RESULT_BACKEND   # Optional, default: 'redis://localhost:6379/2' (NEW)
+```
+
+## 🔐 Security Best Practices & Credential Rotation
+
+### ⚠️ CRITICAL: Credentials MUST Be Rotated
+The following credentials were **EXPOSED** in `.env` before this refactoring and **MUST be rotated immediately**:
+
+**1. TELEGRAM_BOT_TOKEN** (Priority: HIGH)
+- **Where**: Telegram BotFather
+- **How**: /token command → Revoke → Generate new token
+- **Update in**: Replit Secrets (TELEGRAM_BOT_TOKEN)
+
+**2. KRAKEN_API_KEY + KRAKEN_API_SECRET** (Priority: HIGH)
+- **Where**: Kraken.com → Settings → API
+- **How**: Revoke old keys → Generate new pair
+- **Update in**: Replit Secrets (KRAKEN_API_KEY, KRAKEN_API_SECRET)
+
+**3. GEMINI_API_KEY** (Priority: MEDIUM)
+- **Where**: Google Cloud Console → APIs & Services → Credentials
+- **How**: Delete old key → Create new API key
+- **Update in**: Replit Secrets (GEMINI_API_KEY)
+
+**4. OPENAI_API_KEY** (Priority: MEDIUM)
+- **Where**: OpenAI Dashboard → API Keys
+- **How**: Revoke exposed key → Create new secret key
+- **Update in**: Replit Secrets (OPENAI_API_KEY)
+
+**5. TELEGRAM_ADMIN_USER_ID** (Priority: LOW - Not sensitive)
+- **Where**: .env.sanitized or Replit Secrets
+- **Value**: Your Telegram user ID (e.g., 7014748854)
+- **Update in**: Replit Secrets (TELEGRAM_ADMIN_USER_ID)
 
 ### Replit Environment (Current Setup)
-✅ **All credentials in Replit Secrets:**
-- TELEGRAM_BOT_TOKEN
-- GEMINI_API_KEY
-- OPENAI_API_KEY
-- KRAKEN_API_KEY
-- KRAKEN_API_SECRET
+✅ **Credentials NOW in Replit Secrets:**
+- TELEGRAM_BOT_TOKEN (rotate!)
+- GEMINI_API_KEY (rotate!)
+- OPENAI_API_KEY (rotate!)
+- KRAKEN_API_KEY (rotate!)
+- KRAKEN_API_SECRET (rotate!)
+- TELEGRAM_ADMIN_USER_ID (add nuevo)
 
-✅ **`.env` file protected** - Cannot be edited (Replit security)
+✅ **`.env` file protected** - Cannot be edited (Replit security)  
+⚠️ **Use `.env.sanitized` as reference** for local development
 
 ### Railway Deployment
 

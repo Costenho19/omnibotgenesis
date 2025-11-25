@@ -1,28 +1,34 @@
 """
-OMNIX V5.1 ENTERPRISE - Configuración Centralizada Premium
+OMNIX V6.0 ENTERPRISE - Configuración Centralizada Premium
 Nivel: Enterprise Grade
 Escalabilidad: 50K+ usuarios
+
+Migrado a env_manager.py para gestión robusta de variables de entorno
+con precedencia: Replit Secrets > .env.local > defaults
 """
 
 import os
 from dataclasses import dataclass
 from typing import Optional
 
+# Import centralized env config
+from omnix_config.env_manager import env_config
+
 
 @dataclass
 class RedisConfig:
     """Configuración Redis Cache"""
-    host: str = os.getenv('REDIS_HOST', 'localhost')
-    port: int = int(os.getenv('REDIS_PORT', 6379))
-    db: int = int(os.getenv('REDIS_DB', 0))
-    password: Optional[str] = os.getenv('REDIS_PASSWORD')
+    host: str = env_config.get('REDIS_HOST', default='localhost')
+    port: int = env_config.get('REDIS_PORT', default=6379, cast_type=int)
+    db: int = env_config.get('REDIS_DB', default=0, cast_type=int)
+    password: Optional[str] = env_config.get('REDIS_PASSWORD')
     ttl: int = 300  # 5 minutos default
 
 
 @dataclass
 class DatabaseConfig:
     """Configuración PostgreSQL"""
-    url: str = os.getenv('DATABASE_URL', '')
+    url: str = env_config.get('DATABASE_URL', default='')
     pool_size: int = 20
     max_overflow: int = 40
     pool_timeout: int = 30
@@ -32,8 +38,8 @@ class DatabaseConfig:
 @dataclass
 class AIConfig:
     """Configuración servicios IA"""
-    openai_key: str = os.getenv('OPENAI_API_KEY', '')
-    gemini_key: str = os.getenv('GEMINI_API_KEY', '')
+    openai_key: str = env_config.get('OPENAI_API_KEY', default='')
+    gemini_key: str = env_config.get('GEMINI_API_KEY', default='')
     primary_model: str = 'gemini-2.0-flash-exp'
     fallback_models: Optional[list] = None
     max_retries: int = 1
@@ -47,8 +53,8 @@ class AIConfig:
 @dataclass
 class TradingConfig:
     """Configuración Trading"""
-    kraken_key: str = os.getenv('KRAKEN_API_KEY', '')
-    kraken_secret: str = os.getenv('KRAKEN_API_SECRET', '')
+    kraken_key: str = env_config.get('KRAKEN_API_KEY', default='')
+    kraken_secret: str = env_config.get('KRAKEN_API_SECRET', default='')
     max_trade_size: float = 1000.0
     min_trade_size: float = 10.0
     rate_limit: int = 15  # requests per minute
@@ -57,8 +63,8 @@ class TradingConfig:
 @dataclass
 class CeleryConfig:
     """Configuración Celery Workers"""
-    broker_url: str = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
-    result_backend: str = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
+    broker_url: str = env_config.get('CELERY_BROKER_URL', default='redis://localhost:6379/1')
+    result_backend: str = env_config.get('CELERY_RESULT_BACKEND', default='redis://localhost:6379/2')
     task_serializer: str = 'json'
     accept_content: Optional[list] = None
     timezone: str = 'UTC'
@@ -71,13 +77,13 @@ class CeleryConfig:
 @dataclass
 class MonitoringConfig:
     """Configuración Monitoring"""
-    sentry_dsn: Optional[str] = os.getenv('SENTRY_DSN')
-    log_level: str = os.getenv('LOG_LEVEL', 'INFO')
+    sentry_dsn: Optional[str] = env_config.get('SENTRY_DSN')
+    log_level: str = env_config.get('LOG_LEVEL', default='INFO')
     metrics_enabled: bool = True
 
 
 class Settings:
-    """Settings centralizados OMNIX V5.1 Enterprise"""
+    """Settings centralizados OMNIX V6.0 Enterprise - Powered by env_manager.py"""
     
     redis = RedisConfig()
     database = DatabaseConfig()
@@ -87,12 +93,13 @@ class Settings:
     monitoring = MonitoringConfig()
     
     # General
-    ENV: str = os.getenv('ENVIRONMENT', 'development')
-    DEBUG: bool = os.getenv('DEBUG', 'False').lower() == 'true'
-    SECRET_KEY: str = os.getenv('SECRET_KEY', 'omnix-enterprise-secret-key-change-in-prod')
+    ENV: str = env_config.get('ENVIRONMENT', default='development')
+    DEBUG: bool = env_config.get('DEBUG', default='false', cast_type=bool)
+    SECRET_KEY: str = env_config.get('SECRET_KEY', default='omnix-enterprise-secret-key-change-in-prod')
     
     # Telegram
-    TELEGRAM_TOKEN: str = os.getenv('TELEGRAM_BOT_TOKEN', '')
+    TELEGRAM_TOKEN: str = env_config.get_required('TELEGRAM_BOT_TOKEN')
+    TELEGRAM_ADMIN_ID: str = env_config.get('TELEGRAM_ADMIN_USER_ID', default='7014748854')  # TODO: Move to Replit Secrets
     
     # Rate Limiting
     RATE_LIMIT_PER_USER: int = 60  # requests per minute

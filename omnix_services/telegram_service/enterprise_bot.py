@@ -15,6 +15,9 @@ from typing import Optional, Dict, Any
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
+# Import centralized settings
+from omnix_config.settings import settings
+
 logger = logging.getLogger(__name__)
 
 # Import omnix services
@@ -89,9 +92,9 @@ except ImportError:
     TELEGRAM_AVAILABLE = False
 
 
-# Admin verification function
+# Admin verification function - ID from env_config
 ADMIN_IDS = {
-    7014748854,  # Harold Nunes - Creator
+    int(settings.TELEGRAM_ADMIN_ID),  # Harold Nunes - Creator (from TELEGRAM_ADMIN_USER_ID)
 }
 
 def is_admin(user_id):
@@ -981,7 +984,7 @@ Usa /performance para ver evolución de tu balance
             user_id = str(update.message.from_user.id)
             
             # Solo Harold puede ejecutar conversiones reales
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede convertir fondos a USD")
                 return
             
@@ -1107,7 +1110,7 @@ Usa /performance para ver evolución de tu balance
             user_id = str(update.message.from_user.id)
             
             # Solo Harold puede ejecutar conversiones reales
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede convertir fondos")
                 return
             
@@ -1929,7 +1932,7 @@ ETH: {result['new_eth_balance']:.8f}
             logger.info(f"🔐 Usuario autorizado: {user_id}")
             
             # Solo Harold puede activar auto-trading
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 logger.warning(f"⚠️ Usuario no autorizado: {user_id}")
                 await update.message.reply_text("⚠️ Solo Harold puede activar auto-trading")
                 return
@@ -2006,7 +2009,7 @@ Usa /auto_stop para detener
             user_id = str(update.effective_user.id)
             
             # Solo Harold puede detener
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede detener auto-trading")
                 return
             
@@ -2094,7 +2097,7 @@ Usa /auto_stop para detener
             user_id = str(update.effective_user.id)
             
             # Solo Harold puede activar auto-learning
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede activar auto-learning")
                 return
             
@@ -2137,7 +2140,7 @@ Usa /auto_stop para detener
             user_id = str(update.effective_user.id)
             
             # Solo Harold puede pausar auto-learning
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede pausar auto-learning")
                 return
             
@@ -2229,7 +2232,7 @@ Total cambios realizados: {status.get('total_changes', 0)}
             user_id = str(update.effective_user.id)
             
             # Solo Harold puede revertir cambios
-            if user_id != "7014748854":
+            if user_id != settings.TELEGRAM_ADMIN_ID:
                 await update.message.reply_text("⚠️ Solo Harold puede revertir cambios")
                 return
             
@@ -2422,7 +2425,7 @@ Ejemplo: /risk_events 48
             user_name = user.first_name or "Usuario"
             
             logger.info(f"🧠 MENSAJE RECIBIDO de {user_name} ({user_id}): {user_message}")
-            logger.info(f"🎤 DEBUG: user_id='{user_id}', esperado='7014748854', coincide={user_id == '7014748854'}")
+            logger.info(f"🎤 DEBUG: user_id='{user_id}', esperado='{settings.TELEGRAM_ADMIN_ID}', coincide={user_id == settings.TELEGRAM_ADMIN_ID}")
             
             # ⚡ PRIORIDAD MÁXIMA: Comandos específicos del bot
             # Verificar PRIMERO si es comando /autotrading ANTES de enviar a IA
@@ -2483,7 +2486,7 @@ Ejemplo: /risk_events 48
                     logger.info(f"✅ RESPUESTA ENVIADA: {len(ai_response)} caracteres")
                 
                 # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA HAROLD
-                if user_id == "7014748854":  # Harold específicamente
+                if user_id == settings.TELEGRAM_ADMIN_ID:  # Harold específicamente
                     try:
                         # Limpiar texto para voz
                         voice_text = ai_response
@@ -2655,7 +2658,7 @@ Ejemplo: /risk_events 48
                     logger.info(f"✅ RESPUESTA ENVIADA A VOZ: {len(ai_response)} caracteres")
                     
                     # 🎤 ENVIAR VOZ DE RESPUESTA PARA HAROLD
-                    if user_id == "7014748854":
+                    if user_id == settings.TELEGRAM_ADMIN_ID:
                         try:
                             voice_text = ai_response
                             import re
@@ -2974,7 +2977,7 @@ Pregúntame cualquier cosa sobre:
                 if sub_cmd == 'start':
                     if not self.auto_trading:
                         response_text = "⚠️ Auto-Trading Bot no disponible"
-                    elif str(user_id) != "7014748854":
+                    elif str(user_id) != settings.TELEGRAM_ADMIN_ID:
                         response_text = "⚠️ Solo Harold puede activar auto-trading"
                     else:
                         result = self.auto_trading.start()
@@ -3026,7 +3029,7 @@ Usa /autotrading stop para detener"""
                 elif sub_cmd == 'stop':
                     if not self.auto_trading:
                         response_text = "⚠️ Auto-Trading Bot no disponible"
-                    elif str(user_id) != "7014748854":
+                    elif str(user_id) != settings.TELEGRAM_ADMIN_ID:
                         response_text = "⚠️ Solo Harold puede detener auto-trading"
                     else:
                         result = self.auto_trading.stop()
@@ -3789,7 +3792,7 @@ Harold pregunta: {text}"""
         """FUNCIÓN REDIRIGIDA - USA SUPERINTELIGENCIA PARA HAROLD"""
         try:
             logger.info(f"🔄 Redirigiendo a superinteligencia para Harold...")
-            return self.ai.generate_response(text, "Harold", "7014748854", 7014748854)
+            return self.ai.generate_response(text, "Harold", settings.TELEGRAM_ADMIN_ID, int(settings.TELEGRAM_ADMIN_ID))
         except Exception as e:
             logger.error(f"❌ Error generate_smart_response: {e}")
             return f"🤖 Sistema procesando: '{text}'\n\n💰 Balance real verificado con Kraken\n✅ IA superinteligente operativa"

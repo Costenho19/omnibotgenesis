@@ -33,6 +33,7 @@ class EnvCategory(Enum):
     SECURITY = "security"
     APP_SETTINGS = "app_settings"
     MONITORING = "monitoring"
+    CELERY = "celery"
 
 
 class EnvConfig:
@@ -61,6 +62,13 @@ class EnvConfig:
             'validator': lambda x: bool(re.match(r'^\d+:[A-Za-z0-9_-]{35}$', x)),
             'description': 'Token del bot de Telegram',
             'example': '123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567890'
+        },
+        'TELEGRAM_ADMIN_USER_ID': {
+            'category': EnvCategory.TELEGRAM,
+            'required': False,
+            'validator': lambda x: x.isdigit() and len(x) >= 8,
+            'description': 'User ID del administrador de Telegram (configurable via settings.py default)',
+            'example': '123456789'
         },
         
         # AI APIS
@@ -131,6 +139,37 @@ class EnvConfig:
             'description': 'URL de conexión a Redis',
             'example': 'redis://localhost:6379/0'
         },
+        'REDIS_HOST': {
+            'category': EnvCategory.DATABASE,
+            'required': False,
+            'default': 'localhost',
+            'validator': lambda x: len(x) > 0,
+            'description': 'Host de Redis',
+            'example': 'localhost'
+        },
+        'REDIS_PORT': {
+            'category': EnvCategory.DATABASE,
+            'required': False,
+            'default': '6379',
+            'validator': lambda x: x.isdigit() and 1 <= int(x) <= 65535,
+            'description': 'Puerto de Redis',
+            'example': '6379'
+        },
+        'REDIS_DB': {
+            'category': EnvCategory.DATABASE,
+            'required': False,
+            'default': '0',
+            'validator': lambda x: x.isdigit() and 0 <= int(x) <= 15,
+            'description': 'Número de base de datos Redis (0-15)',
+            'example': '0'
+        },
+        'REDIS_PASSWORD': {
+            'category': EnvCategory.DATABASE,
+            'required': False,
+            'validator': lambda x: True,
+            'description': 'Password de Redis (opcional)',
+            'example': 'your_redis_password'
+        },
         
         # SECURITY
         'SESSION_SECRET': {
@@ -146,6 +185,14 @@ class EnvConfig:
             'validator': lambda x: len(x) >= 32,
             'description': 'Key de encriptación (min 32 chars)',
             'example': 'your-encryption-key-here-min-32-chars'
+        },
+        'SECRET_KEY': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'default': 'omnix-enterprise-secret-key-change-in-prod',
+            'validator': lambda x: len(x) >= 20,
+            'description': 'Secret key general de la aplicación',
+            'example': 'omnix-ultra-secret-production-key-2025'
         },
         
         # APP SETTINGS
@@ -189,6 +236,22 @@ class EnvConfig:
             'description': 'Nivel de logging',
             'example': 'INFO'
         },
+        'ENVIRONMENT': {
+            'category': EnvCategory.APP_SETTINGS,
+            'required': False,
+            'default': 'development',
+            'validator': lambda x: x in ['development', 'production', 'staging', 'test'],
+            'description': 'Entorno de ejecución',
+            'example': 'production'
+        },
+        'DEBUG': {
+            'category': EnvCategory.APP_SETTINGS,
+            'required': False,
+            'default': 'false',
+            'validator': lambda x: x.lower() in ['true', 'false'],
+            'description': 'Modo debug (true/false)',
+            'example': 'false'
+        },
         
         # MONITORING
         'ENABLE_METRICS': {
@@ -206,6 +269,31 @@ class EnvConfig:
             'validator': lambda x: x.isdigit() and 1 <= int(x) <= 65535,
             'description': 'Puerto para métricas Prometheus',
             'example': '9090'
+        },
+        'SENTRY_DSN': {
+            'category': EnvCategory.MONITORING,
+            'required': False,
+            'validator': lambda x: x.startswith('https://') and 'sentry.io' in x,
+            'description': 'Sentry DSN para error tracking',
+            'example': 'https://xxxxx@xxxxx.ingest.sentry.io/xxxxx'
+        },
+        
+        # CELERY
+        'CELERY_BROKER_URL': {
+            'category': EnvCategory.CELERY,
+            'required': False,
+            'default': 'redis://localhost:6379/1',
+            'validator': lambda x: x.startswith(('redis://', 'rediss://', 'amqp://')),
+            'description': 'URL del broker Celery (Redis/RabbitMQ)',
+            'example': 'redis://localhost:6379/1'
+        },
+        'CELERY_RESULT_BACKEND': {
+            'category': EnvCategory.CELERY,
+            'required': False,
+            'default': 'redis://localhost:6379/2',
+            'validator': lambda x: x.startswith(('redis://', 'rediss://', 'rpc://')),
+            'description': 'URL del backend de resultados Celery',
+            'example': 'redis://localhost:6379/2'
         }
     }
     

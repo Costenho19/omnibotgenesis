@@ -1,9 +1,13 @@
-# Environment variables
+# Environment variables - NUNCA subir credenciales reales
 .env
 .env.local
+.env.railway
 .env.deployment
 .env.persistent
 .env.migracion
+.env.*.local
+
+# .env.example y .env.sanitized SÍ se suben (son templates sin credenciales)
 
 # Python
 __pycache__/
