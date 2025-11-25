@@ -69,13 +69,22 @@ except ImportError:
 # Import Auto-Learning System (V5.2.3 QUANTUM ULTIMATE - VIDEO LEARNING)
 try:
     from omnix_services.optimization import AutoLearningSystem
-    from video_learning_analyzer import VideoLearningAnalyzer
     AUTO_LEARNING_AVAILABLE = True
+    logger.info("✅ Auto-Learning System disponible")
 except ImportError:
     AutoLearningSystem = None
-    VideoLearningAnalyzer = None
     AUTO_LEARNING_AVAILABLE = False
     logger.warning("⚠️ Auto-Learning System no disponible - aprendizaje de videos desactivado")
+
+# Import Video Learning Analyzer (opcional, funciona sin él)
+try:
+    from omnix_services.ai_service.video import VideoLearningAnalyzer
+    VIDEO_ANALYZER_AVAILABLE = True
+    logger.info("✅ Video Learning Analyzer disponible")
+except ImportError:
+    VideoLearningAnalyzer = None
+    VIDEO_ANALYZER_AVAILABLE = False
+    logger.info("📹 Video Learning Analyzer no disponible (opcional)")
 
 # Import Conversational Brain (V5.3 ULTRA - EL BOT QUE PIENSA EN VOZ ALTA)
 try:
