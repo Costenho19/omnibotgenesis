@@ -58,8 +58,11 @@ from collections import defaultdict, deque
 from flask import Flask, request, jsonify
 from functools import lru_cache
 
+# 🔧 OMNIX V6.0 ULTRA - Configuración Centralizada
+from omnix_config import env_config
+
 # 📊 STOCK TRADING MODULE V6.0 - DUAL MARKET SYSTEM
-STOCK_TRADING_ENABLED = os.getenv('STOCK_TRADING_ENABLED', 'true').lower() == 'true'
+STOCK_TRADING_ENABLED = env_config.get('STOCK_TRADING_ENABLED', default='true', cast_type=bool)
 # Configurar logging ANTES de cualquier uso
 logging.basicConfig(
     level=logging.INFO,
@@ -120,9 +123,9 @@ try:
     GEMINI_AVAILABLE = True
     # Configurar cliente Gemini directamente
     GEMINI_MODEL = None
-    if os.environ.get('GEMINI_API_KEY'):
+    if env_config.get('GEMINI_API_KEY'):
         try:
-            GEMINI_MODEL = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+            GEMINI_MODEL = genai.Client(api_key=env_config.get('GEMINI_API_KEY'))
             print("✅ GEMINI 2.0 CLIENT INICIALIZADO CORRECTAMENTE")
         except Exception as e:
             print(f"❌ Error configurando Gemini: {e}")
@@ -134,9 +137,9 @@ except ImportError:
         GEMINI_AVAILABLE = True
         # Configurar con SDK anterior
         GEMINI_MODEL = None
-        if os.environ.get('GEMINI_API_KEY'):
+        if env_config.get('GEMINI_API_KEY'):
             try:
-                genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
+                genai.configure(api_key=env_config.get('GEMINI_API_KEY'))
                 GEMINI_MODEL = genai.GenerativeModel('gemini-2.0-flash-exp')
                 print("✅ GEMINI CLASSIC CLIENT INICIALIZADO")
             except Exception as e:
@@ -450,15 +453,15 @@ except ImportError as e:
     logger.warning(f"⚠️ Database Service Enterprise not available: {e}")
     DATABASE_ENTERPRISE_AVAILABLE = False
 
-# Configuración integrada
+# Configuración integrada (migrado a EnvConfig centralizado)
 class Config:
-    TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+    TELEGRAM_BOT_TOKEN = env_config.get_required('TELEGRAM_BOT_TOKEN')
     # Sistema de múltiples IA para máxima confiabilidad
-    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-    ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+    GEMINI_API_KEY = env_config.get('GEMINI_API_KEY')
+    OPENAI_API_KEY = env_config.get('OPENAI_API_KEY')
+    ANTHROPIC_API_KEY = env_config.get('ANTHROPIC_API_KEY')
     HOST = '0.0.0.0'
-    PORT = int(os.environ.get('PORT', 8000))
+    PORT = env_config.get('PORT', default=8000, cast_type=int)
     DEBUG = False
 
 config = Config()
@@ -473,13 +476,13 @@ ai_status = {
 }
 
 # Inicializar Gemini IA (PRIMARIA)
-if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
+if GEMINI_AVAILABLE and env_config.get('GEMINI_API_KEY'):
     try:
         if hasattr(genai, 'Client'):
-            genai_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+            genai_client = genai.Client(api_key=env_config.get('GEMINI_API_KEY'))
             logger.info("IA Gemini 2.0 (nuevo SDK) configurada correctamente")
         else:
-            genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
+            genai.configure(api_key=env_config.get('GEMINI_API_KEY'))
             genai_client = None
             logger.info("IA Gemini (SDK anterior) configurada correctamente")
         ai_status['gemini'] = True
@@ -489,9 +492,9 @@ if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
         GEMINI_AVAILABLE = False
 
 # Inicializar OpenAI (PRIMARIA - MEJOR CALIDAD)
-if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
+if OPENAI_AVAILABLE and env_config.get('OPENAI_API_KEY'):
     try:
-        openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        openai_client = OpenAI(api_key=env_config.get('OPENAI_API_KEY'))
         ai_status['openai'] = True
         ai_status['primary'] = 'openai'  # OpenAI como primaria
         logger.info("IA OpenAI GPT-4o configurada como PRIMARIA")
@@ -500,9 +503,9 @@ if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
         OPENAI_AVAILABLE = False
 
 # Inicializar Anthropic (RESPALDO 2)  
-if ANTHROPIC_AVAILABLE and os.environ.get('ANTHROPIC_API_KEY'):
+if ANTHROPIC_AVAILABLE and env_config.get('ANTHROPIC_API_KEY'):
     try:
-        anthropic_client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        anthropic_client = anthropic.Anthropic(api_key=env_config.get('ANTHROPIC_API_KEY'))
         ai_status['anthropic'] = True
         ai_status['backup'].append('anthropic')
         logger.info("IA Anthropic Claude configurada como respaldo")
