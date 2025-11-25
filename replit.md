@@ -8,7 +8,10 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Replit (Development)**: ✅ LIVE - Bot Telegram operativo con ARES V1+V2, Paper Trading $1M, modular architecture validated
 - **Entry Point Unificado**: `python -u main.py` funciona idénticamente en Replit y Railway (zero config drift)
 
-**Recent Changes (November 24, 2025):**
+**Recent Changes (November 25, 2025):**
+- 🔧 **ENVIRONMENT CONFIGURATION REFACTORING**: Centralización completa de variables de entorno en `omnix_config/env_manager.py` (442 líneas) con precedencia Replit Secrets > .env.local > defaults. Eliminados 5 archivos .env duplicados (de 9 a 4 archivos). Main.py migrado de os.getenv() a EnvConfig centralizado. Sistema validado operacional con ARES V1+V2, Signal Contribution, Arbitrage 8 exchanges.
+
+**Previous Changes (November 24, 2025):**
 - 📊 **MARKET DASHBOARD PREMIUM**: Comando `/market` con datos 100% reales de Kraken - Dashboard institucional con precios en tiempo real de 6 cryptos (BTC, ETH, SOL, XRP, ADA, DOGE), sentimiento de mercado, top gainers/losers, volúmenes 24h y tendencias visuales
 - 💱 **ARBITRAGE MULTI-EXCHANGE PREMIUM V6.0**: Sistema institucional de arbitraje con 8 exchanges (Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex) para generar ganancias continuas comprando barato/vendiendo caro automáticamente
 - ✅ **Premium Validation System**: Sistema completo de validación con 10 eventos históricos críticos (COVID crash, FTX collapse, etc.)
@@ -28,6 +31,7 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - **Zero Downtime**: Bot RUNNING continuamente durante todo el refactoring (ARES V1+V2 activos, $1M paper trading)
 
 **Arquitectura Modular Creada (75+ archivos Python):**
+- `omnix_config/`: **env_manager.py (442 líneas)** - Sistema centralizado de configuración con precedencia Replit Secrets > .env.local > defaults, validación de tipos, logging seguro de credenciales
 - `omnix_core/strategies/`: ARES V1 (ares_v1.py), ARES V2 (ares_v2.py) - Estrategias quantum institucionales
 - `omnix_core/security/`: pqc_security.py, pqc_encryption.py - Post-Quantum Cryptography NIST 2024
 - `omnix_core/quantum/`: enhancements.py - QRNG, QAOA portfolio optimization
@@ -47,6 +51,7 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - `omnix_services/voice_service/`: VoiceEngine, biometric authentication, TTS/STT
 - `omnix_services/telegram_service/`: EnterpriseTelegramBot
 - `omnix_services/coherence_service/`: CoherenceEngine para validación de estrategias
+- `omnix_services/community_intelligence/`: SignalContribution (crowdsourcing alpha), CommunityFeedback, RewardSystem
 - `omnix_services/stock_trading/`: Módulos de trading de acciones
 - `omnix_api/payments/`: stripe_integration.py - Integración de pagos Stripe
 
