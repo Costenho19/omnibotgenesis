@@ -14,6 +14,12 @@ FLUJO:
 3. Otros usuarios pueden ejecutarla o votar
 4. Si señal es exitosa → contribuidor gana puntos royalty
 5. Top contribuidores aparecen en /signal_leaderboard
+
+REFACTORIZADO (Nov 26, 2025):
+- Usa DatabaseService centralizado (no queries directas)
+- Tablas definidas en database_service.py (única fuente de verdad)
+- Métodos DAL: save_community_signal(), get_community_signals()
+- 120 líneas de código duplicado eliminadas
 """
 
 import os
@@ -42,6 +48,10 @@ class SignalContributionManager:
     - Sistema trackea performance de cada señal
     - Royalties automáticos para contribuidores exitosos
     - Ranking de mejores "alpha hunters"
+    
+    REFACTORIZADO: Usa DatabaseService centralizado (Nov 26, 2025)
+    - Tablas: community_signals, signal_executions, signal_votes, alpha_leaderboard
+    - Definidas en: omnix_services/database_service/database_service.py
     """
     
     SIGNAL_TYPES = ['LONG', 'SHORT', 'NEUTRAL']
