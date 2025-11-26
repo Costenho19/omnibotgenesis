@@ -399,10 +399,247 @@ class DatabaseServiceEnterprise:
                 ON pending_evaluations(trade_id, status)
             ''')
             
+            # ==========================================
+            # COMMUNITY INTELLIGENCE TABLES - CROWDSOURCING
+            # ==========================================
+            
+            # Tabla de feedback comunitario
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS community_feedback (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    username TEXT,
+                    feedback_type TEXT NOT NULL,
+                    signal_type TEXT,
+                    strategy TEXT,
+                    symbol TEXT,
+                    result TEXT NOT NULL,
+                    market_condition TEXT,
+                    btc_price REAL,
+                    volatility TEXT,
+                    timeframe TEXT,
+                    comment TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_verified BOOLEAN DEFAULT false,
+                    helpful_votes INTEGER DEFAULT 0
+                )
+            ''')
+            
+            # Tabla de votos de estrategias
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS strategy_votes (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    strategy TEXT NOT NULL,
+                    vote INTEGER NOT NULL,
+                    reason TEXT,
+                    market_condition TEXT,
+                    vote_date DATE DEFAULT CURRENT_DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, strategy, vote_date)
+                )
+            ''')
+            
+            # Tabla de propuestas de mejora
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS improvement_proposals (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    username TEXT,
+                    proposal_type TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    affected_strategy TEXT,
+                    priority TEXT DEFAULT 'medium',
+                    status TEXT DEFAULT 'pending',
+                    ai_analysis TEXT,
+                    community_votes INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TIMESTAMP,
+                    implemented_at TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de contribuciones de usuarios
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_contributions (
+                    user_id TEXT PRIMARY KEY,
+                    username TEXT,
+                    total_feedback INTEGER DEFAULT 0,
+                    helpful_feedback INTEGER DEFAULT 0,
+                    total_votes INTEGER DEFAULT 0,
+                    proposals_submitted INTEGER DEFAULT 0,
+                    proposals_accepted INTEGER DEFAULT 0,
+                    contribution_points INTEGER DEFAULT 0,
+                    contribution_level TEXT DEFAULT 'Novato',
+                    badges TEXT DEFAULT '[]',
+                    first_contribution TIMESTAMP,
+                    last_contribution TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de patrones detectados por AI
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS detected_patterns (
+                    id SERIAL PRIMARY KEY,
+                    pattern_type TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    affected_strategy TEXT,
+                    market_condition TEXT,
+                    confidence REAL NOT NULL,
+                    sample_size INTEGER NOT NULL,
+                    success_rate REAL,
+                    failure_rate REAL,
+                    suggestion TEXT,
+                    status TEXT DEFAULT 'detected',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    approved_at TIMESTAMP,
+                    implemented_at TIMESTAMP
+                )
+            ''')
+            
+            # Índices para Community Intelligence
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_user ON community_feedback(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_strategy ON community_feedback(strategy)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_result ON community_feedback(result)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_strategy ON strategy_votes(strategy)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_patterns_status ON detected_patterns(status)')
+            
+            # ==========================================
+            # SIGNAL CONTRIBUTION TABLES - CROWDSOURCING ALPHA
+            # ==========================================
+            
+            # Tabla de señales compartidas por usuarios
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS community_signals (
+                    id SERIAL PRIMARY KEY,
+                    signal_id TEXT UNIQUE NOT NULL,
+                    contributor_id TEXT NOT NULL,
+                    contributor_name TEXT,
+                    
+                    -- Señal
+                    symbol TEXT NOT NULL,
+                    signal_type TEXT NOT NULL,
+                    entry_price REAL,
+                    target_price REAL,
+                    stop_loss REAL,
+                    timeframe TEXT DEFAULT '1h',
+                    confidence INTEGER DEFAULT 50,
+                    
+                    -- Análisis
+                    reasoning TEXT,
+                    indicators_used TEXT,
+                    market_condition TEXT,
+                    
+                    -- Tracking
+                    status TEXT DEFAULT 'active',
+                    executions_count INTEGER DEFAULT 0,
+                    success_count INTEGER DEFAULT 0,
+                    failure_count INTEGER DEFAULT 0,
+                    
+                    -- Votos
+                    upvotes INTEGER DEFAULT 0,
+                    downvotes INTEGER DEFAULT 0,
+                    
+                    -- Resultado final
+                    final_result TEXT,
+                    actual_return REAL,
+                    closed_at TIMESTAMP,
+                    
+                    -- Royalties
+                    royalties_earned INTEGER DEFAULT 0,
+                    
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de ejecuciones de señales
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS signal_executions (
+                    id SERIAL PRIMARY KEY,
+                    signal_id TEXT NOT NULL,
+                    executor_id TEXT NOT NULL,
+                    executor_name TEXT,
+                    
+                    entry_price REAL,
+                    exit_price REAL,
+                    result TEXT,
+                    profit_pct REAL,
+                    
+                    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    closed_at TIMESTAMP,
+                    
+                    feedback TEXT,
+                    rating INTEGER
+                )
+            ''')
+            
+            # Tabla de votos de señales
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS signal_votes (
+                    id SERIAL PRIMARY KEY,
+                    signal_id TEXT NOT NULL,
+                    voter_id TEXT NOT NULL,
+                    vote_type TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(signal_id, voter_id)
+                )
+            ''')
+            
+            # Tabla de leaderboard de alpha
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS alpha_leaderboard (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT UNIQUE NOT NULL,
+                    username TEXT,
+                    
+                    -- Stats
+                    signals_shared INTEGER DEFAULT 0,
+                    signals_successful INTEGER DEFAULT 0,
+                    total_executions INTEGER DEFAULT 0,
+                    win_rate REAL DEFAULT 0,
+                    avg_return REAL DEFAULT 0,
+                    
+                    -- Puntos
+                    royalty_points INTEGER DEFAULT 0,
+                    reputation_score REAL DEFAULT 50,
+                    
+                    -- Ranking
+                    rank_position INTEGER,
+                    rank_tier TEXT DEFAULT 'Bronze',
+                    
+                    last_signal_at TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # ==========================================
+            # AI RISK GUARDIAN TABLE - MONITORING
+            # ==========================================
+            
+            # Tabla de eventos del AI Risk Guardian
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_guardian_events (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+                    risk_type VARCHAR(50) NOT NULL,
+                    risk_level VARCHAR(20) NOT NULL,
+                    description TEXT NOT NULL,
+                    action_taken TEXT NOT NULL,
+                    metadata JSONB,
+                    user_id BIGINT
+                )
+            ''')
+            
+            # Índices para risk_guardian_events
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_timestamp ON risk_guardian_events(timestamp DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_type ON risk_guardian_events(risk_type)')
+            
             conn.commit()
             cursor.close()
             conn.close()
-            logger.info("✅ PostgreSQL: 13 tablas inicializadas (incluye Cerebro Conversacional ÚNICO)")
+            logger.info("✅ PostgreSQL: 23 tablas inicializadas (Core + Paper Trading + Cerebro + Community Intelligence + Signal Contribution + Risk Guardian)")
             
         except Exception as e:
             logger.error(f"Error inicializando tablas: {e}")
