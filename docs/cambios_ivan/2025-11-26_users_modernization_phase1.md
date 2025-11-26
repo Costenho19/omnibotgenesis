@@ -504,7 +504,6 @@ python main.py
    - Estimación: 3-5 días
 
 2. **Agregar FK constraints en tablas legacy**
-   - prices.user_id → users.user_id
    - trades.user_id → users.user_id
    - analysis.user_id → users.user_id
    - Etc.

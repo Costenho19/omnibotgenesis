@@ -2064,7 +2064,6 @@ python -u main.py
 
 ```sql
 -- Agregar índices críticos
-CREATE INDEX CONCURRENTLY idx_prices_symbol_timestamp ON prices(symbol, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_trades_user_timestamp ON trades(user_id, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_conversations_user_timestamp ON conversations(user_id, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_users_last_activity ON users(last_activity DESC);
@@ -2078,7 +2077,6 @@ ALTER TABLE balance_history ADD CONSTRAINT fk_balance_user FOREIGN KEY (user_id)
 
 **Estimación de Mejora**:
 - Queries de historial de trades: 500ms → 50ms (10x)
-- Queries de precios: 200ms → 20ms (10x)
 - Leaderboards: 1000ms → 100ms (10x)
 
 ---
