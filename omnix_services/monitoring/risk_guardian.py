@@ -68,15 +68,15 @@ class AIRiskGuardian:
     peligrosos que podrían causar pérdidas significativas.
     """
     
-    def __init__(self, db_conn_string: str):
+    def __init__(self, database_service=None):
         """
         Inicializa el AI Risk Guardian
         
         Args:
-            db_conn_string: String de conexión a PostgreSQL
+            database_service: DatabaseManager o DatabaseServiceEnterprise instance
         """
-        self.db_conn_string = db_conn_string
-        self._create_tables()
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
         
         # Configuración de límites
         self.config = {
@@ -113,39 +113,9 @@ class AIRiskGuardian:
         logger.info(f"   📉 Drawdown crítico: 20%")
         logger.info(f"   🛑 Pérdidas consecutivas: {self.config['consecutive_losses_trigger']}")
     
-    def _create_tables(self):
-        """Crea tabla PostgreSQL para eventos de riesgo"""
-        try:
-            conn = psycopg2.connect(self.db_conn_string)
-            cur = conn.cursor()
-            
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS risk_guardian_events (
-                    id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-                    risk_type VARCHAR(50) NOT NULL,
-                    risk_level VARCHAR(20) NOT NULL,
-                    description TEXT NOT NULL,
-                    action_taken TEXT NOT NULL,
-                    metadata JSONB,
-                    user_id BIGINT
-                );
-                
-                CREATE INDEX IF NOT EXISTS idx_risk_events_timestamp 
-                ON risk_guardian_events(timestamp DESC);
-                
-                CREATE INDEX IF NOT EXISTS idx_risk_events_type 
-                ON risk_guardian_events(risk_type);
-            """)
-            
-            conn.commit()
-            cur.close()
-            conn.close()
-            
-            logger.info("✅ Tabla risk_guardian_events verificada")
-            
-        except Exception as e:
-            logger.error(f"Error creando tabla risk_guardian_events: {e}")
+    def _create_tables_DEPRECATED(self):
+        """DEPRECATED: Tablas ahora en database_service.py"""
+        pass
     
     def check_all_risks(
         self, 
@@ -467,27 +437,20 @@ class AIRiskGuardian:
         logger.warning(f"   Hasta: {self.block_until}")
     
     def _log_event(self, event: RiskEvent):
-        """Registra evento de riesgo en PostgreSQL"""
+        """Registra evento de riesgo usando DatabaseService"""
+        if not self.connected:
+            logger.warning("⚠️ Database no disponible para logging de eventos")
+            return
+        
         try:
-            conn = psycopg2.connect(self.db_conn_string)
-            cur = conn.cursor()
-            
-            cur.execute("""
-                INSERT INTO risk_guardian_events 
-                (risk_type, risk_level, description, action_taken, metadata)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (
-                event.risk_type.value,
-                event.risk_level.value,
-                event.description,
-                event.action_taken,
-                psycopg2.extras.Json(event.metadata)
-            ))
-            
-            conn.commit()
-            cur.close()
-            conn.close()
-            
+            # Usar DatabaseService centralizado
+            self.db.log_risk_event(
+                risk_type=event.risk_type.value,
+                risk_level=event.risk_level.value,
+                description=event.description,
+                action_taken=event.action_taken,
+                metadata=event.metadata
+            )
         except Exception as e:
             logger.error(f"Error logging risk event: {e}")
     
@@ -537,26 +500,17 @@ class AIRiskGuardian:
         Returns:
             Lista de eventos de riesgo
         """
-        try:
-            conn = psycopg2.connect(self.db_conn_string)
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            
-            cur.execute("""
-                SELECT * FROM risk_guardian_events
-                WHERE timestamp > NOW() - INTERVAL '%s hours'
-                ORDER BY timestamp DESC
-                LIMIT %s
-            """, (hours, limit))
-            
-            events = cur.fetchall()
-            cur.close()
-            conn.close()
-            
-            return [dict(e) for e in events]
-            
-        except Exception as e:
-            logger.error(f"Error fetching risk events: {e}")
+        if not self.connected:
             return []
+        
+        try:
+            # Usar DatabaseService centralizado
+            events = self.db.get_risk_events(limit=limit)
+            return events if events else []
+        except Exception as e:
+            logger.error(f"Error getting risk events: {e}")
+            return []
+    
 
 
 # Testing standalone

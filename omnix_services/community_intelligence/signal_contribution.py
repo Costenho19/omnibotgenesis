@@ -57,28 +57,24 @@ class SignalContributionManager:
         'top_contributor_bonus': 100
     }
     
-    def __init__(self, reward_system=None):
-        self.db_url = os.environ.get('DATABASE_URL')
-        self.connected = False
+    def __init__(self, database_service=None, reward_system=None):
+        """
+        Inicializar Signal Contribution Manager
+        
+        Args:
+            database_service: DatabaseManager o DatabaseServiceEnterprise instance
+            reward_system: RewardSystem instance (opcional)
+        """
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
         self.reward_system = reward_system
         
-        if self.db_url and PSYCOPG2_AVAILABLE:
-            try:
-                self._init_tables()
-                self.connected = True
-                logger.info("✅ SignalContributionManager conectado")
-            except Exception as e:
-                logger.error(f"❌ Error inicializando signal tables: {e}")
+        if self.connected:
+            logger.info("✅ SignalContributionManager conectado a DatabaseService")
         else:
             logger.warning("⚠️ Database no disponible para Signal Contribution")
     
-    def _get_connection(self):
-        """Obtener conexión PostgreSQL"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
-            return None
-        return psycopg2.connect(self.db_url)
-    
-    def _init_tables(self):
+    def _init_tables_DEPRECATED(self):
         """Crear tablas para señales comunitarias"""
         conn = self._get_connection()
         if not conn:
@@ -219,118 +215,62 @@ class SignalContributionManager:
         Returns:
             {'success': True, 'signal_id': 'xxx', 'points_earned': 10}
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database no disponible'}
         
-        try:
-            cursor = conn.cursor()
-            
-            signal_id = self._generate_signal_id(user_id, signal_data)
-            
-            symbol = signal_data.get('symbol', 'BTC').upper()
-            signal_type = signal_data.get('signal_type', 'LONG').upper()
-            
-            if signal_type not in self.SIGNAL_TYPES:
-                return {'success': False, 'error': f'Tipo inválido. Usa: {self.SIGNAL_TYPES}'}
-            
-            expires_hours = 24 if signal_data.get('timeframe', '1h') in ['1m', '5m', '15m'] else 72
-            expires_at = datetime.now() + timedelta(hours=expires_hours)
-            
-            cursor.execute('''
-                INSERT INTO community_signals 
-                (signal_id, contributor_id, contributor_name, symbol, signal_type,
-                 entry_price, target_price, stop_loss, timeframe, confidence,
-                 reasoning, indicators_used, market_condition, expires_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            ''', (
-                signal_id, user_id, username, symbol, signal_type,
-                signal_data.get('entry_price'),
-                signal_data.get('target_price'),
-                signal_data.get('stop_loss'),
-                signal_data.get('timeframe', '1h'),
-                signal_data.get('confidence', 50),
-                signal_data.get('reasoning'),
-                signal_data.get('indicators'),
-                signal_data.get('market_condition'),
-                expires_at
-            ))
-            
-            self._update_leaderboard(cursor, user_id, username, 'signal_shared')
-            
-            conn.commit()
-            
+        # Validación de signal_type
+        signal_type = signal_data.get('signal_type', 'LONG').upper()
+        if signal_type not in self.SIGNAL_TYPES:
+            return {'success': False, 'error': f'Tipo inválido. Usa: {self.SIGNAL_TYPES}'}
+        
+        # Preparar datos completos para la señal
+        signal_id = self._generate_signal_id(user_id, signal_data)
+        symbol = signal_data.get('symbol', 'BTC').upper()
+        
+        full_signal_data = {
+            'signal_id': signal_id,
+            'contributor_id': user_id,
+            'contributor_name': username,
+            'symbol': symbol,
+            'signal_type': signal_type,
+            'entry_price': signal_data.get('entry_price'),
+            'target_price': signal_data.get('target_price'),
+            'stop_loss': signal_data.get('stop_loss'),
+            'timeframe': signal_data.get('timeframe', '1h'),
+            'confidence': signal_data.get('confidence', 50),
+            'reasoning': signal_data.get('reasoning'),
+            'indicators_used': signal_data.get('indicators'),
+            'market_condition': signal_data.get('market_condition')
+        }
+        
+        # Usar DatabaseService centralizado
+        result = self.db.save_community_signal(full_signal_data)
+        
+        if result.get('success'):
+            # Premiar puntos
             points = self.ROYALTY_POINTS['signal_shared']
             if self.reward_system:
                 self.reward_system.award_points(user_id, points, 'signal_shared')
             
             logger.info(f"✅ Señal compartida: {signal_id} por {username}")
             
-            return {
-                'success': True,
-                'signal_id': signal_id,
-                'symbol': symbol,
-                'signal_type': signal_type,
-                'expires_at': expires_at.isoformat(),
-                'points_earned': points
-            }
-            
-        except psycopg2.errors.UniqueViolation:
-            conn.rollback()
-            return {'success': False, 'error': 'Ya compartiste una señal similar recientemente'}
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"❌ Error sharing signal: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()
+            result['signal_id'] = signal_id
+            result['symbol'] = symbol
+            result['signal_type'] = signal_type
+            result['points_earned'] = points
+        
+        return result
     
     def get_community_signals(self, limit: int = 10, symbol: str = None) -> List[Dict]:
         """
         📊 Obtener señales activas de la comunidad
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return []
         
-        try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
-            
-            query = '''
-                SELECT 
-                    signal_id, contributor_name, symbol, signal_type,
-                    entry_price, target_price, stop_loss, timeframe,
-                    confidence, reasoning, upvotes, downvotes,
-                    executions_count, created_at, expires_at,
-                    CASE 
-                        WHEN executions_count > 0 THEN 
-                            ROUND(success_count::numeric / executions_count * 100, 1)
-                        ELSE 0 
-                    END as success_rate
-                FROM community_signals
-                WHERE status = 'active' 
-                  AND expires_at > NOW()
-            '''
-            
-            params = []
-            if symbol:
-                query += ' AND symbol = %s'
-                params.append(symbol.upper())
-            
-            query += ' ORDER BY upvotes DESC, created_at DESC LIMIT %s'
-            params.append(limit)
-            
-            cursor.execute(query, params)
-            signals = cursor.fetchall()
-            
-            return [dict(s) for s in signals]
-            
-        except Exception as e:
-            logger.error(f"❌ Error getting community signals: {e}")
-            return []
-        finally:
-            conn.close()
+        # Usar DatabaseService centralizado
+        signals = self.db.get_community_signals(status='active', limit=limit)
+        return signals if signals else []
     
     def vote_signal(self, signal_id: str, voter_id: str, vote_type: str) -> Dict:
         """

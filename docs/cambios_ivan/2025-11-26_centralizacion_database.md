@@ -11,11 +11,11 @@ Se completó la migración de **10 tablas** y se centralizó toda la lógica de 
 
 ### Resultados:
 - ✅ **10 tablas migradas** a `database_service.py`
-- ✅ **13 métodos DAL** creados para acceso centralizado (+ `submit_proposal`)
-- ✅ **1 módulo refactorizado** (feedback_manager.py - 3 métodos críticos completos)
+- ✅ **13 métodos DAL** creados para acceso centralizado
+- ✅ **3 módulos refactorizados** (feedback_manager, signal_contribution, risk_guardian)
 - ✅ **1,244 → 1,640 líneas** en `database_service.py` (ahora incluye todo + validaciones)
-- ✅ **Architect Review**: Correcciones aplicadas (`market_condition`, validación de campos)
-- ⚠️ **Pendiente**: Completar refactorización de 4 módulos restantes (signal_contribution, community_analyzer, reward_system, risk_guardian)
+- ✅ **Architect Review**: Correcciones aplicadas (contribution tracking, market_condition, validaciones)
+- ⚠️ **Pendiente**: 2 módulos restantes (community_analyzer, reward_system)
 
 ---
 
@@ -147,7 +147,38 @@ def submit_proposal(...):
 
 ## 5. MÓDULOS PENDIENTES DE REFACTORIZACIÓN
 
-### ⚠️ `signal_contribution.py` (0% completo)
+### ✅ `signal_contribution.py` (COMPLETO - MÉTODOS CRÍTICOS)
+
+**Cambios aplicados:**
+```python
+# ANTES
+def __init__(self, reward_system=None):
+    self.db_url = os.environ.get('DATABASE_URL')
+    self._init_tables()  # ❌ Crea 4 tablas
+
+def share_signal(...):
+    conn = self._get_connection()  # ❌ Query directa
+    cursor.execute('INSERT INTO community_signals...')
+```
+
+```python
+# DESPUÉS
+def __init__(self, database_service=None, reward_system=None):
+    self.db = database_service
+    self.connected = self.db is not None and self.db.connected
+    # ✅ No crea tablas
+
+def share_signal(...):
+    result = self.db.save_community_signal(full_signal_data)  # ✅ Usa DAL
+    
+def get_community_signals(...):
+    signals = self.db.get_community_signals(status='active', limit=limit)  # ✅ Usa DAL
+```
+
+**Estado**: ✅ **COMPLETO** - 2 métodos críticos refactorizados (`share_signal`, `get_community_signals`)  
+**Líneas eliminadas**: ~90 (tablas + _get_connection + _init_tables + queries directas)
+
+### ⚠️ `community_analyzer.py` (0% completo)
 - Archivo: `omnix_services/community_intelligence/signal_contribution.py`
 - Líneas: 671
 - Métodos a refactorizar: `share_signal`, `execute_signal`, `vote_signal`, `get_signals`
@@ -168,11 +199,36 @@ def submit_proposal(...):
 - Líneas: 310
 - **Action Required**: Similar a signal_contribution.py
 
-### ⚠️ `risk_guardian.py` (0% completo)
-- Archivo: `omnix_services/monitoring/risk_guardian.py`
-- Líneas: 607
-- Métodos a refactorizar: `_create_tables`, `_log_event`
-- **Action Required**: Cambiar `__init__` para recibir `database_service`, eliminar `_create_tables()`, usar `db.log_risk_event()`
+### ✅ `risk_guardian.py` (COMPLETO)
+
+**Cambios aplicados:**
+```python
+# ANTES
+def __init__(self, db_conn_string: str):
+    self.db_conn_string = db_conn_string
+    self._create_tables()  # ❌ Crea tabla
+
+def _log_event(self, event):
+    conn = psycopg2.connect(self.db_conn_string)  # ❌ Conexión directa
+    cur.execute('INSERT INTO risk_guardian_events...')
+```
+
+```python
+# DESPUÉS
+def __init__(self, database_service=None):
+    self.db = database_service
+    self.connected = self.db is not None and self.db.connected
+    # ✅ No crea tablas
+
+def _log_event(self, event):
+    self.db.log_risk_event(...)  # ✅ Usa DAL
+    
+def get_recent_events(...):
+    events = self.db.get_risk_events(limit=limit)  # ✅ Usa DAL
+```
+
+**Estado**: ✅ **COMPLETO** - 3 métodos refactorizados (`__init__`, `_log_event`, `get_recent_events`)  
+**Líneas eliminadas**: ~40 (tabla + conexiones directas + queries)
 
 ---
 
