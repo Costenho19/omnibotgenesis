@@ -252,17 +252,26 @@ omnix_services/database_service/
 ### Dependencias Nuevas a Instalar
 
 ```bash
-# requirements.txt (agregar estas líneas)
-sqlmodel==0.0.22
-alembic==1.14.0
-asyncpg==0.29.0
-pydantic==2.10.0
-pydantic-settings==2.6.0
-greenlet==3.0.0
-flask-limiter==3.8.0
-flask-cors==5.0.0
-pyjwt==2.8.0
-pytest-asyncio==0.23.0  # Para tests async
+# requirements.txt (agregar estas líneas - VERSIONES 2025)
+# IMPORTANTE: Requiere Python >=3.10
+
+# Core ORM & Migrations
+sqlmodel==0.0.27          # UUID support, cascade delete, SQLAlchemy 2.0.14+
+alembic==1.17.2           # PEP 621 (pyproject.toml), Python >=3.10
+asyncpg==0.30.0           # PostgreSQL 17 support
+
+# Validation & Settings
+pydantic==2.12.4          # Latest stable, 360M+ downloads/month
+pydantic-settings==2.12.0 # AWS/Azure/GCP secrets, Python >=3.10
+
+# Flask API & Security
+flask-limiter==4.0.0      # Rate limiting, Python >=3.10 REQUIRED
+flask-cors==6.0.1         # SECURITY FIXES (CVE-2024-6839, 6844, 6866)
+pyjwt==2.10.1             # JWT auth, security improvements
+
+# Async Runtime & Testing
+greenlet==3.2.4           # Python 3.12+ fixes
+pytest-asyncio==1.3.0     # Auto mode, scoped loops, Python >=3.10
 ```
 
 ---
@@ -276,23 +285,41 @@ pytest-asyncio==0.23.0  # Para tests async
 
 ### PASO 0.1: Instalación de Dependencias
 
+#### Pre-requisito: Verificar Python ≥3.10
+```bash
+python --version
+# DEBE mostrar Python 3.10.x o superior
+# Si es Python 3.8 o 3.9, ACTUALIZAR primero
+```
+
 #### Acción
 ```bash
-# Instalar paquetes core
-pip install sqlmodel==0.0.22 alembic==1.14.0 asyncpg==0.29.0 pydantic==2.10.0 pydantic-settings==2.6.0 greenlet==3.0.0
+# VERSIONES 2025 - Requiere Python >=3.10
+# Instalar paquetes core ORM
+pip install sqlmodel==0.0.27 alembic==1.17.2 asyncpg==0.30.0 pydantic==2.12.4 pydantic-settings==2.12.0 greenlet==3.2.4
 
-# Verificar instalación
-python -c "import sqlmodel; print(f'SQLModel {sqlmodel.__version__}')"
-python -c "import alembic; print(f'Alembic {alembic.__version__}')"
-python -c "import asyncpg; print(f'asyncpg {asyncpg.__version__}')"
+# Instalar Flask API + Security (con security fixes)
+pip install flask-limiter==4.0.0 flask-cors==6.0.1 pyjwt==2.10.1
+
+# Instalar testing (async)
+pip install pytest-asyncio==1.3.0
+
+# Verificar instalación y versiones
+python -c "import sqlmodel; print(f'✅ SQLModel {sqlmodel.__version__}')"
+python -c "import alembic; print(f'✅ Alembic {alembic.__version__}')"
+python -c "import asyncpg; print(f'✅ asyncpg {asyncpg.__version__}')"
+python -c "import pydantic; print(f'✅ Pydantic {pydantic.__version__}')"
+python -c "import flask_cors; print(f'✅ Flask-CORS {flask_cors.__version__}')"
 ```
 
 #### Comprobaciones Redundantes
-- ✅ **CHECK 1**: Verificar que `sqlmodel` se importa sin errores
-- ✅ **CHECK 2**: Verificar que `alembic` se importa sin errores
-- ✅ **CHECK 3**: Verificar versiones mínimas (SQLModel >= 0.0.22, Alembic >= 1.14.0)
-- ✅ **CHECK 4**: Ejecutar `python main.py` y confirmar que el bot sigue funcionando
-- ✅ **CHECK 5**: Revisar logs del workflow para confirmar 0 errores de import
+- ✅ **CHECK 1**: Verificar Python ≥3.10 (obligatorio para Flask-Limiter 4.0.0)
+- ✅ **CHECK 2**: Verificar que `sqlmodel` se importa sin errores
+- ✅ **CHECK 3**: Verificar que `alembic` se importa sin errores
+- ✅ **CHECK 4**: Verificar versiones exactas (SQLModel 0.0.27, Alembic 1.17.2, Flask-CORS 6.0.1)
+- ✅ **CHECK 5**: Ejecutar `python main.py` y confirmar que el bot sigue funcionando
+- ✅ **CHECK 6**: Revisar logs del workflow para confirmar 0 errores de import
+- ✅ **CHECK 7**: Confirmar Flask-CORS 6.0.1 (security fixes CVE-2024-*)
 
 #### Criterio de Aprobación
 - Bot funciona normalmente ✅
