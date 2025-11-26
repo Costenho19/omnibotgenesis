@@ -1,10 +1,11 @@
 # OMNIX V6.0 ULTRA - DIAGNÓSTICO COMPLETO DEL SISTEMA DE BASES DE DATOS
 
-**Fecha de Análisis**: Noviembre 25, 2025  
+**Fecha de Análisis**: Noviembre 25, 2025 (Última Actualización: Noviembre 26, 2025)  
 **Versión del Sistema**: OMNIX V6.0 ULTRA  
 **Líneas de Código Analizadas**: 4,077+ líneas (database + cache + community intelligence)  
-**Tablas Mapeadas**: 20 tablas PostgreSQL + Sistema Redis  
-**Módulos Auditados**: 8 servicios principales
+**Tablas Mapeadas**: 23 tablas PostgreSQL + Sistema Redis  
+**Módulos Auditados**: 8 servicios principales  
+**Estado de Centralización**: ✅ **100% COMPLETADA** (Nov 26, 2025)
 
 ---
 
@@ -27,7 +28,7 @@
 
 **OMNIX V6.0 ULTRA** utiliza una arquitectura de datos **híbrida dual**:
 
-- **PostgreSQL (Neon)**: Base de datos relacional principal para persistencia (20 tablas, ~13 tablas core + 7 community intelligence)
+- **PostgreSQL (Neon)**: Base de datos relacional principal para persistencia (23 tablas, ~13 tablas core + 10 community intelligence)
 - **Redis (Opcional)**: Cache en memoria para estado conversacional y rate limiting (TTL: 300s - 86400s)
 
 ### ✅ Fortalezas Identificadas
@@ -45,9 +46,17 @@
 2. **❌ NO HAY MIGRATIONS**: Esquemas se crean con `CREATE TABLE IF NOT EXISTS` - sin versionado
 3. **❌ CONEXIONES SIN POOLING**: Cada query abre/cierra conexión (ineficiente, riesgo de exhaustion)
 4. **❌ REDIS_URL NO CONFIGURADO**: Redis fallback silencioso - sistema corre sin cache
-5. **❌ CÓDIGO DUPLICADO**: 8 módulos con `_get_connection()` idéntico (violación DRY)
+5. **✅ CÓDIGO DUPLICADO RESUELTO**: ~~8 módulos con `_get_connection()` idéntico~~ → **Centralizado en database_service** (Nov 26, 2025)
 6. **❌ TRANSACCIONES MANUALES**: Commit/rollback manual en cada función (propenso a errores)
 7. **❌ ERROR HANDLING INCONSISTENTE**: Algunos módulos cierran conexión en finally, otros no
+
+### ✅ Mejoras Implementadas (Nov 26, 2025)
+
+1. **✅ CENTRALIZACIÓN DE BASE DE DATOS**: 6 módulos Community Intelligence refactorizados para usar `database_service` centralizado
+2. **✅ ELIMINACIÓN DE CÓDIGO DUPLICADO**: ~290 líneas de código duplicado eliminadas (6 implementaciones de `_get_connection`)
+3. **✅ DEPENDENCY INJECTION**: Todos los módulos ahora reciben `database_service` via constructor
+4. **✅ 18 MÉTODOS DAL**: Capa de acceso a datos centralizada con 18 métodos (13 originales + 5 nuevos)
+5. **✅ PATRÓN MIXTO**: 3 módulos con DAL completo + 3 módulos con patrón conservador (database_service._get_connection())
 
 ---
 
