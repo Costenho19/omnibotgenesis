@@ -1976,6 +1976,12 @@ ALTER TABLE community_signals ADD CONSTRAINT chk_signals_type
 - ✅ ON DELETE CASCADE: eliminar usuario elimina sus datos automáticamente
 - ✅ Validación automática de datos con CHECK constraints
 
+**⚠️ ADVERTENCIA - Data Retention**:
+- **ON DELETE CASCADE es irreversible**: Eliminar un usuario elimina TODOS sus datos relacionados (trades, conversations, community_signals, votes)
+- **Community Intelligence**: Los votos y señales de comunidad se eliminan con el usuario (by design - GDPR "right to be forgotten")
+- **Recomendación**: Para preservar data de auditoría, considerar **soft delete** (users.is_active=false) en vez de DELETE directo
+- **Backup crítico**: Antes de eliminar usuarios con mucha actividad comunitaria, considerar backup manual
+
 ---
 
 #### 7.8.1 ✅ SISTEMA TTL CLEANUP AUTOMÁTICO - IMPLEMENTADO (Nov 26, 2025)
@@ -2059,6 +2065,14 @@ def _run_daily_cleanup(self):
 ✅ Cleanup completado: 1,801 registros eliminados de 2 tablas
    Espacio liberado estimado: ~3,602KB
 ```
+
+**⚠️ ADVERTENCIA - Cleanup + CASCADE Interaction**:
+- **Cleanup TTL + ON DELETE CASCADE**: Si cleanup elimina datos antiguos Y un usuario se elimina, puede haber pérdida masiva de datos
+- **Protección**: Cleanup solo elimina datos >TTL días, no usuarios (users table no está en cleanup config)
+- **Audit Trail**: Si necesitas preservar votos/señales de comunidad para auditoría, considera:
+  1. Soft delete para usuarios (is_active=false)
+  2. Archival table antes de cleanup (e.g., community_signals_archive)
+  3. Excluir tablas críticas del cleanup config
 
 ---
 
