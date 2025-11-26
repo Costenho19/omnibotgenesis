@@ -100,13 +100,15 @@
     │    Módulos Community Intelligence         │
     │    (Refactorizados Nov 26, 2025)          │
     ├───────────────────────────────────────────┤
-    │  ✅ DAL Completo (3):                     │
+    │  ✅ DAL Completo (2):                     │
     │   1. feedback_manager                     │
-    │   2. signal_contribution                  │
-    │   3. risk_guardian                        │
+    │   2. risk_guardian                        │
     │                                           │
-    │  ✅ Patrón Conservador (3):               │
-    │   4. community_analyzer                   │
+    │  ✅ Patrón Mixto (2):                     │
+    │   3. signal_contribution (DAL + SQL)      │
+    │   4. community_analyzer (DAL + SQL)       │
+    │                                           │
+    │  ✅ Patrón Conservador (2):               │
     │   5. reward_system                        │
     │   6. community_dashboard                  │
     └───────────────────────────────────────────┘
@@ -139,8 +141,9 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 ### 2.3 Patrón de Centralización (Nov 26, 2025)
 
 **6 Módulos Refactorizados**:
-- **Patrón DAL Completo** (3): Usan métodos DAL exclusivamente
-- **Patrón Conservador** (3): Usan `database_service._get_connection()` + SQL directo
+- **Patrón DAL Completo** (2): Usan métodos DAL exclusivamente (feedback_manager, risk_guardian)
+- **Patrón Mixto** (2): Usan DAL + SQL directo (signal_contribution, community_analyzer)
+- **Patrón Conservador** (2): Usan `database_service._get_connection()` + SQL directo (reward_system, community_dashboard)
 
 **Beneficios**:
 - ✅ ~290 líneas de código duplicado eliminadas
@@ -882,7 +885,8 @@ CREATE INDEX IF NOT EXISTS idx_patterns_status ON detected_patterns(status);
 
 #### 3.6.1 `community_signals` - Señales Compartidas
 
-**Ubicación**: `omnix_services/community_intelligence/signal_contribution.py:91`
+**Ubicación**: `omnix_services/database_service/database_service.py` (líneas ~513-562)  
+**ACTUALIZADO**: Centralizada Nov 26, 2025 (antes en signal_contribution.py)
 
 ```sql
 CREATE TABLE IF NOT EXISTS community_signals (
@@ -960,7 +964,8 @@ Bot: ¿Stop loss? → 92000
 
 #### 3.6.2 `signal_executions` - Ejecuciones de Señales
 
-**Ubicación**: `omnix_services/community_intelligence/signal_contribution.py:135`
+**Ubicación**: `omnix_services/database_service/database_service.py` (líneas ~564-580)  
+**ACTUALIZADO**: Centralizada Nov 26, 2025 (antes en signal_contribution.py)
 
 ```sql
 CREATE TABLE IF NOT EXISTS signal_executions (
@@ -991,7 +996,8 @@ CREATE TABLE IF NOT EXISTS signal_executions (
 
 #### 3.6.3 `signal_votes` - Votos de Señales
 
-**Ubicación**: `omnix_services/community_intelligence/signal_contribution.py:155`
+**Ubicación**: `omnix_services/database_service/database_service.py` (líneas ~582-592)  
+**ACTUALIZADO**: Centralizada Nov 26, 2025 (antes en signal_contribution.py)
 
 ```sql
 CREATE TABLE IF NOT EXISTS signal_votes (
@@ -1012,7 +1018,8 @@ CREATE TABLE IF NOT EXISTS signal_votes (
 
 #### 3.6.4 `alpha_leaderboard` - Leaderboard de Contribuidores
 
-**Ubicación**: `omnix_services/community_intelligence/signal_contribution.py:166`
+**Ubicación**: `omnix_services/database_service/database_service.py` (líneas ~594-621)  
+**ACTUALIZADO**: Centralizada Nov 26, 2025 (antes en signal_contribution.py)
 
 ```sql
 CREATE TABLE IF NOT EXISTS alpha_leaderboard (
@@ -1432,11 +1439,11 @@ omnix_services/
 │   └── database_manager.py (80 LOC)    ← Adapter legacy
 │
 ├── community_intelligence/
-│   ├── ✅ signal_contribution.py        ← Usa DAL (2 métodos)
-│   ├── ✅ feedback_manager.py           ← Usa DAL (3 métodos)
-│   ├── ✅ reward_system.py              ← Usa database_service._get_connection()
-│   ├── ✅ community_analyzer.py         ← Usa database_service._get_connection() + 5 DAL
-│   └── ✅ community_dashboard.py        ← Usa database_service._get_connection()
+│   ├── ✅ feedback_manager.py           ← Usa DAL Completo (3 métodos)
+│   ├── ✅ signal_contribution.py        ← Usa Mixto (2 DAL + 5 SQL conservadores)
+│   ├── ✅ community_analyzer.py         ← Usa Mixto (5 DAL + SQL conservadores)
+│   ├── ✅ reward_system.py              ← Usa Conservador (database_service._get_connection())
+│   └── ✅ community_dashboard.py        ← Usa Conservador (database_service._get_connection())
 │
 └── monitoring/
     └── ✅ risk_guardian.py              ← Usa DAL (2 métodos)
@@ -1754,34 +1761,39 @@ REDIS_URL=rediss://default:XXX@upstash.io:6379
 - ✅ **Dependency injection** configurado en `enterprise_bot.py`
 - ✅ **~290 líneas eliminadas**
 
-**Patrón Implementado**:
+**Patrón Implementado (3 tipos)**:
 ```python
-# Patrón DAL Completo (3 módulos)
+# Patrón 1: DAL Completo (2 módulos: feedback_manager, risk_guardian)
 class FeedbackManager:
-    def __init__(self, database_service=None):
+    def __init__(self, database_service=None):  # ✅ Dependency Injection
         self.db = database_service
         self.connected = self.db is not None and self.db.connected
     
     def submit_feedback(self, user_id, feedback_data):
-        return self.db.submit_community_feedback(user_id, feedback_data)
+        return self.db.submit_community_feedback(user_id, feedback_data)  # ✅ Solo DAL
 
-# Patrón Conservador (3 módulos)
+# Patrón 2: Mixto DAL+SQL (2 módulos: signal_contribution, community_analyzer)
+class SignalContributionManager:
+    def __init__(self, database_service=None):  # ✅ Dependency Injection
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+    
+    def share_signal(self, user_id, username, signal_data):
+        return self.db.save_community_signal(signal_data)  # ✅ Usa DAL
+    
+    def vote_signal(self, signal_id, voter_id, vote_type):
+        conn = self.db._get_connection()  # ✅ Usa SQL directo (conservador)
+        # ... SQL manual para operaciones complejas
+
+# Patrón 3: Conservador (2 módulos: reward_system, community_dashboard)
 class RewardSystem:
-    def __init__(self, database_service=None):
+    def __init__(self, database_service=None):  # ✅ Dependency Injection
         self.db = database_service
         self.connected = self.db is not None and self.db.connected
     
     def get_leaderboard(self):
-        conn = self.db._get_connection()
-    
-    def get_connection(self):
-        return self.pool.getconn()
-
-# Uso
-class SignalContributionManager(DatabaseMixin):
-    def __init__(self):
-        super().__init__()
-        self._init_tables()
+        conn = self.db._get_connection()  # ✅ Usa SQL directo
+        # ... SQL manual (pendiente migrar a DAL)
 ```
 
 ---
@@ -2104,8 +2116,9 @@ finally:
 - **100% centralización** lograda (mix de patrones DAL completo + conservador)
 
 **Patrón Mixto Implementado**:
-- **DAL Completo (3)**: feedback_manager, signal_contribution, risk_guardian
-- **Conservador (3)**: community_analyzer, reward_system, community_dashboard
+- **DAL Completo (2)**: feedback_manager, risk_guardian
+- **Mixto DAL+SQL (2)**: signal_contribution, community_analyzer  
+- **Conservador (2)**: reward_system, community_dashboard
 
 **Próximo Paso Opcional**: Migrar módulos conservadores a DAL completo para consistencia total
 
