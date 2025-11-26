@@ -951,6 +951,21 @@ Esta fase agrega una **capa REST API** completamente nueva que NO afecta el bot 
 
 **Uso**: Dashboard para inversores, consultas de stats, visualización de trades.
 
+#### 🔒 Nota de Seguridad Importante (2025)
+
+**Flask-CORS 6.0.1 incluye parches de seguridad CRÍTICOS**:
+- ✅ **CVE-2024-6839**: CORS bypass vulnerability (CRITICAL)
+- ✅ **CVE-2024-6844**: Improper header validation (HIGH)
+- ✅ **CVE-2024-6866**: Cross-origin resource sharing bypass (HIGH)
+
+**OBLIGATORIO**: Usar Flask-CORS 6.0.1 o superior para producción. Versiones anteriores (≤5.0.0) tienen vulnerabilidades de seguridad críticas.
+
+**Verificación**:
+```bash
+pip show flask-cors
+# Version: 6.0.1 o superior REQUERIDO
+```
+
 ### API Contract
 
 **Base URL**: `/api/v1/`
@@ -1267,9 +1282,10 @@ Remover todos los `if use_sqlmodel:` del adapter.
 
 ```markdown
 # database.md
-✅ SQLModel 0.0.22+
-✅ Alembic (migraciones)
-❌ psycopg2 (DEPRECATED Nov 2025)
+✅ SQLModel 0.0.27+ (UUID support, cascade delete, SQLAlchemy 2.0.14+)
+✅ Alembic 1.17.2+ (PEP 621, auto-migrations, Python ≥3.10)
+✅ Flask-CORS 6.0.1+ (Security fixes CVE-2024-*)
+❌ psycopg2 (DEPRECATED Nov 2025 - Migrado a SQLModel)
 ```
 
 ---
