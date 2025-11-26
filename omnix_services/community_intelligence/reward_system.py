@@ -105,28 +105,35 @@ class RewardSystem:
     - Leaderboard
     """
     
-    def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
-        self.connected = PSYCOPG2_AVAILABLE and bool(self.db_url)
+    def __init__(self, database_service=None):
+        """
+        Inicializa RewardSystem con database_service centralizado
+        
+        Args:
+            database_service: DatabaseManager o DatabaseServiceEnterprise instance
+        """
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
         
         if self.connected:
-            logger.info("✅ RewardSystem conectado")
+            logger.info("✅ RewardSystem conectado con DatabaseService")
     
-    def _get_connection(self):
-        """Obtener conexión PostgreSQL"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
-            return None
-        return psycopg2.connect(self.db_url)
+    def _get_connection_DEPRECATED(self):
+        """DEPRECATED: Ahora usa database_service centralizado"""
+        pass
     
     def get_user_profile(self, user_id: str) -> Dict[str, Any]:
         """
         Obtener perfil completo de un usuario con puntos, nivel y badges
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return self._get_default_profile(user_id)
         
         try:
+            conn = self.db._get_connection()
+            if not conn:
+                return self._get_default_profile(user_id)
+            
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             cursor.execute('SELECT * FROM user_contributions WHERE user_id = %s', (user_id,))
@@ -168,7 +175,7 @@ class RewardSystem:
             ''', (points,))
             rank_data = cursor.fetchone()
             
-            return {
+            profile_data = {
                 'user_id': user_id,
                 'username': user_data.get('username'),
                 'points': points,
@@ -189,11 +196,23 @@ class RewardSystem:
                 'member_since': user_data.get('first_contribution')
             }
             
+            cursor.close()
+            conn.close()
+            return profile_data
+            
         except Exception as e:
             logger.error(f"❌ Error getting user profile: {e}")
+            if 'cursor' in locals() and cursor:
+                try:
+                    cursor.close()
+                except:
+                    pass
+            if 'conn' in locals() and conn:
+                try:
+                    conn.close()
+                except:
+                    pass
             return self._get_default_profile(user_id)
-        finally:
-            conn.close()
     
     def _get_default_profile(self, user_id: str) -> Dict[str, Any]:
         """Perfil por defecto para usuarios nuevos"""
@@ -254,7 +273,10 @@ class RewardSystem:
         """
         Obtener leaderboard de mejores contribuidores
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return []
+        
+        conn = self.db._get_connection()
         if not conn:
             return []
         
@@ -295,19 +317,26 @@ class RewardSystem:
                     'badge_count': len(badges)
                 })
             
+            cursor.close()
+            conn.close()
             return leaderboard
             
         except Exception as e:
             logger.error(f"❌ Error getting leaderboard: {e}")
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+            if 'conn' in locals() and conn:
+                conn.close()
             return []
-        finally:
-            conn.close()
     
     def award_bonus_points(self, user_id: str, points: int, reason: str) -> Dict[str, Any]:
         """
         Otorgar puntos bonus a un usuario (solo admin)
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self.db._get_connection()
         if not conn:
             return {'success': False, 'error': 'Database not available'}
         
@@ -359,7 +388,10 @@ class RewardSystem:
         """
         Marcar un feedback como útil y otorgar puntos bonus al autor
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self.db._get_connection()
         if not conn:
             return {'success': False, 'error': 'Database not available'}
         

@@ -269,14 +269,14 @@ class EnterpriseTelegramBot:
         # 🧠 COMMUNITY INTELLIGENCE - MEMORIA COLECTIVA V6.0
         if COMMUNITY_INTELLIGENCE_AVAILABLE:
             try:
-                self.feedback_manager = CommunityFeedbackManager()
-                self.community_analyzer = CommunityAnalyzer()
-                self.reward_system = RewardSystem()
+                self.feedback_manager = CommunityFeedbackManager(database_service=self.db_manager)
+                self.community_analyzer = CommunityAnalyzer(database_service=self.db_manager)
+                self.reward_system = RewardSystem(database_service=self.db_manager)
                 self.community_dashboard = CommunityDashboard()
                 logger.info("🧠 Community Intelligence ACTIVADO - Memoria Colectiva")
                 logger.info(f"   📝 Feedback Manager: {'✅ Connected' if self.feedback_manager.connected else '❌ Disconnected'}")
                 logger.info(f"   🔍 Community Analyzer: {'✅ AI Enabled' if self.community_analyzer.ai_available else '⚠️ AI Not Available'}")
-                logger.info(f"   🏆 Reward System: ✅ Ready")
+                logger.info(f"   🏆 Reward System: {'✅ Connected' if self.reward_system.connected else '❌ Disconnected'}")
                 logger.info(f"   📊 Community Dashboard: ✅ Ready")
             except Exception as e:
                 logger.warning(f"⚠️ Community Intelligence error: {e}")
@@ -293,7 +293,10 @@ class EnterpriseTelegramBot:
         # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.0
         if SIGNAL_CONTRIBUTION_AVAILABLE:
             try:
-                self.signal_contribution = SignalContributionManager(reward_system=self.reward_system)
+                self.signal_contribution = SignalContributionManager(
+                    database_service=self.db_manager,
+                    reward_system=self.reward_system
+                )
                 logger.info("🚀 Signal Contribution ACTIVADO - Crowdsourcing de Alpha")
                 logger.info(f"   📡 Signal Manager: {'✅ Connected' if self.signal_contribution.connected else '❌ Disconnected'}")
             except Exception as e:

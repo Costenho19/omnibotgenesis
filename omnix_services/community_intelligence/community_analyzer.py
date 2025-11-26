@@ -211,7 +211,10 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
         Args:
             strategy: Nombre de la estrategia (ARES_V1, ARES_V2, etc.)
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self.db._get_connection()
         if not conn:
             return {'success': False, 'error': 'Database not available'}
         
@@ -293,7 +296,10 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
     
     def get_pending_patterns(self) -> List[Dict[str, Any]]:
         """Obtener patrones detectados pendientes de revisión"""
-        conn = self._get_connection()
+        if not self.connected:
+            return []
+        
+        conn = self.db._get_connection()
         if not conn:
             return []
         
@@ -320,7 +326,10 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
         Aprobar o rechazar un patrón detectado
         SOLO Harold puede aprobar patrones
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self.db._get_connection()
         if not conn:
             return {'success': False, 'error': 'Database not available'}
         
