@@ -1242,3 +1242,333 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error marcando evaluación como completada: {e}")
             return False
+    
+    # ==========================================
+    # COMMUNITY INTELLIGENCE DATA ACCESS LAYER
+    # ==========================================
+    
+    def submit_community_feedback(self, user_id: str, username: str, feedback_data: Dict) -> Dict:
+        """Registrar feedback comunitario"""
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return {'success': False, 'error': 'Connection failed'}
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO community_feedback 
+                (user_id, username, feedback_type, signal_type, strategy, symbol, 
+                 result, market_condition, btc_price, volatility, timeframe, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            ''', (
+                user_id, username, feedback_data.get('feedback_type'), 
+                feedback_data.get('signal_type'), feedback_data.get('strategy'),
+                feedback_data.get('symbol'), feedback_data.get('result'),
+                feedback_data.get('market_condition'), feedback_data.get('btc_price'),
+                feedback_data.get('volatility'), feedback_data.get('timeframe'),
+                feedback_data.get('comment')
+            ))
+            
+            feedback_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return {'success': True, 'feedback_id': feedback_id}
+            
+        except Exception as e:
+            logger.error(f"Error submitting feedback: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def get_community_feedback(self, strategy: str = None, limit: int = 50) -> List[Dict]:
+        """Obtener feedback comunitario"""
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            
+            if strategy:
+                cursor.execute('''
+                    SELECT * FROM community_feedback 
+                    WHERE strategy = %s 
+                    ORDER BY created_at DESC LIMIT %s
+                ''', (strategy, limit))
+            else:
+                cursor.execute('''
+                    SELECT * FROM community_feedback 
+                    ORDER BY created_at DESC LIMIT %s
+                ''', (limit,))
+            
+            rows = cursor.fetchall()
+            feedback_list = []
+            
+            for row in rows:
+                feedback_list.append({
+                    'id': row[0], 'user_id': row[1], 'username': row[2],
+                    'feedback_type': row[3], 'strategy': row[5], 'result': row[7]
+                })
+            
+            cursor.close()
+            conn.close()
+            return feedback_list
+            
+        except Exception as e:
+            logger.error(f"Error getting feedback: {e}")
+            return []
+    
+    def vote_strategy(self, user_id: str, strategy: str, vote: int, reason: str = None) -> Dict:
+        """Votar por una estrategia"""
+        if not self.connected:
+            return {'success': False}
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return {'success': False}
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO strategy_votes (user_id, strategy, vote, reason)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, strategy, vote_date) 
+                DO UPDATE SET vote = EXCLUDED.vote, reason = EXCLUDED.reason
+            ''', (user_id, strategy, vote, reason))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return {'success': True}
+            
+        except Exception as e:
+            logger.error(f"Error voting strategy: {e}")
+            return {'success': False}
+    
+    def update_user_contributions(self, user_id: str, username: str, points: int) -> bool:
+        """Actualizar puntos de contribución del usuario"""
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO user_contributions (user_id, username, contribution_points)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (user_id) 
+                DO UPDATE SET 
+                    contribution_points = user_contributions.contribution_points + EXCLUDED.contribution_points,
+                    last_contribution = CURRENT_TIMESTAMP
+            ''', (user_id, username, points))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating contributions: {e}")
+            return False
+    
+    # ==========================================
+    # SIGNAL CONTRIBUTION DATA ACCESS LAYER
+    # ==========================================
+    
+    def save_community_signal(self, signal_data: Dict) -> Dict:
+        """Guardar señal compartida por usuario"""
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return {'success': False, 'error': 'Connection failed'}
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO community_signals 
+                (signal_id, contributor_id, contributor_name, symbol, signal_type,
+                 entry_price, target_price, stop_loss, timeframe, confidence,
+                 reasoning, indicators_used, market_condition)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            ''', (
+                signal_data.get('signal_id'), signal_data.get('contributor_id'),
+                signal_data.get('contributor_name'), signal_data.get('symbol'),
+                signal_data.get('signal_type'), signal_data.get('entry_price'),
+                signal_data.get('target_price'), signal_data.get('stop_loss'),
+                signal_data.get('timeframe'), signal_data.get('confidence'),
+                signal_data.get('reasoning'), signal_data.get('indicators_used'),
+                signal_data.get('market_condition')
+            ))
+            
+            signal_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return {'success': True, 'id': signal_id}
+            
+        except Exception as e:
+            logger.error(f"Error saving signal: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def get_community_signals(self, status: str = 'active', limit: int = 20) -> List[Dict]:
+        """Obtener señales comunitarias"""
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT signal_id, contributor_name, symbol, signal_type,
+                       entry_price, target_price, confidence, upvotes, downvotes
+                FROM community_signals 
+                WHERE status = %s 
+                ORDER BY created_at DESC LIMIT %s
+            ''', (status, limit))
+            
+            rows = cursor.fetchall()
+            signals = []
+            
+            for row in rows:
+                signals.append({
+                    'signal_id': row[0], 'contributor': row[1], 'symbol': row[2],
+                    'type': row[3], 'entry': row[4], 'target': row[5],
+                    'confidence': row[6], 'upvotes': row[7], 'downvotes': row[8]
+                })
+            
+            cursor.close()
+            conn.close()
+            return signals
+            
+        except Exception as e:
+            logger.error(f"Error getting signals: {e}")
+            return []
+    
+    def update_signal_votes(self, signal_id: str, vote_type: str) -> bool:
+        """Actualizar votos de una señal"""
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            
+            if vote_type == 'upvote':
+                cursor.execute('''
+                    UPDATE community_signals 
+                    SET upvotes = upvotes + 1 
+                    WHERE signal_id = %s
+                ''', (signal_id,))
+            else:
+                cursor.execute('''
+                    UPDATE community_signals 
+                    SET downvotes = downvotes + 1 
+                    WHERE signal_id = %s
+                ''', (signal_id,))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating signal votes: {e}")
+            return False
+    
+    # ==========================================
+    # RISK GUARDIAN DATA ACCESS LAYER
+    # ==========================================
+    
+    def log_risk_event(self, risk_type: str, risk_level: str, description: str, 
+                       action_taken: str, metadata: Dict = None, user_id: int = None) -> bool:
+        """Registrar evento del AI Risk Guardian"""
+        if not self.connected:
+            return False
+        
+        try:
+            import json
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO risk_guardian_events 
+                (risk_type, risk_level, description, action_taken, metadata, user_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (risk_type, risk_level, description, action_taken, 
+                  json.dumps(metadata) if metadata else None, user_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error logging risk event: {e}")
+            return False
+    
+    def get_risk_events(self, limit: int = 50, risk_type: str = None) -> List[Dict]:
+        """Obtener eventos de riesgo"""
+        if not self.connected:
+            return []
+        
+        try:
+            import json
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            
+            if risk_type:
+                cursor.execute('''
+                    SELECT timestamp, risk_type, risk_level, description, action_taken
+                    FROM risk_guardian_events 
+                    WHERE risk_type = %s
+                    ORDER BY timestamp DESC LIMIT %s
+                ''', (risk_type, limit))
+            else:
+                cursor.execute('''
+                    SELECT timestamp, risk_type, risk_level, description, action_taken
+                    FROM risk_guardian_events 
+                    ORDER BY timestamp DESC LIMIT %s
+                ''', (limit,))
+            
+            rows = cursor.fetchall()
+            events = []
+            
+            for row in rows:
+                events.append({
+                    'timestamp': row[0].isoformat() if row[0] else None,
+                    'risk_type': row[1], 'risk_level': row[2],
+                    'description': row[3], 'action_taken': row[4]
+                })
+            
+            cursor.close()
+            conn.close()
+            return events
+            
+        except Exception as e:
+            logger.error(f"Error getting risk events: {e}")
+            return []
