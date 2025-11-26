@@ -308,9 +308,10 @@ class DatabaseServiceEnterprise:
                     first_name TEXT,
                     language_code TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    total_trades INTEGER DEFAULT 0,
+                    total_trades INTEGER DEFAULT 0 CHECK (total_trades >= 0),
                     total_profit NUMERIC(18,8) DEFAULT 0,
-                    risk_tolerance TEXT DEFAULT 'medium',
+                    risk_tolerance TEXT DEFAULT 'medium' 
+                        CHECK (risk_tolerance IN ('low', 'medium', 'high', 'aggressive')),
                     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     whatsapp_number TEXT,
                     notifications_enabled BOOLEAN DEFAULT true,
@@ -320,7 +321,7 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
-            # Índices para users
+            # Índices estratégicos para users
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity DESC)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active) WHERE is_active = true')
@@ -417,6 +418,28 @@ class DatabaseServiceEnterprise:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
+            
+            # Tabla de contactos de usuario (NUEVA - FASE 1 Modernización)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_contacts (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                    contact_type TEXT NOT NULL 
+                        CHECK (contact_type IN ('whatsapp', 'telegram', 'email', 'phone', 'sms')),
+                    contact_value TEXT NOT NULL,
+                    is_verified BOOLEAN DEFAULT false,
+                    verified_at TIMESTAMP WITH TIME ZONE,
+                    is_primary BOOLEAN DEFAULT false,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, contact_type, contact_value)
+                )
+            ''')
+            
+            # Índices para user_contacts
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_user ON user_contacts(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_type ON user_contacts(contact_type, is_verified)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_primary ON user_contacts(user_id, is_primary) WHERE is_primary = true')
             
             # Tabla de validaciones Sharia
             cursor.execute('''

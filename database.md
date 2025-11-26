@@ -157,62 +157,148 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 
 ### 3.1 Resumen de Tablas (Actualizado Nov 26, 2025)
 
-**Total: 23 Tablas** (antes: 20)
+**Total: 24 Tablas** (antes: 20)
 
 | Categoría | Tablas | Función Principal |
 |-----------|--------|-------------------|
-| **Core System** (8) | users, prices, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history | Operación básica del sistema |
+| **Core System** (9) | users, user_contacts, prices, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history | Operación básica del sistema |
 | **Paper Trading** (2) | paper_trading_balances, paper_trading_trades | Trading virtual $1M |
 | **Conversational Brain** (3) | trade_reasonings, trade_evaluations, pending_evaluations | Sistema único de auto-aprendizaje |
 | **Community Intelligence** (5) | community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns | Feedback y mejora continua |
 | **Signal Contribution** (4) | community_signals, signal_executions, signal_votes, alpha_leaderboard | Crowdsourcing de alpha |
 | **Risk Guardian** (1) | risk_guardian_events | AI Risk Guardian events |
 
-**NOTA**: Las 23 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
+**NOTA**: Las 24 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
 
-**Total de Columnas**: ~200 columnas  
-**Índices Creados**: 15+ índices  
+**Total de Columnas**: ~210 columnas  
+**Índices Creados**: 20+ índices  
 **Constraints**: PRIMARY KEY, UNIQUE, CHECK, REFERENCES (FK)  
-**Métodos DAL**: 18 métodos (13 originales + 5 nuevos Community Intelligence)
+**Métodos DAL**: 22 métodos (13 originales + 5 Community Intelligence + 4 User Contacts)
 
 ---
 
-### 3.2 CORE SYSTEM TABLES (8 tablas)
+### 3.2 CORE SYSTEM TABLES (9 tablas)
 
-#### 3.2.1 `users` - Usuarios del Sistema
+#### 3.2.1 `users` - Usuarios del Sistema (MEJORADA - Nov 26, 2025)
 
-**Ubicación**: `omnix_services/database_service/database_service.py:110`
+**Ubicación**: `omnix_services/database_service/database_service.py:290`  
+**ÚLTIMA ACTUALIZACIÓN**: Nov 26, 2025 - FASE 1 Modernización
 
 ```sql
 CREATE TABLE IF NOT EXISTS users (
-    user_id TEXT PRIMARY KEY,              -- Telegram user ID (TEXT para flexibilidad)
-    username TEXT,                         -- @username de Telegram
-    first_name TEXT,                       -- Nombre del usuario
-    language_code TEXT,                    -- 'es', 'en', etc.
+    user_id TEXT PRIMARY KEY,                      -- Telegram user ID (preservado para backward compatibility)
+    username TEXT,                                 -- @username de Telegram
+    first_name TEXT,                               -- Nombre del usuario
+    language_code TEXT,                            -- 'es', 'en', etc.
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total_trades INTEGER DEFAULT 0,        -- Total de trades ejecutados
-    total_profit REAL DEFAULT 0,           -- P&L acumulado
-    risk_tolerance TEXT DEFAULT 'medium',  -- 'low', 'medium', 'high'
+    total_trades INTEGER DEFAULT 0,                -- Total de trades ejecutados
+    total_profit NUMERIC(18,8) DEFAULT 0,          -- ✅ MEJORADO: NUMERIC para precisión financiera
+    risk_tolerance TEXT DEFAULT 'medium',          -- 'low', 'medium', 'high', 'aggressive'
     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    whatsapp_number TEXT,                  -- Para notificaciones WhatsApp
-    notifications_enabled BOOLEAN DEFAULT true
+    whatsapp_number TEXT,                          -- Para notificaciones WhatsApp (legacy)
+    notifications_enabled BOOLEAN DEFAULT true,
+    email TEXT UNIQUE,                             -- ✅ NUEVO: Email del usuario
+    is_active BOOLEAN DEFAULT true,                -- ✅ NUEVO: Estado activo/inactivo
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP  -- ✅ NUEVO: Auditoría
 );
+
+-- Índices estratégicos
+CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity DESC);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active) WHERE is_active = true;
+
+-- CHECK Constraints
+ALTER TABLE users ADD CONSTRAINT check_risk_tolerance 
+    CHECK (risk_tolerance IN ('low', 'medium', 'high', 'aggressive'));
+ALTER TABLE users ADD CONSTRAINT check_total_trades CHECK (total_trades >= 0);
 ```
 
 **Uso**:
 - Registro inicial al primer contacto con bot Telegram
 - Tracking de actividad y preferencias de usuario
 - Base para personalización de estrategias
+- Auditoría de cambios con `updated_at`
 
-**Problemas**:
-- ❌ No hay índice en `last_activity` (queries frecuentes de usuarios activos)
-- ⚠️ `total_profit` REAL (debería ser NUMERIC para precisión financiera)
+**Mejoras Implementadas**:
+- ✅ **total_profit** migrado a NUMERIC(18,8) (precisión financiera institucional)
+- ✅ **email** agregado para futuros canales de comunicación
+- ✅ **is_active** para soft-delete de usuarios
+- ✅ **updated_at** para auditoría de cambios
+- ✅ **Índices** en last_activity, email, is_active
+- ✅ **CHECK constraints** en risk_tolerance y total_trades
+- ✅ **100% backward compatible** (user_id TEXT preservado como PK)
+
+**Migración**:
+- Fresh deployments: Tabla creada con schema moderno
+- Upgrades: ALTER TABLE automático preservando datos existentes
+- Idempotente: Puede ejecutarse múltiples veces sin problemas
 
 ---
 
-#### 3.2.2 `prices` - Precios Históricos de Mercado
+#### 3.2.2 `user_contacts` - Métodos de Contacto (NUEVA - Nov 26, 2025)
 
-**Ubicación**: `omnix_services/database_service/database_service.py:127`
+**Ubicación**: `omnix_services/database_service/database_service.py:316`  
+**FECHA CREACIÓN**: Nov 26, 2025 - FASE 1 Modernización
+
+```sql
+CREATE TABLE IF NOT EXISTS user_contacts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    contact_type TEXT NOT NULL 
+        CHECK (contact_type IN ('whatsapp', 'telegram', 'email', 'phone', 'sms')),
+    contact_value TEXT NOT NULL,                   -- Número, email, username, etc.
+    is_verified BOOLEAN DEFAULT false,             -- Estado de verificación
+    verified_at TIMESTAMP WITH TIME ZONE,          -- Timestamp de verificación
+    is_primary BOOLEAN DEFAULT false,              -- Contacto principal para ese tipo
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, contact_type, contact_value)   -- Un usuario no puede duplicar contactos
+);
+
+-- Índices estratégicos
+CREATE INDEX IF NOT EXISTS idx_user_contacts_user ON user_contacts(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_type ON user_contacts(contact_type, is_verified);
+CREATE INDEX IF NOT EXISTS idx_user_contacts_primary ON user_contacts(user_id, is_primary) 
+    WHERE is_primary = true;
+```
+
+**Uso**:
+- Normalización de métodos de contacto (3NF compliance)
+- Soporte multi-canal: WhatsApp, email, Telegram, phone, SMS
+- Verificación independiente por canal
+- Múltiples contactos del mismo tipo por usuario
+
+**Ejemplo de Datos**:
+```
+user_id: "123456789" (Telegram)
+  ├─ whatsapp: "+34612345678" (primary, verified)
+  ├─ email: "user@example.com" (primary, verified)
+  ├─ telegram: "@username" (primary, verified)
+  └─ phone: "+34698765432" (not primary, not verified)
+```
+
+**Métodos DAL Disponibles** (4 nuevos):
+1. `add_user_contact(user_id, contact_type, contact_value, ...)` - Agregar contacto
+2. `get_user_contacts(user_id, contact_type=None)` - Obtener contactos
+3. `verify_user_contact(user_id, contact_type, contact_value)` - Marcar verificado
+4. `set_primary_contact(user_id, contact_type, contact_value)` - Establecer principal
+
+**Beneficios**:
+- ✅ **3NF Normalización**: Contactos separados de users (elimina redundancia)
+- ✅ **Escalabilidad**: Agregar nuevos canales sin modificar users
+- ✅ **FK Enforced**: ON DELETE CASCADE garantiza integridad
+- ✅ **Verificación**: Cada canal se verifica independientemente
+- ✅ **Flexibilidad**: Múltiples WhatsApp, emails, etc. por usuario
+
+**Migración Automática**:
+- Al crear la tabla, migra automáticamente `whatsapp_number` de users → user_contacts
+- Marca como `is_primary = true` para mantener funcionalidad
+
+---
+
+#### 3.2.3 `prices` - Precios Históricos de Mercado
+
+**Ubicación**: `omnix_services/database_service/database_service.py:338`
 
 ```sql
 CREATE TABLE IF NOT EXISTS prices (
@@ -245,9 +331,9 @@ CREATE INDEX idx_prices_exchange_symbol ON prices(exchange, symbol);
 
 ---
 
-#### 3.2.3 `trades` - Historial de Trades Ejecutados
+#### 3.2.4 `trades` - Historial de Trades Ejecutados
 
-**Ubicación**: `omnix_services/database_service/database_service.py:140`
+**Ubicación**: `omnix_services/database_service/database_service.py:351`
 
 ```sql
 CREATE TABLE IF NOT EXISTS trades (
@@ -279,9 +365,9 @@ CREATE TABLE IF NOT EXISTS trades (
 
 ---
 
-#### 3.2.4 `analysis` - Análisis Técnicos Guardados
+#### 3.2.5 `analysis` - Análisis Técnicos Guardados
 
-**Ubicación**: `omnix_services/database_service/database_service.py:158`
+**Ubicación**: `omnix_services/database_service/database_service.py:365`
 
 ```sql
 CREATE TABLE IF NOT EXISTS analysis (
@@ -307,9 +393,9 @@ CREATE TABLE IF NOT EXISTS analysis (
 
 ---
 
-#### 3.2.5 `conversations` - Historial de Conversaciones IA
+#### 3.2.6 `conversations` - Historial de Conversaciones IA
 
-**Ubicación**: `omnix_services/database_service/database_service.py:172`
+**Ubicación**: `omnix_services/database_service/database_service.py:380`
 
 ```sql
 CREATE TABLE IF NOT EXISTS conversations (
@@ -336,7 +422,7 @@ CREATE TABLE IF NOT EXISTS conversations (
 
 ---
 
-#### 3.2.6 `whatsapp_messages` - Mensajes WhatsApp
+#### 3.2.7 `whatsapp_messages` - Mensajes WhatsApp
 
 **Ubicación**: `omnix_services/database_service/database_service.py:184`
 
@@ -362,7 +448,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
 
 ---
 
-#### 3.2.7 `sharia_validations` - Validaciones Sharia Compliance
+#### 3.2.8 `sharia_validations` - Validaciones Sharia Compliance
 
 **Ubicación**: `omnix_services/database_service/database_service.py:197`
 
@@ -388,7 +474,7 @@ CREATE TABLE IF NOT EXISTS sharia_validations (
 
 ---
 
-#### 3.2.8 `balance_history` - Historial de Balances
+#### 3.2.9 `balance_history` - Historial de Balances
 
 **Ubicación**: `omnix_services/database_service/database_service.py:210`
 
@@ -2124,13 +2210,149 @@ finally:
 
 ---
 
-## 9. ANEXOS
+## 9. FASE 1 MODERNIZACIÓN (Nov 26, 2025)
 
-### 9.1 Listado Completo de Tablas
+### 9.1 Resumen de Mejoras
+
+**Fecha**: Nov 26, 2025  
+**Enfoque**: Conservador (100% backward compatible)  
+**Objetivo**: Mejorar schema sin romper código existente
+
+### 9.2 Cambios Implementados
+
+#### 9.2.1 Tabla `users` Mejorada
+
+**Columnas Agregadas**:
+- `email TEXT UNIQUE` - Email del usuario para futuros canales
+- `is_active BOOLEAN DEFAULT true` - Soft-delete de usuarios
+- `updated_at TIMESTAMP WITH TIME ZONE` - Auditoría de cambios
+
+**Columnas Modificadas**:
+- `total_profit REAL → NUMERIC(18,8)` - Precisión financiera institucional
+
+**Constraints Agregados**:
+- `CHECK (risk_tolerance IN ('low', 'medium', 'high', 'aggressive'))`
+- `CHECK (total_trades >= 0)`
+
+**Índices Agregados**:
+- `idx_users_last_activity ON users(last_activity DESC)`
+- `idx_users_email ON users(email) WHERE email IS NOT NULL`
+- `idx_users_active ON users(is_active) WHERE is_active = true`
+
+#### 9.2.2 Nueva Tabla `user_contacts`
+
+**Propósito**: Normalización 3NF de métodos de contacto multi-canal
+
+**Schema**:
+```sql
+CREATE TABLE user_contacts (
+    id UUID PRIMARY KEY,
+    user_id TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+    contact_type TEXT CHECK (contact_type IN ('whatsapp', 'telegram', 'email', 'phone', 'sms')),
+    contact_value TEXT NOT NULL,
+    is_verified BOOLEAN DEFAULT false,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    is_primary BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, contact_type, contact_value)
+);
+```
+
+**Migración Automática**:
+- Migra `users.whatsapp_number` → `user_contacts` automáticamente
+- Marca como `is_primary = true` para mantener funcionalidad legacy
+
+#### 9.2.3 Nuevos Métodos DAL (4)
+
+1. **add_user_contact(user_id, contact_type, contact_value, ...)** - Línea 2150
+   - Agrega nuevo contacto con validación
+   - Maneja duplicados automáticamente
+
+2. **get_user_contacts(user_id, contact_type=None)** - Línea 2198
+   - Filtra por tipo opcional
+   - Retorna todos los contactos del usuario
+
+3. **verify_user_contact(user_id, contact_type, contact_value)** - Línea 2256
+   - Marca contacto como verificado
+   - Registra timestamp de verificación
+
+4. **set_primary_contact(user_id, contact_type, contact_value)** - Línea 2304
+   - Establece contacto principal
+   - Desmarca otros del mismo tipo
+
+### 9.3 Beneficios Implementados
+
+**Precisión Financiera**:
+- ✅ NUMERIC(18,8) elimina errores de redondeo en total_profit
+- ✅ Cumple estándares institucionales de reporting
+
+**Normalización 3NF**:
+- ✅ user_contacts separa datos multi-valor
+- ✅ Elimina redundancia de whatsapp_number en users
+- ✅ Escalable a nuevos canales sin modificar users
+
+**Integridad Referencial**:
+- ✅ FK constraint ON DELETE CASCADE
+- ✅ CHECK constraints en tipos de contacto
+- ✅ UNIQUE constraints previenen duplicados
+
+**Performance**:
+- ✅ Índices estratégicos en columnas frecuentes
+- ✅ Partial indexes para queries comunes
+
+**Auditoría**:
+- ✅ updated_at tracking automático
+- ✅ verified_at para compliance
+
+### 9.4 Compatibilidad
+
+**Backward Compatibility**:
+- ✅ user_id TEXT preservado como PK (no UUID)
+- ✅ whatsapp_number legacy column mantenida
+- ✅ Código existente 100% funcional
+- ✅ Migración automática en fresh deployments
+- ✅ Migración automática en upgrades
+
+**Estrategia de Migración**:
+```python
+# Fresh deployment (BD vacía)
+1. _migrate_users_to_v2() detecta users NO existe → SKIP
+2. _init_tables() crea schema moderno directamente
+3. ✅ App inicia con schema optimizado
+
+# Upgrade (BD con data vieja)
+1. _migrate_users_to_v2() detecta users existe → ALTER TABLE
+2. Migra total_profit REAL → NUMERIC
+3. Agrega columnas email, is_active, updated_at
+4. Crea user_contacts y migra whatsapp_number
+5. ✅ App funciona con datos migrados
+
+# Ya migrado
+1. _migrate_users_to_v2() detecta total_profit es NUMERIC → SKIP
+2. ✅ App inicia normalmente
+```
+
+### 9.5 Próxima Fase (FASE 2 - Futuro)
+
+**Pendiente** (no implementado en FASE 1):
+- Migrar user_id TEXT → UUID en todas las tablas
+- Agregar FK constraints en tablas legacy
+- Consolidar whatsapp_number (eliminar columna legacy)
+- Migrar total_profit en otras tablas a NUMERIC
+
+**Razón**: FASE 2 requiere más tiempo y puede romper compatibilidad. FASE 1 entrega valor inmediato sin riesgos.
+
+---
+
+## 10. ANEXOS
+
+### 10.1 Listado Completo de Tablas
 
 ```sql
--- CORE SYSTEM (8 tablas)
+-- CORE SYSTEM (9 tablas)
 users
+user_contacts
 prices
 trades
 analysis
@@ -2165,14 +2387,14 @@ alpha_leaderboard
 risk_guardian_events
 ```
 
-**Total**: 23 tablas (Actualizado Nov 26, 2025)  
-**Columnas**: ~200 columnas  
-**Índices**: 15+ índices  
-**Métodos DAL**: 18 métodos (database_service.py)  
+**Total**: 24 tablas (Actualizado Nov 26, 2025 - FASE 1 Modernización)  
+**Columnas**: ~210 columnas  
+**Índices**: 20+ índices  
+**Métodos DAL**: 22 métodos (database_service.py: 13 originales + 5 Community Intelligence + 4 User Contacts)  
 
 ---
 
-### 9.2 Redis Keys Patterns
+### 10.2 Redis Keys Patterns
 
 ```
 conversation_history:{chat_id}      # LIST, TTL 24h
@@ -2185,7 +2407,7 @@ kraken_prices:{symbol}              # STRING, TTL 5m
 
 ---
 
-### 9.3 Queries Más Frecuentes
+### 10.3 Queries Más Frecuentes
 
 ```sql
 -- Top 5 queries (by frequency)
