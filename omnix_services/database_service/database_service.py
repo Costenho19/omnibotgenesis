@@ -69,6 +69,8 @@ class DatabaseServiceEnterprise:
             # 🔄 EJECUTAR MIGRACIONES (si es necesario)
             self._migrate_users_to_v2()
             self._drop_prices_table()
+            self._fix_risk_guardian_user_id_type()
+            self._add_foreign_key_constraints()
             
             self._init_tables()
             self.connected = True
@@ -330,6 +332,184 @@ class DatabaseServiceEnterprise:
             
         except Exception as e:
             logger.error(f"❌ Error eliminando tabla prices: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    def _fix_risk_guardian_user_id_type(self):
+        """
+        🔧 MIGRACIÓN: Corregir tipo incompatible en risk_guardian_events (Nov 26, 2025)
+        
+        Problema: risk_guardian_events.user_id es BIGINT pero users.user_id es TEXT (Telegram ID)
+        Solución: ALTER COLUMN user_id de BIGINT → TEXT
+        
+        Esta migración es idempotente y segura.
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Verificar si la tabla existe
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'risk_guardian_events' 
+                    AND table_schema = 'public'
+                )
+            """)
+            table_exists = cursor.fetchone()[0]
+            
+            if not table_exists:
+                logger.info("✅ Tabla risk_guardian_events no existe aún (skip migration)")
+                conn.close()
+                return
+            
+            # Verificar tipo actual
+            cursor.execute("""
+                SELECT data_type 
+                FROM information_schema.columns 
+                WHERE table_name = 'risk_guardian_events' 
+                AND column_name = 'user_id'
+            """)
+            current_type = cursor.fetchone()
+            
+            if not current_type:
+                logger.info("✅ Columna user_id no existe en risk_guardian_events (skip migration)")
+                conn.close()
+                return
+            
+            if current_type[0] == 'text':
+                logger.info("✅ risk_guardian_events.user_id ya es TEXT (skip migration)")
+                conn.close()
+                return
+            
+            logger.info("🔧 Corrigiendo tipo incompatible: risk_guardian_events.user_id BIGINT → TEXT")
+            
+            # ALTER COLUMN (seguro - convierte int a string)
+            cursor.execute("""
+                ALTER TABLE risk_guardian_events 
+                ALTER COLUMN user_id TYPE TEXT 
+                USING user_id::TEXT
+            """)
+            
+            conn.commit()
+            logger.info("✅ Tipo corregido exitosamente: risk_guardian_events.user_id ahora es TEXT")
+            logger.info("   Razón: users.user_id es TEXT (Telegram ID), necesita consistencia")
+            
+        except Exception as e:
+            logger.error(f"❌ Error corrigiendo tipo user_id: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    def _add_foreign_key_constraints(self):
+        """
+        🔗 MIGRACIÓN: Agregar Foreign Key Constraints (Nov 26, 2025)
+        
+        Garantiza integridad referencial con ON DELETE CASCADE para:
+        - trades, analysis, conversations, balance_history (datos del usuario)
+        - paper_trading_trades, trade_reasonings, trade_evaluations (datos derivados)
+        - community_signals, signal_executions, signal_votes (Community Intelligence)
+        - alpha_leaderboard, risk_guardian_events (tracking)
+        
+        Estrategia: CASCADE - Si eliminas usuario, eliminas todos sus datos relacionados
+        
+        Esta migración es idempotente (verifica FK antes de agregar).
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            logger.info("🔗 Agregando Foreign Key Constraints con ON DELETE CASCADE...")
+            
+            # Función helper para verificar si FK existe
+            def fk_exists(table_name, constraint_name):
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.table_constraints 
+                        WHERE table_name = %s 
+                        AND constraint_name = %s 
+                        AND constraint_type = 'FOREIGN KEY'
+                    )
+                """, (table_name, constraint_name))
+                return cursor.fetchone()[0]
+            
+            # Lista de FKs a agregar (tabla, columna_fk, constraint_name)
+            foreign_keys = [
+                ('trades', 'user_id', 'fk_trades_user'),
+                ('analysis', 'user_id', 'fk_analysis_user'),
+                ('conversations', 'user_id', 'fk_conversations_user'),
+                ('whatsapp_messages', 'user_id', 'fk_whatsapp_user'),
+                ('balance_history', 'user_id', 'fk_balance_history_user'),
+                ('paper_trading_trades', 'user_id', 'fk_paper_trades_user'),
+                ('trade_reasonings', 'user_id', 'fk_trade_reasonings_user'),
+                ('trade_evaluations', 'user_id', 'fk_trade_evaluations_user'),
+                ('community_signals', 'contributor_id', 'fk_signals_contributor'),
+                ('signal_executions', 'executor_id', 'fk_executions_executor'),
+                ('signal_votes', 'voter_id', 'fk_votes_voter'),
+                ('alpha_leaderboard', 'user_id', 'fk_leaderboard_user'),
+                ('risk_guardian_events', 'user_id', 'fk_risk_events_user'),
+            ]
+            
+            added_count = 0
+            skipped_count = 0
+            
+            for table, column, constraint in foreign_keys:
+                # Verificar si la tabla existe
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s AND table_schema = 'public'
+                    )
+                """, (table,))
+                
+                if not cursor.fetchone()[0]:
+                    logger.info(f"   ⏭️  Tabla {table} no existe (skip)")
+                    skipped_count += 1
+                    continue
+                
+                # Verificar si FK ya existe
+                if fk_exists(table, constraint):
+                    logger.info(f"   ✅ {constraint} ya existe en {table}")
+                    skipped_count += 1
+                    continue
+                
+                # Agregar FK
+                try:
+                    cursor.execute(f"""
+                        ALTER TABLE {table} 
+                        ADD CONSTRAINT {constraint} 
+                        FOREIGN KEY ({column}) 
+                        REFERENCES users(user_id) 
+                        ON DELETE CASCADE
+                    """)
+                    logger.info(f"   ✅ Agregado {constraint} en {table}.{column}")
+                    added_count += 1
+                except Exception as e:
+                    logger.warning(f"   ⚠️  Error agregando {constraint}: {e}")
+            
+            conn.commit()
+            
+            if added_count > 0:
+                logger.info(f"✅ Foreign Keys agregadas: {added_count} nuevas, {skipped_count} ya existían")
+                logger.info("   Estrategia: ON DELETE CASCADE (eliminar usuario elimina datos relacionados)")
+            else:
+                logger.info(f"✅ Todas las Foreign Keys ya estaban configuradas ({skipped_count} FKs)")
+            
+        except Exception as e:
+            logger.error(f"❌ Error agregando Foreign Keys: {e}")
             conn.rollback()
         finally:
             conn.close()
@@ -914,7 +1094,7 @@ class DatabaseServiceEnterprise:
                     description TEXT NOT NULL,
                     action_taken TEXT NOT NULL,
                     metadata JSONB,
-                    user_id BIGINT
+                    user_id TEXT
                 )
             ''')
             
