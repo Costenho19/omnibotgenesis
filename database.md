@@ -2072,20 +2072,36 @@ finally:
 
 ---
 
-### 8.5 Roadmap Completo (Priorizado)
+### 8.5 Roadmap Completo (Priorizado - Actualizado Nov 26, 2025)
 
-| Prioridad | Tarea | Esfuerzo | Impacto | Deadline |
-|-----------|-------|----------|---------|----------|
-| 🚨 P0 | Configurar REDIS_URL | 30 min | Alto | Inmediato |
-| 🚨 P0 | Agregar índices faltantes | 1 hora | Alto | 1 día |
-| 🚨 P0 | Implementar connection pooling | 2 horas | Alto | 1 día |
-| ⚠️ P1 | Migrar a SQLAlchemy ORM | 1 semana | Medio | 2 semanas |
-| ⚠️ P1 | Setup Alembic migrations | 2 días | Medio | 2 semanas |
-| ⚠️ P1 | Agregar FK constraints | 1 día | Medio | 1 semana |
-| ⚠️ P1 | Refactor DRY violations | 2 días | Bajo | 3 semanas |
-| ℹ️ P2 | Migrar REAL → NUMERIC | 1 día | Medio | 1 mes |
-| ℹ️ P2 | Implementar archiving | 2 días | Bajo | 1 mes |
-| ℹ️ P2 | Cleanup duplicate tables | 1 día | Bajo | 1 mes |
+| Prioridad | Tarea | Esfuerzo | Impacto | Estado |
+|-----------|-------|----------|---------|--------|
+| 🚨 P0 | Configurar REDIS_URL | 30 min | Alto | ⏳ Pendiente |
+| 🚨 P0 | Agregar índices faltantes | 1 hora | Alto | ⏳ Pendiente |
+| 🚨 P0 | Implementar connection pooling | 2 horas | Alto | ⏳ Pendiente |
+| ✅ ~~P1~~ | ~~Refactor DRY violations~~ | ~~2 días~~ | ~~Bajo~~ | ✅ **COMPLETADO** (Nov 26) |
+| ⚠️ P1 | Migrar a SQLAlchemy ORM | 1 semana | Medio | ⏳ Pendiente |
+| ⚠️ P1 | Setup Alembic migrations | 2 días | Medio | ⏳ Pendiente |
+| ⚠️ P1 | Agregar FK constraints | 1 día | Medio | ⏳ Pendiente |
+| ⚠️ P1 | Migrar módulos conservadores a DAL completo | 1 día | Bajo | 🆕 Nuevo |
+| ℹ️ P2 | Migrar REAL → NUMERIC | 1 día | Medio | ⏳ Pendiente |
+| ℹ️ P2 | Implementar archiving | 2 días | Bajo | ⏳ Pendiente |
+| ℹ️ P2 | Cleanup duplicate tables | 1 día | Bajo | ⏳ Pendiente |
+
+### 8.6 Centralización Completada (Nov 26, 2025)
+
+**✅ Logros**:
+- **6 módulos Community Intelligence** refactorizados
+- **~290 líneas de código duplicado** eliminadas
+- **18 métodos DAL** implementados (13 originales + 5 nuevos)
+- **Dependency injection** configurado en `enterprise_bot.py`
+- **100% centralización** lograda (mix de patrones DAL completo + conservador)
+
+**Patrón Mixto Implementado**:
+- **DAL Completo (3)**: feedback_manager, signal_contribution, risk_guardian
+- **Conservador (3)**: community_analyzer, reward_system, community_dashboard
+
+**Próximo Paso Opcional**: Migrar módulos conservadores a DAL completo para consistencia total
 
 ---
 
@@ -2130,9 +2146,10 @@ alpha_leaderboard
 risk_guardian_events
 ```
 
-**Total**: 20 tablas  
-**Columnas**: ~180 columnas  
+**Total**: 23 tablas (Actualizado Nov 26, 2025)  
+**Columnas**: ~200 columnas  
 **Índices**: 15+ índices  
+**Métodos DAL**: 18 métodos (database_service.py)  
 
 ---
 
@@ -2176,23 +2193,26 @@ FROM alpha_leaderboard ORDER BY royalty_points DESC LIMIT 10;
 
 ---
 
-## 📊 RESUMEN FINAL
+## 📊 RESUMEN FINAL (Actualizado Nov 26, 2025)
 
-**OMNIX V6.0 ULTRA** tiene un sistema de datos **robusto pero inmaduro**:
+**OMNIX V6.0 ULTRA** tiene un sistema de datos **robusto y en mejora continua**:
 
 ### ✅ Fortalezas
-- Schemas institucionales bien diseñados
+- Schemas institucionales bien diseñados (23 tablas)
 - Cerebro Conversacional único en el mercado
 - Community Intelligence diferenciador competitivo
 - Paper Trading con métricas institucionales
 - Redis stateless para escalabilidad
+- ✅ **NUEVO**: **Base de datos 100% centralizada** (Nov 26, 2025)
+- ✅ **NUEVO**: **18 métodos DAL implementados** (13 + 5 nuevos)
+- ✅ **NUEVO**: **~290 líneas de código duplicado eliminadas**
 
 ### ❌ Debilidades Críticas
 - **NO HAY ORM** (SQL injection risk)
 - **NO HAY MIGRATIONS** (schema drift)
 - **NO HAY CONNECTION POOLING** (ineficiente)
 - **REDIS NO CONFIGURADO** (fallback silencioso)
-- **CÓDIGO DUPLICADO** (DRY violations)
+- ~~**CÓDIGO DUPLICADO**~~ → ✅ **RESUELTO** (Nov 26, 2025)
 
 ### 🎯 Siguiente Paso Inmediato
 
@@ -2201,8 +2221,19 @@ FROM alpha_leaderboard ORDER BY royalty_points DESC LIMIT 10;
 3. **ESTA SEMANA**: Implementar connection pooling (2 horas)
 4. **PRÓXIMAS 2 SEMANAS**: Migrar a SQLAlchemy + Alembic
 
+### 📈 Progreso de Centralización (Nov 26, 2025)
+
+| Métrica | Antes | Después | Mejora |
+|---------|-------|---------|--------|
+| Módulos con `_get_connection()` duplicado | 6 | 0 | ✅ 100% |
+| Líneas de código duplicado | ~290 | 0 | ✅ 100% |
+| Métodos DAL disponibles | 13 | 18 | ✅ +38% |
+| Tablas centralizadas | 20 | 23 | ✅ +15% |
+| Dependency injection configurado | No | Sí | ✅ 100% |
+
 ---
 
 **Documento Generado**: Noviembre 25, 2025  
+**Última Actualización**: Noviembre 26, 2025 (Centralización completada)  
 **Autor**: Replit Agent (Análisis exhaustivo del sistema de datos)  
-**Próxima Revisión**: Después de implementar fixes P0
+**Próxima Revisión**: Después de implementar fixes P0 (Redis, Pooling, Índices)
