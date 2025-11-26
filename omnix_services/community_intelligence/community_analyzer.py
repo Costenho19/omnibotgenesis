@@ -45,10 +45,17 @@ class CommunityAnalyzer:
     Solo genera sugerencias para aprobación humana
     """
     
-    def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
-        self.connected = PSYCOPG2_AVAILABLE and bool(self.db_url)
+    def __init__(self, database_service=None):
+        """
+        Inicializa CommunityAnalyzer con database_service centralizado
         
+        Args:
+            database_service: DatabaseManager o DatabaseServiceEnterprise instance
+        """
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+        
+        # Mantener AI capabilities intactas (Gemini)
         if GEMINI_AVAILABLE:
             api_key = os.environ.get('GEMINI_API_KEY')
             if api_key:
@@ -62,42 +69,24 @@ class CommunityAnalyzer:
         else:
             self.ai_available = False
     
-    def _get_connection(self):
-        """Obtener conexión PostgreSQL"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
-            return None
-        return psycopg2.connect(self.db_url)
+    def _get_connection_DEPRECATED(self):
+        """DEPRECATED: Ahora usa database_service centralizado"""
+        pass
     
     def analyze_feedback_patterns(self, days: int = 30, min_samples: int = 5) -> Dict[str, Any]:
         """
-        Analizar patrones en el feedback de la comunidad
+        Analizar patrones en el feedback de la comunidad usando DatabaseService
         
         Returns:
             Dict con patrones detectados y sugerencias
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            # Usar DAL centralizado
             since_date = datetime.now() - timedelta(days=days)
-            
-            cursor.execute('''
-                SELECT 
-                    strategy,
-                    market_condition,
-                    volatility,
-                    result,
-                    COUNT(*) as count
-                FROM community_feedback
-                WHERE created_at >= %s
-                GROUP BY strategy, market_condition, volatility, result
-                HAVING COUNT(*) >= %s
-                ORDER BY strategy, count DESC
-            ''', (since_date, min_samples))
-            
-            raw_patterns = cursor.fetchall()
+            raw_patterns = self.db.fetch_feedback_patterns(since_date, min_samples)
             
             patterns = self._process_raw_patterns(raw_patterns)
             
@@ -117,12 +106,16 @@ class CommunityAnalyzer:
                         'confidence': min(pattern['sample_size'] / 20, 1.0),
                         'sample_size': pattern['sample_size'],
                         'failure_rate': pattern['failure_rate'],
-                        'suggestion': f"Revisar {pattern['strategy']} en condiciones de mercado {pattern['condition']}"
+                        'suggestion': f"Revisar {pattern['strategy']} en condiciones de mercado {pattern['condition']}",
+                        'metadata': {
+                            'volatility': pattern.get('volatility'),
+                            'success_count': pattern.get('success', 0),
+                            'failure_count': pattern.get('failure', 0)
+                        }
                     }
                     detected_patterns.append(detected)
-                    self._save_detected_pattern(cursor, detected)
-            
-            conn.commit()
+                    # Usar DAL para guardar patrón
+                    self.db.upsert_detected_pattern(detected)
             
             return {
                 'success': True,
@@ -135,11 +128,8 @@ class CommunityAnalyzer:
             }
             
         except Exception as e:
-            conn.rollback()
             logger.error(f"❌ Error analyzing patterns: {e}")
             return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()
     
     def _process_raw_patterns(self, raw_data: List[Dict]) -> List[Dict]:
         """Procesar datos crudos en patrones estructurados"""
@@ -210,57 +200,9 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
             logger.error(f"❌ Error getting AI analysis: {e}")
             return None
     
-    def _save_detected_pattern(self, cursor, pattern: Dict):
-        """Guardar patrón detectado en la base de datos (con deduplicación)"""
-        try:
-            cursor.execute('''
-                SELECT id FROM detected_patterns 
-                WHERE affected_strategy = %s 
-                AND market_condition = %s 
-                AND pattern_type = %s
-                AND status = 'detected'
-                AND created_at >= NOW() - INTERVAL '7 days'
-                LIMIT 1
-            ''', (
-                pattern['affected_strategy'],
-                pattern['market_condition'],
-                pattern['pattern_type']
-            ))
-            
-            existing = cursor.fetchone()
-            if existing:
-                cursor.execute('''
-                    UPDATE detected_patterns 
-                    SET confidence = %s, sample_size = %s, failure_rate = %s, 
-                        suggestion = %s, created_at = NOW()
-                    WHERE id = %s
-                ''', (
-                    pattern['confidence'],
-                    pattern['sample_size'],
-                    pattern['failure_rate'],
-                    pattern['suggestion'],
-                    existing[0]
-                ))
-                logger.info(f"📝 Pattern updated: {pattern['pattern_type']} for {pattern['affected_strategy']}")
-            else:
-                cursor.execute('''
-                    INSERT INTO detected_patterns 
-                    (pattern_type, description, affected_strategy, market_condition, 
-                     confidence, sample_size, failure_rate, suggestion)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (
-                    pattern['pattern_type'],
-                    pattern['description'],
-                    pattern['affected_strategy'],
-                    pattern['market_condition'],
-                    pattern['confidence'],
-                    pattern['sample_size'],
-                    pattern['failure_rate'],
-                    pattern['suggestion']
-                ))
-                logger.info(f"✅ Pattern saved: {pattern['pattern_type']} for {pattern['affected_strategy']}")
-        except Exception as e:
-            logger.error(f"❌ Error saving pattern: {e}")
+    def _save_detected_pattern_DEPRECATED(self, cursor, pattern: Dict):
+        """DEPRECATED: Ahora usa db.upsert_detected_pattern()"""
+        pass
     
     def get_strategy_health_report(self, strategy: str) -> Dict[str, Any]:
         """
@@ -416,61 +358,32 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
     
     def generate_community_insights(self) -> Dict[str, Any]:
         """
-        Generar insights generales de la comunidad
+        Generar insights generales de la comunidad usando DatabaseService
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            # Usar DAL para stats básicas
+            stats = self.db.get_community_stats()
             
-            cursor.execute('''
-                SELECT 
-                    COUNT(*) as total_feedback,
-                    COUNT(DISTINCT user_id) as active_users,
-                    COUNT(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as feedback_7d,
-                    COUNT(CASE WHEN created_at >= NOW() - INTERVAL '1 day' THEN 1 END) as feedback_24h
-                FROM community_feedback
-            ''')
-            feedback_overview = cursor.fetchone()
-            
-            cursor.execute('''
-                SELECT 
-                    strategy,
-                    COUNT(*) as feedback_count,
-                    ROUND(AVG(CASE WHEN result = 'success' THEN 100 ELSE 0 END)::numeric, 1) as success_rate
-                FROM community_feedback
-                WHERE created_at >= NOW() - INTERVAL '30 days'
-                GROUP BY strategy
-                ORDER BY feedback_count DESC
-            ''')
-            strategy_performance = cursor.fetchall()
-            
-            cursor.execute('SELECT COUNT(*) as count FROM improvement_proposals WHERE status = %s', ('pending',))
-            pending_proposals = cursor.fetchone()['count']
-            
-            cursor.execute('SELECT COUNT(*) as count FROM detected_patterns WHERE status = %s', ('detected',))
-            pending_patterns = cursor.fetchone()['count']
+            # Obtener top contributors y proposals usando DAL
+            top_contributors = self.db.get_top_contributors(limit=5, days=30)
+            proposals = self.db.get_improvement_proposals(status='pending', limit=5)
             
             return {
                 'success': True,
                 'overview': {
-                    'total_feedback': feedback_overview['total_feedback'],
-                    'active_contributors': feedback_overview['active_users'],
-                    'feedback_last_7d': feedback_overview['feedback_7d'],
-                    'feedback_last_24h': feedback_overview['feedback_24h']
+                    'total_feedback': stats.get('total_feedback', 0),
+                    'active_contributors': stats.get('total_contributors', 0),
+                    'pending_proposals': stats.get('pending_proposals', 0),
+                    'active_patterns': stats.get('active_patterns', 0)
                 },
-                'strategy_performance': [dict(s) for s in strategy_performance],
-                'pending_actions': {
-                    'proposals': pending_proposals,
-                    'patterns': pending_patterns
-                },
+                'top_contributors': top_contributors,
+                'recent_proposals': proposals,
                 'generated_at': datetime.now().isoformat()
             }
             
         except Exception as e:
             logger.error(f"❌ Error generating insights: {e}")
             return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()

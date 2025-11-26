@@ -1669,3 +1669,255 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error getting risk events: {e}")
             return []
+    
+    # ==========================================
+    # COMMUNITY ANALYZER DATA ACCESS LAYER
+    # ==========================================
+    
+    def fetch_feedback_patterns(self, since_date, min_samples: int = 5) -> List[Dict]:
+        """Obtener patrones agregados de feedback comunitario"""
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT 
+                    strategy,
+                    market_condition,
+                    volatility,
+                    result,
+                    COUNT(*) as count
+                FROM community_feedback
+                WHERE created_at >= %s
+                GROUP BY strategy, market_condition, volatility, result
+                HAVING COUNT(*) >= %s
+                ORDER BY strategy, count DESC
+            ''', (since_date, min_samples))
+            
+            rows = cursor.fetchall()
+            patterns = []
+            
+            for row in rows:
+                patterns.append({
+                    'strategy': row[0],
+                    'market_condition': row[1],
+                    'volatility': row[2],
+                    'result': row[3],
+                    'count': row[4]
+                })
+            
+            cursor.close()
+            conn.close()
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Error fetching feedback patterns: {e}")
+            return []
+    
+    def upsert_detected_pattern(self, pattern: Dict) -> bool:
+        """Guardar o actualizar patrón detectado"""
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            
+            # Verificar si ya existe
+            cursor.execute('''
+                SELECT pattern_id FROM detected_patterns 
+                WHERE pattern_type = %s 
+                AND affected_strategy = %s 
+                AND market_condition = %s
+                AND status = 'detected'
+            ''', (pattern.get('pattern_type'), pattern.get('affected_strategy'), 
+                  pattern.get('market_condition')))
+            
+            existing = cursor.fetchone()
+            
+            import json
+            if existing:
+                # Actualizar existente
+                cursor.execute('''
+                    UPDATE detected_patterns SET
+                        confidence = %s,
+                        sample_size = %s,
+                        failure_rate = %s,
+                        suggestion = %s,
+                        metadata = %s,
+                        updated_at = NOW()
+                    WHERE pattern_id = %s
+                ''', (pattern.get('confidence'), pattern.get('sample_size'),
+                      pattern.get('failure_rate'), pattern.get('suggestion'),
+                      json.dumps(pattern.get('metadata', {})), existing[0]))
+            else:
+                # Insertar nuevo
+                cursor.execute('''
+                    INSERT INTO detected_patterns 
+                    (pattern_type, description, affected_strategy, market_condition,
+                     confidence, sample_size, failure_rate, suggestion, metadata, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'detected')
+                ''', (pattern.get('pattern_type'), pattern.get('description'),
+                      pattern.get('affected_strategy'), pattern.get('market_condition'),
+                      pattern.get('confidence'), pattern.get('sample_size'),
+                      pattern.get('failure_rate'), pattern.get('suggestion'),
+                      json.dumps(pattern.get('metadata', {}))))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error upserting detected pattern: {e}")
+            return False
+    
+    def get_top_contributors(self, limit: int = 10, days: int = 30) -> List[Dict]:
+        """Obtener mejores contribuidores"""
+        if not self.connected:
+            return []
+        
+        try:
+            from datetime import datetime, timedelta
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            since_date = datetime.now() - timedelta(days=days)
+            
+            cursor.execute('''
+                SELECT 
+                    user_id,
+                    username,
+                    contribution_points,
+                    contribution_level,
+                    total_feedback,
+                    proposals_submitted,
+                    proposals_accepted
+                FROM user_contributions
+                WHERE last_contribution >= %s
+                ORDER BY contribution_points DESC
+                LIMIT %s
+            ''', (since_date, limit))
+            
+            rows = cursor.fetchall()
+            contributors = []
+            
+            for row in rows:
+                contributors.append({
+                    'user_id': row[0],
+                    'username': row[1],
+                    'points': row[2],
+                    'level': row[3],
+                    'total_feedback': row[4],
+                    'proposals_submitted': row[5],
+                    'proposals_accepted': row[6]
+                })
+            
+            cursor.close()
+            conn.close()
+            return contributors
+            
+        except Exception as e:
+            logger.error(f"Error getting top contributors: {e}")
+            return []
+    
+    def get_improvement_proposals(self, status: str = None, limit: int = 20) -> List[Dict]:
+        """Obtener propuestas de mejora"""
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            
+            if status:
+                cursor.execute('''
+                    SELECT proposal_id, user_id, title, description, category,
+                           expected_improvement, status, votes, created_at
+                    FROM improvement_proposals
+                    WHERE status = %s
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                ''', (status, limit))
+            else:
+                cursor.execute('''
+                    SELECT proposal_id, user_id, title, description, category,
+                           expected_improvement, status, votes, created_at
+                    FROM improvement_proposals
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                ''', (limit,))
+            
+            rows = cursor.fetchall()
+            proposals = []
+            
+            for row in rows:
+                proposals.append({
+                    'proposal_id': row[0],
+                    'user_id': row[1],
+                    'title': row[2],
+                    'description': row[3],
+                    'category': row[4],
+                    'expected_improvement': row[5],
+                    'status': row[6],
+                    'votes': row[7],
+                    'created_at': row[8].isoformat() if row[8] else None
+                })
+            
+            cursor.close()
+            conn.close()
+            return proposals
+            
+        except Exception as e:
+            logger.error(f"Error getting improvement proposals: {e}")
+            return []
+    
+    def get_community_stats(self) -> Dict:
+        """Obtener estadísticas comunitarias"""
+        if not self.connected:
+            return {}
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return {}
+            
+            cursor = conn.cursor()
+            stats = {}
+            
+            # Total contributors
+            cursor.execute('SELECT COUNT(*) FROM user_contributions')
+            stats['total_contributors'] = cursor.fetchone()[0]
+            
+            # Total feedback
+            cursor.execute('SELECT COUNT(*) FROM community_feedback')
+            stats['total_feedback'] = cursor.fetchone()[0]
+            
+            # Pending proposals
+            cursor.execute('SELECT COUNT(*) FROM improvement_proposals WHERE status = %s', ('pending',))
+            stats['pending_proposals'] = cursor.fetchone()[0]
+            
+            # Detected patterns
+            cursor.execute('SELECT COUNT(*) FROM detected_patterns WHERE status = %s', ('detected',))
+            stats['active_patterns'] = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error getting community stats: {e}")
+            return {}
