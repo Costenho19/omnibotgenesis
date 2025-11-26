@@ -1325,8 +1325,8 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error getting feedback: {e}")
             return []
     
-    def vote_strategy(self, user_id: str, strategy: str, vote: int, reason: str = None) -> Dict:
-        """Votar por una estrategia"""
+    def vote_strategy(self, user_id: str, strategy: str, vote: int, reason: str = None, market_condition: str = None) -> Dict:
+        """Votar por una estrategia con condición de mercado"""
         if not self.connected:
             return {'success': False}
         
@@ -1337,23 +1337,40 @@ class DatabaseServiceEnterprise:
             
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO strategy_votes (user_id, strategy, vote, reason)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO strategy_votes (user_id, strategy, vote, reason, market_condition, vote_date)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)
                 ON CONFLICT (user_id, strategy, vote_date) 
-                DO UPDATE SET vote = EXCLUDED.vote, reason = EXCLUDED.reason
-            ''', (user_id, strategy, vote, reason))
+                DO UPDATE SET vote = EXCLUDED.vote, reason = EXCLUDED.reason, market_condition = EXCLUDED.market_condition
+                RETURNING id
+            ''', (user_id, strategy, vote, reason, market_condition))
             
+            vote_id = cursor.fetchone()[0]
             conn.commit()
             cursor.close()
             conn.close()
-            return {'success': True}
+            return {'success': True, 'vote_id': vote_id}
             
         except Exception as e:
             logger.error(f"Error voting strategy: {e}")
-            return {'success': False}
+            return {'success': False, 'error': str(e)}
     
-    def update_user_contributions(self, user_id: str, username: str, points: int) -> bool:
-        """Actualizar puntos de contribución del usuario"""
+    def update_user_contributions(self, user_id: str, username: str, points: int, contribution_type: str = 'generic') -> bool:
+        """
+        Actualizar contribuciones del usuario (puntos + contadores específicos)
+        
+        Args:
+            user_id: ID del usuario
+            username: Nombre del usuario
+            points: Puntos a agregar
+            contribution_type: 'feedback' | 'vote' | 'proposal' | 'helpful_feedback' | 'proposal_accepted' | 'generic'
+        
+        Counters updated based on contribution_type:
+            - 'feedback' → total_feedback +1, points +10
+            - 'vote' → total_votes +1, points +5
+            - 'proposal' → proposals_submitted +1, points +25
+            - 'helpful_feedback' → helpful_feedback +1, points +15
+            - 'proposal_accepted' → proposals_accepted +1, points +50
+        """
         if not self.connected:
             return False
         
@@ -1363,14 +1380,51 @@ class DatabaseServiceEnterprise:
                 return False
             
             cursor = conn.cursor()
+            
+            # Actualizar TODOS los contadores según tipo de contribución
             cursor.execute('''
-                INSERT INTO user_contributions (user_id, username, contribution_points)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (user_id) 
-                DO UPDATE SET 
-                    contribution_points = user_contributions.contribution_points + EXCLUDED.contribution_points,
-                    last_contribution = CURRENT_TIMESTAMP
-            ''', (user_id, username, points))
+                INSERT INTO user_contributions (
+                    user_id, username, 
+                    total_feedback, helpful_feedback, total_votes, 
+                    proposals_submitted, proposals_accepted,
+                    contribution_points, first_contribution
+                )
+                VALUES (
+                    %s, %s,
+                    CASE WHEN %s = 'feedback' THEN 1 ELSE 0 END,
+                    CASE WHEN %s = 'helpful_feedback' THEN 1 ELSE 0 END,
+                    CASE WHEN %s = 'vote' THEN 1 ELSE 0 END,
+                    CASE WHEN %s = 'proposal' THEN 1 ELSE 0 END,
+                    CASE WHEN %s = 'proposal_accepted' THEN 1 ELSE 0 END,
+                    %s, CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (user_id) DO UPDATE SET
+                    username = COALESCE(EXCLUDED.username, user_contributions.username),
+                    total_feedback = user_contributions.total_feedback + 
+                        CASE WHEN %s = 'feedback' THEN 1 ELSE 0 END,
+                    helpful_feedback = user_contributions.helpful_feedback + 
+                        CASE WHEN %s = 'helpful_feedback' THEN 1 ELSE 0 END,
+                    total_votes = user_contributions.total_votes + 
+                        CASE WHEN %s = 'vote' THEN 1 ELSE 0 END,
+                    proposals_submitted = user_contributions.proposals_submitted + 
+                        CASE WHEN %s = 'proposal' THEN 1 ELSE 0 END,
+                    proposals_accepted = user_contributions.proposals_accepted + 
+                        CASE WHEN %s = 'proposal_accepted' THEN 1 ELSE 0 END,
+                    contribution_points = user_contributions.contribution_points + %s,
+                    last_contribution = CURRENT_TIMESTAMP,
+                    contribution_level = CASE 
+                        WHEN user_contributions.contribution_points + %s >= 1000 THEN 'Experto'
+                        WHEN user_contributions.contribution_points + %s >= 500 THEN 'Avanzado'
+                        WHEN user_contributions.contribution_points + %s >= 100 THEN 'Intermedio'
+                        ELSE 'Novato'
+                    END
+            ''', (
+                user_id, username,
+                contribution_type, contribution_type, contribution_type, contribution_type, contribution_type,
+                points,
+                contribution_type, contribution_type, contribution_type, contribution_type, contribution_type,
+                points, points, points, points
+            ))
             
             conn.commit()
             cursor.close()
@@ -1380,6 +1434,49 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error updating contributions: {e}")
             return False
+    
+    def submit_proposal(self, user_id: str, username: str, proposal_data: Dict) -> Dict:
+        """Enviar propuesta de mejora"""
+        if not self.connected:
+            return {'success': False, 'error': 'Database not available'}
+        
+        # Validación de campos requeridos
+        required_fields = ['proposal_type', 'title', 'description']
+        for field in required_fields:
+            if field not in proposal_data:
+                return {'success': False, 'error': f'Missing required field: {field}'}
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return {'success': False, 'error': 'Connection failed'}
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO improvement_proposals 
+                (user_id, username, proposal_type, title, description, affected_strategy, priority)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            ''', (
+                user_id,
+                username,
+                proposal_data.get('proposal_type', 'improvement'),
+                proposal_data.get('title'),
+                proposal_data.get('description'),
+                proposal_data.get('affected_strategy'),
+                proposal_data.get('priority', 'medium')
+            ))
+            
+            proposal_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return {'success': True, 'proposal_id': proposal_id}
+            
+        except Exception as e:
+            logger.error(f"Error submitting proposal: {e}")
+            return {'success': False, 'error': str(e)}
     
     # ==========================================
     # SIGNAL CONTRIBUTION DATA ACCESS LAYER

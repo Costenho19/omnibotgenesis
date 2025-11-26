@@ -80,9 +80,9 @@ class CommunityFeedbackManager:
         result = self.db.submit_community_feedback(user_id, username, feedback_data)
         
         if result.get('success'):
-            # Actualizar contribuciones del usuario
-            points_earned = 5  # Puntos base por feedback
-            self.db.update_user_contributions(user_id, username, points_earned)
+            # Actualizar contribuciones del usuario (con tipo específico)
+            points_earned = 10  # Puntos base por feedback
+            self.db.update_user_contributions(user_id, username, points_earned, 'feedback')
             
             result['points_earned'] = points_earned
             result['message'] = f'Feedback registrado exitosamente (+{points_earned} puntos)'
@@ -107,13 +107,13 @@ class CommunityFeedbackManager:
         if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
-        # Usar DatabaseService centralizado
-        result = self.db.vote_strategy(user_id, strategy, vote, reason)
+        # Usar DatabaseService centralizado con market_condition
+        result = self.db.vote_strategy(user_id, strategy, vote, reason, market_condition)
         
         if result.get('success'):
-            # Actualizar contribuciones del usuario
-            points_earned = 2  # Puntos por voto
-            self.db.update_user_contributions(user_id, None, points_earned)
+            # Actualizar contribuciones del usuario (con tipo específico)
+            points_earned = 5  # Puntos por voto
+            self.db.update_user_contributions(user_id, None, points_earned, 'vote')
             
             result['points_earned'] = points_earned
             result['message'] = f'Voto registrado: {strategy} = {vote}⭐ (+{points_earned} puntos)'
@@ -135,46 +135,21 @@ class CommunityFeedbackManager:
                 'priority': 'low' | 'medium' | 'high'
             }
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
-        try:
-            cursor = conn.cursor()
+        # Usar DatabaseService centralizado
+        result = self.db.submit_proposal(user_id, username, proposal_data)
+        
+        if result.get('success'):
+            # Actualizar contribuciones del usuario (con tipo específico)
+            points_earned = 25  # Puntos por propuesta
+            self.db.update_user_contributions(user_id, username, points_earned, 'proposal')
             
-            cursor.execute('''
-                INSERT INTO improvement_proposals 
-                (user_id, username, proposal_type, title, description, affected_strategy, priority)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            ''', (
-                user_id,
-                username,
-                proposal_data.get('proposal_type', 'improvement'),
-                proposal_data.get('title'),
-                proposal_data.get('description'),
-                proposal_data.get('affected_strategy'),
-                proposal_data.get('priority', 'medium')
-            ))
-            
-            proposal_id = cursor.fetchone()[0]
-            points_earned = self._update_user_contributions(cursor, user_id, username, 'proposal')
-            
-            conn.commit()
-            
-            return {
-                'success': True,
-                'proposal_id': proposal_id,
-                'points_earned': points_earned,
-                'message': f'Propuesta #{proposal_id} enviada (+{points_earned} puntos)'
-            }
-            
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"❌ Error submitting proposal: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()
+            result['points_earned'] = points_earned
+            result['message'] = f'Propuesta #{result["proposal_id"]} enviada (+{points_earned} puntos)'
+        
+        return result
     
     def _update_user_contributions(self, cursor, user_id: str, username: str = None, 
                                    contribution_type: str = 'feedback') -> int:

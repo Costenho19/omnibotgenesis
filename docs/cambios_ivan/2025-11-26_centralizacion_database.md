@@ -11,10 +11,11 @@ Se completó la migración de **10 tablas** y se centralizó toda la lógica de 
 
 ### Resultados:
 - ✅ **10 tablas migradas** a `database_service.py`
-- ✅ **12 métodos DAL** creados para acceso centralizado
-- ✅ **2 módulos refactorizados** (feedback_manager.py parcialmente, más signal_contribution.py pendiente)
-- ✅ **1,244 → 1,566 líneas** en `database_service.py` (ahora incluye todo)
-- ⚠️ **Pendiente**: Completar refactorización de 4 módulos restantes
+- ✅ **13 métodos DAL** creados para acceso centralizado (+ `submit_proposal`)
+- ✅ **1 módulo refactorizado** (feedback_manager.py - 3 métodos críticos completos)
+- ✅ **1,244 → 1,640 líneas** en `database_service.py` (ahora incluye todo + validaciones)
+- ✅ **Architect Review**: Correcciones aplicadas (`market_condition`, validación de campos)
+- ⚠️ **Pendiente**: Completar refactorización de 4 módulos restantes (signal_contribution, community_analyzer, reward_system, risk_guardian)
 
 ---
 
@@ -48,11 +49,12 @@ Migrada desde `omnix_services/monitoring/risk_guardian.py`:
 
 ### Community Intelligence
 ```python
-# Líneas 1249-1385
+# Líneas 1249-1430
 def submit_community_feedback(user_id, username, feedback_data) -> Dict
 def get_community_feedback(strategy=None, limit=50) -> List[Dict]
-def vote_strategy(user_id, strategy, vote, reason=None) -> Dict
+def vote_strategy(user_id, strategy, vote, reason=None, market_condition=None) -> Dict
 def update_user_contributions(user_id, username, points) -> bool
+def submit_proposal(user_id, username, proposal_data) -> Dict  # ✅ NUEVO
 ```
 
 ### Signal Contribution
@@ -74,7 +76,7 @@ def get_risk_events(limit=50, risk_type=None) -> List[Dict]
 
 ## 3. MÓDULOS REFACTORIZADOS
 
-### ✅ `feedback_manager.py` (PARCIAL)
+### ✅ `feedback_manager.py` (COMPLETO - MÉTODOS PRINCIPALES)
 
 **Cambios aplicados:**
 ```python
@@ -104,10 +106,21 @@ def __init__(self, database_service=None):  # ✅ Recibe database_service
 def submit_feedback(...):
     result = self.db.submit_community_feedback(...)  # ✅ Usa DAL
     self.db.update_user_contributions(...)  # ✅ Usa DAL
+
+def vote_strategy(..., market_condition):  # ✅ Ahora incluye market_condition
+    result = self.db.vote_strategy(..., market_condition)  # ✅ Pasa todos los parámetros
+
+def submit_proposal(...):
+    result = self.db.submit_proposal(...)  # ✅ Usa DAL con validación
 ```
 
-**Estado**: ✅ Métodos principales refactorizados (`submit_feedback`, `vote_strategy`)  
-**Pendiente**: Otros métodos (`submit_proposal`, `get_feedback`, etc.)
+**Estado**: ✅ **COMPLETO** - 3 métodos críticos refactorizados (`submit_feedback`, `vote_strategy`, `submit_proposal`)  
+**Revisión Architect**: 
+- ✅ Corregido: `market_condition` ahora se pasa correctamente
+- ✅ Corregido: Agregado `submit_proposal()` DAL con validación de campos requeridos
+- ✅ Verificado: Sin vulnerabilidades SQL injection (queries parametrizadas)  
+
+**Pendiente**: Otros métodos no críticos (`get_feedback`, `analyze_patterns`, etc.)
 
 ---
 
