@@ -25,6 +25,86 @@
 
 ---
 
+## 📦 CHANGELOG DE VERSIONES 2025
+
+**Última Actualización**: 26 de Noviembre de 2025  
+**Todas las versiones han sido actualizadas a las releases más recientes de 2025**
+
+### Tabla Comparativa de Versiones
+
+| Paquete | Versión Original | Versión 2025 | Cambio | Notas Importantes |
+|---------|-----------------|--------------|--------|-------------------|
+| **sqlmodel** | 0.0.22 | **0.0.27** | ⬆️ +0.0.5 | ✨ Soporte UUID nativo, cascade delete relationships, SQLAlchemy ≥2.0.14 |
+| **alembic** | 1.14.0 | **1.17.2** | ⬆️ +0.3.2 | ✨ PEP 621 (pyproject.toml), 🔴 **Python ≥3.10 requerido** |
+| **asyncpg** | 0.29.0 | **0.30.0** | ⬆️ +0.1.0 | ✨ Soporte PostgreSQL 17, Python ≥3.8 |
+| **pydantic** | 2.10.0 | **2.12.4** | ⬆️ +0.2.4 | ✨ Versión estable más reciente, Python ≥3.9, 360M+ downloads/mes |
+| **pydantic-settings** | 2.6.0 | **2.12.0** | ⬆️ +0.6.0 | ✨ Integración AWS/Azure/GCP secrets, 🔴 **Python ≥3.10 requerido** |
+| **greenlet** | 3.0.0 | **3.2.4** | ⬆️ +0.2.4 | ✨ Fixes Python 3.12+, soporte Musllinux wheels |
+| **flask-limiter** | 3.8.0 | **4.0.0** | ⬆️ +0.2.0 | 🔴 **Breaking: Python ≥3.10 requerido**, dropped 3.8/3.9 support |
+| **flask-cors** | 5.0.0 | **6.0.1** | ⬆️ +1.0.1 | 🔒 **Security fixes** (CVE-2024-6839, CVE-2024-6844, CVE-2024-6866) |
+| **pyjwt** | 2.8.0 | **2.10.1** | ⬆️ +0.2.1 | 🔒 Mejoras de seguridad (CVE-2025-45768), Python ≥3.9 |
+| **pytest-asyncio** | 0.23.0 | **1.3.0** | ⬆️ +1.0.7 | 🔴 **Breaking: Python ≥3.10, depreca `event_loop` fixture** |
+
+### ⚠️ Breaking Changes Críticos
+
+**Requisito de Python actualizado a ≥3.10**:
+- ❌ **Python 3.8 y 3.9 ya NO son compatibles** con:
+  - Flask-Limiter 4.0.0 (requiere Python ≥3.10)
+  - pytest-asyncio 1.3.0 (requiere Python ≥3.10)
+  - Alembic 1.17.2 (requiere Python ≥3.10)
+  - pydantic-settings 2.12.0 (requiere Python ≥3.10)
+
+**Cambios en APIs**:
+- `pytest-asyncio 1.3.0`: Eliminó fixture `event_loop` (usar `event_loop_policy` o scoped loops)
+- `SQLModel 0.0.27`: Cambios en cascade delete syntax (ver docs)
+
+### ✅ Beneficios de las Actualizaciones 2025
+
+#### SQLModel 0.0.27
+- ✨ **UUID support nativo** con SQLAlchemy 2.0 types
+- ✨ **Cascade delete relationships**: `cascade_delete`, `ondelete`, `passive_deletes`
+- ✨ Fix para `EmailStr` y `max_length` con Pydantic v2
+- ✨ Mínimo SQLAlchemy 2.0.14 (mejoras de performance)
+
+#### Alembic 1.17.2
+- ✨ **PEP 621 support**: Configuración en `pyproject.toml` en lugar de `alembic.ini`
+- ✨ **Custom commands API**: `CommandLine.register_command()` para CLI custom
+- ✨ Fix rendering de foreign keys en autogenerate
+- ✨ Deprecado `utcnow()` reemplazado con `now(UTC)`
+
+#### Flask-CORS 6.0.1
+- 🔒 **Security patches críticos**:
+  - CVE-2024-6839: CORS bypass vulnerability
+  - CVE-2024-6844: Improper header validation
+  - CVE-2024-6866: Cross-origin resource sharing bypass
+- **IMPORTANTE**: Actualización obligatoria para producción
+
+#### Pydantic-Settings 2.12.0
+- ✨ **Cloud secrets integration**: AWS Secrets Manager, Azure Key Vault, GCP Secret Manager
+- ✨ Soporte para TOML y YAML configs
+- ✨ Mejor validación de environment variables
+
+#### PyJWT 2.10.1
+- 🔒 **Security improvements**: Validación de minimum key length (CVE-2025-45768)
+- ✨ Mejor soporte para JWS detached payloads
+- ✨ `PyJWKSet` con `__getitem__` support
+
+#### pytest-asyncio 1.3.0
+- ✨ **Scoped loops**: Loops creados una vez por scope (más rápido)
+- ✨ **Auto mode**: `asyncio_mode = auto` en pytest.ini (no más decorators)
+- ✨ Runtime dependency en `backports.asyncio.runner` para Python ≤3.10
+
+### 📋 Requisitos Mínimos del Sistema
+
+| Componente | Versión Mínima | Recomendada |
+|-----------|---------------|-------------|
+| **Python** | 3.10 | 3.12+ |
+| **PostgreSQL** | 12.0 | 15.0+ |
+| **Redis** | 6.0 | 7.0+ |
+| **pip** | 21.0+ | 24.0+ |
+
+---
+
 ## 🎯 VISIÓN GENERAL
 
 ### Estado Actual (Baseline)
@@ -48,14 +128,18 @@ omnix_services/database_service/
 
 ### Arquitectura Objetivo
 
-**Stack Tecnológico Final**:
-- **ORM**: SQLModel 0.0.22+ (Pydantic + SQLAlchemy)
-- **Migrations**: Alembic 1.14.0+ (auto-generated, versionadas)
-- **Database Driver**: asyncpg 0.29.0+ (async PostgreSQL)
+**Stack Tecnológico Final** (Versiones 2025):
+- **ORM**: SQLModel 0.0.27 (Pydantic + SQLAlchemy ≥2.0.14)
+- **Migrations**: Alembic 1.17.2 (auto-generated, versionadas con PEP 621)
+- **Database Driver**: asyncpg 0.30.0 (async PostgreSQL, soporte PG 17)
 - **API**: Flask 3.0.0+ (REST API para inversores)
-- **Auth**: PyJWT 2.8.0+ (JWT authentication)
-- **Validation**: Pydantic 2.10.0+ (schemas I/O)
-- **Rate Limiting**: Flask-Limiter 3.8.0+ (Redis-backed)
+- **Auth**: PyJWT 2.10.1 (JWT authentication con security fixes)
+- **Validation**: Pydantic 2.12.4 (schemas I/O, 360M+ downloads/mes)
+- **Rate Limiting**: Flask-Limiter 4.0.0 (Redis-backed, Python ≥3.10)
+- **CORS**: Flask-CORS 6.0.1 (security patches CVE-2024-*)
+- **Settings**: pydantic-settings 2.12.0 (cloud secrets support)
+- **Async Runtime**: greenlet 3.2.4 (Python 3.12+ compatible)
+- **Testing**: pytest-asyncio 1.3.0 (auto mode, scoped loops)
 
 **Estructura de Archivos Objetivo**:
 ```
