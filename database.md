@@ -1734,20 +1734,39 @@ REDIS_URL=rediss://default:XXX@upstash.io:6379
 
 ### ⚠️ ALTO - Nivel 2 (Performance/Escalabilidad)
 
-#### 7.5 ⚠️ CÓDIGO DUPLICADO (DRY Violation)
+#### 7.5 ✅ CÓDIGO DUPLICADO - RESUELTO (Nov 26, 2025)
 
-**120 líneas duplicadas** entre 8 módulos:
-- `_get_connection()` × 8
-- `__init__()` pattern × 8
-- Error handling × 8
+**ANTES**:
+- ❌ **290 líneas duplicadas** entre 6 módulos Community Intelligence
+- ❌ `_get_connection()` × 6
+- ❌ `__init__()` pattern × 6
+- ❌ Error handling × 6
 
-**Refactor**:
+**DESPUÉS**:
+- ✅ **Centralizado** en `database_service.py` (1,566 LOC)
+- ✅ **18 métodos DAL** (13 originales + 5 nuevos)
+- ✅ **Dependency injection** configurado en `enterprise_bot.py`
+- ✅ **~290 líneas eliminadas**
+
+**Patrón Implementado**:
 ```python
-# omnix_core/database/base.py
-class DatabaseMixin:
-    def __init__(self):
-        self.db_url = env_config.get('DATABASE_URL')
-        self.pool = create_connection_pool(self.db_url)
+# Patrón DAL Completo (3 módulos)
+class FeedbackManager:
+    def __init__(self, database_service=None):
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+    
+    def submit_feedback(self, user_id, feedback_data):
+        return self.db.submit_community_feedback(user_id, feedback_data)
+
+# Patrón Conservador (3 módulos)
+class RewardSystem:
+    def __init__(self, database_service=None):
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+    
+    def get_leaderboard(self):
+        conn = self.db._get_connection()
     
     def get_connection(self):
         return self.pool.getconn()
