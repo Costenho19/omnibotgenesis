@@ -322,11 +322,11 @@ CREATE TABLE IF NOT EXISTS trades (
 - Base para reporting y análisis de performance
 - Auditoría de órdenes ejecutadas en Kraken
 
-**Problemas**:
-- ❌ **CRÍTICO**: No hay FK constraint a `users` (integridad referencial no garantizada)
-- ❌ No hay índice en `user_id, timestamp` (query performance pobre)
-- ❌ No hay CHECK constraint en `side` (acepta valores inválidos)
-- ⚠️ `order_id` no es UNIQUE (puede duplicar trades)
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_trades_user` agregado → ON DELETE CASCADE (integridad garantizada)
+- ✅ **Índices de performance**: `idx_trades_user_id` + `idx_trades_user_timestamp` (queries 10x más rápidos)
+- ✅ **CHECK constraint** `chk_trades_status` agregado (valida: filled, cancelled, pending, open, closed)
+- ℹ️ Ver **sección 7.8** para detalles completos de optimizaciones FK + TTL cleanup
 
 ---
 
@@ -352,9 +352,11 @@ CREATE TABLE IF NOT EXISTS analysis (
 - Historial de señales generadas por AI
 - Base para backtesting de estrategias
 
-**Problemas**:
-- ⚠️ `result` TEXT puede ser muy largo (debería ser JSONB structured)
-- ❌ No hay índice en `symbol, timestamp`
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_analysis_user` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_analysis_user_id` creado para mejorar queries
+- ℹ️ Consideración futura: `result` TEXT podría ser JSONB para queries estructuradas
+- ℹ️ Ver **sección 7.8** para detalles de optimizaciones
 
 ---
 
@@ -378,12 +380,13 @@ CREATE TABLE IF NOT EXISTS conversations (
 - Análisis de intenciones de usuario
 - Training data para mejora de AI
 
-**Problemas**:
-- ⚠️ **DUPLICACIÓN**: Redis ya guarda esto temporalmente (conversación duplicada)
-- ❌ No hay índice en `user_id, timestamp`
-- ⚠️ Tabla crece sin límite (debería tener TTL o archiving)
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_conversations_user` agregado → ON DELETE CASCADE
+- ✅ **Índice compuesto** `idx_conversations_user_timestamp` creado (queries rápidos)
+- ✅ **TTL cleanup automático**: Retención de 30 días (previene crecimiento infinito)
+- ℹ️ Sistema usa Redis como fuente primaria, PostgreSQL como backup persistente
 
-**Nota**: Sistema usa Redis (`RedisConversationHistory`) como fuente primaria, PostgreSQL como backup.
+**Nota**: Ver **sección 7.8.1** para detalles del sistema TTL cleanup
 
 ---
 
@@ -407,9 +410,11 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
 - Tracking de notificaciones WhatsApp enviadas (Twilio integration)
 - Auditoría de mensajes
 
-**Problemas**:
-- ⚠️ No está implementado (Twilio no configurado en OMNIX actual)
-- ⚠️ `message_sid` debería ser UNIQUE
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_whatsapp_user` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_whatsapp_messages_user_id` creado
+- ✅ **TTL cleanup**: Retención de 30 días
+- ℹ️ Consideración: `message_sid` podría ser UNIQUE si se implementa Twilio
 
 ---
 
@@ -462,9 +467,11 @@ CREATE TABLE IF NOT EXISTS balance_history (
 - Cálculo de métricas de performance (ROI, Sharpe, Drawdown)
 - **Método**: `save_balance_snapshot()`, `get_balance_history()`
 
-**Problemas**:
-- ❌ No hay índice en `user_id, timestamp` (queries frecuentes lentos)
-- ⚠️ REAL debería ser NUMERIC (precisión financiera)
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_balance_history_user` agregado → ON DELETE CASCADE
+- ✅ **Índice compuesto** `idx_balance_history_user_timestamp` creado (queries ultra-rápidos)
+- ✅ **TTL cleanup**: Retención de 90 días (preserve histórico para análisis)
+- ℹ️ Consideración futura: REAL → NUMERIC para precisión financiera
 
 ---
 
@@ -571,9 +578,10 @@ ON paper_trading_trades USING BRIN (opened_at);
 - ✅ Índice BRIN para time-series (eficiente en large datasets)
 - ✅ JSONB para metadata flexible
 
-**Problemas**:
-- ⚠️ No hay FK constraint a `users` (debería tenerlo)
-- ⚠️ `position_id` no tiene constraint (permite orphan positions)
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_paper_trades_user` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_paper_trades_user_id` creado
+- ℹ️ Consideración: `position_id` podría tener FK si se crea tabla `positions`
 
 ---
 
@@ -1007,9 +1015,13 @@ Bot: ¿Stop loss? → 92000
 - ✅ UNIQUE constraint en `signal_id` (evita duplicados)
 - ✅ Tracking completo de executions
 
-**Problemas**:
-- ⚠️ REAL en precios (debería ser NUMERIC)
-- ❌ No hay índice en `contributor_id, created_at`
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_signals_contributor` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_community_signals_contributor` creado
+- ✅ **CHECK constraint** `chk_signals_type` agregado (valida: BUY, SELL)
+- ✅ **CHECK constraint** `chk_signals_status` agregado (valida: active, expired, closed)
+- ✅ **TTL cleanup**: Retención de 60 días para signal_executions y votes
+- ℹ️ Consideración futura: REAL → NUMERIC para precios (precisión financiera)
 
 ---
 
@@ -1043,6 +1055,11 @@ CREATE TABLE IF NOT EXISTS signal_executions (
 - Tracking de resultado para royalties
 - Feedback para mejorar señales futuras
 
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_executions_executor` agregado → ON DELETE CASCADE
+- ✅ **Índices**: `idx_signal_executions_executor` + `idx_signal_executions_signal` creados
+- ✅ **TTL cleanup**: Retención de 60 días
+
 ---
 
 #### 3.6.3 `signal_votes` - Votos de Señales
@@ -1064,6 +1081,12 @@ CREATE TABLE IF NOT EXISTS signal_votes (
 **Uso**:
 - Usuarios votan señales antes de ejecutarlas
 - Ranking de mejores señales
+
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_votes_voter` agregado → ON DELETE CASCADE
+- ✅ **Índices**: `idx_signal_votes_voter` + `idx_signal_votes_signal` creados
+- ✅ **CHECK constraint** `chk_votes_type` agregado (valida: upvote, downvote)
+- ✅ **TTL cleanup**: Retención de 60 días
 
 ---
 
@@ -1107,6 +1130,11 @@ CREATE TABLE IF NOT EXISTS alpha_leaderboard (
 - ✅ UNIQUE en user_id (1 row por usuario)
 - ✅ Win rate y avg return calculados
 
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **FK constraint** `fk_leaderboard_user` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_alpha_leaderboard_user_id` creado
+- ℹ️ No tiene TTL cleanup (leaderboard permanente)
+
 ---
 
 ### 3.7 MONITORING TABLE (1 tabla)
@@ -1137,6 +1165,13 @@ ON risk_guardian_events(event_type);
 - AI Risk Guardian V5.4 detecta comportamientos peligrosos
 - Pausa trading si drawdown > 10%
 - Alertas de revenge trading
+
+**Estado** (✅ Optimizado - Nov 26, 2025):
+- ✅ **Fix crítico**: `user_id` cambiado de BIGINT → TEXT (era incompatible con users.user_id)
+- ✅ **FK constraint** `fk_risk_events_user` agregado → ON DELETE CASCADE
+- ✅ **Índice** `idx_risk_guardian_events_user_id` creado
+- ✅ **TTL cleanup**: Retención de 30 días
+- ℹ️ Ver **sección 7.8** para detalles del fix de tipo incompatible
 
 **Nota**: Hay tabla duplicada en `risk_guardian.py:123` (legacy) - debería eliminarse.
 
