@@ -24,7 +24,7 @@ Se completó la migración de **10 tablas** y se centralizó toda la lógica de 
 - ✅ **Dependency Injection configurado** en `enterprise_bot.py` para TODOS los módulos
 - ✅ **Auditoría robusta completada** con ripgrep multiline - enterprise_bot.py es único entry point
 - ✅ **1,244 → 1,566 líneas** en `database_service.py` (incluye todos los DAL)
-- ✅ **~290 líneas de código duplicado eliminadas** (6 implementaciones de _get_connection)
+- ✅ **~410 líneas de código duplicado eliminadas** (6 implementaciones de _get_connection + 120 líneas de _init_tables_DEPRECATED)
 - ✅ **Architect Reviews**: Múltiples iteraciones aplicadas
 - ✅ **100% COMPLETO** - Centralización: TODOS los módulos usan database_service (3 con DAL, 3 conservador)
 
@@ -41,11 +41,15 @@ Migradas desde `omnix_services/community_intelligence/feedback_manager.py`:
 - `detected_patterns` - Patrones detectados por AI
 
 ### Signal Contribution (4 tablas)
-Migradas desde `omnix_services/community_intelligence/signal_contribution.py`:
+**Definidas en** `omnix_services/database_service/database_service.py`:
 - `community_signals` - Señales compartidas por usuarios
 - `signal_executions` - Ejecuciones de señales
 - `signal_votes` - Votos de señales
 - `alpha_leaderboard` - Leaderboard de mejores contribuidores
+
+**LIMPIEZA FINAL (Nov 26, 2025)**:
+- ✅ Eliminado método `_init_tables_DEPRECATED()` de signal_contribution.py (~120 líneas duplicadas)
+- ✅ Tablas ahora SOLO existen en database_service.py (única fuente de verdad)
 
 ### Risk Guardian (1 tabla)
 Migrada desde `omnix_services/monitoring/risk_guardian.py`:
@@ -158,9 +162,16 @@ def submit_proposal(...):
 
 ## 5. MÓDULOS PENDIENTES DE REFACTORIZACIÓN
 
-### ✅ `signal_contribution.py` (COMPLETO - MÉTODOS CRÍTICOS)
+### ✅ `signal_contribution.py` (COMPLETO - 100% LIMPIO)
 
-**Cambios aplicados:**
+**Cambios aplicados (ACTUALIZADO - Limpieza Final Nov 26, 2025):**
+- ✅ **Eliminado método _init_tables_DEPRECATED()** completo (~120 líneas de código duplicado)
+- ✅ **4 tablas duplicadas eliminadas**: community_signals, signal_executions, signal_votes, alpha_leaderboard
+- ✅ **Archivo reducido**: 610 líneas → 490 líneas  
+- ✅ **Docstrings actualizados** para reflejar centralización
+- ✅ **Única fuente de verdad**: database_service.py
+
+**Código eliminado:**
 ```python
 # ANTES
 def __init__(self, reward_system=None):

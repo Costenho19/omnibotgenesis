@@ -53,10 +53,13 @@
 ### ✅ Mejoras Implementadas (Nov 26, 2025)
 
 1. **✅ CENTRALIZACIÓN DE BASE DE DATOS**: 6 módulos Community Intelligence refactorizados para usar `database_service` centralizado
-2. **✅ ELIMINACIÓN DE CÓDIGO DUPLICADO**: ~290 líneas de código duplicado eliminadas (6 implementaciones de `_get_connection`)
+2. **✅ ELIMINACIÓN DE CÓDIGO DUPLICADO**: ~410 líneas eliminadas:
+   - ~290 líneas (6 implementaciones de `_get_connection`)
+   - ~120 líneas (método `_init_tables_DEPRECATED` en signal_contribution.py)
 3. **✅ DEPENDENCY INJECTION**: Todos los módulos ahora reciben `database_service` via constructor
 4. **✅ 18 MÉTODOS DAL**: Capa de acceso a datos centralizada con 18 métodos (13 originales + 5 nuevos)
 5. **✅ PATRÓN MIXTO**: 3 módulos con DAL completo + 3 módulos con patrón conservador (database_service._get_connection())
+6. **✅ ÚNICA FUENTE DE VERDAD**: Todas las 23 tablas definidas SOLO en database_service.py (limpieza final completada)
 
 ---
 
@@ -1510,9 +1513,12 @@ class RewardSystem:
         # ... SQL directo (pendiente migrar a DAL)
 ```
 
-**Resultado**:
-- ✅ **~290 líneas eliminadas** (6 implementaciones de `_get_connection`)
+**Resultado (ACTUALIZADO - Limpieza Final Nov 26, 2025)**:
+- ✅ **~410 líneas eliminadas**:
+  - ~290 líneas (6 implementaciones de `_get_connection`)
+  - ~120 líneas (método `_init_tables_DEPRECATED` en signal_contribution.py)
 - ✅ **ÚNICO punto de conexión**: `database_service.py`
+- ✅ **ÚNICA fuente de verdad para tablas**: database_service.py (signal_contribution.py 100% limpio)
 - ✅ **Dependency injection** configurado en `enterprise_bot.py`
 
 ---
@@ -2221,14 +2227,16 @@ FROM alpha_leaderboard ORDER BY royalty_points DESC LIMIT 10;
 3. **ESTA SEMANA**: Implementar connection pooling (2 horas)
 4. **PRÓXIMAS 2 SEMANAS**: Migrar a SQLAlchemy + Alembic
 
-### 📈 Progreso de Centralización (Nov 26, 2025)
+### 📈 Progreso de Centralización (Nov 26, 2025 - LIMPIEZA FINAL)
 
 | Métrica | Antes | Después | Mejora |
 |---------|-------|---------|--------|
 | Módulos con `_get_connection()` duplicado | 6 | 0 | ✅ 100% |
-| Líneas de código duplicado | ~290 | 0 | ✅ 100% |
+| Módulos con `_init_tables()` duplicado | 1 (signal_contribution) | 0 | ✅ 100% |
+| Líneas de código duplicado | ~410 | 0 | ✅ 100% |
 | Métodos DAL disponibles | 13 | 18 | ✅ +38% |
 | Tablas centralizadas | 20 | 23 | ✅ +15% |
+| Archivos con definición de tablas | 2 (database_service + signal_contribution) | 1 (solo database_service) | ✅ 100% |
 | Dependency injection configurado | No | Sí | ✅ 100% |
 
 ---
