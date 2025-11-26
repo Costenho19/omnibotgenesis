@@ -397,7 +397,7 @@ if profit_column and 'numeric' in profit_column[1]:
 - **Normalización**: 2NF (violación con whatsapp_number)
 
 ### Después de FASE 1
-- **Tablas**: 24 tablas (+1: user_contacts)
+- **Tablas**: 23 tablas (nota: prices eliminada posteriormente en Nov 26, 2025 por desuso)
 - **Columnas users**: 14 columnas (+3: email, is_active, updated_at)
 - **Índices users**: 3 índices (+3: last_activity, email, is_active)
 - **Métodos DAL**: 22 métodos (+4: gestión de contactos)

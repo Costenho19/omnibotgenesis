@@ -35,7 +35,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 ### System Design Choices
 - **Modular Architecture**: Transformed from a monolith to a modular system with 75+ specialized Python modules, significantly reducing `main.py` from 15,175 to 617 lines.
-- **Centralized Database Layer (Nov 26, 2025 - LIMPIEZA FINAL COMPLETADA)**: All database logic consolidated in `omnix_services/database_service/` with 24 tables and 22 DAL methods. **6 Community Intelligence modules refactored to use centralized database_service** (2 full DAL: feedback_manager, risk_guardian; 2 mixtos: signal_contribution, community_analyzer; 2 conservadores: reward_system, community_dashboard) eliminating **~410 lines of duplicate code** (~290 _get_connection + ~120 _init_tables_DEPRECATED). Dependency injection configured in enterprise_bot.py (único entry point). **signal_contribution.py 100% limpio** (610→500 líneas). Auditoría final: **24 tablas SOLO en database_service.py** (única fuente de verdad). **100% centralized** (mix of DAL + conservative patterns). See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
+- **Centralized Database Layer (Nov 26, 2025 - LIMPIEZA FINAL COMPLETADA)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 22 DAL methods. **6 Community Intelligence modules refactored to use centralized database_service** (2 full DAL: feedback_manager, risk_guardian; 2 mixtos: signal_contribution, community_analyzer; 2 conservadores: reward_system, community_dashboard) eliminating **~410 lines of duplicate code** (~290 _get_connection + ~120 _init_tables_DEPRECATED). Dependency injection configured in enterprise_bot.py (único entry point). **signal_contribution.py 100% limpio** (610→500 líneas). Auditoría final: **23 tablas SOLO en database_service.py** (única fuente de verdad). **100% centralized** (mix of DAL + conservative patterns). See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
 - **Database Schema Modernization FASE 1 (Nov 26, 2025)**: Conservative improvements to users table following 3NF normalization. Added email, is_active, updated_at columns; changed total_profit from REAL to NUMERIC(18,8) for financial precision; added CHECK constraints. Created new user_contacts table for multi-channel contact management (WhatsApp, email, Telegram, phone, SMS) with FK to users. 4 new DAL methods: add_user_contact(), get_user_contacts(), verify_user_contact(), set_primary_contact(). 100% backward compatible with automatic migration for both fresh deployments and upgrades. See `database.md` section 9 for complete details.
 - **Unified Configuration**: Centralized `env_manager.py` handles environment variables with precedence (Replit Secrets > .env.local > defaults), type validation, and secure logging.
 - **Deployment**: Designed for 24/7 operation on Railway (Production) and Replit (Development) with a unified `python -u main.py` entry point.
@@ -52,8 +52,8 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **CoinGecko API**: Backup price data.
 
 ### Databases
-- **PostgreSQL (Neon)**: Main relational database with 24 tables organized in:
-  - Core System (9 tables): users, user_contacts, prices, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history
+- **PostgreSQL (Neon)**: Main relational database with 23 tables organized in:
+  - Core System (8 tables): users, user_contacts, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history
   - Paper Trading (2 tables): paper_trading_balances, paper_trading_trades
   - Conversational Brain (3 tables): trade_reasonings, trade_evaluations, pending_evaluations
   - Community Intelligence (5 tables): community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns
