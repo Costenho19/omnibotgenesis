@@ -66,12 +66,13 @@ class DatabaseServiceEnterprise:
         try:
             logger.info("🔌 Intentando conectar a PostgreSQL...")
             
-            # 🔄 EJECUTAR MIGRACIÓN A USERS V2 (si es necesario)
+            # 🔄 EJECUTAR MIGRACIONES (si es necesario)
             self._migrate_users_to_v2()
+            self._drop_prices_table()
             
             self._init_tables()
             self.connected = True
-            logger.info("✅ PostgreSQL: 25 tablas inicializadas")
+            logger.info("✅ PostgreSQL: 23 tablas inicializadas")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
             logger.info("=" * 70)
         except Exception as e:
@@ -284,6 +285,55 @@ class DatabaseServiceEnterprise:
         finally:
             conn.close()
     
+    def _drop_prices_table(self):
+        """
+        🗑️ MIGRACIÓN: Eliminar tabla prices huérfana (Nov 26, 2025)
+        
+        Razón: La tabla prices nunca se usa (0 INSERT, 0 SELECT).
+        Todos los módulos consultan precios directamente vía API Kraken.
+        
+        Esta migración es idempotente y segura.
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Verificar si la tabla existe
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'prices' 
+                    AND table_schema = 'public'
+                )
+            """)
+            prices_exists = cursor.fetchone()[0]
+            
+            if not prices_exists:
+                logger.info("✅ Tabla prices ya no existe (skip migration)")
+                conn.close()
+                return
+            
+            logger.info("🗑️ Eliminando tabla prices (huérfana, 0 usos)")
+            
+            # DROP TABLE (seguro con IF EXISTS)
+            cursor.execute('DROP TABLE IF EXISTS prices')
+            
+            conn.commit()
+            logger.info("✅ Tabla prices eliminada exitosamente")
+            logger.info("   Razón: Todos los módulos usan API Kraken directamente")
+            
+        except Exception as e:
+            logger.error(f"❌ Error eliminando tabla prices: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
     def _init_tables(self):
         """Inicializar todas las tablas del sistema"""
         if not self.db_url or not PSYCOPG2_AVAILABLE:
@@ -348,19 +398,6 @@ class DatabaseServiceEnterprise:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_user ON user_contacts(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_type ON user_contacts(contact_type, is_verified)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_primary ON user_contacts(user_id, is_primary) WHERE is_primary = true')
-            
-            # Tabla de precios históricos
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS prices (
-                    id SERIAL PRIMARY KEY,
-                    symbol TEXT,
-                    price REAL,
-                    volume REAL,
-                    change_24h REAL,
-                    exchange TEXT,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
             
             # Tabla de trades ejecutados
             cursor.execute('''
