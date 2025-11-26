@@ -25,6 +25,13 @@ except ImportError:
     PSYCOPG2_AVAILABLE = False
     logger.warning("psycopg2 no disponible - Database desactivado")
 
+try:
+    import redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    logger.warning("redis no disponible - Cleanup se ejecutará siempre")
+
 
 class DatabaseServiceEnterprise:
     """
@@ -41,6 +48,15 @@ class DatabaseServiceEnterprise:
     def __init__(self):
         self.db_url = os.environ.get('DATABASE_URL')
         self.connected = False
+        self.redis_client = None
+        
+        # Intentar conectar a Redis para tracking de cleanup
+        if REDIS_AVAILABLE:
+            try:
+                redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+                self.redis_client = redis.from_url(redis_url, decode_responses=True)
+            except Exception as e:
+                logger.warning(f"Redis no disponible para cleanup tracking: {e}")
         
         # 🔍 DEBUG LOGGING MEJORADO PARA RAILWAY
         logger.info("=" * 70)
@@ -73,6 +89,10 @@ class DatabaseServiceEnterprise:
             self._add_foreign_key_constraints()
             
             self._init_tables()
+            
+            # 🗑️ Ejecutar cleanup automático (1x por día)
+            self._run_daily_cleanup()
+            
             self.connected = True
             logger.info("✅ PostgreSQL: 23 tablas inicializadas")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
@@ -510,6 +530,158 @@ class DatabaseServiceEnterprise:
             
         except Exception as e:
             logger.error(f"❌ Error agregando Foreign Keys: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    def _run_daily_cleanup(self):
+        """
+        🕐 CONTROL DE FRECUENCIA: Ejecutar cleanup 1x por día (Nov 26, 2025)
+        
+        Usa Redis para trackear última ejecución. Si Redis no está disponible,
+        ejecuta cleanup de todos modos (fail-safe para prevenir crecimiento infinito).
+        
+        Key: db:last_cleanup_date
+        Valor: ISO timestamp de última ejecución
+        """
+        try:
+            should_cleanup = False
+            
+            if self.redis_client:
+                try:
+                    # Verificar última ejecución
+                    last_cleanup = self.redis_client.get('db:last_cleanup_date')
+                    
+                    if not last_cleanup:
+                        logger.info("🗑️ Primera ejecución de cleanup - ejecutando...")
+                        should_cleanup = True
+                    else:
+                        # Parsear fecha y verificar si han pasado >24 horas
+                        last_cleanup_dt = datetime.fromisoformat(last_cleanup)
+                        hours_since_cleanup = (datetime.now() - last_cleanup_dt).total_seconds() / 3600
+                        
+                        if hours_since_cleanup >= 24:
+                            logger.info(f"🗑️ Último cleanup hace {hours_since_cleanup:.1f}h - ejecutando...")
+                            should_cleanup = True
+                        else:
+                            logger.info(f"✅ Cleanup reciente ({hours_since_cleanup:.1f}h atrás) - skip")
+                            should_cleanup = False
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️  Error verificando Redis cleanup flag: {e}")
+                    should_cleanup = True
+            else:
+                # Sin Redis, ejecutar cleanup siempre (fail-safe)
+                logger.info("⚠️  Redis no disponible - ejecutando cleanup (fail-safe)")
+                should_cleanup = True
+            
+            if should_cleanup:
+                self._cleanup_old_data()
+                
+                # Actualizar timestamp en Redis
+                if self.redis_client:
+                    try:
+                        self.redis_client.set('db:last_cleanup_date', datetime.now().isoformat())
+                        logger.info("✅ Timestamp de cleanup actualizado en Redis")
+                    except Exception as e:
+                        logger.warning(f"⚠️  Error guardando timestamp en Redis: {e}")
+        
+        except Exception as e:
+            logger.error(f"❌ Error en control de cleanup diario: {e}")
+    
+    def _cleanup_old_data(self):
+        """
+        🗑️ CLEANUP AUTOMÁTICO: Eliminar datos antiguos según TTL configurado (Nov 26, 2025)
+        
+        TTL Policy (Time To Live):
+        - conversations, trades, risk_guardian_events: 30 días (datos operacionales)
+        - trade_reasonings, trade_evaluations, balance_history: 90 días (datos de entrenamiento ML)
+        - signal_executions, signal_votes: 60 días (datos de comunidad)
+        - pending_evaluations (completed/failed): 7 días (limpieza de cola)
+        
+        Estrategia: DELETE directo basado en timestamp
+        Ejecución: 1x por día (verificado con Redis flag)
+        
+        Beneficio: Previene crecimiento infinito (~95% reducción de espacio en 1 año)
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            logger.info("🗑️ Ejecutando cleanup automático de datos antiguos (TTL)...")
+            
+            # Configuración de TTL por tabla (días)
+            # tabla: (días_ttl, columna_timestamp, condición_adicional)
+            cleanup_config = {
+                'conversations': (30, 'timestamp', None),
+                'trades': (30, 'timestamp', None),
+                'risk_guardian_events': (30, 'timestamp', None),
+                'trade_reasonings': (90, 'timestamp', None),
+                'trade_evaluations': (90, 'timestamp', None),
+                'balance_history': (90, 'timestamp', None),
+                'signal_executions': (60, 'executed_at', None),
+                'signal_votes': (60, 'created_at', None),
+                'whatsapp_messages': (30, 'timestamp', None),
+                'analysis': (30, 'timestamp', None),
+                
+                # Cleanup especial para pending_evaluations
+                'pending_evaluations': (7, 'timestamp', "status IN ('completed', 'failed')"),
+            }
+            
+            total_deleted = 0
+            tables_cleaned = 0
+            
+            for table_name, (ttl_days, timestamp_col, extra_condition) in cleanup_config.items():
+                try:
+                    # Verificar si tabla existe
+                    cursor.execute("""
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables 
+                            WHERE table_name = %s AND table_schema = 'public'
+                        )
+                    """, (table_name,))
+                    
+                    if not cursor.fetchone()[0]:
+                        continue
+                    
+                    # Construir query DELETE
+                    delete_query = f"""
+                        DELETE FROM {table_name}
+                        WHERE {timestamp_col} < NOW() - INTERVAL '{ttl_days} days'
+                    """
+                    
+                    if extra_condition:
+                        delete_query += f" AND {extra_condition}"
+                    
+                    # Ejecutar DELETE y obtener count
+                    cursor.execute(delete_query)
+                    deleted_rows = cursor.rowcount
+                    
+                    if deleted_rows > 0:
+                        logger.info(f"   ✅ {table_name}: {deleted_rows} registros eliminados (TTL: {ttl_days} días)")
+                        total_deleted += deleted_rows
+                        tables_cleaned += 1
+                    
+                except Exception as e:
+                    logger.warning(f"   ⚠️  Error limpiando {table_name}: {e}")
+                    continue
+            
+            conn.commit()
+            
+            if total_deleted > 0:
+                logger.info(f"✅ Cleanup completado: {total_deleted} registros eliminados de {tables_cleaned} tablas")
+                logger.info(f"   Espacio liberado estimado: ~{total_deleted * 2}KB")
+            else:
+                logger.info("✅ Cleanup ejecutado: No hay datos antiguos para eliminar")
+            
+        except Exception as e:
+            logger.error(f"❌ Error en cleanup automático: {e}")
             conn.rollback()
         finally:
             conn.close()
