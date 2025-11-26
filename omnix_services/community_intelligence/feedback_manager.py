@@ -7,23 +7,16 @@ CARACTERÍSTICAS:
 - Registra condiciones de mercado al momento del feedback
 - Tracking de usuarios que dan feedback útil
 - Base para análisis de patrones con AI
+
+REFACTORIZADO: Ahora usa DatabaseService centralizado (no queries directas)
 """
 
-import os
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 import json
 
 logger = logging.getLogger(__name__)
-
-try:
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    PSYCOPG2_AVAILABLE = True
-except ImportError:
-    PSYCOPG2_AVAILABLE = False
-    logger.warning("psycopg2 no disponible para Community Feedback")
 
 
 class CommunityFeedbackManager:
@@ -38,142 +31,24 @@ class CommunityFeedbackManager:
     - Votación de estrategias (ARES V1, V2, etc.)
     - Sugerencias de mejora de usuarios
     - Tracking de contribuciones por usuario
+    
+    REFACTORIZADO: Usa DatabaseService centralizado
     """
     
-    def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
-        self.connected = False
+    def __init__(self, database_service=None):
+        """
+        Inicializar Community Feedback Manager
         
-        if self.db_url and PSYCOPG2_AVAILABLE:
-            try:
-                self._init_tables()
-                self.connected = True
-                logger.info("✅ CommunityFeedbackManager conectado")
-            except Exception as e:
-                logger.error(f"❌ Error inicializando feedback tables: {e}")
+        Args:
+            database_service: DatabaseManager o DatabaseServiceEnterprise instance
+        """
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+        
+        if self.connected:
+            logger.info("✅ CommunityFeedbackManager conectado a DatabaseService")
         else:
             logger.warning("⚠️ Database no disponible para Community Feedback")
-    
-    def _get_connection(self):
-        """Obtener conexión PostgreSQL"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
-            return None
-        return psycopg2.connect(self.db_url)
-    
-    def _init_tables(self):
-        """Crear tablas de feedback comunitario"""
-        conn = self._get_connection()
-        if not conn:
-            return
-        
-        try:
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS community_feedback (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    username TEXT,
-                    feedback_type TEXT NOT NULL,
-                    signal_type TEXT,
-                    strategy TEXT,
-                    symbol TEXT,
-                    result TEXT NOT NULL,
-                    market_condition TEXT,
-                    btc_price REAL,
-                    volatility TEXT,
-                    timeframe TEXT,
-                    comment TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    is_verified BOOLEAN DEFAULT false,
-                    helpful_votes INTEGER DEFAULT 0
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS strategy_votes (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    strategy TEXT NOT NULL,
-                    vote INTEGER NOT NULL,
-                    reason TEXT,
-                    market_condition TEXT,
-                    vote_date DATE DEFAULT CURRENT_DATE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(user_id, strategy, vote_date)
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS improvement_proposals (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    username TEXT,
-                    proposal_type TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    affected_strategy TEXT,
-                    priority TEXT DEFAULT 'medium',
-                    status TEXT DEFAULT 'pending',
-                    ai_analysis TEXT,
-                    community_votes INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    reviewed_at TIMESTAMP,
-                    implemented_at TIMESTAMP
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS user_contributions (
-                    user_id TEXT PRIMARY KEY,
-                    username TEXT,
-                    total_feedback INTEGER DEFAULT 0,
-                    helpful_feedback INTEGER DEFAULT 0,
-                    total_votes INTEGER DEFAULT 0,
-                    proposals_submitted INTEGER DEFAULT 0,
-                    proposals_accepted INTEGER DEFAULT 0,
-                    contribution_points INTEGER DEFAULT 0,
-                    contribution_level TEXT DEFAULT 'Novato',
-                    badges TEXT DEFAULT '[]',
-                    first_contribution TIMESTAMP,
-                    last_contribution TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS detected_patterns (
-                    id SERIAL PRIMARY KEY,
-                    pattern_type TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    affected_strategy TEXT,
-                    market_condition TEXT,
-                    confidence REAL NOT NULL,
-                    sample_size INTEGER NOT NULL,
-                    success_rate REAL,
-                    failure_rate REAL,
-                    suggestion TEXT,
-                    status TEXT DEFAULT 'detected',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    approved_at TIMESTAMP,
-                    implemented_at TIMESTAMP
-                )
-            ''')
-            
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_user ON community_feedback(user_id)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_strategy ON community_feedback(strategy)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_result ON community_feedback(result)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_strategy ON strategy_votes(strategy)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_patterns_status ON detected_patterns(status)')
-            
-            conn.commit()
-            logger.info("✅ Community Intelligence tables created")
-            
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"❌ Error creating community tables: {e}")
-            raise
-        finally:
-            conn.close()
     
     def submit_feedback(self, user_id: str, username: str, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -198,53 +73,21 @@ class CommunityFeedbackManager:
         Returns:
             Dict with success status and points earned
         """
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
-        try:
-            cursor = conn.cursor()
+        # Usar DatabaseService centralizado
+        result = self.db.submit_community_feedback(user_id, username, feedback_data)
+        
+        if result.get('success'):
+            # Actualizar contribuciones del usuario
+            points_earned = 5  # Puntos base por feedback
+            self.db.update_user_contributions(user_id, username, points_earned)
             
-            cursor.execute('''
-                INSERT INTO community_feedback 
-                (user_id, username, feedback_type, signal_type, strategy, symbol, 
-                 result, market_condition, btc_price, volatility, timeframe, comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            ''', (
-                user_id,
-                username,
-                feedback_data.get('feedback_type', 'signal'),
-                feedback_data.get('signal_type'),
-                feedback_data.get('strategy'),
-                feedback_data.get('symbol'),
-                feedback_data.get('result', 'unknown'),
-                feedback_data.get('market_condition'),
-                feedback_data.get('btc_price'),
-                feedback_data.get('volatility'),
-                feedback_data.get('timeframe'),
-                feedback_data.get('comment')
-            ))
-            
-            feedback_id = cursor.fetchone()[0]
-            
-            points_earned = self._update_user_contributions(cursor, user_id, username, 'feedback')
-            
-            conn.commit()
-            
-            return {
-                'success': True,
-                'feedback_id': feedback_id,
-                'points_earned': points_earned,
-                'message': f'Feedback registrado exitosamente (+{points_earned} puntos)'
-            }
-            
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"❌ Error submitting feedback: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()
+            result['points_earned'] = points_earned
+            result['message'] = f'Feedback registrado exitosamente (+{points_earned} puntos)'
+        
+        return result
     
     def vote_strategy(self, user_id: str, strategy: str, vote: int, reason: str = None, 
                      market_condition: str = None) -> Dict[str, Any]:
@@ -261,39 +104,21 @@ class CommunityFeedbackManager:
         if vote < 1 or vote > 5:
             return {'success': False, 'error': 'Vote must be between 1 and 5'}
         
-        conn = self._get_connection()
-        if not conn:
+        if not self.connected:
             return {'success': False, 'error': 'Database not available'}
         
-        try:
-            cursor = conn.cursor()
+        # Usar DatabaseService centralizado
+        result = self.db.vote_strategy(user_id, strategy, vote, reason)
+        
+        if result.get('success'):
+            # Actualizar contribuciones del usuario
+            points_earned = 2  # Puntos por voto
+            self.db.update_user_contributions(user_id, None, points_earned)
             
-            cursor.execute('''
-                INSERT INTO strategy_votes (user_id, strategy, vote, reason, market_condition, vote_date)
-                VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)
-                ON CONFLICT (user_id, strategy, vote_date) 
-                DO UPDATE SET vote = EXCLUDED.vote, reason = EXCLUDED.reason
-                RETURNING id
-            ''', (user_id, strategy, vote, reason, market_condition))
-            
-            vote_id = cursor.fetchone()[0]
-            points_earned = self._update_user_contributions(cursor, user_id, None, 'vote')
-            
-            conn.commit()
-            
-            return {
-                'success': True,
-                'vote_id': vote_id,
-                'points_earned': points_earned,
-                'message': f'Voto registrado: {strategy} = {vote}⭐ (+{points_earned} puntos)'
-            }
-            
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"❌ Error voting strategy: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            conn.close()
+            result['points_earned'] = points_earned
+            result['message'] = f'Voto registrado: {strategy} = {vote}⭐ (+{points_earned} puntos)'
+        
+        return result
     
     def submit_proposal(self, user_id: str, username: str, proposal_data: Dict[str, Any]) -> Dict[str, Any]:
         """

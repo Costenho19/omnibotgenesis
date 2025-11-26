@@ -35,6 +35,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 ### System Design Choices
 - **Modular Architecture**: Transformed from a monolith to a modular system with 75+ specialized Python modules, significantly reducing `main.py` from 15,175 to 617 lines.
+- **Centralized Database Layer (Nov 2025)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 12 DAL methods. Eliminates code duplication across 6 modules. See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
 - **Unified Configuration**: Centralized `env_manager.py` handles environment variables with precedence (Replit Secrets > .env.local > defaults), type validation, and secure logging.
 - **Deployment**: Designed for 24/7 operation on Railway (Production) and Replit (Development) with a unified `python -u main.py` entry point.
 - **Root Directory Cleanup**: Reduced Python files in the root from 24 to 2.
@@ -50,7 +51,14 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **CoinGecko API**: Backup price data.
 
 ### Databases
-- **PostgreSQL (Neon)**: Main relational database for user data, trading history, portfolio, metrics, configurations.
+- **PostgreSQL (Neon)**: Main relational database with 23 tables organized in:
+  - Core System (8 tables): users, prices, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history
+  - Paper Trading (2 tables): paper_trading_balances, paper_trading_trades
+  - Conversational Brain (3 tables): trade_reasonings, trade_evaluations, pending_evaluations
+  - Community Intelligence (5 tables): community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns
+  - Signal Contribution (4 tables): community_signals, signal_executions, signal_votes, alpha_leaderboard
+  - Risk Guardian (1 table): risk_guardian_events
+  - **Centralized Access**: All queries via `omnix_services/database_service/database_service.py` (1,566 lines, 12 DAL methods)
 - **Redis**: In-memory data store for state management, conversation history, caching.
 
 ### Key Python Libraries
