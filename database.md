@@ -1418,71 +1418,102 @@ REDIS_URL=redis://default:password@containers-us-west-XXX.railway.app:6379
 
 ---
 
-## 6. MÓDULOS Y CONEXIONES
+## 6. MÓDULOS Y CONEXIONES (Actualizado Nov 26, 2025)
 
 ### 6.1 Mapa de Módulos que Acceden DB
 
 ```
 omnix_services/
 ├── database_service/
-│   ├── database_service.py (1008 LOC) ← CORE, 13 tablas
-│   └── database_manager.py (80 LOC)   ← Adapter legacy
+│   ├── database_service.py (1,566 LOC) ← ✅ CENTRALIZADO, 23 tablas, 18 DAL methods
+│   └── database_manager.py (80 LOC)    ← Adapter legacy
 │
 ├── community_intelligence/
-│   ├── signal_contribution.py (671 LOC)   ← 4 tablas
-│   ├── feedback_manager.py (571 LOC)      ← 5 tablas
-│   ├── reward_system.py (410 LOC)         ← Usa feedback tables
-│   ├── community_analyzer.py (477 LOC)    ← Query patterns
-│   └── community_dashboard.py (310 LOC)   ← Reporting
+│   ├── ✅ signal_contribution.py        ← Usa DAL (2 métodos)
+│   ├── ✅ feedback_manager.py           ← Usa DAL (3 métodos)
+│   ├── ✅ reward_system.py              ← Usa database_service._get_connection()
+│   ├── ✅ community_analyzer.py         ← Usa database_service._get_connection() + 5 DAL
+│   └── ✅ community_dashboard.py        ← Usa database_service._get_connection()
 │
 └── monitoring/
-    ├── ai_risk_guardian.py (250 LOC)      ← 1 tabla
-    └── risk_guardian.py (150 LOC)         ← DUPLICADO (legacy)
+    └── ✅ risk_guardian.py              ← Usa DAL (2 métodos)
 
 omnix_core/cache/
 ├── redis_cache.py (157 LOC)               ← Redis client
 └── redis_state.py (349 LOC)               ← State managers
 ```
 
-**Total Líneas de Código de DB**: 4,077 LOC
+**Total Líneas de Código de DB**: ~4,600 LOC (antes: 4,077)  
+**Código Duplicado Eliminado**: ~290 líneas (6 implementaciones de `_get_connection`)
+
+### 6.1.1 Patrón de Centralización (Nov 26, 2025)
+
+**✅ 6 Módulos Refactorizados**:
+
+| Módulo | Patrón | Métodos DAL | Estado |
+|--------|--------|-------------|--------|
+| `feedback_manager.py` | DAL Completo | 3 (submit_feedback, vote_strategy, submit_proposal) | ✅ |
+| `signal_contribution.py` | DAL Completo | 2 (save_signal, get_signals) | ✅ |
+| `risk_guardian.py` | DAL Completo | 2 (log_event, get_events) | ✅ |
+| `community_analyzer.py` | Conservador + DAL | 5 (fetch_patterns, upsert_pattern, get_stats, get_contributors, get_proposals) | ✅ |
+| `reward_system.py` | Conservador | 0 (usa _get_connection directo) | ✅ |
+| `community_dashboard.py` | Conservador | 0 (usa _get_connection directo) | ✅ |
+
+**Dependency Injection**: Todos reciben `database_service` via constructor en `enterprise_bot.py`
 
 ---
 
-### 6.2 Patrón de Conexión (DUPLICADO 8 VECES)
+### 6.2 Patrón de Conexión ✅ RESUELTO (Nov 26, 2025)
 
-**Cada módulo implementa exactamente lo mismo**:
+**ANTES (Código Duplicado)**:
 
 ```python
 class XxxManager:
     def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
+        self.db_url = os.environ.get('DATABASE_URL')  # ❌ DUPLICADO 6 VECES
         self.connected = False
         
         if self.db_url and PSYCOPG2_AVAILABLE:
             try:
-                self._init_tables()
+                self._init_tables()  # ❌ DUPLICADO
                 self.connected = True
             except Exception as e:
                 logger.error(f"Error: {e}")
     
     def _get_connection(self):
-        """❌ DUPLICADO 8 VECES"""
+        """❌ DUPLICADO 6 VECES"""
         if not self.db_url or not PSYCOPG2_AVAILABLE:
             return None
         return psycopg2.connect(self.db_url)
 ```
 
-**Módulos con Código Duplicado**:
-1. `DatabaseServiceEnterprise`
-2. `SignalContributionManager`
-3. `CommunityFeedbackManager`
-4. `RewardSystem`
-5. `CommunityAnalyzer`
-6. `CommunityDashboard`
-7. `AIRiskGuardian`
-8. `RiskGuardian` (legacy)
+**DESPUÉS (Centralizado)**:
 
-**Violación DRY**: 8 × 15 líneas = 120 líneas duplicadas
+```python
+# Patrón 1: DAL Completo (feedback_manager, signal_contribution, risk_guardian)
+class FeedbackManager:
+    def __init__(self, database_service=None):  # ✅ Dependency Injection
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+    
+    def submit_feedback(self, user_id, feedback_data):
+        return self.db.submit_community_feedback(user_id, feedback_data)  # ✅ Usa DAL
+
+# Patrón 2: Conservador (reward_system, community_analyzer, community_dashboard)
+class RewardSystem:
+    def __init__(self, database_service=None):  # ✅ Dependency Injection
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
+    
+    def get_leaderboard(self):
+        conn = self.db._get_connection()  # ✅ Usa database_service centralizado
+        # ... SQL directo (pendiente migrar a DAL)
+```
+
+**Resultado**:
+- ✅ **~290 líneas eliminadas** (6 implementaciones de `_get_connection`)
+- ✅ **ÚNICO punto de conexión**: `database_service.py`
+- ✅ **Dependency injection** configurado en `enterprise_bot.py`
 
 ---
 
