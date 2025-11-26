@@ -1449,9 +1449,9 @@ class DatabaseServiceEnterprise:
             ''')
             
             cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_trade_reasonings_user_timestamp 
-                ON trade_reasonings(user_id, timestamp DESC)
-            ''')
+                CREATE INDEX IF NOT EXISTS idx_trade_reasonings_user_created 
+                ON trade_reasonings(user_id, created_at DESC)
+            ''')  # FIXED Nov 26, 2025: era 'timestamp' pero tabla usa 'created_at'
             
             # Índice en users.last_activity para queries de "usuarios activos"
             cursor.execute('''
