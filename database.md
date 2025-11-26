@@ -157,18 +157,18 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 
 ### 3.1 Resumen de Tablas (Actualizado Nov 26, 2025)
 
-**Total: 24 Tablas** (antes: 20)
+**Total: 23 Tablas** (antes: 24 → eliminada `prices` por desuso)
 
 | Categoría | Tablas | Función Principal |
 |-----------|--------|-------------------|
-| **Core System** (9) | users, user_contacts, prices, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history | Operación básica del sistema |
+| **Core System** (8) | users, user_contacts, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history | Operación básica del sistema |
 | **Paper Trading** (2) | paper_trading_balances, paper_trading_trades | Trading virtual $1M |
 | **Conversational Brain** (3) | trade_reasonings, trade_evaluations, pending_evaluations | Sistema único de auto-aprendizaje |
 | **Community Intelligence** (5) | community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns | Feedback y mejora continua |
 | **Signal Contribution** (4) | community_signals, signal_executions, signal_votes, alpha_leaderboard | Crowdsourcing de alpha |
 | **Risk Guardian** (1) | risk_guardian_events | AI Risk Guardian events |
 
-**NOTA**: Las 24 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
+**NOTA**: Las 23 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
 
 **Total de Columnas**: ~210 columnas  
 **Índices Creados**: 20+ índices  
@@ -296,42 +296,7 @@ user_id: "123456789" (Telegram)
 
 ---
 
-#### 3.2.3 `prices` - Precios Históricos de Mercado
-
-**Ubicación**: `omnix_services/database_service/database_service.py:338`
-
-```sql
-CREATE TABLE IF NOT EXISTS prices (
-    id SERIAL PRIMARY KEY,
-    symbol TEXT,                           -- 'BTC', 'ETH', 'SOL', etc.
-    price REAL,                            -- Precio actual
-    volume REAL,                           -- Volumen 24h
-    change_24h REAL,                       -- % cambio 24h
-    exchange TEXT,                         -- 'kraken', 'binance', etc.
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-**Uso**:
-- Guardado de precios históricos desde Kraken/exchanges
-- Base para backtesting y análisis técnico
-- Dashboard `/market` pull data de aquí
-
-**Problemas**:
-- ❌ **CRÍTICO**: No hay índices en `symbol`, `exchange`, `timestamp` → queries lentos
-- ❌ No hay constraint de `symbol` (acepta cualquier string)
-- ⚠️ REAL en vez de NUMERIC (pérdida de precisión en precios)
-- ⚠️ Tabla crece infinitamente (no hay TTL/archiving)
-
-**Recomendación**:
-```sql
-CREATE INDEX idx_prices_symbol_timestamp ON prices(symbol, timestamp DESC);
-CREATE INDEX idx_prices_exchange_symbol ON prices(exchange, symbol);
-```
-
----
-
-#### 3.2.4 `trades` - Historial de Trades Ejecutados
+#### 3.2.3 `trades` - Historial de Trades Ejecutados
 
 **Ubicación**: `omnix_services/database_service/database_service.py:351`
 
@@ -365,7 +330,7 @@ CREATE TABLE IF NOT EXISTS trades (
 
 ---
 
-#### 3.2.5 `analysis` - Análisis Técnicos Guardados
+#### 3.2.4 `analysis` - Análisis Técnicos Guardados
 
 **Ubicación**: `omnix_services/database_service/database_service.py:365`
 
@@ -393,7 +358,7 @@ CREATE TABLE IF NOT EXISTS analysis (
 
 ---
 
-#### 3.2.6 `conversations` - Historial de Conversaciones IA
+#### 3.2.5 `conversations` - Historial de Conversaciones IA
 
 **Ubicación**: `omnix_services/database_service/database_service.py:380`
 
@@ -422,7 +387,7 @@ CREATE TABLE IF NOT EXISTS conversations (
 
 ---
 
-#### 3.2.7 `whatsapp_messages` - Mensajes WhatsApp
+#### 3.2.6 `whatsapp_messages` - Mensajes WhatsApp
 
 **Ubicación**: `omnix_services/database_service/database_service.py:184`
 
@@ -448,7 +413,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
 
 ---
 
-#### 3.2.8 `sharia_validations` - Validaciones Sharia Compliance
+#### 3.2.7 `sharia_validations` - Validaciones Sharia Compliance
 
 **Ubicación**: `omnix_services/database_service/database_service.py:197`
 
@@ -474,7 +439,7 @@ CREATE TABLE IF NOT EXISTS sharia_validations (
 
 ---
 
-#### 3.2.9 `balance_history` - Historial de Balances
+#### 3.2.8 `balance_history` - Historial de Balances
 
 **Ubicación**: `omnix_services/database_service/database_service.py:210`
 
@@ -1888,16 +1853,7 @@ class RewardSystem:
 
 **Queries Lentos Detectados**:
 
-1. `prices` table (sin índices):
-```sql
--- ❌ SLOW (full table scan)
-SELECT * FROM prices WHERE symbol = 'BTC' AND timestamp > NOW() - INTERVAL '1 day';
-
--- ✅ FAST (con índice)
-CREATE INDEX idx_prices_symbol_timestamp ON prices(symbol, timestamp DESC);
-```
-
-2. `trades` table (sin índice en user_id):
+1. `trades` table (sin índice en user_id):
 ```sql
 -- ❌ SLOW
 SELECT * FROM trades WHERE user_id = '123456789' ORDER BY timestamp DESC LIMIT 10;
@@ -1906,7 +1862,7 @@ SELECT * FROM trades WHERE user_id = '123456789' ORDER BY timestamp DESC LIMIT 1
 CREATE INDEX idx_trades_user_timestamp ON trades(user_id, timestamp DESC);
 ```
 
-3. `conversations` table (sin índices):
+2. `conversations` table (sin índices):
 ```sql
 -- ❌ SLOW
 SELECT * FROM conversations WHERE user_id = '123' ORDER BY timestamp DESC LIMIT 10;
@@ -1918,7 +1874,6 @@ CREATE INDEX idx_conversations_user_timestamp ON conversations(user_id, timestam
 **Script de Fix**:
 ```sql
 -- Agregar índices faltantes
-CREATE INDEX CONCURRENTLY idx_prices_symbol_timestamp ON prices(symbol, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_trades_user_timestamp ON trades(user_id, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_conversations_user_timestamp ON conversations(user_id, timestamp DESC);
 CREATE INDEX CONCURRENTLY idx_users_last_activity ON users(last_activity DESC);
@@ -1940,7 +1895,6 @@ price NUMERIC(18,8)  -- $95,123.45678900 (exacto)
 ```
 
 **Tablas Afectadas**:
-- `prices.price` REAL → NUMERIC(18,8)
 - `trades.price` REAL → NUMERIC(18,8)
 - `trades.amount` REAL → NUMERIC(20,10)
 - `balance_history.total_usd` REAL → NUMERIC(18,8)
@@ -2014,16 +1968,14 @@ PostgreSQL (conversations table)
 
 **Tablas que crecen sin límite**:
 
-1. `prices` → 1 row cada 5 min = 288 rows/día × 365 = 105K rows/año
-2. `conversations` → No tiene TTL
-3. `pending_evaluations` → completed/failed se acumulan
-4. `risk_guardian_events` → No tiene partitioning
+1. `conversations` → No tiene TTL
+2. `pending_evaluations` → completed/failed se acumulan
+3. `risk_guardian_events` → No tiene partitioning
 
 **Solución**: Implementar archiving
 
 ```sql
 -- Cleanup automático con pg_cron (extension)
-DELETE FROM prices WHERE timestamp < NOW() - INTERVAL '90 days';
 DELETE FROM conversations WHERE timestamp < NOW() - INTERVAL '1 year';
 DELETE FROM pending_evaluations WHERE status = 'completed' AND processed_at < NOW() - INTERVAL '30 days';
 ```
@@ -2350,10 +2302,9 @@ CREATE TABLE user_contacts (
 ### 10.1 Listado Completo de Tablas
 
 ```sql
--- CORE SYSTEM (9 tablas)
+-- CORE SYSTEM (8 tablas)
 users
 user_contacts
-prices
 trades
 analysis
 conversations
@@ -2387,9 +2338,9 @@ alpha_leaderboard
 risk_guardian_events
 ```
 
-**Total**: 24 tablas (Actualizado Nov 26, 2025 - FASE 1 Modernización)  
-**Columnas**: ~210 columnas  
-**Índices**: 20+ índices  
+**Total**: 23 tablas (Actualizado Nov 26, 2025 - Eliminada `prices` por desuso)  
+**Columnas**: ~203 columnas  
+**Índices**: 18+ índices  
 **Métodos DAL**: 22 métodos (database_service.py: 13 originales + 5 Community Intelligence + 4 User Contacts)  
 
 ---
