@@ -35,7 +35,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 ### System Design Choices
 - **Modular Architecture**: Transformed from a monolith to a modular system with 75+ specialized Python modules, significantly reducing `main.py` from 15,175 to 617 lines.
-- **Centralized Database Layer (Nov 2025)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 12 DAL methods. Eliminates code duplication across 6 modules. See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
+- **Centralized Database Layer (Nov 2025)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 13 DAL methods. **3 critical modules refactored** (feedback_manager, signal_contribution, risk_guardian) eliminating ~250 lines of duplicate database code across modules. All modules now use Data Access Layer pattern. See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
 - **Unified Configuration**: Centralized `env_manager.py` handles environment variables with precedence (Replit Secrets > .env.local > defaults), type validation, and secure logging.
 - **Deployment**: Designed for 24/7 operation on Railway (Production) and Replit (Development) with a unified `python -u main.py` entry point.
 - **Root Directory Cleanup**: Reduced Python files in the root from 24 to 2.
