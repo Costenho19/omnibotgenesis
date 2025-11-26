@@ -76,41 +76,74 @@
     │   PostgreSQL      │   │      Redis        │
     │   (Neon Hosted)   │   │  (Optional Cache) │
     │                   │   │                   │
-    │  • 20 Tablas      │   │  • ConversationHx │
+    │  • 23 Tablas      │   │  • ConversationHx │
     │  • Persistencia   │   │  • UserPrefs      │
-    │  • 4,077 LOC      │   │  • MarketContext  │
-    │  • Raw SQL        │   │  • Rate Limiting  │
+    │  • 18 DAL Methods │   │  • MarketContext  │
+    │  • Centralizado   │   │  • Rate Limiting  │
     └───────────────────┘   └───────────────────┘
             │                       │
-    ┌───────┴───────────────────────┴────────┐
-    │         Módulos que Acceden DB         │
-    ├────────────────────────────────────────┤
-    │  1. database_service (core, 1008 LOC)  │
-    │  2. signal_contribution (671 LOC)      │
-    │  3. feedback_manager (571 LOC)         │
-    │  4. reward_system (410 LOC)            │
-    │  5. community_analyzer (477 LOC)       │
-    │  6. community_dashboard (310 LOC)      │
-    │  7. ai_risk_guardian (250 LOC)         │
-    │  8. risk_guardian (legacy, 150 LOC)    │
-    └────────────────────────────────────────┘
+            │                       │
+    ┌───────▼───────────────────────┴────────────┐
+    │   🎯 DATABASE_SERVICE (Centralizado)       │
+    │   omnix_services/database_service/         │
+    │                                            │
+    │   • 1,566 LOC (antes: 1,008)               │
+    │   • 18 métodos DAL (13 + 5 nuevos)         │
+    │   • 23 tablas centralizadas                │
+    │   • Dependency Injection configurado       │
+    └────────────────────────────────────────────┘
+            │
+    ┌───────┴───────────────────────────────────┐
+    │    Módulos Community Intelligence         │
+    │    (Refactorizados Nov 26, 2025)          │
+    ├───────────────────────────────────────────┤
+    │  ✅ DAL Completo (3):                     │
+    │   1. feedback_manager                     │
+    │   2. signal_contribution                  │
+    │   3. risk_guardian                        │
+    │                                           │
+    │  ✅ Patrón Conservador (3):               │
+    │   4. community_analyzer                   │
+    │   5. reward_system                        │
+    │   6. community_dashboard                  │
+    └───────────────────────────────────────────┘
 ```
 
-### 2.2 Flujo de Datos
+### 2.2 Flujo de Datos (Actualizado Nov 26, 2025)
 
 ```
-Usuario Telegram → enterprise_bot.py
+Usuario Telegram → enterprise_bot.py (dependency injection)
                         │
                         ├─→ Conversación AI → Redis (history, state)
                         │
-                        ├─→ Trading Commands → PostgreSQL (trades, balance)
+                        ├─→ Trading Commands → database_service → PostgreSQL (trades, balance)
+                        │                          ↑
+                        │                    (DAL Methods)
                         │
-                        ├─→ Signal Sharing → PostgreSQL (community_signals)
+                        ├─→ Signal Sharing → signal_contribution → database_service
+                        │                                              ↓
+                        │                                          PostgreSQL
                         │
-                        └─→ Feedback → PostgreSQL (community_feedback)
-                                           │
-                                           └─→ Analyzer AI → detected_patterns
+                        └─→ Feedback → feedback_manager → database_service
+                                                             ↓
+                                                         PostgreSQL
+                                                             │
+                                                             └─→ community_analyzer
+                                                                 (AI Gemini pattern detection)
+                                                                 → detected_patterns table
 ```
+
+### 2.3 Patrón de Centralización (Nov 26, 2025)
+
+**6 Módulos Refactorizados**:
+- **Patrón DAL Completo** (3): Usan métodos DAL exclusivamente
+- **Patrón Conservador** (3): Usan `database_service._get_connection()` + SQL directo
+
+**Beneficios**:
+- ✅ ~290 líneas de código duplicado eliminadas
+- ✅ Único punto de conexión a base de datos
+- ✅ Dependency injection configurado en `enterprise_bot.py`
+- ✅ NO más `_get_connection()` duplicado en 6 módulos
 
 ---
 
