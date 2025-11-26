@@ -36,24 +36,21 @@ class CommunityDashboard:
     - Reportes para Harold
     """
     
-    def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
-        self.connected = PSYCOPG2_AVAILABLE and bool(self.db_url)
+    def __init__(self, database_service=None):
+        self.db = database_service
+        self.connected = self.db is not None and self.db.connected
         
         if self.connected:
-            logger.info("✅ CommunityDashboard conectado")
-    
-    def _get_connection(self):
-        """Obtener conexión PostgreSQL"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
-            return None
-        return psycopg2.connect(self.db_url)
+            logger.info("✅ CommunityDashboard conectado a database_service centralizado")
     
     def get_global_stats(self) -> Dict[str, Any]:
         """
         Obtener estadísticas globales de la comunidad
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return self._get_empty_stats()
+        
+        conn = self.db._get_connection()
         if not conn:
             return self._get_empty_stats()
         
@@ -165,7 +162,10 @@ class CommunityDashboard:
         """
         Obtener ranking de estrategias basado en feedback y votos
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return []
+        
+        conn = self.db._get_connection()
         if not conn:
             return []
         
@@ -247,7 +247,10 @@ class CommunityDashboard:
         """
         Obtener insights de tendencias recientes
         """
-        conn = self._get_connection()
+        if not self.connected:
+            return {'success': False, 'trends': []}
+        
+        conn = self.db._get_connection()
         if not conn:
             return {'success': False, 'trends': []}
         

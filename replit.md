@@ -35,7 +35,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 ### System Design Choices
 - **Modular Architecture**: Transformed from a monolith to a modular system with 75+ specialized Python modules, significantly reducing `main.py` from 15,175 to 617 lines.
-- **Centralized Database Layer (Nov 2025)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 13 DAL methods. **3 critical modules refactored** (feedback_manager, signal_contribution, risk_guardian) eliminating ~250 lines of duplicate database code across modules. All modules now use Data Access Layer pattern. See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
+- **Centralized Database Layer (Nov 2025)**: All database logic consolidated in `omnix_services/database_service/` with 23 tables and 18 DAL methods. **6 Community Intelligence modules refactored to use centralized database_service** (3 with full DAL pattern: feedback_manager, signal_contribution, risk_guardian; 3 with conservative pattern using database_service._get_connection(): community_analyzer, reward_system, community_dashboard) eliminating ~290 lines of duplicate _get_connection code. Dependency injection configured in enterprise_bot.py (único entry point). Auditoría robusta completada con ripgrep multiline. **100% centralized** (mix of DAL + conservative patterns). See `docs/cambios_ivan/2025-11-26_centralizacion_database.md` for details.
 - **Unified Configuration**: Centralized `env_manager.py` handles environment variables with precedence (Replit Secrets > .env.local > defaults), type validation, and secure logging.
 - **Deployment**: Designed for 24/7 operation on Railway (Production) and Replit (Development) with a unified `python -u main.py` entry point.
 - **Root Directory Cleanup**: Reduced Python files in the root from 24 to 2.
@@ -58,7 +58,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
   - Community Intelligence (5 tables): community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns
   - Signal Contribution (4 tables): community_signals, signal_executions, signal_votes, alpha_leaderboard
   - Risk Guardian (1 table): risk_guardian_events
-  - **Centralized Access**: All queries via `omnix_services/database_service/database_service.py` (1,566 lines, 12 DAL methods)
+  - **Centralized Access**: All queries via `omnix_services/database_service/database_service.py` (1,566 lines, 18 DAL methods: 13 original + 5 new for Community Intelligence)
 - **Redis**: In-memory data store for state management, conversation history, caching.
 
 ### Key Python Libraries

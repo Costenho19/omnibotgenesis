@@ -272,12 +272,12 @@ class EnterpriseTelegramBot:
                 self.feedback_manager = CommunityFeedbackManager(database_service=self.db_manager)
                 self.community_analyzer = CommunityAnalyzer(database_service=self.db_manager)
                 self.reward_system = RewardSystem(database_service=self.db_manager)
-                self.community_dashboard = CommunityDashboard()
+                self.community_dashboard = CommunityDashboard(database_service=self.db_manager)
                 logger.info("🧠 Community Intelligence ACTIVADO - Memoria Colectiva")
                 logger.info(f"   📝 Feedback Manager: {'✅ Connected' if self.feedback_manager.connected else '❌ Disconnected'}")
                 logger.info(f"   🔍 Community Analyzer: {'✅ AI Enabled' if self.community_analyzer.ai_available else '⚠️ AI Not Available'}")
                 logger.info(f"   🏆 Reward System: {'✅ Connected' if self.reward_system.connected else '❌ Disconnected'}")
-                logger.info(f"   📊 Community Dashboard: ✅ Ready")
+                logger.info(f"   📊 Community Dashboard: {'✅ Connected' if self.community_dashboard.connected else '❌ Disconnected'}")
             except Exception as e:
                 logger.warning(f"⚠️ Community Intelligence error: {e}")
                 self.feedback_manager = None

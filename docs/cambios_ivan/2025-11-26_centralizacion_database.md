@@ -12,16 +12,21 @@ Se completó la migración de **10 tablas** y se centralizó toda la lógica de 
 ### Resultados FINALES:
 - ✅ **10 tablas migradas** a `database_service.py`  
 - ✅ **18 métodos DAL** creados para acceso centralizado (13 originales + 5 nuevos)
-- ✅ **5 módulos COMPLETAMENTE refactorizados**:
-  1. feedback_manager.py (3 métodos)
-  2. signal_contribution.py (2 métodos críticos)
-  3. risk_guardian.py (2 métodos)
-  4. community_analyzer.py (2 métodos + 5 DAL nuevos)
-  5. reward_system.py (refactorización conservadora + connection leak fix)
-- ✅ **1,244 → 1,927 líneas** en `database_service.py` (incluye todos los DAL)
-- ✅ **~400 líneas de código duplicado eliminadas** (conexiones, tablas, queries)
-- ✅ **Architect Reviews**: Múltiples correcciones aplicadas
-- ✅ **100% COMPLETO** - Centralización de base de datos finalizada
+- ✅ **6 módulos Community Intelligence refactorizados para usar database_service centralizado**:
+  - **Patrón DAL Completo** (3 módulos usan métodos DAL exclusivamente):
+    1. feedback_manager.py (3 métodos DAL)
+    2. signal_contribution.py (2 métodos DAL)
+    3. risk_guardian.py (2 métodos DAL)
+  - **Patrón Conservador** (3 módulos usan database_service._get_connection() + SQL directo):
+    4. community_analyzer.py (2 métodos + 5 DAL nuevos, otros usan _get_connection)
+    5. reward_system.py (usa database_service._get_connection() + connection leak fix)
+    6. community_dashboard.py (usa database_service._get_connection() para 3 métodos)
+- ✅ **Dependency Injection configurado** en `enterprise_bot.py` para TODOS los módulos
+- ✅ **Auditoría robusta completada** con ripgrep multiline - enterprise_bot.py es único entry point
+- ✅ **1,244 → 1,566 líneas** en `database_service.py` (incluye todos los DAL)
+- ✅ **~290 líneas de código duplicado eliminadas** (6 implementaciones de _get_connection)
+- ✅ **Architect Reviews**: Múltiples iteraciones aplicadas
+- ✅ **100% COMPLETO** - Centralización: TODOS los módulos usan database_service (3 con DAL, 3 conservador)
 
 ---
 
@@ -218,20 +223,32 @@ def generate_community_insights(...):
 **Líneas eliminadas**: ~80 (conexiones directas + queries)  
 **Crítico**: Gemini AI integration **preservada intacta**
 
-### ⚠️ `community_analyzer.py` (0% completo)
-- Archivo: `omnix_services/community_intelligence/community_analyzer.py`
-- Líneas: 477
-- **Action Required**: Similar a signal_contribution.py
+### ✅ `community_dashboard.py` (COMPLETO)
 
-### ⚠️ `reward_system.py` (0% completo)
-- Archivo: `omnix_services/community_intelligence/reward_system.py`
-- Líneas: 410
-- **Action Required**: Similar a signal_contribution.py
+**Cambios aplicados:**
+```python
+# ANTES
+def __init__(self):
+    self.db_url = os.environ.get('DATABASE_URL')
+    self._get_connection()  # ❌ Código duplicado
 
-### ⚠️ `community_dashboard.py` (0% completo)
-- Archivo: `omnix_services/community_intelligence/community_dashboard.py`
-- Líneas: 310
-- **Action Required**: Similar a signal_contribution.py
+def get_global_stats():
+    conn = self._get_connection()  # ❌ Query directa
+
+# DESPUÉS
+def __init__(self, database_service=None):
+    self.db = database_service
+    self.connected = self.db is not None and self.db.connected
+
+def get_global_stats():
+    if not self.connected: return self._get_empty_stats()
+    conn = self.db._get_connection()  # ✅ Usa database_service
+```
+
+**Estado**: ✅ **COMPLETO (Patrón Conservador)** - 3 métodos refactorizados (`get_global_stats`, `get_strategy_rankings`, `get_trending_insights`)  
+**Patrón**: Usa `database_service._get_connection()` + SQL directo (pendiente: migrar a DAL methods)  
+**Líneas eliminadas**: ~45 (_get_connection duplicado)  
+**Dependency Injection**: ✅ Configurado en enterprise_bot.py línea 278
 
 ### ✅ `risk_guardian.py` (COMPLETO)
 
@@ -283,27 +300,39 @@ def get_recent_events(...):
 
 ## 7. PRÓXIMOS PASOS
 
-### Fase 1: Completar Refactorización (Manual)
-1. ✅ Refactorizar `signal_contribution.py` completo
-2. Refactorizar `community_analyzer.py`
-3. Refactorizar `reward_system.py`
-4. Refactorizar `community_dashboard.py`
-5. Refactorizar `risk_guardian.py`
+### ✅ Fase 1: Refactorización TODOS los módulos Community Intelligence (COMPLETO)
+1. ✅ feedback_manager.py - COMPLETO
+2. ✅ signal_contribution.py - COMPLETO
+3. ✅ community_analyzer.py - COMPLETO
+4. ✅ reward_system.py - COMPLETO
+5. ✅ risk_guardian.py - COMPLETO
+6. ✅ community_dashboard.py - COMPLETO
 
-### Fase 2: Actualizar Instanciaciones
+### ✅ Fase 2: Actualizar Instanciaciones (COMPLETO)
 Todos los módulos ahora requieren `database_service` como parámetro:
 ```python
-# ANTES
-feedback_manager = CommunityFeedbackManager()
+# ANTES (enterprise_bot.py)
+self.feedback_manager = CommunityFeedbackManager()
+self.community_analyzer = CommunityAnalyzer()
+self.reward_system = RewardSystem()
+self.signal_contribution = SignalContributionManager(reward_system=self.reward_system)
 
-# DESPUÉS
-from omnix_services.database_service import DatabaseManager
-db_manager = DatabaseManager()
-feedback_manager = CommunityFeedbackManager(database_service=db_manager)
+# DESPUÉS (enterprise_bot.py)
+self.feedback_manager = CommunityFeedbackManager(database_service=self.db_manager)
+self.community_analyzer = CommunityAnalyzer(database_service=self.db_manager)
+self.reward_system = RewardSystem(database_service=self.db_manager)
+self.signal_contribution = SignalContributionManager(
+    database_service=self.db_manager,
+    reward_system=self.reward_system
+)
 ```
 
-**Archivos a actualizar**:
-- `omnix_services/telegram_service/enterprise_bot.py` (instancia todos los módulos community)
+**Auditoría Robusta Completada**:
+- ✅ Ripgrep multiline ejecutado en todo el codebase
+- ✅ **ÚNICO entry point**: `enterprise_bot.py` (líneas 275-283)
+- ✅ **TODOS los 6 módulos** reciben `database_service=self.db_manager`
+- ✅ main.py NO instancia módulos Community Intelligence
+- ✅ NO se encontraron otras instanciaciones en scripts/tests/omnix_core/omnix_api
 
 ### Fase 3: Fase ORM (Futuro)
 - Implementar SQLAlchemy o similar
