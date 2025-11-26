@@ -149,9 +149,9 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 
 ## 3. POSTGRESQL - ANÁLISIS DETALLADO
 
-### 3.1 Resumen de Tablas
+### 3.1 Resumen de Tablas (Actualizado Nov 26, 2025)
 
-**Total: 20 Tablas**
+**Total: 23 Tablas** (antes: 20)
 
 | Categoría | Tablas | Función Principal |
 |-----------|--------|-------------------|
@@ -160,11 +160,14 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 | **Conversational Brain** (3) | trade_reasonings, trade_evaluations, pending_evaluations | Sistema único de auto-aprendizaje |
 | **Community Intelligence** (5) | community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns | Feedback y mejora continua |
 | **Signal Contribution** (4) | community_signals, signal_executions, signal_votes, alpha_leaderboard | Crowdsourcing de alpha |
-| **Monitoring** (1) | risk_guardian_events | AI Risk Guardian events |
+| **Risk Guardian** (1) | risk_guardian_events | AI Risk Guardian events |
 
-**Total de Columnas**: ~180 columnas  
+**NOTA**: Las 23 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
+
+**Total de Columnas**: ~200 columnas  
 **Índices Creados**: 15+ índices  
-**Constraints**: PRIMARY KEY, UNIQUE, CHECK, REFERENCES (FK)
+**Constraints**: PRIMARY KEY, UNIQUE, CHECK, REFERENCES (FK)  
+**Métodos DAL**: 18 métodos (13 originales + 5 nuevos Community Intelligence)
 
 ---
 
