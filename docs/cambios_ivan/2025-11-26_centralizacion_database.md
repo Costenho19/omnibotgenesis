@@ -13,12 +13,13 @@ Se completó la migración de **10 tablas** y se centralizó toda la lógica de 
 - ✅ **10 tablas migradas** a `database_service.py`  
 - ✅ **18 métodos DAL** creados para acceso centralizado (13 originales + 5 nuevos)
 - ✅ **6 módulos Community Intelligence refactorizados para usar database_service centralizado**:
-  - **Patrón DAL Completo** (3 módulos usan métodos DAL exclusivamente):
+  - **Patrón DAL Completo** (2 módulos usan métodos DAL exclusivamente):
     1. feedback_manager.py (3 métodos DAL)
-    2. signal_contribution.py (2 métodos DAL)
-    3. risk_guardian.py (2 métodos DAL)
+    2. risk_guardian.py (2 métodos DAL)
+  - **Patrón Mixto** (1 módulo usa DAL + conservador):
+    3. signal_contribution.py (2 métodos DAL: save/get_signals + 5 métodos conservadores: vote/execute/report/leaderboard/user_signals)
   - **Patrón Conservador** (3 módulos usan database_service._get_connection() + SQL directo):
-    4. community_analyzer.py (2 métodos + 5 DAL nuevos, otros usan _get_connection)
+    4. community_analyzer.py (5 DAL + conservador para otros métodos)
     5. reward_system.py (usa database_service._get_connection() + connection leak fix)
     6. community_dashboard.py (usa database_service._get_connection() para 3 métodos)
 - ✅ **Dependency Injection configurado** en `enterprise_bot.py` para TODOS los módulos

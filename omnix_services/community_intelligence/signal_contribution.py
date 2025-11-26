@@ -166,7 +166,7 @@ class SignalContributionManager:
         """
         👍/👎 Votar una señal
         """
-        conn = self._get_connection()
+        conn = self.db._get_connection() if self.connected else None
         if not conn:
             return {'success': False, 'error': 'Database no disponible'}
         
@@ -218,7 +218,7 @@ class SignalContributionManager:
         """
         ▶️ Registrar que un usuario ejecutó una señal
         """
-        conn = self._get_connection()
+        conn = self.db._get_connection() if self.connected else None
         if not conn:
             return {'success': False, 'error': 'Database no disponible'}
         
@@ -280,7 +280,7 @@ class SignalContributionManager:
         """
         📊 Reportar resultado de una señal ejecutada
         """
-        conn = self._get_connection()
+        conn = self.db._get_connection() if self.connected else None
         if not conn:
             return {'success': False, 'error': 'Database no disponible'}
         
@@ -357,7 +357,7 @@ class SignalContributionManager:
         """
         🏆 Obtener ranking de mejores contribuidores de señales
         """
-        conn = self._get_connection()
+        conn = self.db._get_connection() if self.connected else None
         if not conn:
             return []
         
@@ -395,7 +395,7 @@ class SignalContributionManager:
         """
         📊 Obtener estadísticas de señales de un usuario
         """
-        conn = self._get_connection()
+        conn = self.db._get_connection() if self.connected else None
         if not conn:
             return {}
         

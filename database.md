@@ -58,7 +58,7 @@
    - ~120 líneas (método `_init_tables_DEPRECATED` en signal_contribution.py)
 3. **✅ DEPENDENCY INJECTION**: Todos los módulos ahora reciben `database_service` via constructor
 4. **✅ 18 MÉTODOS DAL**: Capa de acceso a datos centralizada con 18 métodos (13 originales + 5 nuevos)
-5. **✅ PATRÓN MIXTO**: 3 módulos con DAL completo + 3 módulos con patrón conservador (database_service._get_connection())
+5. **✅ PATRÓN MIXTO**: 2 módulos con DAL completo + 1 módulo mixto (DAL + conservador) + 3 módulos conservadores
 6. **✅ ÚNICA FUENTE DE VERDAD**: Todas las 23 tablas definidas SOLO en database_service.py (limpieza final completada)
 
 ---
@@ -1456,9 +1456,9 @@ omnix_core/cache/
 | Módulo | Patrón | Métodos DAL | Estado |
 |--------|--------|-------------|--------|
 | `feedback_manager.py` | DAL Completo | 3 (submit_feedback, vote_strategy, submit_proposal) | ✅ |
-| `signal_contribution.py` | DAL Completo | 2 (save_signal, get_signals) | ✅ |
 | `risk_guardian.py` | DAL Completo | 2 (log_event, get_events) | ✅ |
-| `community_analyzer.py` | Conservador + DAL | 5 (fetch_patterns, upsert_pattern, get_stats, get_contributors, get_proposals) | ✅ |
+| `signal_contribution.py` | Mixto (DAL + Conservador) | 2 DAL (save_signal, get_signals) + 5 conservadores | ✅ |
+| `community_analyzer.py` | Mixto (DAL + Conservador) | 5 DAL + otros conservadores | ✅ |
 | `reward_system.py` | Conservador | 0 (usa _get_connection directo) | ✅ |
 | `community_dashboard.py` | Conservador | 0 (usa _get_connection directo) | ✅ |
 
