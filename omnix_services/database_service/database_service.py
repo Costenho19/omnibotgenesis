@@ -65,9 +65,13 @@ class DatabaseServiceEnterprise:
         
         try:
             logger.info("🔌 Intentando conectar a PostgreSQL...")
+            
+            # 🔄 EJECUTAR MIGRACIÓN A USERS V2 (si es necesario)
+            self._migrate_users_to_v2()
+            
             self._init_tables()
             self.connected = True
-            logger.info("✅ PostgreSQL: 13 tablas inicializadas")
+            logger.info("✅ PostgreSQL: 25 tablas inicializadas")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
             logger.info("=" * 70)
         except Exception as e:
@@ -93,6 +97,193 @@ class DatabaseServiceEnterprise:
             return None
         return psycopg2.connect(self.db_url)
     
+    def _migrate_users_to_v2(self):
+        """
+        🔄 MIGRACIÓN CONSERVADORA: Modernización progresiva sin romper compatibilidad
+        
+        Estrategia:
+        - Agregar columnas nuevas a users SIN eliminar user_id (backward compatible)
+        - Crear tabla user_contacts para normalización
+        - Mejorar whatsapp_messages progresivamente
+        - Mantener 100% compatibilidad con código existente
+        
+        FECHA: Nov 26, 2025
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            # ✅ Verificar si la tabla users existe
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'users' 
+                    AND table_schema = 'public'
+                )
+            """)
+            users_exists = cursor.fetchone()[0]
+            
+            if not users_exists:
+                logger.info("✅ Fresh deployment: users table no existe, saltando migración")
+                logger.info("   _init_tables() creará el schema correcto")
+                conn.close()
+                return
+            
+            # Verificar si la migración ya se ejecutó
+            cursor.execute("""
+                SELECT column_name, data_type 
+                FROM information_schema.columns 
+                WHERE table_name = 'users' AND column_name = 'total_profit'
+            """)
+            profit_column = cursor.fetchone()
+            
+            # Si total_profit ya es NUMERIC, la migración ya se ejecutó
+            if profit_column and 'numeric' in profit_column[1]:
+                logger.info("✅ Migración ya completada (total_profit es NUMERIC)")
+                conn.close()
+                return
+            
+            logger.info("🔄 Iniciando MIGRACIÓN FASE 1: Mejoras ADD-ONLY (backward compatible)")
+            logger.info("   Detectada tabla users existente, aplicando ALTER TABLE...")
+            
+            # Habilitar extensión UUID
+            cursor.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+            
+            # ========================================
+            # FASE 1: AGREGAR COLUMNAS NUEVAS A USERS
+            # (Mantener user_id TEXT como PK - NO romper nada)
+            # ========================================
+            
+            # Agregar columna email
+            cursor.execute('''
+                ALTER TABLE users 
+                ADD COLUMN IF NOT EXISTS email TEXT UNIQUE
+            ''')
+            
+            # Agregar columna is_active
+            cursor.execute('''
+                ALTER TABLE users 
+                ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
+            ''')
+            
+            # Agregar columna updated_at
+            cursor.execute('''
+                ALTER TABLE users 
+                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            ''')
+            
+            # Cambiar total_profit de REAL a NUMERIC (con validación)
+            logger.info("  Migrando total_profit: REAL → NUMERIC(18,8)...")
+            cursor.execute('''
+                ALTER TABLE users 
+                ALTER COLUMN total_profit TYPE NUMERIC(18,8) 
+                USING COALESCE(total_profit::NUMERIC(18,8), 0)
+            ''')
+            
+            # Agregar CHECK constraint en risk_tolerance (si no existe)
+            cursor.execute('''
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint 
+                        WHERE conname = 'check_risk_tolerance'
+                    ) THEN
+                        ALTER TABLE users ADD CONSTRAINT check_risk_tolerance 
+                        CHECK (risk_tolerance IN ('low', 'medium', 'high', 'aggressive'));
+                    END IF;
+                END $$
+            ''')
+            
+            # Agregar CHECK constraint en total_trades
+            cursor.execute('''
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint 
+                        WHERE conname = 'check_total_trades'
+                    ) THEN
+                        ALTER TABLE users ADD CONSTRAINT check_total_trades 
+                        CHECK (total_trades >= 0);
+                    END IF;
+                END $$
+            ''')
+            
+            # Crear índices nuevos
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active) WHERE is_active = true')
+            
+            logger.info("✅ Columnas nuevas agregadas a users")
+            
+            # ========================================
+            # CREAR TABLA user_contacts (NORMALIZACIÓN 3NF)
+            # FK a users.user_id TEXT (no UUID todavía)
+            # ========================================
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_contacts (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                    contact_type TEXT NOT NULL 
+                        CHECK (contact_type IN ('whatsapp', 'telegram', 'email', 'phone', 'sms')),
+                    contact_value TEXT NOT NULL,
+                    is_verified BOOLEAN DEFAULT false,
+                    verified_at TIMESTAMP WITH TIME ZONE,
+                    is_primary BOOLEAN DEFAULT false,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, contact_type, contact_value)
+                )
+            ''')
+            
+            # Índices para user_contacts
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_user ON user_contacts(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_type ON user_contacts(contact_type, is_verified)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_primary ON user_contacts(user_id, is_primary) WHERE is_primary = true')
+            
+            logger.info("✅ Tabla user_contacts creada")
+            
+            # Migrar whatsapp_number → user_contacts
+            cursor.execute('''
+                INSERT INTO user_contacts (user_id, contact_type, contact_value, is_verified, is_primary)
+                SELECT 
+                    user_id,
+                    'whatsapp' as contact_type,
+                    whatsapp_number as contact_value,
+                    false as is_verified,
+                    true as is_primary
+                FROM users
+                WHERE whatsapp_number IS NOT NULL AND whatsapp_number != ''
+                ON CONFLICT (user_id, contact_type, contact_value) DO NOTHING
+            ''')
+            
+            migrated_contacts = cursor.rowcount
+            logger.info(f"✅ Migrados {migrated_contacts} contactos WhatsApp a user_contacts")
+            
+            # Commit
+            conn.commit()
+            logger.info("🎉 MIGRACIÓN FASE 1 COMPLETADA EXITOSAMENTE")
+            logger.info("   - users mejorada (email, is_active, updated_at, NUMERIC)")
+            logger.info("   - CHECK constraints agregados")
+            logger.info("   - user_contacts creada (3NF normalización)")
+            logger.info(f"   - {migrated_contacts} contactos normalizados")
+            logger.info("   - ✅ 100% BACKWARD COMPATIBLE (user_id TEXT preservado)")
+            
+        except Exception as e:
+            logger.error(f"❌ ERROR EN MIGRACIÓN: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    
     def _init_tables(self):
         """Inicializar todas las tablas del sistema"""
         if not self.db_url or not PSYCOPG2_AVAILABLE:
@@ -105,7 +296,11 @@ class DatabaseServiceEnterprise:
         try:
             cursor = conn.cursor()
             
-            # Tabla de usuarios
+            # Habilitar extensión UUID (si no existe)
+            cursor.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+            
+            # Tabla de usuarios (MEJORADA FASE 1 - Nov 26, 2025)
+            # Mantiene user_id TEXT como PK para backward compatibility
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS users (
                     user_id TEXT PRIMARY KEY,
@@ -114,13 +309,44 @@ class DatabaseServiceEnterprise:
                     language_code TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     total_trades INTEGER DEFAULT 0,
-                    total_profit REAL DEFAULT 0,
+                    total_profit NUMERIC(18,8) DEFAULT 0,
                     risk_tolerance TEXT DEFAULT 'medium',
                     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     whatsapp_number TEXT,
-                    notifications_enabled BOOLEAN DEFAULT true
+                    notifications_enabled BOOLEAN DEFAULT true,
+                    email TEXT UNIQUE,
+                    is_active BOOLEAN DEFAULT true,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
+            
+            # Índices para users
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active) WHERE is_active = true')
+            
+            # Tabla de contactos de usuario (NUEVA - Nov 26, 2025)
+            # FK a users.user_id TEXT (backward compatible)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_contacts (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                    contact_type TEXT NOT NULL 
+                        CHECK (contact_type IN ('whatsapp', 'telegram', 'email', 'phone', 'sms')),
+                    contact_value TEXT NOT NULL,
+                    is_verified BOOLEAN DEFAULT false,
+                    verified_at TIMESTAMP WITH TIME ZONE,
+                    is_primary BOOLEAN DEFAULT false,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, contact_type, contact_value)
+                )
+            ''')
+            
+            # Índices para user_contacts
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_user ON user_contacts(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_type ON user_contacts(contact_type, is_verified)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_contacts_primary ON user_contacts(user_id, is_primary) WHERE is_primary = true')
             
             # Tabla de precios históricos
             cursor.execute('''
@@ -179,7 +405,7 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
-            # Tabla de notificaciones WhatsApp
+            # Tabla de notificaciones WhatsApp (Backward compatible - FASE 1)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS whatsapp_messages (
                     id SERIAL PRIMARY KEY,
@@ -1921,3 +2147,210 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error getting community stats: {e}")
             return {}
+    
+    # ==========================================
+    # USER CONTACTS MANAGEMENT (NUEVA - Nov 26, 2025)
+    # ==========================================
+    
+    def add_user_contact(self, user_id: str, contact_type: str, contact_value: str, 
+                        is_primary: bool = False, is_verified: bool = False) -> Dict:
+        """
+        Agregar nuevo método de contacto para usuario
+        
+        Args:
+            user_id: user_id del usuario (Telegram ID)
+            contact_type: Tipo de contacto ('whatsapp', 'email', 'telegram', 'phone', 'sms')
+            contact_value: Valor del contacto (número, email, etc.)
+            is_primary: Si es el contacto principal para ese tipo
+            is_verified: Si ya está verificado
+        
+        Returns:
+            Dict con resultado de la operación
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self._get_connection()
+        if not conn:
+            return {'success': False, 'error': 'Connection failed'}
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Insertar contacto (user_id es TEXT, FK directo)
+            cursor.execute('''
+                INSERT INTO user_contacts (user_id, contact_type, contact_value, is_primary, is_verified)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, contact_type, contact_value) 
+                DO UPDATE SET is_primary = EXCLUDED.is_primary, is_verified = EXCLUDED.is_verified
+                RETURNING id
+            ''', (user_id, contact_type, contact_value, is_primary, is_verified))
+            
+            contact_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"✅ Contacto agregado: {contact_type} para user {user_id}")
+            return {
+                'success': True, 
+                'contact_id': str(contact_id),
+                'contact_type': contact_type,
+                'contact_value': contact_value
+            }
+            
+        except Exception as e:
+            logger.error(f"Error adding user contact: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def get_user_contacts(self, user_id: str, contact_type: str = None) -> List[Dict]:
+        """
+        Obtener contactos de un usuario
+        
+        Args:
+            user_id: user_id del usuario (Telegram ID)
+            contact_type: Filtrar por tipo de contacto (opcional)
+        
+        Returns:
+            Lista de contactos
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return []
+        
+        conn = self._get_connection()
+        if not conn:
+            return []
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Obtener contactos (user_id es TEXT, FK directo)
+            if contact_type:
+                cursor.execute('''
+                    SELECT id, contact_type, contact_value, is_verified, is_primary, 
+                           verified_at, created_at
+                    FROM user_contacts
+                    WHERE user_id = %s AND contact_type = %s
+                    ORDER BY is_primary DESC, created_at DESC
+                ''', (user_id, contact_type))
+            else:
+                cursor.execute('''
+                    SELECT id, contact_type, contact_value, is_verified, is_primary, 
+                           verified_at, created_at
+                    FROM user_contacts
+                    WHERE user_id = %s
+                    ORDER BY contact_type, is_primary DESC, created_at DESC
+                ''', (user_id,))
+            
+            contacts = []
+            for row in cursor.fetchall():
+                contacts.append({
+                    'id': str(row[0]),
+                    'contact_type': row[1],
+                    'contact_value': row[2],
+                    'is_verified': row[3],
+                    'is_primary': row[4],
+                    'verified_at': row[5].isoformat() if row[5] else None,
+                    'created_at': row[6].isoformat() if row[6] else None
+                })
+            
+            cursor.close()
+            conn.close()
+            return contacts
+            
+        except Exception as e:
+            logger.error(f"Error getting user contacts: {e}")
+            return []
+    
+    def verify_user_contact(self, user_id: str, contact_type: str, contact_value: str) -> bool:
+        """
+        Marcar contacto como verificado
+        
+        Args:
+            user_id: user_id del usuario (Telegram ID)
+            contact_type: Tipo de contacto
+            contact_value: Valor del contacto
+        
+        Returns:
+            True si se verificó exitosamente
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return False
+        
+        conn = self._get_connection()
+        if not conn:
+            return False
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Marcar como verificado (user_id es TEXT, FK directo)
+            cursor.execute('''
+                UPDATE user_contacts
+                SET is_verified = true, verified_at = CURRENT_TIMESTAMP
+                WHERE user_id = %s AND contact_type = %s AND contact_value = %s
+            ''', (user_id, contact_type, contact_value))
+            
+            conn.commit()
+            success = cursor.rowcount > 0
+            cursor.close()
+            conn.close()
+            
+            if success:
+                logger.info(f"✅ Contacto verificado: {contact_type} {contact_value} para user {user_id}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error verifying contact: {e}")
+            return False
+    
+    def set_primary_contact(self, user_id: str, contact_type: str, contact_value: str) -> bool:
+        """
+        Establecer un contacto como principal para su tipo
+        
+        Args:
+            user_id: user_id del usuario (Telegram ID)
+            contact_type: Tipo de contacto
+            contact_value: Valor del contacto a marcar como principal
+        
+        Returns:
+            True si se estableció exitosamente
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return False
+        
+        conn = self._get_connection()
+        if not conn:
+            return False
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Quitar is_primary de todos los contactos de ese tipo
+            cursor.execute('''
+                UPDATE user_contacts
+                SET is_primary = false
+                WHERE user_id = %s AND contact_type = %s
+            ''', (user_id, contact_type))
+            
+            # Establecer el nuevo contacto principal
+            cursor.execute('''
+                UPDATE user_contacts
+                SET is_primary = true
+                WHERE user_id = %s AND contact_type = %s AND contact_value = %s
+            ''', (user_id, contact_type, contact_value))
+            
+            conn.commit()
+            success = cursor.rowcount > 0
+            cursor.close()
+            conn.close()
+            
+            if success:
+                logger.info(f"✅ Contacto principal establecido: {contact_type} {contact_value} para user {user_id}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error setting primary contact: {e}")
+            return False
