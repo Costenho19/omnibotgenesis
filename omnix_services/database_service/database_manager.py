@@ -77,3 +77,21 @@ class DatabaseManager:
             raise Exception("DATABASE_URL no configurado")
         
         return psycopg2.connect(database_url)
+    
+    def save_conversation(self, user_id: str, user_message: str, ai_response: str, language: str = 'es') -> bool:
+        """
+        Guardar conversación en la base de datos
+        FIXED Nov 26, 2025: Método faltante agregado
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.save_conversation(user_id, user_message, ai_response, language)
+        return False
+    
+    def get_conversation_history(self, chat_id: int, limit: int = 10) -> list:
+        """
+        Obtener historial de conversaciones
+        FIXED Nov 26, 2025: Método faltante agregado
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_conversation_history(chat_id, limit)
+        return []

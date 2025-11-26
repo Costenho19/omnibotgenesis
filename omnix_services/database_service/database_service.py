@@ -732,12 +732,13 @@ class DatabaseServiceEnterprise:
             
             # Configuración de TTL por tabla (días)
             # tabla: (días_ttl, columna_timestamp, condición_adicional)
+            # FIXED Nov 26, 2025: Corregidos nombres de columnas (created_at vs timestamp)
             cleanup_config = {
                 'conversations': (30, 'timestamp', None),
                 'trades': (30, 'timestamp', None),
                 'risk_guardian_events': (30, 'timestamp', None),
-                'trade_reasonings': (90, 'timestamp', None),
-                'trade_evaluations': (90, 'timestamp', None),
+                'trade_reasonings': (90, 'created_at', None),  # FIXED: era 'timestamp'
+                'trade_evaluations': (90, 'created_at', None),  # FIXED: era 'timestamp'
                 'balance_history': (90, 'timestamp', None),
                 'signal_executions': (60, 'executed_at', None),
                 'signal_votes': (60, 'created_at', None),
@@ -745,7 +746,7 @@ class DatabaseServiceEnterprise:
                 'analysis': (30, 'timestamp', None),
                 
                 # Cleanup especial para pending_evaluations
-                'pending_evaluations': (7, 'timestamp', "status IN ('completed', 'failed')"),
+                'pending_evaluations': (7, 'created_at', "status IN ('completed', 'failed')"),  # FIXED: era 'timestamp'
             }
             
             total_deleted = 0
