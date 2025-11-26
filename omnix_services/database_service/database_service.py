@@ -87,6 +87,7 @@ class DatabaseServiceEnterprise:
             self._drop_prices_table()
             self._fix_risk_guardian_user_id_type()
             self._add_foreign_key_constraints()
+            self._add_check_constraints()
             
             self._init_tables()
             
@@ -530,6 +531,119 @@ class DatabaseServiceEnterprise:
             
         except Exception as e:
             logger.error(f"❌ Error agregando Foreign Keys: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    def _add_check_constraints(self):
+        """
+        ✅ MIGRACIÓN: Agregar CHECK Constraints para validación de datos (Nov 26, 2025)
+        
+        Garantiza valores válidos en columnas enum y rangos numéricos:
+        - trades.status: valores permitidos
+        - community_signals.signal_type y status
+        - signal_votes.vote_type
+        - pending_evaluations.status
+        - community_feedback.result
+        
+        Estrategia: Constraints a nivel DB previenen datos inválidos
+        
+        Esta migración es idempotente (verifica constraints antes de agregar).
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            logger.info("✅ Agregando CHECK Constraints para validación de datos...")
+            
+            # Función helper para verificar si constraint existe
+            def check_exists(table_name, constraint_name):
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.table_constraints 
+                        WHERE table_name = %s 
+                        AND constraint_name = %s 
+                        AND constraint_type = 'CHECK'
+                    )
+                """, (table_name, constraint_name))
+                return cursor.fetchone()[0]
+            
+            # Lista de CHECK constraints a agregar
+            # (tabla, constraint_name, condición)
+            check_constraints = [
+                ('trades', 'chk_trades_status', 
+                 "status IN ('filled', 'cancelled', 'pending', 'open', 'closed')"),
+                
+                ('community_signals', 'chk_signals_type', 
+                 "signal_type IN ('BUY', 'SELL')"),
+                
+                ('community_signals', 'chk_signals_status', 
+                 "status IN ('active', 'expired', 'closed')"),
+                
+                ('signal_votes', 'chk_votes_type', 
+                 "vote_type IN ('upvote', 'downvote')"),
+                
+                ('pending_evaluations', 'chk_evaluations_status', 
+                 "status IN ('pending', 'completed', 'failed')"),
+                
+                ('community_feedback', 'chk_feedback_result', 
+                 "result IN ('success', 'fail', 'neutral', 'mixed')"),
+                
+                ('strategy_votes', 'chk_strategy_vote', 
+                 "vote IN ('approve', 'reject', 'neutral')"),
+            ]
+            
+            added_count = 0
+            skipped_count = 0
+            
+            for table, constraint, condition in check_constraints:
+                # Verificar si la tabla existe
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s AND table_schema = 'public'
+                    )
+                """, (table,))
+                
+                if not cursor.fetchone()[0]:
+                    logger.info(f"   ⏭️  Tabla {table} no existe (skip)")
+                    skipped_count += 1
+                    continue
+                
+                # Verificar si constraint ya existe
+                if check_exists(table, constraint):
+                    logger.info(f"   ✅ {constraint} ya existe en {table}")
+                    skipped_count += 1
+                    continue
+                
+                # Agregar CHECK constraint
+                try:
+                    cursor.execute(f"""
+                        ALTER TABLE {table} 
+                        ADD CONSTRAINT {constraint} 
+                        CHECK ({condition})
+                    """)
+                    logger.info(f"   ✅ Agregado {constraint} en {table}")
+                    added_count += 1
+                except Exception as e:
+                    logger.warning(f"   ⚠️  Error agregando {constraint}: {e}")
+            
+            conn.commit()
+            
+            if added_count > 0:
+                logger.info(f"✅ CHECK Constraints agregados: {added_count} nuevos, {skipped_count} ya existían")
+                logger.info("   Beneficio: Validación automática de datos a nivel DB")
+            else:
+                logger.info(f"✅ Todos los CHECK Constraints ya estaban configurados ({skipped_count} constraints)")
+            
+        except Exception as e:
+            logger.error(f"❌ Error agregando CHECK Constraints: {e}")
             conn.rollback()
         finally:
             conn.close()
@@ -1310,6 +1424,41 @@ class DatabaseServiceEnterprise:
             # alpha_leaderboard.user_id ya tiene UNIQUE constraint (no necesita índice adicional)
             
             logger.info("✅ Índices FK creados (mejora 10x en queries con JOIN)")
+            
+            # ==========================================
+            # ÍNDICES COMPUESTOS (user_id + timestamp)
+            # Nov 26, 2025 - Optimize historical queries
+            # ==========================================
+            logger.info("🔍 Creando índices compuestos para queries de historial...")
+            
+            # Optimizar queries tipo: "Dame trades del usuario X ordenados por fecha"
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_trades_user_timestamp 
+                ON trades(user_id, timestamp DESC)
+            ''')
+            
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_conversations_user_timestamp 
+                ON conversations(user_id, timestamp DESC)
+            ''')
+            
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_balance_history_user_timestamp 
+                ON balance_history(user_id, timestamp DESC)
+            ''')
+            
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_trade_reasonings_user_timestamp 
+                ON trade_reasonings(user_id, timestamp DESC)
+            ''')
+            
+            # Índice en users.last_activity para queries de "usuarios activos"
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_users_last_activity 
+                ON users(last_activity DESC)
+            ''')
+            
+            logger.info("✅ Índices compuestos creados (optimiza queries con filtro + ordenamiento)")
             
             conn.commit()
             cursor.close()
