@@ -1390,6 +1390,97 @@ class DatabaseServiceEnterprise:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_type ON risk_guardian_events(risk_type)')
             
             # ==========================================
+            # RISK MANAGEMENT SYSTEM (RMS) TABLES
+            # Nov 27, 2025 - Institutional Risk Control
+            # ==========================================
+            
+            # Tabla de configuración de límites de riesgo por usuario
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_limits (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    limit_type VARCHAR(50) NOT NULL,
+                    threshold_value NUMERIC(18,8) NOT NULL,
+                    threshold_unit VARCHAR(20) NOT NULL DEFAULT 'PERCENT',
+                    warning_threshold_pct NUMERIC(8,4) DEFAULT 80.0,
+                    is_active BOOLEAN DEFAULT true,
+                    cooldown_minutes INTEGER DEFAULT 60,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, limit_type)
+                )
+            ''')
+            
+            # Tabla de violaciones de límites
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_limit_breaches (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    limit_id INTEGER REFERENCES risk_limits(id) ON DELETE SET NULL,
+                    limit_type VARCHAR(50) NOT NULL,
+                    severity VARCHAR(20) NOT NULL,
+                    current_value NUMERIC(18,8),
+                    threshold_value NUMERIC(18,8),
+                    percentage_used NUMERIC(8,4),
+                    action_taken VARCHAR(100),
+                    description TEXT,
+                    metadata JSONB,
+                    resolved_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de snapshots de métricas de riesgo
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_metrics_snapshots (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    snapshot_date DATE NOT NULL,
+                    total_balance_usd NUMERIC(18,8),
+                    total_exposure_usd NUMERIC(18,8),
+                    available_balance_usd NUMERIC(18,8),
+                    daily_pnl_usd NUMERIC(18,8),
+                    daily_pnl_pct NUMERIC(8,4),
+                    max_drawdown_usd NUMERIC(18,8),
+                    max_drawdown_pct NUMERIC(8,4),
+                    current_drawdown_pct NUMERIC(8,4),
+                    max_single_position_pct NUMERIC(8,4),
+                    open_positions INTEGER DEFAULT 0,
+                    daily_trades_count INTEGER DEFAULT 0,
+                    volatility_index NUMERIC(8,4),
+                    risk_score INTEGER DEFAULT 0,
+                    positions_breakdown JSONB,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, snapshot_date)
+                )
+            ''')
+            
+            # Tabla de estado del circuit breaker
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS circuit_breaker_status (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL UNIQUE,
+                    is_halted BOOLEAN DEFAULT false,
+                    reason VARCHAR(50),
+                    message TEXT,
+                    halted_at TIMESTAMP WITH TIME ZONE,
+                    resume_at TIMESTAMP WITH TIME ZONE,
+                    halted_by VARCHAR(100) DEFAULT 'system',
+                    can_override BOOLEAN DEFAULT true,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Índices para RMS Tables
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_limits_user ON risk_limits(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_breaches_user ON risk_limit_breaches(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_breaches_created ON risk_limit_breaches(created_at DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_breaches_severity ON risk_limit_breaches(severity)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_snapshots_user_date ON risk_metrics_snapshots(user_id, snapshot_date DESC)')
+            
+            logger.info("✅ RMS Tables creadas (risk_limits, risk_limit_breaches, risk_metrics_snapshots, circuit_breaker_status)")
+            
+            # ==========================================
             # ÍNDICES PARA FOREIGN KEYS (Performance)
             # Nov 26, 2025 - Optimize JOINs and FK lookups
             # ==========================================
@@ -2953,3 +3044,624 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error setting primary contact: {e}")
             return False
+    
+    # ==========================================
+    # RISK MANAGEMENT SYSTEM (RMS) DAL METHODS
+    # Nov 27, 2025 - Institutional Risk Control
+    # ==========================================
+    
+    def get_risk_limits(self, user_id: str) -> List[Dict]:
+        """
+        Obtener límites de riesgo configurados para un usuario
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Lista de límites configurados
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, user_id, limit_type, threshold_value, threshold_unit,
+                       warning_threshold_pct, is_active, cooldown_minutes, 
+                       created_at, updated_at
+                FROM risk_limits
+                WHERE user_id = %s AND is_active = true
+                ORDER BY limit_type
+            ''', (user_id,))
+            
+            limits = []
+            for row in cursor.fetchall():
+                limits.append({
+                    'id': row[0],
+                    'user_id': row[1],
+                    'limit_type': row[2],
+                    'threshold_value': float(row[3]) if row[3] else 0,
+                    'threshold_unit': row[4],
+                    'warning_threshold_pct': float(row[5]) if row[5] else 80.0,
+                    'is_active': row[6],
+                    'cooldown_minutes': row[7],
+                    'created_at': row[8],
+                    'updated_at': row[9]
+                })
+            
+            cursor.close()
+            conn.close()
+            return limits
+            
+        except Exception as e:
+            logger.error(f"Error getting risk limits: {e}")
+            return []
+    
+    def set_risk_limit(
+        self, 
+        user_id: str, 
+        limit_type: str, 
+        threshold_value: float,
+        threshold_unit: str = 'PERCENT',
+        warning_threshold_pct: float = 80.0,
+        cooldown_minutes: int = 60
+    ) -> bool:
+        """
+        Configurar o actualizar un límite de riesgo
+        
+        Args:
+            user_id: ID del usuario
+            limit_type: Tipo de límite
+            threshold_value: Valor del umbral
+            threshold_unit: Unidad (PERCENT, USD, COUNT)
+            warning_threshold_pct: Porcentaje para warning
+            cooldown_minutes: Minutos de cooldown
+        
+        Returns:
+            True si se guardó exitosamente
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO risk_limits 
+                    (user_id, limit_type, threshold_value, threshold_unit, 
+                     warning_threshold_pct, cooldown_minutes, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_id, limit_type) 
+                DO UPDATE SET 
+                    threshold_value = EXCLUDED.threshold_value,
+                    threshold_unit = EXCLUDED.threshold_unit,
+                    warning_threshold_pct = EXCLUDED.warning_threshold_pct,
+                    cooldown_minutes = EXCLUDED.cooldown_minutes,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (user_id, limit_type, threshold_value, threshold_unit, 
+                  warning_threshold_pct, cooldown_minutes))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"✅ Risk limit set: {limit_type} = {threshold_value} {threshold_unit} for {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error setting risk limit: {e}")
+            return False
+    
+    def save_risk_breach(self, user_id: str, breach_data: Dict) -> bool:
+        """
+        Guardar una violación de límite
+        
+        Args:
+            user_id: ID del usuario
+            breach_data: Datos de la violación
+        
+        Returns:
+            True si se guardó exitosamente
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO risk_limit_breaches 
+                    (user_id, limit_id, limit_type, severity, current_value,
+                     threshold_value, percentage_used, action_taken, description, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                user_id,
+                breach_data.get('limit_id'),
+                breach_data.get('limit_type'),
+                breach_data.get('severity'),
+                breach_data.get('current_value'),
+                breach_data.get('threshold_value'),
+                breach_data.get('percentage_used'),
+                breach_data.get('action_taken'),
+                breach_data.get('description'),
+                breach_data.get('metadata')
+            ))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"✅ Risk breach saved: {breach_data.get('severity')} for {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving risk breach: {e}")
+            return False
+    
+    def get_risk_breaches(self, user_id: str, days: int = 30) -> List[Dict]:
+        """
+        Obtener historial de violaciones de límites
+        
+        Args:
+            user_id: ID del usuario
+            days: Días a consultar
+        
+        Returns:
+            Lista de violaciones
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, limit_type, severity, current_value, threshold_value,
+                       percentage_used, action_taken, description, resolved_at, created_at
+                FROM risk_limit_breaches
+                WHERE user_id = %s AND created_at >= NOW() - INTERVAL '%s days'
+                ORDER BY created_at DESC
+            ''', (user_id, days))
+            
+            breaches = []
+            for row in cursor.fetchall():
+                breaches.append({
+                    'id': row[0],
+                    'limit_type': row[1],
+                    'severity': row[2],
+                    'current_value': float(row[3]) if row[3] else 0,
+                    'threshold_value': float(row[4]) if row[4] else 0,
+                    'percentage_used': float(row[5]) if row[5] else 0,
+                    'action_taken': row[6],
+                    'description': row[7],
+                    'resolved_at': row[8].isoformat() if row[8] else None,
+                    'created_at': row[9].isoformat() if row[9] else None
+                })
+            
+            cursor.close()
+            conn.close()
+            return breaches
+            
+        except Exception as e:
+            logger.error(f"Error getting risk breaches: {e}")
+            return []
+    
+    def save_risk_metrics_snapshot(self, user_id: str, snapshot_date, metrics: Dict) -> bool:
+        """
+        Guardar snapshot de métricas de riesgo
+        
+        Args:
+            user_id: ID del usuario
+            snapshot_date: Fecha del snapshot
+            metrics: Diccionario con métricas
+        
+        Returns:
+            True si se guardó exitosamente
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            import json
+            positions_json = json.dumps(metrics.get('positions_breakdown', {}))
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO risk_metrics_snapshots 
+                    (user_id, snapshot_date, total_balance_usd, total_exposure_usd,
+                     available_balance_usd, daily_pnl_usd, daily_pnl_pct, max_drawdown_usd,
+                     max_drawdown_pct, current_drawdown_pct, max_single_position_pct,
+                     open_positions, daily_trades_count, volatility_index, risk_score,
+                     positions_breakdown)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, snapshot_date) 
+                DO UPDATE SET 
+                    total_balance_usd = EXCLUDED.total_balance_usd,
+                    total_exposure_usd = EXCLUDED.total_exposure_usd,
+                    available_balance_usd = EXCLUDED.available_balance_usd,
+                    daily_pnl_usd = EXCLUDED.daily_pnl_usd,
+                    daily_pnl_pct = EXCLUDED.daily_pnl_pct,
+                    max_drawdown_usd = EXCLUDED.max_drawdown_usd,
+                    max_drawdown_pct = EXCLUDED.max_drawdown_pct,
+                    current_drawdown_pct = EXCLUDED.current_drawdown_pct,
+                    max_single_position_pct = EXCLUDED.max_single_position_pct,
+                    open_positions = EXCLUDED.open_positions,
+                    daily_trades_count = EXCLUDED.daily_trades_count,
+                    volatility_index = EXCLUDED.volatility_index,
+                    risk_score = EXCLUDED.risk_score,
+                    positions_breakdown = EXCLUDED.positions_breakdown
+            ''', (
+                user_id,
+                snapshot_date,
+                metrics.get('total_balance_usd', 0),
+                metrics.get('total_exposure_usd', 0),
+                metrics.get('available_balance_usd', 0),
+                metrics.get('daily_pnl_usd', 0),
+                metrics.get('daily_pnl_pct', 0),
+                metrics.get('max_drawdown_usd', 0),
+                metrics.get('max_drawdown_pct', 0),
+                metrics.get('current_drawdown_pct', 0),
+                metrics.get('max_single_position_pct', 0),
+                metrics.get('open_positions', 0),
+                metrics.get('daily_trades_count', 0),
+                metrics.get('volatility_index', 0),
+                metrics.get('risk_score', 0),
+                positions_json
+            ))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"✅ Risk metrics snapshot saved for {user_id} on {snapshot_date}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving risk metrics snapshot: {e}")
+            return False
+    
+    def get_risk_metrics_history(self, user_id: str, days: int = 30) -> List[Dict]:
+        """
+        Obtener historial de métricas de riesgo
+        
+        Args:
+            user_id: ID del usuario
+            days: Días a consultar
+        
+        Returns:
+            Lista de snapshots
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT snapshot_date, total_balance_usd, total_exposure_usd,
+                       daily_pnl_usd, daily_pnl_pct, current_drawdown_pct,
+                       max_single_position_pct, open_positions, daily_trades_count,
+                       risk_score, positions_breakdown
+                FROM risk_metrics_snapshots
+                WHERE user_id = %s AND snapshot_date >= CURRENT_DATE - INTERVAL '%s days'
+                ORDER BY snapshot_date DESC
+            ''', (user_id, days))
+            
+            history = []
+            for row in cursor.fetchall():
+                history.append({
+                    'snapshot_date': row[0].isoformat() if row[0] else None,
+                    'total_balance_usd': float(row[1]) if row[1] else 0,
+                    'total_exposure_usd': float(row[2]) if row[2] else 0,
+                    'daily_pnl_usd': float(row[3]) if row[3] else 0,
+                    'daily_pnl_pct': float(row[4]) if row[4] else 0,
+                    'current_drawdown_pct': float(row[5]) if row[5] else 0,
+                    'max_single_position_pct': float(row[6]) if row[6] else 0,
+                    'open_positions': row[7] or 0,
+                    'daily_trades_count': row[8] or 0,
+                    'risk_score': row[9] or 0,
+                    'positions_breakdown': row[10] or {}
+                })
+            
+            cursor.close()
+            conn.close()
+            return history
+            
+        except Exception as e:
+            logger.error(f"Error getting risk metrics history: {e}")
+            return []
+    
+    def get_circuit_breaker_status(self, user_id: str) -> Optional[Dict]:
+        """
+        Obtener estado del circuit breaker para un usuario
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con estado o None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return None
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT is_halted, reason, message, halted_at, resume_at, 
+                       halted_by, can_override, updated_at
+                FROM circuit_breaker_status
+                WHERE user_id = %s
+            ''', (user_id,))
+            
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if row:
+                return {
+                    'is_halted': row[0],
+                    'reason': row[1],
+                    'message': row[2],
+                    'halted_at': row[3],
+                    'resume_at': row[4],
+                    'halted_by': row[5],
+                    'can_override': row[6],
+                    'updated_at': row[7]
+                }
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting circuit breaker status: {e}")
+            return None
+    
+    def save_circuit_breaker_status(self, user_id: str, status: Dict) -> bool:
+        """
+        Guardar estado del circuit breaker
+        
+        Args:
+            user_id: ID del usuario
+            status: Dict con estado
+        
+        Returns:
+            True si se guardó exitosamente
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO circuit_breaker_status 
+                    (user_id, is_halted, reason, message, halted_at, 
+                     resume_at, halted_by, can_override, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_id) 
+                DO UPDATE SET 
+                    is_halted = EXCLUDED.is_halted,
+                    reason = EXCLUDED.reason,
+                    message = EXCLUDED.message,
+                    halted_at = EXCLUDED.halted_at,
+                    resume_at = EXCLUDED.resume_at,
+                    halted_by = EXCLUDED.halted_by,
+                    can_override = EXCLUDED.can_override,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (
+                user_id,
+                status.get('is_halted', False),
+                status.get('reason'),
+                status.get('message'),
+                status.get('halted_at'),
+                status.get('resume_at'),
+                status.get('halted_by', 'system'),
+                status.get('can_override', True)
+            ))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"✅ Circuit breaker status saved for {user_id}: halted={status.get('is_halted')}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving circuit breaker status: {e}")
+            return False
+    
+    def save_risk_alert(self, user_id: str, alert_data: Dict) -> bool:
+        """
+        Guardar alerta de riesgo (reusa risk_limit_breaches con metadata)
+        
+        Args:
+            user_id: ID del usuario
+            alert_data: Datos de la alerta
+        
+        Returns:
+            True si se guardó exitosamente
+        """
+        import json
+        
+        breach_data = {
+            'limit_type': 'alert',
+            'severity': alert_data.get('severity', 'info'),
+            'description': f"{alert_data.get('title', '')}: {alert_data.get('message', '')}",
+            'action_taken': 'alert_sent',
+            'metadata': json.dumps({
+                'channel': alert_data.get('channel'),
+                'sent_at': alert_data.get('sent_at')
+            })
+        }
+        
+        return self.save_risk_breach(user_id, breach_data)
+    
+    def get_daily_trading_stats(self, user_id: str) -> Optional[Dict]:
+        """
+        Obtener estadísticas de trading del día actual
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con estadísticas o None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return None
+            
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT 
+                    COUNT(*) as trades_count,
+                    COALESCE(SUM(profit), 0) as daily_pnl,
+                    COALESCE(SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END), 0) as wins,
+                    COALESCE(SUM(CASE WHEN profit < 0 THEN 1 ELSE 0 END), 0) as losses
+                FROM paper_trading_trades
+                WHERE user_id = %s 
+                AND DATE(opened_at) = CURRENT_DATE
+                AND status = 'closed'
+            ''', (user_id,))
+            
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if row:
+                return {
+                    'trades_count': row[0] or 0,
+                    'daily_pnl': float(row[1]) if row[1] else 0,
+                    'wins': row[2] or 0,
+                    'losses': row[3] or 0
+                }
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting daily trading stats: {e}")
+            return None
+    
+    def get_open_positions(self, user_id: str) -> List[Dict]:
+        """
+        Obtener posiciones abiertas del usuario
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Lista de posiciones abiertas
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT symbol, side, size, entry_price, opened_at
+                FROM paper_trading_trades
+                WHERE user_id = %s AND status = 'open'
+                ORDER BY opened_at DESC
+            ''', (user_id,))
+            
+            positions = []
+            for row in cursor.fetchall():
+                entry_price = float(row[3]) if row[3] else 0
+                size = float(row[2]) if row[2] else 0
+                positions.append({
+                    'symbol': row[0],
+                    'side': row[1],
+                    'quantity': size,
+                    'entry_price': entry_price,
+                    'current_price': entry_price,
+                    'value_usd': size * entry_price,
+                    'opened_at': row[4]
+                })
+            
+            cursor.close()
+            conn.close()
+            return positions
+            
+        except Exception as e:
+            logger.error(f"Error getting open positions: {e}")
+            return []
+    
+    def get_recent_trades(self, user_id: str, limit: int = 10) -> List[Dict]:
+        """
+        Obtener trades recientes para detectar pérdidas consecutivas
+        
+        Args:
+            user_id: ID del usuario
+            limit: Número de trades a obtener
+        
+        Returns:
+            Lista de trades recientes
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT symbol, side, size, entry_price, exit_price, profit, closed_at
+                FROM paper_trading_trades
+                WHERE user_id = %s AND status = 'closed'
+                ORDER BY closed_at DESC
+                LIMIT %s
+            ''', (user_id, limit))
+            
+            trades = []
+            for row in cursor.fetchall():
+                trades.append({
+                    'symbol': row[0],
+                    'side': row[1],
+                    'size': float(row[2]) if row[2] else 0,
+                    'entry_price': float(row[3]) if row[3] else 0,
+                    'exit_price': float(row[4]) if row[4] else 0,
+                    'profit': float(row[5]) if row[5] else 0,
+                    'closed_at': row[6]
+                })
+            
+            cursor.close()
+            conn.close()
+            return trades
+            
+        except Exception as e:
+            logger.error(f"Error getting recent trades: {e}")
+            return []
