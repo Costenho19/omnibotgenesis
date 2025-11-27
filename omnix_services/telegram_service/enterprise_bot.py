@@ -2933,7 +2933,7 @@ Ejemplo: /risk_events 48
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/help'):
-                response_text += """❓ **AYUDA - COMANDOS OMNIX**
+                response_text += """❓ **AYUDA - COMANDOS OMNIX V6.0 ULTRA**
 
 🔧 **COMANDOS BÁSICOS:**
 /start - Inicializar sistema
@@ -2945,15 +2945,30 @@ Ejemplo: /risk_events 48
 💰 **COMANDOS TRADING:**
 /buy [cantidad] [crypto] - Comprar crypto
 /sell [cantidad] [crypto] - Vender crypto
+/paper_buy - Compra simulada (Paper Trading)
+/paper_sell - Venta simulada (Paper Trading)
+
+⚛️ **FÍSICA CUÁNTICA (DEMO INVERSORES):**
+/quantum_demo - Demo física cuántica completa
+/quantum_demo conmutador - Cálculo [X̂, P̂] = i/2
+/quantum_demo varianza - Varianza del vacío
+/quantum_demo qrng - Física del QRNG
+/quantum_test - Test QRNG en vivo (ANU)
+/quantum_stats - Estadísticas cuánticas
+
+🛡️ **RISK MANAGEMENT (RMS):**
+/rms - Dashboard de riesgo
+/rms_limits - Ver límites actuales
+/emergency_halt - Detener trading
 
 🤖 **IA CONVERSACIONAL:**
 Pregúntame cualquier cosa sobre:
 • Análisis de mercado
 • Estrategias de trading  
+• Física cuántica aplicada
 • Criptomonedas
-• Recomendaciones
 
-*Sistema desarrollado por Harold Nunes*"""
+*OMNIX V6.0 ULTRA - Harold Nunes*"""
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/quantum_stats'):
@@ -3048,6 +3063,48 @@ Pregúntame cualquier cosa sobre:
                     response_text += "⚠️ Módulo QRNG no disponible"
                 except Exception as e:
                     response_text += f"❌ Error en test cuántico: {str(e)}"
+            
+            elif text.startswith('/quantum_demo'):
+                # ⚛️ QUANTUM PHYSICS DEMO - Demostración de física cuántica para inversores
+                try:
+                    from omnix_core.quantum.physics_validator import generate_quantum_response
+                    
+                    # Extraer tema específico si se proporciona
+                    parts = text.split(' ', 1)
+                    if len(parts) > 1:
+                        topic = parts[1].lower()
+                    else:
+                        topic = 'comprehensive'
+                    
+                    # Generar respuesta formateada según el tema
+                    if 'conmutador' in topic or 'commutator' in topic or 'i/2' in topic:
+                        question = "¿Por qué el conmutador es i/2?"
+                    elif 'varianza' in topic or 'variance' in topic:
+                        question = "¿Cuál es la varianza del vacío?"
+                    elif 'qrng' in topic or 'homodina' in topic or 'homodyne' in topic:
+                        question = "¿Cómo funciona el QRNG?"
+                    else:
+                        question = "Explica la física cuántica de OMNIX"
+                    
+                    response_text = generate_quantum_response(question)
+                    
+                    response_text += """
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 **COMANDOS DISPONIBLES:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/quantum_demo conmutador - Cálculo [X̂, P̂] = i/2
+/quantum_demo varianza - Var(X̂_θ) = 1/4
+/quantum_demo qrng - Física del generador cuántico
+/quantum_test - Prueba QRNG en vivo con ANU
+/quantum_stats - Estadísticas de uso cuántico"""
+                    
+                except ImportError:
+                    response_text += "⚠️ Módulo Quantum Physics Validator no disponible"
+                except Exception as e:
+                    response_text += f"❌ Error en demo cuántico: {str(e)}"
+                    logger.error(f"Error en /quantum_demo: {e}")
             
             elif text.startswith('/optimize_portfolio'):
                 # ⚛️ QUANTUM PORTFOLIO OPTIMIZATION - Optimizar asignación de capital con QAOA
