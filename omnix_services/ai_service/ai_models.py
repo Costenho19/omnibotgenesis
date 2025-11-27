@@ -1,13 +1,15 @@
 """
-OMNIX V5.1 ENTERPRISE - AI Models Manager
+OMNIX V6.0 ENTERPRISE - AI Models Manager
 Gestión de múltiples modelos IA: GPT-4o, Gemini 2.0, Claude
 Escalabilidad: 50K+ usuarios con Async verdadero
+Features: Retry with exponential backoff, response validation
 """
 
 import logging
 import os
 import asyncio
-from typing import Optional, Dict, Any
+import re
+from typing import Optional, Dict, Any, Tuple
 from openai import AsyncOpenAI
 try:
     import google.generativeai as genai
@@ -32,6 +34,19 @@ logger = get_logger(__name__)
 class AIModelsManager:
     """Enterprise AI Models Manager - Multi-AI Strategy"""
     
+    MIN_RESPONSE_LENGTH = 50
+    MAX_RETRIES_PER_MODEL = 3
+    BASE_DELAY_SECONDS = 0.5
+    
+    INVALID_RESPONSE_PATTERNS = [
+        r'^error',
+        r'^sorry.*cannot',
+        r'^i apologize.*unable',
+        r'^\s*$',
+        r'^none$',
+        r'^null$',
+    ]
+    
     def __init__(self):
         """Initialize AI clients with fallback strategy"""
         self.openai_client = None
@@ -44,6 +59,38 @@ class AIModelsManager:
         self._initialize_openai()
         self._initialize_gemini()
         self._initialize_anthropic()
+    
+    def _validate_response(self, response: Optional[str]) -> Tuple[bool, str]:
+        """
+        Validate AI response before sending to user
+        
+        Returns:
+            Tuple[bool, str]: (is_valid, reason)
+        """
+        if response is None:
+            return False, "Response is None"
+        
+        if not isinstance(response, str):
+            return False, f"Response is not string: {type(response)}"
+        
+        response_clean = response.strip()
+        
+        if len(response_clean) < self.MIN_RESPONSE_LENGTH:
+            return False, f"Response too short: {len(response_clean)} chars (min: {self.MIN_RESPONSE_LENGTH})"
+        
+        response_lower = response_clean.lower()
+        for pattern in self.INVALID_RESPONSE_PATTERNS:
+            if re.match(pattern, response_lower):
+                return False, f"Response matches invalid pattern: {pattern}"
+        
+        return True, "Valid"
+    
+    def _calculate_backoff_delay(self, attempt: int) -> float:
+        """Calculate exponential backoff delay with jitter"""
+        import random
+        delay = self.BASE_DELAY_SECONDS * (2 ** attempt)
+        jitter = random.uniform(0, delay * 0.1)
+        return min(delay + jitter, 5.0)
     
     def _initialize_openai(self):
         """Initialize OpenAI GPT-4o with Async support"""
@@ -86,55 +133,69 @@ class AIModelsManager:
         prompt: str, 
         system_prompt: str,
         model: Optional[str] = None,
-        max_retries: int = 1
+        max_retries: int = 3
     ) -> Optional[str]:
         """
-        Generate AI response with automatic fallback
+        Generate AI response with automatic fallback, retry logic, and validation
         
         Args:
             prompt: User prompt
             system_prompt: System instructions
             model: Specific model to use (optional)
-            max_retries: Number of retries per model (default 1 for speed)
+            max_retries: Number of retries per model (default 3 with exponential backoff)
             
         Returns:
             Generated response or None
         """
-        # Determine model priority
         if model:
             model_priority = [model] + [m for m in self.fallback_models if m != model]
         else:
-            # Siempre usar primary_model primero, luego fallbacks
             model_priority = [self.primary_model] + self.fallback_models
         
-        # Try each model in priority order (1 intento por modelo para velocidad)
+        total_attempts = 0
+        last_error = None
+        
         for model_name in model_priority:
             for attempt in range(max_retries):
+                total_attempts += 1
                 try:
+                    response = None
+                    
                     if 'gpt' in model_name.lower():
                         response = await self._generate_openai_async(prompt, system_prompt)
-                        if response:
-                            logger.info(f"✅ OpenAI response generated (attempt {attempt + 1})")
-                            return response
-                    
                     elif 'gemini' in model_name.lower():
                         response = await self._generate_gemini_async(prompt, system_prompt)
-                        if response:
-                            logger.info(f"✅ Gemini response generated (attempt {attempt + 1})")
-                            return response
-                    
                     elif 'claude' in model_name.lower():
                         response = await self._generate_anthropic_async(prompt, system_prompt)
-                        if response:
-                            logger.info(f"✅ Claude response generated (attempt {attempt + 1})")
-                            return response
                     
+                    is_valid, reason = self._validate_response(response)
+                    
+                    if is_valid:
+                        logger.info(f"[SUCCESS] {model_name} generated valid response (attempt {attempt + 1}, total: {total_attempts})")
+                        return response
+                    else:
+                        logger.warning(f"[VALIDATION] {model_name} response invalid: {reason}")
+                        if attempt < max_retries - 1:
+                            delay = self._calculate_backoff_delay(attempt)
+                            logger.info(f"[RETRY] Waiting {delay:.2f}s before retry...")
+                            await asyncio.sleep(delay)
+                        continue
+                    
+                except asyncio.TimeoutError:
+                    logger.warning(f"[TIMEOUT] {model_name} attempt {attempt + 1} timed out")
+                    last_error = "timeout"
                 except Exception as e:
-                    logger.warning(f"⚠️ {model_name} attempt {attempt + 1} failed: {e}")
-                    # Sin delay - pasar inmediatamente al siguiente modelo
-                    continue
+                    logger.error(f"[ERROR] {model_name} attempt {attempt + 1} failed: {type(e).__name__}: {e}")
+                    last_error = str(e)
+                
+                if attempt < max_retries - 1:
+                    delay = self._calculate_backoff_delay(attempt)
+                    logger.info(f"[RETRY] Backoff {delay:.2f}s before next attempt...")
+                    await asyncio.sleep(delay)
+            
+            logger.warning(f"[FALLBACK] {model_name} exhausted {max_retries} retries, trying next model...")
         
-        logger.error("❌ All AI models failed to generate response")
+        logger.error(f"[CRITICAL] All AI models failed after {total_attempts} total attempts. Last error: {last_error}")
         return None
     
     async def _generate_openai_async(self, prompt: str, system_prompt: str) -> Optional[str]:
