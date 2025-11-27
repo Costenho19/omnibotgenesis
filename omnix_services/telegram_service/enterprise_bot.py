@@ -3675,62 +3675,92 @@ Los parámetros fueron ajustados automáticamente
                                 # ⚛️ QUANTUM ACTION - Ejecutar QRNG real cuando el usuario pide números cuánticos
                                 quantum_results_context = ""
                                 if intent == 'quantum_action':
-                                    logger.info("⚛️ QUANTUM ACTION DETECTADO - Ejecutando QRNG real...")
+                                    logger.info("⚛️ QUANTUM ACTION DETECTADO - Ejecutando QRNG EN VIVO...")
                                     try:
                                         from omnix_core.quantum.enhancements import global_qrng
                                         import numpy as np
                                         import re
                                         
                                         # Extraer cantidad de números solicitados (default: 10)
-                                        num_match = re.search(r'(\d+)\s*(?:numero|número|numbers?|nums?)', text.lower())
-                                        num_to_generate = int(num_match.group(1)) if num_match else 10
-                                        num_to_generate = min(num_to_generate, 1000)  # Máximo 1000
+                                        num_match = re.search(r'(\d+)\s*(?:numero|número|numbers?|nums?|aleatorio)', text.lower())
+                                        num_to_generate = int(num_match.group(1)) if num_match else 100
+                                        num_to_generate = min(num_to_generate, 1024)  # Máximo 1024 por llamada API
                                         
-                                        # Generar números cuánticos REALES
-                                        quantum_numbers = [global_qrng.random() for _ in range(num_to_generate)]
-                                        arr = np.array(quantum_numbers)
+                                        # LLAMAR DIRECTAMENTE A ANU API (SIN CACHE) - 100% TRANSPARENTE
+                                        logger.info(f"⚛️ Llamando ANU API DIRECTAMENTE para {num_to_generate} números...")
+                                        anu_result = global_qrng.fetch_fresh_from_anu(num_to_generate)
                                         
-                                        # Estadísticas
-                                        stats = global_qrng.get_stats()
-                                        
-                                        # Chi-cuadrado de uniformidad
-                                        num_bins = min(10, num_to_generate)
-                                        observed, bin_edges = np.histogram(arr, bins=num_bins, range=(0, 1))
-                                        expected = num_to_generate / num_bins
-                                        chi_squared = np.sum((observed - expected)**2 / expected)
-                                        df = num_bins - 1
-                                        
-                                        # Construir contexto con datos REALES
-                                        quantum_results_context = f"""
+                                        if anu_result['success']:
+                                            quantum_numbers = anu_result['numbers']
+                                            arr = np.array(quantum_numbers)
+                                            
+                                            # Chi-cuadrado de uniformidad
+                                            num_bins = min(10, len(quantum_numbers))
+                                            observed, bin_edges = np.histogram(arr, bins=num_bins, range=(0, 1))
+                                            expected = len(quantum_numbers) / num_bins
+                                            chi_squared = np.sum((observed - expected)**2 / expected)
+                                            df = num_bins - 1
+                                            
+                                            # Construir lista COMPLETA de números
+                                            all_numbers_text = ""
+                                            if num_to_generate <= 100:
+                                                # Mostrar todos si son 100 o menos
+                                                all_numbers_text = chr(10).join([f"[{i+1:4d}] {n:.12f}" for i, n in enumerate(quantum_numbers)])
+                                            else:
+                                                # Dividir en bloques para números grandes
+                                                all_numbers_text = "LISTA COMPLETA DE NÚMEROS (chunks de 50):\n"
+                                                for chunk_start in range(0, len(quantum_numbers), 50):
+                                                    chunk_end = min(chunk_start + 50, len(quantum_numbers))
+                                                    all_numbers_text += f"\n--- BLOQUE {chunk_start+1}-{chunk_end} ---\n"
+                                                    all_numbers_text += chr(10).join([f"[{i+1:4d}] {n:.12f}" for i, n in enumerate(quantum_numbers[chunk_start:chunk_end], start=chunk_start)])
+                                            
+                                            # Contexto con datos REALES y COMPLETOS
+                                            quantum_results_context = f"""
 
-⚛️ **DATOS REALES DEL QRNG (EJECUTADO AHORA):**
+⚛️ **QRNG ANU - LLAMADA EN VIVO (SIN CACHE)**
 
-🔬 **FUENTE:** {stats.get('last_source', 'ANU Quantum Vacuum')}
-📊 **NÚMEROS GENERADOS:** {num_to_generate}
+🔬 **VERIFICACIÓN DE AUTENTICIDAD:**
+• API URL: {anu_result['api_url']}
+• Timestamp: {anu_result['timestamp']}
+• Fuente: {anu_result['source']}
+• Solicitados: {anu_result['count_requested']}
+• Recibidos: {anu_result['count_received']}
+• Raw uint16 sample (primeros 5): {anu_result.get('raw_response', {}).get('raw_uint16_sample', 'N/A')}
 
-🎲 **MUESTRA DE {min(10, num_to_generate)} NÚMEROS CUÁNTICOS:**
-{chr(10).join([f"[{i+1:2d}] {n:.12f}" for i, n in enumerate(quantum_numbers[:10])])}
+📊 **TODOS LOS {len(quantum_numbers)} NÚMEROS CUÁNTICOS (COMPLETOS, SIN MUESTRAS):**
+```
+{all_numbers_text}
+```
 
 📈 **ANÁLISIS ESTADÍSTICO REAL:**
-• Media: {arr.mean():.6f} (ideal: 0.5000)
-• Desviación Estándar: {arr.std():.6f} (ideal para uniforme: ~0.2887)
-• Mínimo: {arr.min():.6f}
-• Máximo: {arr.max():.6f}
-• Rango: {arr.max() - arr.min():.6f}
+• Media: {arr.mean():.10f} (ideal: 0.5000)
+• Desviación Estándar: {arr.std():.10f} (ideal uniforme: 0.2887)
+• Mínimo: {arr.min():.12f}
+• Máximo: {arr.max():.12f}
+• Rango: {arr.max() - arr.min():.10f}
 
 🔢 **TEST CHI-CUADRADO DE UNIFORMIDAD:**
-• χ² = {chi_squared:.4f}
+• χ² = {chi_squared:.6f}
 • Grados de libertad: {df}
 • Distribución por bin: {list(observed)}
+• Valores esperados por bin: {expected:.2f}
 
-📡 **ESTADÍSTICAS QRNG:**
-• Total requests: {stats.get('total_requests', 0):,}
-• Números cuánticos totales: {stats.get('quantum_numbers_generated', 0):,}
-• Cache actual: {stats.get('cache_size', 0)} números
-
-IMPORTANTE: Estos son datos REALES del QRNG de la ANU. Explica estos resultados al usuario de forma natural.
+✅ ESTOS NÚMEROS FUERON OBTENIDOS EN VIVO DE LA API DE ANU (Australian National University).
+NO son de cache. NO son pseudoaleatorios. Son de fluctuaciones del vacío cuántico.
 """
-                                        logger.info(f"⚛️ QRNG ejecutado: {num_to_generate} números generados")
+                                            logger.info(f"⚛️ QRNG EN VIVO: {len(quantum_numbers)} números obtenidos de ANU API")
+                                        else:
+                                            # Error en la llamada a ANU
+                                            quantum_results_context = f"""
+
+❌ **ERROR LLAMANDO ANU API:**
+• Error: {anu_result['error']}
+• Timestamp: {anu_result['timestamp']}
+
+La API de ANU puede estar temporalmente no disponible. 
+Puedes reintentar en unos segundos o usar /quantum_test para diagnóstico.
+"""
+                                            logger.error(f"❌ QRNG ANU Error: {anu_result['error']}")
                                     except Exception as qrng_error:
                                         logger.error(f"❌ Error QRNG: {qrng_error}")
                                         quantum_results_context = f"\n⚠️ Error ejecutando QRNG: {str(qrng_error)}\n"

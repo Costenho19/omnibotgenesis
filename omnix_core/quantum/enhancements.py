@@ -179,6 +179,8 @@ class QuantumRandomNumberGenerator:
         if total > 0:
             self.stats.uptime_percentage = (successful / total) * 100
         
+        cache_age_seconds = time.time() - self.cache_timestamp if self.cache_timestamp > 0 else -1
+        
         return {
             'total_requests': self.stats.total_requests,
             'successful_quantum': self.stats.successful_requests,
@@ -187,10 +189,93 @@ class QuantumRandomNumberGenerator:
             'fallback_to_classical': self.stats.fallback_to_classical,
             'cache_hits': self.stats.cache_hits,
             'cache_size': len(self.cache),
+            'cache_age_seconds': round(cache_age_seconds, 1),
+            'cache_ttl_seconds': QRNG_CACHE_TTL,
             'last_source': self.stats.last_quantum_source,
             'uptime_percentage': round(self.stats.uptime_percentage, 2),
             'quantum_enabled': self.enabled
         }
+    
+    def fetch_fresh_from_anu(self, count: int) -> Dict[str, Any]:
+        """
+        FUERZA una llamada DIRECTA a ANU API sin usar cache.
+        Útil para auditoría y verificación de que el QRNG es real.
+        
+        Args:
+            count: Cantidad de números a obtener (max 1024 por llamada API)
+            
+        Returns:
+            Dict con números, metadatos y estado de la llamada
+        """
+        result = {
+            'success': False,
+            'source': 'none',
+            'numbers': [],
+            'count_requested': count,
+            'count_received': 0,
+            'api_url': ANU_QRNG_API,
+            'timestamp': datetime.now().isoformat(),
+            'raw_response': None,
+            'error': None
+        }
+        
+        try:
+            # Hacer múltiples llamadas si se piden más de 1024
+            all_numbers = []
+            remaining = min(count, 2048)  # Máximo 2048 para no abusar de la API gratuita
+            
+            while remaining > 0:
+                batch_size = min(remaining, 1024)
+                
+                params = {
+                    'length': batch_size,
+                    'type': 'uint16'
+                }
+                
+                logger.info(f"🔄 QRNG: Llamando ANU API para {batch_size} números EN VIVO...")
+                response = requests.get(ANU_QRNG_API, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if data.get('success') and 'data' in data:
+                        raw_numbers = data['data']
+                        normalized = [n / 65535.0 for n in raw_numbers]
+                        all_numbers.extend(normalized)
+                        
+                        result['raw_response'] = {
+                            'status_code': response.status_code,
+                            'api_success': data.get('success'),
+                            'raw_uint16_sample': raw_numbers[:5] if raw_numbers else []
+                        }
+                        
+                        self.stats.successful_requests += 1
+                        self.stats.quantum_numbers_generated += len(normalized)
+                        self.stats.last_quantum_source = "ANU Quantum Vacuum (LIVE)"
+                        
+                        remaining -= batch_size
+                        logger.info(f"✅ QRNG: Recibidos {len(normalized)} números cuánticos EN VIVO de ANU")
+                    else:
+                        result['error'] = f"API returned success=False: {data}"
+                        break
+                else:
+                    result['error'] = f"HTTP {response.status_code}: {response.text[:200]}"
+                    break
+            
+            if all_numbers:
+                result['success'] = True
+                result['source'] = 'ANU Quantum Vacuum (FRESH - NO CACHE)'
+                result['numbers'] = all_numbers
+                result['count_received'] = len(all_numbers)
+                
+        except requests.exceptions.Timeout:
+            result['error'] = "ANU API timeout (>10s)"
+            logger.error("❌ QRNG: Timeout en ANU API")
+        except Exception as e:
+            result['error'] = str(e)
+            logger.error(f"❌ QRNG: Error en fetch directo: {e}")
+        
+        return result
 
 
 # ==================== QAOA - QUANTUM APPROXIMATE OPTIMIZATION ====================
