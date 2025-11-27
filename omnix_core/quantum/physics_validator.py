@@ -418,6 +418,123 @@ El LO solo necesita ser "suficientemente grande" para:
                 ]
             ),
             
+            'variance_commutator': VerifiedFormula(
+                name="Varianza Cuántica vs Clásica y Conmutador Canónico",
+                latex="Var(X̂_θ)|vacío = 1/4  vs  Var(X_θ)|clásico = 0  ;  [X̂, P̂] = i/2",
+                description="""COMPARACIÓN VARIANZA CUÁNTICA VS CLÁSICA Y ÁLGEBRA DE OPERADORES
+
+═══════════════════════════════════════════════════════════
+VARIANZA DE LA CUADRATURA: VACÍO vs CLÁSICO
+═══════════════════════════════════════════════════════════
+
+▶ ESTADO DE VACÍO CUÁNTICO |0⟩:
+   
+   Var(X̂_θ) = ⟨0|X̂²_θ|0⟩ - ⟨0|X̂_θ|0⟩²
+   
+   ⟨0|X̂_θ|0⟩ = ½⟨0|(â e^{-iθ} + â† e^{iθ})|0⟩ = 0
+   (porque â|0⟩ = 0 y ⟨0|â† = 0)
+   
+   ⟨0|X̂²_θ|0⟩ = ¼⟨0|(â e^{-iθ} + â† e^{iθ})²|0⟩
+              = ¼⟨0|(ââ† + â†â)|0⟩  (términos cruzados = 0)
+              = ¼⟨0|ââ†|0⟩         (porque â†â|0⟩ = 0)
+              = ¼⟨0|(1 + â†â)|0⟩   (por [â,â†] = 1)
+              = ¼
+   
+   ▶ Var(X̂_θ)|vacío = 1/4 ◀
+   
+   Esta varianza NO es cero - es la fuente de aleatoriedad cuántica.
+
+▶ SUSTITUCIÓN CLÁSICA β (INCORRECTA):
+   
+   Si reemplazamos â_vac → β (número complejo), entonces:
+   
+   X_θ = ½(β e^{-iθ} + β* e^{iθ}) = Re(β e^{-iθ})
+   
+   Esto es un NÚMERO, no un operador.
+   
+   ▶ Var(X_θ)|clásico = 0 ◀
+   
+   ¡No hay fluctuaciones! La "aleatoriedad" desaparece.
+
+═══════════════════════════════════════════════════════════
+POR QUÉ ESTO IMPORTA PARA EL QRNG
+═══════════════════════════════════════════════════════════
+
+La aleatoriedad del QRNG proviene EXCLUSIVAMENTE de:
+
+   Var(X̂_θ)|vacío = 1/4 ≠ 0
+
+- El vacío cuántico tiene fluctuaciones INTRÍNSECAS
+- Estas fluctuaciones son impredecibles (no-deterministas)
+- No se pueden eliminar con mejor tecnología
+- Son la base física de la entropía cuántica
+
+Si usáramos un modelo clásico (β):
+- Var = 0 significa cero entropía
+- Cualquier "aleatoriedad" sería determinista
+- El QRNG sería un PRNG disfrazado
+
+═══════════════════════════════════════════════════════════
+CONMUTADOR CANÓNICO Y PRINCIPIO DE INCERTIDUMBRE
+═══════════════════════════════════════════════════════════
+
+Definiciones:
+   X̂ = X̂₀ = ½(â + â†)     (cuadratura de posición)
+   P̂ = X̂_{π/2} = (â† - â)/(2i) = i(â† - â)/2  (cuadratura de momento)
+
+Cálculo del conmutador:
+   [X̂, P̂] = X̂P̂ - P̂X̂
+   
+   X̂P̂ = ½(â + â†) × i(â† - â)/2
+       = (i/4)(â + â†)(â† - â)
+       = (i/4)(ââ† - ââ + â†â† - â†â)
+       = (i/4)(ââ† - â†â + â†â† - ââ)
+   
+   P̂X̂ = i(â† - â)/2 × ½(â + â†)
+       = (i/4)(â† - â)(â + â†)
+       = (i/4)(â†â + â†â† - ââ - ââ†)
+   
+   [X̂, P̂] = (i/4)[(ââ† - â†â) - (â†â - ââ†)]
+           = (i/4)[2(ââ† - â†â)]
+           = (i/2)[â, â†]
+           = (i/2)(1)
+   
+   ▶ [X̂, P̂] = i/2 ◀
+   
+   (En nuestra normalización con ℏ = 1)
+
+Principio de incertidumbre (Heisenberg):
+   ΔX̂ × ΔP̂ ≥ |⟨[X̂, P̂]⟩|/2 = 1/4
+
+Para el vacío (estado de mínima incertidumbre):
+   ΔX̂ = ΔP̂ = ½
+   ΔX̂ × ΔP̂ = ¼ (satura el límite de Heisenberg)
+
+═══════════════════════════════════════════════════════════
+RESUMEN CONCEPTUAL
+═══════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│  CUÁNTICO (â_vac operador)  │  CLÁSICO (β número)      │
+├─────────────────────────────────────────────────────────┤
+│  Var(X̂_θ) = 1/4            │  Var(X_θ) = 0            │
+│  Fluctuaciones intrínsecas   │  Sin fluctuaciones       │
+│  Entropía cuántica real      │  Cero entropía           │
+│  [X̂, P̂] = i/2              │  [X, P] = 0 (conmutan)   │
+│  Incertidumbre fundamental   │  Conocimiento perfecto   │
+└─────────────────────────────────────────────────────────┘
+
+Esta diferencia es la RAZÓN FÍSICA por la cual el QRNG funciona.""",
+                units="Var en unidades adimensionales (ℏ = 1), conmutador adimensional",
+                notes="Var(X̂_θ) = 1/4 es independiente de θ para estados gaussianos centrados",
+                common_mistakes=[
+                    "Pensar que Var = 0 es posible para el vacío",
+                    "Reemplazar â_vac por β y perder las fluctuaciones",
+                    "Olvidar que [X̂, P̂] ≠ 0 implica incertidumbre fundamental",
+                    "Confundir [â, â†] = 1 con [X̂, P̂] = i/2 (diferente normalización)"
+                ]
+            ),
+            
             'common_errors_homodyne': VerifiedFormula(
                 name="Errores Comunes en Derivaciones Homodinas",
                 latex="⚠️ ADVERTENCIAS CRÍTICAS",
@@ -554,8 +671,17 @@ Si no aparece esta fórmula, la derivación está incompleta.""",
             'operators': [
                 'operador', 'operator', 'â_vac', 'â_lo', 'a_vac', 'a_lo',
                 'aniquilación', 'annihilation', 'creación', 'creation',
-                'â†', 'a_dagger', 'hermítico', 'hermitian', 'conmutador',
+                'â†', 'a_dagger', 'hermítico', 'hermitian',
                 'estado coherente', 'coherent state', '|α⟩', 'alpha'
+            ],
+            'variance_commutator': [
+                'varianza', 'variance', 'var(', 'var (',
+                'conmutador', 'commutator', '[x̂', '[x,', '[x,p]', '[x̂,p̂]',
+                'vacío vs clásico', 'vacuum vs classical',
+                'clásico β', 'classical beta', 'número clásico',
+                'fluctuaciones intrínsecas', 'intrinsic fluctuations',
+                'incertidumbre', 'uncertainty', 'heisenberg',
+                'δx', 'δp', 'Δx', 'Δp', 'principio de incertidumbre'
             ]
         }
     
@@ -620,6 +746,7 @@ Si no está aquí, responde: "No tengo información científicamente verificada 
             'vacuum': 'vacuum_fluctuations',
             'squeezed': 'squeezed_states',
             'qrng_physics': 'anu_qrng',
+            'variance_commutator': 'variance_commutator',
         }
         
         added_formulas = set()
