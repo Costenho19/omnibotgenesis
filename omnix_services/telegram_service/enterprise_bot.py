@@ -177,10 +177,12 @@ class EnterpriseTelegramBot:
             self.trading_enterprise_enabled = False
         
         # Fallback a sistema legacy si Enterprise falla
+        self.trading = None  # Inicializar siempre
         if not self.trading_enterprise_enabled:
             logger.info("📦 Usando Trading System legacy (fallback)")
             self.trading = TradingSystem()
         else:
+            self.trading = self.trading_enterprise  # Referencia al enterprise
             logger.info("🚀 TRADING ENTERPRISE READY - Sistema premium activado")
         
         # 📊 PAPER TRADING MANAGER - Trading simulado con datos reales
@@ -510,6 +512,20 @@ class EnterpriseTelegramBot:
             logger.info("✅ Bot Telegram empresarial configurado")
             logger.info("🎤 Handler de voz premium activado - Whisper AI")
             logger.info("🎨 Handler de botones inline activado - Interacción premium")
+            
+            # 🛡️ Conectar AlertDispatcher al bot de Telegram
+            if self.alert_dispatcher:
+                self.alert_dispatcher.set_telegram_bot(self.application.bot)
+                logger.info("📢 AlertDispatcher conectado a Telegram Bot")
+            
+            # 🛡️ Configurar RMS en TradingServiceEnterprise
+            if self.trading_enterprise_enabled and self.trading_enterprise:
+                self.trading_enterprise.configure_rms(
+                    limits_engine=self.limits_engine,
+                    circuit_breaker=self.circuit_breaker,
+                    alert_dispatcher=self.alert_dispatcher
+                )
+            
             return True
             
         except Exception as e:

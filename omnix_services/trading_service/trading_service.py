@@ -27,12 +27,19 @@ class TradingServiceEnterprise:
     - Monte Carlo simulations for risk analysis
     - Black Swan detection for extreme events
     - Post-Quantum Cryptography for security
+    - Risk Management System (RMS) V6.0 integration
     
     Scalable to 100K+ users
     """
     
     def __init__(self):
         logger.info("🚀 Initializing Trading Service Enterprise...")
+        
+        # RMS Integration (set externally after initialization)
+        self.limits_engine = None
+        self.circuit_breaker = None
+        self.alert_dispatcher = None
+        self.rms_enabled = False
         
         # Initialize all sub-modules
         self.kraken = KrakenAPIClient()
@@ -63,6 +70,76 @@ class TradingServiceEnterprise:
             logger.warning("⚠️ Kraken API not accessible")
         
         logger.info("✅ Trading Service Enterprise initialized successfully")
+    
+    def configure_rms(self, limits_engine=None, circuit_breaker=None, alert_dispatcher=None) -> None:
+        """
+        Configure Risk Management System integration.
+        
+        Args:
+            limits_engine: LimitsEngine instance for pre-trade validation
+            circuit_breaker: CircuitBreaker instance for halt control
+            alert_dispatcher: AlertDispatcher for risk notifications
+        """
+        self.limits_engine = limits_engine
+        self.circuit_breaker = circuit_breaker
+        self.alert_dispatcher = alert_dispatcher
+        self.rms_enabled = limits_engine is not None or circuit_breaker is not None
+        
+        if self.rms_enabled:
+            logger.info("🛡️ TradingService: RMS integration configured")
+            if limits_engine:
+                logger.info("   ✅ LimitsEngine: Pre-trade validation active")
+            if circuit_breaker:
+                logger.info("   ✅ CircuitBreaker: Halt protection active")
+            if alert_dispatcher:
+                logger.info("   ✅ AlertDispatcher: Risk notifications active")
+    
+    def _validate_rms(self, user_id: str, pair: str, side: str, amount: float, price: float = None) -> Dict[str, Any]:
+        """
+        Validate trade against RMS before execution.
+        
+        Returns:
+            Dict with 'approved', 'reason', and 'warnings'
+        """
+        result = {'approved': True, 'reason': None, 'warnings': []}
+        
+        if not self.rms_enabled:
+            return result
+        
+        # Check Circuit Breaker first
+        if self.circuit_breaker and self.circuit_breaker.is_trading_halted(user_id):
+            result['approved'] = False
+            result['reason'] = 'Trading halted by Circuit Breaker'
+            logger.warning(f"🛑 RMS: Trade rejected for {user_id} - Circuit Breaker active")
+            return result
+        
+        # Validate with LimitsEngine
+        if self.limits_engine:
+            try:
+                trade_value = amount * (price or 1.0)
+                validation = self.limits_engine.validate_trade(
+                    user_id=user_id,
+                    symbol=pair,
+                    side=side,
+                    quantity=amount,
+                    price=price or 0,
+                    trade_value=trade_value
+                )
+                
+                if not validation.get('approved', True):
+                    result['approved'] = False
+                    result['reason'] = validation.get('reason', 'Trade rejected by LimitsEngine')
+                    logger.warning(f"🛡️ RMS: Trade rejected - {result['reason']}")
+                
+                if validation.get('warnings'):
+                    result['warnings'] = validation['warnings']
+                    
+            except Exception as e:
+                logger.error(f"⚠️ RMS validation error: {e}")
+                # Allow trade but log warning
+                result['warnings'].append(f"RMS validation failed: {e}")
+        
+        return result
     
     def get_account_status(self) -> Dict[str, Any]:
         """Get comprehensive account status"""
@@ -179,10 +256,11 @@ class TradingServiceEnterprise:
         side: str,
         amount: float,
         order_type: str = 'market',
-        price: Optional[float] = None
+        price: Optional[float] = None,
+        user_id: str = 'system'
     ) -> Dict[str, Any]:
         """
-        Execute trade with PQC signature
+        Execute trade with PQC signature and RMS validation
         
         Args:
             pair: Trading pair
@@ -190,8 +268,31 @@ class TradingServiceEnterprise:
             amount: Amount in base currency
             order_type: 'market' or 'limit'
             price: Limit price (required for limit orders)
+            user_id: User ID for RMS validation
         """
         try:
+            # 🛡️ RMS PRE-TRADE VALIDATION
+            if self.rms_enabled:
+                rms_check = self._validate_rms(
+                    user_id=user_id,
+                    pair=pair,
+                    side=side,
+                    amount=amount,
+                    price=price
+                )
+                
+                if not rms_check['approved']:
+                    logger.warning(f"🛑 Trade BLOCKED by RMS: {rms_check['reason']}")
+                    return {
+                        'success': False,
+                        'error': f"RMS Rejection: {rms_check['reason']}",
+                        'rms_blocked': True
+                    }
+                
+                if rms_check['warnings']:
+                    for warning in rms_check['warnings']:
+                        logger.warning(f"⚠️ RMS Warning: {warning}")
+            
             # Prepare order data
             order_data = {
                 'pair': pair,

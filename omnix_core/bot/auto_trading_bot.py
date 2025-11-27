@@ -228,14 +228,12 @@ class AutoTradingBot:
         
         # AI Risk Guardian V5.4 - SUPERVISOR DE RIESGOS
         if AI_RISK_GUARDIAN_AVAILABLE and database_service:
-            import os
-            db_url = os.getenv('DATABASE_URL')
-            if db_url:
-                self.risk_guardian = AIRiskGuardian(db_url)
+            try:
+                self.risk_guardian = AIRiskGuardian(database_service=database_service)
                 logger.info("🛡️ AI Risk Guardian V5.4 ACTIVADO - Protección contra overtrading, drawdown, revenge trading")
-            else:
+            except Exception as e:
                 self.risk_guardian = None
-                logger.warning("⚠️ AI Risk Guardian desactivado - DATABASE_URL no disponible")
+                logger.warning(f"⚠️ AI Risk Guardian error: {e}")
         else:
             self.risk_guardian = None
             logger.info("⚠️ AI Risk Guardian desactivado")

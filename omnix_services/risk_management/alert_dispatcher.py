@@ -75,10 +75,28 @@ class AlertDispatcher:
         self._max_alerts_per_day = 50
         self._cooldown_seconds = 30
         
+        self._telegram_chat_ids: List[str] = []  # Chat IDs para alertas
+        
         self._initialized = True
         logger.info("📢 AlertDispatcher inicializado - Notificaciones activas")
         logger.info(f"   📱 Telegram: {'Activo' if telegram_bot else 'No disponible'}")
         logger.info(f"   ⏱️ Cooldown: {self._cooldown_seconds}s entre alertas")
+    
+    def set_telegram_bot(self, telegram_bot) -> None:
+        """
+        Configurar bot de Telegram después de inicialización.
+        
+        Args:
+            telegram_bot: Instancia del bot de Telegram (Application.bot)
+        """
+        self.telegram_bot = telegram_bot
+        logger.info(f"📱 AlertDispatcher: Telegram bot {'conectado' if telegram_bot else 'desconectado'}")
+    
+    def add_alert_chat_id(self, chat_id: str) -> None:
+        """Agregar chat ID para recibir alertas"""
+        if chat_id not in self._telegram_chat_ids:
+            self._telegram_chat_ids.append(chat_id)
+            logger.info(f"📱 Chat ID {chat_id} agregado para alertas RMS")
     
     async def send_alert(
         self,
