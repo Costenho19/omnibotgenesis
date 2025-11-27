@@ -95,6 +95,25 @@ class PromptsContextManager:
         message_lower = message_normalized.strip()
         word_count = len(message_lower.split())
         
+        # PRIORIDAD 0: ACCIONES CUÁNTICAS - Cuando el usuario pide EJECUTAR el QRNG
+        quantum_action_keywords = [
+            'genera', 'generar', 'generate', 'dame', 'muestrame', 'muéstrame',
+            'crea', 'crear', 'produce', 'obtener', 'obten', 'obtén',
+            'ejecuta', 'ejecutar', 'run', 'test', 'prueba'
+        ]
+        quantum_object_keywords = [
+            'numero cuantico', 'números cuánticos', 'numeros cuanticos',
+            'numero aleatorio', 'números aleatorios', 'numeros aleatorios',
+            'random cuantico', 'qrng', 'quantum random',
+            'entropia cuantica', 'entropía cuántica'
+        ]
+        
+        has_action = any(kw in message_lower for kw in quantum_action_keywords)
+        has_quantum_object = any(kw in message_lower for kw in quantum_object_keywords)
+        
+        if has_action and has_quantum_object:
+            return 'quantum_action'
+        
         # PRIORIDAD 1: Detectar saludos/agradecimientos MUY simples primero
         simple_greetings = ['hola', 'hey', 'buenas', 'que tal', 'como estas', 'como esta', 
                            'buenos dias', 'buenas tardes', 'buenas noches', 'hi', 'hello',
