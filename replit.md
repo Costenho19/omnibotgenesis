@@ -83,9 +83,10 @@ Located in `omnix_core/quantum/`:
 
 ### Feature Specifications
 - **Trading Modes**: Paper Trading ($1M virtual), Real Trading (with post-quantum signed orders), and Backtesting.
-- **Quantum Enhancements**:
-  - **ANU QRNG**: True quantum randomness from Australian National University for Monte Carlo simulations.
-  - **QAOA**: Classical simulation for portfolio optimization, ready for D-Wave Leap integration.
+- **Quantum Enhancements** (REAL QUANTUM):
+  - **ANU QRNG**: True quantum randomness from Australian National University for Monte Carlo simulations. REAL QUANTUM.
+  - **D-Wave Leap**: Real quantum annealing for portfolio optimization using D-Wave hybrid CQM solver. REAL QUANTUM.
+  - **Classical Fallback**: Automatic fallback to classical optimization when quantum not available.
 - **Community Intelligence**: Signal contribution, community feedback, and reward system.
 
 ### System Design Choices

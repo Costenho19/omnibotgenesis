@@ -1,6 +1,10 @@
 """
 OMNIX V6.0 ULTRA - Quantum Enhancements Package
-Exports QRNG, QAOA, Physics Validator, Testing Framework, and Confidence System
+Exports QRNG, QAOA, D-Wave, Physics Validator, Testing Framework, and Confidence System
+
+QUANTUM REAL:
+- ANU QRNG: True quantum randomness from Australian National University
+- D-Wave Leap: Real quantum annealing for portfolio optimization
 """
 
 from omnix_core.quantum.enhancements import (
@@ -30,6 +34,12 @@ from omnix_core.quantum.testing_framework import (
     TestResult
 )
 
+from omnix_core.quantum.dwave_qaoa import (
+    DWavePortfolioOptimizer,
+    QuantumOptimizationResult,
+    DWAVE_AVAILABLE
+)
+
 __all__ = [
     'global_qrng',
     'global_qaoa',
@@ -48,5 +58,8 @@ __all__ = [
     'global_testing_framework',
     'QuantumTestingFramework',
     'TestCase',
-    'TestResult'
+    'TestResult',
+    'DWavePortfolioOptimizer',
+    'QuantumOptimizationResult',
+    'DWAVE_AVAILABLE'
 ]
