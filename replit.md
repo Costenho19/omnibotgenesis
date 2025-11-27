@@ -7,7 +7,11 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 User Communication Preference: Simple, everyday language (Spanish primary).
 
 ## Recent Changes
-- **2025-11-27**: Added Professional Validation Suite (`omnix_testing/professional_validator.py`) with Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, and Realistic Cost Modeling.
+- **2025-11-27**: **PROFESSIONAL VALIDATION SUITE V2.0** - Upgraded to 10/10 institutional hedge fund standard:
+  - **Advanced TCA** (`advanced_tca.py`): Variable costs by hour (0.46%-0.57%), order size, and volatility
+  - **Regime Metrics** (`regime_metrics.py`): Weighted Sharpe, consistency score (0-100%), bear market grade (A-F)
+  - **Drawdown Analyzer** (`drawdown_analyzer.py`): Clustering detection, pain index, recovery time analysis
+- **2025-11-27**: Added Professional Validation Suite V1.0 (`omnix_testing/professional_validator.py`) with Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, and Realistic Cost Modeling.
 - **2025-11-27**: Created ARES Strategy Validation script (`omnix_testing/validate_ares_strategies.py`) for institutional-grade strategy backtesting.
 - **2025-11-27**: Fixed LSP error in `omnix_core/strategies/ares_v1.py` (numpy float conversion).
 

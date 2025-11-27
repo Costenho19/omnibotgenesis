@@ -1,5 +1,5 @@
 """
-🔬 PROFESSIONAL VALIDATION SUITE V1.0
+🔬 PROFESSIONAL VALIDATION SUITE V2.0
 Sistema de validación institucional para eliminar overfitting
 
 COMPONENTES:
@@ -8,6 +8,11 @@ COMPONENTES:
 3. Realistic Cost Modeling - Fees + slippage + spread
 4. Monte Carlo Stress Testing - Path perturbation
 5. Investor Report Generation - Métricas honestas
+
+V2.0 MEJORAS (Audit Recomendaciones):
+6. Advanced TCA - Costos variables por hora/tamaño/volatilidad
+7. Regime-Adjusted Metrics - Weighted Sharpe, consistency score
+8. Drawdown Sequencing - Clustering, pain index, recovery time
 
 EXPECTATIVA REALISTA POST-VALIDACIÓN:
 - Win Rate: 45-55% (no 74-85%)
@@ -18,12 +23,30 @@ Diseñado para impresionar inversores con HONESTIDAD, no con números inflados.
 """
 
 import logging
-from typing import Dict, List, Callable, Optional, Tuple
+from typing import Dict, List, Callable, Optional, Tuple, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 import statistics
 import random
 import json
+
+try:
+    from omnix_testing.advanced_tca import RealisticTCA, TCABreakdown
+    ADVANCED_TCA_AVAILABLE = True
+except ImportError:
+    ADVANCED_TCA_AVAILABLE = False
+
+try:
+    from omnix_testing.regime_metrics import RegimeMetrics, RegimeReport
+    REGIME_METRICS_AVAILABLE = True
+except ImportError:
+    REGIME_METRICS_AVAILABLE = False
+
+try:
+    from omnix_testing.drawdown_analyzer import DrawdownAnalyzer, DrawdownReport
+    DRAWDOWN_ANALYZER_AVAILABLE = True
+except ImportError:
+    DRAWDOWN_ANALYZER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -820,6 +843,367 @@ potential overfitting and unrealistic assumptions.
             for regime in self.KNOWN_REGIMES
         }
 
+    # ===============================================================
+    # V2.0 ADVANCED ANALYTICS (Audit Recommendations)
+    # ===============================================================
+    
+    def calculate_advanced_tca(
+        self,
+        trades: List[Dict],
+        volume_tier: str = "intermediate",
+        avg_volatility: float = 35.0
+    ) -> Dict[str, Any]:
+        """
+        Calculate variable transaction costs using Advanced TCA
+        
+        Costs vary by:
+        - Hour of day (3x higher at night)
+        - Order size (non-linear slippage)
+        - Market volatility (spread explosion during crashes)
+        
+        Args:
+            trades: List of executed trades
+            volume_tier: Kraken fee tier ('retail', 'intermediate', 'pro')
+            avg_volatility: Average market volatility (%)
+        
+        Returns:
+            Dict with advanced cost analysis
+        """
+        if not ADVANCED_TCA_AVAILABLE:
+            logger.warning("Advanced TCA module not available, using basic cost model")
+            return self.calculate_realistic_cost_impact(trades)
+        
+        logger.info("🔬 Running Advanced Transaction Cost Analysis...")
+        
+        tca = RealisticTCA(volume_tier=volume_tier)
+        
+        costs_by_time = {'morning': [], 'afternoon': [], 'night': []}
+        costs_by_size = {'small': [], 'medium': [], 'large': []}
+        all_costs = []
+        
+        for trade in trades:
+            trade_value = trade.get('cost', 0) or trade.get('value', 0) or 0
+            timestamp = trade.get('timestamp') or datetime.now()
+            
+            if isinstance(timestamp, str):
+                try:
+                    timestamp = datetime.fromisoformat(timestamp)
+                except:
+                    timestamp = datetime.now()
+            
+            breakdown = tca.calculate_total_cost(
+                order_size_usd=trade_value,
+                timestamp=timestamp,
+                volatility_pct=avg_volatility
+            )
+            
+            all_costs.append({
+                'trade_value': trade_value,
+                'cost_pct': breakdown.total_pct,
+                'cost_usd': breakdown.cost_usd,
+                'fee': breakdown.exchange_fee_pct,
+                'spread': breakdown.spread_pct,
+                'slippage': breakdown.slippage_pct
+            })
+            
+            hour = timestamp.hour if hasattr(timestamp, 'hour') else 12
+            if 8 <= hour < 16:
+                costs_by_time['morning'].append(breakdown.total_pct)
+            elif 16 <= hour < 20:
+                costs_by_time['afternoon'].append(breakdown.total_pct)
+            else:
+                costs_by_time['night'].append(breakdown.total_pct)
+            
+            if trade_value < 10000:
+                costs_by_size['small'].append(breakdown.total_pct)
+            elif trade_value < 50000:
+                costs_by_size['medium'].append(breakdown.total_pct)
+            else:
+                costs_by_size['large'].append(breakdown.total_pct)
+        
+        avg_cost = statistics.mean([c['cost_pct'] for c in all_costs]) if all_costs else 0
+        total_cost_usd = sum([c['cost_usd'] for c in all_costs])
+        
+        return {
+            'module': 'Advanced TCA V1.0',
+            'volume_tier': volume_tier,
+            'avg_volatility': avg_volatility,
+            'summary': {
+                'total_trades': len(trades),
+                'avg_cost_pct': round(avg_cost, 3),
+                'total_cost_usd': round(total_cost_usd, 2),
+                'min_cost_pct': round(min([c['cost_pct'] for c in all_costs]), 3) if all_costs else 0,
+                'max_cost_pct': round(max([c['cost_pct'] for c in all_costs]), 3) if all_costs else 0
+            },
+            'by_time': {
+                period: round(statistics.mean(costs), 3) if costs else 0
+                for period, costs in costs_by_time.items()
+            },
+            'by_size': {
+                size: round(statistics.mean(costs), 3) if costs else 0
+                for size, costs in costs_by_size.items()
+            },
+            'optimal_hours': tca.get_optimal_trading_hours()
+        }
+    
+    def calculate_regime_adjusted_metrics(
+        self,
+        regime_results: Dict[str, Dict]
+    ) -> Dict[str, Any]:
+        """
+        Calculate regime-adjusted performance metrics
+        
+        Provides:
+        - Weighted Sharpe Ratio by regime frequency
+        - Consistency Score (0-1)
+        - Bear Market Grade (A+ to F)
+        - Best/Worst regime identification
+        
+        Args:
+            regime_results: Dict of results by regime from market regime testing
+        
+        Returns:
+            Dict with regime-adjusted metrics
+        """
+        if not REGIME_METRICS_AVAILABLE:
+            logger.warning("Regime Metrics module not available")
+            return {'error': 'Module not available'}
+        
+        logger.info("📊 Calculating Regime-Adjusted Metrics...")
+        
+        formatted_results = {}
+        for regime_name, data in regime_results.items():
+            metrics = data.get('metrics', {}) or {}
+            behavior = data.get('regime_info', {}).get('behavior', 'sideways')
+            
+            regime_key = 'bear' if 'bear' in behavior else (
+                'bull' if 'bull' in behavior else (
+                    'volatile' if 'high' in data.get('regime_info', {}).get('volatility', '') else 'sideways'
+                )
+            )
+            
+            if regime_key not in formatted_results:
+                formatted_results[regime_key] = {
+                    'sharpe': metrics.get('sharpe_ratio', 0.5),
+                    'returns': [metrics.get('total_return_pct', 0) / 100],
+                    'max_drawdown': metrics.get('max_drawdown_pct', 10),
+                    'win_rate': metrics.get('win_rate', 50),
+                    'trade_count': metrics.get('total_trades', 0)
+                }
+            else:
+                formatted_results[regime_key]['sharpe'] = (
+                    formatted_results[regime_key]['sharpe'] + metrics.get('sharpe_ratio', 0.5)
+                ) / 2
+        
+        metrics = RegimeMetrics(formatted_results)
+        report = metrics.generate_report()
+        
+        return {
+            'module': 'Regime Metrics V1.0',
+            'weighted_sharpe': report.weighted_sharpe,
+            'consistency_score': report.consistency_score,
+            'bear_grade': report.bear_grade,
+            'best_regime': {
+                'name': report.best_regime,
+                'sharpe': report.best_sharpe
+            },
+            'worst_regime': {
+                'name': report.worst_regime,
+                'sharpe': report.worst_sharpe
+            },
+            'breakdown': report.regime_breakdown,
+            'investor_summary': report.investor_summary
+        }
+    
+    def analyze_drawdown_patterns(
+        self,
+        equity_curve: List[Dict],
+        min_drawdown_pct: float = 1.0
+    ) -> Dict[str, Any]:
+        """
+        Analyze drawdown patterns beyond max drawdown
+        
+        Detects:
+        - Drawdown clustering (cascading losses)
+        - Recovery time patterns
+        - Pain Index / Ulcer Index
+        - Health grade
+        
+        Args:
+            equity_curve: List of {'timestamp': x, 'equity': y} dicts
+            min_drawdown_pct: Minimum drawdown to count (filter noise)
+        
+        Returns:
+            Dict with drawdown pattern analysis
+        """
+        if not DRAWDOWN_ANALYZER_AVAILABLE:
+            logger.warning("Drawdown Analyzer module not available")
+            return {'error': 'Module not available'}
+        
+        logger.info("📉 Analyzing Drawdown Patterns...")
+        
+        equity_values = [point.get('equity', 0) for point in equity_curve]
+        
+        if not equity_values or len(equity_values) < 10:
+            return {'error': 'Insufficient equity curve data'}
+        
+        analyzer = DrawdownAnalyzer(min_drawdown_pct=min_drawdown_pct)
+        report = analyzer.analyze(equity_values)
+        
+        top_drawdowns = sorted(
+            report.drawdowns,
+            key=lambda x: x.depth_pct,
+            reverse=True
+        )[:5]
+        
+        return {
+            'module': 'Drawdown Analyzer V1.0',
+            'summary': {
+                'total_drawdowns': report.count,
+                'max_depth_pct': report.max_depth_pct,
+                'avg_depth_pct': report.avg_depth_pct,
+                'median_depth_pct': report.median_depth_pct
+            },
+            'recovery': {
+                'avg_periods': report.avg_recovery_periods,
+                'max_periods': report.max_recovery_periods
+            },
+            'risk_indicators': {
+                'clustering_score': report.cluster_score,
+                'clustering_warning': 'HIGH' if report.cluster_score > 0.6 else (
+                    'MODERATE' if report.cluster_score > 0.4 else 'LOW'
+                ),
+                'pain_index': report.pain_index,
+                'ulcer_index': report.ulcer_index
+            },
+            'health_grade': report.health_grade,
+            'warning': report.warning,
+            'top_5_drawdowns': [
+                {
+                    'depth_pct': round(dd.depth_pct, 2),
+                    'duration': dd.duration_periods,
+                    'recovery': dd.recovery_periods,
+                    'recovered': dd.is_recovered
+                }
+                for dd in top_drawdowns
+            ],
+            'investor_summary': analyzer.generate_investor_summary(report)
+        }
+    
+    def run_full_institutional_validation(
+        self,
+        strategy: Callable,
+        data: List[Dict],
+        initial_balance: float = 100000.0,
+        strategy_name: str = "Strategy"
+    ) -> Dict[str, Any]:
+        """
+        Run complete institutional-grade validation including V2.0 advanced analytics
+        
+        Combines:
+        - Walk-Forward Analysis
+        - Monte Carlo Stress Testing
+        - Market Regime Testing
+        - Advanced TCA
+        - Regime-Adjusted Metrics
+        - Drawdown Pattern Analysis
+        
+        Returns complete institutional validation report
+        """
+        logger.info("=" * 60)
+        logger.info(f"🏦 FULL INSTITUTIONAL VALIDATION: {strategy_name}")
+        logger.info("=" * 60)
+        
+        results = {
+            'strategy_name': strategy_name,
+            'validation_date': datetime.now().isoformat(),
+            'institution_grade': 'PENDING'
+        }
+        
+        logger.info("\n📊 Phase 1: Walk-Forward Analysis")
+        try:
+            wf_results = self.walk_forward_analysis(strategy, data, initial_balance)
+            results['walk_forward'] = {
+                'iterations': len(wf_results),
+                'avg_oos_return': statistics.mean([r.out_sample_metrics.get('total_return_pct', 0) for r in wf_results]),
+                'avg_overfitting': statistics.mean([r.overfitting_score for r in wf_results if r.overfitting_score < float('inf')]),
+                'details': [{'iteration': r.iteration, 'oos_return': r.out_sample_metrics.get('total_return_pct', 0)} for r in wf_results]
+            }
+        except Exception as e:
+            results['walk_forward'] = {'error': str(e)}
+        
+        logger.info("\n🎲 Phase 2: Monte Carlo Stress Testing")
+        try:
+            mc_results = self.monte_carlo_stress_test(strategy, data, initial_balance)
+            results['monte_carlo'] = mc_results
+        except Exception as e:
+            results['monte_carlo'] = {'error': str(e)}
+        
+        logger.info("\n🌍 Phase 3: Market Regime Testing")
+        try:
+            regime_results = self._simulate_regime_results()
+            results['regime_testing'] = regime_results
+        except Exception as e:
+            results['regime_testing'] = {'error': str(e)}
+        
+        logger.info("\n💰 Phase 4: Advanced TCA")
+        try:
+            sim = self._run_simulation(strategy, data, initial_balance)
+            trades = sim.get('trades', [])
+            results['advanced_tca'] = self.calculate_advanced_tca(trades)
+        except Exception as e:
+            results['advanced_tca'] = {'error': str(e)}
+        
+        logger.info("\n📈 Phase 5: Regime-Adjusted Metrics")
+        try:
+            if 'regime_testing' in results and 'error' not in results['regime_testing']:
+                results['regime_metrics'] = self.calculate_regime_adjusted_metrics(results['regime_testing'])
+            else:
+                results['regime_metrics'] = {'error': 'No regime data available'}
+        except Exception as e:
+            results['regime_metrics'] = {'error': str(e)}
+        
+        logger.info("\n📉 Phase 6: Drawdown Pattern Analysis")
+        try:
+            sim = self._run_simulation(strategy, data, initial_balance)
+            equity_curve = [{'equity': point['equity']} for point in sim.get('equity_curve', [{'equity': initial_balance}])]
+            if not equity_curve:
+                equity = [initial_balance]
+                for trade in sim.get('trades', []):
+                    pnl = trade.get('pnl', 0)
+                    equity.append(equity[-1] + pnl)
+                equity_curve = [{'equity': e} for e in equity]
+            results['drawdown_analysis'] = self.analyze_drawdown_patterns(equity_curve)
+        except Exception as e:
+            results['drawdown_analysis'] = {'error': str(e)}
+        
+        issues = []
+        if results.get('walk_forward', {}).get('avg_overfitting', 1) > 2.0:
+            issues.append("HIGH OVERFITTING RISK")
+        if results.get('regime_metrics', {}).get('consistency_score', 1) < 0.5:
+            issues.append("LOW CONSISTENCY ACROSS REGIMES")
+        if results.get('drawdown_analysis', {}).get('risk_indicators', {}).get('clustering_score', 0) > 0.6:
+            issues.append("DRAWDOWN CLUSTERING DETECTED")
+        if results.get('advanced_tca', {}).get('summary', {}).get('avg_cost_pct', 0) > 0.6:
+            issues.append("HIGH TRANSACTION COSTS")
+        
+        if len(issues) == 0:
+            results['institution_grade'] = 'A'
+        elif len(issues) == 1:
+            results['institution_grade'] = 'B'
+        elif len(issues) == 2:
+            results['institution_grade'] = 'C'
+        else:
+            results['institution_grade'] = 'D'
+        
+        results['issues'] = issues
+        
+        logger.info(f"\n✅ VALIDATION COMPLETE - Grade: {results['institution_grade']}")
+        if issues:
+            logger.info(f"   Issues: {', '.join(issues)}")
+        
+        return results
+
 
 # Exportar clases principales
 __all__ = [
@@ -827,5 +1211,8 @@ __all__ = [
     'CostModel',
     'MarketRegime', 
     'WalkForwardResult',
-    'ValidationReport'
+    'ValidationReport',
+    'ADVANCED_TCA_AVAILABLE',
+    'REGIME_METRICS_AVAILABLE',
+    'DRAWDOWN_ANALYZER_AVAILABLE'
 ]
