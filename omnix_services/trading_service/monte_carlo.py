@@ -13,12 +13,17 @@ logger = get_logger(__name__)
 
 # Importar QRNG cuántico
 try:
-    from quantum_enhancements import global_qrng
+    from omnix_core.quantum import global_qrng
     QUANTUM_AVAILABLE = True
     logger.info("✅ Quantum RNG disponible - Monte Carlo usará números cuánticos")
 except ImportError:
-    QUANTUM_AVAILABLE = False
-    logger.warning("⚠️ Quantum RNG no disponible - usando generador clásico")
+    try:
+        from omnix_core.quantum.enhancements import global_qrng
+        QUANTUM_AVAILABLE = True
+        logger.info("✅ Quantum RNG disponible (fallback import)")
+    except ImportError:
+        QUANTUM_AVAILABLE = False
+        logger.warning("⚠️ Quantum RNG no disponible - usando generador clásico")
 
 
 class MonteCarloSimulator:

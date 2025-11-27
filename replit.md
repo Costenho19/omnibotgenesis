@@ -38,7 +38,12 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 ### Feature Specifications
 - **Trading Modes**: Paper Trading, Real Trading (with post-quantum signed orders), and Backtesting.
-- **Quantum Enhancements**: Integrates QRNG and QAOA for portfolio optimization.
+- **Quantum Enhancements (Nov 27, 2025 - ANU QRNG ACTIVATED)**:
+  - **ANU QRNG (Quantum Random Number Generator)**: True quantum randomness from Australian National University's quantum vacuum fluctuation measurements via free legacy API (https://qrng.anu.edu.au/API/jsonI.php). Used by Monte Carlo simulator for 10,000 simulations with provably unpredictable numbers.
+  - **QAOA (Quantum Approximate Optimization Algorithm)**: Classical simulation for portfolio optimization, ready for D-Wave Leap integration.
+  - **Module Location**: `omnix_core/quantum/enhancements.py` exports `global_qrng` and `global_qaoa`.
+  - **Monte Carlo Integration**: Automatic fallback to numpy if API unavailable; Box-Muller transform converts uniform [0,1) to normal distribution.
+  - **Benefits**: Impresses investors ("Powered by Quantum Computing"), unpredictable simulations, cryptographically secure randomness.
 - **Community Intelligence**: Signal Contribution (crowdsourcing alpha), Community Feedback, Reward System.
 
 ### System Design Choices
