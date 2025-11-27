@@ -1,6 +1,6 @@
 """
 OMNIX V6.0 ULTRA - Quantum Enhancements Package
-Exports QRNG and QAOA for Monte Carlo and Portfolio Optimization
+Exports QRNG, QAOA, Physics Validator, Testing Framework, and Confidence System
 """
 
 from omnix_core.quantum.enhancements import (
@@ -13,6 +13,23 @@ from omnix_core.quantum.enhancements import (
     QuantumPortfolioOptimizer
 )
 
+from omnix_core.quantum.physics_validator import (
+    quantum_physics_validator,
+    response_confidence,
+    generate_quantum_response,
+    get_quantum_physics_context,
+    add_quantum_footer,
+    QuantumPhysicsValidator,
+    ResponseConfidence
+)
+
+from omnix_core.quantum.testing_framework import (
+    global_testing_framework,
+    QuantumTestingFramework,
+    TestCase,
+    TestResult
+)
+
 __all__ = [
     'global_qrng',
     'global_qaoa',
@@ -20,5 +37,16 @@ __all__ = [
     'optimize_portfolio_quantum',
     'get_quantum_stats',
     'QuantumRandomNumberGenerator',
-    'QuantumPortfolioOptimizer'
+    'QuantumPortfolioOptimizer',
+    'quantum_physics_validator',
+    'response_confidence',
+    'generate_quantum_response',
+    'get_quantum_physics_context',
+    'add_quantum_footer',
+    'QuantumPhysicsValidator',
+    'ResponseConfidence',
+    'global_testing_framework',
+    'QuantumTestingFramework',
+    'TestCase',
+    'TestResult'
 ]

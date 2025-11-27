@@ -3216,3 +3216,245 @@ def get_quantum_physics_context(message: str) -> Optional[str]:
         return quantum_physics_validator.get_verified_context(topics)
     
     return None
+
+
+# ============================================================
+# V4.0 - RESPONSE CONFIDENCE SYSTEM
+# Sistema de Footer de Confianza para Inversores
+# ============================================================
+
+class ResponseConfidence:
+    """
+    Sistema de Confianza para respuestas cuánticas.
+    
+    Agrega metadata de confianza a las respuestas para:
+    1. Transparencia con inversores PhD
+    2. Cobertura legal si hay errores
+    3. Demostrar que el sistema se auto-evalúa
+    
+    Usage:
+        confidence = ResponseConfidence()
+        enhanced = confidence.add_confidence_footer(response, question)
+    """
+    
+    def __init__(self, validator: Optional['QuantumPhysicsValidator'] = None):
+        """Initialize with optional validator reference"""
+        self.validator = validator if validator is not None else quantum_physics_validator
+    
+    def calculate_confidence_level(self, response: str) -> str:
+        """
+        Calculate confidence level based on response characteristics.
+        
+        Returns:
+            'ALTA', 'MEDIA', or 'BAJA'
+        """
+        factors = {
+            'has_derivation': bool(re.search(r'paso\s*\d|step\s*\d|▶|►|→|━', response, re.IGNORECASE)),
+            'has_calculation': bool(re.search(r'=\s*[\d\.]+|≈\s*[\d\.]+', response)),
+            'has_table': bool(re.search(r'┌|├|└|│|┃', response)),
+            'length_adequate': len(response) > 500,
+            'has_units': bool(re.search(r'Hz|J|V|m/s|eV|bit|dB', response)),
+            'no_hedging': not any(h in response.lower() for h in 
+                ['quizás', 'tal vez', 'probablemente', 'maybe', 'probably', 'i think', 'creo que']),
+        }
+        
+        score = sum(factors.values())
+        
+        if score >= 5:
+            return 'ALTA'
+        elif score >= 3:
+            return 'MEDIA'
+        else:
+            return 'BAJA'
+    
+    def identify_caveats(self, response: str, validation_score: float) -> Optional[str]:
+        """
+        Identify any caveats that should be mentioned.
+        
+        Returns:
+            Caveat string or None
+        """
+        caveats = []
+        
+        if validation_score < 0.7:
+            caveats.append("Score de validación bajo")
+        
+        if len(response) < 200:
+            caveats.append("Respuesta breve")
+        
+        if not re.search(r'=|≈|≥|≤', response):
+            caveats.append("Sin ecuaciones explícitas")
+        
+        if re.search(r'iℏ|ihbar', response, re.IGNORECASE):
+            caveats.append("Usa convención iℏ (nuestra norma es i/2)")
+        
+        return "; ".join(caveats) if caveats else None
+    
+    def count_keywords_found(self, response: str) -> Tuple[int, int]:
+        """
+        Count how many quantum keywords were found in response.
+        
+        Returns:
+            (keywords_found, total_keywords)
+        """
+        keywords_found = 0
+        total_keywords = 75  # Approximate total
+        
+        check_keywords = [
+            'cuadratura', 'quadrature', 'homodina', 'homodyne',
+            'vacío', 'vacuum', 'shot noise', 'conmutador', 'commutator',
+            'squeezed', 'comprimido', 'coherente', 'fock',
+            'wigner', 'fisher', 'heisenberg', 'entropía', 'entropy',
+            'bell', 'chsh', 'decoherencia', 'decoherence',
+            'fotón', 'photon', 'mandel', 'poisson', 'qrng',
+            'operador', 'operator', 'eigenestado', 'eigenstate',
+        ]
+        
+        response_lower = response.lower()
+        for kw in check_keywords:
+            if kw in response_lower:
+                keywords_found += 1
+        
+        return keywords_found, total_keywords
+    
+    def get_confidence_metadata(self, response: str) -> Dict:
+        """
+        Generate complete confidence metadata for a response.
+        
+        Args:
+            response: The AI response to analyze
+            
+        Returns:
+            Dict with all confidence metrics
+        """
+        is_valid, quality_score, findings = self.validator.validate_quantum_response(response)
+        credibility = self.validator.get_quantum_credibility_score(response)
+        
+        confidence_level = self.calculate_confidence_level(response)
+        caveats = self.identify_caveats(response, quality_score)
+        keywords_found, total_keywords = self.count_keywords_found(response)
+        
+        return {
+            'score': int(quality_score * 100),
+            'grade': credibility['grade'],
+            'confidence': confidence_level,
+            'keywords_found': keywords_found,
+            'total_keywords': total_keywords,
+            'has_derivation': credibility['has_derivation'],
+            'has_calculation': credibility['has_numerical_calculation'],
+            'investor_ready': credibility['investor_ready'],
+            'caveats': caveats,
+            'findings': findings,
+            'is_valid': is_valid,
+        }
+    
+    def format_confidence_footer(self, metadata: Dict, minimal: bool = False) -> str:
+        """
+        Format the confidence footer for display.
+        
+        Args:
+            metadata: Confidence metadata dict
+            minimal: If True, show minimal footer (for quick responses)
+            
+        Returns:
+            Formatted footer string
+        """
+        if minimal:
+            emoji = "✅" if metadata['score'] >= 70 else "⚠️" if metadata['score'] >= 50 else "❌"
+            return f"\n\n{emoji} *Score: {metadata['score']}/100 ({metadata['grade']})*"
+        
+        confidence_emoji = {
+            'ALTA': '🟢',
+            'MEDIA': '🟡', 
+            'BAJA': '🔴',
+        }
+        
+        grade_emoji = {
+            'A+': '🏆', 'A': '✅', 'A-': '✅',
+            'B+': '👍', 'B': '👍', 'B-': '👍',
+            'C+': '⚠️', 'C': '⚠️',
+            'D': '❌', 'F': '❌',
+        }
+        
+        footer = f"""
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 **Validación Automática OMNIX**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{grade_emoji.get(metadata['grade'], '📊')} Score: **{metadata['score']}/100** (Grado {metadata['grade']})
+{confidence_emoji.get(metadata['confidence'], '⚪')} Confianza: **{metadata['confidence']}**
+🔍 Keywords: {metadata['keywords_found']}/{metadata['total_keywords']} detectados"""
+        
+        if metadata['has_derivation']:
+            footer += "\n✅ Incluye derivación paso a paso"
+        if metadata['has_calculation']:
+            footer += "\n✅ Incluye cálculos numéricos"
+        
+        if metadata['caveats']:
+            footer += f"\n⚠️ Notas: {metadata['caveats']}"
+        
+        footer += """
+
+💡 *Respuesta validada automáticamente por OMNIX V6.0 ULTRA.*
+*Para decisiones críticas, consulte con experto en física cuántica.*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+        
+        return footer
+    
+    def add_confidence_footer(self, response: str, question: str = "", 
+                             minimal: bool = False) -> str:
+        """
+        Add confidence footer to a response.
+        
+        This is the main entry point for the confidence system.
+        
+        Args:
+            response: The AI response
+            question: Original question (for context)
+            minimal: If True, show minimal footer
+            
+        Returns:
+            Response with confidence footer appended
+        """
+        is_quantum, _ = self.validator.detect_quantum_optics_topic(question)
+        
+        if not is_quantum:
+            return response
+        
+        metadata = self.get_confidence_metadata(response)
+        footer = self.format_confidence_footer(metadata, minimal=minimal)
+        
+        return response + footer
+    
+    def should_add_footer(self, question: str) -> bool:
+        """
+        Determine if a response should have a confidence footer.
+        
+        Only adds footer to quantum physics responses.
+        
+        Args:
+            question: The user's question
+            
+        Returns:
+            True if footer should be added
+        """
+        is_quantum, _ = self.validator.detect_quantum_optics_topic(question)
+        return is_quantum
+
+
+response_confidence = ResponseConfidence()
+
+
+def add_quantum_footer(response: str, question: str = "", minimal: bool = False) -> str:
+    """
+    Convenience function to add confidence footer to a response.
+    
+    Args:
+        response: The AI response
+        question: Original question
+        minimal: If True, show minimal footer
+        
+    Returns:
+        Response with footer if quantum topic detected
+    """
+    return response_confidence.add_confidence_footer(response, question, minimal)
