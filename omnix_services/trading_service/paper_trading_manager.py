@@ -24,20 +24,23 @@ class PaperTradingManager:
     
     Ejecuta trades simulados con datos reales de Kraken
     para testing y validación de estrategias
+    
+    V2: Integrado con Risk Management System (RMS)
     """
     
-    def __init__(self, database_service=None, trading_service=None):
+    def __init__(self, database_service=None, trading_service=None, limits_engine=None, circuit_breaker=None):
         self.database_service = database_service
         self.trading_service = trading_service
+        self.limits_engine = limits_engine
+        self.circuit_breaker = circuit_breaker
         
-        # Balance virtual inicial
         self.INITIAL_BALANCE_USD = 1_000_000.00
         
-        # Kraken fees (26 basis points = 0.26%)
         self.KRAKEN_FEE_BPS = 26.0
         self.KRAKEN_FEE_RATE = 0.0026
         
-        logger.info("📊 PaperTradingManager inicializado - Balance inicial: $1,000,000")
+        rms_status = "RMS activo" if limits_engine else "RMS no configurado"
+        logger.info(f"📊 PaperTradingManager inicializado - Balance inicial: $1,000,000 | {rms_status}")
     
     def initialize_user(self, user_id: str) -> Dict:
         """
@@ -104,6 +107,7 @@ class PaperTradingManager:
         Ejecutar trade simulado con datos REALES de Kraken
         
         V2: Usa schema institucional con P&L tracking completo
+        V3: Integrado con RMS (Risk Management System)
         
         Args:
             user_id: ID del usuario
@@ -115,7 +119,37 @@ class PaperTradingManager:
             Dict con resultado del trade simulado
         """
         try:
-            # 1. Obtener precio REAL de Kraken
+            if self.circuit_breaker and self.circuit_breaker.is_trading_halted(user_id):
+                halt_status = self.circuit_breaker.get_halt_status(user_id)
+                return {
+                    'error': 'Trading detenido por el sistema de riesgo',
+                    'halt_reason': halt_status.reason.value if halt_status.reason else 'unknown',
+                    'halt_message': halt_status.message,
+                    'resume_at': halt_status.resume_at.isoformat() if halt_status.resume_at else None,
+                    'rms_blocked': True
+                }
+            
+            if self.limits_engine:
+                validation = self.limits_engine.validate_order(
+                    user_id=user_id,
+                    symbol=symbol,
+                    side=side,
+                    amount_usd=amount_usd
+                )
+                
+                if not validation.is_valid:
+                    logger.warning(f"🚫 RMS BLOCKED: {validation.rejection_reason}")
+                    return {
+                        'error': f'Orden rechazada por RMS: {validation.rejection_reason}',
+                        'rms_blocked': True,
+                        'risk_score': validation.risk_score,
+                        'breaches': [b.to_dict() for b in validation.breaches] if validation.breaches else []
+                    }
+                
+                if validation.warnings:
+                    for warning in validation.warnings:
+                        logger.warning(f"⚠️ RMS Warning: {warning}")
+            
             if self.trading_service and hasattr(self.trading_service, 'get_ticker'):
                 ticker = self.trading_service.get_ticker(symbol)
                 if not ticker or 'last' not in ticker:

@@ -105,6 +105,22 @@ if STOCK_TRADING_ENABLED:
 else:
     STOCK_MODULE_AVAILABLE = False
 
+# Risk Management System (RMS) V6.0
+try:
+    from omnix_services.risk_management import (
+        LimitsEngine,
+        PositionMonitor,
+        CircuitBreaker,
+        AlertDispatcher,
+        RiskDashboard,
+        RiskConfig
+    )
+    RMS_AVAILABLE = True
+    logger.info("🛡️ Risk Management System (RMS) disponible")
+except ImportError:
+    RMS_AVAILABLE = False
+    logger.warning("⚠️ Risk Management System no disponible")
+
 # Telegram availability check
 try:
     from telegram import __version__
@@ -305,6 +321,56 @@ class EnterpriseTelegramBot:
         else:
             self.signal_contribution = None
         
+        # 🛡️ RISK MANAGEMENT SYSTEM (RMS) V6.0 - Control de Riesgo Institucional
+        if RMS_AVAILABLE:
+            try:
+                self.rms_config = RiskConfig.from_env()
+                self.limits_engine = LimitsEngine(
+                    database_service=self.db_manager,
+                    config=self.rms_config
+                )
+                self.position_monitor = PositionMonitor(
+                    database_service=self.db_manager,
+                    trading_service=self.trading_service,
+                    config=self.rms_config
+                )
+                self.circuit_breaker = CircuitBreaker(
+                    database_service=self.db_manager,
+                    config=self.rms_config
+                )
+                self.alert_dispatcher = AlertDispatcher(
+                    telegram_bot=None,
+                    database_service=self.db_manager,
+                    config=self.rms_config
+                )
+                self.risk_dashboard = RiskDashboard(
+                    database_service=self.db_manager,
+                    limits_engine=self.limits_engine,
+                    position_monitor=self.position_monitor,
+                    circuit_breaker=self.circuit_breaker,
+                    config=self.rms_config
+                )
+                logger.info("🛡️ Risk Management System (RMS) ACTIVADO")
+                logger.info(f"   ⚙️ Capital: ${self.rms_config.initial_capital:,.0f}")
+                logger.info(f"   🎯 Per Trade Limit: {self.rms_config.default_per_trade_limit_pct}%")
+                logger.info(f"   📉 Max Drawdown: {self.rms_config.default_max_drawdown_pct}%")
+                logger.info(f"   🔒 Auto-Halt: {'Enabled' if self.rms_config.enable_auto_halt else 'Disabled'}")
+            except Exception as e:
+                logger.warning(f"⚠️ Risk Management System error: {e}")
+                self.limits_engine = None
+                self.position_monitor = None
+                self.circuit_breaker = None
+                self.alert_dispatcher = None
+                self.risk_dashboard = None
+                self.rms_config = None
+        else:
+            self.limits_engine = None
+            self.position_monitor = None
+            self.circuit_breaker = None
+            self.alert_dispatcher = None
+            self.risk_dashboard = None
+            self.rms_config = None
+        
         self.setup_bot()
     
     def setup_bot(self):
@@ -406,6 +472,16 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("alpha_leaderboard", self.alpha_leaderboard_command))
                 self.application.add_handler(CommandHandler("execute_signal", self.execute_signal_command))
                 logger.info("🚀 Signal Contribution commands registrados: /share_signal, /community_signals, /my_signals, /alpha_leaderboard")
+            
+            # 🛡️ Comandos Risk Management System (RMS) V6.0 - Control Institucional
+            if self.limits_engine:
+                self.application.add_handler(CommandHandler("rms", self.rms_dashboard_command))
+                self.application.add_handler(CommandHandler("rms_limits", self.rms_limits_command))
+                self.application.add_handler(CommandHandler("rms_set", self.rms_set_limit_command))
+                self.application.add_handler(CommandHandler("rms_history", self.rms_history_command))
+                self.application.add_handler(CommandHandler("emergency_halt", self.rms_emergency_halt_command))
+                self.application.add_handler(CommandHandler("resume_trading", self.rms_resume_trading_command))
+                logger.info("🛡️ RMS commands registrados: /rms, /rms_limits, /rms_set, /rms_history, /emergency_halt, /resume_trading")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -4931,6 +5007,228 @@ El contribuidor ganará royalties si la señal es exitosa.
         except Exception as e:
             logger.error(f"Error en execute_signal: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    # ==========================================
+    # 🛡️ RISK MANAGEMENT SYSTEM (RMS) COMMANDS
+    # Nov 27, 2025 - Institutional Risk Control
+    # ==========================================
+    
+    async def rms_dashboard_command(self, update, context):
+        """Comando /rms - Dashboard de riesgo completo"""
+        try:
+            user = update.effective_user
+            
+            if not self.risk_dashboard:
+                await update.message.reply_text("❌ RMS no disponible")
+                return
+            
+            summary = self.risk_dashboard.get_telegram_summary(str(user.id))
+            await update.message.reply_text(summary, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en rms_dashboard: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def rms_limits_command(self, update, context):
+        """Comando /rms_limits - Ver límites configurados"""
+        try:
+            user = update.effective_user
+            
+            if not self.risk_dashboard:
+                await update.message.reply_text("❌ RMS no disponible")
+                return
+            
+            summary = self.risk_dashboard.get_limits_summary(str(user.id))
+            await update.message.reply_text(summary, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en rms_limits: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def rms_set_limit_command(self, update, context):
+        """Comando /rms_set <tipo> <valor> - Configurar límite"""
+        try:
+            if not is_admin(update.effective_user.id):
+                await update.message.reply_text("❌ Solo administradores pueden modificar límites")
+                return
+            
+            if not self.limits_engine:
+                await update.message.reply_text("❌ RMS no disponible")
+                return
+            
+            args = context.args
+            if len(args) < 2:
+                await update.message.reply_text("""
+🛡️ **Configurar Límite de Riesgo**
+
+Uso: `/rms_set <tipo> <valor>`
+
+**Tipos disponibles:**
+• `per_trade` - Máximo % por operación
+• `daily_loss` - Pérdida máxima diaria %
+• `max_drawdown` - Drawdown máximo %
+• `concentration` - Concentración máxima %
+• `daily_trades` - Máximo trades/día
+• `open_positions` - Máximo posiciones
+
+**Ejemplo:** `/rms_set per_trade 5`
+""", parse_mode='Markdown')
+                return
+            
+            from omnix_services.risk_management.risk_models import RiskLimitType, ThresholdUnit
+            
+            limit_type_map = {
+                'per_trade': RiskLimitType.PER_TRADE,
+                'daily_loss': RiskLimitType.DAILY_LOSS,
+                'max_drawdown': RiskLimitType.MAX_DRAWDOWN,
+                'concentration': RiskLimitType.PORTFOLIO_CONCENTRATION,
+                'daily_trades': RiskLimitType.DAILY_TRADES,
+                'open_positions': RiskLimitType.OPEN_POSITIONS
+            }
+            
+            limit_type_str = args[0].lower()
+            if limit_type_str not in limit_type_map:
+                await update.message.reply_text(f"❌ Tipo de límite no válido: {limit_type_str}")
+                return
+            
+            try:
+                value = float(args[1])
+            except ValueError:
+                await update.message.reply_text("❌ El valor debe ser numérico")
+                return
+            
+            unit = ThresholdUnit.COUNT if limit_type_str in ['daily_trades', 'open_positions'] else ThresholdUnit.PERCENT
+            
+            user = update.effective_user
+            success = self.limits_engine.set_limit(
+                user_id=str(user.id),
+                limit_type=limit_type_map[limit_type_str],
+                threshold_value=value,
+                threshold_unit=unit
+            )
+            
+            if success:
+                await update.message.reply_text(f"✅ Límite **{limit_type_str}** configurado a {value} {unit.value}", parse_mode='Markdown')
+            else:
+                await update.message.reply_text("❌ Error configurando límite")
+            
+        except Exception as e:
+            logger.error(f"Error en rms_set_limit: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def rms_history_command(self, update, context):
+        """Comando /rms_history - Historial de violaciones"""
+        try:
+            user = update.effective_user
+            
+            if not self.db_manager:
+                await update.message.reply_text("❌ Base de datos no disponible")
+                return
+            
+            breaches = self.db_manager.get_risk_breaches(str(user.id), days=7)
+            
+            if not breaches:
+                await update.message.reply_text("✅ Sin violaciones de límites en los últimos 7 días")
+                return
+            
+            response = "🛡️ **Historial de Violaciones (7 días)**\n━━━━━━━━━━━━━━━━━━━━\n"
+            
+            for b in breaches[:10]:
+                severity_emoji = {'warning': '🟡', 'critical': '🟠', 'halt': '🔴'}.get(b['severity'], '⚪')
+                response += f"\n{severity_emoji} **{b['limit_type']}**\n"
+                response += f"   {b['description'][:50]}...\n" if len(b.get('description', '')) > 50 else f"   {b.get('description', 'N/A')}\n"
+                response += f"   📅 {b['created_at'][:16] if b['created_at'] else 'N/A'}\n"
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en rms_history: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def rms_emergency_halt_command(self, update, context):
+        """Comando /emergency_halt - Detener trading (admin)"""
+        try:
+            if not is_admin(update.effective_user.id):
+                await update.message.reply_text("❌ Solo administradores pueden usar este comando")
+                return
+            
+            if not self.circuit_breaker:
+                await update.message.reply_text("❌ Circuit Breaker no disponible")
+                return
+            
+            user = update.effective_user
+            message = " ".join(context.args) if context.args else "Halt manual por admin"
+            
+            from omnix_services.risk_management.circuit_breaker import HaltReason
+            
+            status = self.circuit_breaker.manual_halt(
+                user_id=str(user.id),
+                admin_id=str(user.id),
+                message=message
+            )
+            
+            response = f"""
+🛑 **TRADING DETENIDO**
+━━━━━━━━━━━━━━━━━━━━
+
+✋ Trading pausado manualmente
+👤 Por: {user.first_name}
+📝 Razón: {message}
+
+⏰ Trading permanecerá pausado hasta usar `/resume_trading`
+
+⚠️ Todas las nuevas órdenes serán rechazadas.
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+            if self.alert_dispatcher:
+                self.alert_dispatcher.send_halt_notification(str(user.id), message)
+            
+        except Exception as e:
+            logger.error(f"Error en emergency_halt: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def rms_resume_trading_command(self, update, context):
+        """Comando /resume_trading - Reanudar trading (admin)"""
+        try:
+            if not is_admin(update.effective_user.id):
+                await update.message.reply_text("❌ Solo administradores pueden usar este comando")
+                return
+            
+            if not self.circuit_breaker:
+                await update.message.reply_text("❌ Circuit Breaker no disponible")
+                return
+            
+            user = update.effective_user
+            
+            success = self.circuit_breaker.resume_trading(
+                user_id=str(user.id),
+                resumed_by=f"admin:{user.id}",
+                force=True
+            )
+            
+            if success:
+                response = f"""
+✅ **TRADING REANUDADO**
+━━━━━━━━━━━━━━━━━━━━
+
+🚀 Trading activado nuevamente
+👤 Por: {user.first_name}
+⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Las operaciones ahora se procesarán normalmente.
+"""
+                if self.alert_dispatcher:
+                    self.alert_dispatcher.send_resume_notification(str(user.id))
+            else:
+                response = "❌ No se pudo reanudar el trading"
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en resume_trading: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
 
 # Funciones de integración para comandos Harold
 
