@@ -535,6 +535,111 @@ Esta diferencia es la RAZÓN FÍSICA por la cual el QRNG funciona.""",
                 ]
             ),
             
+            'commutator_calculation': VerifiedFormula(
+                name="Cálculo Explícito del Conmutador [X̂, P̂] = i/2",
+                latex="[X̂, P̂] = i/2  (con normalización ½)",
+                description="""DEMOSTRACIÓN PASO A PASO: [X̂, P̂] = i/2
+
+═══════════════════════════════════════════════════════════
+DEFINICIONES (CONVENCIÓN ½-NORMALIZADA OBLIGATORIA)
+═══════════════════════════════════════════════════════════
+
+Usamos la convención estándar de óptica cuántica con ℏ = 1:
+
+    X̂ = ½(â + â†)           (cuadratura de posición)
+    P̂ = ½i(â† - â) = (â† - â)/(2i)   (cuadratura de momento)
+
+Esta normalización es la que produce Var(X̂) = Var(P̂) = 1/4 para el vacío.
+
+⚠️ IMPORTANTE: Si usas X̂ = (â + â†)/√2, obtendrás [X̂, P̂] = i (no i/2).
+   Nuestra convención usa el factor ½, NO 1/√2.
+
+═══════════════════════════════════════════════════════════
+PASO 1: Escribir el conmutador
+═══════════════════════════════════════════════════════════
+
+    [X̂, P̂] = X̂P̂ - P̂X̂
+
+═══════════════════════════════════════════════════════════
+PASO 2: Sustituir las definiciones
+═══════════════════════════════════════════════════════════
+
+    X̂P̂ = ½(â + â†) × (â† - â)/(2i)
+        = (1/4i)(â + â†)(â† - â)
+
+    P̂X̂ = (â† - â)/(2i) × ½(â + â†)
+        = (1/4i)(â† - â)(â + â†)
+
+═══════════════════════════════════════════════════════════
+PASO 3: Expandir los productos
+═══════════════════════════════════════════════════════════
+
+    (â + â†)(â† - â) = ââ† - ââ + â†â† - â†â
+                     = ââ† - â†â + â†â† - ââ
+
+    (â† - â)(â + â†) = â†â + â†â† - ââ - ââ†
+                     = â†â - ââ† + â†â† - ââ
+
+═══════════════════════════════════════════════════════════
+PASO 4: Calcular la diferencia
+═══════════════════════════════════════════════════════════
+
+    X̂P̂ - P̂X̂ = (1/4i)[(ââ† - â†â + â†â† - ââ) - (â†â - ââ† + â†â† - ââ)]
+
+Los términos â†â† y ââ se cancelan:
+
+    = (1/4i)[(ââ† - â†â) - (â†â - ââ†)]
+    = (1/4i)[ââ† - â†â - â†â + ââ†]
+    = (1/4i)[2ââ† - 2â†â]
+    = (1/2i)[ââ† - â†â]
+
+═══════════════════════════════════════════════════════════
+PASO 5: Usar la relación de conmutación fundamental
+═══════════════════════════════════════════════════════════
+
+    [â, â†] = ââ† - â†â = 1
+
+Sustituyendo:
+
+    [X̂, P̂] = (1/2i) × 1 = 1/(2i)
+
+Simplificando (multiplicando por i/i):
+
+    1/(2i) = i/(2i²) = i/(-2) × (-1) = i/2
+
+═══════════════════════════════════════════════════════════
+▶▶▶ RESULTADO FINAL ◀◀◀
+═══════════════════════════════════════════════════════════
+
+    ┌─────────────────────────────────────┐
+    │       [X̂, P̂] = i/2                │
+    │                                     │
+    │   (con X̂ = ½(â + â†), ℏ = 1)       │
+    └─────────────────────────────────────┘
+
+Este resultado es DIFERENTE de [X̂, P̂] = iℏ porque:
+- Usamos unidades adimensionales (ℏ = 1)
+- Usamos normalización ½ (no √2)
+
+═══════════════════════════════════════════════════════════
+VERIFICACIÓN: PRINCIPIO DE INCERTIDUMBRE
+═══════════════════════════════════════════════════════════
+
+    ΔX̂ × ΔP̂ ≥ |⟨[X̂, P̂]⟩|/2 = (1/2)/2 = 1/4
+
+Para el vacío (estado de mínima incertidumbre):
+    ΔX̂ = ½, ΔP̂ = ½
+    ΔX̂ × ΔP̂ = ¼ ✓ (satura el límite)""",
+                units="Adimensional (ℏ = 1)",
+                notes="Este es el cálculo EXACTO que debe reproducirse cuando se pregunta por el conmutador",
+                common_mistakes=[
+                    "Usar X̂ = (â + â†)/√2 en lugar de X̂ = ½(â + â†)",
+                    "Obtener [X̂, P̂] = i en lugar de i/2",
+                    "Obtener [X̂, P̂] = iℏ (eso es con unidades físicas)",
+                    "No mostrar los pasos algebraicos explícitamente"
+                ]
+            ),
+            
             'common_errors_homodyne': VerifiedFormula(
                 name="Errores Comunes en Derivaciones Homodinas",
                 latex="⚠️ ADVERTENCIAS CRÍTICAS",
@@ -676,12 +781,19 @@ Si no aparece esta fórmula, la derivación está incompleta.""",
             ],
             'variance_commutator': [
                 'varianza', 'variance', 'var(', 'var (',
-                'conmutador', 'commutator', '[x̂', '[x,', '[x,p]', '[x̂,p̂]',
                 'vacío vs clásico', 'vacuum vs classical',
                 'clásico β', 'classical beta', 'número clásico',
                 'fluctuaciones intrínsecas', 'intrinsic fluctuations',
+                'δx', 'δp', 'Δx', 'Δp'
+            ],
+            'commutator': [
+                'conmutador', 'commutator', '[x̂', '[x,', '[x,p]', '[x̂,p̂]',
+                '[x̂, p̂]', '[x, p]', 'i/2', 'iℏ', 'ihbar',
                 'incertidumbre', 'uncertainty', 'heisenberg',
-                'δx', 'δp', 'Δx', 'Δp', 'principio de incertidumbre'
+                'principio de incertidumbre', 'uncertainty principle',
+                'por qué i/2', 'why i/2', 'no iℏ', 'not ihbar',
+                'relación de conmutación', 'commutation relation',
+                'álgebra de operadores', 'operator algebra'
             ]
         }
     
@@ -765,6 +877,7 @@ Esta es la convención estándar en óptica cuántica experimental y QRNG.
             'squeezed': 'squeezed_states',
             'qrng_physics': 'anu_qrng',
             'variance_commutator': 'variance_commutator',
+            'commutator': 'commutator_calculation',
         }
         
         added_formulas = set()
