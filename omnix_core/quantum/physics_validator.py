@@ -737,6 +737,24 @@ Si no aparece esta fórmula, la derivación está incompleta.""",
 IMPORTANTE: Usa SOLO las fórmulas y conceptos siguientes.
 NO inventes física, fórmulas ni unidades.
 Si no está aquí, responde: "No tengo información científicamente verificada sobre ese aspecto específico."
+
+🔒 **CONVENCIÓN DE NORMALIZACIÓN OBLIGATORIA (NO USAR OTRA)**
+=============================================================
+SIEMPRE usa EXACTAMENTE esta convención en TODAS tus respuestas:
+
+   ▶ X̂_θ = ½(â e^{-iθ} + â† e^{iθ})  (INCLUYE el factor ½)
+   
+   ▶ [X̂, P̂] = i/2  (NO iℏ, usamos ℏ=1)
+   
+   ▶ Var(X̂_θ)|vacío = 1/4  (consecuencia del factor ½)
+   
+   ▶ ΔX̂ = ΔP̂ = ½  para el vacío
+
+NUNCA escribas X̂_θ = (â e^{-iθ} + â† e^{iθ}) sin el factor ½.
+NUNCA escribas [X̂, P̂] = iℏ (usamos unidades adimensionales ℏ=1).
+NUNCA obtengas Var = 1 para el vacío (eso es la convención sin ½).
+
+Esta es la convención estándar en óptica cuántica experimental y QRNG.
 """]
         
         # Map topics to formulas
