@@ -29,6 +29,12 @@ from datetime import datetime, timedelta
 from enum import Enum
 import statistics
 
+try:
+    from omnix_risk.audit_logger import AuditAction, AuditResult
+    AUDIT_ENUMS_AVAILABLE = True
+except ImportError:
+    AUDIT_ENUMS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -184,12 +190,14 @@ class DeadManSwitch:
         logger.info("🟢 DeadManSwitch monitoring STARTED")
         
         if self._audit_logger:
+            action = AuditAction.DEAD_MAN_SWITCH_TRIGGERED if AUDIT_ENUMS_AVAILABLE else "DEAD_MAN_SWITCH_ACTIVATED"
+            result = AuditResult.SUCCESS if AUDIT_ENUMS_AVAILABLE else "SUCCESS"
             self._audit_logger.log_event(
-                action="DEAD_MAN_SWITCH_ACTIVATED",
+                action=action,
                 reason="System health monitoring started",
                 module="DeadManSwitch",
                 metric=f"check_interval={self._config['check_interval_ms']}ms",
-                result="SUCCESS"
+                result=result
             )
     
     def stop_monitoring(self):
@@ -484,12 +492,14 @@ class DeadManSwitch:
         self._halt_trading("DEAD_MAN_SWITCH", "System health critical - all trading halted")
         
         if self._audit_logger:
+            action = AuditAction.DEAD_MAN_SWITCH_TRIGGERED if AUDIT_ENUMS_AVAILABLE else "DEAD_MAN_SWITCH_TRIGGERED"
+            result = AuditResult.CRITICAL if AUDIT_ENUMS_AVAILABLE else "CRITICAL"
             self._audit_logger.log_event(
-                action="DEAD_MAN_SWITCH_TRIGGERED",
+                action=action,
                 reason=f"System DEAD state - Failed: {', '.join(health.failed_checks)}",
                 module="DeadManSwitch",
                 metric=f"consecutive_failures={health.consecutive_failures}",
-                result="CRITICAL"
+                result=result
             )
         
         for callback in self._halt_callbacks:
@@ -512,12 +522,14 @@ class DeadManSwitch:
                 self._trading_allowed = True
                 
                 if self._audit_logger:
+                    action = AuditAction.DEAD_MAN_SWITCH_RESET if AUDIT_ENUMS_AVAILABLE else "DEAD_MAN_SWITCH_RESET"
+                    result = AuditResult.SUCCESS if AUDIT_ENUMS_AVAILABLE else "SUCCESS"
                     self._audit_logger.log_event(
-                        action="DEAD_MAN_SWITCH_RESET",
+                        action=action,
                         reason="System health restored to HEALTHY",
                         module="DeadManSwitch",
                         metric="status=HEALTHY",
-                        result="SUCCESS"
+                        result=result
                     )
                 
                 for callback in self._recovery_callbacks:
@@ -551,12 +563,14 @@ class DeadManSwitch:
         self._halt_trading("MANUAL_HALT", reason)
         
         if self._audit_logger:
+            action = AuditAction.MANUAL_OVERRIDE if AUDIT_ENUMS_AVAILABLE else "MANUAL_OVERRIDE"
+            result = AuditResult.SUCCESS if AUDIT_ENUMS_AVAILABLE else "SUCCESS"
             self._audit_logger.log_event(
-                action="MANUAL_OVERRIDE",
+                action=action,
                 reason=f"Manual halt: {reason}",
                 module="DeadManSwitch",
                 metric="manual_halt=true",
-                result="SUCCESS"
+                result=result
             )
     
     def force_resume(self):
@@ -569,12 +583,14 @@ class DeadManSwitch:
         logger.info("🟢 Trading manually resumed")
         
         if self._audit_logger:
+            action = AuditAction.MANUAL_OVERRIDE if AUDIT_ENUMS_AVAILABLE else "MANUAL_OVERRIDE"
+            result = AuditResult.SUCCESS if AUDIT_ENUMS_AVAILABLE else "SUCCESS"
             self._audit_logger.log_event(
-                action="MANUAL_OVERRIDE",
+                action=action,
                 reason="Manual trading resume",
                 module="DeadManSwitch",
                 metric="trading_allowed=true",
-                result="SUCCESS"
+                result=result
             )
     
     def register_halt_callback(self, callback: Callable):
