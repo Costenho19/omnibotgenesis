@@ -68,6 +68,12 @@ class PositionMonitor:
         self._initialized = True
         logger.info("📊 PositionMonitor inicializado - Tracking en tiempo real activo")
     
+    def set_trading_service(self, trading_service):
+        """Configurar trading_service después de la inicialización"""
+        self.trading_service = trading_service
+        if trading_service:
+            logger.info("📊 PositionMonitor: TradingService configurado correctamente")
+    
     def get_current_positions(self, user_id: str) -> List[PositionInfo]:
         """Obtener todas las posiciones abiertas del usuario"""
         positions = []

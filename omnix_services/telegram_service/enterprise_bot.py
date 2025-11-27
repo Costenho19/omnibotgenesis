@@ -355,6 +355,17 @@ class EnterpriseTelegramBot:
                 logger.info(f"   🎯 Per Trade Limit: {self.rms_config.default_per_trade_limit_pct}%")
                 logger.info(f"   📉 Max Drawdown: {self.rms_config.default_max_drawdown_pct}%")
                 logger.info(f"   🔒 Auto-Halt: {'Enabled' if self.rms_config.enable_auto_halt else 'Disabled'}")
+                
+                trading_service = self.trading_enterprise if self.trading_enterprise_enabled else getattr(self, 'trading', None)
+                if self.position_monitor and trading_service:
+                    self.position_monitor.set_trading_service(trading_service)
+                    logger.info("   🔗 PositionMonitor conectado a TradingService")
+                
+                if self.paper_trading:
+                    self.paper_trading.limits_engine = self.limits_engine
+                    self.paper_trading.circuit_breaker = self.circuit_breaker
+                    logger.info("   🔗 PaperTradingManager conectado a RMS")
+                
             except Exception as e:
                 logger.warning(f"⚠️ Risk Management System error: {e}")
                 self.limits_engine = None
