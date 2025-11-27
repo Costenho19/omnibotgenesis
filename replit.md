@@ -7,6 +7,11 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 User Communication Preference: Simple, everyday language (Spanish primary).
 
 ## Recent Changes
+- **2025-11-27**: **INSTITUTIONAL MARKET INFRASTRUCTURE** - 4 new modules for 10/10 rating:
+  - **USD Risk Calculator** (`omnix_risk/usd_risk_calculator.py`): All metrics in USD for investors ($20K daily limit, $50K weekly, $100K monthly)
+  - **Exchange Latency Monitor** (`omnix_services/market_data/latency_monitor.py`): Real-time latency in ms for Kraken/Binance/Coinbase/Bybit/OKX
+  - **Orderbook Depth Analyzer** (`omnix_services/market_data/orderbook_depth.py`): L1/L2/L5/L10 depth with slippage calculation
+  - **Liquidity Monitor** (`omnix_services/market_data/liquidity_monitor.py`): Multi-exchange scoring (0-100), A+ to F grades
 - **2025-11-27**: **INSTITUTIONAL OPTIMIZATION SUITE** - Complete hedge fund optimization:
   - **Cascade Protection** (`omnix_risk/cascade_protection.py`): Progressive risk reduction (30%→50%→70%) after consecutive losses, emergency pause, recovery protocol
   - **Adaptive Regime Switcher** (`omnix_strategies/regime_switcher.py`): HMM-based regime detection (bull/bear/sideways/volatile), automatic strategy switching
