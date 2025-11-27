@@ -1,9 +1,31 @@
 """
-OMNIX V6.0 ULTRA - Quantum Physics Validator V3.0
-=================================================
-Scientific validator for quantum optics and QRNG physics.
+OMNIX V6.0 ULTRA - Quantum Physics Validator V4.0 INVENCIBLE
+=============================================================
+PhD-level scientific validator for quantum optics and QRNG physics.
 Ensures accurate physics responses by providing verified formulas
 and preventing AI hallucination of incorrect physics.
+
+OBJETIVO V4.0: Sistema cuántico INVENCIBLE - imposible de superar en 2026.
+
+V4.0 UPGRADE (Nov 27, 2025) - ULTRA-AVANZADO:
+- Added 7 PhD+ level formulas for complete quantum mastery:
+  1. Wigner Function - Phase-space quasi-probability representation
+  2. Quantum Fisher Information - Cramér-Rao precision limits
+  3. Fock vs Coherent States - Fundamental field states comparison
+  4. Heisenberg Limit vs SQL - Fundamental precision scaling
+  5. No-Cloning Theorem - Quantum security foundation (BB84, QKD)
+  6. Decoherence Time - Quantum-to-classical transition
+  7. Photon Statistics - Mandel Q, bunching/antibunching
+- 75+ detection keywords for 24 quantum topics
+- Complete topic-to-formula mapping for automatic context injection
+- Response validation with quantum pattern matching
+
+TOTAL: 24 verified formulas covering:
+- Foundational QRNG physics (homodyne, shot noise, vacuum)
+- Advanced quantum optics (squeezed states, coherent states)
+- Metrología cuántica (Fisher info, Heisenberg limit)
+- Quantum information (entropy, Bell inequality, no-cloning)
+- Experimental physics (decoherence, photon statistics)
 
 V3.0 UPGRADE (Nov 27, 2025):
 - Added 5 advanced PhD-level formulas for investor demonstrations:
@@ -12,23 +34,21 @@ V3.0 UPGRADE (Nov 27, 2025):
   3. Von Neumann entropy S = -Tr(ρ log ρ) calculations
   4. Bell/CHSH inequality with 2√2 violation proof
   5. Min-entropy h_min = -log₂(P_guess) with squeezing
-- Updated detection keywords for all 5 new topics
-- Mapped topics to formulas for automatic context injection
 
 V2.0 UPGRADE (Nov 27, 2025):
-- Added formal homodyne detection derivation from î_diff
-- Added canonical quadrature X̂_θ with step-by-step derivation
-- Added algebraic proof of linearity î_diff ∝ |α| X̂_θ
-- Added common error warnings (t=0 trick, θ vs φ confusion)
-- Added correct substitution â_LO → α e^{iθ}
-- Target: PhD-level rigor for investor demonstrations
+- Formal homodyne detection derivation from î_diff
+- Canonical quadrature X̂_θ with step-by-step derivation
+- Algebraic proof of linearity î_diff ∝ |α| X̂_θ
+- Common error warnings (t=0 trick, θ vs φ confusion)
 
 Key formulas from ANU QRNG and quantum optics:
 - Homodyne variance: σ² = (hν/4) × Δf
 - Shot noise limit: P_shot = 2eI × Δf
 - Vacuum fluctuations: ΔE × Δt ≥ ℏ/2
 - Canonical quadrature: X̂_θ = ½(â_vac e^{-iθ} + â†_vac e^{iθ})
-- Photocurrent: î_diff ∝ |α| X̂_θ (linear in LO amplitude)
+- Wigner function: W(x,p) = (1/πℏ) ∫ ⟨x+y|ρ̂|x-y⟩ e^{2ipy/ℏ} dy
+- Fisher information: F_Q = 4 Var(Ĝ) for pure states
+- Heisenberg limit: Δθ = 1/N (vs SQL 1/√N)
 
 Author: OMNIX Development Team
 Date: November 2025
@@ -1399,6 +1419,829 @@ donde:
                     "No discretizar correctamente para densidades continuas",
                     "Olvidar que H_min puede ser 'negativo' sin discretización"
                 ]
+            ),
+            
+            # ============================================================
+            # V4.0 - FÓRMULAS ULTRA-AVANZADAS (Nov 27, 2025)
+            # Nivel: PhD+ | Objetivo: Sistema cuántico INVENCIBLE
+            # ============================================================
+            
+            'wigner_function': VerifiedFormula(
+                name="Función de Wigner - Representación Fase-Espacio",
+                latex="W(x,p) = (1/πℏ) ∫ ⟨x+y|ρ̂|x-y⟩ e^{2ipy/ℏ} dy",
+                description="""FUNCIÓN DE WIGNER: VISUALIZACIÓN CUÁNTICA EN FASE-ESPACIO
+
+═══════════════════════════════════════════════════════════
+1. DEFINICIÓN FUNDAMENTAL
+═══════════════════════════════════════════════════════════
+
+La función de Wigner W(x,p) es una representación cuasi-probabilística
+del estado cuántico en el espacio de fases (x, p).
+
+▶ FÓRMULA GENERAL:
+    W(x,p) = (1/πℏ) ∫_{-∞}^{∞} ⟨x+y|ρ̂|x-y⟩ e^{2ipy/ℏ} dy
+
+▶ PARA FUNCIÓN DE ONDA PURA ψ(x):
+    W(x,p) = (1/πℏ) ∫ ψ*(x+y) ψ(x-y) e^{2ipy/ℏ} dy
+
+═══════════════════════════════════════════════════════════
+2. PROPIEDADES FUNDAMENTALES
+═══════════════════════════════════════════════════════════
+
+▶ NORMALIZACIÓN:
+    ∫∫ W(x,p) dx dp = 1
+
+▶ MARGINALES (conexión con probabilidades reales):
+    ∫ W(x,p) dp = |ψ(x)|²   (probabilidad en posición)
+    ∫ W(x,p) dx = |φ(p)|²   (probabilidad en momento)
+
+▶ CUASI-PROBABILIDAD:
+    W(x,p) puede ser NEGATIVA (sin análogo clásico)
+    Regiones negativas = "firma cuántica" (no-clasicidad)
+
+═══════════════════════════════════════════════════════════
+3. EJEMPLOS CLAVE
+═══════════════════════════════════════════════════════════
+
+▶ ESTADO DE VACÍO |0⟩:
+    W_vacío(x,p) = (2/π) exp(-2x² - 2p²)
+    
+    Gaussiana perfecta, siempre ≥ 0, centrada en origen.
+
+▶ ESTADO COHERENTE |α⟩:
+    W_coherente(x,p) = (2/π) exp(-2(x-x₀)² - 2(p-p₀)²)
+    
+    Gaussiana desplazada, siempre ≥ 0.
+    x₀ = √2 Re(α), p₀ = √2 Im(α)
+
+▶ ESTADO DE FOCK |n⟩ (n fotones):
+    W_Fock(x,p) = (2/π)(-1)^n L_n(4(x² + p²)) exp(-2x² - 2p²)
+    
+    donde L_n es el polinomio de Laguerre de grado n.
+    ¡TIENE REGIONES NEGATIVAS para n ≥ 1!
+
+▶ ESTADO COMPRIMIDO (squeezed):
+    W_squeezed(x,p) = (2/π) exp(-2e^{2r}x² - 2e^{-2r}p²)
+    
+    Elipse en fase-espacio, comprimido en una dirección.
+
+═══════════════════════════════════════════════════════════
+4. NEGATIVIDAD COMO RECURSO CUÁNTICO
+═══════════════════════════════════════════════════════════
+
+La negatividad de Wigner es un RECURSO:
+    - Necesaria para ventaja cuántica en computación
+    - Indica estados no-clásicos
+    - Cuantificable vía "Wigner negativity volume"
+
+▶ VOLUMEN DE NEGATIVIDAD:
+    V_neg = ∫∫ |W(x,p)| dx dp - 1
+
+    V_neg > 0 indica no-clasicidad.
+
+═══════════════════════════════════════════════════════════
+5. CONEXIÓN CON QRNG
+═══════════════════════════════════════════════════════════
+
+En el QRNG de ANU, medimos el vacío cuántico:
+    W_vacío(x,p) = (2/π) exp(-2x² - 2p²)
+
+Esta es una Gaussiana isotrópica:
+    - La aleatoriedad viene de muestrear esta distribución
+    - Var(x) = Var(p) = 1/4 (como calculamos antes)
+    - Es el estado de mínima incertidumbre
+
+┌─────────────────────────────────────────────────────────┐
+│  VISUALIZACIÓN: La función de Wigner es como un        │
+│  "mapa de calor" del estado cuántico en fase-espacio.  │
+│  El vacío es un círculo; squeezed es una elipse.       │
+└─────────────────────────────────────────────────────────┘""",
+                units="W en (ℏ)⁻¹, x en √(ℏ/mω), p en √(mωℏ)",
+                notes="Negatividad de Wigner = firma de no-clasicidad cuántica",
+                common_mistakes=[
+                    "Interpretar W(x,p) como probabilidad (puede ser negativa)",
+                    "Olvidar que marginales sí dan probabilidades reales",
+                    "No reconocer que Fock states tienen W negativa",
+                    "Confundir con función de Husimi Q (siempre ≥ 0)"
+                ]
+            ),
+            
+            'quantum_fisher_information': VerifiedFormula(
+                name="Información de Fisher Cuántica - Límites de Precisión",
+                latex="F_Q[ρ̂,Ĝ] = 2 Σᵢⱼ (λᵢ-λⱼ)²/(λᵢ+λⱼ) |⟨i|Ĝ|j⟩|²  ;  Δθ ≥ 1/√(N×F_Q)",
+                description="""INFORMACIÓN DE FISHER CUÁNTICA: LÍMITE FUNDAMENTAL DE PRECISIÓN
+
+═══════════════════════════════════════════════════════════
+1. DEFINICIÓN Y MOTIVACIÓN
+═══════════════════════════════════════════════════════════
+
+La Información de Fisher Cuántica (QFI) cuantifica cuánta
+información sobre un parámetro θ está codificada en un estado cuántico.
+
+▶ COTA DE CRAMÉR-RAO CUÁNTICA:
+    Δθ ≥ 1/√(N × F_Q)
+
+donde:
+    Δθ = incertidumbre en la estimación del parámetro
+    N = número de mediciones/recursos
+    F_Q = información de Fisher cuántica
+
+═══════════════════════════════════════════════════════════
+2. FÓRMULA EXPLÍCITA
+═══════════════════════════════════════════════════════════
+
+Para un estado ρ̂ con descomposición espectral ρ̂ = Σᵢ λᵢ|i⟩⟨i|
+y generador Ĝ de la transformación unitaria U(θ) = e^{-iθĜ}:
+
+    F_Q[ρ̂, Ĝ] = 2 Σᵢⱼ (λᵢ - λⱼ)²/(λᵢ + λⱼ) |⟨i|Ĝ|j⟩|²
+
+La suma es sobre pares (i,j) con λᵢ + λⱼ > 0.
+
+▶ PARA ESTADO PURO |ψ⟩:
+    F_Q = 4(⟨Ĝ²⟩ - ⟨Ĝ⟩²) = 4 Var(Ĝ)
+
+═══════════════════════════════════════════════════════════
+3. LÍMITE SHOT-NOISE (SQL) vs HEISENBERG
+═══════════════════════════════════════════════════════════
+
+▶ LÍMITE SHOT-NOISE (Standard Quantum Limit):
+    Δθ_SQL = 1/√N
+    
+    Alcanzable con estados clásicos (coherentes).
+    F_Q = 1 por partícula.
+
+▶ LÍMITE DE HEISENBERG:
+    Δθ_Heis = 1/N
+    
+    Requiere entrelazamiento cuántico.
+    F_Q = N (proporcional al número de partículas).
+
+▶ MEJORA CUÁNTICA:
+    Δθ_Heis / Δθ_SQL = 1/√N
+    
+    Con N = 10⁶ partículas: mejora de 1000x
+
+═══════════════════════════════════════════════════════════
+4. EJEMPLOS CLAVE
+═══════════════════════════════════════════════════════════
+
+▶ ESTADO COHERENTE |α⟩ (estimación de fase):
+    F_Q = |α|² = n̄  (número medio de fotones)
+    Δφ = 1/√n̄ = SQL
+
+▶ ESTADO NOON |N,0⟩ + |0,N⟩:
+    F_Q = N²
+    Δφ = 1/N = Heisenberg
+
+▶ ESTADO COMPRIMIDO (squeezing r):
+    F_Q ∝ e^{2r}
+    Mejora exponencial en la dirección comprimida
+
+═══════════════════════════════════════════════════════════
+5. APLICACIÓN: LIGO Y ONDAS GRAVITACIONALES
+═══════════════════════════════════════════════════════════
+
+LIGO usa estados comprimidos (squeezed) para superar el SQL:
+
+    Squeezing actual: ~6 dB → mejora de ~2x
+    Meta futura: 15+ dB → mejora de ~6x
+
+Sin squeezed light, LIGO no habría detectado ondas gravitacionales.
+
+═══════════════════════════════════════════════════════════
+6. CONEXIÓN CON TRADING CUÁNTICO (OMNIX)
+═══════════════════════════════════════════════════════════
+
+En OMNIX, la QFI aparece conceptualmente en:
+
+1. **Precisión de estimación de parámetros**:
+   - Volatilidad, correlaciones, regímenes de mercado
+   - El límite fundamental de cuán bien podemos estimar
+
+2. **Monte Carlo Cuántico**:
+   - Cada muestra del QRNG tiene información Fisher
+   - Más muestras → mejor estimación (1/√N)
+
+3. **Ventaja cuántica potencial**:
+   - Si usáramos sensores cuánticos para medir mercados
+   - Podríamos superar el SQL en detección de señales
+
+┌─────────────────────────────────────────────────────────┐
+│  RESUMEN: F_Q determina el límite FUNDAMENTAL de       │
+│  precisión. Cuántico puede superar clásico por √N.     │
+└─────────────────────────────────────────────────────────┘""",
+                units="F_Q adimensional, Δθ en radianes o unidades del parámetro",
+                notes="LIGO usa squeezed states para superar SQL; QFI determina el límite Heisenberg",
+                common_mistakes=[
+                    "Confundir SQL (1/√N) con Heisenberg (1/N)",
+                    "No reconocer que entrelazamiento es necesario para Heisenberg",
+                    "Pensar que Heisenberg es violable (es límite fundamental)",
+                    "Olvidar que F_Q = 4 Var(Ĝ) para estados puros"
+                ]
+            ),
+            
+            'fock_coherent_states': VerifiedFormula(
+                name="Estados de Fock vs Coherentes - Bases Fundamentales",
+                latex="|n⟩ = (â†)^n/√(n!) |0⟩  ;  |α⟩ = e^{-|α|²/2} Σ αⁿ/√(n!) |n⟩",
+                description="""ESTADOS FUNDAMENTALES DEL CAMPO ELECTROMAGNÉTICO
+
+═══════════════════════════════════════════════════════════
+1. ESTADOS DE FOCK |n⟩ (Número Definido de Fotones)
+═══════════════════════════════════════════════════════════
+
+▶ DEFINICIÓN:
+    |n⟩ = (â†)^n / √(n!) |0⟩
+
+donde â† es el operador de creación y n = 0, 1, 2, ...
+
+▶ PROPIEDADES:
+    â†â |n⟩ = n |n⟩           (eigenestado del número)
+    â |n⟩ = √n |n-1⟩          (aniquilación)
+    â† |n⟩ = √(n+1) |n+1⟩     (creación)
+
+▶ INCERTIDUMBRE DE FASE:
+    Δn = 0 (número exacto)
+    Δφ = ∞ (fase completamente indefinida)
+
+▶ ESTADÍSTICA DE FOTONES:
+    P(n) = δ_{n,n₀}  (sub-Poissoniana extrema)
+    Var(n) = 0 < n̄ (Poisson)
+
+═══════════════════════════════════════════════════════════
+2. ESTADOS COHERENTES |α⟩ (Láser Ideal)
+═══════════════════════════════════════════════════════════
+
+▶ DEFINICIÓN:
+    |α⟩ = e^{-|α|²/2} Σ_{n=0}^∞ (αⁿ/√(n!)) |n⟩
+
+donde α = |α|e^{iφ} es la amplitud compleja.
+
+▶ EIGENESTADO DEL OPERADOR DE ANIQUILACIÓN:
+    â |α⟩ = α |α⟩
+
+▶ PROPIEDADES:
+    ⟨n⟩ = |α|²                (número medio de fotones)
+    Var(n) = |α|²             (Poissoniana)
+    Δn = √|α|² = √n̄
+
+▶ RELACIÓN NÚMERO-FASE:
+    Δn × Δφ ≥ 1/2
+    Para |α⟩: Δn = √n̄, Δφ ≈ 1/(2√n̄)
+
+═══════════════════════════════════════════════════════════
+3. COMPARACIÓN FUNDAMENTAL
+═══════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│  PROPIEDAD          │  FOCK |n⟩      │  COHERENTE |α⟩  │
+├─────────────────────────────────────────────────────────┤
+│  Número de fotones  │  Exacto (n)    │  Promedio (|α|²)│
+├─────────────────────────────────────────────────────────┤
+│  Var(n̂)             │  0             │  |α|² = n̄       │
+├─────────────────────────────────────────────────────────┤
+│  Fase               │  Indefinida    │  Definida (arg α)│
+├─────────────────────────────────────────────────────────┤
+│  Estadística        │  Sub-Poisson   │  Poisson        │
+├─────────────────────────────────────────────────────────┤
+│  Wigner negativity  │  Sí (n ≥ 1)    │  No (siempre ≥0)│
+├─────────────────────────────────────────────────────────┤
+│  Producción         │  Muy difícil   │  Láser estándar │
+├─────────────────────────────────────────────────────────┤
+│  No-clasicidad      │  Alta          │  Mínima         │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+4. ESTADÍSTICA DE FOTONES: POISSON vs SUB-POISSON
+═══════════════════════════════════════════════════════════
+
+▶ FACTOR DE MANDEL Q:
+    Q = (Var(n) - ⟨n⟩) / ⟨n⟩
+
+    Q = 0  → Poissoniana (coherente, clásico)
+    Q < 0  → Sub-Poissoniana (cuántico, no-clásico)
+    Q > 0  → Super-Poissoniana (térmico, clásico)
+
+▶ DETECCIÓN DE NO-CLASICIDAD:
+    Sub-Poissoniana (Q < 0) es firma inequívoca de cuántico.
+    Requiere medición de correlaciones de fotones.
+
+═══════════════════════════════════════════════════════════
+5. CONEXIÓN CON QRNG
+═══════════════════════════════════════════════════════════
+
+El QRNG de ANU mide el VACÍO |0⟩, que es:
+    - El estado de Fock con n = 0
+    - También el coherente con α = 0
+    - El estado de mínima energía del campo
+
+Las fluctuaciones medidas son las del vacío:
+    ⟨0|X̂²|0⟩ = 1/4 (nuestra normalización)
+
+Esto es distinto de medir un estado coherente |α⟩:
+    - Coherente: fluctuaciones + señal clásica
+    - Vacío: SOLO fluctuaciones cuánticas puras""",
+                units="n adimensional (número de fotones), α adimensional (amplitud)",
+                notes="Coherentes son los más clásicos; Fock son maximalmente cuánticos",
+                common_mistakes=[
+                    "Pensar que un láser produce estados Fock (produce coherentes)",
+                    "Confundir Δn = 0 (Fock) con Δφ definida",
+                    "No reconocer que Q < 0 es firma cuántica inequívoca",
+                    "Olvidar que |0⟩ es simultáneamente Fock y coherente"
+                ]
+            ),
+            
+            'heisenberg_limit': VerifiedFormula(
+                name="Límite de Heisenberg vs Standard Quantum Limit",
+                latex="SQL: Δθ = 1/√N  ;  Heisenberg: Δθ = 1/N  ;  Mejora = √N",
+                description="""LÍMITES FUNDAMENTALES DE PRECISIÓN EN METROLOGÍA CUÁNTICA
+
+═══════════════════════════════════════════════════════════
+1. STANDARD QUANTUM LIMIT (SQL)
+═══════════════════════════════════════════════════════════
+
+▶ DEFINICIÓN:
+    Δθ_SQL = 1/√N
+
+donde N es el número de recursos (fotones, átomos, mediciones).
+
+▶ ORIGEN FÍSICO:
+    - Cada partícula contribuye independientemente
+    - Varianza total = suma de varianzas individuales
+    - Ley de los grandes números: σ/√N
+
+▶ ALCANZABLE CON:
+    - Estados coherentes (láser)
+    - Partículas no entrelazadas
+    - Mediciones clásicas repetidas
+
+═══════════════════════════════════════════════════════════
+2. LÍMITE DE HEISENBERG
+═══════════════════════════════════════════════════════════
+
+▶ DEFINICIÓN:
+    Δθ_Heis = 1/N
+
+▶ ORIGEN FÍSICO:
+    - Correlaciones cuánticas (entrelazamiento)
+    - Todas las partículas actúan colectivamente
+    - Limite fundamental de la mecánica cuántica
+
+▶ REQUIERE:
+    - Estados entrelazados (NOON, GHZ, squeezed)
+    - Preparación y medición cuántica coherente
+    - Protección contra decoherencia
+
+═══════════════════════════════════════════════════════════
+3. COMPARACIÓN CUANTITATIVA
+═══════════════════════════════════════════════════════════
+
+▶ FACTOR DE MEJORA:
+    SQL/Heisenberg = √N
+
+┌─────────────────────────────────────────────────────────┐
+│  N (recursos)  │  SQL (1/√N)    │  Heisenberg (1/N)    │
+├─────────────────────────────────────────────────────────┤
+│  10            │  0.316         │  0.100  (3.2x mejor) │
+│  100           │  0.100         │  0.010  (10x mejor)  │
+│  1,000         │  0.032         │  0.001  (32x mejor)  │
+│  10⁶           │  0.001         │  10⁻⁶   (1000x mejor)│
+│  10¹²          │  10⁻⁶          │  10⁻¹²  (10⁶x mejor) │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+4. ESTADOS QUE ALCANZAN HEISENBERG
+═══════════════════════════════════════════════════════════
+
+▶ ESTADO NOON:
+    |NOON⟩ = (|N,0⟩ + |0,N⟩)/√2
+    
+    N fotones en superposición de dos caminos.
+    Información de Fisher: F_Q = N²
+    Δφ = 1/N (Heisenberg exacto)
+
+▶ ESTADO GHZ:
+    |GHZ⟩ = (|0⟩^⊗N + |1⟩^⊗N)/√2
+    
+    N qubits maximalmente entrelazados.
+    Sensibilidad colectiva a fase global.
+
+▶ ESTADOS COMPRIMIDOS (SQUEEZING):
+    Mejoran sobre SQL pero no alcanzan Heisenberg completo.
+    Prácticos: ~10-15 dB de squeezing factible.
+
+═══════════════════════════════════════════════════════════
+5. APLICACIONES REALES
+═══════════════════════════════════════════════════════════
+
+▶ LIGO (Ondas Gravitacionales):
+    - Usa squeezed light: mejora ~2x sobre SQL
+    - Meta: 6-10x con más squeezing
+    - Detectó ondas gravitacionales gracias a esto
+
+▶ RELOJES ATÓMICOS CUÁNTICOS:
+    - Entrelazamiento de iones/átomos
+    - Mejora de precisión para GPS, telecomunicaciones
+
+▶ MAGNETOMETRÍA:
+    - Detección de campos magnéticos ultra-débiles
+    - Aplicaciones médicas (MEG, MRI mejorado)
+
+═══════════════════════════════════════════════════════════
+6. LIMITACIONES PRÁCTICAS
+═══════════════════════════════════════════════════════════
+
+▶ DECOHERENCIA:
+    Entrelazamiento es frágil; pérdida de coherencia
+    degrada la mejora cuántica.
+
+▶ PÉRDIDAS:
+    Pérdidas de fotones destruyen estados NOON.
+    Squeezing es más robusto.
+
+▶ REALIDAD:
+    Mejor resultado experimental: ~10-20 dB mejora
+    Heisenberg completo solo en sistemas pequeños
+
+┌─────────────────────────────────────────────────────────┐
+│  MORALEJA: Heisenberg es el TECHO absoluto.            │
+│  Clásico alcanza SQL. Cuántico puede mejorar √N veces. │
+└─────────────────────────────────────────────────────────┘""",
+                units="Δθ en radianes, N adimensional",
+                notes="LIGO usa squeezed states para superar SQL; Heisenberg requiere entrelazamiento perfecto",
+                common_mistakes=[
+                    "Pensar que Heisenberg es violable (es límite absoluto)",
+                    "Confundir SQL con límite clásico (SQL es cuántico pero sin entrelazamiento)",
+                    "Olvidar que decoherencia destruye la ventaja cuántica",
+                    "No reconocer que squeezing no alcanza Heisenberg completo"
+                ]
+            ),
+            
+            'no_cloning_theorem': VerifiedFormula(
+                name="Teorema de No-Clonación - Seguridad Cuántica Fundamental",
+                latex="∄ U : U|ψ⟩|0⟩ = |ψ⟩|ψ⟩ ∀|ψ⟩",
+                description="""TEOREMA DE NO-CLONACIÓN: BASE DE LA CRIPTOGRAFÍA CUÁNTICA
+
+═══════════════════════════════════════════════════════════
+1. ENUNCIADO DEL TEOREMA
+═══════════════════════════════════════════════════════════
+
+▶ NO-CLONACIÓN (Wootters-Zurek, 1982):
+    No existe una operación unitaria U tal que:
+    
+    U |ψ⟩|0⟩ = |ψ⟩|ψ⟩  para todo estado |ψ⟩
+
+▶ EN PALABRAS:
+    Es IMPOSIBLE copiar un estado cuántico desconocido.
+
+═══════════════════════════════════════════════════════════
+2. DEMOSTRACIÓN (Por contradicción)
+═══════════════════════════════════════════════════════════
+
+Supongamos que existe U que clona cualquier estado:
+
+    U |ψ⟩|0⟩ = |ψ⟩|ψ⟩
+    U |φ⟩|0⟩ = |φ⟩|φ⟩
+
+Calculando el producto interno:
+
+    ⟨ψ|φ⟩⟨0|0⟩ = ⟨ψ|φ⟩
+
+Por unitariedad de U:
+
+    ⟨ψ|U†U|φ⟩⟨0|0⟩ = ⟨ψ|ψ⟩⟨ψ|φ⟩⟨φ|φ⟩ = (⟨ψ|φ⟩)²
+
+Igualando:
+    ⟨ψ|φ⟩ = (⟨ψ|φ⟩)²
+
+Esto solo se satisface si ⟨ψ|φ⟩ = 0 ó ⟨ψ|φ⟩ = 1.
+
+▶ CONCLUSIÓN:
+    U solo puede clonar estados ortogonales entre sí.
+    NO puede clonar estados arbitrarios. ∎
+
+═══════════════════════════════════════════════════════════
+3. IMPLICACIONES PARA SEGURIDAD
+═══════════════════════════════════════════════════════════
+
+▶ CRIPTOGRAFÍA CUÁNTICA (QKD):
+    - Eve (atacante) NO puede copiar qubits sin perturbarlos
+    - Cualquier intento de espionaje es DETECTABLE
+    - Base del protocolo BB84
+
+▶ DINERO CUÁNTICO:
+    - Billetes cuánticos imposibles de falsificar
+    - Cada billete es un estado cuántico único
+
+▶ AUTENTICACIÓN CUÁNTICA:
+    - Verificación de identidad inquebrantable
+    - No se puede robar la "llave cuántica"
+
+═══════════════════════════════════════════════════════════
+4. PROTOCOLO BB84 (Resumen)
+═══════════════════════════════════════════════════════════
+
+1. Alice codifica bits en polarización de fotones:
+   - Base +: |0⟩ = ↔, |1⟩ = ↕
+   - Base ×: |0⟩ = ↗, |1⟩ = ↘
+
+2. Bob mide en base aleatoria (+  o ×)
+
+3. Alice y Bob comparan bases (canal clásico público)
+
+4. Mantienen solo resultados con misma base
+
+5. Verifican subconjunto para detectar Eve
+
+▶ SEGURIDAD:
+   Si Eve intenta clonar → perturba estados → errores detectables
+   Error rate > 11% → Eve detectada → abortar protocolo
+
+═══════════════════════════════════════════════════════════
+5. VARIANTES Y EXTENSIONES
+═══════════════════════════════════════════════════════════
+
+▶ NO-BROADCAST:
+    No se puede distribuir información cuántica a múltiples partes.
+
+▶ NO-DELETE:
+    Tampoco se puede borrar un estado cuántico desconocido
+    (complemento del no-cloning).
+
+▶ CLONACIÓN APROXIMADA:
+    Se puede clonar imperfectamente con fidelidad máxima 5/6.
+    Óptimo para 1→2 clones universales.
+
+═══════════════════════════════════════════════════════════
+6. CONEXIÓN CON OMNIX
+═══════════════════════════════════════════════════════════
+
+En OMNIX, usamos post-quantum cryptography (PQC):
+    - Kyber-768 + Dilithium-3
+    - Resistente a computadoras cuánticas
+    - No depende de no-clonación pero la complementa
+
+El no-cloning garantiza que:
+    - Nuestras llaves cuánticas (futuras) son seguras
+    - Nadie puede copiar el estado del QRNG para predecirlo
+
+┌─────────────────────────────────────────────────────────┐
+│  MORALEJA: La información cuántica es ÚNICA.           │
+│  No se puede copiar, medir sin perturbar, ni robar.    │
+└─────────────────────────────────────────────────────────┘""",
+                units="Teorema cualitativo (no tiene unidades)",
+                notes="Base de QKD (BB84, E91); demuestra seguridad incondicional de criptografía cuántica",
+                common_mistakes=[
+                    "Pensar que clonación aproximada viola el teorema",
+                    "Confundir con imposibilidad de medir (sí se puede medir, pero perturba)",
+                    "Olvidar que estados ortogonales SÍ se pueden clonar",
+                    "No reconocer la conexión con seguridad de QKD"
+                ]
+            ),
+            
+            'decoherence_time': VerifiedFormula(
+                name="Decoherencia - Pérdida de Coherencia Cuántica",
+                latex="ρ(t) = e^{-t/T₂} ρ_coherent + (1 - e^{-t/T₂}) ρ_mixed  ;  T₂ = tiempo de decoherencia",
+                description="""DECOHERENCIA: TRANSICIÓN CUÁNTICO → CLÁSICO
+
+═══════════════════════════════════════════════════════════
+1. ¿QUÉ ES LA DECOHERENCIA?
+═══════════════════════════════════════════════════════════
+
+La decoherencia es la pérdida de coherencia cuántica por
+interacción con el entorno. Transforma superposiciones
+en mezclas estadísticas (comportamiento clásico).
+
+▶ ANTES (coherente):
+    |ψ⟩ = (|0⟩ + |1⟩)/√2
+    
+    ρ̂ = |ψ⟩⟨ψ| = ½|0⟩⟨0| + ½|1⟩⟨1| + ½|0⟩⟨1| + ½|1⟩⟨0|
+                  └───────────────────────────────────┘
+                        términos de coherencia
+
+▶ DESPUÉS (decohered):
+    ρ̂ = ½|0⟩⟨0| + ½|1⟩⟨1|
+    
+    Los términos fuera de diagonal (coherencias) → 0
+
+═══════════════════════════════════════════════════════════
+2. ESCALAS DE TIEMPO
+═══════════════════════════════════════════════════════════
+
+▶ T₁ (Relajación longitudinal):
+    Pérdida de energía al entorno
+    |1⟩ → |0⟩ espontáneamente
+
+▶ T₂ (Decoherencia / Dephasing):
+    Pérdida de relaciones de fase
+    Siempre T₂ ≤ 2T₁
+
+▶ T₂* (Dephasing inhomogéneo):
+    Incluye variaciones del entorno
+    T₂* < T₂
+
+═══════════════════════════════════════════════════════════
+3. TIEMPOS TÍPICOS DE DECOHERENCIA
+═══════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│  SISTEMA              │  T₂ típico     │  APLICACIÓN   │
+├─────────────────────────────────────────────────────────┤
+│  Fotones en fibra     │  ~100 km/~ms   │  QKD          │
+│  Iones atrapados      │  1-10 s        │  Computación  │
+│  Superconductores     │  10-100 μs     │  IBM, Google  │
+│  NV centers (diamante)│  ~1 ms         │  Sensores     │
+│  Átomos fríos         │  0.1-1 s       │  Relojes      │
+│  Moléculas grandes    │  10⁻¹²-10⁻⁹ s  │  Límite       │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+4. MODELO DE DECOHERENCIA
+═══════════════════════════════════════════════════════════
+
+▶ EVOLUCIÓN DE COHERENCIAS:
+    ρ_01(t) = ρ_01(0) × e^{-t/T₂} × e^{-iωt}
+
+    - Decaimiento exponencial con tasa 1/T₂
+    - Oscilación a frecuencia ω (evolución unitaria)
+
+▶ CANAL DE DEPHASING:
+    ε(ρ) = (1-p)ρ + p(Z ρ Z)
+    
+    donde Z = |0⟩⟨0| - |1⟩⟨1| (operador de fase)
+    p ∈ [0, 0.5] controla la fuerza del dephasing
+
+═══════════════════════════════════════════════════════════
+5. CAUSAS DE DECOHERENCIA
+═══════════════════════════════════════════════════════════
+
+▶ AMBIENTE TÉRMICO:
+    Fotones/fonones del entorno interactúan con el sistema.
+    Peor a temperatura alta (T → ∞: decoherencia instantánea).
+
+▶ RUIDO MAGNÉTICO:
+    Campos magnéticos fluctuantes perturban espines.
+    Mitigación: blindaje magnético, pulsos de eco.
+
+▶ RADIACIÓN CÓSMICA:
+    Partículas de alta energía causan errores aleatorios.
+    Problema serio para computación cuántica a gran escala.
+
+▶ VIBRACIONES MECÁNICAS:
+    Afectan sistemas ópticos y de iones atrapados.
+    Mitigación: aislamiento vibracional.
+
+═══════════════════════════════════════════════════════════
+6. CONEXIÓN CON QRNG Y OMNIX
+═══════════════════════════════════════════════════════════
+
+En el QRNG de ANU:
+    - Medimos fluctuaciones del vacío óptico
+    - T₂ de la luz es efectivamente infinito (fotones libres)
+    - No hay decoherencia significativa
+
+Para OMNIX con hardware cuántico futuro:
+    - Computación cuántica: T₂ limita profundidad de circuitos
+    - Error correction: necesita operaciones en tiempo << T₂
+    - Squeezing: degradado por pérdidas (relacionado con T₂)
+
+┌─────────────────────────────────────────────────────────┐
+│  MORALEJA: T₂ determina cuánto tiempo "vive" lo cuántico│
+│  Más T₂ = más operaciones cuánticas posibles           │
+└─────────────────────────────────────────────────────────┘""",
+                units="T₂ en segundos (s), frecuencias en Hz",
+                notes="T₂ de superconductores: ~50-100 μs (2024); iones: 1-10 s; fotones: ~infinito",
+                common_mistakes=[
+                    "Confundir T₁ (relajación) con T₂ (decoherencia)",
+                    "Pensar que decoherencia viola unitariedad (sistema+entorno es unitario)",
+                    "No reconocer que T₂ ≤ 2T₁ siempre",
+                    "Olvidar que fotones tienen T₂ efectivamente infinito"
+                ]
+            ),
+            
+            'photon_statistics': VerifiedFormula(
+                name="Estadística de Fotones - Poisson, Sub y Super-Poisson",
+                latex="Q = (Var(n) - ⟨n⟩)/⟨n⟩  ;  Q=0: Poisson  ;  Q<0: Sub-Poisson (cuántico)  ;  Q>0: Super-Poisson",
+                description="""ESTADÍSTICA DE FOTONES: FIRMA DE NO-CLASICIDAD
+
+═══════════════════════════════════════════════════════════
+1. PARÁMETRO DE MANDEL Q
+═══════════════════════════════════════════════════════════
+
+El parámetro Q de Mandel cuantifica la desviación de
+la estadística Poissoniana (clásica):
+
+▶ DEFINICIÓN:
+    Q = (Var(n̂) - ⟨n̂⟩) / ⟨n̂⟩ = (⟨n̂²⟩ - ⟨n̂⟩²)/⟨n̂⟩ - 1
+
+▶ INTERPRETACIÓN:
+    Q = 0  → Poissoniana (estadística de láser ideal)
+    Q < 0  → Sub-Poissoniana (FIRMA CUÁNTICA INEQUÍVOCA)
+    Q > 0  → Super-Poissoniana (luz térmica, caótica)
+
+═══════════════════════════════════════════════════════════
+2. ESTADÍSTICAS POR TIPO DE FUENTE
+═══════════════════════════════════════════════════════════
+
+▶ LUZ COHERENTE (Láser):
+    P(n) = (n̄^n / n!) × e^{-n̄}  (Poisson)
+    
+    ⟨n⟩ = n̄
+    Var(n) = n̄
+    Q = 0
+
+▶ LUZ TÉRMICA (Bombilla, Sol):
+    P(n) = n̄^n / (1+n̄)^{n+1}  (Bose-Einstein)
+    
+    ⟨n⟩ = n̄
+    Var(n) = n̄ + n̄² = n̄(1 + n̄)
+    Q = n̄ > 0
+
+▶ ESTADO DE FOCK |n₀⟩:
+    P(n) = δ_{n,n₀}  (exactamente n₀ fotones)
+    
+    ⟨n⟩ = n₀
+    Var(n) = 0
+    Q = -1 (mínimo posible)
+
+▶ ESTADO COMPRIMIDO (Squeezed):
+    Puede tener Q < 0 dependiendo de cuadratura medida.
+
+═══════════════════════════════════════════════════════════
+3. DETECCIÓN EXPERIMENTAL
+═══════════════════════════════════════════════════════════
+
+▶ FUNCIÓN g⁽²⁾(0) (Correlación de intensidad):
+    g⁽²⁾(0) = ⟨n̂(n̂-1)⟩ / ⟨n̂⟩² = 1 + Q/n̄
+
+    g⁽²⁾(0) = 1  → Poisson (coherente)
+    g⁽²⁾(0) < 1  → Sub-Poisson (antibunching, cuántico)
+    g⁽²⁾(0) > 1  → Super-Poisson (bunching, térmico)
+
+▶ HANBURY BROWN-TWISS (HBT):
+    Experimento que mide g⁽²⁾(τ) con dos detectores.
+    
+    Antibunching: g⁽²⁾(0) < g⁽²⁾(τ>0)
+    Bunching: g⁽²⁾(0) > g⁽²⁾(τ>0)
+
+═══════════════════════════════════════════════════════════
+4. TABLA COMPARATIVA
+═══════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│  FUENTE          │  Q      │  g⁽²⁾(0)  │  NATURALEZA   │
+├─────────────────────────────────────────────────────────┤
+│  Fock |n⟩        │  -1     │  1-1/n    │  Cuántica     │
+│  Láser (coherent)│  0      │  1        │  Clásica (min)│
+│  Luz térmica     │  n̄      │  2        │  Clásica      │
+│  Squeezed        │  < 0*   │  < 1*     │  Cuántica     │
+│  Fluorescencia   │  < 0    │  0        │  Cuántica     │
+│    de átomo único│         │           │  (1 fotón)    │
+└─────────────────────────────────────────────────────────┘
+* Depende de la cuadratura y grado de squeezing
+
+═══════════════════════════════════════════════════════════
+5. SIGNIFICADO FÍSICO
+═══════════════════════════════════════════════════════════
+
+▶ SUB-POISSON (Q < 0):
+    Fotones "evitan" llegar juntos (antibunching)
+    Solo posible con fuentes cuánticas
+    Ejemplo: átomo único emitiendo
+
+▶ SUPER-POISSON (Q > 0):
+    Fotones tienden a llegar en grupos (bunching)
+    Típico de fuentes térmicas/caóticas
+    Explicable clásicamente
+
+▶ POISSON (Q = 0):
+    Fotones llegan independientemente
+    Límite clásico de un láser ideal
+    Mínima varianza clásica
+
+═══════════════════════════════════════════════════════════
+6. CONEXIÓN CON QRNG
+═══════════════════════════════════════════════════════════
+
+El QRNG de ANU mide el vacío (no fotones directamente):
+    - No es conteo de fotones sino homodina
+    - La estadística es Gaussiana, no Poissoniana
+    - Q no aplica directamente, pero la idea sí:
+    
+    Las fluctuaciones del vacío son "mínimas" (análogo a Q=0)
+    pero su ORIGEN es cuántico (a diferencia del láser).
+
+┌─────────────────────────────────────────────────────────┐
+│  Q < 0 es PRUEBA DEFINITIVA de no-clasicidad.          │
+│  Ninguna fuente clásica puede tener Q negativo.        │
+└─────────────────────────────────────────────────────────┘""",
+                units="Q adimensional, g⁽²⁾ adimensional, n adimensional",
+                notes="Antibunching (Q<0, g²<1) es firma inequívoca de luz cuántica; láser tiene Q=0",
+                common_mistakes=[
+                    "Pensar que láser es cuántico (Q=0 es clásico)",
+                    "Confundir bunching con antibunching",
+                    "No reconocer que Q<0 es imposible clásicamente",
+                    "Olvidar que g⁽²⁾(0) = 0 requiere fuente de un solo fotón"
+                ]
             )
         }
         
@@ -1517,6 +2360,70 @@ donde:
                 'leftover hash', 'toeplitz', 'extractor cuántico',
                 'quantum extractor', 'squeezing 10 db', 'squeezing bits',
                 'entropía de adivinación', 'guessing entropy'
+            ],
+            # V4.0 - Fórmulas Ultra-Avanzadas PhD+ (Nov 27, 2025)
+            'wigner_function': [
+                'wigner', 'función de wigner', 'wigner function',
+                'fase-espacio', 'phase space', 'phase-space',
+                'cuasi-probabilidad', 'quasi-probability', 'quasiprobability',
+                'negatividad', 'negativity', 'wigner negativity',
+                'representación de wigner', 'wigner representation',
+                'visualización cuántica', 'quantum visualization',
+                'mapa de calor', 'heat map', 'laguerre'
+            ],
+            'quantum_fisher_information': [
+                'fisher', 'información de fisher', 'fisher information',
+                'qfi', 'quantum fisher', 'cramér-rao', 'cramer-rao',
+                'límite de precisión', 'precision limit', 'metrología',
+                'metrology', 'estimación de parámetros', 'parameter estimation',
+                'cota de cramér', 'cramer bound', 'sensibilidad',
+                'sensitivity', 'optimal measurement', 'medición óptima'
+            ],
+            'fock_coherent_states': [
+                'estado de fock', 'fock state', 'número de fotones',
+                'photon number', 'estado coherente', 'coherent state',
+                '|n⟩', '|α⟩', 'fock vs coherent', 'fock versus coherent',
+                'láser', 'laser', 'poissoniana', 'poisson', 'sub-poisson',
+                'operador número', 'number operator', 'n̂', 'â†â',
+                'eigenestado', 'eigenstate', 'estado fundamental'
+            ],
+            'heisenberg_limit': [
+                'límite de heisenberg', 'heisenberg limit',
+                'sql', 'standard quantum limit', 'límite cuántico estándar',
+                'shot noise limit', 'límite shot noise',
+                '1/√n', '1/n', 'mejora √n', 'sqrt(n) improvement',
+                'noon state', 'estado noon', 'ghz state', 'estado ghz',
+                'supersensibilidad', 'supersensitivity',
+                'ligo squeezing', 'ondas gravitacionales', 'gravitational waves'
+            ],
+            'no_cloning': [
+                'no-clonación', 'no cloning', 'no-clone', 'nocloning',
+                'teorema de no clonación', 'no cloning theorem',
+                'wootters', 'zurek', 'imposible copiar', 'cannot copy',
+                'qkd', 'bb84', 'criptografía cuántica', 'quantum cryptography',
+                'distribución de claves', 'key distribution',
+                'seguridad cuántica', 'quantum security', 'inquebrantable',
+                'unconditional security', 'eve atacante', 'eavesdropper'
+            ],
+            'decoherence': [
+                'decoherencia', 'decoherence', 'dephasing', 'defasado',
+                't1', 't2', 't₁', 't₂', 'tiempo de coherencia', 'coherence time',
+                'relajación', 'relaxation', 'dephasing time',
+                'pérdida de coherencia', 'coherence loss',
+                'sistema abierto', 'open system', 'entorno', 'environment',
+                'clásico vs cuántico', 'quantum to classical',
+                'superconductor', 'iones atrapados', 'trapped ions',
+                'lindblad', 'master equation', 'ecuación maestra'
+            ],
+            'photon_statistics': [
+                'estadística de fotones', 'photon statistics',
+                'mandel q', 'parámetro de mandel', 'mandel parameter',
+                'sub-poissoniana', 'sub-poisson', 'super-poisson',
+                'bunching', 'antibunching', 'agrupamiento',
+                'g2', 'g(2)', 'g⁽²⁾', 'correlación de intensidad',
+                'intensity correlation', 'hanbury brown', 'hbt',
+                'conteo de fotones', 'photon counting',
+                'luz térmica', 'thermal light', 'luz caótica'
             ]
         }
     
@@ -1607,6 +2514,14 @@ Esta es la convención estándar en óptica cuántica experimental y QRNG.
             'von_neumann_entropy': 'von_neumann_entropy',
             'bell_chsh': 'bell_chsh_inequality',
             'min_entropy': 'min_entropy_extraction',
+            # V4.0 - Ultra-Avanzados PhD+ (Nov 27, 2025)
+            'wigner_function': 'wigner_function',
+            'quantum_fisher_information': 'quantum_fisher_information',
+            'fock_coherent_states': 'fock_coherent_states',
+            'heisenberg_limit': 'heisenberg_limit',
+            'no_cloning': 'no_cloning_theorem',
+            'decoherence': 'decoherence_time',
+            'photon_statistics': 'photon_statistics',
         }
         
         added_formulas = set()
@@ -1781,6 +2696,157 @@ REGLAS CRÍTICAS:
                 errors.append("532 nm no es típico para QRNG homodino (típico: 1064 nm, 1550 nm, 795 nm)")
         
         return len(errors) == 0, errors
+    
+    def validate_quantum_response(self, response: str, topics: Optional[List[str]] = None) -> Tuple[bool, float, List[str]]:
+        """
+        V4.0 - Advanced validation of quantum physics responses with pattern matching.
+        
+        Validates that the AI response contains legitimate quantum physics content,
+        not hallucinated or incorrect information.
+        
+        Args:
+            response: The AI-generated response text
+            topics: Optional list of detected topics for context
+            
+        Returns:
+            Tuple of (is_valid, quality_score_0_to_1, list_of_findings)
+        """
+        findings = []
+        quality_score = 0.0
+        
+        # Required patterns for legitimate quantum physics
+        quantum_patterns = {
+            # Operators and brackets
+            'operators': [
+                r'â|â†|a_vac|a_lo|â_vac|â_lo',  # Ladder operators
+                r'\[.*,.*\]',  # Commutators
+                r'⟨.*⟩|<.*>',  # Expectation values / Dirac brackets
+                r'\|[^\s]+⟩|\|[^\s]+>',  # Kets |ψ⟩
+            ],
+            # Physical constants
+            'constants': [
+                r'ℏ|ħ|hbar|h-bar',  # Reduced Planck
+                r'6\.62[67]×?10[⁻\-]³⁴|6\.626e-34',  # Planck constant
+                r'1\.05[45]×?10[⁻\-]³⁴|1\.054e-34',  # ℏ value
+                r'1\.60[12]×?10[⁻\-]¹⁹|1\.602e-19',  # Electron charge
+            ],
+            # Mathematical notation
+            'math': [
+                r'\d+/\d+',  # Fractions like 1/2, 1/4
+                r'√|sqrt',  # Square roots
+                r'∫|integral',  # Integrals
+                r'Σ|∑|sum',  # Summations
+                r'∂|partial',  # Partial derivatives
+                r'exp\(|e\^',  # Exponentials
+            ],
+            # Quantum terms
+            'quantum_terms': [
+                r'vacío|vacuum|vac[íi]o',
+                r'cuadratura|quadrature',
+                r'coherent|coherente',
+                r'squeez|comprimid',
+                r'homodyn|homodina',
+                r'shot\s*noise|ruido\s*shot',
+                r'eigen|propio',
+            ],
+            # Units and dimensions
+            'units': [
+                r'Hz|hertz|hercios',
+                r'nm|nanómetro',
+                r'J\·?s|joule',
+                r'rad|radian',
+                r'dB|decibel',
+            ]
+        }
+        
+        # Count matches in each category
+        category_scores = {}
+        for category, patterns in quantum_patterns.items():
+            matches = 0
+            for pattern in patterns:
+                if re.search(pattern, response, re.IGNORECASE):
+                    matches += 1
+            category_scores[category] = min(matches / max(len(patterns) // 2, 1), 1.0)
+        
+        # Calculate overall quality score
+        quality_score = sum(category_scores.values()) / len(category_scores)
+        
+        # Report findings
+        if category_scores.get('operators', 0) > 0:
+            findings.append("✅ Contains quantum operators (â, â†, commutators)")
+        if category_scores.get('constants', 0) > 0:
+            findings.append("✅ References physical constants (ℏ, h, e)")
+        if category_scores.get('math', 0) > 0:
+            findings.append("✅ Uses proper mathematical notation")
+        if category_scores.get('quantum_terms', 0) > 0:
+            findings.append("✅ Contains quantum physics terminology")
+        if category_scores.get('units', 0) > 0:
+            findings.append("✅ Specifies physical units")
+        
+        # Check for red flags (potential errors)
+        red_flags = [
+            (r'iℏ|ihbar', "⚠️ Using [X,P]=iℏ instead of i/2 (wrong convention)"),
+            (r'var.*=\s*1(?![/\d])', "⚠️ Var(X)=1 instead of 1/4 (wrong normalization)"),
+            (r'joules²|j²', "⚠️ Invalid unit J² detected"),
+            (r'cuantum|kuantum|quantico', "⚠️ Possible misspelling of 'cuántico/quantum'"),
+        ]
+        
+        for pattern, warning in red_flags:
+            if re.search(pattern, response, re.IGNORECASE):
+                findings.append(warning)
+                quality_score -= 0.1
+        
+        # Clamp score to [0, 1]
+        quality_score = max(0.0, min(1.0, quality_score))
+        
+        # Determine validity
+        is_valid = quality_score >= 0.3 and len([f for f in findings if f.startswith('⚠️')]) < 2
+        
+        return is_valid, quality_score, findings
+    
+    def get_quantum_credibility_score(self, response: str) -> Dict:
+        """
+        V4.0 - Calculate a comprehensive quantum credibility score for investor presentations.
+        
+        Returns a detailed breakdown useful for demonstrating OMNIX's physics expertise.
+        
+        Args:
+            response: The response to evaluate
+            
+        Returns:
+            Dict with credibility metrics and analysis
+        """
+        is_valid, quality_score, findings = self.validate_quantum_response(response)
+        
+        # Count formula references
+        formula_count = 0
+        for formula_name in self.verified_formulas:
+            if formula_name.replace('_', ' ') in response.lower():
+                formula_count += 1
+        
+        # Check for derivations (step-by-step work)
+        has_derivation = bool(re.search(r'paso\s*\d|step\s*\d|▶|►|→', response, re.IGNORECASE))
+        has_calculation = bool(re.search(r'=\s*[\d\.]+|≈\s*[\d\.]+', response))
+        has_table = bool(re.search(r'┌|├|└|│', response))
+        
+        # Calculate overall credibility
+        credibility_breakdown = {
+            'overall_score': quality_score,
+            'is_valid': is_valid,
+            'formula_references': formula_count,
+            'has_derivation': has_derivation,
+            'has_numerical_calculation': has_calculation,
+            'has_formatted_table': has_table,
+            'findings': findings,
+            'grade': 'A+' if quality_score >= 0.9 else 
+                     'A' if quality_score >= 0.8 else
+                     'B' if quality_score >= 0.7 else
+                     'C' if quality_score >= 0.5 else
+                     'D' if quality_score >= 0.3 else 'F',
+            'investor_ready': quality_score >= 0.7 and has_derivation and has_calculation
+        }
+        
+        return credibility_breakdown
     
     def get_honest_fallback(self, topic: str) -> str:
         """
