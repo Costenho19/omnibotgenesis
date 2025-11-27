@@ -3672,6 +3672,69 @@ Los parámetros fueron ajustados automáticamente
                                 prompts_manager = PromptsContextManager()
                                 intent = prompts_manager.analyze_intent(text)
                                 
+                                # ⚛️ QUANTUM ACTION - Ejecutar QRNG real cuando el usuario pide números cuánticos
+                                quantum_results_context = ""
+                                if intent == 'quantum_action':
+                                    logger.info("⚛️ QUANTUM ACTION DETECTADO - Ejecutando QRNG real...")
+                                    try:
+                                        from omnix_core.quantum.enhancements import global_qrng
+                                        import numpy as np
+                                        import re
+                                        
+                                        # Extraer cantidad de números solicitados (default: 10)
+                                        num_match = re.search(r'(\d+)\s*(?:numero|número|numbers?|nums?)', text.lower())
+                                        num_to_generate = int(num_match.group(1)) if num_match else 10
+                                        num_to_generate = min(num_to_generate, 1000)  # Máximo 1000
+                                        
+                                        # Generar números cuánticos REALES
+                                        quantum_numbers = [global_qrng.random() for _ in range(num_to_generate)]
+                                        arr = np.array(quantum_numbers)
+                                        
+                                        # Estadísticas
+                                        stats = global_qrng.get_stats()
+                                        
+                                        # Chi-cuadrado de uniformidad
+                                        num_bins = min(10, num_to_generate)
+                                        observed, bin_edges = np.histogram(arr, bins=num_bins, range=(0, 1))
+                                        expected = num_to_generate / num_bins
+                                        chi_squared = np.sum((observed - expected)**2 / expected)
+                                        df = num_bins - 1
+                                        
+                                        # Construir contexto con datos REALES
+                                        quantum_results_context = f"""
+
+⚛️ **DATOS REALES DEL QRNG (EJECUTADO AHORA):**
+
+🔬 **FUENTE:** {stats.get('last_source', 'ANU Quantum Vacuum')}
+📊 **NÚMEROS GENERADOS:** {num_to_generate}
+
+🎲 **MUESTRA DE {min(10, num_to_generate)} NÚMEROS CUÁNTICOS:**
+{chr(10).join([f"[{i+1:2d}] {n:.12f}" for i, n in enumerate(quantum_numbers[:10])])}
+
+📈 **ANÁLISIS ESTADÍSTICO REAL:**
+• Media: {arr.mean():.6f} (ideal: 0.5000)
+• Desviación Estándar: {arr.std():.6f} (ideal para uniforme: ~0.2887)
+• Mínimo: {arr.min():.6f}
+• Máximo: {arr.max():.6f}
+• Rango: {arr.max() - arr.min():.6f}
+
+🔢 **TEST CHI-CUADRADO DE UNIFORMIDAD:**
+• χ² = {chi_squared:.4f}
+• Grados de libertad: {df}
+• Distribución por bin: {list(observed)}
+
+📡 **ESTADÍSTICAS QRNG:**
+• Total requests: {stats.get('total_requests', 0):,}
+• Números cuánticos totales: {stats.get('quantum_numbers_generated', 0):,}
+• Cache actual: {stats.get('cache_size', 0)} números
+
+IMPORTANTE: Estos son datos REALES del QRNG de la ANU. Explica estos resultados al usuario de forma natural.
+"""
+                                        logger.info(f"⚛️ QRNG ejecutado: {num_to_generate} números generados")
+                                    except Exception as qrng_error:
+                                        logger.error(f"❌ Error QRNG: {qrng_error}")
+                                        quantum_results_context = f"\n⚠️ Error ejecutando QRNG: {str(qrng_error)}\n"
+                                
                                 # Construir contexto adicional con datos reales
                                 additional_context = {}
                                 if real_market_data:
@@ -3700,6 +3763,10 @@ Los parámetros fueron ajustados automáticamente
                                 # Agregar datos reales de mercado si existen
                                 if real_data_context:
                                     gemini_prompt += f"\n\n{real_data_context}"
+                                
+                                # ⚛️ Agregar resultados del QRNG si se ejecutó
+                                if quantum_results_context:
+                                    gemini_prompt += f"\n\n{quantum_results_context}"
                                 
                                 # Agregar pregunta del usuario
                                 gemini_prompt += f"\n\nPregunta de Harold: {text}\n\nResponde de forma natural y conversacional:"
