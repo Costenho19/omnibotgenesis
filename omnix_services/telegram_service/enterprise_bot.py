@@ -331,7 +331,7 @@ class EnterpriseTelegramBot:
                 )
                 self.position_monitor = PositionMonitor(
                     database_service=self.db_manager,
-                    trading_service=self.trading_service,
+                    trading_service=None,
                     config=self.rms_config
                 )
                 self.circuit_breaker = CircuitBreaker(

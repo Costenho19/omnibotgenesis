@@ -24,6 +24,14 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
     - **Auto-Learning System**: Processes external data (e.g., YouTube trading videos) to propose strategy parameter changes.
 - **Coherence Engine V5.4 ULTRA**: Validates agreement between trading strategies using a 6-Tier Veto System.
 - **AI Risk Guardian V5.4**: Real-time risk supervision with Overtrading Detection, Drawdown Protection, Revenge Trading Detection, and Capital Protection.
+- **Risk Management System (RMS) V6.0 (Nov 27, 2025)**: Institutional-grade risk control system with:
+    - **LimitsEngine**: Pre-trade validation with 6 configurable limits (per-trade 5%, daily loss 2%, max drawdown 10%, concentration 25%, VIX volatility, daily trades count).
+    - **PositionMonitor**: Real-time exposure tracking with 5-second intervals, calculates total exposure, concentration risk, P&L per position.
+    - **CircuitBreaker**: Automatic trading halt on limit breach with 3 severity levels (warning, critical, halt). Manual halt/resume via Telegram.
+    - **AlertDispatcher**: Multi-channel notifications (Telegram, logs) with configurable thresholds.
+    - **RiskDashboard**: Investor-ready risk summaries, generates professional reports with exposure analysis and breach history.
+    - **Database Tables**: 3 new tables (risk_limits, risk_limit_breaches, risk_metrics_snapshots) with 6 DAL methods.
+    - **Telegram Commands**: /rms (dashboard), /rms_limits (view limits), /rms_set (configure), /rms_history (breaches), /emergency_halt, /resume_trading.
 - **Auto-Optimization Engine**: Continuously improves strategies via Genetic Algorithm, A/B Testing, and Auto-Adjustment.
 - **Professional Testing & Validation System (V6.0)**: Includes Historical Events Validator (10 critical events), Strategy Comparator (ARES vs Buy & Hold), and a Premium Validation Suite for investor-ready reports.
 - **Multi-Exchange Arbitrage V6.0**: Institutional arbitrage across 8 exchanges (Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex).
@@ -60,15 +68,17 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **CoinGecko API**: Backup price data.
 
 ### Databases
-- **PostgreSQL (Neon)**: Main relational database with 23 tables organized in:
+- **PostgreSQL (Neon)**: Main relational database with 26 tables organized in:
   - Core System (8 tables): users, user_contacts, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history
   - Paper Trading (2 tables): paper_trading_balances, paper_trading_trades
   - Conversational Brain (3 tables): trade_reasonings, trade_evaluations, pending_evaluations
   - Community Intelligence (5 tables): community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns
   - Signal Contribution (4 tables): community_signals, signal_executions, signal_votes, alpha_leaderboard
   - Risk Guardian (1 table): risk_guardian_events
-  - **Centralized Access**: All queries via `omnix_services/database_service/database_service.py` (2,360 lines, 22 DAL methods: 13 original + 5 Community Intelligence + 4 User Contacts)
+  - Risk Management System (3 tables): risk_limits, risk_limit_breaches, risk_metrics_snapshots
+  - **Centralized Access**: All queries via `omnix_services/database_service/database_service.py` (2,600+ lines, 28 DAL methods: 13 original + 5 Community Intelligence + 4 User Contacts + 6 RMS)
   - **FASE 1 Modernization (Nov 26, 2025)**: Improved users table (NUMERIC precision, email, is_active, updated_at) + new user_contacts table (3NF normalization). 100% backward compatible.
+  - **RMS Tables (Nov 27, 2025)**: 3 new tables for institutional risk control with full DAL support.
 - **Redis**: In-memory data store for state management, conversation history, caching.
 
 ### Key Python Libraries
