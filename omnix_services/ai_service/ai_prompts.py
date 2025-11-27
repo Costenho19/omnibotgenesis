@@ -1,11 +1,12 @@
 """
-OMNIX V5.1 ENTERPRISE - Prompts & Context Manager
+OMNIX V6.0 ENTERPRISE - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
 Escalabilidad: 50K+ usuarios con context caching
++ Quantum Physics Validator for verified scientific responses
 """
 
 # 🔥 RAILWAY DEBUG - Archivo actualizado para forzar recarga
-print("✅ ai_prompts.py V6.0 CARGADO - SIN IMPORTS DE 'config'")
+print("✅ ai_prompts.py V6.0 CARGADO - CON QUANTUM PHYSICS VALIDATOR")
 
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -13,6 +14,15 @@ from omnix_core.cache.redis_cache import cache
 from omnix_core.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Import quantum physics validator for scientific accuracy
+try:
+    from omnix_core.quantum.physics_validator import get_quantum_physics_context, quantum_physics_validator
+    QUANTUM_PHYSICS_VALIDATOR_AVAILABLE = True
+    logger.info("⚛️ Quantum Physics Validator LOADED - Scientific accuracy enabled")
+except ImportError as e:
+    QUANTUM_PHYSICS_VALIDATOR_AVAILABLE = False
+    logger.warning(f"⚠️ Quantum Physics Validator not available: {e}")
 
 
 class PromptsContextManager:
@@ -151,7 +161,8 @@ class PromptsContextManager:
         intent: str = 'general_conversation',
         user_name: str = 'Usuario',
         additional_context: Optional[Dict[str, Any]] = None,
-        conversation_history: Optional[List[Dict]] = None
+        conversation_history: Optional[List[Dict]] = None,
+        user_message: Optional[str] = None
     ) -> str:
         """
         Build comprehensive system prompt for AI
@@ -161,10 +172,18 @@ class PromptsContextManager:
             user_name: User's name
             additional_context: Additional context data
             conversation_history: Previous conversation messages
+            user_message: Original user message for quantum physics detection
             
         Returns:
             System prompt string
         """
+        
+        # ⚛️ QUANTUM PHYSICS VALIDATOR - Inject verified scientific context
+        quantum_physics_context = ""
+        if user_message and QUANTUM_PHYSICS_VALIDATOR_AVAILABLE:
+            quantum_physics_context = get_quantum_physics_context(user_message)
+            if quantum_physics_context:
+                logger.info(f"⚛️ Quantum Physics Validator ACTIVATED for message")
         
         # Base system prompt - OMNIX CON PERSONALIDAD NATURAL
         base_prompt = f"""🎯 CONTEXTO - USUARIO {user_name}:
@@ -350,6 +369,11 @@ OMNIX: "¡De nada! 😊"
 Usuario: "y el precio ahora?"
 OMNIX: "₿ BTC está en $69,420.50 (+3.1% hoy). ¿Analizamos algo específico?"
 """
+        
+        # ⚛️ INJECT VERIFIED QUANTUM PHYSICS CONTEXT if detected
+        if quantum_physics_context:
+            base_prompt += f"\n\n{quantum_physics_context}"
+            logger.info(f"⚛️ Quantum Physics Context INJECTED: {len(quantum_physics_context)} chars")
         
         return base_prompt
     

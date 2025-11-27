@@ -3689,12 +3689,13 @@ Los parámetros fueron ajustados automáticamente
                                         conversation_hist = pg_messages
                                         logger.info(f"🧠 Memoria PostgreSQL: {len(conversation_hist)} pares cargados (persistente)")
                                 
-                                # Generar prompt conversacional natural CON MEMORIA
+                                # Generar prompt conversacional natural CON MEMORIA + QUANTUM PHYSICS VALIDATOR
                                 gemini_prompt = prompts_manager.build_system_prompt(
                                     intent=intent,
                                     user_name='Harold',
                                     additional_context=additional_context,
-                                    conversation_history=conversation_hist
+                                    conversation_history=conversation_hist,
+                                    user_message=text  # Pass message for quantum physics detection
                                 )
                                 
                                 # Agregar datos reales de mercado si existen
