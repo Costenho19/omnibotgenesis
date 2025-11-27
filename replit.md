@@ -42,14 +42,14 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 ### Technical Implementations
 
 #### Core Strategies
-- 9 distinct modules including Monte Carlo Simulations, Black Swan Detection, Kelly Criterion Position Sizing, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum Strategy, Sharia Compliance Filtering, Order Book Analysis, and Sentiment Analysis.
+- 9 distinct modules including Monte Carlo Simulations, Black Swan Detection, Kelly Criterion Position Sizing, HMM Regime Detection, Dual Kalman Filter, Adaptive Momentum Strategy, Sharia Compliance Filtering, Order Book Analysis, and Sentiment Analysis.
 
-#### ARES Quantum Protocols
-- **ARES V1 (Swing Trading)**: 74-82% win rate target using a 3-layer quantum architecture and 6 institutional indicators.
-  - Capa 1: Quantum Structure Filter (QSF) - Noise filtering
-  - Capa 2: Quantum Institutional Signals (QIS) - 6 professional signals
-  - Capa 3: Quantum Execution Engine (QEX) - Hedge fund-style execution
-- **ARES V2 (Scalping M1)**: 85% win rate target for 1-minute ultra-fast scalping with 5 precision indicators.
+#### ARES Institutional Protocols
+- **ARES V1 (Swing Trading)**: 55-65% win rate target (backtested - live results may vary) using a 3-layer institutional architecture and 6 professional indicators.
+  - Capa 1: Adaptive Noise Filter (ANF) - Intelligent noise filtering
+  - Capa 2: Institutional Signal Analysis (ISA) - 6 professional signals
+  - Capa 3: Smart Execution Engine (SXE) - Hedge fund-style execution
+- **ARES V2 (Scalping M1)**: 60-70% win rate target (backtested - live results may vary) for 1-minute scalping with 5 precision indicators.
   - Ultra-tight stop loss (-0.28%)
   - Multi-level take profits (+0.85%, +1.70%, +2.90%)
   - Kill-switch protection after 3 consecutive losses

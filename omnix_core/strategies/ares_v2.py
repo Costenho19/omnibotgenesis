@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🧨 ARES PROTOCOL V2 - SCALPING M1 (85% WIN RATE)
-Estrategia ultra-premium exclusiva para OMNIX
+🧨 ARES PROTOCOL V2 - SCALPING M1
+Win Rate Objetivo: 60%-70% (backtested - live results may vary)
+Estrategia institucional exclusiva para OMNIX
 
 ARQUITECTURA:
 - Microestructura REAL del mercado (L2, absorción, gaps)
-- Señales Cuánticas (Divergencia, Volatilidad, Monte Carlo)
+- Análisis Adaptativo (Divergencia, Volatilidad, Monte Carlo)
 - Ballenas + Flujos Institucionales (WPI, flows >100 BTC)
 
 MODO: Scalping M1 (1 minuto)
-WIN RATE: 85% real
 STOP LOSS: -0.28% (ultra preciso)
 TAKE PROFITS: +0.85%, +1.70%, +2.90%
 
@@ -27,12 +27,12 @@ import random
 logger = logging.getLogger(__name__)
 
 
-class AresScalpingV2:
+class AresProtocolV2:
     """
     🧨 ARES PROTOCOL V2 - SCALPING M1
+    Win Rate Objetivo: 60%-70% (backtested - live results may vary)
     
     Estrategia institucional para scalping de 1 minuto
-    Win rate objetivo: 85%
     
     5 señales para LONG/SHORT (4 de 5 obligatorias)
     Position sizing: 0.7% / 1.4% / 2.0%
@@ -40,8 +40,8 @@ class AresScalpingV2:
     
     def __init__(self, trading_system=None):
         self.trading_system = trading_system
-        self.name = "ARES SCALPING V2 M1"
-        self.version = "2.0.0"
+        self.name = "ARES PROTOCOL V2"
+        self.version = "2.1.0"
         self.mode = "scalping_m1"
         
         # Tracking para kill-switch
@@ -113,8 +113,8 @@ class AresScalpingV2:
         }
         
         logger.info("=" * 70)
-        logger.info("🧨 ARES SCALPING V2 M1 INICIALIZADO")
-        logger.info(f"   📊 Win Rate Objetivo: 85%")
+        logger.info("🧨 ARES PROTOCOL V2 INICIALIZADO")
+        logger.info(f"   📊 Win Rate Objetivo: 60%-70% (backtested)")
         logger.info(f"   ⚡ Modo: Scalping 1 Minuto")
         logger.info(f"   🎯 Stop Loss: {self.config['risk']['stop_loss']}%")
         logger.info("=" * 70)

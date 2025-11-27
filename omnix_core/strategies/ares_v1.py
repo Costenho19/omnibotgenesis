@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🧬 ARES QUANTUM PROTOCOL 73+ - ESTRATEGIA INSTITUCIONAL
-Win Rate Objetivo: 74%–82%
+🧬 ARES PROTOCOL V1 - ESTRATEGIA INSTITUCIONAL SWING TRADING
+Win Rate Objetivo: 55%–65% (backtested - live results may vary)
 
-ARQUITECTURA HÍBRIDA CUÁNTICO-INSTITUCIONAL:
-- Capa 1: Quantum Structure Filter (QSF) - Filtro de ruido
-- Capa 2: Quantum Institutional Signals (QIS) - 6 señales profesionales
-- Capa 3: Quantum Execution Engine (QEX) - Ejecución tipo hedge fund
+ARQUITECTURA DE 3 CAPAS INSTITUCIONALES:
+- Capa 1: Adaptive Noise Filter (ANF) - Filtro de ruido adaptativo
+- Capa 2: Institutional Signal Analysis (ISA) - 6 señales profesionales
+- Capa 3: Smart Execution Engine (SXE) - Ejecución tipo hedge fund
 
 Desarrollado para OMNIX V6.0 ULTRA
 Harold Nunes - Noviembre 2025
@@ -22,33 +22,34 @@ import random
 logger = logging.getLogger(__name__)
 
 
-class AresQuantumProtocol:
+class AresProtocolV1:
     """
-    🧬 PROTOCOLO ARES - ESTRATEGIA INSTITUCIONAL 73%+ WIN RATE
+    🧬 ARES PROTOCOL V1 - ESTRATEGIA INSTITUCIONAL SWING TRADING
+    Win Rate Objetivo: 55%-65% (backtested - live results may vary)
     
-    Sistema híbrido de 3 capas para trading profesional:
-    - QSF: Quantum Structure Filter
-    - QIS: Quantum Institutional Signals  
-    - QEX: Quantum Execution Engine
+    Sistema de 3 capas para trading profesional:
+    - ANF: Adaptive Noise Filter
+    - ISA: Institutional Signal Analysis  
+    - SXE: Smart Execution Engine
     """
     
     def __init__(self, trading_system=None):
         self.trading_system = trading_system
-        self.name = "ARES QUANTUM PROTOCOL 73+"
-        self.version = "1.0.0"
+        self.name = "ARES PROTOCOL V1"
+        self.version = "1.1.0"
         
         # 📊 CONFIGURACIÓN ESTRATEGIA
         self.config = {
-            # CAPA 1: QUANTUM STRUCTURE FILTER
-            "qsf": {
-                "quantum_volatility_min": 18.0,
-                "quantum_volatility_max": 86.0,
+            # CAPA 1: ADAPTIVE NOISE FILTER
+            "anf": {
+                "volatility_min": 18.0,
+                "volatility_max": 86.0,
                 "model_divergence_max": 0.70,
                 "l2_integrity_max": 78.0  # % fractura máxima
             },
             
-            # CAPA 2: QUANTUM INSTITUTIONAL SIGNALS
-            "qis": {
+            # CAPA 2: INSTITUTIONAL SIGNAL ANALYSIS
+            "isa": {
                 "long": {
                     "min_signals": 4,
                     "l2_liquidity": 28.0,
@@ -71,8 +72,8 @@ class AresQuantumProtocol:
                 }
             },
             
-            # CAPA 3: QUANTUM EXECUTION ENGINE
-            "qex": {
+            # CAPA 3: SMART EXECUTION ENGINE
+            "sxe": {
                 "position_sizing": {
                     "normal": 2.7,      # 4/6 señales
                     "strong": 6.2,      # 5/6 señales
@@ -108,18 +109,18 @@ class AresQuantumProtocol:
         }
         
         logger.info("=" * 70)
-        logger.info("🧬 ARES QUANTUM PROTOCOL 73+ INICIALIZADO")
-        logger.info(f"   📊 Win Rate Objetivo: 74%-82%")
-        logger.info(f"   🔬 Arquitectura: 3 Capas Institucionales")
+        logger.info("🧬 ARES PROTOCOL V1 INICIALIZADO")
+        logger.info(f"   📊 Win Rate Objetivo: 55%-65% (backtested)")
+        logger.info(f"   🔬 Arquitectura: 3 Capas Institucionales (ANF/ISA/SXE)")
         logger.info("=" * 70)
     
     # =========================================================================
-    # 🧬 CAPA 1: QUANTUM STRUCTURE FILTER (QSF)
+    # 🧬 CAPA 1: ADAPTIVE NOISE FILTER (ANF)
     # =========================================================================
     
-    def quantum_structure_filter(self, market_data: Dict) -> Tuple[bool, str]:
+    def adaptive_noise_filter(self, market_data: Dict) -> Tuple[bool, str]:
         """
-        CAPA 1: Filtro para eliminar el 90% de operaciones estúpidas
+        CAPA 1: Filtro adaptativo para eliminar el 90% de operaciones de bajo valor
         
         Returns:
             (allowed, reason)
