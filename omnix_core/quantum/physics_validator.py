@@ -1,14 +1,24 @@
 """
-OMNIX V6.0 ULTRA - Quantum Physics Validator
-============================================
+OMNIX V6.0 ULTRA - Quantum Physics Validator V2.0
+=================================================
 Scientific validator for quantum optics and QRNG physics.
 Ensures accurate physics responses by providing verified formulas
 and preventing AI hallucination of incorrect physics.
+
+V2.0 UPGRADE (Nov 27, 2025):
+- Added formal homodyne detection derivation from î_diff
+- Added canonical quadrature X̂_θ with step-by-step derivation
+- Added algebraic proof of linearity î_diff ∝ |α| X̂_θ
+- Added common error warnings (t=0 trick, θ vs φ confusion)
+- Added correct substitution â_LO → α e^{iθ}
+- Target: PhD-level rigor for investor demonstrations
 
 Key formulas from ANU QRNG and quantum optics:
 - Homodyne variance: σ² = (hν/4) × Δf
 - Shot noise limit: P_shot = 2eI × Δf
 - Vacuum fluctuations: ΔE × Δt ≥ ℏ/2
+- Canonical quadrature: X̂_θ = ½(â_vac e^{-iθ} + â†_vac e^{iθ})
+- Photocurrent: î_diff ∝ |α| X̂_θ (linear in LO amplitude)
 
 Author: OMNIX Development Team
 Date: November 2025
@@ -207,6 +217,275 @@ El QRNG de ANU usa métodos más sofisticados que Von Neumann básico.""",
                     "No entender la pérdida de eficiencia",
                     "Confundir con compresión de datos"
                 ]
+            ),
+            
+            # ============================================================
+            # V2.0 - DERIVACIONES FORMALES PHD-LEVEL
+            # ============================================================
+            
+            'homodyne_derivation': VerifiedFormula(
+                name="Derivación Formal Homodina Balanceada",
+                latex="î_diff ∝ â†_LO â_vac + â†_vac â_LO",
+                description="""DERIVACIÓN FORMAL COMPLETA DE DETECCIÓN HOMODINA BALANCEADA
+
+═══════════════════════════════════════════════════════════
+PUNTO DE PARTIDA (Beam Splitter 50/50):
+═══════════════════════════════════════════════════════════
+
+La ecuación del beam splitter para los modos de salida es:
+
+    â₁ = (1/√2)(â_LO + â_vac)
+    â₂ = (1/√2)(â_LO - â_vac)
+
+donde:
+    â_LO = operador de aniquilación del oscilador local
+    â_vac = operador de aniquilación del modo de vacío
+
+═══════════════════════════════════════════════════════════
+PASO 1: Fotocorrientes individuales
+═══════════════════════════════════════════════════════════
+
+Las fotocorrientes de cada detector son proporcionales al número de fotones:
+
+    î₁ ∝ â₁†â₁ = ½(â†_LO + â†_vac)(â_LO + â_vac)
+    î₂ ∝ â₂†â₂ = ½(â†_LO - â†_vac)(â_LO - â_vac)
+
+═══════════════════════════════════════════════════════════
+PASO 2: Diferencia de fotocorrientes
+═══════════════════════════════════════════════════════════
+
+    î_diff = î₁ - î₂
+
+Expandiendo:
+    î₁ = ½(â†_LO â_LO + â†_LO â_vac + â†_vac â_LO + â†_vac â_vac)
+    î₂ = ½(â†_LO â_LO - â†_LO â_vac - â†_vac â_LO + â†_vac â_vac)
+
+Restando:
+    î_diff = ½(2â†_LO â_vac + 2â†_vac â_LO)
+    
+    ▶ î_diff = â†_LO â_vac + â†_vac â_LO ◀
+
+NOTA CRÍTICA: Los términos â†_LO â_LO y â†_vac â_vac se CANCELAN.
+Esto es lo que hace balanceada a la detección homodina.""",
+                units="Operadores adimensionales (en unidades de ℏ = 1)",
+                notes="Esta es la ecuación EXACTA de partida para cualquier derivación homodina",
+                common_mistakes=[
+                    "Empezar desde otra ecuación que no sea esta",
+                    "No mostrar la cancelación de términos DC",
+                    "Saltar directamente a la cuadratura sin derivar"
+                ]
+            ),
+            
+            'canonical_quadrature': VerifiedFormula(
+                name="Cuadratura Canónica X̂_θ",
+                latex="X̂_θ = ½(â_vac e^{-iθ} + â†_vac e^{iθ})",
+                description="""DERIVACIÓN DE LA CUADRATURA CANÓNICA
+
+═══════════════════════════════════════════════════════════
+PASO 3: Sustitución del LO por estado coherente
+═══════════════════════════════════════════════════════════
+
+El oscilador local está en un estado coherente |α⟩ con amplitud compleja:
+
+    α = |α| e^{iθ}
+
+donde:
+    |α| = amplitud (proporcional a √potencia)
+    θ = fase del LO (PARÁMETRO CONTROLADO por el experimentador)
+
+SUSTITUCIÓN CORRECTA:
+    â_LO |α⟩ = α |α⟩ = |α| e^{iθ} |α⟩
+    
+Por lo tanto, en el límite clásico del LO:
+    â_LO → α = |α| e^{iθ}
+    â†_LO → α* = |α| e^{-iθ}
+
+⚠️ CRÍTICO: â_vac PERMANECE COMO OPERADOR CUÁNTICO
+El vacío NO se sustituye por un número clásico.
+
+═══════════════════════════════════════════════════════════
+PASO 4: Sustitución en î_diff
+═══════════════════════════════════════════════════════════
+
+Partiendo de: î_diff = â†_LO â_vac + â†_vac â_LO
+
+Sustituimos:
+    î_diff = (|α| e^{-iθ}) â_vac + â†_vac (|α| e^{iθ})
+    î_diff = |α| (e^{-iθ} â_vac + e^{iθ} â†_vac)
+    î_diff = |α| × 2 × ½(â_vac e^{-iθ} + â†_vac e^{iθ})
+
+═══════════════════════════════════════════════════════════
+PASO 5: Definición de cuadratura canónica
+═══════════════════════════════════════════════════════════
+
+Definimos la CUADRATURA CANÓNICA:
+
+    ▶ X̂_θ = ½(â_vac e^{-iθ} + â†_vac e^{iθ}) ◀
+
+Casos especiales:
+    X̂₀ = ½(â + â†) = X̂  (cuadratura de posición)
+    X̂_{π/2} = ½(âe^{-iπ/2} + â†e^{iπ/2}) = -i½(â - â†)/i = P̂/2  (cuadratura de momento)
+
+Relación de conmutación:
+    [X̂₀, X̂_{π/2}] = i/2
+
+Principio de incertidumbre:
+    ΔX̂₀ × ΔX̂_{π/2} ≥ 1/4
+
+Para estado de vacío:
+    ΔX̂_θ = ½ (para todo θ)""",
+                units="Adimensional (unidades de shot-noise, ℏ = 1)",
+                notes="La fase θ del LO selecciona qué cuadratura del vacío se mide",
+                common_mistakes=[
+                    "No escribir la forma canónica explícitamente",
+                    "Confundir θ (fase del LO) con φ (fase de la señal)",
+                    "Usar t=0 para forzar el resultado (la física NO depende del tiempo)",
+                    "Sustituir â_vac por un número clásico (destruye la cuántica)"
+                ]
+            ),
+            
+            'linearity_proof': VerifiedFormula(
+                name="Demostración Algebraica de Linealidad en α",
+                latex="î_diff = 2|α| X̂_θ  ∝  |α| X̂_θ",
+                description="""DEMOSTRACIÓN ALGEBRAICA COMPLETA
+
+═══════════════════════════════════════════════════════════
+RESULTADO FINAL
+═══════════════════════════════════════════════════════════
+
+Combinando los pasos anteriores:
+
+    î_diff = |α| × 2 × X̂_θ
+
+    ▶ î_diff = 2|α| X̂_θ ◀
+
+SIGNIFICADO FÍSICO:
+1. La fotocorriente diferencial es LINEAL en la amplitud del LO |α|
+2. La fotocorriente mide DIRECTAMENTE la cuadratura X̂_θ del vacío
+3. La fase θ del LO selecciona QUÉ cuadratura se mide
+4. Aumentar |α| aumenta la señal (pero NO el ruido relativo)
+
+═══════════════════════════════════════════════════════════
+VALOR ESPERADO Y VARIANZA
+═══════════════════════════════════════════════════════════
+
+Para estado de vacío |0⟩:
+
+Valor esperado:
+    ⟨î_diff⟩ = 2|α| ⟨0|X̂_θ|0⟩ = 0
+
+    (El vacío tiene media cero en cualquier cuadratura)
+
+Varianza:
+    ⟨î²_diff⟩ - ⟨î_diff⟩² = 4|α|² ⟨0|X̂²_θ|0⟩
+    
+    ⟨0|X̂²_θ|0⟩ = ¼  (para estado de vacío)
+    
+    Var(î_diff) = 4|α|² × ¼ = |α|²
+
+═══════════════════════════════════════════════════════════
+CONEXIÓN CON LA FÓRMULA DE VARIANZA σ²
+═══════════════════════════════════════════════════════════
+
+La varianza de la fotocorriente en unidades de shot-noise:
+
+    σ² = (hν/4) × Δf
+
+Esta fórmula es INDEPENDIENTE de |α| porque:
+1. La varianza del vacío ⟨X̂²_θ⟩ = ¼ es fija
+2. El factor |α|² aparece tanto en señal como en ruido
+3. El ratio señal/ruido (SNR) es lo relevante, no la varianza absoluta
+
+El LO solo necesita ser "suficientemente grande" para:
+- Dominar sobre ruido electrónico del detector
+- Dominar sobre ruido térmico""",
+                units="Operadores en unidades de ℏ = 1",
+                notes="Esta derivación es la que pide un físico cuántico - rigor algebraico completo",
+                common_mistakes=[
+                    "No mostrar los pasos algebraicos explícitamente",
+                    "Hacer la demostración 'narrativa' en lugar de algebraica",
+                    "Confundir varianza de î_diff con σ² = (hν/4)Δf",
+                    "Usar el truco de t=0 (resultado NO depende del tiempo)"
+                ]
+            ),
+            
+            'common_errors_homodyne': VerifiedFormula(
+                name="Errores Comunes en Derivaciones Homodinas",
+                latex="⚠️ ADVERTENCIAS CRÍTICAS",
+                description="""ERRORES QUE DEBES EVITAR ABSOLUTAMENTE
+
+═══════════════════════════════════════════════════════════
+❌ ERROR 1: Usar t=0 para forzar el resultado
+═══════════════════════════════════════════════════════════
+
+INCORRECTO:
+    "Si tomamos t=0, entonces e^{iωt} = 1 y obtenemos..."
+
+CORRECTO:
+    El resultado de la homodina NO depende del tiempo.
+    Depende de la fase θ del oscilador local.
+    La dependencia temporal e^{±iωt} se CANCELA en la resta.
+
+═══════════════════════════════════════════════════════════
+❌ ERROR 2: Confundir θ (fase LO) con φ (fase señal)
+═══════════════════════════════════════════════════════════
+
+θ = fase del oscilador local
+    - Es un PARÁMETRO CONTROLADO
+    - Lo fija el experimentador
+    - Selecciona qué cuadratura medir
+
+φ = fase de la señal (si hay una)
+    - Sería la fase de un estado coherente de entrada
+    - En QRNG, NO hay señal, solo vacío
+    - El vacío NO tiene fase definida
+
+═══════════════════════════════════════════════════════════
+❌ ERROR 3: Empezar desde ecuación incorrecta
+═══════════════════════════════════════════════════════════
+
+INCORRECTO:
+    î_diff = g(â†e^{-iωt} + âe^{iωt})
+    (Esta NO es la ecuación de homodina balanceada)
+
+CORRECTO:
+    Siempre partir de:
+    î_diff = â†_LO â_vac + â†_vac â_LO
+    
+    Esta ecuación se DERIVA del beam splitter 50/50
+
+═══════════════════════════════════════════════════════════
+❌ ERROR 4: Sustituir â_vac por número clásico β
+═══════════════════════════════════════════════════════════
+
+INCORRECTO:
+    "Si el vacío tiene amplitud β..."
+    
+    El vacío NO tiene amplitud clásica.
+    â_vac |0⟩ = 0  (aniquila el vacío)
+    
+    Pero â_vac NO es cero como operador.
+    Las fluctuaciones cuánticas son:
+    ⟨0|â†_vac â_vac|0⟩ = 0  (no hay fotones en promedio)
+    ⟨0|(â_vac + â†_vac)²|0⟩ = 1  (hay fluctuaciones)
+
+═══════════════════════════════════════════════════════════
+❌ ERROR 5: No derivar X̂_θ explícitamente
+═══════════════════════════════════════════════════════════
+
+La cuadratura canónica DEBE escribirse como:
+
+    X̂_θ = ½(â e^{-iθ} + â† e^{iθ})
+
+Esto NO es opcional, es la definición estándar.
+Si no aparece esta fórmula, la derivación está incompleta.""",
+                units="N/A (advertencias conceptuales)",
+                notes="Estos errores distinguen una respuesta 7.5/10 de una 10/10",
+                common_mistakes=[
+                    "Todos los errores listados arriba",
+                    "Hacer derivaciones 'narrativas' en lugar de algebraicas",
+                    "Saltarse pasos intermedios"
+                ]
             )
         }
         
@@ -247,6 +526,27 @@ El QRNG de ANU usa métodos más sofisticados que Von Neumann básico.""",
                 'varianza', 'variance', 'calcular', 'calculate',
                 'derivar', 'derive', 'demostrar', 'prove',
                 'unidades', 'units', 'dimensiones'
+            ],
+            # V2.0 - Detección de derivaciones formales
+            'formal_derivation': [
+                'derivación', 'derivation', 'derivar desde', 'derive from',
+                'demuestra', 'demostración', 'proof', 'prove',
+                'algebraicamente', 'algebraically', 'paso a paso', 'step by step',
+                'ecuación de partida', 'starting equation', 'punto de partida',
+                'beam splitter', 'fotocorriente', 'photocurrent', 'î_diff',
+                'continua desde', 'continue from', 'partiendo de', 'starting from'
+            ],
+            'quadrature': [
+                'cuadratura', 'quadrature', 'x_theta', 'x̂_θ', 'x_θ',
+                'cuadratura canónica', 'canonical quadrature',
+                'operador cuadratura', 'quadrature operator',
+                'fase theta', 'phase theta', 'fase del lo', 'lo phase'
+            ],
+            'operators': [
+                'operador', 'operator', 'â_vac', 'â_lo', 'a_vac', 'a_lo',
+                'aniquilación', 'annihilation', 'creación', 'creation',
+                'â†', 'a_dagger', 'hermítico', 'hermitian', 'conmutador',
+                'estado coherente', 'coherent state', '|α⟩', 'alpha'
             ]
         }
     
@@ -333,6 +633,63 @@ Unidades correctas: {formula.units}
 Nota: {formula.notes}
 """)
                     added_formulas.add(formula_key)
+        
+        # V2.0 - Add formal derivations if asking about derivations, quadratures, or operators
+        needs_formal_derivation = any(t in topics for t in ['formal_derivation', 'quadrature', 'operators'])
+        needs_homodyne_derivation = 'homodyne' in topics and needs_formal_derivation
+        
+        if needs_homodyne_derivation or needs_formal_derivation:
+            # Add the complete formal derivation
+            if 'homodyne_derivation' not in added_formulas:
+                formula = self.verified_formulas['homodyne_derivation']
+                context_parts.append(f"""
+🔬 **{formula.name}**
+Ecuación de partida: {formula.latex}
+
+{formula.description}
+
+⚠️ ERRORES A EVITAR:
+{chr(10).join(f'  - {mistake}' for mistake in formula.common_mistakes)}
+""")
+                added_formulas.add('homodyne_derivation')
+            
+            # Add canonical quadrature derivation
+            if 'canonical_quadrature' not in added_formulas:
+                formula = self.verified_formulas['canonical_quadrature']
+                context_parts.append(f"""
+🔬 **{formula.name}**
+Fórmula canónica: {formula.latex}
+
+{formula.description}
+
+⚠️ ERRORES A EVITAR:
+{chr(10).join(f'  - {mistake}' for mistake in formula.common_mistakes)}
+""")
+                added_formulas.add('canonical_quadrature')
+            
+            # Add linearity proof
+            if 'linearity_proof' not in added_formulas:
+                formula = self.verified_formulas['linearity_proof']
+                context_parts.append(f"""
+🔬 **{formula.name}**
+Resultado: {formula.latex}
+
+{formula.description}
+
+⚠️ ERRORES A EVITAR:
+{chr(10).join(f'  - {mistake}' for mistake in formula.common_mistakes)}
+""")
+                added_formulas.add('linearity_proof')
+            
+            # Add common errors section
+            if 'common_errors_homodyne' not in added_formulas:
+                formula = self.verified_formulas['common_errors_homodyne']
+                context_parts.append(f"""
+🚨 **{formula.name}**
+
+{formula.description}
+""")
+                added_formulas.add('common_errors_homodyne')
         
         # If asking about formulas specifically for homodyne
         if 'homodyne' in topics and 'optical_formulas' in topics:
