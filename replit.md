@@ -7,6 +7,10 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 User Communication Preference: Simple, everyday language (Spanish primary).
 
 ## Recent Changes
+- **2025-11-27**: **INSTITUTIONAL OPTIMIZATION SUITE** - Complete hedge fund optimization:
+  - **Cascade Protection** (`omnix_risk/cascade_protection.py`): Progressive risk reduction (30%→50%→70%) after consecutive losses, emergency pause, recovery protocol
+  - **Adaptive Regime Switcher** (`omnix_strategies/regime_switcher.py`): HMM-based regime detection (bull/bear/sideways/volatile), automatic strategy switching
+  - **Pitch Deck Generator** (`omnix_reports/pitch_deck_generator.py`): 10-slide investor presentation with honest metrics, Markdown/JSON/HTML export
 - **2025-11-27**: **PROFESSIONAL VALIDATION SUITE V2.0** - Upgraded to 10/10 institutional hedge fund standard:
   - **Advanced TCA** (`advanced_tca.py`): Variable costs by hour (0.46%-0.57%), order size, and volatility
   - **Regime Metrics** (`regime_metrics.py`): Weighted Sharpe, consistency score (0-100%), bear market grade (A-F)
