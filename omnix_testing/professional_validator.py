@@ -37,12 +37,26 @@ class CostModel:
     spread_bps: float = 10         # 0.10% spread promedio
     
     def calculate_total_cost(self, trade_value: float, is_taker: bool = True) -> float:
-        """Calcula costo total de un trade"""
+        """
+        Calcula costo total de un trade (round-trip)
+        
+        Costos para TAKER (default):
+          - Fee: 0.26% (taker_fee)
+          - Slippage: 0.05% (5 bps)
+          - Spread: 0.10% (10 bps full spread crossing)
+          - Total: ~0.41% per trade
+        
+        Costos para MAKER:
+          - Fee: 0.16% (maker_fee)
+          - Slippage: 0.05% (5 bps)
+          - Spread: 0.10% (10 bps)
+          - Total: ~0.31% per trade
+        """
         fee = self.taker_fee if is_taker else self.maker_fee
         slippage = self.slippage_bps / 10000
-        spread = self.spread_bps / 10000
+        spread = self.spread_bps / 10000  # Full spread cost when crossing bid-ask
         
-        return trade_value * (fee + slippage + spread / 2)
+        return trade_value * (fee + slippage + spread)
 
 
 @dataclass 
