@@ -323,17 +323,26 @@ Definimos la CUADRATURA CANÓNICA:
     ▶ X̂_θ = ½(â_vac e^{-iθ} + â†_vac e^{iθ}) ◀
 
 Casos especiales:
-    X̂₀ = ½(â + â†) = X̂  (cuadratura de posición)
-    X̂_{π/2} = ½(âe^{-iπ/2} + â†e^{iπ/2}) = -i½(â - â†)/i = P̂/2  (cuadratura de momento)
+    X̂₀ = ½(â + â†) = X̂  (cuadratura de posición, en unidades ℏ=1)
+    
+    X̂_{π/2} = ½(â e^{-iπ/2} + â† e^{iπ/2})
+             = ½(â(-i) + â†(i))
+             = ½i(â† - â)
+             = P̂  (cuadratura de momento, donde P̂ = (â† - â)/(2i) = i(â† - â)/2)
 
 Relación de conmutación:
-    [X̂₀, X̂_{π/2}] = i/2
+    [X̂₀, X̂_{π/2}] = [X̂, P̂] = i/2  (en nuestra normalización con ℏ=1)
 
 Principio de incertidumbre:
-    ΔX̂₀ × ΔX̂_{π/2} ≥ 1/4
+    ΔX̂ × ΔP̂ ≥ 1/4
 
-Para estado de vacío:
-    ΔX̂_θ = ½ (para todo θ)""",
+Para estado de vacío |0⟩:
+    ⟨0|X̂²|0⟩ = ¼, ⟨0|P̂²|0⟩ = ¼
+    ΔX̂_θ = ½ (para todo θ, estados mínimos de incertidumbre)
+
+NOTA SOBRE NORMALIZACIÓN:
+    En esta convención: â = (X̂ + iP̂), â† = (X̂ - iP̂)
+    donde X̂ y P̂ son operadores adimensionales con [X̂, P̂] = i/2""",
                 units="Adimensional (unidades de shot-noise, ℏ = 1)",
                 notes="La fase θ del LO selecciona qué cuadratura del vacío se mide",
                 common_mistakes=[
