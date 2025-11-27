@@ -44,6 +44,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
   - **Module Location**: `omnix_core/quantum/enhancements.py` exports `global_qrng` and `global_qaoa`.
   - **Monte Carlo Integration**: Automatic fallback to numpy if API unavailable; Box-Muller transform converts uniform [0,1) to normal distribution.
   - **Benefits**: Impresses investors ("Powered by Quantum Computing"), unpredictable simulations, cryptographically secure randomness.
+  - **Quantum Physics Validator (Nov 27, 2025)**: Scientific accuracy module at `omnix_core/quantum/physics_validator.py` that ensures AI responses use verified quantum optics formulas. Detects topics (homodyne detection, shot noise, vacuum fluctuations, squeezed states, QRNG physics, bias removal) and injects 2,619+ chars of verified scientific context into prompts. Prevents LLM hallucination of physics formulas with correct SI units and constants (ℏ, h, e, kB).
 - **Community Intelligence**: Signal Contribution (crowdsourcing alpha), Community Feedback, Reward System.
 
 ### System Design Choices
