@@ -166,7 +166,7 @@ class AresQuantumProtocol:
                 kurtosis = np.mean((returns - np.mean(returns))**4) / (np.var(returns)**2)
                 quantum_vol = std_vol * (1 + 0.1 * abs(kurtosis - 3))
                 
-                return min(quantum_vol * 100, 100.0)  # Normalizar a 0-100%
+                return float(min(quantum_vol * 100, 100.0))  # Normalizar a 0-100%
             
             # Fallback: usar volatilidad simple
             return market_data.get('volatility', 50.0)
