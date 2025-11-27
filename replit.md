@@ -7,6 +7,10 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 User Communication Preference: Simple, everyday language (Spanish primary).
 
 ## Recent Changes
+- **2025-11-27**: **INSTITUTIONAL COMPLIANCE SUITE** - 3 candados finales para auditoría:
+  - **InstitutionalStressSuite** (`omnix_testing/institutional_stress_suite.py`): 6 escenarios obligatorios (flash crash, volatilidad extrema, rally parabólico, iliquidez, fallo exchange, corrupción datos) con reporte de auditoría y calificación A+ a F
+  - **InstitutionalAuditLogger** (`omnix_risk/audit_logger.py`): Trail inmutable con 6 campos (timestamp, acción, razón, módulo, métrica, resultado), verificación SHA-256, cumple SOC 2 / MiFID II / SEC 17a-4
+  - **DeadManSwitch** (`omnix_risk/dead_man_switch.py`): Monitor proactivo cada 500ms (heartbeat, latencia <2000ms, orderbook fresh, integridad datos, slippage, websocket), halt automático tras 3 fallos consecutivos
 - **2025-11-27**: **PREMIUM INSTITUTIONAL UPGRADE** - 3 new modules for 100/100 hedge fund rating:
   - **Institutional Response Formatter** (`omnix_services/ai_service/formatters/institutional_formatter.py`): Real numbers (spread bps, slippage $, positions %), professional execution briefs, post-trade confirmations
   - **Reactivation Engine** (`omnix_risk/reactivation_engine.py`): Multi-signal unpause criteria (volatility <2.5%, regime favorable, cooldown 4h min, paper trades win rate >60%), transparent progress tracking

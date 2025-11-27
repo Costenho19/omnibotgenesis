@@ -25,6 +25,14 @@ from omnix_testing.professional_validator import (
     ValidationReport
 )
 
+from omnix_testing.institutional_stress_suite import (
+    InstitutionalStressSuite,
+    StressScenario,
+    TestResult,
+    ScenarioResult,
+    StressSuiteReport
+)
+
 __all__ = [
     'BacktestingEngine',
     'KrakenDataDownloader', 
@@ -33,5 +41,10 @@ __all__ = [
     'CostModel',
     'MarketRegime',
     'WalkForwardResult',
-    'ValidationReport'
+    'ValidationReport',
+    'InstitutionalStressSuite',
+    'StressScenario',
+    'TestResult',
+    'ScenarioResult',
+    'StressSuiteReport'
 ]
