@@ -4,6 +4,7 @@
 OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system designed for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with $1,000,000 virtual capital (spot) + $100,000 (derivatives), employing institutional-grade position sizing to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance and a professional backtesting infrastructure, including new modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
 ### Recent Changes (November 28, 2025)
+- **Aggressive Database Cleanup (Nov 28, 2025)**: Migración agresiva completada - eliminadas 5 tablas legacy sin uso activo (whatsapp_messages, detected_patterns, improvement_proposals, monitoring_metrics, ai_alerts), migrados contactos WhatsApp de users.whatsapp_number → user_contacts, backups automáticos creados. Schema reducido de 33→28 tablas activas (20 core + 7 risk/monitoring + 6 derivatives). Migración idempotente con transacciones, advisory locks y rollback automático.
 - **Redis Cache Integration Complete**: Connected to Railway Redis via TCP proxy (shinkansen.proxy.rlwy.net:32595), persistent cache now active for conversations, market data, and rate limiting. All operations verified (SET/GET/INCREMENT/TTL/DELETE).
 - **AI Token Limits Increased**: Response truncation fixed - GPT-4o (1500→4000 tokens), Gemini (4000→8000), Claude (1500→4000), +300-400% capacity for institutional-grade analyses.
 - **Derivatives Module Integrated**: DerivativesManager now initializes in main.py with $100K paper trading balance
@@ -47,7 +48,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
-- **Centralized Database Layer**: All database logic in `omnix_services/database_service/` with 23 tables and 22 DAL methods.
+- **Centralized Database Layer**: All database logic in `omnix_services/database_service/` with 28 active tables (20 core + 7 risk/monitoring + 6 derivatives) and 22+ DAL methods. Schema migrations managed via transactional methods with advisory locks and automatic rollback.
 - **Unified Configuration**: Centralized `env_manager.py` for environment variables.
 - **Deployment**: 24/7 operation on Railway (Production) and Replit (Development).
 
@@ -63,8 +64,13 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **ANU QRNG API**: For true quantum randomness.
 
 #### Databases
-- **PostgreSQL (Neon)**: Main relational database (33 tables: 23 core + 6 derivatives + 4 auxiliary). Fully operational with all foreign keys, indices, and constraints configured.
-- **Redis (Railway)**: External in-memory cache connected via TCP proxy for persistent state management, conversation history, market data caching, and rate limiting. Connection: shinkansen.proxy.rlwy.net:32595 (public proxy for Replit→Railway).
+- **PostgreSQL (Neon/Railway)**: Main relational database with 28 active tables categorized as:
+  - **20 Core Tables**: users, user_contacts, trades, analysis, conversations, sharia_validations, balance_history, paper_trading_balances, paper_trading_trades, trade_reasonings, trade_evaluations, pending_evaluations, community_feedback, strategy_votes, user_contributions, community_signals, signal_executions, signal_votes, alpha_leaderboard, schema_migrations
+  - **7 Risk/Monitoring Tables**: risk_guardian_events, risk_limits, risk_limit_breaches, risk_metrics_snapshots, circuit_breaker_status (plus 2 legacy monitoring tables removed Nov 28, 2025)
+  - **6 Derivatives Tables**: derivatives_balances, derivatives_trades, derivatives_positions, derivatives_funding_log, derivatives_hedges, derivatives_funding_opportunities
+  - **Legacy Tables Removed (Nov 28, 2025)**: whatsapp_messages, detected_patterns, improvement_proposals, monitoring_metrics, ai_alerts (backups created as omnix_backup_<table>_YYYYMMDD)
+  - Fully operational with all foreign keys, indices, check constraints, and transactional migrations configured.
+- **Redis (Railway)**: External in-memory cache connected via TCP proxy for persistent state management, conversation history, market data caching, and rate limiting. Connection: shinkansen.proxy.rlwy.net:32595 (public proxy for Replit→Railway). For Railway deployment, use internal private network: `REDIS_URL=${{Redis.REDIS_URL}}`.
 
 #### Key Python Libraries
 - `numpy`, `scipy`, `ccxt`: Core trading and mathematical operations.

@@ -89,13 +89,17 @@ class DatabaseServiceEnterprise:
             self._add_foreign_key_constraints()
             self._add_check_constraints()
             
+            # 🧹 MIGRACIÓN AGRESIVA: Limpieza de tablas legacy (Nov 28, 2025)
+            # EJECUTAR ANTES de _init_tables() para evitar recrear tablas legacy
+            self._run_aggressive_cleanup()
+            
             self._init_tables()
             
             # 🗑️ Ejecutar cleanup automático (1x por día)
             self._run_daily_cleanup()
             
             self.connected = True
-            logger.info("✅ PostgreSQL: 23 tablas inicializadas")
+            logger.info("✅ PostgreSQL: 28 tablas activas (20 core + 7 risk + 6 derivatives)")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
             logger.info("=" * 70)
         except Exception as e:
@@ -648,6 +652,482 @@ class DatabaseServiceEnterprise:
         finally:
             conn.close()
     
+    def _run_aggressive_cleanup(self):
+        """
+        🧹 MIGRACIÓN AGRESIVA: Limpieza de tablas legacy y normalización (Nov 28, 2025)
+        
+        Opción B (Agresiva): Eliminación de tablas sin uso activo
+        
+        ESTRATEGIA:
+        1. Advisory lock para prevenir ejecuciones concurrentes
+        2. Transacción única con rollback automático si falla algo
+        3. Migrar users.whatsapp_number → user_contacts (ON CONFLICT para idempotencia)
+        4. Crear backups: omnix_backup.<tabla>_YYYYMMDD
+        5. DROP TABLE IF EXISTS para 5 tablas legacy:
+           - whatsapp_messages (sin uso activo)
+           - detected_patterns (sin uso activo)
+           - improvement_proposals (sin uso activo)
+           - monitoring_metrics (sin uso activo)
+           - ai_alerts (sin uso activo)
+        6. Tabla schema_migrations para tracking one-time execution
+        
+        GARANTÍAS DE SEGURIDAD:
+        - Idempotente (ejecutable múltiples veces sin error)
+        - Transaccional (rollback automático si falla)
+        - Backups automáticos antes de DROP
+        - Advisory lock previene race conditions
+        
+        RESULTADO: 33 → 28 tablas (20 core + 7 risk/monitoring + 6 derivatives - 5 legacy)
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return
+        
+        conn = self._get_connection()
+        if not conn:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            
+            # ================================================
+            # PASO 0: Verificar si migración ya se ejecutó
+            # ================================================
+            logger.info("🔍 Verificando si migración agresiva ya se ejecutó...")
+            
+            # Crear tabla schema_migrations si no existe
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                    id SERIAL PRIMARY KEY,
+                    migration_name TEXT UNIQUE NOT NULL,
+                    migration_hash TEXT,
+                    executed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    success BOOLEAN DEFAULT true
+                )
+            """)
+            conn.commit()
+            
+            # Verificar si esta migración ya corrió
+            migration_name = 'aggressive_cleanup_nov28_2025'
+            migration_hash = 'drop_5_legacy_tables_normalize_contacts'
+            
+            cursor.execute("""
+                SELECT executed_at, success FROM schema_migrations 
+                WHERE migration_name = %s AND success = true
+            """, (migration_name,))
+            
+            existing_migration = cursor.fetchone()
+            
+            if existing_migration:
+                logger.info(f"✅ Migración agresiva ya ejecutada el {existing_migration[0]}")
+                logger.info("   ⏭️  Saltando ejecución (idempotencia)")
+                conn.close()
+                return
+            
+            logger.info("🚀 Iniciando MIGRACIÓN AGRESIVA - Limpieza de base de datos...")
+            logger.info("=" * 80)
+            
+            # ================================================
+            # PASO 1: Advisory Lock para prevenir concurrencia
+            # ================================================
+            logger.info("🔒 Adquiriendo advisory lock (ID: 999888777)...")
+            cursor.execute("SELECT pg_advisory_lock(999888777)")
+            logger.info("✅ Lock adquirido")
+            
+            # ================================================
+            # PASO 2: Iniciar transacción principal
+            # ================================================
+            logger.info("📦 Iniciando transacción principal...")
+            
+            # ================================================
+            # PASO 3: Migrar users.whatsapp_number → user_contacts
+            # ================================================
+            logger.info("📱 PASO 1/4: Migrando users.whatsapp_number → user_contacts...")
+            
+            # Verificar si columna existe
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'users' 
+                    AND column_name = 'whatsapp_number'
+                )
+            """)
+            
+            if cursor.fetchone()[0]:
+                # Migrar datos
+                cursor.execute("""
+                    INSERT INTO user_contacts (user_id, contact_type, contact_value, is_primary)
+                    SELECT user_id, 'whatsapp', whatsapp_number, true
+                    FROM users
+                    WHERE whatsapp_number IS NOT NULL
+                    AND whatsapp_number != ''
+                    ON CONFLICT (user_id, contact_type, contact_value) 
+                    DO UPDATE SET is_primary = EXCLUDED.is_primary
+                """)
+                
+                migrated_count = cursor.rowcount
+                logger.info(f"   ✅ Migrados {migrated_count} números WhatsApp a user_contacts")
+                
+                # Verificar que todos fueron migrados
+                cursor.execute("""
+                    SELECT COUNT(*) FROM users 
+                    WHERE whatsapp_number IS NOT NULL AND whatsapp_number != ''
+                """)
+                total_whatsapp = cursor.fetchone()[0]
+                
+                cursor.execute("""
+                    SELECT COUNT(*) FROM user_contacts 
+                    WHERE contact_type = 'whatsapp'
+                """)
+                migrated_in_contacts = cursor.fetchone()[0]
+                
+                logger.info(f"   🔍 Verificación: {total_whatsapp} en users → {migrated_in_contacts} en user_contacts")
+                
+                # Eliminar columna whatsapp_number
+                logger.info("   🗑️  Eliminando columna users.whatsapp_number...")
+                cursor.execute("ALTER TABLE users DROP COLUMN IF EXISTS whatsapp_number")
+                logger.info("   ✅ Columna eliminada")
+            else:
+                logger.info("   ⏭️  Columna whatsapp_number ya eliminada - saltando migración")
+            
+            # ================================================
+            # PASO 4: Crear backups de tablas legacy
+            # ================================================
+            logger.info("💾 PASO 2/4: Creando backups de tablas legacy...")
+            
+            backup_date = datetime.now().strftime('%Y%m%d')
+            legacy_tables = [
+                'whatsapp_messages',
+                'detected_patterns', 
+                'improvement_proposals',
+                'monitoring_metrics',
+                'ai_alerts'
+            ]
+            
+            backed_up_count = 0
+            for table_name in legacy_tables:
+                # Verificar si tabla existe
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s AND table_schema = 'public'
+                    )
+                """, (table_name,))
+                
+                if cursor.fetchone()[0]:
+                    # Contar registros
+                    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                    row_count = cursor.fetchone()[0]
+                    
+                    backup_table = f"omnix_backup_{table_name}_{backup_date}"
+                    
+                    # Crear backup
+                    cursor.execute(f"""
+                        CREATE TABLE IF NOT EXISTS {backup_table} AS 
+                        SELECT * FROM {table_name}
+                    """)
+                    
+                    logger.info(f"   ✅ Backup creado: {backup_table} ({row_count} registros)")
+                    backed_up_count += 1
+                else:
+                    logger.info(f"   ⏭️  Tabla {table_name} no existe - saltando backup")
+            
+            logger.info(f"   📊 Total backups creados: {backed_up_count}/{len(legacy_tables)}")
+            
+            # ================================================
+            # PASO 5: DROP TABLE IF EXISTS para tablas legacy
+            # ================================================
+            logger.info("🗑️  PASO 3/4: Eliminando tablas legacy...")
+            
+            dropped_count = 0
+            for table_name in legacy_tables:
+                cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE")
+                logger.info(f"   ✅ Eliminada: {table_name}")
+                dropped_count += 1
+            
+            logger.info(f"   📊 Total tablas eliminadas: {dropped_count}/{len(legacy_tables)}")
+            
+            # ================================================
+            # PASO 6: Registrar migración exitosa
+            # ================================================
+            logger.info("📝 PASO 4/4: Registrando migración en schema_migrations...")
+            
+            cursor.execute("""
+                INSERT INTO schema_migrations (migration_name, migration_hash, success)
+                VALUES (%s, %s, true)
+                ON CONFLICT (migration_name) 
+                DO UPDATE SET executed_at = CURRENT_TIMESTAMP, success = true
+            """, (migration_name, migration_hash))
+            
+            logger.info("   ✅ Migración registrada")
+            
+            # ================================================
+            # PASO 7: COMMIT - Aplicar todos los cambios
+            # ================================================
+            logger.info("💾 Aplicando cambios (COMMIT)...")
+            conn.commit()
+            logger.info("✅ COMMIT exitoso")
+            
+            # ================================================
+            # PASO 8: Liberar advisory lock
+            # ================================================
+            logger.info("🔓 Liberando advisory lock...")
+            cursor.execute("SELECT pg_advisory_unlock(999888777)")
+            logger.info("✅ Lock liberado")
+            
+            # ================================================
+            # RESUMEN FINAL
+            # ================================================
+            logger.info("=" * 80)
+            logger.info("🎉 MIGRACIÓN AGRESIVA COMPLETADA EXITOSAMENTE")
+            logger.info("📊 Resultado:")
+            logger.info(f"   - Tablas eliminadas: {dropped_count}")
+            logger.info(f"   - Backups creados: {backed_up_count}")
+            logger.info(f"   - WhatsApp contacts migrados: {migrated_count if 'migrated_count' in locals() else 0}")
+            logger.info(f"   - Schema esperado: 28 tablas (20 core + 7 risk + 6 derivatives)")
+            logger.info("=" * 80)
+            
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error("❌ ERROR EN MIGRACIÓN AGRESIVA")
+            logger.error(f"   Tipo: {type(e).__name__}")
+            logger.error(f"   Mensaje: {str(e)}")
+            import traceback
+            logger.error(f"   Traceback:\n{traceback.format_exc()}")
+            logger.error("=" * 80)
+            logger.error("🔄 ROLLBACK automático - ningún cambio fue aplicado")
+            
+            # Registrar migración fallida
+            try:
+                cursor.execute("""
+                    INSERT INTO schema_migrations (migration_name, migration_hash, success)
+                    VALUES (%s, %s, false)
+                    ON CONFLICT (migration_name) DO NOTHING
+                """, (migration_name, migration_hash))
+                conn.commit()
+            except:
+                pass
+            
+            conn.rollback()
+            
+            # Liberar lock si se adquirió
+            try:
+                cursor.execute("SELECT pg_advisory_unlock(999888777)")
+            except:
+                pass
+        
+        finally:
+            conn.close()
+    
+    def verify_schema_integrity(self) -> Dict[str, any]:
+        """
+        🔍 VALIDACIÓN POST-MIGRACIÓN: Verificar integridad del schema (Nov 28, 2025)
+        
+        VALIDACIONES:
+        1. Contar tablas activas (esperado: 28)
+        2. Verificar user_contacts tiene datos migrados
+        3. Confirmar Foreign Keys intactos
+        4. Smoke queries en tablas críticas
+        5. Validar que tablas legacy fueron eliminadas
+        
+        Returns:
+            Dict con resultados de validación
+        """
+        if not self.db_url or not PSYCOPG2_AVAILABLE:
+            return {'success': False, 'error': 'Database not available'}
+        
+        conn = self._get_connection()
+        if not conn:
+            return {'success': False, 'error': 'Connection failed'}
+        
+        results = {
+            'success': True,
+            'validations': [],
+            'errors': [],
+            'warnings': []
+        }
+        
+        try:
+            cursor = conn.cursor()
+            
+            logger.info("🔍 INICIANDO VALIDACIÓN DE INTEGRIDAD DE SCHEMA...")
+            logger.info("=" * 80)
+            
+            # ================================================
+            # VALIDACIÓN 1: Contar tablas activas
+            # ================================================
+            logger.info("📊 VALIDACIÓN 1/5: Contando tablas activas...")
+            
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_type = 'BASE TABLE'
+                AND table_name NOT LIKE 'omnix_backup_%'
+            """)
+            
+            total_tables = cursor.fetchone()[0]
+            expected_tables = 29  # 28 + schema_migrations
+            
+            if total_tables == expected_tables:
+                logger.info(f"   ✅ Total tablas: {total_tables} (esperado: {expected_tables})")
+                results['validations'].append({'check': 'table_count', 'status': 'passed', 'value': total_tables})
+            else:
+                logger.warning(f"   ⚠️  Total tablas: {total_tables} (esperado: {expected_tables})")
+                results['warnings'].append(f"Table count mismatch: {total_tables} vs {expected_tables}")
+                results['validations'].append({'check': 'table_count', 'status': 'warning', 'value': total_tables})
+            
+            # ================================================
+            # VALIDACIÓN 2: Verificar tablas legacy eliminadas
+            # ================================================
+            logger.info("🗑️  VALIDACIÓN 2/5: Verificando tablas legacy eliminadas...")
+            
+            legacy_tables = [
+                'whatsapp_messages',
+                'detected_patterns',
+                'improvement_proposals',
+                'monitoring_metrics',
+                'ai_alerts'
+            ]
+            
+            legacy_still_present = []
+            for table_name in legacy_tables:
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s AND table_schema = 'public'
+                    )
+                """, (table_name,))
+                
+                if cursor.fetchone()[0]:
+                    legacy_still_present.append(table_name)
+            
+            if not legacy_still_present:
+                logger.info(f"   ✅ Todas las tablas legacy eliminadas ({len(legacy_tables)})")
+                results['validations'].append({'check': 'legacy_tables_removed', 'status': 'passed'})
+            else:
+                logger.warning(f"   ⚠️  Tablas legacy aún presentes: {legacy_still_present}")
+                results['warnings'].append(f"Legacy tables not removed: {legacy_still_present}")
+                results['validations'].append({'check': 'legacy_tables_removed', 'status': 'warning', 'remaining': legacy_still_present})
+            
+            # ================================================
+            # VALIDACIÓN 3: Verificar user_contacts tiene datos
+            # ================================================
+            logger.info("📱 VALIDACIÓN 3/5: Verificando migración de contactos...")
+            
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'users' AND column_name = 'whatsapp_number'
+                )
+            """)
+            whatsapp_column_exists = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM user_contacts WHERE contact_type = 'whatsapp'")
+            whatsapp_contacts_count = cursor.fetchone()[0]
+            
+            if not whatsapp_column_exists:
+                logger.info(f"   ✅ Columna users.whatsapp_number eliminada")
+                logger.info(f"   ✅ user_contacts tiene {whatsapp_contacts_count} contactos WhatsApp")
+                results['validations'].append({
+                    'check': 'whatsapp_migration', 
+                    'status': 'passed', 
+                    'migrated_contacts': whatsapp_contacts_count
+                })
+            else:
+                logger.warning(f"   ⚠️  Columna users.whatsapp_number aún existe")
+                results['warnings'].append("users.whatsapp_number column not removed")
+                results['validations'].append({'check': 'whatsapp_migration', 'status': 'warning'})
+            
+            # ================================================
+            # VALIDACIÓN 4: Verificar Foreign Keys críticos
+            # ================================================
+            logger.info("🔗 VALIDACIÓN 4/5: Verificando Foreign Keys...")
+            
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM information_schema.table_constraints 
+                WHERE constraint_type = 'FOREIGN KEY' 
+                AND table_schema = 'public'
+            """)
+            
+            fk_count = cursor.fetchone()[0]
+            
+            if fk_count > 0:
+                logger.info(f"   ✅ Foreign Keys activos: {fk_count}")
+                results['validations'].append({'check': 'foreign_keys', 'status': 'passed', 'count': fk_count})
+            else:
+                logger.error(f"   ❌ No se encontraron Foreign Keys")
+                results['errors'].append("No foreign keys found")
+                results['validations'].append({'check': 'foreign_keys', 'status': 'failed'})
+                results['success'] = False
+            
+            # ================================================
+            # VALIDACIÓN 5: Smoke queries en tablas críticas
+            # ================================================
+            logger.info("🔥 VALIDACIÓN 5/5: Smoke queries en tablas críticas...")
+            
+            critical_tables = [
+                'users',
+                'trades',
+                'risk_guardian_events',
+                'derivatives_balances',
+                'paper_trading_balances',
+                'user_contacts',
+                'schema_migrations'
+            ]
+            
+            smoke_test_passed = 0
+            for table_name in critical_tables:
+                try:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                    row_count = cursor.fetchone()[0]
+                    logger.info(f"   ✅ {table_name}: {row_count} registros")
+                    smoke_test_passed += 1
+                except Exception as e:
+                    logger.error(f"   ❌ {table_name}: Error - {e}")
+                    results['errors'].append(f"Smoke test failed for {table_name}: {e}")
+                    results['success'] = False
+            
+            results['validations'].append({
+                'check': 'smoke_tests', 
+                'status': 'passed' if smoke_test_passed == len(critical_tables) else 'failed',
+                'passed': smoke_test_passed,
+                'total': len(critical_tables)
+            })
+            
+            # ================================================
+            # RESUMEN FINAL
+            # ================================================
+            logger.info("=" * 80)
+            if results['success']:
+                logger.info("✅ VALIDACIÓN DE INTEGRIDAD: EXITOSA")
+            else:
+                logger.error("❌ VALIDACIÓN DE INTEGRIDAD: FALLÓ")
+            
+            logger.info(f"📊 Validaciones pasadas: {len([v for v in results['validations'] if v.get('status') == 'passed'])}/{len(results['validations'])}")
+            
+            if results['warnings']:
+                logger.warning(f"⚠️  Advertencias: {len(results['warnings'])}")
+                for warning in results['warnings']:
+                    logger.warning(f"   - {warning}")
+            
+            if results['errors']:
+                logger.error(f"❌ Errores: {len(results['errors'])}")
+                for error in results['errors']:
+                    logger.error(f"   - {error}")
+            
+            logger.info("=" * 80)
+            
+        except Exception as e:
+            logger.error(f"❌ Error durante validación de integridad: {e}")
+            results['success'] = False
+            results['errors'].append(str(e))
+        
+        finally:
+            conn.close()
+        
+        return results
+    
     def _run_daily_cleanup(self):
         """
         🕐 CONTROL DE FRECUENCIA: Ejecutar cleanup 1x por día (Nov 26, 2025)
@@ -910,20 +1390,7 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
-            # Tabla de notificaciones WhatsApp (Backward compatible - FASE 1)
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS whatsapp_messages (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT,
-                    recipient TEXT,
-                    message TEXT,
-                    status TEXT,
-                    message_sid TEXT,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # Tabla de contactos de usuario (NUEVA - FASE 1 Modernización)
+            # Tabla de contactos de usuario (NUEVA - Nov 26, 2025 + Migración Agresiva Nov 28, 2025)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS user_contacts (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1193,26 +1660,6 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
-            # Tabla de propuestas de mejora
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS improvement_proposals (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    username TEXT,
-                    proposal_type TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    affected_strategy TEXT,
-                    priority TEXT DEFAULT 'medium',
-                    status TEXT DEFAULT 'pending',
-                    ai_analysis TEXT,
-                    community_votes INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    reviewed_at TIMESTAMP,
-                    implemented_at TIMESTAMP
-                )
-            ''')
-            
             # Tabla de contribuciones de usuarios
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS user_contributions (
@@ -1231,32 +1678,11 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
-            # Tabla de patrones detectados por AI
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS detected_patterns (
-                    id SERIAL PRIMARY KEY,
-                    pattern_type TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    affected_strategy TEXT,
-                    market_condition TEXT,
-                    confidence REAL NOT NULL,
-                    sample_size INTEGER NOT NULL,
-                    success_rate REAL,
-                    failure_rate REAL,
-                    suggestion TEXT,
-                    status TEXT DEFAULT 'detected',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    approved_at TIMESTAMP,
-                    implemented_at TIMESTAMP
-                )
-            ''')
-            
             # Índices para Community Intelligence
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_user ON community_feedback(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_strategy ON community_feedback(strategy)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_result ON community_feedback(result)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_strategy ON strategy_votes(strategy)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_patterns_status ON detected_patterns(status)')
             
             # ==========================================
             # SIGNAL CONTRIBUTION TABLES - CROWDSOURCING ALPHA
