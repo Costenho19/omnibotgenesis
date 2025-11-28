@@ -2396,13 +2396,17 @@ class DatabaseServiceEnterprise:
             return False
     
     def save_conversation(self, user_id: str, user_message: str, ai_response: str, language: str = 'es') -> bool:
-        """Guardar conversación IA"""
+        """Guardar conversación IA en PostgreSQL (persistente)"""
         if not self.connected:
+            logger.warning(f"🧠 save_conversation: DB not connected for user {user_id}")
             return False
         
         try:
+            logger.info(f"🧠 save_conversation: Guardando para user {user_id} (msg: {len(user_message)} chars, resp: {len(ai_response)} chars)")
+            
             conn = self._get_connection()
             if not conn:
+                logger.error(f"🧠 save_conversation: No connection for user {user_id}")
                 return False
             
             cursor = conn.cursor()
@@ -2414,10 +2418,12 @@ class DatabaseServiceEnterprise:
             conn.commit()
             cursor.close()
             conn.close()
+            
+            logger.info(f"✅ save_conversation: SUCCESS para user {user_id}")
             return True
             
         except Exception as e:
-            logger.error(f"Error guardando conversación: {e}")
+            logger.error(f"❌ save_conversation ERROR para user {user_id}: {e}", exc_info=True)
             return False
     
     def get_conversation_history(self, chat_id: int, limit: int = 10) -> list:
@@ -2432,11 +2438,15 @@ class DatabaseServiceEnterprise:
             Lista de diccionarios con {'user': str, 'ai': str, 'timestamp': str}
         """
         if not self.connected:
+            logger.warning(f"🧠 get_conversation_history: DB not connected for chat {chat_id}")
             return []
         
         try:
+            logger.info(f"🧠 get_conversation_history: Cargando para chat {chat_id} (limit={limit})")
+            
             conn = self._get_connection()
             if not conn:
+                logger.error(f"🧠 get_conversation_history: No connection for chat {chat_id}")
                 return []
             
             cursor = conn.cursor()
@@ -2452,19 +2462,19 @@ class DatabaseServiceEnterprise:
             cursor.close()
             conn.close()
             
-            # Convertir a formato esperado (más reciente primero, luego invertir)
             history = []
-            for row in reversed(rows):  # Invertir para tener cronológico
+            for row in reversed(rows):
                 history.append({
                     'user': row[0],
                     'ai': row[1],
                     'timestamp': row[2].isoformat() if row[2] else None
                 })
             
+            logger.info(f"✅ get_conversation_history: Loaded {len(history)} messages for chat {chat_id}")
             return history
             
         except Exception as e:
-            logger.error(f"Error obteniendo historial: {e}")
+            logger.error(f"❌ get_conversation_history ERROR for chat {chat_id}: {e}", exc_info=True)
             return []
     
     def save_trade_reasoning(self, reasoning: Dict) -> Optional[str]:

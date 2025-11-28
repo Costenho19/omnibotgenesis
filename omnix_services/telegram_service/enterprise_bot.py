@@ -504,11 +504,17 @@ class EnterpriseTelegramBot:
                 MessageHandler(filters.VOICE, self.handle_voice_message)
             )
             
+            # 🎥 Handler PREMIUM para videos directos con Vision AI
+            self.application.add_handler(
+                MessageHandler(filters.VIDEO | filters.VIDEO_NOTE, self.handle_video_message)
+            )
+            
             # 🎨 Handler para botones inline (callbacks)
             self.application.add_handler(CallbackQueryHandler(self.handle_callback))
             
             logger.info("✅ Bot Telegram empresarial configurado")
             logger.info("🎤 Handler de voz premium activado - Whisper AI")
+            logger.info("🎥 Handler de video premium activado - Vision AI")
             logger.info("🎨 Handler de botones inline activado - Interacción premium")
             
             # 🛡️ Conectar AlertDispatcher al bot de Telegram
@@ -2901,6 +2907,212 @@ Ejemplo: /risk_events 48
                 await update.message.reply_text("❌ Error procesando voz. Usa texto por favor.")
             except:
                 pass
+
+    async def handle_video_message(self, update, context):
+        """🎥 HANDLER PREMIUM - Recibir videos directos con Vision AI
+        
+        Soporta:
+        - Videos enviados directamente (.mp4, .mov, etc.)
+        - Video notes (círculos de Telegram)
+        - Usa GPT-4 Vision o Gemini Vision para análisis
+        """
+        try:
+            user = update.effective_user
+            user_id = str(user.id)
+            user_name = user.first_name or "Usuario"
+            
+            logger.info(f"🎥 VIDEO DIRECTO RECIBIDO de {user_name} ({user_id})")
+            
+            if self.db_manager:
+                user_registered = self.db_manager.ensure_user_exists(
+                    user_id=user_id,
+                    username=user.username,
+                    first_name=user.first_name or "Usuario",
+                    language_code=user.language_code or 'es'
+                )
+                if user_registered:
+                    logger.info(f"✅ Usuario {user_id} registrado/actualizado exitosamente (video)")
+                else:
+                    logger.error(f"❌ CRÍTICO: Failed to register user {user_id} (video)")
+            
+            processing_msg = await update.message.reply_text("🎥 Analizando tu video con IA...")
+            
+            try:
+                video = update.message.video or update.message.video_note
+                if not video:
+                    await processing_msg.edit_text("❌ No pude detectar el video. Intenta enviarlo de nuevo.")
+                    return
+                
+                video_file = await video.get_file()
+                file_size_mb = video.file_size / (1024 * 1024) if video.file_size else 0
+                duration_sec = video.duration if hasattr(video, 'duration') else 0
+                
+                logger.info(f"🎥 Video recibido: {file_size_mb:.1f}MB, {duration_sec}s duración")
+                
+                if file_size_mb > 20:
+                    await processing_msg.edit_text(
+                        f"⚠️ El video es muy grande ({file_size_mb:.1f}MB).\n\n"
+                        "Para mejor análisis, envía videos de menos de 20MB o "
+                        "comparte un link de YouTube."
+                    )
+                    return
+                
+                import tempfile
+                suffix = '.mp4'
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_video:
+                    await video_file.download_to_drive(tmp_video.name)
+                    video_path = tmp_video.name
+                
+                logger.info(f"🎥 Video descargado: {video_path}")
+                
+                await processing_msg.edit_text("🎥 Video recibido. Analizando con Vision AI...")
+                
+                analysis_result = None
+                
+                if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
+                    try:
+                        logger.info("🎥 Usando VideoAnalyzerUltra para análisis")
+                        analysis_result = await self._analyze_video_with_vision(video_path, user_name)
+                    except Exception as va_error:
+                        logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
+                
+                if not analysis_result:
+                    try:
+                        logger.info("🎥 Usando análisis básico de video")
+                        analysis_result = self._basic_video_analysis(video_path, duration_sec, file_size_mb)
+                    except Exception as basic_error:
+                        logger.error(f"❌ Análisis básico falló: {basic_error}")
+                        analysis_result = f"📹 Video recibido ({duration_sec}s, {file_size_mb:.1f}MB). El análisis detallado no está disponible en este momento."
+                
+                try:
+                    os.unlink(video_path)
+                except:
+                    pass
+                
+                if analysis_result:
+                    caption = update.message.caption or ""
+                    if caption:
+                        full_context = f"El usuario envió un video con el mensaje: '{caption}'\n\nAnálisis del video:\n{analysis_result}"
+                    else:
+                        full_context = f"El usuario envió un video para análisis:\n{analysis_result}"
+                    
+                    ai_response = self.ai_system.generate_response(
+                        user_message=full_context,
+                        user_name=user_name,
+                        chat_id=user_id,
+                        trading_system=self.trading_system
+                    )
+                    
+                    if not ai_response:
+                        ai_response = analysis_result
+                    
+                    if len(ai_response) > 4000:
+                        ai_response = ai_response[:4000] + "..."
+                    
+                    await processing_msg.edit_text(ai_response)
+                    logger.info(f"✅ RESPUESTA A VIDEO ENVIADA: {len(ai_response)} caracteres")
+                    
+                    if self.db_manager:
+                        try:
+                            self.db_manager.save_conversation(
+                                user_id=user_id,
+                                user_message=f"[VIDEO: {duration_sec}s, {file_size_mb:.1f}MB] {caption}",
+                                ai_response=ai_response,
+                                language='es'
+                            )
+                            logger.info(f"🧠 Conversación de video guardada en PostgreSQL")
+                        except Exception as db_error:
+                            logger.warning(f"⚠️ No se pudo guardar conversación de video: {db_error}")
+                else:
+                    await processing_msg.edit_text(
+                        "❌ No pude analizar el video.\n\n"
+                        "💡 Alternativas:\n"
+                        "• Envía un video más corto\n"
+                        "• Comparte un link de YouTube\n"
+                        "• Describe lo que quieres analizar en texto"
+                    )
+                    
+            except Exception as process_error:
+                logger.error(f"❌ Error procesando video: {process_error}")
+                await processing_msg.edit_text("❌ Error procesando tu video. Intenta con un video más pequeño o comparte un link de YouTube.")
+                
+        except Exception as e:
+            logger.error(f"❌ Error crítico handle_video_message: {e}")
+            try:
+                await update.message.reply_text("❌ Error procesando video. Intenta de nuevo o usa texto.")
+            except:
+                pass
+    
+    async def _analyze_video_with_vision(self, video_path: str, user_name: str) -> str:
+        """Analizar video usando GPT-4 Vision o Gemini Vision"""
+        try:
+            import cv2
+            import base64
+            
+            cap = cv2.VideoCapture(video_path)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            
+            frames_to_extract = min(5, total_frames)
+            frame_indices = [int(i * total_frames / frames_to_extract) for i in range(frames_to_extract)]
+            
+            extracted_frames = []
+            for idx in frame_indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+                ret, frame = cap.read()
+                if ret:
+                    frame = cv2.resize(frame, (512, 288))
+                    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                    extracted_frames.append(base64.b64encode(buffer).decode('utf-8'))
+            
+            cap.release()
+            
+            if not extracted_frames:
+                return None
+            
+            import openai
+            openai_key = os.getenv('OPENAI_API_KEY')
+            if openai_key and extracted_frames:
+                client = openai.OpenAI(api_key=openai_key)
+                
+                content = [
+                    {"type": "text", "text": f"Analiza estos frames de un video enviado por {user_name}. Extrae información relevante para trading si aplica (indicadores técnicos, setup, patrones). Si no es trading, describe el contenido general."}
+                ]
+                
+                for i, frame_b64 in enumerate(extracted_frames[:3]):
+                    content.append({
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{frame_b64}"}
+                    })
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": content}],
+                    max_tokens=500
+                )
+                
+                return response.choices[0].message.content
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Error en _analyze_video_with_vision: {e}")
+            return None
+    
+    def _basic_video_analysis(self, video_path: str, duration: int, size_mb: float) -> str:
+        """Análisis básico cuando Vision AI no está disponible"""
+        return f"""📹 **Video Recibido**
+
+• Duración: {duration} segundos
+• Tamaño: {size_mb:.1f} MB
+
+💡 El video ha sido recibido correctamente. Para un análisis más detallado de contenido de trading, puedes:
+
+1. **Describir el contenido** en texto para que pueda ayudarte
+2. **Compartir un link de YouTube** para análisis completo con IA
+3. **Capturar pantalla** de los puntos clave que quieres analizar
+
+¿Qué te gustaría que analice del video?"""
 
     def handle_direct_message(self, chat_id, text, user_id=None):
         """Manejar mensaje directo usando API de Telegram"""
