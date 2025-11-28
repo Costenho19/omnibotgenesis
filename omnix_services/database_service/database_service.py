@@ -1552,6 +1552,157 @@ class DatabaseServiceEnterprise:
             
             logger.info("✅ Índices compuestos creados (optimiza queries con filtro + ordenamiento)")
             
+            # ==========================================
+            # DERIVATIVES TRADING TABLES - INSTITUTIONAL
+            # Nov 28, 2025 - Perpetuals & Futures Module
+            # ==========================================
+            
+            # Tabla de balances de derivados (paper trading perpetuos)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_balances (
+                    user_id TEXT PRIMARY KEY,
+                    balance_usd NUMERIC(18,8) DEFAULT 100000.00,
+                    margin_used NUMERIC(18,8) DEFAULT 0,
+                    available_margin NUMERIC(18,8) DEFAULT 100000.00,
+                    unrealized_pnl NUMERIC(18,8) DEFAULT 0,
+                    total_realized_pnl NUMERIC(18,8) DEFAULT 0,
+                    total_funding_paid NUMERIC(18,8) DEFAULT 0,
+                    total_fees_paid NUMERIC(18,8) DEFAULT 0,
+                    max_leverage NUMERIC(4,2) DEFAULT 3.00,
+                    total_trades INTEGER DEFAULT 0,
+                    winning_trades INTEGER DEFAULT 0,
+                    losing_trades INTEGER DEFAULT 0,
+                    max_drawdown_pct NUMERIC(8,4) DEFAULT 0,
+                    peak_balance NUMERIC(18,8) DEFAULT 100000.00,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de trades de derivados (perpetuos)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_trades (
+                    id BIGSERIAL PRIMARY KEY,
+                    trade_id TEXT UNIQUE NOT NULL,
+                    user_id TEXT NOT NULL,
+                    symbol TEXT NOT NULL,
+                    side TEXT NOT NULL CHECK (side IN ('long', 'short')),
+                    size NUMERIC(20,10) NOT NULL,
+                    entry_price NUMERIC(18,8) NOT NULL,
+                    exit_price NUMERIC(18,8),
+                    leverage NUMERIC(4,2) NOT NULL DEFAULT 1.00,
+                    margin_used NUMERIC(18,8) NOT NULL,
+                    liquidation_price NUMERIC(18,8),
+                    order_type TEXT DEFAULT 'market',
+                    status TEXT DEFAULT 'open' CHECK (status IN ('open', 'closed', 'liquidated', 'cancelled')),
+                    pnl NUMERIC(18,8) DEFAULT 0,
+                    pnl_pct NUMERIC(10,6) DEFAULT 0,
+                    funding_paid NUMERIC(18,8) DEFAULT 0,
+                    fees_paid NUMERIC(18,8) DEFAULT 0,
+                    close_reason TEXT,
+                    opened_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    closed_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Índices para derivatives_trades
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_deriv_trades_user ON derivatives_trades(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_deriv_trades_symbol ON derivatives_trades(symbol)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_deriv_trades_status ON derivatives_trades(status)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_deriv_trades_user_opened ON derivatives_trades(user_id, opened_at DESC)')
+            
+            # Tabla de posiciones abiertas de derivados
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_positions (
+                    position_id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    symbol TEXT NOT NULL,
+                    side TEXT NOT NULL CHECK (side IN ('long', 'short')),
+                    size NUMERIC(20,10) NOT NULL,
+                    entry_price NUMERIC(18,8) NOT NULL,
+                    leverage NUMERIC(4,2) NOT NULL,
+                    margin_used NUMERIC(18,8) NOT NULL,
+                    liquidation_price NUMERIC(18,8),
+                    unrealized_pnl NUMERIC(18,8) DEFAULT 0,
+                    funding_accumulated NUMERIC(18,8) DEFAULT 0,
+                    opened_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    last_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, symbol)
+                )
+            ''')
+            
+            # Índice para posiciones
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_deriv_positions_user ON derivatives_positions(user_id)')
+            
+            # Tabla de funding rates históricos
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_funding_log (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    position_id TEXT,
+                    symbol TEXT NOT NULL,
+                    funding_rate NUMERIC(12,8) NOT NULL,
+                    funding_amount NUMERIC(18,8) NOT NULL,
+                    side TEXT,
+                    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Índice para funding log
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_funding_log_user ON derivatives_funding_log(user_id, timestamp DESC)')
+            
+            # Tabla de hedges activos
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_hedges (
+                    hedge_id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    spot_symbol TEXT NOT NULL,
+                    spot_size NUMERIC(20,10) NOT NULL,
+                    spot_value NUMERIC(18,8) NOT NULL,
+                    hedge_symbol TEXT NOT NULL,
+                    hedge_size NUMERIC(20,10) NOT NULL,
+                    hedge_entry_price NUMERIC(18,8) NOT NULL,
+                    coverage_ratio NUMERIC(6,4) NOT NULL,
+                    hedge_type TEXT DEFAULT 'partial',
+                    delta NUMERIC(18,8) DEFAULT 0,
+                    pnl NUMERIC(18,8) DEFAULT 0,
+                    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed', 'rebalancing')),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    last_rebalance TIMESTAMP WITH TIME ZONE,
+                    closed_at TIMESTAMP WITH TIME ZONE
+                )
+            ''')
+            
+            # Índice para hedges
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_hedges_user ON derivatives_hedges(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_hedges_status ON derivatives_hedges(status)')
+            
+            # Tabla de oportunidades de funding arbitrage
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS derivatives_funding_opportunities (
+                    id BIGSERIAL PRIMARY KEY,
+                    opportunity_id TEXT UNIQUE NOT NULL,
+                    symbol TEXT NOT NULL,
+                    funding_rate NUMERIC(12,8) NOT NULL,
+                    funding_rate_annual NUMERIC(10,6) NOT NULL,
+                    spot_price NUMERIC(18,8) NOT NULL,
+                    perp_price NUMERIC(18,8) NOT NULL,
+                    basis NUMERIC(10,6) NOT NULL,
+                    expected_return_annual NUMERIC(10,6) NOT NULL,
+                    risk_score NUMERIC(6,2) DEFAULT 0,
+                    status TEXT DEFAULT 'detected' CHECK (status IN ('detected', 'executing', 'active', 'closed', 'missed')),
+                    detected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP WITH TIME ZONE
+                )
+            ''')
+            
+            # Índice para oportunidades
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_funding_opp_status ON derivatives_funding_opportunities(status)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_funding_opp_symbol ON derivatives_funding_opportunities(symbol)')
+            
+            logger.info("✅ Derivatives Tables creadas (derivatives_balances, derivatives_trades, derivatives_positions, derivatives_funding_log, derivatives_hedges, derivatives_funding_opportunities)")
+            
             conn.commit()
             cursor.close()
             conn.close()
