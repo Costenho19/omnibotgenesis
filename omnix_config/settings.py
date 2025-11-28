@@ -18,6 +18,7 @@ from omnix_config.env_manager import env_config
 @dataclass
 class RedisConfig:
     """Configuración Redis Cache"""
+    url: Optional[str] = env_config.get('REDIS_URL')  # Priority: Full URL (Railway)
     host: str = env_config.get('REDIS_HOST', default='localhost')
     port: int = env_config.get('REDIS_PORT', default=6379, cast_type=int)
     db: int = env_config.get('REDIS_DB', default=0, cast_type=int)

@@ -20,21 +20,46 @@ class RedisCache:
     def __init__(self):
         """Initialize Redis connection"""
         try:
-            self.client = redis.Redis(
-                host=settings.redis.host,
-                port=settings.redis.port,
-                db=settings.redis.db,
-                password=settings.redis.password,
-                decode_responses=True,
-                socket_keepalive=True,
-                socket_connect_timeout=5,
-                retry_on_timeout=True
-            )
+            # Priority 1: Use REDIS_URL if available (Railway external connection)
+            redis_url = settings.redis.url if hasattr(settings.redis, 'url') else None
+            if not redis_url:
+                from omnix_config.env_manager import env_config
+                redis_url = env_config.get('REDIS_URL')
+            
+            if redis_url:
+                # Connect using full URL (Railway TCP proxy)
+                self.client = redis.from_url(
+                    redis_url,
+                    decode_responses=True,
+                    socket_keepalive=True,
+                    socket_connect_timeout=10,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30
+                )
+                logger.info(f"✅ Redis connecting via URL: {redis_url.split('@')[1] if '@' in redis_url else 'configured'}")
+            else:
+                # Fallback: Use host/port configuration
+                self.client = redis.Redis(
+                    host=settings.redis.host,
+                    port=settings.redis.port,
+                    db=settings.redis.db,
+                    password=settings.redis.password,
+                    decode_responses=True,
+                    socket_keepalive=True,
+                    socket_connect_timeout=5,
+                    retry_on_timeout=True
+                )
+                logger.info(f"✅ Redis connecting via host/port: {settings.redis.host}:{settings.redis.port}")
+            
             # Test connection
             self.client.ping()
-            logger.info(f"✅ Redis connected: {settings.redis.host}:{settings.redis.port}")
-        except redis.ConnectionError:
-            logger.warning("⚠️ Redis not available - Running without cache")
+            logger.info("✅ Redis connection verified successfully!")
+        except redis.ConnectionError as e:
+            logger.warning(f"⚠️ Redis not available - Running without cache: {e}")
+            self.client = None
+        except Exception as e:
+            logger.error(f"❌ Redis initialization error: {e}")
             self.client = None
     
     def get(self, key: str) -> Optional[Any]:
