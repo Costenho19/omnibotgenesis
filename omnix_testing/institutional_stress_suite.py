@@ -3,7 +3,7 @@ OMNIX V6.0 ULTRA - Institutional Stress Test Suite
 ===================================================
 Suite completa de pruebas de estrés para auditoría institucional.
 
-Simula automáticamente 6 escenarios críticos:
+Simula automáticamente 6 escenarios críticos: stress test no esta en g
 1. Flash Crash (-15% en minutos)
 2. Volatilidad Extrema (VIX > 80)
 3. Rally Parabólico (+20% en horas)
