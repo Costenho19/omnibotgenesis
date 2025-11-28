@@ -229,7 +229,7 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.85,
-                    max_tokens=1500,
+                    max_tokens=4000,
                     top_p=0.95,
                     presence_penalty=0.1,
                     frequency_penalty=0.1
@@ -288,7 +288,7 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                     contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.85,
-                        max_output_tokens=4000,
+                        max_output_tokens=8000,
                         top_p=0.95,
                         top_k=40
                     )
@@ -306,7 +306,7 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                     generation_config=genai.types.GenerationConfig(
                         temperature=0.85,
                         top_p=0.95,
-                        max_output_tokens=4000,
+                        max_output_tokens=8000,
                         top_k=40
                     )
                 )
@@ -349,7 +349,7 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
         try:
             response = self.anthropic_client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=1500,
+                max_tokens=4000,
                 temperature=0.8,
                 system=system_prompt,
                 messages=[{"role": "user", "content": prompt}]

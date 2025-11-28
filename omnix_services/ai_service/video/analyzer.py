@@ -342,7 +342,7 @@ Responde solo con JSON válido:
                         ]
                     }
                 ],
-                max_tokens=500
+                max_tokens=2000
             )
             
             # Parsear respuesta JSON
@@ -433,7 +433,7 @@ Responde en JSON:
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4o",
                     messages=[{"role": "user", "content": prompt}],
-                    max_tokens=300
+                    max_tokens=1500
                 )
                 
                 content = response.choices[0].message.content

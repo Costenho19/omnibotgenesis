@@ -301,7 +301,7 @@ Usuario {user_name}: {user_message}"""
                         {"role": "user", "content": user_content}
                     ],
                     temperature=0.7,
-                    max_tokens=1000
+                    max_tokens=4000
                 )
                 
                 response_text = response.choices[0].message.content
