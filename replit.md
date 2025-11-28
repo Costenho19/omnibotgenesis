@@ -18,6 +18,14 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
 
+### Deployment Policy (CRITICAL)
+**⚠️ TELEGRAM TOKEN CONFLICT WARNING:**
+- **Railway = PRODUCTION (24/7)** - Bot corre permanentemente aquí
+- **Replit = DEVELOPMENT ONLY** - Solo para editar código y pruebas puntuales
+- **NUNCA correr el bot en Replit y Railway simultáneamente** - Telegram solo permite UNA conexión activa por token. Dos instancias causan: mensajes perdidos, conflictos de polling, desconexiones.
+- **Después de testear en Replit**: Siempre parar el workflow antes de terminar la sesión.
+- El código se sincroniza con GitHub; Railway hace deploy automático desde `main` branch.
+
 ### System Architecture
 OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for high performance, security, and intelligent automation.
 
