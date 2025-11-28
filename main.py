@@ -13,9 +13,7 @@ import os
 import sys
 import shutil
 
-print("=" * 70)
-print("🧹 RAILWAY FIX: Limpiando cache Python ANTES de imports...")
-print("=" * 70)
+print("🧹 Limpiando cache Python...")
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 deleted_count = 0
@@ -26,9 +24,8 @@ for root, dirs, files in os.walk(current_dir):
         try:
             shutil.rmtree(pycache_path)
             deleted_count += 1
-            print(f"   🗑️ Cache borrado: {pycache_path}")
-        except Exception as e:
-            print(f"   ⚠️ No se pudo borrar {pycache_path}: {e}")
+        except:
+            pass
     
     for file in files:
         if file.endswith('.pyc'):
@@ -36,11 +33,10 @@ for root, dirs, files in os.walk(current_dir):
             try:
                 os.remove(pyc_path)
                 deleted_count += 1
-            except Exception as e:
+            except:
                 pass
 
-print(f"✅ Cache limpiado: {deleted_count} archivos/carpetas eliminados")
-print("=" * 70)
+print(f"✅ Cache limpiado: {deleted_count} elementos eliminados")
 
 import logging
 import time
@@ -49,14 +45,9 @@ import random  # Para nonce único en Kraken
 import uuid     # Para IDs únicos
 import requests
 import asyncio
-import concurrent.futures
-import multiprocessing
 import re
 import tempfile
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-from flask import Flask, request, jsonify
-from functools import lru_cache
 
 # 🔧 OMNIX V6.0 ULTRA - Configuración Centralizada
 from omnix_config import env_config
@@ -230,12 +221,10 @@ except ImportError as e:
 # 🧬 ARES QUANTUM PROTOCOLS - ESTRATEGIAS INSTITUCIONALES
 # =============================================================================
 try:
-    import sys
-    import os
-    print("🔥 RAILWAY DEBUG - INICIANDO BLOQUE IMPORT ARES")
-    print(f"🔍 ARES DEBUG - Python Path: {sys.path[:3]}")
-    print(f"🔍 ARES DEBUG - CWD: {os.getcwd()}")
-    print(f"🔍 ARES DEBUG - omnix_core/strategies/ exists: {os.path.exists('omnix_core/strategies')}")
+    print("🔥 INICIANDO BLOQUE IMPORT ARES")
+    print(f"🔍 Python Path: {sys.path[:3]}")
+    print(f"🔍 CWD: {os.getcwd()}")
+    print(f"🔍 omnix_core/strategies/ exists: {os.path.exists('omnix_core/strategies')}")
     
     from omnix_core.strategies.ares_v1 import AresQuantumProtocol
     from omnix_core.strategies.ares_v2 import AresScalpingV2
