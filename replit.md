@@ -30,6 +30,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Logs de Railway**: El usuario proporcionará logs directamente cuando se necesiten para debugging.
 - **NO arrancar bot localmente** para obtener logs - usar los logs de Railway proporcionados por el usuario.
 - **Solo editar código aquí** - las pruebas se validan en Railway después del deploy automático.
+- **Si se arranca para test/control**: Una vez confirmado todo, PARAR AUTOMÁTICAMENTE el workflow antes de terminar.
 
 ### System Architecture
 OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for high performance, security, and intelligent automation.
