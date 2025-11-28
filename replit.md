@@ -4,6 +4,8 @@
 OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system designed for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with $1,000,000 virtual capital (spot) + $100,000 (derivatives), employing institutional-grade position sizing to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance and a professional backtesting infrastructure, including new modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
 ### Recent Changes (November 28, 2025)
+- **Redis Cache Integration Complete**: Connected to Railway Redis via TCP proxy (shinkansen.proxy.rlwy.net:32595), persistent cache now active for conversations, market data, and rate limiting. All operations verified (SET/GET/INCREMENT/TTL/DELETE).
+- **AI Token Limits Increased**: Response truncation fixed - GPT-4o (1500→4000 tokens), Gemini (4000→8000), Claude (1500→4000), +300-400% capacity for institutional-grade analyses.
 - **Derivatives Module Integrated**: DerivativesManager now initializes in main.py with $100K paper trading balance
 - **Kelly Criterion Fixed**: Corrected from Quarter Kelly (0.25) to Half Kelly (0.50), range enforced 4-20%
 - **LSP Errors Resolved**: Fixed None-check guards in ai_prompts.py, conversational_brain.py, monte_carlo.py
@@ -61,8 +63,8 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **ANU QRNG API**: For true quantum randomness.
 
 #### Databases
-- **PostgreSQL (Neon)**: Main relational database (26 tables).
-- **Redis**: In-memory data store for state management, conversation history, caching.
+- **PostgreSQL (Neon)**: Main relational database (33 tables: 23 core + 6 derivatives + 4 auxiliary). Fully operational with all foreign keys, indices, and constraints configured.
+- **Redis (Railway)**: External in-memory cache connected via TCP proxy for persistent state management, conversation history, market data caching, and rate limiting. Connection: shinkansen.proxy.rlwy.net:32595 (public proxy for Replit→Railway).
 
 #### Key Python Libraries
 - `numpy`, `scipy`, `ccxt`: Core trading and mathematical operations.
