@@ -50,6 +50,11 @@ class DatabaseServiceEnterprise:
         self.connected = False
         self.redis_client = None
         
+        # 🔧 FIX: Railway usa postgres:// pero psycopg2 necesita postgresql://
+        if self.db_url and self.db_url.startswith('postgres://'):
+            self.db_url = self.db_url.replace('postgres://', 'postgresql://', 1)
+            logger.info("🔄 DATABASE_URL convertida: postgres:// → postgresql://")
+        
         # Intentar conectar a Redis para tracking de cleanup
         if REDIS_AVAILABLE:
             try:
