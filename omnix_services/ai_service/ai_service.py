@@ -175,8 +175,37 @@ class ConversationalAIService:
             }
     
     def _get_conversation_history(self, chat_id: int) -> List[Dict]:
-        """Get conversation history for chat_id from Redis"""
-        return self.conversation_history.get_history(chat_id)
+        """
+        Get conversation history for chat_id.
+        
+        FIX Nov 28, 2025: Primero intenta Redis, si está vacío usa PostgreSQL
+        Esto garantiza que el bot recuerde conversaciones incluso después de restart
+        """
+        # 1. Intentar Redis primero (más rápido)
+        redis_history = self.conversation_history.get_history(chat_id)
+        if redis_history and len(redis_history) > 0:
+            logger.debug(f"🧠 Historial cargado de Redis: {len(redis_history)} mensajes")
+            return redis_history
+        
+        # 2. Si Redis está vacío, intentar PostgreSQL (persistente)
+        try:
+            from omnix_services.database_service.database_manager import DatabaseManager
+            db_manager = DatabaseManager()
+            if db_manager.using_enterprise:
+                pg_history = db_manager.get_conversation_history(chat_id, limit=10)
+                if pg_history and len(pg_history) > 0:
+                    logger.info(f"🧠 Historial cargado de PostgreSQL: {len(pg_history)} mensajes (Redis vacío)")
+                    # Opcionalmente: sincronizar a Redis para próximas consultas
+                    for msg in pg_history:
+                        if 'user' in msg:
+                            self.conversation_history.add_message(chat_id, msg)
+                    return pg_history
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudo cargar historial de PostgreSQL: {e}")
+        
+        # 3. No hay historial
+        logger.debug(f"🧠 No hay historial para chat {chat_id}")
+        return []
     
     def _add_to_history(self, chat_id: int, message: Dict):
         """Add message to conversation history in Redis"""

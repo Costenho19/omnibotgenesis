@@ -2648,6 +2648,23 @@ Ejemplo: /risk_events 48
                 
                 logger.info(f"✅ RESPUESTA COMPLETA ENVIADA: {len(ai_response)} caracteres en {total_parts} parte(s)")
                 
+                # 🧠 GUARDAR CONVERSACIÓN EN POSTGRESQL (PERSISTENTE - sobrevive reinicios)
+                # FIX Nov 28, 2025: handle_message ahora guarda historial igual que handle_direct_message
+                if self.db_manager and user_message and ai_response:
+                    try:
+                        save_success = self.db_manager.save_conversation(
+                            user_id=user_id,
+                            user_message=user_message,
+                            ai_response=ai_response[:1000],  # Primeros 1000 chars
+                            language='es'
+                        )
+                        if save_success:
+                            logger.info(f"🧠 Conversación guardada en PostgreSQL para usuario {user_id}")
+                        else:
+                            logger.warning(f"⚠️ No se pudo guardar conversación para usuario {user_id}")
+                    except Exception as save_error:
+                        logger.warning(f"⚠️ Error guardando conversación (no crítico): {save_error}")
+                
                 # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA HAROLD
                 if user_id == settings.TELEGRAM_ADMIN_ID:  # Harold específicamente
                     try:
