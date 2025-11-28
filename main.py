@@ -652,6 +652,19 @@ if __name__ == "__main__":
             logger.info("🤖 Gemini 2.0 Flash + GPT-4o LISTOS")
             logger.info("=" * 80)
             
+            # 🔍 DIAGNÓSTICO FINAL DE BASE DE DATOS - APARECE AL FINAL
+            logger.info("")
+            logger.info("🗄️ ═══════════ ESTADO DATABASE ═══════════")
+            if db_manager and hasattr(db_manager, 'connected'):
+                if db_manager.connected:
+                    logger.info("🗄️ ✅ DATABASE: CONECTADA - Memoria ACTIVA")
+                else:
+                    logger.error("🗄️ ❌ DATABASE: NO CONECTADA - Memoria OFF")
+                    logger.error("🗄️    Revisa DATABASE_URL en Railway")
+            else:
+                logger.error("🗄️ ❌ DATABASE: No disponible")
+            logger.info("🗄️ ═════════════════════════════════════════")
+            
             # Mantener el proceso corriendo
             logger.info("🔄 Entrando en loop de espera (presiona Ctrl+C para detener)...")
             signal.pause()  # Esperar señales UNIX
