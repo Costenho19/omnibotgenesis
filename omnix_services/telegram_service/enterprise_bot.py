@@ -2555,13 +2555,18 @@ Ejemplo: /risk_events 48
             # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier DB write
             # Esto previene FK constraint violations en conversations, trades, signals, etc.
             if self.db_manager:
-                self.db_manager.ensure_user_exists(
+                user_registered = self.db_manager.ensure_user_exists(
                     user_id=user_id,
                     username=user.username,
                     first_name=user.first_name or "Usuario",
                     language_code=user.language_code or 'es'
                 )
-                logger.info(f"✅ Usuario {user_id} registrado/actualizado en BD")
+                if user_registered:
+                    logger.info(f"✅ Usuario {user_id} registrado/actualizado exitosamente")
+                else:
+                    logger.error(f"❌ CRÍTICO: Failed to register user {user_id} - DB writes may fail")
+            else:
+                logger.warning(f"⚠️ db_manager not available - user {user_id} NOT registered")
             
             # ⚡ PRIORIDAD MÁXIMA: Comandos específicos del bot
             # Verificar PRIMERO si es comando /autotrading ANTES de enviar a IA
@@ -2715,13 +2720,18 @@ Ejemplo: /risk_events 48
             
             # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier posible DB write
             if self.db_manager:
-                self.db_manager.ensure_user_exists(
+                user_registered = self.db_manager.ensure_user_exists(
                     user_id=user_id,
                     username=user.username,
                     first_name=user.first_name or "Usuario",
                     language_code=user.language_code or 'es'
                 )
-                logger.info(f"✅ Usuario {user_id} registrado/actualizado (voz)")
+                if user_registered:
+                    logger.info(f"✅ Usuario {user_id} registrado/actualizado exitosamente (voz)")
+                else:
+                    logger.error(f"❌ CRÍTICO: Failed to register user {user_id} (voz) - DB writes may fail")
+            else:
+                logger.warning(f"⚠️ db_manager not available - user {user_id} NOT registered (voz)")
             
             # Mostrar que está procesando
             processing_msg = await update.message.reply_text("🎤 Escuchando tu voz...")

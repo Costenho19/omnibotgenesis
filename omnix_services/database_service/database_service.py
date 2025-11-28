@@ -2351,15 +2351,26 @@ class DatabaseServiceEnterprise:
         Returns:
             True si el usuario existe o fue creado exitosamente, False si error
         """
+        # LOGGING DETALLADO PARA DEBUG
+        logger.info(f"🔍 ensure_user_exists called: user_id={user_id}, username={username}, first_name={first_name}")
+        
         if not self.connected:
+            logger.error(f"❌ ensure_user_exists FAILED: Database not connected (self.connected={self.connected})")
             return False
         
         try:
             conn = self._get_connection()
             if not conn:
+                logger.error("❌ ensure_user_exists FAILED: _get_connection() returned None")
                 return False
             
             cursor = conn.cursor()
+            
+            # Usar valores default si son None para evitar problemas
+            username_safe = username or f"user_{user_id}"
+            first_name_safe = first_name or "Usuario"
+            
+            logger.info(f"✅ Executing UPSERT for user {user_id} (username={username_safe}, first_name={first_name_safe})")
             
             # UPSERT: INSERT ON CONFLICT DO UPDATE
             # Si el usuario ya existe (PK conflict), solo actualiza last_activity y metadata
@@ -2371,15 +2382,17 @@ class DatabaseServiceEnterprise:
                     username = COALESCE(EXCLUDED.username, users.username),
                     first_name = COALESCE(EXCLUDED.first_name, users.first_name),
                     language_code = COALESCE(EXCLUDED.language_code, users.language_code)
-            ''', (user_id, username, first_name, language_code))
+            ''', (user_id, username_safe, first_name_safe, language_code))
             
             conn.commit()
             cursor.close()
             conn.close()
+            
+            logger.info(f"✅ ensure_user_exists SUCCESS: User {user_id} registered/updated")
             return True
             
         except Exception as e:
-            logger.error(f"Error ensuring user exists: {e}")
+            logger.error(f"❌ ensure_user_exists EXCEPTION: {e}", exc_info=True)
             return False
     
     def save_conversation(self, user_id: str, user_message: str, ai_response: str, language: str = 'es') -> bool:
