@@ -7,8 +7,6 @@ Extraído de main.py para arquitectura limpia y mantenible
 import logging
 import os
 import time
-import threading
-import asyncio
 import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any

@@ -26,7 +26,6 @@ Sistema de trading automático con IA, Risk Guardian y Coherence Engine
 
 import logging
 import time
-import asyncio
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List, Any

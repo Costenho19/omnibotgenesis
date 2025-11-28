@@ -15,7 +15,6 @@ Esto NO existe en bots retail. Solo en hedge funds top.
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
-import json
 
 logger = logging.getLogger(__name__)
 
