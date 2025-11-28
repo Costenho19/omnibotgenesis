@@ -2715,6 +2715,16 @@ Ejemplo: /risk_events 48
             
             logger.info(f"🎤 MENSAJE DE VOZ RECIBIDO de {user_name} ({user_id})")
             
+            # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier posible DB write
+            if self.db_manager:
+                self.db_manager.ensure_user_exists(
+                    user_id=user_id,
+                    username=user.username,
+                    first_name=user.first_name or "Usuario",
+                    language_code=user.language_code or 'es'
+                )
+                logger.info(f"✅ Usuario {user_id} registrado/actualizado (voz)")
+            
             # Mostrar que está procesando
             processing_msg = await update.message.reply_text("🎤 Escuchando tu voz...")
             
