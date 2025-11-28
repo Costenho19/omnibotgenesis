@@ -90,6 +90,7 @@ class ConversationalAI:
         🚀 ENTERPRISE-GRADE RESPONSE GENERATION
         
         Mantiene compatibilidad con firma vieja pero usa sistema enterprise modular
+        FIX Nov 28, 2025: Ahora pasa DATOS REALES de Kraken al AI
         """
         try:
             if self.using_enterprise:
@@ -98,6 +99,9 @@ class ConversationalAI:
                 
                 # Convertir chat_id a int si es string
                 chat_id_int = int(chat_id) if chat_id else (user_id if user_id else 0)
+                
+                # 📊 FIX: OBTENER DATOS REALES DE KRAKEN ANTES DE GENERAR RESPUESTA
+                real_market_data = self._fetch_real_market_data(trading_system, user_message)
                 
                 # RAILWAY FIX: Usar asyncio de forma segura
                 try:
@@ -110,7 +114,7 @@ class ConversationalAI:
                             chat_id=chat_id_int,
                             user_message=user_message,
                             user_name=user_name,
-                            market_data=None,
+                            market_data=real_market_data,
                             apply_visual_style=True
                         ),
                         loop
@@ -130,7 +134,7 @@ class ConversationalAI:
                             chat_id=chat_id_int,
                             user_message=user_message,
                             user_name=user_name,
-                            market_data=None,
+                            market_data=real_market_data,
                             apply_visual_style=True
                         )
                     )
@@ -153,6 +157,83 @@ class ConversationalAI:
         except Exception as e:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()
+    
+    def _fetch_real_market_data(self, trading_system, user_message: str) -> dict:
+        """
+        📊 OBTENER DATOS REALES DE KRAKEN ANTES DE GENERAR RESPUESTA
+        
+        FIX Nov 28, 2025: El AI ahora recibe datos REALES para incluir en respuestas
+        También detecta y valida solicitudes de apalancamiento peligroso
+        """
+        import re
+        import requests
+        
+        market_data = {}
+        
+        # 🚨 VALIDACIÓN DE APALANCAMIENTO (máximo 3x permitido)
+        leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', user_message.lower())
+        if leverage_match:
+            leverage_value = int(leverage_match.group(1) or leverage_match.group(2) or leverage_match.group(3))
+            market_data['requested_leverage'] = leverage_value
+            if leverage_value > 3:
+                market_data['leverage_warning'] = f"⛔ APALANCAMIENTO {leverage_value}x RECHAZADO - Máximo permitido: 3x (política de riesgo institucional)"
+                logger.warning(f"⚠️ Apalancamiento {leverage_value}x solicitado - EXCEDE LÍMITE 3x")
+        
+        # 📈 OBTENER PRECIO BTC REAL DE KRAKEN
+        try:
+            # Intentar API autenticada primero
+            if trading_system and hasattr(trading_system, 'kraken_client'):
+                try:
+                    btc_ticker = trading_system.kraken_client.client.fetch_ticker('BTC/USD')
+                    market_data['btc_price'] = btc_ticker.get('last', 0)
+                    market_data['btc_24h_high'] = btc_ticker.get('high', 0)
+                    market_data['btc_24h_low'] = btc_ticker.get('low', 0)
+                    market_data['btc_volume'] = btc_ticker.get('baseVolume', 0)
+                    market_data['btc_change_24h'] = btc_ticker.get('percentage', 0)
+                    
+                    # Calcular spread
+                    bid = btc_ticker.get('bid', 0)
+                    ask = btc_ticker.get('ask', 0)
+                    if bid and ask:
+                        spread_bps = ((ask - bid) / bid) * 10000
+                        market_data['btc_spread_bps'] = round(spread_bps, 2)
+                    
+                    logger.info(f"✅ DATOS KRAKEN REALES: BTC=${market_data['btc_price']:,.2f}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error API autenticada Kraken: {e}")
+            
+            # Fallback: API pública de Kraken
+            if 'btc_price' not in market_data:
+                pub_response = requests.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', timeout=3)
+                if pub_response.status_code == 200:
+                    pub_data = pub_response.json()
+                    if pub_data.get('error') == [] and 'result' in pub_data:
+                        ticker = pub_data['result']['XXBTZUSD']
+                        market_data['btc_price'] = float(ticker['c'][0])
+                        market_data['btc_24h_high'] = float(ticker['h'][0])
+                        market_data['btc_24h_low'] = float(ticker['l'][0])
+                        market_data['btc_volume'] = float(ticker['v'][1])
+                        
+                        bid = float(ticker['b'][0])
+                        ask = float(ticker['a'][0])
+                        spread_bps = ((ask - bid) / bid) * 10000
+                        market_data['btc_spread_bps'] = round(spread_bps, 2)
+                        
+                        logger.info(f"✅ DATOS KRAKEN PÚBLICOS: BTC=${market_data['btc_price']:,.2f}")
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo datos de mercado: {e}")
+        
+        # 💰 PAPER TRADING BALANCE (si está disponible)
+        try:
+            if trading_system and hasattr(trading_system, 'paper_balance'):
+                market_data['paper_balance_usd'] = trading_system.paper_balance
+                market_data['trading_mode'] = 'PAPER'
+            elif trading_system and hasattr(trading_system, 'real_trading_enabled'):
+                market_data['trading_mode'] = 'REAL' if trading_system.real_trading_enabled else 'PAPER'
+        except:
+            pass
+        
+        return market_data
     
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id):
         """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL"""

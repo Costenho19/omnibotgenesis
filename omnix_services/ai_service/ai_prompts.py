@@ -224,18 +224,51 @@ Usa /quantum_test para demostrar la conexión en vivo con ANU."""
         intent_instructions = self._get_intent_instructions(intent)
         base_prompt += f"\n{intent_instructions}\n"
         
-        # Add context data if available
+        # Add context data if available - FIX Nov 28, 2025: DATOS REALES de Kraken
         if additional_context:
-            base_prompt += "\n💹 DATOS DE MERCADO ACTUALES:\n"
+            base_prompt += "\n💹 DATOS DE MERCADO REALES (KRAKEN API - EN VIVO):\n"
             
+            # 🚨 VALIDACIÓN DE APALANCAMIENTO - PRIORIDAD MÁXIMA
+            if 'leverage_warning' in additional_context:
+                base_prompt += f"\n🚨 **ALERTA CRÍTICA:**\n{additional_context['leverage_warning']}\n"
+                base_prompt += "DEBES RECHAZAR esta operación y explicar por qué el límite es 3x.\n\n"
+            
+            # 📈 Precio BTC REAL
+            if 'btc_price' in additional_context:
+                base_prompt += f"- **Bitcoin:** ${additional_context['btc_price']:,.2f} USD\n"
+            if 'btc_24h_high' in additional_context and 'btc_24h_low' in additional_context:
+                base_prompt += f"- **Rango 24h:** ${additional_context['btc_24h_low']:,.2f} - ${additional_context['btc_24h_high']:,.2f}\n"
+            if 'btc_spread_bps' in additional_context:
+                base_prompt += f"- **Spread:** {additional_context['btc_spread_bps']:.2f} bps\n"
+            if 'btc_volume' in additional_context:
+                base_prompt += f"- **Volumen 24h:** {additional_context['btc_volume']:,.2f} BTC\n"
+            if 'btc_change_24h' in additional_context:
+                change = additional_context['btc_change_24h']
+                emoji = "📈" if change >= 0 else "📉"
+                base_prompt += f"- **Cambio 24h:** {emoji} {change:+.2f}%\n"
+            
+            # 💰 Balance y modo de trading
+            if 'paper_balance_usd' in additional_context:
+                base_prompt += f"- **Balance Paper Trading:** ${additional_context['paper_balance_usd']:,.2f} USD\n"
+            if 'trading_mode' in additional_context:
+                mode = additional_context['trading_mode']
+                mode_emoji = "📝" if mode == 'PAPER' else "💰"
+                base_prompt += f"- **Modo:** {mode_emoji} {mode} TRADING\n"
+            
+            # Datos legacy
             if 'price' in additional_context:
                 base_prompt += f"- Bitcoin: ${additional_context['price']:,.2f} USD\n"
-            
             if 'balance' in additional_context:
                 base_prompt += f"- Balance disponible: ${additional_context['balance']:,.2f} USD\n"
-            
             if 'market_sentiment' in additional_context:
                 base_prompt += f"- Sentimiento: {additional_context['market_sentiment']}\n"
+            
+            base_prompt += """
+🚨 **REGLA CRÍTICA - USA ESTOS DATOS:**
+Los datos anteriores son EN TIEMPO REAL de Kraken. 
+DEBES USAR estos números exactos en tu respuesta, NO inventes otros.
+Ejemplo: "El precio actual de BTC es $XX,XXX según Kraken API en vivo."
+"""
         
         # INJECT CONVERSATION MEMORY (últimos 10 mensajes = 5 pares)
         if conversation_history and len(conversation_history) > 0:
