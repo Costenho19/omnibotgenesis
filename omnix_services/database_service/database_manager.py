@@ -16,9 +16,16 @@ class DatabaseManager:
     pero usa DatabaseServiceEnterprise internamente
     """
     def __init__(self):
+        import os
         logger.info("=" * 70)
         logger.info("🔧 INICIALIZANDO DatabaseManager")
         logger.info(f"📦 DATABASE_ENTERPRISE_AVAILABLE: {DATABASE_ENTERPRISE_AVAILABLE}")
+        
+        db_url = os.environ.get('DATABASE_URL')
+        if db_url:
+            logger.info(f"✅ DATABASE_URL DETECTADA ({len(db_url)} caracteres)")
+        else:
+            logger.error("❌ DATABASE_URL NO ENCONTRADA - Memoria NO funcionará")
         
         if DATABASE_ENTERPRISE_AVAILABLE:
             logger.info("🚀 Inicializando DatabaseManager con ENTERPRISE backend")

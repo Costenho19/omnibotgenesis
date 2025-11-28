@@ -3126,8 +3126,8 @@ Ejemplo: /risk_events 48
                     self.db_manager.ensure_user_exists(
                         user_id=str(effective_user_id),
                         username=f"user_{effective_user_id}",
-                        first_name="Telegram",
-                        last_name="User"
+                        first_name="Telegram User",
+                        language_code='es'
                     )
                     logger.info(f"✅ Usuario {effective_user_id} registrado/actualizado en handle_direct_message")
                 except Exception as user_reg_error:
