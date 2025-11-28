@@ -65,6 +65,15 @@ logger.info("=" * 70)
 logger.info("🔥 RAILWAY DEBUG - main.py CARGADO - VERSION ACTUALIZADA CON LOGGER")
 logger.info("=" * 70)
 
+# 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    logger.info(f"✅ DATABASE_URL ENCONTRADA: {len(db_url)} caracteres")
+    logger.info(f"   Preview: {db_url[:40]}...")
+else:
+    logger.error("❌ DATABASE_URL NO ENCONTRADA - LA MEMORIA NO FUNCIONARÁ")
+    logger.error("   Variables disponibles: " + ", ".join(sorted([k for k in os.environ.keys() if 'DATA' in k.upper() or 'PG' in k.upper() or 'SQL' in k.upper()][:5])))
+
 # Stock Trading Module - Conditional Import (AFTER logger is configured)
 if STOCK_TRADING_ENABLED:
     try:
