@@ -78,6 +78,17 @@ class DatabaseManager:
         
         return psycopg2.connect(database_url)
     
+    def ensure_user_exists(self, user_id: str, username: str = None, 
+                           first_name: str = None, language_code: str = 'es') -> bool:
+        """
+        Garantizar que el usuario existe en la tabla users.
+        CRITICAL: Debe llamarse ANTES de cualquier write a tablas con FK a users.
+        ADDED Nov 28, 2025: Fix para FK constraint violations
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.ensure_user_exists(user_id, username, first_name, language_code)
+        return False
+    
     def save_conversation(self, user_id: str, user_message: str, ai_response: str, language: str = 'es') -> bool:
         """
         Guardar conversación en la base de datos
