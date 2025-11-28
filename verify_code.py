@@ -27,7 +27,11 @@ def verify_imports():
             'quantum_channel_capacity',
             'private_capacity_thermal',
             'quantum_sharpe_ratio',
-            'quantum_criticality'
+            'quantum_criticality',
+            # V6.0 PREMIUM - PQC Criticalidad
+            'pqc_decoherence_security',
+            'vqe_bures_fisher',
+            'side_channel_criticality'
         ]
         
         for formula_key in new_formulas:
