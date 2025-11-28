@@ -2554,6 +2554,17 @@ Ejemplo: /risk_events 48
             logger.info(f"🧠 MENSAJE RECIBIDO de {user_name} ({user_id}): {user_message}")
             logger.info(f"🎤 DEBUG: user_id='{user_id}', esperado='{settings.TELEGRAM_ADMIN_ID}', coincide={user_id == settings.TELEGRAM_ADMIN_ID}")
             
+            # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier DB write
+            # Esto previene FK constraint violations en conversations, trades, signals, etc.
+            if self.db_manager:
+                self.db_manager.ensure_user_exists(
+                    user_id=user_id,
+                    username=user.username,
+                    first_name=user.first_name or "Usuario",
+                    language_code=user.language_code or 'es'
+                )
+                logger.info(f"✅ Usuario {user_id} registrado/actualizado en BD")
+            
             # ⚡ PRIORIDAD MÁXIMA: Comandos específicos del bot
             # Verificar PRIMERO si es comando /autotrading ANTES de enviar a IA
             if user_message.startswith('/autotrading') or user_message.startswith('/auto'):
