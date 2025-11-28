@@ -227,12 +227,20 @@ Usa /quantum_test para demostrar la conexión en vivo con ANU."""
         
         # Add context data if available - FIX Nov 28, 2025: DATOS REALES de Kraken
         if additional_context:
-            base_prompt += "\n💹 DATOS DE MERCADO REALES (KRAKEN API - EN VIVO):\n"
-            
             # 🚨 VALIDACIÓN DE APALANCAMIENTO - PRIORIDAD MÁXIMA
             if 'leverage_warning' in additional_context:
                 base_prompt += f"\n🚨 **ALERTA CRÍTICA:**\n{additional_context['leverage_warning']}\n"
                 base_prompt += "DEBES RECHAZAR esta operación y explicar por qué el límite es 3x.\n\n"
+            
+            # 🚨 DATOS NO DISPONIBLES - HONESTIDAD ABSOLUTA
+            if additional_context.get('market_data_unavailable'):
+                base_prompt += "\n⚠️ **DATOS DE MERCADO NO DISPONIBLES:**\n"
+                base_prompt += "- Kraken API no respondió en este momento\n"
+                base_prompt += "- NO INVENTES precios, volúmenes ni análisis de mercado\n"
+                base_prompt += "- Si preguntan por datos de mercado, responde: 'Datos de mercado no disponibles en este momento. Intentaré obtenerlos en tu próxima consulta.'\n"
+                base_prompt += "- PUEDES responder preguntas teóricas, de física cuántica, o sobre el sistema\n\n"
+            else:
+                base_prompt += "\n💹 DATOS DE MERCADO REALES (KRAKEN API - EN VIVO):\n"
             
             # 📈 Precio BTC REAL
             if 'btc_price' in additional_context:

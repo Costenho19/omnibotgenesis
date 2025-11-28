@@ -180,6 +180,7 @@ class ConversationalAI:
                 logger.warning(f"⚠️ Apalancamiento {leverage_value}x solicitado - EXCEDE LÍMITE 3x")
         
         # 📈 OBTENER PRECIO BTC REAL DE KRAKEN
+        kraken_data_obtained = False
         try:
             # Intentar API autenticada primero
             if trading_system and hasattr(trading_system, 'kraken_client'):
@@ -198,6 +199,7 @@ class ConversationalAI:
                         spread_bps = ((ask - bid) / bid) * 10000
                         market_data['btc_spread_bps'] = round(spread_bps, 2)
                     
+                    kraken_data_obtained = True
                     logger.info(f"✅ DATOS KRAKEN REALES: BTC=${market_data['btc_price']:,.2f}")
                 except Exception as e:
                     logger.warning(f"⚠️ Error API autenticada Kraken: {e}")
@@ -219,9 +221,16 @@ class ConversationalAI:
                         spread_bps = ((ask - bid) / bid) * 10000
                         market_data['btc_spread_bps'] = round(spread_bps, 2)
                         
+                        kraken_data_obtained = True
                         logger.info(f"✅ DATOS KRAKEN PÚBLICOS: BTC=${market_data['btc_price']:,.2f}")
         except Exception as e:
             logger.error(f"❌ Error obteniendo datos de mercado: {e}")
+        
+        # 🚨 INDICADOR CRÍTICO: Si no hay datos de Kraken, marcarlo explícitamente
+        if not kraken_data_obtained:
+            market_data['market_data_unavailable'] = True
+            market_data['market_data_warning'] = "⚠️ DATOS DE MERCADO NO DISPONIBLES - No inventar precios ni análisis"
+            logger.warning("⚠️ KRAKEN: No se pudieron obtener datos de mercado - AI debe indicar 'datos no disponibles'")
         
         # 💰 PAPER TRADING BALANCE (si está disponible)
         try:
