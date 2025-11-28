@@ -22,13 +22,24 @@ def verify_imports():
         from omnix_core.quantum.physics_validator import QuantumPhysicsValidator
         pv = QuantumPhysicsValidator()
         
-        # Verify the new quantum_channel_capacity formula exists
-        if 'quantum_channel_capacity' in pv.verified_formulas:
-            formula = pv.verified_formulas['quantum_channel_capacity']
-            print(f"  ✓ Fórmula encontrada: {formula.name}")
-            print(f"  ✓ Keywords: {len(pv.detection_keywords.get('quantum_channel_capacity', []))} términos")
-        else:
-            errors.append("quantum_channel_capacity formula NOT found in verified_formulas")
+        # Verify all V5.0 and V6.0 formulas exist
+        new_formulas = [
+            'quantum_channel_capacity',
+            'private_capacity_thermal',
+            'quantum_sharpe_ratio',
+            'quantum_criticality'
+        ]
+        
+        for formula_key in new_formulas:
+            if formula_key in pv.verified_formulas:
+                formula = pv.verified_formulas[formula_key]
+                kw_count = len(pv.detection_keywords.get(formula_key, []))
+                print(f"  ✓ {formula.name}")
+                print(f"    Keywords: {kw_count} términos")
+            else:
+                errors.append(f"{formula_key} NOT found in verified_formulas")
+        
+        print(f"  ✓ Total fórmulas verificadas: {len(pv.verified_formulas)}")
     except Exception as e:
         errors.append(f"physics_validator import failed: {e}")
     

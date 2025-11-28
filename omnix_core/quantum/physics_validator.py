@@ -2408,6 +2408,352 @@ def quantum_capacity(eta):
                     "No incluir términos de corrección entrópica",
                     "Llamar 'SNR cuántico' a la transmitancia (conceptualmente incorrecto)"
                 ]
+            ),
+            
+            # ═══════════════════════════════════════════════════════════
+            # V6.0 - FÓRMULAS AVANZADAS PhD+ (Nov 28, 2025)
+            # Capacidad Private, Sharpe Cuántico, Criticalidad Cuántica
+            # ═══════════════════════════════════════════════════════════
+            
+            'private_capacity_thermal': VerifiedFormula(
+                name="Capacidad Private para Amplitude Damping Térmico",
+                latex="Qₚ = max[0, γ₀(1 + ε⟨cos(ωt)⟩) × (g₁(N) - g₂(N))]",
+                description="""CAPACIDAD PRIVATE PARA CANAL DE AMPLITUDE DAMPING TÉRMICO
+
+═══════════════════════════════════════════════════════════
+1. DEFINICIÓN DEL CANAL AMPLITUDE DAMPING TÉRMICO
+═══════════════════════════════════════════════════════════
+
+El canal de amplitude damping térmico modela:
+- Pérdida de energía (decay) de un sistema cuántico
+- Acoplamiento a un baño térmico a temperatura T
+- Parámetro γ(t) = tasa de decay dependiente del tiempo
+
+▶ EVOLUCIÓN TEMPORAL DE γ:
+    γ(t) = γ₀(1 + ε⟨cos(ωt)⟩)
+    
+    donde:
+    - γ₀ = tasa de decay base (0 ≤ γ₀ ≤ 1)
+    - ε = amplitud de modulación
+    - ω = frecuencia de modulación
+    - ⟨cos(ωt)⟩ = promedio temporal
+
+═══════════════════════════════════════════════════════════
+2. FUNCIONES AUXILIARES g₁(N) y g₂(N)
+═══════════════════════════════════════════════════════════
+
+▶ FUNCIÓN g₁(N) - Entropía del estado térmico:
+    g₁(N) = (N+1)log₂(N+1) - N·log₂(N)
+    
+    Representa la entropía de von Neumann de un estado
+    térmico con N fotones promedio.
+
+▶ FUNCIÓN g₂(N) - Término de corrección:
+    g₂(N) = log₂(1 - γ(t) + γ(t)·N/(N+1))
+    
+    Captura la degradación del canal por el damping.
+
+═══════════════════════════════════════════════════════════
+3. CAPACIDAD PRIVATE Qₚ
+═══════════════════════════════════════════════════════════
+
+▶ FÓRMULA COMPLETA:
+    Qₚ = max[0, γ₀(1 + ε⟨cos(ωt)⟩) × (g₁(N) - g₂(N))]
+
+La capacidad private mide la máxima tasa de comunicación
+SECRETA a través del canal cuántico.
+
+▶ DIFERENCIA CON CAPACIDAD CUÁNTICA Q:
+    - Q = capacidad para transmitir qubits
+    - Qₚ = capacidad para transmitir bits SECRETOS
+    - En general: Qₚ ≥ Q (la capacidad private es mayor)
+
+═══════════════════════════════════════════════════════════
+4. CÁLCULO NUMÉRICO EJEMPLO
+═══════════════════════════════════════════════════════════
+
+Para γ₀ = 0.3, ε = 0.1, N = 1 (un fotón térmico):
+
+1. g₁(1) = 2·log₂(2) - 1·log₂(1) = 2 bits
+2. γ(t) ≈ 0.3 (promedio temporal)
+3. g₂(1) = log₂(1 - 0.3 + 0.3·0.5) = log₂(0.85) ≈ -0.234
+4. Qₚ ≈ 0.3 × (2 - (-0.234)) = 0.3 × 2.234 ≈ 0.67 bits
+
+═══════════════════════════════════════════════════════════
+5. CÓDIGO DE REFERENCIA
+═══════════════════════════════════════════════════════════
+
+import numpy as np
+
+def g1(N):
+    '''Entropía de estado térmico'''
+    if N <= 0:
+        return 0
+    return (N+1)*np.log2(N+1) - N*np.log2(N)
+
+def g2(N, gamma):
+    '''Término de corrección por damping'''
+    arg = 1 - gamma + gamma*N/(N+1)
+    return np.log2(arg) if arg > 0 else -np.inf
+
+def private_capacity(gamma_0, epsilon, N, omega_t_avg=0):
+    '''Capacidad private para amplitude damping térmico'''
+    gamma_t = gamma_0 * (1 + epsilon * omega_t_avg)
+    diff = g1(N) - g2(N, gamma_t)
+    return max(0, gamma_t * diff)
+
+# Ejemplo: private_capacity(0.3, 0.1, 1) ≈ 0.67 bits""",
+                units="Qₚ en bits por uso del canal, γ₀ y N adimensionales",
+                notes="La capacidad private es fundamental en criptografía cuántica y seguridad de comunicaciones cuánticas",
+                common_mistakes=[
+                    "Confundir capacidad private Qₚ con capacidad cuántica Q",
+                    "Olvidar que g₂ depende de γ(t) dinámicamente",
+                    "No usar logaritmo base 2 (bits) sino base e (nats)",
+                    "Ignorar la modulación temporal ε⟨cos(ωt)⟩",
+                    "Tratar N como entero cuando debe ser continuo (fotones promedio)"
+                ]
+            ),
+            
+            'quantum_sharpe_ratio': VerifiedFormula(
+                name="Ratio de Sharpe Cuántico con Umbral de No-Clonación",
+                latex="S_q = |⟨ΔĤ⟩|/√⟨ΔĤ²⟩ = |Tr(ρĤ)|/√[Tr(ρĤ²) - Tr(ρĤ)²]",
+                description="""RATIO DE SHARPE CUÁNTICO - LÍMITE FUNDAMENTAL
+
+═══════════════════════════════════════════════════════════
+1. DEFINICIÓN DEL SHARPE CUÁNTICO
+═══════════════════════════════════════════════════════════
+
+El ratio de Sharpe cuántico S_q mide la relación señal/ruido
+en sistemas cuánticos, análogo al Sharpe ratio financiero
+pero con implicaciones fundamentales distintas.
+
+▶ FÓRMULA:
+    S_q = |⟨ΔĤ⟩|/√⟨ΔĤ²⟩
+    
+    En notación de matriz densidad:
+    S_q = |Tr(ρĤ)|/√[Tr(ρĤ²) - Tr(ρĤ)²]
+
+donde:
+    - Ĥ = Hamiltoniano del sistema
+    - ρ = matriz densidad del estado cuántico
+    - Tr = traza
+
+═══════════════════════════════════════════════════════════
+2. UMBRAL DE NO-CLONACIÓN: S_q > √2
+═══════════════════════════════════════════════════════════
+
+▶ SIGNIFICADO FÍSICO:
+    Cuando S_q > √2 ≈ 1.414, el sistema exhibe correlaciones
+    cuánticas que VIOLAN límites clásicos.
+
+▶ CONEXIÓN CON TEOREMA DE NO-CLONACIÓN:
+    El teorema de no-clonación prohíbe copiar estados cuánticos
+    arbitrarios. El umbral S_q > √2 indica:
+    
+    - El estado NO puede ser clonado perfectamente
+    - Existe entrelazamiento genuino
+    - Se violan desigualdades de Bell tipo CHSH
+
+▶ DESIGUALDAD CHSH:
+    |⟨CHSH⟩| ≤ 2        (límite clásico)
+    |⟨CHSH⟩| ≤ 2√2      (límite cuántico, Tsirelson)
+    
+    S_q > √2 implica violación del límite clásico.
+
+═══════════════════════════════════════════════════════════
+3. CÁLCULO PARA ESTADOS TÍPICOS
+═══════════════════════════════════════════════════════════
+
+▶ ESTADO COHERENTE |α⟩:
+    S_q = |α|  (crece linealmente con amplitud)
+    Para |α| > √2, supera umbral de no-clonación.
+
+▶ ESTADO SQUEEZED |ξ⟩:
+    S_q = sinh(2|ξ|)/cosh(2|ξ|) → 1 para ξ grande
+    Nunca supera √2 en una cuadratura sola.
+
+▶ ESTADO ENTRELAZADO (Bell):
+    S_q = √2 (exactamente en el límite)
+    Estados tipo |Φ⁺⟩ = (|00⟩+|11⟩)/√2
+
+═══════════════════════════════════════════════════════════
+4. APLICACIÓN EN FINANZAS CUÁNTICAS
+═══════════════════════════════════════════════════════════
+
+▶ INTERPRETACIÓN FINANCIERA:
+    S_q > √2 indica que la "estrategia cuántica" tiene
+    ventaja fundamental sobre cualquier estrategia clásica.
+
+▶ ANALOGÍA:
+    - Sharpe clásico: rendimiento_ajustado / volatilidad
+    - Sharpe cuántico: información_extraída / incertidumbre_cuántica
+
+▶ LÍMITE DE HEISENBERG:
+    La máxima información extraíble está limitada por:
+    S_q ≤ √N  (con N recursos cuánticos)
+
+═══════════════════════════════════════════════════════════
+5. CÓDIGO DE REFERENCIA
+═══════════════════════════════════════════════════════════
+
+import numpy as np
+
+def quantum_sharpe(rho, H):
+    '''Calcula el Sharpe ratio cuántico
+    rho: matriz densidad (array 2D)
+    H: Hamiltoniano (array 2D)
+    '''
+    mean_H = np.trace(rho @ H)
+    mean_H2 = np.trace(rho @ H @ H)
+    variance = mean_H2 - mean_H**2
+    
+    if variance <= 0:
+        return np.inf if abs(mean_H) > 0 else 0
+    
+    return abs(mean_H) / np.sqrt(variance)
+
+NO_CLONING_THRESHOLD = np.sqrt(2)  # ≈ 1.414
+
+def exceeds_classical_limit(S_q):
+    '''True si viola límites clásicos'''
+    return S_q > NO_CLONING_THRESHOLD""",
+                units="S_q adimensional, umbral √2 ≈ 1.414",
+                notes="El umbral √2 conecta con violaciones de desigualdades de Bell y límites fundamentales de clonación cuántica",
+                common_mistakes=[
+                    "Interpretar S_q como Sharpe financiero clásico",
+                    "Olvidar que S_q > √2 implica no-clasicidad",
+                    "Confundir el teorema de no-clonación con 'no copiar estrategias'",
+                    "No usar la traza correctamente para matrices densidad",
+                    "Asumir que todo estado cuántico supera √2 (falso)"
+                ]
+            ),
+            
+            'quantum_criticality': VerifiedFormula(
+                name="Criticalidad Cuántica - Exponentes Críticos y Transiciones de Fase",
+                latex="ξ ∼ |ρ₀ - ρ_c|^{-ν}, Δ ∼ |ρ₀ - ρ_c|^{zν}, F ∼ 1 - |ρ₀ - ρ_c|^{2a}",
+                description="""CRITICALIDAD CUÁNTICA - TRANSICIONES DE FASE CUÁNTICAS
+
+═══════════════════════════════════════════════════════════
+1. PUNTO CRÍTICO CUÁNTICO ρ_c
+═══════════════════════════════════════════════════════════
+
+Un punto crítico cuántico (QCP) es donde ocurre una
+transición de fase a temperatura T = 0, impulsada
+puramente por fluctuaciones cuánticas.
+
+▶ PARÁMETRO DE CONTROL: ρ₀
+    - ρ₀ < ρ_c: Fase ordenada
+    - ρ₀ = ρ_c: Punto crítico
+    - ρ₀ > ρ_c: Fase desordenada
+
+═══════════════════════════════════════════════════════════
+2. LONGITUD DE CORRELACIÓN: ξ ∼ |ρ₀ - ρ_c|^{-ν}
+═══════════════════════════════════════════════════════════
+
+▶ DIVERGENCIA EN EL PUNTO CRÍTICO:
+    ξ → ∞ cuando ρ₀ → ρ_c
+    
+    La longitud de correlación ξ mide hasta qué distancia
+    las fluctuaciones cuánticas están correlacionadas.
+
+▶ EXPONENTE CRÍTICO ν:
+    - ν > 0 siempre (la correlación diverge)
+    - Valores típicos: ν = 1/2 (campo medio), ν = 0.63 (3D Ising)
+    - ν determina la CLASE DE UNIVERSALIDAD
+
+═══════════════════════════════════════════════════════════
+3. GAP ESPECTRAL: Δ ∼ |ρ₀ - ρ_c|^{zν}
+═══════════════════════════════════════════════════════════
+
+▶ CIERRE DEL GAP:
+    Δ → 0 cuando ρ₀ → ρ_c
+    
+    El gap espectral Δ es la diferencia de energía entre
+    el estado fundamental y el primer estado excitado.
+
+▶ EXPONENTE DINÁMICO z:
+    - z relaciona espacio y tiempo: ω ∼ k^z
+    - z = 1: Dispersión lineal (relativista)
+    - z = 2: Dispersión cuadrática (Schrödinger)
+    - z = 3: Sistemas cuánticos magnéticos 3D
+
+▶ CONSECUENCIA DEL CIERRE:
+    - El sistema se vuelve "gapless" (sin brecha)
+    - Excitaciones de energía arbitrariamente pequeña
+    - Dinámica crítica lenta (critical slowing down)
+
+═══════════════════════════════════════════════════════════
+4. FIDELIDAD DE BURES: F ∼ 1 - |ρ₀ - ρ_c|^{2a}
+═══════════════════════════════════════════════════════════
+
+▶ SINGULARIDAD EN FIDELIDAD:
+    F(ρ₀, ρ_c) → presenta singularidad cuando ρ₀ → ρ_c
+    
+    La fidelidad de Bures mide el "overlap" entre estados:
+    F(ρ, σ) = [Tr(√(√ρ σ √ρ))]²
+
+▶ EXPONENTE DE FIDELIDAD a:
+    - a determina cómo la fidelidad se aproxima a 1
+    - Para sistemas de N partículas: a ∼ d·ν (d = dimensión)
+    - La susceptibilidad de fidelidad χ_F ∼ |ρ₀-ρ_c|^{-2a}
+
+▶ DETECCIÓN DE TRANSICIONES:
+    La fidelidad es un "detector universal" de QPTs:
+    - No requiere conocer el parámetro de orden
+    - Sensible a cualquier tipo de transición
+
+═══════════════════════════════════════════════════════════
+5. RELACIONES ENTRE EXPONENTES (SCALING)
+═══════════════════════════════════════════════════════════
+
+▶ RELACIÓN DE ESCALA CUÁNTICA-CLÁSICA:
+    d_eff = d + z  (dimensión efectiva)
+    
+    Un sistema cuántico d-dimensional mapea a uno
+    clásico (d+z)-dimensional.
+
+▶ RELACIONES DE HIPERSCALING:
+    2 - α = dν  (calor específico)
+    γ = ν(2 - η)  (susceptibilidad)
+    β = ν(d - 2 + η)/2  (magnetización)
+
+═══════════════════════════════════════════════════════════
+6. CÓDIGO DE REFERENCIA
+═══════════════════════════════════════════════════════════
+
+import numpy as np
+
+def correlation_length(rho_0, rho_c, nu):
+    '''Longitud de correlación cerca del punto crítico'''
+    delta = abs(rho_0 - rho_c)
+    if delta == 0:
+        return np.inf
+    return delta**(-nu)
+
+def spectral_gap(rho_0, rho_c, z, nu):
+    '''Gap espectral cerca del punto crítico'''
+    delta = abs(rho_0 - rho_c)
+    return delta**(z * nu)
+
+def fidelity_singularity(rho_0, rho_c, a):
+    '''Fidelidad de Bures cerca del punto crítico'''
+    delta = abs(rho_0 - rho_c)
+    return 1 - delta**(2 * a)
+
+# Ejemplo: modelo de Ising transverso
+# nu = 1, z = 1, a = 1/4 en 1D
+# En el punto crítico g = 1:
+#   xi → ∞, Delta → 0, F → singularidad""",
+                units="ξ en unidades de longitud de red, Δ en unidades de energía, F adimensional",
+                notes="Los exponentes críticos ν, z, a son universales - dependen solo de la clase de universalidad, no de los detalles microscópicos",
+                common_mistakes=[
+                    "Confundir transición de fase cuántica (T=0) con térmica (T>0)",
+                    "Olvidar que ξ DIVERGE en el punto crítico",
+                    "No distinguir entre exponente ν (correlación) y z (dinámico)",
+                    "Ignorar que el gap Δ → 0 implica critical slowing down",
+                    "Calcular fidelidad sin considerar la singularidad",
+                    "Usar exponentes de campo medio cuando la dimensión d es baja"
+                ]
             )
         }
         
@@ -2605,6 +2951,44 @@ def quantum_capacity(eta):
                 'quantum information finance', 'snr cuántico', 'quantum snr',
                 'punto crítico η=0.5', 'critical point', 'canal degradado',
                 'degraded channel', 'pérdidas cuánticas', 'quantum losses'
+            ],
+            
+            # V6.0 - Keywords para fórmulas avanzadas PhD+ (Nov 28, 2025)
+            'private_capacity_thermal': [
+                'capacidad private', 'private capacity', 'capacidad privada',
+                'amplitude damping', 'damping térmico', 'thermal damping',
+                'canal de damping', 'damping channel', 'amplitude decay',
+                'g₁(n)', 'g₂(n)', 'g1(n)', 'g2(n)', 'qₚ', 'q_p', 'qp',
+                'γ₀', 'gamma_0', 'tasa de decay', 'decay rate',
+                'baño térmico', 'thermal bath', 'criptografía cuántica',
+                'quantum cryptography', 'comunicación secreta', 'secret communication',
+                'private key', 'clave privada cuántica', 'capacidad secreta',
+                'secret capacity', 'modulación temporal', 'time modulation'
+            ],
+            'quantum_sharpe_ratio': [
+                'sharpe cuántico', 'quantum sharpe', 'sharpe ratio cuántico',
+                'ratio de sharpe cuántico', 'quantum sharpe ratio',
+                's_q', 'sq', 'umbral de no-clonación', 'no-cloning threshold',
+                'no cloning', 'no-clonación', 'límite √2', 'sqrt(2)',
+                'raíz de 2', 'root 2', '1.414', 'tsirelson',
+                'chsh', 'desigualdad de bell', 'bell inequality',
+                'límite clásico', 'classical limit', 'correlaciones cuánticas',
+                'quantum correlations', 'entrelazamiento', 'entanglement',
+                'señal/ruido cuántico', 'quantum signal to noise',
+                'finanzas cuánticas', 'quantum finance', 'sharpe quantum'
+            ],
+            'quantum_criticality': [
+                'criticalidad cuántica', 'quantum criticality', 'punto crítico cuántico',
+                'quantum critical point', 'qcp', 'transición de fase cuántica',
+                'quantum phase transition', 'qpt', 'longitud de correlación',
+                'correlation length', 'ξ', 'xi', 'gap espectral', 'spectral gap',
+                'Δ', 'delta gap', 'exponente crítico', 'critical exponent',
+                'ν', 'nu', 'exponente dinámico', 'dynamic exponent', 'z',
+                'fidelidad de bures', 'bures fidelity', 'singularidad',
+                'singularity', 'ρ₀', 'rho_0', 'ρ_c', 'rho_c',
+                'clase de universalidad', 'universality class', 'scaling',
+                'hiperscaling', 'hyperscaling', 'critical slowing',
+                'divergencia', 'divergence', 'cierre del gap', 'gap closing'
             ]
         }
     
@@ -2705,6 +3089,10 @@ Esta es la convención estándar en óptica cuántica experimental y QRNG.
             'photon_statistics': 'photon_statistics',
             # V5.0 - Capacidad Cuántica Gaussiana (Nov 28, 2025)
             'quantum_channel_capacity': 'quantum_channel_capacity',
+            # V6.0 - Fórmulas avanzadas PhD+ (Nov 28, 2025)
+            'private_capacity_thermal': 'private_capacity_thermal',
+            'quantum_sharpe_ratio': 'quantum_sharpe_ratio',
+            'quantum_criticality': 'quantum_criticality',
         }
         
         added_formulas = set()
