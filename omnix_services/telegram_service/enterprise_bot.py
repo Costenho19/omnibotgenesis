@@ -2867,6 +2867,23 @@ Ejemplo: /risk_events 48
         """Manejar mensaje directo usando API de Telegram"""
         global global_conversation_history  # Declarar global al inicio
         try:
+            # CRITICAL FIX: Registrar usuario ANTES de cualquier operación DB
+            effective_user_id = user_id or chat_id
+            if self.db_manager:
+                logger.info(f"🔧 handle_direct_message: Registrando usuario {effective_user_id} ANTES de procesar")
+                try:
+                    self.db_manager.ensure_user_exists(
+                        user_id=str(effective_user_id),
+                        username=f"user_{effective_user_id}",
+                        first_name="Telegram",
+                        last_name="User"
+                    )
+                    logger.info(f"✅ Usuario {effective_user_id} registrado/actualizado en handle_direct_message")
+                except Exception as user_reg_error:
+                    logger.error(f"❌ Error registrando usuario en handle_direct_message: {user_reg_error}")
+            else:
+                logger.warning("⚠️ db_manager no disponible en handle_direct_message")
+            
             # Procesar comando
             response_text = ""
             
