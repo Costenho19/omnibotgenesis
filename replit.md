@@ -1,7 +1,13 @@
 # OMNIX V6.0 ULTRA - Automated Trading System
 
 ### Overview
-OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system designed for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with $1,000,000 virtual capital, employing institutional-grade position sizing to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance and a professional backtesting infrastructure, including new modules for institutional compliance, derivatives trading, and enhanced investor reporting.
+OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system designed for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with $1,000,000 virtual capital (spot) + $100,000 (derivatives), employing institutional-grade position sizing to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance and a professional backtesting infrastructure, including new modules for institutional compliance, derivatives trading, and enhanced investor reporting.
+
+### Recent Changes (November 28, 2025)
+- **Derivatives Module Integrated**: DerivativesManager now initializes in main.py with $100K paper trading balance
+- **Kelly Criterion Fixed**: Corrected from Quarter Kelly (0.25) to Half Kelly (0.50), range enforced 4-20%
+- **LSP Errors Resolved**: Fixed None-check guards in ai_prompts.py, conversational_brain.py, monte_carlo.py
+- **AI Honesty Rules**: Updated prompts to never invent data, Kelly always 4-20%, D-Wave marked as pending
 
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).

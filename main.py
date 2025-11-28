@@ -328,6 +328,22 @@ from omnix_services.monitoring import AdvancedPerformanceTracker
 # Trading Services (migrated from monolithic main.py)
 from omnix_services.trading_service import MultiCurrencyTradingEngine, EnhancedTradingSystem
 
+# Derivatives Trading Module (institutional-grade futures/perpetuals)
+try:
+    from omnix_services.derivatives import (
+        DerivativesManager,
+        MarginEngine,
+        KrakenFuturesClient,
+        PaperDerivativesManager,
+        HedgingService,
+        FundingArbitrageAnalyzer
+    )
+    DERIVATIVES_AVAILABLE = True
+    logger.info("✅ Derivatives Module loaded - Institutional futures/perpetuals ready")
+except ImportError as e:
+    DERIVATIVES_AVAILABLE = False
+    logger.warning(f"⚠️ Derivatives Module not available: {e}")
+
 from omnix_services.telegram_service import EnterpriseTelegramBot
 from omnix_core import TradingSystem
 
@@ -573,6 +589,18 @@ if __name__ == "__main__":
         trading_system = TradingSystem()
         logger.info("✅ TradingSystem instanciado")
         
+        # 2.5. DerivativesManager (institutional futures/perpetuals)
+        derivatives_manager = None
+        if DERIVATIVES_AVAILABLE:
+            try:
+                derivatives_manager = DerivativesManager()
+                logger.info("✅ DerivativesManager instanciado - Mode: PAPER TRADING ($100K)")
+                logger.info(f"   📊 MarginEngine: Max {MarginEngine.MAX_LEVERAGE}x leverage")
+                logger.info(f"   🛡️ Risk Controls: Warning at {MarginEngine.WARNING_THRESHOLD*100}%, Critical at {MarginEngine.CRITICAL_THRESHOLD*100}%")
+            except Exception as e:
+                logger.warning(f"⚠️ DerivativesManager initialization failed: {e}")
+                derivatives_manager = None
+        
         # 3. MetricsEngine (singleton)
         metrics_engine = None  # Se auto-instancia como singleton
         
@@ -608,6 +636,8 @@ if __name__ == "__main__":
             logger.info("✅ OMNIX V6.0 ULTRA - BOT TELEGRAM OPERATIVO")
             logger.info("📡 Modo: PAPER TRADING - Capital Virtual: $1,000,000")
             logger.info("🧬 ARES V1 (Swing 74-82%) + V2 (Scalping 85%) ACTIVOS")
+            if derivatives_manager:
+                logger.info("📈 DERIVATIVES MODULE ACTIVO - Futures/Perpetuals ($100K)")
             logger.info("🤖 Gemini 2.0 Flash + GPT-4o LISTOS")
             logger.info("=" * 80)
             

@@ -531,7 +531,7 @@ class ConversationalBrain:
     def _save_reasoning_to_db(self, reasoning: Dict):
         """Guardar razonamiento en PostgreSQL"""
         try:
-            if hasattr(self.database, 'save_trade_reasoning'):
+            if self.database is not None and hasattr(self.database, 'save_trade_reasoning'):
                 self.database.save_trade_reasoning(reasoning)
                 logger.debug(f"💾 Razonamiento guardado en DB")
         except Exception as e:
@@ -540,7 +540,7 @@ class ConversationalBrain:
     def _save_evaluation_to_db(self, evaluation: Dict):
         """Guardar evaluación en PostgreSQL"""
         try:
-            if hasattr(self.database, 'save_trade_evaluation'):
+            if self.database is not None and hasattr(self.database, 'save_trade_evaluation'):
                 self.database.save_trade_evaluation(evaluation)
                 logger.debug(f"💾 Evaluación guardada en DB")
         except Exception as e:

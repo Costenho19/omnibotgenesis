@@ -136,8 +136,8 @@ class KellyCriterionOptimizer:
         # Calcular estadísticas
         total_trades = len(wins) + len(losses)
         win_rate = len(wins) / total_trades
-        avg_win = np.mean(wins)
-        avg_loss = np.mean(losses)
+        avg_win = float(np.mean(wins))
+        avg_loss = float(np.mean(losses))
         
         return self.calculate_optimal_position(
             win_rate=win_rate,

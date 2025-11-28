@@ -12,6 +12,7 @@ from omnix_core.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Importar QRNG cuántico
+global_qrng = None
 try:
     from omnix_core.quantum import global_qrng
     QUANTUM_AVAILABLE = True
@@ -23,6 +24,7 @@ except ImportError:
         logger.info("✅ Quantum RNG disponible (fallback import)")
     except ImportError:
         QUANTUM_AVAILABLE = False
+        global_qrng = None
         logger.warning("⚠️ Quantum RNG no disponible - usando generador clásico")
 
 
@@ -63,7 +65,7 @@ class MonteCarloSimulator:
             num_steps = days
             
             # Generate random walks using QUANTUM or classical RNG
-            if self.quantum_enabled and QUANTUM_AVAILABLE:
+            if self.quantum_enabled and QUANTUM_AVAILABLE and global_qrng is not None:
                 # QUANTUM: Números verdaderamente aleatorios de ANU Quantum API
                 total_randoms = self.num_simulations * num_steps
                 quantum_randoms = global_qrng.random_array(total_randoms)

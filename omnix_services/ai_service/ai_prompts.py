@@ -22,6 +22,8 @@ try:
     logger.info("⚛️ Quantum Physics Validator LOADED - Scientific accuracy enabled")
 except ImportError as e:
     QUANTUM_PHYSICS_VALIDATOR_AVAILABLE = False
+    get_quantum_physics_context = None
+    quantum_physics_validator = None
     logger.warning(f"⚠️ Quantum Physics Validator not available: {e}")
 
 
@@ -180,7 +182,7 @@ class PromptsContextManager:
         
         # ⚛️ QUANTUM PHYSICS VALIDATOR - Inject verified scientific context
         quantum_physics_context = ""
-        if user_message and QUANTUM_PHYSICS_VALIDATOR_AVAILABLE:
+        if user_message and QUANTUM_PHYSICS_VALIDATOR_AVAILABLE and get_quantum_physics_context is not None:
             quantum_physics_context = get_quantum_physics_context(user_message)
             if quantum_physics_context:
                 logger.info(f"⚛️ Quantum Physics Validator ACTIVATED for message")
