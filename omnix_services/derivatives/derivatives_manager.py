@@ -166,8 +166,8 @@ class DerivativesManager:
             return False, f"Límite de pérdida diaria alcanzado ({daily_loss_pct:.1%})"
         
         margin_status = self.margin_engine.get_margin_status()
-        if margin_status.margin_level in [MarginLevel.CRITICAL, MarginLevel.LIQUIDATION]:
-            return False, f"Margen insuficiente: {margin_status.margin_level.value}"
+        if not margin_status.can_trade:
+            return False, f"Trading bloqueado por margen: {margin_status.margin_level.value} - {margin_status.warnings[0] if margin_status.warnings else 'Margen insuficiente'}"
         
         if self._rms and self._rms.get("limits_engine"):
             pass

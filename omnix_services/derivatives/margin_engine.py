@@ -374,15 +374,15 @@ class MarginEngine:
         
         liquidation_distance = margin_ratio - self.LIQUIDATION_THRESHOLD
         
-        can_trade = level in [MarginLevel.HEALTHY, MarginLevel.WARNING]
+        can_trade = level == MarginLevel.HEALTHY
         
         warnings = []
         if level == MarginLevel.WARNING:
-            warnings.append(f"⚠️ Margen bajo: {margin_ratio:.1%}")
+            warnings.append(f"⚠️ TRADING RESTRINGIDO - Margen bajo: {margin_ratio:.1%}")
         elif level == MarginLevel.CRITICAL:
-            warnings.append(f"🚨 Margen crítico: {margin_ratio:.1%} - Reducir posiciones")
+            warnings.append(f"🚨 TRADING BLOQUEADO - Margen crítico: {margin_ratio:.1%} - Reducir posiciones inmediatamente")
         elif level == MarginLevel.LIQUIDATION:
-            warnings.append(f"💀 RIESGO DE LIQUIDACIÓN: {margin_ratio:.1%}")
+            warnings.append(f"💀 EMERGENCIA - RIESGO DE LIQUIDACIÓN: {margin_ratio:.1%}")
         
         if effective_leverage > 2.5:
             warnings.append(f"📊 Apalancamiento alto: {effective_leverage:.2f}x")
