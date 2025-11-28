@@ -610,6 +610,19 @@ if __name__ == "__main__":
         db_manager = DatabaseManager()
         logger.info("✅ DatabaseManager instanciado")
         
+        # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - MUY VISIBLE
+        logger.info("=" * 60)
+        logger.info("🗄️ ESTADO DE BASE DE DATOS:")
+        db_health = db_manager.health_check()
+        logger.info(f"   📊 Connected: {db_health.get('database_connected', False)}")
+        logger.info(f"   🔧 Enterprise: {db_health.get('enterprise', db_manager.using_enterprise if hasattr(db_manager, 'using_enterprise') else 'N/A')}")
+        logger.info(f"   🔗 URL Config: {db_health.get('database_url_configured', False)}")
+        if not db_health.get('database_connected', False):
+            logger.error("   ❌ MEMORIA NO FUNCIONARÁ - Base de datos desconectada")
+        else:
+            logger.info("   ✅ MEMORIA ACTIVA - Conversaciones se guardarán")
+        logger.info("=" * 60)
+        
         logger.info("📱 Instanciando EnterpriseTelegramBot...")
         # EnterpriseTelegramBot instancia ConversationalAI y TradingSystem internamente
         telegram_bot = EnterpriseTelegramBot(db_manager=db_manager)
