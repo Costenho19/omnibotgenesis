@@ -32,6 +32,9 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Solo editar código aquí** - las pruebas se validan en Railway después del deploy automático.
 - **Si se arranca para test/control**: Una vez confirmado todo, PARAR AUTOMÁTICAMENTE el workflow antes de terminar.
 
+### Recent Changes (November 28, 2025) - Message Splitting
+- **Telegram Message Splitting V2 (Nov 28, 2025)**: Implementada división inteligente de mensajes >4096 caracteres para evitar truncamiento. Nuevo método `split_text_smart()` divide respetando estructura (párrafos→líneas→palabras). Handler async `handle_message()` usa await para división compatible con event loop. Handler sync `handle_direct_message()` usa `send_telegram_text_safe()`. Header "(1/N)" añadido a mensajes divididos. Delay 0.3s entre partes para evitar rate limits. Arquitecto validó: flujo async preservado, sin bloqueo de event loop.
+
 ### System Architecture
 OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for high performance, security, and intelligent automation.
 

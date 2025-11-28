@@ -2612,19 +2612,41 @@ Ejemplo: /risk_events 48
                 if not ai_response:
                     ai_response = f"🧠 OMNIX IA procesando tu consulta, {user_name}. Sistema operativo."
                 
-                # Limitar respuesta para Telegram
-                if len(ai_response) > 4000:
-                    ai_response = ai_response[:4000] + "..."
+                # HAROLD FIX V2: Dividir mensajes >4096 chars usando async Telegram API
+                # Ya NO se trunca la respuesta - se envía completa dividida inteligentemente
+                chat_id = update.effective_chat.id
                 
-                # Editar el mensaje de pensamiento con la respuesta
-                try:
-                    await thinking_message.edit_text(ai_response)
-                    logger.info(f"✅ RESPUESTA EDITADA: {len(ai_response)} caracteres")
-                except Exception as edit_error:
-                    # Si falla la edición, enviar mensaje nuevo
-                    logger.warning(f"⚠️ No se pudo editar mensaje de pensamiento: {edit_error}")
-                    await update.message.reply_text(ai_response)
-                    logger.info(f"✅ RESPUESTA ENVIADA: {len(ai_response)} caracteres")
+                parts = self.split_text_smart(ai_response, 4000)
+                total_parts = len(parts)
+                logger.info(f"📨 handle_message: {len(ai_response)} chars → {total_parts} parte(s)")
+                
+                for i, part in enumerate(parts):
+                    header = ""
+                    if total_parts > 1:
+                        header = f"📄 ({i+1}/{total_parts})\n\n"
+                    
+                    final_text = header + part
+                    clean_text = self._sanitize_markdown(final_text)
+                    
+                    try:
+                        if i == 0:
+                            await thinking_message.edit_text(clean_text)
+                            logger.info(f"✅ Parte {i+1}/{total_parts} editada OK ({len(clean_text)} chars)")
+                        else:
+                            await update.message.reply_text(clean_text)
+                            logger.info(f"✅ Parte {i+1}/{total_parts} enviada OK ({len(clean_text)} chars)")
+                    except Exception as part_error:
+                        logger.warning(f"⚠️ Error parte {i+1}: {part_error}")
+                        try:
+                            await update.message.reply_text(clean_text)
+                        except:
+                            pass
+                    
+                    if i < total_parts - 1:
+                        import asyncio
+                        await asyncio.sleep(0.3)
+                
+                logger.info(f"✅ RESPUESTA COMPLETA ENVIADA: {len(ai_response)} caracteres en {total_parts} parte(s)")
                 
                 # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA HAROLD
                 if user_id == settings.TELEGRAM_ADMIN_ID:  # Harold específicamente
@@ -3858,53 +3880,23 @@ Harold pregunta: {text}"""
                     final_response_text = self.filter_sensitive_content(response_text)
                     logger.info(f"🔒 Texto filtrado para seguridad: {len(final_response_text)} chars")
                 
-                # PASO 3: Editar el indicador directamente con respuesta completa - SIN DIVISIONES
-                # HAROLD: Eliminado sistema de partes que causaba encabezados duplicados
+                # PASO 3: Enviar respuesta usando wrapper centralizado que divide automáticamente
+                # HAROLD FIX V2: Ahora usa send_telegram_text_safe() para dividir mensajes >4096 chars
                 if thinking_message_id:
-                    # HAROLD FIX: Limpiar markdown problemático para evitar errores de parsing
-                    clean_text = final_response_text
-                    # Limpiar caracteres problemáticos de markdown mal formateado
-                    clean_text = clean_text.replace('**', '*').replace('__', '_')  # Normalizar markdown
-                    clean_text = clean_text.replace('_*', '*').replace('*_', '*')  # Quitar combinaciones raras
-                    
-                    edit_data = {
-                        'chat_id': chat_id,
-                        'message_id': thinking_message_id,
-                        'text': clean_text[:4000]  # Limitar longitud para evitar problemas
-                    }
-                    
-                    edit_response = requests.post(edit_url, json=edit_data)
-                    if edit_response.status_code == 200:
-                        logger.info(f"✅ Mensaje editado exitosamente: {len(final_response_text)} chars")
-                    else:
-                        logger.error(f"❌ Error editando mensaje: {edit_response.text}")
-                        # HAROLD FIX: Enviar mensaje largo dividido correctamente
-                        self.send_message_in_parts(chat_id, final_response_text)
-                        logger.info(f"✅ Mensaje completo enviado en partes: {len(final_response_text)} chars")
+                    self.send_telegram_text_safe(
+                        chat_id=chat_id, 
+                        text=final_response_text, 
+                        parse_mode='Markdown',
+                        edit_message_id=thinking_message_id
+                    )
+                    logger.info(f"✅ Respuesta enviada via send_telegram_text_safe: {len(final_response_text)} chars")
                 else:
-                    # Si no hay thinking_message_id, enviar directo
-                    # HAROLD FIX: También limpiar texto para mensajes directos
-                    clean_backup_text = final_response_text
-                    clean_backup_text = clean_backup_text.replace('**', '*').replace('__', '_')
-                    clean_backup_text = clean_backup_text.replace('_*', '*').replace('*_', '*')
-                    
-                    data = {
-                        'chat_id': chat_id,
-                        'text': clean_backup_text[:4000]  # Limitar longitud
-                    }
-                    
-                    response = requests.post(send_url, json=data)
-                    if response.status_code == 200:
-                        logger.info(f"✅ Mensaje enviado a {chat_id}: {len(final_response_text)} chars")
-                    else:
-                        logger.error(f"❌ Error enviando mensaje: {response.text}")
-                        # Respaldo de emergencia
-                        data_backup = {
-                            'chat_id': chat_id,
-                            'text': "🤖 OMNIX V5.1 operativo - respuesta generada correctamente",
-                            'parse_mode': 'Markdown'
-                        }
-                        requests.post(send_url, json=data_backup)
+                    self.send_telegram_text_safe(
+                        chat_id=chat_id,
+                        text=final_response_text,
+                        parse_mode='Markdown'
+                    )
+                    logger.info(f"✅ Mensaje directo enviado via send_telegram_text_safe: {len(final_response_text)} chars")
                 
                 # GUARDAR HISTORIAL EN POSTGRESQL (PERSISTENTE - sobrevive reinicios)
                 if text and final_response_text:
@@ -4015,76 +4007,173 @@ Harold pregunta: {text}"""
             # Respuesta generica segura en caso de error
             return "Informacion sobre criptomonedas y analisis de mercado disponible. El sistema proporciona insights educativos sobre trading y tecnologia blockchain."
 
-    def send_message_in_parts(self, chat_id, text):
-        """HAROLD FIX: Dividir mensajes largos inteligentemente"""
+    def split_text_smart(self, text, max_length=4000):
+        """
+        Divide texto largo inteligentemente respetando Markdown.
+        Prioridad: párrafos (\n\n) → líneas (\n) → palabras → caracteres
+        Returns: Lista de partes, cada una <= max_length
+        """
+        if len(text) <= max_length:
+            return [text]
+        
+        parts = []
+        current_part = ""
+        
+        paragraphs = text.split('\n\n')
+        
+        for paragraph in paragraphs:
+            test_addition = ('\n\n' if current_part else '') + paragraph
+            
+            if len(current_part) + len(test_addition) <= max_length:
+                current_part += test_addition
+            else:
+                if current_part:
+                    parts.append(current_part)
+                
+                if len(paragraph) <= max_length:
+                    current_part = paragraph
+                else:
+                    lines = paragraph.split('\n')
+                    current_part = ""
+                    for line in lines:
+                        test_line = ('\n' if current_part else '') + line
+                        if len(current_part) + len(test_line) <= max_length:
+                            current_part += test_line
+                        else:
+                            if current_part:
+                                parts.append(current_part)
+                            
+                            if len(line) <= max_length:
+                                current_part = line
+                            else:
+                                words = line.split(' ')
+                                current_part = ""
+                                for word in words:
+                                    test_word = (' ' if current_part else '') + word
+                                    if len(current_part) + len(test_word) <= max_length:
+                                        current_part += test_word
+                                    else:
+                                        if current_part:
+                                            parts.append(current_part)
+                                        if len(word) <= max_length:
+                                            current_part = word
+                                        else:
+                                            for i in range(0, len(word), max_length):
+                                                parts.append(word[i:i+max_length])
+                                            current_part = ""
+        
+        if current_part:
+            parts.append(current_part)
+        
+        return parts if parts else [text[:max_length]]
+
+    def send_telegram_text_safe(self, chat_id, text, parse_mode='Markdown', edit_message_id=None):
+        """
+        Envía texto a Telegram de forma segura, dividiendo automáticamente si >4096 chars.
+        Si edit_message_id se proporciona, intenta editar primero (para primera parte).
+        """
         try:
-            # HAROLD FIX: Obtener bot_token correctamente
             bot_token = getattr(self, 'bot_token', None) or os.environ.get('TELEGRAM_BOT_TOKEN')
             
             if not bot_token:
                 logger.error("❌ Bot token no disponible")
-                return
-                
-            max_length = 4000  # Límite seguro Telegram
+                return False
             
-            if len(text) <= max_length:
-                data = {
-                    'chat_id': chat_id,
-                    'text': text,
-                    'parse_mode': 'Markdown'
-                }
-                send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                requests.post(send_url, json=data)
-                return
+            MAX_LENGTH = 4000
             
-            # Dividir inteligentemente por párrafos
-            parts = []
-            current_part = ""
-            paragraphs = text.split('\n\n')
+            parts = self.split_text_smart(text, MAX_LENGTH)
+            total_parts = len(parts)
             
-            for paragraph in paragraphs:
-                if len(current_part + paragraph) <= max_length - 100:
-                    current_part += paragraph + '\n\n'
-                else:
-                    if current_part.strip():
-                        parts.append(current_part.strip())
-                    current_part = paragraph + '\n\n'
+            logger.info(f"📨 send_telegram_text_safe: {len(text)} chars → {total_parts} parte(s)")
             
-            if current_part.strip():
-                parts.append(current_part.strip())
-            
-            # Enviar todas las partes
-            send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
             for i, part in enumerate(parts):
-                header = f"🧠 OMNIX SUPERINTELIGENCIA (Parte {i+1}/{len(parts)})\n\n" if len(parts) > 1 else ""
+                header = ""
+                if total_parts > 1:
+                    header = f"📄 ({i+1}/{total_parts})\n\n"
+                
                 final_text = header + part
                 
-                data = {
-                    'chat_id': chat_id,
-                    'text': final_text,
-                    'parse_mode': 'Markdown'
-                }
-                response = requests.post(send_url, json=data)
-                logger.info(f"✅ Parte {i+1}/{len(parts)} enviada: {response.status_code}")
-                time.sleep(0.5)  # Pausa entre mensajes
+                clean_text = final_text
+                if parse_mode == 'Markdown':
+                    clean_text = self._sanitize_markdown(final_text)
+                
+                if i == 0 and edit_message_id:
+                    edit_url = f"https://api.telegram.org/bot{bot_token}/editMessageText"
+                    edit_data = {
+                        'chat_id': chat_id,
+                        'message_id': edit_message_id,
+                        'text': clean_text
+                    }
+                    if parse_mode:
+                        edit_data['parse_mode'] = parse_mode
+                    
+                    response = requests.post(edit_url, json=edit_data, timeout=10)
+                    if response.status_code != 200:
+                        logger.warning(f"⚠️ Edit fallido, enviando como nuevo mensaje: {response.status_code}")
+                        send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                        send_data = {
+                            'chat_id': chat_id,
+                            'text': clean_text
+                        }
+                        if parse_mode:
+                            send_data['parse_mode'] = parse_mode
+                        response = requests.post(send_url, json=send_data, timeout=10)
+                else:
+                    send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    send_data = {
+                        'chat_id': chat_id,
+                        'text': clean_text
+                    }
+                    if parse_mode:
+                        send_data['parse_mode'] = parse_mode
+                    response = requests.post(send_url, json=send_data, timeout=10)
+                
+                if response.status_code == 200:
+                    logger.info(f"✅ Parte {i+1}/{total_parts} enviada OK ({len(clean_text)} chars)")
+                else:
+                    logger.error(f"❌ Error parte {i+1}: {response.text}")
+                    if parse_mode:
+                        send_data_plain = {
+                            'chat_id': chat_id,
+                            'text': clean_text
+                        }
+                        requests.post(send_url, json=send_data_plain, timeout=10)
+                
+                if i < total_parts - 1:
+                    time.sleep(0.3)
             
-            logger.info(f"✅ Mensaje dividido en {len(parts)} partes enviadas exitosamente")
+            return True
             
         except Exception as e:
-            logger.error(f"Error send_message_in_parts: {e}")
-            # HAROLD FIX: Respaldo de emergencia
+            logger.error(f"❌ Error send_telegram_text_safe: {e}", exc_info=True)
             try:
                 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
                 if bot_token:
-                    data = {
+                    fallback_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    fallback_data = {
                         'chat_id': chat_id,
-                        'text': "🧠 OMNIX IA SUPERINTELIGENTE\n\nRespuesta generada correctamente - verificando entrega...",
-                        'parse_mode': 'Markdown'
+                        'text': text[:4000] if len(text) > 4000 else text
                     }
-                    send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    requests.post(send_url, json=data)
+                    requests.post(fallback_url, json=fallback_data, timeout=10)
             except:
                 pass
+            return False
+
+    def _sanitize_markdown(self, text):
+        """Limpia Markdown problemático que puede causar errores en Telegram"""
+        if not text:
+            return text
+        
+        sanitized = text
+        sanitized = sanitized.replace('**', '*')
+        sanitized = sanitized.replace('__', '_')
+        sanitized = sanitized.replace('_*', '*').replace('*_', '*')
+        
+        return sanitized
+
+    def send_message_in_parts(self, chat_id, text):
+        """HAROLD FIX: Dividir mensajes largos inteligentemente - AHORA USA send_telegram_text_safe"""
+        return self.send_telegram_text_safe(chat_id, text, parse_mode='Markdown')
 
     def generate_smart_response(self, text):
         """FUNCIÓN REDIRIGIDA - USA SUPERINTELIGENCIA PARA HAROLD"""
