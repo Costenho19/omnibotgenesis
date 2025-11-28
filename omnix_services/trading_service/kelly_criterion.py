@@ -20,11 +20,12 @@ class KellyCriterionOptimizer:
     - R = Win/Loss ratio (promedio ganancia / promedio pérdida)
     """
     
-    def __init__(self, fractional_kelly: float = 0.25):
+    def __init__(self, fractional_kelly: float = 0.50):
         """
         Args:
-            fractional_kelly: Fracción del Kelly Criterion a usar (0.25 = Quarter Kelly)
-                             Usar fracciones reduce volatilidad manteniendo crecimiento
+            fractional_kelly: Fracción del Kelly Criterion a usar (0.50 = Half Kelly)
+                             Half Kelly es estándar institucional - balance óptimo
+                             entre crecimiento y volatilidad.
         """
         self.fractional_kelly = fractional_kelly
         logger.info(f"💎 Kelly Criterion Optimizer initialized - Fractional: {fractional_kelly}")
@@ -35,8 +36,8 @@ class KellyCriterionOptimizer:
         avg_win: float,
         avg_loss: float,
         total_capital: float,
-        min_position: float = 0.01,
-        max_position: float = 0.30
+        min_position: float = 0.04,
+        max_position: float = 0.20
     ) -> Dict:
         """
         Calcula el tamaño óptimo de posición usando Kelly Criterion
@@ -46,11 +47,15 @@ class KellyCriterionOptimizer:
             avg_win: Ganancia promedio por trade ganador
             avg_loss: Pérdida promedio por trade perdedor (positivo)
             total_capital: Capital total disponible
-            min_position: Tamaño mínimo de posición (% del capital)
-            max_position: Tamaño máximo de posición (% del capital)
+            min_position: Tamaño mínimo de posición (% del capital) - Default 4%
+            max_position: Tamaño máximo de posición (% del capital) - Default 20%
         
         Returns:
             Dict con kelly_fraction, position_size, position_usd, confidence
+            
+        Nota: Con win_rate=0.65 y ratio 2:1, Kelly da ~47.5%.
+              Con Half Kelly (0.50), eso es ~23.75%.
+              Limitado a max_position=20% para control de riesgo institucional.
         """
         
         # Validaciones
@@ -188,7 +193,10 @@ class KellyCriterionOptimizer:
     
     def _conservative_position(self, total_capital: float, fraction: float = 0.05) -> Dict:
         """
-        Retorna posición conservadora cuando no hay datos suficientes
+        Retorna posición conservadora cuando no hay datos suficientes.
+        
+        Nota: El default de 5% es adecuado para situaciones sin datos.
+              Con datos reales, Kelly típicamente da 4-20%.
         """
         return {
             'kelly_fraction': fraction,
@@ -198,7 +206,7 @@ class KellyCriterionOptimizer:
             'win_rate': 0.5,
             'win_loss_ratio': 1.0,
             'confidence': 'LOW',
-            'recommendation': 'CONSERVATIVE - Insufficient data for Kelly optimization'
+            'recommendation': 'CONSERVATIVE - Datos insuficientes para optimización Kelly. Usando 5% conservador.'
         }
     
     def adjust_for_var(
