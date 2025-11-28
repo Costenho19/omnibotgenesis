@@ -3,6 +3,28 @@
 ### Overview
 OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
+### Recent Changes (Nov 28, 2025)
+
+**Conversation Memory Fix:**
+- `handle_message` (async) now saves conversations to PostgreSQL (previously only `handle_direct_message` saved)
+- `AIService._get_conversation_history` now loads from PostgreSQL if Redis is empty (survives restarts)
+
+**Real Market Data in AI Responses:**
+- `ConversationalAIAdapter._fetch_real_market_data()` fetches live Kraken data before generating responses
+- AI responses now include actual BTC price, spread (bps), volume, 24h range
+- Fallback to Kraken public API if authenticated API fails
+
+**Leverage Validation:**
+- Automatic detection of leverage requests (regex: "10x", "leverage 5", "apalancamiento 8")
+- Requests exceeding 3x maximum are flagged with rejection message in AI prompt
+- AI instructed to explicitly reject dangerous leverage operations
+
+**Quantum Physics Honesty Rules:**
+- Clear separation between real capabilities (ANU QRNG) and theoretical references (31 formulas)
+- Strict rules: NO inventing theory, NO mixing trading with pure physics inappropriately
+- AI must distinguish between "what I have" vs "what I reference from theory"
+- Honest fallback: "That's outside my verified knowledge" when uncertain
+
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
 
