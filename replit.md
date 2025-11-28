@@ -25,6 +25,18 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - AI must distinguish between "what I have" vs "what I reference from theory"
 - Honest fallback: "That's outside my verified knowledge" when uncertain
 
+**Direct Video Handler (New):**
+- Added `handle_video_message()` for direct video files (.mp4, video notes)
+- Uses GPT-4 Vision to extract frames and analyze content
+- Falls back to basic analysis if Vision AI unavailable
+- Saves video conversations to PostgreSQL
+- Handler: `filters.VIDEO | filters.VIDEO_NOTE`
+
+**Memory Diagnostics Logging:**
+- `save_conversation()` now logs user_id, message lengths, and success/failure
+- `get_conversation_history()` now logs load attempts and result counts
+- Visible in Railway logs for debugging memory issues
+
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
 
