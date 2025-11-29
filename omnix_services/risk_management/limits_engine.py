@@ -1,14 +1,17 @@
 """
-OMNIX V6.0 ULTRA - Limits Engine
-================================
-Motor de validación pre-trade de límites de riesgo.
+OMNIX V6.2 ULTRA - Limits Engine (Memory-Enhanced)
+===================================================
+Motor de validación pre-trade de límites de riesgo con
+ajuste dinámico basado en memoria Non-Markoviana.
 
 Funciones principales:
 - Validar órdenes antes de ejecución
 - Verificar límites por operación, diarios, drawdown
 - Calcular uso de límites en tiempo real
+- NUEVO V6.2: Ajuste dinámico de límites por coherencia temporal
 
 Creado: Nov 27, 2025
+Actualizado: Nov 29, 2025 - Memory-Enhanced Risk Management
 """
 
 import logging
@@ -54,7 +57,8 @@ class LimitsEngine:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, database_service=None, config: RiskConfig = None):
+    def __init__(self, database_service=None, config: RiskConfig = None, 
+                 memory_adapter=None):
         if hasattr(self, '_initialized') and self._initialized:
             return
             
@@ -65,11 +69,16 @@ class LimitsEngine:
         self._cache_ttl = 60
         self._last_cache_update: Dict[str, datetime] = {}
         
+        self._memory_adapter = memory_adapter
+        self._enable_memory_adjustment = True
+        self._last_adjustment_factor = 1.0
+        
         self._initialized = True
-        logger.info("🛡️ LimitsEngine inicializado - Validación pre-trade activa")
+        logger.info("🛡️ LimitsEngine V6.2 inicializado - Validación pre-trade activa")
         logger.info(f"   📊 Capital inicial: ${self.config.initial_capital:,.2f}")
         logger.info(f"   ⚠️  Warning threshold: {self.config.warning_threshold_pct}%")
         logger.info(f"   🚨 Critical threshold: {self.config.critical_threshold_pct}%")
+        logger.info(f"   🧠 Memory-Enhanced: {'Activo' if memory_adapter else 'No disponible'}")
     
     def validate_order(
         self,
@@ -404,3 +413,119 @@ class LimitsEngine:
         else:
             self._user_limits_cache.clear()
             self._last_cache_update.clear()
+    
+    def set_memory_adapter(self, memory_adapter) -> None:
+        """Configurar adaptador de memoria después de inicialización"""
+        self._memory_adapter = memory_adapter
+        if memory_adapter:
+            logger.info("🧠 LimitsEngine: MemoryRiskAdapter conectado")
+    
+    def enable_memory_adjustment(self, enabled: bool = True) -> None:
+        """Habilitar/deshabilitar ajuste dinámico por memoria"""
+        self._enable_memory_adjustment = enabled
+        logger.info(f"🧠 Memory adjustment: {'Activo' if enabled else 'Desactivado'}")
+    
+    def get_memory_adjusted_limit(self, base_value: float) -> float:
+        """
+        Obtener límite ajustado por coherencia de memoria.
+        
+        Args:
+            base_value: Valor base del límite
+            
+        Returns:
+            Valor ajustado según riesgo de memoria temporal
+        """
+        if not self._enable_memory_adjustment or not self._memory_adapter:
+            return base_value
+        
+        try:
+            factor = self._memory_adapter.get_limit_adjustment_factor()
+            self._last_adjustment_factor = factor
+            
+            adjusted = base_value * factor
+            
+            if factor != 1.0:
+                logger.debug(f"📊 Límite ajustado: ${base_value:,.2f} → ${adjusted:,.2f} (factor: {factor:.2f})")
+            
+            return adjusted
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo ajuste de memoria: {e}")
+            return base_value
+    
+    def get_memory_risk_assessment(self) -> Optional[Dict[str, Any]]:
+        """
+        Obtener evaluación de riesgo basada en memoria.
+        
+        Returns:
+            Diccionario con métricas de riesgo de memoria, o None si no disponible
+        """
+        if not self._memory_adapter:
+            return None
+        
+        try:
+            return self._memory_adapter.get_status_summary()
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo evaluación de memoria: {e}")
+            return None
+    
+    def validate_order_with_memory(
+        self,
+        user_id: str,
+        symbol: str,
+        side: str,
+        amount_usd: float,
+        current_price: float,
+        current_metrics: Optional[RiskMetrics] = None
+    ) -> OrderValidationResult:
+        """
+        Validar orden con ajuste dinámico basado en memoria Non-Markoviana.
+        
+        Esta versión extiende validate_order añadiendo:
+        1. Ajuste dinámico de límites según coherencia temporal
+        2. Warnings adicionales por riesgo de transición de régimen
+        3. Factor de posición recomendado
+        
+        Args:
+            user_id: ID del usuario
+            symbol: Par de trading
+            side: 'buy' o 'sell'
+            amount_usd: Monto en USD
+            current_price: Precio actual del activo
+            current_metrics: Métricas actuales (opcional)
+            
+        Returns:
+            OrderValidationResult con análisis de memoria incluido
+        """
+        result = self.validate_order(user_id, symbol, side, amount_usd, current_metrics)
+        
+        if not self._memory_adapter or not self._enable_memory_adjustment:
+            return result
+        
+        try:
+            memory_metrics = self._memory_adapter.compute_memory_risk(current_price)
+            
+            should_halt, halt_reason = self._memory_adapter.should_trigger_circuit_breaker()
+            if should_halt and result.is_valid:
+                result.warnings.append(f"🧠 {halt_reason}")
+            
+            position_factor = self._memory_adapter.get_position_risk_factor()
+            if position_factor < 1.0:
+                recommended_amount = amount_usd * position_factor
+                result.warnings.append(
+                    f"🧠 Memoria sugiere reducir posición a ${recommended_amount:,.2f} "
+                    f"(factor: {position_factor:.1f}x por riesgo temporal)"
+                )
+            
+            alerts = self._memory_adapter.get_predictive_alerts()
+            for alert in alerts:
+                if alert['severity'] in ['critical', 'warning']:
+                    result.warnings.append(f"🔮 {alert['message']}")
+            
+            memory_risk_score = int(memory_metrics.overall_memory_risk * 0.3)
+            result.risk_score = min(100, result.risk_score + memory_risk_score)
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error en validación con memoria: {e}")
+        
+        return result

@@ -1,8 +1,9 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V6.1 ULTRA - TRADING AUTOMÁTICO 24/7
-Sistema de trading automático con IA, Risk Guardian, Coherence Engine y Non-Markovian Kernel
+🤖 OMNIX AUTO-TRADING BOT V6.2 ULTRA - TRADING AUTOMÁTICO 24/7
+Sistema de trading automático con IA, Risk Guardian, Coherence Engine,
+Non-Markovian Kernel y Memory-Enhanced Risk Management System
 
-🔥 ESTRATEGIAS V6.1 ULTRA (10 MÓDULOS):
+🔥 ESTRATEGIAS V6.2 ULTRA (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -14,6 +15,13 @@ Sistema de trading automático con IA, Risk Guardian, Coherence Engine y Non-Mar
 9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
 10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
 
+🧠 MEMORY-ENHANCED RMS V6.2 (NUEVO):
+- MemoryRiskAdapter: Puente entre kernel temporal y gestión de riesgo
+- LimitsEngine: Límites dinámicos ajustados por coherencia de régimen
+- CircuitBreaker: Halt automático por incoherencia de memoria/transición de régimen
+- PositionMonitor: Factor de riesgo basado en divergencia de memoria
+- AlertDispatcher: Alertas predictivas de transiciones de régimen
+
 💰 MODOS DE OPERACIÓN:
 - PAPER TRADING: $1,000,000 virtual (recomendado para testing)
 - REAL TRADING: Dinero real en Kraken (solo para producción)
@@ -23,6 +31,7 @@ Sistema de trading automático con IA, Risk Guardian, Coherence Engine y Non-Mar
 - Validaciones múltiples antes de ejecutar
 - Parada automática si pérdidas > límite configurable
 - Logging completo de decisiones
+- Gestión de riesgo predictiva con memoria Non-Markoviana
 """
 
 import logging
@@ -134,6 +143,26 @@ except ImportError:
     NonMarkovianKernel = None
     NON_MARKOVIAN_KERNEL_AVAILABLE = False
     logger.warning("⚠️ Non-Markovian Kernel no disponible")
+
+# Import Memory-Enhanced RMS V6.2 - PREDICTIVE RISK MANAGEMENT
+try:
+    from omnix_services.risk_management import (
+        MemoryRiskAdapter,
+        LimitsEngine,
+        CircuitBreaker,
+        PositionMonitor,
+        AlertDispatcher
+    )
+    MEMORY_ENHANCED_RMS_AVAILABLE = True
+    logger.info("🧠 Memory-Enhanced RMS V6.2 disponible")
+except ImportError:
+    MemoryRiskAdapter = None
+    LimitsEngine = None
+    CircuitBreaker = None
+    PositionMonitor = None
+    AlertDispatcher = None
+    MEMORY_ENHANCED_RMS_AVAILABLE = False
+    logger.warning("⚠️ Memory-Enhanced RMS no disponible")
 
 
 class AutoTradingBot:
@@ -265,8 +294,52 @@ class AutoTradingBot:
             self.non_markovian_kernel = None
             logger.info("⚠️ Non-Markovian Kernel desactivado")
         
+        # Memory-Enhanced RMS V6.2 - PREDICTIVE RISK MANAGEMENT
+        if MEMORY_ENHANCED_RMS_AVAILABLE and self.non_markovian_kernel:
+            try:
+                self.memory_risk_adapter = MemoryRiskAdapter(kernel=self.non_markovian_kernel)
+                self.limits_engine = LimitsEngine(
+                    database_service=database_service,
+                    memory_adapter=self.memory_risk_adapter
+                )
+                self.circuit_breaker = CircuitBreaker(
+                    database_service=database_service,
+                    memory_adapter=self.memory_risk_adapter
+                )
+                self.position_monitor = PositionMonitor(
+                    database_service=database_service,
+                    memory_adapter=self.memory_risk_adapter
+                )
+                self.alert_dispatcher = AlertDispatcher(
+                    telegram_bot=None,
+                    database_service=database_service,
+                    memory_adapter=self.memory_risk_adapter
+                )
+                logger.info("🧠 Memory-Enhanced RMS V6.2 ACTIVADO - Gestión de riesgo predictiva")
+                logger.info("   📊 LimitsEngine con ajuste dinámico por coherencia")
+                logger.info("   🔌 CircuitBreaker con halt por incoherencia de memoria")
+                logger.info("   📈 PositionMonitor con factor de riesgo por divergencia")
+                logger.info("   📢 AlertDispatcher con alertas predictivas de régimen")
+            except Exception as e:
+                self.memory_risk_adapter = None
+                self.limits_engine = None
+                self.circuit_breaker = None
+                self.position_monitor = None
+                self.alert_dispatcher = None
+                logger.warning(f"⚠️ Memory-Enhanced RMS error: {e}")
+        else:
+            self.memory_risk_adapter = None
+            self.limits_engine = None
+            self.circuit_breaker = None
+            self.position_monitor = None
+            self.alert_dispatcher = None
+            if not NON_MARKOVIAN_KERNEL_AVAILABLE:
+                logger.info("⚠️ Memory-Enhanced RMS desactivado (requiere Non-Markovian Kernel)")
+            else:
+                logger.info("⚠️ Memory-Enhanced RMS desactivado")
+        
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
-        logger.info(f"🤖 AutoTradingBot V6.1 ULTRA inicializado - Modo: {mode}")
+        logger.info(f"🤖 AutoTradingBot V6.2 ULTRA inicializado - Modo: {mode}")
     
     def start(self) -> Dict:
         """Iniciar trading automático 24/7"""
@@ -331,6 +404,10 @@ class AutoTradingBot:
         evaluation_check_counter = 0
         evaluation_check_interval = 10  # Verificar evaluaciones cada 10 ciclos (~5 min si ciclo es 30s)
         
+        # Contador para alertas predictivas (cada 5 min = 10 ciclos de 30s)
+        predictive_alert_counter = 0
+        predictive_alert_interval = 10
+        
         while self.state['running']:
             try:
                 # Verificar parada de emergencia
@@ -341,6 +418,11 @@ class AutoTradingBot:
                 
                 # Análisis completo
                 analysis = self._analyze_market()
+                
+                # 🧠 V6.2: Check predictive alerts after market analysis
+                if analysis and self.alert_dispatcher:
+                    current_price = analysis.get('current_price', 0)
+                    self._check_predictive_alerts(current_price)
                 
                 if analysis and analysis.get('should_trade'):
                     # Ejecutar trade
@@ -364,6 +446,30 @@ class AutoTradingBot:
                 time.sleep(60)  # Esperar 1 min antes de reintentar
         
         logger.info("🔄 Trading loop terminado")
+    
+    def _check_predictive_alerts(self, current_price: float):
+        """
+        Verificar y enviar alertas predictivas basadas en memoria Non-Markoviana.
+        
+        V6.2 Memory-Enhanced RMS: Evalúa métricas del kernel temporal y
+        envía alertas anticipatorias sobre cambios de régimen.
+        """
+        if not self.alert_dispatcher or not self.memory_risk_adapter:
+            return
+        
+        try:
+            sent_alerts = self.alert_dispatcher.check_and_send_predictive_alerts(
+                user_id='system_trading_bot',
+                current_price=current_price
+            )
+            
+            if sent_alerts:
+                logger.info(f"🔮 {len(sent_alerts)} alertas predictivas enviadas")
+                for alert in sent_alerts:
+                    logger.info(f"   📢 {alert.get('type')}: {alert.get('severity')}")
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Error en alertas predictivas: {e}")
     
     def _analyze_market(self) -> Optional[Dict]:
         """
@@ -572,7 +678,8 @@ class AutoTradingBot:
                 'action': 'HOLD',
                 'confidence': 0.0,
                 'reason': [],
-                'v52_analysis': {}
+                'v52_analysis': {},
+                'current_price': current_price
             }
             
             score = 0  # Score de confianza (-100 a +100)

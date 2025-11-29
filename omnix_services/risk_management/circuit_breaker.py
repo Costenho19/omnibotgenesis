@@ -1,15 +1,18 @@
 """
-OMNIX V6.0 ULTRA - Circuit Breaker
-==================================
-Sistema de bloqueo automático de trading.
+OMNIX V6.2 ULTRA - Circuit Breaker (Memory-Enhanced)
+=====================================================
+Sistema de bloqueo automático de trading con
+detección predictiva basada en memoria Non-Markoviana.
 
 Funciones principales:
 - Activar/desactivar trading automáticamente
 - Cooldown periods después de violaciones
 - Override manual para administradores
 - Estado persistente en base de datos
+- NUEVO V6.2: Trigger por incoherencia de memoria temporal
 
 Creado: Nov 27, 2025
+Actualizado: Nov 29, 2025 - Memory-Enhanced Risk Management
 """
 
 import logging
@@ -34,6 +37,8 @@ class HaltReason(Enum):
     SYSTEM_ERROR = 'system_error'
     CONSECUTIVE_LOSSES = 'consecutive_losses'
     RISK_SCORE_HIGH = 'risk_score_high'
+    MEMORY_INCOHERENCE = 'memory_incoherence'
+    REGIME_TRANSITION = 'regime_transition'
 
 
 @dataclass
@@ -75,7 +80,8 @@ class CircuitBreaker:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, database_service=None, config: RiskConfig = None):
+    def __init__(self, database_service=None, config: RiskConfig = None,
+                 memory_adapter=None):
         if hasattr(self, '_initialized') and self._initialized:
             return
             
@@ -85,10 +91,15 @@ class CircuitBreaker:
         self._halt_status: Dict[str, HaltStatus] = {}
         self._halt_history: Dict[str, List[HaltStatus]] = {}
         
+        self._memory_adapter = memory_adapter
+        self._enable_memory_halt = True
+        self._memory_halt_cooldown = 30
+        
         self._initialized = True
-        logger.info("🔌 CircuitBreaker inicializado - Protección automática activa")
+        logger.info("🔌 CircuitBreaker V6.2 inicializado - Protección automática activa")
         logger.info(f"   ⏱️ Cooldown default: {self.config.halt_cooldown_minutes} minutos")
         logger.info(f"   🔒 Auto-halt: {'Activado' if self.config.enable_auto_halt else 'Desactivado'}")
+        logger.info(f"   🧠 Memory-halt: {'Activo' if memory_adapter else 'No disponible'}")
     
     def is_trading_halted(self, user_id: str) -> bool:
         """Verificar si el trading está detenido para un usuario"""
@@ -316,5 +327,124 @@ class CircuitBreaker:
             'auto_halt_enabled': self.config.enable_auto_halt,
             'default_cooldown_minutes': self.config.halt_cooldown_minutes,
             'total_halted_users': len(halted_users),
-            'halted_users': halted_users
+            'halted_users': halted_users,
+            'memory_halt_enabled': self._enable_memory_halt,
+            'memory_adapter_connected': self._memory_adapter is not None
+        }
+    
+    def set_memory_adapter(self, memory_adapter) -> None:
+        """Configurar adaptador de memoria después de inicialización"""
+        self._memory_adapter = memory_adapter
+        if memory_adapter:
+            logger.info("🧠 CircuitBreaker: MemoryRiskAdapter conectado")
+    
+    def enable_memory_halt(self, enabled: bool = True) -> None:
+        """Habilitar/deshabilitar halt por memoria"""
+        self._enable_memory_halt = enabled
+        logger.info(f"🧠 Memory halt: {'Activo' if enabled else 'Desactivado'}")
+    
+    def check_memory_risk(self, user_id: str, current_price: float) -> Optional[HaltStatus]:
+        """
+        Verificar si el riesgo de memoria requiere halt.
+        
+        Esta función evalúa las métricas del kernel Non-Markoviano
+        y activa el circuit breaker si detecta condiciones críticas.
+        
+        Args:
+            user_id: ID del usuario
+            current_price: Precio actual del activo
+            
+        Returns:
+            HaltStatus si se activó halt, None en caso contrario
+        """
+        if not self._enable_memory_halt or not self._memory_adapter:
+            return None
+        
+        if self.is_trading_halted(user_id):
+            return self.get_halt_status(user_id)
+        
+        try:
+            should_halt, halt_reason = self._memory_adapter.should_trigger_circuit_breaker()
+            
+            if should_halt:
+                memory_metrics = self._memory_adapter.compute_memory_risk(current_price)
+                
+                if memory_metrics.transition_risk > 80:
+                    reason = HaltReason.REGIME_TRANSITION
+                else:
+                    reason = HaltReason.MEMORY_INCOHERENCE
+                
+                return self.trigger_halt(
+                    user_id=user_id,
+                    reason=reason,
+                    message=halt_reason,
+                    cooldown_minutes=self._memory_halt_cooldown,
+                    halted_by='memory_adapter'
+                )
+            
+        except Exception as e:
+            logger.error(f"❌ Error verificando riesgo de memoria: {e}")
+        
+        return None
+    
+    def trigger_from_memory_risk(self, user_id: str, 
+                                  risk_type: str, 
+                                  risk_value: float,
+                                  message: str = '') -> Optional[HaltStatus]:
+        """
+        Trigger manual desde análisis de memoria.
+        
+        Args:
+            user_id: ID del usuario
+            risk_type: Tipo de riesgo ('coherence', 'transition', 'divergence')
+            risk_value: Valor del riesgo (0-100)
+            message: Mensaje descriptivo
+            
+        Returns:
+            HaltStatus si se activó halt, None en caso contrario
+        """
+        if not self.config.enable_auto_halt:
+            logger.warning(f"⚠️ Auto-halt desactivado, ignorando trigger de memoria")
+            return None
+        
+        if risk_value < 75:
+            logger.debug(f"📊 Riesgo de memoria {risk_type}={risk_value:.1f}% bajo umbral crítico")
+            return None
+        
+        reason_map = {
+            'coherence': HaltReason.MEMORY_INCOHERENCE,
+            'transition': HaltReason.REGIME_TRANSITION,
+            'divergence': HaltReason.MEMORY_INCOHERENCE
+        }
+        
+        reason = reason_map.get(risk_type, HaltReason.MEMORY_INCOHERENCE)
+        
+        if not message:
+            message = f"🧠 Riesgo de memoria {risk_type} detectado: {risk_value:.1f}%"
+        
+        return self.trigger_halt(
+            user_id=user_id,
+            reason=reason,
+            message=message,
+            cooldown_minutes=self._memory_halt_cooldown,
+            halted_by='memory_risk'
+        )
+    
+    def get_memory_halt_stats(self) -> Dict[str, Any]:
+        """Obtener estadísticas de halts por memoria"""
+        memory_halts = []
+        for user_id, history in self._halt_history.items():
+            for halt in history:
+                if halt.reason in [HaltReason.MEMORY_INCOHERENCE, HaltReason.REGIME_TRANSITION]:
+                    memory_halts.append({
+                        'user_id': user_id,
+                        'reason': halt.reason.value,
+                        'halted_at': halt.halted_at.isoformat() if halt.halted_at else None
+                    })
+        
+        return {
+            'total_memory_halts': len(memory_halts),
+            'recent_halts': memory_halts[-10:],
+            'memory_halt_enabled': self._enable_memory_halt,
+            'memory_halt_cooldown': self._memory_halt_cooldown
         }

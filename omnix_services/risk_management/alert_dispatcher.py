@@ -1,15 +1,18 @@
 """
-OMNIX V6.0 ULTRA - Alert Dispatcher
-====================================
-Sistema de alertas y notificaciones de riesgo.
+OMNIX V6.2 ULTRA - Alert Dispatcher (Memory-Enhanced)
+======================================================
+Sistema de alertas y notificaciones de riesgo con
+alertas predictivas basadas en memoria Non-Markoviana.
 
 Funciones principales:
 - Enviar alertas por Telegram
 - Logging de eventos de riesgo
 - Resúmenes diarios
 - Escalamiento de alertas
+- NUEVO V6.2: Alertas predictivas de transición de régimen
 
 Creado: Nov 27, 2025
+Actualizado: Nov 29, 2025 - Memory-Enhanced Risk Management
 """
 
 import logging
@@ -60,7 +63,8 @@ class AlertDispatcher:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, telegram_bot=None, database_service=None, config: RiskConfig = None):
+    def __init__(self, telegram_bot=None, database_service=None, config: RiskConfig = None,
+                 memory_adapter=None):
         if hasattr(self, '_initialized') and self._initialized:
             return
             
@@ -75,12 +79,18 @@ class AlertDispatcher:
         self._max_alerts_per_day = 50
         self._cooldown_seconds = 30
         
-        self._telegram_chat_ids: List[str] = []  # Chat IDs para alertas
+        self._telegram_chat_ids: List[str] = []
+        
+        self._memory_adapter = memory_adapter
+        self._enable_predictive_alerts = True
+        self._last_predictive_check: Optional[datetime] = None
+        self._predictive_alert_cooldown = 300
         
         self._initialized = True
-        logger.info("📢 AlertDispatcher inicializado - Notificaciones activas")
+        logger.info("📢 AlertDispatcher V6.2 inicializado - Notificaciones activas")
         logger.info(f"   📱 Telegram: {'Activo' if telegram_bot else 'No disponible'}")
         logger.info(f"   ⏱️ Cooldown: {self._cooldown_seconds}s entre alertas")
+        logger.info(f"   🧠 Alertas predictivas: {'Activo' if memory_adapter else 'No disponible'}")
     
     def set_telegram_bot(self, telegram_bot) -> None:
         """
@@ -389,5 +399,209 @@ class AlertDispatcher:
             'total_today': len(today_alerts),
             'total_all_time': len(history),
             'by_severity': by_severity,
-            'last_alert': history[-1].sent_at.isoformat() if history else None
+            'last_alert': history[-1].sent_at.isoformat() if history else None,
+            'predictive_alerts_enabled': self._enable_predictive_alerts
         }
+    
+    def set_memory_adapter(self, memory_adapter) -> None:
+        """Configurar adaptador de memoria después de inicialización"""
+        self._memory_adapter = memory_adapter
+        if memory_adapter:
+            logger.info("🧠 AlertDispatcher: MemoryRiskAdapter conectado")
+    
+    def enable_predictive_alerts(self, enabled: bool = True) -> None:
+        """Habilitar/deshabilitar alertas predictivas"""
+        self._enable_predictive_alerts = enabled
+        logger.info(f"🧠 Alertas predictivas: {'Activo' if enabled else 'Desactivado'}")
+    
+    def check_and_send_predictive_alerts(self, user_id: str, 
+                                          current_price: float) -> List[Dict]:
+        """
+        Verificar y enviar alertas predictivas basadas en memoria.
+        
+        Esta función evalúa las métricas del kernel Non-Markoviano y
+        envía alertas anticipatorias sobre cambios de régimen.
+        
+        Args:
+            user_id: ID del usuario
+            current_price: Precio actual del activo
+            
+        Returns:
+            Lista de alertas enviadas
+        """
+        if not self._enable_predictive_alerts or not self._memory_adapter:
+            return []
+        
+        now = datetime.now()
+        if (self._last_predictive_check and 
+            (now - self._last_predictive_check).seconds < self._predictive_alert_cooldown):
+            return []
+        
+        self._last_predictive_check = now
+        
+        sent_alerts = []
+        
+        try:
+            predictive_alerts = self._memory_adapter.get_predictive_alerts()
+            
+            for alert in predictive_alerts:
+                severity_map = {
+                    'critical': RiskSeverity.CRITICAL,
+                    'warning': RiskSeverity.WARNING,
+                    'info': RiskSeverity.INFO
+                }
+                severity = severity_map.get(alert.get('severity', 'info'), RiskSeverity.INFO)
+                
+                alert_type = alert.get('type', 'MEMORY_ALERT')
+                title = self._get_predictive_alert_title(alert_type)
+                message = alert.get('message', 'Alerta de memoria detectada')
+                
+                if alert.get('recommended_action'):
+                    message += f"\n\n📋 Recomendación: {alert['recommended_action']}"
+                
+                success = self.send_alert_sync(
+                    user_id=user_id,
+                    severity=severity,
+                    title=title,
+                    message=message
+                )
+                
+                if success:
+                    sent_alerts.append({
+                        'type': alert_type,
+                        'severity': alert.get('severity'),
+                        'sent_at': now.isoformat()
+                    })
+        
+        except Exception as e:
+            logger.error(f"❌ Error enviando alertas predictivas: {e}")
+        
+        return sent_alerts
+    
+    def _get_predictive_alert_title(self, alert_type: str) -> str:
+        """Obtener título formateado para alerta predictiva"""
+        titles = {
+            'REGIME_TRANSITION': '🔮 Transición de Régimen Detectada',
+            'COHERENCE_LOSS': '🧠 Pérdida de Coherencia Temporal',
+            'VOLATILITY_INCREASE': '📊 Aumento de Volatilidad Esperado',
+            'VOLATILITY_DECREASE': '📉 Disminución de Volatilidad Esperada',
+            'MEMORY_ALERT': '🧠 Alerta de Memoria Non-Markoviana'
+        }
+        return titles.get(alert_type, f'🔮 {alert_type}')
+    
+    async def send_predictive_alert_async(
+        self,
+        user_id: str,
+        alert_type: str,
+        message: str,
+        recommended_action: str = '',
+        severity: str = 'warning'
+    ) -> bool:
+        """
+        Enviar alerta predictiva asíncrona con formato especial.
+        
+        Args:
+            user_id: ID del usuario
+            alert_type: Tipo de alerta (REGIME_TRANSITION, COHERENCE_LOSS, etc.)
+            message: Mensaje de la alerta
+            recommended_action: Acción recomendada (opcional)
+            severity: Severidad ('info', 'warning', 'critical')
+            
+        Returns:
+            True si se envió correctamente
+        """
+        severity_map = {
+            'critical': RiskSeverity.CRITICAL,
+            'warning': RiskSeverity.WARNING,
+            'info': RiskSeverity.INFO
+        }
+        risk_severity = severity_map.get(severity, RiskSeverity.INFO)
+        
+        title = self._get_predictive_alert_title(alert_type)
+        
+        full_message = f"🔮 **ALERTA PREDICTIVA**\n\n{message}"
+        if recommended_action:
+            full_message += f"\n\n📋 **Acción Recomendada:**\n{recommended_action}"
+        
+        return await self.send_alert(
+            user_id=user_id,
+            severity=risk_severity,
+            title=title,
+            message=full_message
+        )
+    
+    def send_regime_transition_alert(self, user_id: str, 
+                                      transition_risk: float,
+                                      coherence_level: float) -> bool:
+        """
+        Enviar alerta específica de transición de régimen.
+        
+        Args:
+            user_id: ID del usuario
+            transition_risk: Riesgo de transición (0-100)
+            coherence_level: Nivel de coherencia (0-100)
+            
+        Returns:
+            True si se envió correctamente
+        """
+        severity = RiskSeverity.CRITICAL if transition_risk > 80 else RiskSeverity.WARNING
+        
+        message = f"""
+🔮 **Transición de Régimen Detectada**
+
+📊 Riesgo de transición: {transition_risk:.1f}%
+🧠 Coherencia temporal: {coherence_level:.1f}%
+
+El kernel Non-Markoviano ha detectado patrones que indican
+un posible cambio de régimen de mercado inminente.
+
+📋 **Recomendaciones:**
+• Reducir tamaño de posiciones nuevas
+• Ajustar stops más conservadores
+• Monitorear volatilidad de cerca
+"""
+        
+        return self.send_alert_sync(
+            user_id=user_id,
+            severity=severity,
+            title='🔮 Transición de Régimen',
+            message=message
+        )
+    
+    def send_memory_coherence_alert(self, user_id: str,
+                                     coherence_risk: float,
+                                     regime_stability: float) -> bool:
+        """
+        Enviar alerta de pérdida de coherencia temporal.
+        
+        Args:
+            user_id: ID del usuario
+            coherence_risk: Riesgo por pérdida de coherencia (0-100)
+            regime_stability: Estabilidad del régimen (0-100)
+            
+        Returns:
+            True si se envió correctamente
+        """
+        severity = RiskSeverity.CRITICAL if coherence_risk > 80 else RiskSeverity.WARNING
+        
+        message = f"""
+🧠 **Pérdida de Coherencia Temporal**
+
+⚠️ Riesgo por incoherencia: {coherence_risk:.1f}%
+📊 Estabilidad del régimen: {regime_stability:.1f}%
+
+La memoria temporal del mercado muestra signos de
+decoherencia, lo que reduce la predictibilidad.
+
+📋 **Recomendaciones:**
+• Operar con cautela adicional
+• Preferir posiciones más pequeñas
+• Esperar estabilización antes de nuevas entradas
+"""
+        
+        return self.send_alert_sync(
+            user_id=user_id,
+            severity=severity,
+            title='🧠 Coherencia Temporal Baja',
+            message=message
+        )

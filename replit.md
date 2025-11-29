@@ -1,11 +1,35 @@
-# OMNIX V6.1 ULTRA - Automated Trading System
+# OMNIX V6.2 ULTRA - Automated Trading System
 
 ### Overview
-OMNIX V6.1 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, real-time market analysis, and Non-Markovian temporal memory, featuring advanced strategy modules like ARES V1/V2 and the new Memory Kernel. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
+OMNIX V6.2 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, real-time market analysis, Non-Markovian temporal memory, and now features **Memory-Enhanced Risk Management** - a predictive risk system that uses temporal memory patterns to anticipate regime transitions. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
 ### Recent Changes (Nov 29, 2025)
 
-**Non-Markovian Memory Kernel V6.1 (NEW):**
+**Memory-Enhanced Risk Management V6.2 (NEW):**
+- **MemoryRiskAdapter**: Bridge between Non-Markovian Kernel and RMS for predictive risk analysis
+  - Computes coherence risk, transition risk, divergence risk, cyclical risk
+  - Predicts volatility changes based on memory patterns
+  - Provides limit adjustment factors and position sizing recommendations
+- **LimitsEngine V6.2**: Dynamic limit adjustment based on temporal coherence
+  - `get_memory_adjusted_limit()`: Adjusts limits by regime stability
+  - `validate_order_with_memory()`: Enhanced validation with predictive warnings
+  - Memory-aware risk scoring integrated
+- **CircuitBreaker V6.2**: New halt reasons for memory-based triggers
+  - `MEMORY_INCOHERENCE`: Triggers on critical coherence loss
+  - `REGIME_TRANSITION`: Triggers on high transition risk detection
+  - `check_memory_risk()`: Evaluates kernel metrics before allowing trades
+- **PositionMonitor V6.2**: Memory-based position risk adjustment
+  - `get_memory_risk_factor()`: Returns 0.3-1.0 multiplier based on memory state
+  - `get_position_sizing_recommendation()`: Combines exposure + memory analysis
+  - `check_memory_concentration_alerts()`: Predictive alert integration
+- **AlertDispatcher V6.2**: Predictive alerts for regime transitions
+  - `check_and_send_predictive_alerts()`: Scans for upcoming market changes
+  - `send_regime_transition_alert()`: Specific alert for regime changes
+  - `send_memory_coherence_alert()`: Alert for temporal decoherence
+- New file: `omnix_services/risk_management/memory_risk_adapter.py`
+- RMS module version upgraded to 6.2.0
+
+**Non-Markovian Memory Kernel V6.1:**
 - Implemented genuine Non-Markovian kernel: K(t-s) = exp(-|t-s|/τ)[1 + ε cos(Ω(t-s))]
 - Parameters: τ=12h (memory decay), ε=0.35 (oscillation amplitude), Ω=0.523 rad/period (12h cycles)
 - Captures temporal dependencies that Markov models miss
@@ -13,7 +37,7 @@ OMNIX V6.1 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 - Detects regime transitions, institutional accumulation patterns, and cyclical strength
 - New file: `omnix_core/strategies/non_markovian_kernel.py`
 - AI prompts updated with reframing for kernel questions
-- Auto-trading bot upgraded to V6.1 with 10 strategy modules
+- Auto-trading bot upgraded to V6.2 with Memory-Enhanced RMS
 
 **Multi-Crypto Support V6.1.0:**
 - Support for 50+ cryptocurrencies: BTC, ETH, ADA, SOL, XRP, DOT, DOGE, AVAX, LINK, MATIC, LTC, and more
@@ -114,7 +138,8 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **Risk Management & Protection**:
     - **Coherence Engine V5.4 ULTRA**: Validates agreement between trading strategies using a 6-Tier Veto System.
     - **AI Risk Guardian V5.4**: Real-time risk supervision (Overtrading, Drawdown, Revenge Trading Detection, Capital Protection).
-    - **Risk Management System (RMS) V6.0**: Institutional-grade risk control with LimitsEngine, PositionMonitor, CircuitBreaker, AlertDispatcher, and RiskDashboard.
+    - **Risk Management System (RMS) V6.2 MEMORY-ENHANCED**: Institutional-grade risk control with LimitsEngine, PositionMonitor, CircuitBreaker, AlertDispatcher, RiskDashboard, and MemoryRiskAdapter. Features predictive risk assessment using Non-Markovian temporal patterns.
+    - **MemoryRiskAdapter V6.2**: Bridge between Non-Markovian Kernel and RMS, computing coherence risk, transition risk, divergence risk, and cyclical risk for predictive risk management.
     - **Auto-Optimization Engine**: Continuously improves strategies via Genetic Algorithm, A/B Testing, and Auto-Adjustment.
     - **Multi-Exchange Arbitrage V6.0**: Institutional arbitrage across 8 exchanges.
     - **Institutional Compliance Suite**: Includes InstitutionalStressSuite, InstitutionalAuditLogger, and a DeadManSwitch.

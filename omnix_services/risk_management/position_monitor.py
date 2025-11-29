@@ -1,15 +1,18 @@
 """
-OMNIX V6.0 ULTRA - Position Monitor
-====================================
-Monitoreo en tiempo real de posiciones y exposición.
+OMNIX V6.2 ULTRA - Position Monitor (Memory-Enhanced)
+======================================================
+Monitoreo en tiempo real de posiciones y exposición con
+ajuste de riesgo basado en memoria Non-Markoviana.
 
 Funciones principales:
 - Tracking de posiciones abiertas
 - Cálculo de exposición total
 - Snapshots diarios de métricas
 - Detección de concentración excesiva
+- NUEVO V6.2: Factor de riesgo por divergencia de memoria
 
 Creado: Nov 27, 2025
+Actualizado: Nov 29, 2025 - Memory-Enhanced Risk Management
 """
 
 import logging
@@ -53,7 +56,8 @@ class PositionMonitor:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, database_service=None, trading_service=None, config: RiskConfig = None):
+    def __init__(self, database_service=None, trading_service=None, config: RiskConfig = None,
+                 memory_adapter=None):
         if hasattr(self, '_initialized') and self._initialized:
             return
             
@@ -65,8 +69,13 @@ class PositionMonitor:
         self._metrics_cache: Dict[str, RiskMetrics] = {}
         self._last_snapshot: Dict[str, date] = {}
         
+        self._memory_adapter = memory_adapter
+        self._enable_memory_adjustment = True
+        self._memory_risk_factor = 1.0
+        
         self._initialized = True
-        logger.info("📊 PositionMonitor inicializado - Tracking en tiempo real activo")
+        logger.info("📊 PositionMonitor V6.2 inicializado - Tracking en tiempo real activo")
+        logger.info(f"   🧠 Memory-Enhanced: {'Activo' if memory_adapter else 'No disponible'}")
     
     def set_trading_service(self, trading_service):
         """Configurar trading_service después de la inicialización"""
@@ -311,3 +320,157 @@ class PositionMonitor:
         else:
             self._positions_cache.clear()
             self._metrics_cache.clear()
+    
+    def set_memory_adapter(self, memory_adapter) -> None:
+        """Configurar adaptador de memoria después de inicialización"""
+        self._memory_adapter = memory_adapter
+        if memory_adapter:
+            logger.info("🧠 PositionMonitor: MemoryRiskAdapter conectado")
+    
+    def enable_memory_adjustment(self, enabled: bool = True) -> None:
+        """Habilitar/deshabilitar ajuste por memoria"""
+        self._enable_memory_adjustment = enabled
+        logger.info(f"🧠 Memory adjustment: {'Activo' if enabled else 'Desactivado'}")
+    
+    def get_memory_risk_factor(self) -> float:
+        """
+        Obtener factor de riesgo basado en memoria Non-Markoviana.
+        
+        Este factor ajusta el riesgo de posiciones basándose en:
+        1. Divergencia de memoria (tensión precio/memoria histórica)
+        2. Coherencia de régimen (estabilidad del mercado)
+        3. Riesgo de transición (cambio de régimen inminente)
+        
+        Returns:
+            Factor multiplicador [0.3, 2.0] para el risk score
+        """
+        if not self._enable_memory_adjustment or not self._memory_adapter:
+            return 1.0
+        
+        try:
+            factor = self._memory_adapter.get_position_risk_factor()
+            self._memory_risk_factor = factor
+            return factor
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo factor de memoria: {e}")
+            return 1.0
+    
+    def get_memory_enhanced_risk_metrics(self, user_id: str, 
+                                          current_price: float) -> RiskMetrics:
+        """
+        Obtener métricas de riesgo mejoradas con análisis de memoria.
+        
+        Extiende get_risk_metrics añadiendo:
+        1. Ajuste de risk_score por coherencia temporal
+        2. Volatility_index mejorado con predicción de cambio
+        3. Alertas predictivas en metadata
+        
+        Args:
+            user_id: ID del usuario
+            current_price: Precio actual del activo principal
+            
+        Returns:
+            RiskMetrics con análisis de memoria integrado
+        """
+        metrics = self.get_risk_metrics(user_id)
+        
+        if not self._memory_adapter or not self._enable_memory_adjustment:
+            return metrics
+        
+        try:
+            memory_metrics = self._memory_adapter.compute_memory_risk(current_price)
+            
+            memory_adjustment = int(memory_metrics.overall_memory_risk * 0.25)
+            metrics.risk_score = min(100, metrics.risk_score + memory_adjustment)
+            
+            if memory_metrics.predicted_volatility_change > 0:
+                metrics.volatility_index = min(100, 
+                    metrics.volatility_index + memory_metrics.predicted_volatility_change)
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error en métricas mejoradas: {e}")
+        
+        return metrics
+    
+    def check_memory_concentration_alerts(self, user_id: str, 
+                                           current_price: float) -> List[str]:
+        """
+        Verificar alertas de concentración mejoradas con memoria.
+        
+        Combina alertas tradicionales con alertas predictivas del kernel.
+        
+        Args:
+            user_id: ID del usuario
+            current_price: Precio actual
+            
+        Returns:
+            Lista combinada de alertas
+        """
+        alerts = self.check_concentration_alerts(user_id)
+        
+        if not self._memory_adapter or not self._enable_memory_adjustment:
+            return alerts
+        
+        try:
+            predictive_alerts = self._memory_adapter.get_predictive_alerts()
+            for alert in predictive_alerts:
+                if alert['severity'] in ['critical', 'warning']:
+                    alerts.append(f"🧠 {alert['message']}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo alertas predictivas: {e}")
+        
+        return alerts
+    
+    def get_position_sizing_recommendation(self, user_id: str, 
+                                            base_size_usd: float,
+                                            current_price: float) -> Dict[str, Any]:
+        """
+        Obtener recomendación de tamaño de posición ajustado por memoria.
+        
+        Args:
+            user_id: ID del usuario
+            base_size_usd: Tamaño base de la posición en USD
+            current_price: Precio actual del activo
+            
+        Returns:
+            Diccionario con tamaño recomendado y justificación
+        """
+        result = {
+            'base_size_usd': base_size_usd,
+            'recommended_size_usd': base_size_usd,
+            'adjustment_factor': 1.0,
+            'memory_risk_level': 'stable',
+            'reasoning': []
+        }
+        
+        exposure = self.get_exposure_summary(user_id)
+        
+        if exposure['exposure_pct'] > 70:
+            result['adjustment_factor'] *= 0.7
+            result['reasoning'].append(
+                f"Exposición alta ({exposure['exposure_pct']:.1f}%) - reducción 30%"
+            )
+        
+        if exposure['max_concentration_pct'] > 20:
+            result['adjustment_factor'] *= 0.8
+            result['reasoning'].append(
+                f"Concentración alta ({exposure['max_concentration_pct']:.1f}%) - reducción 20%"
+            )
+        
+        if self._memory_adapter and self._enable_memory_adjustment:
+            try:
+                memory_factor = self._memory_adapter.get_position_risk_factor()
+                if memory_factor < 1.0:
+                    result['adjustment_factor'] *= memory_factor
+                    
+                    memory_metrics = self._memory_adapter.compute_memory_risk(current_price)
+                    result['memory_risk_level'] = memory_metrics.risk_level.value
+                    result['reasoning'].append(
+                        f"Riesgo de memoria ({result['memory_risk_level']}) - factor {memory_factor:.1f}x"
+                    )
+            except Exception as e:
+                logger.warning(f"⚠️ Error en recomendación de memoria: {e}")
+        
+        result['recommended_size_usd'] = base_size_usd * result['adjustment_factor']
+        
+        return result
