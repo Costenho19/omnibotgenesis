@@ -243,8 +243,8 @@ try:
     from omnix_core.strategies.ares_v2 import AresScalpingV2
     ARES_STRATEGIES_AVAILABLE = True
     print("✅ ARES QUANTUM PROTOCOLS LOADED:")
-    print("   🧬 ARES V1 - Swing Trading (74-82% win rate)")
-    print("   🧨 ARES V2 - Scalping M1 (85% win rate)")
+    print("   🧬 ARES V1 - Swing Trading (55-65% win rate)")
+    print("   🧨 ARES V2 - Scalping M1 (60-70% win rate)")
 except ImportError as e:
     AresQuantumProtocol = None
     AresScalpingV2 = None
@@ -650,7 +650,7 @@ if __name__ == "__main__":
             logger.info("=" * 80)
             logger.info("✅ OMNIX V6.0 ULTRA - BOT TELEGRAM OPERATIVO")
             logger.info("📡 Modo: PAPER TRADING - Capital Virtual: $1,000,000")
-            logger.info("🧬 ARES V1 (Swing 74-82%) + V2 (Scalping 85%) ACTIVOS")
+            logger.info("🧬 ARES V1 (Swing 55-65%) + V2 (Scalping 60-70%) ACTIVOS")
             if derivatives_manager:
                 logger.info("📈 DERIVATIVES MODULE ACTIVO - Futures/Perpetuals ($100K)")
             logger.info("🤖 Gemini 2.0 Flash + GPT-4o LISTOS")

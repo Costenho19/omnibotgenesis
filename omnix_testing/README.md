@@ -112,8 +112,8 @@ omnix_testing/
 
 ### Win Rates Objetivo
 
-- **ARES V1 (Swing Trading):** 74-82% win rate
-- **ARES V2 (Scalping M1):** 85% win rate
+- **ARES V1 (Swing Trading):** 55-65% win rate
+- **ARES V2 (Scalping M1):** 60-70% win rate
 - **9 Estrategias Base:** 65-75% win rate combinado
 
 ### Metodología Auditable

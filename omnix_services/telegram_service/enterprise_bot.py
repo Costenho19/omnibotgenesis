@@ -212,8 +212,8 @@ class EnterpriseTelegramBot:
             logger.info("🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible")
             logger.info(f"   📊 Paper Trading: {'✅ ACTIVADO ($1M virtual)' if self.paper_trading else '❌ Desactivado'}")
             logger.info(f"   🎓 Auto-Learning: {'✅ DISPONIBLE' if self.ai else '⚠️ Sin IA'}")
-            logger.info(f"   🧬 ARES V1 Swing: {'✅ CONECTADO (74-82% win rate)' if self.auto_trading.ares_v1 else '⚠️ No disponible'}")
-            logger.info(f"   🧨 ARES V2 Scalping: {'✅ CONECTADO (85% win rate)' if self.auto_trading.ares_v2 else '⚠️ No disponible'}")
+            logger.info(f"   🧬 ARES V1 Swing: {'✅ CONECTADO (55-65% win rate)' if self.auto_trading.ares_v1 else '⚠️ No disponible'}")
+            logger.info(f"   🧨 ARES V2 Scalping: {'✅ CONECTADO (60-70% win rate)' if self.auto_trading.ares_v2 else '⚠️ No disponible'}")
         except Exception as e:
             logger.warning(f"⚠️ Auto-Trading Bot no disponible: {e}")
             self.auto_trading = None

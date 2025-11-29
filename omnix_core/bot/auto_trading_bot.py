@@ -686,7 +686,7 @@ class AutoTradingBot:
             
             # ========== ESTRATEGIAS ARES QUANTUM (peso 35%) ==========
             
-            # 8. ARES V1 Swing Trading (peso: 20 puntos - INSTITUCIONAL 74-82% win rate)
+            # 8. ARES V1 Swing Trading (peso: 20 puntos - INSTITUCIONAL 55-65% win rate)
             try:
                 if self.ares_v1 is not None and hasattr(self.ares_v1, 'analyze'):
                     max_score += 20

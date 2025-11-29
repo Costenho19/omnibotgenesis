@@ -152,8 +152,8 @@ def compare_strategies():
     print("=" * 70)
     
     print("\n🎯 SELECCIONA ESTRATEGIA ARES:")
-    print("1. ARES V1 - Swing Trading (74-82% win rate)")
-    print("2. ARES V2 - Scalping M1 (85% win rate)")
+    print("1. ARES V1 - Swing Trading (55-65% win rate)")
+    print("2. ARES V2 - Scalping M1 (60-70% win rate)")
     
     choice = input("\nSelecciona opción (1-2): ").strip()
     

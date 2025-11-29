@@ -277,12 +277,12 @@ class PDFReportGenerator:
         story.append(Paragraph("1.2 ARES Quantum Protocols", self.styles['OmnixHeading2']))
         
         ares_text = """
-        <b>ARES V1 (Swing Trading):</b> Institutional-grade swing trading with 74-82% historical win rate.
+        <b>ARES V1 (Swing Trading):</b> Institutional-grade swing trading with 55-65% target win rate.
         Features 6 institutional signals (RSI Divergence, Smart Money Index, Liquidity Sweeps, Volume Profile,
         Fibonacci Confluence, Market Regime) with multi-timeframe correlation (H4, H1, M15).<br/><br/>
         
         <b>ARES V2 (Scalping M1):</b> Ultra-fast 1-minute scalping optimized for high-frequency opportunities
-        with 85% historical win rate. 5 precision signals (RSI M1, Bollinger Squeeze, Volume Spike, Momentum Shift,
+        with 60-70% target win rate. 5 precision signals (RSI M1, Bollinger Squeeze, Volume Spike, Momentum Shift,
         VWAP Cross) with tight stop-loss (-0.28%) and rapid take-profit (+0.85%).
         """
         story.append(Paragraph(ares_text, self.styles['OmnixBody']))

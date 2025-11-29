@@ -267,7 +267,7 @@ class BacktestingEngine:
     
     def _strategy_ares_v1(self, candle: pd.Series, params: Dict):
         """
-        ARES V1 Swing Trading Strategy (74-82% win rate)
+        ARES V1 Swing Trading Strategy (55-65% win rate)
         Uses quantum institutional signals for position entry/exit
         """
         if not self.ares_v1:

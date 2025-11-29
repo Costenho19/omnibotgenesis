@@ -27,7 +27,7 @@
 **OMNIX V6.0 ULTRA** is an enterprise-grade automated cryptocurrency trading system designed for 24/7 operation on Kraken Exchange. The system integrates:
 
 - **AI/ML**: Multi-LLM architecture (Gemini 2.0 Flash, GPT-4o, Claude)
-- **Quantum Strategies**: ARES V1 (Swing Trading 74-82% win rate) + ARES V2 (Scalping M1 85% win rate)
+- **Quantum Strategies**: ARES V1 (Swing Trading 55-65% win rate) + ARES V2 (Scalping M1 60-70% win rate)
 - **Post-Quantum Cryptography**: NIST 2024 compliant (Kyber-768 + Dilithium-3)
 - **Real-time Trading**: Kraken WebSocket integration with <500ms latency
 - **Paper Trading**: $1,000,000 virtual capital for track record generation
