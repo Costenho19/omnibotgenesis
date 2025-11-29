@@ -580,20 +580,34 @@ Opera bajo tu propio riesgo. /legal para detalles."""
 
     async def version_command(self, update, context):
         """Comando /version - Verificar versión del build en producción"""
+        logger.info("🔧 /version command triggered")
         try:
+            # Safe checks to avoid AttributeError
+            has_trading = hasattr(self, 'trading') and self.trading is not None
+            has_kraken = False
+            try:
+                has_kraken = (hasattr(self, 'trading_enterprise') and 
+                             self.trading_enterprise is not None and 
+                             hasattr(self.trading_enterprise, 'kraken_client') and
+                             self.trading_enterprise.kraken_client is not None)
+            except:
+                pass
+            
             version_text = f"""🔧 **OMNIX BUILD INFO**
 
-📌 **Version**: V6.0.5
-🕐 **Build Timestamp**: 2025-11-29T04:30:00Z
-🎯 **Build ID**: enterprise-bot-kraken-fix
-🔗 **Kraken WebSocket**: {'✅ Conectado' if hasattr(self, 'trading') and self.trading else '⚠️ No disponible'}
-📡 **Kraken Client**: {'✅ Disponible' if (self.trading_enterprise and hasattr(self.trading_enterprise, 'kraken_client')) else '⚠️ Usando API pública'}
+📌 **Version**: V6.0.6
+🕐 **Build**: 2025-11-29T05:30:00Z
+🎯 **Build ID**: version-cmd-fix
+🔗 **Trading**: {'✅ Activo' if has_trading else '⚠️ No disponible'}
+📡 **Kraken**: {'✅ Disponible' if has_kraken else '⚠️ API pública'}
 
-✅ Este mensaje confirma que el código V6.0.5 está activo."""
+✅ Código V6.0.6 confirmado."""
             
+            logger.info(f"🔧 /version responding: V6.0.6")
             await update.message.reply_text(version_text, parse_mode='Markdown')
         except Exception as e:
-            await update.message.reply_text(f"Error: {e}")
+            logger.error(f"❌ /version error: {e}")
+            await update.message.reply_text(f"🔧 OMNIX V6.0.6 - Error: {e}")
 
     async def help_command(self, update, context):
         """Comando /help"""
