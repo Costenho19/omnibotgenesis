@@ -2610,7 +2610,13 @@ Ejemplo: /risk_events 48
             user_id = str(user.id)
             user_name = user.first_name or "Usuario"
             
+            # 🔍 DEBUG Nov 29: Log detallado para diagnosticar detección de YouTube
             logger.info(f"🧠 MENSAJE RECIBIDO de {user_name} ({user_id}): {user_message}")
+            logger.info(f"🔍 DEBUG YOUTUBE: text='{user_message}', caption='{update.message.caption}'")
+            logger.info(f"🔍 DEBUG YOUTUBE: entities={update.message.entities}")
+            logger.info(f"🔍 DEBUG YOUTUBE: reply_to={update.message.reply_to_message}")
+            if update.message.reply_to_message:
+                logger.info(f"🔍 DEBUG YOUTUBE: reply_text='{update.message.reply_to_message.text}', reply_caption='{update.message.reply_to_message.caption}'")
             logger.info(f"🎤 DEBUG: user_id='{user_id}', esperado='{settings.TELEGRAM_ADMIN_ID}', coincide={user_id == settings.TELEGRAM_ADMIN_ID}")
             
             # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier DB write
