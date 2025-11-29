@@ -86,6 +86,25 @@ class DatabaseServiceEnterprise:
             except Exception as e:
                 logger.warning(f"⚠️ settings no disponible: {e}")
         
+        # 🔧 FIX Nov 29, 2025 #2: Detectar si el VALUE incluye la KEY como prefijo
+        # Esto ocurre cuando Railway tiene: Key=DATABASE_URL, Value=DATABASE_URL=postgresql://...
+        if self.db_url:
+            # Detectar patrones incorrectos: DATABASE_URL=... o DATABASE_URL:...
+            if self.db_url.startswith('DATABASE_URL='):
+                self.db_url = self.db_url[len('DATABASE_URL='):]
+                # Propagar la corrección a os.environ para otros módulos
+                os.environ['DATABASE_URL'] = self.db_url
+                logger.warning("🔧 FIX APLICADO: Removido prefijo 'DATABASE_URL=' → propagado a os.environ")
+            elif self.db_url.startswith('DATABASE_URL:'):
+                self.db_url = self.db_url[len('DATABASE_URL:'):]
+                os.environ['DATABASE_URL'] = self.db_url
+                logger.warning("🔧 FIX APLICADO: Removido prefijo 'DATABASE_URL:' → propagado a os.environ")
+            elif self.db_url == 'DATABASE_URL':
+                # El valor ES literalmente la key (error de configuración)
+                logger.error("❌ DATABASE_URL contiene 'DATABASE_URL' literal - Error de configuración en Railway")
+                logger.error("   Revisa que el VALUE sea la URL real, no el nombre de la variable")
+                self.db_url = None
+        
         # 🔧 FIX: Railway usa postgres:// pero psycopg2 necesita postgresql://
         if self.db_url and self.db_url.startswith('postgres://'):
             self.db_url = self.db_url.replace('postgres://', 'postgresql://', 1)

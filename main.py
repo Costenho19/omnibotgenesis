@@ -72,8 +72,22 @@ logger.info("=" * 70)
 # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
 db_url = os.environ.get('DATABASE_URL')
 if db_url:
+    # 🔧 FIX Nov 29, 2025: Detectar si el VALUE incluye la KEY como prefijo
+    if db_url.startswith('DATABASE_URL='):
+        db_url = db_url[len('DATABASE_URL='):]
+        os.environ['DATABASE_URL'] = db_url
+        logger.warning("🔧 FIX: Removido prefijo 'DATABASE_URL=' del valor - Corrige tu Railway config")
+    elif db_url.startswith('DATABASE_URL:'):
+        db_url = db_url[len('DATABASE_URL:'):]
+        os.environ['DATABASE_URL'] = db_url
+        logger.warning("🔧 FIX: Removido prefijo 'DATABASE_URL:' del valor - Corrige tu Railway config")
+    
     logger.info(f"✅ DATABASE_URL ENCONTRADA: {len(db_url)} caracteres")
-    logger.info(f"   Preview: {db_url[:40]}...")
+    # Mostrar primeros caracteres seguros (sin exponer credenciales)
+    if db_url.startswith(('postgres://', 'postgresql://')):
+        logger.info(f"   Preview: {db_url[:25]}...")
+    else:
+        logger.info(f"   Preview: {db_url[:15]}... (formato inusual)")
 else:
     logger.error("❌ DATABASE_URL NO ENCONTRADA - LA MEMORIA NO FUNCIONARÁ")
     logger.error("   Variables disponibles: " + ", ".join(sorted([k for k in os.environ.keys() if 'DATA' in k.upper() or 'PG' in k.upper() or 'SQL' in k.upper()][:5])))
