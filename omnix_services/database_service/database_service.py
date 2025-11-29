@@ -1303,7 +1303,7 @@ class DatabaseServiceEnterprise:
             # tabla: (días_ttl, columna_timestamp, condición_adicional)
             # FIXED Nov 26, 2025: Corregidos nombres de columnas (created_at vs timestamp)
             cleanup_config = {
-                'conversations': (30, 'timestamp', None),
+                'conversations': (30, 'created_at', None),  # FIXED Nov 29: era 'timestamp'
                 'trades': (30, 'timestamp', None),
                 'risk_guardian_events': (30, 'timestamp', None),
                 'trade_reasonings': (90, 'created_at', None),  # FIXED: era 'timestamp'
@@ -1475,7 +1475,7 @@ class DatabaseServiceEnterprise:
                     user_message TEXT,
                     ai_response TEXT,
                     language TEXT,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
             
@@ -2077,9 +2077,9 @@ class DatabaseServiceEnterprise:
             ''')
             
             cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_conversations_user_timestamp 
-                ON conversations(user_id, timestamp DESC)
-            ''')
+                CREATE INDEX IF NOT EXISTS idx_conversations_user_created 
+                ON conversations(user_id, created_at DESC)
+            ''')  # FIXED Nov 29: era 'timestamp' pero tabla usa 'created_at'
             
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_balance_history_user_timestamp 
@@ -2572,10 +2572,10 @@ class DatabaseServiceEnterprise:
             
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT user_message, ai_response, timestamp 
+                SELECT user_message, ai_response, created_at 
                 FROM conversations 
                 WHERE user_id = %s 
-                ORDER BY timestamp DESC 
+                ORDER BY created_at DESC 
                 LIMIT %s
             ''', (str(chat_id), limit))
             
