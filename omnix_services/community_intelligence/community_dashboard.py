@@ -18,11 +18,11 @@ import json
 logger = logging.getLogger(__name__)
 
 try:
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    PSYCOPG2_AVAILABLE = True
+    from psycopg.rows import dict_row
+    PSYCOPG_AVAILABLE = True
 except ImportError:
-    PSYCOPG2_AVAILABLE = False
+    PSYCOPG_AVAILABLE = False
+    dict_row = None
 
 
 class CommunityDashboard:
@@ -55,7 +55,7 @@ class CommunityDashboard:
             return self._get_empty_stats()
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=dict_row)
             
             cursor.execute('''
                 SELECT 
@@ -170,7 +170,7 @@ class CommunityDashboard:
             return []
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=dict_row)
             
             cursor.execute('''
                 WITH feedback_stats AS (
@@ -255,7 +255,7 @@ class CommunityDashboard:
             return {'success': False, 'trends': []}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=dict_row)
             since_date = datetime.now() - timedelta(days=days)
             
             cursor.execute('''

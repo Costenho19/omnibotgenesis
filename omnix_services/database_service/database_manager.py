@@ -35,7 +35,7 @@ class DatabaseManager:
             
             health = self.enterprise_service.health_check()
             logger.info(f"🏥 Health Check:")
-            logger.info(f"   - psycopg2_available: {health.get('psycopg2_available', False)}")
+            logger.info(f"   - psycopg_available: {health.get('psycopg_available', False)}")
             logger.info(f"   - database_url_configured: {health.get('database_url_configured', False)}")
             logger.info(f"   - database_connected: {health.get('database_connected', False)}")
             
@@ -76,14 +76,13 @@ class DatabaseManager:
         """
         Retorna conexión PostgreSQL directa para módulos que la necesitan
         como AI Risk Guardian
+        
+        UPDATED Nov 29, 2025: Usa psycopg3 via DatabaseServiceEnterprise
         """
-        import psycopg2
+        if self.using_enterprise:
+            return self.enterprise_service._get_connection()
         
-        database_url = os.getenv('DATABASE_URL')
-        if not database_url:
-            raise Exception("DATABASE_URL no configurado")
-        
-        return psycopg2.connect(database_url)
+        raise Exception("DATABASE_URL no configurado - Enterprise service no disponible")
     
     def ensure_user_exists(self, user_id: str, username: str = None, 
                            first_name: str = None, language_code: str = 'es') -> bool:

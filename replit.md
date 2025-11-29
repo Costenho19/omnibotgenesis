@@ -72,7 +72,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - `numpy`, `scipy`, `ccxt`: Core trading and mathematical operations.
 - `google-generativeai`, `openai`: AI model integration.
 - `python-telegram-bot`: Telegram integration.
-- `psycopg2-binary`, `redis`: Database drivers.
+- `psycopg` (v3), `redis`: Database drivers (psycopg3 for native PostgreSQL URL support).
 - `requests`, `websockets`, `aiohttp`, `httpx`: HTTP and WebSocket communication.
 - `pypqc`: Post-quantum cryptography implementation.
 - `pandas`, `plotly`, `kaleido`, `reportlab`, `PyPDF2`: Professional testing and reporting.

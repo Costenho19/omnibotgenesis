@@ -17,12 +17,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-try:
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    PSYCOPG2_AVAILABLE = True
-except ImportError:
-    PSYCOPG2_AVAILABLE = False
 
 try:
     import google.generativeai as genai
