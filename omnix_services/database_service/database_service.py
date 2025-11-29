@@ -46,9 +46,45 @@ class DatabaseServiceEnterprise:
     """
     
     def __init__(self):
-        self.db_url = os.environ.get('DATABASE_URL')
+        self.db_url = None
         self.connected = False
         self.redis_client = None
+        db_url_source = None
+        
+        # 🔧 FIX Nov 29, 2025: Múltiples fuentes para DATABASE_URL
+        # Prioridad: os.environ > env_manager > settings
+        # Esto soluciona el problema de orden de carga en Railway
+        
+        # 1. Intentar os.environ primero (Railway/Replit inyectan aquí)
+        self.db_url = os.environ.get('DATABASE_URL')
+        if self.db_url:
+            db_url_source = "os.environ"
+        
+        # 2. Si no está en os.environ, intentar env_manager
+        if not self.db_url:
+            try:
+                from omnix_config.env_manager import env_config
+                self.db_url = env_config.get('DATABASE_URL')
+                if self.db_url:
+                    db_url_source = "env_manager"
+                    # También inyectar a os.environ para otros módulos
+                    os.environ['DATABASE_URL'] = self.db_url
+                    logger.info("🔄 DATABASE_URL cargada desde env_manager → inyectada a os.environ")
+            except Exception as e:
+                logger.warning(f"⚠️ env_manager no disponible: {e}")
+        
+        # 3. Si aún no está, intentar settings
+        if not self.db_url:
+            try:
+                from omnix_config.settings import settings
+                if hasattr(settings, 'database') and hasattr(settings.database, 'url'):
+                    self.db_url = settings.database.url
+                    if self.db_url:
+                        db_url_source = "settings"
+                        os.environ['DATABASE_URL'] = self.db_url
+                        logger.info("🔄 DATABASE_URL cargada desde settings → inyectada a os.environ")
+            except Exception as e:
+                logger.warning(f"⚠️ settings no disponible: {e}")
         
         # 🔧 FIX: Railway usa postgres:// pero psycopg2 necesita postgresql://
         if self.db_url and self.db_url.startswith('postgres://'):
@@ -58,14 +94,20 @@ class DatabaseServiceEnterprise:
         # Intentar conectar a Redis para tracking de cleanup
         if REDIS_AVAILABLE:
             try:
-                redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+                redis_url = os.environ.get('REDIS_URL')
+                if not redis_url:
+                    try:
+                        from omnix_config.env_manager import env_config
+                        redis_url = env_config.get('REDIS_URL', 'redis://localhost:6379')
+                    except:
+                        redis_url = 'redis://localhost:6379'
                 self.redis_client = redis.from_url(redis_url, decode_responses=True)
             except Exception as e:
                 logger.warning(f"Redis no disponible para cleanup tracking: {e}")
         
         # 🔍 DEBUG LOGGING MEJORADO PARA RAILWAY
         logger.info("=" * 70)
-        logger.info("🚀 INICIANDO DatabaseServiceEnterprise")
+        logger.info("🚀 INICIANDO DatabaseServiceEnterprise V6.2")
         logger.info(f"📊 PSYCOPG2_AVAILABLE: {PSYCOPG2_AVAILABLE}")
         
         if self.db_url:
@@ -73,9 +115,13 @@ class DatabaseServiceEnterprise:
             db_url_preview = self.db_url[:30] + "..." if len(self.db_url) > 30 else self.db_url
             logger.info(f"✅ DATABASE_URL detectada: {db_url_preview}")
             logger.info(f"📏 DATABASE_URL length: {len(self.db_url)} caracteres")
+            logger.info(f"📦 DATABASE_URL source: {db_url_source}")
         else:
-            logger.error("❌ DATABASE_URL NO ENCONTRADA en os.environ")
-            logger.info(f"🔑 Variables disponibles: {', '.join(sorted(os.environ.keys())[:10])}")
+            logger.error("❌ DATABASE_URL NO ENCONTRADA en ninguna fuente:")
+            logger.error("   - os.environ: No")
+            logger.error("   - env_manager: No")
+            logger.error("   - settings: No")
+            logger.info(f"🔑 Variables en os.environ: {', '.join(sorted([k for k in os.environ.keys() if 'DATABASE' in k.upper() or 'PG' in k.upper()])[:10])}")
             logger.info("=" * 70)
             return
         
