@@ -470,6 +470,13 @@ class AutoTradingBot:
             non_markovian = None
             if self.non_markovian_kernel and current_price:
                 try:
+                    kernel_history_len = self.non_markovian_kernel.get_history_length()
+                    min_required = 24
+                    
+                    if prices and len(prices) >= min_required and kernel_history_len < min_required:
+                        loaded = self.non_markovian_kernel.seed_history(prices, clear_existing=True)
+                        logger.debug(f"🧠 Kernel seeded with {loaded} prices (chronological order)")
+                    
                     non_markovian = self.non_markovian_kernel.generate_signal(
                         current_price=current_price,
                         market_data={'prices': prices} if prices else None
@@ -865,10 +872,10 @@ class AutoTradingBot:
                     # Convertir señales a formato Coherence Engine
                     strategy_signals = self._build_strategy_signals(
                         monte_carlo, black_swan, sentiment, kelly, 
-                        hmm_regime, kalman, quantum
+                        hmm_regime, kalman, quantum, non_markovian
                     )
                     
-                    # Analizar coherencia con todas las 9 estrategias
+                    # Analizar coherencia con todas las 10 estrategias V6.1
                     coherence_report = self.coherence_engine.analyze_coherence(strategy_signals)
                     
                     # Adjuntar reporte completo a decisión (para logging y análisis)
@@ -1963,10 +1970,10 @@ class AutoTradingBot:
         
         return params
     
-    def _build_strategy_signals(self, monte_carlo, black_swan, sentiment, kelly, hmm_regime, kalman, quantum):
+    def _build_strategy_signals(self, monte_carlo, black_swan, sentiment, kelly, hmm_regime, kalman, quantum, non_markovian=None):
         """
         Construye lista de StrategySignal para el Coherence Engine
-        Convierte señales de trading a formato estandarizado
+        Convierte señales de trading a formato estandarizado (10 estrategias V6.1)
         """
         if not COHERENCE_ENGINE_AVAILABLE:
             return []
@@ -2124,7 +2131,34 @@ class AutoTradingBot:
                 reasoning=f"Sentiment: {sent_score}/100"
             ))
         
-        # 8. Order Book Analysis (placeholder - no data aquí)
+        # 8. Non-Markovian Memory Kernel V6.1 (12-point weight in decision flow)
+        if non_markovian:
+            nm_signal = non_markovian.get('signal', 'HOLD')
+            nm_confidence = non_markovian.get('confidence', 0) / 100.0
+            metrics = non_markovian.get('metrics', {})
+            bullish_score = metrics.get('bullish_score', 0)
+            bearish_score = metrics.get('bearish_score', 0)
+            kernel_weight = 12.0
+            
+            if nm_signal == 'BUY':
+                signal_enum = Signal.BUY if nm_confidence < 0.7 else Signal.STRONG_BUY
+                strength = (bullish_score / 100.0) * kernel_weight
+            elif nm_signal == 'SELL':
+                signal_enum = Signal.SELL if nm_confidence < 0.7 else Signal.STRONG_SELL
+                strength = -(bearish_score / 100.0) * kernel_weight
+            else:
+                signal_enum = Signal.HOLD
+                strength = 0.0
+            
+            signals.append(StrategySignal(
+                name='non_markovian_kernel',
+                signal=signal_enum,
+                confidence=nm_confidence,
+                strength=strength,
+                reasoning=f"Memory: Bull={bullish_score:.1f} Bear={bearish_score:.1f} | {non_markovian.get('reason', '')}"
+            ))
+        
+        # 9. Order Book Analysis (placeholder - no data aquí)
         signals.append(StrategySignal(
             name='order_book',
             signal=Signal.HOLD,
@@ -2133,7 +2167,7 @@ class AutoTradingBot:
             reasoning="Order book neutral"
         ))
         
-        # 9. Sharia Compliance (placeholder - siempre OK si estamos evaluando)
+        # 10. Sharia Compliance (placeholder - siempre OK si estamos evaluando)
         signals.append(StrategySignal(
             name='sharia_compliance',
             signal=Signal.BUY,

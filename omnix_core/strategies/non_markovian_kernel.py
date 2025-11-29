@@ -30,7 +30,7 @@ OMNIX V6.1 ULTRA - Institutional Trading System
 import logging
 import numpy as np
 from typing import Dict, Optional, Tuple, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +142,63 @@ class NonMarkovianKernel:
             self._timestamp_history = self._timestamp_history[-self.window_size:]
         
         self._kernel_cache = None
+    
+    def get_history_length(self) -> int:
+        """
+        Get the current length of the price history buffer.
+        
+        Returns:
+            Number of price points in history
+        """
+        return len(self._price_history)
+    
+    def seed_history(self, prices: list, clear_existing: bool = True, 
+                     sampling_interval_hours: float = 1.0,
+                     anchor_timestamp: Optional[datetime] = None) -> int:
+        """
+        Seed the kernel with historical price data in chronological order.
+        
+        Timestamps are generated with proper temporal spacing to preserve
+        kernel decay calculations (τ=12h). The anchor timestamp represents
+        when the most recent price was observed.
+        
+        Args:
+            prices: List of prices in chronological order (oldest first)
+            clear_existing: If True, clear existing history before seeding
+            sampling_interval_hours: Time interval between samples in hours (default: 1h)
+            anchor_timestamp: Timestamp for the last price (defaults to now minus 1 interval)
+            
+        Returns:
+            Number of prices loaded
+        """
+        if clear_existing:
+            self._price_history = []
+            self._timestamp_history = []
+            self._kernel_cache = None
+        
+        prices_to_load = prices[-self.window_size:]
+        n_prices = len(prices_to_load)
+        
+        if n_prices == 0:
+            return 0
+        
+        interval_delta = timedelta(hours=sampling_interval_hours)
+        
+        if anchor_timestamp is None:
+            if self._timestamp_history:
+                anchor_timestamp = self._timestamp_history[-1]
+            else:
+                anchor_timestamp = datetime.utcnow() - interval_delta
+        
+        start_time = anchor_timestamp - (interval_delta * (n_prices - 1))
+        
+        for i, price in enumerate(prices_to_load):
+            timestamp = start_time + (interval_delta * i)
+            self._price_history.append(price)
+            self._timestamp_history.append(timestamp)
+        
+        self._kernel_cache = None
+        return n_prices
     
     def compute_memory_weighted_price(self) -> Optional[float]:
         """
