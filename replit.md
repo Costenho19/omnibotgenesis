@@ -3,16 +3,31 @@
 ### Overview
 OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
-### Recent Changes (Nov 28, 2025)
+### Recent Changes (Nov 29, 2025)
+
+**Robust Market Data System (V6.0.3):**
+- `_fetch_real_market_data()` now uses 3-source fallback: Kraken Auth → Kraken Public → CoinGecko
+- Robust JSON validation before accessing keys
+- 10-second timeout per source
+- Clear logging: [1/3], [2/3], [3/3] for each attempt
+- `data_source` field indicates which API provided the data
+
+**Strategic Honesty System:**
+- "Sinceridad Estratégica" - honest without sounding weak
+- 3 Commandments: Never say "no tengo X", never sound small/limited, never expose raw limitations
+- CEO-style responses: concise, data-driven, institutional tone
+- Reframing for Bloomberg/D-Wave/leverage questions with confident pivots
+
+**Leverage Validation (5x Maximum):**
+- Automatic detection of leverage requests via regex
+- Requests exceeding 5x are rejected with institutional explanation
+- AI instructed to block dangerous leverage operations
+
+### Previous Changes (Nov 28, 2025)
 
 **Conversation Memory Fix:**
-- `handle_message` (async) now saves conversations to PostgreSQL (previously only `handle_direct_message` saved)
-- `AIService._get_conversation_history` now loads from PostgreSQL if Redis is empty (survives restarts)
-
-**Real Market Data in AI Responses:**
-- `ConversationalAIAdapter._fetch_real_market_data()` fetches live Kraken data before generating responses
-- AI responses now include actual BTC price, spread (bps), volume, 24h range
-- Fallback to Kraken public API if authenticated API fails
+- `handle_message` (async) now saves conversations to PostgreSQL
+- `AIService._get_conversation_history` loads from PostgreSQL if Redis is empty
 
 **Leverage Validation:**
 - Automatic detection of leverage requests (regex: "10x", "leverage 5", "apalancamiento 8")
