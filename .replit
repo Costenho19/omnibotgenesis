@@ -5,27 +5,6 @@ channel = "stable-24_05"
 packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "arrow-cpp", "bzip2", "c-blosc", "cairo", "cargo", "ffmpeg", "ffmpeg-full", "fontconfig", "freetype", "ghostscript", "glib", "glibcLocales", "gmp", "gobject-introspection", "gtk3", "harfbuzz", "hdf5", "imagemagick", "imagemagickBig", "lcms2", "libGL", "libGLU", "libffi", "libiconv", "libimagequant", "libjpeg", "libpng", "libsodium", "libtiff", "libuv", "libwebp", "libxcrypt", "lzo", "openjpeg", "openssl", "pango", "pkg-config", "portaudio", "portmidi", "postgresql", "qhull", "railway", "rustc", "sqlite", "tcl", "tk", "xcodebuild", "xsimd", "zlib"]
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Code Verification"
-
-[[workflows.workflow]]
-name = "Code Verification"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -u verify_code.py"
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [[ports]]
 localPort = 5000
