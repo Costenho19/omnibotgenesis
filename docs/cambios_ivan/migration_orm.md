@@ -107,24 +107,29 @@
 
 ## 🎯 VISIÓN GENERAL
 
-### Estado Actual (Baseline)
+### Estado Actual (Baseline) - ACTUALIZADO Nov 29, 2025
 ```
 omnix_services/database_service/
-└── database_service.py (2,360 líneas)
-    ├── SQL puro con psycopg2
-    ├── 23 tablas manuales
-    ├── 22 métodos DAL
-    ├── 3 migraciones manuales idempotentes
-    └── Sistema TTL cleanup automático
+└── database_service.py (~2,500 líneas)
+    ├── SQL puro con psycopg3 (migrado desde psycopg2)
+    ├── 28 tablas activas
+    ├── 22+ métodos DAL centralizados
+    ├── 100% módulos usan DatabaseServiceEnterprise
+    ├── Migraciones idempotentes automáticas
+    └── Sistema TTL cleanup + FK constraints
 ```
 
-**Problemas Identificados**:
-- ❌ No hay ORM (type safety débil, riesgo de errores)
-- ❌ Migraciones manuales (error-prone, no versionadas)
-- ❌ SQL concatenado (riesgo potencial de injection)
-- ❌ No hay API REST (inversores no pueden consultar datos)
-- ❌ Testing difícil (no hay mocks, tests acoplados a DB)
-- ❌ No async-ready (limitado para escalar)
+**Estado V6.3 (Nov 29, 2025)**:
+- ✅ Migración completa psycopg2 → psycopg3 (soporte nativo DATABASE_URL)
+- ✅ 100% centralización - todos los módulos usan DatabaseServiceEnterprise
+- ✅ dict_row en lugar de RealDictCursor
+- ✅ Conexión SSL automática para Railway
+
+**Mejoras Pendientes (Futuro ORM)**:
+- ⏳ No hay ORM (type safety débil, riesgo de errores)
+- ⏳ Migraciones manuales (error-prone, no versionadas)
+- ⏳ No hay API REST (inversores no pueden consultar datos)
+- ⏳ Testing difícil (no hay mocks, tests acoplados a DB)
 
 ### Arquitectura Objetivo
 
