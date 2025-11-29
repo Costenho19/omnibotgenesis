@@ -2715,21 +2715,63 @@ Ejemplo: /risk_events 48
                             logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
                     
                     # Construir contexto para la IA con el análisis del video
-                    video_context = f"El usuario pidió analizar este video de YouTube: {video_url}\n\n"
+                    video_context = f"ANÁLISIS DE VIDEO DE YOUTUBE: {video_url}\n\n"
+                    has_real_content = False
                     
                     if video_analysis and video_analysis.get('status') == 'success':
                         # Incluir resultados del análisis
                         if 'transcript_analysis' in video_analysis:
                             ta = video_analysis['transcript_analysis']
                             video_context += f"📝 TRANSCRIPCIÓN ANALIZADA:\n"
-                            if ta.get('trading_strategy'):
-                                video_context += f"- Estrategia: {ta['trading_strategy']}\n"
+                            
+                            # Nuevo formato: summary y key_insights del análisis IA
+                            if ta.get('summary'):
+                                video_context += f"📋 RESUMEN: {ta['summary']}\n\n"
+                                has_real_content = True
+                            
+                            if ta.get('trading_strategy') or ta.get('strategy'):
+                                strategy = ta.get('trading_strategy') or ta.get('strategy')
+                                video_context += f"🎯 Estrategia: {strategy}\n"
+                                has_real_content = True
+                            
                             if ta.get('timeframe'):
-                                video_context += f"- Timeframe: {ta['timeframe']}\n"
-                            if ta.get('technical_parameters'):
-                                video_context += f"- Parámetros técnicos: {ta['technical_parameters']}\n"
-                            if ta.get('assets_mentioned'):
-                                video_context += f"- Activos mencionados: {', '.join(ta['assets_mentioned'])}\n"
+                                video_context += f"⏱️ Timeframe: {ta['timeframe']}\n"
+                            
+                            if ta.get('assets_mentioned') or ta.get('assets'):
+                                assets = ta.get('assets_mentioned') or ta.get('assets', [])
+                                if assets:
+                                    video_context += f"💰 Activos: {', '.join(assets) if isinstance(assets, list) else assets}\n"
+                            
+                            if ta.get('indicators'):
+                                video_context += f"📊 Indicadores: {ta['indicators']}\n"
+                            
+                            if ta.get('key_insights'):
+                                insights = ta['key_insights']
+                                if isinstance(insights, list):
+                                    video_context += f"💡 Puntos clave:\n"
+                                    for i, insight in enumerate(insights[:5], 1):
+                                        video_context += f"   {i}. {insight}\n"
+                                    has_real_content = True
+                            
+                            if ta.get('risk_management'):
+                                rm = ta['risk_management']
+                                video_context += f"🛡️ Gestión de riesgo: {rm}\n"
+                            
+                            if ta.get('entry_exit'):
+                                ee = ta['entry_exit']
+                                video_context += f"🚀 Entrada/Salida: {ee}\n"
+                            
+                            # Technical parameters (formato antiguo)
+                            if ta.get('technical_parameters') and isinstance(ta['technical_parameters'], dict):
+                                params = ta['technical_parameters']
+                                if params:
+                                    video_context += f"📈 Parámetros técnicos: {params}\n"
+                            
+                            # Raw text parcial si no hay análisis estructurado
+                            if not has_real_content and ta.get('raw_text'):
+                                raw = ta['raw_text'][:2000]
+                                video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO:\n{raw}\n"
+                                has_real_content = True
                         
                         if 'visual_analysis' in video_analysis:
                             va = video_analysis['visual_analysis']
@@ -2747,9 +2789,27 @@ Ejemplo: /risk_events 48
                             ir = video_analysis['integrated_recommendations']
                             video_context += f"\n🧠 RECOMENDACIONES INTEGRADAS:\n{ir}\n"
                         
-                        video_context += f"\nConfianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
-                    else:
-                        video_context += "No se pudo obtener análisis detallado del video. Proporciona un resumen basado en el contexto de la conversación y el tipo de video de trading que podría ser."
+                        video_context += f"\n✅ Confianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
+                    
+                    if not has_real_content:
+                        # Fallback: intentar obtener transcripción directamente
+                        try:
+                            from youtube_transcript_api import YouTubeTranscriptApi
+                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
+                            if video_id_match:
+                                video_id = video_id_match.group(1)
+                                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                                for t in transcript_list:
+                                    data = t.fetch()
+                                    full_text = ' '.join([e['text'] for e in data])
+                                    video_context += f"\n📜 TRANSCRIPCIÓN DIRECTA DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                    has_real_content = True
+                                    break
+                        except Exception as fallback_err:
+                            logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
+                    
+                    if not has_real_content:
+                        video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
                     
                     video_context += f"\n\nMensaje original del usuario: {user_message}"
                     

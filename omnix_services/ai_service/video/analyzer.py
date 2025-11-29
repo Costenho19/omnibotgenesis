@@ -191,10 +191,18 @@ class VideoAnalyzerUltra:
             
             return {
                 'raw_text': transcript,
-                'technical_parameters': analysis.get('parameters', {}),
+                'technical_parameters': analysis.get('indicators', {}),
                 'trading_strategy': analysis.get('strategy', ''),
+                'strategy': analysis.get('strategy', ''),
                 'timeframe': analysis.get('timeframe', ''),
                 'assets_mentioned': analysis.get('assets', []),
+                'assets': analysis.get('assets', []),
+                'indicators': analysis.get('indicators', {}),
+                'levels': analysis.get('levels', {}),
+                'entry_exit': analysis.get('entry_exit', {}),
+                'risk_management': analysis.get('risk_management', {}),
+                'key_insights': analysis.get('key_insights', []),
+                'summary': analysis.get('summary', ''),
                 'confidence': analysis.get('confidence', 0.0)
             }
             
@@ -636,22 +644,153 @@ Responde en JSON:
         return None
     
     def _get_transcript(self, video_id: str) -> Optional[str]:
-        """Obtener transcripción del video (stub - implementar con youtube-transcript-api)"""
-        # TODO: Implementar extracción real de transcripción
+        """Obtener transcripción REAL del video usando youtube-transcript-api"""
         logger.info(f"📝 Obteniendo transcripción de video {video_id}...")
-        return "Transcripción de ejemplo - implementar extracción real"
+        
+        try:
+            from youtube_transcript_api import YouTubeTranscriptApi
+            from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
+            
+            try:
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                
+                transcript = None
+                for lang in ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']:
+                    try:
+                        transcript = transcript_list.find_transcript([lang])
+                        break
+                    except:
+                        continue
+                
+                if not transcript:
+                    try:
+                        transcript = transcript_list.find_generated_transcript(['es', 'en'])
+                    except:
+                        for t in transcript_list:
+                            transcript = t
+                            break
+                
+                if transcript:
+                    transcript_data = transcript.fetch()
+                    full_text = ' '.join([entry['text'] for entry in transcript_data])
+                    logger.info(f"✅ Transcripción obtenida: {len(full_text)} caracteres, idioma: {transcript.language}")
+                    return full_text
+                else:
+                    logger.warning(f"⚠️ No se encontró transcripción para video {video_id}")
+                    return None
+                    
+            except TranscriptsDisabled:
+                logger.warning(f"⚠️ Transcripciones deshabilitadas para video {video_id}")
+                return None
+            except NoTranscriptFound:
+                logger.warning(f"⚠️ No hay transcripción disponible para video {video_id}")
+                return None
+            except VideoUnavailable:
+                logger.warning(f"⚠️ Video {video_id} no disponible")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo transcripción: {e}")
+            return None
     
     def _extract_technical_parameters(self, transcript: str) -> Dict:
         """Extraer parámetros técnicos de la transcripción con IA"""
-        # Usar el mismo enfoque que VideoLearningAnalyzer
-        # TODO: Integrar con IA para extracción
-        return {
-            'parameters': {},
-            'strategy': '',
-            'timeframe': '',
-            'assets': [],
-            'confidence': 0.7
-        }
+        logger.info(f"🧠 Analizando transcripción con IA ({len(transcript)} chars)...")
+        
+        try:
+            if self.openai_client:
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": """Eres un experto en trading. Analiza la transcripción y extrae:
+1. Estrategia principal mencionada
+2. Timeframe recomendado (M1, M5, M15, H1, H4, D1, W1)
+3. Activos/criptomonedas mencionados
+4. Indicadores técnicos (RSI, MACD, EMA, etc.) con sus configuraciones
+5. Niveles de soporte/resistencia si se mencionan
+6. Puntos de entrada/salida recomendados
+7. Gestión de riesgo (stop loss, take profit, ratio R:R)
+
+Responde en JSON con esta estructura:
+{
+    "strategy": "nombre de la estrategia",
+    "timeframe": "timeframe principal",
+    "assets": ["lista", "de", "activos"],
+    "indicators": {"RSI": "14", "EMA": "9,21"},
+    "levels": {"support": [], "resistance": []},
+    "entry_exit": {"entry": "descripción", "exit": "descripción"},
+    "risk_management": {"stop_loss": "", "take_profit": "", "risk_reward": ""},
+    "key_insights": ["punto clave 1", "punto clave 2"],
+    "summary": "resumen ejecutivo del video en 2-3 oraciones"
+}"""
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Analiza esta transcripción de video de trading:\n\n{transcript[:8000]}"
+                        }
+                    ],
+                    temperature=0.3,
+                    max_tokens=1500
+                )
+                
+                result_text = response.choices[0].message.content
+                
+                try:
+                    import json
+                    if '```json' in result_text:
+                        result_text = result_text.split('```json')[1].split('```')[0]
+                    elif '```' in result_text:
+                        result_text = result_text.split('```')[1].split('```')[0]
+                    
+                    analysis = json.loads(result_text.strip())
+                    analysis['confidence'] = 0.85
+                    logger.info(f"✅ Análisis IA completado: estrategia={analysis.get('strategy', 'N/A')}")
+                    return analysis
+                except json.JSONDecodeError:
+                    logger.warning("⚠️ No se pudo parsear JSON, retornando texto raw")
+                    return {
+                        'raw_analysis': result_text,
+                        'strategy': 'Ver análisis completo',
+                        'summary': result_text[:500],
+                        'confidence': 0.7
+                    }
+                    
+            elif self.gemini_client:
+                model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
+                prompt = f"""Analiza esta transcripción de video de trading y extrae los puntos clave, estrategias, indicadores mencionados, y recomendaciones:
+
+{transcript[:8000]}
+
+Proporciona un análisis estructurado con:
+1. Resumen ejecutivo
+2. Estrategia principal
+3. Indicadores y configuraciones
+4. Puntos de entrada/salida
+5. Gestión de riesgo"""
+                
+                response = model.generate_content(prompt)
+                return {
+                    'summary': response.text,
+                    'strategy': 'Ver análisis completo',
+                    'confidence': 0.75
+                }
+            else:
+                return {
+                    'raw_text': transcript[:2000],
+                    'strategy': 'Análisis manual requerido',
+                    'summary': f'Transcripción disponible ({len(transcript)} caracteres). Sin IA para análisis automático.',
+                    'confidence': 0.5
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Error en análisis IA: {e}")
+            return {
+                'raw_text': transcript[:1000] if transcript else '',
+                'error': str(e),
+                'confidence': 0.3
+            }
     
     def _extract_key_frames(self, video_url: str, num_frames: int) -> List[str]:
         """
