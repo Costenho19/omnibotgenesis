@@ -103,7 +103,25 @@ User Communication Preference: Simple, everyday language (Spanish primary).
   - `omnix_services/ai_service/conversational_ai_adapter.py` - Lines 103-118 (robust chat_id parsing)
   - `omnix_services/database_service/database_service.py` - Lines 1413-1431 (column migration)
 
-#### YouTube Video Analysis Fix V2 (Nov 29, 2025 - Latest)
+#### YouTube Video Analysis Fix V3 - yt-dlp Fallback (Nov 29, 2025 - Latest)
+- **Problem**: `youtube-transcript-api` returning XML parsing errors "no element found: line 1, column 0" - YouTube rate-limiting or blocking Railway IP
+- **Root Cause**: YouTube API returning empty/malformed responses to Railway server IP, affecting both `get_transcript()` and `list_transcripts()` methods
+- **Solution**: Added `yt-dlp` as third fallback method - more robust library that downloads subtitles differently
+- **Enhanced Fallback Chain** (4 levels):
+  1. VideoAnalyzerUltra with `_get_transcript()` (uses `get_transcript()` first, then `list_transcripts()`)
+  2. If above fails → `_get_transcript_ytdlp()` using yt-dlp library
+  3. Direct youtube-transcript-api in handlers (redundant safety)
+  4. Final yt-dlp call in handlers
+  5. Error message if all fail
+- **New Methods Added**:
+  - `_get_transcript_ytdlp(video_id)` - Downloads VTT subtitles using yt-dlp
+  - `_parse_vtt(vtt_content)` - Parses VTT format to plain text
+- **Files Modified**:
+  - `requirements.txt` - Added `yt-dlp>=2024.1.0`
+  - `omnix_services/ai_service/video/analyzer.py` - Added _get_transcript_ytdlp() and _parse_vtt() methods, integrated yt-dlp fallback in _get_transcript()
+  - `omnix_services/telegram_service/enterprise_bot.py` - Added yt-dlp fallback to both handle_message and handle_direct_message handlers
+
+#### YouTube Video Analysis Fix V2 (Nov 29, 2025)
 - **Problem**: Videos still showing "no puedo interactuar con videos" despite VideoAnalyzerUltra existing
 - **Root Cause Multiple Issues**:
   1. `handle_direct_message` (sync handler) used old auto-learning path instead of VideoAnalyzerUltra
@@ -119,10 +137,6 @@ User Communication Preference: Simple, everyday language (Spanish primary).
   - **Fixed ensure_user_exists** to check if `last_activity` column exists before using it
   - **Added early return** after video processing to avoid thinking_message_id error
   - **Added extensive logging** for debugging transcript extraction failures
-- **Files Modified**:
-  - `omnix_services/ai_service/video/analyzer.py` - Lines 649-718 (_get_transcript with dual methods)
-  - `omnix_services/telegram_service/enterprise_bot.py` - Lines 224-254 (separated initialization), 4088-4243 (video handling in handle_direct_message), 2803-2842 (video handling in handle_message)
-  - `omnix_services/database_service/database_service.py` - Lines 2517-2548 (conditional last_activity handling)
 
 #### Critical Architecture Fix: Trading System Instance
 - **Problem**: `/balance` and other commands used undefined `global_trading_system` variable instead of the properly initialized `self.trading` instance
