@@ -4085,141 +4085,159 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                 youtube_pattern = r'(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)'
                 youtube_match = re.search(youtube_pattern, text)
                 
-                if youtube_match and self.auto_trading and hasattr(self.auto_trading, 'process_video_learning'):
-                    logger.info("🎬 URL de YouTube detectada - procesando con auto-learning")
+                if youtube_match:
+                    logger.info("🎬 URL de YouTube detectada en handle_direct_message")
                     
                     video_url = youtube_match.group(0)
+                    if not video_url.startswith('http'):
+                        video_url = 'https://' + video_url
                     
                     # Enviar mensaje de procesamiento
                     send_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendMessage"
                     processing_data = {
                         'chat_id': chat_id,
-                        'text': "🎬 Video de YouTube detectado - Analizando con IA...",
+                        'text': "🎬 Video de YouTube detectado - Analizando transcripción con IA...",
                         'parse_mode': 'Markdown'
                     }
                     requests.post(send_url, json=processing_data)
                     
-                    # PASO 1: Primero, obtener respuesta de IA sobre el video
-                    logger.info("🧠 Analizando video con IA conversacional...")
-                    ai_response = ""
+                    # FIX Nov 29, 2025: USAR VideoAnalyzerUltra para obtener transcripción REAL
+                    video_context = f"ANÁLISIS DE VIDEO DE YOUTUBE: {video_url}\n\n"
+                    has_real_content = False
+                    
+                    # PASO 1: Intentar con VideoAnalyzerUltra (preferido)
+                    if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
+                        logger.info("🎬 Usando VideoAnalyzerUltra para análisis en handle_direct_message")
+                        try:
+                            video_analysis = self.video_analyzer_ultra.analyze_video_complete(video_url, extract_frames=False)
+                            if video_analysis and video_analysis.get('status') == 'success':
+                                logger.info(f"✅ VideoAnalyzerUltra completó análisis: {video_analysis.get('confidence_score', 0):.2%}")
+                                
+                                if 'transcript_analysis' in video_analysis:
+                                    ta = video_analysis['transcript_analysis']
+                                    
+                                    if ta.get('summary'):
+                                        video_context += f"📋 RESUMEN: {ta['summary']}\n\n"
+                                        has_real_content = True
+                                    
+                                    if ta.get('trading_strategy') or ta.get('strategy'):
+                                        strategy = ta.get('trading_strategy') or ta.get('strategy')
+                                        video_context += f"🎯 Estrategia: {strategy}\n"
+                                        has_real_content = True
+                                    
+                                    if ta.get('timeframe'):
+                                        video_context += f"⏱️ Timeframe: {ta['timeframe']}\n"
+                                    
+                                    if ta.get('indicators'):
+                                        video_context += f"📊 Indicadores: {ta['indicators']}\n"
+                                    
+                                    if ta.get('key_insights'):
+                                        insights = ta['key_insights']
+                                        if isinstance(insights, list):
+                                            video_context += f"💡 Puntos clave:\n"
+                                            for i, insight in enumerate(insights[:5], 1):
+                                                video_context += f"   {i}. {insight}\n"
+                                            has_real_content = True
+                                    
+                                    if ta.get('risk_management'):
+                                        video_context += f"🛡️ Gestión de riesgo: {ta['risk_management']}\n"
+                                    
+                                    if ta.get('entry_exit'):
+                                        video_context += f"🚀 Entrada/Salida: {ta['entry_exit']}\n"
+                                    
+                                    if not has_real_content and ta.get('raw_text'):
+                                        raw = ta['raw_text'][:2000]
+                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO:\n{raw}\n"
+                                        has_real_content = True
+                                
+                                video_context += f"\n✅ Confianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
+                        except Exception as va_error:
+                            logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
+                    
+                    # PASO 2: Fallback directo a youtube-transcript-api
+                    if not has_real_content:
+                        logger.info("🔄 Fallback: Intentando youtube-transcript-api directamente")
+                        try:
+                            from youtube_transcript_api import YouTubeTranscriptApi
+                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
+                            if video_id_match:
+                                video_id = video_id_match.group(1)
+                                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                                for t in transcript_list:
+                                    data = t.fetch()
+                                    full_text = ' '.join([e['text'] for e in data])
+                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                    has_real_content = True
+                                    logger.info(f"✅ Transcripción directa obtenida: {len(full_text)} chars")
+                                    break
+                        except Exception as fallback_err:
+                            logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
+                    
+                    if not has_real_content:
+                        video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
+                    
+                    video_context += f"\n\nMensaje original del usuario: {text}"
+                    
+                    # PASO 3: Generar respuesta con IA usando el contexto del video
+                    logger.info(f"🧠 Enviando a IA con contexto de video: {len(video_context)} chars")
+                    response_text = ""
                     try:
-                        # Usar IA para analizar el video
-                        ai_prompt = f"Analiza este video de trading de YouTube y extrae insights técnicos (RSI levels, EMA periods, MACD settings, etc.): {video_url}"
-                        
-                        # FIX Nov 29, 2025: Ejecutar coroutine síncronamente en handler sync
-                        import asyncio
-                        
-                        # Intentar generar respuesta con IA
                         if hasattr(self.ai, 'generate_response'):
-                            # FIX CRÍTICO Nov 29, 2025: Pasar chat_id y user_id para memoria
-                            # generate_response puede ser async - ejecutar síncronamente
+                            import asyncio
                             result = self.ai.generate_response(
-                                user_message=ai_prompt,
+                                user_message=video_context,
                                 user_name="Harold",
                                 chat_id=str(chat_id),
                                 user_id=str(effective_user_id),
                                 trading_system=self.trading
                             )
                             if asyncio.iscoroutine(result):
-                                # Es una coroutine, ejecutar en el event loop
                                 try:
                                     loop = asyncio.get_event_loop()
                                     if loop.is_running():
-                                        # Ya hay un loop running, usar run_coroutine_threadsafe
                                         import concurrent.futures
                                         future = asyncio.run_coroutine_threadsafe(result, loop)
-                                        ai_response = future.result(timeout=30)
+                                        response_text = future.result(timeout=30)
                                     else:
-                                        ai_response = loop.run_until_complete(result)
+                                        response_text = loop.run_until_complete(result)
                                 except Exception as async_err:
                                     logger.warning(f"⚠️ Error ejecutando coroutine: {async_err}")
-                                    ai_response = f"Análisis de video de trading: {video_url}"
                             else:
-                                ai_response = result
-                        elif hasattr(self.ai, 'ask'):
-                            ai_response = self.ai.ask(ai_prompt, str(user_id))
+                                response_text = result
                         
-                        # Validar que ai_response es un string
-                        if not isinstance(ai_response, str):
-                            ai_response = str(ai_response) if ai_response else f"Análisis de video de trading: {video_url}"
+                        if not response_text or not isinstance(response_text, str):
+                            response_text = f"🎬 Recibí el video pero tuve problemas procesándolo. ¿Puedes decirme qué aspecto te gustaría que analice?"
                         
-                        logger.info(f"✅ IA analizó video: {len(ai_response)} caracteres")
+                        logger.info(f"✅ IA respondió al video: {len(response_text)} chars")
                     except Exception as ai_error:
                         logger.warning(f"⚠️ Error IA en video: {ai_error}")
-                        ai_response = f"Análisis de video de trading: {video_url}"
-                    
-                    # PASO 2: Procesar con video learning system
-                    auto_apply = False
-                    if self.auto_trading.auto_learning:
-                        auto_apply = self.auto_trading.auto_learning.enabled
-                    
-                    result = self.auto_trading.process_video_learning(
-                        video_url=video_url,
-                        ai_response=ai_response,
-                        auto_apply=auto_apply
-                    )
-                    
-                    # PASO 3: Generar respuesta premium para Harold
-                    if result.get('success'):
-                        proposals = result.get('proposals', [])
-                        applied = result.get('applied', [])
-                        
-                        response_text = f"""🎓 ANÁLISIS DE VIDEO COMPLETADO
-
-📹 Video: {video_url}
-🧠 Confianza análisis: {result.get('confidence', 0)*100:.0f}%
-
-"""
-                        if proposals:
-                            response_text += f"💡 PROPUESTAS DETECTADAS: {len(proposals)}\n\n"
-                            for i, prop in enumerate(proposals[:5], 1):
-                                response_text += f"{i}. {prop['param_name']}: {prop['new_value']:.2f}\n"
-                                response_text += f"   📝 {prop['reason']}\n\n"
-                            
-                            if len(proposals) > 5:
-                                response_text += f"... y {len(proposals) - 5} propuestas más\n\n"
-                        
-                        if auto_apply and applied:
-                            response_text += f"""✅ CAMBIOS APLICADOS AUTOMÁTICAMENTE: {len(applied)}
-
-🎓 Auto-Learning está ACTIVADO
-Los parámetros fueron ajustados automáticamente
-
-"""
-                        elif auto_apply and not applied:
-                            response_text += """⏸️ AUTO-LEARNING ACTIVADO pero no se aplicaron cambios
-(Propuestas fuera de rangos seguros o bloqueadas)
-
-"""
-                        else:
-                            response_text += """⏸️ AUTO-LEARNING DESACTIVADO
-
-💡 Para aplicar estos cambios automáticamente:
-• Usa /activar_auto_ajuste
-• O responde "aplicar" para aprobar manualmente
-
-"""
-                        
-                        response_text += """📊 COMANDOS:
-/ver_aprendizaje → Ver historial completo
-/revertir_cambio → Deshacer último cambio
-/activar_auto_ajuste → Activar modo automático
-/pausar_auto_ajuste → Pausar modo automático
-
-🎓 Sistema Premium V5.2.3 operativo"""
-                    else:
-                        response_text = f"❌ Error procesando video: {result.get('error', 'Error desconocido')}"
+                        response_text = f"🎬 Hubo un error analizando el video. Por favor, intenta de nuevo."
                     
                     # Enviar respuesta
                     data = {
                         'chat_id': chat_id,
-                        'text': response_text,
+                        'text': response_text[:4000],
                         'parse_mode': 'Markdown'
                     }
                     requests.post(send_url, json=data)
                     
-                    # Continuar normalmente (no return aquí, dejar que el flujo continúe)
                     final_response_text = response_text
+                    
+                    # Guardar en DB
+                    if self.db_manager:
+                        try:
+                            self.db_manager.save_conversation(
+                                user_id=effective_user_id,
+                                user_message=f"[VIDEO YOUTUBE: {video_url}] {text}",
+                                ai_response=response_text[:1000],
+                                language='es'
+                            )
+                        except Exception as db_error:
+                            logger.warning(f"⚠️ Error guardando conversación de video: {db_error}")
+                    
+                    # FIX Nov 29, 2025: RETURN aquí para evitar error thinking_message_id
+                    logger.info(f"✅ Video procesado exitosamente en handle_direct_message - saliendo")
+                    return
                 
                 # HAROLD PRIMERO: Mostrar indicador de pensamiento estilo ChatGPT/Gemini
                 send_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendMessage"

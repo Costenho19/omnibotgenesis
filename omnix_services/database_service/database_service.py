@@ -2513,17 +2513,36 @@ class DatabaseServiceEnterprise:
             
             logger.info(f"✅ Executing UPSERT for user {user_id} (username={username_safe}, first_name={first_name_safe})")
             
-            # UPSERT: INSERT ON CONFLICT DO UPDATE
-            # Si el usuario ya existe (PK conflict), solo actualiza last_activity y metadata
+            # FIX Nov 29, 2025: Verificar si columna last_activity existe antes de usarla
+            # Esto evita error si la migración no se ejecutó en Railway
             cursor.execute('''
-                INSERT INTO users (user_id, username, first_name, language_code, created_at, last_activity)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (user_id) DO UPDATE SET
-                    last_activity = CURRENT_TIMESTAMP,
-                    username = COALESCE(EXCLUDED.username, users.username),
-                    first_name = COALESCE(EXCLUDED.first_name, users.first_name),
-                    language_code = COALESCE(EXCLUDED.language_code, users.language_code)
-            ''', (user_id, username_safe, first_name_safe, language_code))
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name = 'users' AND column_name = 'last_activity'
+            ''')
+            has_last_activity = cursor.fetchone() is not None
+            
+            if has_last_activity:
+                # UPSERT con last_activity
+                cursor.execute('''
+                    INSERT INTO users (user_id, username, first_name, language_code, created_at, last_activity)
+                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        last_activity = CURRENT_TIMESTAMP,
+                        username = COALESCE(EXCLUDED.username, users.username),
+                        first_name = COALESCE(EXCLUDED.first_name, users.first_name),
+                        language_code = COALESCE(EXCLUDED.language_code, users.language_code)
+                ''', (user_id, username_safe, first_name_safe, language_code))
+            else:
+                # UPSERT SIN last_activity (tabla legacy)
+                logger.warning("⚠️ Columna last_activity no existe - usando UPSERT legacy")
+                cursor.execute('''
+                    INSERT INTO users (user_id, username, first_name, language_code, created_at)
+                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        username = COALESCE(EXCLUDED.username, users.username),
+                        first_name = COALESCE(EXCLUDED.first_name, users.first_name),
+                        language_code = COALESCE(EXCLUDED.language_code, users.language_code)
+                ''', (user_id, username_safe, first_name_safe, language_code))
             
             conn.commit()
             cursor.close()
