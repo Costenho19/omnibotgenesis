@@ -103,20 +103,26 @@ User Communication Preference: Simple, everyday language (Spanish primary).
   - `omnix_services/ai_service/conversational_ai_adapter.py` - Lines 103-118 (robust chat_id parsing)
   - `omnix_services/database_service/database_service.py` - Lines 1413-1431 (column migration)
 
-#### YouTube Video Analysis Fix (Complete Implementation - Nov 29, 2025)
-- **Problem**: Bot detected YouTube videos but couldn't explain their content - said "necesito acceso al video"
-- **Root Cause**: The `_get_transcript()` function in `VideoAnalyzerUltra` was a stub that returned fake text instead of real YouTube transcriptions
-- **Solution**: 
-  - Implemented REAL transcript extraction using `youtube-transcript-api` library
-  - Added multi-language support (es, en, es-419, es-ES, en-US, en-GB) with auto-generated fallback
-  - Implemented `_extract_technical_parameters()` with GPT-4o-mini analysis (Gemini 2.0 Flash fallback)
-  - AI extracts: strategy, timeframe, assets, indicators, entry/exit points, risk management, key insights, summary
-  - Enhanced `handle_message` handler to use new analysis fields (summary, key_insights, indicators, etc.)
-  - Added direct fallback transcript extraction if VideoAnalyzerUltra fails
-  - Proper error handling for disabled transcripts, unavailable videos, and API failures
+#### YouTube Video Analysis Fix V2 (Nov 29, 2025 - Latest)
+- **Problem**: Videos still showing "no puedo interactuar con videos" despite VideoAnalyzerUltra existing
+- **Root Cause Multiple Issues**:
+  1. `handle_direct_message` (sync handler) used old auto-learning path instead of VideoAnalyzerUltra
+  2. `_get_transcript()` used `list_transcripts()` which can fail with XML parsing errors on some videos
+  3. Fallback logic not executing properly when VideoAnalyzerUltra returned 0% confidence
+  4. `last_activity` column missing in Railway database causing UPSERT failures
+  5. `thinking_message_id` undefined error when video processing completed
+- **Solution**:
+  - **Separated VideoAnalyzerUltra initialization** into its own try-block (won't fail if VideoLearningIntegration fails)
+  - **Rewrote handle_direct_message video handling** to use VideoAnalyzerUltra with proper fallback chain
+  - **Added get_transcript() as primary method** (more robust than list_transcripts for problematic videos)
+  - **Enhanced fallback chain**: VideoAnalyzerUltra → get_transcript() direct → list_transcripts() → error message
+  - **Fixed ensure_user_exists** to check if `last_activity` column exists before using it
+  - **Added early return** after video processing to avoid thinking_message_id error
+  - **Added extensive logging** for debugging transcript extraction failures
 - **Files Modified**:
-  - `omnix_services/ai_service/video/analyzer.py` - Lines 641-788 (complete rewrite of _get_transcript and _extract_technical_parameters)
-  - `omnix_services/telegram_service/enterprise_bot.py` - Lines 2720-2815 (enhanced video_context building with new fields)
+  - `omnix_services/ai_service/video/analyzer.py` - Lines 649-718 (_get_transcript with dual methods)
+  - `omnix_services/telegram_service/enterprise_bot.py` - Lines 224-254 (separated initialization), 4088-4243 (video handling in handle_direct_message), 2803-2842 (video handling in handle_message)
+  - `omnix_services/database_service/database_service.py` - Lines 2517-2548 (conditional last_activity handling)
 
 #### Critical Architecture Fix: Trading System Instance
 - **Problem**: `/balance` and other commands used undefined `global_trading_system` variable instead of the properly initialized `self.trading` instance
