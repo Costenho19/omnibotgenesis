@@ -2838,6 +2838,21 @@ Ejemplo: /risk_events 48
                         except Exception as fallback_err:
                             logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
                     
+                    # MÉTODO 3: yt-dlp (fallback final más robusto)
+                    if not has_real_content:
+                        logger.info("🔧 Fallback final en handle_message: Intentando yt-dlp")
+                        try:
+                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
+                            if video_id_match and hasattr(self, 'video_analyzer') and self.video_analyzer:
+                                video_id = video_id_match.group(1)
+                                ytdlp_transcript = self.video_analyzer._get_transcript_ytdlp(video_id)
+                                if ytdlp_transcript and len(ytdlp_transcript) > 50:
+                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
+                                    has_real_content = True
+                                    logger.info(f"✅ Transcripción yt-dlp obtenida en handle_message: {len(ytdlp_transcript)} chars")
+                        except Exception as ytdlp_err:
+                            logger.warning(f"⚠️ yt-dlp también falló en handle_message: {ytdlp_err}")
+                    
                     if not has_real_content:
                         video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
                     
@@ -4218,6 +4233,21 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             logger.error("❌ youtube-transcript-api no está instalada")
                         except Exception as fallback_err:
                             logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
+                    
+                    # PASO 3: Fallback final con yt-dlp (más robusto)
+                    if not has_real_content:
+                        logger.info("🔧 Fallback final: Intentando yt-dlp")
+                        try:
+                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
+                            if video_id_match and hasattr(self, 'video_analyzer') and self.video_analyzer:
+                                video_id = video_id_match.group(1)
+                                ytdlp_transcript = self.video_analyzer._get_transcript_ytdlp(video_id)
+                                if ytdlp_transcript and len(ytdlp_transcript) > 50:
+                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
+                                    has_real_content = True
+                                    logger.info(f"✅ Transcripción yt-dlp obtenida: {len(ytdlp_transcript)} chars")
+                        except Exception as ytdlp_err:
+                            logger.warning(f"⚠️ yt-dlp también falló: {ytdlp_err}")
                     
                     if not has_real_content:
                         video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
