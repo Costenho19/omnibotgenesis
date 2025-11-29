@@ -65,8 +65,12 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **ANU QRNG API**: For true quantum randomness.
 
 #### Databases
-- **PostgreSQL (Neon/Railway)**: Main relational database with 28 active tables for core operations, risk/monitoring, and derivatives.
+- **PostgreSQL (Railway)**: Main relational database hosted on Railway with 28 active tables for core operations, risk/monitoring, and derivatives. 
+  - **Connection**: Uses `DATABASE_URL` environment variable with public URL (`interchange.proxy.rlwy.net`)
+  - **Driver**: psycopg3 (native URL support, no parsing required)
+  - **SSL**: Required (`sslmode=require` added automatically)
 - **Redis (Railway)**: External in-memory cache for persistent state management, conversation history, market data caching, and rate limiting.
+  - **Connection**: Uses `REDIS_URL` environment variable
 
 #### Key Python Libraries
 - `numpy`, `scipy`, `ccxt`: Core trading and mathematical operations.
