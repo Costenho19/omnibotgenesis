@@ -705,13 +705,124 @@ Responde en JSON:
             except Exception as inner_err:
                 # Capturar errores de parsing XML u otros
                 logger.warning(f"⚠️ Error interno obteniendo transcripción: {inner_err}")
-                return None
+                logger.info("🔄 Intentando fallback con yt-dlp...")
+                return self._get_transcript_ytdlp(video_id)
                 
         except ImportError as ie:
             logger.error(f"❌ youtube-transcript-api no instalada: {ie}")
-            return None
+            logger.info("🔄 Intentando fallback con yt-dlp...")
+            return self._get_transcript_ytdlp(video_id)
         except Exception as e:
             logger.error(f"❌ Error obteniendo transcripción: {e}")
+            logger.info("🔄 Intentando fallback con yt-dlp...")
+            return self._get_transcript_ytdlp(video_id)
+    
+    def _get_transcript_ytdlp(self, video_id: str) -> Optional[str]:
+        """Obtener transcripción usando yt-dlp como fallback robusto"""
+        logger.info(f"🔧 Intentando yt-dlp para video {video_id}...")
+        
+        try:
+            import yt_dlp
+            import tempfile
+            import os
+            
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+            
+            with tempfile.TemporaryDirectory() as tmpdir:
+                ydl_opts = {
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB'],
+                    'subtitlesformat': 'vtt',
+                    'skip_download': True,
+                    'outtmpl': os.path.join(tmpdir, '%(id)s'),
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extract_flat': False,
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    try:
+                        info = ydl.extract_info(video_url, download=True)
+                        
+                        if info and 'subtitles' in info:
+                            for lang in ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']:
+                                if lang in info['subtitles']:
+                                    sub_file = os.path.join(tmpdir, f"{video_id}.{lang}.vtt")
+                                    if os.path.exists(sub_file):
+                                        with open(sub_file, 'r', encoding='utf-8') as f:
+                                            vtt_content = f.read()
+                                            text = self._parse_vtt(vtt_content)
+                                            if text:
+                                                logger.info(f"✅ Transcripción yt-dlp obtenida: {len(text)} chars (subtítulos manuales)")
+                                                return text
+                        
+                        if info and 'automatic_captions' in info:
+                            for lang in ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']:
+                                if lang in info['automatic_captions']:
+                                    sub_file = os.path.join(tmpdir, f"{video_id}.{lang}.vtt")
+                                    if os.path.exists(sub_file):
+                                        with open(sub_file, 'r', encoding='utf-8') as f:
+                                            vtt_content = f.read()
+                                            text = self._parse_vtt(vtt_content)
+                                            if text:
+                                                logger.info(f"✅ Transcripción yt-dlp obtenida: {len(text)} chars (auto-generados)")
+                                                return text
+                        
+                        for filename in os.listdir(tmpdir):
+                            if filename.endswith('.vtt'):
+                                filepath = os.path.join(tmpdir, filename)
+                                with open(filepath, 'r', encoding='utf-8') as f:
+                                    vtt_content = f.read()
+                                    text = self._parse_vtt(vtt_content)
+                                    if text:
+                                        logger.info(f"✅ Transcripción yt-dlp obtenida: {len(text)} chars")
+                                        return text
+                                        
+                    except Exception as ydl_err:
+                        logger.warning(f"⚠️ yt-dlp extraction error: {ydl_err}")
+                        return None
+            
+            logger.warning(f"⚠️ yt-dlp no encontró subtítulos para {video_id}")
+            return None
+            
+        except ImportError:
+            logger.warning("⚠️ yt-dlp no instalado")
+            return None
+        except Exception as e:
+            logger.error(f"❌ Error yt-dlp: {e}")
+            return None
+    
+    def _parse_vtt(self, vtt_content: str) -> Optional[str]:
+        """Parsear contenido VTT a texto plano"""
+        try:
+            lines = vtt_content.split('\n')
+            text_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith('WEBVTT'):
+                    continue
+                if line.startswith('Kind:') or line.startswith('Language:'):
+                    continue
+                if '-->' in line:
+                    continue
+                if line.isdigit():
+                    continue
+                import re
+                line = re.sub(r'<[^>]+>', '', line)
+                if line and line not in text_lines[-3:] if text_lines else True:
+                    text_lines.append(line)
+            
+            full_text = ' '.join(text_lines)
+            full_text = ' '.join(full_text.split())
+            
+            return full_text if len(full_text) > 50 else None
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error parsing VTT: {e}")
             return None
     
     def _extract_technical_parameters(self, transcript: str) -> Dict:
