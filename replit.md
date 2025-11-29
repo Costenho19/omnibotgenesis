@@ -16,11 +16,18 @@ OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system 
 
 **Leverage Validation:**
 - Automatic detection of leverage requests (regex: "10x", "leverage 5", "apalancamiento 8")
-- Requests exceeding 3x maximum are flagged with rejection message in AI prompt
+- Requests exceeding 5x maximum are flagged with rejection message in AI prompt
 - AI instructed to explicitly reject dangerous leverage operations
 
+**Strategic Honesty System (Nov 29, 2025):**
+- Implemented "Sinceridad Estratégica" - honest without sounding weak
+- 3 Commandments: Never say "no tengo X", never sound small/limited, never expose raw limitations
+- Reframing for Bloomberg/D-Wave/leverage questions with confident pivots
+- CEO-style responses: concise, data-driven, no excessive technical explanations
+- Institutional tone suitable for investor presentations
+
 **Quantum Physics Honesty Rules:**
-- Clear separation between real capabilities (ANU QRNG) and theoretical references (31 formulas)
+- Clear separation between real capabilities (ANU QRNG) and theoretical references (24 formulas)
 - Strict rules: NO inventing theory, NO mixing trading with pure physics inappropriately
 - AI must distinguish between "what I have" vs "what I reference from theory"
 - Honest fallback: "That's outside my verified knowledge" when uncertain
@@ -68,7 +75,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
     - **Kill-Switch Protection**: Multi-layer fail-safe for real trading, including critical fail-safes and signal-based blocking.
 - **Professional Testing & Validation System**: Includes Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, Realistic Cost Modeling, and Investor Report Generation with a grade system.
 - **AI & Machine Learning**: Conversational AI (Google Gemini 2.0 Flash primary, GPT-4o, Claude fallbacks) with "Cerebro Conversacional" for self-explaining AI reasoning and an Auto-Learning System for strategy parameter optimization.
-- **Quantum Physics Validation System**: PhD+ level scientific accuracy with 31 verified formulas and quantum credibility scoring, including advanced formulas for Amplitude Damping, Quantum Sharpe Ratio, and Quantum Criticality.
+- **Quantum Physics Validation System**: PhD+ level scientific accuracy with 24 verified formulas and quantum credibility scoring, including advanced formulas for Amplitude Damping, Quantum Sharpe Ratio, and Quantum Criticality.
 - **Risk Management & Protection**:
     - **Coherence Engine V5.4 ULTRA**: Validates agreement between trading strategies using a 6-Tier Veto System.
     - **AI Risk Guardian V5.4**: Real-time risk supervision (Overtrading, Drawdown, Revenge Trading Detection, Capital Protection).
@@ -81,7 +88,7 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
     - **Institutional Optimization Suite**: Features Cascade Protection, Adaptive Regime Switcher, and Pitch Deck Generator.
 - **Derivatives Trading Module**: Central orchestrator (`DerivativesManager`) for perpetuals trading with paper/real modes, `MarginEngine`, `KrakenFuturesClient`, `HedgingService`, `FundingArbitrageAnalyzer`, and Telegram integration.
 - **Trading Modes**: Paper Trading, Real Trading (with post-quantum signed orders), and Backtesting.
-- **Quantum Enhancements**: ANU QRNG for true quantum randomness and D-Wave Leap for real quantum annealing for portfolio optimization, with classical fallback.
+- **Quantum Enhancements**: ANU QRNG for true quantum randomness. Portfolio optimization uses classical algorithms with quantum-inspired techniques.
 - **Community Intelligence**: Signal contribution, community feedback, and reward system.
 - **Telegram Message Splitting**: Implemented intelligent message splitting for texts exceeding 4096 characters, respecting structure and adding "(1/N)" headers with a delay to avoid rate limits.
 

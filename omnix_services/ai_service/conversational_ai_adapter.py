@@ -170,14 +170,14 @@ class ConversationalAI:
         
         market_data = {}
         
-        # 🚨 VALIDACIÓN DE APALANCAMIENTO (máximo 3x permitido)
+        # 🚨 VALIDACIÓN DE APALANCAMIENTO (máximo 5x permitido)
         leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', user_message.lower())
         if leverage_match:
             leverage_value = int(leverage_match.group(1) or leverage_match.group(2) or leverage_match.group(3))
             market_data['requested_leverage'] = leverage_value
-            if leverage_value > 3:
-                market_data['leverage_warning'] = f"⛔ APALANCAMIENTO {leverage_value}x RECHAZADO - Máximo permitido: 3x (política de riesgo institucional)"
-                logger.warning(f"⚠️ Apalancamiento {leverage_value}x solicitado - EXCEDE LÍMITE 3x")
+            if leverage_value > 5:
+                market_data['leverage_warning'] = f"⛔ APALANCAMIENTO {leverage_value}x RECHAZADO - Máximo permitido: 5x (política de riesgo institucional)"
+                logger.warning(f"⚠️ Apalancamiento {leverage_value}x solicitado - EXCEDE LÍMITE 5x")
         
         # 📈 OBTENER PRECIO BTC REAL DE KRAKEN
         kraken_data_obtained = False
