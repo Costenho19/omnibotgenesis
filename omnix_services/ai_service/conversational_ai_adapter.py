@@ -199,37 +199,59 @@ class ConversationalAI:
                 logger.warning(f"⚠️ Kraken AUTH falló: {e}")
         
         # ═══════════════════════════════════════════════════════════════════
-        # FUENTE 2: API PÚBLICA DE KRAKEN
+        # FUENTE 2: API PÚBLICA DE KRAKEN (MÉTODO PRINCIPAL)
         # ═══════════════════════════════════════════════════════════════════
         if not btc_obtained:
             try:
-                logger.info("📡 [2/3] Kraken PUBLIC...")
+                logger.info("📡 [2/3] Kraken PUBLIC API...")
                 resp = requests.get(
                     'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
                     timeout=10,
                     headers={'User-Agent': 'OMNIX/6.0'}
                 )
+                logger.info(f"📡 Kraken response status: {resp.status_code}")
+                
                 if resp.status_code == 200:
                     data = resp.json()
-                    if data.get('error') == [] and 'result' in data:
+                    logger.info(f"📡 Kraken raw keys: {list(data.keys()) if data else 'None'}")
+                    
+                    # VALIDACIÓN MEJORADA: not error (más robusta que == [])
+                    has_no_error = not data.get('error')
+                    has_result = 'result' in data and data['result']
+                    
+                    if has_no_error and has_result:
                         result = data['result']
-                        ticker_key = 'XXBTZUSD' if 'XXBTZUSD' in result else list(result.keys())[0] if result else None
-                        if ticker_key and ticker_key in result:
+                        logger.info(f"📡 Kraken result keys: {list(result.keys())}")
+                        
+                        # Buscar XXBTZUSD o cualquier clave disponible
+                        ticker_key = None
+                        if 'XXBTZUSD' in result:
+                            ticker_key = 'XXBTZUSD'
+                        elif result:
+                            ticker_key = list(result.keys())[0]
+                        
+                        if ticker_key:
                             ticker = result[ticker_key]
-                            if 'c' in ticker and ticker['c']:
+                            logger.info(f"📡 Ticker data: c={ticker.get('c')}, h={ticker.get('h')}, l={ticker.get('l')}")
+                            
+                            if 'c' in ticker and ticker['c'] and len(ticker['c']) > 0:
                                 market_data['btc_price'] = float(ticker['c'][0])
-                                market_data['btc_24h_high'] = float(ticker['h'][0]) if 'h' in ticker else 0
-                                market_data['btc_24h_low'] = float(ticker['l'][0]) if 'l' in ticker else 0
-                                market_data['btc_volume'] = float(ticker['v'][1]) if 'v' in ticker else 0
+                                market_data['btc_24h_high'] = float(ticker['h'][0]) if ticker.get('h') else 0
+                                market_data['btc_24h_low'] = float(ticker['l'][0]) if ticker.get('l') else 0
+                                market_data['btc_volume'] = float(ticker['v'][1]) if ticker.get('v') and len(ticker['v']) > 1 else 0
                                 market_data['data_source'] = 'Kraken'
                                 btc_obtained = True
-                                logger.info(f"✅ KRAKEN PUBLIC: ${market_data['btc_price']:,.0f}")
+                                logger.info(f"✅ KRAKEN PUBLIC SUCCESS: ${market_data['btc_price']:,.2f}")
+                            else:
+                                logger.warning(f"⚠️ Kraken: ticker['c'] inválido: {ticker.get('c')}")
+                        else:
+                            logger.warning(f"⚠️ Kraken: No ticker key found in result")
                     else:
-                        logger.warning(f"⚠️ Kraken error response: {data.get('error')}")
+                        logger.warning(f"⚠️ Kraken error: has_no_error={has_no_error}, has_result={has_result}, error={data.get('error')}")
                 else:
-                    logger.warning(f"⚠️ Kraken HTTP {resp.status_code}")
+                    logger.warning(f"⚠️ Kraken HTTP error: {resp.status_code}")
             except Exception as e:
-                logger.warning(f"⚠️ Kraken PUBLIC falló: {e}")
+                logger.warning(f"⚠️ Kraken PUBLIC falló: {type(e).__name__}: {e}")
         
         # ═══════════════════════════════════════════════════════════════════
         # FUENTE 3: COINGECKO BACKUP

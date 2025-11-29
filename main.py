@@ -7,8 +7,8 @@ IA Avanzada + AI Risk Guardian V5.4 + Professional Trading Strategy 73% Win Rate
 Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
 Desarrollado por Harold Nunes - Noviembre 2025 - V6.0.0
 
-BUILD_TIMESTAMP = "2025-11-29T02:15:00Z"
-FORCE_REBUILD_VERSION = "6.0.3-robust-market-data"
+BUILD_TIMESTAMP = "2025-11-29T03:30:00Z"
+FORCE_REBUILD_VERSION = "6.0.4-kraken-debug"
 """
 
 # 🧹 LIMPIEZA DE CACHE RAILWAY - EJECUTAR ANTES DE CUALQUIER IMPORT
@@ -65,8 +65,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("=" * 70)
-logger.info("🔥 OMNIX V6.0.3 - BUILD 2025-11-29T02:15:00Z")
-logger.info("🎯 ROBUST MARKET DATA - 3 SOURCES (Kraken Auth/Public + CoinGecko)")
+logger.info("🔥 OMNIX V6.0.4 - BUILD 2025-11-29T03:30:00Z")
+logger.info("🎯 KRAKEN DEBUG - Full logging para diagnóstico de conexión")
 logger.info("=" * 70)
 
 # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
