@@ -103,16 +103,20 @@ User Communication Preference: Simple, everyday language (Spanish primary).
   - `omnix_services/ai_service/conversational_ai_adapter.py` - Lines 103-118 (robust chat_id parsing)
   - `omnix_services/database_service/database_service.py` - Lines 1413-1431 (column migration)
 
-#### YouTube Video Analysis Fix
-- **Problem**: When user shared YouTube video links or forwarded videos, bot said "no tengo acceso a videos" instead of analyzing them
-- **Root Cause**: YouTube URL detection logic existed only in `handle_direct_message` (webhook mode), not in `handle_message` (polling mode used by Railway)
+#### YouTube Video Analysis Fix (Complete Implementation - Nov 29, 2025)
+- **Problem**: Bot detected YouTube videos but couldn't explain their content - said "necesito acceso al video"
+- **Root Cause**: The `_get_transcript()` function in `VideoAnalyzerUltra` was a stub that returned fake text instead of real YouTube transcriptions
 - **Solution**: 
-  - Added YouTube URL detection to `handle_message` in `enterprise_bot.py`
-  - Detects URLs in: message text, message entities (embeds), captions, and reply messages
-  - Integrates with existing `VideoAnalyzerUltra` for transcript, visual, and sentiment analysis
-  - Falls back to AI-powered contextual analysis if VideoAnalyzerUltra fails
+  - Implemented REAL transcript extraction using `youtube-transcript-api` library
+  - Added multi-language support (es, en, es-419, es-ES, en-US, en-GB) with auto-generated fallback
+  - Implemented `_extract_technical_parameters()` with GPT-4o-mini analysis (Gemini 2.0 Flash fallback)
+  - AI extracts: strategy, timeframe, assets, indicators, entry/exit points, risk management, key insights, summary
+  - Enhanced `handle_message` handler to use new analysis fields (summary, key_insights, indicators, etc.)
+  - Added direct fallback transcript extraction if VideoAnalyzerUltra fails
+  - Proper error handling for disabled transcripts, unavailable videos, and API failures
 - **Files Modified**:
-  - `omnix_services/telegram_service/enterprise_bot.py` (lines 2664-2782) - YouTube detection added to polling handler
+  - `omnix_services/ai_service/video/analyzer.py` - Lines 641-788 (complete rewrite of _get_transcript and _extract_technical_parameters)
+  - `omnix_services/telegram_service/enterprise_bot.py` - Lines 2720-2815 (enhanced video_context building with new fields)
 
 #### Critical Architecture Fix: Trading System Instance
 - **Problem**: `/balance` and other commands used undefined `global_trading_system` variable instead of the properly initialized `self.trading` instance
