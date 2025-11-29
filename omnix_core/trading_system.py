@@ -303,34 +303,67 @@ class TradingSystem:
         """HAROLD: Obtener balance real completo de todas las monedas"""
         try:
             if not self.kraken:
+                logger.error("❌ get_real_balance: self.kraken es None")
                 return {'error': 'Kraken no conectado'}
+            
+            if not self.real_trading_enabled:
+                logger.warning("⚠️ get_real_balance: Trading real no habilitado (sin API keys)")
+                return {'error': 'API keys de Kraken no configuradas'}
                 
+            logger.info("🔄 Solicitando balance a Kraken API...")
             balance = self.kraken.fetch_balance()
+            
+            logger.info(f"📊 Kraken respuesta raw keys: {list(balance.keys())[:15]}")
+            
             real_balance = {}
             total_usd_value = 0
             
+            kraken_to_standard = {
+                'XXBT': 'BTC', 'XBT': 'BTC',
+                'XETH': 'ETH', 'ZUSD': 'USD',
+                'ZEUR': 'EUR', 'XXRP': 'XRP',
+                'XSOL': 'SOL', 'SOL': 'SOL',
+                'MANA': 'MANA', 'PEPE': 'PEPE',
+            }
+            
             for currency, data in balance.items():
-                if isinstance(data, dict) and data.get('free', 0) > 0:
-                    real_balance[currency] = {
-                        'free': data.get('free', 0),
-                        'used': data.get('used', 0),
-                        'total': data.get('total', 0)
-                    }
+                if currency in ['info', 'free', 'used', 'total', 'timestamp', 'datetime']:
+                    continue
                     
-                    # Estimar valor en USD (aproximado)
-                    if currency == 'USD':
-                        total_usd_value += data.get('free', 0)
-                    elif currency == 'BTC':
-                        btc_price = self.get_btc_price().get('price', 0)
-                        total_usd_value += data.get('free', 0) * btc_price
+                if isinstance(data, dict):
+                    free_val = data.get('free', 0) or 0
+                    total_val = data.get('total', 0) or 0
+                    
+                    if free_val > 0 or total_val > 0:
+                        std_currency = kraken_to_standard.get(currency, currency)
+                        real_balance[std_currency] = {
+                            'free': free_val,
+                            'used': data.get('used', 0) or 0,
+                            'total': total_val
+                        }
+                        logger.info(f"  💰 {std_currency}: free={free_val}, total={total_val}")
+                        
+                        if std_currency in ['USD', 'ZUSD']:
+                            total_usd_value += free_val
+                        elif std_currency in ['BTC', 'XXBT', 'XBT']:
+                            try:
+                                btc_price = self.get_btc_price().get('price', 0)
+                                total_usd_value += free_val * btc_price
+                            except:
+                                pass
             
             real_balance['estimated_total_usd'] = total_usd_value
             logger.info(f"🏦 Balance real: {len(real_balance)-1} monedas, ~${total_usd_value:.2f} USD total")
             
+            if len(real_balance) <= 1:
+                logger.warning("⚠️ Balance vacío - Verificar permisos API key en Kraken")
+            
             return real_balance
             
         except Exception as e:
-            logger.error(f"Error obteniendo balance real: {e}")
+            logger.error(f"❌ Error obteniendo balance real: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return {'error': str(e)}
     
     def smart_currency_switch(self):
