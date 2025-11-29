@@ -1,11 +1,11 @@
 # OMNIX V6.0 ULTRA - DIAGNÓSTICO COMPLETO DEL SISTEMA DE BASES DE DATOS
 
-**Fecha de Análisis**: Noviembre 25, 2025 (Última Actualización: Noviembre 26, 2025)  
-**Versión del Sistema**: OMNIX V6.0 ULTRA  
-**Líneas de Código Analizadas**: 4,077+ líneas (database + cache + community intelligence)  
-**Tablas Mapeadas**: 23 tablas PostgreSQL + Sistema Redis  
+**Fecha de Análisis**: Noviembre 25, 2025 (Última Actualización: Noviembre 29, 2025)  
+**Versión del Sistema**: OMNIX V6.2 ULTRA  
+**Líneas de Código Analizadas**: 4,400+ líneas (database + cache + community intelligence)  
+**Tablas Mapeadas**: 33 tablas PostgreSQL + Sistema Redis  
 **Módulos Auditados**: 8 servicios principales  
-**Estado de Centralización**: ✅ **100% COMPLETADA** (Nov 26, 2025)
+**Estado de Centralización**: ✅ **100% COMPLETADA** (Nov 29, 2025)
 
 ---
 
@@ -28,7 +28,7 @@
 
 **OMNIX V6.0 ULTRA** utiliza una arquitectura de datos **híbrida dual**:
 
-- **PostgreSQL (Neon)**: Base de datos relacional principal para persistencia (23 tablas, ~13 tablas core + 10 community intelligence)
+- **PostgreSQL (Railway)**: Base de datos relacional principal para persistencia (33 tablas: 8 core + 6 risk + 6 derivatives + 7 community + 6 signals)
 - **Redis (Opcional)**: Cache en memoria para estado conversacional y rate limiting (TTL: 300s - 86400s)
 
 ### ✅ Fortalezas Identificadas
@@ -59,7 +59,7 @@
 3. **✅ DEPENDENCY INJECTION**: Todos los módulos ahora reciben `database_service` via constructor
 4. **✅ 18 MÉTODOS DAL**: Capa de acceso a datos centralizada con 18 métodos (13 originales + 5 nuevos)
 5. **✅ PATRÓN MIXTO**: 2 módulos con DAL completo + 1 módulo mixto (DAL + conservador) + 3 módulos conservadores
-6. **✅ ÚNICA FUENTE DE VERDAD**: Todas las 23 tablas definidas SOLO en database_service.py (limpieza final completada)
+6. **✅ ÚNICA FUENTE DE VERDAD**: Todas las 33 tablas definidas SOLO en database_service.py (limpieza final completada Nov 29, 2025)
 
 ---
 
@@ -79,9 +79,9 @@
     │   PostgreSQL      │   │      Redis        │
     │   (Neon Hosted)   │   │  (Optional Cache) │
     │                   │   │                   │
-    │  • 23 Tablas      │   │  • ConversationHx │
+    │  • 33 Tablas      │   │  • ConversationHx │
     │  • Persistencia   │   │  • UserPrefs      │
-    │  • 18 DAL Methods │   │  • MarketContext  │
+    │  • 22+ DAL Methods│   │  • MarketContext  │
     │  • Centralizado   │   │  • Rate Limiting  │
     └───────────────────┘   └───────────────────┘
             │                       │
@@ -90,9 +90,9 @@
     │   🎯 DATABASE_SERVICE (Centralizado)       │
     │   omnix_services/database_service/         │
     │                                            │
-    │   • 1,566 LOC (antes: 1,008)               │
-    │   • 18 métodos DAL (13 + 5 nuevos)         │
-    │   • 23 tablas centralizadas                │
+    │   • 4,400+ LOC                              │
+    │   • 22+ métodos DAL                        │
+    │   • 33 tablas centralizadas                │
     │   • Dependency Injection configurado       │
     └────────────────────────────────────────────┘
             │
@@ -155,25 +155,24 @@ Usuario Telegram → enterprise_bot.py (dependency injection)
 
 ## 3. POSTGRESQL - ANÁLISIS DETALLADO
 
-### 3.1 Resumen de Tablas (Actualizado Nov 26, 2025)
+### 3.1 Resumen de Tablas (Actualizado Nov 29, 2025)
 
-**Total: 23 Tablas** (antes: 24 → eliminada `prices` por desuso)
+**Total: 33 Tablas** (8 core + 6 risk + 6 derivatives + 7 community + 6 signals)
 
-| Categoría | Tablas | Función Principal |
-|-----------|--------|-------------------|
-| **Core System** (8) | users, user_contacts, trades, analysis, conversations, whatsapp_messages, sharia_validations, balance_history | Operación básica del sistema |
-| **Paper Trading** (2) | paper_trading_balances, paper_trading_trades | Trading virtual $1M |
-| **Conversational Brain** (3) | trade_reasonings, trade_evaluations, pending_evaluations | Sistema único de auto-aprendizaje |
-| **Community Intelligence** (5) | community_feedback, strategy_votes, improvement_proposals, user_contributions, detected_patterns | Feedback y mejora continua |
-| **Signal Contribution** (4) | community_signals, signal_executions, signal_votes, alpha_leaderboard | Crowdsourcing de alpha |
-| **Risk Guardian** (1) | risk_guardian_events | AI Risk Guardian events |
+| Categoría | Cantidad | Tablas | Función Principal |
+|-----------|----------|--------|-------------------|
+| **Core** | 8 | users, trades, analysis, schema_migrations, conversations, user_contacts, balance_history, sharia_validations | Operación básica del sistema |
+| **Risk** | 6 | risk_limits, risk_limit_breaches, risk_metrics_snapshots, risk_guardian_events, circuit_breaker_status, paper_trading_balances | Gestión de riesgo institucional |
+| **Derivatives** | 6 | derivatives_positions, derivatives_trades, derivatives_balances, derivatives_hedges, derivatives_funding_log, derivatives_funding_opportunities | Trading de derivados |
+| **Community** | 7 | community_feedback, strategy_votes, user_contributions, detected_patterns, improvement_proposals, trade_evaluations, pending_evaluations | Feedback y mejora continua |
+| **Signals** | 6 | community_signals, signal_executions, signal_votes, alpha_leaderboard, paper_trading_trades, trade_reasonings | Crowdsourcing de alpha |
 
-**NOTA**: Las 23 tablas están **100% centralizadas** en `database_service.py` desde Nov 26, 2025.
+**NOTA**: Las 33 tablas están **100% centralizadas** en `database_service.py` desde Nov 29, 2025.
 
-**Total de Columnas**: ~210 columnas  
-**Índices Creados**: 20+ índices  
+**Total de Columnas**: ~280 columnas  
+**Índices Creados**: 25+ índices  
 **Constraints**: PRIMARY KEY, UNIQUE, CHECK, REFERENCES (FK)  
-**Métodos DAL**: 22 métodos (13 originales + 5 Community Intelligence + 4 User Contacts)
+**Métodos DAL**: 22+ métodos
 
 ---
 

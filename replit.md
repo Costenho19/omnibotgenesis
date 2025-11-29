@@ -31,7 +31,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **ARES Institutional Protocols**: ARES V1 (Swing Trading) and ARES V2 (Scalping M1) with target win rates and multi-layer Kill-Switch Protection.
 - **Professional Testing & Validation System**: Features Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, Realistic Cost Modeling, and Investor Report Generation.
 - **AI & Machine Learning**: Conversational AI (Google Gemini 2.0 Flash primary, GPT-4o, Claude fallbacks) with "Cerebro Conversacional" for self-explaining AI reasoning and an Auto-Learning System for strategy parameter optimization.
-- **Quantum Physics Validation System**: PhD+ level scientific accuracy with 24 verified formulas and quantum credibility scoring, including advanced formulas for Amplitude Damping, Quantum Sharpe Ratio, and Quantum Criticality.
+- **Quantum Physics Validation System**: PhD+ level scientific accuracy with 31 verified formulas and quantum credibility scoring, including advanced formulas for Amplitude Damping, Quantum Sharpe Ratio, Quantum Criticality, Bures-Fisher Metrics, and Side-Channel Analysis.
 - **Risk Management & Protection**:
     - **Coherence Engine V5.4 ULTRA**: Validates agreement between trading strategies using a 6-Tier Veto System.
     - **AI Risk Guardian V5.4**: Real-time risk supervision (Overtrading, Drawdown, Revenge Trading Detection, Capital Protection).
@@ -49,7 +49,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
-- **Centralized Database Layer**: All database logic in `omnix_services/database_service/` with 28 active tables and 22+ DAL methods. Schema migrations managed transactionally.
+- **Centralized Database Layer**: All database logic in `omnix_services/database_service/` with 33 code-managed tables (8 core + 6 risk + 6 derivatives + 7 community + 6 signals) and 22+ DAL methods. Schema migrations managed transactionally via `_init_tables()`.
 - **Unified Configuration**: Centralized `env_manager.py` for environment variables.
 - **Deployment**: 24/7 operation on Railway (Production) and Replit (Development).
 
@@ -65,8 +65,13 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **ANU QRNG API**: For true quantum randomness.
 
 #### Databases
-- **PostgreSQL (Railway)**: Main relational database hosted on Railway with 28 active tables for core operations, risk/monitoring, and derivatives. 
-  - **Connection**: Uses `DATABASE_URL` environment variable with public URL (`interchange.proxy.rlwy.net`)
+- **PostgreSQL (Railway)**: Main relational database hosted on Railway with 33 code-managed tables:
+  - **Core (8)**: users, trades, analysis, schema_migrations, conversations, user_contacts, balance_history, sharia_validations
+  - **Risk (6)**: risk_limits, risk_limit_breaches, risk_metrics_snapshots, risk_guardian_events, circuit_breaker_status, paper_trading_balances
+  - **Derivatives (6)**: derivatives_positions, derivatives_trades, derivatives_balances, derivatives_hedges, derivatives_funding_log, derivatives_funding_opportunities
+  - **Community (7)**: community_feedback, strategy_votes, user_contributions, detected_patterns, improvement_proposals, trade_evaluations, pending_evaluations
+  - **Signals (6)**: community_signals, signal_executions, signal_votes, alpha_leaderboard, paper_trading_trades, trade_reasonings
+  - **Connection**: Uses `DATABASE_URL` environment variable with public URL (`interchange.proxy.rlwy.net` or `shuttle.proxy.rlwy.net`)
   - **Driver**: psycopg3 (native URL support, no parsing required)
   - **SSL**: Required (`sslmode=require` added automatically)
 - **Redis (Railway)**: External in-memory cache for persistent state management, conversation history, market data caching, and rate limiting.

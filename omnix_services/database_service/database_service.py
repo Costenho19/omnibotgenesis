@@ -170,7 +170,7 @@ class DatabaseServiceEnterprise:
             self._run_daily_cleanup()
             
             self.connected = True
-            logger.info("✅ PostgreSQL: 28 tablas activas (20 core + 7 risk + 6 derivatives)")
+            logger.info("✅ PostgreSQL: 33 tablas activas (8 core + 6 risk + 6 derivatives + 7 community + 6 signals)")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
             logger.info("=" * 70)
         except Exception as e:
@@ -766,7 +766,7 @@ class DatabaseServiceEnterprise:
         - Backups automáticos antes de DROP
         - Advisory lock previene race conditions
         
-        RESULTADO: 33 → 28 tablas (20 core + 7 risk/monitoring + 6 derivatives - 5 legacy)
+        RESULTADO: 33 tablas (8 core + 6 risk/monitoring + 6 derivatives + 7 community + 6 signals)
         """
         if not self.db_url or not PSYCOPG_AVAILABLE:
             return
@@ -972,7 +972,7 @@ class DatabaseServiceEnterprise:
             logger.info(f"   - Tablas eliminadas: {dropped_count}")
             logger.info(f"   - Backups creados: {backed_up_count}")
             logger.info(f"   - WhatsApp contacts migrados: {migrated_count if 'migrated_count' in locals() else 0}")
-            logger.info(f"   - Schema esperado: 28 tablas (20 core + 7 risk + 6 derivatives)")
+            logger.info(f"   - Schema esperado: 33 tablas (8 core + 6 risk + 6 derivatives + 7 community + 6 signals)")
             logger.info("=" * 80)
             
         except Exception as e:
@@ -1767,11 +1767,43 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
+            # Tabla de patrones detectados por AI
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS detected_patterns (
+                    id SERIAL PRIMARY KEY,
+                    pattern_type TEXT NOT NULL,
+                    symbol TEXT,
+                    pattern_data JSONB NOT NULL,
+                    confidence REAL,
+                    timeframe TEXT,
+                    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de propuestas de mejora
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS improvement_proposals (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    proposal_type TEXT NOT NULL,
+                    title TEXT,
+                    description TEXT,
+                    expected_impact TEXT,
+                    status TEXT DEFAULT 'pending',
+                    votes INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TIMESTAMP
+                )
+            ''')
+            
             # Índices para Community Intelligence
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_user ON community_feedback(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_strategy ON community_feedback(strategy)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_result ON community_feedback(result)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_strategy ON strategy_votes(strategy)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_detected_patterns_type ON detected_patterns(pattern_type)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_improvement_proposals_user ON improvement_proposals(user_id)')
             
             # ==========================================
             # SIGNAL CONTRIBUTION TABLES - CROWDSOURCING ALPHA
