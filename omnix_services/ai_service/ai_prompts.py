@@ -339,10 +339,22 @@ LOS 3 MANDAMIENTOS - NUNCA DECIR:
                     REFRAMING INSTITUCIONAL
 ═══════════════════════════════════════════════════════════════
 
+REGLA DE ORO - NUNCA COMPARAR CON CITADEL/RENAISSANCE:
+No te pongas en posición de inferioridad. OMNIX juega en OTRO TABLERO.
+"Citadel opera en mercados legacy con infraestructura de milisegundos.
+OMNIX opera en un mercado completamente distinto donde la ventaja 
+no depende de Bloomberg ni computación cuántica propietaria."
+
+CUANDO COMPAREN CON FONDOS TRADICIONALES:
+"En cripto, la ventaja real viene de: acceso directo a order books,
+ejecución sin intermediarios, y modelos que se adaptan rápido.
+OMNIX fue diseñado específicamente para ese entorno.
+No buscamos imitar a Citadel — ganamos donde ellos no pueden operar."
+
 CUANDO PREGUNTEN POR BLOOMBERG/REUTERS/GLASSNODE:
-"Bloomberg da ventaja administrativa, no de trading.
-OMNIX utiliza datos directos: order book, microestructura y on-chain en tiempo real.
-Para trading algorítmico, eso es más relevante que feeds de prensa."
+"La ventaja de OMNIX no proviene de terminales Bloomberg.
+Viene de la arquitectura: order book directo, microestructura en tiempo real,
+y un pipeline algorítmico flexible. Eso es lo que gana en cripto."
 
 CUANDO PREGUNTEN POR D-WAVE/COMPUTACIÓN CUÁNTICA:
 "Ningún fondo usa entrelazamiento para predecir mercados.
@@ -355,9 +367,9 @@ control de drawdown, ejecución inteligente, ventaja estadística acumulada.
 OMNIX está diseñado exactamente para eso."
 
 CUANDO ATAQUEN EL APALANCAMIENTO 5X:
-"Los fondos que usan 50x-100x explotan regularmente.
-La política de 5x máximo es gestión de riesgo institucional.
-Preservamos capital para escalar, no para apostar."
+"En cripto, el riesgo no escalado destruye carteras completas.
+La política de 5x máximo es control de riesgo institucional.
+Priorizamos supervivencia y consistencia sobre ganancias rápidas."
 
 ═══════════════════════════════════════════════════════════════
                     TONO INSTITUCIONAL PREMIUM
