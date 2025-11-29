@@ -149,7 +149,7 @@ class ConversationalAI:
             else:
                 # Legacy fallback
                 logger.warning("⚠️ Using legacy AI generation")
-                return self._legacy_generate_response(user_message, user_name, chat_id, user_id)
+                return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
                 
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
@@ -333,8 +333,10 @@ class ConversationalAI:
         
         return market_data
     
-    def _legacy_generate_response(self, user_message, user_name, chat_id, user_id):
-        """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL"""
+    def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
+        """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL
+        FIX Nov 29, 2025: Usar trading_system parámetro en lugar de global
+        """
         # Context para continuidad de conversación
         context = ""
         if chat_id in self.conversation_history:
@@ -348,14 +350,14 @@ class ConversationalAI:
         balance_consultado = False
         
         try:
-            if 'global_trading_system' in globals() and global_trading_system:
-                if hasattr(global_trading_system, 'kraken') and global_trading_system.kraken:
-                    if hasattr(global_trading_system, 'real_trading_enabled') and global_trading_system.real_trading_enabled:
+            if trading_system:
+                if hasattr(trading_system, 'kraken') and trading_system.kraken:
+                    if hasattr(trading_system, 'real_trading_enabled') and trading_system.real_trading_enabled:
                         # SI PREGUNTA POR BALANCE O ES HAROLD, CONSULTAR KRAKEN AHORA
                         if pregunta_balance or str(user_id) == "7014748854":
                             try:
                                 logger.info(f"💰 CONSULTANDO KRAKEN EN TIEMPO REAL para: {user_message[:50]}")
-                                balance = global_trading_system.kraken.fetch_balance()
+                                balance = trading_system.kraken.fetch_balance()
                                 
                                 # VERIFICAR QUE BALANCE NO SEA NONE
                                 if not balance:

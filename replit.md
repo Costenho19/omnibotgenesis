@@ -85,3 +85,21 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - `requests`, `websockets`, `aiohttp`, `httpx`: HTTP and WebSocket communication.
 - `pypqc`: Post-quantum cryptography implementation.
 - `pandas`, `plotly`, `kaleido`, `reportlab`, `PyPDF2`: Professional testing and reporting.
+
+### Recent Changes (Nov 29, 2025)
+
+#### Critical Architecture Fix: Trading System Instance
+- **Problem**: `/balance` and other commands used undefined `global_trading_system` variable instead of the properly initialized `self.trading` instance
+- **Root Cause**: `global_trading_system` is only set when `main()` from `omnix_core/trading_system.py` runs (which it doesn't in Railway's architecture)
+- **Solution**: 
+  - Replaced all 18 occurrences of `global_trading_system` with `self.trading` in `enterprise_bot.py`
+  - Fixed `conversational_ai_adapter.py` to pass and use `trading_system` parameter instead of global variable
+- **Files Modified**:
+  - `omnix_services/telegram_service/enterprise_bot.py` - All trading commands now use correct instance
+  - `omnix_services/ai_service/conversational_ai_adapter.py` - Legacy response generation fixed
+
+#### Previous Fixes (Session)
+- **Memory System**: Fixed conversation history using `timestamp` instead of correct `created_at` column
+- **Kraken Prices**: Public client now always created for market data (no API keys required)
+- **Balance Parsing**: Corrected extraction of 'free' values from dict structure in balance responses
+- **Balance Architecture**: Changed `/balance` from undefined global to `self.trading`

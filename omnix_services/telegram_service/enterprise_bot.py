@@ -944,10 +944,10 @@ El mejor trade es el que NO haces si no estás seguro.
             
             # Obtener precio real usando instancia global
             try:
-                if not global_trading_system:
+                if not self.trading:
                     await update.message.reply_text("⚠️ Sistema de trading no disponible")
                     return
-                price_data = global_trading_system.get_real_market_data(f"{symbol}/USD")
+                price_data = self.trading.get_real_market_data(f"{symbol}/USD")
                 
                 if price_data and 'precio_actual' in price_data:
                     precio = price_data['precio_actual']
@@ -993,10 +993,10 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
             
             for symbol in cryptos:
                 try:
-                    if not global_trading_system:
+                    if not self.trading:
                         continue
                     
-                    price_data = global_trading_system.get_real_market_data(f"{symbol}/USD")
+                    price_data = self.trading.get_real_market_data(f"{symbol}/USD")
                     
                     if price_data and 'precio_actual' in price_data:
                         precio = price_data['precio_actual']
@@ -1099,13 +1099,13 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
             await update.message.reply_text("❌ Error obteniendo dashboard del mercado")
 
     async def balance_command(self, update, context):
-        """Comando /balance - FIX Nov 29 2025: Parseo correcto de estructura balance"""
+        """Comando /balance - FIX Nov 29 2025: Usar self.trading en lugar de global"""
         try:
             try:
-                if not global_trading_system:
+                if not self.trading:
                     await update.message.reply_text("⚠️ Sistema de trading no disponible")
                     return
-                balance_data = global_trading_system.get_real_balance()
+                balance_data = self.trading.get_real_balance()
                 
                 if 'error' in balance_data:
                     await update.message.reply_text(f"❌ Error Kraken: {balance_data['error']}")
@@ -1175,7 +1175,7 @@ _Datos actualizados en tiempo real_
                 return
             
             # Verificar que el sistema de trading esté disponible
-            if not global_trading_system:
+            if not self.trading:
                 await update.message.reply_text("⚠️ Sistema de trading no disponible")
                 return
             
@@ -1183,7 +1183,7 @@ _Datos actualizados en tiempo real_
             
             try:
                 # Obtener balance actual
-                balance_data = global_trading_system.get_real_balance()
+                balance_data = self.trading.get_real_balance()
                 
                 if not balance_data:
                     await update.message.reply_text("❌ No se pudo obtener balance de Kraken")
@@ -1226,7 +1226,7 @@ _Datos actualizados en tiempo real_
                     
                     # Obtener precio actual para estimar valor
                     try:
-                        ticker = global_trading_system.kraken_client.client.fetch_ticker(f"{moneda}/USD")
+                        ticker = self.trading.kraken_client.client.fetch_ticker(f"{moneda}/USD")
                         precio_actual = ticker['last']
                         valor_usd = cantidad_float * precio_actual
                         
@@ -1239,7 +1239,7 @@ _Datos actualizados en tiempo real_
                         logger.info(f"💱 Convirtiendo {cantidad_float} {moneda} a USD (${valor_usd:.2f})")
                         
                         # Usar KrakenAPIClient para crear orden de mercado SELL
-                        orden_result = global_trading_system.kraken_client.place_order(
+                        orden_result = self.trading.kraken_client.place_order(
                             pair=par,
                             order_type='market',
                             side='sell',
@@ -1319,7 +1319,7 @@ _Datos actualizados en tiempo real_
                 return
             
             # Verificar sistema de trading
-            if not global_trading_system:
+            if not self.trading:
                 await update.message.reply_text("⚠️ Sistema de trading no disponible")
                 return
             
@@ -1345,7 +1345,7 @@ _Datos actualizados en tiempo real_
             
             try:
                 # Obtener balance actual
-                balance_data = global_trading_system.get_real_balance()
+                balance_data = self.trading.get_real_balance()
                 
                 if moneda not in balance_data or float(balance_data[moneda]) <= 0:
                     await update.message.reply_text(f"❌ No tienes {moneda} en tu balance")
@@ -1355,7 +1355,7 @@ _Datos actualizados en tiempo real_
                 
                 # Obtener precio actual
                 par = pares_kraken[moneda]
-                ticker = global_trading_system.kraken_client.client.fetch_ticker(f"{moneda}/USD")
+                ticker = self.trading.kraken_client.client.fetch_ticker(f"{moneda}/USD")
                 precio_actual = ticker['last']
                 
                 # Calcular cantidad de crypto a vender
@@ -1376,7 +1376,7 @@ _Datos actualizados en tiempo real_
                 # EJECUTAR CONVERSIÓN REAL
                 logger.info(f"💱 Convirtiendo {cantidad_crypto:.8f} {moneda} a USD (${valor_usd:.2f})")
                 
-                orden_result = global_trading_system.kraken_client.place_order(
+                orden_result = self.trading.kraken_client.place_order(
                     pair=par,
                     order_type='market',
                     side='sell',
@@ -1533,10 +1533,10 @@ Sistema OMNIX V5.1 - Harold Nunes
             
             # Realizar análisis completo usando instancia global
             try:
-                if not global_trading_system:
+                if not self.trading:
                     await update.message.reply_text("⚠️ Sistema de trading no disponible")
                     return
-                analisis = global_trading_system.generate_comprehensive_analysis(f"{symbol}/USD")
+                analisis = self.trading.generate_comprehensive_analysis(f"{symbol}/USD")
                 
                 mensaje = f"""
 🧠 **ANÁLISIS TÉCNICO {symbol}/USD**
@@ -1598,7 +1598,7 @@ Sistema OMNIX V5.1 - Harold Nunes
             symbol = context.args[0].upper() if context.args else "BTC"
             
             # Obtener precio actual
-            price = global_trading_system.get_current_price(f"{symbol}/USD")
+            price = self.trading.get_current_price(f"{symbol}/USD")
             if not price:
                 price = 50000  # Default BTC
             
@@ -1825,7 +1825,7 @@ Liquidez: {spread.get('liquidity', 'N/A')}
             await update.message.reply_text("🔍 Ejecutando análisis enterprise completo...")
             
             # Obtener datos
-            price = global_trading_system.get_current_price(f"{symbol}/USD") or 50000
+            price = self.trading.get_current_price(f"{symbol}/USD") or 50000
             prices = self._get_price_history(symbol, days=100)
             
             # Análisis completo
@@ -2581,9 +2581,9 @@ Ejemplo: /risk_events 48
         """Obtener histórico de precios"""
         try:
             # Usar trading system si está disponible
-            if global_trading_system:
+            if self.trading:
                 # Implementación simple - en producción usar API real
-                current_price = global_trading_system.get_current_price(f"{symbol}/USD")
+                current_price = self.trading.get_current_price(f"{symbol}/USD")
                 if current_price:
                     import numpy as np
                     # Generar histórico simulado (en producción usar API real)
@@ -2595,8 +2595,8 @@ Ejemplo: /risk_events 48
     def _get_order_book(self, symbol):
         """Obtener order book"""
         try:
-            if global_trading_system and hasattr(global_trading_system, 'exchange'):
-                order_book = global_trading_system.exchange.fetch_order_book(f"{symbol}/USD")
+            if self.trading and hasattr(self.trading, 'exchange'):
+                order_book = self.trading.exchange.fetch_order_book(f"{symbol}/USD")
                 return order_book
             return None
         except:
