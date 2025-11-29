@@ -98,53 +98,58 @@ class TradingSystem:
         logger.info("Sistema de trading inicializado")
     
     def init_kraken(self):
-        """Inicializar conexión a Kraken"""
+        """Inicializar conexión a Kraken - SIEMPRE crear cliente público para precios"""
         try:
             if TRADING_AVAILABLE:
                 api_key = os.environ.get('KRAKEN_API_KEY', '')
                 secret = os.environ.get('KRAKEN_API_SECRET', '')
                 
-                # HAROLD ARREGLO: Configurar Kraken correctamente
+                # FIX Nov 29, 2025: SIEMPRE crear cliente público para precios en tiempo real
+                # El cliente público NO requiere API keys para datos de mercado
+                self.kraken = ccxt.kraken({
+                    'enableRateLimit': True,
+                    'timeout': 30000,
+                    'options': {
+                        'adjustForTimeDifference': True
+                    }
+                })
+                logger.info("📊 Kraken cliente público inicializado - Precios en tiempo real activados")
+                
+                # Si hay credenciales, habilitar trading real
                 if api_key and secret:
                     import time
+                    # Reconfigurar con credenciales para trading
                     self.kraken = ccxt.kraken({
                         'apiKey': api_key,
                         'secret': secret,
                         'sandbox': False,
                         'enableRateLimit': True,
                         'timeout': 30000,
-                        'nonce': generate_unique_nonce,  # Función para nonce único
+                        'nonce': generate_unique_nonce,
                         'options': {
                             'adjustForTimeDifference': True
                         }
                     })
                     
-                    # HAROLD FIX MEJORADO: Conexión MÁS robusta y FORZAR trading real
                     try:
-                        # Test más suave sin interrumpir sistema principal
-                        time.sleep(3)  # Esperar más tiempo para evitar rate limits
+                        time.sleep(2)
                         test_balance = self.kraken.fetch_balance()
-                        
-                        # Verificación simple de conexión (portafolio completo se muestra con /balance)
                         logger.info(f"✅ Conexión Kraken verificada - Trading real activo")
-                        
-                        # ACTIVAR TRADING REAL FORZADO PARA HAROLD
                         self.real_trading_enabled = True
                         logger.info("🚀 Kraken API conectada - TRADING REAL ACTIVADO")
                         
                     except Exception as test_error:
-                        logger.warning(f"⚠️ Error inicial Kraken: {test_error}")
-                        # HAROLD RETO: FORZAR TRADING REAL A PESAR DE ERRORES MENORES
-                        self.real_trading_enabled = True  # FORZAR ACTIVACIÓN
-                        logger.info("🚀 HAROLD RETO: TRADING REAL FORZADO - Listo para operaciones")
+                        logger.warning(f"⚠️ Error verificando balance Kraken: {test_error}")
+                        self.real_trading_enabled = True
+                        logger.info("🚀 Trading real activado (verificación diferida)")
                 else:
-                    # SISTEMA REAL REQUIERE CREDENCIALES VÁLIDAS
-                    self.kraken = None
+                    # Sin credenciales = Paper Trading, pero CON precios reales
                     self.real_trading_enabled = False
-                    logger.warning("⚠️ Kraken credenciales no configuradas - MODO DEMO")
+                    logger.info("📋 Kraken PAPER MODE - Precios REALES activados (sin API keys)")
             else:
                 self.kraken = None
                 self.real_trading_enabled = False
+                logger.warning("⚠️ ccxt no disponible - Sin precios en tiempo real")
         except Exception as e:
             logger.error(f"Error Kraken: {e}")
             self.kraken = None
