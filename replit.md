@@ -88,6 +88,20 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 
 ### Recent Changes (Nov 29, 2025)
 
+#### CRITICAL: Conversation Memory System Fix (Nov 29, 2025)
+- **Problem**: Bot had no memory - couldn't remember previous conversations despite PostgreSQL/Redis storing data correctly
+- **Root Cause**: All calls to `generate_response()` in `handle_direct_message` and `handle_message` were missing the `chat_id` and `user_id` parameters. The AI adapter defaulted to `chat_id=0`, causing history lookups to return empty results even though real conversations were saved with correct user IDs (e.g., 7014748854)
+- **Solution**: 
+  - Fixed ALL 6 calls to `self.ai.generate_response()` to pass named parameters: `chat_id=str(chat_id), user_id=str(user_id), trading_system=self.trading`
+  - Fixed `self.ai_system` → `self.ai` (undefined variable bug)
+  - Fixed `self.trading_system` → `self.trading` (undefined variable bug)
+  - Added robust chat_id conversion in `conversational_ai_adapter.py` with logging
+  - Added `last_activity` column migration for users table
+- **Files Modified**:
+  - `omnix_services/telegram_service/enterprise_bot.py` - Lines 2758-2765, 2799-2805, 3033-3039, 3190-3197, 4043-4049, 4663-4669
+  - `omnix_services/ai_service/conversational_ai_adapter.py` - Lines 103-118
+  - `omnix_services/database_service/database_service.py` - Lines 1413-1431
+
 #### YouTube Video Analysis Fix
 - **Problem**: When user shared YouTube video links or forwarded videos, bot said "no tengo acceso a videos" instead of analyzing them
 - **Root Cause**: YouTube URL detection logic existed only in `handle_direct_message` (webhook mode), not in `handle_message` (polling mode used by Railway)
