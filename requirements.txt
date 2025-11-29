@@ -1,4 +1,4 @@
-# OMNIX V6.0.4 - Force Railway Rebuild 2025-11-29T04:00:00Z
+# OMNIX V6.0.5 - Force Railway Rebuild 2025-11-29T04:30:00Z
 # Core Trading & Math
 numpy==1.26.4
 scipy==1.12.0

@@ -400,6 +400,7 @@ class EnterpriseTelegramBot:
             
             # Comandos principales
             self.application.add_handler(CommandHandler("start", self.start_command))
+            self.application.add_handler(CommandHandler("version", self.version_command))  # V6.0.5
             self.application.add_handler(CommandHandler("precio", self.precio_command))
             self.application.add_handler(CommandHandler("market", self.market_command))
             self.application.add_handler(CommandHandler("help", self.help_command))
@@ -576,6 +577,23 @@ Opera bajo tu propio riesgo. /legal para detalles."""
         except Exception as e:
             logger.error(f"❌ Error comando start: {e}")
             await update.message.reply_text("Error procesando comando /start")
+
+    async def version_command(self, update, context):
+        """Comando /version - Verificar versión del build en producción"""
+        try:
+            version_text = f"""🔧 **OMNIX BUILD INFO**
+
+📌 **Version**: V6.0.5
+🕐 **Build Timestamp**: 2025-11-29T04:30:00Z
+🎯 **Build ID**: enterprise-bot-kraken-fix
+🔗 **Kraken WebSocket**: {'✅ Conectado' if hasattr(self, 'trading') and self.trading else '⚠️ No disponible'}
+📡 **Kraken Client**: {'✅ Disponible' if (self.trading_enterprise and hasattr(self.trading_enterprise, 'kraken_client')) else '⚠️ Usando API pública'}
+
+✅ Este mensaje confirma que el código V6.0.5 está activo."""
+            
+            await update.message.reply_text(version_text, parse_mode='Markdown')
+        except Exception as e:
+            await update.message.reply_text(f"Error: {e}")
 
     async def help_command(self, update, context):
         """Comando /help"""
@@ -3968,10 +3986,15 @@ Los parámetros fueron ajustados automáticamente
                     try:
                         # 🔴 CRÍTICO: OBTENER DATOS REALES DE KRAKEN ANTES DE LLAMAR IA
                         real_market_data = {}
+                        kraken_auth_available = False
+                        
                         try:
-                            # HAROLD FIX: Usar self.trading_enterprise en lugar de trading_system undefined
+                            # HAROLD FIX V6.0.5: Verificar si hay kraken_client disponible PRIMERO
                             ts = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
-                            if ts and hasattr(ts, 'kraken_client'):
+                            
+                            if ts and hasattr(ts, 'kraken_client') and ts.kraken_client:
+                                kraken_auth_available = True
+                                logger.info("📡 Kraken AUTH disponible - intentando fetch...")
                                 # Obtener precio real BTC/USD
                                 btc_ticker = ts.kraken_client.client.fetch_ticker('BTC/USD')
                                 real_market_data['btc_price'] = btc_ticker['last']
@@ -3984,18 +4007,48 @@ Los parámetros fueron ajustados automáticamente
                                 real_market_data['balance_usd'] = balance.get('USD', {}).get('free', 0)
                                 real_market_data['balance_btc'] = balance.get('BTC', {}).get('free', 0)
                                 
-                                logger.info(f"✅ DATOS REALES KRAKEN: BTC=${real_market_data['btc_price']:,.2f}, Balance=${real_market_data['balance_usd']:.2f}")
+                                logger.info(f"✅ KRAKEN AUTH SUCCESS: BTC=${real_market_data['btc_price']:,.2f}")
+                            else:
+                                logger.warning("⚠️ Kraken AUTH no disponible - saltando directo a API pública")
+                                raise Exception("No kraken_client available")
                         except Exception as data_error:
-                            logger.error(f"⚠️ Error obteniendo datos reales Kraken: {data_error}")
-                            # Intentar API pública como fallback
+                            logger.warning(f"⚠️ Kraken AUTH falló: {data_error}")
+                            # Intentar API pública como fallback CON VALIDACIÓN ROBUSTA
                             try:
-                                pub_response = requests.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', timeout=5)
+                                logger.info("📡 Intentando Kraken PUBLIC API...")
+                                pub_response = requests.get(
+                                    'https://api.kraken.com/0/public/Ticker?pair=XBTUSD', 
+                                    timeout=10,
+                                    headers={'User-Agent': 'OMNIX/6.0'}
+                                )
+                                logger.info(f"📡 Kraken PUBLIC status: {pub_response.status_code}")
+                                
                                 if pub_response.status_code == 200:
                                     pub_data = pub_response.json()
-                                    real_market_data['btc_price'] = float(pub_data['result']['XXBTZUSD']['c'][0])
-                                    logger.info(f"✅ DATOS REALES API PÚBLICA: BTC=${real_market_data['btc_price']:,.2f}")
+                                    
+                                    # VALIDACIÓN ROBUSTA (no asumir estructura)
+                                    if not pub_data.get('error') and 'result' in pub_data and pub_data['result']:
+                                        result = pub_data['result']
+                                        ticker_key = 'XXBTZUSD' if 'XXBTZUSD' in result else list(result.keys())[0] if result else None
+                                        
+                                        if ticker_key and ticker_key in result:
+                                            ticker = result[ticker_key]
+                                            if 'c' in ticker and ticker['c'] and len(ticker['c']) > 0:
+                                                real_market_data['btc_price'] = float(ticker['c'][0])
+                                                real_market_data['btc_24h_high'] = float(ticker['h'][0]) if ticker.get('h') else 0
+                                                real_market_data['btc_24h_low'] = float(ticker['l'][0]) if ticker.get('l') else 0
+                                                real_market_data['btc_volume'] = float(ticker['v'][1]) if ticker.get('v') and len(ticker['v']) > 1 else 0
+                                                logger.info(f"✅ KRAKEN PUBLIC SUCCESS: BTC=${real_market_data['btc_price']:,.2f}")
+                                            else:
+                                                logger.warning(f"⚠️ Kraken ticker['c'] inválido")
+                                        else:
+                                            logger.warning(f"⚠️ Kraken no tiene ticker key válido")
+                                    else:
+                                        logger.warning(f"⚠️ Kraken error en respuesta: {pub_data.get('error')}")
+                                else:
+                                    logger.warning(f"⚠️ Kraken HTTP error: {pub_response.status_code}")
                             except Exception as pub_error:
-                                logger.error(f"❌ Error API pública: {pub_error}")
+                                logger.error(f"❌ Kraken PUBLIC falló: {type(pub_error).__name__}: {pub_error}")
                         
                         # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad
                         import google.generativeai as genai
