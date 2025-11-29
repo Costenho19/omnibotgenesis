@@ -71,3 +71,4 @@ pyarrow==18.1.0
 telegram
 dwave-ocean-sdk
 psycopg[binary]
+youtube-transcript-api
