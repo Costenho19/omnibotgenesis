@@ -1,11 +1,20 @@
-# OMNIX V6.0 ULTRA - Automated Trading System
+# OMNIX V6.1 ULTRA - Automated Trading System
 
 ### Overview
-OMNIX V6.0 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
+OMNIX V6.1 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
 ### Recent Changes (Nov 29, 2025)
 
-**Robust Market Data System (V6.0.3):**
+**Multi-Crypto Support V6.1.0 (NEW):**
+- Support for 50+ cryptocurrencies: BTC, ETH, ADA, SOL, XRP, DOT, DOGE, AVAX, LINK, MATIC, LTC, and more
+- `CRYPTO_MAPPING` dictionary maps common names → symbols → Kraken pairs
+- `fetch_crypto_price(crypto_name)` function fetches any supported crypto
+- Auto-detection of crypto names in user messages (e.g., "precio de Cardano")
+- Kraken primary + CoinGecko fallback for all cryptos
+- AI prompt updated to display multi-crypto data
+- `/version` command shows V6.1.0 build info
+
+**Robust Market Data System (V6.0.3-V6.0.5):**
 - `_fetch_real_market_data()` now uses 3-source fallback: Kraken Auth → Kraken Public → CoinGecko
 - Robust JSON validation before accessing keys
 - 10-second timeout per source

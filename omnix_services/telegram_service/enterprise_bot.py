@@ -593,21 +593,28 @@ Opera bajo tu propio riesgo. /legal para detalles."""
             except:
                 pass
             
-            version_text = f"""🔧 **OMNIX BUILD INFO**
+            version_text = f"""🔧 **OMNIX V6.1 ULTRA - BUILD INFO**
 
-📌 **Version**: V6.0.6
-🕐 **Build**: 2025-11-29T05:30:00Z
-🎯 **Build ID**: version-cmd-fix
-🔗 **Trading**: {'✅ Activo' if has_trading else '⚠️ No disponible'}
-📡 **Kraken**: {'✅ Disponible' if has_kraken else '⚠️ API pública'}
+📌 **Version**: V6.1.0
+🕐 **Build**: 2025-11-29T06:00:00Z
+🎯 **Build ID**: multi-crypto-support
 
-✅ Código V6.0.6 confirmado."""
+**🪙 MULTI-CRIPTO V6.1:**
+✅ 50+ criptomonedas soportadas
+✅ BTC, ETH, ADA, SOL, XRP, DOT, DOGE...
+✅ Kraken + CoinGecko fallback
+
+**📊 SISTEMA:**
+🔗 Trading: {'✅ Activo' if has_trading else '⚠️ Paper Mode'}
+📡 Kraken: {'✅ API Conectada' if has_kraken else '⚠️ API Pública'}
+
+✅ Build V6.1.0 confirmado."""
             
-            logger.info(f"🔧 /version responding: V6.0.6")
+            logger.info(f"🔧 /version responding: V6.1.0")
             await update.message.reply_text(version_text, parse_mode='Markdown')
         except Exception as e:
             logger.error(f"❌ /version error: {e}")
-            await update.message.reply_text(f"🔧 OMNIX V6.0.6 - Error: {e}")
+            await update.message.reply_text(f"🔧 OMNIX V6.1.0 - Error: {e}")
 
     async def help_command(self, update, context):
         """Comando /help"""
