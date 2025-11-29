@@ -14,17 +14,17 @@ import os
 import logging
 from typing import Optional, List, Dict
 from datetime import datetime, timedelta
-from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
 try:
-    import psycopg2
-    from psycopg2 import sql
-    PSYCOPG2_AVAILABLE = True
+    import psycopg
+    from psycopg import sql
+    PSYCOPG_AVAILABLE = True
+    logger.info("✅ psycopg3 cargado correctamente - Soporte nativo de URLs")
 except ImportError:
-    PSYCOPG2_AVAILABLE = False
-    logger.warning("psycopg2 no disponible - Database desactivado")
+    PSYCOPG_AVAILABLE = False
+    logger.warning("psycopg3 no disponible - Database desactivado")
 
 try:
     import redis
@@ -106,7 +106,7 @@ class DatabaseServiceEnterprise:
                 logger.error("   Revisa que el VALUE sea la URL real, no el nombre de la variable")
                 self.db_url = None
         
-        # 🔧 FIX: Railway usa postgres:// pero psycopg2 necesita postgresql://
+        # 🔧 FIX: Railway usa postgres:// pero psycopg necesita postgresql://
         if self.db_url and self.db_url.startswith('postgres://'):
             self.db_url = self.db_url.replace('postgres://', 'postgresql://', 1)
             logger.info("🔄 DATABASE_URL convertida: postgres:// → postgresql://")
@@ -127,8 +127,8 @@ class DatabaseServiceEnterprise:
         
         # 🔍 DEBUG LOGGING MEJORADO PARA RAILWAY
         logger.info("=" * 70)
-        logger.info("🚀 INICIANDO DatabaseServiceEnterprise V6.2")
-        logger.info(f"📊 PSYCOPG2_AVAILABLE: {PSYCOPG2_AVAILABLE}")
+        logger.info("🚀 INICIANDO DatabaseServiceEnterprise V6.3 (psycopg3)")
+        logger.info(f"📊 PSYCOPG_AVAILABLE: {PSYCOPG_AVAILABLE}")
         
         if self.db_url:
             # Mostrar primeros 30 caracteres para confirmar presencia (sin exponer credenciales)
@@ -145,8 +145,8 @@ class DatabaseServiceEnterprise:
             logger.info("=" * 70)
             return
         
-        if not PSYCOPG2_AVAILABLE:
-            logger.error("❌ psycopg2 NO DISPONIBLE - No se puede conectar a PostgreSQL")
+        if not PSYCOPG_AVAILABLE:
+            logger.error("❌ psycopg3 NO DISPONIBLE - No se puede conectar a PostgreSQL")
             logger.info("=" * 70)
             return
         
@@ -185,7 +185,7 @@ class DatabaseServiceEnterprise:
     def health_check(self) -> Dict[str, bool]:
         """Health check del servicio"""
         return {
-            'psycopg2_available': PSYCOPG2_AVAILABLE,
+            'psycopg_available': PSYCOPG_AVAILABLE,
             'database_connected': self.connected,
             'database_url_configured': bool(self.db_url)
         }
@@ -194,27 +194,22 @@ class DatabaseServiceEnterprise:
         """
         Obtener conexión a PostgreSQL
         
-        🔧 FIX Nov 29, 2025: psycopg2 NO soporta URLs directamente.
-        Debe parsearse la URL y conectar con keyword arguments.
-        Railway requiere sslmode='require'.
+        🚀 MIGRACIÓN Nov 29, 2025: psycopg3 soporta URLs nativamente.
+        No requiere parsear la URL manualmente.
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return None
         
         try:
-            # Parsear la DATABASE_URL
-            result = urlparse(self.db_url)
+            # psycopg3 soporta URLs directamente - mucho más simple
+            # Agregar sslmode=require para Railway
+            conn_string = self.db_url
+            if '?' not in conn_string:
+                conn_string += '?sslmode=require'
+            elif 'sslmode' not in conn_string:
+                conn_string += '&sslmode=require'
             
-            # Conectar con keyword arguments (psycopg2 no soporta URLs directas)
-            return psycopg2.connect(
-                host=result.hostname,
-                port=result.port,
-                database=result.path[1:],  # Remover el "/" inicial
-                user=result.username,
-                password=result.password,
-                sslmode='require',  # Railway requiere SSL
-                connect_timeout=10
-            )
+            return psycopg.connect(conn_string, connect_timeout=10)
         except Exception as e:
             logger.error(f"❌ Error conectando a PostgreSQL: {e}")
             raise
@@ -231,7 +226,7 @@ class DatabaseServiceEnterprise:
         
         FECHA: Nov 26, 2025
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -415,7 +410,7 @@ class DatabaseServiceEnterprise:
         
         Esta migración es idempotente y segura.
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -464,7 +459,7 @@ class DatabaseServiceEnterprise:
         
         Esta migración es idempotente y segura.
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -541,7 +536,7 @@ class DatabaseServiceEnterprise:
         
         Esta migración es idempotente (verifica FK antes de agregar).
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -648,7 +643,7 @@ class DatabaseServiceEnterprise:
         
         Esta migración es idempotente (verifica constraints antes de agregar).
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -773,7 +768,7 @@ class DatabaseServiceEnterprise:
         
         RESULTADO: 33 → 28 tablas (20 core + 7 risk/monitoring + 6 derivatives - 5 legacy)
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -1026,7 +1021,7 @@ class DatabaseServiceEnterprise:
         Returns:
             Dict con resultados de validación
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return {'success': False, 'error': 'Database not available'}
         
         conn = self._get_connection()
@@ -1292,7 +1287,7 @@ class DatabaseServiceEnterprise:
         
         Beneficio: Previene crecimiento infinito (~95% reducción de espacio en 1 año)
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -1377,7 +1372,7 @@ class DatabaseServiceEnterprise:
     
     def _init_tables(self):
         """Inicializar todas las tablas del sistema"""
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return
         
         conn = self._get_connection()
@@ -3600,7 +3595,7 @@ class DatabaseServiceEnterprise:
         Returns:
             Dict con resultado de la operación
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return {'success': False, 'error': 'Database not available'}
         
         conn = self._get_connection()
@@ -3647,7 +3642,7 @@ class DatabaseServiceEnterprise:
         Returns:
             Lista de contactos
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return []
         
         conn = self._get_connection()
@@ -3707,7 +3702,7 @@ class DatabaseServiceEnterprise:
         Returns:
             True si se verificó exitosamente
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return False
         
         conn = self._get_connection()
@@ -3750,7 +3745,7 @@ class DatabaseServiceEnterprise:
         Returns:
             True si se estableció exitosamente
         """
-        if not self.db_url or not PSYCOPG2_AVAILABLE:
+        if not self.db_url or not PSYCOPG_AVAILABLE:
             return False
         
         conn = self._get_connection()
