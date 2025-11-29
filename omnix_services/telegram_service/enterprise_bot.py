@@ -2752,11 +2752,13 @@ Ejemplo: /risk_events 48
                     video_context += f"\n\nMensaje original del usuario: {user_message}"
                     
                     # Generar respuesta con contexto del video
-                    ai_response = self.ai_system.generate_response(
+                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    ai_response = self.ai.generate_response(
                         user_message=video_context,
                         user_name=user_name,
                         chat_id=user_id,
-                        trading_system=self.trading_system
+                        user_id=user_id,
+                        trading_system=self.trading
                     )
                     
                     if not ai_response:
@@ -2790,11 +2792,13 @@ Ejemplo: /risk_events 48
             thinking_message = await update.message.reply_text("🧠 OMNIX IA")
             
             try:
-                ai_response = self.ai_system.generate_response(
+                # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                ai_response = self.ai.generate_response(
                     user_message=user_message,
                     user_name=user_name,
                     chat_id=user_id,
-                    trading_system=self.trading_system
+                    user_id=user_id,
+                    trading_system=self.trading
                 )
                 
                 if not ai_response:
@@ -3022,11 +3026,13 @@ Ejemplo: /risk_events 48
                     logger.info(f"🎤 Texto transcrito: {transcribed_text}")
                     
                     # Procesar con la IA directamente (sin FakeUpdate)
-                    ai_response = self.ai_system.generate_response(
+                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    ai_response = self.ai.generate_response(
                         user_message=transcribed_text,
                         user_name=user_name,
                         chat_id=user_id,
-                        trading_system=self.trading_system
+                        user_id=user_id,
+                        trading_system=self.trading
                     )
                     
                     if not ai_response:
@@ -3178,11 +3184,13 @@ Ejemplo: /risk_events 48
                     else:
                         full_context = f"El usuario envió un video para análisis:\n{analysis_result}"
                     
-                    ai_response = self.ai_system.generate_response(
+                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    ai_response = self.ai.generate_response(
                         user_message=full_context,
                         user_name=user_name,
                         chat_id=user_id,
-                        trading_system=self.trading_system
+                        user_id=user_id,
+                        trading_system=self.trading
                     )
                     
                     if not ai_response:
@@ -4035,8 +4043,15 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                         
                         # Intentar generar respuesta con IA
                         if hasattr(self.ai, 'generate_response'):
+                            # FIX CRÍTICO Nov 29, 2025: Pasar chat_id y user_id para memoria
                             # generate_response puede ser async - ejecutar síncronamente
-                            result = self.ai.generate_response(ai_prompt, str(user_id))
+                            result = self.ai.generate_response(
+                                user_message=ai_prompt,
+                                user_name="Harold",
+                                chat_id=str(chat_id),
+                                user_id=str(effective_user_id),
+                                trading_system=self.trading
+                            )
                             if asyncio.iscoroutine(result):
                                 # Es una coroutine, ejecutar en el event loop
                                 try:
@@ -4649,7 +4664,14 @@ Harold pregunta: {text}"""
         """FUNCIÓN REDIRIGIDA - USA SUPERINTELIGENCIA PARA HAROLD"""
         try:
             logger.info(f"🔄 Redirigiendo a superinteligencia para Harold...")
-            return self.ai.generate_response(text, "Harold", settings.TELEGRAM_ADMIN_ID, int(settings.TELEGRAM_ADMIN_ID))
+            # FIX Nov 29, 2025: Usar parámetros nombrados para memoria
+            return self.ai.generate_response(
+                user_message=text,
+                user_name="Harold",
+                chat_id=str(settings.TELEGRAM_ADMIN_ID),
+                user_id=str(settings.TELEGRAM_ADMIN_ID),
+                trading_system=self.trading
+            )
         except Exception as e:
             logger.error(f"❌ Error generate_smart_response: {e}")
             return f"🤖 Sistema procesando: '{text}'\n\n💰 Balance real verificado con Kraken\n✅ IA superinteligente operativa"
