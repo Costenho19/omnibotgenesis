@@ -2799,18 +2799,42 @@ Ejemplo: /risk_events 48
                     
                     if not has_real_content:
                         # Fallback: intentar obtener transcripción directamente
+                        logger.info("🔄 Fallback en handle_message: Intentando youtube-transcript-api directamente")
                         try:
                             from youtube_transcript_api import YouTubeTranscriptApi
                             video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
                             if video_id_match:
                                 video_id = video_id_match.group(1)
-                                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                                for t in transcript_list:
-                                    data = t.fetch()
-                                    full_text = ' '.join([e['text'] for e in data])
-                                    video_context += f"\n📜 TRANSCRIPCIÓN DIRECTA DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                    has_real_content = True
-                                    break
+                                logger.info(f"🎬 Video ID extraído en handle_message: {video_id}")
+                                
+                                # MÉTODO 1: get_transcript directo (más robusto)
+                                try:
+                                    transcript_data = YouTubeTranscriptApi.get_transcript(
+                                        video_id, 
+                                        languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
+                                    )
+                                    if transcript_data:
+                                        full_text = ' '.join([e['text'] for e in transcript_data])
+                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                        has_real_content = True
+                                        logger.info(f"✅ Transcripción directa obtenida en handle_message: {len(full_text)} chars")
+                                except Exception as direct_err:
+                                    logger.warning(f"⚠️ Método directo falló en handle_message: {direct_err}")
+                                    
+                                    # MÉTODO 2: list_transcripts (fallback del fallback)
+                                    try:
+                                        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                                        for t in transcript_list:
+                                            data = t.fetch()
+                                            full_text = ' '.join([e['text'] for e in data])
+                                            video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                            has_real_content = True
+                                            logger.info(f"✅ Transcripción via list_transcripts en handle_message: {len(full_text)} chars")
+                                            break
+                                    except Exception as list_err:
+                                        logger.warning(f"⚠️ list_transcripts también falló: {list_err}")
+                        except ImportError:
+                            logger.error("❌ youtube-transcript-api no está instalada")
                         except Exception as fallback_err:
                             logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
                     
@@ -4162,14 +4186,36 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
                             if video_id_match:
                                 video_id = video_id_match.group(1)
-                                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                                for t in transcript_list:
-                                    data = t.fetch()
-                                    full_text = ' '.join([e['text'] for e in data])
-                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                    has_real_content = True
-                                    logger.info(f"✅ Transcripción directa obtenida: {len(full_text)} chars")
-                                    break
+                                logger.info(f"🎬 Video ID extraído: {video_id}")
+                                
+                                # MÉTODO 1: get_transcript directo (más robusto)
+                                try:
+                                    transcript_data = YouTubeTranscriptApi.get_transcript(
+                                        video_id, 
+                                        languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
+                                    )
+                                    if transcript_data:
+                                        full_text = ' '.join([e['text'] for e in transcript_data])
+                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                        has_real_content = True
+                                        logger.info(f"✅ Transcripción directa obtenida (método directo): {len(full_text)} chars")
+                                except Exception as direct_err:
+                                    logger.warning(f"⚠️ Método directo falló: {direct_err}")
+                                    
+                                    # MÉTODO 2: list_transcripts (fallback del fallback)
+                                    try:
+                                        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                                        for t in transcript_list:
+                                            data = t.fetch()
+                                            full_text = ' '.join([e['text'] for e in data])
+                                            video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
+                                            has_real_content = True
+                                            logger.info(f"✅ Transcripción obtenida via list_transcripts: {len(full_text)} chars")
+                                            break
+                                    except Exception as list_err:
+                                        logger.warning(f"⚠️ list_transcripts también falló: {list_err}")
+                        except ImportError:
+                            logger.error("❌ youtube-transcript-api no está instalada")
                         except Exception as fallback_err:
                             logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
                     

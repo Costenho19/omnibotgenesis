@@ -652,6 +652,20 @@ Responde en JSON:
             from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
             
             try:
+                # MÉTODO 1: Usar get_transcript directamente (más robusto)
+                try:
+                    transcript_data = YouTubeTranscriptApi.get_transcript(
+                        video_id, 
+                        languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
+                    )
+                    if transcript_data:
+                        full_text = ' '.join([entry['text'] for entry in transcript_data])
+                        logger.info(f"✅ Transcripción obtenida (método directo): {len(full_text)} caracteres")
+                        return full_text
+                except Exception as direct_err:
+                    logger.warning(f"⚠️ Método directo falló: {direct_err}, intentando list_transcripts...")
+                
+                # MÉTODO 2: list_transcripts (fallback)
                 transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
                 
                 transcript = None
@@ -688,7 +702,14 @@ Responde en JSON:
             except VideoUnavailable:
                 logger.warning(f"⚠️ Video {video_id} no disponible")
                 return None
+            except Exception as inner_err:
+                # Capturar errores de parsing XML u otros
+                logger.warning(f"⚠️ Error interno obteniendo transcripción: {inner_err}")
+                return None
                 
+        except ImportError as ie:
+            logger.error(f"❌ youtube-transcript-api no instalada: {ie}")
+            return None
         except Exception as e:
             logger.error(f"❌ Error obteniendo transcripción: {e}")
             return None
