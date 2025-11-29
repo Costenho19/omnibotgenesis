@@ -1099,49 +1099,65 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
             await update.message.reply_text("❌ Error obteniendo dashboard del mercado")
 
     async def balance_command(self, update, context):
-        """Comando /balance"""
+        """Comando /balance - FIX Nov 29 2025: Parseo correcto de estructura balance"""
         try:
-            # Obtener balance real usando instancia global
             try:
                 if not global_trading_system:
                     await update.message.reply_text("⚠️ Sistema de trading no disponible")
                     return
                 balance_data = global_trading_system.get_real_balance()
                 
-                # Guardar snapshot automáticamente usando DatabaseServiceEnterprise
+                if 'error' in balance_data:
+                    await update.message.reply_text(f"❌ Error Kraken: {balance_data['error']}")
+                    return
+                
+                def get_free_balance(currency):
+                    val = balance_data.get(currency, {})
+                    if isinstance(val, dict):
+                        return val.get('free', 0) or 0
+                    return float(val) if val else 0
+                
+                usd_balance = get_free_balance('USD')
+                btc_balance = get_free_balance('BTC')
+                eth_balance = get_free_balance('ETH')
+                total_usd = balance_data.get('estimated_total_usd', 0)
+                
                 user_id = str(update.message.from_user.id)
                 snapshot_data = {
                     'exchange': 'kraken',
-                    'total_usd': balance_data.get('total_usd', 0),
-                    'btc_balance': balance_data.get('BTC', 0),
-                    'eth_balance': balance_data.get('ETH', 0),
-                    'usdt_balance': balance_data.get('USDT', 0),
+                    'total_usd': total_usd,
+                    'btc_balance': btc_balance,
+                    'eth_balance': eth_balance,
+                    'usdt_balance': get_free_balance('USDT'),
                     'other_balance': 0
                 }
                 if global_db_manager:
                     global_db_manager.save_balance_snapshot(user_id, snapshot_data)
                 
-                mensaje = f"""
-**BALANCE REAL KRAKEN**
+                currencies_list = ""
+                for currency, data in balance_data.items():
+                    if currency in ['estimated_total_usd', 'error']:
+                        continue
+                    if isinstance(data, dict):
+                        free = data.get('free', 0) or 0
+                        if free > 0.0001:
+                            currencies_list += f"• **{currency}:** {free:.8f}\n"
+                
+                mensaje = f"""💰 **BALANCE REAL KRAKEN**
 
-**USD:** ${balance_data.get('USD', 0):.2f}
-**BTC:** {balance_data.get('BTC', 0):.8f}
-**ETH:** {balance_data.get('ETH', 0):.6f}
+{currencies_list if currencies_list else '• Sin balances significativos'}
 
-**Total estimado:** ${balance_data.get('total_usd', 0):.2f}
+💵 **Total Estimado:** ${total_usd:,.2f} USD
 
-**Estado:** TRADING REAL ACTIVADO
-**Seguridad:** API Kraken oficial
+✅ **Estado:** TRADING REAL ACTIVADO
+🔐 **Seguridad:** API Kraken oficial
 
-*Datos actualizados en tiempo real*
-*Balance guardado para tracking histórico*
-
-Usa /performance para ver evolución de tu balance
+_Datos actualizados en tiempo real_
 """
                 
             except Exception as e:
                 logger.error(f"Error obteniendo balance: {e}")
-                mensaje = "Error obteniendo balance. Verifica conexion Kraken."
+                mensaje = f"❌ Error obteniendo balance: {str(e)[:100]}"
             
             await update.message.reply_text(mensaje, parse_mode='Markdown')
             

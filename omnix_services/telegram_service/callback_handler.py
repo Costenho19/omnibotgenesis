@@ -201,43 +201,36 @@ Selecciona el tipo de análisis que deseas:"""
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=keyboard)
     
     async def _show_balance(self, query, bot_instance):
-        """Mostrar balance de Kraken"""
+        """Mostrar balance de Kraken - FIX Nov 29 2025: Parseo correcto de estructura"""
         try:
             balance = self.trading.get_real_balance()
             
-            if balance:
+            if balance and 'error' not in balance:
                 text = "💰 **BALANCE KRAKEN REAL**\n\n"
-                total_usd = 0
+                total_usd = balance.get('estimated_total_usd', 0)
                 
-                for currency, amount in balance.items():
-                    amount_float = float(amount)
-                    if amount_float > 0.001:  # Mostrar solo balances significativos
-                        text += f"• **{currency}:** {amount_float:.8f}\n"
-                        
-                        # Convertir a USD si es posible
-                        if currency != "USD":
-                            try:
-                                price = self.trading.get_current_price(f"{currency}/USD")
-                                if price:
-                                    value_usd = amount_float * price
-                                    total_usd += value_usd
-                                    text += f"  └─ ≈ ${value_usd:,.2f} USD\n"
-                            except:
-                                pass
-                        else:
-                            total_usd += amount_float
+                for currency, data in balance.items():
+                    if currency in ['estimated_total_usd', 'error']:
+                        continue
+                    
+                    if isinstance(data, dict):
+                        free_amount = data.get('free', 0) or 0
+                        if free_amount > 0.0001:
+                            text += f"• **{currency}:** {free_amount:.8f}\n"
+                    elif isinstance(data, (int, float)) and data > 0.0001:
+                        text += f"• **{currency}:** {data:.8f}\n"
                 
                 text += f"\n💵 **Total Estimado:** ${total_usd:,.2f} USD"
                 text += f"\n⏰ **Actualizado:** {datetime.now().strftime('%H:%M:%S')}"
                 
-                # Botón para volver
                 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
                 keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
                 await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
             else:
+                error_msg = balance.get('error', 'Sin conexión') if balance else 'Sin datos'
                 from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
                 keyboard = InlineKeyboardsManager.get_main_menu()
-                await query.edit_message_text("❌ Error obteniendo balance de Kraken", reply_markup=keyboard)
+                await query.edit_message_text(f"❌ Error Kraken: {error_msg}", reply_markup=keyboard)
         except Exception as e:
             logger.error(f"❌ Error mostrando balance: {e}")
             from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
