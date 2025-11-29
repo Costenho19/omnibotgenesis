@@ -2609,6 +2609,8 @@ Ejemplo: /risk_events 48
             user = update.effective_user
             user_id = str(user.id)
             user_name = user.first_name or "Usuario"
+            # FIX Nov 29, 2025: Obtener chat_id correcto para memoria
+            telegram_chat_id = str(update.effective_chat.id)  # Distinto de user_id en grupos
             
             # 🔍 DEBUG Nov 29: Log detallado para diagnosticar detección de YouTube
             logger.info(f"🧠 MENSAJE RECIBIDO de {user_name} ({user_id}): {user_message}")
@@ -2752,11 +2754,11 @@ Ejemplo: /risk_events 48
                     video_context += f"\n\nMensaje original del usuario: {user_message}"
                     
                     # Generar respuesta con contexto del video
-                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
                     ai_response = self.ai.generate_response(
                         user_message=video_context,
                         user_name=user_name,
-                        chat_id=user_id,
+                        chat_id=telegram_chat_id,
                         user_id=user_id,
                         trading_system=self.trading
                     )
@@ -2792,11 +2794,11 @@ Ejemplo: /risk_events 48
             thinking_message = await update.message.reply_text("🧠 OMNIX IA")
             
             try:
-                # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
                 ai_response = self.ai.generate_response(
                     user_message=user_message,
                     user_name=user_name,
-                    chat_id=user_id,
+                    chat_id=telegram_chat_id,
                     user_id=user_id,
                     trading_system=self.trading
                 )
@@ -3026,11 +3028,11 @@ Ejemplo: /risk_events 48
                     logger.info(f"🎤 Texto transcrito: {transcribed_text}")
                     
                     # Procesar con la IA directamente (sin FakeUpdate)
-                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
                     ai_response = self.ai.generate_response(
                         user_message=transcribed_text,
                         user_name=user_name,
-                        chat_id=user_id,
+                        chat_id=telegram_chat_id,
                         user_id=user_id,
                         trading_system=self.trading
                     )
@@ -3184,11 +3186,11 @@ Ejemplo: /risk_events 48
                     else:
                         full_context = f"El usuario envió un video para análisis:\n{analysis_result}"
                     
-                    # FIX Nov 29, 2025: Pasar user_id explícito para memoria
+                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
                     ai_response = self.ai.generate_response(
                         user_message=full_context,
                         user_name=user_name,
-                        chat_id=user_id,
+                        chat_id=telegram_chat_id,
                         user_id=user_id,
                         trading_system=self.trading
                     )
