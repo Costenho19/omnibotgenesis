@@ -1,11 +1,21 @@
 # OMNIX V6.1 ULTRA - Automated Trading System
 
 ### Overview
-OMNIX V6.1 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, and real-time market analysis, featuring advanced strategy modules like ARES V1 and V2, and multi-exchange arbitrage. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
+OMNIX V6.1 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It operates in paper trading mode with substantial virtual capital to build a credible track record for investor presentations. The system integrates AI, post-quantum cryptography, real-time market analysis, and Non-Markovian temporal memory, featuring advanced strategy modules like ARES V1/V2 and the new Memory Kernel. The project aims to secure seed funding by demonstrating robust performance, including modules for institutional compliance, derivatives trading, and enhanced investor reporting.
 
 ### Recent Changes (Nov 29, 2025)
 
-**Multi-Crypto Support V6.1.0 (NEW):**
+**Non-Markovian Memory Kernel V6.1 (NEW):**
+- Implemented genuine Non-Markovian kernel: K(t-s) = exp(-|t-s|/τ)[1 + ε cos(Ω(t-s))]
+- Parameters: τ=12h (memory decay), ε=0.35 (oscillation amplitude), Ω=0.523 rad/period (12h cycles)
+- Captures temporal dependencies that Markov models miss
+- Integrated to decision flow with 12-point weight
+- Detects regime transitions, institutional accumulation patterns, and cyclical strength
+- New file: `omnix_core/strategies/non_markovian_kernel.py`
+- AI prompts updated with reframing for kernel questions
+- Auto-trading bot upgraded to V6.1 with 10 strategy modules
+
+**Multi-Crypto Support V6.1.0:**
 - Support for 50+ cryptocurrencies: BTC, ETH, ADA, SOL, XRP, DOT, DOGE, AVAX, LINK, MATIC, LTC, and more
 - `CRYPTO_MAPPING` dictionary maps common names → symbols → Kraken pairs
 - `fetch_crypto_price(crypto_name)` function fetches any supported crypto
@@ -92,7 +102,8 @@ OMNIX V6.0 ULTRA is built around a robust, modular architecture designed for hig
 - **Reporting**: Generates professional, investor-ready PDF reports (25-35 pages) with executive summaries, methodology, results, risk analysis, and trade logs, utilizing Plotly for 5 institutional-quality visualizations.
 
 #### Technical Implementations
-- **Core Strategies**: 9 distinct modules including Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Adaptive Momentum, Sharia Compliance, Order Book Analysis, and Sentiment Analysis.
+- **Core Strategies**: 10 distinct modules including Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum, ARES V1/V2, Non-Markovian Kernel, and Order Book Analysis.
+- **Non-Markovian Memory Kernel V6.1**: Captures temporal dependencies beyond Markov assumption with K(t-s) = exp(-|t-s|/τ)[1 + ε cos(Ω(t-s))]. Detects regime transitions, cyclical patterns, and memory coherence. 12-point weight in decision flow.
 - **ARES Institutional Protocols**:
     - **ARES V1 (Swing Trading)**: 55-65% win rate target using a 3-layer institutional architecture and 6 professional indicators.
     - **ARES V2 (Scalping M1)**: 60-70% win rate target for 1-minute scalping with 5 precision indicators, ultra-tight stop loss, multi-level take profits, and kill-switch protection.

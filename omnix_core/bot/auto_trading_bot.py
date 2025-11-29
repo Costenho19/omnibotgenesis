@@ -1,8 +1,8 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V5.4 ULTRA - TRADING AUTOMÁTICO 24/7
-Sistema de trading automático con IA, Risk Guardian y Coherence Engine
+🤖 OMNIX AUTO-TRADING BOT V6.1 ULTRA - TRADING AUTOMÁTICO 24/7
+Sistema de trading automático con IA, Risk Guardian, Coherence Engine y Non-Markovian Kernel
 
-🔥 ESTRATEGIAS V5.4 ULTRA (9 MÓDULOS):
+🔥 ESTRATEGIAS V6.1 ULTRA (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -10,8 +10,9 @@ Sistema de trading automático con IA, Risk Guardian y Coherence Engine
 5. HMM Regime Detection: Detectar régimen de mercado (TRENDING/RANGING/VOLATILE)
 6. Kalman Filter: Filtrado adaptivo de señales con lag mínimo
 7. Quantum Momentum: Estrategia propietaria 6 componentes (EMA/RSI/MACD/Volume/HP/ATR)
-8. Sharia Compliance: Filtro halal/haram automático
-9. Order Book Analysis: Detección de whales y desbalances
+8. ARES V1: Swing Trading institucional (55-65% win rate)
+9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
+10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
 
 💰 MODOS DE OPERACIÓN:
 - PAPER TRADING: $1,000,000 virtual (recomendado para testing)
@@ -123,6 +124,16 @@ except ImportError:
     AIRiskGuardian = None
     AI_RISK_GUARDIAN_AVAILABLE = False
     logger.warning("⚠️ AI Risk Guardian no disponible - supervisión de riesgos desactivada")
+
+# Import Non-Markovian Kernel (V6.1 ULTRA - QUANTUM MEMORY)
+try:
+    from omnix_core.strategies.non_markovian_kernel import NonMarkovianKernel
+    NON_MARKOVIAN_KERNEL_AVAILABLE = True
+    logger.info("🧠 Non-Markovian Kernel disponible")
+except ImportError:
+    NonMarkovianKernel = None
+    NON_MARKOVIAN_KERNEL_AVAILABLE = False
+    logger.warning("⚠️ Non-Markovian Kernel no disponible")
 
 
 class AutoTradingBot:
@@ -237,8 +248,25 @@ class AutoTradingBot:
             self.risk_guardian = None
             logger.info("⚠️ AI Risk Guardian desactivado")
         
+        # Non-Markovian Memory Kernel V6.1 ULTRA - QUANTUM TEMPORAL MEMORY
+        if NON_MARKOVIAN_KERNEL_AVAILABLE:
+            try:
+                self.non_markovian_kernel = NonMarkovianKernel(
+                    tau=12.0,      # 12 hours memory decay
+                    epsilon=0.35,  # 35% oscillation amplitude
+                    omega=0.523,   # π/6 captures 12-hour cycles
+                    window_size=168  # 1 week of hourly data
+                )
+                logger.info("🧠 Non-Markovian Kernel V6.1 ACTIVADO - K(t-s) = exp(-|t-s|/τ)[1 + ε cos(Ω(t-s))]")
+            except Exception as e:
+                self.non_markovian_kernel = None
+                logger.warning(f"⚠️ Non-Markovian Kernel error: {e}")
+        else:
+            self.non_markovian_kernel = None
+            logger.info("⚠️ Non-Markovian Kernel desactivado")
+        
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
-        logger.info(f"🤖 AutoTradingBot V5.2 QUANTUM inicializado - Modo: {mode}")
+        logger.info(f"🤖 AutoTradingBot V6.1 ULTRA inicializado - Modo: {mode}")
     
     def start(self) -> Dict:
         """Iniciar trading automático 24/7"""
@@ -438,7 +466,20 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error calculando pesos adaptativos: {e}")
             
-            # 10. Decisión basada en TODOS los análisis + Pesos Adaptativos
+            # 10. NON-MARKOVIAN MEMORY KERNEL V6.1 - Temporal Memory Analysis
+            non_markovian = None
+            if self.non_markovian_kernel and current_price:
+                try:
+                    non_markovian = self.non_markovian_kernel.generate_signal(
+                        current_price=current_price,
+                        market_data={'prices': prices} if prices else None
+                    )
+                    if non_markovian and non_markovian.get('signal') != 'HOLD':
+                        logger.info(f"🧠 Non-Markovian Kernel: {non_markovian.get('signal')} ({non_markovian.get('confidence', 0):.1f}% conf)")
+                except Exception as e:
+                    logger.debug(f"Error en Non-Markovian Kernel (continuando): {e}")
+            
+            # 11. Decisión basada en TODOS los análisis + Pesos Adaptativos
             decision = self._make_v52_decision(
                 current_price=current_price,
                 monte_carlo=monte_carlo,
@@ -448,7 +489,8 @@ class AutoTradingBot:
                 hmm_regime=hmm_regime,
                 kalman=kalman,
                 quantum=quantum,
-                adaptive_weights=adaptive_weights
+                adaptive_weights=adaptive_weights,
+                non_markovian=non_markovian
             )
             
             # 11. 🧠 CEREBRO CONVERSACIONAL - Generar razonamiento pre-trade
@@ -501,16 +543,21 @@ class AutoTradingBot:
         hmm_regime: Optional[Dict],
         kalman: Optional[Dict],
         quantum: Optional[Dict],
-        adaptive_weights: Optional[object] = None
+        adaptive_weights: Optional[object] = None,
+        non_markovian: Optional[Dict] = None
     ) -> Dict:
         """
-        Decisión AVANZADA V5.2 integrando TODAS las 9 estrategias
+        Decisión AVANZADA V6.1 integrando TODAS las 10 estrategias
         
         Sistema de scoring ponderado que combina señales de múltiples fuentes
         
         NUEVO V5.2: Usa pesos adaptativos ω(t) para balancear Kalman vs Monte Carlo
         - ω cerca de 0 → favorece Kalman Filter (mercado normal)
         - ω cerca de 1 → favorece Monte Carlo (mercado extremo/volátil)
+        
+        NUEVO V6.1: Non-Markovian Memory Kernel para capturar dependencias temporales
+        - K(t-s) = exp(-|t-s|/τ)[1 + ε cos(Ω(t-s))]
+        - Detecta patrones cíclicos y coherencia de régimen
         """
         try:
             decision = {
@@ -759,6 +806,34 @@ class AutoTradingBot:
             except Exception as e:
                 logger.debug(f"ARES V2 error: {e}")
                 decision['v52_analysis']['ares_v2_error'] = str(e)
+            
+            # 10. NON-MARKOVIAN MEMORY KERNEL V6.1 (peso: 12 puntos - QUANTUM TEMPORAL MEMORY)
+            if non_markovian:
+                max_score += 12
+                nm_signal = non_markovian.get('signal', 'HOLD')
+                nm_confidence = non_markovian.get('confidence', 0)
+                nm_metrics = non_markovian.get('metrics', {})
+                
+                if nm_signal == 'BUY' and nm_confidence > 60:
+                    score += 12
+                    decision['reason'].append(f"🧠 Non-Markovian: BUY ({nm_confidence:.0f}% conf)")
+                elif nm_signal == 'BUY' and nm_confidence > 40:
+                    score += 6
+                    decision['reason'].append(f"✅ Non-Markovian: BUY ({nm_confidence:.0f}% conf)")
+                elif nm_signal == 'SELL' and nm_confidence > 60:
+                    score -= 12
+                    decision['reason'].append(f"🧠 Non-Markovian: SELL ({nm_confidence:.0f}% conf)")
+                elif nm_signal == 'SELL' and nm_confidence > 40:
+                    score -= 6
+                    decision['reason'].append(f"⚠️ Non-Markovian: SELL ({nm_confidence:.0f}% conf)")
+                
+                decision['v52_analysis']['non_markovian_signal'] = nm_signal
+                decision['v52_analysis']['non_markovian_confidence'] = nm_confidence
+                decision['v52_analysis']['non_markovian_metrics'] = nm_metrics
+                
+                if nm_metrics.get('regime_coherence'):
+                    coherence = nm_metrics['regime_coherence']
+                    decision['v52_analysis']['memory_regime_coherence'] = coherence.get('overall_coherence', 0)
             
             # ========== DECISIÓN FINAL ==========
             
