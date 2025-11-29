@@ -14,6 +14,7 @@ import os
 import logging
 from typing import Optional, List, Dict
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -190,10 +191,33 @@ class DatabaseServiceEnterprise:
         }
     
     def _get_connection(self):
-        """Obtener conexión a PostgreSQL"""
+        """
+        Obtener conexión a PostgreSQL
+        
+        🔧 FIX Nov 29, 2025: psycopg2 NO soporta URLs directamente.
+        Debe parsearse la URL y conectar con keyword arguments.
+        Railway requiere sslmode='require'.
+        """
         if not self.db_url or not PSYCOPG2_AVAILABLE:
             return None
-        return psycopg2.connect(self.db_url)
+        
+        try:
+            # Parsear la DATABASE_URL
+            result = urlparse(self.db_url)
+            
+            # Conectar con keyword arguments (psycopg2 no soporta URLs directas)
+            return psycopg2.connect(
+                host=result.hostname,
+                port=result.port,
+                database=result.path[1:],  # Remover el "/" inicial
+                user=result.username,
+                password=result.password,
+                sslmode='require',  # Railway requiere SSL
+                connect_timeout=10
+            )
+        except Exception as e:
+            logger.error(f"❌ Error conectando a PostgreSQL: {e}")
+            raise
     
     def _migrate_users_to_v2(self):
         """
