@@ -50,6 +50,7 @@ tqdm==4.67.1
 
 # Video Analysis
 youtube-transcript-api==0.6.1
+yt-dlp>=2024.1.0
 
 # Web Scraping (News Analysis)
 beautifulsoup4==4.12.3
