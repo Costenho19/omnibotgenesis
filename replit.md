@@ -88,6 +88,17 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 
 ### Recent Changes (Nov 29, 2025)
 
+#### YouTube Video Analysis Fix
+- **Problem**: When user shared YouTube video links or forwarded videos, bot said "no tengo acceso a videos" instead of analyzing them
+- **Root Cause**: YouTube URL detection logic existed only in `handle_direct_message` (webhook mode), not in `handle_message` (polling mode used by Railway)
+- **Solution**: 
+  - Added YouTube URL detection to `handle_message` in `enterprise_bot.py`
+  - Detects URLs in: message text, message entities (embeds), captions, and reply messages
+  - Integrates with existing `VideoAnalyzerUltra` for transcript, visual, and sentiment analysis
+  - Falls back to AI-powered contextual analysis if VideoAnalyzerUltra fails
+- **Files Modified**:
+  - `omnix_services/telegram_service/enterprise_bot.py` (lines 2664-2782) - YouTube detection added to polling handler
+
 #### Critical Architecture Fix: Trading System Instance
 - **Problem**: `/balance` and other commands used undefined `global_trading_system` variable instead of the properly initialized `self.trading` instance
 - **Root Cause**: `global_trading_system` is only set when `main()` from `omnix_core/trading_system.py` runs (which it doesn't in Railway's architecture)

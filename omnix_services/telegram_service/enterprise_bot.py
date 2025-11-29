@@ -2658,6 +2658,127 @@ Ejemplo: /risk_events 48
                 
                 return  # SALIR - NO enviar a IA
             
+            # 🎥 FIX Nov 29, 2025: DETECCIÓN DE URLs DE YOUTUBE EN MENSAJES DE TEXTO
+            # Detectar si el mensaje contiene una URL de YouTube y procesarla con VideoAnalyzerUltra
+            # También detecta URLs en mensajes reenviados con preview embebido
+            import re
+            youtube_pattern = r'(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)'
+            youtube_match = re.search(youtube_pattern, user_message or '')
+            
+            # También buscar en entities del mensaje (URLs embebidas de reenvíos)
+            if not youtube_match and update.message.entities:
+                for entity in update.message.entities:
+                    if entity.type == 'url':
+                        url_text = user_message[entity.offset:entity.offset + entity.length]
+                        if 'youtube.com' in url_text or 'youtu.be' in url_text:
+                            youtube_match = re.search(youtube_pattern, url_text)
+                            break
+            
+            # Buscar en caption si es un mensaje con media
+            if not youtube_match and update.message.caption:
+                youtube_match = re.search(youtube_pattern, update.message.caption)
+            
+            # Buscar en reply_to_message si el usuario está respondiendo a un mensaje con video
+            if not youtube_match and update.message.reply_to_message:
+                reply_text = update.message.reply_to_message.text or update.message.reply_to_message.caption or ''
+                youtube_match = re.search(youtube_pattern, reply_text)
+            
+            if youtube_match:
+                video_url = youtube_match.group(0)
+                if not video_url.startswith('http'):
+                    video_url = 'https://' + video_url
+                
+                logger.info(f"🎥 URL de YouTube detectada en handle_message: {video_url}")
+                
+                # Mostrar mensaje de procesamiento
+                processing_msg = await update.message.reply_text("🎬 Video de YouTube detectado - Analizando con IA...")
+                
+                try:
+                    # Intentar análisis con VideoAnalyzerUltra si está disponible
+                    video_analysis = None
+                    
+                    if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
+                        logger.info("🎬 Usando VideoAnalyzerUltra para análisis de YouTube")
+                        try:
+                            video_analysis = self.video_analyzer_ultra.analyze_video_complete(video_url, extract_frames=True)
+                            if video_analysis and video_analysis.get('status') == 'success':
+                                logger.info(f"✅ VideoAnalyzerUltra completó análisis con confianza: {video_analysis.get('confidence_score', 0):.2%}")
+                        except Exception as va_error:
+                            logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
+                    
+                    # Construir contexto para la IA con el análisis del video
+                    video_context = f"El usuario pidió analizar este video de YouTube: {video_url}\n\n"
+                    
+                    if video_analysis and video_analysis.get('status') == 'success':
+                        # Incluir resultados del análisis
+                        if 'transcript_analysis' in video_analysis:
+                            ta = video_analysis['transcript_analysis']
+                            video_context += f"📝 TRANSCRIPCIÓN ANALIZADA:\n"
+                            if ta.get('trading_strategy'):
+                                video_context += f"- Estrategia: {ta['trading_strategy']}\n"
+                            if ta.get('timeframe'):
+                                video_context += f"- Timeframe: {ta['timeframe']}\n"
+                            if ta.get('technical_parameters'):
+                                video_context += f"- Parámetros técnicos: {ta['technical_parameters']}\n"
+                            if ta.get('assets_mentioned'):
+                                video_context += f"- Activos mencionados: {', '.join(ta['assets_mentioned'])}\n"
+                        
+                        if 'visual_analysis' in video_analysis:
+                            va = video_analysis['visual_analysis']
+                            video_context += f"\n🎬 ANÁLISIS VISUAL:\n"
+                            if va.get('patterns_detected'):
+                                video_context += f"- Patrones detectados: {', '.join(va['patterns_detected'])}\n"
+                            if va.get('support_resistance_levels'):
+                                video_context += f"- Niveles S/R: {va['support_resistance_levels']}\n"
+                        
+                        if 'sentiment_analysis' in video_analysis:
+                            sa = video_analysis['sentiment_analysis']
+                            video_context += f"\n💭 SENTIMIENTO: {sa.get('sentiment', 'neutral')} (Risk appetite: {sa.get('risk_appetite', 'moderate')})\n"
+                        
+                        if 'integrated_recommendations' in video_analysis:
+                            ir = video_analysis['integrated_recommendations']
+                            video_context += f"\n🧠 RECOMENDACIONES INTEGRADAS:\n{ir}\n"
+                        
+                        video_context += f"\nConfianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
+                    else:
+                        video_context += "No se pudo obtener análisis detallado del video. Proporciona un resumen basado en el contexto de la conversación y el tipo de video de trading que podría ser."
+                    
+                    video_context += f"\n\nMensaje original del usuario: {user_message}"
+                    
+                    # Generar respuesta con contexto del video
+                    ai_response = self.ai_system.generate_response(
+                        user_message=video_context,
+                        user_name=user_name,
+                        chat_id=user_id,
+                        trading_system=self.trading_system
+                    )
+                    
+                    if not ai_response:
+                        ai_response = f"🎬 Recibí el video de YouTube pero no pude analizarlo completamente. ¿Podrías describir qué aspectos del video te gustaría que analice?"
+                    
+                    # Enviar respuesta
+                    await processing_msg.edit_text(ai_response[:4000])
+                    
+                    # Guardar en DB
+                    if self.db_manager:
+                        try:
+                            self.db_manager.save_conversation(
+                                user_id=user_id,
+                                user_message=f"[VIDEO YOUTUBE: {video_url}] {user_message}",
+                                ai_response=ai_response[:1000],
+                                language='es'
+                            )
+                        except Exception as db_error:
+                            logger.warning(f"⚠️ Error guardando conversación de video: {db_error}")
+                    
+                    logger.info(f"✅ Análisis de video YouTube completado: {len(ai_response)} chars")
+                    return  # SALIR - ya procesamos el video
+                    
+                except Exception as video_error:
+                    logger.error(f"❌ Error procesando video YouTube: {video_error}")
+                    await processing_msg.edit_text(f"❌ Error analizando el video. Por favor intenta de nuevo o describe lo que quieres analizar.")
+                    return
+            
             # 🚀 GENERAR RESPUESTA CON SUPERINTELIGENCIA OMNIX
             # Mostrar indicador de pensamiento estilo ChatGPT/Gemini
             thinking_message = await update.message.reply_text("🧠 OMNIX IA")
