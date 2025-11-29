@@ -97,8 +97,22 @@ class ConversationalAI:
                 # 🔥 USO DEL NUEVO SISTEMA ENTERPRISE
                 logger.info(f"🚀 Generando respuesta ENTERPRISE para {user_name}")
                 
-                # Convertir chat_id a int si es string
-                chat_id_int = int(chat_id) if chat_id else (user_id if user_id else 0)
+                # FIX Nov 29, 2025: Convertir chat_id a int robusto
+                # Prioridad: chat_id > user_id > 0
+                chat_id_int = 0
+                if chat_id:
+                    try:
+                        chat_id_int = int(chat_id)
+                    except (ValueError, TypeError):
+                        chat_id_int = 0
+                
+                if chat_id_int == 0 and user_id:
+                    try:
+                        chat_id_int = int(user_id)
+                    except (ValueError, TypeError):
+                        chat_id_int = 0
+                
+                logger.info(f"🧠 MEMORIA: Usando chat_id={chat_id_int} (original: chat_id='{chat_id}', user_id='{user_id}')")
                 
                 # 📊 FIX: OBTENER DATOS REALES DE KRAKEN ANTES DE GENERAR RESPUESTA
                 real_market_data = self._fetch_real_market_data(trading_system, user_message)
