@@ -219,30 +219,36 @@ class EnterpriseTelegramBot:
             self.auto_trading = None
         
         # 🎥 VIDEO ANALYZER ULTRA V5.3 - Análisis avanzado de videos con Vision AI
+        # FIX Nov 29, 2025: Separar inicialización para evitar que falle todo el bloque
+        self.video_analyzer_ultra = None
+        self.video_learning_integration = None
+        
+        # Paso 1: Inicializar VideoAnalyzerUltra (CRÍTICO para análisis de YouTube)
         try:
             from omnix_services.ai_service.video.analyzer import VideoAnalyzerUltra
-            from omnix_services.ai_service.video.integration import VideoLearningIntegration
-            
             self.video_analyzer_ultra = VideoAnalyzerUltra()
             logger.info("🎥 Video Analyzer Ultra V5.3 inicializado")
             logger.info(f"   🎬 GPT-4 Vision: {'✅' if self.video_analyzer_ultra.openai_client else '❌'}")
             logger.info(f"   🧠 Gemini Vision: {'✅' if self.video_analyzer_ultra.gemini_client else '❌'}")
-            
-            # Integración con Auto-Learning System
-            if self.auto_trading and hasattr(self.auto_trading, 'auto_learning'):
-                self.video_learning_integration = VideoLearningIntegration(
-                    auto_learning_system=self.auto_trading.auto_learning,
-                    video_analyzer_ultra=self.video_analyzer_ultra
-                )
-                logger.info("🔗 Video Learning Integration conectada al Auto-Learning System")
-            else:
-                self.video_learning_integration = None
-                logger.warning("⚠️ Video Learning Integration sin Auto-Learning System")
-                
         except Exception as e:
             logger.warning(f"⚠️ Video Analyzer Ultra V5.3 no disponible: {e}")
-            self.video_analyzer_ultra = None
-            self.video_learning_integration = None
+            import traceback
+            logger.warning(f"   Traceback: {traceback.format_exc()}")
+        
+        # Paso 2: Inicializar VideoLearningIntegration (OPCIONAL - no bloquea análisis)
+        if self.video_analyzer_ultra:
+            try:
+                from omnix_services.ai_service.video.integration import VideoLearningIntegration
+                if self.auto_trading and hasattr(self.auto_trading, 'auto_learning'):
+                    self.video_learning_integration = VideoLearningIntegration(
+                        auto_learning_system=self.auto_trading.auto_learning,
+                        video_analyzer_ultra=self.video_analyzer_ultra
+                    )
+                    logger.info("🔗 Video Learning Integration conectada al Auto-Learning System")
+                else:
+                    logger.info("ℹ️ Video Learning Integration omitida - Auto-Learning no disponible")
+            except Exception as e:
+                logger.warning(f"⚠️ Video Learning Integration no disponible: {e}")
         
         # 📊 STOCK TRADING HANDLER V6.0 - DUAL MARKET SYSTEM
         if STOCK_MODULE_AVAILABLE:
