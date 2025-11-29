@@ -160,15 +160,16 @@ class ConversationalAI:
     
     def _fetch_real_market_data(self, trading_system, user_message: str) -> dict:
         """
-        📊 OBTENER DATOS REALES DE KRAKEN ANTES DE GENERAR RESPUESTA
+        📊 OBTENER DATOS REALES DE MERCADO - SISTEMA ROBUSTO CON MÚLTIPLES FUENTES
         
-        FIX Nov 28, 2025: El AI ahora recibe datos REALES para incluir en respuestas
-        También detecta y valida solicitudes de apalancamiento peligroso
+        FIX Nov 29, 2025: Control de flujo corregido, validación JSON robusta
         """
         import re
         import requests
         
         market_data = {}
+        btc_obtained = False
+        logger.info("🔍 MARKET DATA: Iniciando obtención de precio BTC...")
         
         # 🚨 VALIDACIÓN DE APALANCAMIENTO (máximo 5x permitido)
         leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', user_message.lower())
@@ -177,60 +178,93 @@ class ConversationalAI:
             market_data['requested_leverage'] = leverage_value
             if leverage_value > 5:
                 market_data['leverage_warning'] = f"⛔ APALANCAMIENTO {leverage_value}x RECHAZADO - Máximo permitido: 5x (política de riesgo institucional)"
-                logger.warning(f"⚠️ Apalancamiento {leverage_value}x solicitado - EXCEDE LÍMITE 5x")
+                logger.warning(f"⚠️ Leverage {leverage_value}x solicitado - EXCEDE LÍMITE 5x")
         
-        # 📈 OBTENER PRECIO BTC REAL DE KRAKEN
-        kraken_data_obtained = False
-        try:
-            # Intentar API autenticada primero
-            if trading_system and hasattr(trading_system, 'kraken_client'):
-                try:
-                    btc_ticker = trading_system.kraken_client.client.fetch_ticker('BTC/USD')
-                    market_data['btc_price'] = btc_ticker.get('last', 0)
-                    market_data['btc_24h_high'] = btc_ticker.get('high', 0)
-                    market_data['btc_24h_low'] = btc_ticker.get('low', 0)
-                    market_data['btc_volume'] = btc_ticker.get('baseVolume', 0)
-                    market_data['btc_change_24h'] = btc_ticker.get('percentage', 0)
-                    
-                    # Calcular spread
-                    bid = btc_ticker.get('bid', 0)
-                    ask = btc_ticker.get('ask', 0)
-                    if bid and ask:
-                        spread_bps = ((ask - bid) / bid) * 10000
-                        market_data['btc_spread_bps'] = round(spread_bps, 2)
-                    
-                    kraken_data_obtained = True
-                    logger.info(f"✅ DATOS KRAKEN REALES: BTC=${market_data['btc_price']:,.2f}")
-                except Exception as e:
-                    logger.warning(f"⚠️ Error API autenticada Kraken: {e}")
-            
-            # Fallback: API pública de Kraken
-            if 'btc_price' not in market_data:
-                pub_response = requests.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', timeout=3)
-                if pub_response.status_code == 200:
-                    pub_data = pub_response.json()
-                    if pub_data.get('error') == [] and 'result' in pub_data:
-                        ticker = pub_data['result']['XXBTZUSD']
-                        market_data['btc_price'] = float(ticker['c'][0])
-                        market_data['btc_24h_high'] = float(ticker['h'][0])
-                        market_data['btc_24h_low'] = float(ticker['l'][0])
-                        market_data['btc_volume'] = float(ticker['v'][1])
-                        
-                        bid = float(ticker['b'][0])
-                        ask = float(ticker['a'][0])
-                        spread_bps = ((ask - bid) / bid) * 10000
-                        market_data['btc_spread_bps'] = round(spread_bps, 2)
-                        
-                        kraken_data_obtained = True
-                        logger.info(f"✅ DATOS KRAKEN PÚBLICOS: BTC=${market_data['btc_price']:,.2f}")
-        except Exception as e:
-            logger.error(f"❌ Error obteniendo datos de mercado: {e}")
+        # ═══════════════════════════════════════════════════════════════════
+        # FUENTE 1: API AUTENTICADA DE KRAKEN
+        # ═══════════════════════════════════════════════════════════════════
+        if not btc_obtained and trading_system and hasattr(trading_system, 'kraken_client'):
+            try:
+                logger.info("📡 [1/3] Kraken AUTH...")
+                btc_ticker = trading_system.kraken_client.client.fetch_ticker('BTC/USD')
+                if btc_ticker and 'last' in btc_ticker and btc_ticker['last']:
+                    market_data['btc_price'] = float(btc_ticker['last'])
+                    market_data['btc_24h_high'] = float(btc_ticker.get('high', 0) or 0)
+                    market_data['btc_24h_low'] = float(btc_ticker.get('low', 0) or 0)
+                    market_data['btc_volume'] = float(btc_ticker.get('baseVolume', 0) or 0)
+                    market_data['data_source'] = 'Kraken'
+                    btc_obtained = True
+                    logger.info(f"✅ KRAKEN AUTH: ${market_data['btc_price']:,.0f}")
+            except Exception as e:
+                logger.warning(f"⚠️ Kraken AUTH falló: {e}")
         
-        # 🚨 INDICADOR CRÍTICO: Si no hay datos de Kraken, marcarlo explícitamente
-        if not kraken_data_obtained:
+        # ═══════════════════════════════════════════════════════════════════
+        # FUENTE 2: API PÚBLICA DE KRAKEN
+        # ═══════════════════════════════════════════════════════════════════
+        if not btc_obtained:
+            try:
+                logger.info("📡 [2/3] Kraken PUBLIC...")
+                resp = requests.get(
+                    'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
+                    timeout=10,
+                    headers={'User-Agent': 'OMNIX/6.0'}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data.get('error') == [] and 'result' in data:
+                        result = data['result']
+                        ticker_key = 'XXBTZUSD' if 'XXBTZUSD' in result else list(result.keys())[0] if result else None
+                        if ticker_key and ticker_key in result:
+                            ticker = result[ticker_key]
+                            if 'c' in ticker and ticker['c']:
+                                market_data['btc_price'] = float(ticker['c'][0])
+                                market_data['btc_24h_high'] = float(ticker['h'][0]) if 'h' in ticker else 0
+                                market_data['btc_24h_low'] = float(ticker['l'][0]) if 'l' in ticker else 0
+                                market_data['btc_volume'] = float(ticker['v'][1]) if 'v' in ticker else 0
+                                market_data['data_source'] = 'Kraken'
+                                btc_obtained = True
+                                logger.info(f"✅ KRAKEN PUBLIC: ${market_data['btc_price']:,.0f}")
+                    else:
+                        logger.warning(f"⚠️ Kraken error response: {data.get('error')}")
+                else:
+                    logger.warning(f"⚠️ Kraken HTTP {resp.status_code}")
+            except Exception as e:
+                logger.warning(f"⚠️ Kraken PUBLIC falló: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # FUENTE 3: COINGECKO BACKUP
+        # ═══════════════════════════════════════════════════════════════════
+        if not btc_obtained:
+            try:
+                logger.info("📡 [3/3] CoinGecko BACKUP...")
+                resp = requests.get(
+                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_high=true&include_24hr_low=true',
+                    timeout=10,
+                    headers={'User-Agent': 'OMNIX/6.0'}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if 'bitcoin' in data and 'usd' in data['bitcoin']:
+                        market_data['btc_price'] = float(data['bitcoin']['usd'])
+                        market_data['btc_24h_high'] = float(data['bitcoin'].get('usd_24h_high', 0) or 0)
+                        market_data['btc_24h_low'] = float(data['bitcoin'].get('usd_24h_low', 0) or 0)
+                        market_data['data_source'] = 'CoinGecko'
+                        btc_obtained = True
+                        logger.info(f"✅ COINGECKO: ${market_data['btc_price']:,.0f}")
+                else:
+                    logger.warning(f"⚠️ CoinGecko HTTP {resp.status_code}")
+            except Exception as e:
+                logger.warning(f"⚠️ CoinGecko falló: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # RESULTADO FINAL
+        # ═══════════════════════════════════════════════════════════════════
+        if btc_obtained:
+            logger.info(f"✅ BTC PRICE OBTAINED: ${market_data['btc_price']:,.0f} via {market_data.get('data_source', 'Unknown')}")
+        else:
             market_data['market_data_unavailable'] = True
-            market_data['market_data_warning'] = "⚠️ DATOS DE MERCADO NO DISPONIBLES - No inventar precios ni análisis"
-            logger.warning("⚠️ KRAKEN: No se pudieron obtener datos de mercado - AI debe indicar 'datos no disponibles'")
+            market_data['market_data_warning'] = "Datos de mercado temporalmente no disponibles"
+            logger.error("❌ TODAS LAS FUENTES FALLARON - Sin precio BTC")
         
         # 💰 PAPER TRADING BALANCE (si está disponible)
         try:
