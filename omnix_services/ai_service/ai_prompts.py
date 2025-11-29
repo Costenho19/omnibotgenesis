@@ -266,6 +266,24 @@ ARQUITECTURA TÉCNICA:
                 emoji = "📈" if change >= 0 else "📉"
                 base_prompt += f"- **Cambio 24h:** {emoji} {change:+.2f}%\n"
             
+            # 🪙 CRIPTO ESPECÍFICA SOLICITADA (Cardano, Solana, XRP, etc.)
+            if 'requested_crypto' in additional_context:
+                crypto = additional_context['requested_crypto']
+                base_prompt += f"\n🪙 **{crypto['name']} ({crypto['symbol']}):** ${crypto['price']:,.4f} USD\n"
+                if crypto.get('change_24h') is not None:
+                    change_emoji = "📈" if crypto['change_24h'] >= 0 else "📉"
+                    base_prompt += f"- **Cambio 24h:** {change_emoji} {crypto['change_24h']:+.2f}%\n"
+                if crypto.get('high_24h') and crypto.get('low_24h'):
+                    base_prompt += f"- **Rango 24h:** ${crypto['low_24h']:,.4f} - ${crypto['high_24h']:,.4f}\n"
+                if crypto.get('volume'):
+                    base_prompt += f"- **Volumen 24h:** {crypto['volume']:,.0f} {crypto['symbol']}\n"
+                base_prompt += f"- **Fuente:** {crypto.get('source', 'Kraken')} API en vivo\n"
+            
+            # ⚠️ Error obteniendo cripto específica
+            if 'crypto_error' in additional_context:
+                base_prompt += f"\n⚠️ **Error Cripto:** {additional_context['crypto_error']}\n"
+                base_prompt += "Informa al usuario que esa cripto no está disponible o no es soportada.\n"
+            
             # 💰 Balance y modo de trading
             if 'paper_balance_usd' in additional_context:
                 base_prompt += f"- **Balance Paper Trading:** ${additional_context['paper_balance_usd']:,.2f} USD\n"

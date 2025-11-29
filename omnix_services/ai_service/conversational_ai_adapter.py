@@ -160,16 +160,49 @@ class ConversationalAI:
     
     def _fetch_real_market_data(self, trading_system, user_message: str) -> dict:
         """
-        📊 OBTENER DATOS REALES DE MERCADO - SISTEMA ROBUSTO CON MÚLTIPLES FUENTES
+        📊 OBTENER DATOS REALES DE MERCADO - SISTEMA MULTI-CRIPTO V6.1
         
-        FIX Nov 29, 2025: Control de flujo corregido, validación JSON robusta
+        FIX Nov 29, 2025: Soporte para 50+ criptomonedas (Cardano, Solana, XRP, etc.)
         """
         import re
         import requests
+        from omnix_services.market_data.kraken_data import fetch_crypto_price, normalize_crypto_name, CRYPTO_MAPPING
         
         market_data = {}
         btc_obtained = False
-        logger.info("🔍 MARKET DATA: Iniciando obtención de precio BTC...")
+        logger.info("🔍 MARKET DATA: Iniciando obtención de datos...")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # DETECCIÓN DE CRIPTO ESPECÍFICA EN EL MENSAJE
+        # ═══════════════════════════════════════════════════════════════════
+        detected_crypto = None
+        message_lower = user_message.lower()
+        
+        # Buscar nombres de criptomonedas en el mensaje
+        for crypto_name in CRYPTO_MAPPING.keys():
+            if crypto_name in message_lower:
+                detected_crypto = crypto_name
+                break
+        
+        # Si detectamos una cripto específica (no BTC), obtener su precio
+        if detected_crypto and detected_crypto not in ['btc', 'bitcoin']:
+            logger.info(f"🔍 Cripto detectada: {detected_crypto}")
+            crypto_data = fetch_crypto_price(detected_crypto)
+            
+            if crypto_data.get('success'):
+                market_data['requested_crypto'] = {
+                    'symbol': crypto_data['symbol'],
+                    'name': detected_crypto.title(),
+                    'price': crypto_data['price'],
+                    'change_24h': crypto_data.get('change_24h', 0),
+                    'high_24h': crypto_data.get('high_24h'),
+                    'low_24h': crypto_data.get('low_24h'),
+                    'volume': crypto_data.get('volume'),
+                    'source': crypto_data.get('source', 'Kraken')
+                }
+                logger.info(f"✅ {crypto_data['symbol']}: ${crypto_data['price']:,.4f}")
+            else:
+                market_data['crypto_error'] = crypto_data.get('error', 'Precio no disponible')
         
         # 🚨 VALIDACIÓN DE APALANCAMIENTO (máximo 5x permitido)
         leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', user_message.lower())

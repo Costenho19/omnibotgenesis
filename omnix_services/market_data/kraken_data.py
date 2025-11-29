@@ -1,6 +1,6 @@
 """
-OMNIX Market Data - Kraken Data Provider
-Real-time market data from Kraken exchange with intelligent caching
+OMNIX Market Data - Kraken Data Provider V6.1
+Real-time market data from Kraken exchange with multi-crypto support
 """
 
 import time
@@ -16,6 +16,264 @@ _kraken_data_cache = {
     'timestamp': 0,
     'ttl': 10  # 10 segundos de cache
 }
+
+# Cache específico por símbolo
+_symbol_cache = {}
+_symbol_cache_ttl = 15  # 15 segundos
+
+# ============================================================================
+# MAPEO COMPLETO DE CRIPTOMONEDAS - Kraken soporta 100+ pares
+# ============================================================================
+CRYPTO_MAPPING = {
+    # Nombre común → (Símbolo, Par Kraken API)
+    'bitcoin': ('BTC', 'XXBTZUSD'),
+    'btc': ('BTC', 'XXBTZUSD'),
+    'ethereum': ('ETH', 'XETHZUSD'),
+    'eth': ('ETH', 'XETHZUSD'),
+    'ether': ('ETH', 'XETHZUSD'),
+    'cardano': ('ADA', 'ADAUSD'),
+    'ada': ('ADA', 'ADAUSD'),
+    'solana': ('SOL', 'SOLUSD'),
+    'sol': ('SOL', 'SOLUSD'),
+    'ripple': ('XRP', 'XXRPZUSD'),
+    'xrp': ('XRP', 'XXRPZUSD'),
+    'polkadot': ('DOT', 'DOTUSD'),
+    'dot': ('DOT', 'DOTUSD'),
+    'dogecoin': ('DOGE', 'XDGUSD'),
+    'doge': ('DOGE', 'XDGUSD'),
+    'avalanche': ('AVAX', 'AVAXUSD'),
+    'avax': ('AVAX', 'AVAXUSD'),
+    'chainlink': ('LINK', 'LINKUSD'),
+    'link': ('LINK', 'LINKUSD'),
+    'polygon': ('MATIC', 'MATICUSD'),
+    'matic': ('MATIC', 'MATICUSD'),
+    'litecoin': ('LTC', 'XLTCZUSD'),
+    'ltc': ('LTC', 'XLTCZUSD'),
+    'uniswap': ('UNI', 'UNIUSD'),
+    'uni': ('UNI', 'UNIUSD'),
+    'stellar': ('XLM', 'XXLMZUSD'),
+    'xlm': ('XLM', 'XXLMZUSD'),
+    'cosmos': ('ATOM', 'ATOMUSD'),
+    'atom': ('ATOM', 'ATOMUSD'),
+    'tron': ('TRX', 'TRXUSD'),
+    'trx': ('TRX', 'TRXUSD'),
+    'shiba': ('SHIB', 'SHIBUSD'),
+    'shib': ('SHIB', 'SHIBUSD'),
+    'shiba inu': ('SHIB', 'SHIBUSD'),
+    'near': ('NEAR', 'NEARUSD'),
+    'near protocol': ('NEAR', 'NEARUSD'),
+    'algorand': ('ALGO', 'ALGOUSD'),
+    'algo': ('ALGO', 'ALGOUSD'),
+    'aave': ('AAVE', 'AAVEUSD'),
+    'filecoin': ('FIL', 'FILUSD'),
+    'fil': ('FIL', 'FILUSD'),
+    'eos': ('EOS', 'EOSUSD'),
+    'tezos': ('XTZ', 'XTZUSD'),
+    'xtz': ('XTZ', 'XTZUSD'),
+    'monero': ('XMR', 'XXMRZUSD'),
+    'xmr': ('XMR', 'XXMRZUSD'),
+    'maker': ('MKR', 'MKRUSD'),
+    'mkr': ('MKR', 'MKRUSD'),
+    'compound': ('COMP', 'COMPUSD'),
+    'comp': ('COMP', 'COMPUSD'),
+    'fantom': ('FTM', 'FTMUSD'),
+    'ftm': ('FTM', 'FTMUSD'),
+    'hedera': ('HBAR', 'HBARUSD'),
+    'hbar': ('HBAR', 'HBARUSD'),
+    'aptos': ('APT', 'APTUSD'),
+    'apt': ('APT', 'APTUSD'),
+    'arbitrum': ('ARB', 'ARBUSD'),
+    'arb': ('ARB', 'ARBUSD'),
+    'optimism': ('OP', 'OPUSD'),
+    'op': ('OP', 'OPUSD'),
+    'injective': ('INJ', 'INJUSD'),
+    'inj': ('INJ', 'INJUSD'),
+    'render': ('RNDR', 'RNDRUSD'),
+    'rndr': ('RNDR', 'RNDRUSD'),
+    'pepe': ('PEPE', 'PEPEUSD'),
+    'bonk': ('BONK', 'BONKUSD'),
+    'sui': ('SUI', 'SUIUSD'),
+    'sei': ('SEI', 'SEIUSD'),
+    'celestia': ('TIA', 'TIAUSD'),
+    'tia': ('TIA', 'TIAUSD'),
+    'jupiter': ('JUP', 'JUPUSD'),
+    'jup': ('JUP', 'JUPUSD'),
+}
+
+# Lista de símbolos soportados para referencia rápida
+SUPPORTED_SYMBOLS = list(set(v[0] for v in CRYPTO_MAPPING.values()))
+
+
+def normalize_crypto_name(name: str) -> tuple:
+    """
+    Normalizar nombre de cripto a (símbolo, par_kraken)
+    
+    Args:
+        name: Nombre común, símbolo o variante (ej: "cardano", "ADA", "Cardano")
+        
+    Returns:
+        tuple: (símbolo, par_kraken) o (None, None) si no se encuentra
+    """
+    if not name:
+        return (None, None)
+    
+    normalized = name.lower().strip()
+    
+    if normalized in CRYPTO_MAPPING:
+        return CRYPTO_MAPPING[normalized]
+    
+    # Intentar como símbolo directo (ej: "BTC" pasado como "btc")
+    for key, value in CRYPTO_MAPPING.items():
+        if value[0].lower() == normalized:
+            return value
+    
+    return (None, None)
+
+
+def get_supported_cryptos() -> list:
+    """Retornar lista de criptos soportadas para el prompt de la IA"""
+    cryptos = {}
+    for name, (symbol, _) in CRYPTO_MAPPING.items():
+        if symbol not in cryptos:
+            cryptos[symbol] = []
+        if name != symbol.lower():
+            cryptos[symbol].append(name.title())
+    
+    return [f"{sym} ({', '.join(names[:2])})" if names else sym 
+            for sym, names in sorted(cryptos.items())]
+
+
+def fetch_crypto_price(crypto_name: str) -> dict:
+    """
+    Obtener precio de CUALQUIER criptomoneda de Kraken
+    
+    Args:
+        crypto_name: Nombre común o símbolo (ej: "cardano", "ADA", "Bitcoin")
+        
+    Returns:
+        dict: {symbol, price, high_24h, low_24h, volume, change_24h, source, success}
+    """
+    global _symbol_cache
+    
+    symbol, kraken_pair = normalize_crypto_name(crypto_name)
+    
+    if not symbol:
+        logger.warning(f"⚠️ Cripto no reconocida: {crypto_name}")
+        return {
+            'success': False,
+            'error': f"No reconozco '{crypto_name}'. Criptos soportadas: BTC, ETH, ADA, SOL, XRP, DOT, DOGE, AVAX, LINK, MATIC, LTC, y 40+ más.",
+            'symbol': None
+        }
+    
+    # Check cache
+    cache_key = symbol
+    current_time = time.time()
+    if cache_key in _symbol_cache:
+        cached = _symbol_cache[cache_key]
+        if current_time - cached['timestamp'] < _symbol_cache_ttl:
+            logger.info(f"✅ {symbol} desde cache")
+            return cached['data']
+    
+    result = {
+        'symbol': symbol,
+        'name': crypto_name.title(),
+        'success': False,
+        'source': 'unknown'
+    }
+    
+    # Intento 1: API pública de Kraken
+    try:
+        url = f'https://api.kraken.com/0/public/Ticker?pair={kraken_pair}'
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            if isinstance(data, dict) and not data.get('error'):
+                if 'result' in data and data['result']:
+                    ticker_key = list(data['result'].keys())[0]
+                    ticker = data['result'][ticker_key]
+                    
+                    price = float(ticker['c'][0])  # Current price
+                    open_price = float(ticker['o'])  # Open price (24h)
+                    
+                    result.update({
+                        'price': price,
+                        'high_24h': float(ticker['h'][1]),  # 24h high
+                        'low_24h': float(ticker['l'][1]),   # 24h low
+                        'volume': float(ticker['v'][1]),    # 24h volume
+                        'change_24h': round(((price - open_price) / open_price) * 100, 2) if open_price > 0 else 0,
+                        'source': 'Kraken',
+                        'success': True
+                    })
+                    
+                    logger.info(f"✅ {symbol} precio Kraken: ${price:,.4f}")
+                    
+                    # Update cache
+                    _symbol_cache[cache_key] = {
+                        'data': result,
+                        'timestamp': current_time
+                    }
+                    
+                    return result
+            
+            # Kraken devolvió error
+            error_msg = data.get('error', ['Unknown error'])
+            logger.warning(f"⚠️ Kraken error para {symbol}: {error_msg}")
+            
+    except Exception as e:
+        logger.warning(f"⚠️ Error Kraken para {symbol}: {e}")
+    
+    # Intento 2: CoinGecko como fallback
+    try:
+        coingecko_ids = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'ADA': 'cardano', 
+            'SOL': 'solana', 'XRP': 'ripple', 'DOT': 'polkadot',
+            'DOGE': 'dogecoin', 'AVAX': 'avalanche-2', 'LINK': 'chainlink',
+            'MATIC': 'matic-network', 'LTC': 'litecoin', 'UNI': 'uniswap',
+            'XLM': 'stellar', 'ATOM': 'cosmos', 'TRX': 'tron',
+            'SHIB': 'shiba-inu', 'NEAR': 'near', 'ALGO': 'algorand',
+            'AAVE': 'aave', 'FIL': 'filecoin', 'EOS': 'eos',
+            'XTZ': 'tezos', 'XMR': 'monero', 'MKR': 'maker',
+            'COMP': 'compound-governance-token', 'FTM': 'fantom',
+            'HBAR': 'hedera-hashgraph', 'APT': 'aptos', 'ARB': 'arbitrum',
+            'OP': 'optimism', 'INJ': 'injective-protocol', 'RNDR': 'render-token',
+            'PEPE': 'pepe', 'BONK': 'bonk', 'SUI': 'sui', 'SEI': 'sei-network',
+            'TIA': 'celestia', 'JUP': 'jupiter-exchange-solana'
+        }
+        
+        cg_id = coingecko_ids.get(symbol)
+        if cg_id:
+            url = f'https://api.coingecko.com/api/v3/simple/price?ids={cg_id}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true'
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if cg_id in data:
+                    cg_data = data[cg_id]
+                    result.update({
+                        'price': cg_data.get('usd', 0),
+                        'change_24h': round(cg_data.get('usd_24h_change', 0), 2),
+                        'volume': cg_data.get('usd_24h_vol', 0),
+                        'source': 'CoinGecko',
+                        'success': True
+                    })
+                    
+                    logger.info(f"✅ {symbol} precio CoinGecko: ${result['price']:,.4f}")
+                    
+                    # Update cache
+                    _symbol_cache[cache_key] = {
+                        'data': result,
+                        'timestamp': current_time
+                    }
+                    
+                    return result
+                    
+    except Exception as e:
+        logger.warning(f"⚠️ Error CoinGecko para {symbol}: {e}")
+    
+    result['error'] = f"No se pudo obtener precio de {symbol} en este momento"
+    return result
 
 
 def fetch_market_snapshot(trading_system):
@@ -68,17 +326,11 @@ def fetch_market_snapshot(trading_system):
     
     # Intentar API pública como fallback si falló la autenticada
     if 'btc_price' not in real_market_data:
-        try:
-            pub_response = requests.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', timeout=3)
-            if pub_response.status_code == 200:
-                pub_data = pub_response.json()
-                if pub_data.get('error') == [] and 'result' in pub_data:
-                    real_market_data['btc_price'] = float(pub_data['result']['XXBTZUSD']['c'][0])
-                    real_market_data['btc_24h_high'] = float(pub_data['result']['XXBTZUSD']['h'][0])
-                    real_market_data['btc_24h_low'] = float(pub_data['result']['XXBTZUSD']['l'][0])
-                    logger.info(f"✅ PRECIO BTC REAL (API pública): ${real_market_data['btc_price']:,.2f}")
-        except Exception as pub_error:
-            logger.error(f"❌ Error API pública Kraken: {pub_error}")
+        btc_data = fetch_crypto_price('BTC')
+        if btc_data.get('success'):
+            real_market_data['btc_price'] = btc_data['price']
+            real_market_data['btc_24h_high'] = btc_data.get('high_24h', 0)
+            real_market_data['btc_24h_low'] = btc_data.get('low_24h', 0)
     
     # Actualizar cache
     if real_market_data:
