@@ -723,7 +723,7 @@ class AutoTradingBot:
                 logger.debug(f"ARES V1 error: {e}")
                 decision['v52_analysis']['ares_v1_error'] = str(e)
             
-            # 9. ARES V2 Scalping M1 (peso: 15 puntos - ULTRA-RÁPIDO 85% win rate)
+            # 9. ARES V2 Scalping M1 (peso: 15 puntos - ULTRA-RÁPIDO 60-70% win rate)
             try:
                 if self.ares_v2 is not None and hasattr(self.ares_v2, 'analyze'):
                     max_score += 15
