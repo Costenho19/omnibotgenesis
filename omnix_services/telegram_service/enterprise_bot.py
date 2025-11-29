@@ -4030,11 +4030,35 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                         # Usar IA para analizar el video
                         ai_prompt = f"Analiza este video de trading de YouTube y extrae insights técnicos (RSI levels, EMA periods, MACD settings, etc.): {video_url}"
                         
+                        # FIX Nov 29, 2025: Ejecutar coroutine síncronamente en handler sync
+                        import asyncio
+                        
                         # Intentar generar respuesta con IA
                         if hasattr(self.ai, 'generate_response'):
-                            ai_response = self.ai.generate_response(ai_prompt, str(user_id))
+                            # generate_response puede ser async - ejecutar síncronamente
+                            result = self.ai.generate_response(ai_prompt, str(user_id))
+                            if asyncio.iscoroutine(result):
+                                # Es una coroutine, ejecutar en el event loop
+                                try:
+                                    loop = asyncio.get_event_loop()
+                                    if loop.is_running():
+                                        # Ya hay un loop running, usar run_coroutine_threadsafe
+                                        import concurrent.futures
+                                        future = asyncio.run_coroutine_threadsafe(result, loop)
+                                        ai_response = future.result(timeout=30)
+                                    else:
+                                        ai_response = loop.run_until_complete(result)
+                                except Exception as async_err:
+                                    logger.warning(f"⚠️ Error ejecutando coroutine: {async_err}")
+                                    ai_response = f"Análisis de video de trading: {video_url}"
+                            else:
+                                ai_response = result
                         elif hasattr(self.ai, 'ask'):
                             ai_response = self.ai.ask(ai_prompt, str(user_id))
+                        
+                        # Validar que ai_response es un string
+                        if not isinstance(ai_response, str):
+                            ai_response = str(ai_response) if ai_response else f"Análisis de video de trading: {video_url}"
                         
                         logger.info(f"✅ IA analizó video: {len(ai_response)} caracteres")
                     except Exception as ai_error:

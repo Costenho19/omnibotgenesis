@@ -1407,6 +1407,26 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
+            # MIGRACIÓN: Agregar columnas faltantes a tabla users existente (Nov 29, 2025)
+            # Esto es necesario porque CREATE TABLE IF NOT EXISTS no modifica tablas existentes
+            migration_columns = [
+                ("last_activity", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+                ("whatsapp_number", "TEXT"),
+                ("notifications_enabled", "BOOLEAN DEFAULT true"),
+                ("email", "TEXT"),
+                ("is_active", "BOOLEAN DEFAULT true"),
+                ("updated_at", "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+                ("total_trades", "INTEGER DEFAULT 0"),
+                ("total_profit", "NUMERIC(18,8) DEFAULT 0"),
+                ("risk_tolerance", "TEXT DEFAULT 'medium'")
+            ]
+            
+            for col_name, col_def in migration_columns:
+                try:
+                    cursor.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
+                except Exception as col_err:
+                    pass  # Silently ignore if column exists or can't be added
+            
             # Índices estratégicos para users
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity DESC)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL')
