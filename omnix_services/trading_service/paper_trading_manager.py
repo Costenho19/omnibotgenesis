@@ -501,7 +501,7 @@ class PaperTradingManager:
     def _close_position_fifo_v2(self, user_id: str, symbol: str, sell_quantity: float, 
                                 exit_price: float) -> Optional[Dict]:
         """
-        Cerrar posición FIFO (SELL) - V1: Solo soporta sell exacto de 1 posición
+        Cerrar posición FIFO (SELL) - V2: Soporta ventas parciales institucionales
         
         Returns:
             Dict con P&L info o None si falla
@@ -530,39 +530,57 @@ class PaperTradingManager:
             trade_id, entry_price, quantity, opened_at = result[0]
             base_quantity = float(quantity)
             
-            # V1: Validar que la cantidad coincida (no partial fills)
-            if abs(sell_quantity - base_quantity) > 0.00000001:
-                logger.warning(f"V1 no soporta partial sells: {sell_quantity} != {base_quantity}")
-                return None
+            # V2: Ajustar sell_quantity si es mayor que la posición disponible
+            actual_sell_quantity = min(sell_quantity, base_quantity)
+            is_partial_close = actual_sell_quantity < base_quantity
+            remaining_quantity = base_quantity - actual_sell_quantity
             
-            # Calcular P&L
-            quote_notional_usd = sell_quantity * exit_price
+            # Calcular P&L basado en cantidad REAL vendida
+            quote_notional_usd = actual_sell_quantity * exit_price
             fee_sell = self._calculate_fee(quote_notional_usd)
-            fee_buy = self._calculate_fee(base_quantity * float(entry_price))
-            gross_pnl_usd = (exit_price - float(entry_price)) * sell_quantity
-            net_realized_pnl_usd = gross_pnl_usd - fee_buy - fee_sell
+            # Fee de compra proporcional a lo vendido
+            fee_buy_proportional = self._calculate_fee(actual_sell_quantity * float(entry_price))
+            gross_pnl_usd = (exit_price - float(entry_price)) * actual_sell_quantity
+            net_realized_pnl_usd = gross_pnl_usd - fee_buy_proportional - fee_sell
             total_proceeds = quote_notional_usd - fee_sell
             
             # Calcular duración y porcentaje P&L
             duration_seconds = int((datetime.now() - opened_at).total_seconds())
             profit_pct = ((exit_price / float(entry_price)) - 1) * 100
             
-            # Cerrar trade - usando columnas correctas del schema
-            self.database_service.execute_query(
-                """
-                UPDATE paper_trading_trades
-                SET exit_price = %s,
-                    profit_loss = %s,
-                    profit_pct = %s,
-                    status = 'closed',
-                    closed_at = NOW()
-                WHERE id = %s
-                """,
-                (exit_price, net_realized_pnl_usd, profit_pct, trade_id)
-            )
+            if is_partial_close:
+                # VENTA PARCIAL: Reducir cantidad de la posición, mantener abierta
+                self.database_service.execute_query(
+                    """
+                    UPDATE paper_trading_trades
+                    SET quantity = %s
+                    WHERE id = %s
+                    """,
+                    (remaining_quantity, trade_id)
+                )
+                logger.info(f"✅ Venta parcial FIFO: {actual_sell_quantity:.8f} de {base_quantity:.8f} {symbol} | Restante: {remaining_quantity:.8f}")
+            else:
+                # CIERRE COMPLETO: Cerrar la posición
+                self.database_service.execute_query(
+                    """
+                    UPDATE paper_trading_trades
+                    SET exit_price = %s,
+                        profit_loss = %s,
+                        profit_pct = %s,
+                        status = 'closed',
+                        closed_at = NOW()
+                    WHERE id = %s
+                    """,
+                    (exit_price, net_realized_pnl_usd, profit_pct, trade_id)
+                )
+                logger.info(f"✅ Posición cerrada FIFO: {actual_sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
             
-            # Actualizar balance
+            # Actualizar balance (siempre)
             is_winning_trade = net_realized_pnl_usd > 0
+            
+            # Solo contar como trade cerrado si es cierre completo
+            winning_increment = 1 if (is_winning_trade and not is_partial_close) else 0
+            losing_increment = 1 if (not is_winning_trade and not is_partial_close) else 0
             
             self.database_service.execute_query(
                 """
@@ -576,21 +594,20 @@ class PaperTradingManager:
                 WHERE user_id = %s
                 """,
                 (total_proceeds, total_proceeds, net_realized_pnl_usd,
-                 1 if is_winning_trade else 0,
-                 0 if is_winning_trade else 1,
-                 user_id)
+                 winning_increment, losing_increment, user_id)
             )
-            
-            logger.info(f"✅ Posición cerrada FIFO: {sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
             
             return {
                 'trade_uuid': str(trade_id),
                 'entry_price': float(entry_price),
                 'exit_price': exit_price,
-                'base_quantity': sell_quantity,
+                'base_quantity': actual_sell_quantity,
+                'original_quantity': base_quantity,
+                'remaining_quantity': remaining_quantity,
+                'is_partial_close': is_partial_close,
                 'gross_pnl_usd': gross_pnl_usd,
                 'net_realized_pnl_usd': net_realized_pnl_usd,
-                'fee_buy': fee_buy,
+                'fee_buy': fee_buy_proportional,
                 'fee_sell': fee_sell,
                 'duration_seconds': duration_seconds,
                 'is_winning_trade': is_winning_trade
