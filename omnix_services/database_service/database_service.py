@@ -170,8 +170,10 @@ class DatabaseServiceEnterprise:
             self._run_daily_cleanup()
             
             self.connected = True
+            self.using_enterprise = True  # 🔧 FIX Nov 30, 2025: Flag para PaperTradingManager use PostgreSQL
             logger.info("✅ PostgreSQL: 33 tablas activas (8 core + 6 risk + 6 derivatives + 7 community + 6 signals)")
             logger.info("🗄️ DatabaseServiceEnterprise conectado exitosamente")
+            logger.info("🏢 using_enterprise = True → Paper Trading usará PostgreSQL")
             logger.info("=" * 70)
         except Exception as e:
             logger.error("=" * 70)
