@@ -46,7 +46,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Leverage Validation**: Automatically detects and rejects leverage requests exceeding 5x.
 - **Multi-Crypto Support**: Supports 50+ cryptocurrencies with primary Kraken and fallback CoinGecko data sources.
 - **Robust Market Data System**: Uses 3-source fallback (Kraken Auth → Kraken Public → CoinGecko) with JSON validation and timeouts.
-- **Stock Trading Premium V6.2**: Elevated stock trading module to match crypto capabilities, including Monte Carlo, Kalman Filter, HMM, ARES, and Non-Markovian Memory for stocks.
+- **Stock Trading Premium V6.3 ULTRA**: 100% institutional-grade stock trading with 9 active modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
 - **YouTube Video Analysis**: Enhanced with OpenAI Whisper as an ultimate fallback for transcript generation, including caching for efficiency.
 
 #### System Design Choices
