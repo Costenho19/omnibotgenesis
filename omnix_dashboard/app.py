@@ -1,7 +1,7 @@
 """
-OMNIX Performance Dashboard V6.3 ULTRA
-Professional Institutional-Grade Trading Analytics
-Premium 2025 Design
+OMNIX Performance Dashboard V6.4 INSTITUTIONAL+
+Professional Institutional-Grade Trading & Portfolio Analytics
+Premium 2025 Design with Portfolio Management
 """
 
 import os
@@ -311,12 +311,91 @@ def api_equity_curve():
     })
 
 
+@app.route('/api/portfolio')
+def api_portfolio():
+    """API endpoint for portfolio status"""
+    try:
+        from omnix_services.portfolio_management import OmnixPortfolioEngine
+        from omnix_services.portfolio_management.institutional.volatility_targeting import RiskProfile
+        
+        engine = OmnixPortfolioEngine(
+            target_volatility=0.10,
+            target_beta=0.5,
+            max_weight_per_asset=0.15
+        )
+        
+        demo_prices = {
+            "AAPL": [175 + i*0.5 for i in range(60)],
+            "MSFT": [380 + i*0.8 for i in range(60)],
+            "GOOGL": [140 + i*0.3 for i in range(60)],
+            "NVDA": [480 + i*2.0 for i in range(60)],
+            "TSLA": [250 + i*1.5 for i in range(60)],
+            "JPM": [170 + i*0.4 for i in range(60)],
+            "BTC": [43000 + i*200 for i in range(60)],
+            "ETH": [2200 + i*30 for i in range(60)],
+            "SPY": [450 + i*0.6 for i in range(60)],
+        }
+        
+        demo_signals = {
+            "AAPL": {"direction": "LONG", "confidence": 0.75, "source": "HMM"},
+            "MSFT": {"direction": "LONG", "confidence": 0.80, "source": "ARES"},
+            "GOOGL": {"direction": "NEUTRAL", "confidence": 0.60, "source": "MONTE_CARLO"},
+            "NVDA": {"direction": "STRONG_LONG", "confidence": 0.85, "source": "MEMORY_KERNEL"},
+            "TSLA": {"direction": "SHORT", "confidence": 0.65, "source": "HMM"},
+            "JPM": {"direction": "LONG", "confidence": 0.70, "source": "KALMAN"},
+            "BTC": {"direction": "LONG", "confidence": 0.72, "source": "ARES"},
+            "ETH": {"direction": "LONG", "confidence": 0.68, "source": "HMM"},
+        }
+        
+        snapshot = engine.build_portfolio(
+            prices=demo_prices,
+            signals=demo_signals,
+            risk_profile=RiskProfile.INSTITUTIONAL,
+            view_confidence=0.5
+        )
+        
+        return jsonify({
+            'success': True,
+            'portfolio': {
+                'weights': snapshot.weights,
+                'expected_return': snapshot.expected_return,
+                'expected_volatility': snapshot.expected_volatility,
+                'sharpe_ratio': snapshot.sharpe_ratio,
+                'portfolio_beta': snapshot.portfolio_beta,
+                'effective_n_assets': snapshot.effective_n_assets,
+                'diversification_score': snapshot.diversification_score,
+                'net_exposure': snapshot.net_exposure,
+                'gross_exposure': snapshot.gross_exposure,
+                'sector_exposures': snapshot.sector_exposures,
+                'cluster_warnings': snapshot.cluster_warnings,
+                'risk_profile': snapshot.risk_profile
+            },
+            'modules': {
+                'risk_model': True,
+                'optimizer': True,
+                'vol_targeting': True,
+                'exposure_manager': True,
+                'cluster_detector': True
+            },
+            'version': '6.4 INSTITUTIONAL+',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Portfolio API error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'portfolio': None
+        })
+
+
 @app.route('/api/health')
 def api_health():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
-        'version': 'V6.3 ULTRA',
+        'version': 'V6.4 INSTITUTIONAL+',
         'db_connected': DB_AVAILABLE,
         'timestamp': datetime.now().isoformat()
     })
