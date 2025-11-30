@@ -1,7 +1,7 @@
-# OMNIX V6.2 ULTRA - Automated Trading System
+# OMNIX V6.4 INSTITUTIONAL+ - Automated Trading System
 
 ### Overview
-OMNIX V6.2 ULTRA is an enterprise-grade automated cryptocurrency trading system for 24/7 operation on the Kraken Exchange. It focuses on paper trading to build a credible track record for investor presentations. Key features include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian temporal memory, and Memory-Enhanced Risk Management. The project aims to secure seed funding by demonstrating robust performance, supporting over 50 cryptocurrencies, and incorporating modules for institutional compliance and derivatives trading.
+OMNIX V6.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system for 24/7 operation. It focuses on paper trading to build a credible track record for investor presentations targeting $400K seed funding at $2.5M valuation. Key features include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian temporal memory, Memory-Enhanced Risk Management, and institutional-grade portfolio optimization (Markowitz + Black-Litterman). The project supports 50+ cryptocurrencies and 100+ stocks with modules for institutional compliance and derivatives trading.
 
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
@@ -48,6 +48,14 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Robust Market Data System**: Uses 3-source fallback (Kraken Auth → Kraken Public → CoinGecko) with JSON validation and timeouts.
 - **Stock Trading Premium V6.3 ULTRA**: 100% institutional-grade stock trading with 9 active modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
 - **YouTube Video Analysis**: Enhanced with OpenAI Whisper as an ultimate fallback for transcript generation, including caching for efficiency.
+- **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level portfolio optimization with 5 institutional modules:
+    - **RiskModelEngine**: Covariance matrix, correlation analysis, beta calculations with Ledoit-Wolf shrinkage.
+    - **PortfolioOptimizer**: Markowitz Mean-Variance + Black-Litterman views integration from OMNIX signals (HMM, ARES, Monte Carlo).
+    - **VolatilityTargetingEngine**: Dynamic position sizing to maintain target volatility (Conservative 5%, Moderate 10%, Aggressive 15%, Institutional 12%).
+    - **ExposureManager**: Sector/asset/beta limits, net/gross exposure compliance, institutional mandates.
+    - **ClusteringRiskDetector**: Hidden concentration risk detection via correlation clustering, effective-N calculation.
+    - **OmnixPortfolioEngine**: Unified orchestration layer combining all modules.
+- **Performance Dashboard V6.4**: Premium 2025-style web dashboard with equity curve, advanced metrics, portfolio visualization for investor presentations.
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
