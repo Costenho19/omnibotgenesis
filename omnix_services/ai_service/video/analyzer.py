@@ -717,32 +717,57 @@ Responde en JSON:
             logger.info("🔄 Intentando fallback con yt-dlp...")
             return self._get_transcript_ytdlp(video_id)
     
-    def _get_transcript_ytdlp(self, video_id: str) -> Optional[str]:
-        """Obtener transcripción usando yt-dlp como fallback robusto"""
+    def _get_transcript_ytdlp(self, video_id: str, max_retries: int = 3) -> Optional[str]:
+        """Obtener transcripción usando yt-dlp como fallback robusto con reintentos"""
         logger.info(f"🔧 Intentando yt-dlp para video {video_id}...")
         
         try:
             import yt_dlp
             import tempfile
             import os
+            import time
+            import random
+        except ImportError:
+            logger.warning("⚠️ yt-dlp no instalado")
+            return None
+        
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ]
+        
+        last_error = None
+        
+        for attempt in range(max_retries):
+            if attempt > 0:
+                delay = (2 ** attempt) + random.uniform(1, 3)
+                logger.info(f"⏳ Esperando {delay:.1f}s antes de reintentar (intento {attempt + 1}/{max_retries})...")
+                time.sleep(delay)
             
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
-            
-            with tempfile.TemporaryDirectory() as tmpdir:
-                ydl_opts = {
-                    'writesubtitles': True,
-                    'writeautomaticsub': True,
-                    'subtitleslangs': ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB'],
-                    'subtitlesformat': 'vtt',
-                    'skip_download': True,
-                    'outtmpl': os.path.join(tmpdir, '%(id)s'),
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extract_flat': False,
-                }
-                
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    try:
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    ydl_opts = {
+                        'writesubtitles': True,
+                        'writeautomaticsub': True,
+                        'subtitleslangs': ['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB'],
+                        'subtitlesformat': 'vtt',
+                        'skip_download': True,
+                        'outtmpl': os.path.join(tmpdir, '%(id)s'),
+                        'quiet': True,
+                        'no_warnings': True,
+                        'extract_flat': False,
+                        'http_headers': {
+                            'User-Agent': random.choice(user_agents),
+                            'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+                        },
+                        'socket_timeout': 30,
+                        'retries': 3,
+                    }
+                    
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(video_url, download=True)
                         
                         if info and 'subtitles' in info:
@@ -779,19 +804,21 @@ Responde en JSON:
                                         logger.info(f"✅ Transcripción yt-dlp obtenida: {len(text)} chars")
                                         return text
                                         
-                    except Exception as ydl_err:
-                        logger.warning(f"⚠️ yt-dlp extraction error: {ydl_err}")
-                        return None
-            
+            except Exception as ydl_err:
+                last_error = ydl_err
+                error_str = str(ydl_err)
+                if '429' in error_str or 'Too Many Requests' in error_str:
+                    logger.warning(f"⚠️ Rate limit 429 (intento {attempt + 1}/{max_retries}): {ydl_err}")
+                    continue
+                else:
+                    logger.warning(f"⚠️ yt-dlp extraction error: {ydl_err}")
+                    break
+        
+        if last_error:
+            logger.warning(f"⚠️ yt-dlp falló después de {max_retries} intentos: {last_error}")
+        else:
             logger.warning(f"⚠️ yt-dlp no encontró subtítulos para {video_id}")
-            return None
-            
-        except ImportError:
-            logger.warning("⚠️ yt-dlp no instalado")
-            return None
-        except Exception as e:
-            logger.error(f"❌ Error yt-dlp: {e}")
-            return None
+        return None
     
     def _parse_vtt(self, vtt_content: str) -> Optional[str]:
         """Parsear contenido VTT a texto plano"""
