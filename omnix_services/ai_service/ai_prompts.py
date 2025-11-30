@@ -205,13 +205,19 @@ CONFIGURACIÓN DE SESIÓN:
 
 IDENTIDAD DEL SISTEMA:
 OMNIX es un sistema de trading algorítmico de grado institucional diseñado 
-para análisis cuantitativo y gestión de riesgo en mercados de criptomonedas.
+para análisis cuantitativo y gestión de riesgo en mercados de criptomonedas Y acciones.
+
+MERCADOS SOPORTADOS:
+- 🪙 CRIPTOMONEDAS: 50+ criptos vía Kraken Exchange (24/7)
+- 📈 ACCIONES (STOCKS): 100+ acciones vía Alpaca Markets (horario NYSE/NASDAQ)
 
 ARQUITECTURA TÉCNICA:
 
 1. INFRAESTRUCTURA DE DATOS
-   - Conexión directa: Kraken Exchange API (tiempo real)
+   - Conexión directa: Kraken Exchange API (criptomonedas, tiempo real)
+   - Conexión directa: Alpaca Markets API (acciones, horario de mercado)
    - Motor algorítmico: 9 estrategias cuantitativas integradas
+   - Stock Trading Premium V6.3: 9 módulos especializados para acciones
    - QRNG: Australian National University (fluctuaciones del vacío cuántico)
    - Análisis técnico propietario: RSI, MACD, Bollinger, EMA
 
