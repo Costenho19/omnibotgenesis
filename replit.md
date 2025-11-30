@@ -61,6 +61,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **Professional empty state** ("No trading data yet") instead of fake demo data
     - **Automatic production data** - Shows real trades when deployed to Railway
     - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
+    - **Railway Deployment**: Can run as separate service using `start_dashboard.py` (see `RAILWAY_DASHBOARD_SETUP.md`)
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
