@@ -46,6 +46,10 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Leverage Validation**: Automatically detects and rejects leverage requests exceeding 5x.
 - **Multi-Crypto Support**: Supports 50+ cryptocurrencies with primary Kraken and fallback CoinGecko data sources.
 - **Robust Market Data System**: Uses 3-source fallback (Kraken Auth → Kraken Public → CoinGecko) with JSON validation and timeouts.
+- **Real Data Integration V6.4**: Portfolio commands now fetch REAL historical data:
+    - **Kraken OHLC**: Auto-detects response keys (handles `XXBTZUSD` vs `XBTUSD` mapping)
+    - **Alpaca Bars API**: 60-day historical bars for stocks (AAPL, MSFT, GOOGL, etc.)
+    - **Data Quality Tracking**: Logs which assets use real vs synthetic fallback data
 - **Stock Trading Premium V6.3 ULTRA**: 100% institutional-grade stock trading with 9 active modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
 - **YouTube Video Analysis**: Enhanced with OpenAI Whisper as an ultimate fallback for transcript generation, including caching for efficiency.
 - **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level portfolio optimization with 5 institutional modules:

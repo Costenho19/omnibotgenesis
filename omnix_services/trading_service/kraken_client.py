@@ -160,7 +160,7 @@ class KrakenAPIClient:
         Get OHLC (candlestick) data for historical analysis
         
         Args:
-            pair: Trading pair
+            pair: Trading pair (e.g., 'XBTUSD', 'ETHUSD')
             interval: Time frame in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
             since: Return data since given timestamp
             
@@ -174,11 +174,14 @@ class KrakenAPIClient:
             
             result = self._request('/0/public/OHLC', data=data)
             
-            if result and pair in result:
-                ohlc_data = result[pair]
-                logger.info(f"✅ OHLC data retrieved for {pair}: {len(ohlc_data)} candles")
-                return ohlc_data
+            if result:
+                for key in result:
+                    if key != 'last' and isinstance(result[key], list):
+                        ohlc_data = result[key]
+                        logger.info(f"✅ OHLC data retrieved for {pair} (key={key}): {len(ohlc_data)} candles")
+                        return ohlc_data
             
+            logger.warning(f"⚠️ No OHLC data found for {pair}")
             return []
         except Exception as e:
             logger.error(f"Failed to get OHLC for {pair}: {e}")
