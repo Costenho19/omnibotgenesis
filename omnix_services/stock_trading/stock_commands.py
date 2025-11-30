@@ -1,6 +1,6 @@
 """
-📊 Stock Trading Telegram Commands Handler
-All commands for stock market trading
+📊 Stock Trading Telegram Commands Handler V6.2 PREMIUM
+All commands for stock market trading with institutional features
 """
 
 import logging
@@ -13,14 +13,20 @@ from .fundamental_analyzer import FundamentalAnalyzer
 
 logger = logging.getLogger(__name__)
 
-# Feature flag check
 STOCK_TRADING_ENABLED = os.getenv('STOCK_TRADING_ENABLED', 'false').lower() == 'true'
 
 
 class StockCommandsHandler:
     """
-    Handles all stock-related Telegram commands
-    Only active if STOCK_TRADING_ENABLED=true
+    Handles all stock-related Telegram commands V6.2 PREMIUM
+    Includes institutional-grade analysis with:
+    - Monte Carlo Simulations
+    - Kalman Filter
+    - HMM Regime Detection
+    - ARES-STOCK strategies
+    - Non-Markovian Memory
+    - Coherence Engine
+    - Risk Guardian
     """
     
     def __init__(self):
@@ -29,20 +35,63 @@ class StockCommandsHandler:
             self.enabled = False
             return
         
-        logger.info("📊 Inicializando Stock Trading Module...")
+        logger.info("📊 Inicializando Stock Trading Module V6.2 PREMIUM...")
         
-        # Initialize services
         self.alpaca = AlpacaService(paper_trading=True)
         self.market_hours = MarketHoursManager()
         self.stock_analyzer = StockAnalyzer()
         self.fundamental_analyzer = FundamentalAnalyzer()
         
+        self.premium_engine = None
+        self.coherence_adapter = None
+        self.risk_bridge = None
+        self.auto_optimizer = None
+        self._init_premium_features()
+        
         self.enabled = STOCK_TRADING_ENABLED and self.alpaca.connected
         
         if self.enabled:
-            logger.info("✅ Stock Trading Module ACTIVADO - Alpaca conectado")
+            logger.info("✅ Stock Trading Module V6.2 PREMIUM ACTIVADO")
+            logger.info(f"   🏦 Alpaca: {'✅' if self.alpaca.connected else '❌'}")
+            logger.info(f"   🚀 Premium Engine: {'✅' if self.premium_engine else '❌'}")
+            logger.info(f"   🔗 Coherence: {'✅' if self.coherence_adapter else '❌'}")
+            logger.info(f"   🛡️ Risk Guardian: {'✅' if self.risk_bridge else '❌'}")
         else:
             logger.warning("⚠️ Stock Trading Module configurado pero Alpaca no conectado")
+    
+    def _init_premium_features(self):
+        """Initialize premium trading features"""
+        try:
+            from .premium import StockStrategyEngine
+            self.premium_engine = StockStrategyEngine(
+                stock_analyzer=self.stock_analyzer,
+                fundamental_analyzer=self.fundamental_analyzer,
+                market_hours=self.market_hours
+            )
+            logger.info("   ✅ Stock Strategy Engine Premium inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Premium Engine no disponible: {e}")
+        
+        try:
+            from .premium.integration import StockCoherenceAdapter
+            self.coherence_adapter = StockCoherenceAdapter()
+            logger.info("   ✅ Coherence Adapter inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Coherence Adapter no disponible: {e}")
+        
+        try:
+            from .premium.integration import StockRiskGuardianBridge
+            self.risk_bridge = StockRiskGuardianBridge()
+            logger.info("   ✅ Risk Guardian Bridge inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Risk Guardian Bridge no disponible: {e}")
+        
+        try:
+            from .premium.stock_auto_optimizer import StockAutoOptimizer
+            self.auto_optimizer = StockAutoOptimizer()
+            logger.info("   ✅ Auto-Optimizer inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Auto-Optimizer no disponible: {e}")
     
     async def handle_balance_stocks(self, update, context) -> str:
         """Handle /balance_bolsa command"""
@@ -174,6 +223,112 @@ class StockCommandsHandler:
         except Exception as e:
             logger.error(f"Error analyzing {symbol}: {e}")
             return f"❌ Error analizando {symbol}: {str(e)}"
+    
+    async def handle_premium_analysis(self, update, context, symbol: str) -> str:
+        """Handle /analizar_premium [SYMBOL] - Análisis institucional completo"""
+        if not STOCK_TRADING_ENABLED:
+            return "📊 Módulo de bolsa no activado"
+        
+        if not symbol:
+            return "⚠️ Uso: /analizar_premium AAPL"
+        
+        symbol = symbol.upper().strip()
+        
+        if not self.premium_engine:
+            return await self.handle_analyze_stock(update, context, symbol)
+        
+        try:
+            response = f"🚀 **ANÁLISIS PREMIUM: {symbol}**\n"
+            response += "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            
+            signal = self.premium_engine.analyze(symbol, include_fundamental=True)
+            
+            if not signal:
+                response += "❌ No se pudo completar análisis premium\n"
+                response += "Intentando análisis básico...\n\n"
+                return await self.handle_analyze_stock(update, context, symbol)
+            
+            signal_emojis = {
+                'strong_buy': '🟢🟢',
+                'buy': '🟢',
+                'hold': '🟡',
+                'sell': '🔴',
+                'strong_sell': '🔴🔴'
+            }
+            
+            regime_emojis = {
+                'bull': '📈 Bull',
+                'bear': '📉 Bear',
+                'sideways': '➡️ Lateral',
+                'crisis': '🚨 Crisis',
+                'unknown': '❓ Desconocido'
+            }
+            
+            signal_emoji = signal_emojis.get(signal.signal_type.value, '❓')
+            regime_text = regime_emojis.get(signal.regime.value, '❓')
+            
+            response += f"{signal_emoji} **Señal: {signal.signal_type.value.upper()}**\n"
+            response += f"💯 Confianza: {signal.confidence:.0%}\n"
+            response += f"🎯 Régimen: {regime_text}\n\n"
+            
+            response += "**📊 Scores:**\n"
+            response += f"   🔧 Técnico: {signal.technical_score:.2f}\n"
+            response += f"   📈 Fundamental: {signal.fundamental_score:.2f}\n"
+            response += f"   🧠 Coherencia: {signal.memory_coherence:.2f}\n\n"
+            
+            if signal.sources:
+                response += "**🎲 Señales por Estrategia:**\n"
+                for source, value in signal.sources.items():
+                    emoji = "🟢" if value > 0.2 else "🔴" if value < -0.2 else "🟡"
+                    response += f"   {emoji} {source}: {value:+.2f}\n"
+                response += "\n"
+            
+            if signal.risk_approved:
+                response += "✅ **Aprobado por Risk Guardian**\n"
+            else:
+                response += "⚠️ **Vetos activos:**\n"
+                for reason in signal.veto_reasons:
+                    response += f"   • {reason}\n"
+            
+            response += f"\n🕐 {signal.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error in premium analysis {symbol}: {e}")
+            return f"❌ Error en análisis premium: {str(e)}"
+    
+    async def handle_stock_status(self, update, context) -> str:
+        """Handle /stock_status - Estado del sistema premium"""
+        if not STOCK_TRADING_ENABLED:
+            return "📊 Módulo de bolsa no activado"
+        
+        response = "🚀 **STOCK TRADING V6.2 PREMIUM**\n"
+        response += "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        response += f"🏦 Alpaca: {'✅ Conectado' if self.alpaca.connected else '❌ Desconectado'}\n"
+        response += f"⏰ Mercado: {self.market_hours.get_market_status()['status_text']}\n\n"
+        
+        response += "**Módulos Premium:**\n"
+        response += f"   🚀 Strategy Engine: {'✅' if self.premium_engine else '❌'}\n"
+        response += f"   🔗 Coherence Adapter: {'✅' if self.coherence_adapter else '❌'}\n"
+        response += f"   🛡️ Risk Guardian: {'✅' if self.risk_bridge else '❌'}\n"
+        response += f"   🔧 Auto-Optimizer: {'✅' if self.auto_optimizer else '❌'}\n\n"
+        
+        if self.premium_engine:
+            status = self.premium_engine.get_status()
+            modules = status.get('modules', {})
+            active = sum(1 for v in modules.values() if v)
+            total = len(modules)
+            response += f"**Engine Status:**\n"
+            response += f"   📊 Módulos activos: {active}/{total}\n"
+            response += f"   🎯 Monte Carlo: {'✅' if modules.get('monte_carlo') else '❌'}\n"
+            response += f"   📈 Kalman Filter: {'✅' if modules.get('kalman_filter') else '❌'}\n"
+            response += f"   🎲 HMM Regime: {'✅' if modules.get('hmm_detector') else '❌'}\n"
+            response += f"   🧬 ARES-STOCK: {'✅' if modules.get('ares_stock') else '❌'}\n"
+            response += f"   🧠 Memory Kernel: {'✅' if modules.get('memory_kernel') else '❌'}\n"
+        
+        return response
     
     async def handle_buy_stock(self, update, context, symbol: str, amount: Optional[float] = None) -> str:
         """Handle /comprar_bolsa [SYMBOL] [AMOUNT] command"""

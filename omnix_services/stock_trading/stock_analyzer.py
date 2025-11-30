@@ -5,6 +5,7 @@ RSI, MACD, EMA strategies adapted for stock market
 
 import logging
 import numpy as np
+import os
 from typing import Dict, List, Optional, Tuple
 import requests
 
