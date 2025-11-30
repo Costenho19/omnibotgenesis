@@ -2843,9 +2843,9 @@ Ejemplo: /risk_events 48
                         logger.info("🔧 Fallback final en handle_message: Intentando yt-dlp")
                         try:
                             video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match and hasattr(self, 'video_analyzer') and self.video_analyzer:
+                            if video_id_match and hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
                                 video_id = video_id_match.group(1)
-                                ytdlp_transcript = self.video_analyzer._get_transcript_ytdlp(video_id)
+                                ytdlp_transcript = self.video_analyzer_ultra._get_transcript_ytdlp(video_id)
                                 if ytdlp_transcript and len(ytdlp_transcript) > 50:
                                     video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
                                     has_real_content = True
@@ -4239,9 +4239,9 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                         logger.info("🔧 Fallback final: Intentando yt-dlp")
                         try:
                             video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match and hasattr(self, 'video_analyzer') and self.video_analyzer:
+                            if video_id_match and hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
                                 video_id = video_id_match.group(1)
-                                ytdlp_transcript = self.video_analyzer._get_transcript_ytdlp(video_id)
+                                ytdlp_transcript = self.video_analyzer_ultra._get_transcript_ytdlp(video_id)
                                 if ytdlp_transcript and len(ytdlp_transcript) > 50:
                                     video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
                                     has_real_content = True
