@@ -132,3 +132,48 @@ class DatabaseManager:
             return self.enterprise_service.execute_query(sql, params, fetch)
         logger.error("❌ execute_query no disponible - enterprise_service no configurado")
         return None
+    
+    def get_paper_trading_balance(self, user_id: str) -> dict:
+        """
+        Obtener balance de paper trading del usuario
+        FIXED Nov 30, 2025: RMS necesita este método para calcular drawdown
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_paper_trading_balance(user_id)
+        return {'balance': 1_000_000.0, 'available': 1_000_000.0, 'total_pnl': 0.0}
+    
+    def get_risk_limits(self, user_id: str) -> list:
+        """
+        Obtener límites de riesgo del usuario
+        FIXED Nov 30, 2025: RMS LimitsEngine necesita este método
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_risk_limits(user_id)
+        return []
+    
+    def get_circuit_breaker_status(self, user_id: str) -> dict:
+        """
+        Obtener estado del circuit breaker
+        FIXED Nov 30, 2025: RMS CircuitBreaker necesita este método
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_circuit_breaker_status(user_id)
+        return None
+    
+    def get_daily_trading_stats(self, user_id: str) -> dict:
+        """
+        Obtener estadísticas de trading del día
+        FIXED Nov 30, 2025: RMS necesita este método para PnL diario
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_daily_trading_stats(user_id)
+        return None
+    
+    def get_open_positions(self, user_id: str) -> list:
+        """
+        Obtener posiciones abiertas del usuario
+        FIXED Nov 30, 2025: RMS necesita este método para exposición
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.get_open_positions(user_id)
+        return []
