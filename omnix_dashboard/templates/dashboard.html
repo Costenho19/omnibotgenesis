@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OMNIX V6.3 ULTRA - Performance Dashboard</title>
+    <title>OMNIX V6.4 INSTITUTIONAL+ - Performance Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -147,7 +147,7 @@
                             <span class="text-xl font-bold">O</span>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold gradient-text">OMNIX V6.3 ULTRA</h1>
+                            <h1 class="text-xl font-bold gradient-text">OMNIX V6.4 INSTITUTIONAL+</h1>
                             <p class="text-xs text-zinc-500">Institutional Performance Dashboard</p>
                         </div>
                     </div>
@@ -333,8 +333,8 @@
 
         <footer class="border-t border-zinc-800/50 py-6 mt-8">
             <div class="max-w-7xl mx-auto px-6 text-center text-zinc-500 text-sm">
-                <p>OMNIX V6.3 ULTRA - Institutional Trading System</p>
-                <p class="text-xs mt-1">Paper Trading Mode - For Demonstration Purposes</p>
+                <p>OMNIX V6.4 INSTITUTIONAL+ - Goldman-Sachs Level Portfolio Management</p>
+                <p class="text-xs mt-1">Real Paper Trading Data - Track Record for Investors</p>
             </div>
         </footer>
     </div>
@@ -353,7 +353,7 @@
                     updateStrategiesUI(data.strategies);
                     
                     document.getElementById('db-status').textContent = 
-                        data.db_connected ? 'Database Connected' : 'Demo Mode';
+                        data.db_connected ? 'Live Data' : 'Awaiting Trades';
                     document.getElementById('last-update').textContent = 
                         new Date(data.last_updated).toLocaleTimeString();
                 }
