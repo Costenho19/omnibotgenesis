@@ -190,6 +190,64 @@ class DatabaseServiceEnterprise:
             'database_url_configured': bool(self.db_url)
         }
     
+    def execute_query(self, sql: str, params: tuple = None, fetch: bool = True):
+        """
+        Ejecutar query SQL genérica
+        
+        Args:
+            sql: Query SQL a ejecutar
+            params: Parámetros para la query (tuple)
+            fetch: Si True, retorna resultados (SELECT). Si False, solo ejecuta (INSERT/UPDATE)
+            
+        Returns:
+            Lista de tuplas con resultados si fetch=True, None si fetch=False
+            
+        Uso:
+            result = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
+            db.execute_query("UPDATE users SET name = %s WHERE id = %s", (name, id), fetch=False)
+        """
+        if not self.connected:
+            logger.error("❌ execute_query: Database no conectada")
+            return None
+            
+        conn = None
+        try:
+            conn = self._get_connection()
+            if not conn:
+                logger.error("❌ execute_query: No se pudo obtener conexión")
+                return None
+                
+            cursor = conn.cursor()
+            
+            if params:
+                cursor.execute(sql, params)
+            else:
+                cursor.execute(sql)
+            
+            if fetch:
+                result = cursor.fetchall()
+                conn.commit()
+                return result
+            else:
+                conn.commit()
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ execute_query error: {e}")
+            logger.error(f"   SQL: {sql[:100]}...")
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            raise
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except:
+                    pass
+    
     def _get_connection(self):
         """
         Obtener conexión a PostgreSQL
