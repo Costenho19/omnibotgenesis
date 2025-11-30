@@ -4846,6 +4846,200 @@ Harold pregunta: {text}"""
             logger.error(f"❌ Error generate_smart_response: {e}")
             return f"🤖 Sistema procesando: '{text}'\n\n💰 Balance real verificado con Kraken\n✅ IA superinteligente operativa"
 
+    # ============================================================================
+    # 📊 PAPER TRADING DIRECT HANDLERS - FIX Nov 30, 2025
+    # Estos métodos ejecutan trades REALES en PostgreSQL desde el polling directo
+    # ============================================================================
+    
+    def _handle_paper_buy_direct(self, chat_id, user_id, text):
+        """Ejecutar /paper_buy REALMENTE desde polling directo"""
+        try:
+            # Parsear comando: /paper_buy BTC 100
+            parts = text.split()
+            if len(parts) < 3:
+                self.send_telegram_text_safe(chat_id, "Uso: /paper_buy BTC 100 (comprar $100 de BTC)")
+                return
+            
+            symbol = parts[1].upper()
+            try:
+                amount_usd = float(parts[2])
+            except ValueError:
+                self.send_telegram_text_safe(chat_id, "⚠️ Cantidad debe ser número. Ej: /paper_buy BTC 100")
+                return
+            
+            if amount_usd <= 0:
+                self.send_telegram_text_safe(chat_id, "⚠️ Cantidad debe ser mayor a 0")
+                return
+            
+            self.send_telegram_text_safe(chat_id, f"🔍 Ejecutando compra REAL de ${amount_usd:,.2f} en {symbol}...")
+            
+            # EJECUTAR TRADE REAL EN POSTGRESQL
+            result = self.paper_trading.execute_paper_trade(
+                user_id=str(user_id),
+                side='buy',
+                symbol=f"{symbol}/USD",
+                amount_usd=amount_usd
+            )
+            
+            if 'error' in result:
+                self.send_telegram_text_safe(chat_id, f"❌ {result['error']}")
+                return
+            
+            msg = f"""✅ *COMPRA EJECUTADA EN POSTGRESQL*
+
+{symbol}: +{result['amount']:.8f}
+Precio: ${result['price']:,.2f}
+Total: ${result['total_usd']:,.2f}
+
+💰 *NUEVO BALANCE:*
+USD: ${result['new_balance_usd']:,.2f}
+BTC: {result['new_btc_balance']:.8f}
+ETH: {result['new_eth_balance']:.8f}
+
+✅ Trade guardado en base de datos"""
+            
+            self.send_telegram_text_safe(chat_id, msg)
+            logger.info(f"✅ PAPER BUY REAL EJECUTADO: {symbol} ${amount_usd} para user {user_id}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error _handle_paper_buy_direct: {e}")
+            self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
+    
+    def _handle_paper_sell_direct(self, chat_id, user_id, text):
+        """Ejecutar /paper_sell REALMENTE desde polling directo"""
+        try:
+            parts = text.split()
+            if len(parts) < 3:
+                self.send_telegram_text_safe(chat_id, "Uso: /paper_sell BTC 100 (vender $100 de BTC)")
+                return
+            
+            symbol = parts[1].upper()
+            try:
+                amount_usd = float(parts[2])
+            except ValueError:
+                self.send_telegram_text_safe(chat_id, "⚠️ Cantidad debe ser número. Ej: /paper_sell BTC 100")
+                return
+            
+            if amount_usd <= 0:
+                self.send_telegram_text_safe(chat_id, "⚠️ Cantidad debe ser mayor a 0")
+                return
+            
+            self.send_telegram_text_safe(chat_id, f"🔍 Ejecutando venta REAL de ${amount_usd:,.2f} en {symbol}...")
+            
+            result = self.paper_trading.execute_paper_trade(
+                user_id=str(user_id),
+                side='sell',
+                symbol=f"{symbol}/USD",
+                amount_usd=amount_usd
+            )
+            
+            if 'error' in result:
+                self.send_telegram_text_safe(chat_id, f"❌ {result['error']}")
+                return
+            
+            msg = f"""✅ *VENTA EJECUTADA EN POSTGRESQL*
+
+{symbol}: -{result['amount']:.8f}
+Precio: ${result['price']:,.2f}
+Total: ${result['total_usd']:,.2f}
+P&L: ${result.get('realized_pnl', 0):,.2f}
+
+💰 *NUEVO BALANCE:*
+USD: ${result['new_balance_usd']:,.2f}
+
+✅ Trade guardado en base de datos"""
+            
+            self.send_telegram_text_safe(chat_id, msg)
+            logger.info(f"✅ PAPER SELL REAL EJECUTADO: {symbol} ${amount_usd} para user {user_id}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error _handle_paper_sell_direct: {e}")
+            self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
+    
+    def _handle_paper_start_direct(self, chat_id, user_id):
+        """Inicializar paper trading para usuario"""
+        try:
+            result = self.paper_trading.initialize_user(str(user_id))
+            
+            if 'error' in result:
+                self.send_telegram_text_safe(chat_id, f"❌ {result['error']}")
+                return
+            
+            if result.get('already_initialized'):
+                msg = f"""📊 *PAPER TRADING YA ACTIVO*
+
+Balance: ${result['balance_usd']:,.2f}
+Trades: {result['total_trades']}
+
+Usa /paper_buy BTC 100 para comprar"""
+            else:
+                msg = """🎯 *PAPER TRADING ACTIVADO*
+
+💰 Balance inicial: $1,000,000
+
+Comandos disponibles:
+• /paper_buy BTC 100
+• /paper_sell BTC 100
+• /paper_balance
+• /paper_positions"""
+            
+            self.send_telegram_text_safe(chat_id, msg)
+            logger.info(f"✅ Paper Trading inicializado para user {user_id}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error _handle_paper_start_direct: {e}")
+            self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
+    
+    def _handle_paper_balance_direct(self, chat_id, user_id):
+        """Mostrar balance de paper trading"""
+        try:
+            balance = self.paper_trading.get_balance(str(user_id))
+            
+            if 'error' in balance:
+                self.send_telegram_text_safe(chat_id, f"⚠️ {balance.get('message', 'Usa /paper_start para comenzar')}")
+                return
+            
+            msg = f"""📊 *PAPER TRADING BALANCE*
+
+💵 *EFECTIVO:*
+USD: ${balance['balance_usd']:,.2f}
+
+₿ *CRYPTO:*
+BTC: {balance['btc_balance']:.8f}
+ETH: {balance['eth_balance']:.8f}
+
+💰 *VALOR TOTAL:*
+${balance['total_value_usd']:,.2f}
+
+📈 *PERFORMANCE:*
+P&L: ${balance['profit_loss_usd']:,.2f} ({balance['profit_loss_pct']:+.2f}%)
+Trades: {balance['total_trades']}"""
+            
+            self.send_telegram_text_safe(chat_id, msg)
+            
+        except Exception as e:
+            logger.error(f"❌ Error _handle_paper_balance_direct: {e}")
+            self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
+    
+    def _handle_paper_positions_direct(self, chat_id, user_id):
+        """Mostrar posiciones abiertas de paper trading"""
+        try:
+            positions = self.paper_trading.get_open_positions(str(user_id))
+            
+            if not positions:
+                self.send_telegram_text_safe(chat_id, "📊 No tienes posiciones abiertas.\n\nUsa /paper_buy BTC 100 para abrir una posición.")
+                return
+            
+            msg = "📊 *POSICIONES ABIERTAS*\n\n"
+            for pos in positions:
+                msg += f"• {pos['symbol']}: {pos['quantity']:.8f} @ ${pos['entry_price']:,.2f}\n"
+            
+            self.send_telegram_text_safe(chat_id, msg)
+            
+        except Exception as e:
+            logger.error(f"❌ Error _handle_paper_positions_direct: {e}")
+            self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
+
     def start_polling(self, drop_pending_updates=True):
         """Iniciar bot en modo polling directo - VERSION FUNCIONAL"""
         try:
@@ -4882,7 +5076,20 @@ Harold pregunta: {text}"""
                                         user_id = message.get('from', {}).get('id', chat_id)
                                         text = message.get('text', '')
                                         logger.info(f"📧 Procesando mensaje: '{text}' de chat:{chat_id} user:{user_id}")
-                                        self.handle_direct_message(chat_id, text, user_id=user_id)
+                                        
+                                        # FIX Nov 30, 2025: Detectar comandos de paper trading y ejecutarlos REALMENTE
+                                        if text.startswith('/paper_buy ') and self.paper_trading:
+                                            self._handle_paper_buy_direct(chat_id, user_id, text)
+                                        elif text.startswith('/paper_sell ') and self.paper_trading:
+                                            self._handle_paper_sell_direct(chat_id, user_id, text)
+                                        elif text.startswith('/paper_start') and self.paper_trading:
+                                            self._handle_paper_start_direct(chat_id, user_id)
+                                        elif text.startswith('/paper_balance') and self.paper_trading:
+                                            self._handle_paper_balance_direct(chat_id, user_id)
+                                        elif text.startswith('/paper_positions') and self.paper_trading:
+                                            self._handle_paper_positions_direct(chat_id, user_id)
+                                        else:
+                                            self.handle_direct_message(chat_id, text, user_id=user_id)
                                     offset = update['update_id'] + 1
                             
                         time.sleep(1)
