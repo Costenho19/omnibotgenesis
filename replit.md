@@ -55,7 +55,12 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **ExposureManager**: Sector/asset/beta limits, net/gross exposure compliance, institutional mandates.
     - **ClusteringRiskDetector**: Hidden concentration risk detection via correlation clustering, effective-N calculation.
     - **OmnixPortfolioEngine**: Unified orchestration layer combining all modules.
-- **Performance Dashboard V6.4**: Premium 2025-style web dashboard with equity curve, advanced metrics, portfolio visualization for investor presentations.
+- **Performance Dashboard V6.4 REAL DATA**: Premium 2025-style web dashboard connected directly to PostgreSQL. Features:
+    - **Real-time data** from `paper_trading_trades` and `balance_history` tables
+    - **Live Data indicator** (green dot) when database connected
+    - **Professional empty state** ("No trading data yet") instead of fake demo data
+    - **Automatic production data** - Shows real trades when deployed to Railway
+    - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
