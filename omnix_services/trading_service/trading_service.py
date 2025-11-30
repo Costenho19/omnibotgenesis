@@ -159,6 +159,47 @@ class TradingServiceEnterprise:
             logger.error(f"Failed to get account status: {e}")
             return {}
     
+    def get_ticker(self, symbol: str) -> Dict[str, Any]:
+        """
+        Get current ticker data for a trading pair.
+        
+        FIXED Nov 30, 2025: Método faltante - PaperTradingManager necesita
+        este método para obtener precios de mercado.
+        
+        Args:
+            symbol: Trading pair (e.g., 'BTC', 'XBTUSD')
+            
+        Returns:
+            Ticker data with 'last' price
+        """
+        try:
+            pair = symbol
+            if symbol in ['BTC', 'XBT']:
+                pair = 'XBTUSD'
+            elif symbol == 'ETH':
+                pair = 'ETHUSD'
+            elif symbol == 'SOL':
+                pair = 'SOLUSD'
+            elif not symbol.endswith('USD'):
+                pair = f"{symbol}USD"
+            
+            ticker = self.kraken.get_ticker(pair)
+            
+            if ticker and 'c' in ticker:
+                return {
+                    'last': float(ticker['c'][0]),
+                    'bid': float(ticker['b'][0]) if 'b' in ticker else None,
+                    'ask': float(ticker['a'][0]) if 'a' in ticker else None,
+                    'volume': float(ticker['v'][1]) if 'v' in ticker else None,
+                    'pair': pair
+                }
+            
+            return ticker
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting ticker for {symbol}: {e}")
+            return None
+    
     def analyze_trading_opportunity(
         self,
         pair: str = 'XBTUSD',
