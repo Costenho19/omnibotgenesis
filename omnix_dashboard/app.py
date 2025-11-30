@@ -65,7 +65,7 @@ def get_paper_trades(days=30):
             SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
                    profit_loss, profit_pct, strategy, status, opened_at, closed_at
             FROM paper_trading_trades
-            WHERE opened_at >= NOW() - INTERVAL '%s days'
+            WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
             ORDER BY opened_at DESC
             LIMIT 500
         ''', (days,))
@@ -152,7 +152,7 @@ def get_balance_history(days=30):
         cursor.execute('''
             SELECT total_usd, btc_balance, eth_balance, usdt_balance, other_balance, timestamp
             FROM balance_history
-            WHERE timestamp >= NOW() - INTERVAL '%s days'
+            WHERE timestamp >= NOW() - INTERVAL '1 day' * %s
             ORDER BY timestamp ASC
         ''', (days,))
         
