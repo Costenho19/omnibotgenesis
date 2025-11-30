@@ -191,6 +191,11 @@ class PaperTradingManager:
                 
                 logger.info(f"✅ BUY ejecutado: {crypto_amount:.8f} {symbol} @ ${current_price:,.2f} (fee: ${fee_usd:.2f})")
                 
+                updated_balance = self._get_paper_balance(user_id)
+                new_balance_usd = updated_balance['balance_usd'] if updated_balance else (balance['balance_usd'] - total_cost)
+                new_btc_balance = updated_balance.get('btc_balance', 0.0) if updated_balance else 0.0
+                new_eth_balance = updated_balance.get('eth_balance', 0.0) if updated_balance else 0.0
+                
                 return {
                     'success': True,
                     'side': 'buy',
@@ -201,6 +206,9 @@ class PaperTradingManager:
                     'fee_usd': fee_usd,
                     'total_cost': total_cost,
                     'trade_uuid': trade_uuid,
+                    'new_balance_usd': new_balance_usd,
+                    'new_btc_balance': new_btc_balance,
+                    'new_eth_balance': new_eth_balance,
                     'message': f'✅ BUY {crypto_amount:.8f} {symbol} @ ${current_price:,.2f} | Fee: ${fee_usd:.2f}'
                 }
                 
@@ -218,6 +226,11 @@ class PaperTradingManager:
                 
                 logger.info(f"✅ SELL ejecutado: {crypto_amount:.8f} {symbol} @ ${current_price:,.2f} | P&L: ${close_result['net_realized_pnl_usd']:,.2f}")
                 
+                updated_balance = self._get_paper_balance(user_id)
+                new_balance_usd = updated_balance['balance_usd'] if updated_balance else balance['balance_usd']
+                new_btc_balance = updated_balance.get('btc_balance', 0.0) if updated_balance else 0.0
+                new_eth_balance = updated_balance.get('eth_balance', 0.0) if updated_balance else 0.0
+                
                 return {
                     'success': True,
                     'side': 'sell',
@@ -233,6 +246,9 @@ class PaperTradingManager:
                     'duration_seconds': close_result['duration_seconds'],
                     'is_winning_trade': close_result['is_winning_trade'],
                     'trade_uuid': close_result['trade_uuid'],
+                    'new_balance_usd': new_balance_usd,
+                    'new_btc_balance': new_btc_balance,
+                    'new_eth_balance': new_eth_balance,
                     'message': f'✅ SELL {crypto_amount:.8f} {symbol} @ ${current_price:,.2f} | P&L: ${close_result["net_realized_pnl_usd"]:+,.2f} ({"WIN" if close_result["is_winning_trade"] else "LOSS"})'
                 }
             else:
