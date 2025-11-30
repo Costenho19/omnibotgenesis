@@ -381,11 +381,17 @@ class PaperTradingManager:
         return False
     
     def _save_paper_balance_legacy(self, balance_data: Dict) -> bool:
-        """Fallback a memoria temporal si DB falla"""
+        """
+        ⚠️ DEPRECATED: Fallback a memoria temporal si PostgreSQL falla
+        
+        NOTA: Este método solo se usa cuando using_enterprise=False
+        Los datos se pierden al reiniciar. Usar solo para desarrollo local.
+        En producción, using_enterprise=True usa PostgreSQL directamente.
+        """
         if not hasattr(self, '_balances'):
             self._balances = {}
         self._balances[balance_data['user_id']] = balance_data
-        logger.warning("⚠️ Balance guardado en memoria temporal - se perderá al reiniciar")
+        logger.warning("⚠️ DEPRECATED: Balance guardado en memoria temporal - NO SE PERSISTIRÁ en PostgreSQL")
         return True
     
     def _update_paper_balance(self, balance_data: Dict) -> bool:
@@ -414,34 +420,6 @@ class PaperTradingManager:
                 return True
         except Exception as e:
             logger.error(f"Error actualizando balance: {e}")
-        return False
-    
-    def _save_paper_trade(self, trade_data: Dict) -> bool:
-        """Guardar trade en PostgreSQL - HISTORIAL PERMANENTE"""
-        try:
-            if self.database_service and hasattr(self.database_service, 'execute_query'):
-                self.database_service.execute_query(
-                    """
-                    INSERT INTO paper_trading_trades 
-                    (user_id, symbol, side, amount, price, total_usd, 
-                     timestamp, is_paper_trade)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        trade_data['user_id'],
-                        trade_data['symbol'],
-                        trade_data['side'],
-                        trade_data['amount'],
-                        trade_data['price'],
-                        trade_data['total_usd'],
-                        trade_data['timestamp'],
-                        trade_data.get('is_paper_trade', True)
-                    )
-                )
-                logger.info(f"✅ Trade guardado en PostgreSQL: {trade_data['side']} {trade_data['symbol']}")
-                return True
-        except Exception as e:
-            logger.error(f"Error guardando trade: {e}")
         return False
     
     def _calculate_fee(self, notional_usd: float) -> float:
