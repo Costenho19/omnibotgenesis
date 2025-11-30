@@ -47,6 +47,14 @@ class StockSignal:
     risk_approved: bool
     veto_reasons: List[str]
     timestamp: datetime
+    protection_warnings: List[str] = None
+    position_multiplier: float = 1.0
+    gap_protected: bool = False
+    earnings_protected: bool = False
+    
+    def __post_init__(self):
+        if self.protection_warnings is None:
+            self.protection_warnings = []
     
     def to_dict(self) -> Dict:
         return {
@@ -60,8 +68,20 @@ class StockSignal:
             'memory_coherence': round(self.memory_coherence, 2),
             'risk_approved': self.risk_approved,
             'veto_reasons': self.veto_reasons,
+            'protection_warnings': self.protection_warnings,
+            'position_multiplier': round(self.position_multiplier, 2),
+            'gap_protected': self.gap_protected,
+            'earnings_protected': self.earnings_protected,
             'timestamp': self.timestamp.isoformat()
         }
+    
+    def get_action_summary(self) -> str:
+        """Resumen de acción con protecciones"""
+        if not self.risk_approved:
+            return f"🚫 BLOQUEADO: {', '.join(self.veto_reasons[:2])}"
+        if self.position_multiplier < 0.5:
+            return f"⚠️ {self.signal_type.value.upper()} (sizing reducido {int(self.position_multiplier*100)}%)"
+        return f"✅ {self.signal_type.value.upper()} (conf: {self.confidence:.0%})"
 
 
 class StockStrategyEngine:
@@ -115,10 +135,12 @@ class StockStrategyEngine:
         self.hmm_detector = None
         self.ares_stock = None
         self.memory_kernel = None
+        self.gap_protection = None
+        self.earnings_protector = None
         
         self._init_modules()
         
-        logger.info("🚀 Stock Strategy Engine V6.2 PREMIUM inicializado")
+        logger.info("🚀 Stock Strategy Engine V6.3 ULTRA inicializado")
         logger.info(f"   📊 Lookback: {self.STOCK_PARAMS['lookback_period']} barras")
         logger.info(f"   🎲 Monte Carlo: {self.STOCK_PARAMS['monte_carlo_paths']} paths")
         logger.info(f"   🧠 HMM Estados: {self.STOCK_PARAMS['hmm_states']}")
@@ -172,6 +194,24 @@ class StockStrategyEngine:
             logger.info("   ✅ Non-Markovian Memory Kernel inicializado")
         except Exception as e:
             logger.warning(f"   ⚠️ Non-Markovian Memory Kernel no disponible: {e}")
+        
+        try:
+            from .modules.gap_protection import GapProtection
+            self.gap_protection = GapProtection(
+                market_hours_manager=self.market_hours
+            )
+            logger.info("   ✅ Gap Protection V6.3 inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Gap Protection no disponible: {e}")
+        
+        try:
+            from .modules.earnings_protector import EarningsProtector
+            self.earnings_protector = EarningsProtector(
+                database_service=self.database_service
+            )
+            logger.info("   ✅ Earnings Protector V6.3 inicializado")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Earnings Protector no disponible: {e}")
     
     def analyze(self, symbol: str, include_fundamental: bool = True) -> Optional[StockSignal]:
         """
@@ -185,7 +225,31 @@ class StockStrategyEngine:
             StockSignal con señal consolidada y metadatos
         """
         try:
-            logger.info(f"📊 Analizando {symbol} con estrategias premium...")
+            logger.info(f"📊 Analizando {symbol} con estrategias premium V6.3...")
+            
+            protection_warnings = []
+            position_multiplier = 1.0
+            
+            if self.gap_protection:
+                gap_status = self.gap_protection.check_trading_window()
+                if not gap_status['can_trade']:
+                    protection_warnings.append(f"🛡️ Gap Protection: {gap_status['risk_note']}")
+                    logger.warning(f"   ⚠️ {gap_status['risk_note']}")
+                if gap_status.get('near_close'):
+                    protection_warnings.append("⏰ Cerca del cierre - evitar nuevas posiciones")
+                    position_multiplier *= 0.5
+            
+            if self.earnings_protector:
+                earnings_check = self.earnings_protector.check_earnings(symbol)
+                if earnings_check['should_block']:
+                    protection_warnings.append(f"📅 {earnings_check['recommendation']}")
+                    logger.warning(f"   🚫 Earnings blocker: {earnings_check['recommendation']}")
+                position_multiplier *= earnings_check.get('position_multiplier', 1.0)
+                
+                market_events = self.earnings_protector.check_market_events()
+                if market_events['has_critical_today']:
+                    protection_warnings.append(f"🔴 Evento crítico hoy: {market_events['market_mode']}")
+                    position_multiplier *= market_events.get('market_multiplier', 0.3)
             
             if not self._check_market_hours():
                 logger.info(f"⏰ Mercado cerrado - análisis en modo offline")
@@ -269,6 +333,8 @@ class StockStrategyEngine:
                     veto_reasons.extend(risk_result['reasons'])
                     risk_approved = False
             
+            veto_reasons.extend(protection_warnings)
+            
             stock_signal = StockSignal(
                 symbol=symbol,
                 signal_type=signal_type,
@@ -280,12 +346,18 @@ class StockStrategyEngine:
                 memory_coherence=memory_coherence,
                 risk_approved=risk_approved,
                 veto_reasons=veto_reasons,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
+                protection_warnings=protection_warnings,
+                position_multiplier=position_multiplier,
+                gap_protected=self.gap_protection is not None,
+                earnings_protected=self.earnings_protector is not None
             )
             
             logger.info(f"✅ Análisis completado: {signal_type.value} (conf: {confidence:.2f})")
+            if position_multiplier < 1.0:
+                logger.info(f"   🛡️ Position sizing ajustado: {position_multiplier:.0%}")
             if veto_reasons:
-                logger.info(f"   ⚠️ Vetos: {', '.join(veto_reasons)}")
+                logger.info(f"   ⚠️ Alertas: {', '.join(veto_reasons[:3])}")
             
             return stock_signal
             
@@ -480,7 +552,7 @@ class StockStrategyEngine:
     def get_status(self) -> Dict:
         """Obtener estado del motor"""
         return {
-            'engine': 'Stock Strategy Engine V6.2 PREMIUM',
+            'engine': 'Stock Strategy Engine V6.3 ULTRA',
             'modules': {
                 'monte_carlo': self.monte_carlo is not None,
                 'kalman_filter': self.kalman_filter is not None,
@@ -488,8 +560,70 @@ class StockStrategyEngine:
                 'ares_stock': self.ares_stock is not None,
                 'memory_kernel': self.memory_kernel is not None,
                 'coherence_engine': self.coherence_engine is not None,
-                'risk_guardian': self.risk_guardian is not None
+                'risk_guardian': self.risk_guardian is not None,
+                'gap_protection': self.gap_protection is not None,
+                'earnings_protector': self.earnings_protector is not None
             },
             'parameters': self.STOCK_PARAMS,
             'market_open': self._check_market_hours()
         }
+    
+    def get_risk_dashboard(self) -> Dict:
+        """Dashboard de riesgo institucional integrado"""
+        dashboard = {
+            'timestamp': datetime.now().isoformat(),
+            'engine_version': 'V6.3 ULTRA',
+            'protection_status': {
+                'gap_protection': 'ACTIVE' if self.gap_protection else 'INACTIVE',
+                'earnings_protection': 'ACTIVE' if self.earnings_protector else 'INACTIVE',
+                'coherence_engine': 'ACTIVE' if self.coherence_engine else 'INACTIVE',
+                'risk_guardian': 'ACTIVE' if self.risk_guardian else 'INACTIVE'
+            },
+            'trading_window': None,
+            'market_events': None,
+            'blocked_symbols': [],
+            'high_risk_earnings': [],
+            'sizing_multiplier': 1.0,
+            'market_mode': 'NORMAL'
+        }
+        
+        if self.gap_protection:
+            gap_status = self.gap_protection.get_status()
+            dashboard['trading_window'] = gap_status.get('trading_window', {})
+            dashboard['blocked_symbols'].extend(gap_status.get('blocked_symbols', []))
+        
+        if self.earnings_protector:
+            earnings_status = self.earnings_protector.get_status()
+            dashboard['market_events'] = {
+                'market_mode': earnings_status.get('market_mode', 'NORMAL'),
+                'upcoming_events': earnings_status.get('upcoming_events', 0)
+            }
+            dashboard['high_risk_earnings'] = earnings_status.get('high_risk_earnings', [])
+            dashboard['sizing_multiplier'] = earnings_status.get('market_multiplier', 1.0)
+            dashboard['market_mode'] = earnings_status.get('market_mode', 'NORMAL')
+            dashboard['blocked_symbols'].extend(earnings_status.get('blocked_symbols', []))
+        
+        dashboard['blocked_symbols'] = list(set(dashboard['blocked_symbols']))
+        
+        total_modules = 9
+        active_modules = sum([
+            self.monte_carlo is not None,
+            self.kalman_filter is not None,
+            self.hmm_detector is not None,
+            self.ares_stock is not None,
+            self.memory_kernel is not None,
+            self.coherence_engine is not None,
+            self.risk_guardian is not None,
+            self.gap_protection is not None,
+            self.earnings_protector is not None
+        ])
+        dashboard['system_health'] = f"{active_modules}/{total_modules} modules active"
+        
+        return dashboard
+    
+    def add_earnings_date(self, symbol: str, date: str, time_of_day: str = "AMC"):
+        """Añadir fecha de earnings para un símbolo"""
+        if self.earnings_protector:
+            self.earnings_protector.add_earnings_date(symbol, date, time_of_day)
+            return True
+        return False

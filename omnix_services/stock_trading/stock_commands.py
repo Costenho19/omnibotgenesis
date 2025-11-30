@@ -283,13 +283,23 @@ class StockCommandsHandler:
                     response += f"   {emoji} {source}: {value:+.2f}\n"
                 response += "\n"
             
+            if signal.protection_warnings:
+                response += "**🛡️ Protecciones Activas:**\n"
+                for warning in signal.protection_warnings[:3]:
+                    response += f"   • {warning}\n"
+                if signal.position_multiplier < 1.0:
+                    response += f"   📊 Sizing ajustado: {signal.position_multiplier:.0%}\n"
+                response += "\n"
+            
             if signal.risk_approved:
                 response += "✅ **Aprobado por Risk Guardian**\n"
             else:
                 response += "⚠️ **Vetos activos:**\n"
-                for reason in signal.veto_reasons:
+                for reason in signal.veto_reasons[:3]:
                     response += f"   • {reason}\n"
             
+            response += f"\n🛡️ Gap Protection: {'✅' if signal.gap_protected else '❌'}"
+            response += f" | Earnings Protection: {'✅' if signal.earnings_protected else '❌'}"
             response += f"\n🕐 {signal.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
             
             return response
@@ -303,7 +313,7 @@ class StockCommandsHandler:
         if not STOCK_TRADING_ENABLED:
             return "📊 Módulo de bolsa no activado"
         
-        response = "🚀 **STOCK TRADING V6.2 PREMIUM**\n"
+        response = "🚀 **STOCK TRADING V6.3 ULTRA**\n"
         response += "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         
         response += f"🏦 Alpaca: {'✅ Conectado' if self.alpaca.connected else '❌ Desconectado'}\n"
@@ -320,15 +330,82 @@ class StockCommandsHandler:
             modules = status.get('modules', {})
             active = sum(1 for v in modules.values() if v)
             total = len(modules)
-            response += f"**Engine Status:**\n"
-            response += f"   📊 Módulos activos: {active}/{total}\n"
+            response += f"**Engine Status ({active}/{total}):**\n"
             response += f"   🎯 Monte Carlo: {'✅' if modules.get('monte_carlo') else '❌'}\n"
             response += f"   📈 Kalman Filter: {'✅' if modules.get('kalman_filter') else '❌'}\n"
             response += f"   🎲 HMM Regime: {'✅' if modules.get('hmm_detector') else '❌'}\n"
             response += f"   🧬 ARES-STOCK: {'✅' if modules.get('ares_stock') else '❌'}\n"
-            response += f"   🧠 Memory Kernel: {'✅' if modules.get('memory_kernel') else '❌'}\n"
+            response += f"   🧠 Memory Kernel: {'✅' if modules.get('memory_kernel') else '❌'}\n\n"
+            
+            response += "**Protección Institucional:**\n"
+            response += f"   🛡️ Gap Protection: {'✅' if modules.get('gap_protection') else '❌'}\n"
+            response += f"   📅 Earnings Protector: {'✅' if modules.get('earnings_protector') else '❌'}\n"
         
         return response
+    
+    async def handle_risk_dashboard(self, update, context) -> str:
+        """Handle /risk_dashboard - Dashboard de riesgo institucional"""
+        if not STOCK_TRADING_ENABLED:
+            return "📊 Módulo de bolsa no activado"
+        
+        response = "🛡️ **RISK DASHBOARD INSTITUCIONAL**\n"
+        response += "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        if not self.premium_engine:
+            response += "❌ Motor premium no inicializado\n"
+            return response
+        
+        try:
+            dashboard = self.premium_engine.get_risk_dashboard()
+            
+            mode_emojis = {
+                'NORMAL': '✅',
+                'AWARE': '🟡',
+                'CAUTIOUS': '🟠',
+                'DEFENSIVE': '🔴'
+            }
+            
+            mode = dashboard.get('market_mode', 'NORMAL')
+            mode_emoji = mode_emojis.get(mode, '❓')
+            
+            response += f"**Estado del Mercado:**\n"
+            response += f"   {mode_emoji} Modo: **{mode}**\n"
+            response += f"   📊 Sizing multiplier: {dashboard.get('sizing_multiplier', 1.0):.0%}\n\n"
+            
+            protection = dashboard.get('protection_status', {})
+            response += f"**Protecciones Activas:**\n"
+            response += f"   🛡️ Gap Protection: {protection.get('gap_protection', 'INACTIVE')}\n"
+            response += f"   📅 Earnings Protection: {protection.get('earnings_protection', 'INACTIVE')}\n"
+            response += f"   🔗 Coherence Engine: {protection.get('coherence_engine', 'INACTIVE')}\n"
+            response += f"   🛡️ Risk Guardian: {protection.get('risk_guardian', 'INACTIVE')}\n\n"
+            
+            trading_window = dashboard.get('trading_window', {})
+            if trading_window:
+                can_trade = "✅ SÍ" if trading_window.get('can_trade') else "🔴 NO"
+                response += f"**Ventana de Trading:**\n"
+                response += f"   🕐 Hora ET: {trading_window.get('current_time_et', 'N/A')}\n"
+                response += f"   📊 Puede operar: {can_trade}\n"
+                if trading_window.get('time_to_close'):
+                    response += f"   ⏰ Tiempo al cierre: {trading_window.get('time_to_close')}\n"
+                response += "\n"
+            
+            blocked = dashboard.get('blocked_symbols', [])
+            if blocked:
+                response += f"**🚫 Símbolos Bloqueados ({len(blocked)}):**\n"
+                response += f"   {', '.join(blocked[:10])}\n\n"
+            
+            high_risk = dashboard.get('high_risk_earnings', [])
+            if high_risk:
+                response += f"**⚠️ Earnings próximos (alto riesgo):**\n"
+                response += f"   {', '.join(high_risk[:10])}\n\n"
+            
+            response += f"🔧 Sistema: {dashboard.get('system_health', 'N/A')}\n"
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error in risk dashboard: {e}")
+            return f"❌ Error obteniendo dashboard: {str(e)}"
     
     async def handle_buy_stock(self, update, context, symbol: str, amount: Optional[float] = None) -> str:
         """Handle /comprar_bolsa [SYMBOL] [AMOUNT] command"""
