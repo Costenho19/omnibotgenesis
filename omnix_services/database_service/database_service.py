@@ -2270,6 +2270,22 @@ class DatabaseServiceEnterprise:
             
             logger.info("✅ Derivatives Tables creadas (derivatives_balances, derivatives_trades, derivatives_positions, derivatives_funding_log, derivatives_hedges, derivatives_funding_opportunities)")
             
+            # Tabla de caché de transcripciones de video
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS video_transcript_cache (
+                    video_id TEXT PRIMARY KEY,
+                    transcript TEXT NOT NULL,
+                    source TEXT DEFAULT 'whisper',
+                    duration_seconds INTEGER,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP + INTERVAL '30 days')
+                )
+            ''')
+            
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_transcript_expires ON video_transcript_cache(expires_at)')
+            
+            logger.info("✅ Video Transcript Cache Table creada")
+            
             conn.commit()
             cursor.close()
             conn.close()
@@ -4474,3 +4490,83 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error getting recent trades: {e}")
             return []
+    
+    def get_cached_transcript(self, video_id: str) -> Optional[str]:
+        """
+        Obtener transcripción cacheada de un video
+        
+        Args:
+            video_id: ID del video de YouTube
+            
+        Returns:
+            Transcripción si existe y no ha expirado, None si no existe
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return None
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT transcript FROM video_transcript_cache
+                WHERE video_id = %s AND expires_at > CURRENT_TIMESTAMP
+            ''', (video_id,))
+            
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if row:
+                logger.info(f"✅ Transcripción encontrada en caché para video {video_id}")
+                return row[0]
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting cached transcript: {e}")
+            return None
+    
+    def save_transcript_cache(self, video_id: str, transcript: str, source: str = 'whisper', duration_seconds: int = None) -> bool:
+        """
+        Guardar transcripción en caché
+        
+        Args:
+            video_id: ID del video de YouTube
+            transcript: Texto de la transcripción
+            source: Fuente de la transcripción (whisper, youtube, etc.)
+            duration_seconds: Duración del video en segundos
+            
+        Returns:
+            True si exitoso, False si falla
+        """
+        if not self.connected or not transcript:
+            return False
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO video_transcript_cache (video_id, transcript, source, duration_seconds)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (video_id) DO UPDATE SET
+                    transcript = EXCLUDED.transcript,
+                    source = EXCLUDED.source,
+                    duration_seconds = EXCLUDED.duration_seconds,
+                    created_at = CURRENT_TIMESTAMP,
+                    expires_at = CURRENT_TIMESTAMP + INTERVAL '30 days'
+            ''', (video_id, transcript, source, duration_seconds))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            logger.info(f"✅ Transcripción guardada en caché para video {video_id} ({len(transcript)} chars)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving transcript cache: {e}")
+            return False

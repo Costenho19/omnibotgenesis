@@ -39,16 +39,18 @@ class VideoAnalyzerUltra:
     recomendaciones de trading institucionales.
     """
     
-    def __init__(self, openai_api_key: str = None, gemini_api_key: str = None):
+    def __init__(self, openai_api_key: str = None, gemini_api_key: str = None, database_service = None):
         """
         Inicializar Video Analyzer Ultra
         
         Args:
             openai_api_key: API key de OpenAI (GPT-4 Vision)
             gemini_api_key: API key de Google Gemini
+            database_service: Servicio de base de datos para caché de transcripciones
         """
         self.openai_api_key = openai_api_key or os.environ.get('OPENAI_API_KEY')
         self.gemini_api_key = gemini_api_key or os.environ.get('GEMINI_API_KEY')
+        self.database_service = database_service
         
         # Inicializar APIs de visión
         self._init_vision_apis()
@@ -647,6 +649,13 @@ Responde en JSON:
         """Obtener transcripción REAL del video usando youtube-transcript-api"""
         logger.info(f"📝 Obteniendo transcripción de video {video_id}...")
         
+        # PASO 0: Verificar caché primero
+        if self.database_service:
+            cached = self.database_service.get_cached_transcript(video_id)
+            if cached:
+                logger.info(f"🚀 Transcripción obtenida de caché: {len(cached)} chars")
+                return cached
+        
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
             from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
@@ -814,11 +823,110 @@ Responde en JSON:
                     logger.warning(f"⚠️ yt-dlp extraction error: {ydl_err}")
                     break
         
-        if last_error:
-            logger.warning(f"⚠️ yt-dlp falló después de {max_retries} intentos: {last_error}")
-        else:
-            logger.warning(f"⚠️ yt-dlp no encontró subtítulos para {video_id}")
+        # Intentar Whisper como último recurso para cualquier fallo de subtítulos
+        if last_error or True:  # Siempre intentar Whisper si llegamos aquí
+            error_str = str(last_error) if last_error else "no subtitles found"
+            logger.info(f"🎤 Subtítulos no disponibles ({error_str[:50]}...) - intentando transcripción de audio con Whisper...")
+            whisper_result = self._get_transcript_whisper(video_id)
+            if whisper_result:
+                return whisper_result
+            logger.warning(f"⚠️ Todos los métodos fallaron para video {video_id}")
         return None
+    
+    def _get_transcript_whisper(self, video_id: str, max_duration_seconds: int = 600) -> Optional[str]:
+        """
+        Fallback: Descargar audio del video y transcribir con OpenAI Whisper.
+        Se usa cuando YouTube bloquea subtítulos con error 429.
+        
+        Args:
+            video_id: ID del video de YouTube
+            max_duration_seconds: Duración máxima en segundos (default: 10 minutos)
+        """
+        if not self.openai_client:
+            logger.warning("⚠️ OpenAI client no disponible para Whisper")
+            return None
+        
+        logger.info(f"🎤 Iniciando transcripción Whisper para video {video_id}...")
+        
+        try:
+            import yt_dlp
+            import tempfile
+            import os
+            
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+            
+            with tempfile.TemporaryDirectory() as tmpdir:
+                audio_file = os.path.join(tmpdir, f"{video_id}.mp3")
+                
+                ydl_opts = {
+                    'format': 'worstaudio[ext=m4a]/worstaudio/worst',
+                    'outtmpl': os.path.join(tmpdir, f"{video_id}.%(ext)s"),
+                    'quiet': True,
+                    'no_warnings': True,
+                    'max_downloads': 1,
+                    'extract_audio': True,
+                }
+                
+                logger.info("📥 Descargando audio del video...")
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(video_url, download=True)
+                    
+                    if info:
+                        duration = info.get('duration', 0)
+                        if duration > max_duration_seconds:
+                            logger.warning(f"⚠️ Video muy largo ({duration}s > {max_duration_seconds}s) - cancelando Whisper")
+                            return None
+                        logger.info(f"📊 Duración del video: {duration}s")
+                
+                actual_audio_file = audio_file
+                for ext in ['.mp3', '.m4a', '.webm', '.opus']:
+                    test_file = os.path.join(tmpdir, f"{video_id}{ext}")
+                    if os.path.exists(test_file):
+                        actual_audio_file = test_file
+                        break
+                
+                if not os.path.exists(actual_audio_file):
+                    for f in os.listdir(tmpdir):
+                        if f.startswith(video_id):
+                            actual_audio_file = os.path.join(tmpdir, f)
+                            break
+                
+                if not os.path.exists(actual_audio_file):
+                    logger.warning("⚠️ No se pudo descargar el audio")
+                    return None
+                
+                file_size = os.path.getsize(actual_audio_file)
+                logger.info(f"✅ Audio descargado: {file_size / 1024 / 1024:.2f} MB")
+                
+                if file_size > 25 * 1024 * 1024:
+                    logger.warning(f"⚠️ Archivo de audio muy grande ({file_size / 1024 / 1024:.1f} MB > 25 MB)")
+                    return None
+                
+                logger.info("🎤 Enviando a OpenAI Whisper para transcripción...")
+                
+                with open(actual_audio_file, 'rb') as audio:
+                    transcript_response = self.openai_client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio,
+                        language="es",
+                        response_format="text"
+                    )
+                
+                if transcript_response and len(transcript_response) > 50:
+                    logger.info(f"✅ Transcripción Whisper exitosa: {len(transcript_response)} chars")
+                    # Guardar en caché para futuras solicitudes
+                    if self.database_service:
+                        duration = info.get('duration', 0) if info else None
+                        self.database_service.save_transcript_cache(video_id, transcript_response, 'whisper', duration)
+                    return transcript_response
+                else:
+                    logger.warning("⚠️ Whisper retornó transcripción vacía o muy corta")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"❌ Error en transcripción Whisper: {e}")
+            return None
     
     def _parse_vtt(self, vtt_content: str) -> Optional[str]:
         """Parsear contenido VTT a texto plano"""

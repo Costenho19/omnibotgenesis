@@ -103,24 +103,31 @@ User Communication Preference: Simple, everyday language (Spanish primary).
   - `omnix_services/ai_service/conversational_ai_adapter.py` - Lines 103-118 (robust chat_id parsing)
   - `omnix_services/database_service/database_service.py` - Lines 1413-1431 (column migration)
 
-#### YouTube Video Analysis Fix V4 - yt-dlp with Rate Limit Handling (Nov 30, 2025 - Latest)
-- **Problem**: YouTube returning 429 "Too Many Requests" errors to Railway IP, blocking both youtube-transcript-api and yt-dlp
-- **Root Cause**: YouTube rate-limiting Railway's server IP address
-- **Solution**: Enhanced yt-dlp with retry logic and anti-detection measures
-- **New Features in `_get_transcript_ytdlp()`**:
-  - **3 automatic retries** with exponential backoff (2s, 4s, 8s + random jitter)
-  - **Rotating User-Agent** headers (Chrome on Windows/Mac/Linux)
-  - **Specific 429 error handling** - retries instead of failing immediately
-  - **Accept-Language headers** for Spanish/English preference
-- **Enhanced Fallback Chain** (5 levels):
-  1. VideoAnalyzerUltra `get_transcript()` direct method
-  2. VideoAnalyzerUltra `list_transcripts()` fallback
-  3. `_get_transcript_ytdlp()` with retries (inside analyzer)
-  4. Direct youtube-transcript-api in handlers
-  5. Final yt-dlp call in handlers
+#### YouTube Video Analysis Fix V5 - Whisper Audio Fallback (Nov 30, 2025 - Latest)
+- **Problem**: YouTube blocking ALL subtitle download methods (youtube-transcript-api + yt-dlp) with 429 rate limit errors on Railway IP
+- **Root Cause**: Railway's shared IP address is rate-blocked by YouTube for subtitle scraping
+- **Solution**: Added OpenAI Whisper as ultimate fallback - downloads audio (which still works) and transcribes with AI
+- **New Method `_get_transcript_whisper()`**:
+  - Downloads lowest quality audio (saves bandwidth and time)
+  - Sends to OpenAI Whisper API for transcription
+  - **10-minute max duration** limit to control costs
+  - **25MB max file size** limit for Whisper API
+  - Caches successful transcriptions in PostgreSQL for 30 days
+- **New Database Table `video_transcript_cache`**:
+  - Stores video_id, transcript, source, duration, created_at, expires_at
+  - Cache checked before any network request
+  - Prevents repeated Whisper calls for same video
+- **Enhanced Fallback Chain** (6 levels):
+  1. PostgreSQL cache check (instant if cached)
+  2. VideoAnalyzerUltra `get_transcript()` direct
+  3. VideoAnalyzerUltra `list_transcripts()` fallback
+  4. `_get_transcript_ytdlp()` with retries
+  5. **NEW: `_get_transcript_whisper()`** - audio download + Whisper transcription
+  6. Error message if all fail
 - **Files Modified**:
-  - `omnix_services/ai_service/video/analyzer.py` - Rewrote `_get_transcript_ytdlp()` with retry loop, User-Agent rotation, exponential backoff
-  - `omnix_services/telegram_service/enterprise_bot.py` - Fixed variable name `self.video_analyzer` → `self.video_analyzer_ultra`
+  - `omnix_services/ai_service/video/analyzer.py` - Added `_get_transcript_whisper()`, cache integration, database_service parameter
+  - `omnix_services/database_service/database_service.py` - Added `video_transcript_cache` table, `get_cached_transcript()`, `save_transcript_cache()` methods
+  - `omnix_services/telegram_service/enterprise_bot.py` - Pass db_manager to VideoAnalyzerUltra
 
 #### YouTube Video Analysis Fix V2 (Nov 29, 2025)
 - **Problem**: Videos still showing "no puedo interactuar con videos" despite VideoAnalyzerUltra existing

@@ -226,7 +226,7 @@ class EnterpriseTelegramBot:
         # Paso 1: Inicializar VideoAnalyzerUltra (CRÍTICO para análisis de YouTube)
         try:
             from omnix_services.ai_service.video.analyzer import VideoAnalyzerUltra
-            self.video_analyzer_ultra = VideoAnalyzerUltra()
+            self.video_analyzer_ultra = VideoAnalyzerUltra(database_service=self.db_manager)
             logger.info("🎥 Video Analyzer Ultra V5.3 inicializado")
             logger.info(f"   🎬 GPT-4 Vision: {'✅' if self.video_analyzer_ultra.openai_client else '❌'}")
             logger.info(f"   🧠 Gemini Vision: {'✅' if self.video_analyzer_ultra.gemini_client else '❌'}")
