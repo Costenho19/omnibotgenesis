@@ -108,10 +108,6 @@ class PaperTradingManager:
         
         V2: Usa schema institucional con P&L tracking completo
         V3: Integrado con RMS (Risk Management System)
-        V4 FIX Nov 30, 2025: RMS BYPASSED para paper trading
-            - Paper trading es simulación para aprendizaje
-            - No debe bloquearse por límites de riesgo
-            - El RMS se aplicará solo en trading real
         
         Args:
             user_id: ID del usuario
@@ -123,11 +119,36 @@ class PaperTradingManager:
             Dict con resultado del trade simulado
         """
         try:
-            # FIX Nov 30, 2025: RMS BYPASSED para paper trading
-            # El RMS causaba falsos positivos (100% drawdown) en cuentas nuevas
-            # porque get_paper_trading_balance() no existe en DatabaseServiceEnterprise
-            # Paper trading es para aprendizaje - no debe tener límites de riesgo estrictos
-            logger.info(f"📊 Paper Trade: {side.upper()} {symbol} ${amount_usd:,.2f} - RMS bypassed for simulation")
+            if self.circuit_breaker and self.circuit_breaker.is_trading_halted(user_id):
+                halt_status = self.circuit_breaker.get_halt_status(user_id)
+                return {
+                    'error': 'Trading detenido por el sistema de riesgo',
+                    'halt_reason': halt_status.reason.value if halt_status.reason else 'unknown',
+                    'halt_message': halt_status.message,
+                    'resume_at': halt_status.resume_at.isoformat() if halt_status.resume_at else None,
+                    'rms_blocked': True
+                }
+            
+            if self.limits_engine:
+                validation = self.limits_engine.validate_order(
+                    user_id=user_id,
+                    symbol=symbol,
+                    side=side,
+                    amount_usd=amount_usd
+                )
+                
+                if not validation.is_valid:
+                    logger.warning(f"🚫 RMS BLOCKED: {validation.rejection_reason}")
+                    return {
+                        'error': f'Orden rechazada por RMS: {validation.rejection_reason}',
+                        'rms_blocked': True,
+                        'risk_score': validation.risk_score,
+                        'breaches': [b.to_dict() for b in validation.breaches] if validation.breaches else []
+                    }
+                
+                if validation.warnings:
+                    for warning in validation.warnings:
+                        logger.warning(f"⚠️ RMS Warning: {warning}")
             
             if self.trading_service and hasattr(self.trading_service, 'get_ticker'):
                 ticker = self.trading_service.get_ticker(symbol)

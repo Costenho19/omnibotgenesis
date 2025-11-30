@@ -4511,6 +4511,84 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error getting open positions: {e}")
             return []
     
+    def get_paper_trading_balance(self, user_id: str) -> Optional[Dict]:
+        """
+        FIX Nov 30, 2025: Método requerido por RMS LimitsEngine
+        Obtener balance de paper trading para cálculo de drawdown
+        
+        IMPORTANTE: Distinguir entre NULL (no existe) y 0 (balance agotado real)
+        - NULL → usuario no inicializado → retorna balance inicial $1M
+        - 0 → balance real agotado → preservar 0 para que RMS detecte drawdown
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con balance y available, o balance inicial si no existe
+        """
+        INITIAL_BALANCE = 1000000.0
+        
+        if not self.connected:
+            logger.warning(f"⚠️ get_paper_trading_balance: DB not connected, returning initial balance for {user_id}")
+            return {
+                'balance': INITIAL_BALANCE,
+                'available': INITIAL_BALANCE,
+                'total_pnl': 0
+            }
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                logger.warning(f"⚠️ get_paper_trading_balance: No connection, returning initial balance for {user_id}")
+                return {
+                    'balance': INITIAL_BALANCE,
+                    'available': INITIAL_BALANCE,
+                    'total_pnl': 0
+                }
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT balance_usd, available_margin_usd, total_realized_pnl_usd
+                FROM paper_trading_balances
+                WHERE user_id = %s
+            ''', (user_id,))
+            
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if row:
+                # FIX: Usar is None para distinguir NULL de 0
+                # Si el valor es 0, mantenerlo como 0 (balance agotado real)
+                # Si es NULL, usar default (no debería pasar con schema correcto)
+                balance = float(row[0]) if row[0] is not None else INITIAL_BALANCE
+                available = float(row[1]) if row[1] is not None else balance
+                total_pnl = float(row[2]) if row[2] is not None else 0
+                
+                return {
+                    'balance': balance,
+                    'available': available,
+                    'total_pnl': total_pnl
+                }
+            
+            # Usuario no existe en paper_trading_balances
+            # Esto es normal para usuarios nuevos que aún no han hecho /paper_start
+            logger.info(f"📊 get_paper_trading_balance: User {user_id} not initialized, returning initial balance")
+            return {
+                'balance': INITIAL_BALANCE,
+                'available': INITIAL_BALANCE,
+                'total_pnl': 0
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting paper trading balance: {e}")
+            # En caso de error de DB, asumir usuario nuevo para no bloquear trading
+            return {
+                'balance': INITIAL_BALANCE,
+                'available': INITIAL_BALANCE,
+                'total_pnl': 0
+            }
+    
     def get_recent_trades(self, user_id: str, limit: int = 10) -> List[Dict]:
         """
         Obtener trades recientes para detectar pérdidas consecutivas
