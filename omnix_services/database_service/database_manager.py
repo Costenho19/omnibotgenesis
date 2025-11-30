@@ -112,3 +112,23 @@ class DatabaseManager:
         if self.using_enterprise:
             return self.enterprise_service.get_conversation_history(chat_id, limit)
         return []
+    
+    def execute_query(self, sql: str, params: tuple = None, fetch: bool = None):
+        """
+        Ejecutar query SQL genérica - Delegado a enterprise_service
+        
+        FIXED Nov 30, 2025: Método faltante - causaba que paper trading 
+        no guardara trades en PostgreSQL
+        
+        Args:
+            sql: Query SQL a ejecutar
+            params: Parámetros para la query (tuple)
+            fetch: Si True, retorna resultados. Si None, auto-detecta.
+            
+        Returns:
+            Lista de tuplas con resultados si es SELECT/RETURNING, None si es INSERT/UPDATE
+        """
+        if self.using_enterprise and hasattr(self.enterprise_service, 'execute_query'):
+            return self.enterprise_service.execute_query(sql, params, fetch)
+        logger.error("❌ execute_query no disponible - enterprise_service no configurado")
+        return None
