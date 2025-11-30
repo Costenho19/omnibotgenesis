@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIX V6.3 ULTRA - Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --accent-green: #00ff88;
+            --accent-red: #ff4757;
+            --accent-blue: #5b8def;
+            --accent-purple: #a855f7;
+            --accent-orange: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border-color: #27272a;
+        }
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: linear-gradient(135deg, rgba(26, 26, 36, 0.9) 0%, rgba(18, 18, 26, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .metric-card {
+            background: linear-gradient(145deg, #1a1a24 0%, #12121a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.1);
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px currentColor;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00ff88, #5b8def);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .stat-up { color: var(--accent-green); }
+        .stat-down { color: var(--accent-red); }
+        
+        .chart-container {
+            background: rgba(26, 26, 36, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-crypto {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        
+        .badge-stock {
+            background: rgba(91, 141, 239, 0.2);
+            color: #5b8def;
+            border: 1px solid rgba(91, 141, 239, 0.3);
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(90deg, #1a1a24 0%, #2a2a34 50%, #1a1a24 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="min-h-screen">
+        <header class="border-b border-zinc-800/50 backdrop-blur-xl sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <span class="text-xl font-bold">O</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">OMNIX V6.3 ULTRA</h1>
+                            <p class="text-xs text-zinc-500">Institutional Performance Dashboard</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span>
+                            <span id="db-status" class="text-zinc-400">Connecting...</span>
+                        </div>
+                        <div class="text-sm text-zinc-500">
+                            <span id="last-update">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="metric-card p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-zinc-500 text-sm font-medium">Total P&L</span>
+                        <span class="text-2xl">💰</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="total-pnl" class="text-3xl font-bold stat-up">$0.00</span>
+                    </div>
+                    <div class="mt-2 text-xs text-zinc-500">Paper Trading (30 days)</div>
+                </div>
+                
+                <div class="metric-card p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-zinc-500 text-sm font-medium">Win Rate</span>
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="win-rate" class="text-3xl font-bold">0%</span>
+                    </div>
+                    <div class="mt-2 text-xs text-zinc-500">
+                        <span id="wins-losses">0W / 0L</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-zinc-500 text-sm font-medium">Sharpe Ratio</span>
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="sharpe-ratio" class="text-3xl font-bold">0.00</span>
+                    </div>
+                    <div class="mt-2 text-xs text-zinc-500">Risk-adjusted returns</div>
+                </div>
+                
+                <div class="metric-card p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-zinc-500 text-sm font-medium">Max Drawdown</span>
+                        <span class="text-2xl">📉</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="max-drawdown" class="text-3xl font-bold stat-down">0%</span>
+                    </div>
+                    <div class="mt-2 text-xs text-zinc-500">Peak to trough</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="lg:col-span-2 glass-card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold">Equity Curve</h2>
+                        <div class="flex gap-2">
+                            <button onclick="updateEquityCurve(7)" class="px-3 py-1 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition">7D</button>
+                            <button onclick="updateEquityCurve(30)" class="px-3 py-1 text-xs rounded-lg bg-green-500/20 text-green-400 border border-green-500/30">30D</button>
+                            <button onclick="updateEquityCurve(90)" class="px-3 py-1 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition">90D</button>
+                        </div>
+                    </div>
+                    <div id="equity-chart" class="chart-container h-72"></div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h2 class="text-lg font-semibold mb-6">Advanced Metrics</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Profit Factor</span>
+                            <span id="profit-factor" class="font-semibold">0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Sortino Ratio</span>
+                            <span id="sortino-ratio" class="font-semibold">0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Avg Win</span>
+                            <span id="avg-win" class="font-semibold stat-up">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Avg Loss</span>
+                            <span id="avg-loss" class="font-semibold stat-down">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Best Trade</span>
+                            <span id="best-trade" class="font-semibold stat-up">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-zinc-800">
+                            <span class="text-zinc-400 text-sm">Worst Trade</span>
+                            <span id="worst-trade" class="font-semibold stat-down">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-zinc-400 text-sm">Expectancy</span>
+                            <span id="expectancy" class="font-semibold">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card p-6">
+                    <h2 class="text-lg font-semibold mb-6">Market Performance</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="badge badge-crypto">CRYPTO</span>
+                            </div>
+                            <div class="text-2xl font-bold mb-1" id="crypto-pnl">$0.00</div>
+                            <div class="flex items-center gap-2 text-sm text-zinc-400">
+                                <span id="crypto-trades">0 trades</span>
+                                <span>•</span>
+                                <span id="crypto-winrate">0% WR</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="badge badge-stock">STOCKS</span>
+                            </div>
+                            <div class="text-2xl font-bold mb-1" id="stocks-pnl">$0.00</div>
+                            <div class="flex items-center gap-2 text-sm text-zinc-400">
+                                <span id="stocks-trades">0 trades</span>
+                                <span>•</span>
+                                <span id="stocks-winrate">0% WR</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="market-chart" class="chart-container h-48 mt-4"></div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h2 class="text-lg font-semibold mb-6">Strategy Breakdown</h2>
+                    <div id="strategy-list" class="space-y-3 max-h-80 overflow-y-auto scrollbar-thin">
+                        <div class="text-zinc-500 text-sm text-center py-8">Loading strategies...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold">Recent Trades</h2>
+                    <span id="trade-count" class="text-sm text-zinc-500">0 trades</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-zinc-500 text-xs uppercase tracking-wider border-b border-zinc-800">
+                                <th class="pb-4 pr-4">Symbol</th>
+                                <th class="pb-4 pr-4">Side</th>
+                                <th class="pb-4 pr-4">Entry</th>
+                                <th class="pb-4 pr-4">Exit</th>
+                                <th class="pb-4 pr-4">P&L</th>
+                                <th class="pb-4 pr-4">Strategy</th>
+                                <th class="pb-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trades-table" class="text-sm">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-zinc-500">Loading trades...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-zinc-800/50 py-6 mt-8">
+            <div class="max-w-7xl mx-auto px-6 text-center text-zinc-500 text-sm">
+                <p>OMNIX V6.3 ULTRA - Institutional Trading System</p>
+                <p class="text-xs mt-1">Paper Trading Mode - For Demonstration Purposes</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        
+        async function fetchMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/api/metrics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateMetricsUI(data.metrics);
+                    updateAssetsUI(data.assets);
+                    updateStrategiesUI(data.strategies);
+                    
+                    document.getElementById('db-status').textContent = 
+                        data.db_connected ? 'Database Connected' : 'Demo Mode';
+                    document.getElementById('last-update').textContent = 
+                        new Date(data.last_updated).toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+            }
+        }
+        
+        function updateMetricsUI(metrics) {
+            const pnl = metrics.total_pnl;
+            const pnlEl = document.getElementById('total-pnl');
+            pnlEl.textContent = `$${pnl.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            pnlEl.className = `text-3xl font-bold ${pnl >= 0 ? 'stat-up' : 'stat-down'}`;
+            
+            const winRate = metrics.win_rate;
+            const winRateEl = document.getElementById('win-rate');
+            winRateEl.textContent = `${winRate}%`;
+            winRateEl.className = `text-3xl font-bold ${winRate >= 50 ? 'stat-up' : winRate > 0 ? 'text-yellow-500' : ''}`;
+            
+            document.getElementById('wins-losses').textContent = 
+                `${metrics.winning_trades}W / ${metrics.losing_trades}L`;
+            
+            document.getElementById('sharpe-ratio').textContent = metrics.sharpe_ratio.toFixed(2);
+            document.getElementById('max-drawdown').textContent = `${metrics.max_drawdown}%`;
+            document.getElementById('profit-factor').textContent = metrics.profit_factor.toFixed(2);
+            document.getElementById('sortino-ratio').textContent = metrics.sortino_ratio.toFixed(2);
+            document.getElementById('avg-win').textContent = `$${metrics.avg_win.toLocaleString()}`;
+            document.getElementById('avg-loss').textContent = `$${metrics.avg_loss.toLocaleString()}`;
+            document.getElementById('best-trade').textContent = `$${metrics.best_trade.toLocaleString()}`;
+            document.getElementById('worst-trade').textContent = `$${metrics.worst_trade.toLocaleString()}`;
+            document.getElementById('expectancy').textContent = `$${metrics.expectancy.toLocaleString()}`;
+        }
+        
+        function updateAssetsUI(assets) {
+            const crypto = assets.crypto || {trades: 0, pnl: 0, win_rate: 0};
+            const stocks = assets.stocks || {trades: 0, pnl: 0, win_rate: 0};
+            
+            const cryptoPnlEl = document.getElementById('crypto-pnl');
+            cryptoPnlEl.textContent = `$${crypto.pnl.toLocaleString()}`;
+            cryptoPnlEl.className = `text-2xl font-bold mb-1 ${crypto.pnl >= 0 ? 'stat-up' : 'stat-down'}`;
+            document.getElementById('crypto-trades').textContent = `${crypto.trades} trades`;
+            document.getElementById('crypto-winrate').textContent = `${crypto.win_rate}% WR`;
+            
+            const stocksPnlEl = document.getElementById('stocks-pnl');
+            stocksPnlEl.textContent = `$${stocks.pnl.toLocaleString()}`;
+            stocksPnlEl.className = `text-2xl font-bold mb-1 ${stocks.pnl >= 0 ? 'stat-up' : 'stat-down'}`;
+            document.getElementById('stocks-trades').textContent = `${stocks.trades} trades`;
+            document.getElementById('stocks-winrate').textContent = `${stocks.win_rate}% WR`;
+            
+            renderMarketChart(crypto, stocks);
+        }
+        
+        function updateStrategiesUI(strategies) {
+            const container = document.getElementById('strategy-list');
+            
+            if (!strategies || Object.keys(strategies).length === 0) {
+                container.innerHTML = '<div class="text-zinc-500 text-sm text-center py-8">No strategies yet</div>';
+                return;
+            }
+            
+            const sorted = Object.entries(strategies).sort((a, b) => b[1].pnl - a[1].pnl);
+            
+            container.innerHTML = sorted.map(([name, data]) => `
+                <div class="flex items-center justify-between p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition">
+                    <div>
+                        <div class="font-medium">${name}</div>
+                        <div class="text-xs text-zinc-500">${data.trades} trades • ${data.win_rate}% WR</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold ${data.pnl >= 0 ? 'stat-up' : 'stat-down'}">
+                            $${data.pnl.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function fetchTrades() {
+            try {
+                const response = await fetch(`${API_BASE}/api/trades`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderTradesTable(data.trades);
+                    document.getElementById('trade-count').textContent = `${data.total} trades`;
+                }
+            } catch (error) {
+                console.error('Error fetching trades:', error);
+            }
+        }
+        
+        function renderTradesTable(trades) {
+            const tbody = document.getElementById('trades-table');
+            
+            if (!trades || trades.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-zinc-500">
+                            No trades yet. Start trading to see your history here.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = trades.slice(0, 20).map(trade => {
+                const pnlClass = trade.pnl >= 0 ? 'stat-up' : 'stat-down';
+                const sideClass = trade.side === 'buy' ? 'text-green-400' : 'text-red-400';
+                const date = trade.opened ? new Date(trade.opened).toLocaleDateString() : '--';
+                
+                return `
+                    <tr class="table-row border-b border-zinc-800/50">
+                        <td class="py-3 pr-4 font-medium">${trade.symbol}</td>
+                        <td class="py-3 pr-4 ${sideClass} uppercase text-xs font-semibold">${trade.side}</td>
+                        <td class="py-3 pr-4">$${trade.entry.toLocaleString()}</td>
+                        <td class="py-3 pr-4">${trade.exit ? '$' + trade.exit.toLocaleString() : '--'}</td>
+                        <td class="py-3 pr-4 font-semibold ${pnlClass}">
+                            ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toLocaleString()}
+                        </td>
+                        <td class="py-3 pr-4 text-zinc-400">${trade.strategy || 'Manual'}</td>
+                        <td class="py-3 text-zinc-500">${date}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        async function fetchEquityCurve() {
+            try {
+                const response = await fetch(`${API_BASE}/api/equity-curve`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    renderEquityChart(data.data);
+                } else {
+                    renderEmptyEquityChart();
+                }
+            } catch (error) {
+                console.error('Error fetching equity curve:', error);
+                renderEmptyEquityChart();
+            }
+        }
+        
+        function renderEquityChart(data) {
+            const dates = data.map(d => d.date);
+            const equity = data.map(d => d.equity);
+            
+            const trace = {
+                x: dates,
+                y: equity,
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                line: {
+                    color: '#00ff88',
+                    width: 2
+                },
+                fillcolor: 'rgba(0, 255, 136, 0.1)'
+            };
+            
+            const layout = {
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                margin: { l: 60, r: 20, t: 20, b: 40 },
+                xaxis: {
+                    showgrid: false,
+                    color: '#71717a',
+                    tickfont: { size: 10 }
+                },
+                yaxis: {
+                    showgrid: true,
+                    gridcolor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#71717a',
+                    tickfont: { size: 10 },
+                    tickprefix: '$'
+                },
+                hovermode: 'x unified'
+            };
+            
+            Plotly.newPlot('equity-chart', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        function renderEmptyEquityChart() {
+            const layout = {
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                margin: { l: 60, r: 20, t: 20, b: 40 },
+                xaxis: { showgrid: false, color: '#71717a' },
+                yaxis: { showgrid: true, gridcolor: 'rgba(255, 255, 255, 0.05)', color: '#71717a' },
+                annotations: [{
+                    text: 'No trading data yet',
+                    xref: 'paper',
+                    yref: 'paper',
+                    x: 0.5,
+                    y: 0.5,
+                    showarrow: false,
+                    font: { color: '#71717a', size: 14 }
+                }]
+            };
+            
+            Plotly.newPlot('equity-chart', [], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        function renderMarketChart(crypto, stocks) {
+            const data = [{
+                values: [crypto.trades || 0, stocks.trades || 0],
+                labels: ['Crypto', 'Stocks'],
+                type: 'pie',
+                hole: 0.6,
+                marker: {
+                    colors: ['#a855f7', '#5b8def']
+                },
+                textinfo: 'percent',
+                textfont: { color: '#fff', size: 12 }
+            }];
+            
+            const layout = {
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                margin: { l: 20, r: 20, t: 20, b: 20 },
+                showlegend: false,
+                annotations: [{
+                    text: `${(crypto.trades || 0) + (stocks.trades || 0)}`,
+                    x: 0.5,
+                    y: 0.5,
+                    font: { size: 24, color: '#fff', family: 'Inter' },
+                    showarrow: false
+                }]
+            };
+            
+            Plotly.newPlot('market-chart', data, layout, { responsive: true, displayModeBar: false });
+        }
+        
+        function updateEquityCurve(days) {
+            fetchEquityCurve();
+        }
+        
+        async function init() {
+            await Promise.all([
+                fetchMetrics(),
+                fetchTrades(),
+                fetchEquityCurve()
+            ]);
+            
+            setInterval(fetchMetrics, 30000);
+            setInterval(fetchTrades, 60000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

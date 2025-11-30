@@ -71,3 +71,4 @@ tables==3.9.2
 pyarrow==18.1.0
 telegram
 dwave-ocean-sdk
+flask-cors

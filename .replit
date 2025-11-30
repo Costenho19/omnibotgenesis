@@ -16,6 +16,10 @@ author = "agent"
 task = "workflow.run"
 args = "Code Verification"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OMNIX Dashboard"
+
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -27,13 +31,21 @@ args = "python -u verify_code.py"
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "OMNIX Dashboard"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m omnix_dashboard.app"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5002
-externalPort = 3002
 
 [[ports]]
 localPort = 5003
