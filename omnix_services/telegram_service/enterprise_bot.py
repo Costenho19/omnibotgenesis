@@ -454,19 +454,22 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("risk_status", self.risk_status_command))
             self.application.add_handler(CommandHandler("risk_events", self.risk_events_command))
             
+            # 📊 Comandos UNIFICADOS /analizar - Auto-detección Crypto/Stock V6.3
+            self.application.add_handler(CommandHandler("analizar", self.analyze_stock_command))
+            self.application.add_handler(CommandHandler("analizar_premium", self.premium_stock_command))
+            logger.info("🔀 Smart Routing activado: /analizar auto-detecta crypto vs stock")
+            
             # 📊 Comandos Stock Trading V6.3 ULTRA - BOLSA DE VALORES (NYSE/NASDAQ)
             if self.stock_handler and self.stock_handler.enabled:
                 self.application.add_handler(CommandHandler("balance_bolsa", self.balance_stocks_command))
                 self.application.add_handler(CommandHandler("portfolio_bolsa", self.balance_stocks_command))
                 self.application.add_handler(CommandHandler("mercado", self.market_status_command))
                 self.application.add_handler(CommandHandler("horario_bolsa", self.market_status_command))
-                self.application.add_handler(CommandHandler("analizar", self.analyze_stock_command))
-                self.application.add_handler(CommandHandler("analizar_premium", self.premium_stock_command))
                 self.application.add_handler(CommandHandler("stock_status", self.stock_status_command))
                 self.application.add_handler(CommandHandler("risk_dashboard", self.stock_risk_dashboard_command))
                 self.application.add_handler(CommandHandler("comprar_bolsa", self.buy_stock_command))
                 self.application.add_handler(CommandHandler("vender_bolsa", self.sell_stock_command))
-                logger.info("📊 Stock Trading V6.3 ULTRA registrado: /analizar, /analizar_premium, /stock_status, /risk_dashboard, /comprar_bolsa, /vender_bolsa")
+                logger.info("📊 Stock Trading V6.3 ULTRA registrado: /stock_status, /risk_dashboard, /comprar_bolsa, /vender_bolsa")
             
             # 💱 Comandos Arbitrage Multi-Exchange Premium V6.0
             if self.arbitrage_scanner:
@@ -4934,17 +4937,67 @@ Harold pregunta: {text}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def analyze_stock_command(self, update, context):
-        """Comando /analizar [SYMBOL] - Análisis técnico y fundamental de acciones"""
-        if not self.stock_handler or not self.stock_handler.enabled:
-            await update.message.reply_text("📊 Módulo de bolsa no activado")
-            return
-        
+        """Comando /analizar [SYMBOL] - Auto-detecta crypto vs stock"""
         try:
-            symbol = context.args[0] if context.args else None
-            response = await self.stock_handler.handle_analyze_stock(update, context, symbol)
-            await update.message.reply_text(response, parse_mode='Markdown')
+            symbol = context.args[0].upper() if context.args else None
+            
+            if not symbol:
+                await update.message.reply_text(
+                    "⚠️ **Uso:** `/analizar AAPL` (acciones) o `/analizar BTC` (crypto)\n\n"
+                    "OMNIX detecta automáticamente el tipo de activo.",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            from omnix_services.symbol_classifier import symbol_classifier
+            asset_type, confidence = symbol_classifier.classify(symbol)
+            
+            if asset_type == 'crypto':
+                logger.info(f"🪙 {symbol} → CRYPTO routing (conf: {confidence:.0%})")
+                
+                if not self.trading:
+                    await update.message.reply_text("⚠️ Sistema crypto no disponible")
+                    return
+                
+                try:
+                    analisis = self.trading.generate_comprehensive_analysis(f"{symbol}/USD")
+                    
+                    mensaje = f"""
+🪙 **ANÁLISIS CRYPTO: {symbol}/USD**
+
+📊 **Precio:** ${analisis.get('precio', 'N/A')}
+📈 **RSI:** {analisis.get('rsi', 'N/A')}
+📉 **MACD:** {analisis.get('macd', 'N/A')}
+🎯 **Recomendación:** {analisis.get('recomendacion', 'NEUTRO')}
+
+🔮 **Análisis IA:**
+{analisis.get('analisis_ia', 'Mercado en análisis...')}
+
+⚡ **Actualizado:** {datetime.now().strftime('%H:%M:%S')}
+🧬 *Sistema OMNIX Quantum V6.2*
+"""
+                    await update.message.reply_text(mensaje, parse_mode='Markdown')
+                    
+                except Exception as e:
+                    logger.error(f"Error análisis crypto: {e}")
+                    await update.message.reply_text(f"⚠️ Error analizando {symbol}: {str(e)}")
+            
+            else:
+                logger.info(f"📈 {symbol} → STOCK routing (conf: {confidence:.0%})")
+                
+                if not self.stock_handler or not self.stock_handler.enabled:
+                    await update.message.reply_text(
+                        f"📊 **{symbol}** detectado como acción, pero el módulo de bolsa no está activado.\n\n"
+                        "Contacta al administrador para activar `STOCK_TRADING_ENABLED=true`",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                response = await self.stock_handler.handle_analyze_stock(update, context, symbol)
+                await update.message.reply_text(response, parse_mode='Markdown')
+        
         except Exception as e:
-            logger.error(f"Error en analyze_stock: {e}")
+            logger.error(f"Error en analyze_command: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def buy_stock_command(self, update, context):
@@ -4978,16 +5031,80 @@ Harold pregunta: {text}"""
     
     async def premium_stock_command(self, update, context):
         """Comando /analizar_premium [SYMBOL] - Análisis institucional V6.3 ULTRA"""
-        if not self.stock_handler or not self.stock_handler.enabled:
-            await update.message.reply_text("📊 Módulo de bolsa no activado")
-            return
-        
         try:
-            symbol = context.args[0] if context.args else None
-            response = await self.stock_handler.handle_premium_analysis(update, context, symbol)
-            await update.message.reply_text(response, parse_mode='Markdown')
+            symbol = context.args[0].upper() if context.args else None
+            
+            if not symbol:
+                await update.message.reply_text(
+                    "⚠️ **Uso:** `/analizar_premium AAPL` (acciones) o `/analizar_premium BTC` (crypto)\n\n"
+                    "Análisis institucional con 9+ módulos premium.",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            from omnix_services.symbol_classifier import symbol_classifier
+            asset_type, confidence = symbol_classifier.classify(symbol)
+            
+            if asset_type == 'crypto':
+                logger.info(f"🪙 {symbol} → CRYPTO PREMIUM routing (conf: {confidence:.0%})")
+                
+                if not self.trading_enterprise_enabled:
+                    await update.message.reply_text(
+                        f"🪙 **{symbol}** detectado como crypto.\n\n"
+                        "Usa `/analisis {symbol}` para análisis crypto cuántico.",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                try:
+                    await update.message.reply_text(f"🔄 Analizando {symbol} con sistema cuántico premium...")
+                    
+                    price = self.trading.get_current_price(f"{symbol}/USD")
+                    analisis = self.trading.generate_comprehensive_analysis(f"{symbol}/USD")
+                    
+                    mensaje = f"""
+🪙 **ANÁLISIS PREMIUM: {symbol}/USD**
+━━━━━━━━━━━━━━━━━━━━━━
+
+💵 **Precio:** ${price:,.2f}
+📈 **RSI:** {analisis.get('rsi', 'N/A')}
+📉 **MACD:** {analisis.get('macd', 'N/A')}
+🎯 **Señal:** {analisis.get('recomendacion', 'NEUTRO')}
+
+🔮 **Análisis Cuántico:**
+{analisis.get('analisis_ia', 'Procesando...')}
+
+**Módulos Activos:**
+   🎲 Monte Carlo: ✅
+   📈 Kalman Filter: ✅
+   🧠 HMM Regime: ✅
+   🧬 ARES V1/V2: ✅
+   🔗 Non-Markovian: ✅
+
+⚡ {datetime.now().strftime('%H:%M:%S')}
+🧬 *OMNIX Quantum Premium V6.2*
+"""
+                    await update.message.reply_text(mensaje, parse_mode='Markdown')
+                    
+                except Exception as e:
+                    logger.error(f"Error análisis crypto premium: {e}")
+                    await update.message.reply_text(f"⚠️ Error: {str(e)}")
+            
+            else:
+                logger.info(f"📈 {symbol} → STOCK PREMIUM routing (conf: {confidence:.0%})")
+                
+                if not self.stock_handler or not self.stock_handler.enabled:
+                    await update.message.reply_text(
+                        f"📊 **{symbol}** detectado como acción, pero el módulo de bolsa no está activado.",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                response = await self.stock_handler.handle_premium_analysis(update, context, symbol)
+                await update.message.reply_text(response, parse_mode='Markdown')
+        
         except Exception as e:
-            logger.error(f"Error en premium_stock: {e}")
+            logger.error(f"Error en premium_command: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def stock_status_command(self, update, context):
