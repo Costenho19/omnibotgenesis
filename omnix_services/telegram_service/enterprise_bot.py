@@ -454,14 +454,19 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("risk_status", self.risk_status_command))
             self.application.add_handler(CommandHandler("risk_events", self.risk_events_command))
             
-            # 📊 Comandos Stock Trading V6.0 - BOLSA DE VALORES (NYSE/NASDAQ)
+            # 📊 Comandos Stock Trading V6.3 ULTRA - BOLSA DE VALORES (NYSE/NASDAQ)
             if self.stock_handler and self.stock_handler.enabled:
                 self.application.add_handler(CommandHandler("balance_bolsa", self.balance_stocks_command))
+                self.application.add_handler(CommandHandler("portfolio_bolsa", self.balance_stocks_command))
                 self.application.add_handler(CommandHandler("mercado", self.market_status_command))
+                self.application.add_handler(CommandHandler("horario_bolsa", self.market_status_command))
                 self.application.add_handler(CommandHandler("analizar", self.analyze_stock_command))
+                self.application.add_handler(CommandHandler("analizar_premium", self.premium_stock_command))
+                self.application.add_handler(CommandHandler("stock_status", self.stock_status_command))
+                self.application.add_handler(CommandHandler("risk_dashboard", self.stock_risk_dashboard_command))
                 self.application.add_handler(CommandHandler("comprar_bolsa", self.buy_stock_command))
                 self.application.add_handler(CommandHandler("vender_bolsa", self.sell_stock_command))
-                logger.info("📊 Stock Trading commands registrados: /balance_bolsa, /mercado, /analizar, /comprar_bolsa, /vender_bolsa")
+                logger.info("📊 Stock Trading V6.3 ULTRA registrado: /analizar, /analizar_premium, /stock_status, /risk_dashboard, /comprar_bolsa, /vender_bolsa")
             
             # 💱 Comandos Arbitrage Multi-Exchange Premium V6.0
             if self.arbitrage_scanner:
@@ -4969,6 +4974,46 @@ Harold pregunta: {text}"""
             await update.message.reply_text(response, parse_mode='Markdown')
         except Exception as e:
             logger.error(f"Error en sell_stock: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def premium_stock_command(self, update, context):
+        """Comando /analizar_premium [SYMBOL] - Análisis institucional V6.3 ULTRA"""
+        if not self.stock_handler or not self.stock_handler.enabled:
+            await update.message.reply_text("📊 Módulo de bolsa no activado")
+            return
+        
+        try:
+            symbol = context.args[0] if context.args else None
+            response = await self.stock_handler.handle_premium_analysis(update, context, symbol)
+            await update.message.reply_text(response, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error en premium_stock: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def stock_status_command(self, update, context):
+        """Comando /stock_status - Estado del sistema V6.3 ULTRA"""
+        if not self.stock_handler or not self.stock_handler.enabled:
+            await update.message.reply_text("📊 Módulo de bolsa no activado")
+            return
+        
+        try:
+            response = await self.stock_handler.handle_stock_status(update, context)
+            await update.message.reply_text(response, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error en stock_status: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def stock_risk_dashboard_command(self, update, context):
+        """Comando /risk_dashboard - Dashboard de riesgo institucional V6.3"""
+        if not self.stock_handler or not self.stock_handler.enabled:
+            await update.message.reply_text("📊 Módulo de bolsa no activado")
+            return
+        
+        try:
+            response = await self.stock_handler.handle_risk_dashboard(update, context)
+            await update.message.reply_text(response, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error en stock_risk_dashboard: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     # ==========================================
