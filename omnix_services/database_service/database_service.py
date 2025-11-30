@@ -190,21 +190,24 @@ class DatabaseServiceEnterprise:
             'database_url_configured': bool(self.db_url)
         }
     
-    def execute_query(self, sql: str, params: tuple = None, fetch: bool = True):
+    def execute_query(self, sql: str, params: tuple = None, fetch: bool = None):
         """
         Ejecutar query SQL genérica
         
         Args:
             sql: Query SQL a ejecutar
             params: Parámetros para la query (tuple)
-            fetch: Si True, retorna resultados (SELECT). Si False, solo ejecuta (INSERT/UPDATE)
+            fetch: Si True, retorna resultados (SELECT/RETURNING). 
+                   Si False, solo ejecuta (INSERT/UPDATE sin RETURNING).
+                   Si None (default), auto-detecta basado en el SQL.
             
         Returns:
-            Lista de tuplas con resultados si fetch=True, None si fetch=False
+            Lista de tuplas con resultados si es SELECT o RETURNING, None si es INSERT/UPDATE sin fetch
             
         Uso:
             result = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
-            db.execute_query("UPDATE users SET name = %s WHERE id = %s", (name, id), fetch=False)
+            db.execute_query("UPDATE users SET name = %s WHERE id = %s", (name, id))
+            result = db.execute_query("INSERT INTO ... RETURNING id", (data,))
         """
         if not self.connected:
             logger.error("❌ execute_query: Database no conectada")
@@ -224,7 +227,12 @@ class DatabaseServiceEnterprise:
             else:
                 cursor.execute(sql)
             
-            if fetch:
+            sql_upper = sql.strip().upper()
+            should_fetch = fetch if fetch is not None else (
+                sql_upper.startswith('SELECT') or 'RETURNING' in sql_upper
+            )
+            
+            if should_fetch:
                 result = cursor.fetchall()
                 conn.commit()
                 return result
