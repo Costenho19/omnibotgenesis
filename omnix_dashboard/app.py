@@ -1057,6 +1057,171 @@ def api_system_status():
     })
 
 
+@app.route('/api/intelligence/fear-greed')
+def api_fear_greed():
+    """API endpoint for Fear & Greed Index"""
+    try:
+        import sys
+        sys.path.insert(0, '..')
+        from omnix_services.market_intelligence import fear_greed_service
+        
+        current = fear_greed_service.get_current_index()
+        trend = fear_greed_service.get_trend(7)
+        
+        if current:
+            return jsonify({
+                'success': True,
+                'current': {
+                    'value': current['value'],
+                    'classification': current['classification'],
+                    'recommendation': current['recommendation'],
+                    'color': current['color'],
+                    'description': current['description']
+                },
+                'trend': trend,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+        return jsonify({
+            'success': False,
+            'error': 'Unable to fetch Fear & Greed data'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in fear-greed endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/intelligence/finnhub/news')
+def api_finnhub_news():
+    """API endpoint for Finnhub financial news"""
+    try:
+        import sys
+        sys.path.insert(0, '..')
+        from omnix_services.market_intelligence import finnhub_service
+        
+        if not finnhub_service.is_available():
+            return jsonify({
+                'success': False,
+                'error': 'FINNHUB_API_KEY not configured'
+            })
+        
+        news = finnhub_service.get_general_news('general')
+        
+        return jsonify({
+            'success': True,
+            'news': news[:10] if news else [],
+            'source': 'Finnhub',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in finnhub news endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/intelligence/finnhub/sentiment/<symbol>')
+def api_finnhub_sentiment(symbol):
+    """API endpoint for Finnhub news sentiment"""
+    try:
+        import sys
+        sys.path.insert(0, '..')
+        from omnix_services.market_intelligence import finnhub_service
+        
+        if not finnhub_service.is_available():
+            return jsonify({
+                'success': False,
+                'error': 'FINNHUB_API_KEY not configured'
+            })
+        
+        sentiment = finnhub_service.get_news_sentiment(symbol)
+        
+        return jsonify({
+            'success': True,
+            'sentiment': sentiment,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in sentiment endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/intelligence/alpha-vantage/technical/<symbol>')
+def api_alpha_vantage_technical(symbol):
+    """API endpoint for Alpha Vantage technical indicators"""
+    try:
+        import sys
+        sys.path.insert(0, '..')
+        from omnix_services.market_intelligence import alpha_vantage_service
+        
+        if not alpha_vantage_service.is_available():
+            return jsonify({
+                'success': False,
+                'error': 'ALPHA_VANTAGE_API_KEY not configured'
+            })
+        
+        summary = alpha_vantage_service.get_technical_summary(symbol)
+        
+        return jsonify({
+            'success': True,
+            'technical': summary,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in alpha vantage endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/intelligence/summary')
+def api_intelligence_summary():
+    """Combined market intelligence summary"""
+    try:
+        import sys
+        sys.path.insert(0, '..')
+        from omnix_services.market_intelligence import fear_greed_service, finnhub_service, alpha_vantage_service
+        
+        fear_greed = fear_greed_service.get_current_index()
+        
+        finnhub_available = finnhub_service.is_available()
+        alpha_available = alpha_vantage_service.is_available()
+        
+        return jsonify({
+            'success': True,
+            'fear_greed': {
+                'value': fear_greed['value'] if fear_greed else None,
+                'classification': fear_greed['classification'] if fear_greed else None,
+                'recommendation': fear_greed['recommendation'] if fear_greed else None
+            } if fear_greed else None,
+            'services': {
+                'fear_greed': True,
+                'finnhub': finnhub_available,
+                'alpha_vantage': alpha_available
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in intelligence summary: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
 @app.route('/api/debug')
 def api_debug():
     """Debug endpoint to diagnose connection issues (no secrets exposed)"""
@@ -1097,6 +1262,158 @@ def api_debug():
         'python_version': os.popen('python --version').read().strip(),
         'timestamp': datetime.now().isoformat()
     })
+
+
+@app.route('/api/market/fear-greed')
+def api_market_fear_greed():
+    """API endpoint for Fear & Greed Index - 100% free, no API key needed"""
+    import requests
+    
+    try:
+        response = requests.get(
+            'https://api.alternative.me/fng/?limit=1',
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get('data') and len(data['data']) > 0:
+            fng = data['data'][0]
+            value = int(fng['value'])
+            classification = fng['value_classification']
+            
+            if value <= 24:
+                color = '#ff3366'
+                recommendation = 'Extreme Fear: Consider accumulating positions'
+            elif value <= 49:
+                color = '#ff9933'
+                recommendation = 'Fear: Monitor for entry opportunities'
+            elif value <= 54:
+                color = '#ffff00'
+                recommendation = 'Neutral: Market balanced'
+            elif value <= 75:
+                color = '#99ff33'
+                recommendation = 'Greed: Consider taking profits'
+            else:
+                color = '#00ff88'
+                recommendation = 'Extreme Greed: High risk - reduce exposure'
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'value': value,
+                    'classification': classification,
+                    'color': color,
+                    'recommendation': recommendation,
+                    'timestamp': datetime.now().isoformat()
+                }
+            })
+        
+        return jsonify({'success': False, 'error': 'No data available'})
+        
+    except Exception as e:
+        logger.error(f"Fear & Greed API error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/api/market/finnhub-news')
+def api_market_finnhub_news():
+    """API endpoint for Finnhub market news"""
+    import requests
+    from flask import request
+    
+    api_key = os.environ.get('FINNHUB_API_KEY')
+    if not api_key:
+        return jsonify({
+            'success': False,
+            'error': 'FINNHUB_API_KEY not configured',
+            'data': []
+        })
+    
+    category = request.args.get('category', 'crypto')
+    
+    try:
+        response = requests.get(
+            f'https://finnhub.io/api/v1/news?category={category}&token={api_key}',
+            timeout=10
+        )
+        response.raise_for_status()
+        news = response.json()
+        
+        if isinstance(news, list):
+            formatted_news = []
+            for item in news[:10]:
+                formatted_news.append({
+                    'headline': item.get('headline', ''),
+                    'source': item.get('source', 'Unknown'),
+                    'datetime': item.get('datetime', 0),
+                    'url': item.get('url', ''),
+                    'summary': item.get('summary', '')[:200] if item.get('summary') else ''
+                })
+            
+            return jsonify({
+                'success': True,
+                'data': formatted_news,
+                'source': 'Finnhub',
+                'timestamp': datetime.now().isoformat()
+            })
+        
+        return jsonify({'success': False, 'error': 'Invalid response format', 'data': []})
+        
+    except Exception as e:
+        logger.error(f"Finnhub API error: {e}")
+        return jsonify({'success': False, 'error': str(e), 'data': []})
+
+
+@app.route('/api/market/technical-indicators/<symbol>')
+def api_market_technical_indicators(symbol):
+    """API endpoint for Alpha Vantage technical indicators"""
+    import requests
+    
+    api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
+    if not api_key:
+        return jsonify({
+            'success': False,
+            'error': 'ALPHA_VANTAGE_API_KEY not configured'
+        })
+    
+    try:
+        rsi_response = requests.get(
+            f'https://www.alphavantage.co/query?function=RSI&symbol={symbol}&interval=daily&time_period=14&series_type=close&apikey={api_key}',
+            timeout=15
+        )
+        rsi_data = rsi_response.json()
+        
+        rsi_value = None
+        if 'Technical Analysis: RSI' in rsi_data:
+            latest = list(rsi_data['Technical Analysis: RSI'].values())[0]
+            rsi_value = float(latest.get('RSI', 0))
+        
+        if rsi_value:
+            if rsi_value < 30:
+                rsi_signal = 'OVERSOLD'
+            elif rsi_value > 70:
+                rsi_signal = 'OVERBOUGHT'
+            else:
+                rsi_signal = 'NEUTRAL'
+        else:
+            rsi_signal = 'N/A'
+        
+        return jsonify({
+            'success': True,
+            'symbol': symbol,
+            'indicators': {
+                'rsi': {
+                    'value': rsi_value,
+                    'signal': rsi_signal
+                }
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Alpha Vantage API error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 
 if __name__ == '__main__':

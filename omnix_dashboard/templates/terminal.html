@@ -426,6 +426,72 @@
             background: var(--border-color);
             border-radius: 2px;
         }
+        
+        .fear-greed-gauge {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .fear-greed-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .fear-greed-label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        
+        .fear-greed-bar {
+            height: 8px;
+            background: linear-gradient(90deg, #ff3366, #ff9933, #ffff00, #99ff33, #00ff88);
+            border-radius: 4px;
+            margin: 12px 0 8px;
+            position: relative;
+        }
+        
+        .fear-greed-marker {
+            position: absolute;
+            top: -4px;
+            width: 4px;
+            height: 16px;
+            background: white;
+            border-radius: 2px;
+            transform: translateX(-50%);
+        }
+        
+        .fear-greed-description {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .intelligence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+        
+        .intel-active {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .intel-inactive {
+            background: rgba(255, 51, 102, 0.15);
+            color: var(--accent-red);
+        }
     </style>
 </head>
 <body>
@@ -536,6 +602,19 @@
             </div>
             
             <div class="panel-header" style="margin-top: 16px;">
+                <span class="panel-title">😱 Fear & Greed Index</span>
+                <span class="intelligence-badge intel-active" id="fng-status">LIVE</span>
+            </div>
+            <div class="fear-greed-gauge" id="fear-greed-container">
+                <div class="fear-greed-value" id="fng-value" style="color: var(--accent-yellow);">--</div>
+                <div class="fear-greed-label" id="fng-label">Loading...</div>
+                <div class="fear-greed-bar">
+                    <div class="fear-greed-marker" id="fng-marker" style="left: 50%;"></div>
+                </div>
+                <div class="fear-greed-description" id="fng-recommendation">Fetching market sentiment...</div>
+            </div>
+            
+            <div class="panel-header" style="margin-top: 12px;">
                 <span class="panel-title">🛡️ Protection Status</span>
             </div>
             <div class="protection-grid">
@@ -833,12 +912,60 @@
             document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
         }
         
+        async function fetchFearGreed() {
+            try {
+                const response = await fetch(`${API_BASE}/api/market/fear-greed`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const fng = data.data;
+                    document.getElementById('fng-value').textContent = fng.value;
+                    document.getElementById('fng-value').style.color = fng.color || 'var(--accent-yellow)';
+                    document.getElementById('fng-label').textContent = fng.classification || 'N/A';
+                    document.getElementById('fng-marker').style.left = `${fng.value}%`;
+                    document.getElementById('fng-recommendation').textContent = fng.recommendation || 'Market sentiment indicator';
+                    document.getElementById('fng-status').className = 'intelligence-badge intel-active';
+                    document.getElementById('fng-status').textContent = 'LIVE';
+                } else {
+                    document.getElementById('fng-status').className = 'intelligence-badge intel-inactive';
+                    document.getElementById('fng-status').textContent = 'OFFLINE';
+                }
+            } catch (e) {
+                console.error('Fear & Greed error:', e);
+                document.getElementById('fng-status').className = 'intelligence-badge intel-inactive';
+                document.getElementById('fng-status').textContent = 'ERROR';
+            }
+        }
+        
+        async function fetchFinnhubNews() {
+            try {
+                const response = await fetch(`${API_BASE}/api/market/finnhub-news?category=crypto`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const newsHtml = data.data.slice(0, 6).map(item => `
+                        <div class="news-item">
+                            <div class="news-title">${item.headline || item.title}</div>
+                            <div class="news-source">${item.source} | ${new Date(item.datetime * 1000 || item.datetime).toLocaleTimeString()}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('news-feed').innerHTML = newsHtml;
+                    document.getElementById('news-source').textContent = 'FINNHUB';
+                    document.getElementById('news-source').className = 'panel-badge';
+                }
+            } catch (e) {
+                console.error('Finnhub news error:', e);
+            }
+        }
+        
         async function refreshAll() {
             await Promise.all([
                 fetchCryptoPrices(),
                 fetchSignals(),
                 fetchVolume(),
                 fetchNews(),
+                fetchFinnhubNews(),
+                fetchFearGreed(),
                 fetchMetrics(),
                 fetchEquityCurve(),
                 loadChart(currentSymbol)

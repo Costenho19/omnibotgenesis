@@ -80,6 +80,20 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **Real-time Clock**: Auto-detects user's local timezone, updates every second (responsive on all devices)
     - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
     - **Railway Deployment**: Can run as separate service using `start_dashboard.py` (see `RAILWAY_DASHBOARD_SETUP.md`)
+- **Market Intelligence System V6.4**: Live external data integration for smarter trading decisions:
+    - **Fear & Greed Index**: Real-time market sentiment from Alternative.me API (100% free, no key needed)
+        - Classifications: Extreme Fear (0-24), Fear (25-49), Neutral (50), Greed (51-75), Extreme Greed (76-100)
+        - Trading recommendations based on sentiment levels
+        - Endpoint: `/api/market/fear-greed`
+    - **Finnhub Integration**: Professional market news and sentiment (requires FINNHUB_API_KEY)
+        - General market news, crypto news, earnings calendar
+        - Company sentiment scores and buzz metrics
+        - Endpoint: `/api/market/finnhub-news`
+    - **Alpha Vantage Integration**: Technical indicators (requires ALPHA_VANTAGE_API_KEY)
+        - RSI (Relative Strength Index) with overbought/oversold signals
+        - MACD, Bollinger Bands support ready
+        - Endpoint: `/api/market/technical-indicators/<symbol>`
+    - **Caching**: 30-minute cache to respect API rate limits (Finnhub 60/min, Alpha Vantage 5/min)
 - **OMNIX Personal Assistant Premium V6.4** - Sistema de configuración personalizada por usuario vía Telegram:
     - **UserSettingsService**: Gestión de preferencias de trading por usuario con persistencia en PostgreSQL.
     - **5 Perfiles de Riesgo**: ultra_conservative, conservative, moderate, aggressive, institutional (Goldman-Sachs style).
