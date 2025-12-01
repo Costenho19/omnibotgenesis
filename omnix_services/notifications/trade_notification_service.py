@@ -15,6 +15,8 @@ from datetime import datetime
 from typing import Dict, Optional, List
 import asyncio
 
+from .telegram_utils import split_message
+
 logger = logging.getLogger(__name__)
 
 
@@ -175,7 +177,7 @@ class TradeNotificationService:
                 loop.close()
     
     async def _send_notification(self, message: str, chat_id: str = None) -> bool:
-        """Enviar notificación a Telegram"""
+        """Enviar notificación a Telegram con soporte para mensajes largos"""
         try:
             if not self.telegram_bot:
                 logger.warning("📢 Telegram bot no configurado para notificaciones")
@@ -187,28 +189,30 @@ class TradeNotificationService:
                 logger.warning("📢 No hay chat_ids configurados para notificaciones")
                 return False
             
+            message_parts = split_message(message)
+            
             success_count = 0
             for cid in chat_ids:
                 try:
-                    if hasattr(self.telegram_bot, 'send_message'):
-                        await self.telegram_bot.send_message(
-                            chat_id=int(cid),
-                            text=message,
-                            parse_mode='Markdown'
-                        )
-                        success_count += 1
-                    elif hasattr(self.telegram_bot, 'bot') and hasattr(self.telegram_bot.bot, 'send_message'):
-                        await self.telegram_bot.bot.send_message(
-                            chat_id=int(cid),
-                            text=message,
-                            parse_mode='Markdown'
-                        )
-                        success_count += 1
+                    for part in message_parts:
+                        if hasattr(self.telegram_bot, 'send_message'):
+                            await self.telegram_bot.send_message(
+                                chat_id=int(cid),
+                                text=part,
+                                parse_mode='Markdown'
+                            )
+                        elif hasattr(self.telegram_bot, 'bot') and hasattr(self.telegram_bot.bot, 'send_message'):
+                            await self.telegram_bot.bot.send_message(
+                                chat_id=int(cid),
+                                text=part,
+                                parse_mode='Markdown'
+                            )
+                    success_count += 1
                 except Exception as send_err:
                     logger.warning(f"Error enviando a {cid}: {send_err}")
             
             if success_count > 0:
-                logger.info(f"📢 Notificación enviada a {success_count} chats")
+                logger.info(f"📢 Notificación enviada a {success_count} chats ({len(message_parts)} partes)")
                 return True
             return False
             

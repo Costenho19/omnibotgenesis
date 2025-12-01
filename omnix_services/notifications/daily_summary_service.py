@@ -17,6 +17,8 @@ from typing import Dict, Optional, List
 import threading
 import time
 
+from .telegram_utils import split_message
+
 logger = logging.getLogger(__name__)
 
 
@@ -361,7 +363,7 @@ class DailySummaryService:
             return "📊 Error generando resumen"
     
     async def _send_message(self, message: str, chat_id: str = None) -> bool:
-        """Enviar mensaje a Telegram"""
+        """Enviar mensaje a Telegram con soporte para mensajes largos"""
         try:
             if not self.telegram_bot:
                 logger.warning("📊 Telegram bot no configurado")
@@ -373,26 +375,30 @@ class DailySummaryService:
                 logger.warning("📊 No hay chat_ids configurados")
                 return False
             
+            message_parts = split_message(message)
+            
             success_count = 0
             for cid in chat_ids:
                 try:
-                    if hasattr(self.telegram_bot, 'send_message'):
-                        await self.telegram_bot.send_message(
-                            chat_id=int(cid),
-                            text=message,
-                            parse_mode='Markdown'
-                        )
-                        success_count += 1
-                    elif hasattr(self.telegram_bot, 'bot'):
-                        await self.telegram_bot.bot.send_message(
-                            chat_id=int(cid),
-                            text=message,
-                            parse_mode='Markdown'
-                        )
-                        success_count += 1
+                    for part in message_parts:
+                        if hasattr(self.telegram_bot, 'send_message'):
+                            await self.telegram_bot.send_message(
+                                chat_id=int(cid),
+                                text=part,
+                                parse_mode='Markdown'
+                            )
+                        elif hasattr(self.telegram_bot, 'bot'):
+                            await self.telegram_bot.bot.send_message(
+                                chat_id=int(cid),
+                                text=part,
+                                parse_mode='Markdown'
+                            )
+                    success_count += 1
                 except Exception as send_err:
                     logger.warning(f"Error enviando a {cid}: {send_err}")
             
+            if success_count > 0:
+                logger.info(f"📊 Resumen enviado a {success_count} chats ({len(message_parts)} partes)")
             return success_count > 0
             
         except Exception as e:
