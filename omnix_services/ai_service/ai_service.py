@@ -1,9 +1,12 @@
 """
-OMNIX V5.1 ENTERPRISE - Conversational AI Service
+OMNIX V6.4 ENTERPRISE - Conversational AI Service
 Main orchestrator for AI functionality
 Reemplaza la clase ConversationalAI de main.py (1,133 líneas)
 Escalabilidad: 50K+ usuarios con stateless design
++ Real Context Provider for institutional transparency
 """
+
+print("✅ ai_service.py V6.4 CARGADO - REAL CONTEXT PROVIDER")
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -21,6 +24,14 @@ from omnix_core.cache.redis_state import (
 from omnix_core.utils.logger import get_logger
 from omnix_core.utils.rate_limiter import rate_limit, RateLimitExceeded
 from omnix_config.settings import settings
+
+try:
+    from omnix_core.context import get_real_context_provider, create_real_context_provider
+    REAL_CONTEXT_AVAILABLE = True
+except ImportError:
+    REAL_CONTEXT_AVAILABLE = False
+    get_real_context_provider = None
+    create_real_context_provider = None
 
 logger = get_logger(__name__)
 
@@ -64,6 +75,16 @@ class ConversationalAIService:
         # Check AI models health
         health = self.models.health_check()
         logger.info(f"🔍 AI Models Health: {health}")
+        
+        # 🔴 INITIALIZE REAL CONTEXT PROVIDER (Institutional Transparency)
+        if REAL_CONTEXT_AVAILABLE and create_real_context_provider:
+            try:
+                existing = get_real_context_provider()
+                if existing is None:
+                    create_real_context_provider()
+                    logger.info("🔴 Real Context Provider initialized from ConversationalAIService")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not initialize Real Context Provider: {e}")
     
     @rate_limit(
         max_requests=30, 
