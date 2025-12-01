@@ -2703,6 +2703,72 @@ Ejemplo: /risk_events 48
             else:
                 logger.warning(f"⚠️ db_manager not available - user {user_id} NOT registered")
             
+            # ⚙️ USER SETTINGS V6.4: Procesamiento de Lenguaje Natural para configuración
+            # Detectar peticiones de configuración en lenguaje natural ANTES de enviar a IA
+            if self.user_settings_service and USER_SETTINGS_AVAILABLE:
+                nlp_result = self.user_settings_service.process_natural_language_command(user_id, user_message)
+                
+                if nlp_result:
+                    action, params = nlp_result
+                    logger.info(f"⚙️ NLP detectó acción de configuración: {action} con params: {params}")
+                    
+                    if action == 'update_risk':
+                        suggested = params.get('suggested_profile')
+                        if params.get('action') == 'increase':
+                            response = f"""🎯 Entendido, quieres un perfil más agresivo.
+
+Para cambiar a perfil **{suggested.value}**, usa:
+`/perfil {suggested.value}` {'ACEPTO' if suggested == RiskProfile.AGGRESSIVE else ''}
+
+Esto aumentará tus límites de trading y potencial de ganancias (y riesgo).
+
+Usa `/perfil` para ver todas las opciones disponibles."""
+                        else:
+                            response = f"""🛡️ Entendido, prefieres proteger tu capital.
+
+Para cambiar a perfil **{suggested.value}**, usa:
+`/perfil {suggested.value}`
+
+Esto reducirá tus límites de exposición para mayor seguridad.
+
+Usa `/perfil` para ver todas las opciones disponibles."""
+                        await update.message.reply_text(response, parse_mode='Markdown')
+                        return
+                    
+                    elif action == 'update_limit':
+                        limit_type = params.get('type')
+                        value = params.get('value')
+                        if limit_type == 'max_trade':
+                            success, msg = self.user_settings_service.update_trading_limits(user_id, max_trade=value)
+                            await update.message.reply_text(msg, parse_mode='Markdown')
+                            return
+                        elif limit_type == 'min_trade':
+                            success, msg = self.user_settings_service.update_trading_limits(user_id, min_trade=value)
+                            await update.message.reply_text(msg, parse_mode='Markdown')
+                            return
+                    
+                    elif action == 'pause':
+                        success, msg = self.user_settings_service.pause_trading(user_id, "Pausa solicitada por usuario", 60)
+                        await update.message.reply_text(msg, parse_mode='Markdown')
+                        return
+                    
+                    elif action == 'resume':
+                        success, msg = self.user_settings_service.resume_trading(user_id)
+                        await update.message.reply_text(msg, parse_mode='Markdown')
+                        return
+                    
+                    elif action == 'auto_trading':
+                        enable = params.get('enable', False)
+                        if enable:
+                            response = """🤖 Para activar el trading automático, necesitas aceptar el disclaimer de riesgo.
+
+Usa: `/autotrading activar ACEPTO`"""
+                        else:
+                            success, msg = self.user_settings_service.toggle_auto_trading(user_id, False)
+                            response = msg
+                        await update.message.reply_text(response, parse_mode='Markdown')
+                        return
+            
             # ⚡ PRIORIDAD MÁXIMA: Comandos específicos del bot
             # Verificar PRIMERO si es comando /autotrading ANTES de enviar a IA
             if user_message.startswith('/autotrading') or user_message.startswith('/auto'):
