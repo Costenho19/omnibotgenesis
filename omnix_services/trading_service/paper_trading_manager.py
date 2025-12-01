@@ -515,8 +515,12 @@ class PaperTradingManager:
             Dict con P&L info o None si falla
         """
         try:
+            logger.info(f"🔧 _close_position_fifo_v2: INICIANDO SELL user={user_id}, symbol={symbol}, qty={sell_quantity}, price={exit_price}")
+            logger.info(f"🔧 _close_position_fifo_v2: database_service = {self.database_service}")
+            logger.info(f"🔧 _close_position_fifo_v2: has execute_query = {hasattr(self.database_service, 'execute_query') if self.database_service else False}")
+            
             if not self.database_service or not hasattr(self.database_service, 'execute_query'):
-                logger.error("❌ _close_position_fifo_v2: Database service no disponible")
+                logger.error("❌ _close_position_fifo_v2: Database service no disponible - ABORTANDO SELL")
                 return None
             
             logger.info(f"🔍 _close_position_fifo_v2: Buscando posición abierta para user={user_id}, symbol={symbol}")
@@ -561,55 +565,67 @@ class PaperTradingManager:
             profit_pct = ((exit_price / float(entry_price)) - 1) * 100
             
             if is_partial_close:
-                # VENTA PARCIAL: Reducir cantidad de la posición, mantener abierta
                 logger.info(f"🔄 Ejecutando UPDATE venta parcial: quantity={remaining_quantity}, trade_id={trade_id}")
-                self.database_service.execute_query(
-                    """
-                    UPDATE paper_trading_trades
-                    SET quantity = %s
-                    WHERE id = %s
-                    """,
-                    (remaining_quantity, trade_id)
-                )
+                try:
+                    self.database_service.execute_query(
+                        """
+                        UPDATE paper_trading_trades
+                        SET quantity = %s
+                        WHERE id = %s
+                        """,
+                        (remaining_quantity, trade_id)
+                    )
+                    logger.info(f"✅ UPDATE VENTA PARCIAL EJECUTADO - trade_id={trade_id}")
+                except Exception as update_err:
+                    logger.error(f"❌ ERROR en UPDATE venta parcial: {update_err}")
+                    raise
                 logger.info(f"✅ Venta parcial FIFO: {actual_sell_quantity:.8f} de {base_quantity:.8f} {symbol} | Restante: {remaining_quantity:.8f}")
             else:
-                # CIERRE COMPLETO: Cerrar la posición
                 logger.info(f"🔄 Ejecutando UPDATE cierre completo: exit_price={exit_price}, profit_loss={net_realized_pnl_usd}, profit_pct={profit_pct}, trade_id={trade_id}")
-                self.database_service.execute_query(
-                    """
-                    UPDATE paper_trading_trades
-                    SET exit_price = %s,
-                        profit_loss = %s,
-                        profit_pct = %s,
-                        status = 'closed',
-                        closed_at = NOW()
-                    WHERE id = %s
-                    """,
-                    (exit_price, net_realized_pnl_usd, profit_pct, trade_id)
-                )
+                try:
+                    self.database_service.execute_query(
+                        """
+                        UPDATE paper_trading_trades
+                        SET exit_price = %s,
+                            profit_loss = %s,
+                            profit_pct = %s,
+                            status = 'closed',
+                            closed_at = NOW()
+                        WHERE id = %s
+                        """,
+                        (exit_price, net_realized_pnl_usd, profit_pct, trade_id)
+                    )
+                    logger.info(f"✅ UPDATE CIERRE COMPLETO EJECUTADO - trade_id={trade_id}, status='closed'")
+                except Exception as update_err:
+                    logger.error(f"❌ ERROR en UPDATE cierre completo: {update_err}")
+                    raise
                 logger.info(f"✅ Posición cerrada FIFO en PostgreSQL: {actual_sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
             
-            # Actualizar balance (siempre)
             is_winning_trade = net_realized_pnl_usd > 0
             
-            # Solo contar como trade cerrado si es cierre completo
             winning_increment = 1 if (is_winning_trade and not is_partial_close) else 0
             losing_increment = 1 if (not is_winning_trade and not is_partial_close) else 0
             
-            self.database_service.execute_query(
-                """
-                UPDATE paper_trading_balances
-                SET balance_usd = balance_usd + %s,
-                    available_margin_usd = available_margin_usd + %s,
-                    total_realized_pnl_usd = total_realized_pnl_usd + %s,
-                    winning_trades = winning_trades + %s,
-                    losing_trades = losing_trades + %s,
-                    updated_at = NOW()
-                WHERE user_id = %s
-                """,
-                (total_proceeds, total_proceeds, net_realized_pnl_usd,
-                 winning_increment, losing_increment, user_id)
-            )
+            logger.info(f"🔧 Actualizando balance: proceeds=${total_proceeds:.2f}, pnl=${net_realized_pnl_usd:.2f}, win={winning_increment}, loss={losing_increment}")
+            try:
+                self.database_service.execute_query(
+                    """
+                    UPDATE paper_trading_balances
+                    SET balance_usd = balance_usd + %s,
+                        available_margin_usd = available_margin_usd + %s,
+                        total_realized_pnl_usd = total_realized_pnl_usd + %s,
+                        winning_trades = winning_trades + %s,
+                        losing_trades = losing_trades + %s,
+                        updated_at = NOW()
+                    WHERE user_id = %s
+                    """,
+                    (total_proceeds, total_proceeds, net_realized_pnl_usd,
+                     winning_increment, losing_increment, user_id)
+                )
+                logger.info(f"✅ UPDATE BALANCE EJECUTADO para user={user_id}")
+            except Exception as bal_err:
+                logger.error(f"❌ ERROR actualizando balance: {bal_err}")
+                raise
             
             return {
                 'trade_uuid': str(trade_id),
