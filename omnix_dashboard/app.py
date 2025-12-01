@@ -17,49 +17,49 @@ app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'omnix-ultra-2025')
 
-db = None
 DB_AVAILABLE = False
-DB_CONNECTION = None
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-def init_database():
-    """Initialize database connection - REQUIRED for real data"""
-    global db, DB_AVAILABLE, DB_CONNECTION
+def get_db_connection():
+    """Get direct PostgreSQL connection using psycopg"""
+    global DB_AVAILABLE
     
-    if DB_AVAILABLE:
-        return True
+    if not DATABASE_URL:
+        logger.warning("DATABASE_URL not configured")
+        DB_AVAILABLE = False
+        return None
     
     try:
-        from omnix_services.database_service import DatabaseManager
-        db = DatabaseManager()
-        DB_AVAILABLE = db.connected if hasattr(db, 'connected') else False
-        
-        if DB_AVAILABLE and hasattr(db, 'enterprise_service'):
-            DB_CONNECTION = db.enterprise_service
-            logger.info("Database connected: Real data mode ACTIVE")
-        else:
-            logger.warning("Database connected but enterprise service not available")
-            
-        return DB_AVAILABLE
+        import psycopg
+        conn = psycopg.connect(DATABASE_URL)
+        DB_AVAILABLE = True
+        return conn
     except Exception as e:
-        logger.warning(f"Database not available: {e}")
-        db = None
+        logger.error(f"Database connection failed: {e}")
         DB_AVAILABLE = False
-        return False
+        return None
+
+def init_database():
+    """Check if database is available"""
+    global DB_AVAILABLE
+    conn = get_db_connection()
+    if conn:
+        conn.close()
+        DB_AVAILABLE = True
+        logger.info("Database connected: Real data mode ACTIVE")
+        return True
+    DB_AVAILABLE = False
+    return False
 
 
 def get_paper_trades(days=30):
     """Fetch REAL paper trading history from database"""
-    init_database()
-    
-    if not DB_AVAILABLE or not DB_CONNECTION:
+    conn = get_db_connection()
+    if not conn:
         logger.info("No database connection - returning empty (no demo data)")
         return []
     
     try:
-        conn = DB_CONNECTION._get_connection()
-        if not conn:
-            return []
-        
         cursor = conn.cursor()
         cursor.execute('''
             SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
@@ -138,16 +138,11 @@ def get_demo_trades():
 
 def get_balance_history(days=30):
     """Fetch REAL balance history from database"""
-    init_database()
-    
-    if not DB_AVAILABLE or not DB_CONNECTION:
+    conn = get_db_connection()
+    if not conn:
         return []
     
     try:
-        conn = DB_CONNECTION._get_connection()
-        if not conn:
-            return []
-        
         cursor = conn.cursor()
         cursor.execute('''
             SELECT total_usd, btc_balance, eth_balance, usdt_balance, other_balance, timestamp
@@ -498,9 +493,9 @@ def api_portfolio():
 @app.route('/api/positions')
 def api_positions():
     """API endpoint for open positions"""
-    init_database()
+    conn = get_db_connection()
     
-    if not DB_AVAILABLE or not DB_CONNECTION:
+    if not conn:
         return jsonify({
             'success': False,
             'positions': [],
@@ -508,10 +503,6 @@ def api_positions():
         })
     
     try:
-        conn = DB_CONNECTION._get_connection()
-        if not conn:
-            return jsonify({'success': False, 'positions': []})
-        
         cursor = conn.cursor()
         cursor.execute('''
             SELECT id, user_id, symbol, side, quantity, entry_price, strategy, status, opened_at
