@@ -1,7 +1,7 @@
-# OMNIX V6.4 INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5 INSTITUTIONAL+ - Automated Trading System
 
 ### Overview
-OMNIX V6.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system for 24/7 operation. It focuses on paper trading to build a credible track record for investor presentations targeting $400K seed funding at $2.5M valuation. Key features include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian temporal memory, Memory-Enhanced Risk Management, and institutional-grade portfolio optimization (Markowitz + Black-Litterman). The project supports 50+ cryptocurrencies and 100+ stocks with modules for institutional compliance and derivatives trading.
+OMNIX V6.5 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at a $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian temporal memory with On-Chain Data Intelligence, Memory-Enhanced Risk Management, Adaptive Parameter Calibration, and institutional-grade portfolio optimization (Markowitz + Black-Litterman). The system supports over 50 cryptocurrencies and 100 stocks, incorporating modules for institutional compliance and derivatives trading.
 
 ### User Preferences
 User Communication Preference: Simple, everyday language (Spanish primary).
@@ -22,116 +22,52 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 ### System Architecture
 
 #### UI/UX Decisions
-- **Market Dashboard**: Institutional-grade dashboard with real-time Kraken data, market sentiment, top gainers/losers, 24h volumes, and visual trends for 6 cryptocurrencies.
+- **Market Dashboard**: Provides an institutional-grade dashboard with real-time Kraken data, market sentiment, top gainers/losers, 24h volumes, and visual trends for 6 cryptocurrencies.
 - **Reporting**: Generates professional, investor-ready PDF reports (25-35 pages) with executive summaries, methodology, results, risk analysis, and trade logs, utilizing Plotly for 5 institutional-quality visualizations.
+- **Performance Dashboard V6.4 REAL DATA**: Premium web dashboard connected to PostgreSQL, displaying real-time trading metrics, equity curve, and portfolio data.
 
 #### Technical Implementations
-- **Core Strategies**: Includes Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum, ARES V1/V2, Non-Markovian Kernel, and Order Book Analysis.
-- **Non-Markovian Memory Kernel V6.1**: Captures temporal dependencies to detect regime transitions, cyclical patterns, and memory coherence.
-- **Adaptive Parameter Engine V6.5 ULTRA** (NEW): Auto-calibration system for ARES strategies based on market regime:
-    - **RegimeSignalProcessor**: Processes Memory Kernel signals and detects regime changes
-    - **ParameterCalibrator**: Dynamically adjusts SL/TP/position size based on regime (accumulation, distribution, trending, volatile)
-    - **CooldownManager**: Intelligent cooldown between calibrations (15min default, min 5 trades)
-    - **MicrostructureAnalyzer**: Fine-tunes parameters based on spread, volume, and liquidity
-    - **Governance Layer**: All calibrations validated by Coherence Engine + Risk Guardian
-    - **PostgreSQL Persistence**: Tables `adaptive_parameters`, `calibration_events`, `calibration_metrics`
-    - **Smooth Transitions**: Exponential smoothing (0.3 factor) prevents sudden parameter jumps
-    - **Critical Override**: High-volatility/breakout regimes bypass cooldown for immediate protection
-- **ARES Institutional Protocols**: ARES V1 (Swing Trading) and ARES V2 (Scalping M1) with target win rates and multi-layer Kill-Switch Protection.
-- **AutoTradingBot V6.4 PREMIUM**: Optimized for 20-50 trades/day with 55%+ win rate:
-    - **Multi-Crypto Scanning**: Rotates through 3 pairs (BTC, ETH, SOL) every 25 seconds.
-    - **Tiered Signal Strength**: VERY_STRONG (100%), STRONG (75%), MODERATE (50%) position sizing.
-    - **Ramp-Up System**: Conservative start (30% size) scaling to 100% after 50 successful trades with DB persistence.
-    - **HMM Quality Filter**: Enhanced regime detection with confidence-weighted decisions.
-    - **Coherence Engine V6.4**: Balanced veto system (45% threshold) with signal-strength bypass for VERY_STRONG.
-    - **Drawdown Protection**: Auto-reduces position size on losing days ($200+ loss = 75%, $500+ = 50%).
-    - **State Persistence**: Trade counters and metrics persist across restarts via PostgreSQL.
-- **Notification Services V6.4 PREMIUM**: Real-time trade alerts and daily summaries:
-    - **TradeNotificationService**: Instant Telegram alerts when trades execute (BUY/SELL with P&L).
-    - **DailySummaryService**: Automated daily summary at 20:00 UTC with institutional metrics.
-    - **Benchmark Comparison**: Shows OMNIX performance vs Bitcoin HODL with alpha calculation.
-    - **Telegram Command**: `/resumen` for on-demand daily summary generation.
-- **Professional Testing & Validation System**: Features Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, Realistic Cost Modeling, and Investor Report Generation.
-- **AI & Machine Learning**: Conversational AI ("Cerebro Conversacional") for self-explaining AI reasoning and an Auto-Learning System for strategy parameter optimization.
-- **Quantum Physics Validation System**: PhD+ level scientific accuracy with 31 verified formulas and quantum credibility scoring.
-- **Risk Management & Protection**:
-    - **Coherence Engine V5.4 ULTRA**: Validates agreement between trading strategies using a 6-Tier Veto System.
-    - **AI Risk Guardian V5.4**: Real-time risk supervision (Overtrading, Drawdown, Revenge Trading Detection, Capital Protection).
-    - **Risk Management System (RMS) V6.2 MEMORY-ENHANCED**: Institutional-grade risk control with predictive risk assessment using Non-Markovian temporal patterns.
-    - **Auto-Optimization Engine**: Continuously improves strategies via Genetic Algorithm, A/B Testing, and Auto-Adjustment.
-    - **Multi-Exchange Arbitrage V6.0**: Institutional arbitrage across 8 exchanges.
-    - **Institutional Compliance Suite**: Includes InstitutionalStressSuite, InstitutionalAuditLogger, and a DeadManSwitch.
+- **Core Strategies**: Incorporates Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum, ARES V1/V2, Non-Markovian Kernel, and Order Book Analysis.
+- **Non-Markovian Memory Kernel V6.5**: Captures temporal dependencies to detect regime transitions and integrates with On-Chain Data Intelligence.
+- **On-Chain Data Intelligence V6.5**: Provides institutional-grade blockchain analytics using free APIs for WhaleTracker, Arkham Intelligence integration, ExchangeFlowAnalyzer, NetworkMetricsCollector, and SmartMoneySignal aggregation.
+- **Adaptive Parameter Engine V6.5 ULTRA**: An auto-calibration system for ARES strategies that dynamically adjusts parameters (SL/TP/position size) based on market regime, utilizing a `RegimeSignalProcessor`, `ParameterCalibrator`, `CooldownManager`, and `MicrostructureAnalyzer`.
+- **AutoTradingBot V6.4 PREMIUM**: Optimized for 20-50 trades/day with a 55%+ win rate, featuring multi-crypto scanning, tiered signal strength, a ramp-up system, HMM quality filter, Coherence Engine, drawdown protection, and state persistence via PostgreSQL.
+- **Notification Services V6.4 PREMIUM**: Provides real-time Telegram trade alerts and daily summaries, including performance benchmarks against Bitcoin HODL.
+- **AI & Machine Learning**: Includes a conversational AI ("Cerebro Conversacional") for reasoning explanations and an Auto-Learning System for strategy parameter optimization.
+- **Risk Management & Protection**: Features Coherence Engine V5.4 ULTRA (6-Tier Veto System), AI Risk Guardian V5.4 (real-time risk supervision), and RMS V6.2 MEMORY-ENHANCED (predictive risk assessment). Includes an Auto-Optimization Engine, Multi-Exchange Arbitrage V6.0, and an Institutional Compliance Suite.
 - **Derivatives Trading Module**: Orchestrates perpetuals trading with paper/real modes, `MarginEngine`, `KrakenFuturesClient`, `HedgingService`, `FundingArbitrageAnalyzer`, and Telegram integration.
-- **Trading Modes**: Paper Trading, Real Trading (with post-quantum signed orders), and Backtesting.
-- **Quantum Enhancements**: ANU QRNG for true quantum randomness.
-- **Strategic Honesty System**: Provides CEO-style, data-driven responses, avoiding raw limitations.
-- **Leverage Validation**: Automatically detects and rejects leverage requests exceeding 5x.
-- **Multi-Crypto Support**: Supports 50+ cryptocurrencies with primary Kraken and fallback CoinGecko data sources.
-- **Robust Market Data System**: Uses 3-source fallback (Kraken Auth → Kraken Public → CoinGecko) with JSON validation and timeouts.
-- **Real Data Integration V6.4**: Portfolio commands now fetch REAL historical data:
-    - **Kraken OHLC**: Auto-detects response keys (handles `XXBTZUSD` vs `XBTUSD` mapping)
-    - **Alpaca Bars API**: 60-day historical bars for stocks (AAPL, MSFT, GOOGL, etc.)
-    - **Data Quality Tracking**: Logs which assets use real vs synthetic fallback data
-- **Stock Trading Premium V6.3 ULTRA**: 100% institutional-grade stock trading with 9 active modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
-- **YouTube Video Analysis**: Enhanced with OpenAI Whisper as an ultimate fallback for transcript generation, including caching for efficiency.
-- **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level portfolio optimization with 5 institutional modules:
-    - **RiskModelEngine**: Covariance matrix, correlation analysis, beta calculations with Ledoit-Wolf shrinkage.
-    - **PortfolioOptimizer**: Markowitz Mean-Variance + Black-Litterman views integration from OMNIX signals (HMM, ARES, Monte Carlo).
-    - **VolatilityTargetingEngine**: Dynamic position sizing to maintain target volatility (Conservative 5%, Moderate 10%, Aggressive 15%, Institutional 12%).
-    - **ExposureManager**: Sector/asset/beta limits, net/gross exposure compliance, institutional mandates.
-    - **ClusteringRiskDetector**: Hidden concentration risk detection via correlation clustering, effective-N calculation.
-    - **OmnixPortfolioEngine**: Unified orchestration layer combining all modules.
-- **Performance Dashboard V6.4 REAL DATA**: Premium 2025-style web dashboard connected directly to PostgreSQL. Features:
-    - **Real-time data** from `paper_trading_trades` and `balance_history` tables
-    - **Live Data indicator** (green dot) when database connected
-    - **Professional empty state** ("No trading data yet") instead of fake demo data
-    - **Automatic production data** - Shows real trades when deployed to Railway
-    - **Real-time Clock**: Auto-detects user's local timezone, updates every second (responsive on all devices)
-    - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
-    - **Railway Deployment**: Can run as separate service using `start_dashboard.py` (see `RAILWAY_DASHBOARD_SETUP.md`)
-- **Market Intelligence System V6.4**: Live external data integration for smarter trading decisions:
-    - **Fear & Greed Index**: Real-time market sentiment from Alternative.me API (100% free, no key needed)
-        - Classifications: Extreme Fear (0-24), Fear (25-49), Neutral (50), Greed (51-75), Extreme Greed (76-100)
-        - Trading recommendations based on sentiment levels
-        - Endpoint: `/api/market/fear-greed`
-    - **Finnhub Integration**: Professional market news and sentiment (requires FINNHUB_API_KEY)
-        - General market news, crypto news, earnings calendar
-        - Company sentiment scores and buzz metrics
-        - Endpoint: `/api/market/finnhub-news`
-    - **Alpha Vantage Integration**: Technical indicators (requires ALPHA_VANTAGE_API_KEY)
-        - RSI (Relative Strength Index) with overbought/oversold signals
-        - MACD, Bollinger Bands support ready
-        - Endpoint: `/api/market/technical-indicators/<symbol>`
-    - **Caching**: 30-minute cache to respect API rate limits (Finnhub 60/min, Alpha Vantage 5/min)
-- **OMNIX Personal Assistant Premium V6.4** - Sistema de configuración personalizada por usuario vía Telegram:
-    - **UserSettingsService**: Gestión de preferencias de trading por usuario con persistencia en PostgreSQL.
-    - **5 Perfiles de Riesgo**: ultra_conservative, conservative, moderate, aggressive, institutional (Goldman-Sachs style).
-    - **Límites Personalizados**: min/max trade USD, límite diario, máximo posiciones, % máx del portfolio.
-    - **Comandos Telegram Premium**: `/miconfig`, `/perfil`, `/limites`, `/proteccion`, `/estrategias`, `/cryptos`, `/autotrading`, `/pausar`, `/reanudar`, `/onboarding`.
-    - **Procesamiento Lenguaje Natural**: Entiende peticiones como "quiero ser más agresivo", "máximo $500 por trade", "pausa el trading".
-    - **Auto-Protección**: Pausa automática al alcanzar límite de pérdida diaria (configurable).
-    - **Integración PaperTradingManager**: Valida trades contra límites del usuario antes de ejecutar.
-    - **Tabla**: `user_settings` en PostgreSQL con JSON para configuración flexible.
+- **Portfolio Management V6.4 INSTITUTIONAL+**: Offers Goldman-Sachs level portfolio optimization with modules like `RiskModelEngine`, `PortfolioOptimizer` (Markowitz + Black-Litterman), `VolatilityTargetingEngine`, `ExposureManager`, and `ClusteringRiskDetector`.
+- **Market Intelligence System V6.4**: Integrates live external data for market sentiment (Fear & Greed Index), news (Finnhub), and technical indicators (Alpha Vantage).
+- **OMNIX Personal Assistant Premium V6.4**: Allows per-user custom configuration via Telegram, including risk profiles, personalized limits, and natural language processing for command execution.
+- **Robust Market Data System**: Utilizes a 3-source fallback (Kraken Auth → Kraken Public → CoinGecko) with JSON validation and timeouts.
+- **Real Data Integration V6.4**: Portfolio commands fetch real historical data from Kraken OHLC and Alpaca Bars API for stocks.
+- **Stock Trading Premium V6.3 ULTRA**: Institutional-grade stock trading with 9 active modules including Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
 
 #### System Design Choices
-- **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
-- **Centralized Database Layer**: All database logic in `omnix_services/database_service/` with 33 code-managed tables and 22+ DAL methods. Schema migrations managed transactionally.
+- **Modular Architecture**: Composed of 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
+- **Centralized Database Layer**: All database logic is managed within `omnix_services/database_service/`, featuring 33 code-managed tables and 22+ DAL methods with transactional schema migrations.
 - **Unified Configuration**: Centralized `env_manager.py` for environment variables.
-- **Deployment**: 24/7 operation on Railway (Production) and Replit (Development).
+- **Deployment**: Designed for 24/7 operation on Railway (Production) and Replit (Development).
 
 ### External Dependencies
 
 #### APIs & Services
-- **Kraken Exchange**: Primary for market data, account info, order execution.
+- **Kraken Exchange**: Primary for market data, account info, and order execution.
 - **Google Gemini**: Gemini 2.0 Flash (primary AI model).
 - **OpenAI**: GPT-4o, Whisper (for AI services).
 - **Anthropic Claude**: Optional AI fallback.
 - **Stripe**: Payment processing.
 - **CoinGecko API**: Backup price data.
 - **ANU QRNG API**: For true quantum randomness.
+- **ClankApp API**: Free whale transaction tracking (no API key required).
+- **Arkham Intelligence API**: Free wallet identity enrichment (no API key required).
+- **Alternative.me API**: Fear & Greed Index (free, no key needed).
+- **Finnhub API**: Market news and sentiment.
+- **Alpha Vantage API**: Technical indicators.
+- **Alpaca API**: Historical stock data.
 
 #### Databases
-- **PostgreSQL (Railway)**: Main relational database hosted on Railway with 33 code-managed tables for core operations, risk, derivatives, community, signals, and video transcript caching. Uses `psycopg3` driver with SSL.
+- **PostgreSQL (Railway)**: Main relational database hosted on Railway, managing 33 tables for core operations, risk, derivatives, community, signals, and video transcript caching. Uses `psycopg3` driver with SSL.
 - **Redis (Railway)**: External in-memory cache for persistent state management, conversation history, market data caching, and rate limiting.
 
 #### Key Python Libraries
