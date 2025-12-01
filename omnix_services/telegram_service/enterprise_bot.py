@@ -4924,6 +4924,7 @@ ETH: {result['new_eth_balance']:.8f}
                 self.send_telegram_text_safe(chat_id, "⚠️ Cantidad debe ser mayor a 0")
                 return
             
+            logger.info(f"🔄 _handle_paper_sell_direct: Iniciando venta para user_id={user_id}, symbol={symbol}/USD, amount=${amount_usd}")
             self.send_telegram_text_safe(chat_id, f"🔍 Ejecutando venta REAL de ${amount_usd:,.2f} en {symbol}...")
             
             result = self.paper_trading.execute_paper_trade(
@@ -4933,24 +4934,31 @@ ETH: {result['new_eth_balance']:.8f}
                 amount_usd=amount_usd
             )
             
+            logger.info(f"🔄 _handle_paper_sell_direct: Resultado = {result}")
+            
             if 'error' in result:
+                logger.error(f"❌ _handle_paper_sell_direct: Error = {result['error']}")
                 self.send_telegram_text_safe(chat_id, f"❌ {result['error']}")
                 return
+            
+            pnl = result.get('net_realized_pnl_usd', result.get('realized_pnl', 0))
+            is_win = result.get('is_winning_trade', pnl > 0)
             
             msg = f"""✅ *VENTA EJECUTADA EN POSTGRESQL*
 
 {symbol}: -{result['amount']:.8f}
-Precio: ${result['price']:,.2f}
+Precio Entrada: ${result.get('entry_price', 0):,.2f}
+Precio Salida: ${result['price']:,.2f}
 Total: ${result['total_usd']:,.2f}
-P&L: ${result.get('realized_pnl', 0):,.2f}
+P&L: ${pnl:+,.2f} {'🟢 WIN' if is_win else '🔴 LOSS'}
 
 💰 *NUEVO BALANCE:*
 USD: ${result['new_balance_usd']:,.2f}
 
-✅ Trade guardado en base de datos"""
+✅ Trade cerrado y guardado en PostgreSQL"""
             
             self.send_telegram_text_safe(chat_id, msg)
-            logger.info(f"✅ PAPER SELL REAL EJECUTADO: {symbol} ${amount_usd} para user {user_id}")
+            logger.info(f"✅ PAPER SELL REAL EJECUTADO Y GUARDADO: {symbol} ${amount_usd} para user {user_id} | P&L: ${pnl:+,.2f}")
             
         except Exception as e:
             logger.error(f"❌ Error _handle_paper_sell_direct: {e}")

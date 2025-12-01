@@ -508,8 +508,10 @@ class PaperTradingManager:
         """
         try:
             if not self.database_service or not hasattr(self.database_service, 'execute_query'):
-                logger.error("Database service no disponible")
+                logger.error("❌ _close_position_fifo_v2: Database service no disponible")
                 return None
+            
+            logger.info(f"🔍 _close_position_fifo_v2: Buscando posición abierta para user={user_id}, symbol={symbol}")
             
             # Buscar posición abierta más antigua (FIFO) - usando columnas correctas del schema
             result = self.database_service.execute_query(
@@ -522,6 +524,8 @@ class PaperTradingManager:
                 """,
                 (user_id, symbol)
             )
+            
+            logger.info(f"🔍 _close_position_fifo_v2: Resultado SELECT = {result}")
             
             if not result or len(result) == 0:
                 logger.warning(f"No hay posición abierta para {symbol}")
@@ -550,6 +554,7 @@ class PaperTradingManager:
             
             if is_partial_close:
                 # VENTA PARCIAL: Reducir cantidad de la posición, mantener abierta
+                logger.info(f"🔄 Ejecutando UPDATE venta parcial: quantity={remaining_quantity}, trade_id={trade_id}")
                 self.database_service.execute_query(
                     """
                     UPDATE paper_trading_trades
@@ -561,6 +566,7 @@ class PaperTradingManager:
                 logger.info(f"✅ Venta parcial FIFO: {actual_sell_quantity:.8f} de {base_quantity:.8f} {symbol} | Restante: {remaining_quantity:.8f}")
             else:
                 # CIERRE COMPLETO: Cerrar la posición
+                logger.info(f"🔄 Ejecutando UPDATE cierre completo: exit_price={exit_price}, profit_loss={net_realized_pnl_usd}, profit_pct={profit_pct}, trade_id={trade_id}")
                 self.database_service.execute_query(
                     """
                     UPDATE paper_trading_trades
@@ -573,7 +579,7 @@ class PaperTradingManager:
                     """,
                     (exit_price, net_realized_pnl_usd, profit_pct, trade_id)
                 )
-                logger.info(f"✅ Posición cerrada FIFO: {actual_sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
+                logger.info(f"✅ Posición cerrada FIFO en PostgreSQL: {actual_sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
             
             # Actualizar balance (siempre)
             is_winning_trade = net_realized_pnl_usd > 0
