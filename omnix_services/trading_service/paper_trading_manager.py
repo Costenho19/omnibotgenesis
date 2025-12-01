@@ -451,16 +451,20 @@ class PaperTradingManager:
             trade_uuid del trade creado, o None si falla
         """
         try:
+            logger.info(f"🔧 _open_position_v2: INICIANDO user={user_id}, symbol={symbol}, qty={base_quantity}")
+            logger.info(f"🔧 _open_position_v2: database_service = {self.database_service}")
+            logger.info(f"🔧 _open_position_v2: has execute_query = {hasattr(self.database_service, 'execute_query') if self.database_service else False}")
+            
             if not self.database_service or not hasattr(self.database_service, 'execute_query'):
-                logger.error("Database service no disponible")
+                logger.error("❌ _open_position_v2: Database service no disponible")
                 return None
             
-            # Calcular valores
             quote_notional_usd = base_quantity * entry_price
             fee_usd = self._calculate_fee(quote_notional_usd)
             total_cost = quote_notional_usd + fee_usd
             
-            # Insertar trade en paper_trading_trades (usando columnas correctas del schema)
+            logger.info(f"🔧 _open_position_v2: Ejecutando INSERT en paper_trading_trades...")
+            
             result = self.database_service.execute_query(
                 """
                 INSERT INTO paper_trading_trades 
@@ -472,8 +476,12 @@ class PaperTradingManager:
                 (user_id, symbol, entry_price, base_quantity, source_strategy)
             )
             
+            logger.info(f"🔧 _open_position_v2: INSERT result = {result}")
+            
             trade_id = result[0][0] if result and len(result) > 0 else None
             trade_uuid = str(trade_id) if trade_id else None
+            
+            logger.info(f"🔧 _open_position_v2: trade_id = {trade_id}, trade_uuid = {trade_uuid}")
             
             if trade_uuid:
                 # Actualizar balance (deducir USD gastado + fees)
