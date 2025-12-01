@@ -849,37 +849,44 @@
             updateLastRefresh();
         }
         
+        let lastSecond = -1;
+        const timezoneInfo = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const tzShort = timezoneInfo.split('/').pop().replace('_', ' ');
+        
         function updateLiveClock() {
             const now = new Date();
+            const currentSecond = now.getSeconds();
             
-            const timeStr = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: false 
-            });
+            if (currentSecond !== lastSecond) {
+                lastSecond = currentSecond;
+                
+                const timeStr = now.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit',
+                    hour12: false 
+                });
+                
+                const dateStr = now.toLocaleDateString('en-US', { 
+                    weekday: 'short',
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                
+                document.getElementById('live-time').textContent = timeStr;
+                document.getElementById('live-date').textContent = dateStr;
+                document.getElementById('timezone-badge').textContent = tzShort;
+            }
             
-            const dateStr = now.toLocaleDateString('en-US', { 
-                weekday: 'short',
-                month: 'short', 
-                day: 'numeric'
-            });
-            
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const tzShort = timezone.split('/').pop().replace('_', ' ');
-            
-            document.getElementById('live-time').textContent = timeStr;
-            document.getElementById('live-date').textContent = dateStr;
-            document.getElementById('timezone-badge').textContent = tzShort;
+            requestAnimationFrame(updateLiveClock);
         }
         
         async function init() {
-            updateLiveClock();
-            setInterval(updateLiveClock, 1000);
+            requestAnimationFrame(updateLiveClock);
             
             await refreshAllData();
             setInterval(refreshAllData, 10000);
-            console.log('OMNIX Dashboard V6.4 INSTITUTIONAL+ | Auto-refresh: 10s | Live Clock: Active');
+            console.log('OMNIX Dashboard V6.4 INSTITUTIONAL+ | Auto-refresh: 10s | Live Clock: Smooth');
         }
         
         init();
