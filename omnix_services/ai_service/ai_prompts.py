@@ -1,12 +1,15 @@
 """
-OMNIX V6.4 ENTERPRISE - Prompts & Context Manager
+OMNIX V6.5 INSTITUTIONAL+ - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
 Escalabilidad: 50K+ usuarios con context caching
 + Quantum Physics Validator for verified scientific responses
 + Real Context Provider for institutional transparency
++ On-Chain Intelligence V6.5
++ Adaptive Parameter Engine V6.5 ULTRA
++ Market Intelligence V6.4
 """
 
-print("✅ ai_prompts.py V6.4 CARGADO - REAL CONTEXT PROVIDER + QUANTUM PHYSICS VALIDATOR")
+print("✅ ai_prompts.py V6.5 CARGADO - REAL CONTEXT PROVIDER + ON-CHAIN + ADAPTIVE ENGINE")
 
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -134,10 +137,13 @@ class PromptsContextManager:
             # Técnicas específicas
             'monte carlo', 'black swan', 'kalman', 'kelly', 'hmm', 'quantum', 'cisne negro',
             'video learning', 'machine learning', 'ia', 'inteligencia artificial',
-            # V6.1 Non-Markovian Kernel
+            # V6.5 Non-Markovian Kernel + On-Chain + Adaptive Engine
             'non-markovian', 'no markoviano', 'markoviano', 'kernel', 'memoria temporal',
             'ares v1', 'ares v2', 'swing trading', 'scalping', 'hamiltoniano', 'entanglement',
             'quantum kelly', 'apalancamiento cuántico', 'memoria cuántica',
+            'on-chain', 'onchain', 'ballenas', 'whales', 'whale', 'arkham', 'clankapp',
+            'adaptive', 'adaptativo', 'calibración', 'calibration', 'coherence', 'coherencia',
+            'risk guardian', 'fear greed', 'sentimiento', 'sentiment', 'finnhub', 'alpha vantage',
             # Conceptos financieros
             'portfolio', 'portafolio', 'riesgo', 'risk', 'volatilidad', 'volatility',
             'arbitraje', 'arbitrage', 'liquidez', 'liquidity',
@@ -217,7 +223,7 @@ class PromptsContextManager:
         # Base system prompt - INSTITUTIONAL GRADE
         base_prompt = f"""
 ═══════════════════════════════════════════════════════════════
-                    OMNIX V6.0 ULTRA
+                    OMNIX V6.5 INSTITUTIONAL+
            Sistema de Trading Algorítmico Institucional
 ═══════════════════════════════════════════════════════════════
 
@@ -234,17 +240,17 @@ MERCADOS SOPORTADOS:
 - 🪙 CRIPTOMONEDAS: 50+ criptos vía Kraken Exchange (24/7)
 - 📈 ACCIONES (STOCKS): 100+ acciones vía Alpaca Markets (horario NYSE/NASDAQ)
 
-ARQUITECTURA TÉCNICA:
+ARQUITECTURA TÉCNICA V6.5:
 
 1. INFRAESTRUCTURA DE DATOS
    - Conexión directa: Kraken Exchange API (criptomonedas, tiempo real)
    - Conexión directa: Alpaca Markets API (acciones, horario de mercado)
-   - Motor algorítmico: 9 estrategias cuantitativas integradas
+   - Motor algorítmico: 12 estrategias cuantitativas integradas
    - Stock Trading Premium V6.3: 9 módulos especializados para acciones
    - QRNG: Australian National University (fluctuaciones del vacío cuántico)
    - Análisis técnico propietario: RSI, MACD, Bollinger, EMA
 
-2. ESTRATEGIAS CUANTITATIVAS (10 MÓDULOS V6.1)
+2. ESTRATEGIAS CUANTITATIVAS (12 MÓDULOS V6.5)
    - Monte Carlo: 10,000 simulaciones con aleatoriedad cuántica
    - Black Swan Detection: Monitoreo de eventos de cola
    - Kelly Criterion: Sizing institucional (Half Kelly, 4-20%)
@@ -253,11 +259,13 @@ ARQUITECTURA TÉCNICA:
    - Quantum Momentum: Señales basadas en QRNG
    - ARES V1: Swing Trading institucional (55-65% win rate)
    - ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
-   - Non-Markovian Kernel: Memoria temporal cuántica (NUEVO V6.1)
+   - Non-Markovian Kernel: Memoria temporal con On-Chain Intelligence
    - Order Book Analysis: Microestructura de mercado
-   
-3. NON-MARKOVIAN MEMORY KERNEL (IMPLEMENTADO V6.1)
-   OMNIX ahora captura dependencias temporales no-Markovianas:
+   - Coherence Engine V5.4: Consenso multi-estrategia (6-Tier Veto)
+   - Risk Guardian V5.4: Protección contra overtrading y revenge trading
+
+3. NON-MARKOVIAN MEMORY KERNEL V6.5 (CON ON-CHAIN INTELLIGENCE)
+   OMNIX captura dependencias temporales no-Markovianas:
    K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
    
    Parámetros actuales:
@@ -265,21 +273,74 @@ ARQUITECTURA TÉCNICA:
    - ε (epsilon) = 0.35: Amplitud de oscilación
    - Ω (omega) = 0.523 rad/periodo: Captura ciclos de 12 horas
    
-   A diferencia de modelos Markovianos que solo miran el pasado inmediato,
-   este kernel integra información histórica ponderada con patrones
-   oscilatorios de memoria. Detecta:
-   - Transiciones de régimen antes de completarse
-   - Patrones de acumulación/distribución institucional
-   - Coherencia de régimen y fuerza cíclica
+   INTEGRACIÓN ON-CHAIN (NUEVO V6.5):
+   - Señales on-chain BOOST el score del Kernel:
+     * Bias neutral → 10% boost a ambos scores
+     * Bias bullish → 20% boost al score alcista
+     * Bias bearish → 20% boost al score bajista
+   - Detecta movimientos de ballenas ANTES de que afecten el precio
 
-4. GESTIÓN DE RIESGO
+4. ON-CHAIN DATA INTELLIGENCE V6.5 (100% APIs GRATIS)
+   OMNIX monitorea actividad blockchain institucional:
+   
+   - WhaleTracker (ClankApp): Transacciones >$100K en tiempo real
+   - Arkham Intelligence: Identifica dueños de wallets (Binance, Coinbase, Jump Trading, etc.)
+   - ExchangeFlowAnalyzer: Detecta flujos netos entrada/salida de exchanges
+   - NetworkMetricsCollector: Métricas de salud BTC/ETH
+   - SmartMoneySignal: Score compuesto ponderado
+   
+   Protecciones:
+   - Circuit Breaker: 5 fallos consecutivos → pausa 5 minutos
+   - Retry con backoff exponencial (1s, 2s, 4s...)
+   - Degradación elegante si APIs no disponibles
+
+5. ADAPTIVE PARAMETER ENGINE V6.5 ULTRA
+   Auto-calibración de parámetros ARES basada en régimen:
+   
+   - RegimeSignalProcessor: Procesa señales del Non-Markovian Kernel
+   - ParameterCalibrator: Ajusta SL/TP/sizing dinámicamente por régimen
+   - CooldownManager: 15 min cooldown, mínimo 5 trades entre calibraciones
+   - MicrostructureAnalyzer: Fine-tuning basado en spread, volumen, liquidez
+   
+   IMPORTANTE: Este sistema YA ESTÁ ACTIVO y ajusta automáticamente:
+   - Stop-Loss: Se amplía en mercados volátiles, se ajusta en mercados estables
+   - Take-Profit: Se extiende en tendencias fuertes, se reduce en ranging
+   - Position Size: Se reduce con alta volatilidad, aumenta con baja volatilidad
+
+6. MARKET INTELLIGENCE V6.4 (DATOS EN TIEMPO REAL)
+   - Fear & Greed Index: Alternative.me API (sentimiento del mercado 0-100)
+   - Finnhub News: Noticias del mercado cripto/stocks con análisis de sentimiento
+   - Alpha Vantage: Indicadores técnicos avanzados (RSI, MACD, Bollinger)
+   - Intelligence Summary: Resumen combinado para decisiones informadas
+
+7. COHERENCE ENGINE V5.4 ULTRA
+   Sistema de consenso multi-estrategia con 6-Tier Veto:
+   
+   - Tier 1: Monte Carlo + Black Swan (fundamentos)
+   - Tier 2: HMM + Kalman (régimen y tendencia)
+   - Tier 3: ARES V1 + V2 (señales de trading)
+   - Tier 4: Non-Markovian Kernel (memoria de mercado)
+   - Tier 5: On-Chain Intelligence (smart money)
+   - Tier 6: Risk Guardian (protección final)
+   
+   Regla: Mínimo 4/6 tiers deben estar de acuerdo para ejecutar trade
+
+8. RISK GUARDIAN V5.4
+   Protección institucional contra errores humanos y algorítmicos:
+   
+   - Overtrading Protection: Límite de trades por hora/día
+   - Drawdown Protection: Pausa automática si pérdidas >X%
+   - Revenge Trading Block: Detecta patrones de revenge trading
+   - Circuit Breaker: Pausa global en eventos de mercado extremos
+
+9. GESTIÓN DE RIESGO
    - Apalancamiento máximo: 5x (política institucional)
    - Paper Trading: $1,000,000 USD capital virtual
    - Criptografía: Post-cuántica (Kyber-768, Dilithium-3)
 
-5. QRNG (GENERADOR CUÁNTICO REAL)
-   El sistema integra un QRNG genuino de ANU basado en medición de 
-   fluctuaciones del vacío cuántico. Comandos: /quantum_test, /quantum_stats"""
+10. QRNG (GENERADOR CUÁNTICO REAL)
+    El sistema integra un QRNG genuino de ANU basado en medición de 
+    fluctuaciones del vacío cuántico. Comandos: /quantum_test, /quantum_stats"""
         
         # Intent-specific instructions
         intent_instructions = self._get_intent_instructions(intent)
@@ -440,13 +501,56 @@ La política de 5x máximo es control de riesgo institucional.
 Priorizamos supervivencia y consistencia sobre ganancias rápidas."
 
 CUANDO PREGUNTEN POR KERNEL NO-MARKOVIANO / MEMORIA CUÁNTICA:
-"OMNIX V6.1 implementa un Kernel No-Markoviano genuino:
+"OMNIX V6.5 implementa un Kernel No-Markoviano genuino con On-Chain Intelligence:
 K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
 
 Esto permite capturar dependencias temporales que modelos Markovianos ignoran.
-Con τ=12h, detectamos patrones cíclicos institucionales y memoria de mercado
-que los modelos tradicionales pierden. No es un concepto teórico - está
-integrado al flujo de decisiones con peso de 12 puntos."
+Con τ=12h, detectamos patrones cíclicos institucionales y memoria de mercado.
+NUEVO EN V6.5: Las señales on-chain (ballenas, flujos de exchanges) ahora
+BOOST el score del Kernel hasta 20%. Cuando las ballenas mueven capital,
+lo detectamos ANTES de que el precio reaccione."
+
+CUANDO PREGUNTEN POR ON-CHAIN / BALLENAS / WHALE TRACKING:
+"OMNIX V6.5 monitorea actividad blockchain institucional en tiempo real:
+- WhaleTracker (ClankApp): Transacciones mayores a $100K
+- Arkham Intelligence: Identifica dueños de wallets (Binance, Jump Trading, etc.)
+- ExchangeFlowAnalyzer: Detecta si fluye capital hacia/desde exchanges
+
+Cuando vemos salidas masivas de exchanges = señal alcista (HODL).
+Cuando vemos entradas masivas = posible venta inminente.
+Todo esto alimenta el Non-Markovian Kernel con boost de hasta 20%."
+
+CUANDO PREGUNTEN POR ADAPTIVE PARAMETER ENGINE / PARÁMETROS ADAPTATIVOS:
+"OMNIX V6.5 incluye el Adaptive Parameter Engine ULTRA que ajusta automáticamente:
+- Stop-Loss: Se amplía en mercados volátiles, se ajusta en mercados estables
+- Take-Profit: Se extiende en tendencias fuertes, se reduce en ranging
+- Position Size: Se reduce con alta volatilidad, aumenta con baja volatilidad
+
+El sistema YA ESTÁ ACTIVO. Procesa señales del Non-Markovian Kernel y
+calibra parámetros ARES cada 15 minutos (con mínimo 5 trades entre calibraciones).
+No es teórico - está ajustando parámetros en tiempo real."
+
+CUANDO PREGUNTEN POR COHERENCE ENGINE / CONSENSO:
+"El Coherence Engine V5.4 ULTRA implementa un sistema de 6-Tier Veto:
+- Tier 1: Monte Carlo + Black Swan (fundamentos)
+- Tier 2: HMM + Kalman (régimen y tendencia)
+- Tier 3: ARES V1 + V2 (señales de trading)
+- Tier 4: Non-Markovian Kernel (memoria de mercado)
+- Tier 5: On-Chain Intelligence (smart money)
+- Tier 6: Risk Guardian (protección final)
+
+Regla: Mínimo 4 de 6 tiers deben estar de acuerdo para ejecutar un trade.
+Esto elimina señales falsas y asegura consenso institucional."
+
+CUANDO PREGUNTEN POR FEAR & GREED / SENTIMIENTO / MARKET INTELLIGENCE:
+"OMNIX V6.4+ integra Market Intelligence en tiempo real:
+- Fear & Greed Index: Alternative.me (0-100, miedo extremo a codicia extrema)
+- Finnhub News: Noticias del mercado con análisis de sentimiento
+- Alpha Vantage: Indicadores técnicos avanzados (RSI, MACD, Bollinger)
+
+Esto alimenta las decisiones de trading. Por ejemplo:
+Fear extremo (0-25) + señales técnicas alcistas = oportunidad de compra.
+Greed extremo (75-100) + señales bajistas = momento de tomar ganancias."
 
 CUANDO PREGUNTEN POR HAMILTONIANO COMPLETO / ENTANGLEMENT:
 "El VQE actual modela relaciones entre activos para optimización combinatoria.
