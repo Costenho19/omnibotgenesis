@@ -77,6 +77,10 @@ class NonMarkovianKernel:
         self._last_signal: Optional[str] = None
         self._last_confidence: float = 0.0
         
+        # On-Chain Data Integration V6.5
+        self._on_chain_signal: Optional[Dict] = None
+        self._on_chain_weight: float = 0.15  # Weight for on-chain signals in composite score
+        
         logger.info("=" * 70)
         logger.info("🧠 NON-MARKOVIAN KERNEL INITIALIZED")
         logger.info(f"   τ (tau) = {tau} hours (memory decay)")
@@ -366,13 +370,84 @@ class NonMarkovianKernel:
             "overall_coherence": round(overall_coherence, 2)
         }
     
+    def integrate_on_chain_signal(self, on_chain_data: Dict) -> None:
+        """
+        🔗 Integrate on-chain signal into the kernel analysis.
+        
+        On-chain data provides additional market insight from:
+        - Whale transaction activity
+        - Exchange flow patterns
+        - Network health metrics
+        - Smart money movements
+        
+        Args:
+            on_chain_data: Dict from OnChainSignal.to_kernel_format()
+                Expected keys:
+                - 'signal': float (-1 to 1, composite score)
+                - 'bias': str ('bullish', 'bearish', 'neutral')
+                - 'confidence': float (0 to 1)
+                - 'components': dict with whale, exchange_flow, network, smart_money scores
+        """
+        self._on_chain_signal = on_chain_data
+        logger.debug(
+            f"🔗 On-chain signal integrated: bias={on_chain_data.get('bias')}, "
+            f"score={on_chain_data.get('signal', 0):.3f}"
+        )
+    
+    def set_on_chain_weight(self, weight: float) -> None:
+        """
+        Set the weight for on-chain signals in composite analysis.
+        
+        Args:
+            weight: Weight between 0 and 0.3 (max 30% influence)
+        """
+        self._on_chain_weight = max(0.0, min(0.3, weight))
+        logger.info(f"On-chain weight set to {self._on_chain_weight:.2f}")
+    
+    def _compute_on_chain_boost(self) -> Tuple[float, float, str]:
+        """
+        Compute signal boost from on-chain data.
+        
+        Returns:
+            Tuple of (bullish_boost, bearish_boost, reason)
+        """
+        if not self._on_chain_signal:
+            return 0.0, 0.0, ""
+        
+        signal = self._on_chain_signal.get('signal', 0)
+        confidence = self._on_chain_signal.get('confidence', 0)
+        bias = self._on_chain_signal.get('bias', 'neutral')
+        
+        # Scale boost by weight and confidence
+        boost_factor = abs(signal) * confidence * self._on_chain_weight * 100
+        
+        bullish_boost = boost_factor if signal > 0 else 0.0
+        bearish_boost = boost_factor if signal < 0 else 0.0
+        
+        components = self._on_chain_signal.get('components', {})
+        
+        reasons = []
+        if components.get('whale', 0) > 0.2:
+            reasons.append("whale accumulation")
+        elif components.get('whale', 0) < -0.2:
+            reasons.append("whale distribution")
+        
+        if components.get('exchange_flow', 0) > 0.2:
+            reasons.append("exchange outflows (bullish)")
+        elif components.get('exchange_flow', 0) < -0.2:
+            reasons.append("exchange inflows (bearish)")
+        
+        reason = f"On-chain: {', '.join(reasons)}" if reasons else ""
+        
+        return bullish_boost, bearish_boost, reason
+    
     def generate_signal(self, current_price: float, 
                         market_data: Optional[Dict] = None) -> Dict:
         """
         Generate trading signal based on non-Markovian analysis.
         
-        Combines memory divergence, momentum, cyclical patterns, and
-        regime coherence into a unified trading signal.
+        Combines memory divergence, momentum, cyclical patterns,
+        regime coherence, and on-chain data into a unified trading signal.
         
         Args:
             current_price: Current market price
@@ -433,6 +508,11 @@ class NonMarkovianKernel:
                 bullish_score += cyclical_boost
             else:
                 bearish_score += cyclical_boost
+        
+        # On-Chain Data Integration V6.5
+        on_chain_bullish, on_chain_bearish, on_chain_reason = self._compute_on_chain_boost()
+        bullish_score += on_chain_bullish
+        bearish_score += on_chain_bearish
         
         total_score = bullish_score + bearish_score
         

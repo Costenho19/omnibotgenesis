@@ -21,12 +21,15 @@ from .models import (
     SmartMoneySignal,
     OnChainSignal,
     FlowDirection,
-    TransactionType
+    TransactionType,
+    MarketBias,
+    SignalStrength
 )
 
 from .on_chain_service import (
     OnChainDataService,
-    get_on_chain_service
+    get_on_chain_service,
+    set_kernel_instance
 )
 
 from .whale_tracker import WhaleTracker
@@ -36,6 +39,7 @@ from .network_metrics import NetworkMetricsCollector
 __all__ = [
     'OnChainDataService',
     'get_on_chain_service',
+    'set_kernel_instance',
     'WhaleTracker',
     'ExchangeFlowAnalyzer',
     'NetworkMetricsCollector',
@@ -45,7 +49,9 @@ __all__ = [
     'SmartMoneySignal',
     'OnChainSignal',
     'FlowDirection',
-    'TransactionType'
+    'TransactionType',
+    'MarketBias',
+    'SignalStrength'
 ]
 
 __version__ = '6.5.0'

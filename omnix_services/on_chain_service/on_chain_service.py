@@ -33,6 +33,14 @@ logger = logging.getLogger('OMNIX.OnChain')
 
 # Singleton instance
 _on_chain_service: Optional['OnChainDataService'] = None
+_kernel_instance = None  # Will be set by bot
+
+
+def set_kernel_instance(kernel):
+    """Set the Non-Markovian Kernel instance for on-chain integration."""
+    global _kernel_instance
+    _kernel_instance = kernel
+    logger.info("🔗 Kernel instance set for on-chain integration")
 
 
 def get_on_chain_service(db=None) -> 'OnChainDataService':
@@ -304,6 +312,19 @@ class OnChainDataService:
         # Persistir si hay DB
         if self.db:
             await self._persist_signal(signal)
+        
+        # ========================================================
+        # KERNEL INTEGRATION V6.5
+        # Push signal to Non-Markovian Kernel for enhanced analysis
+        # ========================================================
+        global _kernel_instance
+        if _kernel_instance is not None:
+            try:
+                kernel_format = signal.to_kernel_format()
+                _kernel_instance.integrate_on_chain_signal(kernel_format)
+                logger.debug(f"🔗 On-chain signal pushed to kernel: {kernel_format.get('bias')}")
+            except Exception as e:
+                logger.warning(f"Kernel integration error: {e}")
         
         logger.info(
             f"🔗 On-chain signal for {symbol}: "
