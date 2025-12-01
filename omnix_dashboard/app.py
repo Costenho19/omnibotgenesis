@@ -639,8 +639,8 @@ def api_market_crypto():
     import requests
     
     pairs = [
-        'BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'ADAUSD',
-        'DOGEUSD', 'DOTUSD', 'AVAXUSD', 'LINKUSD', 'MATICUSD'
+        'XBTUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'ADAUSD',
+        'XDGUSD', 'DOTUSD', 'AVAXUSD', 'LINKUSD', 'ATOMUSD'
     ]
     
     try:
@@ -652,15 +652,17 @@ def api_market_crypto():
         data = response.json()
         
         if data.get('error') and len(data['error']) > 0:
-            logger.warning(f"Kraken API error: {data['error']}")
+            non_critical = any('Unknown asset' in str(e) for e in data['error'])
+            if not non_critical:
+                logger.warning(f"Kraken API error: {data['error']}")
         
         prices = []
         symbol_map = {
             'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
-            'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA', 'XDGUSD': 'DOGE',
+            'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA', 'XXDGZUSD': 'DOGE',
             'DOTUSD': 'DOT', 'AVAXUSD': 'AVAX', 'LINKUSD': 'LINK',
-            'MATICUSD': 'MATIC', 'BTCUSD': 'BTC', 'ETHUSD': 'ETH',
-            'XRPUSD': 'XRP', 'DOGEUSD': 'DOGE'
+            'ATOMUSD': 'ATOM', 'XBTUSD': 'BTC', 'ETHUSD': 'ETH',
+            'XRPUSD': 'XRP', 'XDGUSD': 'DOGE'
         }
         
         for key, ticker in data.get('result', {}).items():
