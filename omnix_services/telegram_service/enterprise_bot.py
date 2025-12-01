@@ -119,6 +119,16 @@ except ImportError:
     RMS_AVAILABLE = False
     logger.warning("⚠️ Risk Management System no disponible")
 
+# User Settings Service V6.4 - Configuración Personalizada Premium
+try:
+    from omnix_services.user_settings import UserSettingsService, RiskProfile
+    from omnix_services.user_settings.user_settings_service import get_settings_service
+    USER_SETTINGS_AVAILABLE = True
+    logger.info("⚙️ User Settings Service V6.4 disponible")
+except ImportError:
+    USER_SETTINGS_AVAILABLE = False
+    logger.warning("⚠️ User Settings Service no disponible")
+
 # Telegram availability check
 try:
     from telegram import __version__
@@ -403,6 +413,19 @@ class EnterpriseTelegramBot:
             self.risk_dashboard = None
             self.rms_config = None
         
+        # ⚙️ USER SETTINGS SERVICE V6.4 - Configuración Personalizada Premium
+        if USER_SETTINGS_AVAILABLE:
+            try:
+                self.user_settings_service = get_settings_service()
+                logger.info("⚙️ User Settings Service ACTIVADO - Configuración Personalizada")
+                logger.info("   📝 Comandos: /miconfig, /perfil, /limites, /proteccion")
+                logger.info("   🤖 NLP: Procesamiento de lenguaje natural activado")
+            except Exception as e:
+                logger.warning(f"⚠️ User Settings Service error: {e}")
+                self.user_settings_service = None
+        else:
+            self.user_settings_service = None
+        
         self.setup_bot()
     
     def setup_bot(self):
@@ -523,6 +546,20 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("emergency_halt", self.rms_emergency_halt_command))
                 self.application.add_handler(CommandHandler("resume_trading", self.rms_resume_trading_command))
                 logger.info("🛡️ RMS commands registrados: /rms, /rms_limits, /rms_set, /rms_history, /emergency_halt, /resume_trading")
+            
+            # ⚙️ Comandos User Settings V6.4 - Configuración Personalizada Premium
+            if self.user_settings_service:
+                self.application.add_handler(CommandHandler("miconfig", self.miconfig_command))
+                self.application.add_handler(CommandHandler("perfil", self.perfil_command))
+                self.application.add_handler(CommandHandler("limites", self.limites_command))
+                self.application.add_handler(CommandHandler("proteccion", self.proteccion_command))
+                self.application.add_handler(CommandHandler("estrategias", self.estrategias_command))
+                self.application.add_handler(CommandHandler("cryptos", self.cryptos_command))
+                self.application.add_handler(CommandHandler("autotrading", self.autotrading_command))
+                self.application.add_handler(CommandHandler("pausar", self.pausar_trading_command))
+                self.application.add_handler(CommandHandler("reanudar", self.reanudar_trading_command))
+                self.application.add_handler(CommandHandler("onboarding", self.onboarding_command))
+                logger.info("⚙️ User Settings V6.4 registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -6558,6 +6595,637 @@ Las operaciones ahora se procesarán normalmente.
             
         except Exception as e:
             logger.error(f"Error en resume_trading: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # ⚙️ USER SETTINGS V6.4 - COMANDOS DE CONFIGURACIÓN PERSONALIZADA PREMIUM
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    async def miconfig_command(self, update, context):
+        """Comando /miconfig - Ver toda mi configuración personal"""
+        try:
+            user = update.effective_user
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(
+                str(user.id), 
+                username=user.username
+            )
+            
+            summary = settings.get_profile_summary()
+            
+            commands_info = """
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📋 COMANDOS DE CONFIGURACIÓN:**
+
+`/perfil` - Cambiar perfil de riesgo
+`/limites` - Ajustar límites de trading
+`/proteccion` - Configurar auto-protección
+`/estrategias` - Gestionar estrategias activas
+`/cryptos` - Ver/modificar cryptos permitidas
+`/autotrading` - Activar/desactivar trading automático
+`/pausar` - Pausar trading temporalmente
+`/reanudar` - Reanudar trading
+"""
+            
+            await update.message.reply_text(
+                summary + commands_info, 
+                parse_mode='Markdown'
+            )
+            
+        except Exception as e:
+            logger.error(f"Error en miconfig: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def perfil_command(self, update, context):
+        """Comando /perfil [nombre] [ACEPTO] - Cambiar perfil de riesgo"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            if not args:
+                profiles_text = """⚙️ **PERFILES DE RIESGO DISPONIBLES**
+
+🛡️ **ultraconservador** - Máxima protección
+   • 2% máx por trade, 5% pérdida diaria
+   
+🔒 **conservador** - Crecimiento estable
+   • 5% máx por trade, 10% pérdida diaria
+   
+⚖️ **moderado** - Balance equilibrado (DEFAULT)
+   • 10% máx por trade, 15% pérdida diaria
+   
+🔥 **agresivo** - Mayor potencial, mayor riesgo
+   • 15% máx por trade, 25% pérdida diaria
+   
+🏦 **institucional** - Parámetros Goldman-Sachs
+   • 8% máx por trade, 12% pérdida diaria
+
+**Uso:** `/perfil [nombre]`
+**Ejemplo:** `/perfil conservador`
+
+⚠️ Perfiles agresivos requieren confirmación:
+`/perfil agresivo ACEPTO`
+"""
+                await update.message.reply_text(profiles_text, parse_mode='Markdown')
+                return
+            
+            profile_name = args[0].lower()
+            accept_disclaimer = len(args) > 1 and args[1].upper() == 'ACEPTO'
+            
+            profile_map = {
+                'ultraconservador': RiskProfile.ULTRA_CONSERVATIVE,
+                'ultra_conservative': RiskProfile.ULTRA_CONSERVATIVE,
+                'conservador': RiskProfile.CONSERVATIVE,
+                'conservative': RiskProfile.CONSERVATIVE,
+                'moderado': RiskProfile.MODERATE,
+                'moderate': RiskProfile.MODERATE,
+                'agresivo': RiskProfile.AGGRESSIVE,
+                'aggressive': RiskProfile.AGGRESSIVE,
+                'institucional': RiskProfile.INSTITUTIONAL,
+                'institutional': RiskProfile.INSTITUTIONAL,
+            }
+            
+            if profile_name not in profile_map:
+                await update.message.reply_text(
+                    f"❌ Perfil '{profile_name}' no reconocido.\n\nUsa `/perfil` para ver opciones disponibles.",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            success, message = self.user_settings_service.update_risk_profile(
+                str(user.id), 
+                profile_map[profile_name],
+                accept_disclaimer=accept_disclaimer
+            )
+            
+            await update.message.reply_text(message, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en perfil: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def limites_command(self, update, context):
+        """Comando /limites - Ver o modificar límites de trading"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id))
+            
+            if not args:
+                limits = settings.trading_limits
+                limits_text = f"""📊 **TUS LÍMITES DE TRADING**
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💵 **Montos por trade:**
+• Mínimo: ${limits.min_trade_usd:,.0f}
+• Máximo: ${limits.max_trade_usd:,.0f}
+
+📅 **Límite diario:** ${limits.daily_trade_limit_usd:,.0f}
+
+📈 **Posiciones:**
+• Máximo abiertas: {limits.max_open_positions}
+• % máx del portfolio: {limits.max_trade_pct}%
+
+⚡ **Apalancamiento máx:** x{limits.leverage_max:.1f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📝 MODIFICAR LÍMITES:**
+
+`/limites min 50` - Mín $50 por trade
+`/limites max 2000` - Máx $2000 por trade
+`/limites diario 10000` - Límite diario $10K
+`/limites posiciones 10` - Máx 10 posiciones
+
+**Ejemplo combinado:**
+`/limites max 1500`
+"""
+                await update.message.reply_text(limits_text, parse_mode='Markdown')
+                return
+            
+            if len(args) < 2:
+                await update.message.reply_text(
+                    "❌ Formato: `/limites [tipo] [valor]`\n\nEjemplo: `/limites max 1000`",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            limit_type = args[0].lower()
+            try:
+                value = float(args[1])
+            except ValueError:
+                await update.message.reply_text("❌ El valor debe ser numérico")
+                return
+            
+            if limit_type == 'min':
+                success, message = self.user_settings_service.update_trading_limits(
+                    str(user.id), min_trade=value
+                )
+            elif limit_type == 'max':
+                success, message = self.user_settings_service.update_trading_limits(
+                    str(user.id), max_trade=value
+                )
+            elif limit_type == 'diario':
+                success, message = self.user_settings_service.update_trading_limits(
+                    str(user.id), daily_limit=value
+                )
+            elif limit_type == 'posiciones':
+                success, message = self.user_settings_service.update_trading_limits(
+                    str(user.id), max_positions=int(value)
+                )
+            else:
+                await update.message.reply_text(
+                    f"❌ Tipo '{limit_type}' no reconocido.\n\nOpciones: min, max, diario, posiciones",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            await update.message.reply_text(message, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en limites: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def proteccion_command(self, update, context):
+        """Comando /proteccion - Configurar sistema de auto-protección"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id))
+            
+            if not args:
+                prot = settings.protection_settings
+                auto_status = "✅ Activada" if prot.auto_pause_enabled else "❌ Desactivada"
+                trailing_status = "✅" if prot.trailing_stop_enabled else "❌"
+                
+                protection_text = f"""🛡️ **TU CONFIGURACIÓN DE PROTECCIÓN**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📉 **Límites de pérdida:**
+• Diario: {prot.daily_loss_limit_pct}%
+• Semanal: {prot.weekly_loss_limit_pct}%
+
+🎯 **Stop Loss por defecto:** {prot.stop_loss_default_pct}%
+📈 **Take Profit por defecto:** {prot.take_profit_default_pct}%
+
+📊 **Trailing Stop:** {trailing_status} ({prot.trailing_stop_pct}%)
+
+⏸️ **Auto-pausa:** {auto_status}
+⏱️ **Tiempo enfriamiento:** {prot.cool_down_minutes} min
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📝 MODIFICAR PROTECCIÓN:**
+
+`/proteccion diario 15` - Límite pérdida diaria 15%
+`/proteccion stoploss 5` - Stop loss por defecto 5%
+`/proteccion takeprofit 12` - Take profit 12%
+`/proteccion autopausa on` - Activar auto-pausa
+`/proteccion autopausa off` - Desactivar auto-pausa
+"""
+                await update.message.reply_text(protection_text, parse_mode='Markdown')
+                return
+            
+            setting_type = args[0].lower()
+            
+            if setting_type == 'autopausa':
+                if len(args) < 2:
+                    await update.message.reply_text("❌ Uso: `/proteccion autopausa on/off`", parse_mode='Markdown')
+                    return
+                enable = args[1].lower() in ['on', 'si', 'yes', 'true', 'activar']
+                success, message = self.user_settings_service.update_protection_settings(
+                    str(user.id), auto_pause=enable
+                )
+            elif setting_type == 'diario':
+                if len(args) < 2:
+                    await update.message.reply_text("❌ Uso: `/proteccion diario [%]`", parse_mode='Markdown')
+                    return
+                value = float(args[1])
+                success, message = self.user_settings_service.update_protection_settings(
+                    str(user.id), daily_loss_limit=value
+                )
+            elif setting_type == 'stoploss':
+                if len(args) < 2:
+                    await update.message.reply_text("❌ Uso: `/proteccion stoploss [%]`", parse_mode='Markdown')
+                    return
+                value = float(args[1])
+                success, message = self.user_settings_service.update_protection_settings(
+                    str(user.id), stop_loss=value
+                )
+            elif setting_type == 'takeprofit':
+                if len(args) < 2:
+                    await update.message.reply_text("❌ Uso: `/proteccion takeprofit [%]`", parse_mode='Markdown')
+                    return
+                value = float(args[1])
+                success, message = self.user_settings_service.update_protection_settings(
+                    str(user.id), take_profit=value
+                )
+            else:
+                await update.message.reply_text(
+                    f"❌ Opción '{setting_type}' no reconocida.\n\nOpciones: diario, stoploss, takeprofit, autopausa",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            await update.message.reply_text(message, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en proteccion: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def estrategias_command(self, update, context):
+        """Comando /estrategias - Ver y gestionar estrategias activas"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id))
+            available = self.user_settings_service.get_available_strategies()
+            
+            if not args:
+                active = settings.active_strategies
+                
+                strategies_text = """📈 **ESTRATEGIAS OMNIX V6.4**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**🟢 TUS ESTRATEGIAS ACTIVAS:**
+"""
+                for s in available:
+                    if s['id'] in active:
+                        risk_emoji = {'low': '🟢', 'medium': '🟡', 'high': '🔴'}.get(s['risk'], '⚪')
+                        strategies_text += f"• {risk_emoji} **{s['name']}**\n"
+                
+                strategies_text += """
+**⚪ ESTRATEGIAS DISPONIBLES:**
+"""
+                for s in available:
+                    if s['id'] not in active:
+                        risk_emoji = {'low': '🟢', 'medium': '🟡', 'high': '🔴'}.get(s['risk'], '⚪')
+                        strategies_text += f"• {risk_emoji} {s['name']} - {s['description']}\n"
+                
+                strategies_text += """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📝 GESTIONAR ESTRATEGIAS:**
+
+`/estrategias add ARES_V2` - Activar estrategia
+`/estrategias remove MONTE_CARLO` - Desactivar estrategia
+`/estrategias reset` - Restaurar por defecto
+
+🟢 Bajo riesgo | 🟡 Medio | 🔴 Alto
+"""
+                await update.message.reply_text(strategies_text, parse_mode='Markdown')
+                return
+            
+            action = args[0].lower()
+            
+            if action == 'reset':
+                settings.active_strategies = ['ARES_V1', 'ARES_V2', 'MONTE_CARLO', 'HMM_REGIME']
+                self.user_settings_service.save_user_settings(settings)
+                await update.message.reply_text("✅ Estrategias restauradas a configuración por defecto")
+                return
+            
+            if len(args) < 2:
+                await update.message.reply_text("❌ Especifica la estrategia: `/estrategias add ARES_V2`", parse_mode='Markdown')
+                return
+            
+            strategy_id = args[1].upper()
+            available_ids = [s['id'] for s in available]
+            
+            if strategy_id not in available_ids:
+                await update.message.reply_text(
+                    f"❌ Estrategia '{strategy_id}' no existe.\n\nUsa `/estrategias` para ver las disponibles.",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            if action == 'add':
+                if strategy_id not in settings.active_strategies:
+                    settings.active_strategies.append(strategy_id)
+                    self.user_settings_service.save_user_settings(settings)
+                    await update.message.reply_text(f"✅ Estrategia **{strategy_id}** activada", parse_mode='Markdown')
+                else:
+                    await update.message.reply_text(f"ℹ️ Estrategia {strategy_id} ya está activa")
+            elif action == 'remove':
+                if strategy_id in settings.active_strategies:
+                    settings.active_strategies.remove(strategy_id)
+                    self.user_settings_service.save_user_settings(settings)
+                    await update.message.reply_text(f"✅ Estrategia **{strategy_id}** desactivada", parse_mode='Markdown')
+                else:
+                    await update.message.reply_text(f"ℹ️ Estrategia {strategy_id} no estaba activa")
+            else:
+                await update.message.reply_text("❌ Acción no reconocida. Usa: add, remove, reset")
+            
+        except Exception as e:
+            logger.error(f"Error en estrategias: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def cryptos_command(self, update, context):
+        """Comando /cryptos - Ver y gestionar criptomonedas permitidas"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id))
+            
+            if not args:
+                cryptos = settings.allowed_cryptos
+                
+                cryptos_text = f"""🪙 **TUS CRIPTOMONEDAS PERMITIDAS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Activas ({len(cryptos)}):**
+{', '.join(cryptos)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📝 GESTIONAR CRYPTOS:**
+
+`/cryptos add SOL/USD` - Añadir crypto
+`/cryptos remove DOGE/USD` - Quitar crypto
+`/cryptos reset` - Restaurar lista por defecto
+
+**Cryptos populares:**
+BTC/USD, ETH/USD, SOL/USD, XRP/USD, ADA/USD, 
+DOT/USD, DOGE/USD, AVAX/USD, MATIC/USD, LINK/USD
+"""
+                await update.message.reply_text(cryptos_text, parse_mode='Markdown')
+                return
+            
+            action = args[0].lower()
+            
+            if action == 'reset':
+                settings.allowed_cryptos = [
+                    'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD', 'ADA/USD', 'DOGE/USD', 'DOT/USD'
+                ]
+                self.user_settings_service.save_user_settings(settings)
+                await update.message.reply_text("✅ Lista de cryptos restaurada")
+                return
+            
+            if len(args) < 2:
+                await update.message.reply_text("❌ Especifica la crypto: `/cryptos add SOL/USD`", parse_mode='Markdown')
+                return
+            
+            crypto = args[1].upper()
+            if '/' not in crypto:
+                crypto = f"{crypto}/USD"
+            
+            if action == 'add':
+                if crypto not in settings.allowed_cryptos:
+                    settings.allowed_cryptos.append(crypto)
+                    self.user_settings_service.save_user_settings(settings)
+                    await update.message.reply_text(f"✅ **{crypto}** añadida a tu lista", parse_mode='Markdown')
+                else:
+                    await update.message.reply_text(f"ℹ️ {crypto} ya está en tu lista")
+            elif action == 'remove':
+                if crypto in settings.allowed_cryptos:
+                    settings.allowed_cryptos.remove(crypto)
+                    self.user_settings_service.save_user_settings(settings)
+                    await update.message.reply_text(f"✅ **{crypto}** eliminada de tu lista", parse_mode='Markdown')
+                else:
+                    await update.message.reply_text(f"ℹ️ {crypto} no estaba en tu lista")
+            else:
+                await update.message.reply_text("❌ Acción no reconocida. Usa: add, remove, reset")
+            
+        except Exception as e:
+            logger.error(f"Error en cryptos: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def autotrading_command(self, update, context):
+        """Comando /autotrading [activar/desactivar] [ACEPTO] - Trading automático"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id))
+            
+            if not args:
+                status = "🟢 ACTIVO" if settings.auto_trading else "⚪ INACTIVO"
+                mode = "📝 Paper Trading" if settings.paper_trading_mode else "💵 Trading Real"
+                
+                autotrading_text = f"""🤖 **TRADING AUTOMÁTICO**
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Estado actual:** {status}
+**Modo:** {mode}
+
+Cuando está activo, OMNIX puede ejecutar trades automáticamente basándose en tus estrategias y respetando tus límites.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📝 COMANDOS:**
+
+`/autotrading activar` - Activar (requiere ACEPTO)
+`/autotrading desactivar` - Desactivar
+
+⚠️ Activar requiere aceptar disclaimer de riesgo
+"""
+                await update.message.reply_text(autotrading_text, parse_mode='Markdown')
+                return
+            
+            action = args[0].lower()
+            accept = len(args) > 1 and args[1].upper() == 'ACEPTO'
+            
+            if action in ['activar', 'on', 'enable']:
+                if not accept:
+                    await update.message.reply_text(
+                        """⚠️ **DISCLAIMER DE RIESGO**
+
+El trading automático conlleva riesgos significativos:
+• Podrías perder parte o todo tu capital
+• OMNIX opera basándose en algoritmos, no garantiza ganancias
+• Las condiciones del mercado pueden cambiar rápidamente
+
+Para activar, escribe:
+`/autotrading activar ACEPTO`""",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                success, message = self.user_settings_service.toggle_auto_trading(str(user.id), True)
+                await update.message.reply_text(message, parse_mode='Markdown')
+                
+            elif action in ['desactivar', 'off', 'disable']:
+                success, message = self.user_settings_service.toggle_auto_trading(str(user.id), False)
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text("❌ Usa: `/autotrading activar` o `/autotrading desactivar`", parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en autotrading: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def pausar_trading_command(self, update, context):
+        """Comando /pausar [minutos] - Pausar trading temporalmente"""
+        try:
+            user = update.effective_user
+            args = context.args if context.args else []
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            minutes = 60
+            if args:
+                try:
+                    minutes = int(args[0])
+                    if minutes < 5:
+                        minutes = 5
+                    elif minutes > 1440:
+                        minutes = 1440
+                except ValueError:
+                    pass
+            
+            success, message = self.user_settings_service.pause_trading(
+                str(user.id),
+                reason="Pausa manual solicitada por usuario",
+                minutes=minutes
+            )
+            
+            await update.message.reply_text(message, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en pausar: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def reanudar_trading_command(self, update, context):
+        """Comando /reanudar - Reanudar trading"""
+        try:
+            user = update.effective_user
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            success, message = self.user_settings_service.resume_trading(str(user.id))
+            await update.message.reply_text(message, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en reanudar: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def onboarding_command(self, update, context):
+        """Comando /onboarding - Iniciar proceso de configuración guiada"""
+        try:
+            user = update.effective_user
+            
+            if not self.user_settings_service:
+                await update.message.reply_text("❌ Servicio de configuración no disponible")
+                return
+            
+            settings = self.user_settings_service.get_user_settings(str(user.id), username=user.username)
+            
+            onboarding_text = f"""🚀 **BIENVENIDO AL ASISTENTE DE CONFIGURACIÓN**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+¡Hola {user.first_name}! Te guiaré para configurar OMNIX según tus preferencias.
+
+**📌 PASO 1: ELIGE TU PERFIL DE RIESGO**
+
+Escribe uno de estos comandos:
+
+🛡️ `/perfil conservador` - Protección máxima
+⚖️ `/perfil moderado` - Balance equilibrado  
+🔥 `/perfil agresivo ACEPTO` - Mayor potencial
+
+**📌 PASO 2: REVISA TUS LÍMITES**
+
+`/limites` - Ver y ajustar límites de trading
+
+**📌 PASO 3: CONFIGURA TU PROTECCIÓN**
+
+`/proteccion` - Auto-pausa y stop loss
+
+**📌 PASO 4: ELIGE TUS ESTRATEGIAS**
+
+`/estrategias` - Activa las que prefieras
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 **TIP:** También puedes escribirme en lenguaje natural:
+• "quiero ser más conservador"
+• "máximo $500 por trade"
+• "pausa el trading"
+
+Tu configuración actual: **{settings.risk_profile.value.title()}**
+Usa `/miconfig` para ver todos los detalles.
+"""
+            
+            await update.message.reply_text(onboarding_text, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en onboarding: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
