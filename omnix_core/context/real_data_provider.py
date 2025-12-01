@@ -182,7 +182,7 @@ class OMNIXRealContextProvider:
                     """SELECT id, symbol, side, quantity, entry_price, exit_price, 
                               profit_loss, status, opened_at, closed_at
                        FROM paper_trading_trades 
-                       WHERE user_id = %s
+                       WHERE user_id = %s::TEXT
                        ORDER BY id DESC LIMIT %s""",
                     (user_id, limit)
                 )

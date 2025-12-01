@@ -319,7 +319,7 @@ class PaperTradingManager:
                            total_unrealized_pnl_usd, max_drawdown_pct, sharpe_ratio,
                            created_at, updated_at
                     FROM paper_trading_balances 
-                    WHERE user_id = %s
+                    WHERE user_id = %s::TEXT
                     """,
                     (user_id,)
                 )
@@ -422,7 +422,7 @@ class PaperTradingManager:
                         eth_balance = %s,
                         total_trades = %s,
                         updated_at = NOW()
-                    WHERE user_id = %s
+                    WHERE user_id = %s::TEXT
                     """,
                     (
                         balance_data['balance_usd'],
@@ -492,7 +492,7 @@ class PaperTradingManager:
                         available_margin_usd = available_margin_usd - %s,
                         total_trades = total_trades + 1,
                         updated_at = NOW()
-                    WHERE user_id = %s
+                    WHERE user_id = %s::TEXT
                     """,
                     (total_cost, total_cost, user_id)
                 )
@@ -530,7 +530,7 @@ class PaperTradingManager:
                 """
                 SELECT id, entry_price, quantity, opened_at
                 FROM paper_trading_trades
-                WHERE user_id = %s AND symbol = %s AND status = 'open' AND closed_at IS NULL
+                WHERE user_id = %s::TEXT AND symbol = %s AND status = 'open' AND closed_at IS NULL
                 ORDER BY opened_at ASC
                 LIMIT 1
                 """,
@@ -617,7 +617,7 @@ class PaperTradingManager:
                         winning_trades = winning_trades + %s,
                         losing_trades = losing_trades + %s,
                         updated_at = NOW()
-                    WHERE user_id = %s
+                    WHERE user_id = %s::TEXT
                     """,
                     (total_proceeds, total_proceeds, net_realized_pnl_usd,
                      winning_increment, losing_increment, user_id)
@@ -665,7 +665,7 @@ class PaperTradingManager:
                        quantity, profit_loss, profit_pct, strategy,
                        status, opened_at, closed_at
                 FROM paper_trading_trades
-                WHERE user_id = %s
+                WHERE user_id = %s::TEXT
                 ORDER BY opened_at DESC
                 """,
                 (user_id,)
@@ -733,3 +733,49 @@ class PaperTradingManager:
         except Exception as e:
             logger.error(f"Error generando reporte P&L: {e}")
             return {'error': str(e)}
+    
+    def get_open_positions(self, user_id: str) -> list:
+        """
+        Obtener posiciones abiertas del usuario
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Lista de posiciones abiertas
+        """
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                logger.warning("get_open_positions: Database service no disponible")
+                return []
+            
+            result = self.database_service.execute_query(
+                """
+                SELECT id, symbol, side, quantity, entry_price, opened_at
+                FROM paper_trading_trades
+                WHERE user_id = %s::TEXT AND status = 'open' AND closed_at IS NULL
+                ORDER BY opened_at DESC
+                """,
+                (user_id,)
+            )
+            
+            if not result:
+                return []
+            
+            positions = []
+            for row in result:
+                trade_id, symbol, side, quantity, entry_price, opened_at = row
+                positions.append({
+                    'trade_id': str(trade_id),
+                    'symbol': symbol,
+                    'side': side,
+                    'quantity': float(quantity) if quantity else 0,
+                    'entry_price': float(entry_price) if entry_price else 0,
+                    'opened_at': opened_at.isoformat() if opened_at else None
+                })
+            
+            return positions
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo posiciones abiertas: {e}")
+            return []

@@ -4441,7 +4441,7 @@ class DatabaseServiceEnterprise:
                     COALESCE(SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END), 0) as wins,
                     COALESCE(SUM(CASE WHEN profit < 0 THEN 1 ELSE 0 END), 0) as losses
                 FROM paper_trading_trades
-                WHERE user_id = %s 
+                WHERE user_id = %s::TEXT 
                 AND DATE(opened_at) = CURRENT_DATE
                 AND status = 'closed'
             ''', (user_id,))
@@ -4483,9 +4483,9 @@ class DatabaseServiceEnterprise:
             
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT symbol, side, size, entry_price, opened_at
+                SELECT symbol, side, quantity, entry_price, opened_at
                 FROM paper_trading_trades
-                WHERE user_id = %s AND status = 'open'
+                WHERE user_id = %s::TEXT AND status = 'open'
                 ORDER BY opened_at DESC
             ''', (user_id,))
             
@@ -4610,9 +4610,9 @@ class DatabaseServiceEnterprise:
             
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT symbol, side, size, entry_price, exit_price, profit, closed_at
+                SELECT symbol, side, quantity, entry_price, exit_price, profit_loss, closed_at
                 FROM paper_trading_trades
-                WHERE user_id = %s AND status = 'closed'
+                WHERE user_id = %s::TEXT AND status = 'closed'
                 ORDER BY closed_at DESC
                 LIMIT %s
             ''', (user_id, limit))
