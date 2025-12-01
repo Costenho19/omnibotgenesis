@@ -123,40 +123,6 @@ def get_paper_trades(days=30):
         return []
 
 
-def get_demo_trades():
-    """Return demo data for display purposes"""
-    import random
-    from datetime import datetime, timedelta
-    
-    strategies = ['ARES V1', 'ARES V2', 'Monte Carlo', 'Kalman Filter', 'HMM Regime']
-    symbols_crypto = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD']
-    symbols_stock = ['AAPL', 'TSLA', 'NVDA', 'MSFT']
-    
-    trades = []
-    base_time = datetime.now()
-    
-    for i in range(25):
-        is_crypto = random.random() > 0.4
-        symbol = random.choice(symbols_crypto if is_crypto else symbols_stock)
-        side = random.choice(['buy', 'sell'])
-        entry = random.uniform(100, 50000) if is_crypto else random.uniform(100, 500)
-        pnl = random.uniform(-500, 1500)
-        
-        trades.append({
-            'id': i + 1,
-            'symbol': symbol,
-            'side': side,
-            'entry_price': entry,
-            'exit_price': entry * (1 + pnl / 10000),
-            'quantity': random.uniform(0.1, 10),
-            'pnl': pnl,
-            'pnl_percent': pnl / entry * 100,
-            'opened_at': base_time - timedelta(days=random.randint(1, 28)),
-            'closed_at': base_time - timedelta(days=random.randint(0, 1)),
-            'strategy_used': random.choice(strategies)
-        })
-    
-    return trades
 
 
 def get_balance_history(days=30):
