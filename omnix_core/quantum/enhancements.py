@@ -419,7 +419,7 @@ class QuantumPortfolioOptimizer:
         p_layers = 3  # Número de capas QAOA
         n_samples = 100  # Muestras por iteración
         
-        best_weights = None
+        best_weights: np.ndarray = np.ones(n_assets) / n_assets * budget  # Inicializar con pesos uniformes
         best_objective = -np.inf
         
         # Optimización variacional (simula QAOA)
@@ -443,7 +443,7 @@ class QuantumPortfolioOptimizer:
                     best_weights = weights.copy()
         
         # Retorno esperado del portafolio óptimo
-        expected_portfolio_return = np.dot(best_weights, expected_returns)
+        expected_portfolio_return = float(np.dot(best_weights, expected_returns))
         
         logger.info(f"⚛️ QAOA optimization complete: Expected return={expected_portfolio_return:.4f}")
         
@@ -527,7 +527,7 @@ global_qaoa = QuantumPortfolioOptimizer(use_dwave=False)  # Cambiar a True si ti
 def get_quantum_random(size: int = 1) -> np.ndarray:
     """Función helper para obtener números cuánticos"""
     if size == 1:
-        return global_qrng.random()
+        return np.array([global_qrng.random()])
     return global_qrng.random_array(size)
 
 
