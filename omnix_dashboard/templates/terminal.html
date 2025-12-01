@@ -37,28 +37,21 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow-x: auto;
+        }
+        
+        .terminal-wrapper {
+            min-width: 1280px;
+            width: 100%;
         }
         
         .terminal-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            grid-template-rows: auto 1fr 1fr auto;
+            grid-template-columns: 280px 1fr 300px;
+            grid-template-rows: auto auto 1fr 1fr auto;
             gap: 2px;
-            height: 100vh;
+            min-height: 100vh;
             background: var(--border-color);
-        }
-        
-        @media (max-width: 1200px) {
-            .terminal-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .terminal-grid {
-                grid-template-columns: 1fr;
-            }
         }
         
         .panel {
@@ -495,6 +488,7 @@
     </style>
 </head>
 <body>
+    <div class="terminal-wrapper">
     <div class="terminal-grid">
         <!-- Header Bar -->
         <div class="header-bar">
@@ -982,5 +976,6 @@
         
         init();
     </script>
+    </div>
 </body>
 </html>
