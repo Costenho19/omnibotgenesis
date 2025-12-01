@@ -2354,6 +2354,76 @@ class DatabaseServiceEnterprise:
             
             logger.info("✅ Video Transcript Cache Table creada")
             
+            # ========================================
+            # ADAPTIVE PARAMETER ENGINE V6.5 TABLES
+            # Tablas para auto-calibración dinámica de estrategias ARES
+            # ========================================
+            
+            # Tabla de perfiles de parámetros adaptativos
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS adaptive_parameters (
+                    id BIGSERIAL PRIMARY KEY,
+                    strategy_name TEXT NOT NULL,
+                    stop_loss_pct NUMERIC(8,5) NOT NULL DEFAULT -0.28,
+                    take_profit_pct NUMERIC(8,5) NOT NULL DEFAULT 0.85,
+                    position_size_factor NUMERIC(6,4) NOT NULL DEFAULT 1.0,
+                    timeout_minutes INTEGER NOT NULL DEFAULT 60,
+                    entry_threshold NUMERIC(6,4) NOT NULL DEFAULT 0.70,
+                    sensitivity_coefficient NUMERIC(6,4) NOT NULL DEFAULT 1.0,
+                    calibration_count INTEGER NOT NULL DEFAULT 0,
+                    is_active BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(strategy_name, is_active)
+                )
+            ''')
+            
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_adaptive_params_strategy ON adaptive_parameters(strategy_name)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_adaptive_params_active ON adaptive_parameters(is_active)')
+            
+            # Tabla de eventos de calibración
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS calibration_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    event_id TEXT UNIQUE NOT NULL,
+                    strategy TEXT NOT NULL,
+                    regime TEXT NOT NULL,
+                    regime_confidence NUMERIC(6,4) NOT NULL,
+                    previous_params JSONB NOT NULL,
+                    new_params JSONB NOT NULL,
+                    status TEXT NOT NULL CHECK (status IN ('pending', 'applied', 'rejected_cooldown', 'rejected_risk', 'rejected_coherence', 'rolled_back')),
+                    reason TEXT,
+                    microstructure_context JSONB,
+                    performance_window JSONB,
+                    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_calibration_strategy ON calibration_events(strategy, timestamp DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_calibration_status ON calibration_events(status)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_calibration_regime ON calibration_events(regime)')
+            
+            # Tabla de métricas de calibración (para machine learning)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS calibration_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    strategy TEXT NOT NULL,
+                    regime TEXT NOT NULL,
+                    calibration_event_id TEXT REFERENCES calibration_events(event_id),
+                    trades_after INTEGER DEFAULT 0,
+                    pnl_after NUMERIC(18,8) DEFAULT 0,
+                    win_rate_after NUMERIC(6,4),
+                    avg_trade_duration INTEGER,
+                    parameter_effectiveness NUMERIC(6,4),
+                    measured_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_cal_metrics_strategy ON calibration_metrics(strategy)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_cal_metrics_regime ON calibration_metrics(regime)')
+            
+            logger.info("✅ Adaptive Parameter Engine Tables creadas (adaptive_parameters, calibration_events, calibration_metrics)")
+            
             conn.commit()
             cursor.close()
             conn.close()
