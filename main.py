@@ -683,9 +683,34 @@ if __name__ == "__main__":
                 logger.error("🗄️ ❌ DATABASE: No disponible")
             logger.info("🗄️ ═════════════════════════════════════════")
             
-            # Mantener el proceso corriendo
-            logger.info("🔄 Entrando en loop de espera (presiona Ctrl+C para detener)...")
-            signal.pause()  # Esperar señales UNIX
+            # Iniciar Dashboard en hilo secundario con monitoreo
+            dashboard_failed = threading.Event()
+            
+            def start_dashboard():
+                try:
+                    from omnix_dashboard.app import app
+                    logger.info("🌐 Dashboard iniciando en puerto 5000...")
+                    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+                except Exception as e:
+                    logger.error(f"❌ Error iniciando Dashboard: {e}")
+                finally:
+                    dashboard_failed.set()
+            
+            dashboard_thread = threading.Thread(target=start_dashboard, name="DashboardThread")
+            dashboard_thread.start()
+            logger.info("✅ Dashboard iniciado en hilo secundario")
+            
+            # Loop de monitoreo: verifica dashboard cada 5 segundos
+            logger.info("🔄 Entrando en loop de monitoreo...")
+            try:
+                while True:
+                    time.sleep(5)
+                    if dashboard_failed.is_set() or not dashboard_thread.is_alive():
+                        logger.error("❌ Dashboard murió - reiniciando proceso...")
+                        sys.exit(1)
+            except KeyboardInterrupt:
+                logger.info("🛑 Interrupción recibida - apagando...")
+                sys.exit(0)
         else:
             logger.error("❌ Error iniciando bot Telegram")
             sys.exit(1)
