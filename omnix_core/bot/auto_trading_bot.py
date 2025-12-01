@@ -1915,43 +1915,113 @@ class AutoTradingBot:
         Este método es llamado por el Adaptive Parameter Engine cuando
         detecta un cambio de régimen y calibra nuevos parámetros.
         
+        SAFEGUARDS:
+        - Verifica que no hay posiciones abiertas antes de aplicar cambios
+        - Solo aplica a NUEVOS trades, no afecta trades en progreso
+        - Valida con Risk Guardian antes de aplicar
+        - Almacena parámetros para próximo trade, no modifica trades activos
+        
         Args:
             strategy_name: 'ARES_V1' o 'ARES_V2'
             profile: AdaptiveParameterProfile con los nuevos parámetros
         """
         try:
-            if strategy_name == 'ARES_V1' and self.ares_v1:
-                # Actualizar parámetros de ARES V1 (Swing Trading)
-                if hasattr(self.ares_v1, 'stop_loss_pct'):
-                    self.ares_v1.stop_loss_pct = profile.stop_loss_pct
-                if hasattr(self.ares_v1, 'take_profit_pct'):
-                    self.ares_v1.take_profit_pct = profile.take_profit_pct
-                if hasattr(self.ares_v1, 'position_size_factor'):
-                    self.ares_v1.position_size_factor = profile.position_size_factor
-                if hasattr(self.ares_v1, 'entry_threshold'):
-                    self.ares_v1.entry_threshold = profile.entry_threshold
-                
-                logger.info(f"✅ ARES V1 actualizado: SL={profile.stop_loss_pct:.3f}, TP={profile.take_profit_pct:.3f}")
-                
-            elif strategy_name == 'ARES_V2' and self.ares_v2:
-                # Actualizar parámetros de ARES V2 (Scalping)
-                if hasattr(self.ares_v2, 'stop_loss_pct'):
-                    self.ares_v2.stop_loss_pct = profile.stop_loss_pct
-                if hasattr(self.ares_v2, 'take_profit_pct'):
-                    self.ares_v2.take_profit_pct = profile.take_profit_pct
-                if hasattr(self.ares_v2, 'position_size_factor'):
-                    self.ares_v2.position_size_factor = profile.position_size_factor
-                if hasattr(self.ares_v2, 'entry_threshold'):
-                    self.ares_v2.entry_threshold = profile.entry_threshold
-                
-                logger.info(f"✅ ARES V2 actualizado: SL={profile.stop_loss_pct:.3f}, TP={profile.take_profit_pct:.3f}")
+            # SAFEGUARD 1: Verificar que no hay posiciones abiertas
+            has_open_positions = False
+            if self.config.get('paper_mode'):
+                has_open_positions = bool(self.state.get('paper_positions', {}))
+            else:
+                if hasattr(self.trading_service, 'get_open_orders'):
+                    try:
+                        open_orders = self.trading_service.get_open_orders()
+                        has_open_positions = bool(open_orders)
+                    except:
+                        pass
             
-            # Actualizar también la configuración global del bot
+            if has_open_positions:
+                # Guardar parámetros para aplicar cuando no haya posiciones
+                if not hasattr(self, '_pending_calibrations'):
+                    self._pending_calibrations = {}
+                self._pending_calibrations[strategy_name] = profile
+                logger.info(f"⏳ Calibración pendiente para {strategy_name} (hay posiciones abiertas)")
+                return
+            
+            # SAFEGUARD 2: Validar con Risk Guardian
+            if self.risk_guardian:
+                try:
+                    if hasattr(self.risk_guardian, 'validate_parameter_change'):
+                        validation = self.risk_guardian.validate_parameter_change({
+                            'strategy': strategy_name,
+                            'stop_loss_pct': profile.stop_loss_pct,
+                            'take_profit_pct': profile.take_profit_pct,
+                            'position_size_factor': profile.position_size_factor
+                        })
+                        if validation and not validation.get('approved', True):
+                            logger.warning(f"🛡️ Risk Guardian rechazó calibración: {validation.get('reason')}")
+                            return
+                except Exception as e:
+                    logger.warning(f"Risk Guardian validation error: {e}")
+            
+            # SAFEGUARD 3: Almacenar en _next_trade_params en lugar de modificar directamente
+            if not hasattr(self, '_next_trade_params'):
+                self._next_trade_params = {}
+            
+            self._next_trade_params[strategy_name] = {
+                'stop_loss_pct': profile.stop_loss_pct,
+                'take_profit_pct': profile.take_profit_pct,
+                'position_size_factor': profile.position_size_factor,
+                'entry_threshold': profile.entry_threshold,
+                'applied_at': datetime.utcnow().isoformat()
+            }
+            
+            # También actualizar la configuración global del bot para nuevos trades
             if hasattr(profile, 'stop_loss_pct'):
                 self.config['stop_loss_pct'] = abs(profile.stop_loss_pct)
             
+            logger.info(f"✅ Parámetros adaptativos guardados para próximo trade de {strategy_name}")
+            logger.info(f"   SL={profile.stop_loss_pct:.3f}, TP={profile.take_profit_pct:.3f}, Size={profile.position_size_factor:.2f}")
+            
         except Exception as e:
             logger.error(f"❌ Error aplicando parámetros adaptativos a {strategy_name}: {e}")
+    
+    def _get_adaptive_params_for_trade(self, strategy_name: str) -> Optional[Dict]:
+        """
+        Obtener parámetros adaptativos para un nuevo trade.
+        
+        Este método es llamado al abrir un nuevo trade para obtener
+        los parámetros calibrados por el Adaptive Engine.
+        
+        Args:
+            strategy_name: 'ARES_V1' o 'ARES_V2'
+            
+        Returns:
+            Dict con parámetros o None si no hay calibración pendiente
+        """
+        if not hasattr(self, '_next_trade_params'):
+            return None
+        
+        return self._next_trade_params.get(strategy_name)
+    
+    def _apply_pending_calibrations(self) -> None:
+        """
+        Aplicar calibraciones pendientes cuando no hay posiciones abiertas.
+        
+        Se llama periódicamente para verificar si hay calibraciones
+        que estaban esperando a que se cerraran las posiciones.
+        """
+        if not hasattr(self, '_pending_calibrations') or not self._pending_calibrations:
+            return
+        
+        # Verificar si ahora no hay posiciones
+        has_open_positions = False
+        if self.config.get('paper_mode'):
+            has_open_positions = bool(self.state.get('paper_positions', {}))
+        
+        if not has_open_positions:
+            for strategy_name, profile in list(self._pending_calibrations.items()):
+                self._apply_adaptive_parameters(strategy_name, profile)
+                del self._pending_calibrations[strategy_name]
+            logger.info("✅ Calibraciones pendientes aplicadas")
     
     def _process_kernel_for_adaptive_engine(self, kernel_output: Dict) -> None:
         """

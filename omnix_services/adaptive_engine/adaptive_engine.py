@@ -767,16 +767,58 @@ class AdaptiveParameterEngine:
         return True
     
     def _log_calibration(self, event: CalibrationEvent):
-        """Registra el evento de calibración"""
+        """
+        Registra el evento de calibración.
+        
+        SAFETY: DB persistence is non-blocking and fault-tolerant.
+        If DB fails, calibration still applies - data is logged locally.
+        """
         self.calibration_history.append(event)
         if len(self.calibration_history) > self.max_history:
             self.calibration_history.pop(0)
         
         if self.db:
             try:
-                pass
+                import threading
+                
+                def persist_async():
+                    try:
+                        if hasattr(self.db, '_get_connection'):
+                            conn = self.db._get_connection()
+                            if conn:
+                                cursor = conn.cursor()
+                                cursor.execute('''
+                                    INSERT INTO calibration_events 
+                                    (event_id, strategy, regime, regime_confidence, 
+                                     previous_params, new_params, status, reason, 
+                                     microstructure_context, performance_window, timestamp)
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                    ON CONFLICT (event_id) DO NOTHING
+                                ''', (
+                                    event.event_id,
+                                    event.strategy,
+                                    event.regime.value,
+                                    event.regime_confidence,
+                                    json.dumps(event.previous_params),
+                                    json.dumps(event.new_params),
+                                    event.status.value,
+                                    event.reason,
+                                    json.dumps(event.microstructure_context),
+                                    json.dumps(event.performance_window),
+                                    event.timestamp
+                                ))
+                                conn.commit()
+                                cursor.close()
+                                conn.close()
+                                logger.debug(f"📊 Calibration event persisted: {event.event_id}")
+                    except Exception as e:
+                        logger.warning(f"DB persist error (non-blocking): {e}")
+                
+                thread = threading.Thread(target=persist_async, daemon=True)
+                thread.start()
+                
             except Exception as e:
-                logger.warning(f"Failed to persist calibration: {e}")
+                logger.warning(f"Failed to start persistence thread: {e}")
     
     def get_parameters(self, strategy: str) -> Optional[AdaptiveParameterProfile]:
         """Obtiene los parámetros actuales para una estrategia"""

@@ -28,6 +28,15 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 #### Technical Implementations
 - **Core Strategies**: Includes Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum, ARES V1/V2, Non-Markovian Kernel, and Order Book Analysis.
 - **Non-Markovian Memory Kernel V6.1**: Captures temporal dependencies to detect regime transitions, cyclical patterns, and memory coherence.
+- **Adaptive Parameter Engine V6.5 ULTRA** (NEW): Auto-calibration system for ARES strategies based on market regime:
+    - **RegimeSignalProcessor**: Processes Memory Kernel signals and detects regime changes
+    - **ParameterCalibrator**: Dynamically adjusts SL/TP/position size based on regime (accumulation, distribution, trending, volatile)
+    - **CooldownManager**: Intelligent cooldown between calibrations (15min default, min 5 trades)
+    - **MicrostructureAnalyzer**: Fine-tunes parameters based on spread, volume, and liquidity
+    - **Governance Layer**: All calibrations validated by Coherence Engine + Risk Guardian
+    - **PostgreSQL Persistence**: Tables `adaptive_parameters`, `calibration_events`, `calibration_metrics`
+    - **Smooth Transitions**: Exponential smoothing (0.3 factor) prevents sudden parameter jumps
+    - **Critical Override**: High-volatility/breakout regimes bypass cooldown for immediate protection
 - **ARES Institutional Protocols**: ARES V1 (Swing Trading) and ARES V2 (Scalping M1) with target win rates and multi-layer Kill-Switch Protection.
 - **AutoTradingBot V6.4 PREMIUM**: Optimized for 20-50 trades/day with 55%+ win rate:
     - **Multi-Crypto Scanning**: Rotates through 3 pairs (BTC, ETH, SOL) every 25 seconds.
