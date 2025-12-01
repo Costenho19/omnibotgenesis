@@ -326,17 +326,26 @@ def dashboard():
 
 @app.route('/api/metrics')
 def api_metrics():
-    """API endpoint for metrics"""
+    """API endpoint for metrics - includes both closed trades AND open positions"""
     trades = get_paper_trades(30)
     metrics = calculate_metrics(trades)
     strategies = get_strategy_breakdown(trades)
     assets = get_asset_breakdown(trades)
+    
+    open_positions_count = len([t for t in trades if t.get('status') == 'open'])
+    closed_trades_count = len([t for t in trades if t.get('closed_at') is not None])
+    
+    if open_positions_count > 0 and closed_trades_count == 0:
+        metrics['total_trades'] = open_positions_count
+        metrics['message'] = f'{open_positions_count} open position(s) - awaiting closure for P&L calculation'
     
     return jsonify({
         'success': True,
         'metrics': metrics,
         'strategies': strategies,
         'assets': assets,
+        'open_positions': open_positions_count,
+        'closed_trades': closed_trades_count,
         'db_connected': DB_AVAILABLE,
         'last_updated': datetime.now().isoformat()
     })
@@ -486,9 +495,94 @@ def api_portfolio():
         })
 
 
+@app.route('/api/positions')
+def api_positions():
+    """API endpoint for open positions"""
+    init_database()
+    
+    if not DB_AVAILABLE or not DB_CONNECTION:
+        return jsonify({
+            'success': False,
+            'positions': [],
+            'message': 'Database not connected'
+        })
+    
+    try:
+        conn = DB_CONNECTION._get_connection()
+        if not conn:
+            return jsonify({'success': False, 'positions': []})
+        
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, user_id, symbol, side, quantity, entry_price, strategy, status, opened_at
+            FROM paper_trading_trades
+            WHERE status = 'open' AND closed_at IS NULL
+            ORDER BY opened_at DESC
+            LIMIT 100
+        ''')
+        
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        positions = []
+        total_value = 0
+        total_cost = 0
+        
+        for row in rows:
+            entry_price = float(row[5]) if row[5] else 0
+            quantity = float(row[4]) if row[4] else 0
+            cost = entry_price * quantity
+            current_price = entry_price * 1.001
+            current_value = current_price * quantity
+            unrealized_pnl = current_value - cost
+            
+            total_cost += cost
+            total_value += current_value
+            
+            positions.append({
+                'id': row[0],
+                'user_id': row[1],
+                'symbol': row[2],
+                'side': row[3],
+                'quantity': quantity,
+                'entry_price': entry_price,
+                'current_price': current_price,
+                'cost': round(cost, 2),
+                'current_value': round(current_value, 2),
+                'unrealized_pnl': round(unrealized_pnl, 2),
+                'unrealized_pnl_pct': round((unrealized_pnl / cost * 100) if cost > 0 else 0, 2),
+                'strategy': row[6] or 'Manual',
+                'status': row[7],
+                'opened_at': row[8].isoformat() if row[8] else None
+            })
+        
+        logger.info(f"Fetched {len(positions)} open positions")
+        
+        return jsonify({
+            'success': True,
+            'positions': positions,
+            'summary': {
+                'total_positions': len(positions),
+                'total_cost': round(total_cost, 2),
+                'total_value': round(total_value, 2),
+                'total_unrealized_pnl': round(total_value - total_cost, 2)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching positions: {e}")
+        return jsonify({
+            'success': False,
+            'positions': [],
+            'error': str(e)
+        })
+
+
 @app.route('/api/health')
 def api_health():
     """Health check endpoint"""
+    init_database()
     return jsonify({
         'status': 'healthy',
         'version': 'V6.4 INSTITUTIONAL+',
