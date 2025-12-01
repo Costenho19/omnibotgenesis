@@ -1,9 +1,9 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V6.2 ULTRA - TRADING AUTOMÁTICO 24/7
+🤖 OMNIX AUTO-TRADING BOT V6.5 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
 Sistema de trading automático con IA, Risk Guardian, Coherence Engine,
-Non-Markovian Kernel y Memory-Enhanced Risk Management System
+Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain Intelligence
 
-🔥 ESTRATEGIAS V6.2 ULTRA (10 MÓDULOS):
+🔥 ESTRATEGIAS V6.5 INSTITUTIONAL+ (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -15,12 +15,18 @@ Non-Markovian Kernel y Memory-Enhanced Risk Management System
 9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
 10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
 
-🧠 MEMORY-ENHANCED RMS V6.2 (NUEVO):
+🧠 MEMORY-ENHANCED RMS V6.5:
 - MemoryRiskAdapter: Puente entre kernel temporal y gestión de riesgo
 - LimitsEngine: Límites dinámicos ajustados por coherencia de régimen
 - CircuitBreaker: Halt automático por incoherencia de memoria/transición de régimen
 - PositionMonitor: Factor de riesgo basado en divergencia de memoria
 - AlertDispatcher: Alertas predictivas de transiciones de régimen
+
+🎯 V6.5 NUEVAS FUNCIONALIDADES:
+- Auto-trading persistente: El estado se guarda en DB y sobrevive reinicios de Railway
+- Adaptive Parameter Engine: Auto-calibración de SL/TP/posición por régimen
+- On-Chain Intelligence: Whale tracking via ClankApp + Arkham
+- Logging detallado: Cada operación se registra con verificación
 
 💰 MODOS DE OPERACIÓN:
 - PAPER TRADING: $1,000,000 virtual (recomendado para testing)
@@ -394,8 +400,28 @@ class AutoTradingBot:
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot V6.5 ULTRA inicializado - Modo: {mode}")
+        
+        # V6.5: Auto-iniciar si el estado persistente indica que debería estar activo
+        self._auto_start_if_persistent()
     
-    def start(self) -> Dict:
+    def _auto_start_if_persistent(self):
+        """
+        V6.5: Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
+        Esto garantiza que Railway reinicie con el mismo estado que antes del restart.
+        """
+        if hasattr(self, '_should_auto_start') and self._should_auto_start:
+            logger.info("🔄 V6.5: Iniciando auto-trading automáticamente desde estado persistente...")
+            try:
+                result = self.start()
+                if result.get('success'):
+                    logger.info("✅ V6.5: Auto-trading restaurado exitosamente desde estado persistente")
+                else:
+                    error = result.get('error', 'Unknown error')
+                    logger.warning(f"⚠️ V6.5: No se pudo restaurar auto-trading: {error}")
+            except Exception as e:
+                logger.error(f"❌ V6.5: Error restaurando auto-trading: {e}")
+    
+    def start(self, user_id: str = None) -> Dict:
         """Iniciar trading automático 24/7"""
         try:
             if self.state['running']:
@@ -412,6 +438,9 @@ class AutoTradingBot:
             self.state['running'] = True
             self.state['emergency_stop'] = False
             self.config['active'] = True
+            
+            # V6.5: Persistir estado en user_settings
+            self._persist_auto_trading_state(user_id, active=True)
             
             # Iniciar thread para loop 24/7
             # CRÍTICO: daemon=False para que el thread SIGA CORRIENDO en Railway/webhooks
@@ -432,11 +461,14 @@ class AutoTradingBot:
             logger.error(f"Error iniciando auto-trading: {e}")
             return {'error': str(e)}
     
-    def stop(self) -> Dict:
+    def stop(self, user_id: str = None) -> Dict:
         """Detener trading automático"""
         try:
             self.state['running'] = False
             self.config['active'] = False
+            
+            # V6.5: Persistir estado en user_settings
+            self._persist_auto_trading_state(user_id, active=False)
             
             logger.info("🛑 AUTO-TRADING DETENIDO")
             
@@ -450,17 +482,97 @@ class AutoTradingBot:
             logger.error(f"Error deteniendo auto-trading: {e}")
             return {'error': str(e)}
     
-    def _load_persistent_state(self):
+    def _persist_auto_trading_state(self, user_id: str = None, active: bool = True):
         """
-        V6.4: Cargar estado persistente de la base de datos.
-        Esto garantiza que los contadores de trades y métricas se mantengan
-        entre reinicios del bot para que el ramp-up system funcione correctamente.
+        V6.5: Persistir estado de auto-trading en user_settings.
+        Esto garantiza que el estado sobreviva a reinicios de Railway.
         """
-        if not self.database_service:
-            logger.info("📊 V6.4: Sin database_service - usando estado inicial")
+        if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+            logger.debug("V6.5: No se puede persistir estado (sin database_service)")
             return
         
         try:
+            if user_id:
+                # Actualizar usuario específico
+                self.database_service.execute_query('''
+                    UPDATE user_settings 
+                    SET auto_trading = %s, updated_at = NOW()
+                    WHERE user_id = %s
+                ''', (active, user_id))
+                logger.info(f"💾 V6.5: Estado auto_trading={active} persistido para user {user_id}")
+            else:
+                # Actualizar todos los usuarios con auto_trading activo/inactivo
+                # Si activamos, solo actualizamos el primer usuario
+                # Si desactivamos, desactivamos todos
+                if active:
+                    # Buscar el primer usuario que tenga trading_enabled
+                    result = self.database_service.execute_query('''
+                        SELECT user_id FROM user_settings 
+                        WHERE trading_enabled = true 
+                        ORDER BY updated_at DESC 
+                        LIMIT 1
+                    ''')
+                    if result and len(result) > 0:
+                        uid = result[0].get('user_id')
+                        self.database_service.execute_query('''
+                            UPDATE user_settings 
+                            SET auto_trading = true, updated_at = NOW()
+                            WHERE user_id = %s
+                        ''', (uid,))
+                        logger.info(f"💾 V6.5: auto_trading=true persistido para user {uid}")
+                else:
+                    self.database_service.execute_query('''
+                        UPDATE user_settings 
+                        SET auto_trading = false, updated_at = NOW()
+                        WHERE auto_trading = true
+                    ''')
+                    logger.info("💾 V6.5: auto_trading=false persistido para todos los usuarios")
+        except Exception as e:
+            logger.warning(f"⚠️ V6.5: Error persistiendo auto_trading: {e}")
+    
+    def _load_persistent_state(self):
+        """
+        V6.5: Cargar estado persistente de la base de datos.
+        Esto garantiza que los contadores de trades y métricas se mantengan
+        entre reinicios del bot para que el ramp-up system funcione correctamente.
+        
+        V6.5 FIX: También carga auto_trading de user_settings para persistir
+        el estado entre reinicios de Railway.
+        """
+        if not self.database_service:
+            logger.info("📊 V6.5: Sin database_service - usando estado inicial")
+            return
+        
+        try:
+            # V6.5: Cargar configuración de auto-trading de user_settings
+            self._should_auto_start = False  # Flag para auto-iniciar después del __init__
+            try:
+                if hasattr(self.database_service, 'execute_query'):
+                    user_settings_result = self.database_service.execute_query('''
+                        SELECT auto_trading, is_paused, trading_enabled, user_id
+                        FROM user_settings
+                        WHERE auto_trading = true
+                        LIMIT 1
+                    ''')
+                    if user_settings_result and len(user_settings_result) > 0:
+                        row = user_settings_result[0]
+                        auto_trading = row.get('auto_trading', False)
+                        is_paused = row.get('is_paused', False)
+                        trading_enabled = row.get('trading_enabled', True)
+                        user_id = row.get('user_id', 'unknown')
+                        
+                        if auto_trading and not is_paused and trading_enabled:
+                            self._should_auto_start = True
+                            logger.info(f"🔄 V6.5: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
+                        elif auto_trading and is_paused:
+                            logger.info(f"⏸️ V6.5: Auto-trading está PAUSADO para user {user_id}")
+                        elif auto_trading and not trading_enabled:
+                            logger.info(f"🔒 V6.5: Trading DESHABILITADO para user {user_id}")
+                    else:
+                        logger.info("📊 V6.5: No hay usuarios con auto_trading activo")
+            except Exception as e:
+                logger.warning(f"⚠️ V6.5: Error cargando auto_trading de user_settings: {e}")
+            
             # Cargar estadísticas de trades cerrados
             from datetime import datetime, timedelta
             
@@ -539,8 +651,10 @@ class AutoTradingBot:
             logger.warning(f"⚠️ V6.4: Error cargando estado persistente (usando valores iniciales): {e}")
     
     def _trading_loop(self):
-        """Loop principal 24/7 - V6.4 MULTI-CRYPTO PREMIUM"""
-        logger.info("🔄 Trading loop V6.4 MULTI-CRYPTO iniciado - Corriendo 24/7")
+        """Loop principal 24/7 - V6.5 MULTI-CRYPTO PREMIUM"""
+        logger.info("🔄 Trading loop V6.5 MULTI-CRYPTO iniciado - Corriendo 24/7")
+        logger.info(f"   📊 Configuración: {len(self.config.get('trading_pairs', ['BTC/USD']))} pares, intervalo {self.config['check_interval_seconds']}s")
+        logger.info(f"   💰 Modo: {'PAPER' if self.config['paper_mode'] else 'REAL'} | Min trade: ${self.config['min_trade_usd']}")
         
         # Contador para procesar evaluaciones cada N ciclos
         evaluation_check_counter = 0
@@ -550,12 +664,23 @@ class AutoTradingBot:
         predictive_alert_counter = 0
         predictive_alert_interval = 10
         
+        # V6.5: Contador de ciclos para logging periódico
+        cycle_counter = 0
+        log_interval = 20  # Log status cada 20 ciclos
+        
         # V6.4: Índice para rotar entre pares
         pair_index = 0
         trading_pairs = self.config.get('trading_pairs', ['BTC/USD'])
         
         while self.state['running']:
             try:
+                cycle_counter += 1
+                
+                # V6.5: Log periódico de estado para confirmar que está corriendo
+                if cycle_counter % log_interval == 0:
+                    win_rate = (self.state['winning_trades'] / self.state['total_trades'] * 100) if self.state['total_trades'] > 0 else 0
+                    logger.info(f"📈 V6.5 STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
+                
                 # Verificar parada de emergencia
                 if self._check_emergency_stop():
                     logger.critical("🚨 PARADA DE EMERGENCIA - Pérdidas excesivas")
@@ -572,18 +697,36 @@ class AutoTradingBot:
                 # Análisis completo
                 analysis = self._analyze_market()
                 
+                # V6.5: Log detallado del análisis
+                if analysis:
+                    should_trade = analysis.get('should_trade', False)
+                    confidence = analysis.get('confidence', 0)
+                    signal = analysis.get('signal', 'HOLD')
+                    reason = analysis.get('reason', 'N/A')
+                    logger.info(f"   📊 Análisis: {signal} | Confianza: {confidence:.2%} | Trade: {'SÍ' if should_trade else 'NO'} | Razón: {reason[:50]}...")
+                else:
+                    logger.warning(f"   ⚠️ Sin datos de análisis para {self.config['trading_pair']}")
+                
                 # 🧠 V6.2: Check predictive alerts after market analysis
                 if analysis and self.alert_dispatcher:
                     current_price = analysis.get('current_price', 0)
                     self._check_predictive_alerts(current_price)
                 
                 if analysis and analysis.get('should_trade'):
+                    logger.info(f"🎯 SEÑAL DE TRADE DETECTADA - {self.config['trading_pair']} - Ejecutando...")
                     # Ejecutar trade
                     result = self._execute_smart_trade(analysis)
                     
                     if result.get('success'):
-                        logger.info(f"✅ Trade ejecutado en {self.config['trading_pair']}: {result}")
+                        trade_type = result.get('type', 'unknown')
+                        trade_amount = result.get('amount', 0)
+                        trade_price = result.get('price', 0)
+                        logger.info(f"✅ TRADE EJECUTADO: {trade_type} {trade_amount} {self.config['trading_pair']} @ ${trade_price:.2f}")
+                        logger.info(f"   📝 Detalles: {result}")
                         self._update_stats(result)
+                    else:
+                        error = result.get('error', 'Unknown error')
+                        logger.warning(f"⚠️ Trade no ejecutado: {error}")
                 
                 # 🧠 Procesar evaluaciones pendientes cada N ciclos
                 evaluation_check_counter += 1
@@ -595,10 +738,12 @@ class AutoTradingBot:
                 time.sleep(self.config['check_interval_seconds'])
                 
             except Exception as e:
-                logger.error(f"Error en trading loop: {e}")
+                logger.error(f"❌ Error en trading loop ciclo #{cycle_counter}: {e}")
+                import traceback
+                logger.error(f"   Traceback: {traceback.format_exc()}")
                 time.sleep(30)  # V6.4: Esperar 30s (era 60s) antes de reintentar
         
-        logger.info("🔄 Trading loop V6.4 terminado")
+        logger.info(f"🔄 Trading loop V6.5 terminado después de {cycle_counter} ciclos")
     
     def _check_predictive_alerts(self, current_price: float):
         """
@@ -1606,6 +1751,24 @@ class AutoTradingBot:
                 self.state['total_trades'] += 1
                 mode = "PAPER" if self.config['paper_mode'] else "REAL"
                 logger.info(f"✅ TRADE {mode} EJECUTADO: {action} ${amount_usd:.2f}")
+                
+                # V6.5: Log detallado del registro en base de datos
+                trade_id = result.get('trade_id') or result.get('order_id', 'N/A')
+                db_status = "📦 Guardado en DB" if result.get('trade_id') else "⚠️ Sin confirmación DB"
+                logger.info(f"   💾 V6.5 REGISTRO: Trade #{self.state['total_trades']} | ID: {trade_id} | {db_status}")
+                
+                # V6.5: Verificar que el trade existe en la base de datos
+                if self.database_service and hasattr(self.database_service, 'execute_query'):
+                    try:
+                        verify_result = self.database_service.execute_query('''
+                            SELECT COUNT(*) as count FROM paper_trading_trades 
+                            WHERE created_at >= NOW() - INTERVAL '1 minute'
+                        ''')
+                        if verify_result and len(verify_result) > 0:
+                            recent_count = verify_result[0].get('count', 0)
+                            logger.info(f"   ✅ V6.5 VERIFICACIÓN: {recent_count} trade(s) registrado(s) en último minuto")
+                    except Exception as e:
+                        logger.debug(f"V6.5: Error verificando registro: {e}")
                 
                 # 🔒 REGISTRAR TRADE CON VERIFICACIÓN CRIPTOGRÁFICA
                 if investor_logger:
