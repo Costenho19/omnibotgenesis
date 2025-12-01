@@ -3998,9 +3998,35 @@ Pregúntame cualquier cosa sobre:
                         if 'error' in result:
                             response_text = f"❌ {result['error']}"
                         else:
+                            # V6.4: Obtener balance REAL actual del paper trading
+                            current_balance = result['initial_balance']
+                            balance_display = f"${current_balance:,.2f}"
+                            pnl_text = ""
+                            
+                            if self.paper_trading:
+                                try:
+                                    real_balance = self.paper_trading.get_paper_balance(str(user_id))
+                                    if real_balance.get('initialized'):
+                                        current_balance = real_balance.get('total_value_usd', current_balance)
+                                        pnl = real_balance.get('profit_loss_usd', 0)
+                                        pnl_pct = real_balance.get('profit_loss_pct', 0)
+                                        balance_display = f"${current_balance:,.2f}"
+                                        if pnl != 0:
+                                            pnl_emoji = "📈" if pnl >= 0 else "📉"
+                                            pnl_text = f"\n{pnl_emoji} P&L: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
+                                except Exception as e:
+                                    logger.warning(f"Error obteniendo balance real: {e}")
+                            
+                            # V6.4: Obtener pares activos de la configuración
+                            trading_pairs = result['config'].get('trading_pairs', ['BTC/USD'])
+                            if isinstance(trading_pairs, list) and len(trading_pairs) > 1:
+                                pairs_display = ", ".join([p.split('/')[0] for p in trading_pairs])
+                            else:
+                                pairs_display = result['config'].get('trading_pair', 'BTC/USD')
+                            
                             response_text = f"""🤖 **AUTO-TRADING ACTIVADO 24/7**
 
-💰 Balance inicial: ${result['initial_balance']:.2f}
+💰 Balance actual: {balance_display}{pnl_text}
 
 **ESTRATEGIA INTELIGENTE:**
 ✅ Monte Carlo - Validación probabilística
@@ -4009,7 +4035,7 @@ Pregúntame cualquier cosa sobre:
 ✅ Post-Quantum - Firmas seguras
 
 **CONFIGURACIÓN:**
-📊 Par: {result['config']['trading_pair']}
+📊 Pares: {pairs_display}
 ⏱️ Análisis cada: {result['config']['check_interval_seconds']}s
 💵 Mínimo trade: ${result['config']['min_trade_usd']}
 📉 Stop-loss: {result['config']['stop_loss_pct']*100}%
@@ -4022,8 +4048,8 @@ Pregúntame cualquier cosa sobre:
 """
                             # Agregar advertencia según modo
                             if result['config'].get('paper_mode', True):
-                                response_text += """
-✅ **MODO:** PAPER TRADING ($1M virtual)
+                                response_text += f"""
+✅ **MODO:** PAPER TRADING
 💰 Trades simulados con datos REALES de Kraken
 📊 Sin riesgo - Ideal para generar track record
 
