@@ -18,23 +18,46 @@ CORS(app)
 app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'omnix-ultra-2025')
 
 DB_AVAILABLE = False
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DB_ERROR_MESSAGE = None
+
+def get_database_url():
+    """Get DATABASE_URL - checks multiple possible variable names"""
+    url = os.environ.get('DATABASE_URL')
+    if url:
+        return url
+    url = os.environ.get('POSTGRES_URL')
+    if url:
+        return url
+    url = os.environ.get('DATABASE_PUBLIC_URL')
+    if url:
+        return url
+    return None
 
 def get_db_connection():
     """Get direct PostgreSQL connection using psycopg"""
-    global DB_AVAILABLE
+    global DB_AVAILABLE, DB_ERROR_MESSAGE
     
-    if not DATABASE_URL:
-        logger.warning("DATABASE_URL not configured")
+    database_url = get_database_url()
+    
+    if not database_url:
+        DB_ERROR_MESSAGE = "No DATABASE_URL, POSTGRES_URL, or DATABASE_PUBLIC_URL found in environment"
+        logger.warning(DB_ERROR_MESSAGE)
         DB_AVAILABLE = False
         return None
     
     try:
         import psycopg
-        conn = psycopg.connect(DATABASE_URL)
+        conn = psycopg.connect(database_url)
         DB_AVAILABLE = True
+        DB_ERROR_MESSAGE = None
         return conn
+    except ImportError as e:
+        DB_ERROR_MESSAGE = f"psycopg library not installed: {e}"
+        logger.error(DB_ERROR_MESSAGE)
+        DB_AVAILABLE = False
+        return None
     except Exception as e:
+        DB_ERROR_MESSAGE = f"Connection failed: {str(e)[:200]}"
         logger.error(f"Database connection failed: {e}")
         DB_AVAILABLE = False
         return None
@@ -578,11 +601,68 @@ def api_health():
         'status': 'healthy',
         'version': 'V6.4 INSTITUTIONAL+',
         'db_connected': DB_AVAILABLE,
+        'db_error': DB_ERROR_MESSAGE if not DB_AVAILABLE else None,
+        'timestamp': datetime.now().isoformat()
+    })
+
+
+@app.route('/api/debug')
+def api_debug():
+    """Debug endpoint to diagnose connection issues (no secrets exposed)"""
+    env_vars_status = {
+        'DATABASE_URL': 'SET' if os.environ.get('DATABASE_URL') else 'NOT SET',
+        'POSTGRES_URL': 'SET' if os.environ.get('POSTGRES_URL') else 'NOT SET',
+        'DATABASE_PUBLIC_URL': 'SET' if os.environ.get('DATABASE_PUBLIC_URL') else 'NOT SET',
+    }
+    
+    database_url = get_database_url()
+    url_info = None
+    if database_url:
+        if '@' in database_url:
+            host_part = database_url.split('@')[-1].split('/')[0] if '@' in database_url else 'unknown'
+            url_info = f"Host: {host_part[:50]}..."
+        else:
+            url_info = "URL format: invalid (no @ symbol)"
+    
+    init_database()
+    
+    psycopg_installed = False
+    try:
+        import psycopg
+        psycopg_installed = True
+        psycopg_version = getattr(psycopg, '__version__', 'unknown')
+    except ImportError:
+        psycopg_version = 'NOT INSTALLED'
+    
+    return jsonify({
+        'status': 'debug_info',
+        'environment_variables': env_vars_status,
+        'database_url_detected': database_url is not None,
+        'database_url_info': url_info,
+        'psycopg_installed': psycopg_installed,
+        'psycopg_version': psycopg_version,
+        'db_connected': DB_AVAILABLE,
+        'db_error': DB_ERROR_MESSAGE,
+        'python_version': os.popen('python --version').read().strip(),
         'timestamp': datetime.now().isoformat()
     })
 
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    logger.info(f"🚀 OMNIX Dashboard starting on port {port}")
+    logger.info(f"🚀 OMNIX Dashboard V6.4 INSTITUTIONAL+ starting on port {port}")
+    
+    database_url = get_database_url()
+    if database_url:
+        logger.info("✅ DATABASE_URL detected - attempting connection...")
+        if init_database():
+            logger.info("✅ Database connected successfully - REAL DATA MODE")
+        else:
+            logger.error(f"❌ Database connection FAILED: {DB_ERROR_MESSAGE}")
+            logger.info("📊 Dashboard will show 'Esperando traders' until connection is fixed")
+    else:
+        logger.warning("⚠️ No DATABASE_URL found - Dashboard will show empty state")
+        logger.info("💡 Set DATABASE_URL, POSTGRES_URL, or DATABASE_PUBLIC_URL in environment")
+    
+    logger.info(f"🔗 Debug endpoint: http://localhost:{port}/api/debug")
     app.run(host='0.0.0.0', port=port, debug=False)
