@@ -636,17 +636,31 @@
             tbody.innerHTML = html;
         }
         
-        async function init() {
+        function updateLastRefresh() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('last-update').innerHTML = `
+                <span class="text-green-400 font-medium">LIVE</span> 
+                <span class="text-zinc-500">Updated ${timeStr}</span>
+            `;
+        }
+        
+        async function refreshAllData() {
             await Promise.all([
                 fetchMetrics(),
                 fetchTrades(),
                 fetchPositions(),
                 fetchEquityCurve()
             ]);
+            updateLastRefresh();
+        }
+        
+        async function init() {
+            await refreshAllData();
             
-            setInterval(fetchMetrics, 30000);
-            setInterval(fetchTrades, 60000);
-            setInterval(fetchPositions, 30000);
+            setInterval(refreshAllData, 10000);
+            
+            console.log('📊 OMNIX Dashboard V6.4 - Auto-refresh every 10 seconds');
         }
         
         init();
