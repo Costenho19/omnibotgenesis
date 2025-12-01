@@ -2248,10 +2248,36 @@ ETH: {result['new_eth_balance']:.8f}
                 await update.message.reply_text(f"❌ {result['error']}")
                 return
             
+            # V6.4: Obtener balance REAL actual del paper trading
+            current_balance = result['initial_balance']
+            balance_display = f"${current_balance:,.2f}"
+            pnl_text = ""
+            
+            if self.paper_trading:
+                try:
+                    real_balance = self.paper_trading.get_paper_balance(user_id)
+                    if real_balance.get('initialized'):
+                        current_balance = real_balance.get('total_value_usd', current_balance)
+                        pnl = real_balance.get('profit_loss_usd', 0)
+                        pnl_pct = real_balance.get('profit_loss_pct', 0)
+                        balance_display = f"${current_balance:,.2f}"
+                        if pnl != 0:
+                            pnl_emoji = "📈" if pnl >= 0 else "📉"
+                            pnl_text = f"\n{pnl_emoji} P&L: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
+                except Exception as e:
+                    logger.warning(f"Error obteniendo balance real: {e}")
+            
+            # V6.4: Obtener pares activos de la configuración
+            trading_pairs = result['config'].get('trading_pairs', ['BTC/USD'])
+            if isinstance(trading_pairs, list) and len(trading_pairs) > 1:
+                pairs_display = ", ".join([p.split('/')[0] for p in trading_pairs])
+            else:
+                pairs_display = result['config'].get('trading_pair', 'BTC/USD')
+            
             msg = f"""
 🤖 **AUTO-TRADING ACTIVADO 24/7**
 
-💰 Balance inicial: ${result['initial_balance']:.2f}
+💰 Balance actual: {balance_display}{pnl_text}
 
 **ESTRATEGIA INTELIGENTE:**
 ✅ Monte Carlo - Validación probabilística
@@ -2260,7 +2286,7 @@ ETH: {result['new_eth_balance']:.8f}
 ✅ Post-Quantum - Firmas seguras
 
 **CONFIGURACIÓN:**
-📊 Par: {result['config']['trading_pair']}
+📊 Pares: {pairs_display}
 ⏱️ Análisis cada: {result['config']['check_interval_seconds']}s
 💵 Mínimo trade: ${result['config']['min_trade_usd']}
 📉 Stop-loss: {result['config']['stop_loss_pct']*100}%
@@ -2274,8 +2300,8 @@ ETH: {result['new_eth_balance']:.8f}
             
             # Agregar advertencia según modo
             if result['config'].get('paper_mode', True):
-                msg += """
-✅ **MODO:** PAPER TRADING ($1M virtual)
+                msg += f"""
+✅ **MODO:** PAPER TRADING
 💰 Trades simulados con datos REALES de Kraken
 📊 Sin riesgo - Ideal para generar track record
 
@@ -2323,6 +2349,24 @@ Usa /auto_stop para detener
             
             stats = result.get('stats', {})
             
+            # V6.4: Obtener balance REAL actual del paper trading
+            current_balance = stats.get('initial_balance', 0)
+            balance_display = f"${current_balance:,.2f}"
+            pnl_text = ""
+            
+            if self.paper_trading:
+                try:
+                    real_balance = self.paper_trading.get_paper_balance(user_id)
+                    if real_balance.get('initialized'):
+                        current_balance = real_balance.get('total_value_usd', current_balance)
+                        pnl = real_balance.get('profit_loss_usd', 0)
+                        pnl_pct = real_balance.get('profit_loss_pct', 0)
+                        balance_display = f"${current_balance:,.2f}"
+                        pnl_emoji = "📈" if pnl >= 0 else "📉"
+                        pnl_text = f"{pnl_emoji} P&L Total: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
+                except Exception as e:
+                    logger.warning(f"Error obteniendo balance real: {e}")
+            
             msg = f"""
 🛑 **AUTO-TRADING DETENIDO**
 
@@ -2330,9 +2374,9 @@ Usa /auto_stop para detener
 Trades totales: {stats.get('total_trades', 0)}
 Ganadores: {stats.get('winning_trades', 0)}
 Perdedores: {stats.get('losing_trades', 0)}
-P&L total: ${stats.get('total_profit_loss', 0):.2f}
 
-Balance inicial: ${stats.get('initial_balance', 0):.2f}
+💰 **Balance actual:** {balance_display}
+{pnl_text}
 
 *Bot detenido exitosamente*
 """
@@ -4077,15 +4121,33 @@ Usa /autotrading stop para detener"""
                             response_text = f"❌ {result['error']}"
                         else:
                             stats = result.get('stats', {})
+                            
+                            # V6.4: Obtener balance REAL actual
+                            current_balance = stats.get('initial_balance', 0)
+                            balance_display = f"${current_balance:,.2f}"
+                            pnl_text = ""
+                            
+                            if self.paper_trading:
+                                try:
+                                    real_balance = self.paper_trading.get_paper_balance(str(user_id))
+                                    if real_balance.get('initialized'):
+                                        current_balance = real_balance.get('total_value_usd', current_balance)
+                                        pnl = real_balance.get('profit_loss_usd', 0)
+                                        pnl_pct = real_balance.get('profit_loss_pct', 0)
+                                        balance_display = f"${current_balance:,.2f}"
+                                        pnl_emoji = "📈" if pnl >= 0 else "📉"
+                                        pnl_text = f"\n{pnl_emoji} P&L Total: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
+                                except:
+                                    pass
+                            
                             response_text = f"""🛑 **AUTO-TRADING DETENIDO**
 
 📊 **ESTADÍSTICAS FINALES:**
 Trades totales: {stats.get('total_trades', 0)}
 Ganadores: {stats.get('winning_trades', 0)}
 Perdedores: {stats.get('losing_trades', 0)}
-P&L total: ${stats.get('total_profit_loss', 0):.2f}
 
-Balance inicial: ${stats.get('initial_balance', 0):.2f}
+💰 **Balance actual:** {balance_display}{pnl_text}
 
 *Bot detenido exitosamente*"""
                         
@@ -4101,17 +4163,44 @@ Balance inicial: ${stats.get('initial_balance', 0):.2f}
                             status = "🟢 ACTIVO" if result.get('running', False) else "🔴 INACTIVO"
                             stats = result.get('stats', {})
                             
-                            response_text = f"""🤖 **AUTO-TRADING BOT V5.2 STATUS**
+                            # V6.4: Obtener balance REAL actual
+                            current_balance = 0
+                            balance_display = "N/A"
+                            pnl_text = ""
+                            
+                            if self.paper_trading:
+                                try:
+                                    real_balance = self.paper_trading.get_paper_balance(str(user_id))
+                                    if real_balance.get('initialized'):
+                                        current_balance = real_balance.get('total_value_usd', 0)
+                                        pnl = real_balance.get('profit_loss_usd', 0)
+                                        pnl_pct = real_balance.get('profit_loss_pct', 0)
+                                        balance_display = f"${current_balance:,.2f}"
+                                        pnl_emoji = "📈" if pnl >= 0 else "📉"
+                                        pnl_text = f"\n{pnl_emoji} P&L: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
+                                except:
+                                    pass
+                            
+                            # V6.4: Obtener pares activos
+                            trading_pairs = result.get('config', {}).get('trading_pairs', ['BTC/USD'])
+                            if isinstance(trading_pairs, list) and len(trading_pairs) > 1:
+                                pairs_display = ", ".join([p.split('/')[0] for p in trading_pairs])
+                            else:
+                                pairs_display = "BTC/USD"
+                            
+                            response_text = f"""🤖 **AUTO-TRADING BOT V6.4 STATUS**
 
 Estado: {status}
 Modo: {result.get('mode', 'PAPER TRADING')}
+📊 Pares: {pairs_display}
+
+💰 **Balance actual:** {balance_display}{pnl_text}
 
 📊 **ESTADÍSTICAS:**
 Trades totales: {stats.get('total_trades', 0)}
 Ganadores: {stats.get('winning_trades', 0)}
 Perdedores: {stats.get('losing_trades', 0)}
 Win rate: {stats.get('win_rate', 0)*100:.1f}%
-P&L total: ${stats.get('total_profit_loss', 0):.2f}
 
 ⏱️ Última actualización: {result.get('last_update', 'N/A')}
 
