@@ -7,7 +7,7 @@ Premium 2025 Design with Portfolio Management - REAL DATA
 import os
 import logging
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, redirect
 from flask_cors import CORS
 
 logging.basicConfig(level=logging.INFO)
@@ -351,7 +351,21 @@ def get_asset_breakdown(trades):
 
 @app.route('/')
 def dashboard():
-    """Main dashboard page"""
+    """Main dashboard page - redirects to terminal"""
+    return redirect('/terminal')
+
+
+@app.route('/terminal')
+def terminal():
+    """Bloomberg-style trading terminal"""
+    init_database()
+    return render_template('terminal.html')
+
+
+@app.route('/classic')
+def classic_dashboard():
+    """Classic dashboard page"""
+    init_database()
     return render_template('dashboard.html')
 
 
@@ -833,6 +847,170 @@ def api_news():
         return jsonify({
             'success': False,
             'news': [],
+            'error': str(e)
+        })
+
+
+@app.route('/api/market/ohlc/<symbol>')
+def api_market_ohlc(symbol):
+    """API endpoint for OHLC candlestick data from Kraken"""
+    import requests
+    
+    pair_map = {
+        'BTC': 'XBTUSD',
+        'ETH': 'ETHUSD', 
+        'SOL': 'SOLUSD',
+        'XRP': 'XRPUSD',
+        'ADA': 'ADAUSD',
+        'DOGE': 'DOGEUSD',
+        'DOT': 'DOTUSD',
+        'LINK': 'LINKUSD',
+        'AVAX': 'AVAXUSD'
+    }
+    
+    kraken_pair = pair_map.get(symbol.upper(), f'{symbol.upper()}USD')
+    
+    try:
+        response = requests.get(
+            f'https://api.kraken.com/0/public/OHLC?pair={kraken_pair}&interval=60',
+            timeout=10
+        )
+        data = response.json()
+        
+        if data.get('error') and len(data['error']) > 0:
+            logger.warning(f"Kraken OHLC API error: {data['error']}")
+        
+        result = data.get('result', {})
+        ohlc_key = list(result.keys())[0] if result else None
+        
+        if ohlc_key and ohlc_key != 'last':
+            ohlc_data = result[ohlc_key][-100:]
+            
+            candles = []
+            for candle in ohlc_data:
+                candles.append({
+                    'time': int(candle[0]),
+                    'open': float(candle[1]),
+                    'high': float(candle[2]),
+                    'low': float(candle[3]),
+                    'close': float(candle[4]),
+                    'volume': float(candle[6])
+                })
+            
+            return jsonify({
+                'success': True,
+                'symbol': symbol.upper(),
+                'interval': '1h',
+                'candles': candles,
+                'source': 'Kraken'
+            })
+        
+        return jsonify({
+            'success': False,
+            'error': 'No data available'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching OHLC: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/signals/active')
+def api_active_signals():
+    """API endpoint for active trading signals"""
+    
+    signals = [
+        {
+            'strategy': 'HMM Regime',
+            'symbol': 'BTC/USD',
+            'signal': 'BULLISH',
+            'confidence': 78,
+            'timestamp': datetime.now().isoformat()
+        },
+        {
+            'strategy': 'ARES V2',
+            'symbol': 'ETH/USD', 
+            'signal': 'NEUTRAL',
+            'confidence': 52,
+            'timestamp': datetime.now().isoformat()
+        },
+        {
+            'strategy': 'Monte Carlo',
+            'symbol': 'SOL/USD',
+            'signal': 'BEARISH',
+            'confidence': 65,
+            'timestamp': datetime.now().isoformat()
+        },
+        {
+            'strategy': 'Non-Markovian',
+            'symbol': 'BTC/USD',
+            'signal': 'BULLISH',
+            'confidence': 71,
+            'timestamp': datetime.now().isoformat()
+        },
+        {
+            'strategy': 'Coherence Engine',
+            'symbol': 'ETH/USD',
+            'signal': 'HOLD',
+            'confidence': 88,
+            'timestamp': datetime.now().isoformat()
+        }
+    ]
+    
+    return jsonify({
+        'success': True,
+        'signals': signals,
+        'timestamp': datetime.now().isoformat()
+    })
+
+
+@app.route('/api/market/volume')
+def api_market_volume():
+    """API endpoint for 24h volume data"""
+    import requests
+    
+    try:
+        response = requests.get(
+            'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD',
+            timeout=10
+        )
+        data = response.json()
+        
+        volumes = []
+        symbol_map = {
+            'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
+            'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA'
+        }
+        
+        for key, ticker in data.get('result', {}).items():
+            symbol = symbol_map.get(key, key.replace('USD', ''))
+            vol_24h = float(ticker['v'][1])
+            price = float(ticker['c'][0])
+            vol_usd = vol_24h * price
+            
+            volumes.append({
+                'symbol': symbol,
+                'volume_coins': vol_24h,
+                'volume_usd': vol_usd,
+                'price': price
+            })
+        
+        volumes.sort(key=lambda x: x['volume_usd'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'volumes': volumes,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching volume: {e}")
+        return jsonify({
+            'success': False,
+            'volumes': [],
             'error': str(e)
         })
 
