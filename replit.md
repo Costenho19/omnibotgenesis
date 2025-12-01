@@ -37,6 +37,11 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **Coherence Engine V6.4**: Balanced veto system (45% threshold) with signal-strength bypass for VERY_STRONG.
     - **Drawdown Protection**: Auto-reduces position size on losing days ($200+ loss = 75%, $500+ = 50%).
     - **State Persistence**: Trade counters and metrics persist across restarts via PostgreSQL.
+- **Notification Services V6.4 PREMIUM**: Real-time trade alerts and daily summaries:
+    - **TradeNotificationService**: Instant Telegram alerts when trades execute (BUY/SELL with P&L).
+    - **DailySummaryService**: Automated daily summary at 20:00 UTC with institutional metrics.
+    - **Benchmark Comparison**: Shows OMNIX performance vs Bitcoin HODL with alpha calculation.
+    - **Telegram Command**: `/resumen` for on-demand daily summary generation.
 - **Professional Testing & Validation System**: Features Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, Realistic Cost Modeling, and Investor Report Generation.
 - **AI & Machine Learning**: Conversational AI ("Cerebro Conversacional") for self-explaining AI reasoning and an Auto-Learning System for strategy parameter optimization.
 - **Quantum Physics Validation System**: PhD+ level scientific accuracy with 31 verified formulas and quantum credibility scoring.

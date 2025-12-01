@@ -129,6 +129,17 @@ except ImportError:
     USER_SETTINGS_AVAILABLE = False
     logger.warning("⚠️ User Settings Service no disponible")
 
+# Notification Services V6.4 PREMIUM - Trade Alerts & Daily Summary
+try:
+    from omnix_services.notifications import TradeNotificationService, DailySummaryService
+    NOTIFICATIONS_AVAILABLE = True
+    logger.info("📢 Notification Services V6.4 PREMIUM disponibles")
+except ImportError:
+    NOTIFICATIONS_AVAILABLE = False
+    TradeNotificationService = None
+    DailySummaryService = None
+    logger.info("📢 Notification Services no disponibles (opcional)")
+
 # Telegram availability check
 try:
     from telegram import __version__
@@ -192,6 +203,10 @@ class EnterpriseTelegramBot:
         else:
             self.trading = self.trading_enterprise  # Referencia al enterprise
             logger.info("🚀 TRADING ENTERPRISE READY - Sistema premium activado")
+        
+        # 📢 NOTIFICATION SERVICES V6.4 PREMIUM - Trade Alerts & Daily Summary
+        self.notification_service = None
+        self.daily_summary_service = None
         
         # 📊 PAPER TRADING MANAGER - Trading simulado con datos reales
         try:
@@ -561,6 +576,10 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("onboarding", self.onboarding_command))
                 logger.info("⚙️ User Settings V6.4 registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
             
+            # 📊 Comandos Daily Summary V6.4 PREMIUM - Resúmenes diarios
+            self.application.add_handler(CommandHandler("resumen", self.resumen_command))
+            logger.info("📊 Daily Summary V6.4 registrado: /resumen")
+            
             # Handler para mensajes de texto
             self.application.add_handler(
                 MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
@@ -596,6 +615,35 @@ class EnterpriseTelegramBot:
                     circuit_breaker=self.circuit_breaker,
                     alert_dispatcher=self.alert_dispatcher
                 )
+            
+            # 📢 Inicializar Notification Services V6.4 PREMIUM
+            if NOTIFICATIONS_AVAILABLE:
+                try:
+                    trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
+                    
+                    self.notification_service = TradeNotificationService(
+                        telegram_bot=self.application.bot,
+                        database_service=self.db_manager
+                    )
+                    self.notification_service.set_admin_chat_id(str(settings.TELEGRAM_ADMIN_ID))
+                    
+                    self.daily_summary_service = DailySummaryService(
+                        telegram_bot=self.application.bot,
+                        database_service=self.db_manager,
+                        trading_service=trading_service
+                    )
+                    self.daily_summary_service.set_admin_chat_id(str(settings.TELEGRAM_ADMIN_ID))
+                    self.daily_summary_service.set_summary_time(20, 0)
+                    self.daily_summary_service.start_scheduler()
+                    
+                    if self.paper_trading:
+                        self.paper_trading.notification_service = self.notification_service
+                    
+                    logger.info("📢 Notification Services V6.4 PREMIUM ACTIVOS")
+                    logger.info("   🔔 Trade Alerts: Notificaciones en tiempo real")
+                    logger.info("   📊 Daily Summary: Resumen diario a las 20:00 UTC")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error inicializando Notification Services: {e}")
             
             return True
             
@@ -7292,6 +7340,41 @@ Usa `/miconfig` para ver todos los detalles.
             
         except Exception as e:
             logger.error(f"Error en onboarding: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def resumen_command(self, update, context):
+        """Comando /resumen - Generar resumen diario de trading V6.4 PREMIUM"""
+        try:
+            user = update.effective_user
+            chat_id = str(update.effective_chat.id)
+            
+            if not is_admin(user.id):
+                await update.message.reply_text("❌ Este comando es solo para administradores")
+                return
+            
+            await update.message.reply_text("📊 Generando resumen del día...")
+            
+            if self.daily_summary_service:
+                summary = self.daily_summary_service.get_summary_now()
+                
+                if summary:
+                    message = self.daily_summary_service._format_summary_message(summary)
+                    await update.message.reply_text(message, parse_mode='Markdown')
+                else:
+                    await update.message.reply_text("""📊 *RESUMEN DEL DÍA*
+━━━━━━━━━━━━━━━━━━━━━
+
+📭 No hay trades cerrados hoy.
+
+El bot está activo y buscando oportunidades.
+Usa `/autotrading status` para ver el estado.
+
+_OMNIX V6.4 INSTITUTIONAL+_""", parse_mode='Markdown')
+            else:
+                await update.message.reply_text("❌ Servicio de resumen no disponible")
+                
+        except Exception as e:
+            logger.error(f"Error en resumen: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 

@@ -31,6 +31,14 @@ except ImportError:
     USER_SETTINGS_AVAILABLE = False
     logger.warning("⚠️ UserSettingsService no disponible en PaperTradingManager")
 
+try:
+    from omnix_services.notifications import TradeNotificationService
+    NOTIFICATIONS_AVAILABLE = True
+except ImportError:
+    NOTIFICATIONS_AVAILABLE = False
+    TradeNotificationService = None
+    logger.info("📢 TradeNotificationService no disponible (opcional)")
+
 
 class PaperTradingManager:
     """
@@ -44,12 +52,21 @@ class PaperTradingManager:
     """
     
     def __init__(self, database_service=None, trading_service=None, limits_engine=None, 
-                 circuit_breaker=None, user_settings_service=None):
+                 circuit_breaker=None, user_settings_service=None, notification_service=None,
+                 telegram_bot=None):
         self.database_service = database_service
         self.trading_service = trading_service
         self.limits_engine = limits_engine
         self.circuit_breaker = circuit_breaker
         self.user_settings_service = user_settings_service
+        self.notification_service = notification_service
+        self.telegram_bot = telegram_bot
+        
+        if not self.notification_service and NOTIFICATIONS_AVAILABLE and telegram_bot:
+            self.notification_service = TradeNotificationService(
+                telegram_bot=telegram_bot,
+                database_service=database_service
+            )
         
         self.INITIAL_BALANCE_USD = 1_000_000.00
         
@@ -58,7 +75,8 @@ class PaperTradingManager:
         
         rms_status = "RMS activo" if limits_engine else "RMS no configurado"
         uss_status = "UserSettings activo" if user_settings_service else "UserSettings no configurado"
-        logger.info(f"📊 PaperTradingManager V6.4 inicializado - Balance: $1M | {rms_status} | {uss_status}")
+        notif_status = "Notificaciones activas" if self.notification_service else "Sin notificaciones"
+        logger.info(f"📊 PaperTradingManager V6.4 PREMIUM inicializado - Balance: $1M | {rms_status} | {uss_status} | {notif_status}")
     
     def initialize_user(self, user_id: str) -> Dict:
         """
@@ -619,7 +637,6 @@ class PaperTradingManager:
             logger.info(f"🔧 _open_position_v2: trade_id = {trade_id}, trade_uuid = {trade_uuid}")
             
             if trade_uuid:
-                # Actualizar balance (deducir USD gastado + fees)
                 self.database_service.execute_query(
                     """
                     UPDATE paper_trading_balances
@@ -633,6 +650,23 @@ class PaperTradingManager:
                 )
                 
                 logger.info(f"✅ Posición abierta: {base_quantity:.8f} {symbol} @ ${entry_price:,.2f} (fee: ${fee_usd:.2f})")
+                
+                if self.notification_service:
+                    try:
+                        trade_data = {
+                            'symbol': symbol,
+                            'entry_price': entry_price,
+                            'quantity': base_quantity,
+                            'amount_usd': quote_notional_usd,
+                            'strategy': source_strategy,
+                            'signal_strength': 'MODERATE',
+                            'confidence': 50.0
+                        }
+                        self.notification_service.notify_trade_sync('buy', trade_data, user_id)
+                        logger.info(f"📢 Notificación de BUY enviada para {symbol}")
+                    except Exception as notif_err:
+                        logger.warning(f"Error enviando notificación BUY: {notif_err}")
+                
                 return str(trade_uuid)
             
             return None
@@ -762,8 +796,9 @@ class PaperTradingManager:
                 logger.error(f"❌ ERROR actualizando balance: {bal_err}")
                 raise
             
-            return {
+            trade_result = {
                 'trade_uuid': str(trade_id),
+                'symbol': symbol,
                 'entry_price': float(entry_price),
                 'exit_price': exit_price,
                 'base_quantity': actual_sell_quantity,
@@ -772,11 +807,21 @@ class PaperTradingManager:
                 'is_partial_close': is_partial_close,
                 'gross_pnl_usd': gross_pnl_usd,
                 'net_realized_pnl_usd': net_realized_pnl_usd,
+                'profit_pct': profit_pct,
                 'fee_buy': fee_buy_proportional,
                 'fee_sell': fee_sell,
                 'duration_seconds': duration_seconds,
                 'is_winning_trade': is_winning_trade
             }
+            
+            if self.notification_service and not is_partial_close:
+                try:
+                    self.notification_service.notify_trade_sync('sell', trade_result, user_id)
+                    logger.info(f"📢 Notificación de SELL enviada para {symbol}")
+                except Exception as notif_err:
+                    logger.warning(f"Error enviando notificación: {notif_err}")
+            
+            return trade_result
             
         except Exception as e:
             logger.error(f"Error cerrando posición: {e}")
