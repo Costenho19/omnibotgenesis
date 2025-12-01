@@ -126,18 +126,21 @@ def get_paper_trades(days=30):
 
 
 def get_balance_history(days=30):
-    """Fetch REAL balance history from database"""
+    """Fetch REAL balance history from database - V6.5 corrected columns"""
     conn = get_db_connection()
     if not conn:
         return []
     
     try:
         cursor = conn.cursor()
+        
+        # V6.5: Use correct column names from actual balance_history table
+        # Columns: id, user_id, balance, change_amount, change_reason, recorded_at
         cursor.execute('''
-            SELECT total_usd, btc_balance, eth_balance, usdt_balance, other_balance, timestamp
+            SELECT user_id, balance, change_amount, change_reason, recorded_at
             FROM balance_history
-            WHERE timestamp >= NOW() - INTERVAL '1 day' * %s
-            ORDER BY timestamp ASC
+            WHERE recorded_at >= NOW() - INTERVAL '1 day' * %s
+            ORDER BY recorded_at ASC
         ''', (days,))
         
         rows = cursor.fetchall()
@@ -147,13 +150,41 @@ def get_balance_history(days=30):
         history = []
         for row in rows:
             history.append({
-                'total_usd': float(row[0]) if row[0] else 0,
-                'btc_balance': float(row[1]) if row[1] else 0,
-                'eth_balance': float(row[2]) if row[2] else 0,
-                'usdt_balance': float(row[3]) if row[3] else 0,
-                'other_balance': float(row[4]) if row[4] else 0,
-                'timestamp': row[5].isoformat() if row[5] else None
+                'user_id': row[0],
+                'total_usd': float(row[1]) if row[1] else 0,
+                'change_amount': float(row[2]) if row[2] else 0,
+                'change_reason': row[3] or 'Unknown',
+                'timestamp': row[4].isoformat() if row[4] else None
             })
+        
+        # If no balance_history, try to derive from paper_trading_balances
+        if not history:
+            conn2 = get_db_connection()
+            if conn2:
+                try:
+                    cursor2 = conn2.cursor()
+                    cursor2.execute('''
+                        SELECT user_id, balance_usd, total_realized_pnl_usd, updated_at
+                        FROM paper_trading_balances
+                        ORDER BY updated_at DESC
+                        LIMIT 1
+                    ''')
+                    balance_row = cursor2.fetchone()
+                    cursor2.close()
+                    conn2.close()
+                    
+                    if balance_row:
+                        history.append({
+                            'user_id': balance_row[0],
+                            'total_usd': float(balance_row[1]) if balance_row[1] else 1000000,
+                            'change_amount': float(balance_row[2]) if balance_row[2] else 0,
+                            'change_reason': 'Current Balance',
+                            'timestamp': balance_row[3].isoformat() if balance_row[3] else datetime.now().isoformat()
+                        })
+                except Exception as e:
+                    logger.error(f"Error in balance_history fallback: {e}")
+                    if conn2:
+                        conn2.close()
         
         logger.info(f"Fetched {len(history)} REAL balance snapshots from database")
         return history
@@ -429,62 +460,101 @@ def api_equity_curve():
 
 @app.route('/api/portfolio')
 def api_portfolio():
-    """API endpoint for portfolio status"""
+    """API endpoint for portfolio status - V6.5 connected to real DB"""
+    conn = get_db_connection()
+    
+    if not conn:
+        return jsonify({
+            'success': False,
+            'error': 'Database not connected',
+            'portfolio': None
+        })
+    
     try:
-        from omnix_services.portfolio_management import OmnixPortfolioEngine
-        from omnix_services.portfolio_management.institutional.volatility_targeting import RiskProfile
+        cursor = conn.cursor()
         
-        engine = OmnixPortfolioEngine(
-            target_volatility=0.10,
-            target_beta=0.5,
-            max_weight_per_asset=0.15
-        )
+        # Get real balance from paper_trading_balances
+        cursor.execute('''
+            SELECT user_id, balance_usd, btc_balance, eth_balance, 
+                   total_trades, winning_trades, losing_trades,
+                   total_realized_pnl_usd, max_drawdown_pct, sharpe_ratio,
+                   updated_at
+            FROM paper_trading_balances
+            ORDER BY updated_at DESC
+            LIMIT 1
+        ''')
         
-        demo_prices = {
-            "AAPL": [175 + i*0.5 for i in range(60)],
-            "MSFT": [380 + i*0.8 for i in range(60)],
-            "GOOGL": [140 + i*0.3 for i in range(60)],
-            "NVDA": [480 + i*2.0 for i in range(60)],
-            "TSLA": [250 + i*1.5 for i in range(60)],
-            "JPM": [170 + i*0.4 for i in range(60)],
-            "BTC": [43000 + i*200 for i in range(60)],
-            "ETH": [2200 + i*30 for i in range(60)],
-            "SPY": [450 + i*0.6 for i in range(60)],
-        }
+        balance_row = cursor.fetchone()
         
-        demo_signals = {
-            "AAPL": {"direction": "LONG", "confidence": 0.75, "source": "HMM"},
-            "MSFT": {"direction": "LONG", "confidence": 0.80, "source": "ARES"},
-            "GOOGL": {"direction": "NEUTRAL", "confidence": 0.60, "source": "MONTE_CARLO"},
-            "NVDA": {"direction": "STRONG_LONG", "confidence": 0.85, "source": "MEMORY_KERNEL"},
-            "TSLA": {"direction": "SHORT", "confidence": 0.65, "source": "HMM"},
-            "JPM": {"direction": "LONG", "confidence": 0.70, "source": "KALMAN"},
-            "BTC": {"direction": "LONG", "confidence": 0.72, "source": "ARES"},
-            "ETH": {"direction": "LONG", "confidence": 0.68, "source": "HMM"},
-        }
+        # Get open positions for portfolio weights
+        cursor.execute('''
+            SELECT symbol, side, quantity, entry_price
+            FROM paper_trading_trades
+            WHERE status = 'open'
+        ''')
         
-        snapshot = engine.build_portfolio(
-            prices=demo_prices,
-            signals=demo_signals,
-            risk_profile=RiskProfile.INSTITUTIONAL,
-            view_confidence=0.5
-        )
+        positions = cursor.fetchall()
+        
+        # Calculate portfolio weights from real positions
+        weights = {}
+        total_value = 0
+        position_details = []
+        
+        for pos in positions:
+            symbol = pos[0].replace('/USD', '')
+            value = float(pos[2] or 0) * float(pos[3] or 0)
+            total_value += value
+            position_details.append({
+                'symbol': symbol,
+                'side': pos[1],
+                'value': value
+            })
+        
+        for pos in position_details:
+            if total_value > 0:
+                weights[pos['symbol']] = round(pos['value'] / total_value, 4)
+        
+        # Get closed trades for performance metrics
+        cursor.execute('''
+            SELECT COUNT(*) as total,
+                   SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                   SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                   SUM(profit_loss) as total_pnl
+            FROM paper_trading_trades
+            WHERE status = 'closed'
+        ''')
+        
+        perf_row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        # Build portfolio response from real data
+        total_trades = int(perf_row[0] or 0) if perf_row else 0
+        winning_trades = int(perf_row[1] or 0) if perf_row else 0
+        total_pnl = float(perf_row[3] or 0) if perf_row else 0
+        win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+        
+        balance_usd = float(balance_row[1]) if balance_row and balance_row[1] else 1000000
+        sharpe = float(balance_row[9]) if balance_row and balance_row[9] else 0
+        max_dd = float(balance_row[8]) if balance_row and balance_row[8] else 0
         
         return jsonify({
             'success': True,
             'portfolio': {
-                'weights': snapshot.weights,
-                'expected_return': snapshot.expected_return,
-                'expected_volatility': snapshot.expected_volatility,
-                'sharpe_ratio': snapshot.sharpe_ratio,
-                'portfolio_beta': snapshot.portfolio_beta,
-                'effective_n_assets': snapshot.effective_n_assets,
-                'diversification_score': snapshot.diversification_score,
-                'net_exposure': snapshot.net_exposure,
-                'gross_exposure': snapshot.gross_exposure,
-                'sector_exposures': snapshot.sector_exposures,
-                'cluster_warnings': snapshot.cluster_warnings,
-                'risk_profile': snapshot.risk_profile
+                'weights': weights if weights else {'CASH': 1.0},
+                'balance_usd': round(balance_usd, 2),
+                'total_pnl': round(total_pnl, 2),
+                'expected_return': round(total_pnl / balance_usd * 100, 2) if balance_usd > 0 else 0,
+                'expected_volatility': round(max_dd, 2),
+                'sharpe_ratio': round(sharpe, 2),
+                'win_rate': round(win_rate, 2),
+                'total_trades': total_trades,
+                'winning_trades': winning_trades,
+                'open_positions': len(positions),
+                'net_exposure': round(total_value, 2),
+                'gross_exposure': round(total_value, 2),
+                'diversification_score': len(weights) / 10.0 if weights else 0,
+                'risk_profile': 'INSTITUTIONAL'
             },
             'modules': {
                 'risk_model': True,
@@ -493,7 +563,8 @@ def api_portfolio():
                 'exposure_manager': True,
                 'cluster_detector': True
             },
-            'version': '6.4 INSTITUTIONAL+',
+            'source': 'PostgreSQL',
+            'version': '6.5 INSTITUTIONAL+',
             'timestamp': datetime.now().isoformat()
         })
         
@@ -508,7 +579,9 @@ def api_portfolio():
 
 @app.route('/api/positions')
 def api_positions():
-    """API endpoint for open positions"""
+    """API endpoint for open positions - V6.5 with real Kraken prices"""
+    import requests
+    
     conn = get_db_connection()
     
     if not conn:
@@ -532,15 +605,44 @@ def api_positions():
         cursor.close()
         conn.close()
         
+        # V6.5: Get real-time prices from Kraken
+        kraken_prices = {}
+        try:
+            response = requests.get(
+                'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD,DOGEUSD',
+                timeout=10
+            )
+            data = response.json()
+            
+            price_map = {
+                'XXBTZUSD': 'BTC/USD', 'XETHZUSD': 'ETH/USD', 'SOLUSD': 'SOL/USD',
+                'XXRPZUSD': 'XRP/USD', 'ADAUSD': 'ADA/USD', 'XDGUSD': 'DOGE/USD',
+                'XBTUSD': 'BTC/USD', 'ETHUSD': 'ETH/USD'
+            }
+            
+            for key, ticker in data.get('result', {}).items():
+                symbol = price_map.get(key, key)
+                kraken_prices[symbol] = float(ticker['c'][0])
+                
+            logger.info(f"V6.5: Fetched {len(kraken_prices)} real-time prices from Kraken")
+            
+        except Exception as e:
+            logger.warning(f"V6.5: Could not fetch Kraken prices: {e}")
+        
         positions = []
         total_value = 0
         total_cost = 0
         
         for row in rows:
+            symbol = row[2]
             entry_price = float(row[5]) if row[5] else 0
             quantity = float(row[4]) if row[4] else 0
             cost = entry_price * quantity
-            current_price = entry_price * 1.001
+            
+            # V6.5: Use real Kraken price or fallback to entry price
+            current_price = kraken_prices.get(symbol, entry_price)
+            price_source = 'Kraken' if symbol in kraken_prices else 'Entry'
+            
             current_value = current_price * quantity
             unrealized_pnl = current_value - cost
             
@@ -550,11 +652,12 @@ def api_positions():
             positions.append({
                 'id': row[0],
                 'user_id': row[1],
-                'symbol': row[2],
+                'symbol': symbol,
                 'side': row[3],
                 'quantity': quantity,
                 'entry_price': entry_price,
                 'current_price': current_price,
+                'price_source': price_source,
                 'cost': round(cost, 2),
                 'current_value': round(current_value, 2),
                 'unrealized_pnl': round(unrealized_pnl, 2),
@@ -564,7 +667,7 @@ def api_positions():
                 'opened_at': row[8].isoformat() if row[8] else None
             })
         
-        logger.info(f"Fetched {len(positions)} open positions")
+        logger.info(f"Fetched {len(positions)} open positions with real prices")
         
         return jsonify({
             'success': True,
@@ -574,7 +677,9 @@ def api_positions():
                 'total_cost': round(total_cost, 2),
                 'total_value': round(total_value, 2),
                 'total_unrealized_pnl': round(total_value - total_cost, 2)
-            }
+            },
+            'price_source': 'Kraken API',
+            'timestamp': datetime.now().isoformat()
         })
         
     except Exception as e:
@@ -888,49 +993,114 @@ def api_market_ohlc(symbol):
 
 @app.route('/api/signals/active')
 def api_active_signals():
-    """API endpoint for active trading signals"""
+    """API endpoint for active trading signals - V6.5 connected to real DB"""
+    conn = get_db_connection()
+    signals = []
     
-    signals = [
-        {
-            'strategy': 'HMM Regime',
-            'symbol': 'BTC/USD',
-            'signal': 'BULLISH',
-            'confidence': 78,
-            'timestamp': datetime.now().isoformat()
-        },
-        {
-            'strategy': 'ARES V2',
-            'symbol': 'ETH/USD', 
-            'signal': 'NEUTRAL',
-            'confidence': 52,
-            'timestamp': datetime.now().isoformat()
-        },
-        {
-            'strategy': 'Monte Carlo',
-            'symbol': 'SOL/USD',
-            'signal': 'BEARISH',
-            'confidence': 65,
-            'timestamp': datetime.now().isoformat()
-        },
-        {
-            'strategy': 'Non-Markovian',
-            'symbol': 'BTC/USD',
-            'signal': 'BULLISH',
-            'confidence': 71,
-            'timestamp': datetime.now().isoformat()
-        },
-        {
-            'strategy': 'Coherence Engine',
-            'symbol': 'ETH/USD',
-            'signal': 'HOLD',
-            'confidence': 88,
-            'timestamp': datetime.now().isoformat()
-        }
-    ]
+    if conn:
+        try:
+            cursor = conn.cursor()
+            
+            # Get recent trades to derive signals (last 24 hours)
+            cursor.execute('''
+                SELECT symbol, side, strategy, status, opened_at, entry_price
+                FROM paper_trading_trades
+                WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                ORDER BY opened_at DESC
+                LIMIT 10
+            ''')
+            
+            recent_trades = cursor.fetchall()
+            
+            # Analyze trade patterns to generate signals
+            symbol_stats = {}
+            for trade in recent_trades:
+                symbol = trade[0]
+                side = trade[1]
+                strategy = trade[2] or 'OMNIX'
+                
+                if symbol not in symbol_stats:
+                    symbol_stats[symbol] = {'buys': 0, 'sells': 0, 'strategies': set()}
+                
+                if side == 'buy':
+                    symbol_stats[symbol]['buys'] += 1
+                else:
+                    symbol_stats[symbol]['sells'] += 1
+                symbol_stats[symbol]['strategies'].add(strategy)
+            
+            # Generate signals based on trade activity
+            for symbol, stats in symbol_stats.items():
+                total = stats['buys'] + stats['sells']
+                if total > 0:
+                    buy_ratio = stats['buys'] / total
+                    
+                    if buy_ratio > 0.7:
+                        signal_type = 'BULLISH'
+                        confidence = int(buy_ratio * 100)
+                    elif buy_ratio < 0.3:
+                        signal_type = 'BEARISH'
+                        confidence = int((1 - buy_ratio) * 100)
+                    else:
+                        signal_type = 'NEUTRAL'
+                        confidence = 50
+                    
+                    signals.append({
+                        'strategy': list(stats['strategies'])[0] if stats['strategies'] else 'OMNIX',
+                        'symbol': symbol,
+                        'signal': signal_type,
+                        'confidence': confidence,
+                        'trades_24h': total,
+                        'timestamp': datetime.now().isoformat()
+                    })
+            
+            # Also check for open positions as active signals
+            cursor.execute('''
+                SELECT symbol, side, strategy, entry_price, opened_at
+                FROM paper_trading_trades
+                WHERE status = 'open'
+                ORDER BY opened_at DESC
+            ''')
+            
+            open_positions = cursor.fetchall()
+            for pos in open_positions:
+                existing = next((s for s in signals if s['symbol'] == pos[0]), None)
+                if not existing:
+                    signals.append({
+                        'strategy': pos[2] or 'OMNIX',
+                        'symbol': pos[0],
+                        'signal': 'LONG' if pos[1] == 'buy' else 'SHORT',
+                        'confidence': 75,
+                        'position_open': True,
+                        'timestamp': pos[4].isoformat() if pos[4] else datetime.now().isoformat()
+                    })
+            
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"Generated {len(signals)} signals from real trading data")
+            
+        except Exception as e:
+            logger.error(f"Error fetching signals from DB: {e}")
+            if conn:
+                conn.close()
+    
+    # Fallback if no signals found
+    if not signals:
+        signals = [
+            {
+                'strategy': 'OMNIX V6.5',
+                'symbol': 'BTC/USD',
+                'signal': 'ANALYZING',
+                'confidence': 0,
+                'message': 'Waiting for trading activity',
+                'timestamp': datetime.now().isoformat()
+            }
+        ]
     
     return jsonify({
         'success': True,
         'signals': signals,
+        'source': 'PostgreSQL',
         'timestamp': datetime.now().isoformat()
     })
 
@@ -985,37 +1155,101 @@ def api_market_volume():
 
 @app.route('/api/system/status')
 def api_system_status():
-    """API endpoint for OMNIX system status"""
+    """API endpoint for OMNIX system status - V6.5 connected to real DB"""
+    conn = get_db_connection()
     
+    # Get trades from DB
     trades = get_paper_trades(1)
     open_positions = len([t for t in trades if t.get('status') == 'open'])
     trades_today = len([t for t in trades if t.get('closed_at') is not None])
     
+    # V6.5: Read user_settings for bot status
+    bot_active = False
+    trading_enabled = False
+    daily_pnl = 0.0
+    user_settings_data = {}
+    strategy_counts = {}
+    
+    if conn:
+        try:
+            cursor = conn.cursor()
+            
+            # Get user settings
+            cursor.execute('''
+                SELECT auto_trading, trading_enabled, daily_pnl_usd, 
+                       active_cryptos, stop_loss_pct, take_profit_pct,
+                       risk_profile, updated_at
+                FROM user_settings
+                ORDER BY updated_at DESC
+                LIMIT 1
+            ''')
+            
+            settings_row = cursor.fetchone()
+            if settings_row:
+                bot_active = bool(settings_row[0])
+                trading_enabled = bool(settings_row[1])
+                daily_pnl = float(settings_row[2]) if settings_row[2] else 0.0
+                user_settings_data = {
+                    'active_cryptos': settings_row[3] or ['BTC/USD', 'ETH/USD'],
+                    'stop_loss_pct': float(settings_row[4]) if settings_row[4] else 3.0,
+                    'take_profit_pct': float(settings_row[5]) if settings_row[5] else 5.0,
+                    'risk_profile': settings_row[6] or 'moderado',
+                    'last_updated': settings_row[7].isoformat() if settings_row[7] else None
+                }
+            
+            # Get recent trades count by strategy
+            cursor.execute('''
+                SELECT strategy, COUNT(*) as cnt
+                FROM paper_trading_trades
+                WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                GROUP BY strategy
+            ''')
+            
+            strategy_counts = {row[0]: row[1] for row in cursor.fetchall()}
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"Error reading user_settings: {e}")
+            if conn:
+                conn.close()
+    
+    # Build strategies status from real data
+    strategies = {}
+    if strategy_counts:
+        for strat_name, signal_count in strategy_counts.items():
+            strategies[strat_name] = {'active': True, 'signals_today': signal_count}
+    
+    # Add default strategies if none found
+    if not strategies:
+        strategies = {
+            'OMNIX_V6.5': {'active': bot_active, 'signals_today': trades_today},
+            'Auto_Trading_Bot': {'active': bot_active, 'signals_today': open_positions}
+        }
+    
     status = {
-        'bot_active': True,
-        'version': 'V6.4 INSTITUTIONAL+',
+        'bot_active': bot_active,
+        'trading_enabled': trading_enabled,
+        'version': 'V6.5 INSTITUTIONAL+',
         'uptime': '24/7 Railway',
         'last_activity': datetime.now().isoformat(),
         'database_connected': DB_AVAILABLE,
-        'strategies': {
-            'HMM_Regime': {'active': True, 'signals_today': 5},
-            'ARES_V1': {'active': True, 'signals_today': 3},
-            'ARES_V2': {'active': True, 'signals_today': 8},
-            'Monte_Carlo': {'active': True, 'signals_today': 2},
-            'Non_Markovian': {'active': True, 'signals_today': 4},
-            'Coherence_Engine': {'active': True, 'vetos_today': 1}
-        },
+        'daily_pnl_usd': round(daily_pnl, 2),
+        'strategies': strategies,
         'protection': {
-            'drawdown_tier': 'NORMAL',
+            'drawdown_tier': 'NORMAL' if daily_pnl >= 0 else 'CAUTION',
             'ramp_up_pct': 100,
-            'daily_loss_limit': 500,
+            'daily_loss_limit': user_settings_data.get('stop_loss_pct', 3.0) * 100,
             'position_size_factor': 1.0
         },
         'trading': {
             'open_positions': open_positions,
             'trades_today': trades_today,
-            'pairs_active': ['BTC/USD', 'ETH/USD', 'SOL/USD']
+            'pairs_active': user_settings_data.get('active_cryptos', ['BTC/USD', 'ETH/USD', 'SOL/USD'])
         },
+        'user_settings': user_settings_data,
+        'source': 'PostgreSQL',
         'timestamp': datetime.now().isoformat()
     }
     
