@@ -29,6 +29,14 @@ User Communication Preference: Simple, everyday language (Spanish primary).
 - **Core Strategies**: Includes Monte Carlo Simulations, Black Swan Detection, Kelly Criterion, HMM Regime Detection, Dual Kalman Filter, Quantum Momentum, ARES V1/V2, Non-Markovian Kernel, and Order Book Analysis.
 - **Non-Markovian Memory Kernel V6.1**: Captures temporal dependencies to detect regime transitions, cyclical patterns, and memory coherence.
 - **ARES Institutional Protocols**: ARES V1 (Swing Trading) and ARES V2 (Scalping M1) with target win rates and multi-layer Kill-Switch Protection.
+- **AutoTradingBot V6.4 PREMIUM**: Optimized for 20-50 trades/day with 55%+ win rate:
+    - **Multi-Crypto Scanning**: Rotates through 3 pairs (BTC, ETH, SOL) every 25 seconds.
+    - **Tiered Signal Strength**: VERY_STRONG (100%), STRONG (75%), MODERATE (50%) position sizing.
+    - **Ramp-Up System**: Conservative start (30% size) scaling to 100% after 50 successful trades with DB persistence.
+    - **HMM Quality Filter**: Enhanced regime detection with confidence-weighted decisions.
+    - **Coherence Engine V6.4**: Balanced veto system (45% threshold) with signal-strength bypass for VERY_STRONG.
+    - **Drawdown Protection**: Auto-reduces position size on losing days ($200+ loss = 75%, $500+ = 50%).
+    - **State Persistence**: Trade counters and metrics persist across restarts via PostgreSQL.
 - **Professional Testing & Validation System**: Features Walk-Forward Analysis, Monte Carlo Stress Testing, Market Regime Testing, Realistic Cost Modeling, and Investor Report Generation.
 - **AI & Machine Learning**: Conversational AI ("Cerebro Conversacional") for self-explaining AI reasoning and an Auto-Learning System for strategy parameter optimization.
 - **Quantum Physics Validation System**: PhD+ level scientific accuracy with 31 verified formulas and quantum credibility scoring.

@@ -195,18 +195,21 @@ class AutoTradingBot:
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
-            'trading_pair': 'BTC/USD',
-            'check_interval_seconds': 30,  # Analizar cada 30 segundos (reactivo institucional)
-            'min_trade_usd': 100.0,  # Mínimo $100 por trade (flexible para paper trading)
-            'max_position_pct': 0.25,  # Máximo 25% del balance por trade (conservador profesional)
-            'stop_loss_pct': 0.025,  # Stop-loss 2.5% (protección tight profesional)
-            'max_daily_loss_pct': 0.10,  # Parada si pérdida diaria > 10% (risk management estricto)
-            'min_confidence': 0.15,  # Confianza mínima 15% (balance entre selectividad y actividad)
+            'trading_pairs': ['BTC/USD', 'ETH/USD', 'SOL/USD'],  # V6.4: Top 3 cryptos (más estable)
+            'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
+            'check_interval_seconds': 25,  # V6.4: 25s (balance entre velocidad y estabilidad)
+            'min_trade_usd': 75.0,  # V6.4: Mínimo $75 (balance calidad/cantidad)
+            'max_position_pct': 0.12,  # V6.4: Máximo 12% por trade (más conservador)
+            'stop_loss_pct': 0.02,  # Stop-loss 2% (tighter para proteger ganancias)
+            'max_daily_loss_pct': 0.08,  # V6.4: Parada si pérdida diaria > 8%
+            'min_confidence': 0.14,  # V6.4: Confianza mínima 14% (balance calidad/cantidad)
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
+            'use_multi_crypto': True,  # V6.4: Activar escaneo multi-crypto
+            'trades_per_day_target': 25,  # V6.4: Objetivo 25 trades/día (realista)
         }
         
-        # Estado del bot
+        # Estado del bot - V6.4: Cargado de la base de datos para persistencia
         self.state = {
             'running': False,
             'total_trades': 0,
@@ -220,6 +223,9 @@ class AutoTradingBot:
             'paper_balance': 1_000_000.0 if self.config['paper_mode'] else 0.0,  # $1M virtual
             'paper_positions': {}  # {symbol: {amount, avg_price, value}}
         }
+        
+        # V6.4: Cargar estado persistente de la DB
+        self._load_persistent_state()
         
         # Inicializar balance en Prometheus
         if METRICS_ENGINE_AVAILABLE and metrics:
@@ -396,17 +402,109 @@ class AutoTradingBot:
             logger.error(f"Error deteniendo auto-trading: {e}")
             return {'error': str(e)}
     
+    def _load_persistent_state(self):
+        """
+        V6.4: Cargar estado persistente de la base de datos.
+        Esto garantiza que los contadores de trades y métricas se mantengan
+        entre reinicios del bot para que el ramp-up system funcione correctamente.
+        """
+        if not self.database_service:
+            logger.info("📊 V6.4: Sin database_service - usando estado inicial")
+            return
+        
+        try:
+            # Cargar estadísticas de trades cerrados
+            from datetime import datetime, timedelta
+            
+            # Contar trades totales (últimos 30 días para track record)
+            total_trades = 0
+            winning_trades = 0
+            losing_trades = 0
+            total_pnl = 0.0
+            daily_pnl = 0.0
+            
+            # Intentar obtener trades de la base de datos
+            if hasattr(self.database_service, 'get_paper_trades_stats'):
+                stats = self.database_service.get_paper_trades_stats()
+                if stats:
+                    total_trades = stats.get('total_trades', 0)
+                    winning_trades = stats.get('winning_trades', 0)
+                    losing_trades = stats.get('losing_trades', 0)
+                    total_pnl = stats.get('total_pnl', 0.0)
+                    daily_pnl = stats.get('daily_pnl', 0.0)
+            elif hasattr(self.database_service, 'execute_query'):
+                # Fallback: Consulta directa
+                try:
+                    result = self.database_service.execute_query('''
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                            SUM(CASE WHEN profit_loss <= 0 THEN 1 ELSE 0 END) as losses,
+                            COALESCE(SUM(profit_loss), 0) as total_pnl
+                        FROM paper_trading_trades
+                        WHERE status = 'closed'
+                        AND closed_at >= NOW() - INTERVAL '30 days'
+                    ''')
+                    if result and len(result) > 0:
+                        row = result[0]
+                        total_trades = int(row.get('total', 0) or 0)
+                        winning_trades = int(row.get('wins', 0) or 0)
+                        losing_trades = int(row.get('losses', 0) or 0)
+                        total_pnl = float(row.get('total_pnl', 0) or 0)
+                except Exception as e:
+                    logger.debug(f"Query fallback error: {e}")
+            
+            # Cargar P/L del día actual para drawdown protection
+            try:
+                if hasattr(self.database_service, 'execute_query'):
+                    daily_result = self.database_service.execute_query('''
+                        SELECT COALESCE(SUM(profit_loss), 0) as daily_pnl
+                        FROM paper_trading_trades
+                        WHERE status = 'closed'
+                        AND closed_at >= CURRENT_DATE
+                    ''')
+                    if daily_result and len(daily_result) > 0:
+                        daily_pnl = float(daily_result[0].get('daily_pnl', 0) or 0)
+            except Exception as e:
+                logger.debug(f"Daily P/L query error: {e}")
+            
+            # Actualizar estado - INCLUYENDO daily_profit_loss para drawdown protection
+            self.state['total_trades'] = total_trades
+            self.state['winning_trades'] = winning_trades
+            self.state['losing_trades'] = losing_trades
+            self.state['total_profit_loss'] = total_pnl
+            self.state['daily_profit_loss'] = daily_pnl  # V6.4 FIX: Persistir drawdown diario
+            
+            # Calcular win rate
+            win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+            
+            # Log con drawdown info
+            drawdown_status = ""
+            if daily_pnl < -500:
+                drawdown_status = " ⚠️ DRAWDOWN ACTIVO (50% sizing)"
+            elif daily_pnl < -200:
+                drawdown_status = " ⚠️ DRAWDOWN ACTIVO (75% sizing)"
+            
+            logger.info(f"📊 V6.4 Estado cargado: {total_trades} trades, Win Rate: {win_rate:.1f}%, P/L Total: ${total_pnl:.2f}, P/L Hoy: ${daily_pnl:.2f}{drawdown_status}")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ V6.4: Error cargando estado persistente (usando valores iniciales): {e}")
+    
     def _trading_loop(self):
-        """Loop principal 24/7"""
-        logger.info("🔄 Trading loop iniciado - Corriendo 24/7")
+        """Loop principal 24/7 - V6.4 MULTI-CRYPTO PREMIUM"""
+        logger.info("🔄 Trading loop V6.4 MULTI-CRYPTO iniciado - Corriendo 24/7")
         
         # Contador para procesar evaluaciones cada N ciclos
         evaluation_check_counter = 0
-        evaluation_check_interval = 10  # Verificar evaluaciones cada 10 ciclos (~5 min si ciclo es 30s)
+        evaluation_check_interval = 10  # Verificar evaluaciones cada 10 ciclos
         
-        # Contador para alertas predictivas (cada 5 min = 10 ciclos de 30s)
+        # Contador para alertas predictivas
         predictive_alert_counter = 0
         predictive_alert_interval = 10
+        
+        # V6.4: Índice para rotar entre pares
+        pair_index = 0
+        trading_pairs = self.config.get('trading_pairs', ['BTC/USD'])
         
         while self.state['running']:
             try:
@@ -415,6 +513,13 @@ class AutoTradingBot:
                     logger.critical("🚨 PARADA DE EMERGENCIA - Pérdidas excesivas")
                     self.stop()
                     break
+                
+                # V6.4: MULTI-CRYPTO - Escanear el par actual
+                if self.config.get('use_multi_crypto', True) and len(trading_pairs) > 1:
+                    current_pair = trading_pairs[pair_index]
+                    self.config['trading_pair'] = current_pair
+                    pair_index = (pair_index + 1) % len(trading_pairs)
+                    logger.info(f"🔍 Escaneando {current_pair} ({pair_index+1}/{len(trading_pairs)})")
                 
                 # Análisis completo
                 analysis = self._analyze_market()
@@ -429,7 +534,7 @@ class AutoTradingBot:
                     result = self._execute_smart_trade(analysis)
                     
                     if result.get('success'):
-                        logger.info(f"✅ Trade ejecutado: {result}")
+                        logger.info(f"✅ Trade ejecutado en {self.config['trading_pair']}: {result}")
                         self._update_stats(result)
                 
                 # 🧠 Procesar evaluaciones pendientes cada N ciclos
@@ -438,14 +543,14 @@ class AutoTradingBot:
                     evaluation_check_counter = 0
                     self._process_pending_evaluations()
                 
-                # Esperar antes del siguiente análisis
+                # V6.4: Esperar menos entre análisis para más oportunidades
                 time.sleep(self.config['check_interval_seconds'])
                 
             except Exception as e:
                 logger.error(f"Error en trading loop: {e}")
-                time.sleep(60)  # Esperar 1 min antes de reintentar
+                time.sleep(30)  # V6.4: Esperar 30s (era 60s) antes de reintentar
         
-        logger.info("🔄 Trading loop terminado")
+        logger.info("🔄 Trading loop V6.4 terminado")
     
     def _check_predictive_alerts(self, current_price: float):
         """
@@ -791,22 +896,37 @@ class AutoTradingBot:
                     score -= adjusted_weight * 0.53
                 decision['v52_analysis']['kalman_trend'] = trend
             
-            # 6. HMM Regime (peso: 10 puntos) + ADAPTIVE REGIME DETECTION
+            # 6. HMM Regime (peso: 15 puntos) + V6.4 QUALITY FILTER
             if hmm_regime:
-                max_score += 10
+                max_score += 15  # V6.4: Aumentado peso de 10 a 15
                 regime = hmm_regime.get('regime', 'UNKNOWN')
                 params = hmm_regime.get('recommended_params', {})
+                regime_confidence = hmm_regime.get('confidence', 0.5)
                 
+                # V6.4: HMM QUALITY FILTER - Boost para trades alineados con régimen
                 if regime == 'TRENDING':
-                    score += 10
-                    decision['reason'].append(f"✅ HMM: {regime} market (follow trend)")
+                    score += 15
+                    decision['reason'].append(f"✅ HMM: {regime} ({regime_confidence:.0%} conf)")
+                    decision['v52_analysis']['hmm_quality_bonus'] = True
                 elif regime == 'RANGING':
-                    score -= 5  # Evitar trending strategies
-                    decision['reason'].append(f"⚠️ HMM: {regime} market (mean reversion)")
+                    # V6.4: Solo penalizar si confianza alta en ranging
+                    if regime_confidence > 0.7:
+                        score -= 8
+                        decision['reason'].append(f"⚠️ HMM: {regime} market - reduciendo")
+                    else:
+                        score -= 3  # Penalización menor si confianza baja
                 elif regime == 'VOLATILE':
-                    score -= 8  # Reducir exposición
-                    decision['reason'].append(f"🚨 HMM: {regime} market (high risk)")
+                    # V6.4: VETO solo en volatilidad extrema con alta confianza
+                    if regime_confidence > 0.8:
+                        score -= 15
+                        decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO")
+                        decision['v52_analysis']['hmm_volatility_veto'] = True
+                    else:
+                        score -= 5
+                        decision['reason'].append(f"⚠️ HMM: {regime} moderado")
+                
                 decision['v52_analysis']['market_regime'] = regime
+                decision['v52_analysis']['hmm_confidence'] = regime_confidence
                 
                 # Ajustar position size según régimen
                 if params:
@@ -962,16 +1082,40 @@ class AutoTradingBot:
             decision['raw_score'] = score
             decision['max_score'] = max_score
             
-            # Decisión de trading
+            # V6.4 PREMIUM: Decisión de trading con umbrales optimizados
+            # Objetivo: 20-50 trades/día con win rate > 55%
             if confidence >= (self.config['min_confidence'] * 100):
-                if score > 15:  # Señal COMPRA fuerte
+                # V6.4: Umbrales escalonados para más oportunidades
+                if score > 20:  # Señal COMPRA MUY FUERTE - Full position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
+                    decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
-                elif score < -15:  # Señal VENTA fuerte
+                elif score > 10:  # Señal COMPRA FUERTE - 75% position
+                    decision['should_trade'] = True
+                    decision['action'] = 'BUY'
+                    decision['signal_strength'] = 'STRONG'
+                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
+                elif score > 5:  # Señal COMPRA MODERADA - 50% position
+                    decision['should_trade'] = True
+                    decision['action'] = 'BUY'
+                    decision['signal_strength'] = 'MODERATE'
+                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.50
+                elif score < -20:  # Señal VENTA MUY FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
+                    decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
+                elif score < -10:  # Señal VENTA FUERTE
+                    decision['should_trade'] = True
+                    decision['action'] = 'SELL'
+                    decision['signal_strength'] = 'STRONG'
+                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
+                elif score < -5:  # Señal VENTA MODERADA
+                    decision['should_trade'] = True
+                    decision['action'] = 'SELL'
+                    decision['signal_strength'] = 'MODERATE'
+                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.50
             
             # 🧠 COHERENCE ENGINE V5.4 ULTRA - Validación Premium de Coherencia
             if self.coherence_engine and decision.get('should_trade'):
@@ -1000,69 +1144,57 @@ class AutoTradingBot:
                     logger.info(f"   🎯 Consenso: {coherence_report.consensus_signal.name} (Confianza: {coherence_report.consensus_confidence:.1%})")
                     logger.info(f"   💡 Recomendación: {coherence_report.decision_recommendation}")
                     
-                    # ========== SISTEMA DE VETO PREMIUM ULTRA ==========
+                    # ========== V6.4 SISTEMA DE VETO BALANCEADO ==========
+                    # Objetivo: Más trades manteniendo calidad (win rate > 55%)
                     
-                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja o contradicciones graves
+                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (< 30%)
                     if (coherence_report.coherence_level.value == 'CRITICAL' or 
                         coherence_report.coherence_score < 30):
-                        logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% - Estrategias en conflicto grave")
+                        logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% (CRITICAL)")
-                        if coherence_report.contradictions:
-                            logger.error(f"   ⚠️ Contradicciones detectadas: {len(coherence_report.contradictions)}")
-                            for contradiction in coherence_report.contradictions[:3]:  # Mostrar top 3
-                                logger.error(f"      • {contradiction}")
+                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}%")
                     
-                    # NIVEL 2: VETO POR BAJA COHERENCIA - Score < 50%
-                    elif (coherence_report.coherence_level.value == 'POOR' or 
-                          coherence_report.coherence_score < 50):
-                        logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < 50% - Cancelando operación")
+                    # NIVEL 2: VETO POR BAJA COHERENCIA - Si < 45% (V6.4: balance entre 40% y 50%)
+                    elif coherence_report.coherence_score < 45:
+                        logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < 45%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🛑 VETO: Coherencia insuficiente ({coherence_report.coherence_score:.1f}%)")
-                        if coherence_report.contradictions:
-                            decision['reason'].append(f"   {len(coherence_report.contradictions)} contradicciones detectadas")
+                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}%")
                     
-                    # NIVEL 3: VETO POR RECOMENDACIÓN HOLD del motor
+                    # NIVEL 3: HOLD recomendado - solo vetar si señal no es muy fuerte
                     elif coherence_report.decision_recommendation == 'HOLD':
-                        logger.warning(f"⚠️ COHERENCE ENGINE RECOMIENDA HOLD - Vetando operación")
-                        logger.warning(f"   Razón: Consenso débil o señales contradictorias")
-                        decision['should_trade'] = False
-                        decision['action'] = 'HOLD'
-                        decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD (consenso débil)")
+                        signal_strength = decision.get('signal_strength', 'MODERATE')
+                        if signal_strength == 'VERY_STRONG':
+                            # Solo señales MUY fuertes pueden pasar con reducción
+                            if 'amount_usd' in decision:
+                                decision['amount_usd'] *= 0.55
+                                decision['reason'].append(f"⚠️ Señal VERY_STRONG bypassing HOLD - posición reducida 45%")
+                        else:
+                            # STRONG y MODERATE respetan HOLD
+                            decision['should_trade'] = False
+                            decision['action'] = 'HOLD'
+                            decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD")
                     
-                    # NIVEL 4: REDUCCIÓN MODERADA - Coherencia entre 50-70%
-                    elif (coherence_report.coherence_level.value == 'MODERATE' or 
-                          coherence_report.coherence_score < 70):
+                    # NIVEL 4: REDUCCIÓN MODERADA - Coherencia 45-60%
+                    elif coherence_report.coherence_score < 60:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
-                            # Ajuste progresivo según coherencia
-                            if coherence_report.coherence_score < 60:
-                                reduction_factor = 0.40  # Reducir a 40% si coherencia 50-60%
-                            else:
-                                reduction_factor = 0.60  # Reducir a 60% si coherencia 60-70%
-                            
-                            decision['amount_usd'] *= reduction_factor
-                            logger.warning(f"⚠️ COHERENCIA MODERADA: Reduciendo posición {reduction_factor:.0%}")
-                            logger.warning(f"   ${original_amount:.2f} → ${decision['amount_usd']:.2f} (Score: {coherence_report.coherence_score:.1f}%)")
-                            decision['reason'].append(f"⚠️ Posición reducida {100-int(reduction_factor*100)}% por coherencia moderada")
+                            decision['amount_usd'] *= 0.60
+                            logger.info(f"📊 Coherencia moderada: ${original_amount:.2f} → ${decision['amount_usd']:.2f}")
+                            decision['reason'].append(f"📊 Posición reducida 40% por coherencia moderada")
                     
-                    # NIVEL 5: REDUCCIÓN LEVE - Coherencia entre 70-85% (buena pero no excelente)
-                    elif (coherence_report.coherence_level.value == 'GOOD' and 
-                          coherence_report.coherence_score < 85):
+                    # NIVEL 5: REDUCCIÓN LEVE - Coherencia 60-80%
+                    elif coherence_report.coherence_score < 80:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
-                            decision['amount_usd'] *= 0.85  # Reducir a 85%
-                            logger.info(f"📊 Coherencia buena: Ajuste conservador de posición")
-                            logger.info(f"   ${original_amount:.2f} → ${decision['amount_usd']:.2f} (Score: {coherence_report.coherence_score:.1f}%)")
-                            decision['reason'].append(f"📊 Ajuste conservador 15% (coherencia buena pero no excelente)")
+                            decision['amount_usd'] *= 0.85
+                            decision['reason'].append(f"📊 Ajuste 15% (coherencia buena)")
                     
-                    # NIVEL 6: APROBACIÓN COMPLETA - Coherencia excelente >= 85%
+                    # NIVEL 6: APROBACIÓN COMPLETA - Coherencia >= 80%
                     else:
-                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_report.coherence_score:.1f}% ({coherence_report.coherence_level.value})")
-                        logger.info(f"   🎯 Todas las estrategias alineadas - Operación autorizada al 100%")
-                        decision['reason'].append(f"✅ Coherencia excelente ({coherence_report.coherence_score:.1f}%) - Full position")
+                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_report.coherence_score:.1f}%")
+                        decision['reason'].append(f"✅ Coherencia excelente - Full position")
                     
                     # Log de contradicciones si existen (siempre, para transparencia)
                     if coherence_report.contradictions and decision.get('should_trade'):
@@ -1613,18 +1745,50 @@ class AutoTradingBot:
         hmm_regime: Optional[Dict]
     ) -> float:
         """
-        Calcular tamaño óptimo de posición usando Kelly + HMM Regime
+        V6.4 PREMIUM: Calcular tamaño óptimo de posición
+        - Kelly Criterion + HMM Regime + Ramp-Up System
+        - Reduce drawdown inicial empezando conservador
         """
         balance = self._get_balance()
+        
+        # ========== V6.4 RAMP-UP SYSTEM ==========
+        # Empezar conservador y escalar según track record
+        total_trades = self.state.get('total_trades', 0)
+        winning_trades = self.state.get('winning_trades', 0)
+        win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 50
+        
+        # Factor de ramp-up basado en número de trades
+        if total_trades < 5:
+            ramp_up_factor = 0.30  # Primeros 5 trades: 30% tamaño
+        elif total_trades < 10:
+            ramp_up_factor = 0.50  # Trades 5-10: 50% tamaño
+        elif total_trades < 20:
+            ramp_up_factor = 0.70  # Trades 10-20: 70% tamaño
+        elif total_trades < 50:
+            ramp_up_factor = 0.85  # Trades 20-50: 85% tamaño
+        else:
+            ramp_up_factor = 1.0   # 50+ trades: 100% tamaño
+        
+        # Bonus si win rate es alto
+        if total_trades >= 10 and win_rate >= 60:
+            ramp_up_factor = min(1.0, ramp_up_factor * 1.15)  # +15% si win rate > 60%
+        
+        # Penalización si win rate es bajo
+        if total_trades >= 10 and win_rate < 45:
+            ramp_up_factor *= 0.70  # -30% si win rate < 45%
         
         # Tamaño base según configuración
         base_size = balance * self.config['max_position_pct']
         
+        # Aplicar ramp-up
+        base_size *= ramp_up_factor
+        
         # Ajuste por Kelly Criterion
         if kelly and 'recommended_position_usd' in kelly:
             kelly_size = kelly['recommended_position_usd']
-            # Promediar entre Kelly y base
-            base_size = (base_size + kelly_size) / 2
+            # Promediar entre Kelly y base (más peso a Kelly si track record bueno)
+            kelly_weight = 0.5 if total_trades < 20 else 0.6
+            base_size = base_size * (1 - kelly_weight) + kelly_size * kelly_weight
         
         # Ajuste por régimen de mercado (HMM)
         if hmm_regime and 'recommended_params' in hmm_regime:
@@ -1632,11 +1796,23 @@ class AutoTradingBot:
             position_multiplier = params.get('position_size_multiplier', 1.0)
             base_size *= position_multiplier
         
+        # V6.4: Protección contra drawdown - reducir si día malo
+        daily_loss = self.state.get('daily_profit_loss', 0)
+        if daily_loss < -500:  # Perdimos más de $500 hoy
+            base_size *= 0.50  # Reducir a 50%
+            logger.warning(f"⚠️ V6.4 Drawdown Protection: Día con pérdida ${daily_loss:.2f} - reduciendo posición")
+        elif daily_loss < -200:
+            base_size *= 0.75  # Reducir a 75%
+        
         # Límites de seguridad
         min_size = self.config['min_trade_usd']
-        max_size = balance * 0.25  # Nunca más del 25%
+        max_size = balance * 0.15  # V6.4: Máximo 15% (era 25%)
         
         optimal_size = max(min_size, min(base_size, max_size))
+        
+        # Log para tracking
+        if total_trades < 20:
+            logger.info(f"📊 V6.4 Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}, Size=${optimal_size:.2f}")
         
         return optimal_size
     
