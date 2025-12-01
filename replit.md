@@ -22,6 +22,14 @@ OMNIX V6.5 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and st
 3. **Code sync**: GitHub -> Railway auto-deploy from main branch
 4. **After testing on Replit**: ALWAYS stop workflow before ending session
 
+### Bot Testing Protocol (MANDATORY)
+> **REGLA OBLIGATORIA**: Cada vez que se active el bot en Replit para testing:
+> 1. Realizar las pruebas necesarias
+> 2. **APAGAR el workflow del bot ANTES de terminar la sesión**
+> 3. Verificar que el workflow esté detenido
+>
+> **Razón**: Telegram solo permite UNA conexión activa por token. Si el bot corre en Replit y Railway al mismo tiempo, habrá conflictos y errores de conexión.
+
 ## System Architecture
 
 ### Core Engines
