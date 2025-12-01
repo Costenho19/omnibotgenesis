@@ -269,6 +269,84 @@
                 grid-template-columns: repeat(4, 1fr);
             }
         }
+        
+        .crypto-ticker {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 0.5rem 0;
+        }
+        
+        .crypto-ticker::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .ticker-item {
+            flex-shrink: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            min-width: 140px;
+            transition: all 0.2s ease;
+        }
+        
+        .ticker-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
+        }
+        
+        .ticker-item.positive {
+            border-left: 2px solid var(--accent-green);
+        }
+        
+        .ticker-item.negative {
+            border-left: 2px solid var(--accent-red);
+        }
+        
+        .news-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .news-item:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: var(--bg-elevated);
+        }
+        
+        .strategy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+        }
+        
+        .strategy-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .strategy-inactive {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .omnix-brand-bar {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -310,6 +388,98 @@
         </header>
 
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-6 py-6">
+            <!-- OMNIX Premium Crypto Ticker -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-purple-400">📈</span>
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Live Crypto Markets</h2>
+                    </div>
+                    <span class="text-[10px] text-slate-600 uppercase">Via Kraken</span>
+                </div>
+                <div id="crypto-ticker" class="crypto-ticker">
+                    <div class="ticker-item">
+                        <div class="text-slate-500 text-[10px] uppercase">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News & System Status Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Financial News -->
+                <div class="lg:col-span-2 glass-card p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400">📰</span>
+                            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Financial News</h2>
+                        </div>
+                        <span id="news-source" class="text-[10px] text-slate-600 uppercase">Loading...</span>
+                    </div>
+                    <div id="news-feed" class="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
+                        <div class="text-slate-600 text-xs text-center py-6 uppercase tracking-wider">Loading news...</div>
+                    </div>
+                </div>
+
+                <!-- OMNIX System Status -->
+                <div class="glass-card p-4">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-green-400">🤖</span>
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">OMNIX Status</h2>
+                    </div>
+                    <div id="system-status" class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <span class="text-slate-500 text-xs uppercase tracking-wider">Bot Status</span>
+                            <span class="strategy-badge strategy-active">● ACTIVE</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <span class="text-slate-500 text-xs uppercase tracking-wider">Uptime</span>
+                            <span class="text-sm mono text-cyan-400">24/7 Railway</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <span class="text-slate-500 text-xs uppercase tracking-wider">Protection</span>
+                            <span id="protection-status" class="text-sm mono text-green-400">NORMAL</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <span class="text-slate-500 text-xs uppercase tracking-wider">Ramp-Up</span>
+                            <span id="rampup-status" class="text-sm mono">100%</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-slate-500 text-xs uppercase tracking-wider">Active Pairs</span>
+                            <span id="active-pairs" class="text-sm mono text-purple-400">BTC ETH SOL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OMNIX Branding Bar -->
+            <div class="omnix-brand-bar mb-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <span class="text-xl font-bold">O</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold gradient-text-brand">OMNIX V6.4 INSTITUTIONAL+</div>
+                            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Automated Trading System</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6 text-center">
+                        <div>
+                            <div class="text-lg font-bold mono gradient-text-green" id="brand-trades-today">0</div>
+                            <div class="text-[9px] text-slate-500 uppercase">Trades Today</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold mono text-cyan-400" id="brand-strategies">6</div>
+                            <div class="text-[9px] text-slate-500 uppercase">Strategies</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold mono text-purple-400" id="brand-protection">9</div>
+                            <div class="text-[9px] text-slate-500 uppercase">Protections</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 <div class="metric-card p-4">
                     <div class="flex items-center justify-between mb-2">
@@ -828,6 +998,87 @@
             fetchEquityCurve();
         }
         
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch(`${API_BASE}/api/market/crypto`);
+                const data = await response.json();
+                
+                if (data.success && data.prices.length > 0) {
+                    const container = document.getElementById('crypto-ticker');
+                    container.innerHTML = data.prices.map(crypto => {
+                        const changeClass = crypto.is_positive ? 'stat-positive' : 'stat-negative';
+                        const borderClass = crypto.is_positive ? 'positive' : 'negative';
+                        const changePrefix = crypto.is_positive ? '+' : '';
+                        
+                        let priceFormatted;
+                        if (crypto.price >= 1000) {
+                            priceFormatted = '$' + crypto.price.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                        } else if (crypto.price >= 1) {
+                            priceFormatted = '$' + crypto.price.toFixed(2);
+                        } else {
+                            priceFormatted = '$' + crypto.price.toFixed(4);
+                        }
+                        
+                        return `
+                            <div class="ticker-item ${borderClass}">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-semibold text-sm">${crypto.symbol}</span>
+                                    <span class="text-[10px] ${changeClass}">${changePrefix}${crypto.change_24h.toFixed(2)}%</span>
+                                </div>
+                                <div class="font-bold mono ${changeClass}">${priceFormatted}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error fetching crypto prices:', error);
+            }
+        }
+        
+        async function fetchNews() {
+            try {
+                const response = await fetch(`${API_BASE}/api/news`);
+                const data = await response.json();
+                
+                if (data.success && data.news.length > 0) {
+                    document.getElementById('news-source').textContent = data.source;
+                    const container = document.getElementById('news-feed');
+                    container.innerHTML = data.news.map(item => `
+                        <div class="news-item">
+                            <div class="flex items-start gap-2">
+                                <span class="text-blue-400 text-xs mt-0.5">●</span>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium mb-1 line-clamp-2">${item.title}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">${item.source}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+            }
+        }
+        
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/system/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const status = data.status;
+                    
+                    document.getElementById('protection-status').textContent = status.protection.drawdown_tier;
+                    document.getElementById('rampup-status').textContent = status.protection.ramp_up_pct + '%';
+                    document.getElementById('active-pairs').textContent = status.trading.pairs_active.map(p => p.replace('/USD', '')).join(' ');
+                    
+                    document.getElementById('brand-trades-today').textContent = status.trading.trades_today;
+                }
+            } catch (error) {
+                console.error('Error fetching system status:', error);
+            }
+        }
+        
         function updateLastRefresh() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
@@ -844,7 +1095,10 @@
                 fetchMetrics(),
                 fetchTrades(),
                 fetchPositions(),
-                fetchEquityCurve()
+                fetchEquityCurve(),
+                fetchCryptoPrices(),
+                fetchNews(),
+                fetchSystemStatus()
             ]);
             updateLastRefresh();
         }
