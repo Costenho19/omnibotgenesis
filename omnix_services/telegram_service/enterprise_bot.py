@@ -5219,62 +5219,137 @@ Trades: {balance['total_trades']}"""
             self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
 
     def start_polling(self, drop_pending_updates=True):
-        """Iniciar bot en modo polling directo - VERSION FUNCIONAL"""
+        """Iniciar bot en modo polling directo - VERSION ULTRA ROBUSTA V6.4
+        
+        Mejoras Dic 2025:
+        - Timeout aumentado de 10s a 30s para evitar desconexiones
+        - 3 reintentos automáticos antes de esperar
+        - Loop infinito de reconexión - NUNCA se detiene
+        - Backoff exponencial: 5s → 10s → 20s → 30s máx
+        - Logs detallados para debugging
+        """
         try:
-            logger.info("🚀 Iniciando bot Telegram...")
+            logger.info("🚀 Iniciando bot Telegram V6.4 ULTRA ROBUSTO...")
             
             # Eliminar webhook si existe
             try:
                 webhook_delete_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/deleteWebhook"
-                requests.post(webhook_delete_url)
+                requests.post(webhook_delete_url, timeout=10)
                 logger.info("🗑️ Webhook eliminado para usar polling")
             except:
                 pass
             
-            # SISTEMA SIMPLE DE POLLING DIRECTO
+            # SISTEMA ULTRA ROBUSTO DE POLLING V6.4
             def poll_messages():
-                """Polling directo y simple"""
+                """Polling ultra robusto con reconexión automática infinita"""
                 offset = 0
-                logger.info("🔄 Iniciando polling directo...")
+                consecutive_errors = 0
+                max_retries = 3
+                base_wait = 5  # segundos base para backoff
+                max_wait = 30  # máximo tiempo de espera
                 
+                logger.info("🔄 Iniciando polling ULTRA ROBUSTO V6.4...")
+                logger.info("⚙️ Config: timeout=30s, reintentos=3, backoff=exponencial")
+                
+                # PROTECCIÓN MÁXIMA: Loop con manejo robusto de errores
                 while hasattr(self, 'is_running') and self.is_running:
                     try:
-                        # Obtener mensajes nuevos
+                        # Obtener mensajes nuevos con timeout extendido
                         updates_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/getUpdates"
-                        params = {'offset': offset, 'timeout': 5}
-                        response = requests.get(updates_url, params=params, timeout=10)
+                        params = {'offset': offset, 'timeout': 20}  # Long polling 20s
+                        
+                        # Timeout de request extendido a 30s para evitar desconexiones
+                        response = requests.get(updates_url, params=params, timeout=30)
                         
                         if response.status_code == 200:
                             data = response.json()
+                            
+                            # Reset contador de errores en éxito
+                            if consecutive_errors > 0:
+                                logger.info(f"✅ Conexión restaurada después de {consecutive_errors} errores")
+                                consecutive_errors = 0
+                            
                             if data['ok'] and data['result']:
                                 for update in data['result']:
+                                    # PROTECCIÓN: Siempre actualizar offset primero para evitar loops infinitos
+                                    offset = update['update_id'] + 1
+                                    
                                     if 'message' in update:
                                         message = update['message']
                                         chat_id = message['chat']['id']
                                         user_id = message.get('from', {}).get('id', chat_id)
                                         text = message.get('text', '')
-                                        logger.info(f"📧 Procesando mensaje: '{text}' de chat:{chat_id} user:{user_id}")
                                         
-                                        # FIX Nov 30, 2025: Detectar comandos de paper trading y ejecutarlos REALMENTE
-                                        if text.startswith('/paper_buy ') and self.paper_trading:
-                                            self._handle_paper_buy_direct(chat_id, user_id, text)
-                                        elif text.startswith('/paper_sell ') and self.paper_trading:
-                                            self._handle_paper_sell_direct(chat_id, user_id, text)
-                                        elif text.startswith('/paper_start') and self.paper_trading:
-                                            self._handle_paper_start_direct(chat_id, user_id)
-                                        elif text.startswith('/paper_balance') and self.paper_trading:
-                                            self._handle_paper_balance_direct(chat_id, user_id)
-                                        elif text.startswith('/paper_positions') and self.paper_trading:
-                                            self._handle_paper_positions_direct(chat_id, user_id)
-                                        else:
-                                            self.handle_direct_message(chat_id, text, user_id=user_id)
-                                    offset = update['update_id'] + 1
+                                        # PROTECCIÓN CRÍTICA: Envolver procesamiento en try/except
+                                        # para que errores en handlers NO detengan el polling
+                                        try:
+                                            logger.info(f"📧 Procesando mensaje: '{text}' de chat:{chat_id} user:{user_id}")
+                                            
+                                            # FIX Nov 30, 2025: Detectar comandos de paper trading
+                                            if text.startswith('/paper_buy ') and self.paper_trading:
+                                                self._handle_paper_buy_direct(chat_id, user_id, text)
+                                            elif text.startswith('/paper_sell ') and self.paper_trading:
+                                                self._handle_paper_sell_direct(chat_id, user_id, text)
+                                            elif text.startswith('/paper_start') and self.paper_trading:
+                                                self._handle_paper_start_direct(chat_id, user_id)
+                                            elif text.startswith('/paper_balance') and self.paper_trading:
+                                                self._handle_paper_balance_direct(chat_id, user_id)
+                                            elif text.startswith('/paper_positions') and self.paper_trading:
+                                                self._handle_paper_positions_direct(chat_id, user_id)
+                                            else:
+                                                self.handle_direct_message(chat_id, text, user_id=user_id)
+                                        except Exception as handler_error:
+                                            # Log error pero CONTINUAR procesando - polling no debe morir
+                                            logger.error(f"❌ Error procesando mensaje de {chat_id}: {handler_error}")
+                                            logger.error(f"📝 Mensaje que causó error: '{text[:100]}...'")
+                                            # Intentar notificar al usuario del error
+                                            try:
+                                                self.send_telegram_text_safe(chat_id, f"⚠️ Error procesando tu mensaje. Por favor intenta de nuevo.")
+                                            except:
+                                                pass  # Si falla la notificación, continuar de todos modos
+                        
+                        elif response.status_code == 409:
+                            # Conflicto - otro bot está usando el mismo token
+                            logger.warning("⚠️ Conflicto 409: Otro bot está activo. Esperando 10s...")
+                            time.sleep(10)
+                        
+                        elif response.status_code >= 500:
+                            # Error del servidor Telegram - reintentar
+                            consecutive_errors += 1
+                            wait_time = min(base_wait * (2 ** (consecutive_errors - 1)), max_wait)
+                            logger.warning(f"⚠️ Error servidor Telegram {response.status_code}. Reintento {consecutive_errors}/{max_retries} en {wait_time}s")
+                            time.sleep(wait_time)
                             
-                        time.sleep(1)
+                        time.sleep(0.5)  # Pequeña pausa entre polls exitosos
+                        
+                    except requests.exceptions.Timeout as e:
+                        consecutive_errors += 1
+                        wait_time = min(base_wait * (2 ** min(consecutive_errors - 1, 3)), max_wait)
+                        
+                        if consecutive_errors <= max_retries:
+                            logger.warning(f"⚠️ Timeout de red (intento {consecutive_errors}/{max_retries}). Reconectando en {wait_time}s...")
+                        else:
+                            logger.error(f"❌ Timeout persistente ({consecutive_errors} errores). Continuando reintentos cada {wait_time}s...")
+                        
+                        time.sleep(wait_time)
+                        
+                    except requests.exceptions.ConnectionError as e:
+                        consecutive_errors += 1
+                        wait_time = min(base_wait * (2 ** min(consecutive_errors - 1, 3)), max_wait)
+                        logger.error(f"❌ Error de conexión: {e}. Reconectando en {wait_time}s... (intento {consecutive_errors})")
+                        time.sleep(wait_time)
                         
                     except Exception as e:
-                        logger.error(f"❌ Error polling: {e}")
-                        time.sleep(3)
+                        consecutive_errors += 1
+                        wait_time = min(base_wait * (2 ** min(consecutive_errors - 1, 3)), max_wait)
+                        logger.error(f"❌ Error inesperado en polling: {e}. Reintentando en {wait_time}s...")
+                        time.sleep(wait_time)
+                        
+                        # Log cada 10 errores para monitoreo
+                        if consecutive_errors % 10 == 0:
+                            logger.error(f"🔴 ALERTA: {consecutive_errors} errores consecutivos. Bot sigue intentando reconectar...")
+                
+                logger.warning("⚠️ Loop de polling terminado (is_running=False)")
             
             # Iniciar polling en hilo separado
             import threading
@@ -5283,7 +5358,8 @@ Trades: {balance['total_trades']}"""
             polling_thread = threading.Thread(target=poll_messages, daemon=True)
             polling_thread.start()
             
-            logger.info("✅ Bot Telegram iniciado con polling directo")
+            logger.info("✅ Bot Telegram V6.4 ULTRA ROBUSTO iniciado")
+            logger.info("🛡️ Reconexión automática ACTIVADA - El bot NUNCA se detendrá por errores de red")
             logger.info(f"📡 Hilo de polling activo: {polling_thread.is_alive()}")
             return True
                 
