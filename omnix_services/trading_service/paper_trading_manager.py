@@ -1,5 +1,5 @@
 """
-📊 OMNIX PAPER TRADING SYSTEM
+📊 OMNIX PAPER TRADING SYSTEM V6.4 INSTITUTIONAL+
 Sistema de trading simulado con datos REALES de Kraken
 
 CARACTERÍSTICAS:
@@ -8,6 +8,13 @@ CARACTERÍSTICAS:
 - Trades simulados (NO gasta dinero real)
 - Performance tracking completo
 - Integración con servicios enterprise
+- V6.4: Respeta límites personalizados del usuario
+
+USER SETTINGS V6.4:
+- Límites de trading por usuario
+- Perfil de riesgo personalizado
+- Auto-pausa por límite de pérdida
+- Estrategias activas por usuario
 """
 
 import logging
@@ -17,22 +24,32 @@ from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
+try:
+    from omnix_services.user_settings import UserSettingsService, RiskProfile
+    USER_SETTINGS_AVAILABLE = True
+except ImportError:
+    USER_SETTINGS_AVAILABLE = False
+    logger.warning("⚠️ UserSettingsService no disponible en PaperTradingManager")
+
 
 class PaperTradingManager:
     """
-    Sistema profesional de Paper Trading
+    Sistema profesional de Paper Trading V6.4 INSTITUTIONAL+
     
     Ejecuta trades simulados con datos reales de Kraken
     para testing y validación de estrategias
     
     V2: Integrado con Risk Management System (RMS)
+    V6.4: Respeta límites personalizados de usuario (UserSettingsService)
     """
     
-    def __init__(self, database_service=None, trading_service=None, limits_engine=None, circuit_breaker=None):
+    def __init__(self, database_service=None, trading_service=None, limits_engine=None, 
+                 circuit_breaker=None, user_settings_service=None):
         self.database_service = database_service
         self.trading_service = trading_service
         self.limits_engine = limits_engine
         self.circuit_breaker = circuit_breaker
+        self.user_settings_service = user_settings_service
         
         self.INITIAL_BALANCE_USD = 1_000_000.00
         
@@ -40,7 +57,8 @@ class PaperTradingManager:
         self.KRAKEN_FEE_RATE = 0.0026
         
         rms_status = "RMS activo" if limits_engine else "RMS no configurado"
-        logger.info(f"📊 PaperTradingManager inicializado - Balance inicial: $1,000,000 | {rms_status}")
+        uss_status = "UserSettings activo" if user_settings_service else "UserSettings no configurado"
+        logger.info(f"📊 PaperTradingManager V6.4 inicializado - Balance: $1M | {rms_status} | {uss_status}")
     
     def initialize_user(self, user_id: str) -> Dict:
         """
@@ -102,23 +120,49 @@ class PaperTradingManager:
             logger.error(f"Error inicializando paper trading: {e}")
             return {'error': str(e)}
     
-    def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float) -> Dict:
+    def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float, 
+                              source_strategy: str = 'manual') -> Dict:
         """
         Ejecutar trade simulado con datos REALES de Kraken
         
         V2: Usa schema institucional con P&L tracking completo
         V3: Integrado con RMS (Risk Management System)
+        V6.4: Respeta límites personalizados del usuario (UserSettingsService)
         
         Args:
             user_id: ID del usuario
             side: 'buy' o 'sell'
             symbol: Par de trading (ej: 'BTC/USD')
             amount_usd: Cantidad en USD a tradear
+            source_strategy: Estrategia que origina el trade
             
         Returns:
             Dict con resultado del trade simulado
         """
         try:
+            # ⚙️ V6.4: VALIDAR CONFIGURACIÓN PERSONALIZADA DEL USUARIO
+            if self.user_settings_service and USER_SETTINGS_AVAILABLE:
+                user_check = self.user_settings_service.validate_trade_request(
+                    user_id=user_id,
+                    symbol=symbol,
+                    amount_usd=amount_usd,
+                    strategy=source_strategy
+                )
+                
+                if not user_check['allowed']:
+                    logger.warning(f"⚙️ USER SETTINGS BLOCKED: {user_check['reason']} para user {user_id}")
+                    return {
+                        'error': user_check['reason'],
+                        'user_settings_blocked': True,
+                        'block_type': user_check.get('block_type', 'unknown'),
+                        'suggestion': user_check.get('suggestion', ''),
+                        'limits': user_check.get('limits', {})
+                    }
+                
+                if user_check.get('warnings'):
+                    for warning in user_check['warnings']:
+                        logger.info(f"⚠️ User Settings Warning: {warning}")
+            
             if self.circuit_breaker and self.circuit_breaker.is_trading_halted(user_id):
                 halt_status = self.circuit_breaker.get_halt_status(user_id)
                 return {
@@ -231,7 +275,7 @@ class PaperTradingManager:
                 new_btc_balance = updated_balance.get('btc_balance', 0.0) if updated_balance else 0.0
                 new_eth_balance = updated_balance.get('eth_balance', 0.0) if updated_balance else 0.0
                 
-                return {
+                result = {
                     'success': True,
                     'side': 'sell',
                     'symbol': symbol,
@@ -251,12 +295,107 @@ class PaperTradingManager:
                     'new_eth_balance': new_eth_balance,
                     'message': f'✅ SELL {crypto_amount:.8f} {symbol} @ ${current_price:,.2f} | P&L: ${close_result["net_realized_pnl_usd"]:+,.2f} ({"WIN" if close_result["is_winning_trade"] else "LOSS"})'
                 }
+                
+                auto_protection = self._check_and_trigger_auto_protection(user_id, close_result['net_realized_pnl_usd'])
+                if auto_protection:
+                    result['auto_protection_triggered'] = True
+                    result['auto_protection'] = auto_protection
+                    result['message'] += f"\n\n🛡️ AUTO-PROTECCIÓN: Trading pausado automáticamente"
+                
+                return result
             else:
                 return {'error': 'Side debe ser buy o sell'}
             
         except Exception as e:
             logger.error(f"Error ejecutando paper trade: {e}")
             return {'error': str(e)}
+    
+    def _check_and_trigger_auto_protection(self, user_id: str, pnl_usd: float) -> Optional[Dict]:
+        """
+        V6.4: Verificar si se excedieron límites de pérdida y activar auto-protección
+        
+        Args:
+            user_id: ID del usuario
+            pnl_usd: P&L del trade recién cerrado (negativo si es pérdida)
+            
+        Returns:
+            Dict con información de auto-pausa si se activó, None si no
+        """
+        if not self.user_settings_service or not USER_SETTINGS_AVAILABLE:
+            return None
+        
+        try:
+            settings = self.user_settings_service.get_user_settings(user_id)
+            
+            if not settings.protection_settings.auto_pause_enabled:
+                return None
+            
+            daily_pnl = self._get_daily_pnl(user_id)
+            
+            if daily_pnl is None:
+                return None
+            
+            total_daily_loss_pct = abs(daily_pnl + pnl_usd) / self.INITIAL_BALANCE_USD * 100
+            
+            if pnl_usd < 0 and total_daily_loss_pct >= settings.protection_settings.daily_loss_limit_pct:
+                reason = f"Auto-protección: Pérdida diaria ({total_daily_loss_pct:.1f}%) excede límite ({settings.protection_settings.daily_loss_limit_pct}%)"
+                cool_down = settings.protection_settings.cool_down_minutes
+                
+                success, message = self.user_settings_service.pause_trading(
+                    user_id, reason, cool_down
+                )
+                
+                if success:
+                    logger.warning(f"🛡️ AUTO-PROTECCIÓN ACTIVADA para user {user_id}: {reason}")
+                    return {
+                        'auto_paused': True,
+                        'reason': reason,
+                        'daily_loss_pct': total_daily_loss_pct,
+                        'limit_pct': settings.protection_settings.daily_loss_limit_pct,
+                        'cool_down_minutes': cool_down,
+                        'message': message
+                    }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error en auto-protección: {e}")
+            return None
+    
+    def _get_daily_pnl(self, user_id: str) -> Optional[float]:
+        """Obtener P&L total del día actual"""
+        try:
+            if not self.database_service:
+                return None
+            
+            from datetime import date
+            today = date.today()
+            today_start = datetime(today.year, today.month, today.day)
+            
+            trades = self._get_closed_positions_v2(user_id, limit=100)
+            if not trades:
+                return 0.0
+            
+            daily_pnl = 0.0
+            for trade in trades:
+                close_time = trade.get('close_timestamp')
+                if close_time:
+                    try:
+                        if isinstance(close_time, str):
+                            trade_date = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
+                        else:
+                            trade_date = close_time
+                        
+                        if trade_date.date() == today:
+                            daily_pnl += trade.get('net_realized_pnl_usd', 0.0)
+                    except:
+                        continue
+            
+            return daily_pnl
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo daily PnL: {e}")
+            return None
     
     def get_paper_balance(self, user_id: str) -> Dict:
         """Obtener balance actual de paper trading"""
