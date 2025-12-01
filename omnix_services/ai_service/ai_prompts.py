@@ -1,12 +1,12 @@
 """
-OMNIX V6.0 ENTERPRISE - Prompts & Context Manager
+OMNIX V6.4 ENTERPRISE - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
 Escalabilidad: 50K+ usuarios con context caching
 + Quantum Physics Validator for verified scientific responses
++ Real Context Provider for institutional transparency
 """
 
-# 🔥 RAILWAY DEBUG - Archivo actualizado para forzar recarga
-print("✅ ai_prompts.py V6.0 CARGADO - CON QUANTUM PHYSICS VALIDATOR")
+print("✅ ai_prompts.py V6.4 CARGADO - REAL CONTEXT PROVIDER + QUANTUM PHYSICS VALIDATOR")
 
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -25,6 +25,16 @@ except ImportError as e:
     get_quantum_physics_context = None
     quantum_physics_validator = None
     logger.warning(f"⚠️ Quantum Physics Validator not available: {e}")
+
+# Import Real Context Provider for institutional transparency
+try:
+    from omnix_core.context import get_real_context_provider
+    REAL_CONTEXT_PROVIDER_AVAILABLE = True
+    logger.info("🔴 Real Context Provider LOADED - Institutional transparency enabled")
+except ImportError as e:
+    REAL_CONTEXT_PROVIDER_AVAILABLE = False
+    get_real_context_provider = None
+    logger.warning(f"⚠️ Real Context Provider not available: {e}")
 
 
 class PromptsContextManager:
@@ -168,7 +178,8 @@ class PromptsContextManager:
         user_name: str = 'Usuario',
         additional_context: Optional[Dict[str, Any]] = None,
         conversation_history: Optional[List[Dict]] = None,
-        user_message: Optional[str] = None
+        user_message: Optional[str] = None,
+        user_id: Optional[str] = None
     ) -> str:
         """
         Build comprehensive system prompt for AI
@@ -179,6 +190,7 @@ class PromptsContextManager:
             additional_context: Additional context data
             conversation_history: Previous conversation messages
             user_message: Original user message for quantum physics detection
+            user_id: User ID for fetching real context data
             
         Returns:
             System prompt string
@@ -190,6 +202,17 @@ class PromptsContextManager:
             quantum_physics_context = get_quantum_physics_context(user_message)
             if quantum_physics_context:
                 logger.info(f"⚛️ Quantum Physics Validator ACTIVATED for message")
+        
+        # 🔴 REAL CONTEXT PROVIDER - Inject verified OMNIX system data (INSTITUTIONAL TRANSPARENCY)
+        omnix_real_context = ""
+        if REAL_CONTEXT_PROVIDER_AVAILABLE and get_real_context_provider is not None:
+            try:
+                provider = get_real_context_provider()
+                if provider:
+                    omnix_real_context = provider.format_for_prompt(user_id=user_id)
+                    logger.info(f"🔴 Real Context Provider INJECTED: {len(omnix_real_context)} chars")
+            except Exception as rcp_error:
+                logger.warning(f"⚠️ Error getting real context: {rcp_error}")
         
         # Base system prompt - INSTITUTIONAL GRADE
         base_prompt = f"""
@@ -488,6 +511,11 @@ y un sistema diseñado para escalar como fondo cuantitativo real."
         if quantum_physics_context:
             base_prompt += f"\n\n{quantum_physics_context}"
             logger.info(f"⚛️ Quantum Physics Context INJECTED: {len(quantum_physics_context)} chars")
+        
+        # 🔴 INJECT REAL OMNIX SYSTEM CONTEXT (INSTITUTIONAL TRANSPARENCY)
+        if omnix_real_context:
+            base_prompt += f"\n\n{omnix_real_context}"
+            logger.info(f"🔴 Real OMNIX Context INJECTED: {len(omnix_real_context)} chars")
         
         return base_prompt
     

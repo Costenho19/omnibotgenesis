@@ -218,6 +218,21 @@ class EnterpriseTelegramBot:
             logger.warning(f"⚠️ Auto-Trading Bot no disponible: {e}")
             self.auto_trading = None
         
+        # 🔴 OMNIX REAL CONTEXT PROVIDER - TRANSPARENCIA INSTITUCIONAL
+        try:
+            from omnix_core.context import create_real_context_provider
+            trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
+            self.real_context_provider = create_real_context_provider(
+                auto_trading_bot=self.auto_trading,
+                paper_trading_manager=self.paper_trading,
+                trading_service=trading_service,
+                database_manager=self.db_manager
+            )
+            logger.info("🔴 Real Context Provider ACTIVO - IA siempre usará datos reales verificados")
+        except Exception as e:
+            logger.warning(f"⚠️ Real Context Provider no disponible: {e}")
+            self.real_context_provider = None
+        
         # 🎥 VIDEO ANALYZER ULTRA V5.3 - Análisis avanzado de videos con Vision AI
         # FIX Nov 29, 2025: Separar inicialización para evitar que falle todo el bloque
         self.video_analyzer_ultra = None
@@ -4431,20 +4446,23 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             genai.configure(api_key=gemini_key)
                             model = genai.GenerativeModel("gemini-2.0-flash-exp")
                             
-                            # INYECTAR DATOS REALES EN EL PROMPT
-                            real_data_context = ""
-                            if real_market_data:
-                                real_data_context = f"""
-🔴 DATOS REALES DE KRAKEN (AHORA MISMO - OBLIGATORIO USAR ESTOS):
+                            # 🔴 INYECTAR CONTEXTO REAL COMPLETO DE OMNIX (TRANSPARENCIA INSTITUCIONAL)
+                            omnix_real_context = ""
+                            try:
+                                if self.real_context_provider:
+                                    omnix_real_context = self.real_context_provider.format_for_prompt(user_id=user_id)
+                                    logger.info(f"🔴 Contexto real OMNIX inyectado: {len(omnix_real_context)} chars")
+                                else:
+                                    if real_market_data:
+                                        omnix_real_context = f"""
+🔴 DATOS REALES DE KRAKEN:
 • Bitcoin (BTC/USD): ${real_market_data.get('btc_price', 0):,.2f}
 • 24h High: ${real_market_data.get('btc_24h_high', 0):,.2f}
 • 24h Low: ${real_market_data.get('btc_24h_low', 0):,.2f}
-• Volumen 24h: {real_market_data.get('btc_volume', 0):,.4f} BTC
-• Balance USD: ${real_market_data.get('balance_usd', 0):.2f}
-• Balance BTC: {real_market_data.get('balance_btc', 0):.8f}
-
-⚠️ CRÍTICO: USA SOLO ESTOS DATOS REALES - NUNCA INVENTES PRECIOS NI BALANCES
 """
+                            except Exception as ctx_error:
+                                logger.warning(f"⚠️ Error obteniendo contexto real: {ctx_error}")
+                                omnix_real_context = ""
                             
                             # USAR SISTEMA DE PROMPTS CONVERSACIONAL NATURAL CON MEMORIA
                             try:
@@ -4478,9 +4496,9 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                     user_message=text  # Pass message for quantum physics detection
                                 )
                                 
-                                # Agregar datos reales de mercado si existen
-                                if real_data_context:
-                                    gemini_prompt += f"\n\n{real_data_context}"
+                                # 🔴 Agregar contexto real completo de OMNIX (mercado + auto-trading + balance + posiciones)
+                                if omnix_real_context:
+                                    gemini_prompt += f"\n\n{omnix_real_context}"
                                 
                                 # Agregar pregunta del usuario
                                 gemini_prompt += f"\n\nPregunta de Harold: {text}\n\nResponde de forma natural y conversacional:"
@@ -4488,11 +4506,11 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as prompt_error:
                                 logger.warning(f"⚠️ Error usando PromptsContextManager: {prompt_error}")
                                 # Fallback simple conversacional
-                                gemini_prompt = f"""Soy OMNIX V5.4 ULTRA, tu asistente de trading personal.
+                                gemini_prompt = f"""Soy OMNIX V6.4 ULTRA, tu asistente de trading institucional.
 
 IMPORTANTE: Responde en ESPAÑOL de forma natural y conversacional.
 
-{real_data_context}
+{omnix_real_context}
 
 ESTILO:
 - Natural como ChatGPT pero con personalidad
@@ -4500,6 +4518,7 @@ ESTILO:
 - Si es pregunta técnica: Análisis profundo 1500-2500 caracteres
 - Habla en primera persona: "Soy OMNIX", "Puedo ayudarte"
 - Usa emojis apropiados: 🤖 🚀 📊 ₿ 💰
+- SIEMPRE usa los datos reales mostrados arriba - NUNCA inventes
 
 Harold pregunta: {text}"""
 
