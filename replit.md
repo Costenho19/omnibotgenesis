@@ -64,6 +64,7 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **Live Data indicator** (green dot) when database connected
     - **Professional empty state** ("No trading data yet") instead of fake demo data
     - **Automatic production data** - Shows real trades when deployed to Railway
+    - **Real-time Clock**: Auto-detects user's local timezone, updates every second (responsive on all devices)
     - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
     - **Railway Deployment**: Can run as separate service using `start_dashboard.py` (see `RAILWAY_DASHBOARD_SETUP.md`)
 - **OMNIX Personal Assistant Premium V6.4** - Sistema de configuración personalizada por usuario vía Telegram:
