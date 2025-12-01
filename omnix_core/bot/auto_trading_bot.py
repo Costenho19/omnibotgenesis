@@ -164,6 +164,24 @@ except ImportError:
     MEMORY_ENHANCED_RMS_AVAILABLE = False
     logger.warning("⚠️ Memory-Enhanced RMS no disponible")
 
+# Import Adaptive Parameter Engine V6.5 - AUTO-CALIBRATION FOR ARES
+try:
+    from omnix_services.adaptive_engine import (
+        AdaptiveParameterEngine,
+        AdaptiveParameterProfile,
+        RegimeType,
+        get_adaptive_engine
+    )
+    ADAPTIVE_PARAMETER_ENGINE_AVAILABLE = True
+    logger.info("🎯 Adaptive Parameter Engine V6.5 disponible")
+except ImportError:
+    AdaptiveParameterEngine = None
+    AdaptiveParameterProfile = None
+    RegimeType = None
+    get_adaptive_engine = None
+    ADAPTIVE_PARAMETER_ENGINE_AVAILABLE = False
+    logger.warning("⚠️ Adaptive Parameter Engine no disponible")
+
 
 class AutoTradingBot:
     """
@@ -344,8 +362,38 @@ class AutoTradingBot:
             else:
                 logger.info("⚠️ Memory-Enhanced RMS desactivado")
         
+        # Adaptive Parameter Engine V6.5 - AUTO-CALIBRATION FOR ARES
+        if ADAPTIVE_PARAMETER_ENGINE_AVAILABLE and self.non_markovian_kernel and self.coherence_engine:
+            try:
+                self.adaptive_engine = get_adaptive_engine(
+                    database_service=database_service,
+                    coherence_engine=self.coherence_engine,
+                    risk_guardian=self.risk_guardian
+                )
+                
+                # Callback para actualizar ARES cuando se calibran parámetros
+                def on_calibration(strategy_name: str, profile):
+                    logger.info(f"🎯 Calibración aplicada a {strategy_name}")
+                    self._apply_adaptive_parameters(strategy_name, profile)
+                
+                self.adaptive_engine.register_callback(on_calibration)
+                
+                logger.info("🎯 Adaptive Parameter Engine V6.5 ACTIVADO - Auto-calibración dinámica")
+                logger.info("   ⚙️ ARES V1/V2 parámetros se ajustan por régimen de mercado")
+                logger.info("   🧠 Integrado con Non-Markovian Memory Kernel")
+                logger.info("   🔒 Validado por Coherence Engine + Risk Guardian")
+            except Exception as e:
+                self.adaptive_engine = None
+                logger.warning(f"⚠️ Adaptive Parameter Engine error: {e}")
+        else:
+            self.adaptive_engine = None
+            if not ADAPTIVE_PARAMETER_ENGINE_AVAILABLE:
+                logger.info("⚠️ Adaptive Parameter Engine no disponible")
+            else:
+                logger.info("⚠️ Adaptive Parameter Engine desactivado (requiere Non-Markovian Kernel + Coherence Engine)")
+        
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
-        logger.info(f"🤖 AutoTradingBot V6.2 ULTRA inicializado - Modo: {mode}")
+        logger.info(f"🤖 AutoTradingBot V6.5 ULTRA inicializado - Modo: {mode}")
     
     def start(self) -> Dict:
         """Iniciar trading automático 24/7"""
@@ -1859,6 +1907,112 @@ class AutoTradingBot:
             return None
         except:
             return None
+    
+    def _apply_adaptive_parameters(self, strategy_name: str, profile) -> None:
+        """
+        🎯 Aplicar parámetros calibrados a las estrategias ARES
+        
+        Este método es llamado por el Adaptive Parameter Engine cuando
+        detecta un cambio de régimen y calibra nuevos parámetros.
+        
+        Args:
+            strategy_name: 'ARES_V1' o 'ARES_V2'
+            profile: AdaptiveParameterProfile con los nuevos parámetros
+        """
+        try:
+            if strategy_name == 'ARES_V1' and self.ares_v1:
+                # Actualizar parámetros de ARES V1 (Swing Trading)
+                if hasattr(self.ares_v1, 'stop_loss_pct'):
+                    self.ares_v1.stop_loss_pct = profile.stop_loss_pct
+                if hasattr(self.ares_v1, 'take_profit_pct'):
+                    self.ares_v1.take_profit_pct = profile.take_profit_pct
+                if hasattr(self.ares_v1, 'position_size_factor'):
+                    self.ares_v1.position_size_factor = profile.position_size_factor
+                if hasattr(self.ares_v1, 'entry_threshold'):
+                    self.ares_v1.entry_threshold = profile.entry_threshold
+                
+                logger.info(f"✅ ARES V1 actualizado: SL={profile.stop_loss_pct:.3f}, TP={profile.take_profit_pct:.3f}")
+                
+            elif strategy_name == 'ARES_V2' and self.ares_v2:
+                # Actualizar parámetros de ARES V2 (Scalping)
+                if hasattr(self.ares_v2, 'stop_loss_pct'):
+                    self.ares_v2.stop_loss_pct = profile.stop_loss_pct
+                if hasattr(self.ares_v2, 'take_profit_pct'):
+                    self.ares_v2.take_profit_pct = profile.take_profit_pct
+                if hasattr(self.ares_v2, 'position_size_factor'):
+                    self.ares_v2.position_size_factor = profile.position_size_factor
+                if hasattr(self.ares_v2, 'entry_threshold'):
+                    self.ares_v2.entry_threshold = profile.entry_threshold
+                
+                logger.info(f"✅ ARES V2 actualizado: SL={profile.stop_loss_pct:.3f}, TP={profile.take_profit_pct:.3f}")
+            
+            # Actualizar también la configuración global del bot
+            if hasattr(profile, 'stop_loss_pct'):
+                self.config['stop_loss_pct'] = abs(profile.stop_loss_pct)
+            
+        except Exception as e:
+            logger.error(f"❌ Error aplicando parámetros adaptativos a {strategy_name}: {e}")
+    
+    def _process_kernel_for_adaptive_engine(self, kernel_output: Dict) -> None:
+        """
+        🧠 Procesar salida del Non-Markovian Kernel para el Adaptive Engine
+        
+        Envía las señales de régimen al motor adaptativo para que
+        determine si es necesario recalibrar los parámetros de ARES.
+        
+        Args:
+            kernel_output: Diccionario con salida del kernel (regime, coherence, etc.)
+        """
+        if not self.adaptive_engine:
+            return
+        
+        try:
+            # Obtener datos de microestructura (si están disponibles)
+            microstructure_data = None
+            if hasattr(self.trading_service, 'get_spread'):
+                try:
+                    spread = self.trading_service.get_spread(self.config.get('trading_pair', 'BTC/USD'))
+                    microstructure_data = {
+                        'current_spread': spread.get('spread', 0.001) if spread else 0.001,
+                        'current_volume': spread.get('volume', 1000000) if spread else 1000000
+                    }
+                except:
+                    pass
+            
+            # Procesar señal del kernel
+            result = self.adaptive_engine.process_kernel_signal(
+                kernel_output=kernel_output,
+                microstructure_data=microstructure_data
+            )
+            
+            if result.get('is_significant_change'):
+                logger.info(f"🎯 Adaptive Engine: Régimen cambiado a {result.get('regime')}")
+                
+                # Registrar trade en el cooldown manager
+                for strategy in ['ARES_V1', 'ARES_V2']:
+                    self.adaptive_engine.record_trade(strategy)
+                    
+        except Exception as e:
+            logger.error(f"❌ Error procesando kernel para Adaptive Engine: {e}")
+    
+    def get_adaptive_status(self) -> Dict:
+        """
+        📊 Obtener estado del Adaptive Parameter Engine
+        
+        Returns:
+            Dict con estado actual del engine y perfiles activos
+        """
+        if not self.adaptive_engine:
+            return {'enabled': False, 'reason': 'Adaptive Engine no inicializado'}
+        
+        try:
+            status = self.adaptive_engine.get_status()
+            return {
+                'enabled': True,
+                **status
+            }
+        except Exception as e:
+            return {'enabled': False, 'error': str(e)}
     
     def _process_pending_evaluations(self):
         """
