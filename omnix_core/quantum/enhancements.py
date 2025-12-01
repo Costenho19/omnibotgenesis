@@ -25,6 +25,7 @@ logger = logging.getLogger('OMNIX.Quantum')
 ANU_QRNG_API = "https://qrng.anu.edu.au/API/jsonI.php"
 QRNG_CACHE_TTL = 3600  # Cache de números cuánticos por 1 hora
 QRNG_BATCH_SIZE = 1024  # Obtener 1024 números por request
+QRNG_ERROR_COOLDOWN = 300  # 5 minutos de cooldown después de error
 
 
 # ==================== QRNG - QUANTUM RANDOM NUMBER GENERATOR ====================
@@ -51,6 +52,8 @@ class QuantumRandomNumberGenerator:
     vacío cuántico electromagnético.
     
     Fallback: numpy.random si la API cuántica no está disponible
+    
+    V6.4: Cooldown inteligente para evitar spam de logs cuando API está caída
     """
     
     def __init__(self):
@@ -58,15 +61,26 @@ class QuantumRandomNumberGenerator:
         self.cache: List[float] = []
         self.cache_timestamp = 0
         self.enabled = True
+        self.last_error_time = 0  # V6.4: Timestamp del último error
+        self.in_fallback_mode = False  # V6.4: Flag para evitar logs repetidos
+        self.fallback_logged = False  # V6.4: Ya logueamos el fallback?
         logger.info("🎲 Quantum RNG inicializado - Fuente: ANU Quantum API")
     
     def _fetch_quantum_numbers(self, count: int = QRNG_BATCH_SIZE) -> Optional[List[float]]:
         """
         Obtiene números cuánticos reales de ANU API
         
+        V6.4: Con cooldown inteligente para evitar spam cuando API está caída
+        
         Returns:
             List[float]: Lista de números aleatorios entre 0 y 1, o None si falla
         """
+        # V6.4: Verificar cooldown - si hubo error reciente, no intentar
+        time_since_error = time.time() - self.last_error_time
+        if self.in_fallback_mode and time_since_error < QRNG_ERROR_COOLDOWN:
+            # Silenciosamente usar fallback sin intentar API
+            return None
+        
         try:
             # ANU API params: type=uint16, length=count, size=1
             params = {
@@ -88,16 +102,36 @@ class QuantumRandomNumberGenerator:
                     self.stats.quantum_numbers_generated += len(normalized)
                     self.stats.last_quantum_source = "ANU Quantum Vacuum"
                     
+                    # V6.4: Salimos del modo fallback si API vuelve a funcionar
+                    if self.in_fallback_mode:
+                        logger.info("✅ QRNG API recuperada - Usando números cuánticos reales")
+                        self.in_fallback_mode = False
+                        self.fallback_logged = False
+                    
                     logger.debug(f"✅ QRNG: {len(normalized)} números cuánticos obtenidos")
                     return normalized
             
-            logger.warning(f"⚠️ QRNG API error: {response.status_code}")
+            # V6.4: Solo loguear UNA VEZ cuando entramos en modo fallback
+            self.last_error_time = time.time()
+            self.in_fallback_mode = True
             self.stats.failed_requests += 1
+            
+            if not self.fallback_logged:
+                logger.warning(f"⚠️ QRNG API error {response.status_code} - Usando generador clásico (próximo intento en 5 min)")
+                self.fallback_logged = True
+            
             return None
             
         except Exception as e:
-            logger.warning(f"⚠️ QRNG fetch error: {e}")
+            # V6.4: Solo loguear UNA VEZ cuando entramos en modo fallback
+            self.last_error_time = time.time()
+            self.in_fallback_mode = True
             self.stats.failed_requests += 1
+            
+            if not self.fallback_logged:
+                logger.warning(f"⚠️ QRNG conexión fallida - Usando generador clásico (próximo intento en 5 min)")
+                self.fallback_logged = True
+            
             return None
     
     def _refill_cache(self):
@@ -109,11 +143,11 @@ class QuantumRandomNumberGenerator:
             self.cache_timestamp = time.time()
             logger.info(f"🎲 QRNG cache rellenado: {len(self.cache)} números cuánticos")
         else:
-            # Fallback a números clásicos
+            # Fallback a números clásicos (silencioso si ya logueamos)
             self.cache = list(np.random.random(QRNG_BATCH_SIZE))
             self.cache_timestamp = time.time()
             self.stats.fallback_to_classical += 1
-            logger.warning("⚠️ QRNG fallback a generador clásico")
+            # V6.4: No loguear aquí - ya se logueó en _fetch_quantum_numbers
     
     def random(self) -> float:
         """
