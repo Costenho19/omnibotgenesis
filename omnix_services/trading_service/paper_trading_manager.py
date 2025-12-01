@@ -370,28 +370,24 @@ class PaperTradingManager:
             
             from datetime import date
             today = date.today()
-            today_start = datetime(today.year, today.month, today.day)
+            today_iso = today.isoformat()
             
-            trades = self._get_closed_positions_v2(user_id, limit=100)
-            if not trades:
-                return 0.0
+            try:
+                if hasattr(self.database_service, 'execute_query'):
+                    query = """
+                        SELECT COALESCE(SUM(net_realized_pnl_usd), 0) as daily_pnl
+                        FROM paper_trading_trades
+                        WHERE user_id = %s 
+                        AND status = 'closed'
+                        AND DATE(close_timestamp) = %s
+                    """
+                    result = self.database_service.execute_query(query, (user_id, today_iso))
+                    if result and len(result) > 0:
+                        return float(result[0].get('daily_pnl', 0.0))
+            except Exception as query_error:
+                logger.warning(f"Error en query daily PnL: {query_error}")
             
-            daily_pnl = 0.0
-            for trade in trades:
-                close_time = trade.get('close_timestamp')
-                if close_time:
-                    try:
-                        if isinstance(close_time, str):
-                            trade_date = datetime.fromisoformat(close_time.replace('Z', '+00:00'))
-                        else:
-                            trade_date = close_time
-                        
-                        if trade_date.date() == today:
-                            daily_pnl += trade.get('net_realized_pnl_usd', 0.0)
-                    except:
-                        continue
-            
-            return daily_pnl
+            return 0.0
             
         except Exception as e:
             logger.error(f"Error obteniendo daily PnL: {e}")

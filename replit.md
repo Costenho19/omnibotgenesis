@@ -66,6 +66,15 @@ User Communication Preference: Simple, everyday language (Spanish primary).
     - **Automatic production data** - Shows real trades when deployed to Railway
     - API endpoints: `/api/metrics`, `/api/trades`, `/api/equity-curve`, `/api/portfolio`, `/api/health`
     - **Railway Deployment**: Can run as separate service using `start_dashboard.py` (see `RAILWAY_DASHBOARD_SETUP.md`)
+- **OMNIX Personal Assistant Premium V6.4** - Sistema de configuración personalizada por usuario vía Telegram:
+    - **UserSettingsService**: Gestión de preferencias de trading por usuario con persistencia en PostgreSQL.
+    - **5 Perfiles de Riesgo**: ultra_conservative, conservative, moderate, aggressive, institutional (Goldman-Sachs style).
+    - **Límites Personalizados**: min/max trade USD, límite diario, máximo posiciones, % máx del portfolio.
+    - **Comandos Telegram Premium**: `/miconfig`, `/perfil`, `/limites`, `/proteccion`, `/estrategias`, `/cryptos`, `/autotrading`, `/pausar`, `/reanudar`, `/onboarding`.
+    - **Procesamiento Lenguaje Natural**: Entiende peticiones como "quiero ser más agresivo", "máximo $500 por trade", "pausa el trading".
+    - **Auto-Protección**: Pausa automática al alcanzar límite de pérdida diaria (configurable).
+    - **Integración PaperTradingManager**: Valida trades contra límites del usuario antes de ejecutar.
+    - **Tabla**: `user_settings` en PostgreSQL con JSON para configuración flexible.
 
 #### System Design Choices
 - **Modular Architecture**: 75+ specialized Python modules organized into `omnix_core/`, `omnix_services/`, `omnix_testing/`.
