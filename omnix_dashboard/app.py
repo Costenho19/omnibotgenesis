@@ -243,21 +243,34 @@ def calculate_metrics(trades):
     profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
     
     if len(pnls) > 1:
-        returns = np.array(pnls)
-        risk_free_rate = 0.05 / 252
-        excess_returns = returns - risk_free_rate
-        sharpe = np.mean(excess_returns) / np.std(returns) * np.sqrt(252) if np.std(returns) > 0 else 0
+        initial_capital_for_sharpe = 1_000_000
+        pct_returns = np.array(pnls) / initial_capital_for_sharpe * 100
         
-        downside_returns = returns[returns < 0]
-        downside_std = np.std(downside_returns) if len(downside_returns) > 0 else 0
-        sortino = np.mean(excess_returns) / downside_std * np.sqrt(252) if downside_std > 0 else 0
+        risk_free_rate = 0.05 / 252
+        excess_returns = pct_returns - risk_free_rate
+        
+        if np.std(pct_returns) > 0:
+            sharpe = np.mean(excess_returns) / np.std(pct_returns) * np.sqrt(min(len(pnls), 252))
+            sharpe = np.clip(sharpe, -10, 10)
+        else:
+            sharpe = 0
+        
+        downside_returns = pct_returns[pct_returns < 0]
+        if len(downside_returns) > 0 and np.std(downside_returns) > 0:
+            sortino = np.mean(excess_returns) / np.std(downside_returns) * np.sqrt(min(len(pnls), 252))
+            sortino = np.clip(sortino, -10, 10)
+        else:
+            sortino = 0
     else:
         sharpe = 0
         sortino = 0
     
+    initial_capital = 1_000_000
     cumulative = np.cumsum(pnls)
-    peak = np.maximum.accumulate(cumulative)
-    drawdown = (peak - cumulative) / np.maximum(peak, 1) * 100
+    equity_curve = initial_capital + cumulative
+    peak = np.maximum.accumulate(equity_curve)
+    drawdown = (peak - equity_curve) / peak * 100
+    drawdown = np.clip(drawdown, 0, 100)
     max_drawdown = np.max(drawdown) if len(drawdown) > 0 else 0
     
     best_trade = max(pnls) if pnls else 0
