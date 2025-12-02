@@ -1339,6 +1339,7 @@ class AutoTradingBot:
                     
                     # ========== V6.4 SISTEMA DE VETO BALANCEADO ==========
                     # Objetivo: Más trades manteniendo calidad (win rate > 55%)
+                    # NOTA: Umbrales iguales para paper y real mode para mantener calidad
                     
                     # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (< 30%)
                     if (coherence_report.coherence_level.value == 'CRITICAL' or 
