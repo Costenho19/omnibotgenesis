@@ -72,15 +72,14 @@ except ImportError:
     VOICE_SERVICE_AVAILABLE = False
     logger.warning("⚠️ Voice Service no disponible")
 
-# ARES Quantum Protocols - Variables globales desde trading_system
+# ARES Quantum Protocols - Import module for dynamic access to global instances
 try:
-    from omnix_core.trading_system import global_ares_v1, global_ares_v2
-    ARES_AVAILABLE = global_ares_v1 is not None and global_ares_v2 is not None
+    import omnix_core.trading_system as trading_system_module
+    ARES_AVAILABLE = trading_system_module.ARES_STRATEGIES_AVAILABLE
     if ARES_AVAILABLE:
-        logger.info("🧬 ARES V1/V2 disponibles desde trading_system")
+        logger.info("🧬 ARES V1/V2 module imported - instances created at runtime")
 except ImportError:
-    global_ares_v1 = None
-    global_ares_v2 = None
+    trading_system_module = None
     ARES_AVAILABLE = False
     logger.warning("⚠️ ARES Quantum Protocols no disponibles")
 
@@ -225,14 +224,16 @@ class EnterpriseTelegramBot:
         try:
             from omnix_core.bot.auto_trading_bot import AutoTradingBot
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
+            ares_v1_instance = trading_system_module.global_ares_v1 if trading_system_module else None
+            ares_v2_instance = trading_system_module.global_ares_v2 if trading_system_module else None
             self.auto_trading = AutoTradingBot(
                 trading_service=trading_service,
                 database_service=self.db_manager,
                 advanced_features=global_advanced_features if 'global_advanced_features' in globals() else None,
                 paper_trading=self.paper_trading,
                 ai_service=self.ai,  # 🎓 V5.2.3: AI para auto-learning de videos
-                ares_v1=global_ares_v1 if 'global_ares_v1' in globals() else None,  # 🧬 ARES V1 Swing Trading
-                ares_v2=global_ares_v2 if 'global_ares_v2' in globals() else None   # 🧨 ARES V2 Scalping M1
+                ares_v1=ares_v1_instance,  # 🧬 ARES V1 Swing Trading - dynamic access
+                ares_v2=ares_v2_instance   # 🧨 ARES V2 Scalping M1 - dynamic access
             )
             logger.info("🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible")
             logger.info(f"   📊 Paper Trading: {'✅ ACTIVADO ($1M virtual)' if self.paper_trading else '❌ Desactivado'}")
