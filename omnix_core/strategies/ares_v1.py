@@ -641,7 +641,7 @@ if __name__ == "__main__":
     print("=" * 70)
     
     # Crear instancia
-    ares = AresQuantumProtocol()
+    ares = AresProtocolV1()
     
     # Datos de prueba
     test_market_data = {

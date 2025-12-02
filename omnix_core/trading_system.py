@@ -5191,8 +5191,8 @@ def main():
         # Inicializar ARES Quantum Protocols
         if ARES_STRATEGIES_AVAILABLE:
             logger.info("Inicializando ARES Quantum Protocols...")
-            global_ares_v1 = AresQuantumProtocol(trading_system=global_trading_system)
-            global_ares_v2 = AresScalpingV2(trading_system=global_trading_system)
+            global_ares_v1 = AresProtocolV1(trading_system=global_trading_system)
+            global_ares_v2 = AresProtocolV2(trading_system=global_trading_system)
             logger.info("🧬 ARES V1 Swing Trading (55-65% win rate) - LISTO")
             logger.info("🧨 ARES V2 Scalping M1 (60-70% win rate) - LISTO")
         else:

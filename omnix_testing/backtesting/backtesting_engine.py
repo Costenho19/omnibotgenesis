@@ -27,12 +27,12 @@ except ImportError:
     from .metrics_calculator import MetricsCalculator
 
 try:
-    from ares_quantum_protocol import AresQuantumProtocol
-    from ares_scalping_v2 import AresScalpingV2
+    from omnix_core.strategies.ares_v1 import AresProtocolV1
+    from omnix_core.strategies.ares_v2 import AresProtocolV2
 except ImportError as e:
     print(f"⚠️ Warning: ARES modules not found: {e}")
-    AresQuantumProtocol = None
-    AresScalpingV2 = None
+    AresProtocolV1 = None
+    AresProtocolV2 = None
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +73,9 @@ class BacktestingEngine:
         
         # Initialize ARES strategies
         try:
-            if AresQuantumProtocol and AresScalpingV2:
-                self.ares_v1 = AresQuantumProtocol()
-                self.ares_v2 = AresScalpingV2()
+            if AresProtocolV1 and AresProtocolV2:
+                self.ares_v1 = AresProtocolV1()
+                self.ares_v2 = AresProtocolV2()
                 logger.info("🧬 ARES Protocols inicializados")
             else:
                 self.ares_v1 = None

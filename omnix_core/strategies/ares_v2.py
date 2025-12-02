@@ -543,7 +543,7 @@ if __name__ == "__main__":
     print("🧨 ARES SCALPING V2 M1 - SISTEMA INSTITUCIONAL")
     print("=" * 70)
     
-    ares_v2 = AresScalpingV2()
+    ares_v2 = AresProtocolV2()
     
     # Datos de prueba M1
     test_data = {

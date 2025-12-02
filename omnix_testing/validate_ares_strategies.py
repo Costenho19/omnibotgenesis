@@ -111,8 +111,8 @@ def create_ares_v1_adapter() -> Callable:
         Función que toma datos OHLCV y retorna señal ('buy', 'sell', 'hold')
     """
     try:
-        from omnix_core.strategies.ares_v1 import AresQuantumProtocol
-        ares = AresQuantumProtocol()
+        from omnix_core.strategies.ares_v1 import AresProtocolV1
+        ares = AresProtocolV1()
         
         def strategy(data: List[Dict]) -> str:
             if len(data) < 50:
@@ -162,8 +162,8 @@ def create_ares_v2_adapter() -> Callable:
         Función que toma datos OHLCV y retorna señal ('buy', 'sell', 'hold')
     """
     try:
-        from omnix_core.strategies.ares_v2 import AresScalpingV2
-        ares = AresScalpingV2()
+        from omnix_core.strategies.ares_v2 import AresProtocolV2
+        ares = AresProtocolV2()
         
         def strategy(data: List[Dict]) -> str:
             if len(data) < 30:

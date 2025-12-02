@@ -253,22 +253,22 @@ try:
     print(f"🔍 CWD: {os.getcwd()}")
     print(f"🔍 omnix_core/strategies/ exists: {os.path.exists('omnix_core/strategies')}")
     
-    from omnix_core.strategies.ares_v1 import AresQuantumProtocol
-    from omnix_core.strategies.ares_v2 import AresScalpingV2
+    from omnix_core.strategies.ares_v1 import AresProtocolV1
+    from omnix_core.strategies.ares_v2 import AresProtocolV2
     ARES_STRATEGIES_AVAILABLE = True
     print("✅ ARES QUANTUM PROTOCOLS LOADED:")
     print("   🧬 ARES V1 - Swing Trading (55-65% win rate)")
     print("   🧨 ARES V2 - Scalping M1 (60-70% win rate)")
 except ImportError as e:
-    AresQuantumProtocol = None
-    AresScalpingV2 = None
+    AresProtocolV1 = None
+    AresProtocolV2 = None
     ARES_STRATEGIES_AVAILABLE = False
     print(f"❌ ARES ImportError COMPLETO: {type(e).__name__}: {str(e)}")
     import traceback
     print(traceback.format_exc())
 except Exception as e:
-    AresQuantumProtocol = None
-    AresScalpingV2 = None
+    AresProtocolV1 = None
+    AresProtocolV2 = None
     ARES_STRATEGIES_AVAILABLE = False
     print(f"❌ ARES Exception COMPLETO: {type(e).__name__}: {str(e)}")
     import traceback
