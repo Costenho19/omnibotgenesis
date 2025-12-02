@@ -506,15 +506,22 @@ class CoherenceEngine:
         # ========== VALIDACIÓN ADICIONAL: Coherencia general ==========
         report = self.analyze_coherence(signals)
         
-        if report.coherence_score < 30:
+        # V6.5: Umbrales diferenciados para paper vs real trading
+        # Paper mode: umbral 10% (permite trades para calibración)
+        # Real mode: umbral 30% (protección estricta)
+        coherence_block_threshold = 10 if paper_mode else 30
+        coherence_warn_threshold = 30 if paper_mode else 50
+        
+        if report.coherence_score < coherence_block_threshold:
             block_reasons.append(
-                f"🚫 COHERENCIA CRÍTICA: {report.coherence_score:.1f}% < 30% - "
+                f"🚫 COHERENCIA CRÍTICA: {report.coherence_score:.1f}% < {coherence_block_threshold}% - "
                 f"Demasiadas contradicciones entre estrategias"
             )
-        elif report.coherence_score < 50:
+        elif report.coherence_score < coherence_warn_threshold:
+            mode_label = "PAPER MODE - Permitido para calibración" if paper_mode else "Reducir tamaño de posición 50%"
             warnings.append(
-                f"⚠️ COHERENCIA BAJA: {report.coherence_score:.1f}% - "
-                f"Reducir tamaño de posición 50%"
+                f"⚠️ COHERENCIA BAJA: {report.coherence_score:.1f}% < {coherence_warn_threshold}% - "
+                f"{mode_label}"
             )
         
         # ========== DECISIÓN FINAL ==========
