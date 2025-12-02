@@ -6,33 +6,34 @@ OMNIX V6.5 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and st
 
 ## Recent Changes (December 2, 2025)
 
-### ARES Strategies Import Fix - CRITICAL BUG RESOLVED
+### ARES Module-Level Initialization Fix - PRODUCTION DEPLOYED
 
-**Problem**: Auto-trading was completely halted because ARES V1 and V2 strategies failed to load. The system showed `ARES_STRATEGIES_AVAILABLE = False`.
+**Problem**: ARES strategies showed as "None" in enterprise_bot because `initialize_system()` ran AFTER the import.
 
-**Root Cause**: Class name mismatch in imports across 6 files:
-| Incorrect Import | Actual Class Name |
-|------------------|-------------------|
-| `AresQuantumProtocol` | `AresProtocolV1` |
-| `AresScalpingV2` | `AresProtocolV2` |
+**Root Cause**: Race condition - `global_ares_v1` and `global_ares_v2` were set to `None` at module level, then assigned in `initialize_system()`. But `enterprise_bot.py` imported them before `initialize_system()` ran.
 
-**Files Corrected**:
-1. `main.py` (lines 256-274) - Main import and fallback assignments
-2. `omnix_core/trading_system.py` (lines 5194-5195) - Global instantiation
-3. `omnix_core/strategies/ares_v1.py` (line 644) - Local test block
-4. `omnix_core/strategies/ares_v2.py` (line 546) - Local test block
-5. `omnix_testing/validate_ares_strategies.py` (lines 114-118, 165-169) - Validation adapters
-6. `omnix_testing/backtesting/backtesting_engine.py` (lines 30-35, 76-81) - Backtesting imports
+**Solution Applied**:
+1. **trading_system.py**: Create ARES instances at module level (not in function)
+   ```python
+   # Module-level instantiation
+   global_ares_v1 = AresProtocolV1(trading_system=None)
+   global_ares_v2 = AresProtocolV2(trading_system=None)
+   ```
+2. **trading_system.py**: Connect trading_system to existing instances in `initialize_system()`
+   ```python
+   global_ares_v1.trading_system = global_trading_system
+   global_ares_v2.trading_system = global_trading_system
+   ```
+3. **enterprise_bot.py**: Import module for dynamic access (already done)
 
-**Verification Result**:
+**Railway Production Logs (21:59:24 UTC)**:
 ```
-✅ ARES QUANTUM PROTOCOLS LOADED:
-   🧬 ARES V1: AresProtocolV1 (v1.1.0) - Win Rate 55%-65%
-   🧨 ARES V2: AresProtocolV2 (v2.1.0) - Win Rate 60%-70%
-✅ Instancias creadas correctamente
+🧬 ARES V1 Swing: ✅ CONECTADO (55-65% win rate)
+🧨 ARES V2 Scalping: ✅ CONECTADO (60-70% win rate)
+🧬 ARES V1 (Swing 55-65%) + V2 (Scalping 60-70%) ACTIVOS
 ```
 
-**Impact**: Bot can now generate trading signals using both ARES strategies. Push to GitHub required for Railway deployment.
+**Status**: PRODUCTION OPERATIONAL - Bot running 24/7 on Railway with both ARES strategies active.
 
 ---
 
