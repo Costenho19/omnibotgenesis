@@ -4,6 +4,38 @@
 
 OMNIX V6.5 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
+## Recent Changes (December 2, 2025)
+
+### ARES Strategies Import Fix - CRITICAL BUG RESOLVED
+
+**Problem**: Auto-trading was completely halted because ARES V1 and V2 strategies failed to load. The system showed `ARES_STRATEGIES_AVAILABLE = False`.
+
+**Root Cause**: Class name mismatch in imports across 6 files:
+| Incorrect Import | Actual Class Name |
+|------------------|-------------------|
+| `AresQuantumProtocol` | `AresProtocolV1` |
+| `AresScalpingV2` | `AresProtocolV2` |
+
+**Files Corrected**:
+1. `main.py` (lines 256-274) - Main import and fallback assignments
+2. `omnix_core/trading_system.py` (lines 5194-5195) - Global instantiation
+3. `omnix_core/strategies/ares_v1.py` (line 644) - Local test block
+4. `omnix_core/strategies/ares_v2.py` (line 546) - Local test block
+5. `omnix_testing/validate_ares_strategies.py` (lines 114-118, 165-169) - Validation adapters
+6. `omnix_testing/backtesting/backtesting_engine.py` (lines 30-35, 76-81) - Backtesting imports
+
+**Verification Result**:
+```
+✅ ARES QUANTUM PROTOCOLS LOADED:
+   🧬 ARES V1: AresProtocolV1 (v1.1.0) - Win Rate 55%-65%
+   🧨 ARES V2: AresProtocolV2 (v2.1.0) - Win Rate 60%-70%
+✅ Instancias creadas correctamente
+```
+
+**Impact**: Bot can now generate trading signals using both ARES strategies. Push to GitHub required for Railway deployment.
+
+---
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
@@ -249,4 +281,4 @@ Natural Language: "quiero ser mas agresivo", "maximo $500 por trade", "pausa el 
 
 ---
 
-*Last Updated: December 2024 | OMNIX V6.5 INSTITUTIONAL+ | $400K seed at $2.5M valuation*
+*Last Updated: December 2, 2025 | OMNIX V6.5 INSTITUTIONAL+ | $400K seed at $2.5M valuation*
