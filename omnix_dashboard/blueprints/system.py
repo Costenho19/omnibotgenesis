@@ -1,0 +1,265 @@
+"""
+OMNIX Dashboard - System Blueprint
+System API routes (/api/system/status, /api/debug, /api/signals/active)
+"""
+
+import os
+import logging
+from datetime import datetime
+from flask import Blueprint, jsonify
+
+from omnix_dashboard.utils.database import get_db_connection, get_database_url, init_database
+from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE
+from omnix_dashboard.utils.decorators import require_api_key
+from omnix_dashboard.utils.queries import get_paper_trades
+
+logger = logging.getLogger(__name__)
+
+system_bp = Blueprint('system', __name__)
+
+
+@system_bp.route('/api/signals/active')
+@require_api_key
+def api_active_signals():
+    """API endpoint for active trading signals - V6.5 connected to real DB"""
+    signals = []
+    
+    with get_db_connection() as conn:
+        if conn:
+            try:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT symbol, side, strategy, status, opened_at, entry_price
+                    FROM paper_trading_trades
+                    WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                    ORDER BY opened_at DESC
+                    LIMIT 10
+                ''')
+                
+                recent_trades = cursor.fetchall()
+                
+                symbol_stats = {}
+                for trade in recent_trades:
+                    symbol = trade[0]
+                    side = trade[1]
+                    strategy = trade[2] or 'OMNIX'
+                    
+                    if symbol not in symbol_stats:
+                        symbol_stats[symbol] = {'buys': 0, 'sells': 0, 'strategies': set()}
+                    
+                    if side == 'buy':
+                        symbol_stats[symbol]['buys'] += 1
+                    else:
+                        symbol_stats[symbol]['sells'] += 1
+                    symbol_stats[symbol]['strategies'].add(strategy)
+                
+                for symbol, stats in symbol_stats.items():
+                    total = stats['buys'] + stats['sells']
+                    if total > 0:
+                        buy_ratio = stats['buys'] / total
+                        
+                        if buy_ratio > 0.7:
+                            signal_type = 'BULLISH'
+                            confidence = int(buy_ratio * 100)
+                        elif buy_ratio < 0.3:
+                            signal_type = 'BEARISH'
+                            confidence = int((1 - buy_ratio) * 100)
+                        else:
+                            signal_type = 'NEUTRAL'
+                            confidence = 50
+                        
+                        signals.append({
+                            'strategy': list(stats['strategies'])[0] if stats['strategies'] else 'OMNIX',
+                            'symbol': symbol,
+                            'signal': signal_type,
+                            'confidence': confidence,
+                            'trades_24h': total,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                
+                cursor.execute('''
+                    SELECT symbol, side, strategy, entry_price, opened_at
+                    FROM paper_trading_trades
+                    WHERE status = 'open'
+                    ORDER BY opened_at DESC
+                ''')
+                
+                open_positions = cursor.fetchall()
+                for pos in open_positions:
+                    existing = next((s for s in signals if s['symbol'] == pos[0]), None)
+                    if not existing:
+                        signals.append({
+                            'strategy': pos[2] or 'OMNIX',
+                            'symbol': pos[0],
+                            'signal': 'LONG' if pos[1] == 'buy' else 'SHORT',
+                            'confidence': 75,
+                            'position_open': True,
+                            'timestamp': pos[4].isoformat() if pos[4] else datetime.now().isoformat()
+                        })
+                
+                cursor.close()
+                logger.info(f"Generated {len(signals)} signals from real trading data")
+                
+            except Exception as e:
+                logger.error(f"Error fetching signals from DB: {e}")
+    
+    if not signals:
+        signals = [
+            {
+                'strategy': 'OMNIX V6.5',
+                'symbol': 'BTC/USD',
+                'signal': 'ANALYZING',
+                'confidence': 0,
+                'message': 'Waiting for trading activity',
+                'timestamp': datetime.now().isoformat()
+            }
+        ]
+    
+    return jsonify({
+        'success': True,
+        'signals': signals,
+        'source': 'PostgreSQL',
+        'timestamp': datetime.now().isoformat()
+    })
+
+
+@system_bp.route('/api/system/status')
+def api_system_status():
+    """API endpoint for OMNIX system status - V6.5 connected to real DB"""
+    from omnix_dashboard.utils.database import DB_AVAILABLE
+    
+    trades = get_paper_trades(1)
+    open_positions = len([t for t in trades if t.get('status') == 'open'])
+    trades_today = len([t for t in trades if t.get('closed_at') is not None])
+    
+    bot_active = False
+    trading_enabled = False
+    daily_pnl = 0.0
+    user_settings_data = {}
+    strategy_counts = {}
+    
+    with get_db_connection() as conn:
+        if conn:
+            try:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT auto_trading, trading_enabled, daily_pnl_usd, 
+                           active_cryptos, stop_loss_pct, take_profit_pct,
+                           risk_profile, updated_at
+                    FROM user_settings
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                ''')
+                
+                settings_row = cursor.fetchone()
+                if settings_row:
+                    bot_active = bool(settings_row[0])
+                    trading_enabled = bool(settings_row[1])
+                    daily_pnl = float(settings_row[2]) if settings_row[2] else 0.0
+                    user_settings_data = {
+                        'active_cryptos': settings_row[3] or ['BTC/USD', 'ETH/USD'],
+                        'stop_loss_pct': float(settings_row[4]) if settings_row[4] else 3.0,
+                        'take_profit_pct': float(settings_row[5]) if settings_row[5] else 5.0,
+                        'risk_profile': settings_row[6] or 'moderado',
+                        'last_updated': settings_row[7].isoformat() if settings_row[7] else None
+                    }
+                
+                cursor.execute('''
+                    SELECT strategy, COUNT(*) as cnt
+                    FROM paper_trading_trades
+                    WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                    GROUP BY strategy
+                ''')
+                
+                strategy_counts = {row[0]: row[1] for row in cursor.fetchall()}
+                cursor.close()
+                
+            except Exception as e:
+                logger.error(f"Error reading user_settings: {e}")
+    
+    strategies = {}
+    if strategy_counts:
+        for strat_name, signal_count in strategy_counts.items():
+            strategies[strat_name] = {'active': True, 'signals_today': signal_count}
+    
+    if not strategies:
+        strategies = {
+            'OMNIX_V6.5': {'active': bot_active, 'signals_today': trades_today},
+            'Auto_Trading_Bot': {'active': bot_active, 'signals_today': open_positions}
+        }
+    
+    status = {
+        'bot_active': bot_active,
+        'trading_enabled': trading_enabled,
+        'version': 'V6.5 INSTITUTIONAL+',
+        'uptime': '24/7 Railway',
+        'last_activity': datetime.now().isoformat(),
+        'database_connected': DB_AVAILABLE,
+        'daily_pnl_usd': round(daily_pnl, 2),
+        'strategies': strategies,
+        'protection': {
+            'drawdown_tier': 'NORMAL' if daily_pnl >= 0 else 'CAUTION',
+            'ramp_up_pct': 100,
+            'daily_loss_limit': user_settings_data.get('stop_loss_pct', 3.0) * 100,
+            'position_size_factor': 1.0
+        },
+        'trading': {
+            'open_positions': open_positions,
+            'trades_today': trades_today,
+            'pairs_active': user_settings_data.get('active_cryptos', ['BTC/USD', 'ETH/USD', 'SOL/USD'])
+        },
+        'user_settings': user_settings_data,
+        'source': 'PostgreSQL',
+        'timestamp': datetime.now().isoformat()
+    }
+    
+    return jsonify({
+        'success': True,
+        'status': status
+    })
+
+
+@system_bp.route('/api/debug')
+def api_debug():
+    """Debug endpoint to diagnose connection issues (no secrets exposed)"""
+    from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE
+    
+    env_vars_status = {
+        'DATABASE_URL': 'SET' if os.environ.get('DATABASE_URL') else 'NOT SET',
+        'POSTGRES_URL': 'SET' if os.environ.get('POSTGRES_URL') else 'NOT SET',
+        'DATABASE_PUBLIC_URL': 'SET' if os.environ.get('DATABASE_PUBLIC_URL') else 'NOT SET',
+    }
+    
+    database_url = get_database_url()
+    url_info = None
+    if database_url:
+        if '@' in database_url:
+            host_part = database_url.split('@')[-1].split('/')[0] if '@' in database_url else 'unknown'
+            url_info = f"Host: {host_part[:50]}..."
+        else:
+            url_info = "URL format: invalid (no @ symbol)"
+    
+    init_database()
+    
+    psycopg_installed = False
+    try:
+        import psycopg
+        psycopg_installed = True
+        psycopg_version = getattr(psycopg, '__version__', 'unknown')
+    except ImportError:
+        psycopg_version = 'NOT INSTALLED'
+    
+    return jsonify({
+        'status': 'debug_info',
+        'environment_variables': env_vars_status,
+        'database_url_detected': database_url is not None,
+        'database_url_info': url_info,
+        'psycopg_installed': psycopg_installed,
+        'psycopg_version': psycopg_version,
+        'db_connected': DB_AVAILABLE,
+        'db_error': DB_ERROR_MESSAGE,
+        'python_version': os.popen('python --version').read().strip(),
+        'timestamp': datetime.now().isoformat()
+    })

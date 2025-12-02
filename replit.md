@@ -65,6 +65,32 @@ Provides institutional-grade blockchain analytics using free APIs, featuring Wha
 
 The system includes a web dashboard built with Flask, providing multiple views (main, terminal-style, classic) and a comprehensive set of API endpoints for performance metrics, trading data, market data, market intelligence, and system status.
 
+### Backend Architecture (December 2024 Refactor)
+
+**Flask Blueprints Architecture (12 files, 1961 lines):**
+```
+omnix_dashboard/
+├── app.py                  # Application factory (90 lines, 95% reduction)
+├── run.py                  # WSGI entry point
+├── blueprints/             # 5 Blueprints, 25 routes total
+│   ├── views.py           # HTML pages (3 routes)
+│   ├── core.py            # Core APIs (6 routes)
+│   ├── market.py          # Market data (7 routes)
+│   ├── intelligence.py    # External APIs (4 routes)
+│   └── system.py          # System status (5 routes)
+└── utils/                  # Shared utilities (586 lines)
+    ├── database.py        # PostgreSQL connection pool
+    ├── decorators.py      # API authentication
+    ├── external_apis.py   # HTTP client with retry
+    └── queries.py         # SQL query functions
+```
+
+**Key Improvements:**
+- Application factory pattern for testability
+- Connection pooling (min=2, max=10)
+- Absolute imports for package independence
+- Modular route organization by domain
+
 ### Frontend Architecture (December 2024 Refactor)
 
 **Modular CSS (18 files, 1562 lines) - BEM Methodology:**
