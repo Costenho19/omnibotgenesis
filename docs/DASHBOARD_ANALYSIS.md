@@ -6,19 +6,106 @@
 
 ---
 
-## 1. File Structure
+## 1. File Structure (December 2024 Refactor)
+
+### 1.1 Backend - Flask Blueprints Architecture
+
+**Refactored from monolithic 1728-line app.py to 13 modular files (2063 lines total):**
 
 ```
 omnix_dashboard/
-├── app.py                      # Backend Flask (1639 lines, 25+ endpoints)
+├── app.py                      # Application factory (90 lines, 95% reduction)
+├── run.py                      # WSGI entry point (34 lines)
 ├── __init__.py
+├── ARCHITECTURE.md             # Technical architecture documentation
+├── blueprints/                 # 5 Blueprints, 25 routes total
+│   ├── __init__.py            # Blueprint exports (18 lines)
+│   ├── views.py               # HTML page routes (29 lines, 3 routes)
+│   ├── core.py                # Core APIs (369 lines, 6 routes)
+│   ├── market.py              # Market data (366 lines, 7 routes)
+│   ├── intelligence.py        # External APIs (298 lines, 5 routes)
+│   └── system.py              # System status (265 lines, 5 routes)
+├── utils/                      # Shared utilities (594 lines)
+│   ├── __init__.py            # Utils exports (53 lines)
+│   ├── database.py            # PostgreSQL connection pool (162 lines)
+│   ├── decorators.py          # API authentication (45 lines)
+│   ├── external_apis.py       # HTTP client with retry (68 lines)
+│   └── queries.py             # SQL query functions (266 lines)
 ├── templates/
-│   ├── terminal.html           # Dashboard Terminal (982 lines)
-│   └── dashboard.html          # Dashboard Classic (1150 lines)
+│   ├── base.html              # Jinja2 base template with blocks
+│   ├── terminal.html          # Trading Terminal (extends base)
+│   └── dashboard.html         # Classic Dashboard (extends base)
 └── static/
-    ├── css/                    # (empty - CSS inline)
-    └── js/                     # (empty - JS inline)
+    ├── css/                   # Modular CSS (18 files, 1562 lines)
+    └── js/                    # Modular JavaScript (11 files, 1318 lines)
 ```
+
+### 1.2 Blueprint Distribution
+
+| Blueprint | File | Lines | Routes | Purpose |
+|-----------|------|-------|--------|---------|
+| `views_bp` | views.py | 29 | 3 | HTML pages (/, /terminal, /classic) |
+| `core_bp` | core.py | 369 | 6 | Metrics, trades, equity, portfolio, positions, health |
+| `market_bp` | market.py | 366 | 7 | Crypto, stocks, OHLC, volume, Fear&Greed, news |
+| `intelligence_bp` | intelligence.py | 298 | 5 | Finnhub, Alpha Vantage, intelligence summary |
+| `system_bp` | system.py | 265 | 5 | System status, signals, debug |
+
+### 1.3 Utils Package
+
+| Module | Lines | Purpose |
+|--------|-------|---------|
+| `database.py` | 162 | Connection pooling (min=2, max=10), context manager |
+| `decorators.py` | 45 | `@require_api_key` - per-request authentication |
+| `external_apis.py` | 68 | `http_get_with_timeout()` with retry logic |
+| `queries.py` | 266 | SQL functions: get_paper_trades, calculate_metrics |
+
+### 1.4 Frontend - Modular CSS (BEM Methodology)
+
+```
+omnix_dashboard/static/css/
+├── base/
+│   ├── variables.css          # CSS custom properties
+│   ├── reset.css              # Normalize styles
+│   └── typography.css         # Font definitions
+├── components/
+│   ├── panel.css, card.css, ticker.css, signal.css
+│   ├── badge.css, chart.css, table.css
+│   ├── news.css, protection.css
+├── layouts/
+│   ├── header.css, terminal-grid.css, animations.css
+├── pages/
+│   ├── terminal.css, dashboard.css
+└── main.css                   # Imports all modules
+```
+
+### 1.5 Frontend - Modular JavaScript (IIFE Pattern)
+
+```
+omnix_dashboard/static/js/
+├── core/
+│   ├── api.js                 # Fetch wrapper with error handling
+│   ├── utils.js               # Format utilities
+│   └── clock.js               # Real-time clock
+├── components/
+│   ├── charts.js, ticker.js, signals.js
+│   ├── volume.js, news.js, feargreed.js
+└── pages/
+    ├── terminal.js            # Terminal page initialization
+    └── dashboard.js           # Dashboard page initialization
+```
+
+### 1.6 Architecture Improvements (December 2024)
+
+| Improvement | Before | After |
+|-------------|--------|-------|
+| Main app.py | 1728 lines | 90 lines (95% reduction) |
+| Total backend code | 1728 lines | 2063 lines (modular) |
+| Files | 1 monolithic | 13 organized |
+| Blueprints | 0 | 5 logical groups |
+| Connection pooling | None | psycopg_pool (min=2, max=10) |
+| Import pattern | Relative | Absolute (package independence) |
+| API auth | Import-time cached | Per-request resolution |
+| External services | sys.path mutation | Lazy-loading helpers |
 
 ---
 
@@ -399,13 +486,34 @@ URGENCY     │ Security +    │ Frontend      │
 
 ---
 
-## 13. Quick Reference: File Locations
+## 13. Quick Reference: File Locations (Updated December 2024)
 
+### Backend (Flask Blueprints)
 | Component | Path | Lines |
 |-----------|------|-------|
-| Flask Backend | `omnix_dashboard/app.py` | 1639 |
-| Terminal HTML | `omnix_dashboard/templates/terminal.html` | 982 |
-| Classic HTML | `omnix_dashboard/templates/dashboard.html` | 1150 |
+| Application Factory | `omnix_dashboard/app.py` | 90 |
+| WSGI Entry Point | `omnix_dashboard/run.py` | 34 |
+| Views Blueprint | `omnix_dashboard/blueprints/views.py` | 29 |
+| Core Blueprint | `omnix_dashboard/blueprints/core.py` | 369 |
+| Market Blueprint | `omnix_dashboard/blueprints/market.py` | 366 |
+| Intelligence Blueprint | `omnix_dashboard/blueprints/intelligence.py` | 298 |
+| System Blueprint | `omnix_dashboard/blueprints/system.py` | 265 |
+| Database Utils | `omnix_dashboard/utils/database.py` | 162 |
+| Query Functions | `omnix_dashboard/utils/queries.py` | 266 |
+| **Total Backend** | **13 files** | **2063** |
+
+### Frontend
+| Component | Path | Lines |
+|-----------|------|-------|
+| Base Template | `omnix_dashboard/templates/base.html` | ~50 |
+| Terminal Template | `omnix_dashboard/templates/terminal.html` | 216 |
+| Dashboard Template | `omnix_dashboard/templates/dashboard.html` | 314 |
+| CSS Modules | `omnix_dashboard/static/css/` | 1562 (18 files) |
+| JS Modules | `omnix_dashboard/static/js/` | 1318 (11 files) |
+
+### Configuration
+| Component | Path | Lines |
+|-----------|------|-------|
 | Main Entry | `main.py` | 723 |
 | Railway Config | `railway.json` | 12 |
 | Replit Config | `.replit` | ~80 |
@@ -458,6 +566,127 @@ URGENCY     │ Security +    │ Frontend      │
 | Endpoint | Method | Returns |
 |----------|--------|---------|
 | `/api/system/status` | GET | System status |
+
+---
+
+## 15. CSS Migration Recommendation: Tailwind CSS
+
+### 15.1 Current State
+
+The dashboard currently uses **18 modular CSS files (~1562 lines)** following BEM methodology:
+
+```
+omnix_dashboard/static/css/
+├── base/ (3 files)
+│   ├── variables.css, reset.css, typography.css
+├── components/ (9 files)
+│   ├── panel.css, card.css, ticker.css, signal.css
+│   ├── badge.css, chart.css, table.css, news.css, protection.css
+├── layouts/ (3 files)
+│   ├── header.css, terminal-grid.css, animations.css
+├── pages/ (2 files)
+│   ├── terminal.css, dashboard.css
+└── main.css (imports)
+```
+
+**Current Issues:**
+- Browser console warning: `cdn.tailwindcss.com should not be used in production`
+- CDN Tailwind loaded alongside custom CSS causes conflicts
+- 18 separate HTTP requests for CSS modules
+- Manual maintenance of design tokens across files
+
+### 15.2 Recommendation: Migrate to Tailwind CSS
+
+**Why Tailwind CSS:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Utility-first** | Atomic classes reduce CSS bloat |
+| **Single bundle** | One optimized CSS file vs 18 modules |
+| **Consistency** | Built-in design system (spacing, colors, typography) |
+| **Dark mode** | Native support with `dark:` prefix |
+| **Responsive** | Mobile-first with `sm:`, `md:`, `lg:` prefixes |
+| **Production build** | PurgeCSS removes unused styles (~10KB final) |
+| **IDE support** | IntelliSense autocomplete for classes |
+
+### 15.3 Migration Strategy
+
+**Phase 1: Setup (1-2 hours)**
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+Configure `tailwind.config.js`:
+```javascript
+module.exports = {
+  content: [
+    "./omnix_dashboard/templates/**/*.html",
+    "./omnix_dashboard/static/js/**/*.js"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'omnix-bg': '#0a0a0f',
+        'omnix-panel': '#1a1a2e',
+        'omnix-accent': '#00d4aa',
+        'omnix-profit': '#00ff88',
+        'omnix-loss': '#ff4444',
+      }
+    }
+  },
+  plugins: []
+}
+```
+
+**Phase 2: Convert Components (4-6 hours)**
+
+| Current BEM Class | Tailwind Equivalent |
+|-------------------|---------------------|
+| `.panel` | `bg-omnix-panel rounded-lg p-4 border border-gray-800` |
+| `.card--profit` | `text-omnix-profit font-bold` |
+| `.ticker__item` | `flex items-center gap-2 px-3 py-2` |
+| `.signal--long` | `bg-green-500/20 text-green-400 px-2 py-1 rounded` |
+| `.badge--live` | `animate-pulse bg-green-500 text-xs px-2 rounded-full` |
+
+**Phase 3: Build Pipeline (1 hour)**
+
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "css:build": "tailwindcss -i ./src/input.css -o ./omnix_dashboard/static/css/output.css --minify",
+    "css:watch": "tailwindcss -i ./src/input.css -o ./omnix_dashboard/static/css/output.css --watch"
+  }
+}
+```
+
+**Phase 4: Cleanup (1 hour)**
+- Remove 18 CSS module files
+- Remove CDN Tailwind script from templates
+- Single `<link href="/static/css/output.css">` in base.html
+
+### 15.4 Expected Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| CSS Files | 18 | 1 |
+| Total CSS Lines | 1562 | ~200 (custom) + Tailwind |
+| HTTP Requests | 18 | 1 |
+| Production Size | ~50KB | ~10KB (purged) |
+| Console Warnings | Yes | No |
+| Dark Mode | Manual | Native |
+
+### 15.5 Migration Priority
+
+| Priority | Reason |
+|----------|--------|
+| **P2 (Moderate)** | Not blocking functionality, but improves maintainability |
+| **Estimated Effort** | 6-10 hours total |
+| **Dependencies** | None (can be done independently) |
+| **Risk** | Low (CSS-only, no backend changes) |
+
+**Recommended Timing:** After completing Phase 1-3 critical fixes, before investor presentation.
 
 ---
 
