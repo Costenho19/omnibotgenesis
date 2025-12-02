@@ -14,15 +14,16 @@ gTTS==2.5.4
 # Web Framework & Production Server
 Flask==3.1.2
 waitress==3.0.2
-gunicorn==21.2.0
+gunicorn==23.0.0
+gevent>=24.2.1
 fastapi==0.109.0
 uvicorn==0.27.0
 
 # Telegram Bot
 python-telegram-bot==20.7
 
-# Database 
-psycopg[binary]>=3.1.0
+# Database with Connection Pooling
+psycopg[binary,pool]>=3.1.0
 
 # Redis
 redis==5.0.1
@@ -72,3 +73,5 @@ pyarrow==18.1.0
 telegram
 dwave-ocean-sdk
 flask-cors
+gevent
+psycopg[binary,pool]

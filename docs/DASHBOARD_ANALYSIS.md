@@ -186,10 +186,45 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 
 | # | Issue | Location | Impact | Status |
 |---|-------|----------|--------|--------|
-| 4 | **Flask dev server in production** | `main.py` line 693 | Werkzeug doesn't scale, no TLS, single-thread | ❌ Open |
-| 5 | **No connection pooling** | `app.py` line 50 | New connection per request = inefficient | ❌ Open |
-| 6 | **Blocking requests without timeout** | `app.py` multiple | Kraken/Finnhub calls can block everything | ❌ Open |
-| 7 | **Dashboard thread without lifecycle** | `main.py` line 699 | If main thread blocks, monitoring collapses | ❌ Open |
+| 4 | **Flask dev server in production** | `railway.json` | Gunicorn config ready, Railway healthcheck configured | ✅ Fixed (Dec 2024) |
+| 5 | **No connection pooling** | `app.py` line 100-200 | psycopg_pool with min=2, max=10, lifecycle management | ✅ Fixed (Dec 2024) |
+| 6 | **Blocking requests without timeout** | `app.py` line 219-238 | ThreadPoolExecutor with 10s timeout + fallback | ✅ Fixed (Dec 2024) |
+| 7 | **Dashboard thread without lifecycle** | `railway.json` | Railway healthcheck at /api/health with pool stats | ✅ Fixed (Dec 2024) |
+
+**Architecture V6.5 Configuration:**
+```bash
+# Railway Environment Variables (OPTIONAL - defaults work well):
+DB_POOL_MIN=2            # Minimum pool connections (default: 2)
+DB_POOL_MAX=10           # Maximum pool connections (default: 10)
+
+# Railway uses main.py which starts:
+# 1. Telegram Bot (main process)
+# 2. Dashboard (secondary thread on port 5000)
+
+# Healthcheck configured in railway.json:
+# - Path: /api/health
+# - Timeout: 30 seconds
+```
+
+**Key Improvements:**
+- **Connection Pool**: `psycopg_pool.ConnectionPool` with context manager, graceful shutdown via atexit
+- **Pool Stats**: `/api/health` returns live pool metrics (size, available, waiting requests)
+- **External API Wrapper**: `fetch_with_timeout()` with ThreadPoolExecutor prevents blocking
+- **Gunicorn Config**: Ready for standalone dashboard deployment if needed (gevent workers)
+
+**All External API Endpoints Migrated (Dec 2024):**
+Using `http_get_with_timeout()` with ThreadPoolExecutor:
+- `/api/market/crypto` - Kraken ticker (timeout 10s)
+- `/api/market/stocks` - Alpaca bars (timeout 10s)  
+- `/api/market/ohlc/<symbol>` - Kraken OHLC (timeout 10s)
+- `/api/market/fear-greed` - Alternative.me (timeout 10s)
+- `/api/market/finnhub-news` - Finnhub news (timeout 10s)
+- `/api/market/technical-indicators/<symbol>` - Alpha Vantage (timeout 15s)
+- `/api/news` - CoinGecko news with fallback (timeout 10s)
+
+**Future Improvements:**
+- Consider spawning Gunicorn from main.py for production WSGI server
+- Add Redis cache layer for API fallback data
 
 ### 5.3 SEVERE - Data
 

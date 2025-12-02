@@ -1,18 +1,29 @@
 """
-OMNIX Performance Dashboard V6.4 INSTITUTIONAL+
+OMNIX Performance Dashboard V6.5 INSTITUTIONAL+
 Professional Institutional-Grade Trading & Portfolio Analytics
 Premium 2025 Design with Portfolio Management - REAL DATA
+
+Architecture V6.5:
+- Connection Pooling: psycopg_pool for efficient DB connections
+- WSGI Server: Gunicorn with gevent workers (production)
+- External APIs: ThreadPoolExecutor with timeout and fallback
 """
 
 import os
+import sys
+import atexit
 import logging
 from functools import wraps
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+from contextlib import contextmanager
 from flask import Flask, render_template, jsonify, redirect, request
 from flask_cors import CORS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+API_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api_fetch")
 
 app = Flask(__name__)
 
@@ -68,6 +79,7 @@ def require_api_key(f):
 
 DB_AVAILABLE = False
 DB_ERROR_MESSAGE = None
+DB_POOL = None
 
 def get_database_url():
     """Get DATABASE_URL - checks multiple possible variable names"""
@@ -82,165 +94,283 @@ def get_database_url():
         return url
     return None
 
-def get_db_connection():
-    """Get direct PostgreSQL connection using psycopg"""
-    global DB_AVAILABLE, DB_ERROR_MESSAGE
+def init_connection_pool():
+    """Initialize psycopg3 connection pool - call once at startup"""
+    global DB_POOL, DB_AVAILABLE, DB_ERROR_MESSAGE
     
     database_url = get_database_url()
-    
     if not database_url:
-        DB_ERROR_MESSAGE = "No DATABASE_URL, POSTGRES_URL, or DATABASE_PUBLIC_URL found in environment"
+        DB_ERROR_MESSAGE = "No DATABASE_URL found in environment"
         logger.warning(DB_ERROR_MESSAGE)
         DB_AVAILABLE = False
-        return None
+        return False
     
     try:
-        import psycopg
-        conn = psycopg.connect(database_url)
+        from psycopg_pool import ConnectionPool
+        
+        min_size = int(os.environ.get('DB_POOL_MIN', '2'))
+        max_size = int(os.environ.get('DB_POOL_MAX', '10'))
+        
+        DB_POOL = ConnectionPool(
+            conninfo=database_url,
+            min_size=min_size,
+            max_size=max_size,
+            timeout=30.0,
+            max_lifetime=3600.0,
+            max_idle=600.0,
+            open=True,
+            name="omnix_dashboard_pool"
+        )
+        
         DB_AVAILABLE = True
         DB_ERROR_MESSAGE = None
-        return conn
+        logger.info(f"Connection pool initialized: min={min_size}, max={max_size}")
+        return True
+        
     except ImportError as e:
-        DB_ERROR_MESSAGE = f"psycopg library not installed: {e}"
+        DB_ERROR_MESSAGE = f"psycopg_pool not installed: {e}"
         logger.error(DB_ERROR_MESSAGE)
         DB_AVAILABLE = False
-        return None
+        return False
     except Exception as e:
-        DB_ERROR_MESSAGE = f"Connection failed: {str(e)[:200]}"
-        logger.error(f"Database connection failed: {e}")
+        DB_ERROR_MESSAGE = f"Pool initialization failed: {str(e)[:200]}"
+        logger.error(f"Connection pool failed: {e}")
         DB_AVAILABLE = False
-        return None
+        return False
+
+@contextmanager
+def get_db_connection():
+    """Get connection from pool using context manager.
+    
+    Usage:
+        with get_db_connection() as conn:
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute(...)
+    """
+    global DB_AVAILABLE, DB_ERROR_MESSAGE
+    
+    if DB_POOL is None:
+        init_connection_pool()
+    
+    if DB_POOL is None:
+        yield None
+        return
+    
+    try:
+        with DB_POOL.connection() as conn:
+            DB_AVAILABLE = True
+            yield conn
+    except Exception as e:
+        DB_ERROR_MESSAGE = f"Connection error: {str(e)[:200]}"
+        logger.error(f"Database connection error: {e}")
+        DB_AVAILABLE = False
+        yield None
+
+def get_pool_stats():
+    """Get connection pool statistics for health checks"""
+    if DB_POOL is None:
+        return {'status': 'not_initialized'}
+    try:
+        stats = DB_POOL.get_stats()
+        return {
+            'status': 'active',
+            'pool_size': getattr(stats, 'pool_size', 0),
+            'pool_available': getattr(stats, 'pool_available', 0),
+            'requests_waiting': getattr(stats, 'requests_waiting', 0),
+            'requests_num': getattr(stats, 'requests_num', 0),
+            'usage_ms': getattr(stats, 'usage_ms', 0),
+            'requests_queued': getattr(stats, 'requests_queued', 0),
+            'pool_min': int(os.environ.get('DB_POOL_MIN', '2')),
+            'pool_max': int(os.environ.get('DB_POOL_MAX', '10'))
+        }
+    except Exception as e:
+        logger.error(f"Error getting pool stats: {e}")
+        return {'status': 'error', 'error': str(e)}
+
+def shutdown_pool():
+    """Gracefully close connection pool on shutdown"""
+    global DB_POOL
+    if DB_POOL:
+        try:
+            DB_POOL.close()
+            logger.info("Connection pool closed gracefully")
+        except Exception as e:
+            logger.error(f"Error closing pool: {e}")
+        DB_POOL = None
+
+atexit.register(shutdown_pool)
 
 def init_database():
-    """Check if database is available"""
+    """Initialize database connection pool"""
     global DB_AVAILABLE
-    conn = get_db_connection()
-    if conn:
-        conn.close()
-        DB_AVAILABLE = True
-        logger.info("Database connected: Real data mode ACTIVE")
-        return True
+    
+    if init_connection_pool():
+        with get_db_connection() as conn:
+            if conn:
+                DB_AVAILABLE = True
+                logger.info("Database connected: Real data mode ACTIVE (pooled)")
+                return True
+    
     DB_AVAILABLE = False
     return False
 
 
-def get_paper_trades(days=30):
-    """Fetch REAL paper trading history from database"""
-    conn = get_db_connection()
-    if not conn:
-        logger.info("No database connection - returning empty (no demo data)")
-        return []
+def fetch_with_timeout(func, timeout=10, fallback=None):
+    """Execute a function with timeout using ThreadPoolExecutor.
+    
+    Args:
+        func: Callable to execute
+        timeout: Timeout in seconds (default 10)
+        fallback: Value to return on timeout/error
+    
+    Returns:
+        Result of func() or fallback on timeout/error
+    """
+    try:
+        future = API_EXECUTOR.submit(func)
+        return future.result(timeout=timeout)
+    except FuturesTimeoutError:
+        logger.warning(f"Timeout after {timeout}s calling external API")
+        return fallback
+    except Exception as e:
+        logger.error(f"Error in fetch_with_timeout: {e}")
+        return fallback
+
+
+def http_get_with_timeout(url, headers=None, timeout=10, fallback=None):
+    """HTTP GET request with ThreadPoolExecutor timeout and fallback.
+    
+    Args:
+        url: URL to fetch
+        headers: Optional headers dict
+        timeout: Timeout in seconds (default 10)
+        fallback: Value to return on timeout/error (default None)
+    
+    Returns:
+        Response JSON or fallback on error
+    """
+    import requests
+    
+    def do_request():
+        resp = requests.get(url, headers=headers, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json()
     
     try:
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
-                   profit_loss, profit_pct, strategy, status, opened_at, closed_at
-            FROM paper_trading_trades
-            WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
-            ORDER BY opened_at DESC
-            LIMIT 500
-        ''', (days,))
-        
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        trades = []
-        for row in rows:
-            trades.append({
-                'id': row[0],
-                'user_id': row[1],
-                'symbol': row[2],
-                'side': row[3],
-                'quantity': float(row[4]) if row[4] else 0,
-                'entry_price': float(row[5]) if row[5] else 0,
-                'exit_price': float(row[6]) if row[6] else 0,
-                'pnl': float(row[7]) if row[7] else 0,
-                'pnl_percent': float(row[8]) if row[8] else 0,
-                'strategy_used': row[9] or 'OMNIX',
-                'status': row[10],
-                'opened_at': row[11],
-                'closed_at': row[12]
-            })
-        
-        logger.info(f"Fetched {len(trades)} REAL trades from database")
-        return trades
-        
+        future = API_EXECUTOR.submit(do_request)
+        return future.result(timeout=timeout + 2)
+    except FuturesTimeoutError:
+        logger.warning(f"Timeout after {timeout}s fetching {url}")
+        return fallback
     except Exception as e:
-        logger.error(f"Error fetching real trades: {e}")
-        return []
+        logger.error(f"Error fetching {url}: {e}")
+        return fallback
+
+def get_paper_trades(days=30):
+    """Fetch REAL paper trading history from database"""
+    with get_db_connection() as conn:
+        if not conn:
+            logger.info("No database connection - returning empty (no demo data)")
+            return []
+        
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
+                       profit_loss, profit_pct, strategy, status, opened_at, closed_at
+                FROM paper_trading_trades
+                WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
+                ORDER BY opened_at DESC
+                LIMIT 500
+            ''', (days,))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            trades = []
+            for row in rows:
+                trades.append({
+                    'id': row[0],
+                    'user_id': row[1],
+                    'symbol': row[2],
+                    'side': row[3],
+                    'quantity': float(row[4]) if row[4] else 0,
+                    'entry_price': float(row[5]) if row[5] else 0,
+                    'exit_price': float(row[6]) if row[6] else 0,
+                    'pnl': float(row[7]) if row[7] else 0,
+                    'pnl_percent': float(row[8]) if row[8] else 0,
+                    'strategy_used': row[9] or 'OMNIX',
+                    'status': row[10],
+                    'opened_at': row[11],
+                    'closed_at': row[12]
+                })
+            
+            logger.info(f"Fetched {len(trades)} REAL trades from database")
+            return trades
+            
+        except Exception as e:
+            logger.error(f"Error fetching real trades: {e}")
+            return []
 
 
 
 
 def get_balance_history(days=30):
     """Fetch REAL balance history from database - V6.5 corrected columns"""
-    conn = get_db_connection()
-    if not conn:
-        return []
-    
-    try:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        if not conn:
+            return []
         
-        # V6.5: Use correct column names from actual balance_history table
-        # Columns: id, user_id, balance, change_amount, change_reason, recorded_at
-        cursor.execute('''
-            SELECT user_id, balance, change_amount, change_reason, recorded_at
-            FROM balance_history
-            WHERE recorded_at >= NOW() - INTERVAL '1 day' * %s
-            ORDER BY recorded_at ASC
-        ''', (days,))
-        
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        history = []
-        for row in rows:
-            history.append({
-                'user_id': row[0],
-                'total_usd': float(row[1]) if row[1] else 0,
-                'change_amount': float(row[2]) if row[2] else 0,
-                'change_reason': row[3] or 'Unknown',
-                'timestamp': row[4].isoformat() if row[4] else None
-            })
-        
-        # If no balance_history, try to derive from paper_trading_balances
-        if not history:
-            conn2 = get_db_connection()
-            if conn2:
-                try:
-                    cursor2 = conn2.cursor()
-                    cursor2.execute('''
-                        SELECT user_id, balance_usd, total_realized_pnl_usd, updated_at
-                        FROM paper_trading_balances
-                        ORDER BY updated_at DESC
-                        LIMIT 1
-                    ''')
-                    balance_row = cursor2.fetchone()
-                    cursor2.close()
-                    conn2.close()
-                    
-                    if balance_row:
-                        history.append({
-                            'user_id': balance_row[0],
-                            'total_usd': float(balance_row[1]) if balance_row[1] else 1000000,
-                            'change_amount': float(balance_row[2]) if balance_row[2] else 0,
-                            'change_reason': 'Current Balance',
-                            'timestamp': balance_row[3].isoformat() if balance_row[3] else datetime.now().isoformat()
-                        })
-                except Exception as e:
-                    logger.error(f"Error in balance_history fallback: {e}")
-                    if conn2:
-                        conn2.close()
-        
-        logger.info(f"Fetched {len(history)} REAL balance snapshots from database")
-        return history
-        
-    except Exception as e:
-        logger.error(f"Error fetching balance history: {e}")
-        return []
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT user_id, balance, change_amount, change_reason, recorded_at
+                FROM balance_history
+                WHERE recorded_at >= NOW() - INTERVAL '1 day' * %s
+                ORDER BY recorded_at ASC
+            ''', (days,))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            history = []
+            for row in rows:
+                history.append({
+                    'user_id': row[0],
+                    'total_usd': float(row[1]) if row[1] else 0,
+                    'change_amount': float(row[2]) if row[2] else 0,
+                    'change_reason': row[3] or 'Unknown',
+                    'timestamp': row[4].isoformat() if row[4] else None
+                })
+            
+            if not history:
+                cursor2 = conn.cursor()
+                cursor2.execute('''
+                    SELECT user_id, balance_usd, total_realized_pnl_usd, updated_at
+                    FROM paper_trading_balances
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                ''')
+                balance_row = cursor2.fetchone()
+                cursor2.close()
+                
+                if balance_row:
+                    history.append({
+                        'user_id': balance_row[0],
+                        'total_usd': float(balance_row[1]) if balance_row[1] else 1000000,
+                        'change_amount': float(balance_row[2]) if balance_row[2] else 0,
+                        'change_reason': 'Current Balance',
+                        'timestamp': balance_row[3].isoformat() if balance_row[3] else datetime.now().isoformat()
+                    })
+            
+            logger.info(f"Fetched {len(history)} REAL balance snapshots from database")
+            return history
+            
+        except Exception as e:
+            logger.error(f"Error fetching balance history: {e}")
+            return []
 
 
 def calculate_metrics(trades):
@@ -514,283 +644,278 @@ def api_equity_curve():
 @require_api_key
 def api_portfolio():
     """API endpoint for portfolio status - V6.5 connected to real DB"""
-    conn = get_db_connection()
-    
-    if not conn:
-        return jsonify({
-            'success': False,
-            'error': 'Database not connected',
-            'portfolio': None
-        })
-    
-    try:
-        cursor = conn.cursor()
-        
-        # Get real balance from paper_trading_balances
-        cursor.execute('''
-            SELECT user_id, balance_usd, btc_balance, eth_balance, 
-                   total_trades, winning_trades, losing_trades,
-                   total_realized_pnl_usd, max_drawdown_pct, sharpe_ratio,
-                   updated_at
-            FROM paper_trading_balances
-            ORDER BY updated_at DESC
-            LIMIT 1
-        ''')
-        
-        balance_row = cursor.fetchone()
-        
-        # Get open positions for portfolio weights
-        cursor.execute('''
-            SELECT symbol, side, quantity, entry_price
-            FROM paper_trading_trades
-            WHERE status = 'open'
-        ''')
-        
-        positions = cursor.fetchall()
-        
-        # Calculate portfolio weights from real positions
-        weights = {}
-        total_value = 0
-        position_details = []
-        
-        for pos in positions:
-            symbol = pos[0].replace('/USD', '')
-            value = float(pos[2] or 0) * float(pos[3] or 0)
-            total_value += value
-            position_details.append({
-                'symbol': symbol,
-                'side': pos[1],
-                'value': value
+    with get_db_connection() as conn:
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database not connected',
+                'portfolio': None
             })
         
-        for pos in position_details:
-            if total_value > 0:
-                weights[pos['symbol']] = round(pos['value'] / total_value, 4)
-        
-        # Get closed trades for performance metrics
-        cursor.execute('''
-            SELECT COUNT(*) as total,
-                   SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
-                   SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
-                   SUM(profit_loss) as total_pnl
-            FROM paper_trading_trades
-            WHERE status = 'closed'
-        ''')
-        
-        perf_row = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
-        # Build portfolio response from real data
-        total_trades = int(perf_row[0] or 0) if perf_row else 0
-        winning_trades = int(perf_row[1] or 0) if perf_row else 0
-        total_pnl = float(perf_row[3] or 0) if perf_row else 0
-        win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
-        
-        balance_usd = float(balance_row[1]) if balance_row and balance_row[1] else 1000000
-        sharpe = float(balance_row[9]) if balance_row and balance_row[9] else 0
-        max_dd = float(balance_row[8]) if balance_row and balance_row[8] else 0
-        
-        return jsonify({
-            'success': True,
-            'portfolio': {
-                'weights': weights if weights else {'CASH': 1.0},
-                'balance_usd': round(balance_usd, 2),
-                'total_pnl': round(total_pnl, 2),
-                'expected_return': round(total_pnl / balance_usd * 100, 2) if balance_usd > 0 else 0,
-                'expected_volatility': round(max_dd, 2),
-                'sharpe_ratio': round(sharpe, 2),
-                'win_rate': round(win_rate, 2),
-                'total_trades': total_trades,
-                'winning_trades': winning_trades,
-                'open_positions': len(positions),
-                'net_exposure': round(total_value, 2),
-                'gross_exposure': round(total_value, 2),
-                'diversification_score': len(weights) / 10.0 if weights else 0,
-                'risk_profile': 'INSTITUTIONAL'
-            },
-            'modules': {
-                'risk_model': True,
-                'optimizer': True,
-                'vol_targeting': True,
-                'exposure_manager': True,
-                'cluster_detector': True
-            },
-            'source': 'PostgreSQL',
-            'version': '6.5 INSTITUTIONAL+',
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Portfolio API error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'portfolio': None
-        })
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT user_id, balance_usd, btc_balance, eth_balance, 
+                       total_trades, winning_trades, losing_trades,
+                       total_realized_pnl_usd, max_drawdown_pct, sharpe_ratio,
+                       updated_at
+                FROM paper_trading_balances
+                ORDER BY updated_at DESC
+                LIMIT 1
+            ''')
+            
+            balance_row = cursor.fetchone()
+            
+            cursor.execute('''
+                SELECT symbol, side, quantity, entry_price
+                FROM paper_trading_trades
+                WHERE status = 'open'
+            ''')
+            
+            positions = cursor.fetchall()
+            
+            weights = {}
+            total_value = 0
+            position_details = []
+            
+            for pos in positions:
+                symbol = pos[0].replace('/USD', '')
+                value = float(pos[2] or 0) * float(pos[3] or 0)
+                total_value += value
+                position_details.append({
+                    'symbol': symbol,
+                    'side': pos[1],
+                    'value': value
+                })
+            
+            for pos in position_details:
+                if total_value > 0:
+                    weights[pos['symbol']] = round(pos['value'] / total_value, 4)
+            
+            cursor.execute('''
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                       SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                       SUM(profit_loss) as total_pnl
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+            ''')
+            
+            perf_row = cursor.fetchone()
+            cursor.close()
+            
+            total_trades = int(perf_row[0] or 0) if perf_row else 0
+            winning_trades = int(perf_row[1] or 0) if perf_row else 0
+            total_pnl = float(perf_row[3] or 0) if perf_row else 0
+            win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+            
+            balance_usd = float(balance_row[1]) if balance_row and balance_row[1] else 1000000
+            sharpe = float(balance_row[9]) if balance_row and balance_row[9] else 0
+            max_dd = float(balance_row[8]) if balance_row and balance_row[8] else 0
+            
+            return jsonify({
+                'success': True,
+                'portfolio': {
+                    'weights': weights if weights else {'CASH': 1.0},
+                    'balance_usd': round(balance_usd, 2),
+                    'total_pnl': round(total_pnl, 2),
+                    'expected_return': round(total_pnl / balance_usd * 100, 2) if balance_usd > 0 else 0,
+                    'expected_volatility': round(max_dd, 2),
+                    'sharpe_ratio': round(sharpe, 2),
+                    'win_rate': round(win_rate, 2),
+                    'total_trades': total_trades,
+                    'winning_trades': winning_trades,
+                    'open_positions': len(positions),
+                    'net_exposure': round(total_value, 2),
+                    'gross_exposure': round(total_value, 2),
+                    'diversification_score': len(weights) / 10.0 if weights else 0,
+                    'risk_profile': 'INSTITUTIONAL'
+                },
+                'modules': {
+                    'risk_model': True,
+                    'optimizer': True,
+                    'vol_targeting': True,
+                    'exposure_manager': True,
+                    'cluster_detector': True
+                },
+                'source': 'PostgreSQL',
+                'version': '6.5 INSTITUTIONAL+',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Portfolio API error: {e}")
+            return jsonify({
+                'success': False,
+                'error': str(e),
+                'portfolio': None
+            })
 
 
 @app.route('/api/positions')
 @require_api_key
 def api_positions():
     """API endpoint for open positions - V6.5 with real Kraken prices"""
-    import requests
-    
-    conn = get_db_connection()
-    
-    if not conn:
-        return jsonify({
-            'success': False,
-            'positions': [],
-            'message': 'Database not connected'
-        })
-    
-    try:
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT id, user_id, symbol, side, quantity, entry_price, strategy, status, opened_at
-            FROM paper_trading_trades
-            WHERE status = 'open' AND closed_at IS NULL
-            ORDER BY opened_at DESC
-            LIMIT 100
-        ''')
-        
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        # V6.5: Get real-time prices from Kraken
-        kraken_prices = {}
-        try:
-            response = requests.get(
-                'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD,DOGEUSD',
-                timeout=10
-            )
-            data = response.json()
-            
-            price_map = {
-                'XXBTZUSD': 'BTC/USD', 'XETHZUSD': 'ETH/USD', 'SOLUSD': 'SOL/USD',
-                'XXRPZUSD': 'XRP/USD', 'ADAUSD': 'ADA/USD', 'XDGUSD': 'DOGE/USD',
-                'XBTUSD': 'BTC/USD', 'ETHUSD': 'ETH/USD'
-            }
-            
-            for key, ticker in data.get('result', {}).items():
-                symbol = price_map.get(key, key)
-                kraken_prices[symbol] = float(ticker['c'][0])
-                
-            logger.info(f"V6.5: Fetched {len(kraken_prices)} real-time prices from Kraken")
-            
-        except Exception as e:
-            logger.warning(f"V6.5: Could not fetch Kraken prices: {e}")
-        
-        positions = []
-        total_value = 0
-        total_cost = 0
-        
-        for row in rows:
-            symbol = row[2]
-            entry_price = float(row[5]) if row[5] else 0
-            quantity = float(row[4]) if row[4] else 0
-            cost = entry_price * quantity
-            
-            # V6.5: Use real Kraken price or fallback to entry price
-            current_price = kraken_prices.get(symbol, entry_price)
-            price_source = 'Kraken' if symbol in kraken_prices else 'Entry'
-            
-            current_value = current_price * quantity
-            unrealized_pnl = current_value - cost
-            
-            total_cost += cost
-            total_value += current_value
-            
-            positions.append({
-                'id': row[0],
-                'user_id': row[1],
-                'symbol': symbol,
-                'side': row[3],
-                'quantity': quantity,
-                'entry_price': entry_price,
-                'current_price': current_price,
-                'price_source': price_source,
-                'cost': round(cost, 2),
-                'current_value': round(current_value, 2),
-                'unrealized_pnl': round(unrealized_pnl, 2),
-                'unrealized_pnl_pct': round((unrealized_pnl / cost * 100) if cost > 0 else 0, 2),
-                'strategy': row[6] or 'Manual',
-                'status': row[7],
-                'opened_at': row[8].isoformat() if row[8] else None
+    with get_db_connection() as conn:
+        if not conn:
+            return jsonify({
+                'success': False,
+                'positions': [],
+                'message': 'Database not connected'
             })
         
-        logger.info(f"Fetched {len(positions)} open positions with real prices")
-        
-        return jsonify({
-            'success': True,
-            'positions': positions,
-            'summary': {
-                'total_positions': len(positions),
-                'total_cost': round(total_cost, 2),
-                'total_value': round(total_value, 2),
-                'total_unrealized_pnl': round(total_value - total_cost, 2)
-            },
-            'price_source': 'Kraken API',
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error fetching positions: {e}")
-        return jsonify({
-            'success': False,
-            'positions': [],
-            'error': str(e)
-        })
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, user_id, symbol, side, quantity, entry_price, strategy, status, opened_at
+                FROM paper_trading_trades
+                WHERE status = 'open' AND closed_at IS NULL
+                ORDER BY opened_at DESC
+                LIMIT 100
+            ''')
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            url = 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD,DOGEUSD'
+            data = http_get_with_timeout(url, timeout=10, fallback={'result': {}})
+            
+            kraken_prices = {}
+            
+            if data:
+                price_map = {
+                    'XXBTZUSD': 'BTC/USD', 'XETHZUSD': 'ETH/USD', 'SOLUSD': 'SOL/USD',
+                    'XXRPZUSD': 'XRP/USD', 'ADAUSD': 'ADA/USD', 'XDGUSD': 'DOGE/USD',
+                    'XBTUSD': 'BTC/USD', 'ETHUSD': 'ETH/USD'
+                }
+                
+                for key, ticker in data.get('result', {}).items():
+                    symbol = price_map.get(key, key)
+                    kraken_prices[symbol] = float(ticker['c'][0])
+                    
+                logger.info(f"V6.5: Fetched {len(kraken_prices)} real-time prices from Kraken")
+            
+            positions = []
+            total_value = 0
+            total_cost = 0
+            
+            for row in rows:
+                symbol = row[2]
+                entry_price = float(row[5]) if row[5] else 0
+                quantity = float(row[4]) if row[4] else 0
+                cost = entry_price * quantity
+                
+                current_price = kraken_prices.get(symbol, entry_price)
+                price_source = 'Kraken' if symbol in kraken_prices else 'Entry'
+                
+                current_value = current_price * quantity
+                unrealized_pnl = current_value - cost
+                
+                total_cost += cost
+                total_value += current_value
+                
+                positions.append({
+                    'id': row[0],
+                    'user_id': row[1],
+                    'symbol': symbol,
+                    'side': row[3],
+                    'quantity': quantity,
+                    'entry_price': entry_price,
+                    'current_price': current_price,
+                    'price_source': price_source,
+                    'cost': round(cost, 2),
+                    'current_value': round(current_value, 2),
+                    'unrealized_pnl': round(unrealized_pnl, 2),
+                    'unrealized_pnl_pct': round((unrealized_pnl / cost * 100) if cost > 0 else 0, 2),
+                    'strategy': row[6] or 'Manual',
+                    'status': row[7],
+                    'opened_at': row[8].isoformat() if row[8] else None
+                })
+            
+            logger.info(f"Fetched {len(positions)} open positions with real prices")
+            
+            return jsonify({
+                'success': True,
+                'positions': positions,
+                'summary': {
+                    'total_positions': len(positions),
+                    'total_cost': round(total_cost, 2),
+                    'total_value': round(total_value, 2),
+                    'total_unrealized_pnl': round(total_value - total_cost, 2)
+                },
+                'price_source': 'Kraken API',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error fetching positions: {e}")
+            return jsonify({
+                'success': False,
+                'positions': [],
+                'error': str(e)
+            })
 
 
 @app.route('/api/health')
 def api_health():
-    """Health check endpoint"""
-    init_database()
+    """Health check endpoint - V6.5 with pool stats for Railway healthcheck"""
+    if DB_POOL is None:
+        init_database()
+    
+    pool_stats = get_pool_stats()
+    
+    is_healthy = DB_AVAILABLE
+    if pool_stats and pool_stats.get('requests_waiting', 0) > 50:
+        is_healthy = False
+    
     return jsonify({
-        'status': 'healthy',
-        'version': 'V6.4 INSTITUTIONAL+',
+        'status': 'healthy' if is_healthy else 'degraded',
+        'version': 'V6.5 INSTITUTIONAL+',
         'db_connected': DB_AVAILABLE,
         'db_error': DB_ERROR_MESSAGE if not DB_AVAILABLE else None,
+        'pool': pool_stats,
+        'architecture': {
+            'connection_pooling': DB_POOL is not None,
+            'wsgi_server': 'gunicorn' if IS_RAILWAY else 'werkzeug',
+            'environment': 'railway' if IS_RAILWAY else 'development'
+        },
         'timestamp': datetime.now().isoformat()
-    })
+    }), 200 if is_healthy else 503
 
 
 @app.route('/api/market/crypto')
 def api_market_crypto():
-    """API endpoint for live crypto prices from Kraken"""
-    import requests
-    
+    """API endpoint for live crypto prices from Kraken - uses http_get_with_timeout"""
     pairs = [
         'XBTUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'ADAUSD',
         'XDGUSD', 'DOTUSD', 'AVAXUSD', 'LINKUSD', 'ATOMUSD'
     ]
     
-    try:
-        pair_str = ','.join(pairs)
-        response = requests.get(
-            f'https://api.kraken.com/0/public/Ticker?pair={pair_str}',
-            timeout=10
-        )
-        data = response.json()
-        
-        if data.get('error') and len(data['error']) > 0:
-            non_critical = any('Unknown asset' in str(e) for e in data['error'])
-            if not non_critical:
-                logger.warning(f"Kraken API error: {data['error']}")
-        
-        prices = []
-        symbol_map = {
-            'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
-            'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA', 'XXDGZUSD': 'DOGE',
-            'DOTUSD': 'DOT', 'AVAXUSD': 'AVAX', 'LINKUSD': 'LINK',
-            'ATOMUSD': 'ATOM', 'XBTUSD': 'BTC', 'ETHUSD': 'ETH',
-            'XRPUSD': 'XRP', 'XDGUSD': 'DOGE'
-        }
-        
-        for key, ticker in data.get('result', {}).items():
+    pair_str = ','.join(pairs)
+    url = f'https://api.kraken.com/0/public/Ticker?pair={pair_str}'
+    
+    data = http_get_with_timeout(url, timeout=10, fallback=None)
+    
+    if data is None:
+        return jsonify({'success': False, 'prices': [], 'error': 'Timeout fetching crypto prices', 'source': 'Kraken'})
+    
+    if data.get('error') and len(data['error']) > 0:
+        non_critical = any('Unknown asset' in str(e) for e in data['error'])
+        if not non_critical:
+            logger.warning(f"Kraken API error: {data['error']}")
+    
+    prices = []
+    symbol_map = {
+        'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
+        'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA', 'XXDGZUSD': 'DOGE',
+        'DOTUSD': 'DOT', 'AVAXUSD': 'AVAX', 'LINKUSD': 'LINK',
+        'ATOMUSD': 'ATOM', 'XBTUSD': 'BTC', 'ETHUSD': 'ETH',
+        'XRPUSD': 'XRP', 'XDGUSD': 'DOGE'
+    }
+    
+    for key, ticker in data.get('result', {}).items():
+        try:
             symbol = symbol_map.get(key, key.replace('USD', '').replace('Z', ''))
             last_price = float(ticker['c'][0])
             open_price = float(ticker['o'])
@@ -809,28 +934,22 @@ def api_market_crypto():
                 'low_24h': low_24h,
                 'is_positive': change_pct >= 0
             })
-        
-        prices.sort(key=lambda x: x['volume_24h'], reverse=True)
-        
-        return jsonify({
-            'success': True,
-            'prices': prices,
-            'source': 'Kraken',
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error fetching crypto prices: {e}")
-        return jsonify({
-            'success': False,
-            'prices': [],
-            'error': str(e)
-        })
+        except (KeyError, IndexError, TypeError) as e:
+            logger.debug(f"Skipping ticker {key}: {e}")
+    
+    prices.sort(key=lambda x: x['volume_24h'], reverse=True)
+    
+    return jsonify({
+        'success': True,
+        'prices': prices,
+        'source': 'Kraken',
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 @app.route('/api/market/stocks')
 def api_market_stocks():
-    """API endpoint for stock prices - using Alpaca or fallback"""
+    """API endpoint for stock prices - using Alpaca with http_get_with_timeout"""
     
     stocks_data = [
         {'symbol': 'AAPL', 'name': 'Apple Inc.'},
@@ -845,144 +964,117 @@ def api_market_stocks():
         {'symbol': 'DIA', 'name': 'Dow Jones ETF'}
     ]
     
-    try:
-        alpaca_key = os.environ.get('ALPACA_API_KEY')
-        alpaca_secret = os.environ.get('ALPACA_SECRET_KEY')
+    alpaca_key = os.environ.get('ALPACA_API_KEY')
+    alpaca_secret = os.environ.get('ALPACA_SECRET_KEY')
+    
+    if alpaca_key and alpaca_secret:
+        headers = {
+            'APCA-API-KEY-ID': alpaca_key,
+            'APCA-API-SECRET-KEY': alpaca_secret
+        }
         
-        if alpaca_key and alpaca_secret:
-            import requests
-            headers = {
-                'APCA-API-KEY-ID': alpaca_key,
-                'APCA-API-SECRET-KEY': alpaca_secret
-            }
+        symbols = ','.join([s['symbol'] for s in stocks_data])
+        url = f'https://data.alpaca.markets/v2/stocks/bars/latest?symbols={symbols}'
+        
+        data = http_get_with_timeout(url, headers=headers, timeout=10, fallback=None)
+        
+        if data and data.get('bars'):
+            bars = data.get('bars', {})
+            prices = []
+            for stock in stocks_data:
+                if stock['symbol'] in bars:
+                    bar = bars[stock['symbol']]
+                    prices.append({
+                        'symbol': stock['symbol'],
+                        'name': stock['name'],
+                        'price': bar.get('c', 0),
+                        'change_24h': round(((bar.get('c', 0) - bar.get('o', 0)) / bar.get('o', 1)) * 100, 2),
+                        'volume': bar.get('v', 0),
+                        'is_positive': bar.get('c', 0) >= bar.get('o', 0)
+                    })
             
-            symbols = ','.join([s['symbol'] for s in stocks_data])
-            url = f'https://data.alpaca.markets/v2/stocks/bars/latest?symbols={symbols}'
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                bars = data.get('bars', {})
-                
-                prices = []
-                for stock in stocks_data:
-                    if stock['symbol'] in bars:
-                        bar = bars[stock['symbol']]
-                        prices.append({
-                            'symbol': stock['symbol'],
-                            'name': stock['name'],
-                            'price': bar.get('c', 0),
-                            'change_24h': round(((bar.get('c', 0) - bar.get('o', 0)) / bar.get('o', 1)) * 100, 2),
-                            'volume': bar.get('v', 0),
-                            'is_positive': bar.get('c', 0) >= bar.get('o', 0)
-                        })
-                
-                return jsonify({
-                    'success': True,
-                    'prices': prices,
-                    'source': 'Alpaca',
-                    'market_open': True,
-                    'timestamp': datetime.now().isoformat()
-                })
-        
-        now = datetime.now()
-        is_market_hours = now.weekday() < 5 and 9 <= now.hour < 16
-        
-        return jsonify({
-            'success': True,
-            'prices': [],
-            'source': 'Alpaca (not configured)',
-            'market_open': is_market_hours,
-            'message': 'Configure ALPACA_API_KEY for live stock data',
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error fetching stock prices: {e}")
-        return jsonify({
-            'success': False,
-            'prices': [],
-            'error': str(e)
-        })
+            return jsonify({
+                'success': True,
+                'prices': prices,
+                'source': 'Alpaca',
+                'market_open': True,
+                'timestamp': datetime.now().isoformat()
+            })
+    
+    now = datetime.now()
+    is_market_hours = now.weekday() < 5 and 9 <= now.hour < 16
+    
+    return jsonify({
+        'success': True,
+        'prices': [],
+        'source': 'Alpaca (not configured)',
+        'market_open': is_market_hours,
+        'message': 'Configure ALPACA_API_KEY for live stock data',
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 @app.route('/api/news')
 def api_news():
-    """API endpoint for financial news"""
-    import requests
+    """API endpoint for financial news - uses http_get_with_timeout"""
+    url = 'https://api.coingecko.com/api/v3/news'
+    data = http_get_with_timeout(url, headers={'accept': 'application/json'}, timeout=10, fallback=None)
     
-    try:
-        response = requests.get(
-            'https://api.coingecko.com/api/v3/news',
-            timeout=10,
-            headers={'accept': 'application/json'}
-        )
-        
-        if response.status_code == 200:
-            data = response.json().get('data', [])[:10]
-            news = []
-            for item in data:
-                news.append({
-                    'title': item.get('title', ''),
-                    'description': item.get('description', '')[:150] + '...' if item.get('description') else '',
-                    'url': item.get('url', ''),
-                    'source': item.get('news_site', 'CoinGecko'),
-                    'published': item.get('created_at', ''),
-                    'category': 'crypto'
-                })
-            
-            return jsonify({
-                'success': True,
-                'news': news,
-                'source': 'CoinGecko News',
-                'timestamp': datetime.now().isoformat()
+    if data and data.get('data'):
+        raw_news = data.get('data', [])[:10]
+        news = []
+        for item in raw_news:
+            news.append({
+                'title': item.get('title', ''),
+                'description': item.get('description', '')[:150] + '...' if item.get('description') else '',
+                'url': item.get('url', ''),
+                'source': item.get('news_site', 'CoinGecko'),
+                'published': item.get('created_at', ''),
+                'category': 'crypto'
             })
-        
-        news = [
-            {
-                'title': 'Bitcoin mantiene soporte en niveles clave',
-                'description': 'Los analistas observan consolidación mientras el mercado espera el próximo movimiento...',
-                'source': 'OMNIX Analysis',
-                'category': 'crypto',
-                'published': datetime.now().isoformat()
-            },
-            {
-                'title': 'ETH 2.0 muestra adopción institucional creciente',
-                'description': 'Grandes fondos continúan acumulando Ethereum en anticipación a actualizaciones...',
-                'source': 'OMNIX Analysis',
-                'category': 'crypto',
-                'published': datetime.now().isoformat()
-            },
-            {
-                'title': 'Mercados tradicionales impactan correlación crypto',
-                'description': 'La correlación entre S&P500 y Bitcoin alcanza nuevos niveles esta semana...',
-                'source': 'OMNIX Analysis',
-                'category': 'markets',
-                'published': datetime.now().isoformat()
-            }
-        ]
         
         return jsonify({
             'success': True,
             'news': news,
-            'source': 'OMNIX Fallback',
+            'source': 'CoinGecko News',
             'timestamp': datetime.now().isoformat()
         })
-        
-    except Exception as e:
-        logger.error(f"Error fetching news: {e}")
-        return jsonify({
-            'success': False,
-            'news': [],
-            'error': str(e)
-        })
+    
+    news = [
+        {
+            'title': 'Bitcoin mantiene soporte en niveles clave',
+            'description': 'Los analistas observan consolidación mientras el mercado espera el próximo movimiento...',
+            'source': 'OMNIX Analysis',
+            'category': 'crypto',
+            'published': datetime.now().isoformat()
+        },
+        {
+            'title': 'ETH 2.0 muestra adopción institucional creciente',
+            'description': 'Grandes fondos continúan acumulando Ethereum en anticipación a actualizaciones...',
+            'source': 'OMNIX Analysis',
+            'category': 'crypto',
+            'published': datetime.now().isoformat()
+        },
+        {
+            'title': 'Mercados tradicionales impactan correlación crypto',
+            'description': 'La correlación entre S&P500 y Bitcoin alcanza nuevos niveles esta semana...',
+            'source': 'OMNIX Analysis',
+            'category': 'markets',
+            'published': datetime.now().isoformat()
+        }
+    ]
+    
+    return jsonify({
+        'success': True,
+        'news': news,
+        'source': 'OMNIX Fallback',
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 @app.route('/api/market/ohlc/<symbol>')
 def api_market_ohlc(symbol):
-    """API endpoint for OHLC candlestick data from Kraken"""
-    import requests
-    
+    """API endpoint for OHLC candlestick data from Kraken - uses http_get_with_timeout"""
     pair_map = {
         'BTC': 'XBTUSD',
         'ETH': 'ETHUSD', 
@@ -996,148 +1088,132 @@ def api_market_ohlc(symbol):
     }
     
     kraken_pair = pair_map.get(symbol.upper(), f'{symbol.upper()}USD')
+    url = f'https://api.kraken.com/0/public/OHLC?pair={kraken_pair}&interval=60'
     
-    try:
-        response = requests.get(
-            f'https://api.kraken.com/0/public/OHLC?pair={kraken_pair}&interval=60',
-            timeout=10
-        )
-        data = response.json()
+    data = http_get_with_timeout(url, timeout=10, fallback=None)
+    
+    if data is None:
+        return jsonify({'success': False, 'error': 'Timeout fetching OHLC data'})
+    
+    if data.get('error') and len(data['error']) > 0:
+        logger.warning(f"Kraken OHLC API error: {data['error']}")
+    
+    result = data.get('result', {})
+    ohlc_key = list(result.keys())[0] if result else None
+    
+    if ohlc_key and ohlc_key != 'last':
+        ohlc_data = result[ohlc_key][-100:]
         
-        if data.get('error') and len(data['error']) > 0:
-            logger.warning(f"Kraken OHLC API error: {data['error']}")
-        
-        result = data.get('result', {})
-        ohlc_key = list(result.keys())[0] if result else None
-        
-        if ohlc_key and ohlc_key != 'last':
-            ohlc_data = result[ohlc_key][-100:]
-            
-            candles = []
-            for candle in ohlc_data:
-                candles.append({
-                    'time': int(candle[0]),
-                    'open': float(candle[1]),
-                    'high': float(candle[2]),
-                    'low': float(candle[3]),
-                    'close': float(candle[4]),
-                    'volume': float(candle[6])
-                })
-            
-            return jsonify({
-                'success': True,
-                'symbol': symbol.upper(),
-                'interval': '1h',
-                'candles': candles,
-                'source': 'Kraken'
+        candles = []
+        for candle in ohlc_data:
+            candles.append({
+                'time': int(candle[0]),
+                'open': float(candle[1]),
+                'high': float(candle[2]),
+                'low': float(candle[3]),
+                'close': float(candle[4]),
+                'volume': float(candle[6])
             })
         
         return jsonify({
-            'success': False,
-            'error': 'No data available'
+            'success': True,
+            'symbol': symbol.upper(),
+            'interval': '1h',
+            'candles': candles,
+            'source': 'Kraken'
         })
-        
-    except Exception as e:
-        logger.error(f"Error fetching OHLC: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        })
+    
+    return jsonify({
+        'success': False,
+        'error': 'No data available'
+    })
 
 
 @app.route('/api/signals/active')
 @require_api_key
 def api_active_signals():
     """API endpoint for active trading signals - V6.5 connected to real DB"""
-    conn = get_db_connection()
     signals = []
     
-    if conn:
-        try:
-            cursor = conn.cursor()
-            
-            # Get recent trades to derive signals (last 24 hours)
-            cursor.execute('''
-                SELECT symbol, side, strategy, status, opened_at, entry_price
-                FROM paper_trading_trades
-                WHERE opened_at >= NOW() - INTERVAL '24 hours'
-                ORDER BY opened_at DESC
-                LIMIT 10
-            ''')
-            
-            recent_trades = cursor.fetchall()
-            
-            # Analyze trade patterns to generate signals
-            symbol_stats = {}
-            for trade in recent_trades:
-                symbol = trade[0]
-                side = trade[1]
-                strategy = trade[2] or 'OMNIX'
+    with get_db_connection() as conn:
+        if conn:
+            try:
+                cursor = conn.cursor()
                 
-                if symbol not in symbol_stats:
-                    symbol_stats[symbol] = {'buys': 0, 'sells': 0, 'strategies': set()}
+                cursor.execute('''
+                    SELECT symbol, side, strategy, status, opened_at, entry_price
+                    FROM paper_trading_trades
+                    WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                    ORDER BY opened_at DESC
+                    LIMIT 10
+                ''')
                 
-                if side == 'buy':
-                    symbol_stats[symbol]['buys'] += 1
-                else:
-                    symbol_stats[symbol]['sells'] += 1
-                symbol_stats[symbol]['strategies'].add(strategy)
-            
-            # Generate signals based on trade activity
-            for symbol, stats in symbol_stats.items():
-                total = stats['buys'] + stats['sells']
-                if total > 0:
-                    buy_ratio = stats['buys'] / total
+                recent_trades = cursor.fetchall()
+                
+                symbol_stats = {}
+                for trade in recent_trades:
+                    symbol = trade[0]
+                    side = trade[1]
+                    strategy = trade[2] or 'OMNIX'
                     
-                    if buy_ratio > 0.7:
-                        signal_type = 'BULLISH'
-                        confidence = int(buy_ratio * 100)
-                    elif buy_ratio < 0.3:
-                        signal_type = 'BEARISH'
-                        confidence = int((1 - buy_ratio) * 100)
+                    if symbol not in symbol_stats:
+                        symbol_stats[symbol] = {'buys': 0, 'sells': 0, 'strategies': set()}
+                    
+                    if side == 'buy':
+                        symbol_stats[symbol]['buys'] += 1
                     else:
-                        signal_type = 'NEUTRAL'
-                        confidence = 50
-                    
-                    signals.append({
-                        'strategy': list(stats['strategies'])[0] if stats['strategies'] else 'OMNIX',
-                        'symbol': symbol,
-                        'signal': signal_type,
-                        'confidence': confidence,
-                        'trades_24h': total,
-                        'timestamp': datetime.now().isoformat()
-                    })
-            
-            # Also check for open positions as active signals
-            cursor.execute('''
-                SELECT symbol, side, strategy, entry_price, opened_at
-                FROM paper_trading_trades
-                WHERE status = 'open'
-                ORDER BY opened_at DESC
-            ''')
-            
-            open_positions = cursor.fetchall()
-            for pos in open_positions:
-                existing = next((s for s in signals if s['symbol'] == pos[0]), None)
-                if not existing:
-                    signals.append({
-                        'strategy': pos[2] or 'OMNIX',
-                        'symbol': pos[0],
-                        'signal': 'LONG' if pos[1] == 'buy' else 'SHORT',
-                        'confidence': 75,
-                        'position_open': True,
-                        'timestamp': pos[4].isoformat() if pos[4] else datetime.now().isoformat()
-                    })
-            
-            cursor.close()
-            conn.close()
-            
-            logger.info(f"Generated {len(signals)} signals from real trading data")
-            
-        except Exception as e:
-            logger.error(f"Error fetching signals from DB: {e}")
-            if conn:
-                conn.close()
+                        symbol_stats[symbol]['sells'] += 1
+                    symbol_stats[symbol]['strategies'].add(strategy)
+                
+                for symbol, stats in symbol_stats.items():
+                    total = stats['buys'] + stats['sells']
+                    if total > 0:
+                        buy_ratio = stats['buys'] / total
+                        
+                        if buy_ratio > 0.7:
+                            signal_type = 'BULLISH'
+                            confidence = int(buy_ratio * 100)
+                        elif buy_ratio < 0.3:
+                            signal_type = 'BEARISH'
+                            confidence = int((1 - buy_ratio) * 100)
+                        else:
+                            signal_type = 'NEUTRAL'
+                            confidence = 50
+                        
+                        signals.append({
+                            'strategy': list(stats['strategies'])[0] if stats['strategies'] else 'OMNIX',
+                            'symbol': symbol,
+                            'signal': signal_type,
+                            'confidence': confidence,
+                            'trades_24h': total,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                
+                cursor.execute('''
+                    SELECT symbol, side, strategy, entry_price, opened_at
+                    FROM paper_trading_trades
+                    WHERE status = 'open'
+                    ORDER BY opened_at DESC
+                ''')
+                
+                open_positions = cursor.fetchall()
+                for pos in open_positions:
+                    existing = next((s for s in signals if s['symbol'] == pos[0]), None)
+                    if not existing:
+                        signals.append({
+                            'strategy': pos[2] or 'OMNIX',
+                            'symbol': pos[0],
+                            'signal': 'LONG' if pos[1] == 'buy' else 'SHORT',
+                            'confidence': 75,
+                            'position_open': True,
+                            'timestamp': pos[4].isoformat() if pos[4] else datetime.now().isoformat()
+                        })
+                
+                cursor.close()
+                logger.info(f"Generated {len(signals)} signals from real trading data")
+                
+            except Exception as e:
+                logger.error(f"Error fetching signals from DB: {e}")
     
     # Fallback if no signals found
     if not signals:
@@ -1162,113 +1238,93 @@ def api_active_signals():
 
 @app.route('/api/market/volume')
 def api_market_volume():
-    """API endpoint for 24h volume data"""
-    import requests
+    """API endpoint for 24h volume data - uses http_get_with_timeout"""
+    url = 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD'
+    data = http_get_with_timeout(url, timeout=10, fallback=None)
     
-    try:
-        response = requests.get(
-            'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD',
-            timeout=10
-        )
-        data = response.json()
+    if data is None:
+        return jsonify({'success': False, 'volumes': [], 'error': 'Timeout fetching volume data'})
+    
+    volumes = []
+    symbol_map = {
+        'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
+        'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA'
+    }
+    
+    for key, ticker in data.get('result', {}).items():
+        symbol = symbol_map.get(key, key.replace('USD', ''))
+        vol_24h = float(ticker['v'][1])
+        price = float(ticker['c'][0])
+        vol_usd = vol_24h * price
         
-        volumes = []
-        symbol_map = {
-            'XXBTZUSD': 'BTC', 'XETHZUSD': 'ETH', 'SOLUSD': 'SOL',
-            'XXRPZUSD': 'XRP', 'ADAUSD': 'ADA'
-        }
-        
-        for key, ticker in data.get('result', {}).items():
-            symbol = symbol_map.get(key, key.replace('USD', ''))
-            vol_24h = float(ticker['v'][1])
-            price = float(ticker['c'][0])
-            vol_usd = vol_24h * price
-            
-            volumes.append({
-                'symbol': symbol,
-                'volume_coins': vol_24h,
-                'volume_usd': vol_usd,
-                'price': price
-            })
-        
-        volumes.sort(key=lambda x: x['volume_usd'], reverse=True)
-        
-        return jsonify({
-            'success': True,
-            'volumes': volumes,
-            'timestamp': datetime.now().isoformat()
+        volumes.append({
+            'symbol': symbol,
+            'volume_coins': vol_24h,
+            'volume_usd': vol_usd,
+            'price': price
         })
-        
-    except Exception as e:
-        logger.error(f"Error fetching volume: {e}")
-        return jsonify({
-            'success': False,
-            'volumes': [],
-            'error': str(e)
-        })
+    
+    volumes.sort(key=lambda x: x['volume_usd'], reverse=True)
+    
+    return jsonify({
+        'success': True,
+        'volumes': volumes,
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 @app.route('/api/system/status')
 def api_system_status():
     """API endpoint for OMNIX system status - V6.5 connected to real DB"""
-    conn = get_db_connection()
-    
-    # Get trades from DB
     trades = get_paper_trades(1)
     open_positions = len([t for t in trades if t.get('status') == 'open'])
     trades_today = len([t for t in trades if t.get('closed_at') is not None])
     
-    # V6.5: Read user_settings for bot status
     bot_active = False
     trading_enabled = False
     daily_pnl = 0.0
     user_settings_data = {}
     strategy_counts = {}
     
-    if conn:
-        try:
-            cursor = conn.cursor()
-            
-            # Get user settings
-            cursor.execute('''
-                SELECT auto_trading, trading_enabled, daily_pnl_usd, 
-                       active_cryptos, stop_loss_pct, take_profit_pct,
-                       risk_profile, updated_at
-                FROM user_settings
-                ORDER BY updated_at DESC
-                LIMIT 1
-            ''')
-            
-            settings_row = cursor.fetchone()
-            if settings_row:
-                bot_active = bool(settings_row[0])
-                trading_enabled = bool(settings_row[1])
-                daily_pnl = float(settings_row[2]) if settings_row[2] else 0.0
-                user_settings_data = {
-                    'active_cryptos': settings_row[3] or ['BTC/USD', 'ETH/USD'],
-                    'stop_loss_pct': float(settings_row[4]) if settings_row[4] else 3.0,
-                    'take_profit_pct': float(settings_row[5]) if settings_row[5] else 5.0,
-                    'risk_profile': settings_row[6] or 'moderado',
-                    'last_updated': settings_row[7].isoformat() if settings_row[7] else None
-                }
-            
-            # Get recent trades count by strategy
-            cursor.execute('''
-                SELECT strategy, COUNT(*) as cnt
-                FROM paper_trading_trades
-                WHERE opened_at >= NOW() - INTERVAL '24 hours'
-                GROUP BY strategy
-            ''')
-            
-            strategy_counts = {row[0]: row[1] for row in cursor.fetchall()}
-            
-            cursor.close()
-            conn.close()
-            
-        except Exception as e:
-            logger.error(f"Error reading user_settings: {e}")
-            if conn:
-                conn.close()
+    with get_db_connection() as conn:
+        if conn:
+            try:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT auto_trading, trading_enabled, daily_pnl_usd, 
+                           active_cryptos, stop_loss_pct, take_profit_pct,
+                           risk_profile, updated_at
+                    FROM user_settings
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                ''')
+                
+                settings_row = cursor.fetchone()
+                if settings_row:
+                    bot_active = bool(settings_row[0])
+                    trading_enabled = bool(settings_row[1])
+                    daily_pnl = float(settings_row[2]) if settings_row[2] else 0.0
+                    user_settings_data = {
+                        'active_cryptos': settings_row[3] or ['BTC/USD', 'ETH/USD'],
+                        'stop_loss_pct': float(settings_row[4]) if settings_row[4] else 3.0,
+                        'take_profit_pct': float(settings_row[5]) if settings_row[5] else 5.0,
+                        'risk_profile': settings_row[6] or 'moderado',
+                        'last_updated': settings_row[7].isoformat() if settings_row[7] else None
+                    }
+                
+                cursor.execute('''
+                    SELECT strategy, COUNT(*) as cnt
+                    FROM paper_trading_trades
+                    WHERE opened_at >= NOW() - INTERVAL '24 hours'
+                    GROUP BY strategy
+                ''')
+                
+                strategy_counts = {row[0]: row[1] for row in cursor.fetchall()}
+                cursor.close()
+                
+            except Exception as e:
+                logger.error(f"Error reading user_settings: {e}")
     
     # Build strategies status from real data
     strategies = {}
@@ -1523,60 +1579,51 @@ def api_debug():
 
 @app.route('/api/market/fear-greed')
 def api_market_fear_greed():
-    """API endpoint for Fear & Greed Index - 100% free, no API key needed"""
-    import requests
+    """API endpoint for Fear & Greed Index - uses http_get_with_timeout"""
+    url = 'https://api.alternative.me/fng/?limit=1'
+    data = http_get_with_timeout(url, timeout=10, fallback=None)
     
-    try:
-        response = requests.get(
-            'https://api.alternative.me/fng/?limit=1',
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
+    if data is None:
+        return jsonify({'success': False, 'error': 'Timeout fetching Fear & Greed Index'})
+    
+    if data.get('data') and len(data['data']) > 0:
+        fng = data['data'][0]
+        value = int(fng['value'])
+        classification = fng['value_classification']
         
-        if data.get('data') and len(data['data']) > 0:
-            fng = data['data'][0]
-            value = int(fng['value'])
-            classification = fng['value_classification']
-            
-            if value <= 24:
-                color = '#ff3366'
-                recommendation = 'Extreme Fear: Consider accumulating positions'
-            elif value <= 49:
-                color = '#ff9933'
-                recommendation = 'Fear: Monitor for entry opportunities'
-            elif value <= 54:
-                color = '#ffff00'
-                recommendation = 'Neutral: Market balanced'
-            elif value <= 75:
-                color = '#99ff33'
-                recommendation = 'Greed: Consider taking profits'
-            else:
-                color = '#00ff88'
-                recommendation = 'Extreme Greed: High risk - reduce exposure'
-            
-            return jsonify({
-                'success': True,
-                'data': {
-                    'value': value,
-                    'classification': classification,
-                    'color': color,
-                    'recommendation': recommendation,
-                    'timestamp': datetime.now().isoformat()
-                }
-            })
+        if value <= 24:
+            color = '#ff3366'
+            recommendation = 'Extreme Fear: Consider accumulating positions'
+        elif value <= 49:
+            color = '#ff9933'
+            recommendation = 'Fear: Monitor for entry opportunities'
+        elif value <= 54:
+            color = '#ffff00'
+            recommendation = 'Neutral: Market balanced'
+        elif value <= 75:
+            color = '#99ff33'
+            recommendation = 'Greed: Consider taking profits'
+        else:
+            color = '#00ff88'
+            recommendation = 'Extreme Greed: High risk - reduce exposure'
         
-        return jsonify({'success': False, 'error': 'No data available'})
-        
-    except Exception as e:
-        logger.error(f"Fear & Greed API error: {e}")
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({
+            'success': True,
+            'data': {
+                'value': value,
+                'classification': classification,
+                'color': color,
+                'recommendation': recommendation,
+                'timestamp': datetime.now().isoformat()
+            }
+        })
+    
+    return jsonify({'success': False, 'error': 'No data available'})
 
 
 @app.route('/api/market/finnhub-news')
 def api_market_finnhub_news():
-    """API endpoint for Finnhub market news"""
-    import requests
+    """API endpoint for Finnhub market news - uses http_get_with_timeout"""
     from flask import request
     
     api_key = os.environ.get('FINNHUB_API_KEY')
@@ -1588,45 +1635,37 @@ def api_market_finnhub_news():
         })
     
     category = request.args.get('category', 'crypto')
+    url = f'https://finnhub.io/api/v1/news?category={category}&token={api_key}'
     
-    try:
-        response = requests.get(
-            f'https://finnhub.io/api/v1/news?category={category}&token={api_key}',
-            timeout=10
-        )
-        response.raise_for_status()
-        news = response.json()
-        
-        if isinstance(news, list):
-            formatted_news = []
-            for item in news[:10]:
-                formatted_news.append({
-                    'headline': item.get('headline', ''),
-                    'source': item.get('source', 'Unknown'),
-                    'datetime': item.get('datetime', 0),
-                    'url': item.get('url', ''),
-                    'summary': item.get('summary', '')[:200] if item.get('summary') else ''
-                })
-            
-            return jsonify({
-                'success': True,
-                'data': formatted_news,
-                'source': 'Finnhub',
-                'timestamp': datetime.now().isoformat()
+    news = http_get_with_timeout(url, timeout=10, fallback=None)
+    
+    if news is None:
+        return jsonify({'success': False, 'error': 'Timeout fetching Finnhub news', 'data': []})
+    
+    if isinstance(news, list):
+        formatted_news = []
+        for item in news[:10]:
+            formatted_news.append({
+                'headline': item.get('headline', ''),
+                'source': item.get('source', 'Unknown'),
+                'datetime': item.get('datetime', 0),
+                'url': item.get('url', ''),
+                'summary': item.get('summary', '')[:200] if item.get('summary') else ''
             })
         
-        return jsonify({'success': False, 'error': 'Invalid response format', 'data': []})
-        
-    except Exception as e:
-        logger.error(f"Finnhub API error: {e}")
-        return jsonify({'success': False, 'error': str(e), 'data': []})
+        return jsonify({
+            'success': True,
+            'data': formatted_news,
+            'source': 'Finnhub',
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return jsonify({'success': False, 'error': 'Invalid response format', 'data': []})
 
 
 @app.route('/api/market/technical-indicators/<symbol>')
 def api_market_technical_indicators(symbol):
-    """API endpoint for Alpha Vantage technical indicators"""
-    import requests
-    
+    """API endpoint for Alpha Vantage technical indicators - uses http_get_with_timeout"""
     api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
     if not api_key:
         return jsonify({
@@ -1634,43 +1673,38 @@ def api_market_technical_indicators(symbol):
             'error': 'ALPHA_VANTAGE_API_KEY not configured'
         })
     
-    try:
-        rsi_response = requests.get(
-            f'https://www.alphavantage.co/query?function=RSI&symbol={symbol}&interval=daily&time_period=14&series_type=close&apikey={api_key}',
-            timeout=15
-        )
-        rsi_data = rsi_response.json()
-        
-        rsi_value = None
-        if 'Technical Analysis: RSI' in rsi_data:
-            latest = list(rsi_data['Technical Analysis: RSI'].values())[0]
-            rsi_value = float(latest.get('RSI', 0))
-        
-        if rsi_value:
-            if rsi_value < 30:
-                rsi_signal = 'OVERSOLD'
-            elif rsi_value > 70:
-                rsi_signal = 'OVERBOUGHT'
-            else:
-                rsi_signal = 'NEUTRAL'
+    url = f'https://www.alphavantage.co/query?function=RSI&symbol={symbol}&interval=daily&time_period=14&series_type=close&apikey={api_key}'
+    rsi_data = http_get_with_timeout(url, timeout=15, fallback=None)
+    
+    if rsi_data is None:
+        return jsonify({'success': False, 'error': 'Timeout fetching technical indicators'})
+    
+    rsi_value = None
+    if 'Technical Analysis: RSI' in rsi_data:
+        latest = list(rsi_data['Technical Analysis: RSI'].values())[0]
+        rsi_value = float(latest.get('RSI', 0))
+    
+    if rsi_value:
+        if rsi_value < 30:
+            rsi_signal = 'OVERSOLD'
+        elif rsi_value > 70:
+            rsi_signal = 'OVERBOUGHT'
         else:
-            rsi_signal = 'N/A'
-        
-        return jsonify({
-            'success': True,
-            'symbol': symbol,
-            'indicators': {
-                'rsi': {
-                    'value': rsi_value,
-                    'signal': rsi_signal
-                }
-            },
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Alpha Vantage API error: {e}")
-        return jsonify({'success': False, 'error': str(e)})
+            rsi_signal = 'NEUTRAL'
+    else:
+        rsi_signal = 'N/A'
+    
+    return jsonify({
+        'success': True,
+        'symbol': symbol,
+        'indicators': {
+            'rsi': {
+                'value': rsi_value,
+                'signal': rsi_signal
+            }
+        },
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 if __name__ == '__main__':
