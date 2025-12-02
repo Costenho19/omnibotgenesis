@@ -1,0 +1,96 @@
+/**
+ * OMNIX Dashboard V6.5 - Ticker Component
+ * BEM Naming: .ticker, .ticker__item, .ticker__price
+ */
+
+/* ================================
+   TICKER ROW (Terminal)
+   ================================ */
+.ticker-row {
+    background: var(--bg-card);
+    padding: 0;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.ticker-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* ================================
+   TICKER ITEM
+   ================================ */
+.ticker-item {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-right: 1px solid var(--border-terminal);
+    min-width: 120px;
+    transition: background var(--transition-normal);
+}
+
+.ticker-item:hover {
+    background: var(--bg-hover);
+}
+
+/* Dashboard variant */
+.ticker-item--dashboard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    min-width: 140px;
+    transition: var(--transition-normal);
+}
+
+.ticker-item--dashboard:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-glow-purple);
+}
+
+.ticker-item--dashboard.positive {
+    border-left: 2px solid var(--accent-green);
+}
+
+.ticker-item--dashboard.negative {
+    border-left: 2px solid var(--accent-red);
+}
+
+/* ================================
+   TICKER ELEMENTS
+   ================================ */
+.ticker__symbol {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ticker__price {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 2px 0;
+    font-family: var(--font-mono);
+}
+
+.ticker__change {
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ================================
+   CRYPTO TICKER (Dashboard)
+   ================================ */
+.crypto-ticker {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 0.5rem 0;
+}
+
+.crypto-ticker::-webkit-scrollbar {
+    display: none;
+}

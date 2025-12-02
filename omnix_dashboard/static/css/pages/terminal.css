@@ -1,0 +1,20 @@
+/**
+ * OMNIX Dashboard V6.5 - Terminal Page Styles
+ * Page-specific overrides for terminal.html
+ */
+
+/* ================================
+   TERMINAL BODY OVERRIDE
+   ================================ */
+body.page-terminal {
+    background: var(--bg-terminal);
+    color: var(--text-terminal-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+body.page-terminal * {
+    font-family: var(--font-mono);
+}

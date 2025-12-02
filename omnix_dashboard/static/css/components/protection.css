@@ -1,0 +1,36 @@
+/**
+ * OMNIX Dashboard V6.5 - Protection Grid Component
+ */
+
+/* ================================
+   PROTECTION GRID
+   ================================ */
+.protection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.protection-item {
+    background: var(--bg-card);
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.protection-item__icon {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.protection-item__name {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.protection-item__status {
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 2px;
+}
