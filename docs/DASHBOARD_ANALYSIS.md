@@ -152,9 +152,35 @@ def get_database_url():
 
 | # | Issue | Location | Impact | Status |
 |---|-------|----------|--------|--------|
-| 1 | **Hardcoded SECRET_KEY** | `app.py` line 18 | `'omnix-ultra-2025'` allows session forgery | ❌ Open |
-| 2 | **Unrestricted global CORS** | `app.py` line 17 | `CORS(app)` allows calls from any origin | ❌ Open |
-| 3 | **No API authentication** | All endpoints | Anyone can access trading data | ❌ Open |
+| 1 | **Hardcoded SECRET_KEY** | `app.py` line 25-30 | **MANDATORY** in Railway (crashes if missing), dev fallback for Replit | ✅ Fixed (Dec 2024) |
+| 2 | **Unrestricted global CORS** | `app.py` line 33-43 | CORS restricted to Railway/Replit domains via `DASHBOARD_ALLOWED_ORIGINS` | ✅ Fixed (Dec 2024) |
+| 3 | **No API authentication** | Sensitive endpoints | `@require_api_key` decorator protects: metrics, trades, positions, portfolio, equity-curve, signals | ✅ Fixed (Dec 2024) |
+
+**Security Configuration for Railway (MANDATORY):**
+```bash
+# REQUIRED - Dashboard will crash without this in Railway:
+SESSION_SECRET=<your-secret>
+
+# STRONGLY RECOMMENDED - Protects sensitive endpoints:
+DASHBOARD_API_KEY=<generate-with: python -c "import secrets; print(secrets.token_urlsafe(32))">
+
+# OPTIONAL - Defaults to Railway/Replit domains if not set:
+DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
+```
+
+**Protected Endpoints (require DASHBOARD_API_KEY when configured):**
+- `/api/metrics` - Performance metrics
+- `/api/trades` - Trade history
+- `/api/positions` - Open positions
+- `/api/portfolio` - Portfolio state
+- `/api/equity-curve` - Equity curve data
+- `/api/signals/active` - Active trading signals
+
+**Public Endpoints (no authentication required):**
+- `/api/market/*` - Public market data (Kraken prices, volume, OHLC)
+- `/api/news` - Internal news
+- `/api/health` - Health check
+- `/api/system/status` - System status
 
 ### 5.2 CRITICAL - Architecture
 

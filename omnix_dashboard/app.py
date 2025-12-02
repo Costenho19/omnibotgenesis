@@ -6,16 +6,65 @@ Premium 2025 Design with Portfolio Management - REAL DATA
 
 import os
 import logging
+from functools import wraps
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, redirect
+from flask import Flask, render_template, jsonify, redirect, request
 from flask_cors import CORS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
-app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'omnix-ultra-2025')
+
+IS_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PROJECT_ID'))
+IS_DEVELOPMENT = os.environ.get('PAPER_MODE', '').upper() == 'TRUE' and not IS_RAILWAY
+
+SECRET_KEY = os.environ.get('SESSION_SECRET')
+if not SECRET_KEY:
+    if IS_RAILWAY:
+        raise RuntimeError("CRITICAL: SESSION_SECRET must be configured in Railway production environment")
+    logger.warning("SESSION_SECRET not configured - using development mode (insecure)")
+    SECRET_KEY = 'dev-only-insecure-key-do-not-use-in-production'
+app.config['SECRET_KEY'] = SECRET_KEY
+
+ALLOWED_ORIGINS = os.environ.get('DASHBOARD_ALLOWED_ORIGINS', '').split(',')
+if not ALLOWED_ORIGINS or ALLOWED_ORIGINS == ['']:
+    ALLOWED_ORIGINS = [
+        'https://*.railway.app',
+        'https://*.up.railway.app', 
+        'https://*.replit.dev',
+        'https://*.repl.co',
+        'http://localhost:5000',
+        'http://127.0.0.1:5000'
+    ]
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
+
+DASHBOARD_API_KEY = os.environ.get('DASHBOARD_API_KEY')
+if IS_RAILWAY and not DASHBOARD_API_KEY:
+    logger.warning("DASHBOARD_API_KEY not configured - sensitive endpoints will be public in production!")
+
+def require_api_key(f):
+    """Decorator to protect sensitive endpoints with API key authentication.
+    
+    Behavior:
+    - If DASHBOARD_API_KEY is not set: endpoints are public (development mode)
+    - If DASHBOARD_API_KEY is set: requires X-API-Key header or api_key query param
+    
+    In Railway production, DASHBOARD_API_KEY should be set to protect sensitive data.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not DASHBOARD_API_KEY:
+            return f(*args, **kwargs)
+        
+        api_key = request.headers.get('X-API-Key') or request.args.get('api_key')
+        
+        if api_key != DASHBOARD_API_KEY:
+            logger.warning(f"Unauthorized API access attempt to {request.path} from {request.remote_addr}")
+            return jsonify({'error': 'Unauthorized', 'code': 401}), 401
+        
+        return f(*args, **kwargs)
+    return decorated
 
 DB_AVAILABLE = False
 DB_ERROR_MESSAGE = None
@@ -367,6 +416,7 @@ def classic_dashboard():
 
 
 @app.route('/api/metrics')
+@require_api_key
 def api_metrics():
     """API endpoint for metrics - includes both closed trades AND open positions"""
     trades = get_paper_trades(30)
@@ -394,6 +444,7 @@ def api_metrics():
 
 
 @app.route('/api/trades')
+@require_api_key
 def api_trades():
     """API endpoint for recent trades"""
     trades = get_paper_trades(30)
@@ -422,6 +473,7 @@ def api_trades():
 
 
 @app.route('/api/equity-curve')
+@require_api_key
 def api_equity_curve():
     """API endpoint for equity curve data"""
     trades = get_paper_trades(90)
@@ -459,6 +511,7 @@ def api_equity_curve():
 
 
 @app.route('/api/portfolio')
+@require_api_key
 def api_portfolio():
     """API endpoint for portfolio status - V6.5 connected to real DB"""
     conn = get_db_connection()
@@ -578,6 +631,7 @@ def api_portfolio():
 
 
 @app.route('/api/positions')
+@require_api_key
 def api_positions():
     """API endpoint for open positions - V6.5 with real Kraken prices"""
     import requests
@@ -992,6 +1046,7 @@ def api_market_ohlc(symbol):
 
 
 @app.route('/api/signals/active')
+@require_api_key
 def api_active_signals():
     """API endpoint for active trading signals - V6.5 connected to real DB"""
     conn = get_db_connection()
