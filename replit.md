@@ -65,6 +65,31 @@ Provides institutional-grade blockchain analytics using free APIs, featuring Wha
 
 The system includes a web dashboard built with Flask, providing multiple views (main, terminal-style, classic) and a comprehensive set of API endpoints for performance metrics, trading data, market data, market intelligence, and system status.
 
+### Frontend Architecture (December 2024 Refactor)
+
+**Modular CSS (18 files, 1562 lines) - BEM Methodology:**
+```
+omnix_dashboard/static/css/
+├── base/ (variables.css, reset.css, typography.css)
+├── components/ (panel.css, card.css, ticker.css, signal.css, badge.css, chart.css, table.css, news.css, protection.css)
+├── layouts/ (header.css, terminal-grid.css, animations.css)
+├── pages/ (terminal.css, dashboard.css)
+└── main.css (imports all modules)
+```
+
+**Modular JavaScript (11 files, 1318 lines) - IIFE Pattern:**
+```
+omnix_dashboard/static/js/
+├── core/ (api.js, utils.js, clock.js)
+├── components/ (charts.js, ticker.js, signals.js, volume.js, news.js, feargreed.js)
+└── pages/ (terminal.js, dashboard.js)
+```
+
+**Jinja2 Template Inheritance:**
+- `base.html`: Centralized head, shared CSS/JS, extensible blocks (title, extra_css, body_class, content, extra_js)
+- `terminal.html`: Extends base.html, Trading Terminal view (216 lines)
+- `dashboard.html`: Extends base.html, Classic institutional view (314 lines)
+
 ### Data Flow
 
 Market Data (Kraken/Alpaca) feeds into the Non-Markovian Kernel, boosted by On-Chain Intelligence. This leads to Regime Detection and Signal Generation, feeding the Adaptive Parameter Engine. After Coherence Engine Validation and a Risk Guardian Check, trades are executed, persisted in PostgreSQL, and notifications are sent via Telegram.
