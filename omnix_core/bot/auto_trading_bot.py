@@ -191,11 +191,36 @@ except ImportError:
 
 class AutoTradingBot:
     """
-    Bot de Trading Automático 24/7 - V5.2 QUANTUM ULTIMATE
+    Bot de Trading Automático 24/7 - V6.5 INSTITUTIONAL+
     
-    Usa TODAS las 9 estrategias avanzadas para tomar decisiones óptimas
+    Usa TODAS las 10 estrategias avanzadas para tomar decisiones óptimas
     Incluye modo PAPER TRADING con $1M virtual para testing
+    Escanea 11 pares de crypto para máximas oportunidades
     """
+    
+    # V6.5: Mapeo completo de símbolos estándar a formato Kraken
+    # Kraken usa nombres especiales para algunos activos
+    KRAKEN_SYMBOL_MAP = {
+        'BTC/USD': 'XBTUSD',
+        'ETH/USD': 'ETHUSD',
+        'SOL/USD': 'SOLUSD',
+        'XRP/USD': 'XRPUSD',
+        'ADA/USD': 'ADAUSD',
+        'DOT/USD': 'DOTUSD',
+        'LINK/USD': 'LINKUSD',
+        'AVAX/USD': 'AVAXUSD',
+        'MATIC/USD': 'MATICUSD',
+        'ATOM/USD': 'ATOMUSD',
+        'LTC/USD': 'LTCUSD',
+    }
+    
+    @classmethod
+    def convert_to_kraken_pair(cls, pair: str) -> str:
+        """Convierte par estándar (BTC/USD) a formato Kraken (XBTUSD)"""
+        if pair in cls.KRAKEN_SYMBOL_MAP:
+            return cls.KRAKEN_SYMBOL_MAP[pair]
+        # Fallback: remover / para pares no mapeados
+        return pair.replace('/', '')
     
     def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None, ares_v1=None, ares_v2=None):
         self.trading_service = trading_service
@@ -219,7 +244,12 @@ class AutoTradingBot:
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
-            'trading_pairs': ['BTC/USD', 'ETH/USD', 'SOL/USD'],  # V6.4: Top 3 cryptos (más estable)
+            'trading_pairs': [
+                'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
+                'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
+                'LINK/USD', 'AVAX/USD', 'MATIC/USD', # DeFi/L2 líderes
+                'ATOM/USD', 'LTC/USD'               # Ecosistema diversificado
+            ],  # V6.5: 11 pares para máximas oportunidades
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
             'check_interval_seconds': 25,  # V6.4: 25s (balance entre velocidad y estabilidad)
             'min_trade_usd': 75.0,  # V6.4: Mínimo $75 (balance calidad/cantidad)
@@ -781,8 +811,8 @@ class AutoTradingBot:
             
             # 1. Obtener precio actual
             try:
-                # Convertir par de formato "BTC/USD" a "XBTUSD" (formato Kraken)
-                kraken_pair = pair.replace('BTC/USD', 'XBTUSD').replace('ETH/USD', 'ETHUSD').replace('/', '')
+                # V6.5: Usar mapeo de símbolos para todos los 11 pares
+                kraken_pair = self.convert_to_kraken_pair(pair)
                 ticker_data = self.trading_service.kraken.get_ticker(kraken_pair)
                 
                 if not ticker_data or 'c' not in ticker_data:

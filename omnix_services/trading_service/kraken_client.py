@@ -146,10 +146,28 @@ class KrakenAPIClient:
         
         Args:
             pair: Trading pair (e.g., 'XBTUSD' for BTC/USD)
+            
+        Note: Kraken accepts short forms (XBTUSD) but returns extended forms (XXBTZUSD)
+        This method handles both formats automatically.
         """
         try:
             result = self._request('/0/public/Ticker', data={'pair': pair})
-            return result.get(pair, {}) if result else {}
+            if not result:
+                return {}
+            
+            # Try exact match first
+            if pair in result:
+                return result[pair]
+            
+            # Kraken returns extended format (XXBTZUSD) when queried with short (XBTUSD)
+            # Find the first matching ticker data
+            for key in result:
+                if isinstance(result[key], dict) and 'c' in result[key]:
+                    logger.debug(f"Ticker {pair} → Kraken key: {key}")
+                    return result[key]
+            
+            logger.warning(f"⚠️ No ticker data found for {pair} in response keys: {list(result.keys())}")
+            return {}
         except Exception as e:
             logger.error(f"Failed to get ticker for {pair}: {e}")
             return {}
@@ -191,7 +209,19 @@ class KrakenAPIClient:
         """Get order book for analysis"""
         try:
             result = self._request('/0/public/Depth', data={'pair': pair, 'count': count})
-            return result.get(pair, {}) if result else {}
+            if not result:
+                return {}
+            
+            # Try exact match first
+            if pair in result:
+                return result[pair]
+            
+            # Handle Kraken extended format responses
+            for key in result:
+                if isinstance(result[key], dict) and ('asks' in result[key] or 'bids' in result[key]):
+                    return result[key]
+            
+            return {}
         except Exception as e:
             logger.error(f"Failed to get order book for {pair}: {e}")
             return {}
