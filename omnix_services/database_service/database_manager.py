@@ -177,3 +177,52 @@ class DatabaseManager:
         if self.using_enterprise:
             return self.enterprise_service.get_open_positions(user_id)
         return []
+    
+    def get_due_evaluations(self) -> list:
+        """
+        Obtener evaluaciones pendientes que ya deben procesarse
+        FIXED Dec 2, 2025: Método faltante que bloqueaba módulo de evaluación
+        
+        Returns:
+            Lista de evaluaciones pendientes donde due_time <= NOW()
+        """
+        if self.using_enterprise:
+            try:
+                sql = """
+                    SELECT id, trade_id, evaluation_type, due_time, 
+                           conditions, status, created_at
+                    FROM pending_evaluations 
+                    WHERE due_time <= NOW() 
+                    AND status = 'pending'
+                    ORDER BY due_time ASC
+                    LIMIT 100
+                """
+                rows = self.enterprise_service.execute_query(sql, fetch=True)
+                if rows:
+                    columns = ['id', 'trade_id', 'evaluation_type', 'due_time', 
+                               'conditions', 'status', 'created_at']
+                    return [dict(zip(columns, row)) for row in rows]
+                return []
+            except Exception as e:
+                logger.warning(f"⚠️ Error obteniendo evaluaciones pendientes: {e}")
+                return []
+        return []
+    
+    def mark_evaluation_processed(self, evaluation_id: int, result: str = 'processed') -> bool:
+        """
+        Marcar una evaluación como procesada
+        ADDED Dec 2, 2025: Complemento de get_due_evaluations
+        """
+        if self.using_enterprise:
+            try:
+                sql = """
+                    UPDATE pending_evaluations 
+                    SET status = %s, processed_at = NOW()
+                    WHERE id = %s
+                """
+                self.enterprise_service.execute_query(sql, (result, evaluation_id), fetch=False)
+                return True
+            except Exception as e:
+                logger.warning(f"⚠️ Error marcando evaluación {evaluation_id}: {e}")
+                return False
+        return False

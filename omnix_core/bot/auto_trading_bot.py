@@ -199,9 +199,10 @@ class AutoTradingBot:
     """
     
     # V6.5: Mapeo completo de símbolos estándar a formato Kraken
-    # Kraken usa nombres especiales para algunos activos
+    # NOTA: Kraken usa XBT para Bitcoin (no BTC) - esto es crítico
+    # API pública acepta formato corto (XBTUSD) pero retorna formato largo (XXBTZUSD)
     KRAKEN_SYMBOL_MAP = {
-        'BTC/USD': 'XBTUSD',
+        'BTC/USD': 'XBTUSD',      # BTC → XBT (Kraken naming convention)
         'ETH/USD': 'ETHUSD',
         'SOL/USD': 'SOLUSD',
         'XRP/USD': 'XRPUSD',
@@ -214,13 +215,48 @@ class AutoTradingBot:
         'LTC/USD': 'LTCUSD',
     }
     
+    # Mapeo inverso para logs legibles (Kraken → Display)
+    # Incluye tanto formato corto como extendido de Kraken
+    DISPLAY_SYMBOL_MAP = {
+        'XBTUSD': 'BTC/USD',
+        'XXBTZUSD': 'BTC/USD',
+        'ETHUSD': 'ETH/USD',
+        'XETHZUSD': 'ETH/USD',
+        'SOLUSD': 'SOL/USD',
+        'XRPUSD': 'XRP/USD',
+        'XXRPZUSD': 'XRP/USD',
+        'ADAUSD': 'ADA/USD',
+        'DOTUSD': 'DOT/USD',
+        'LINKUSD': 'LINK/USD',
+        'AVAXUSD': 'AVAX/USD',
+        'MATICUSD': 'MATIC/USD',
+        'ATOMUSD': 'ATOM/USD',
+        'LTCUSD': 'LTC/USD',
+        'XLTCZUSD': 'LTC/USD',
+    }
+    
     @classmethod
     def convert_to_kraken_pair(cls, pair: str) -> str:
-        """Convierte par estándar (BTC/USD) a formato Kraken (XBTUSD)"""
+        """
+        Convierte par estándar (BTC/USD) a formato Kraken (XBTUSD)
+        
+        IMPORTANTE: Kraken usa XBT para Bitcoin, no BTC.
+        La API acepta formato corto pero puede retornar formato largo.
+        """
         if pair in cls.KRAKEN_SYMBOL_MAP:
             return cls.KRAKEN_SYMBOL_MAP[pair]
         # Fallback: remover / para pares no mapeados
         return pair.replace('/', '')
+    
+    @classmethod
+    def get_display_pair(cls, kraken_pair: str) -> str:
+        """Convierte formato Kraken a display legible"""
+        if kraken_pair in cls.DISPLAY_SYMBOL_MAP:
+            return cls.DISPLAY_SYMBOL_MAP[kraken_pair]
+        # Insertar / si no hay mapeo
+        if len(kraken_pair) >= 6 and '/' not in kraken_pair:
+            return f"{kraken_pair[:-3]}/{kraken_pair[-3:]}"
+        return kraken_pair
     
     def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None, ares_v1=None, ares_v2=None):
         self.trading_service = trading_service

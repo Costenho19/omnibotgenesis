@@ -39,6 +39,7 @@ The system is built around several core engines:
 -   **AutoTradingBot V6.4 PREMIUM**: Features multi-crypto scanning, tiered signal strength, a ramp-up system, HMM quality filter for confidence-weighted regime detection, and drawdown protection.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
 -   **Coherence Engine V6.5 ULTRA**: Utilizes a 6-Tier Veto System for validating strategy agreement. Uses consistent thresholds (30%/45%) for both Paper and Real modes to maintain trade quality and win rate > 55%.
+-   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs (BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, MATIC, ATOM, LTC) with proper Kraken symbol mapping (BTC→XBT).
 -   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading.
 
 ### Portfolio Management
