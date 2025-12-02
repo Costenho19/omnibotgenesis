@@ -2434,6 +2434,7 @@ class AutoTradingBot:
             'running': self.state['running'],
             'paper_mode': self.config['paper_mode'],
             'trading_pair': self.config['trading_pair'],
+            'trading_pairs': self.config.get('trading_pairs', ['BTC/USD']),  # V6.5: Lista completa de 11 pares
             'current_balance': balance,
             'initial_balance': initial_balance,
             'profit_loss': profit_loss,

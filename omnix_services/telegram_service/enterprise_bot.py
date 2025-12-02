@@ -4182,12 +4182,12 @@ Perdedores: {stats.get('losing_trades', 0)}
                                 except:
                                     pass
                             
-                            # V6.4: Obtener pares activos
-                            trading_pairs = result.get('config', {}).get('trading_pairs', ['BTC/USD'])
+                            # V6.5: Obtener pares activos (get_status devuelve trading_pairs directamente)
+                            trading_pairs = result.get('trading_pairs', ['BTC/USD'])
                             if isinstance(trading_pairs, list) and len(trading_pairs) > 1:
                                 pairs_display = ", ".join([p.split('/')[0] for p in trading_pairs])
                             else:
-                                pairs_display = "BTC/USD"
+                                pairs_display = result.get('trading_pair', 'BTC/USD')
                             
                             response_text = f"""🤖 **AUTO-TRADING BOT V6.4 STATUS**
 
