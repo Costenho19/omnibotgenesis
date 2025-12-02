@@ -689,8 +689,9 @@ if __name__ == "__main__":
             def start_dashboard():
                 try:
                     from omnix_dashboard.app import app
-                    logger.info("🌐 Dashboard iniciando en puerto 5000...")
-                    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+                    dashboard_port = int(os.environ.get('PORT', 5000))
+                    logger.info(f"🌐 Dashboard iniciando en puerto {dashboard_port}...")
+                    app.run(host='0.0.0.0', port=dashboard_port, debug=False, use_reloader=False)
                 except Exception as e:
                     logger.error(f"❌ Error iniciando Dashboard: {e}")
                 finally:
