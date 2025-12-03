@@ -61,6 +61,13 @@ The system includes a web dashboard built with Flask, providing multiple views (
 
 The backend utilizes a Flask Blueprints architecture for modularity, with separate blueprints for views, core APIs, market data, intelligence, and system status. Key improvements include an application factory pattern, connection pooling for PostgreSQL, and modular route organization. ARES strategies are instantiated at the module level for correct initialization.
 
+### Dashboard Data Handling (Phase 3 - Dec 2025)
+
+- **Proper Error Responses**: `get_paper_trades()` now supports `return_dict=True` parameter returning `{success, trades, error, db_connected}` instead of empty arrays.
+- **Dynamic Status Bar**: `statusbar.js` polls `/api/health` every 15s and updates BOT/DATABASE/KRAKEN status indicators in real-time.
+- **PAPER TRADING Badge**: Prominent orange badge in both terminal.html and dashboard.html clearly indicates paper trading mode.
+- **Price Fallback System**: `/api/positions` uses Kraken API first, with CoinGecko as automatic fallback when Kraken fails.
+
 ### Data Flow
 
 Market Data (Kraken/Alpaca) feeds into the Non-Markovian Kernel, boosted by On-Chain Intelligence. This leads to Regime Detection and Signal Generation, feeding the Adaptive Parameter Engine. After Coherence Engine Validation and a Risk Guardian Check, trades are executed, persisted in PostgreSQL, and notifications are sent via Telegram.
