@@ -241,24 +241,32 @@ class UserSessionManager:
             return False
     
     def _save_to_redis(self, session: UserTradingSession):
-        """Guardar sesión en Redis"""
+        """Guardar sesión en Redis con manejo robusto"""
         redis_client = self._get_redis_client()
-        if redis_client:
-            try:
-                data = json.dumps(session.to_dict())
-                redis_client.setex(
-                    self._redis_key(session.user_id),
-                    self.SESSION_TTL,
-                    data
-                )
+        if not redis_client:
+            logger.debug("📊 Redis no disponible - usando solo PostgreSQL")
+            return False
+        
+        try:
+            data = json.dumps(session.to_dict())
+            redis_client.setex(
+                self._redis_key(session.user_id),
+                self.SESSION_TTL,
+                data
+            )
+            
+            if session.running and not session.paused:
+                redis_client.sadd(self.ACTIVE_SESSIONS_KEY, session.user_id)
+                logger.debug(f"📊 Redis: User {session.user_id} añadido a sesiones activas")
+            else:
+                redis_client.srem(self.ACTIVE_SESSIONS_KEY, session.user_id)
+                logger.debug(f"📊 Redis: User {session.user_id} removido de sesiones activas")
+            
+            return True
                 
-                if session.running:
-                    redis_client.sadd(self.ACTIVE_SESSIONS_KEY, session.user_id)
-                else:
-                    redis_client.srem(self.ACTIVE_SESSIONS_KEY, session.user_id)
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ Error guardando en Redis: {e}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error guardando en Redis: {e}")
+            return False
     
     def _save_to_postgres(self, session: UserTradingSession):
         """Guardar sesión en PostgreSQL"""

@@ -594,9 +594,20 @@ class AutoTradingBot:
     def _trading_loop_multi_user(self):
         """
         V6.5.2: Loop de trading que procesa TODOS los usuarios activos
-        Cada iteración escanea oportunidades para cada usuario con sesión activa
+        Usa ThreadPoolExecutor para procesamiento paralelo de usuarios
+        
+        Arquitectura:
+        - Pool de workers para procesamiento paralelo
+        - Cada usuario se procesa en su propio thread
+        - Lock por usuario para evitar race conditions
+        - Timeout por usuario para evitar bloqueos
         """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
         logger.info("🔄 V6.5.2: Iniciando loop de trading multi-usuario...")
+        
+        max_workers = min(32, (os.cpu_count() or 1) * 4)
+        user_locks: Dict[str, threading.Lock] = {}
         
         while self.state.get('running'):
             try:
@@ -604,15 +615,33 @@ class AutoTradingBot:
                     session_manager = get_session_manager()
                     active_users = session_manager.get_active_sessions()
                     
-                    for user_id in active_users:
-                        try:
-                            session = session_manager.get_session(user_id)
+                    if active_users:
+                        logger.debug(f"📊 Procesando {len(active_users)} usuarios activos")
+                        
+                        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                            futures = {}
                             
-                            if session.running and not session.paused and not session.emergency_stop:
-                                self._process_user_trading_cycle(user_id, session)
+                            for user_id in active_users:
+                                if user_id not in user_locks:
+                                    user_locks[user_id] = threading.Lock()
                                 
-                        except Exception as e:
-                            logger.error(f"❌ Error procesando user {user_id}: {e}")
+                                if user_locks[user_id].locked():
+                                    continue
+                                
+                                future = executor.submit(
+                                    self._safe_process_user,
+                                    user_id,
+                                    user_locks[user_id],
+                                    session_manager
+                                )
+                                futures[future] = user_id
+                            
+                            for future in as_completed(futures, timeout=60):
+                                user_id = futures[future]
+                                try:
+                                    result = future.result(timeout=30)
+                                except Exception as e:
+                                    logger.error(f"❌ Error procesando user {user_id}: {e}")
                 else:
                     self._run_trading_cycle()
                 
@@ -623,6 +652,34 @@ class AutoTradingBot:
                 time.sleep(30)
         
         logger.info("🛑 V6.5.2: Trading loop multi-usuario detenido")
+    
+    def _safe_process_user(self, user_id: str, lock: threading.Lock, session_manager) -> bool:
+        """
+        Procesar un usuario de forma segura con lock
+        
+        Args:
+            user_id: ID del usuario
+            lock: Lock para este usuario
+            session_manager: Gestor de sesiones
+        
+        Returns:
+            True si se procesó correctamente
+        """
+        if not lock.acquire(blocking=False):
+            return False
+        
+        try:
+            session = session_manager.get_session(user_id)
+            
+            if session.running and not session.paused and not session.emergency_stop:
+                self._process_user_trading_cycle(user_id, session)
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"❌ Error en _safe_process_user para {user_id}: {e}")
+            return False
+        finally:
+            lock.release()
     
     def _process_user_trading_cycle(self, user_id: str, session):
         """
