@@ -3,6 +3,7 @@ OMNIX Dashboard - Database Utilities
 Connection pooling and database management
 
 Phase 1 (Dec 2025): Added telemetry logging for pool monitoring
+Phase 2 (Dec 2025): Added USE_UNIFIED_GATEWAY feature flag for DatabaseGateway migration
 """
 
 import os
@@ -21,6 +22,9 @@ _TELEMETRY_THREAD = None
 _TELEMETRY_STOP_EVENT = threading.Event()
 _TELEMETRY_LOCK = threading.Lock()
 _TELEMETRY_INTERVAL = 300  # 5 minutes
+
+USE_UNIFIED_GATEWAY = os.environ.get('USE_UNIFIED_GATEWAY', 'false').lower() == 'true'
+_GATEWAY_INSTANCE = None
 
 
 def get_database_url():
@@ -82,9 +86,26 @@ def init_connection_pool():
         return False
 
 
+def _get_gateway():
+    """Lazy-load DatabaseGateway to avoid circular imports."""
+    global _GATEWAY_INSTANCE
+    if _GATEWAY_INSTANCE is None:
+        try:
+            from omnix_services.database_service.database_gateway import DatabaseGateway
+            _GATEWAY_INSTANCE = DatabaseGateway
+            logger.info("📊 DatabaseGateway loaded for unified connection management")
+        except ImportError as e:
+            logger.warning(f"⚠️ DatabaseGateway not available, using legacy pool: {e}")
+            return None
+    return _GATEWAY_INSTANCE
+
+
 @contextmanager
 def get_db_connection():
     """Get connection from pool using context manager.
+    
+    Phase 2: If USE_UNIFIED_GATEWAY=true, uses DatabaseGateway.
+    Otherwise falls back to legacy pool.
     
     Usage:
         with get_db_connection() as conn:
@@ -93,6 +114,25 @@ def get_db_connection():
                 cursor.execute(...)
     """
     global DB_AVAILABLE, DB_ERROR_MESSAGE, DB_POOL
+    
+    if USE_UNIFIED_GATEWAY:
+        gateway = _get_gateway()
+        if gateway:
+            try:
+                with gateway.get_connection() as conn:
+                    if conn:
+                        DB_AVAILABLE = True
+                        yield conn
+                    else:
+                        DB_AVAILABLE = False
+                        yield None
+                return
+            except Exception as e:
+                DB_ERROR_MESSAGE = f"Gateway connection error: {str(e)[:200]}"
+                logger.error(f"DatabaseGateway connection error: {e}")
+                DB_AVAILABLE = False
+                yield None
+                return
     
     if DB_POOL is None:
         init_connection_pool()
@@ -113,9 +153,23 @@ def get_db_connection():
 
 
 def get_pool_stats():
-    """Get connection pool statistics for health checks"""
+    """Get connection pool statistics for health checks.
+    
+    Phase 2: If USE_UNIFIED_GATEWAY=true, gets stats from DatabaseGateway.
+    """
+    if USE_UNIFIED_GATEWAY:
+        gateway = _get_gateway()
+        if gateway:
+            try:
+                stats = gateway.get_pool_stats()
+                stats['backend'] = 'unified_gateway'
+                return stats
+            except Exception as e:
+                logger.error(f"Error getting gateway stats: {e}")
+                return {'status': 'error', 'error': str(e), 'backend': 'unified_gateway'}
+    
     if DB_POOL is None:
-        return {'status': 'not_initialized'}
+        return {'status': 'not_initialized', 'backend': 'legacy_pool'}
     try:
         stats = DB_POOL.get_stats()
         return {
@@ -127,11 +181,12 @@ def get_pool_stats():
             'usage_ms': getattr(stats, 'usage_ms', 0),
             'requests_queued': getattr(stats, 'requests_queued', 0),
             'pool_min': int(os.environ.get('DB_POOL_MIN', '2')),
-            'pool_max': int(os.environ.get('DB_POOL_MAX', '10'))
+            'pool_max': int(os.environ.get('DB_POOL_MAX', '10')),
+            'backend': 'legacy_pool'
         }
     except Exception as e:
         logger.error(f"Error getting pool stats: {e}")
-        return {'status': 'error', 'error': str(e)}
+        return {'status': 'error', 'error': str(e), 'backend': 'legacy_pool'}
 
 
 def shutdown_pool():
@@ -222,15 +277,29 @@ atexit.register(shutdown_pool)
 
 
 def init_database():
-    """Initialize database connection pool and start telemetry (Phase 1)"""
+    """Initialize database connection pool and start telemetry.
+    
+    Phase 2: If USE_UNIFIED_GATEWAY=true, initializes DatabaseGateway instead.
+    Gateway has its own telemetry, so we skip legacy telemetry in that case.
+    """
     global DB_AVAILABLE
+    
+    if USE_UNIFIED_GATEWAY:
+        gateway = _get_gateway()
+        if gateway:
+            with get_db_connection() as conn:
+                if conn:
+                    DB_AVAILABLE = True
+                    logger.info("Database connected: Real data mode ACTIVE (DatabaseGateway)")
+                    return True
+        DB_AVAILABLE = False
+        logger.warning("⚠️ USE_UNIFIED_GATEWAY=true but gateway init failed, falling back to legacy")
     
     if init_connection_pool():
         with get_db_connection() as conn:
             if conn:
                 DB_AVAILABLE = True
-                logger.info("Database connected: Real data mode ACTIVE (pooled)")
-                # Start telemetry thread for Phase 1 monitoring
+                logger.info("Database connected: Real data mode ACTIVE (legacy pool)")
                 _start_telemetry_thread()
                 return True
     
