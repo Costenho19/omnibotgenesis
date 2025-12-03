@@ -6,6 +6,28 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ## Recent Changes (Changelog)
 
+### December 2025 - Phase 5: Database Service Unification (In Progress)
+
+**Phase 1 (Discovery & Freeze) ✅ - Dec 3, 2025**
+| Task | Status | Description |
+|------|--------|-------------|
+| Call Site Mapping | ✅ Done | 14 consumers documented (6 Dashboard + 8 Enterprise) |
+| Feature Flag | ✅ Done | `DISABLE_AUTO_MIGRATIONS=true` skips 8 auto-migrations |
+| Pool Telemetry | ✅ Done | Background thread logs stats every 5min with PID |
+| Diagnostics Endpoint | ✅ Done | `/api/db-diagnostics` shows real-time pool health |
+| Consumer Migration Order | ✅ Done | Priority sequence documented in DATABASE_AUDIT_REPORT.md |
+
+**Key Files**
+- `docs/core/DATABASE_AUDIT_REPORT.md` - Complete audit (~1,050 lines)
+- `omnix_services/database_service/database_service.py` - Feature flag implementation
+- `omnix_dashboard/utils/database.py` - Telemetry thread with proper shutdown
+- `omnix_dashboard/blueprints/system.py` - `/api/db-diagnostics` endpoint
+
+**Next: Phase 2 (Build Unified Gateway)**
+- Requires 48h telemetry capture from Railway production
+- Build `DatabaseGateway` class to route queries to single pool
+- Implement canary deployment for zero-downtime cutover
+
 ### December 2025 - Phase 4: Frontend Optimization ✅
 
 **Modular JavaScript Architecture**
