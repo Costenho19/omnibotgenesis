@@ -685,22 +685,34 @@ if __name__ == "__main__":
                 logger.error("🗄️ ❌ DATABASE: No disponible")
             logger.info("🗄️ ═════════════════════════════════════════")
             
-            # V6.5.1: Restaurar auto-trading DESPUÉS de confirmar que DB está conectada
+            # V6.5.2: Inicializar UserSessionManager y restaurar sesiones multi-usuario
             if db_connected:
                 logger.info("")
-                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE ═══════════")
+                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE V6.5.2 ═══════════")
                 try:
+                    from omnix_core.sessions import initialize_session_manager, get_session_manager
+                    from omnix_core.cache import get_redis_cache
+                    
+                    redis_cache = get_redis_cache()
+                    session_manager = initialize_session_manager(
+                        redis_cache=redis_cache,
+                        database_service=db_manager
+                    )
+                    logger.info("🚀 UserSessionManager V6.5.2 inicializado - 100K+ usuarios")
+                    
                     if hasattr(telegram_bot, 'auto_trading') and telegram_bot.auto_trading:
+                        telegram_bot.auto_trading.redis_cache = redis_cache
+                        
                         restored = telegram_bot.auto_trading.check_and_restore_auto_trading()
                         if restored:
-                            logger.info("🔄 ✅ Auto-trading restaurado desde estado persistente")
+                            logger.info("🔄 ✅ Sesiones multi-usuario restauradas")
                         else:
-                            logger.info("🔄 ℹ️ No hay auto-trading que restaurar")
+                            logger.info("🔄 ℹ️ No hay sesiones activas que restaurar")
                     else:
                         logger.warning("🔄 ⚠️ auto_trading no disponible en telegram_bot")
                 except Exception as e:
-                    logger.error(f"🔄 ❌ Error restaurando auto-trading: {e}")
-                logger.info("🔄 ═══════════════════════════════════════════")
+                    logger.error(f"🔄 ❌ Error en restauración V6.5.2: {e}")
+                logger.info("🔄 ═════════════════════════════════════════════════════")
             
             # Iniciar Dashboard en hilo secundario con monitoreo
             dashboard_failed = threading.Event()
