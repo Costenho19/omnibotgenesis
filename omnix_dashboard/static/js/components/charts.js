@@ -1,6 +1,6 @@
 /**
- * OMNIX Dashboard V6.5 - Chart Components
- * Plotly chart wrappers
+ * OMNIX Dashboard V6.5.2 - Chart Components
+ * Plotly chart wrappers with delta updates
  */
 
 const OmnixCharts = (function() {
@@ -10,6 +10,8 @@ const OmnixCharts = (function() {
         responsive: true,
         displayModeBar: false
     };
+
+    const chartInstances = {};
 
     const terminalColors = {
         green: '#00ff88',
@@ -28,6 +30,65 @@ const OmnixCharts = (function() {
         grid: 'rgba(255, 255, 255, 0.03)',
         text: '#64748b'
     };
+
+    function getLayout(theme, type = 'default') {
+        const colors = theme === 'terminal' ? terminalColors : dashboardColors;
+        
+        const baseLayout = {
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: 'transparent'
+        };
+
+        if (type === 'candlestick') {
+            return {
+                ...baseLayout,
+                margin: { l: 50, r: 20, t: 20, b: 30 },
+                xaxis: {
+                    gridcolor: colors.grid,
+                    color: colors.text,
+                    tickfont: { size: 10, family: 'JetBrains Mono' },
+                    rangeslider: { visible: false }
+                },
+                yaxis: {
+                    gridcolor: colors.grid,
+                    color: colors.text,
+                    tickfont: { size: 10, family: 'JetBrains Mono' },
+                    tickprefix: '$',
+                    side: 'right'
+                }
+            };
+        }
+
+        if (type === 'equity') {
+            return {
+                ...baseLayout,
+                margin: { l: 50, r: 20, t: 10, b: 30 },
+                xaxis: {
+                    showgrid: false,
+                    color: colors.text,
+                    tickfont: { size: 9, family: 'JetBrains Mono' }
+                },
+                yaxis: {
+                    showgrid: true,
+                    gridcolor: colors.grid,
+                    color: colors.text,
+                    tickfont: { size: 9, family: 'JetBrains Mono' },
+                    tickprefix: '$'
+                },
+                hovermode: 'x unified'
+            };
+        }
+
+        if (type === 'pie') {
+            return {
+                ...baseLayout,
+                margin: { l: 10, r: 10, t: 10, b: 10 },
+                showlegend: false
+            };
+        }
+
+        return baseLayout;
+    }
 
     function candlestick(containerId, candles, options = {}) {
         const { theme = 'terminal' } = options;
@@ -48,26 +109,14 @@ const OmnixCharts = (function() {
             decreasing: { line: { color: colors.red }, fillcolor: colors.red }
         };
 
-        const layout = {
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-            margin: { l: 50, r: 20, t: 20, b: 30 },
-            xaxis: {
-                gridcolor: colors.grid,
-                color: colors.text,
-                tickfont: { size: 10, family: 'JetBrains Mono' },
-                rangeslider: { visible: false }
-            },
-            yaxis: {
-                gridcolor: colors.grid,
-                color: colors.text,
-                tickfont: { size: 10, family: 'JetBrains Mono' },
-                tickprefix: '$',
-                side: 'right'
-            }
-        };
+        const layout = getLayout(theme, 'candlestick');
 
-        Plotly.newPlot(containerId, [trace], layout, chartConfig);
+        if (chartInstances[containerId]) {
+            Plotly.react(containerId, [trace], layout, chartConfig);
+        } else {
+            Plotly.newPlot(containerId, [trace], layout, chartConfig);
+            chartInstances[containerId] = true;
+        }
     }
 
     function equityCurve(containerId, data, options = {}) {
@@ -88,26 +137,14 @@ const OmnixCharts = (function() {
             fillcolor: `rgba(${theme === 'terminal' ? '0, 255, 136' : '34, 197, 94'}, 0.1)`
         };
 
-        const layout = {
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-            margin: { l: 50, r: 20, t: 10, b: 30 },
-            xaxis: {
-                showgrid: false,
-                color: colors.text,
-                tickfont: { size: 9, family: 'JetBrains Mono' }
-            },
-            yaxis: {
-                showgrid: true,
-                gridcolor: colors.grid,
-                color: colors.text,
-                tickfont: { size: 9, family: 'JetBrains Mono' },
-                tickprefix: '$'
-            },
-            hovermode: 'x unified'
-        };
+        const layout = getLayout(theme, 'equity');
 
-        Plotly.newPlot(containerId, [trace], layout, chartConfig);
+        if (chartInstances[containerId]) {
+            Plotly.react(containerId, [trace], layout, chartConfig);
+        } else {
+            Plotly.newPlot(containerId, [trace], layout, chartConfig);
+            chartInstances[containerId] = true;
+        }
     }
 
     function pie(containerId, data, options = {}) {
@@ -132,10 +169,7 @@ const OmnixCharts = (function() {
         };
 
         const layout = {
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-            margin: { l: 10, r: 10, t: 10, b: 10 },
-            showlegend: false,
+            ...getLayout('dashboard', 'pie'),
             annotations: [{
                 text: centerText || `${total}`,
                 x: 0.5,
@@ -145,12 +179,18 @@ const OmnixCharts = (function() {
             }]
         };
 
-        Plotly.newPlot(containerId, [trace], layout, chartConfig);
+        if (chartInstances[containerId]) {
+            Plotly.react(containerId, [trace], layout, chartConfig);
+        } else {
+            Plotly.newPlot(containerId, [trace], layout, chartConfig);
+            chartInstances[containerId] = true;
+        }
     }
 
     function renderEmpty(containerId, message) {
         const container = document.getElementById(containerId);
         if (container) {
+            chartInstances[containerId] = false;
             container.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 11px;">
                     ${message}
@@ -160,7 +200,20 @@ const OmnixCharts = (function() {
     }
 
     function resize(containerId) {
-        Plotly.Plots.resize(containerId);
+        if (chartInstances[containerId]) {
+            Plotly.Plots.resize(containerId);
+        }
+    }
+
+    function destroy(containerId) {
+        if (chartInstances[containerId]) {
+            Plotly.purge(containerId);
+            delete chartInstances[containerId];
+        }
+    }
+
+    function destroyAll() {
+        Object.keys(chartInstances).forEach(destroy);
     }
 
     return {
@@ -169,6 +222,8 @@ const OmnixCharts = (function() {
         pie,
         renderEmpty,
         resize,
+        destroy,
+        destroyAll,
         terminalColors,
         dashboardColors
     };

@@ -1,5 +1,6 @@
 /**
- * OMNIX Dashboard V6.5 - Dashboard Page Controller
+ * OMNIX Dashboard V6.5.2 - Dashboard Page Controller
+ * With independent error handling per widget
  */
 
 const DashboardApp = (function() {
@@ -7,19 +8,14 @@ const DashboardApp = (function() {
 
     let allTrades = [];
     let openPositions = [];
-    let refreshInterval = null;
 
     async function fetchMetrics() {
-        try {
-            const data = await OmnixAPI.getMetrics();
-            if (data.success) {
-                updateMetricsUI(data.metrics);
-                updateAssetsUI(data.assets);
-                updateStrategiesUI(data.strategies);
-                updateConnectionStatus(data.db_connected);
-            }
-        } catch (error) {
-            console.error('Error fetching metrics:', error);
+        const data = await OmnixAPI.getMetrics();
+        if (data.success) {
+            updateMetricsUI(data.metrics);
+            updateAssetsUI(data.assets);
+            updateStrategiesUI(data.strategies);
+            updateConnectionStatus(data.db_connected);
         }
     }
 
@@ -110,26 +106,18 @@ const DashboardApp = (function() {
     }
 
     async function fetchTrades() {
-        try {
-            const data = await OmnixAPI.getTrades();
-            if (data.success) {
-                allTrades = data.trades || [];
-                renderCombinedTable();
-            }
-        } catch (error) {
-            console.error('Error fetching trades:', error);
+        const data = await OmnixAPI.getTrades();
+        if (data.success) {
+            allTrades = data.trades || [];
+            renderCombinedTable();
         }
     }
 
     async function fetchPositions() {
-        try {
-            const data = await OmnixAPI.getPositions();
-            if (data.success) {
-                openPositions = data.positions || [];
-                renderCombinedTable();
-            }
-        } catch (error) {
-            console.error('Error fetching positions:', error);
+        const data = await OmnixAPI.getPositions();
+        if (data.success) {
+            openPositions = data.positions || [];
+            renderCombinedTable();
         }
     }
 
@@ -230,51 +218,40 @@ const DashboardApp = (function() {
     }
 
     async function fetchEquityCurve() {
-        try {
-            const data = await OmnixAPI.getEquityCurve();
-            if (data.success && data.data.length > 1) {
-                OmnixCharts.equityCurve('equity-chart', data.data, { theme: 'dashboard' });
-            } else {
-                OmnixCharts.renderEmpty('equity-chart', 'Waiting for trading data...');
-            }
-        } catch (error) {
-            console.error('Error fetching equity curve:', error);
+        const data = await OmnixAPI.getEquityCurve();
+        if (data.success && data.data && data.data.length > 1) {
+            OmnixCharts.equityCurve('equity-chart', data.data, { theme: 'dashboard' });
+        } else {
+            OmnixCharts.renderEmpty('equity-chart', 'Waiting for trading data...');
         }
     }
 
     async function fetchSystemStatus() {
-        try {
-            const data = await OmnixAPI.getSystemStatus();
-            if (data.success) {
-                const status = data.status;
-                OmnixUtils.setElement('protection-status', status.protection.drawdown_tier);
-                OmnixUtils.setElement('rampup-status', status.protection.ramp_up_pct + '%');
-                OmnixUtils.setElement('active-pairs', status.trading.pairs_active.map(p => p.replace('/USD', '')).join(' '));
-                OmnixUtils.setElement('brand-trades-today', status.trading.trades_today);
-            }
-        } catch (error) {
-            console.error('Error fetching system status:', error);
+        const data = await OmnixAPI.getSystemStatus();
+        if (data.success) {
+            const status = data.status;
+            OmnixUtils.setElement('protection-status', status.protection.drawdown_tier);
+            OmnixUtils.setElement('rampup-status', status.protection.ramp_up_pct + '%');
+            OmnixUtils.setElement('active-pairs', status.trading.pairs_active.map(p => p.replace('/USD', '')).join(' '));
+            OmnixUtils.setElement('brand-trades-today', status.trading.trades_today);
         }
     }
 
-    function updateLastRefresh() {
-        const el = document.getElementById('last-update');
-        if (el) {
-            el.textContent = OmnixUtils.formatTime(new Date());
-        }
+    function getWidgets() {
+        return [
+            { name: 'metrics', fn: fetchMetrics },
+            { name: 'trades', fn: fetchTrades },
+            { name: 'positions', fn: fetchPositions },
+            { name: 'equity', fn: fetchEquityCurve },
+            { name: 'ticker', fn: () => OmnixTicker.update('crypto-ticker', 'dashboard') },
+            { name: 'news', fn: () => OmnixNews.update('news-feed', 'news-source') },
+            { name: 'system', fn: fetchSystemStatus }
+        ];
     }
 
     async function refreshAllData() {
-        await Promise.all([
-            fetchMetrics(),
-            fetchTrades(),
-            fetchPositions(),
-            fetchEquityCurve(),
-            OmnixTicker.update('crypto-ticker', 'dashboard'),
-            OmnixNews.update('news-feed', 'news-source'),
-            fetchSystemStatus()
-        ]);
-        updateLastRefresh();
+        await OmnixCommon.refreshWidgets(getWidgets());
+        OmnixCommon.updateTimestamp('last-update');
     }
 
     function init() {
@@ -284,17 +261,16 @@ const DashboardApp = (function() {
             timezoneId: 'timezone-badge'
         });
 
-        refreshAllData();
-        refreshInterval = setInterval(refreshAllData, 10000);
+        OmnixCommon.startAutoRefresh(refreshAllData, 10000);
 
-        console.log('OMNIX Dashboard V6.4 INSTITUTIONAL+ | Performance Dashboard Active');
+        console.log('OMNIX Dashboard V6.5.2 INSTITUTIONAL+ | Performance Dashboard Active');
     }
 
     function destroy() {
         OmnixClock.stop();
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
+        OmnixCommon.stopAutoRefresh();
+        if (window.OmnixCharts && typeof OmnixCharts.destroyAll === 'function') {
+            OmnixCharts.destroyAll();
         }
     }
 

@@ -335,10 +335,19 @@ Using `http_get_with_timeout()` with ThreadPoolExecutor:
 
 | # | Issue | Location | Impact | Status |
 |---|-------|----------|--------|--------|
-| 12 | **Full Plotly re-render** | Both dashboards | Recreates charts every 10s (expensive) | ❌ Open |
-| 13 | **No retry/backoff** | JavaScript fetch | Silent network errors | ❌ Open |
-| 14 | **Promise.all without granularity** | `refreshAll()` | One error affects all widgets | ❌ Open |
-| 15 | **Duplicated JS logic** | terminal.html + dashboard.html | Same code in both files | ❌ Open |
+| 12 | **Full Plotly re-render** | `charts.js` | Recreates charts every 10s (expensive) | ✅ Fixed (Dec 2025) |
+| 13 | **No retry/backoff** | `api.js` | Silent network errors | ✅ Fixed (Dec 2025) |
+| 14 | **Promise.all without granularity** | `common.js` | One error affects all widgets | ✅ Fixed (Dec 2025) |
+| 15 | **Duplicated JS logic** | `common.js` | Same code in both files | ✅ Fixed (Dec 2025) |
+
+**Phase 4 Solutions Implemented (December 2025):**
+
+| Issue | Solution | Implementation |
+|-------|----------|----------------|
+| #12 | `Plotly.react()` for delta updates | `charts.js` tracks instances, reuses instead of recreating |
+| #13 | Exponential backoff with jitter | `api.js:fetchWithRetry()` - 3 retries, 1-10s delays |
+| #14 | `refreshWidgets()` executes each independently | `common.js` - widget failures don't cascade |
+| #15 | Shared refresh logic in `common.js` | `startAutoRefresh()`, `updateTimestamp()`, widget pattern |
 
 ### 5.5 MODERATE - Functionality
 
@@ -403,20 +412,22 @@ APIs that exist in `app.py` but NO dashboard consumes:
 
 | Dashboard | Current Level | Institutional Standard | Gap |
 |-----------|---------------|------------------------|-----|
-| Terminal | ~75% | Bloomberg Terminal | 25% |
-| Classic | ~80% | TradingView Pro | 20% |
+| Terminal | ~85% | Bloomberg Terminal | 15% |
+| Classic | ~88% | TradingView Pro | 12% |
 
-**Progress Made (Phase 1-3 Complete):**
+**Progress Made (Phase 1-4 Complete):**
 - ✅ API authentication with `@require_api_key` decorator
 - ✅ Connection pooling with psycopg_pool (min=2, max=10)
 - ✅ Graceful degradation with CoinGecko price fallback
 - ✅ Real-time status bar polling `/api/health` every 15s
 - ✅ Clear Paper/Real trading mode indicator
+- ✅ Optimized chart rendering with Plotly.react()
+- ✅ Retry/backoff for API resilience
+- ✅ Independent widget error handling
 
-**Remaining Gaps:**
+**Remaining Gaps (Phase 5):**
 - No audited data snapshots
 - No risk telemetry dashboard widget
-- Frontend optimization (Plotly re-render)
 - Benchmark comparisons
 
 ---
@@ -449,14 +460,14 @@ APIs that exist in `app.py` but NO dashboard consumes:
 | Paper/real indicator | Both dashboards | Orange "PAPER TRADING" badge in header | ✅ Done |
 | Price fallbacks | `core.py` | CoinGecko as automatic backup for Kraken | ✅ Done |
 
-### Phase 4: Frontend (Moderate) ⏱️ 4-5 hours
+### Phase 4: Frontend (Moderate) ✅ COMPLETED - December 2025
 
-| Task | File | Action |
-|------|------|--------|
-| Consolidate JS | `static/js/common.js` | Extract shared functions |
-| Delta chart updates | Both dashboards | Use Plotly.react() |
-| Retry with backoff | JS | exponential-backoff library |
-| Per-endpoint error handling | JS | Individual try-catch |
+| Task | File | Action | Status |
+|------|------|--------|--------|
+| Consolidate JS | `js/core/common.js` | Extract shared functions | ✅ Done |
+| Delta chart updates | `js/components/charts.js` | Use Plotly.react() | ✅ Done |
+| Retry with backoff | `js/core/api.js` | fetchWithRetry() exponential backoff | ✅ Done |
+| Per-widget error handling | `js/core/common.js` | refreshWidgets() independent execution | ✅ Done |
 
 ### Phase 5: Investor Features (Moderate) ⏱️ 3-4 hours
 
@@ -494,9 +505,9 @@ URGENCY     │ Security +    │ Frontend      │
 | Phase 1: Security | 2-3 | P0 | None | ✅ Complete (Dec 2024) |
 | Phase 2: Architecture | 4-6 | P0 | Phase 1 | ✅ Complete (Dec 2024) |
 | Phase 3: Data | 3-4 | P1 | Phase 2 | ✅ Complete (Dec 2025) |
-| Phase 4: Frontend | 4-5 | P2 | Phase 3 | ❌ Pending |
+| Phase 4: Frontend | 4-5 | P2 | Phase 3 | ✅ Complete (Dec 2025) |
 | Phase 5: Investor | 3-4 | P2 | Phase 3 | ❌ Pending |
-| **TOTAL** | **16-22** | - | - | **70% Complete** |
+| **TOTAL** | **16-22** | - | - | **85% Complete** |
 
 ---
 
