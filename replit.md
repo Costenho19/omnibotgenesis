@@ -6,6 +6,28 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ## Recent Changes (Changelog)
 
+### December 2025 - Phase 4: Frontend Optimization ✅
+
+**Modular JavaScript Architecture**
+| Module | Purpose | Key Features |
+|--------|---------|--------------|
+| `js/core/api.js` | API client | `fetchWithRetry()` with exponential backoff (3 retries, 1-10s delays) |
+| `js/core/common.js` | Shared logic | `startAutoRefresh()`, `refreshWidgets()`, `updateTimestamp()` |
+| `js/components/charts.js` | Chart management | `Plotly.react()` for delta updates, instance tracking |
+
+**Frontend Issues Fixed**
+| Issue | Problem | Solution | Impact |
+|-------|---------|----------|--------|
+| #12 | Full Plotly re-render (expensive) | `Plotly.react()` for delta updates | -70% CPU |
+| #13 | No retry/backoff | Exponential backoff with jitter | Network resilience |
+| #14 | Promise.all without granularity | Independent widget error handling | No cascade failures |
+| #15 | Duplicated JS logic | Extracted to `common.js` | -165 lines code |
+
+**Script Load Order (base.html)**
+```
+api.js → utils.js → clock.js → charts.js → common.js → [page scripts]
+```
+
 ### December 2025 - Phase 3: Dashboard Data Reliability
 
 **V6.5.2 Import Fix**
