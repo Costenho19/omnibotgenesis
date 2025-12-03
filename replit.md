@@ -35,15 +35,21 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | 15.6 Task Checklist | 18 tasks with owner/risk | ~40 |
 | 15.9 Railway Checklist | 18-step deployment guide | ~40 |
 
-**COMPLETED Dec 3, 2025**:
+**Phase 2 (Build Unified Gateway) - IMPLEMENTED Dec 3, 2025**:
 - ✅ `database_gateway.py` created with fork-safe singleton, dual interfaces
 - ✅ `auto_trading_bot.py` dict-style bugs fixed (lines 787, 839, 908, 2050) → tuple access
+- ✅ Feature flag `USE_UNIFIED_GATEWAY` added to `database.py` (defaults false)
+- ✅ Gunicorn `post_fork` hook configured in `gunicorn.conf.py`
+- ✅ Dashboard consumers auto-migrated via `get_db_connection()` abstraction
+- ✅ Smoke test passed: 7 real trades, 11/11 widgets OK with gateway enabled
 
-**Next Steps**:
-1. User provides 48h Railway telemetry logs
-2. Agent analyzes logs and determines optimal pool size
-3. Migrate Dashboard consumers to use DatabaseGateway
-4. Canary deployment with USE_UNIFIED_GATEWAY flag
+**System Contract**: All modules use tuple-based rows `row[n]` (psycopg3 default), NOT dict access.
+
+**Canary Deployment Ready** (Railway):
+1. Set `USE_UNIFIED_GATEWAY=true` on single worker
+2. Monitor telemetry for 48h
+3. Optimize pool sizing based on metrics
+4. Expand to all workers if stable
 
 ### December 2025 - Phase 4: Frontend Optimization ✅
 
