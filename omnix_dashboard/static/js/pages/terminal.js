@@ -81,6 +81,10 @@ const TerminalApp = (function() {
         if (window.AdaptiveEngine) {
             AdaptiveEngine.init('adaptive-engine-widget');
         }
+        
+        if (window.BenchmarkOverlay) {
+            BenchmarkOverlay.init('equity-chart', 'equity-panel-header');
+        }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
 

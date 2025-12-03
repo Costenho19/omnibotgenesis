@@ -374,6 +374,70 @@ class AlphaVantageService:
         if key not in self._cache_time:
             return False
         return datetime.now() - self._cache_time[key] < self._cache_duration
+    
+    def get_daily_prices(self, symbol: str, days: int = 30) -> List[Dict]:
+        """
+        Get daily closing prices for a symbol (stocks like SPY).
+        Uses TIME_SERIES_DAILY endpoint.
+        
+        Args:
+            symbol: Stock ticker (SPY, AAPL, etc.)
+            days: Number of days of historical data (default 30, max 100)
+            
+        Returns:
+            List of {date: str, price: float} sorted by date ascending
+        """
+        if not self.api_key:
+            logger.warning("ALPHA_VANTAGE_API_KEY not configured")
+            return []
+        
+        cache_key = f"daily_{symbol}_{days}"
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, [])
+        
+        try:
+            response = requests.get(
+                self.BASE_URL,
+                params={
+                    'function': 'TIME_SERIES_DAILY',
+                    'symbol': symbol,
+                    'outputsize': 'compact',
+                    'apikey': self.api_key
+                },
+                timeout=15
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'Note' in data:
+                logger.warning(f"Alpha Vantage rate limit: {data.get('Note', '')[:100]}")
+                return self._cache.get(cache_key, [])
+            
+            if 'Time Series (Daily)' not in data:
+                logger.warning(f"No daily data for {symbol}")
+                return []
+            
+            time_series = data['Time Series (Daily)']
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            result = []
+            for date_str, values in sorted(time_series.items()):
+                date = datetime.strptime(date_str, '%Y-%m-%d')
+                if date >= cutoff_date:
+                    result.append({
+                        'date': date_str,
+                        'price': round(float(values['4. close']), 2)
+                    })
+            
+            self._cache[cache_key] = result
+            self._cache_time[cache_key] = datetime.now()
+            
+            logger.info(f"Fetched {len(result)} daily prices for {symbol}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error fetching daily prices for {symbol}: {e}")
+            return self._cache.get(cache_key, [])
 
 
 alpha_vantage_service = AlphaVantageService()

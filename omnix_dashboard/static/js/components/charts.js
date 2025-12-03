@@ -132,6 +132,7 @@ const OmnixCharts = (function() {
             y: data.map(d => d.equity),
             type: 'scatter',
             mode: 'lines',
+            name: 'Portfolio',
             fill: 'tozeroy',
             line: { color: colors.green, width: 2, shape: 'spline' },
             fillcolor: `rgba(${theme === 'terminal' ? '0, 255, 136' : '34, 197, 94'}, 0.1)`

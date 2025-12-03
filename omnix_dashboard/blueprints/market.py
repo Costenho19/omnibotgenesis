@@ -369,12 +369,10 @@ def api_market_technical_indicators(symbol):
 @market_bp.route('/api/benchmarks')
 def api_benchmarks():
     """API endpoint for benchmark comparisons (BTC and SPY normalized to %)."""
-    from omnix_dashboard.utils.benchmark_service import get_benchmarks
+    from omnix_services.market_data.benchmark_adapter import get_benchmarks
     
     days = request.args.get('days', 30, type=int)
     base_date = request.args.get('base_date', None)
-    
-    days = min(max(days, 7), 90)
     
     benchmarks = get_benchmarks(days=days, base_date=base_date)
     

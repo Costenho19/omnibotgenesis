@@ -339,3 +339,88 @@ def fetch_market_snapshot(trading_system):
         logger.info(f"✅ Cache actualizado con {len(real_market_data)} datos de Kraken")
     
     return real_market_data
+
+
+# ============================================================================
+# OHLC DIARIO PARA BENCHMARKS
+# ============================================================================
+
+_ohlc_daily_cache = {}
+_ohlc_daily_cache_ttl = 3600  # 1 hora
+
+
+def get_ohlc_daily(symbol: str = 'BTC', days: int = 30) -> list:
+    """
+    Obtener OHLC diario de Kraken para benchmarks.
+    Usa intervalo de 1440 minutos (1 día).
+    
+    Args:
+        symbol: Símbolo cripto (BTC, ETH, SOL, etc.)
+        days: Número de días de histórico (default 30, max 720)
+        
+    Returns:
+        Lista de {date: str, price: float} ordenada por fecha ascendente
+    """
+    import time as time_module
+    
+    cache_key = f"ohlc_daily_{symbol}_{days}"
+    current_time = time_module.time()
+    
+    if cache_key in _ohlc_daily_cache:
+        cached = _ohlc_daily_cache[cache_key]
+        if current_time - cached['timestamp'] < _ohlc_daily_cache_ttl:
+            logger.info(f"✅ Usando OHLC diario {symbol} desde cache ({len(cached['data'])} puntos)")
+            return cached['data']
+    
+    normalized = normalize_crypto_name(symbol.lower())
+    if normalized[0] is None:
+        logger.warning(f"Símbolo no reconocido: {symbol}")
+        return []
+    
+    kraken_pair = normalized[1]
+    
+    since = int((current_time - (days * 86400)))
+    
+    url = f"https://api.kraken.com/0/public/OHLC?pair={kraken_pair}&interval=1440&since={since}"
+    
+    try:
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get('error') and len(data['error']) > 0:
+            logger.warning(f"Error Kraken OHLC: {data['error']}")
+            if cache_key in _ohlc_daily_cache:
+                return _ohlc_daily_cache[cache_key]['data']
+            return []
+        
+        result_keys = [k for k in data.get('result', {}).keys() if k != 'last']
+        if not result_keys:
+            logger.warning(f"Sin datos OHLC para {symbol}")
+            return []
+        
+        ohlc_data = data['result'][result_keys[0]]
+        
+        result = []
+        for candle in ohlc_data:
+            timestamp = int(candle[0])
+            close_price = float(candle[4])
+            date_str = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+            result.append({
+                'date': date_str,
+                'price': round(close_price, 2)
+            })
+        
+        _ohlc_daily_cache[cache_key] = {
+            'data': result,
+            'timestamp': current_time
+        }
+        
+        logger.info(f"✅ Obtenidos {len(result)} días de OHLC para {symbol}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo OHLC diario {symbol}: {e}")
+        if cache_key in _ohlc_daily_cache:
+            return _ohlc_daily_cache[cache_key]['data']
+        return []

@@ -1,0 +1,65 @@
+/**
+ * OMNIX Benchmark Overlay Styles V6.5
+ */
+
+.benchmark-toggles {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.benchmark-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    color: #888;
+}
+
+.benchmark-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.benchmark-toggle.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.benchmark-toggle .toggle-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.benchmark-toggle.active .toggle-indicator {
+    opacity: 1;
+    box-shadow: 0 0 6px currentColor;
+}
+
+.benchmark-toggle .toggle-label {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.equity-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.equity-panel__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

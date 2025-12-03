@@ -16,10 +16,6 @@ author = "agent"
 task = "workflow.run"
 args = "Code Verification"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Dashboard Preview"
-
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -30,18 +26,6 @@ args = "python -u verify_code.py"
 
 [workflows.workflow.metadata]
 outputType = "console"
-
-[[workflows.workflow]]
-name = "Dashboard Preview"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=5000"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 5000
@@ -66,6 +50,10 @@ externalPort = 8080
 [[ports]]
 localPort = 9000
 externalPort = 9000
+
+[[ports]]
+localPort = 39297
+externalPort = 3001
 
 [deployment]
 deploymentTarget = "vm"
