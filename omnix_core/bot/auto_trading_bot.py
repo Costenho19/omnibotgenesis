@@ -489,6 +489,52 @@ class AutoTradingBot:
             except Exception as e:
                 logger.error(f"❌ V6.5.1: Error restaurando auto-trading: {e}")
     
+    def check_and_restore_auto_trading(self):
+        """
+        V6.5.1: Método público para restaurar auto-trading DESPUÉS de que la DB esté conectada.
+        Llamar desde main.py después de verificar que DATABASE está CONECTADA.
+        Esto soluciona el problema de timing donde _load_persistent_state se ejecutaba
+        antes de que la conexión a la DB estuviera lista.
+        """
+        if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+            logger.warning("⚠️ V6.5.1: check_and_restore - No hay database_service disponible")
+            return False
+        
+        if self.state.get('running'):
+            logger.info("📊 V6.5.1: Auto-trading ya está corriendo, no se requiere restauración")
+            return True
+        
+        try:
+            logger.info("🔍 V6.5.1: Verificando estado persistente en database...")
+            user_settings_result = self.database_service.execute_query('''
+                SELECT auto_trading, is_paused, trading_enabled, user_id
+                FROM user_settings
+                WHERE auto_trading = true AND trading_enabled = true AND (is_paused = false OR is_paused IS NULL)
+                LIMIT 1
+            ''')
+            
+            if user_settings_result and len(user_settings_result) > 0:
+                row = user_settings_result[0]
+                user_id = row.get('user_id', 'unknown')
+                logger.info(f"🔄 V6.5.1: Estado auto_trading=true encontrado para user {user_id}")
+                logger.info(f"🔄 V6.5.1: Iniciando auto-trading automáticamente...")
+                
+                result = self.start(user_id=user_id)
+                if result.get('success'):
+                    logger.info(f"✅ V6.5.1: Auto-trading RESTAURADO exitosamente para user {user_id}")
+                    return True
+                else:
+                    error = result.get('error', 'Unknown error')
+                    logger.warning(f"⚠️ V6.5.1: No se pudo restaurar auto-trading: {error}")
+                    return False
+            else:
+                logger.info("📊 V6.5.1: No hay usuarios con auto_trading activo - No se requiere restauración")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ V6.5.1: Error en check_and_restore_auto_trading: {e}")
+            return False
+    
     def start(self, user_id: str = None) -> Dict:
         """Iniciar trading automático 24/7"""
         try:

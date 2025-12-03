@@ -673,15 +673,34 @@ if __name__ == "__main__":
             # 🔍 DIAGNÓSTICO FINAL DE BASE DE DATOS - APARECE AL FINAL
             logger.info("")
             logger.info("🗄️ ═══════════ ESTADO DATABASE ═══════════")
+            db_connected = False
             if db_manager and hasattr(db_manager, 'connected'):
                 if db_manager.connected:
                     logger.info("🗄️ ✅ DATABASE: CONECTADA - Memoria ACTIVA")
+                    db_connected = True
                 else:
                     logger.error("🗄️ ❌ DATABASE: NO CONECTADA - Memoria OFF")
                     logger.error("🗄️    Revisa DATABASE_URL en Railway")
             else:
                 logger.error("🗄️ ❌ DATABASE: No disponible")
             logger.info("🗄️ ═════════════════════════════════════════")
+            
+            # V6.5.1: Restaurar auto-trading DESPUÉS de confirmar que DB está conectada
+            if db_connected:
+                logger.info("")
+                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE ═══════════")
+                try:
+                    if hasattr(telegram_bot, 'auto_trading') and telegram_bot.auto_trading:
+                        restored = telegram_bot.auto_trading.check_and_restore_auto_trading()
+                        if restored:
+                            logger.info("🔄 ✅ Auto-trading restaurado desde estado persistente")
+                        else:
+                            logger.info("🔄 ℹ️ No hay auto-trading que restaurar")
+                    else:
+                        logger.warning("🔄 ⚠️ auto_trading no disponible en telegram_bot")
+                except Exception as e:
+                    logger.error(f"🔄 ❌ Error restaurando auto-trading: {e}")
+                logger.info("🔄 ═══════════════════════════════════════════")
             
             # Iniciar Dashboard en hilo secundario con monitoreo
             dashboard_failed = threading.Event()
