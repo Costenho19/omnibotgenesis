@@ -1493,19 +1493,774 @@ Phase 1 is complete when:
 
 ---
 
-## 15. Phase 2-4 Overview (Future)
+## 15. Phase 2: Build Unified Database Gateway
 
-| Phase | Focus | Duration | Risk |
-|-------|-------|----------|------|
-| **Phase 2** | Build unified gateway, migrate dashboard | 1 week | 🟡 MEDIUM |
-| **Phase 3** | Add missing FKs, merge redundant tables | 1 week | 🟠 HIGH |
-| **Phase 4** | Consolidate query functions, add transactions | 1 week | 🟠 HIGH |
+> **Duration**: 1 week  
+> **Risk Level**: 🟡 MEDIUM  
+> **Goal**: Create single connection pool serving all consumers, eliminate dual-service architecture
 
-**Detailed plans for Phases 2-4 will be added after Phase 1 completes successfully.**
+### 15.1 Current Problem Analysis
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CURRENT ARCHITECTURE (PROBLEMATIC)           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Dashboard Consumers          Enterprise Consumers             │
+│   ┌────────────────┐          ┌────────────────┐               │
+│   │ queries.py     │          │ paper_trading  │               │
+│   │ core.py        │          │ manager.py     │               │
+│   │ system.py      │          │ enterprise_    │               │
+│   │ snapshots.py   │          │ bot.py         │               │
+│   └───────┬────────┘          │ main.py        │               │
+│           │                   └───────┬────────┘               │
+│           ▼                           ▼                        │
+│   ┌────────────────┐          ┌────────────────┐               │
+│   │ psycopg_pool   │          │ psycopg.connect│               │
+│   │ ConnectionPool │          │ (per-query)    │               │
+│   │ min=2, max=10  │          │ NO POOLING     │               │
+│   └───────┬────────┘          └───────┬────────┘               │
+│           │                           │                        │
+│           └─────────┬─────────────────┘                        │
+│                     ▼                                          │
+│            ┌────────────────┐                                  │
+│            │   PostgreSQL   │  ← Connection Contention!        │
+│            │    Railway     │                                  │
+│            └────────────────┘                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Problems**:
+1. Two separate connection strategies compete for connections
+2. Enterprise service creates new connection per query (expensive)
+3. No visibility into total connection usage
+4. Railway Postgres limits connections (usually 100)
+5. Auto-migrations run from Enterprise, not Dashboard
+
+### 15.2 Target Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TARGET ARCHITECTURE (UNIFIED)                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ALL Consumers (Dashboard + Enterprise)                        │
+│   ┌────────────────────────────────────────────────────┐       │
+│   │ queries.py | core.py | paper_trading_manager.py    │       │
+│   │ system.py | snapshots.py | enterprise_bot.py       │       │
+│   └────────────────────────┬───────────────────────────┘       │
+│                            │                                    │
+│                            ▼                                    │
+│   ┌────────────────────────────────────────────────────┐       │
+│   │              DatabaseGateway                        │       │
+│   │  ┌──────────────────────────────────────────────┐  │       │
+│   │  │ • Unified ConnectionPool (psycopg_pool)      │  │       │
+│   │  │ • Feature flags for migration control        │  │       │
+│   │  │ • Telemetry & health checks                  │  │       │
+│   │  │ • Backward-compatible execute_query()        │  │       │
+│   │  │ • Context manager get_connection()           │  │       │
+│   │  └──────────────────────────────────────────────┘  │       │
+│   └────────────────────────┬───────────────────────────┘       │
+│                            │                                    │
+│                            ▼                                    │
+│            ┌────────────────┐                                  │
+│            │   PostgreSQL   │  ← Single Pool!                  │
+│            │    Railway     │                                  │
+│            └────────────────┘                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 15.3 DatabaseGateway Design
+
+**Location**: `omnix_services/database_service/database_gateway.py` (NEW FILE)
+
+```python
+"""
+DatabaseGateway - Unified Database Access Layer
+Phase 2 Implementation - December 2025
+
+Provides single connection pool for all OMNIX consumers.
+Backward compatible with existing DatabaseServiceEnterprise interface.
+"""
+
+from psycopg_pool import ConnectionPool
+from contextlib import contextmanager
+import os
+import logging
+import threading
+
+logger = logging.getLogger(__name__)
+
+class DatabaseGateway:
+    """
+    Unified database access layer replacing dual-service architecture.
+    
+    Features:
+    - Single ConnectionPool (psycopg_pool) for all queries
+    - Backward-compatible execute_query() for Enterprise consumers
+    - Context manager get_connection() for Dashboard consumers
+    - Built-in telemetry and health checks
+    - Feature flag support for controlled rollout
+    """
+    
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        """Singleton pattern - one gateway instance per process"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        if self._initialized:
+            return
+            
+        self.db_url = os.environ.get('DATABASE_URL')
+        self.pool = None
+        self.connected = False
+        self.auto_migrations_enabled = os.environ.get(
+            'DISABLE_AUTO_MIGRATIONS', 'false'
+        ).lower() != 'true'
+        
+        self._init_pool()
+        self._initialized = True
+    
+    def _init_pool(self):
+        """Initialize connection pool with production settings"""
+        if not self.db_url:
+            logger.error("DATABASE_URL not found")
+            return
+            
+        try:
+            min_size = int(os.environ.get('DB_POOL_MIN', '2'))
+            max_size = int(os.environ.get('DB_POOL_MAX', '15'))  # Higher for unified
+            
+            self.pool = ConnectionPool(
+                conninfo=self.db_url,
+                min_size=min_size,
+                max_size=max_size,
+                timeout=30.0,
+                max_lifetime=3600.0,
+                max_idle=600.0,
+                open=True,
+                name="omnix_unified_pool"
+            )
+            self.connected = True
+            logger.info(f"DatabaseGateway pool initialized: min={min_size}, max={max_size}")
+            
+        except Exception as e:
+            logger.error(f"DatabaseGateway init failed: {e}")
+            self.connected = False
+    
+    @contextmanager
+    def get_connection(self):
+        """
+        Context manager for Dashboard-style access.
+        
+        Usage:
+            with gateway.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(...)
+        """
+        if not self.pool:
+            yield None
+            return
+            
+        try:
+            with self.pool.connection() as conn:
+                yield conn
+        except Exception as e:
+            logger.error(f"Gateway connection error: {e}")
+            yield None
+    
+    def execute_query(self, sql: str, params: tuple = None, fetch: bool = None):
+        """
+        Execute query - backward compatible with Enterprise interface.
+        
+        Usage:
+            result = gateway.execute_query("SELECT * FROM users WHERE id = %s", (id,))
+            gateway.execute_query("UPDATE users SET name = %s", (name,))
+        """
+        if not self.pool:
+            logger.error("Gateway pool not available")
+            return None
+            
+        try:
+            with self.pool.connection() as conn:
+                cursor = conn.cursor()
+                
+                if params:
+                    cursor.execute(sql, params)
+                else:
+                    cursor.execute(sql)
+                
+                sql_upper = sql.strip().upper()
+                should_fetch = fetch if fetch is not None else (
+                    sql_upper.startswith('SELECT') or 'RETURNING' in sql_upper
+                )
+                
+                if should_fetch:
+                    result = cursor.fetchall()
+                    conn.commit()
+                    return result
+                else:
+                    conn.commit()
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Gateway query error: {e}")
+            logger.error(f"   SQL: {sql[:100]}...")
+            raise
+    
+    def get_pool_stats(self) -> dict:
+        """Return pool statistics for monitoring"""
+        if not self.pool:
+            return {'status': 'unavailable'}
+            
+        try:
+            stats = self.pool.get_stats()
+            return {
+                'status': 'active',
+                'pool_size': stats.pool_size,
+                'pool_available': stats.pool_available,
+                'requests_waiting': stats.requests_waiting,
+                'requests_num': stats.requests_num,
+                'usage_ms': stats.usage_ms,
+                'pool_name': 'omnix_unified_pool'
+            }
+        except Exception as e:
+            return {'status': 'error', 'error': str(e)}
+    
+    def health_check(self) -> dict:
+        """Health check for monitoring endpoints"""
+        return {
+            'connected': self.connected,
+            'pool_available': self.pool is not None,
+            'auto_migrations_enabled': self.auto_migrations_enabled,
+            'stats': self.get_pool_stats()
+        }
+
+
+# Global instance for import convenience
+_gateway = None
+
+def get_gateway() -> DatabaseGateway:
+    """Get or create the singleton gateway instance"""
+    global _gateway
+    if _gateway is None:
+        _gateway = DatabaseGateway()
+    return _gateway
+```
+
+### 15.4 Critical Implementation Details
+
+#### 15.4.1 Gunicorn/Multi-Worker Lifecycle (CRITICAL)
+
+**Problem**: When using Gunicorn with multiple workers (`-w 4`), the master process forks child workers. If the pool is initialized before fork, all workers share the same socket connections → corruption.
+
+**Solution**: Lazy initialization + post-fork hook
+
+```python
+# In database_gateway.py - Updated Singleton
+
+class DatabaseGateway:
+    _instance = None
+    _lock = threading.Lock()
+    _pid = None  # Track process ID for fork detection
+    
+    def __new__(cls):
+        current_pid = os.getpid()
+        
+        # If we're in a new process (post-fork), reset singleton
+        if cls._instance is not None and cls._pid != current_pid:
+            logger.warning(f"Fork detected (old_pid={cls._pid}, new_pid={current_pid}). Reinitializing pool.")
+            cls._instance = None
+        
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+                    cls._pid = current_pid
+        return cls._instance
+```
+
+**Gunicorn Config** (`gunicorn.conf.py`):
+```python
+# Post-fork hook to ensure each worker gets fresh pool
+def post_fork(server, worker):
+    from omnix_services.database_service.database_gateway import DatabaseGateway
+    DatabaseGateway._instance = None  # Force reinitialization in this worker
+    logger.info(f"Worker {worker.pid} initialized fresh database pool")
+```
+
+**Railway Deployment**: Railway uses single-process mode by default, but this pattern ensures safety if scaled.
+
+**Gunicorn Integration Steps** (for production):
+
+1. **Create/Update gunicorn.conf.py**:
+```python
+# gunicorn.conf.py
+import logging
+
+bind = "0.0.0.0:5000"
+workers = 4
+worker_class = "sync"
+timeout = 120
+
+def post_fork(server, worker):
+    """Reset database pool after fork to prevent socket sharing"""
+    try:
+        from omnix_services.database_service.database_gateway import DatabaseGateway
+        DatabaseGateway._instance = None
+        logging.info(f"Worker {worker.pid}: Database pool reset for fresh connection")
+    except ImportError:
+        pass  # Gateway not yet created
+```
+
+2. **Verify hook is active** (add to startup log check):
+```python
+# In app.py or __init__.py
+import os
+logger.info(f"Process PID: {os.getpid()}, Pool initialized: {gateway.connected}")
+```
+
+3. **Railway Procfile** (if using Gunicorn):
+```
+web: gunicorn --config gunicorn.conf.py omnix_dashboard.app:app
+```
+
+4. **Validation command** (run locally with Gunicorn):
+```bash
+gunicorn -w 2 --config gunicorn.conf.py omnix_dashboard.app:app
+# Check logs for: "Worker XXXXX: Database pool reset for fresh connection"
+```
+
+#### 15.4.2 execute_query() Semantic Compatibility (CRITICAL)
+
+**Problem**: Enterprise code expects specific psycopg3 behaviors. Gateway must match exactly.
+
+| Behavior | Current Enterprise | Gateway Must Match |
+|----------|-------------------|-------------------|
+| Cursor factory | Default (tuple rows) | Default (tuple rows) |
+| Autocommit | False (explicit commit) | False (explicit commit) |
+| Transaction | Per-connection | Per-connection via pool |
+| Rollback on error | Manual in except block | Manual in except block |
+| Connection close | Always in finally | Pool handles return |
+
+**Row Access Pattern Analysis** (from code audit):
+
+All Enterprise consumers access results via **tuple indexing** (`row[0]`, `row[1]`, etc.), NOT dict-style access. Examples from `paper_trading_manager.py`:
+
+```python
+# Line 481-497: _get_paper_balance()
+row = result[0]
+return {
+    'user_id': row[0],          # Tuple index 0
+    'balance_usd': float(row[1]), # Tuple index 1
+    'btc_balance': float(row[2]), # etc.
+    ...
+}
+
+# Line 634: _open_position_v2()
+trade_id = result[0][0]  # First row, first column
+
+# Line 865: get_trade_pnl_report()
+trade_id, symbol, side, entry_price, ... = row  # Tuple unpacking
+```
+
+**Full Enterprise Audit Results** (all files checked):
+
+| File | Access Pattern | Status |
+|------|---------------|--------|
+| `paper_trading_manager.py` | Tuple index (`row[0]`, `row[1]`) | ✅ Compatible |
+| `daily_summary_service.py` | Tuple index (`row[0]`, `result[0][0]`) | ✅ Compatible |
+| `trade_notification_service.py` | Tuple index (`row[0]`) | ✅ Compatible |
+| `paper_trading.py` | Tuple index (`row[0]`, `result[0][0]`) | ✅ Compatible |
+| `user_session_manager.py` | Tuple index (`row[0]`) | ✅ Compatible |
+| `auto_trading_bot.py` | **MIXED** - some `.get('key')` calls | ⚠️ NEEDS FIX |
+
+**CRITICAL FINDING - auto_trading_bot.py**:
+
+Lines 787, 839, 908, 2050 use dict-style access (`.get('key')`) which is **INCOMPATIBLE** with psycopg3 default tuple rows. This is likely a latent bug OR unused code path.
+
+```python
+# Line 787 - PROBLEMATIC (dict access on tuple)
+uid = result[0].get('user_id')  # Will fail if result[0] is tuple
+
+# Line 839 - PROBLEMATIC
+auto_trading = row.get('auto_trading', False)  # Will fail
+```
+
+**Resolution Options**:
+
+1. **Option A (Preferred)**: Fix auto_trading_bot.py to use tuple indexing:
+   ```python
+   # Before (broken)
+   uid = result[0].get('user_id')
+   # After (fixed)
+   uid = result[0][0]  # First column = user_id
+   ```
+
+2. **Option B**: Add row_factory to Gateway for dict returns:
+   ```python
+   from psycopg.rows import dict_row
+   cursor = conn.cursor(row_factory=dict_row)
+   ```
+   **NOT RECOMMENDED** - Changes behavior for ALL consumers
+
+**Conclusion**: Gateway returns `List[Tuple]` (psycopg3 default). Most consumers are compatible. **auto_trading_bot.py requires fixes** before Phase 2 migration - added to Task 2.4.1.
+
+**Updated execute_query() with full compatibility**:
+
+```python
+def execute_query(self, sql: str, params: tuple = None, fetch: bool = None):
+    """
+    Execute query - DROP-IN replacement for Enterprise interface.
+    
+    Semantic guarantees:
+    - Returns list of tuples (same as psycopg3 default cursor)
+    - Commits on success, raises on error (caller handles rollback logic)
+    - No autocommit - explicit transaction boundaries
+    - Connection returned to pool (not closed)
+    
+    Return types:
+    - SELECT/RETURNING: List[Tuple] (can be empty [])
+    - INSERT/UPDATE/DELETE without RETURNING: None
+    - Error: raises exception (caller must handle)
+    """
+    if not self.pool:
+        logger.error("Gateway pool not available")
+        return None
+        
+    conn = None
+    try:
+        with self.pool.connection() as conn:
+            cursor = conn.cursor()  # Default tuple factory
+            
+            if params:
+                cursor.execute(sql, params)
+            else:
+                cursor.execute(sql)
+            
+            # Auto-detect fetch based on SQL (same as Enterprise)
+            sql_upper = sql.strip().upper()
+            should_fetch = fetch if fetch is not None else (
+                sql_upper.startswith('SELECT') or 'RETURNING' in sql_upper
+            )
+            
+            if should_fetch:
+                result = cursor.fetchall()  # List[Tuple]
+                conn.commit()
+                return result
+            else:
+                conn.commit()
+                return None
+                
+    except Exception as e:
+        # Note: Pool's context manager handles connection return
+        # Caller is responsible for any application-level rollback logic
+        logger.error(f"Gateway query error: {e}")
+        logger.error(f"   SQL: {sql[:100]}...")
+        raise  # Preserve exception for caller handling
+```
+
+#### 15.4.3 Import Strategy (No Circular Dependencies)
+
+**Problem**: Dashboard (`omnix_dashboard`) importing from Enterprise (`omnix_services`) could create circular imports.
+
+**Solution**: Gateway is standalone with no internal OMNIX imports
+
+```
+omnix_services/
+└── database_service/
+    ├── __init__.py          # Exports: get_gateway, DatabaseGateway
+    ├── database_gateway.py  # NEW: Standalone, no omnix_* imports
+    └── database_service.py  # LEGACY: Will be deprecated
+```
+
+**Gateway Dependencies** (external only):
+```python
+# database_gateway.py imports ONLY:
+from psycopg_pool import ConnectionPool
+from contextlib import contextmanager
+import os
+import logging
+import threading
+# NO imports from omnix_core, omnix_dashboard, etc.
+```
+
+**Safe Import Pattern** for consumers:
+```python
+# In omnix_dashboard/utils/queries.py
+def get_paper_trades(days=30, return_dict=False):
+    if USE_UNIFIED_GATEWAY:
+        # Lazy import inside function - avoids module-level circular deps
+        from omnix_services.database_service.database_gateway import get_gateway
+        gateway = get_gateway()
+        with gateway.get_connection() as conn:
+            ...
+```
+
+**Validation Before Deploy**:
+
+1. **Compile Check** (catches syntax errors):
+```bash
+python -m py_compile omnix_services/database_service/database_gateway.py
+# No output = success
+```
+
+2. **Import Chain Validation** (catches circular imports):
+```bash
+# Test Gateway standalone (should have NO omnix_* deps)
+python -c "from omnix_services.database_service.database_gateway import get_gateway; print('Gateway OK:', get_gateway())"
+
+# Test Dashboard can import Gateway
+python -c "from omnix_dashboard.utils.queries import get_paper_trades; print('Queries OK')"
+
+# Full import test (simulates production startup)
+python -c "
+import sys
+print('Testing import chain...')
+from omnix_services.database_service.database_gateway import DatabaseGateway
+print('  1. DatabaseGateway: OK')
+from omnix_dashboard.utils.database import get_db_connection  
+print('  2. Dashboard pool: OK')
+from omnix_dashboard.utils.queries import get_paper_trades
+print('  3. Queries module: OK')
+print('All imports successful!')
+"
+```
+
+3. **Railway PYTHONPATH** (already configured in Railway):
+```
+# Railway automatically adds project root to PYTHONPATH
+# No changes needed for omnix_* imports
+```
+
+4. **Circular Dependency Detection** (optional but recommended):
+```bash
+# Install: pip install pydeps
+pydeps omnix_services/database_service/database_gateway.py --no-show --max-bacon 2
+# Should show ONLY external deps (psycopg_pool, logging, etc.)
+```
+
+**Module Ownership Summary**:
+```
+Package                          Owns                      Imports From Gateway
+──────────────────────────────────────────────────────────────────────────────
+omnix_services.database_service  database_gateway.py       (self - no imports)
+omnix_dashboard.utils            queries.py, database.py   YES (lazy import)
+omnix_dashboard.blueprints       core.py, system.py, etc   YES (lazy import)
+omnix_services.trading_service   paper_trading_manager.py  YES (lazy import)
+```
+
+### 15.5 Migration Strategy: Canary Deployment
+
+Phase 2 uses a **canary deployment** pattern to migrate consumers one-by-one without breaking 24/7 trading.
+
+#### Stage 1: Feature Flag for Routing (Week 1, Days 1-2)
+
+Add routing flag to each consumer file:
+
+```python
+# In omnix_dashboard/utils/queries.py
+USE_UNIFIED_GATEWAY = os.environ.get('USE_UNIFIED_GATEWAY', 'false').lower() == 'true'
+
+def get_paper_trades(days=30, return_dict=False):
+    if USE_UNIFIED_GATEWAY:
+        from omnix_services.database_service.database_gateway import get_gateway
+        gateway = get_gateway()
+        with gateway.get_connection() as conn:
+            # Same logic, different pool
+            ...
+    else:
+        # Original code path
+        with get_db_connection() as conn:
+            ...
+```
+
+#### Stage 2: Migrate Dashboard Consumers (Week 1, Days 3-4)
+
+| Order | File | Functions | Risk |
+|-------|------|-----------|------|
+| 1 | `utils/queries.py` | `get_paper_trades()`, `get_balance_history()` | 🟢 LOW |
+| 2 | `blueprints/system.py` | `/api/health`, `/api/db-diagnostics` | 🟢 LOW |
+| 3 | `blueprints/core.py` | `/api/metrics`, `/api/trades`, `/api/positions` | 🟡 MEDIUM |
+| 4 | `blueprints/snapshots.py` | 7 snapshot endpoints | 🟡 MEDIUM |
+
+#### Stage 3: Migrate Enterprise Consumers (Week 1, Days 5-7)
+
+| Order | File | Functions | Risk |
+|-------|------|-----------|------|
+| 5 | `notifications/daily_summary_service.py` | Summary queries | 🟢 LOW |
+| 6 | `notifications/trade_notification_service.py` | Trade notifications | 🟢 LOW |
+| 7 | `trading_service/paper_trading_manager.py` | All trading operations | 🔴 CRITICAL |
+| 8 | `telegram_service/enterprise_bot.py` | Bot commands | 🔴 CRITICAL |
+| 9 | `main.py` | Bot startup | 🔴 CRITICAL |
+
+### 15.6 Task Checklist
+
+| # | Task | Status | Owner | Risk |
+|---|------|--------|-------|------|
+| **Pre-Implementation** |
+| 2.1 | Analyze Phase 1 telemetry logs (48h) | ⬜ Pending | Agent | - |
+| 2.2 | Identify peak connection usage patterns | ⬜ Pending | Agent | - |
+| **Pre-Requisite Fixes** |
+| 2.3 | Fix auto_trading_bot.py dict-style access (lines 787,839,908,2050) | ⬜ Pending | Agent | 🟡 MEDIUM |
+| **Gateway Creation** |
+| 2.4 | Create `database_gateway.py` with fork-safe singleton | ⬜ Pending | Agent | 🟢 LOW |
+| 2.5 | Implement execute_query() with semantic compatibility | ⬜ Pending | Agent | 🟡 MEDIUM |
+| 2.6 | Add Gunicorn post-fork hook (gunicorn.conf.py) | ⬜ Pending | Agent | 🟢 LOW |
+| 2.7 | Run import chain validation tests | ⬜ Pending | Agent | 🟢 LOW |
+| **Canary Rollout** |
+| 2.8 | Add `USE_UNIFIED_GATEWAY` feature flag | ⬜ Pending | Agent | 🟢 LOW |
+| 2.9 | Migrate `queries.py` (first canary) | ⬜ Pending | Agent | 🟢 LOW |
+| 2.10 | Test with `USE_UNIFIED_GATEWAY=true` locally | ⬜ Pending | Agent | 🟢 LOW |
+| 2.11 | Deploy to Railway with flag OFF | ⬜ Pending | User | 🟢 LOW |
+| 2.12 | Verify Gunicorn post_fork hook active in logs | ⬜ Pending | User | 🟡 MEDIUM |
+| 2.13 | Enable flag for 1 hour, monitor | ⬜ Pending | User | 🟡 MEDIUM |
+| **Full Migration** |
+| 2.14 | Migrate remaining Dashboard consumers | ⬜ Pending | Agent | 🟡 MEDIUM |
+| 2.15 | Migrate Enterprise consumers (critical) | ⬜ Pending | Agent | 🔴 CRITICAL |
+| **Cleanup** |
+| 2.16 | Deprecate old Dashboard pool with warnings | ⬜ Pending | Agent | 🟡 MEDIUM |
+| 2.17 | Deprecate old Enterprise service with warnings | ⬜ Pending | Agent | 🔴 CRITICAL |
+| 2.18 | Measure connection reduction (target: 50%+) | ⬜ Pending | Agent | - |
+
+### 15.7 Telemetry Analysis Template
+
+When you provide the 48-hour logs, I will analyze them using this template:
+
+```
+=== PHASE 1 TELEMETRY ANALYSIS ===
+
+1. CONNECTION PATTERNS
+   - Peak concurrent connections: ___
+   - Average connections during trading hours: ___
+   - Connection spikes (timestamp + count): ___
+
+2. POOL UTILIZATION (Dashboard)
+   - Pool size at peak: ___/10
+   - Requests waiting (max): ___
+   - Usage time (avg ms): ___
+
+3. ENTERPRISE SERVICE USAGE
+   - Queries per hour (avg): ___
+   - Failed connection attempts: ___
+   - Long-running queries (>5s): ___
+
+4. RECOMMENDATIONS
+   - Suggested unified pool size: min=___, max=___
+   - High-risk migration targets: ___
+   - Safe migration candidates: ___
+```
+
+### 15.8 Code Changes Summary
+
+| File | Action | Lines Changed (Est.) |
+|------|--------|---------------------|
+| `omnix_services/database_service/database_gateway.py` | CREATE | ~200 |
+| `omnix_dashboard/utils/queries.py` | MODIFY | ~20 |
+| `omnix_dashboard/utils/database.py` | DEPRECATE | ~50 (add warnings) |
+| `omnix_dashboard/blueprints/core.py` | MODIFY | ~15 |
+| `omnix_dashboard/blueprints/system.py` | MODIFY | ~20 |
+| `omnix_dashboard/blueprints/snapshots.py` | MODIFY | ~30 |
+| `omnix_services/trading_service/paper_trading_manager.py` | MODIFY | ~40 |
+| `omnix_services/database_service/database_service.py` | DEPRECATE | ~100 (add warnings) |
+
+### 15.9 Railway Deployment Checklist
+
+Before enabling `USE_UNIFIED_GATEWAY=true` in production:
+
+```
+PRE-DEPLOYMENT
+─────────────────────────────────────────────────────────────
+[ ] 1. Phase 1 telemetry logs analyzed (48h)
+[ ] 2. auto_trading_bot.py dict-access bugs fixed
+[ ] 3. database_gateway.py created and tested locally
+[ ] 4. Import chain validation passed (see 15.4.3)
+[ ] 5. Gunicorn post_fork hook added (if using Gunicorn)
+
+RAILWAY DEPLOYMENT (flag OFF)
+─────────────────────────────────────────────────────────────
+[ ] 6. Push code to GitHub main branch
+[ ] 7. Railway auto-deploys from main
+[ ] 8. Verify logs show "DatabaseGateway pool initialized"
+[ ] 9. If using Gunicorn, verify "Database pool reset for fresh connection"
+[ ] 10. Dashboard loads correctly (/terminal, /api/health)
+
+CANARY TEST (flag ON for 1 hour)
+─────────────────────────────────────────────────────────────
+[ ] 11. Set USE_UNIFIED_GATEWAY=true in Railway env vars
+[ ] 12. Railway restarts automatically
+[ ] 13. Monitor for 1 hour:
+       - /api/health returns status=ok
+       - /api/db-diagnostics shows unified pool stats
+       - No "connection pool exhausted" errors
+       - Trading continues normally
+[ ] 14. If issues: Set USE_UNIFIED_GATEWAY=false (instant rollback)
+
+FULL ROLLOUT
+─────────────────────────────────────────────────────────────
+[ ] 15. Keep flag ON for 24 hours
+[ ] 16. Migrate remaining consumers
+[ ] 17. Deprecate old pool code
+[ ] 18. Remove feature flag (make Gateway default)
+```
+
+### 15.10 Rollback Strategy
+
+If any Phase 2 migration causes issues:
+
+1. **Immediate**: Set `USE_UNIFIED_GATEWAY=false` → reverts to dual-service
+2. **Per-consumer**: Each file can be individually reverted
+3. **Full rollback**: Railway deployment history to Phase 1 version
+
+### 15.11 Success Criteria
+
+Phase 2 is complete when:
+
+- [ ] Telemetry analyzed and pool sizing determined
+- [ ] auto_trading_bot.py dict-access bugs fixed
+- [ ] `DatabaseGateway` created with fork-safe singleton
+- [ ] Gunicorn post_fork hook configured and verified
+- [ ] Import chain validation tests passed
+- [ ] All Dashboard consumers migrated
+- [ ] All Enterprise consumers migrated
+- [ ] Old pool code deprecated with warnings
+- [ ] Single unified pool serving all queries
+- [ ] Connection count reduced by 50%+ (measured)
+- [ ] Zero trading interruptions during migration
+
+### 15.12 Dependencies
+
+**Requires before starting**:
+- Phase 1 complete ✅
+- 48-hour telemetry logs from Railway production
+- User approval to proceed with canary deployment
 
 ---
 
-**Document Version:** 2.1  
+## 16. Phase 3-4 Overview (Future)
+
+| Phase | Focus | Duration | Risk |
+|-------|-------|----------|------|
+| **Phase 3** | Add missing FKs, merge redundant tables | 1 week | 🟠 HIGH |
+| **Phase 4** | Consolidate query functions, add transactions | 1 week | 🟠 HIGH |
+
+**Detailed plans for Phases 3-4 will be added after Phase 2 completes successfully.**
+
+---
+
+**Document Version:** 2.2  
 **OMNIX V6.5.2 INSTITUTIONAL+**  
 **Audit Date:** December 2025  
-**Phase 1 Plan Added:** December 3, 2025
+**Phase 1 Plan Added:** December 3, 2025  
+**Phase 2 Plan Added:** December 3, 2025
