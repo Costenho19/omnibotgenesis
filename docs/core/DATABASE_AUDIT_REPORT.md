@@ -2113,9 +2113,9 @@ def get_paper_trades(days=30, return_dict=False):
 | 2.1 | Analyze Phase 1 telemetry logs (48h) | ⬜ Pending | Agent | - |
 | 2.2 | Identify peak connection usage patterns | ⬜ Pending | Agent | - |
 | **Pre-Requisite Fixes** |
-| 2.3 | Fix auto_trading_bot.py dict-style access (lines 787,839,908,2050) | ⬜ Pending | Agent | 🟡 MEDIUM |
+| 2.3 | Fix auto_trading_bot.py dict-style access (lines 787,839,908,2050) | ✅ Done | Agent | 🟢 RESOLVED |
 | **Gateway Creation** |
-| 2.4 | Create `database_gateway.py` with fork-safe singleton | ⬜ Pending | Agent | 🟢 LOW |
+| 2.4 | Create `database_gateway.py` with fork-safe singleton | ✅ Done | Agent | 🟢 RESOLVED |
 | 2.5 | Implement execute_query() with semantic compatibility | ⬜ Pending | Agent | 🟡 MEDIUM |
 | 2.6 | Add Gunicorn post-fork hook (gunicorn.conf.py) | ⬜ Pending | Agent | 🟢 LOW |
 | 2.7 | Run import chain validation tests | ⬜ Pending | Agent | 🟢 LOW |
@@ -2228,8 +2228,8 @@ If any Phase 2 migration causes issues:
 Phase 2 is complete when:
 
 - [ ] Telemetry analyzed and pool sizing determined
-- [ ] auto_trading_bot.py dict-access bugs fixed
-- [ ] `DatabaseGateway` created with fork-safe singleton
+- [x] auto_trading_bot.py dict-access bugs fixed (Dec 3, 2025)
+- [x] `DatabaseGateway` created with fork-safe singleton (Dec 3, 2025)
 - [ ] Gunicorn post_fork hook configured and verified
 - [ ] Import chain validation tests passed
 - [ ] All Dashboard consumers migrated

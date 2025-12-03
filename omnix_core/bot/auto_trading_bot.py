@@ -783,14 +783,15 @@ class AutoTradingBot:
                         ORDER BY updated_at DESC 
                         LIMIT 1
                     ''')
-                    if result and len(result) > 0:
-                        uid = result[0].get('user_id')
-                        self.database_service.execute_query('''
-                            UPDATE user_settings 
-                            SET auto_trading = true, updated_at = NOW()
-                            WHERE user_id = %s
-                        ''', (uid,))
-                        logger.info(f"💾 V6.5.1: auto_trading=true persistido para user {uid}")
+                    if result and len(result) > 0 and result[0]:
+                        uid = result[0][0] if result[0] else None  # First column = user_id (tuple access)
+                        if uid:
+                            self.database_service.execute_query('''
+                                UPDATE user_settings 
+                                SET auto_trading = true, updated_at = NOW()
+                                WHERE user_id = %s
+                            ''', (uid,))
+                            logger.info(f"💾 V6.5.1: auto_trading=true persistido para user {uid}")
                     else:
                         self.database_service.execute_query('''
                             INSERT INTO user_settings (user_id, auto_trading, trading_enabled, updated_at)
@@ -834,12 +835,17 @@ class AutoTradingBot:
                         WHERE auto_trading = true
                         LIMIT 1
                     ''')
-                    if user_settings_result and len(user_settings_result) > 0:
+                    if user_settings_result and len(user_settings_result) > 0 and user_settings_result[0]:
                         row = user_settings_result[0]
-                        auto_trading = row.get('auto_trading', False)
-                        is_paused = row.get('is_paused', False)
-                        trading_enabled = row.get('trading_enabled', True)
-                        user_id = row.get('user_id', 'unknown')
+                        # Tuple unpacking: SELECT auto_trading, is_paused, trading_enabled, user_id
+                        # Guard against empty/None rows
+                        if row and len(row) >= 4:
+                            auto_trading = bool(row[0]) if row[0] is not None else False
+                            is_paused = bool(row[1]) if row[1] is not None else False
+                            trading_enabled = bool(row[2]) if row[2] is not None else True
+                            user_id = str(row[3]) if row[3] else 'unknown'
+                        else:
+                            auto_trading, is_paused, trading_enabled, user_id = False, False, True, 'unknown'
                         
                         if auto_trading and not is_paused and trading_enabled:
                             self._should_auto_start = True
@@ -886,12 +892,15 @@ class AutoTradingBot:
                         WHERE status = 'closed'
                         AND closed_at >= NOW() - INTERVAL '30 days'
                     ''')
-                    if result and len(result) > 0:
+                    if result and len(result) > 0 and result[0]:
                         row = result[0]
-                        total_trades = int(row.get('total', 0) or 0)
-                        winning_trades = int(row.get('wins', 0) or 0)
-                        losing_trades = int(row.get('losses', 0) or 0)
-                        total_pnl = float(row.get('total_pnl', 0) or 0)
+                        # Tuple unpacking: SELECT COUNT(*), SUM(wins), SUM(losses), SUM(pnl)
+                        # Guard against empty/None rows with safe access
+                        if row and len(row) >= 4:
+                            total_trades = int(row[0] or 0)
+                            winning_trades = int(row[1] or 0)
+                            losing_trades = int(row[2] or 0)
+                            total_pnl = float(row[3] or 0)
                 except Exception as e:
                     logger.debug(f"Query fallback error: {e}")
             
@@ -904,8 +913,10 @@ class AutoTradingBot:
                         WHERE status = 'closed'
                         AND closed_at >= CURRENT_DATE
                     ''')
-                    if daily_result and len(daily_result) > 0:
-                        daily_pnl = float(daily_result[0].get('daily_pnl', 0) or 0)
+                    if daily_result and len(daily_result) > 0 and daily_result[0]:
+                        # Tuple access: SELECT COALESCE(SUM(...)) → first column
+                        row = daily_result[0]
+                        daily_pnl = float(row[0] or 0) if row and len(row) > 0 else 0
             except Exception as e:
                 logger.debug(f"Daily P/L query error: {e}")
             
@@ -2046,8 +2057,10 @@ class AutoTradingBot:
                             SELECT COUNT(*) as count FROM paper_trading_trades 
                             WHERE created_at >= NOW() - INTERVAL '1 minute'
                         ''')
-                        if verify_result and len(verify_result) > 0:
-                            recent_count = verify_result[0].get('count', 0)
+                        if verify_result and len(verify_result) > 0 and verify_result[0]:
+                            # Tuple access: SELECT COUNT(*) → first column
+                            row = verify_result[0]
+                            recent_count = int(row[0] or 0) if row and len(row) > 0 else 0
                             logger.info(f"   ✅ V6.5 VERIFICACIÓN: {recent_count} trade(s) registrado(s) en último minuto")
                     except Exception as e:
                         logger.debug(f"V6.5: Error verificando registro: {e}")
