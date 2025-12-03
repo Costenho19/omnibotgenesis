@@ -11,8 +11,7 @@
 |----------|----------|-------------|
 | **Project Overview** | `/replit.md` | Main project documentation |
 | **Project Structure** | `docs/core/PROJECT_STRUCTURE.md` | Architecture and modules |
-| **Database Schema** | `docs/core/DATABASE.md` | 45 tables documented |
-| **Database Audit** | `docs/core/DATABASE_AUDIT_REPORT.md` | Schema audit & defect analysis |
+| **Database Reference** | `docs/core/DATABASE_AUDIT_REPORT.md` | Complete schema, SQL statements, audit & defect analysis |
 | **Environment Config** | `docs/core/MIGRATION_GUIDE.md` | 30+ environment variables |
 | **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | Complete API, security, and architecture reference |
 | **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
@@ -29,8 +28,7 @@ docs/
 │
 ├── core/                                  # Core architecture docs
 │   ├── PROJECT_STRUCTURE.md               # System architecture (V6.5.2)
-│   ├── DATABASE.md                        # Database schema (45 tables)
-│   ├── DATABASE_AUDIT_REPORT.md           # Schema audit & integrity analysis
+│   ├── DATABASE_AUDIT_REPORT.md           # Database schema, SQL, audit & integrity analysis
 │   ├── MIGRATION_GUIDE.md                 # Environment configuration
 │   └── DASHBOARD_TECHNICAL_REFERENCE.md   # Dashboard API & security (19 protected endpoints)
 │
@@ -62,7 +60,7 @@ docs/
 - **45 Database Tables** - Complete persistent storage
 - **25+ Dashboard API Endpoints** - Real-time data access
 - **Audited Snapshots** - Cryptographic verification for investors
-- **Database Audit Report** - Complete schema analysis
+- **Database Audit Report** - Complete schema analysis with SQL reference
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity
@@ -98,7 +96,8 @@ docs/
 | Other | 13 | Documented |
 | **TOTAL** | **45** | Audited Dec 2025 |
 
-**Audit Status**: See [DATABASE_AUDIT_REPORT.md](core/DATABASE_AUDIT_REPORT.md) for:
+**Full Reference**: See [DATABASE_AUDIT_REPORT.md](core/DATABASE_AUDIT_REPORT.md) for:
+- Complete CREATE TABLE SQL statements (Section 11)
 - Foreign key analysis (8 FKs of 45 tables)
 - Redundant table detection
 - Service layer duplication
@@ -111,9 +110,8 @@ docs/
 ### For Developers
 1. Read `replit.md` - Project overview
 2. Read `docs/core/PROJECT_STRUCTURE.md` - Architecture
-3. Review `docs/core/DATABASE.md` - Database schema
-4. Check `docs/core/DATABASE_AUDIT_REPORT.md` - Schema analysis
-5. Check `docs/core/MIGRATION_GUIDE.md` - Environment setup
+3. Review `docs/core/DATABASE_AUDIT_REPORT.md` - Database schema & SQL
+4. Check `docs/core/MIGRATION_GUIDE.md` - Environment setup
 
 ### For Deployment
 1. Read `docs/deployment/RAILWAY_DEPLOYMENT.md` - Main deployment
@@ -166,7 +164,7 @@ docs/
 
 - **Technical Issues:** Review documentation first
 - **Architecture Questions:** See `PROJECT_STRUCTURE.md`
-- **Database:** See `DATABASE.md` and `DATABASE_AUDIT_REPORT.md`
+- **Database:** See `DATABASE_AUDIT_REPORT.md`
 - **Deployment:** See deployment guides
 
 ---
