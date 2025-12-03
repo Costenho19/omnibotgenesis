@@ -4,6 +4,27 @@
 
 OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support for 100,000+ simultaneous users. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
+## Recent Changes (Changelog)
+
+### December 2025 - Phase 3: Dashboard Data Reliability
+
+**V6.5.2 Import Fix**
+- Fixed `get_redis_cache` import error blocking auto-restore after Railway restarts
+- Created function in `omnix_core/cache/redis_cache.py` and exported via `__init__.py`
+
+**Dashboard Data Issues Fixed**
+| Issue | Problem | Solution | Files Modified |
+|-------|---------|----------|----------------|
+| #8 | DB failures returned empty `[]` | `get_paper_trades(return_dict=True)` returns `{success, trades, error, db_connected}` | `queries.py`, `core.py` |
+| #9 | Static status bar (hardcoded) | New `statusbar.js` polls `/api/health` every 15s, updates DOM dynamically | `statusbar.js`, `terminal.html`, `dashboard.html` |
+| #10 | No Paper/Real mode indicator | Prominent orange "PAPER TRADING" badge in both dashboards | `terminal.html`, `dashboard.html` |
+| #11 | No price fallback | `/api/positions` uses Kraken first, CoinGecko as automatic fallback | `core.py` |
+
+**Auto-Trading Quality Focus**
+- Coherence Engine maintains strict 45% threshold
+- Prioritizes quality over quantity to maintain zero losses
+- System rejects low-quality signals to protect capital
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
@@ -67,6 +88,36 @@ The backend utilizes a Flask Blueprints architecture for modularity, with separa
 - **Dynamic Status Bar**: `statusbar.js` polls `/api/health` every 15s and updates BOT/DATABASE/KRAKEN status indicators in real-time.
 - **PAPER TRADING Badge**: Prominent orange badge in both terminal.html and dashboard.html clearly indicates paper trading mode.
 - **Price Fallback System**: `/api/positions` uses Kraken API first, with CoinGecko as automatic fallback when Kraken fails.
+
+### Dashboard API Endpoints
+
+| Endpoint | Purpose | Response Format |
+|----------|---------|-----------------|
+| `/api/health` | System health check | `{status, version, db_connected, db_error, pool, architecture, timestamp}` |
+| `/api/metrics` | Trading performance | `{success, metrics, error, db_connected}` |
+| `/api/trades` | Paper trade history | `{success, trades, error, db_connected}` |
+| `/api/positions` | Open positions with live prices | `{success, positions, summary, price_source, db_connected}` |
+| `/api/ticker` | Real-time crypto prices | `{prices, source, timestamp}` |
+| `/api/fear-greed` | Market sentiment index | `{value, classification, timestamp}` |
+
+### Dashboard Files Structure
+
+```
+omnix_dashboard/
+├── blueprints/
+│   └── core.py              # Main API routes (/api/*)
+├── utils/
+│   ├── database.py          # PostgreSQL connection pool
+│   └── queries.py           # DB query functions
+├── static/js/components/
+│   ├── statusbar.js         # Dynamic status bar (polls /api/health)
+│   ├── charts.js            # Trading charts
+│   ├── ticker.js            # Price ticker
+│   └── ...
+└── templates/
+    ├── terminal.html        # Bloomberg-style terminal view
+    └── dashboard.html       # Main dashboard view
+```
 
 ### Data Flow
 
