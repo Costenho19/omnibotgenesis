@@ -67,6 +67,9 @@ const OmnixUtils = (function() {
     }
 
     function formatTime(date, options = {}) {
+        if (typeof OmnixTime !== 'undefined') {
+            return OmnixTime.formatTime(date, options);
+        }
         const { hour12 = false } = options;
         return date.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
@@ -77,6 +80,9 @@ const OmnixUtils = (function() {
     }
 
     function formatDate(date, options = {}) {
+        if (typeof OmnixTime !== 'undefined') {
+            return OmnixTime.formatDate(date, options);
+        }
         const { style = 'short' } = options;
         
         if (style === 'long') {
@@ -93,6 +99,26 @@ const OmnixUtils = (function() {
             month: 'short', 
             day: 'numeric' 
         });
+    }
+
+    function formatDateTime(date) {
+        if (typeof OmnixTime !== 'undefined') {
+            return OmnixTime.formatDateTime(date);
+        }
+        return `${formatDate(date)} ${formatTime(date)}`;
+    }
+
+    function formatRelative(date) {
+        if (typeof OmnixTime !== 'undefined') {
+            return OmnixTime.formatRelative(date);
+        }
+        const now = new Date();
+        const diffMs = now - new Date(date);
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour}h ago`;
+        return formatDate(new Date(date));
     }
 
     function getPnlClass(value) {
@@ -147,6 +173,8 @@ const OmnixUtils = (function() {
         formatNumber,
         formatTime,
         formatDate,
+        formatDateTime,
+        formatRelative,
         getPnlClass,
         getStatClass,
         debounce,

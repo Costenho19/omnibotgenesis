@@ -47,7 +47,11 @@ const OmnixNews = (function() {
     function formatTime(datetime) {
         if (!datetime) return '';
         const timestamp = typeof datetime === 'number' ? datetime * 1000 : new Date(datetime).getTime();
-        return new Date(timestamp).toLocaleTimeString();
+        const date = new Date(timestamp);
+        if (typeof OmnixTime !== 'undefined') {
+            return OmnixTime.formatRelative(date);
+        }
+        return date.toLocaleTimeString();
     }
 
     async function updateFinnhub(containerId, sourceId = null, maxItems = 6) {

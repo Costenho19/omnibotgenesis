@@ -165,7 +165,7 @@ const DashboardApp = (function() {
         html += openPositions.map(pos => {
             const pnlClass = OmnixUtils.getStatClass(pos.unrealized_pnl);
             const pnlPct = pos.unrealized_pnl_pct || 0;
-            const date = pos.opened_at ? new Date(pos.opened_at).toLocaleDateString() : '--';
+            const date = pos.opened_at ? OmnixUtils.formatDate(new Date(pos.opened_at)) : '--';
 
             return `
                 <tr>
@@ -198,7 +198,7 @@ const DashboardApp = (function() {
             const pnl = trade.pnl || 0;
             const pnlPct = trade.pnl_pct || 0;
             const pnlClass = OmnixUtils.getStatClass(pnl);
-            const date = trade.closed ? new Date(trade.closed).toLocaleDateString() : '--';
+            const date = trade.closed ? OmnixUtils.formatDate(new Date(trade.closed)) : '--';
 
             return `
                 <tr>
