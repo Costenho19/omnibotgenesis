@@ -1,41 +1,8 @@
-# OMNIX V6.5 INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5.2 INSTITUTIONAL+ - Automated Trading System
 
 ## Overview
 
-OMNIX V6.5 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
-
-## Recent Changes (December 2, 2025)
-
-### ARES Module-Level Initialization Fix - PRODUCTION DEPLOYED
-
-**Problem**: ARES strategies showed as "None" in enterprise_bot because `initialize_system()` ran AFTER the import.
-
-**Root Cause**: Race condition - `global_ares_v1` and `global_ares_v2` were set to `None` at module level, then assigned in `initialize_system()`. But `enterprise_bot.py` imported them before `initialize_system()` ran.
-
-**Solution Applied**:
-1. **trading_system.py**: Create ARES instances at module level (not in function)
-   ```python
-   # Module-level instantiation
-   global_ares_v1 = AresProtocolV1(trading_system=None)
-   global_ares_v2 = AresProtocolV2(trading_system=None)
-   ```
-2. **trading_system.py**: Connect trading_system to existing instances in `initialize_system()`
-   ```python
-   global_ares_v1.trading_system = global_trading_system
-   global_ares_v2.trading_system = global_trading_system
-   ```
-3. **enterprise_bot.py**: Import module for dynamic access (already done)
-
-**Railway Production Logs (21:59:24 UTC)**:
-```
-🧬 ARES V1 Swing: ✅ CONECTADO (55-65% win rate)
-🧨 ARES V2 Scalping: ✅ CONECTADO (60-70% win rate)
-🧬 ARES V1 (Swing 55-65%) + V2 (Scalping 60-70%) ACTIVOS
-```
-
-**Status**: PRODUCTION OPERATIONAL - Bot running 24/7 on Railway with both ARES strategies active.
-
----
+OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support for 100,000+ simultaneous users. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -74,85 +41,33 @@ The system is built around several core engines:
 -   **Coherence Engine V6.5 ULTRA**: Utilizes a 6-Tier Veto System for validating strategy agreement. Uses consistent thresholds (30%/45%) for both Paper and Real modes to maintain trade quality and win rate > 55%.
 -   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs (BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, MATIC, ATOM, LTC) with proper Kraken symbol mapping (BTC→XBT).
 -   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading.
+-   **Portfolio Management V6.4 INSTITUTIONAL+** implements Goldman-Sachs level optimization, including Markowitz and Black-Litterman models, dynamic position sizing, exposure management, and risk detection.
+-   **Derivatives Trading Module**: Supports paper/real trading modes and includes a MarginEngine, KrakenFuturesClient, HedgingService, and FundingArbitrageAnalyzer.
+-   **Stock Trading Premium V6.3 ULTRA**: Integrates 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
+-   **Adaptive Parameter Engine V6.5 ULTRA**: An auto-calibration system for ARES strategies based on market regime. It includes a RegimeSignalProcessor, ParameterCalibrator, CooldownManager, MicrostructureAnalyzer, and safety features.
+-   **On-Chain Data Intelligence V6.5**: Provides institutional-grade blockchain analytics using free APIs, featuring WhaleTracker, Arkham Intelligence Integration, ExchangeFlowAnalyzer, NetworkMetricsCollector, and SmartMoneySignal.
 
-### Portfolio Management
+### Multi-User Architecture V6.5.2
 
-**Portfolio Management V6.4 INSTITUTIONAL+** implements Goldman-Sachs level optimization, including Markowitz and Black-Litterman models, dynamic position sizing, exposure management, and risk detection.
-
-### Derivatives Trading Module
-
-Supports paper/real trading modes and includes a MarginEngine, KrakenFuturesClient, HedgingService, and FundingArbitrageAnalyzer.
-
-### Stock Trading Premium V6.3 ULTRA
-
-Integrates 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
-
-### Adaptive Parameter Engine V6.5 ULTRA
-
-An auto-calibration system for ARES strategies based on market regime. It includes a RegimeSignalProcessor, ParameterCalibrator, CooldownManager, MicrostructureAnalyzer, and safety features.
-
-### On-Chain Data Intelligence V6.5
-
-Provides institutional-grade blockchain analytics using free APIs, featuring WhaleTracker, Arkham Intelligence Integration, ExchangeFlowAnalyzer, NetworkMetricsCollector, and SmartMoneySignal.
+-   Supports 100,000+ simultaneous users with isolated trading sessions.
+-   Utilizes Redis for fast state management and PostgreSQL for persistence.
+-   Employs a ThreadPoolExecutor for parallel processing of user sessions and per-user locks for thread safety.
 
 ### UI/UX Decisions
 
-The system includes a web dashboard built with Flask, providing multiple views (main, terminal-style, classic) and a comprehensive set of API endpoints for performance metrics, trading data, market data, market intelligence, and system status.
+The system includes a web dashboard built with Flask, providing multiple views (main, terminal-style, classic) and a comprehensive set of API endpoints for performance metrics, trading data, market data, market intelligence, and system status. The frontend uses Modular CSS (BEM Methodology) and Modular JavaScript (IIFE Pattern), with Jinja2 template inheritance for a consistent user experience.
 
-### Backend Architecture (December 2024 Refactor)
+### Backend Architecture
 
-**Flask Blueprints Architecture (12 files, 1961 lines):**
-```
-omnix_dashboard/
-├── app.py                  # Application factory (90 lines, 95% reduction)
-├── run.py                  # WSGI entry point
-├── blueprints/             # 5 Blueprints, 25 routes total
-│   ├── views.py           # HTML pages (3 routes)
-│   ├── core.py            # Core APIs (6 routes)
-│   ├── market.py          # Market data (7 routes)
-│   ├── intelligence.py    # External APIs (4 routes)
-│   └── system.py          # System status (5 routes)
-└── utils/                  # Shared utilities (586 lines)
-    ├── database.py        # PostgreSQL connection pool
-    ├── decorators.py      # API authentication
-    ├── external_apis.py   # HTTP client with retry
-    └── queries.py         # SQL query functions
-```
-
-**Key Improvements:**
-- Application factory pattern for testability
-- Connection pooling (min=2, max=10)
-- Absolute imports for package independence
-- Modular route organization by domain
-
-### Frontend Architecture (December 2024 Refactor)
-
-**Modular CSS (18 files, 1562 lines) - BEM Methodology:**
-```
-omnix_dashboard/static/css/
-├── base/ (variables.css, reset.css, typography.css)
-├── components/ (panel.css, card.css, ticker.css, signal.css, badge.css, chart.css, table.css, news.css, protection.css)
-├── layouts/ (header.css, terminal-grid.css, animations.css)
-├── pages/ (terminal.css, dashboard.css)
-└── main.css (imports all modules)
-```
-
-**Modular JavaScript (11 files, 1318 lines) - IIFE Pattern:**
-```
-omnix_dashboard/static/js/
-├── core/ (api.js, utils.js, clock.js)
-├── components/ (charts.js, ticker.js, signals.js, volume.js, news.js, feargreed.js)
-└── pages/ (terminal.js, dashboard.js)
-```
-
-**Jinja2 Template Inheritance:**
-- `base.html`: Centralized head, shared CSS/JS, extensible blocks (title, extra_css, body_class, content, extra_js)
-- `terminal.html`: Extends base.html, Trading Terminal view (216 lines)
-- `dashboard.html`: Extends base.html, Classic institutional view (314 lines)
+The backend utilizes a Flask Blueprints architecture for modularity, with separate blueprints for views, core APIs, market data, intelligence, and system status. Key improvements include an application factory pattern, connection pooling for PostgreSQL, and modular route organization. ARES strategies are instantiated at the module level for correct initialization.
 
 ### Data Flow
 
 Market Data (Kraken/Alpaca) feeds into the Non-Markovian Kernel, boosted by On-Chain Intelligence. This leads to Regime Detection and Signal Generation, feeding the Adaptive Parameter Engine. After Coherence Engine Validation and a Risk Guardian Check, trades are executed, persisted in PostgreSQL, and notifications are sent via Telegram.
+
+### Project Structure
+
+The project is organized into `omnix_core/` (core trading logic), `omnix_services/` (various system services), `omnix_dashboard/` (Flask web interface), `omnix_api/` (REST API), and `omnix_testing/` (validation suite).
 
 ## External Dependencies
 
@@ -186,100 +101,3 @@ Market Data (Kraken/Alpaca) feeds into the Non-Markovian Kernel, boosted by On-C
 -   **HTTP**: requests, aiohttp, httpx, websockets
 -   **Security**: pypqc (post-quantum)
 -   **Reporting**: plotly, kaleido, reportlab, PyPDF2
----
-
-## What's New in V6.5
-
-### Adaptive Parameter Engine V6.5 ULTRA
-- **RegimeSignalProcessor**: Processes Non-Markovian Kernel signals
-- **ParameterCalibrator**: Dynamically adjusts SL/TP/position size per regime
-- **CooldownManager**: 15-min cooldown, min 5 trades between calibrations
-- **MicrostructureAnalyzer**: Fine-tunes based on spread, volume, liquidity
-- **Safety Features**: Pending calibrations queue, open position checks, Risk Guardian validation
-- **Database Tables**: adaptive_parameters, calibration_events, calibration_metrics
-
-### On-Chain Data Intelligence V6.5
-100% FREE APIs - No API keys required:
-- **WhaleTracker (ClankApp)**: Transactions >$100K with circuit breaker and retry logic
-- **Arkham Intelligence**: Wallet identity enrichment (Binance, Coinbase, Jump Trading, etc.)
-- **ExchangeFlowAnalyzer**: Net flow trend detection
-- **NetworkMetricsCollector**: BTC/ETH health metrics
-- **SmartMoneySignal**: Weighted composite scoring
-- **Kernel Integration**: On-chain signals boost regime detection
-
----
-
-## Project Structure
-
-omnix/
-- omnix_core/ (9 modules): bot, cache, context, quantum, security, strategies, trading_system.py
-- omnix_services/ (22 modules): adaptive_engine, ai_service, coherence_service, database_service, derivatives, market_intelligence, monitoring, notifications, on_chain_service, portfolio_management, stock_trading, telegram_service, trading_service, user_settings
-- omnix_dashboard/: Flask dashboard with 25+ API endpoints
-- omnix_api/: REST API with Stripe payments
-- omnix_testing/: Validation suite
-
----
-
-## Dashboard API Endpoints (25)
-
-### Core Views (5): /, /terminal, /classic, /api/health, /api/debug
-### Trading Data (6): /api/metrics, /api/trades, /api/equity-curve, /api/portfolio, /api/positions, /api/signals/active
-### Market Data (5): /api/market/crypto, /api/market/stocks, /api/market/ohlc/<symbol>, /api/market/volume, /api/news
-### Market Intelligence (8): /api/market/fear-greed, /api/market/finnhub-news, /api/market/technical-indicators/<symbol>, /api/intelligence/fear-greed, /api/intelligence/finnhub/news, /api/intelligence/finnhub/sentiment/<symbol>, /api/intelligence/alpha-vantage/technical/<symbol>, /api/intelligence/summary
-### System (1): /api/system/status
-
----
-
-## Database Schema (35+ Tables)
-
-- Core (6): users, user_contacts, trades, analysis, conversations, balance_history
-- Paper Trading (2): paper_trading_balances, paper_trading_trades
-- Derivatives (6): derivatives_balances, trades, positions, funding_log, hedges, funding_opportunities
-- Conversational Brain (3): trade_reasonings, trade_evaluations, pending_evaluations
-- Community (9): community_feedback, strategy_votes, user_contributions, detected_patterns, improvement_proposals, community_signals, signal_executions, signal_votes, alpha_leaderboard
-- Risk (4): risk_guardian_events, risk_limits, risk_limit_breaches, circuit_breaker_status
-- Adaptive V6.5 (3): adaptive_parameters, calibration_events, calibration_metrics
-- System (4): schema_migrations, video_transcript_cache, sharia_validations, user_settings
-
----
-
-## Environment Variables
-
-### Required: DATABASE_URL, REDIS_URL, SESSION_SECRET, FINNHUB_API_KEY, ALPHA_VANTAGE_API_KEY
-### Optional: TELEGRAM_BOT_TOKEN, KRAKEN_API_KEY, KRAKEN_API_SECRET, ALPACA_API_KEY, ALPACA_SECRET_KEY, GEMINI_API_KEY, OPENAI_API_KEY, STRIPE_SECRET_KEY
-
----
-
-## Telegram Commands (Personal Assistant V6.4)
-
-/miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading, /pausar, /reanudar, /onboarding, /resumen
-
-Natural Language: "quiero ser mas agresivo", "maximo $500 por trade", "pausa el trading"
-
----
-
-## Testing Suite (omnix_testing)
-
-- backtesting_engine.py: Historical simulation
-- kraken_data_downloader.py: OHLC with caching
-- metrics_calculator.py: Sharpe, Sortino, drawdown
-- pdf_report_generator.py: Investor PDF reports
-- institutional_stress_suite.py: Stress testing
-- historical_events_validator.py: Black swan testing
-
----
-
-## Version History
-
-| Version | Date | Features |
-|---------|------|----------|
-| V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
-| V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
-| V6.3 | Nov 2024 | Stock Trading ULTRA, Real Data Integration |
-| V6.2 | Oct 2024 | RMS Memory-Enhanced, Derivatives |
-| V6.1 | Oct 2024 | Non-Markovian Kernel, Coherence Engine |
-| V6.0 | Sep 2024 | Multi-Exchange Arbitrage, Institutional Compliance |
-
----
-
-*Last Updated: December 2, 2025 | OMNIX V6.5 INSTITUTIONAL+ | $400K seed at $2.5M valuation*
