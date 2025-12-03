@@ -552,6 +552,7 @@ class AutoTradingBot:
         """
         V6.5: Persistir estado de auto-trading en user_settings.
         Esto garantiza que el estado sobreviva a reinicios de Railway.
+        V6.5.1: Usa UPSERT para crear registro si no existe.
         """
         if not self.database_service or not hasattr(self.database_service, 'execute_query'):
             logger.debug("V6.5: No se puede persistir estado (sin database_service)")
@@ -559,19 +560,15 @@ class AutoTradingBot:
         
         try:
             if user_id:
-                # Actualizar usuario específico
                 self.database_service.execute_query('''
-                    UPDATE user_settings 
-                    SET auto_trading = %s, updated_at = NOW()
-                    WHERE user_id = %s
-                ''', (active, user_id))
-                logger.info(f"💾 V6.5: Estado auto_trading={active} persistido para user {user_id}")
+                    INSERT INTO user_settings (user_id, auto_trading, trading_enabled, updated_at)
+                    VALUES (%s, %s, true, NOW())
+                    ON CONFLICT (user_id) DO UPDATE 
+                    SET auto_trading = EXCLUDED.auto_trading, updated_at = NOW()
+                ''', (user_id, active))
+                logger.info(f"💾 V6.5.1: Estado auto_trading={active} persistido para user {user_id}")
             else:
-                # Actualizar todos los usuarios con auto_trading activo/inactivo
-                # Si activamos, solo actualizamos el primer usuario
-                # Si desactivamos, desactivamos todos
                 if active:
-                    # Buscar el primer usuario que tenga trading_enabled
                     result = self.database_service.execute_query('''
                         SELECT user_id FROM user_settings 
                         WHERE trading_enabled = true 
@@ -585,16 +582,24 @@ class AutoTradingBot:
                             SET auto_trading = true, updated_at = NOW()
                             WHERE user_id = %s
                         ''', (uid,))
-                        logger.info(f"💾 V6.5: auto_trading=true persistido para user {uid}")
+                        logger.info(f"💾 V6.5.1: auto_trading=true persistido para user {uid}")
+                    else:
+                        self.database_service.execute_query('''
+                            INSERT INTO user_settings (user_id, auto_trading, trading_enabled, updated_at)
+                            VALUES ('default_admin', true, true, NOW())
+                            ON CONFLICT (user_id) DO UPDATE 
+                            SET auto_trading = true, updated_at = NOW()
+                        ''')
+                        logger.info("💾 V6.5.1: auto_trading=true persistido para default_admin")
                 else:
                     self.database_service.execute_query('''
                         UPDATE user_settings 
                         SET auto_trading = false, updated_at = NOW()
                         WHERE auto_trading = true
                     ''')
-                    logger.info("💾 V6.5: auto_trading=false persistido para todos los usuarios")
+                    logger.info("💾 V6.5.1: auto_trading=false persistido para todos los usuarios")
         except Exception as e:
-            logger.warning(f"⚠️ V6.5: Error persistiendo auto_trading: {e}")
+            logger.warning(f"⚠️ V6.5.1: Error persistiendo auto_trading: {e}")
     
     def _load_persistent_state(self):
         """
