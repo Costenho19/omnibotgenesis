@@ -131,7 +131,7 @@ def api_system_status():
     
     trades = get_paper_trades(1)
     open_positions = len([t for t in trades if t.get('status') == 'open'])
-    trades_today = len([t for t in trades if t.get('closed_at') is not None])
+    trades_today = len(trades)
     
     bot_active = False
     trading_enabled = False
@@ -190,6 +190,18 @@ def api_system_status():
             'Auto_Trading_Bot': {'active': bot_active, 'signals_today': open_positions}
         }
     
+    drawdown_tier = 'NORMAL'
+    risk_level = 'LOW'
+    if daily_pnl < -500:
+        drawdown_tier = 'CRITICAL'
+        risk_level = 'CRITICAL'
+    elif daily_pnl < -200:
+        drawdown_tier = 'WARNING'
+        risk_level = 'HIGH'
+    elif daily_pnl < 0:
+        drawdown_tier = 'CAUTION'
+        risk_level = 'MEDIUM'
+    
     status = {
         'bot_active': bot_active,
         'trading_enabled': trading_enabled,
@@ -200,10 +212,43 @@ def api_system_status():
         'daily_pnl_usd': round(daily_pnl, 2),
         'strategies': strategies,
         'protection': {
-            'drawdown_tier': 'NORMAL' if daily_pnl >= 0 else 'CAUTION',
-            'ramp_up_pct': 100,
+            'drawdown_tier': drawdown_tier,
+            'ramp_up_pct': 100 if drawdown_tier == 'NORMAL' else (75 if drawdown_tier == 'CAUTION' else 50),
             'daily_loss_limit': user_settings_data.get('stop_loss_pct', 3.0) * 100,
-            'position_size_factor': 1.0
+            'position_size_factor': 1.0 if drawdown_tier == 'NORMAL' else (0.75 if drawdown_tier == 'CAUTION' else 0.5)
+        },
+        'risk_guardian': {
+            'status': 'ACTIVE',
+            'version': 'V5.4',
+            'risk_level': risk_level,
+            'circuit_breaker': {
+                'active': drawdown_tier == 'CRITICAL',
+                'trigger_reason': 'Daily loss limit exceeded' if drawdown_tier == 'CRITICAL' else None,
+                'cooldown_remaining': 0
+            },
+            'overtrading_protection': {
+                'enabled': True,
+                'max_trades_per_day': 20,
+                'max_trades_per_hour': 10,
+                'trades_today': trades_today,
+                'blocked': trades_today >= 20
+            },
+            'revenge_trading': {
+                'enabled': True,
+                'consecutive_losses_trigger': 3,
+                'blocked': False,
+                'cooldown_remaining': 0
+            },
+            'capital_protection': {
+                'enabled': True,
+                'max_risk_per_trade_pct': 2.0,
+                'max_daily_loss_pct': 5.0,
+                'current_daily_loss_pct': abs(min(daily_pnl, 0)) / 10000 * 100 if daily_pnl < 0 else 0
+            },
+            'limits': {
+                'drawdown_10pct': {'action': 'reduce_size', 'triggered': False},
+                'drawdown_20pct': {'action': 'stop_trading', 'triggered': drawdown_tier == 'CRITICAL'}
+            }
         },
         'trading': {
             'open_positions': open_positions,

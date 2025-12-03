@@ -57,7 +57,8 @@ const TerminalApp = (function() {
             { name: 'volume', fn: () => OmnixVolume.update('volume-bars') },
             { name: 'news', fn: () => OmnixNews.update('news-feed', 'news-source') },
             { name: 'finnhub', fn: () => OmnixNews.updateFinnhub('news-feed', 'news-source') },
-            { name: 'feargreed', fn: () => OmnixFearGreed.update() }
+            { name: 'feargreed', fn: () => OmnixFearGreed.update() },
+            { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } }
         ];
     }
 
@@ -71,6 +72,10 @@ const TerminalApp = (function() {
             timeId: 'clock-time',
             dateId: 'clock-date'
         });
+
+        if (window.RiskGuardian) {
+            RiskGuardian.init('risk-guardian-widget');
+        }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
 

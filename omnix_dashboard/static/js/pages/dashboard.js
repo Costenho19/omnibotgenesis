@@ -245,7 +245,8 @@ const DashboardApp = (function() {
             { name: 'equity', fn: fetchEquityCurve },
             { name: 'ticker', fn: () => OmnixTicker.update('crypto-ticker', 'dashboard') },
             { name: 'news', fn: () => OmnixNews.update('news-feed', 'news-source') },
-            { name: 'system', fn: fetchSystemStatus }
+            { name: 'system', fn: fetchSystemStatus },
+            { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } }
         ];
     }
 
@@ -260,6 +261,10 @@ const DashboardApp = (function() {
             dateId: 'live-date',
             timezoneId: 'timezone-badge'
         });
+
+        if (window.RiskGuardian) {
+            RiskGuardian.init('risk-guardian-widget');
+        }
 
         OmnixCommon.startAutoRefresh(refreshAllData, 10000);
 

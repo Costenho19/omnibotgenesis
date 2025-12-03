@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/terminal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/riskguardian.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -124,40 +125,8 @@
             <div class="fear-greed-description" id="fng-recommendation">Fetching market sentiment...</div>
         </div>
         
-        <div class="panel-header" style="margin-top: 12px;">
-            <span class="panel-title">🛡️ Protection Status</span>
-        </div>
-        <div class="protection-grid">
-            <div class="protection-item">
-                <div class="protection-icon">⚡</div>
-                <div class="protection-name">Coherence</div>
-                <div class="protection-status positive">ACTIVE</div>
-            </div>
-            <div class="protection-item">
-                <div class="protection-icon">🎯</div>
-                <div class="protection-name">Risk Guard</div>
-                <div class="protection-status positive">ACTIVE</div>
-            </div>
-            <div class="protection-item">
-                <div class="protection-icon">🔒</div>
-                <div class="protection-name">Kill Switch</div>
-                <div class="protection-status positive">READY</div>
-            </div>
-            <div class="protection-item">
-                <div class="protection-icon">📉</div>
-                <div class="protection-name">Drawdown</div>
-                <div class="protection-status positive" id="dd-tier">NORMAL</div>
-            </div>
-            <div class="protection-item">
-                <div class="protection-icon">🚀</div>
-                <div class="protection-name">Ramp-Up</div>
-                <div class="protection-status" id="rampup">100%</div>
-            </div>
-            <div class="protection-item">
-                <div class="protection-icon">💰</div>
-                <div class="protection-name">Capital</div>
-                <div class="protection-status positive">SAFE</div>
-            </div>
+        <div style="margin-top: 12px;" id="risk-guardian-widget">
+            <div style="color: var(--text-muted); font-size: 11px;">Loading Risk Guardian...</div>
         </div>
     </div>
     
@@ -213,5 +182,6 @@
 <script src="{{ url_for('static', filename='js/components/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/feargreed.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/statusbar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/riskguardian.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

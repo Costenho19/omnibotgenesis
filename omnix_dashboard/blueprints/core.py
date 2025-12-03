@@ -52,7 +52,7 @@ def api_metrics():
     closed_trades_count = len([t for t in trades if t.get('closed_at') is not None])
     
     if open_positions_count > 0 and closed_trades_count == 0:
-        metrics['total_trades'] = open_positions_count
+        metrics['total_trades'] = int(open_positions_count)
         metrics['message'] = f'{open_positions_count} open position(s) - awaiting closure for P&L calculation'
     
     return jsonify({
@@ -411,7 +411,8 @@ def api_health():
     pool_stats = get_pool_stats()
     
     is_healthy = DB_AVAILABLE
-    if pool_stats and pool_stats.get('requests_waiting', 0) > 50:
+    requests_waiting = int(pool_stats.get('requests_waiting', 0)) if pool_stats else 0
+    if requests_waiting > 50:
         is_healthy = False
     
     return jsonify({
