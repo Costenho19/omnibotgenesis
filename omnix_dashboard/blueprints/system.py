@@ -269,6 +269,7 @@ def api_system_status():
 
 
 @system_bp.route('/api/system/adaptive')
+@require_api_key
 def api_system_adaptive():
     """API endpoint for Adaptive Parameter Engine V6.5 ULTRA telemetry"""
     from omnix_dashboard.utils.database import DB_AVAILABLE
@@ -388,6 +389,7 @@ def api_system_adaptive():
 
 
 @system_bp.route('/api/debug')
+@require_api_key
 def api_debug():
     """Debug endpoint to diagnose connection issues (no secrets exposed)"""
     from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE

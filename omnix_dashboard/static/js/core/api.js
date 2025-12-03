@@ -1,12 +1,13 @@
 /**
  * OMNIX Dashboard V6.5.2 - API Client
- * Centralized API communication layer with retry/backoff
+ * Centralized API communication layer with retry/backoff and authentication
  */
 
 const OmnixAPI = (function() {
     'use strict';
 
     const API_BASE = '';
+    let _apiKey = null;
     
     const DEFAULT_RETRY_OPTIONS = {
         maxRetries: 3,
@@ -14,6 +15,18 @@ const OmnixAPI = (function() {
         maxDelay: 10000,
         backoffFactor: 2
     };
+
+    function setApiKey(key) {
+        _apiKey = key;
+    }
+
+    function getAuthHeaders() {
+        const headers = {};
+        if (_apiKey) {
+            headers['X-API-Key'] = _apiKey;
+        }
+        return headers;
+    }
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -31,11 +44,15 @@ const OmnixAPI = (function() {
     async function fetchWithRetry(url, options = {}, retryOptions = {}) {
         const opts = { ...DEFAULT_RETRY_OPTIONS, ...retryOptions };
         let lastError;
+        
+        const authHeaders = getAuthHeaders();
+        const mergedHeaders = { ...authHeaders, ...(options.headers || {}) };
 
         for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
             try {
                 const response = await fetch(url, {
                     ...options,
+                    headers: mergedHeaders,
                     signal: AbortSignal.timeout(15000)
                 });
 
@@ -71,9 +88,10 @@ const OmnixAPI = (function() {
     }
 
     async function post(endpoint, data, retryOptions = {}) {
+        const authHeaders = getAuthHeaders();
         return fetchWithRetry(`${API_BASE}${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...authHeaders, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         }, retryOptions);
     }
@@ -87,6 +105,7 @@ const OmnixAPI = (function() {
     }
 
     return {
+        setApiKey,
         getMetrics: () => get('/api/metrics'),
         getTrades: () => get('/api/trades'),
         getPositions: () => get('/api/positions'),
@@ -100,6 +119,8 @@ const OmnixAPI = (function() {
         getFinnhubNews: (category = 'crypto') => get(`/api/market/finnhub-news?category=${category}`),
         getSystemStatus: () => get('/api/system/status'),
         getHealth: () => get('/api/health'),
+        getSnapshots: () => get('/api/snapshots'),
+        getSnapshotChain: () => get('/api/snapshots/chain/verify'),
         get,
         post,
         safeGet,

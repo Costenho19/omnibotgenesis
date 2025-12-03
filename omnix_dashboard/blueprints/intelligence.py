@@ -8,6 +8,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify
 
 from omnix_dashboard.utils.external_apis import http_get_with_timeout
+from omnix_dashboard.utils.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ def api_news():
 
 
 @intelligence_bp.route('/api/intelligence/fear-greed')
+@require_api_key
 def api_fear_greed():
     """API endpoint for Fear & Greed Index via market intelligence service"""
     try:
@@ -158,6 +160,7 @@ def api_fear_greed():
 
 
 @intelligence_bp.route('/api/intelligence/finnhub/news')
+@require_api_key
 def api_finnhub_news():
     """API endpoint for Finnhub financial news via market intelligence service"""
     try:
@@ -193,6 +196,7 @@ def api_finnhub_news():
 
 
 @intelligence_bp.route('/api/intelligence/finnhub/sentiment/<symbol>')
+@require_api_key
 def api_finnhub_sentiment(symbol):
     """API endpoint for Finnhub news sentiment"""
     try:
@@ -227,6 +231,7 @@ def api_finnhub_sentiment(symbol):
 
 
 @intelligence_bp.route('/api/intelligence/alpha-vantage/technical/<symbol>')
+@require_api_key
 def api_alpha_vantage_technical(symbol):
     """API endpoint for Alpha Vantage technical indicators via market intelligence service"""
     try:
@@ -261,6 +266,7 @@ def api_alpha_vantage_technical(symbol):
 
 
 @intelligence_bp.route('/api/intelligence/summary')
+@require_api_key
 def api_intelligence_summary():
     """Combined market intelligence summary"""
     try:

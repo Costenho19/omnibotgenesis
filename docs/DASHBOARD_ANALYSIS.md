@@ -43,14 +43,16 @@ omnix_dashboard/
 
 ### 1.2 Blueprint Distribution
 
-| Blueprint | File | Lines | Routes | Purpose |
-|-----------|------|-------|--------|---------|
-| `views_bp` | views.py | 29 | 3 | HTML pages (/, /terminal, /classic) |
-| `core_bp` | core.py | 430 | 6 | Metrics, trades, equity, portfolio, positions, health |
-| `market_bp` | market.py | 366 | 7 | Crypto, stocks, OHLC, volume, Fear&Greed, news |
-| `intelligence_bp` | intelligence.py | 298 | 6 | Finnhub, Alpha Vantage, intelligence summary, news |
-| `system_bp` | system.py | 265 | 3 | Signals, system status, debug |
-| `snapshots_bp` | snapshots.py | 610 | 6 | Audited snapshots, chain verification, cryptographic audit [NEW] |
+| Blueprint | File | Lines | Routes | Protected | Purpose |
+|-----------|------|-------|--------|-----------|---------|
+| `views_bp` | views.py | 29 | 3 | 0 | HTML pages (/, /terminal, /classic) |
+| `core_bp` | core.py | 430 | 6 | 5 | Metrics, trades, equity, portfolio, positions, health |
+| `market_bp` | market.py | 366 | 8 | 0 | Crypto, stocks, OHLC, volume, Fear&Greed, benchmarks (public) |
+| `intelligence_bp` | intelligence.py | 305 | 6 | 5 | Finnhub, Alpha Vantage, intelligence summary, news |
+| `system_bp` | system.py | 435 | 4 | 3 | Signals, system status, adaptive, debug |
+| `snapshots_bp` | snapshots.py | 615 | 6 | 6 | Audited snapshots, chain verification, cryptographic audit |
+
+**Security Summary:** 19 protected endpoints / 33 total routes (58% protected)
 
 ### 1.3 Utils Package
 
@@ -299,24 +301,41 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 ```
 
 **Protected Endpoints (require DASHBOARD_API_KEY when configured):**
-- `/api/metrics` - Performance metrics
-- `/api/trades` - Trade history
-- `/api/positions` - Open positions
-- `/api/portfolio` - Portfolio state
-- `/api/equity-curve` - Equity curve data
-- `/api/signals/active` - Active trading signals
-- `/api/snapshots` - List all audited snapshots [NEW Phase 5]
-- `/api/snapshots/create` - Create new snapshot with SHA-256 checksum [NEW Phase 5]
-- `/api/snapshots/<id>/verify` - Verify individual snapshot integrity [NEW Phase 5]
-- `/api/snapshots/chain/verify` - Verify entire snapshot chain [NEW Phase 5]
-- `/api/snapshots/<id>/audit` - Full audit details with complete checksums [NEW Phase 5]
-- `/api/snapshots/latest` - Get most recent snapshot [NEW Phase 5]
+
+| Blueprint | Endpoint | Purpose | Protection Added |
+|-----------|----------|---------|------------------|
+| core.py | `/api/metrics` | Performance metrics | Dec 2024 |
+| core.py | `/api/trades` | Trade history | Dec 2024 |
+| core.py | `/api/positions` | Open positions | Dec 2024 |
+| core.py | `/api/portfolio` | Portfolio state | Dec 2024 |
+| core.py | `/api/equity-curve` | Equity curve data | Dec 2024 |
+| system.py | `/api/signals/active` | Active trading signals | Dec 2024 |
+| system.py | `/api/system/adaptive` | Adaptive Engine telemetry | Dec 2025 |
+| system.py | `/api/debug` | Debug diagnostics | Dec 2025 |
+| intelligence.py | `/api/intelligence/fear-greed` | Fear & Greed via service | Dec 2025 |
+| intelligence.py | `/api/intelligence/finnhub/news` | Finnhub news | Dec 2025 |
+| intelligence.py | `/api/intelligence/finnhub/sentiment/<symbol>` | Symbol sentiment | Dec 2025 |
+| intelligence.py | `/api/intelligence/alpha-vantage/technical/<symbol>` | Technical indicators | Dec 2025 |
+| intelligence.py | `/api/intelligence/summary` | Combined intelligence | Dec 2025 |
+| snapshots.py | `/api/snapshots` | List all audited snapshots | Dec 2025 |
+| snapshots.py | `/api/snapshots/create` | Create snapshot with SHA-256 | Dec 2025 |
+| snapshots.py | `/api/snapshots/<id>/verify` | Verify snapshot integrity | Dec 2025 |
+| snapshots.py | `/api/snapshots/chain/verify` | Verify entire chain | Dec 2025 |
+| snapshots.py | `/api/snapshots/<id>/audit` | Full audit details | Dec 2025 |
+| snapshots.py | `/api/snapshots/latest` | Get most recent snapshot | Dec 2025 |
+
+**Total Protected: 19 endpoints across 4 blueprints**
 
 **Public Endpoints (no authentication required):**
-- `/api/market/*` - Public market data (Kraken prices, volume, OHLC)
-- `/api/news` - Internal news
-- `/api/health` - Health check
-- `/api/system/status` - System status
+- `/api/market/*` - Public market data (Kraken prices, volume, OHLC, Fear & Greed)
+- `/api/news` - Internal/fallback news
+- `/api/health` - Health check with pool stats
+- `/api/system/status` - System status (non-sensitive)
+
+**Frontend API Client Authentication (Dec 2025):**
+- `OmnixAPI.setApiKey(key)` - Sets API key for all subsequent requests
+- `OmnixAPI.fetchWithRetry()` - Automatically includes `X-API-Key` header
+- All protected endpoints called via authenticated client in JS modules
 
 ### 5.2 CRITICAL - Architecture
 
