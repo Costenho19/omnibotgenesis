@@ -18,15 +18,30 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | Consumer Migration Order | ✅ Done | Priority sequence documented in DATABASE_AUDIT_REPORT.md |
 
 **Key Files**
-- `docs/core/DATABASE_AUDIT_REPORT.md` - Complete audit (~1,050 lines)
+- `docs/core/DATABASE_AUDIT_REPORT.md` - Complete audit (~2,200 lines)
 - `omnix_services/database_service/database_service.py` - Feature flag implementation
 - `omnix_dashboard/utils/database.py` - Telemetry thread with proper shutdown
 - `omnix_dashboard/blueprints/system.py` - `/api/db-diagnostics` endpoint
 
-**Next: Phase 2 (Build Unified Gateway)**
-- Requires 48h telemetry capture from Railway production
-- Build `DatabaseGateway` class to route queries to single pool
-- Implement canary deployment for zero-downtime cutover
+**Phase 2 (Build Unified Gateway) - DOCUMENTED Dec 3, 2025**
+| Section | Content | Lines |
+|---------|---------|-------|
+| 15.1 Architecture | Single pool, dual interfaces | ~50 |
+| 15.2-15.3 Gateway Code | Fork-safe singleton, execute_query() | ~200 |
+| 15.4.1 Gunicorn Hook | post_fork reinit, Railway Procfile | ~50 |
+| 15.4.2 Row Access Audit | 6 consumers checked, 1 needs fix | ~60 |
+| 15.4.3 Import Validation | 4-step check, CI gating | ~40 |
+| 15.5 Migration Order | 9 consumers prioritized | ~30 |
+| 15.6 Task Checklist | 18 tasks with owner/risk | ~40 |
+| 15.9 Railway Checklist | 18-step deployment guide | ~40 |
+
+**BLOCKER IDENTIFIED**: `auto_trading_bot.py` lines 787, 839, 908, 2050 use dict-style `.get()` access incompatible with psycopg3 tuple returns. Must fix before Phase 2 rollout.
+
+**Next Steps**:
+1. User provides 48h Railway telemetry logs
+2. Agent fixes auto_trading_bot.py dict-access bugs
+3. Agent creates database_gateway.py
+4. Canary deployment with USE_UNIFIED_GATEWAY flag
 
 ### December 2025 - Phase 4: Frontend Optimization ✅
 
