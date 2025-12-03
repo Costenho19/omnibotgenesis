@@ -32,7 +32,18 @@ def api_metrics():
     """API endpoint for metrics - includes both closed trades AND open positions"""
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
-    trades = get_paper_trades(30)
+    result = get_paper_trades(30, return_dict=True)
+    
+    if not result['success']:
+        return jsonify({
+            'success': False,
+            'error': result['error'],
+            'db_connected': result['db_connected'],
+            'metrics': None,
+            'last_updated': datetime.now().isoformat()
+        })
+    
+    trades = result['trades']
     metrics = calculate_metrics(trades)
     strategies = get_strategy_breakdown(trades)
     assets = get_asset_breakdown(trades)
@@ -60,8 +71,18 @@ def api_metrics():
 @require_api_key
 def api_trades():
     """API endpoint for recent trades"""
-    trades = get_paper_trades(30)
+    result = get_paper_trades(30, return_dict=True)
     
+    if not result['success']:
+        return jsonify({
+            'success': False,
+            'error': result['error'],
+            'db_connected': result['db_connected'],
+            'trades': [],
+            'total': 0
+        })
+    
+    trades = result['trades']
     formatted_trades = []
     for t in trades[:50]:
         formatted_trades.append({
@@ -81,7 +102,8 @@ def api_trades():
     return jsonify({
         'success': True,
         'trades': formatted_trades,
-        'total': len(trades)
+        'total': len(trades),
+        'db_connected': True
     })
 
 
@@ -236,16 +258,46 @@ def api_portfolio():
             })
 
 
+def fetch_coingecko_prices():
+    """Fallback price source using CoinGecko API"""
+    try:
+        url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,cardano,dogecoin&vs_currencies=usd'
+        data = http_get_with_timeout(url, timeout=10, fallback=None)
+        
+        if data:
+            coingecko_map = {
+                'bitcoin': 'BTC/USD',
+                'ethereum': 'ETH/USD',
+                'solana': 'SOL/USD',
+                'ripple': 'XRP/USD',
+                'cardano': 'ADA/USD',
+                'dogecoin': 'DOGE/USD'
+            }
+            
+            prices = {}
+            for coin_id, symbol in coingecko_map.items():
+                if coin_id in data and 'usd' in data[coin_id]:
+                    prices[symbol] = float(data[coin_id]['usd'])
+            
+            logger.info(f"CoinGecko fallback: Fetched {len(prices)} prices")
+            return prices
+    except Exception as e:
+        logger.error(f"CoinGecko fallback failed: {e}")
+    
+    return {}
+
+
 @core_bp.route('/api/positions')
 @require_api_key
 def api_positions():
-    """API endpoint for open positions - V6.5 with real Kraken prices"""
+    """API endpoint for open positions - V6.5 with real Kraken prices + CoinGecko fallback"""
     with get_db_connection() as conn:
         if not conn:
             return jsonify({
                 'success': False,
                 'positions': [],
-                'message': 'Database not connected'
+                'error': 'Database not connected',
+                'db_connected': False
             })
         
         try:
@@ -262,11 +314,12 @@ def api_positions():
             cursor.close()
             
             url = 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD,SOLUSD,XRPUSD,ADAUSD,DOGEUSD'
-            data = http_get_with_timeout(url, timeout=10, fallback={'result': {}})
+            data = http_get_with_timeout(url, timeout=10, fallback=None)
             
             kraken_prices = {}
+            price_source_used = 'Entry'
             
-            if data:
+            if data and data.get('result'):
                 price_map = {
                     'XXBTZUSD': 'BTC/USD', 'XETHZUSD': 'ETH/USD', 'SOLUSD': 'SOL/USD',
                     'XXRPZUSD': 'XRP/USD', 'ADAUSD': 'ADA/USD', 'XDGUSD': 'DOGE/USD',
@@ -276,8 +329,14 @@ def api_positions():
                 for key, ticker in data.get('result', {}).items():
                     symbol = price_map.get(key, key)
                     kraken_prices[symbol] = float(ticker['c'][0])
-                    
+                
+                price_source_used = 'Kraken'
                 logger.info(f"V6.5: Fetched {len(kraken_prices)} real-time prices from Kraken")
+            else:
+                logger.warning("Kraken API failed, trying CoinGecko fallback...")
+                kraken_prices = fetch_coingecko_prices()
+                if kraken_prices:
+                    price_source_used = 'CoinGecko'
             
             positions = []
             total_value = 0
@@ -290,7 +349,7 @@ def api_positions():
                 cost = entry_price * quantity
                 
                 current_price = kraken_prices.get(symbol, entry_price)
-                price_source = 'Kraken' if symbol in kraken_prices else 'Entry'
+                price_source = price_source_used if symbol in kraken_prices else 'Entry'
                 
                 current_value = current_price * quantity
                 unrealized_pnl = current_value - cost
@@ -327,7 +386,8 @@ def api_positions():
                     'total_value': round(total_value, 2),
                     'total_unrealized_pnl': round(total_value - total_cost, 2)
                 },
-                'price_source': 'Kraken API',
+                'price_source': f'{price_source_used} API',
+                'db_connected': True,
                 'timestamp': datetime.now().isoformat()
             })
             

@@ -180,23 +180,23 @@
     </div>
     
     <div class="status-bar">
-        <div class="status-item">
+        <div class="status-item" id="status-bot">
             <span class="status-dot status-online"></span>
-            <span>BOT ACTIVE</span>
+            <span>BOT ONLINE</span>
         </div>
-        <div class="status-item">
+        <div class="status-item" id="status-db">
             <span class="status-dot status-online"></span>
-            <span>DATABASE CONNECTED</span>
+            <span>DATABASE ONLINE</span>
         </div>
-        <div class="status-item">
+        <div class="status-item" id="status-kraken">
             <span class="status-dot status-online"></span>
-            <span>KRAKEN API</span>
+            <span>KRAKEN ONLINE</span>
         </div>
         <div class="status-item">
             <span>PAIRS: BTC ETH SOL</span>
         </div>
-        <div class="status-item">
-            <span>REFRESH: 10s</span>
+        <div class="status-item" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); padding: 4px 12px; border-radius: 4px;">
+            <span style="color: #000; font-weight: 700; letter-spacing: 1px;">📄 PAPER TRADING</span>
         </div>
         <div class="status-item">
             <span id="last-update">--:--:--</span>
@@ -213,5 +213,6 @@
 <script src="{{ url_for('static', filename='js/components/volume.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/feargreed.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/statusbar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

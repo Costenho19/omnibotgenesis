@@ -10,11 +10,27 @@ from .database import get_db_connection
 logger = logging.getLogger(__name__)
 
 
-def get_paper_trades(days=30):
-    """Fetch REAL paper trading history from database"""
+def get_paper_trades(days=30, return_dict=False):
+    """Fetch REAL paper trading history from database
+    
+    Args:
+        days: Number of days to fetch
+        return_dict: If True, returns {success, trades, error} dict for explicit error handling
+    
+    Returns:
+        If return_dict=False: List of trades (legacy behavior)
+        If return_dict=True: Dict with success, trades, error, db_connected fields
+    """
     with get_db_connection() as conn:
         if not conn:
-            logger.info("No database connection - returning empty (no demo data)")
+            logger.warning("No database connection - cannot fetch trades")
+            if return_dict:
+                return {
+                    'success': False,
+                    'trades': [],
+                    'error': 'Database not connected',
+                    'db_connected': False
+                }
             return []
         
         try:
@@ -50,10 +66,25 @@ def get_paper_trades(days=30):
                 })
             
             logger.info(f"Fetched {len(trades)} REAL trades from database")
+            
+            if return_dict:
+                return {
+                    'success': True,
+                    'trades': trades,
+                    'error': None,
+                    'db_connected': True
+                }
             return trades
             
         except Exception as e:
             logger.error(f"Error fetching real trades: {e}")
+            if return_dict:
+                return {
+                    'success': False,
+                    'trades': [],
+                    'error': str(e),
+                    'db_connected': True
+                }
             return []
 
 

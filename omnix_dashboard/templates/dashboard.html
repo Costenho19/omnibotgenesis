@@ -35,6 +35,9 @@
                         <span id="timezone-badge" class="text-[7px] sm:text-[8px] text-slate-600 uppercase ml-0.5 sm:ml-1 hidden sm:inline">--</span>
                     </div>
                     
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        <span style="color: #000; font-weight: 700; font-size: 11px; letter-spacing: 1px;">📄 PAPER TRADING</span>
+                    </div>
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50">
                         <span id="connection-dot" class="w-2 h-2 rounded-full bg-green-500 pulse-live"></span>
                         <span id="db-status" class="text-xs text-slate-400 mono">CONNECTING...</span>
@@ -309,5 +312,6 @@
 <script src="{{ url_for('static', filename='js/components/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/ticker.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/news.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/statusbar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
 {% endblock %}
