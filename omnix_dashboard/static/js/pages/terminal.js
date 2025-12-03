@@ -58,7 +58,8 @@ const TerminalApp = (function() {
             { name: 'news', fn: () => OmnixNews.update('news-feed', 'news-source') },
             { name: 'finnhub', fn: () => OmnixNews.updateFinnhub('news-feed', 'news-source') },
             { name: 'feargreed', fn: () => OmnixFearGreed.update() },
-            { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } }
+            { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } },
+            { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } }
         ];
     }
 
@@ -75,6 +76,10 @@ const TerminalApp = (function() {
 
         if (window.RiskGuardian) {
             RiskGuardian.init('risk-guardian-widget');
+        }
+        
+        if (window.AdaptiveEngine) {
+            AdaptiveEngine.init('adaptive-engine-widget');
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);

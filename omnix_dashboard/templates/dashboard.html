@@ -5,6 +5,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/riskguardian.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/adaptive.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -274,7 +275,12 @@
                     <div class="text-slate-600 text-xs text-center py-6 uppercase tracking-wider">Loading Risk Guardian...</div>
                 </div>
             </div>
-            <div class="lg:col-span-2 glass-card p-4">
+            <div class="lg:col-span-1 glass-card p-4">
+                <div id="adaptive-engine-widget">
+                    <div class="text-slate-600 text-xs text-center py-6 uppercase tracking-wider">Loading Adaptive Engine...</div>
+                </div>
+            </div>
+            <div class="lg:col-span-1 glass-card p-4">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">OMNIX Status</h2>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
@@ -343,5 +349,6 @@
 <script src="{{ url_for('static', filename='js/components/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/statusbar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/riskguardian.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/adaptive.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
 {% endblock %}

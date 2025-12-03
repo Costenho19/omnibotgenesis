@@ -5,6 +5,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/terminal.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/riskguardian.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/adaptive.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -128,6 +129,10 @@
         <div style="margin-top: 12px;" id="risk-guardian-widget">
             <div style="color: var(--text-muted); font-size: 11px;">Loading Risk Guardian...</div>
         </div>
+        
+        <div style="margin-top: 12px;" id="adaptive-engine-widget">
+            <div style="color: var(--text-muted); font-size: 11px;">Loading Adaptive Engine...</div>
+        </div>
     </div>
     
     <div class="panel">
@@ -183,5 +188,6 @@
 <script src="{{ url_for('static', filename='js/components/feargreed.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/statusbar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/riskguardian.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/adaptive.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}
