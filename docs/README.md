@@ -13,7 +13,7 @@
 | **Project Structure** | `docs/core/PROJECT_STRUCTURE.md` | Architecture and modules |
 | **Database Schema** | `docs/core/DATABASE.md` | 44 tables documented |
 | **Environment Config** | `docs/core/MIGRATION_GUIDE.md` | 30+ environment variables |
-| **Dashboard Analysis** | `docs/DASHBOARD_ANALYSIS.md` | Technical audit report (20 issues, roadmap) |
+| **Dashboard Technical Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | Complete API, security, and architecture reference |
 | **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
 | **Dashboard Setup** | `docs/deployment/RAILWAY_DASHBOARD_SETUP.md` | Dashboard configuration |
 | **Testing Suite** | `omnix_testing/README.md` | Backtesting and validation |
@@ -29,7 +29,8 @@ docs/
 ├── core/                              # Core architecture docs
 │   ├── PROJECT_STRUCTURE.md           # System architecture (V6.5)
 │   ├── DATABASE.md                    # Database schema (44 tables)
-│   └── MIGRATION_GUIDE.md             # Environment configuration
+│   ├── MIGRATION_GUIDE.md             # Environment configuration
+│   └── DASHBOARD_TECHNICAL_REFERENCE.md  # Dashboard API & security (19 protected endpoints)
 │
 ├── deployment/                        # Deployment guides
 │   ├── RAILWAY_DEPLOYMENT.md          # Railway production setup

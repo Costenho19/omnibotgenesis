@@ -1,8 +1,22 @@
-# OMNIX V6.5.2 Dashboard Analysis - Complete Technical Report
+# OMNIX V6.5.2 Dashboard - Technical Reference
 
+> **Document:** Official Dashboard Technical Reference  
+> **Location:** `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md`  
 > **Last Updated:** December 2025  
-> **Status:** Production Ready (Phase 5 Complete)  
-> **Purpose:** Technical audit for institutional investors
+> **Status:** Production Ready (Phase 5+ Complete)  
+> **Purpose:** Complete API, security, and architecture reference for institutional investors
+
+---
+
+## Document Scope
+
+This technical reference provides comprehensive documentation for the OMNIX Dashboard system including:
+
+- **Architecture**: Flask Blueprints, modular JavaScript/CSS, database schema
+- **API Reference**: 33 endpoints across 6 blueprints (19 protected, 14 public)
+- **Security Model**: API key authentication, CORS configuration, protected routes
+- **Frontend**: Modular JS (IIFE pattern), CSS (BEM methodology), Jinja2 templates
+- **Database**: PostgreSQL with connection pooling, audited snapshots with SHA-256 chain
 
 ---
 
