@@ -364,3 +364,29 @@ def api_market_technical_indicators(symbol):
         },
         'timestamp': datetime.now().isoformat()
     })
+
+
+@market_bp.route('/api/benchmarks')
+def api_benchmarks():
+    """API endpoint for benchmark comparisons (BTC and SPY normalized to %)."""
+    from omnix_dashboard.utils.benchmark_service import get_benchmarks
+    
+    days = request.args.get('days', 30, type=int)
+    base_date = request.args.get('base_date', None)
+    
+    days = min(max(days, 7), 90)
+    
+    benchmarks = get_benchmarks(days=days, base_date=base_date)
+    
+    return jsonify({
+        'success': benchmarks['success'],
+        'benchmarks': {
+            'btc': benchmarks['btc'],
+            'spy': benchmarks['spy']
+        },
+        'base_date': benchmarks['base_date'],
+        'btc_available': benchmarks['btc_available'],
+        'spy_available': benchmarks['spy_available'],
+        'days': days,
+        'timestamp': datetime.now().isoformat()
+    })
