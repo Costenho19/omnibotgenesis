@@ -23,23 +23,41 @@ const AuditedSnapshots = (function() {
 
     async function refresh() {
         try {
-            const [snapshotsRes, chainRes] = await Promise.all([
+            const [snapshotsRes, chainRes] = await Promise.allSettled([
                 OmnixAPI.fetchWithRetry('/api/snapshots?limit=10'),
                 OmnixAPI.fetchWithRetry('/api/snapshots/chain/verify')
             ]);
 
-            if (snapshotsRes.success) {
-                _snapshots = snapshotsRes.snapshots || [];
+            let hasErrors = false;
+            let errorMessages = [];
+
+            if (snapshotsRes.status === 'fulfilled' && snapshotsRes.value.success) {
+                _snapshots = snapshotsRes.value.snapshots || [];
+            } else if (snapshotsRes.status === 'rejected') {
+                hasErrors = true;
+                errorMessages.push('Failed to load snapshots');
+                console.error('Snapshots fetch error:', snapshotsRes.reason);
+            } else if (snapshotsRes.value && !snapshotsRes.value.success) {
+                hasErrors = true;
+                errorMessages.push(snapshotsRes.value.error || 'Snapshots unavailable');
             }
 
-            if (chainRes.success) {
-                _chainStatus = chainRes;
+            if (chainRes.status === 'fulfilled' && chainRes.value.success) {
+                _chainStatus = chainRes.value;
+            } else if (chainRes.status === 'rejected') {
+                console.warn('Chain verification unavailable:', chainRes.reason);
+            } else if (chainRes.value && !chainRes.value.success) {
+                console.warn('Chain verification error:', chainRes.value.error);
             }
 
-            render();
+            if (hasErrors && _snapshots.length === 0) {
+                renderError(errorMessages.join('. '));
+            } else {
+                render();
+            }
         } catch (error) {
             console.error('AuditedSnapshots refresh error:', error);
-            renderError();
+            renderError('Connection error. Retrying...');
         }
     }
 
@@ -125,7 +143,7 @@ const AuditedSnapshots = (function() {
         }).join('');
     }
 
-    function renderError() {
+    function renderError(message = 'Unable to load snapshots') {
         const container = document.getElementById(_containerId);
         if (!container) return;
 
@@ -135,54 +153,131 @@ const AuditedSnapshots = (function() {
                     <span class="snapshots-icon">📋</span>
                     <span>AUDITED SNAPSHOTS</span>
                 </div>
+                <div class="chain-status" style="background: ${STATUS_COLORS.failed.bg}; border-color: ${STATUS_COLORS.failed.border}; color: ${STATUS_COLORS.failed.text}">
+                    ⚠️ ERROR
+                </div>
             </div>
             <div class="snapshots-error">
-                Unable to load snapshots. Check database connection.
+                <div class="error-icon">⚠️</div>
+                <div class="error-message">${message}</div>
+                <div class="error-hint">Check database connection or API key configuration.</div>
+                <button class="snapshot-btn retry-btn" onclick="AuditedSnapshots.refresh()">
+                    ↻ Retry
+                </button>
             </div>
         `;
     }
 
     async function createSnapshot() {
+        showNotification('Creating snapshot...', 'pending');
         try {
-            const response = await fetch('/api/snapshots/create', {
+            const data = await OmnixAPI.fetchWithRetry('/api/snapshots/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'daily' })
             });
-            const data = await response.json();
             
             if (data.success) {
-                console.log('Snapshot created:', data.checksum);
+                const msg = data.already_exists 
+                    ? 'Snapshot already exists for today' 
+                    : 'Snapshot created successfully!';
+                console.log('Snapshot:', data.checksum);
+                showNotification(msg, 'success');
                 await refresh();
             } else {
                 console.error('Failed to create snapshot:', data.error);
+                showNotification(`Failed: ${data.error || 'Unknown error'}`, 'error');
             }
         } catch (error) {
             console.error('Create snapshot error:', error);
+            const errorMsg = error.message?.includes('401') 
+                ? 'Authentication required' 
+                : 'Network error creating snapshot';
+            showNotification(errorMsg, 'error');
         }
     }
 
     async function verify(snapshotId) {
+        showNotification('Verifying snapshot...', 'pending');
         try {
             const response = await OmnixAPI.fetchWithRetry(`/api/snapshots/${snapshotId}/verify`);
             if (response.success) {
-                console.log('Verification result:', response.verification_status);
+                const status = response.verification_status;
+                const isValid = status === 'verified';
+                showNotification(
+                    isValid ? 'Snapshot verified successfully!' : 'Verification failed - integrity issue detected',
+                    isValid ? 'success' : 'error'
+                );
                 await refresh();
+            } else {
+                showNotification(`Verification error: ${response.error}`, 'error');
             }
         } catch (error) {
             console.error('Verify snapshot error:', error);
+            showNotification('Network error during verification', 'error');
         }
     }
 
     async function verifyAll() {
+        showNotification('Verifying entire chain...', 'pending');
         try {
             const response = await OmnixAPI.fetchWithRetry('/api/snapshots/chain/verify');
             if (response.success) {
                 _chainStatus = response;
+                const isValid = response.chain_valid;
+                showNotification(
+                    isValid 
+                        ? `Chain verified: ${response.verified_count} snapshots intact!` 
+                        : `Chain issues: ${response.failed_count} snapshot(s) failed verification`,
+                    isValid ? 'success' : 'error'
+                );
                 render();
+            } else {
+                showNotification(`Chain verification error: ${response.error}`, 'error');
             }
         } catch (error) {
             console.error('Verify chain error:', error);
+            showNotification('Network error during chain verification', 'error');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        const colors = {
+            success: { bg: '#00ff8830', border: '#00ff88', text: '#00ff88' },
+            error: { bg: '#ff444430', border: '#ff4444', text: '#ff4444' },
+            pending: { bg: '#ffaa0030', border: '#ffaa00', text: '#ffaa00' },
+            info: { bg: '#4a90d930', border: '#4a90d9', text: '#4a90d9' }
+        };
+        const color = colors[type] || colors.info;
+        
+        let notification = document.querySelector('.snapshots-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.className = 'snapshots-notification';
+            document.body.appendChild(notification);
+        }
+        
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            background: ${color.bg};
+            border: 1px solid ${color.border};
+            color: ${color.text};
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        `;
+        notification.textContent = message;
+        
+        if (type !== 'pending') {
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
     }
 

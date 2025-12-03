@@ -5,11 +5,15 @@ Provides cryptographically verified snapshots for investor auditing
 
 import hashlib
 import json
+import logging
 from datetime import datetime, date
 from typing import Optional
 from flask import Blueprint, jsonify, request
 
 from omnix_dashboard.utils.database import get_db_connection, is_db_available
+from omnix_dashboard.utils.decorators import require_api_key
+
+logger = logging.getLogger(__name__)
 
 snapshots_bp = Blueprint('snapshots', __name__)
 
@@ -49,6 +53,7 @@ def get_latest_checksum() -> Optional[str]:
 
 
 @snapshots_bp.route('/api/snapshots')
+@require_api_key
 def list_snapshots():
     """List all audited snapshots with verification status"""
     if not is_db_available():
@@ -118,6 +123,7 @@ def list_snapshots():
 
 
 @snapshots_bp.route('/api/snapshots/create', methods=['POST'])
+@require_api_key
 def create_snapshot():
     """Create a new audited snapshot with cryptographic verification"""
     if not is_db_available():
@@ -140,6 +146,24 @@ def create_snapshot():
             
             with conn.cursor() as cur:
                 cur.execute("""
+                    SELECT id, verification_status, checksum_sha256 
+                    FROM audited_snapshots 
+                    WHERE snapshot_type = %s AND snapshot_date = %s
+                """, (snapshot_type, snapshot_date))
+                existing = cur.fetchone()
+                
+                if existing and existing[1] == 'verified':
+                    logger.info(f"Snapshot for {snapshot_date} already verified, returning existing")
+                    return jsonify({
+                        'success': True,
+                        'snapshot_id': existing[0],
+                        'checksum': existing[2],
+                        'chained': True,
+                        'message': f'Snapshot for {snapshot_date} already exists and is verified',
+                        'already_exists': True
+                    })
+                
+                cur.execute("""
                     SELECT COUNT(*) as total,
                            SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
                            SUM(profit_loss) as total_pnl
@@ -148,15 +172,21 @@ def create_snapshot():
                 """, (snapshot_date,))
                 
                 trade_stats = cur.fetchone()
-                total_trades = trade_stats[0] or 0
-                wins = trade_stats[1] or 0
-                total_pnl = float(trade_stats[2]) if trade_stats[2] else 0
+                if trade_stats:
+                    total_trades = trade_stats[0] or 0
+                    wins = trade_stats[1] or 0
+                    total_pnl = float(trade_stats[2]) if trade_stats[2] else 0
+                else:
+                    total_trades = 0
+                    wins = 0
+                    total_pnl = 0.0
                 
                 cur.execute("""
                     SELECT COUNT(*) FROM paper_trading_trades
                     WHERE closed_at IS NULL
                 """)
-                open_positions = cur.fetchone()[0] or 0
+                open_row = cur.fetchone()
+                open_positions = open_row[0] if open_row else 0
                 
                 cur.execute("""
                     SELECT balance_usd, sharpe_ratio, max_drawdown_pct, 
@@ -224,8 +254,18 @@ def create_snapshot():
                     sharpe_ratio, max_drawdown, json.dumps(snapshot_data), checksum, previous_checksum
                 ))
                 
-                snapshot_id = cur.fetchone()[0]
+                result_row = cur.fetchone()
+                if not result_row:
+                    logger.error(f"Snapshot creation failed: no ID returned for {snapshot_date}")
+                    conn.rollback()
+                    return jsonify({
+                        'success': False,
+                        'error': 'Snapshot creation failed - no ID returned'
+                    })
+                
+                snapshot_id = result_row[0]
                 conn.commit()
+                logger.info(f"Snapshot {snapshot_id} created for {snapshot_date} with checksum {checksum[:16]}...")
                 
                 return jsonify({
                     'success': True,
@@ -237,6 +277,7 @@ def create_snapshot():
                 
         except Exception as e:
             conn.rollback()
+            logger.error(f"Snapshot creation failed: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': str(e)
@@ -244,6 +285,7 @@ def create_snapshot():
 
 
 @snapshots_bp.route('/api/snapshots/<int:snapshot_id>/verify')
+@require_api_key
 def verify_snapshot(snapshot_id):
     """Verify the integrity of a specific snapshot"""
     if not is_db_available():
@@ -291,6 +333,14 @@ def verify_snapshot(snapshot_id):
                 
                 new_status = 'verified' if (checksum_valid and chain_valid) else 'failed'
                 
+                if not checksum_valid:
+                    logger.warning(
+                        f"Snapshot {snapshot_id} checksum mismatch: "
+                        f"stored={stored_checksum[:16]}... calculated={calculated_checksum[:16]}..."
+                    )
+                if not chain_valid:
+                    logger.warning(f"Snapshot {snapshot_id} chain broken: missing previous {previous_checksum[:16]}...")
+                
                 cur.execute("""
                     UPDATE audited_snapshots 
                     SET verified_at = CURRENT_TIMESTAMP,
@@ -298,6 +348,11 @@ def verify_snapshot(snapshot_id):
                     WHERE id = %s
                 """, (new_status, snapshot_id))
                 conn.commit()
+                
+                if new_status == 'verified':
+                    logger.info(f"Snapshot {snapshot_id} verified successfully")
+                else:
+                    logger.error(f"Snapshot {snapshot_id} verification FAILED")
                 
                 return jsonify({
                     'success': True,
@@ -311,6 +366,7 @@ def verify_snapshot(snapshot_id):
                 })
                 
         except Exception as e:
+            logger.error(f"Snapshot {snapshot_id} verification error: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': str(e)
@@ -318,6 +374,7 @@ def verify_snapshot(snapshot_id):
 
 
 @snapshots_bp.route('/api/snapshots/chain/verify')
+@require_api_key
 def verify_chain():
     """Verify the entire chain of snapshots with full integrity checks"""
     if not is_db_available():
@@ -386,6 +443,7 @@ def verify_chain():
                         verified_ids.append(snapshot_id)
                     else:
                         failed_ids.append(snapshot_id)
+                        logger.warning(f"Chain verification failed for snapshot {snapshot_id}: {issue}")
                 
                 if verified_ids:
                     cur.execute("""
@@ -407,6 +465,13 @@ def verify_chain():
                 
                 chain_valid = len(broken_links) == 0
                 
+                if chain_valid:
+                    logger.info(f"Chain verification passed: {len(rows)} snapshots verified")
+                else:
+                    logger.error(f"Chain verification FAILED: {len(failed_ids)}/{len(rows)} snapshots have issues")
+                    for link in broken_links:
+                        logger.error(f"  - Snapshot {link['id']}: {link['issue']}")
+                
                 return jsonify({
                     'success': True,
                     'chain_valid': chain_valid,
@@ -418,6 +483,7 @@ def verify_chain():
                 })
                 
         except Exception as e:
+            logger.error(f"Chain verification error: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': str(e)
@@ -425,6 +491,7 @@ def verify_chain():
 
 
 @snapshots_bp.route('/api/snapshots/<int:snapshot_id>/audit')
+@require_api_key
 def get_snapshot_audit(snapshot_id):
     """Get full audit details for a snapshot including complete checksums for external verification"""
     if not is_db_available():
@@ -499,6 +566,7 @@ def get_snapshot_audit(snapshot_id):
 
 
 @snapshots_bp.route('/api/snapshots/latest')
+@require_api_key
 def get_latest_snapshot():
     """Get the most recent snapshot with full details"""
     if not is_db_available():

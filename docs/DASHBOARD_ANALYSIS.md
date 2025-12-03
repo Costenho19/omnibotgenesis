@@ -1,7 +1,7 @@
 # OMNIX V6.5.2 Dashboard Analysis - Complete Technical Report
 
 > **Last Updated:** December 2025  
-> **Status:** Production Ready (Phase 4 Complete)  
+> **Status:** Production Ready (Phase 5 Complete)  
 > **Purpose:** Technical audit for institutional investors
 
 ---
@@ -18,13 +18,14 @@ omnix_dashboard/
 ├── run.py                      # WSGI entry point (34 lines)
 ├── __init__.py
 ├── ARCHITECTURE.md             # Technical architecture documentation
-├── blueprints/                 # 5 Blueprints, 25 routes total
-│   ├── __init__.py            # Blueprint exports (18 lines)
+├── blueprints/                 # 6 Blueprints, 31 routes total
+│   ├── __init__.py            # Blueprint exports (22 lines)
 │   ├── views.py               # HTML page routes (29 lines, 3 routes)
 │   ├── core.py                # Core APIs (430 lines, 6 routes)
 │   ├── market.py              # Market data (366 lines, 7 routes)
 │   ├── intelligence.py        # External APIs (298 lines, 6 routes)
-│   └── system.py              # System status (265 lines, 3 routes)
+│   ├── system.py              # System status (265 lines, 3 routes)
+│   └── snapshots.py           # Audited snapshots (610 lines, 6 routes) [NEW Phase 5]
 ├── utils/                      # Shared utilities (625 lines)
 │   ├── __init__.py            # Utils exports (53 lines)
 │   ├── database.py            # PostgreSQL connection pool (162 lines)
@@ -49,6 +50,7 @@ omnix_dashboard/
 | `market_bp` | market.py | 366 | 7 | Crypto, stocks, OHLC, volume, Fear&Greed, news |
 | `intelligence_bp` | intelligence.py | 298 | 6 | Finnhub, Alpha Vantage, intelligence summary, news |
 | `system_bp` | system.py | 265 | 3 | Signals, system status, debug |
+| `snapshots_bp` | snapshots.py | 610 | 6 | Audited snapshots, chain verification, cryptographic audit [NEW] |
 
 ### 1.3 Utils Package
 
@@ -82,19 +84,21 @@ omnix_dashboard/static/css/
 
 ```
 omnix_dashboard/static/js/
-├── core/                      # 496 lines total
+├── core/                      # 596 lines total
 │   ├── api.js                 # 112 lines - Fetch wrapper with fetchWithRetry() exponential backoff
 │   ├── utils.js               # 160 lines - Format utilities
 │   ├── clock.js               # 79 lines - Real-time clock
-│   └── common.js              # 145 lines - Shared refresh logic, startAutoRefresh(), refreshWidgets()
-├── components/                # 768 lines total
+│   ├── common.js              # 145 lines - Shared refresh logic, startAutoRefresh(), refreshWidgets()
+│   └── timezone.js            # 100 lines - Centralized date/time formatting [NEW Phase 5]
+├── components/                # 918 lines total
 │   ├── charts.js              # 234 lines - Plotly.react() delta updates, instance tracking
 │   ├── ticker.js              # 84 lines - Crypto price ticker
 │   ├── signals.js             # 66 lines - Trading signals display
 │   ├── volume.js              # 63 lines - Volume chart
 │   ├── news.js                # 94 lines - News feed
 │   ├── feargreed.js           # 101 lines - Fear & Greed gauge
-│   └── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
+│   ├── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
+│   └── snapshots.js           # 150 lines - Audited snapshots widget [NEW Phase 5]
 └── pages/                     # 394 lines total
     ├── terminal.js            # 101 lines - Terminal page controller
     └── dashboard.js           # 293 lines - Dashboard page controller
@@ -102,7 +106,7 @@ omnix_dashboard/static/js/
 
 **Script Load Order (base.html):**
 ```
-api.js → utils.js → clock.js → charts.js → common.js → [page scripts]
+api.js → utils.js → clock.js → timezone.js → charts.js → common.js → [page scripts]
 ```
 
 ### 1.6 Architecture Improvements (December 2024)
@@ -242,6 +246,34 @@ def get_database_url():
            os.environ.get('DATABASE_PUBLIC_URL')
 ```
 
+### 4.1 Audited Snapshots Schema (Phase 5)
+
+**Table: `audited_snapshots`** - Cryptographically verified portfolio snapshots for investor audit
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | SERIAL PRIMARY KEY | Unique identifier |
+| `snapshot_type` | VARCHAR | Type: 'daily', 'weekly', 'monthly' |
+| `snapshot_date` | DATE | Date of the snapshot |
+| `total_equity` | NUMERIC | Total portfolio value in USD |
+| `total_pnl` | NUMERIC | Cumulative profit/loss |
+| `open_positions_count` | INTEGER | Number of open positions |
+| `closed_trades_count` | INTEGER | Number of closed trades |
+| `win_rate` | NUMERIC | Win rate percentage |
+| `sharpe_ratio` | NUMERIC | Risk-adjusted return metric |
+| `max_drawdown` | NUMERIC | Maximum drawdown percentage |
+| `data_json` | JSONB | Complete snapshot data for verification |
+| `checksum_sha256` | VARCHAR | SHA-256 hash of data_json |
+| `previous_checksum` | VARCHAR | Chain link to previous snapshot |
+| `created_at` | TIMESTAMP | Creation timestamp |
+| `verified_at` | TIMESTAMP | Last verification timestamp |
+| `verification_status` | VARCHAR | 'pending', 'verified', 'failed' |
+| `user_id` | VARCHAR | Multi-tenant user identifier |
+| `position_snapshot_ids` | INTEGER[] | Related position snapshots |
+| `risk_snapshot_id` | INTEGER | Related risk metrics snapshot |
+
+**Unique Constraint:** `(snapshot_type, snapshot_date)` - One snapshot per type per day
+
 ---
 
 ## 5. Issues Detected
@@ -273,6 +305,12 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 - `/api/portfolio` - Portfolio state
 - `/api/equity-curve` - Equity curve data
 - `/api/signals/active` - Active trading signals
+- `/api/snapshots` - List all audited snapshots [NEW Phase 5]
+- `/api/snapshots/create` - Create new snapshot with SHA-256 checksum [NEW Phase 5]
+- `/api/snapshots/<id>/verify` - Verify individual snapshot integrity [NEW Phase 5]
+- `/api/snapshots/chain/verify` - Verify entire snapshot chain [NEW Phase 5]
+- `/api/snapshots/<id>/audit` - Full audit details with complete checksums [NEW Phase 5]
+- `/api/snapshots/latest` - Get most recent snapshot [NEW Phase 5]
 
 **Public Endpoints (no authentication required):**
 - `/api/market/*` - Public market data (Kraken prices, volume, OHLC)
