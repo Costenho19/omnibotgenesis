@@ -1,10 +1,15 @@
 """
 OMNIX Dashboard - Database Utilities
 Connection pooling and database management
+
+Phase 1 (Dec 2025): Added telemetry logging for pool monitoring
 """
 
 import os
 import logging
+import threading
+import time
+import atexit
 from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
@@ -12,6 +17,10 @@ logger = logging.getLogger(__name__)
 DB_AVAILABLE = False
 DB_ERROR_MESSAGE = None
 DB_POOL = None
+_TELEMETRY_THREAD = None
+_TELEMETRY_STOP_EVENT = threading.Event()
+_TELEMETRY_LOCK = threading.Lock()
+_TELEMETRY_INTERVAL = 300  # 5 minutes
 
 
 def get_database_url():
@@ -126,8 +135,21 @@ def get_pool_stats():
 
 
 def shutdown_pool():
-    """Gracefully close connection pool on shutdown"""
-    global DB_POOL
+    """Gracefully close connection pool and stop telemetry on shutdown"""
+    global DB_POOL, _TELEMETRY_THREAD
+    
+    # Signal telemetry thread to stop
+    _TELEMETRY_STOP_EVENT.set()
+    
+    # Wait for telemetry thread to finish (with timeout)
+    if _TELEMETRY_THREAD is not None and _TELEMETRY_THREAD.is_alive():
+        try:
+            _TELEMETRY_THREAD.join(timeout=2.0)
+        except Exception:
+            pass
+    _TELEMETRY_THREAD = None
+    
+    # Close database pool
     if DB_POOL:
         try:
             DB_POOL.close()
@@ -137,8 +159,70 @@ def shutdown_pool():
         DB_POOL = None
 
 
+def _log_pool_telemetry():
+    """Background thread to log pool stats every 5 minutes (Phase 1 telemetry)
+    
+    Uses stop event for clean shutdown and process ID for multi-worker awareness.
+    """
+    pid = os.getpid()
+    
+    while not _TELEMETRY_STOP_EVENT.is_set():
+        try:
+            stats = get_pool_stats()
+            if stats.get('status') == 'active':
+                logger.info(
+                    f"📊 POOL TELEMETRY [pid={pid}]: "
+                    f"size={stats.get('pool_size', 0)}, "
+                    f"available={stats.get('pool_available', 0)}, "
+                    f"waiting={stats.get('requests_waiting', 0)}, "
+                    f"total_requests={stats.get('requests_num', 0)}, "
+                    f"usage_ms={stats.get('usage_ms', 0)}"
+                )
+            else:
+                logger.warning(f"📊 POOL TELEMETRY [pid={pid}]: status={stats.get('status')}")
+        except Exception as e:
+            logger.error(f"📊 POOL TELEMETRY ERROR [pid={pid}]: {e}")
+        
+        # Wait with stop event check for faster shutdown response
+        _TELEMETRY_STOP_EVENT.wait(timeout=_TELEMETRY_INTERVAL)
+
+
+def _start_telemetry_thread():
+    """Start the background telemetry thread (Phase 1)
+    
+    Thread-safe implementation that prevents multiple threads from starting.
+    Uses lock to prevent race conditions in multi-threaded environments.
+    """
+    global _TELEMETRY_THREAD
+    
+    # Check if telemetry is enabled via environment variable
+    if os.environ.get('DISABLE_POOL_TELEMETRY', 'false').lower() == 'true':
+        logger.info("📊 Pool telemetry disabled via DISABLE_POOL_TELEMETRY=true")
+        return
+    
+    with _TELEMETRY_LOCK:
+        # Double-check inside lock to prevent race conditions
+        if _TELEMETRY_THREAD is not None and _TELEMETRY_THREAD.is_alive():
+            return  # Already running
+        
+        # Reset stop event in case of restart
+        _TELEMETRY_STOP_EVENT.clear()
+        
+        _TELEMETRY_THREAD = threading.Thread(
+            target=_log_pool_telemetry, 
+            daemon=True, 
+            name=f"pool-telemetry-{os.getpid()}"
+        )
+        _TELEMETRY_THREAD.start()
+        logger.info(f"📊 Pool telemetry started (pid={os.getpid()}, interval={_TELEMETRY_INTERVAL}s)")
+
+
+# Register shutdown handler for clean exit
+atexit.register(shutdown_pool)
+
+
 def init_database():
-    """Initialize database connection pool"""
+    """Initialize database connection pool and start telemetry (Phase 1)"""
     global DB_AVAILABLE
     
     if init_connection_pool():
@@ -146,6 +230,8 @@ def init_database():
             if conn:
                 DB_AVAILABLE = True
                 logger.info("Database connected: Real data mode ACTIVE (pooled)")
+                # Start telemetry thread for Phase 1 monitoring
+                _start_telemetry_thread()
                 return True
     
     DB_AVAILABLE = False

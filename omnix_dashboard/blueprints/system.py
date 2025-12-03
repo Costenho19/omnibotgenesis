@@ -8,8 +8,10 @@ import logging
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify
 
-from omnix_dashboard.utils.database import get_db_connection, get_database_url, init_database
-from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE
+from omnix_dashboard.utils.database import (
+    get_db_connection, get_database_url, init_database,
+    get_pool_stats, DB_AVAILABLE, DB_ERROR_MESSAGE
+)
 from omnix_dashboard.utils.decorators import require_api_key
 from omnix_dashboard.utils.queries import get_paper_trades
 
@@ -430,4 +432,60 @@ def api_debug():
         'db_error': DB_ERROR_MESSAGE,
         'python_version': os.popen('python --version').read().strip(),
         'timestamp': datetime.now().isoformat()
+    })
+
+
+@system_bp.route('/api/db-diagnostics')
+@require_api_key
+def api_db_diagnostics():
+    """
+    Phase 1 Database Diagnostics Endpoint (Dec 2025)
+    
+    Returns real-time pool statistics and Enterprise Service health.
+    Used for monitoring connection pool contention before service unification.
+    """
+    warnings = []
+    enterprise_health = {
+        'connected': False,
+        'using_enterprise': False,
+        'auto_migrations_enabled': True,
+        'last_connection_latency_ms': None
+    }
+    
+    pool_stats = get_pool_stats()
+    
+    try:
+        from omnix_services.database_service import db_service
+        if db_service:
+            health = db_service.health_check()
+            enterprise_health = {
+                'connected': health.get('database_connected', False),
+                'using_enterprise': getattr(db_service, 'using_enterprise', False),
+                'auto_migrations_enabled': health.get('auto_migrations_enabled', True),
+                'psycopg_available': health.get('psycopg_available', False)
+            }
+    except ImportError:
+        enterprise_health['error'] = 'Enterprise service not available'
+    except Exception as e:
+        enterprise_health['error'] = str(e)[:100]
+    
+    if pool_stats.get('status') == 'active' and enterprise_health.get('connected'):
+        warnings.append("Two parallel DB services detected - consolidation recommended (see DATABASE_AUDIT_REPORT.md)")
+    
+    if pool_stats.get('requests_waiting', 0) > 0:
+        warnings.append(f"Pool contention detected: {pool_stats.get('requests_waiting')} requests waiting")
+    
+    pool_available = pool_stats.get('pool_available', 0)
+    pool_size = pool_stats.get('pool_size', 1)
+    if pool_size > 0 and pool_available / pool_size < 0.2:
+        warnings.append(f"Pool utilization high: only {pool_available}/{pool_size} connections available")
+    
+    return jsonify({
+        'success': True,
+        'timestamp': datetime.now().isoformat(),
+        'dashboard_pool': pool_stats,
+        'enterprise_service': enterprise_health,
+        'warnings': warnings,
+        'phase': 'Phase 1: Discovery & Freeze',
+        'documentation': 'docs/core/DATABASE_AUDIT_REPORT.md (Section 14)'
     })

@@ -153,21 +153,50 @@ class DatabaseServiceEnterprise:
         try:
             logger.info("🔌 Intentando conectar a PostgreSQL...")
             
-            # 🔄 EJECUTAR MIGRACIONES (si es necesario)
-            self._migrate_users_to_v2()
-            self._drop_prices_table()
-            self._fix_risk_guardian_user_id_type()
-            self._add_foreign_key_constraints()
-            self._add_check_constraints()
+            # 🚦 FEATURE FLAG: DISABLE_AUTO_MIGRATIONS (Phase 1 - Dec 2025)
+            # Set DISABLE_AUTO_MIGRATIONS=true in Railway to skip all DDL operations
+            # This allows telemetry collection without schema changes
+            auto_migrations_disabled = os.environ.get('DISABLE_AUTO_MIGRATIONS', 'false').lower() == 'true'
+            self.auto_migrations_enabled = not auto_migrations_disabled
             
-            # 🧹 MIGRACIÓN AGRESIVA: Limpieza de tablas legacy (Nov 28, 2025)
-            # EJECUTAR ANTES de _init_tables() para evitar recrear tablas legacy
-            self._run_aggressive_cleanup()
-            
-            self._init_tables()
-            
-            # 🗑️ Ejecutar cleanup automático (1x por día)
-            self._run_daily_cleanup()
+            if auto_migrations_disabled:
+                logger.warning("=" * 70)
+                logger.warning("⚠️ AUTO-MIGRATIONS DISABLED via DISABLE_AUTO_MIGRATIONS=true")
+                logger.warning("   - Schema migrations: SKIPPED")
+                logger.warning("   - Table cleanup: SKIPPED")
+                logger.warning("   - Connection validation: RUNNING")
+                logger.warning("=" * 70)
+                
+                # Validate connection even when migrations are disabled
+                # This ensures self.connected is accurate and queries can execute
+                test_conn = self._get_connection()
+                if test_conn:
+                    try:
+                        cursor = test_conn.cursor()
+                        cursor.execute("SELECT 1")
+                        cursor.fetchone()
+                        cursor.close()
+                        logger.info("✅ Connection validated (migrations disabled)")
+                    finally:
+                        test_conn.close()
+                else:
+                    raise Exception("Failed to establish database connection")
+            else:
+                # 🔄 EJECUTAR MIGRACIONES (si es necesario)
+                self._migrate_users_to_v2()
+                self._drop_prices_table()
+                self._fix_risk_guardian_user_id_type()
+                self._add_foreign_key_constraints()
+                self._add_check_constraints()
+                
+                # 🧹 MIGRACIÓN AGRESIVA: Limpieza de tablas legacy (Nov 28, 2025)
+                # EJECUTAR ANTES de _init_tables() para evitar recrear tablas legacy
+                self._run_aggressive_cleanup()
+                
+                self._init_tables()
+                
+                # 🗑️ Ejecutar cleanup automático (1x por día)
+                self._run_daily_cleanup()
             
             self.connected = True
             self.using_enterprise = True  # 🔧 FIX Nov 30, 2025: Flag para PaperTradingManager use PostgreSQL
@@ -189,7 +218,8 @@ class DatabaseServiceEnterprise:
         return {
             'psycopg_available': PSYCOPG_AVAILABLE,
             'database_connected': self.connected,
-            'database_url_configured': bool(self.db_url)
+            'database_url_configured': bool(self.db_url),
+            'auto_migrations_enabled': getattr(self, 'auto_migrations_enabled', True)
         }
     
     def execute_query(self, sql: str, params: tuple = None, fetch: bool = None):
