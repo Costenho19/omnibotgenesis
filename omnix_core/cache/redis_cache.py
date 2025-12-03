@@ -179,3 +179,8 @@ def cache_result(ttl: int = 300, key_prefix: str = ""):
 
 # Global cache instance
 cache = RedisCache()
+
+
+def get_redis_cache() -> RedisCache:
+    """Get global Redis cache instance for V6.5.2 multi-user architecture"""
+    return cache
