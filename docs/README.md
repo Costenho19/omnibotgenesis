@@ -1,7 +1,7 @@
-# OMNIX V6.5 INSTITUTIONAL+ Documentation Index
+# OMNIX V6.5.2 INSTITUTIONAL+ Documentation Index
 
-**Version:** V6.5 INSTITUTIONAL+  
-**Last Updated:** December 2024
+**Version:** V6.5.2 INSTITUTIONAL+  
+**Last Updated:** December 2025
 
 ---
 
@@ -11,9 +11,10 @@
 |----------|----------|-------------|
 | **Project Overview** | `/replit.md` | Main project documentation |
 | **Project Structure** | `docs/core/PROJECT_STRUCTURE.md` | Architecture and modules |
-| **Database Schema** | `docs/core/DATABASE.md` | 44 tables documented |
+| **Database Schema** | `docs/core/DATABASE.md` | 45 tables documented |
+| **Database Audit** | `docs/core/DATABASE_AUDIT_REPORT.md` | Schema audit & defect analysis |
 | **Environment Config** | `docs/core/MIGRATION_GUIDE.md` | 30+ environment variables |
-| **Dashboard Technical Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | Complete API, security, and architecture reference |
+| **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | Complete API, security, and architecture reference |
 | **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
 | **Dashboard Setup** | `docs/deployment/RAILWAY_DASHBOARD_SETUP.md` | Dashboard configuration |
 | **Testing Suite** | `omnix_testing/README.md` | Backtesting and validation |
@@ -24,41 +25,44 @@
 
 ```
 docs/
-├── README.md                          # This index file
+├── README.md                              # This index file
 │
-├── core/                              # Core architecture docs
-│   ├── PROJECT_STRUCTURE.md           # System architecture (V6.5)
-│   ├── DATABASE.md                    # Database schema (44 tables)
-│   ├── MIGRATION_GUIDE.md             # Environment configuration
-│   └── DASHBOARD_TECHNICAL_REFERENCE.md  # Dashboard API & security (19 protected endpoints)
+├── core/                                  # Core architecture docs
+│   ├── PROJECT_STRUCTURE.md               # System architecture (V6.5.2)
+│   ├── DATABASE.md                        # Database schema (45 tables)
+│   ├── DATABASE_AUDIT_REPORT.md           # Schema audit & integrity analysis
+│   ├── MIGRATION_GUIDE.md                 # Environment configuration
+│   └── DASHBOARD_TECHNICAL_REFERENCE.md   # Dashboard API & security (19 protected endpoints)
 │
-├── deployment/                        # Deployment guides
-│   ├── RAILWAY_DEPLOYMENT.md          # Railway production setup
-│   └── RAILWAY_DASHBOARD_SETUP.md     # Dashboard configuration
+├── deployment/                            # Deployment guides
+│   ├── RAILWAY_DEPLOYMENT.md              # Railway production setup
+│   └── RAILWAY_DASHBOARD_SETUP.md         # Dashboard configuration
 │
-├── testing/                           # Testing documentation
+├── testing/                               # Testing documentation
 │   └── (see omnix_testing/README.md)
 │
-└── archive/                           # Historical documentation
-    ├── historical/                    # Past version docs
-    └── ivan/                          # Ivan documentation
+└── archive/                               # Historical documentation
+    ├── historical/                        # Past version docs
+    └── ivan/                              # Ivan documentation
 ```
 
 ---
 
-## V6.5 Key Features
+## V6.5.2 Key Features
 
 ### Core Engines
 - **AutoTradingBot V6.4 PREMIUM** - Multi-crypto scanning, tiered signals
 - **Non-Markovian Memory Kernel V6.5** - Regime transitions, cyclical patterns
-- **Coherence Engine V5.4 ULTRA** - 6-Tier Veto System
+- **Coherence Engine V6.5 ULTRA** - 6-Tier Veto System (45% threshold)
 - **AI Risk Guardian V5.4** - Overtrading and drawdown protection
 
-### New in V6.5
+### New in V6.5.2
 - **Adaptive Parameter Engine V6.5 ULTRA** - Auto-calibration per regime
 - **On-Chain Data Intelligence V6.5** - Whale tracking, exchange flows
-- **44 Database Tables** - Complete persistent storage
+- **45 Database Tables** - Complete persistent storage
 - **25+ Dashboard API Endpoints** - Real-time data access
+- **Audited Snapshots** - Cryptographic verification for investors
+- **Database Audit Report** - Complete schema analysis
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity
@@ -81,13 +85,35 @@ docs/
 
 ---
 
+## Database Summary
+
+| Category | Tables | Status |
+|----------|--------|--------|
+| Core Trading | 5 | Documented |
+| User Management | 4 | Documented |
+| Risk Management | 9 | Documented |
+| Derivatives | 6 | Documented |
+| AI/Conversations | 3 | Documented |
+| Community | 5 | Documented |
+| Other | 13 | Documented |
+| **TOTAL** | **45** | Audited Dec 2025 |
+
+**Audit Status**: See [DATABASE_AUDIT_REPORT.md](core/DATABASE_AUDIT_REPORT.md) for:
+- Foreign key analysis (8 FKs of 45 tables)
+- Redundant table detection
+- Service layer duplication
+- Remediation plan
+
+---
+
 ## Getting Started
 
 ### For Developers
 1. Read `replit.md` - Project overview
 2. Read `docs/core/PROJECT_STRUCTURE.md` - Architecture
 3. Review `docs/core/DATABASE.md` - Database schema
-4. Check `docs/core/MIGRATION_GUIDE.md` - Environment setup
+4. Check `docs/core/DATABASE_AUDIT_REPORT.md` - Schema analysis
+5. Check `docs/core/MIGRATION_GUIDE.md` - Environment setup
 
 ### For Deployment
 1. Read `docs/deployment/RAILWAY_DEPLOYMENT.md` - Main deployment
@@ -116,7 +142,7 @@ docs/
 ### Databases
 | Service | Purpose |
 |---------|---------|
-| PostgreSQL (Railway) | Main persistence |
+| PostgreSQL (Railway) | Main persistence (45 tables) |
 | Redis (Railway) | Cache & state |
 
 ---
@@ -125,6 +151,8 @@ docs/
 
 | Version | Date | Key Features |
 |---------|------|--------------|
+| V6.5.2 | Dec 2025 | Database Audit, Audited Snapshots, Frontend Optimization |
+| V6.5.1 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
 | V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
 | V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
 | V6.3 | Nov 2024 | Stock Trading ULTRA, Real Data Integration |
@@ -138,10 +166,10 @@ docs/
 
 - **Technical Issues:** Review documentation first
 - **Architecture Questions:** See `PROJECT_STRUCTURE.md`
-- **Database:** See `DATABASE.md`
+- **Database:** See `DATABASE.md` and `DATABASE_AUDIT_REPORT.md`
 - **Deployment:** See deployment guides
 
 ---
 
-**OMNIX V6.5 INSTITUTIONAL+**  
+**OMNIX V6.5.2 INSTITUTIONAL+**  
 **Target: $400K seed funding @ $2.5M valuation**
