@@ -2241,8 +2241,8 @@ ETH: {result['new_eth_balance']:.8f}
             logger.info("✅ Validaciones OK - Activando bot...")
             await update.message.reply_text("🔄 Activando trading automático 24/7...")
             
-            logger.info("📞 Llamando a auto_trading.start()...")
-            result = self.auto_trading.start()
+            logger.info(f"📞 Llamando a auto_trading.start(user_id={user_id})...")
+            result = self.auto_trading.start(user_id=user_id)
             logger.info(f"📊 Resultado de start(): {result}")
             
             if 'error' in result:
@@ -2342,7 +2342,7 @@ Usa /auto_stop para detener
             
             await update.message.reply_text("🔄 Deteniendo trading automático...")
             
-            result = self.auto_trading.stop()
+            result = self.auto_trading.stop(user_id=user_id)
             
             if 'error' in result:
                 await update.message.reply_text(f"❌ {result['error']}")
@@ -4038,7 +4038,7 @@ Pregúntame cualquier cosa sobre:
                     elif str(user_id) != settings.TELEGRAM_ADMIN_ID:
                         response_text = "⚠️ Solo Harold puede activar auto-trading"
                     else:
-                        result = self.auto_trading.start()
+                        result = self.auto_trading.start(user_id=str(user_id))
                         
                         if 'error' in result:
                             response_text = f"❌ {result['error']}"
@@ -4116,7 +4116,7 @@ Usa /autotrading stop para detener"""
                     elif str(user_id) != settings.TELEGRAM_ADMIN_ID:
                         response_text = "⚠️ Solo Harold puede detener auto-trading"
                     else:
-                        result = self.auto_trading.stop()
+                        result = self.auto_trading.stop(user_id=str(user_id))
                         
                         if 'error' in result:
                             response_text = f"❌ {result['error']}"

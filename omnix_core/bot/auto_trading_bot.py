@@ -472,20 +472,22 @@ class AutoTradingBot:
     
     def _auto_start_if_persistent(self):
         """
-        V6.5: Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
+        V6.5.1: Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
         Esto garantiza que Railway reinicie con el mismo estado que antes del restart.
+        V6.5.1: Ahora pasa el user_id específico para soportar múltiples usuarios.
         """
         if hasattr(self, '_should_auto_start') and self._should_auto_start:
-            logger.info("🔄 V6.5: Iniciando auto-trading automáticamente desde estado persistente...")
+            user_id = getattr(self, '_persistent_user_id', None)
+            logger.info(f"🔄 V6.5.1: Iniciando auto-trading automáticamente para user {user_id}...")
             try:
-                result = self.start()
+                result = self.start(user_id=user_id)
                 if result.get('success'):
-                    logger.info("✅ V6.5: Auto-trading restaurado exitosamente desde estado persistente")
+                    logger.info(f"✅ V6.5.1: Auto-trading restaurado exitosamente para user {user_id}")
                 else:
                     error = result.get('error', 'Unknown error')
-                    logger.warning(f"⚠️ V6.5: No se pudo restaurar auto-trading: {error}")
+                    logger.warning(f"⚠️ V6.5.1: No se pudo restaurar auto-trading: {error}")
             except Exception as e:
-                logger.error(f"❌ V6.5: Error restaurando auto-trading: {e}")
+                logger.error(f"❌ V6.5.1: Error restaurando auto-trading: {e}")
     
     def start(self, user_id: str = None) -> Dict:
         """Iniciar trading automático 24/7"""
@@ -615,8 +617,9 @@ class AutoTradingBot:
             return
         
         try:
-            # V6.5: Cargar configuración de auto-trading de user_settings
+            # V6.5.1: Cargar configuración de auto-trading de user_settings
             self._should_auto_start = False  # Flag para auto-iniciar después del __init__
+            self._persistent_user_id = None  # V6.5.1: Guardar user_id para restauración
             try:
                 if hasattr(self.database_service, 'execute_query'):
                     user_settings_result = self.database_service.execute_query('''
@@ -634,15 +637,16 @@ class AutoTradingBot:
                         
                         if auto_trading and not is_paused and trading_enabled:
                             self._should_auto_start = True
-                            logger.info(f"🔄 V6.5: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
+                            self._persistent_user_id = user_id  # V6.5.1: Guardar para restauración
+                            logger.info(f"🔄 V6.5.1: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
                         elif auto_trading and is_paused:
-                            logger.info(f"⏸️ V6.5: Auto-trading está PAUSADO para user {user_id}")
+                            logger.info(f"⏸️ V6.5.1: Auto-trading está PAUSADO para user {user_id}")
                         elif auto_trading and not trading_enabled:
-                            logger.info(f"🔒 V6.5: Trading DESHABILITADO para user {user_id}")
+                            logger.info(f"🔒 V6.5.1: Trading DESHABILITADO para user {user_id}")
                     else:
-                        logger.info("📊 V6.5: No hay usuarios con auto_trading activo")
+                        logger.info("📊 V6.5.1: No hay usuarios con auto_trading activo")
             except Exception as e:
-                logger.warning(f"⚠️ V6.5: Error cargando auto_trading de user_settings: {e}")
+                logger.warning(f"⚠️ V6.5.1: Error cargando auto_trading de user_settings: {e}")
             
             # Cargar estadísticas de trades cerrados
             from datetime import datetime, timedelta
