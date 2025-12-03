@@ -1,16 +1,16 @@
 # OMNIX V6.5.2 Dashboard Analysis - Complete Technical Report
 
 > **Last Updated:** December 2025  
-> **Status:** Production Ready (Phase 3 Complete)  
+> **Status:** Production Ready (Phase 4 Complete)  
 > **Purpose:** Technical audit for institutional investors
 
 ---
 
-## 1. File Structure (December 2024 Refactor)
+## 1. File Structure (Updated December 2025)
 
 ### 1.1 Backend - Flask Blueprints Architecture
 
-**Refactored from monolithic 1728-line app.py to 13 modular files (2063 lines total):**
+**Refactored from monolithic 1728-line app.py to 13 modular files (2094 lines total):**
 
 ```
 omnix_dashboard/
@@ -21,23 +21,23 @@ omnix_dashboard/
 ├── blueprints/                 # 5 Blueprints, 25 routes total
 │   ├── __init__.py            # Blueprint exports (18 lines)
 │   ├── views.py               # HTML page routes (29 lines, 3 routes)
-│   ├── core.py                # Core APIs (369 lines, 6 routes)
+│   ├── core.py                # Core APIs (430 lines, 6 routes)
 │   ├── market.py              # Market data (366 lines, 7 routes)
-│   ├── intelligence.py        # External APIs (298 lines, 5 routes)
-│   └── system.py              # System status (265 lines, 5 routes)
-├── utils/                      # Shared utilities (594 lines)
+│   ├── intelligence.py        # External APIs (298 lines, 6 routes)
+│   └── system.py              # System status (265 lines, 3 routes)
+├── utils/                      # Shared utilities (625 lines)
 │   ├── __init__.py            # Utils exports (53 lines)
 │   ├── database.py            # PostgreSQL connection pool (162 lines)
 │   ├── decorators.py          # API authentication (45 lines)
 │   ├── external_apis.py       # HTTP client with retry (68 lines)
-│   └── queries.py             # SQL query functions (266 lines)
+│   └── queries.py             # SQL query functions (297 lines)
 ├── templates/
 │   ├── base.html              # Jinja2 base template with blocks
 │   ├── terminal.html          # Trading Terminal (extends base)
 │   └── dashboard.html         # Classic Dashboard (extends base)
 └── static/
     ├── css/                   # Modular CSS (18 files, 1562 lines)
-    └── js/                    # Modular JavaScript (11 files, 1318 lines)
+    └── js/                    # Modular JavaScript (13 files, 1658 lines)
 ```
 
 ### 1.2 Blueprint Distribution
@@ -45,10 +45,10 @@ omnix_dashboard/
 | Blueprint | File | Lines | Routes | Purpose |
 |-----------|------|-------|--------|---------|
 | `views_bp` | views.py | 29 | 3 | HTML pages (/, /terminal, /classic) |
-| `core_bp` | core.py | 369 | 6 | Metrics, trades, equity, portfolio, positions, health |
+| `core_bp` | core.py | 430 | 6 | Metrics, trades, equity, portfolio, positions, health |
 | `market_bp` | market.py | 366 | 7 | Crypto, stocks, OHLC, volume, Fear&Greed, news |
-| `intelligence_bp` | intelligence.py | 298 | 5 | Finnhub, Alpha Vantage, intelligence summary |
-| `system_bp` | system.py | 265 | 5 | System status, signals, debug |
+| `intelligence_bp` | intelligence.py | 298 | 6 | Finnhub, Alpha Vantage, intelligence summary, news |
+| `system_bp` | system.py | 265 | 3 | Signals, system status, debug |
 
 ### 1.3 Utils Package
 
@@ -57,7 +57,7 @@ omnix_dashboard/
 | `database.py` | 162 | Connection pooling (min=2, max=10), context manager |
 | `decorators.py` | 45 | `@require_api_key` - per-request authentication |
 | `external_apis.py` | 68 | `http_get_with_timeout()` with retry logic |
-| `queries.py` | 266 | SQL functions: get_paper_trades, calculate_metrics |
+| `queries.py` | 297 | SQL functions: get_paper_trades, calculate_metrics |
 
 ### 1.4 Frontend - Modular CSS (BEM Methodology)
 
@@ -82,16 +82,27 @@ omnix_dashboard/static/css/
 
 ```
 omnix_dashboard/static/js/
-├── core/
-│   ├── api.js                 # Fetch wrapper with error handling
-│   ├── utils.js               # Format utilities
-│   └── clock.js               # Real-time clock
-├── components/
-│   ├── charts.js, ticker.js, signals.js
-│   ├── volume.js, news.js, feargreed.js
-└── pages/
-    ├── terminal.js            # Terminal page initialization
-    └── dashboard.js           # Dashboard page initialization
+├── core/                      # 496 lines total
+│   ├── api.js                 # 112 lines - Fetch wrapper with fetchWithRetry() exponential backoff
+│   ├── utils.js               # 160 lines - Format utilities
+│   ├── clock.js               # 79 lines - Real-time clock
+│   └── common.js              # 145 lines - Shared refresh logic, startAutoRefresh(), refreshWidgets()
+├── components/                # 768 lines total
+│   ├── charts.js              # 234 lines - Plotly.react() delta updates, instance tracking
+│   ├── ticker.js              # 84 lines - Crypto price ticker
+│   ├── signals.js             # 66 lines - Trading signals display
+│   ├── volume.js              # 63 lines - Volume chart
+│   ├── news.js                # 94 lines - News feed
+│   ├── feargreed.js           # 101 lines - Fear & Greed gauge
+│   └── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
+└── pages/                     # 394 lines total
+    ├── terminal.js            # 101 lines - Terminal page controller
+    └── dashboard.js           # 293 lines - Dashboard page controller
+```
+
+**Script Load Order (base.html):**
+```
+api.js → utils.js → clock.js → charts.js → common.js → [page scripts]
 ```
 
 ### 1.6 Architecture Improvements (December 2024)
@@ -99,7 +110,7 @@ omnix_dashboard/static/js/
 | Improvement | Before | After |
 |-------------|--------|-------|
 | Main app.py | 1728 lines | 90 lines (95% reduction) |
-| Total backend code | 1728 lines | 2063 lines (modular) |
+| Total backend code | 1728 lines | 2094 lines (modular) |
 | Files | 1 monolithic | 13 organized |
 | Blueprints | 0 | 5 logical groups |
 | Connection pooling | None | psycopg_pool (min=2, max=10) |
@@ -117,10 +128,10 @@ omnix_dashboard/static/js/
 |--------|--------|
 | **File** | `omnix_dashboard/templates/terminal.html` |
 | **URL Route** | `/terminal` (and `/` redirects here) |
-| **Backend** | `app.py` lines 355-359 |
+| **Backend** | `blueprints/views.py` route handler |
 | **Purpose** | Real-time trading operations terminal |
 | **Audience** | Traders, Operations Center (NOC) |
-| **Size** | 982 lines (inline HTML+CSS+JS) |
+| **Size** | 217 lines (extends base.html, uses external JS modules) |
 
 **Features:**
 - Header with core metrics (PnL, Win Rate, Trades, Drawdown, Sharpe, Sortino)
@@ -153,10 +164,10 @@ omnix_dashboard/static/js/
 |--------|--------|
 | **File** | `omnix_dashboard/templates/dashboard.html` |
 | **URL Route** | `/classic` |
-| **Backend** | `app.py` lines 362-366 |
+| **Backend** | `blueprints/views.py` route handler |
 | **Purpose** | Executive performance report |
 | **Audience** | Investors, Risk Committee |
-| **Size** | 1150 lines (inline HTML+CSS+JS) |
+| **Size** | 316 lines (extends base.html, uses external JS modules) |
 
 **Features:**
 - Institutional metrics (card format)
@@ -396,15 +407,17 @@ APIs that exist in `app.py` but NO dashboard consumes:
 
 ## 8. Code Duplication Between Dashboards
 
-| Component | Terminal | Classic | Duplicated Code |
-|-----------|----------|---------|-----------------|
-| Fetch metrics | ✅ | ✅ | ~30 lines JS |
-| Equity curve | ✅ | ✅ | ~40 lines JS |
-| Crypto ticker | ✅ | ✅ | ~25 lines JS |
-| News feed | ✅ | ✅ | ~20 lines JS |
-| CSS variables | ✅ | ✅ | ~50 lines CSS |
+**Phase 4 Consolidation Complete (December 2025):**
 
-**Total duplicated estimated:** ~165 lines
+| Component | Before | After | Location |
+|-----------|--------|-------|----------|
+| Fetch wrapper | ~30 lines × 2 | 112 lines shared | `js/core/api.js` |
+| Auto-refresh logic | ~40 lines × 2 | 145 lines shared | `js/core/common.js` |
+| Chart management | ~50 lines × 2 | 234 lines shared | `js/components/charts.js` |
+| Status bar | Inline × 2 | 126 lines shared | `js/components/statusbar.js` |
+| CSS variables | ~50 lines × 2 | Shared in base | `css/base/variables.css` |
+
+**Duplication eliminated:** ~165 lines consolidated into reusable modules
 
 ---
 
@@ -511,7 +524,7 @@ URGENCY     │ Security +    │ Frontend      │
 
 ---
 
-## 13. Quick Reference: File Locations (Updated December 2024)
+## 13. Quick Reference: File Locations (Updated December 2025)
 
 ### Backend (Flask Blueprints)
 | Component | Path | Lines |
@@ -519,22 +532,22 @@ URGENCY     │ Security +    │ Frontend      │
 | Application Factory | `omnix_dashboard/app.py` | 90 |
 | WSGI Entry Point | `omnix_dashboard/run.py` | 34 |
 | Views Blueprint | `omnix_dashboard/blueprints/views.py` | 29 |
-| Core Blueprint | `omnix_dashboard/blueprints/core.py` | 369 |
+| Core Blueprint | `omnix_dashboard/blueprints/core.py` | 430 |
 | Market Blueprint | `omnix_dashboard/blueprints/market.py` | 366 |
 | Intelligence Blueprint | `omnix_dashboard/blueprints/intelligence.py` | 298 |
 | System Blueprint | `omnix_dashboard/blueprints/system.py` | 265 |
 | Database Utils | `omnix_dashboard/utils/database.py` | 162 |
-| Query Functions | `omnix_dashboard/utils/queries.py` | 266 |
-| **Total Backend** | **13 files** | **2063** |
+| Query Functions | `omnix_dashboard/utils/queries.py` | 297 |
+| **Total Backend** | **13 files** | **2094** |
 
 ### Frontend
 | Component | Path | Lines |
 |-----------|------|-------|
-| Base Template | `omnix_dashboard/templates/base.html` | ~50 |
-| Terminal Template | `omnix_dashboard/templates/terminal.html` | 216 |
-| Dashboard Template | `omnix_dashboard/templates/dashboard.html` | 314 |
+| Base Template | `omnix_dashboard/templates/base.html` | 27 |
+| Terminal Template | `omnix_dashboard/templates/terminal.html` | 217 |
+| Dashboard Template | `omnix_dashboard/templates/dashboard.html` | 316 |
 | CSS Modules | `omnix_dashboard/static/css/` | 1562 (18 files) |
-| JS Modules | `omnix_dashboard/static/js/` | 1318 (11 files) |
+| JS Modules | `omnix_dashboard/static/js/` | 1658 (13 files) |
 
 ### Configuration
 | Component | Path | Lines |
@@ -715,4 +728,4 @@ Add to `package.json`:
 
 ---
 
-*Document generated from OMNIX V6.5 Dashboard Audit - December 2024*
+*Document generated from OMNIX V6.5.2 Dashboard Audit - Last Updated: December 2025*
