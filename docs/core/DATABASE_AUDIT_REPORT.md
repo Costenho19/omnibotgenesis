@@ -1275,6 +1275,237 @@ DATABASE_URL=postgresql://user:password@host:port/database
 
 ---
 
-**Document Version:** 2.0  
+## 13. Service Unification Implementation Plan
+
+> **PRIORITY #1**: Consolidate dual PostgreSQL service layers before attempting schema fixes.  
+> **Reason**: Two independent database stacks compete for connections, run separate migrations, and create inconsistent transaction semantics.
+
+### 13.1 Problem Statement
+
+OMNIX currently has **two parallel database services** operating simultaneously:
+
+| Service | Location | Library | Pool Size | Auto-Migrations |
+|---------|----------|---------|-----------|-----------------|
+| Dashboard Pool | `omnix_dashboard/utils/database.py` | psycopg_pool | 2-10 | No |
+| Enterprise Service | `omnix_services/database_service/database_service.py` | psycopg3 direct | No pool | **Yes (5 routines)** |
+
+**Risks**:
+1. Connection pool exhaustion (both compete for Railway's limited connections)
+2. Conflicting DDL (Enterprise auto-runs schema mutations on import)
+3. Inconsistent transaction semantics across trading flows
+4. Any FK rollout while dual services persist could be silently undone
+
+---
+
+### 13.2 Call Site Mapping
+
+#### Dashboard Pool Consumers (psycopg_pool)
+
+| File | Function | Usage Pattern |
+|------|----------|---------------|
+| `omnix_dashboard/app.py` | `create_app()` | Initializes pool at startup |
+| `omnix_dashboard/run.py` | Startup | Imports database module |
+| `omnix_dashboard/blueprints/core.py` | All `/api/*` endpoints | `get_db_connection()` |
+| `omnix_dashboard/blueprints/views.py` | Template rendering | `get_db_connection()` |
+| `omnix_dashboard/blueprints/snapshots.py` | Snapshot creation | `get_db_connection()` |
+| `omnix_dashboard/blueprints/system.py` | Health checks | `get_db_connection()` |
+| `omnix_dashboard/utils/queries.py` | Query functions | `get_db_connection()` |
+
+**Total**: 7 files, ~50 call sites
+
+#### Enterprise Service Consumers (psycopg3 direct)
+
+| File | Class/Function | Usage Pattern |
+|------|----------------|---------------|
+| `main.py` | Bot startup | `DatabaseServiceEnterprise()` |
+| `verify_code.py` | Validation | `DatabaseServiceEnterprise()` |
+| `omnix_services/telegram_service/enterprise_bot.py` | Bot commands | `db_service` instance |
+| `omnix_services/monitoring/risk_guardian.py` | Risk events | `db_service` instance |
+| `omnix_services/ai_service/ai_service.py` | AI interactions | `db_service` instance |
+| `omnix_services/community_intelligence/*.py` | 4 modules | `db_service` instance |
+| `omnix_services/database_service/database_manager.py` | Manager wrapper | `DatabaseServiceEnterprise()` |
+
+**Total**: 9 files, ~30 call sites
+
+---
+
+### 13.3 Auto-Migration Routines (CRITICAL)
+
+The Enterprise Service runs these migrations **automatically on every import**:
+
+| Migration | Method | Risk Level | Action |
+|-----------|--------|------------|--------|
+| Users V2 | `_migrate_users_to_v2()` | 🟠 HIGH | Alters users table, adds constraints |
+| Drop Prices | `_drop_prices_table()` | 🟢 LOW | Drops orphan table |
+| Fix Risk Guardian | `_fix_risk_guardian_user_id_type()` | 🟠 HIGH | Alters column type |
+| Add FKs | `_add_foreign_key_constraints()` | 🔴 CRITICAL | Can break if tables not ready |
+| Add CHECKs | `_add_check_constraints()` | 🟡 MEDIUM | Adds validation constraints |
+| Aggressive Cleanup | `_run_aggressive_cleanup()` | 🔴 CRITICAL | Drops legacy tables |
+| Init Tables | `_init_tables()` | 🔴 CRITICAL | Creates 33 tables |
+| Daily Cleanup | `_run_daily_cleanup()` | 🟡 MEDIUM | Deletes old records |
+
+**Total**: 8 automatic DDL routines running on every bot restart
+
+---
+
+## 14. Phase 1: Discovery & Freeze (Implementation)
+
+> **Duration**: 48-72 hours  
+> **Risk Level**: LOW (no schema changes, monitoring only)  
+> **Goal**: Map all call sites, disable auto-migrations, establish baseline telemetry
+
+### 14.1 Task Checklist
+
+| # | Task | Status | Owner | Notes |
+|---|------|--------|-------|-------|
+| 1.1 | Document all Dashboard Pool call sites | ⬜ Pending | Agent | See 13.2 |
+| 1.2 | Document all Enterprise Service call sites | ⬜ Pending | Agent | See 13.2 |
+| 1.3 | Create `DISABLE_AUTO_MIGRATIONS` feature flag | ⬜ Pending | Agent | Environment variable |
+| 1.4 | Add telemetry logging to Dashboard Pool | ⬜ Pending | Agent | Every 5 minutes |
+| 1.5 | Add telemetry logging to Enterprise Service | ⬜ Pending | Agent | Connection count per call |
+| 1.6 | Create `/api/db-diagnostics` endpoint | ⬜ Pending | Agent | Real-time pool stats |
+| 1.7 | Deploy to Railway staging (if available) | ⬜ Pending | User | Validate in staging first |
+| 1.8 | Run 48-hour telemetry capture | ⬜ Pending | User | Collect pool contention data |
+| 1.9 | Analyze telemetry and identify high-risk call sites | ⬜ Pending | Agent | Based on connection patterns |
+| 1.10 | Document consumer migration order | ⬜ Pending | Agent | Priority sequence |
+
+### 14.2 Feature Flag Implementation
+
+**Environment Variable**: `DISABLE_AUTO_MIGRATIONS`
+
+```python
+# In DatabaseServiceEnterprise.__init__():
+if os.environ.get('DISABLE_AUTO_MIGRATIONS', 'false').lower() == 'true':
+    logger.warning("⚠️ AUTO-MIGRATIONS DISABLED via feature flag")
+    # Skip all migration routines
+else:
+    # Run migrations as normal
+    self._migrate_users_to_v2()
+    self._drop_prices_table()
+    # ... etc
+```
+
+**Deployment Note**: Set `DISABLE_AUTO_MIGRATIONS=true` in Railway ONLY after Phase 1 telemetry confirms no active schema changes are needed.
+
+### 14.3 Telemetry Implementation
+
+#### Dashboard Pool (every 5 minutes)
+
+```python
+import threading
+import time
+
+def _log_pool_stats_periodically():
+    while True:
+        stats = get_pool_stats()
+        logger.info(f"📊 POOL TELEMETRY: size={stats.get('pool_size')}, "
+                   f"available={stats.get('pool_available')}, "
+                   f"waiting={stats.get('requests_waiting')}, "
+                   f"total_requests={stats.get('requests_num')}")
+        time.sleep(300)  # 5 minutes
+
+# Start telemetry thread on pool init
+telemetry_thread = threading.Thread(target=_log_pool_stats_periodically, daemon=True)
+telemetry_thread.start()
+```
+
+#### Enterprise Service (per connection)
+
+```python
+def _get_connection(self):
+    start_time = time.time()
+    conn = psycopg.connect(conn_string, connect_timeout=10)
+    elapsed = (time.time() - start_time) * 1000
+    logger.info(f"📊 ENTERPRISE CONN: latency={elapsed:.1f}ms, caller={inspect.stack()[2].function}")
+    return conn
+```
+
+### 14.4 Diagnostics Endpoint Specification
+
+**Endpoint**: `GET /api/db-diagnostics`  
+**Authentication**: Admin only (check is_admin flag)  
+**Response**:
+
+```json
+{
+  "timestamp": "2025-12-03T10:30:00Z",
+  "dashboard_pool": {
+    "status": "active",
+    "pool_size": 5,
+    "pool_available": 3,
+    "requests_waiting": 0,
+    "requests_num": 1542,
+    "usage_ms": 45230,
+    "pool_min": 2,
+    "pool_max": 10
+  },
+  "enterprise_service": {
+    "connected": true,
+    "using_enterprise": true,
+    "last_connection_latency_ms": 45.2,
+    "auto_migrations_enabled": false
+  },
+  "warnings": [
+    "Two parallel DB services detected - consolidation recommended"
+  ]
+}
+```
+
+### 14.5 Consumer Migration Order (Draft)
+
+Based on risk and dependency analysis:
+
+| Priority | Consumer | Reason | Complexity |
+|----------|----------|--------|------------|
+| 1 | `omnix_dashboard/utils/queries.py` | Isolated query functions | 🟢 LOW |
+| 2 | `omnix_dashboard/blueprints/core.py` | Main API endpoints | 🟡 MEDIUM |
+| 3 | `omnix_dashboard/blueprints/snapshots.py` | Snapshot creation | 🟢 LOW |
+| 4 | `omnix_dashboard/blueprints/views.py` | Template rendering | 🟢 LOW |
+| 5 | `omnix_dashboard/blueprints/system.py` | Health checks | 🟢 LOW |
+| 6 | `omnix_services/ai_service/ai_service.py` | AI interactions | 🟡 MEDIUM |
+| 7 | `omnix_services/community_intelligence/*.py` | 4 community modules | 🟡 MEDIUM |
+| 8 | `omnix_services/monitoring/risk_guardian.py` | Risk events | 🟠 HIGH |
+| 9 | `omnix_services/telegram_service/enterprise_bot.py` | Bot commands | 🔴 CRITICAL |
+| 10 | `main.py` | Bot startup | 🔴 CRITICAL |
+
+**Strategy**: Migrate dashboard consumers first (lower risk), then services, then bot core.
+
+### 14.6 Rollback Strategy
+
+If any Phase 1 change causes issues:
+
+1. **Feature Flag**: Set `DISABLE_AUTO_MIGRATIONS=false` to restore original behavior
+2. **Telemetry**: Comment out telemetry threads if causing performance issues
+3. **Diagnostics Endpoint**: Remove route if exposing sensitive data
+4. **Railway Rollback**: Use Railway's deployment history to revert to previous version
+
+### 14.7 Success Criteria
+
+Phase 1 is complete when:
+
+- [x] All call sites documented in this report
+- [ ] Feature flag implemented and tested locally
+- [ ] Telemetry logging active in both services
+- [ ] `/api/db-diagnostics` endpoint functional
+- [ ] 48-hour telemetry data collected from production
+- [ ] High-risk call sites identified
+- [ ] Consumer migration order finalized
+
+---
+
+## 15. Phase 2-4 Overview (Future)
+
+| Phase | Focus | Duration | Risk |
+|-------|-------|----------|------|
+| **Phase 2** | Build unified gateway, migrate dashboard | 1 week | 🟡 MEDIUM |
+| **Phase 3** | Add missing FKs, merge redundant tables | 1 week | 🟠 HIGH |
+| **Phase 4** | Consolidate query functions, add transactions | 1 week | 🟠 HIGH |
+
+**Detailed plans for Phases 2-4 will be added after Phase 1 completes successfully.**
+
+---
+
+**Document Version:** 2.1  
 **OMNIX V6.5.2 INSTITUTIONAL+**  
-**Audit Date:** December 2025
+**Audit Date:** December 2025  
+**Phase 1 Plan Added:** December 3, 2025
