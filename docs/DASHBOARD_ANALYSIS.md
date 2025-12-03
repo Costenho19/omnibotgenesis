@@ -364,11 +364,21 @@ Using `http_get_with_timeout()` with ThreadPoolExecutor:
 
 | # | Issue | Location | Impact | Status |
 |---|-------|----------|--------|--------|
-| 16 | **Risk Guardian invisible** | Both dashboards | Protection status not shown | ❌ Open |
-| 17 | **Adaptive Engine absent** | Both dashboards | Calibrations not exposed | ❌ Open |
-| 18 | **Benchmarks not shown** | Both dashboards | No market comparison | ❌ Open |
-| 19 | **Timezone misaligned** | Classic dashboard | System settings ignored | ❌ Open |
-| 20 | **No audited snapshots** | Both dashboards | Data not reconciled | ❌ Open |
+| 16 | **Risk Guardian invisible** | Both dashboards | Protection status not shown | ✅ Fixed (Dec 2025) |
+| 17 | **Adaptive Engine absent** | Both dashboards | Calibrations not exposed | ✅ Fixed (Dec 2025) |
+| 18 | **Benchmarks not shown** | Both dashboards | No market comparison | ✅ Fixed (Dec 2025) |
+| 19 | **Timezone misaligned** | Classic dashboard | System settings ignored | ✅ Fixed (Dec 2025) |
+| 20 | **No audited snapshots** | Both dashboards | Data not reconciled | ✅ Fixed (Dec 2025) |
+
+**Phase 5 Solutions Implemented (December 2025):**
+
+| Issue | Solution | Implementation |
+|-------|----------|----------------|
+| #16 | Risk Guardian widget with real-time telemetry | `js/components/riskguardian.js` (128 lines), consumes `/api/system/status` |
+| #17 | Adaptive Engine widget with regime detection | `js/components/adaptive.js` (234 lines), endpoint `/api/system/adaptive` |
+| #18 | BTC/SPY benchmark overlay on equity chart | `js/components/benchmarks.js`, endpoint `/api/benchmarks`, adapter in omnix_services |
+| #19 | Centralized timezone formatting via OmnixTime module | `js/core/timezone.js`, user preference storage, unified timestamp display |
+| #20 | Audited snapshots with cryptographic verification | `blueprints/snapshots.py`, endpoint `/api/snapshots/*`, SHA-256 checksums |
 
 ---
 
@@ -394,14 +404,14 @@ APIs that exist in `app.py` but NO dashboard consumes:
 
 | Data | Importance | Exists in Backend | Dashboard Status |
 |------|------------|-------------------|------------------|
-| Risk Guardian / Circuit Breaker status | 🔴 Critical | ✅ Yes | Not displayed |
-| Exposure limits per asset | 🔴 Critical | ✅ Yes | Not displayed |
-| Benchmark comparison | 🔴 Critical | ❌ No | Not available |
-| Adaptive calibration audit trail | 🟠 High | ✅ Partial | Not displayed |
-| Data/Kraken latency | 🟠 High | ❌ No | Not available |
-| Incident logs | 🟠 High | ✅ Yes | Not exposed |
-| Paper vs live confirmation | 🟠 High | ✅ Yes | Not shown |
-| Data integrity alerts | 🟡 Medium | ❌ No | Not available |
+| Risk Guardian / Circuit Breaker status | 🔴 Critical | ✅ Yes | ✅ Displayed (Phase 5) |
+| Exposure limits per asset | 🔴 Critical | ✅ Yes | ✅ Displayed (Phase 5) |
+| Benchmark comparison | 🔴 Critical | ✅ Yes | ✅ BTC/SPY overlay (Phase 5) |
+| Adaptive calibration audit trail | 🟠 High | ✅ Yes | ✅ Displayed (Phase 5) |
+| Data/Kraken latency | 🟠 High | ✅ Yes | ✅ In health endpoint |
+| Incident logs | 🟠 High | ✅ Yes | ✅ Risk Guardian widget |
+| Paper vs live confirmation | 🟠 High | ✅ Yes | ✅ Badge in header (Phase 3) |
+| Data integrity alerts | 🟡 Medium | ✅ Yes | ✅ Audited snapshots (Phase 5) |
 
 ---
 
@@ -425,10 +435,10 @@ APIs that exist in `app.py` but NO dashboard consumes:
 
 | Dashboard | Current Level | Institutional Standard | Gap |
 |-----------|---------------|------------------------|-----|
-| Terminal | ~85% | Bloomberg Terminal | 15% |
-| Classic | ~88% | TradingView Pro | 12% |
+| Terminal | ~95% | Bloomberg Terminal | 5% |
+| Classic | ~95% | TradingView Pro | 5% |
 
-**Progress Made (Phase 1-4 Complete):**
+**Progress Made (Phase 1-5 Complete):**
 - ✅ API authentication with `@require_api_key` decorator
 - ✅ Connection pooling with psycopg_pool (min=2, max=10)
 - ✅ Graceful degradation with CoinGecko price fallback
@@ -437,11 +447,15 @@ APIs that exist in `app.py` but NO dashboard consumes:
 - ✅ Optimized chart rendering with Plotly.react()
 - ✅ Retry/backoff for API resilience
 - ✅ Independent widget error handling
+- ✅ Risk Guardian telemetry widget (Phase 5)
+- ✅ Adaptive Engine calibration widget (Phase 5)
+- ✅ BTC/SPY benchmark overlay (Phase 5)
+- ✅ Unified timezone formatting (Phase 5)
+- ✅ Audited snapshots with cryptographic verification (Phase 5)
 
-**Remaining Gaps (Phase 5):**
-- No audited data snapshots
-- No risk telemetry dashboard widget
-- Benchmark comparisons
+**Remaining Gaps:**
+- Minor UI polish refinements
+- Additional benchmark indices (optional)
 
 ---
 
@@ -482,14 +496,15 @@ APIs that exist in `app.py` but NO dashboard consumes:
 | Retry with backoff | `js/core/api.js` | fetchWithRetry() exponential backoff | ✅ Done |
 | Per-widget error handling | `js/core/common.js` | refreshWidgets() independent execution | ✅ Done |
 
-### Phase 5: Investor Features (Moderate) ⏱️ 3-4 hours
+### Phase 5: Investor Features (Moderate) ✅ COMPLETED - December 2025
 
-| Task | File | Action |
-|------|------|--------|
-| Risk Guardian panel | Both dashboards | New widget |
-| Adaptive calibrations | Both dashboards | New widget |
-| Consume unused endpoints | Both dashboards | Wire up APIs |
-| Benchmark comparisons | `app.py` + dashboards | New endpoint + widget |
+| Task | File | Action | Status |
+|------|------|--------|--------|
+| Risk Guardian panel | `js/components/riskguardian.js` | Widget with circuit breaker, overtrading, revenge protection | ✅ Done |
+| Adaptive calibrations | `js/components/adaptive.js` | Widget with regime detection, strategy weights, kernel params | ✅ Done |
+| Benchmark comparisons | `blueprints/market.py`, `js/components/benchmarks.js` | BTC/SPY overlay on equity chart | ✅ Done |
+| Timezone alignment | `js/core/timezone.js` | Centralized formatting, user preferences | ✅ Done |
+| Audited snapshots | `blueprints/snapshots.py` | Cryptographic verification, SHA-256 checksums | ✅ Done |
 
 ---
 
@@ -519,8 +534,8 @@ URGENCY     │ Security +    │ Frontend      │
 | Phase 2: Architecture | 4-6 | P0 | Phase 1 | ✅ Complete (Dec 2024) |
 | Phase 3: Data | 3-4 | P1 | Phase 2 | ✅ Complete (Dec 2025) |
 | Phase 4: Frontend | 4-5 | P2 | Phase 3 | ✅ Complete (Dec 2025) |
-| Phase 5: Investor | 3-4 | P2 | Phase 3 | ❌ Pending |
-| **TOTAL** | **16-22** | - | - | **85% Complete** |
+| Phase 5: Investor | 3-4 | P2 | Phase 3 | ✅ Complete (Dec 2025) |
+| **TOTAL** | **16-22** | - | - | **100% Complete** |
 
 ---
 
