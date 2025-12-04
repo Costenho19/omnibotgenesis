@@ -1,6 +1,54 @@
-# OMNIX V6.5 INSTITUTIONAL+ - Changelog
+# OMNIX V6.5.2 INSTITUTIONAL+ - Changelog
 
 Registro de cambios, correcciones y mejoras del sistema.
+
+---
+
+## [2025-12-04] - Documentation Consolidation & Database Optimization
+
+### Documentation Cleanup
+| Action | File | Reason |
+|--------|------|--------|
+| DELETED | `scripts/README.md` | Empty placeholder |
+| DELETED | `docs/core/PROJECT_STRUCTURE.md` | Duplicate of TECHNICAL_REFERENCE |
+| DELETED | `docs/core/MIGRATION_GUIDE.md` | Covered by deployment docs |
+| DELETED | `omnix_dashboard/ARCHITECTURE.md` | Duplicate of DASHBOARD_TECHNICAL_REFERENCE |
+| DELETED | `omnix_testing/PREMIUM_VALIDATION_README.md` | Outdated V6.0, covered by README.md |
+
+### Database Table Consolidation
+| Table Dropped | Reason |
+|---------------|--------|
+| `circuit_breaker_states` | Duplicate of `circuit_breaker_status` |
+| `risk_guardian_logs` | Duplicate of `risk_guardian_events` |
+| `trading_history` | Duplicate of `paper_trading_trades` |
+
+**Result:** 45 → 42 tables, 38 FKs (90% coverage)
+
+### Legacy Code Cleanup
+| Action | Location | Result |
+|--------|----------|--------|
+| DELETED | `omnix_core/models/` | Empty folder removed |
+| DELETED | `omnix_core/queue/` | Empty folder removed |
+| DELETED | `omnix_services/trading_service/pqc_security.py` | 162-line duplicate removed |
+| FIXED | `omnix_core/strategies/__init__.py` | Added exports |
+| FIXED | `omnix_core/security/__init__.py` | Added exports |
+| FIXED | `omnix_services/__init__.py` | Added exports |
+
+### Dependency Updates
+| Package | Old | New | Risk |
+|---------|-----|-----|------|
+| anthropic | 0.51.0 | 0.75.0 | LOW |
+| python-telegram-bot | 20.7 | 21.9 | LOW |
+| psycopg | 3.2.4 | 3.3.1 | LOW |
+| pandas | 2.2.2 | 2.2.3 | LOW |
+| scipy | 1.14.0 | 1.14.1 | LOW |
+| ccxt | 4.4.35 | 4.5.24 | MEDIUM |
+| httpx | 0.27.0 | 0.27.2 | LOW |
+
+### References Updated
+- `docs/README.md` - Fixed table counts (45→42)
+- `docs/core/Omnix_TECHNICAL_REFERENCE.md` - FK coverage updated (90%)
+- `replit.md` - Dec 2025 changes documented
 
 ---
 
