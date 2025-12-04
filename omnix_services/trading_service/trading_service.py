@@ -11,7 +11,7 @@ from omnix_core.cache.redis_cache import cache_result
 from .kraken_client import KrakenAPIClient
 from .monte_carlo import MonteCarloSimulator
 from .black_swan import BlackSwanDetector
-from .pqc_security import PostQuantumSecurity
+from omnix_core.security.pqc_security import PostQuantumSecurity
 from .kraken_websocket import get_kraken_websocket
 from .backtesting_engine import BacktestingEngine
 
@@ -153,7 +153,7 @@ class TradingServiceEnterprise:
                 'balance': balance,
                 'total_usd': total_usd,
                 'currencies': list(balance.keys()),
-                'pqc_enabled': self.pqc.enabled
+                'pqc_enabled': self.pqc.pqc_enabled
             }
         except Exception as e:
             logger.error(f"Failed to get account status: {e}")
@@ -345,10 +345,16 @@ class TradingServiceEnterprise:
             }
             
             # Sign order with PQC
-            signature = self.pqc.sign_order(order_data)
-            
-            if signature:
-                logger.info(f"✅ Order signed with Dilithium-3 ({len(signature)} bytes)")
+            signature = None
+            if self.pqc.pqc_enabled:
+                try:
+                    import json
+                    order_bytes = json.dumps(order_data, sort_keys=True).encode()
+                    signature = self.pqc.sign_message(order_bytes)
+                    if signature:
+                        logger.info(f"✅ Order signed with Dilithium-3 ({len(signature)} bytes)")
+                except Exception as e:
+                    logger.warning(f"⚠️ PQC signing failed (continuing): {e}")
             
             # Execute order
             result = self.kraken.place_order(
@@ -433,5 +439,5 @@ class TradingServiceEnterprise:
             'kraken_api': self.kraken.health_check(),
             'monte_carlo': True,  # Always available
             'black_swan': True,  # Always available
-            'pqc_security': self.pqc.enabled
+            'pqc_security': self.pqc.pqc_enabled
         }
