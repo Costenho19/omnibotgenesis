@@ -437,29 +437,259 @@ omnix_api/
 
 ### 8.1 External Dependencies
 
-| Package | Used By | Purpose |
-|---------|---------|---------|
-| `ccxt` | TradingSystem, KrakenClient | Crypto exchange API |
-| `redis` | RedisCache, UserSessionManager | Caching, state |
-| `psycopg` | DatabaseGateway, DatabaseServiceEnterprise | PostgreSQL v3 |
-| `psycopg_pool` | Dashboard connection pooling | Pool management |
-| `pypqc` | PostQuantumSecurity | Real PQC operations |
-| `numpy` | All strategies, quantum modules | Numerical computing |
-| `scipy` | ARES protocols, portfolio optimization | Scientific computing |
-| `flask` | Dashboard | Web framework |
-| `flask-cors` | Dashboard | CORS support |
-| `gunicorn` | Dashboard | Production server |
-| `gevent` | Dashboard | Async workers |
-| `google-generativeai` | AI Service | Gemini AI |
-| `openai` | AI Service, Voice Service | GPT-4o, Whisper |
-| `anthropic` | AI Service | Claude |
-| `python-telegram-bot` | TelegramService | Telegram integration |
-| `prometheus_client` | MetricsEngine | Monitoring |
-| `plotly` | Chart generation | Visualization |
-| `kaleido` | Chart export | Static charts |
-| `reportlab` | PDF generation | Reports |
-| `requests` | External APIs | HTTP client |
-| `beautifulsoup4` | NewsScraperService | HTML parsing |
+#### 8.1.1 Dependency Inventory (Complete from requirements.txt)
+
+**Core Trading & Math:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `numpy` | 1.26.4 | All strategies, quantum modules | Numerical computing |
+| `scipy` | 1.12.0 | ARES protocols, portfolio optimization | Scientific computing |
+| `ccxt` | 4.5.1 | TradingSystem, KrakenClient | Crypto exchange API (Kraken) |
+| `pandas` | 2.2.0 | Backtesting, analytics | Data analysis |
+
+**AI & ML:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `google-generativeai` | 0.8.5 | AI Service | Gemini AI (⚠️ DEPRECATED Aug 2025) |
+| `openai` | 1.101.0 | AI Service, Voice Service | GPT-4o, Whisper |
+| `anthropic` | (missing) | AI Service | Claude (needs to be added) |
+
+**Voice & Media:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `gTTS` | 2.5.4 | Voice Service | Google Text-to-Speech |
+| `youtube-transcript-api` | 0.6.1 | Video Learning Analyzer | YouTube transcripts |
+| `yt-dlp` | >=2024.1.0 | Video Learning Analyzer | Video downloads |
+
+**Web Framework & Servers:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `Flask` | 3.1.2 | Dashboard | Web framework |
+| `flask-cors` | (unpinned) | Dashboard | CORS support |
+| `gunicorn` | 23.0.0 | Dashboard | Production server (Railway) |
+| `gevent` | >=24.2.1 | Dashboard | Async workers |
+| `waitress` | 3.0.2 | Dashboard | Alternative WSGI server |
+| `fastapi` | 0.109.0 | API endpoints | Async API framework |
+| `uvicorn` | 0.27.0 | FastAPI | ASGI server |
+
+**Database:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `psycopg[binary,pool]` | >=3.1.0 | DatabaseGateway, DatabaseServiceEnterprise | PostgreSQL v3 driver |
+| `redis` | 5.0.1 | RedisCache, UserSessionManager | Caching, state |
+
+**Telegram:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `python-telegram-bot` | 20.7 | TelegramService | Main Telegram integration |
+| `telegram` | (unpinned) | Legacy/utils | Telegram utilities |
+
+**HTTP & Async:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `requests` | 2.32.5 | External APIs | Sync HTTP client |
+| `aiohttp` | >=3.9.0 | Async services | Async HTTP client |
+| `httpx` | >=0.25.0,<1.0.0 | AI services | Modern HTTP client |
+| `websockets` | 12.0 | Real-time feeds | WebSocket support |
+
+**Security:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `pypqc` | (unpinned) | PostQuantumSecurity | Kyber-768, Dilithium-3 |
+
+**Visualization & Reports:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `plotly` | 5.24.1 | Chart generation | Interactive charts |
+| `kaleido` | 0.2.1 | Chart export | Static image export |
+| `matplotlib` | 3.9.3 | Testing/backtesting | Static charts |
+| `seaborn` | 0.13.2 | Analytics | Statistical plots |
+| `reportlab` | 4.2.5 | PDF generation | Investor reports |
+| `PyPDF2` | 3.0.1 | PDF manipulation | PDF utilities |
+
+**Data Storage:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `tables` | 3.9.2 | Backtesting | HDF5 storage |
+| `pyarrow` | 18.1.0 | Data processing | Parquet/Arrow format |
+
+**Utilities:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `python-dotenv` | 1.0.0 | Config | Environment loading |
+| `python-decouple` | 3.8 | Config | Settings management |
+| `pillow` | 10.2.0 | Image processing | Image utilities |
+| `pytz` | 2024.1 | Time handling | Timezone support |
+| `tqdm` | 4.67.1 | Progress bars | CLI progress |
+| `beautifulsoup4` | 4.12.3 | NewsScraperService | HTML parsing |
+| `prometheus-client` | 0.20.0 | MetricsEngine | Monitoring |
+
+**External Services:**
+
+| Package | Version | Used By | Purpose |
+|---------|---------|---------|---------|
+| `stripe` | 5.0.0 | Payments | Payment processing |
+| `alpaca-trade-api` | (unpinned) | Stock Trading Service | Alpaca API |
+| `dwave-ocean-sdk` | (unpinned) | Quantum optimization | D-Wave integration |
+
+#### 8.1.2 Version Matrix (Audited December 4, 2025)
+
+**Packages Requiring Updates:**
+
+| Package | Current | Latest Stable | Proposed | Risk Level |
+|---------|---------|---------------|----------|------------|
+| `psycopg[binary,pool]` | >=3.1.0 | 3.3.1 | ==3.3.1 | 🟢 LOW |
+| `pandas` | 2.2.0 | 2.2.3 | ==2.2.3 | 🟢 LOW |
+| `pypqc` | (unpinned) | 0.0.6.2 | ==0.0.6.2 | 🟢 LOW |
+| `scipy` | 1.12.0 | 1.14.1 | ==1.14.1 | 🟢 LOW |
+| `ccxt` | 4.5.1 | 4.5.24+ | >=4.5.24 | 🟡 MEDIUM |
+| `python-telegram-bot` | 20.7 | 22.5 | ==21.9 | 🟡 MEDIUM |
+| `anthropic` | (missing) | 0.75.0 | ==0.75.0 | 🟡 MEDIUM |
+
+**Packages to Keep Current (Stable):**
+
+| Package | Current | Latest Stable | Status |
+|---------|---------|---------------|--------|
+| `openai` | 1.101.0 | 2.x | ✅ KEEP 1.101.0 (v2 breaking) |
+| `Flask` | 3.1.2 | 3.1.x | ✅ CURRENT |
+| `gunicorn` | 23.0.0 | 23.0.0 | ✅ CURRENT |
+| `plotly` | 5.24.1 | 5.24.1 | ✅ CURRENT |
+| `requests` | 2.32.5 | 2.32.5 | ✅ CURRENT |
+
+**High-Risk Packages (Do NOT Update):**
+
+| Package | Current | Latest | Risk | Reason |
+|---------|---------|--------|------|--------|
+| `numpy` | 1.26.4 | 2.2.0 | 🔴 HIGH | ABI breaking changes |
+| `redis` | 5.0.1 | 7.1.0 | 🔴 HIGH | Drops Python 3.9 |
+| `kaleido` | 0.2.1 | 1.2.0 | 🔴 HIGH | Requires external Chrome |
+| `google-generativeai` | 0.8.5 | DEPRECATED | 🔴 HIGH | End of life Aug 2025 |
+
+#### 8.1.3 Risk Analysis and Compatibility Notes
+
+**🟢 LOW RISK - Safe to Update:**
+
+| Package | Notes |
+|---------|-------|
+| `psycopg 3.3.1` | Minor version bump, maintains psycopg3 tuple-based API. Requires Python 3.10+. |
+| `pandas 2.2.3` | Bug fixes only, compatible with numpy 1.26.x and 2.x. |
+| `pypqc 0.0.6.2` | **SECURITY PATCH** - Fixes KyberSlash vulnerability (private key timing attack). Drop-in replacement. |
+| `scipy 1.14.1` | Compatible with numpy 1.26.x. First version with Python 3.13 support. |
+
+**🟡 MEDIUM RISK - Requires Testing:**
+
+| Package | Notes |
+|---------|-------|
+| `ccxt 4.5.24+` | Active development. Must verify Kraken API compatibility. Added `orjson` optional for performance. |
+| `python-telegram-bot 21.9` | **DO NOT UPGRADE TO v22+** - v22 has breaking changes with modular dependencies. v21.9 is last stable before breaking changes. |
+| `anthropic 0.75.0` | **MISSING FROM requirements.txt** but used in code. Must add for Claude support. |
+
+**Note on OpenAI:** Current version 1.101.0 is stable and should be kept. Do NOT upgrade to v2.x which has breaking API changes.
+
+**🔴 HIGH RISK - Do Not Update:**
+
+| Package | Current | Latest | Reason |
+|---------|---------|--------|--------|
+| `numpy` | 1.26.4 | 2.2.0 | **ABI BREAKING CHANGES** - NumPy 2.0 breaks binary compatibility with scipy, pandas, and many compiled extensions. |
+| `redis` | 5.0.1 | 7.1.0 | **DROPS PYTHON 3.9 SUPPORT** - v7.1 requires Python 3.10+. Must verify Railway Python version first. |
+| `kaleido` | 0.2.1 | 1.2.0 | **BREAKING CHANGES** - v1.0+ no longer bundles Chrome, requires external Chrome installation. Not suitable for Railway. |
+| `google-generativeai` | 0.8.5 | DEPRECATED | **END OF LIFE: AUGUST 31, 2025** - Must migrate to `google-genai` SDK before deprecation. Requires code changes. |
+
+#### 8.1.4 Deprecation Warnings
+
+**⚠️ CRITICAL: Google Generative AI SDK Deprecation**
+
+| Item | Details |
+|------|---------|
+| Package | `google-generativeai` |
+| Deprecation Date | August 31, 2025 |
+| Replacement | `google-genai` (new unified SDK) |
+| Migration Guide | https://ai.google.dev/gemini-api/docs/migrate |
+| Impact | `omnix_services/ai_service/` requires code refactoring |
+| Action | Plan migration in dedicated iteration before Aug 2025 |
+
+**New SDK Example:**
+```python
+# OLD (deprecated)
+import google.generativeai as genai
+genai.configure(api_key="...")
+model = genai.GenerativeModel('gemini-2.0-flash')
+
+# NEW (google-genai)
+from google import genai
+client = genai.Client(api_key="...")
+response = client.models.generate_content(model='gemini-2.0-flash', contents='...')
+```
+
+#### 8.1.5 Security Patches
+
+| Package | Version | CVE/Advisory | Description |
+|---------|---------|--------------|-------------|
+| `pypqc` | 0.0.6.2 | KyberSlash (GMS-2024-382) | Private key recovery via timing attack. Fixed Jan 26, 2024. |
+
+#### 8.1.6 Python Version Compatibility
+
+| Package | Python 3.9 | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 |
+|---------|------------|-------------|-------------|-------------|-------------|
+| psycopg 3.3.x | ❌ | ✅ | ✅ | ✅ | ✅ |
+| redis 5.0.x | ✅ | ✅ | ✅ | ✅ | ❌ |
+| redis 7.1.x | ❌ | ✅ | ✅ | ✅ | ✅ |
+| numpy 1.26.x | ✅ | ✅ | ✅ | ✅ | ❌ |
+| numpy 2.2.x | ❌ | ✅ | ✅ | ✅ | ✅ |
+| scipy 1.14.x | ❌ | ✅ | ✅ | ✅ | ✅ |
+| pandas 2.2.x | ✅ | ✅ | ✅ | ✅ | ✅ |
+| python-telegram-bot 21.x | ✅ | ✅ | ✅ | ✅ | ✅ |
+| python-telegram-bot 22.x | ❌ | ✅ | ✅ | ✅ | ✅ |
+
+**Railway Production:** Verify Python version before updating redis or psycopg.
+
+#### 8.1.7 Dependency Update Plan
+
+**Phase A: Low Risk (Immediate)**
+```
+psycopg[binary,pool]==3.3.1
+pandas==2.2.3
+scipy==1.14.1
+pypqc==0.0.6.2
+```
+
+**Phase B: Medium Risk (With Testing)**
+```
+ccxt>=4.5.24
+python-telegram-bot==21.9
+anthropic==0.75.0
+```
+
+**Phase C: Cleanup**
+- Remove duplicate entries in requirements.txt (gevent, psycopg appear twice)
+- Pin all unpinned dependencies
+
+**Phase D: Deferred (Requires Code Changes)**
+- Migrate `google-generativeai` → `google-genai` (before Aug 2025)
+- Evaluate NumPy 2.0 migration when ecosystem stabilizes
+
+#### 8.1.8 requirements.txt Issues
+
+| Issue | Location | Fix |
+|-------|----------|-----|
+| Duplicate `gevent` | Lines 18, 76 | Remove line 76 |
+| Duplicate `psycopg[binary,pool]` | Lines 26-27, 77 | Remove line 77 |
+| Missing `anthropic` | - | Add `anthropic==0.75.0` |
+| Unpinned `pypqc` | Line 43 | Pin to `==0.0.6.2` |
+| Unpinned `alpaca-trade-api` | Line 61 | Pin to specific version |
+| Unpinned `flask-cors` | Line 75 | Pin to specific version |
+| Unpinned `dwave-ocean-sdk` | Line 74 | Pin to specific version |
 
 ### 8.2 Internal Dependency Graph
 
@@ -551,6 +781,7 @@ grep -r "row\['" omnix_*
 | 1.0 | Dec 4, 2025 | Agent | Initial omnix_core/ inventory |
 | 2.0 | Dec 4, 2025 | Agent | Complete omnix_services/, dashboard, other packages |
 | 2.1 | Dec 4, 2025 | Agent | Verified line counts, added root modules, dashboard utils |
+| 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
 
 ---
 
