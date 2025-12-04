@@ -188,6 +188,8 @@ class TradingServiceEnterprise:
             if ticker and 'c' in ticker:
                 return {
                     'last': float(ticker['c'][0]),
+                    'high': float(ticker['h'][1]) if 'h' in ticker else None,
+                    'low': float(ticker['l'][1]) if 'l' in ticker else None,
                     'bid': float(ticker['b'][0]) if 'b' in ticker else None,
                     'ask': float(ticker['a'][0]) if 'a' in ticker else None,
                     'volume': float(ticker['v'][1]) if 'v' in ticker else None,
