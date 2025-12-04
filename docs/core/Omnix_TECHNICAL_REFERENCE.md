@@ -405,9 +405,10 @@ omnix_api/
 
 | Metric | Value |
 |--------|-------|
-| Total Tables | 45 |
-| Foreign Keys | 41 (91% coverage) |
+| Total Tables | 42 |
+| Foreign Keys | 38 (90% coverage) |
 | Phase 3 Status | Complete (Dec 4, 2025) |
+| Tables Consolidated | 3 dropped (Dec 4, 2025) |
 
 ### 7.2 Core Tables
 
