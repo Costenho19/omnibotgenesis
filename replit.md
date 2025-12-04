@@ -102,6 +102,20 @@ All FK constraints use `DEFERRABLE INITIALLY DEFERRED` for transaction safety.
 - Imports: All critical modules verified
 - Contract: Tuple-based `row[n]` access preserved
 
+**Legacy Code Cleanup - Dec 4, 2025**
+| Action | Location | Result |
+|--------|----------|--------|
+| DELETED | `omnix_core/models/` | Empty folder removed (0 imports) |
+| DELETED | `omnix_core/queue/` | Empty folder removed (0 imports) |
+| DELETED | `omnix_services/trading_service/pqc_security.py` | 162-line duplicate removed (0 imports) |
+| FIXED | `omnix_core/strategies/__init__.py` | Added exports for AresProtocolV1, V2, NonMarkovianKernel |
+| FIXED | `omnix_core/security/__init__.py` | Added exports for PostQuantumSecurity |
+| FIXED | `omnix_services/__init__.py` | Added exports for NewsScraperService, SymbolClassifier |
+
+**Note**: Paper trading modules (`omnix_core/bot/paper_trading.py` and `omnix_services/.../paper_trading_manager.py`) were kept - both are actively used by different bot components.
+
+Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md` (Section 9)
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
