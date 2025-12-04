@@ -1,12 +1,15 @@
-# OMNIX V6.0.5 - Force Railway Rebuild 2025-11-29T04:30:00Z
+# OMNIX V6.5.2 INSTITUTIONAL+ - Dependencies Updated 2025-12-04
+# Phase A/B/C Updates Applied - See docs/core/Omnix_TECHNICAL_REFERENCE.md Section 8.1
+
 # Core Trading & Math
 numpy==1.26.4
-scipy==1.12.0
-ccxt==4.5.1
+scipy==1.14.1
+ccxt>=4.5.24
 
 # AI & ML
 google-generativeai==0.8.5
 openai==1.101.0
+anthropic==0.75.0
 
 # Voice Processing
 gTTS==2.5.4
@@ -20,10 +23,10 @@ fastapi==0.109.0
 uvicorn==0.27.0
 
 # Telegram Bot
-python-telegram-bot==20.7
+python-telegram-bot==21.9
 
 # Database with Connection Pooling
-psycopg[binary,pool]>=3.1.0
+psycopg[binary,pool]==3.3.1
 
 # Redis
 redis==5.0.1
@@ -39,12 +42,12 @@ pytz==2024.1
 # Metrics & Monitoring
 prometheus-client==0.20.0
 
-# Security (Post-Quantum Crypto)
-pypqc
+# Security (Post-Quantum Crypto) - KyberSlash patch
+pypqc==0.0.6.2
 
 # HTTP/Async
 aiohttp>=3.9.0
-httpx>=0.25.0,<1.0.0
+httpx~=0.27.2
 
 # Extras
 tqdm==4.67.1
@@ -56,12 +59,12 @@ yt-dlp>=2024.1.0
 # Web Scraping (News Analysis)
 beautifulsoup4==4.12.3
 
-# Payments
+# Payments & Trading
 stripe==5.0.0
-alpaca-trade-api
+alpaca-trade-api>=3.0.0
 
 # Professional Testing & Backtesting System
-pandas==2.2.0
+pandas==2.2.3
 plotly==5.24.1
 kaleido==0.2.1
 reportlab==4.2.5
@@ -70,8 +73,12 @@ matplotlib==3.9.3
 seaborn==0.13.2
 tables==3.9.2
 pyarrow==18.1.0
+
+# Telegram utilities
 telegram
-dwave-ocean-sdk
-flask-cors
-gevent
-psycopg[binary,pool]
+
+# Quantum Computing
+dwave-ocean-sdk>=6.0.0
+
+# Flask extensions
+flask-cors>=4.0.0
