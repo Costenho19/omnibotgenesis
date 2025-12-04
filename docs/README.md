@@ -10,10 +10,9 @@
 | Document | Location | Description |
 |----------|----------|-------------|
 | **Project Overview** | `/replit.md` | Main project documentation |
-| **Project Structure** | `docs/core/PROJECT_STRUCTURE.md` | Architecture and modules |
-| **Database Reference** | `docs/core/DATABASE_AUDIT_REPORT.md` | Complete schema, SQL statements, audit & defect analysis |
-| **Environment Config** | `docs/core/MIGRATION_GUIDE.md` | 30+ environment variables |
-| **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | Complete API, security, and architecture reference |
+| **Technical Reference** | `docs/core/Omnix_TECHNICAL_REFERENCE.md` | Complete architecture, modules, dependencies |
+| **Database Reference** | `docs/core/DATABASE_AUDIT_REPORT.md` | Schema, SQL statements, audit & FK analysis |
+| **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | API, security, and architecture reference |
 | **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
 | **Dashboard Setup** | `docs/deployment/RAILWAY_DASHBOARD_SETUP.md` | Dashboard configuration |
 | **Testing Suite** | `omnix_testing/README.md` | Backtesting and validation |
@@ -26,10 +25,9 @@
 docs/
 ├── README.md                              # This index file
 │
-├── core/                                  # Core architecture docs
-│   ├── PROJECT_STRUCTURE.md               # System architecture (V6.5.2)
-│   ├── DATABASE_AUDIT_REPORT.md           # Database schema, SQL, audit & integrity analysis
-│   ├── MIGRATION_GUIDE.md                 # Environment configuration
+├── core/                                  # Core reference docs
+│   ├── Omnix_TECHNICAL_REFERENCE.md       # System architecture, modules, dependencies
+│   ├── DATABASE_AUDIT_REPORT.md           # Database schema, SQL, audit & integrity
 │   └── DASHBOARD_TECHNICAL_REFERENCE.md   # Dashboard API & security (19 protected endpoints)
 │
 ├── deployment/                            # Deployment guides
@@ -57,10 +55,10 @@ docs/
 ### New in V6.5.2
 - **Adaptive Parameter Engine V6.5 ULTRA** - Auto-calibration per regime
 - **On-Chain Data Intelligence V6.5** - Whale tracking, exchange flows
-- **45 Database Tables** - Complete persistent storage
+- **42 Database Tables** - Complete persistent storage (3 redundant consolidated)
 - **25+ Dashboard API Endpoints** - Real-time data access
 - **Audited Snapshots** - Cryptographic verification for investors
-- **Database Audit Report** - Complete schema analysis with SQL reference
+- **38 Foreign Keys** - 90% referential integrity coverage
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity
@@ -87,20 +85,19 @@ docs/
 
 | Category | Tables | Status |
 |----------|--------|--------|
-| Core Trading | 5 | Documented |
-| User Management | 4 | Documented |
-| Risk Management | 9 | Documented |
-| Derivatives | 6 | Documented |
-| AI/Conversations | 3 | Documented |
-| Community | 5 | Documented |
-| Other | 13 | Documented |
-| **TOTAL** | **45** | Audited Dec 2025 |
+| Core Trading | 5 | Active |
+| User Management | 4 | Active |
+| Risk Management | 8 | Active |
+| Derivatives | 6 | Active |
+| AI/Conversations | 3 | Active |
+| Community | 5 | Active |
+| Other | 11 | Active |
+| **TOTAL** | **42** | Audited Dec 2025 |
 
 **Full Reference**: See [DATABASE_AUDIT_REPORT.md](core/DATABASE_AUDIT_REPORT.md) for:
-- Complete CREATE TABLE SQL statements (Section 11)
-- Foreign key analysis (8 FKs of 45 tables)
-- Redundant table detection
-- Service layer duplication
+- Complete CREATE TABLE SQL statements
+- Foreign key analysis (38 FKs, 90% coverage)
+- Table consolidation history (3 redundant tables dropped)
 - Remediation plan
 
 ---
@@ -109,9 +106,8 @@ docs/
 
 ### For Developers
 1. Read `replit.md` - Project overview
-2. Read `docs/core/PROJECT_STRUCTURE.md` - Architecture
+2. Read `docs/core/Omnix_TECHNICAL_REFERENCE.md` - Architecture and dependencies
 3. Review `docs/core/DATABASE_AUDIT_REPORT.md` - Database schema & SQL
-4. Check `docs/core/MIGRATION_GUIDE.md` - Environment setup
 
 ### For Deployment
 1. Read `docs/deployment/RAILWAY_DEPLOYMENT.md` - Main deployment
@@ -140,7 +136,7 @@ docs/
 ### Databases
 | Service | Purpose |
 |---------|---------|
-| PostgreSQL (Railway) | Main persistence (45 tables) |
+| PostgreSQL (Railway) | Main persistence (42 tables) |
 | Redis (Railway) | Cache & state |
 
 ---
@@ -149,7 +145,7 @@ docs/
 
 | Version | Date | Key Features |
 |---------|------|--------------|
-| V6.5.2 | Dec 2025 | Database Audit, Audited Snapshots, Frontend Optimization |
+| V6.5.2 | Dec 2025 | Database Audit, Audited Snapshots, Table Consolidation |
 | V6.5.1 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
 | V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
 | V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
@@ -163,7 +159,7 @@ docs/
 ## Support
 
 - **Technical Issues:** Review documentation first
-- **Architecture Questions:** See `PROJECT_STRUCTURE.md`
+- **Architecture Questions:** See `Omnix_TECHNICAL_REFERENCE.md`
 - **Database:** See `DATABASE_AUDIT_REPORT.md`
 - **Deployment:** See deployment guides
 
