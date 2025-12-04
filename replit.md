@@ -44,6 +44,18 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 This fix resolves the error: `column "trade_id" does not exist` in `DatabaseManager.get_due_evaluations()`.
 
+**DATABASE_AUDIT_REPORT.md Reorganization - Dec 4, 2025**
+| Change | Description |
+|--------|-------------|
+| Reduced Size | 2699 → ~600 lines (73% reduction) |
+| Added Dashboard | Section 2 shows quick status, phase progress, blockers |
+| Consolidated Integrity | Section 3 with full 34-table FK list in 3.1.3 |
+| Created Playbooks | Section 5 with SQL templates for each phase |
+| Added Appendix | Schema reference with 45-table catalog |
+| Added Revision History | Version tracking from 1.0 to 3.0 |
+
+Reference document: `docs/core/DATABASE_AUDIT_REPORT.md`
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
