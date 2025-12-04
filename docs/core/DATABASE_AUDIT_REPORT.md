@@ -2255,20 +2255,444 @@ Phase 2 is complete when:
 
 ---
 
-## 16. Phase 3-4 Overview (Future)
+## 16. Phase 3: Data Integrity Hardening
 
-| Phase | Focus | Duration | Risk |
-|-------|-------|----------|------|
-| **Phase 3** | Add missing FKs, merge redundant tables | 1 week | 🟠 HIGH |
-| **Phase 4** | Consolidate query functions, add transactions | 1 week | 🟠 HIGH |
+> **Duration**: 1 week  
+> **Risk Level**: 🟠 HIGH  
+> **Goal**: Add missing Foreign Keys, clean orphan data, prepare table consolidation  
+> **Pre-requisite**: Phase 2 canary deployment stable for 48h ✅
 
-**Detailed plans for Phases 3-4 will be added after Phase 2 completes successfully.**
+### 16.1 Overview
+
+Phase 3 focuses on data integrity by adding Foreign Key constraints to the 34 tables that have `user_id` columns but no FK relationship to the `users` table. This requires careful orphan scanning, data cleanup, and staged rollout to avoid disrupting 24/7 trading.
+
+### 16.2 Implementation Tasks
+
+| # | Task | Description | Status | Risk |
+|---|------|-------------|--------|------|
+| 3.1 | **Orphan Scan** | Execute diagnostic queries to detect user_ids in tables that don't exist in `users` table | ⬜ Pending | 🟢 LOW |
+| 3.2 | **Data Cleanup** | Create scripts to clean/reassign orphan records before adding FK constraints | ⬜ Pending | 🟡 MEDIUM |
+| 3.3 | **FK Batch 1 (Analytics)** | Add FKs to 5 low-risk analytics tables | ⬜ Pending | 🟢 LOW |
+| 3.4 | **FK Batch 2 (Risk)** | Add FKs to 5 medium-risk risk management tables | ⬜ Pending | 🟡 MEDIUM |
+| 3.5 | **FK Batch 3 (Trading)** | Add FKs to 5 high-risk trading core tables | ⬜ Pending | 🔴 HIGH |
+| 3.6 | **Table Consolidation Prep** | Create playbook for merging redundant table pairs | ⬜ Pending | 🟡 MEDIUM |
+
+### 16.3 Task 3.1: Orphan Scan
+
+**Purpose**: Identify all user_id values in tables that don't have a corresponding record in `users`.
+
+**Diagnostic Query Template**:
+```sql
+-- Example for paper_trading_trades
+SELECT COUNT(*) as orphan_count, 
+       ARRAY_AGG(DISTINCT user_id) as orphan_user_ids
+FROM paper_trading_trades t
+WHERE t.user_id IS NOT NULL 
+  AND NOT EXISTS (SELECT 1 FROM users u WHERE u.user_id = t.user_id);
+```
+
+**Tables to Scan** (34 total):
+
+| Batch | Tables | Priority |
+|-------|--------|----------|
+| Analytics | community_feedback, community_signals, strategy_votes, improvement_proposals, user_rewards | 🟢 LOW |
+| Risk | risk_alerts, risk_events, risk_limits, risk_limit_breaches, risk_guardian_events, risk_guardian_logs, memory_risk_patterns | 🟡 MEDIUM |
+| Trading | paper_trading_trades, paper_trading_balances, trades, perpetual_positions, derivatives_orders | 🔴 HIGH |
+| Derivatives | funding_arbitrage, funding_payments, hedge_positions, margin_calls | 🟡 MEDIUM |
+| Patterns | detected_patterns, pending_evaluations, trade_evaluations, trade_reasonings | 🟢 LOW |
+| Snapshots | position_snapshots, audited_snapshots | 🟢 LOW |
+| Circuit Breaker | circuit_breaker_states, circuit_breaker_status | 🟢 LOW |
+| Other | conversations, user_settings, user_contributions, arbitrage_opportunities, limit_checks | 🟡 MEDIUM |
+
+**Expected Output**:
+```
+=== ORPHAN SCAN RESULTS ===
+Table                      | Orphan Count | Sample IDs
+---------------------------|--------------|------------------
+paper_trading_trades       | 0            | []
+paper_trading_balances     | 0            | []
+...
+TOTAL ORPHANS: ___
+```
+
+### 16.4 Task 3.2: Data Cleanup Scripts
+
+**Purpose**: Clean or reassign orphan records before adding FK constraints.
+
+**Strategy Options**:
+
+| Option | When to Use | SQL Pattern |
+|--------|-------------|-------------|
+| **DELETE** | Old/irrelevant records | `DELETE FROM table WHERE user_id NOT IN (SELECT user_id FROM users)` |
+| **SET NULL** | Records should stay, user optional | `UPDATE table SET user_id = NULL WHERE ...` |
+| **REASSIGN** | Migrate to system user | `UPDATE table SET user_id = 'SYSTEM' WHERE ...` |
+| **CREATE USER** | User should exist | `INSERT INTO users (user_id, ...) SELECT DISTINCT user_id FROM table WHERE ...` |
+
+**Cleanup Script Template**:
+```sql
+-- Phase 3.2: Orphan Cleanup for [TABLE_NAME]
+-- Generated: [DATE]
+-- Orphan count: [COUNT]
+
+BEGIN;
+
+-- Option A: Delete old orphans (>90 days)
+DELETE FROM [table_name] 
+WHERE user_id NOT IN (SELECT user_id FROM users)
+  AND created_at < NOW() - INTERVAL '90 days';
+
+-- Option B: Reassign recent orphans to SYSTEM user
+UPDATE [table_name] 
+SET user_id = 'SYSTEM'
+WHERE user_id NOT IN (SELECT user_id FROM users)
+  AND created_at >= NOW() - INTERVAL '90 days';
+
+COMMIT;
+```
+
+### 16.5 Task 3.3: FK Batch 1 - Analytics Tables (LOW RISK)
+
+**Tables**: 5 analytics/community tables with low write frequency.
+
+| Table | user_id Type | Current Records | FK Target |
+|-------|--------------|-----------------|-----------|
+| community_feedback | VARCHAR | ~100 | users.user_id |
+| community_signals | VARCHAR | ~500 | users.user_id |
+| strategy_votes | VARCHAR | ~200 | users.user_id |
+| improvement_proposals | VARCHAR | ~50 | users.user_id |
+| user_rewards | VARCHAR | ~100 | users.user_id |
+
+**Migration SQL**:
+```sql
+-- Phase 3.3: FK Batch 1 - Analytics Tables
+-- Risk: LOW (read-mostly tables)
+-- Execution: During low-activity window
+
+-- Set lock timeout to prevent long waits
+SET lock_timeout = '5s';
+
+-- Add FKs with DEFERRABLE for safety
+ALTER TABLE community_feedback 
+  ADD CONSTRAINT fk_community_feedback_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE community_signals 
+  ADD CONSTRAINT fk_community_signals_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE strategy_votes 
+  ADD CONSTRAINT fk_strategy_votes_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE improvement_proposals 
+  ADD CONSTRAINT fk_improvement_proposals_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE user_rewards 
+  ADD CONSTRAINT fk_user_rewards_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+-- Verify
+SELECT COUNT(*) FROM information_schema.table_constraints 
+WHERE constraint_type = 'FOREIGN KEY' AND table_schema = 'public';
+```
+
+**Rollback**:
+```sql
+ALTER TABLE community_feedback DROP CONSTRAINT IF EXISTS fk_community_feedback_user;
+ALTER TABLE community_signals DROP CONSTRAINT IF EXISTS fk_community_signals_user;
+ALTER TABLE strategy_votes DROP CONSTRAINT IF EXISTS fk_strategy_votes_user;
+ALTER TABLE improvement_proposals DROP CONSTRAINT IF EXISTS fk_improvement_proposals_user;
+ALTER TABLE user_rewards DROP CONSTRAINT IF EXISTS fk_user_rewards_user;
+```
+
+### 16.6 Task 3.4: FK Batch 2 - Risk Management Tables (MEDIUM RISK)
+
+**Tables**: 5 risk management tables with moderate write frequency.
+
+| Table | user_id Type | Current Records | FK Target |
+|-------|--------------|-----------------|-----------|
+| risk_alerts | VARCHAR | ~1000 | users.user_id |
+| risk_events | VARCHAR | ~500 | users.user_id |
+| risk_limits | VARCHAR | ~100 | users.user_id |
+| risk_limit_breaches | VARCHAR | ~200 | users.user_id |
+| risk_guardian_events | VARCHAR | ~300 | users.user_id |
+
+**Migration SQL**:
+```sql
+-- Phase 3.4: FK Batch 2 - Risk Management Tables
+-- Risk: MEDIUM (logging tables, moderate frequency)
+-- Execution: During low-activity window
+
+SET lock_timeout = '5s';
+
+ALTER TABLE risk_alerts 
+  ADD CONSTRAINT fk_risk_alerts_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE risk_events 
+  ADD CONSTRAINT fk_risk_events_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE risk_limits 
+  ADD CONSTRAINT fk_risk_limits_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE risk_limit_breaches 
+  ADD CONSTRAINT fk_risk_limit_breaches_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE risk_guardian_events 
+  ADD CONSTRAINT fk_risk_guardian_events_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+```
+
+### 16.7 Task 3.5: FK Batch 3 - Trading Core Tables (HIGH RISK)
+
+**Tables**: 5 core trading tables with high write frequency.
+
+| Table | user_id Type | Current Records | FK Target | Write Frequency |
+|-------|--------------|-----------------|-----------|-----------------|
+| paper_trading_trades | VARCHAR | ~10000 | users.user_id | HIGH |
+| paper_trading_balances | TEXT | ~100 | users.user_id | HIGH |
+| trades | VARCHAR | ~500 | users.user_id | MEDIUM |
+| perpetual_positions | VARCHAR | ~200 | users.user_id | MEDIUM |
+| derivatives_orders | VARCHAR | ~300 | users.user_id | LOW |
+
+**⚠️ CRITICAL NOTES**:
+1. `paper_trading_balances.user_id` is `TEXT` while `users.user_id` is `VARCHAR` - may need type alignment
+2. Execute during minimal trading activity (weekend or maintenance window)
+3. Monitor for lock contention
+4. Have rollback ready
+
+**Migration SQL**:
+```sql
+-- Phase 3.5: FK Batch 3 - Trading Core Tables
+-- Risk: HIGH (core trading path)
+-- Execution: MAINTENANCE WINDOW ONLY
+
+SET lock_timeout = '3s';  -- Shorter timeout for high-frequency tables
+
+-- Fix type mismatch first (if needed)
+ALTER TABLE paper_trading_balances 
+  ALTER COLUMN user_id TYPE VARCHAR USING user_id::VARCHAR;
+
+-- Add FKs
+ALTER TABLE paper_trading_trades 
+  ADD CONSTRAINT fk_paper_trading_trades_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE paper_trading_balances 
+  ADD CONSTRAINT fk_paper_trading_balances_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE trades 
+  ADD CONSTRAINT fk_trades_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE perpetual_positions 
+  ADD CONSTRAINT fk_perpetual_positions_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE derivatives_orders 
+  ADD CONSTRAINT fk_derivatives_orders_user 
+  FOREIGN KEY (user_id) REFERENCES users(user_id) 
+  DEFERRABLE INITIALLY DEFERRED;
+```
+
+### 16.8 Task 3.6: Table Consolidation Prep
+
+**Purpose**: Prepare playbook for merging redundant table pairs.
+
+**Redundant Pairs Identified**:
+
+| Pair | Keep | Merge From | Overlap | Priority |
+|------|------|------------|---------|----------|
+| circuit_breaker_states ↔ circuit_breaker_status | `circuit_breaker_status` | `circuit_breaker_states` | 70% | 🟢 HIGH |
+| risk_guardian_events ↔ risk_guardian_logs | `risk_guardian_events` | `risk_guardian_logs` | 60% | 🟡 MEDIUM |
+| trading_history ↔ paper_trading_trades | `paper_trading_trades` | `trading_history` | 80% | 🔴 LOW (complex) |
+
+**Consolidation Playbook Template**:
+
+```
+=== TABLE CONSOLIDATION: [SOURCE] → [TARGET] ===
+
+1. ANALYSIS
+   - Source table: [name], [columns], [row count]
+   - Target table: [name], [columns], [row count]
+   - Column mapping: [source_col → target_col]
+   - Missing columns in target: [list]
+
+2. PREPARATION
+   - Add missing columns to target
+   - Create shadow table for rollback
+   - Enable CDC logging (if available)
+
+3. MIGRATION
+   - INSERT INTO target SELECT ... FROM source WHERE NOT EXISTS
+   - Verify row counts match
+   - Verify data integrity
+
+4. CUTOVER
+   - Update code references (grep for table name)
+   - Rename source to _deprecated
+   - Monitor for errors
+
+5. CLEANUP (after 7 days stable)
+   - DROP deprecated table
+   - Update documentation
+```
 
 ---
 
-**Document Version:** 2.3  
+## 17. Phase 4: Service Unification & Deprecation
+
+> **Duration**: 1 week  
+> **Risk Level**: 🟠 HIGH  
+> **Goal**: Migrate Enterprise services to DatabaseGateway, deprecate legacy code  
+> **Pre-requisite**: Phase 3 FK constraints stable
+
+### 17.1 Overview
+
+Phase 4 completes the database unification by migrating remaining Enterprise consumers to DatabaseGateway and adding deprecation warnings to legacy code.
+
+### 17.2 Implementation Tasks
+
+| # | Task | Description | Status | Risk |
+|---|------|-------------|--------|------|
+| 4.1 | **Trading Manager Adapter** | Add DatabaseGateway adapter to paper_trading_manager.py with feature flag | ⬜ Pending | 🔴 HIGH |
+| 4.2 | **Bot Migration** | Migrate enterprise_bot.py and main.py to DatabaseGateway | ⬜ Pending | 🔴 HIGH |
+| 4.3 | **Legacy Deprecation** | Add deprecation warnings to DatabaseServiceEnterprise and old pool code | ⬜ Pending | 🟡 MEDIUM |
+| 4.4 | **Documentation Update** | Update DATABASE_AUDIT_REPORT.md with final results | ⬜ Pending | 🟢 LOW |
+
+### 17.3 Task 4.1: Trading Manager Adapter
+
+**File**: `omnix_services/trading_service/paper_trading_manager.py`
+
+**Current State**: Uses `DatabaseServiceEnterprise` directly via `db_service` instance.
+
+**Target State**: Uses `DatabaseGateway` when `USE_UNIFIED_GATEWAY=true`.
+
+**Implementation Pattern**:
+```python
+# At top of file
+import os
+USE_UNIFIED_GATEWAY = os.environ.get('USE_UNIFIED_GATEWAY', 'false').lower() == 'true'
+
+def _get_db():
+    """Get database interface based on feature flag."""
+    if USE_UNIFIED_GATEWAY:
+        from omnix_services.database_service.database_gateway import DatabaseGateway
+        return DatabaseGateway
+    else:
+        return db_service  # Legacy
+
+# Usage in methods:
+def _get_paper_balance(self, user_id):
+    db = _get_db()
+    if USE_UNIFIED_GATEWAY:
+        result = db.execute_query(
+            "SELECT * FROM paper_trading_balances WHERE user_id = %s",
+            (user_id,)
+        )
+    else:
+        result = db.execute_query(...)  # Original code
+```
+
+**Migration Checklist**:
+- [ ] Add feature flag import
+- [ ] Create `_get_db()` helper
+- [ ] Wrap each db call with flag check
+- [ ] Test with flag OFF (no change)
+- [ ] Test with flag ON (uses Gateway)
+- [ ] Verify tuple row access still works
+
+### 17.4 Task 4.2: Bot Migration
+
+**Files**: 
+- `omnix_services/telegram_service/enterprise_bot.py`
+- `main.py`
+
+**Strategy**: Same adapter pattern as Trading Manager.
+
+**Priority Order**:
+1. `enterprise_bot.py` - Bot commands (medium frequency)
+2. `main.py` - Bot startup (one-time init)
+
+### 17.5 Task 4.3: Legacy Deprecation
+
+**Files to Add Warnings**:
+
+| File | Warning Location | Message |
+|------|------------------|---------|
+| `omnix_services/database_service/database_service.py` | `__init__()` | "DatabaseServiceEnterprise is deprecated. Use DatabaseGateway instead." |
+| `omnix_dashboard/utils/database.py` | `init_connection_pool()` | "Legacy pool is deprecated when USE_UNIFIED_GATEWAY=true" |
+
+**Warning Pattern**:
+```python
+import warnings
+
+class DatabaseServiceEnterprise:
+    def __init__(self):
+        warnings.warn(
+            "DatabaseServiceEnterprise is deprecated since v6.5.2. "
+            "Use DatabaseGateway instead. Will be removed in v7.0.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # ... existing init code
+```
+
+### 17.6 Task 4.4: Documentation Update
+
+**Final updates to this document**:
+- [ ] Update FK count (from 8 to 18+)
+- [ ] Mark redundant tables as consolidated
+- [ ] Update Service Duplication section (resolved)
+- [ ] Add Phase 3-4 completion dates
+- [ ] Update Document Version to 3.0
+
+---
+
+## 18. Phase 3-4 Success Criteria
+
+### Phase 3 Complete When:
+- [ ] Orphan scan executed on all 34 tables
+- [ ] Orphan records cleaned/reassigned
+- [ ] FK Batch 1 (5 analytics tables) added
+- [ ] FK Batch 2 (5 risk tables) added
+- [ ] FK Batch 3 (5 trading tables) added
+- [ ] Table consolidation playbooks created
+- [ ] Zero trading interruptions
+
+### Phase 4 Complete When:
+- [ ] paper_trading_manager.py using DatabaseGateway
+- [ ] enterprise_bot.py using DatabaseGateway
+- [ ] main.py using DatabaseGateway
+- [ ] Deprecation warnings added to legacy code
+- [ ] Documentation updated with final results
+- [ ] FK count increased from 8 to 18+ (100%+ improvement)
+
+---
+
+**Document Version:** 2.4  
 **OMNIX V6.5.2 INSTITUTIONAL+**  
 **Audit Date:** December 2025  
 **Phase 1 Plan Added:** December 3, 2025  
 **Phase 2 Plan Added:** December 3, 2025  
-**Phase 2 Status Updated:** December 4, 2025 (Canary deployment active, schema fixes applied)
+**Phase 2 Status Updated:** December 4, 2025 (Canary deployment active, schema fixes applied)  
+**Phase 3-4 Plan Added:** December 4, 2025
