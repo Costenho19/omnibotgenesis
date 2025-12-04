@@ -309,9 +309,24 @@ class AutoTradingBot:
         # DEBUG: Logging para verificar PAPER_MODE en Railway
         logger.info(f"🔍 PAPER_MODE env var: '{paper_mode_raw}' → paper_mode={paper_mode_env}")
         
+        # V6.5.2: Cargar Trading Profile desde variable de entorno
+        self.trading_profile = None
+        if TRADING_PROFILES_AVAILABLE:
+            self.trading_profile = get_active_profile()
+            profile_name = self.trading_profile.name
+            logger.info(f"📊 Trading Profile: {profile_name}")
+            logger.info(f"   📝 {self.trading_profile.description[:60]}...")
+        else:
+            profile_name = "HARDCODED"
+            logger.info("📊 Trading Profile: HARDCODED (perfiles no disponibles)")
+        
+        # Usar valores del perfil si está disponible, sino valores por defecto
+        p = self.trading_profile  # Shorthand
+        
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
+            'trading_profile': profile_name,  # V6.5.2: Nombre del perfil activo
             'trading_pairs': [
                 'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
                 'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
@@ -319,16 +334,16 @@ class AutoTradingBot:
                 'ATOM/USD', 'LTC/USD'               # Ecosistema diversificado
             ],  # V6.5: 11 pares para máximas oportunidades
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
-            'check_interval_seconds': 25,  # V6.4: 25s (balance entre velocidad y estabilidad)
-            'min_trade_usd': 75.0,  # V6.4: Mínimo $75 (balance calidad/cantidad)
-            'max_position_pct': 0.12,  # V6.4: Máximo 12% por trade (más conservador)
-            'stop_loss_pct': 0.02,  # Stop-loss 2% (tighter para proteger ganancias)
-            'max_daily_loss_pct': 0.08,  # V6.4: Parada si pérdida diaria > 8%
-            'min_confidence': 0.14,  # V6.4: Confianza mínima 14% (balance calidad/cantidad)
+            'check_interval_seconds': p.check_interval_seconds if p else 25,
+            'min_trade_usd': p.min_trade_usd if p else 75.0,
+            'max_position_pct': p.max_position_pct if p else 0.12,
+            'stop_loss_pct': p.stop_loss_pct if p else 0.02,
+            'max_daily_loss_pct': p.max_daily_loss_pct if p else 0.08,
+            'min_confidence': p.min_confidence if p else 0.14,
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
             'use_multi_crypto': True,  # V6.4: Activar escaneo multi-crypto
-            'trades_per_day_target': 25,  # V6.4: Objetivo 25 trades/día (realista)
+            'trades_per_day_target': p.trades_per_day_target if p else 25,
         }
         
         # Estado del bot - V6.4: Cargado de la base de datos para persistencia
@@ -1408,10 +1423,14 @@ class AutoTradingBot:
                     else:
                         score -= 3  # Penalización menor si confianza baja
                 elif regime == 'VOLATILE':
-                    # V6.4: VETO solo en volatilidad extrema con alta confianza
-                    if regime_confidence > 0.8:
+                    # V6.5.2: HMM VETO configurable por perfil
+                    p = self.trading_profile  # Shorthand
+                    hmm_veto_enabled = p.hmm_veto_enabled if p else True
+                    hmm_veto_threshold = p.hmm_veto_confidence_threshold if p else 0.85
+                    
+                    if hmm_veto_enabled and regime_confidence > hmm_veto_threshold:
                         score -= 15
-                        decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO")
+                        decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO (conf > {hmm_veto_threshold:.0%})")
                         decision['v52_analysis']['hmm_volatility_veto'] = True
                     else:
                         score -= 5
@@ -1426,7 +1445,11 @@ class AutoTradingBot:
             
             # ADAPTIVE REGIME CROSS-VALIDATION
             # Si adaptive_weights y HMM detectan régimen EXTREME/VOLATILE simultáneamente → VETO
-            if adaptive_weights and hmm_regime:
+            # V6.5.2: Configurable por perfil
+            p = self.trading_profile  # Shorthand
+            regime_change_veto_enabled = p.regime_change_veto_enabled if p else True
+            
+            if adaptive_weights and hmm_regime and regime_change_veto_enabled:
                 adaptive_regime = adaptive_weights.regime if hasattr(adaptive_weights, 'regime') else 'NORMAL'
                 hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
                 
@@ -1574,36 +1597,43 @@ class AutoTradingBot:
             decision['raw_score'] = score
             decision['max_score'] = max_score
             
-            # V6.4 PREMIUM: Decisión de trading con umbrales optimizados
-            # Objetivo: 20-50 trades/día con win rate > 55%
+            # V6.5.2 PREMIUM: Decisión de trading con umbrales desde Trading Profile
+            # Objetivo: trades/día configurables con win rate > 55%
+            
+            # Obtener score thresholds del perfil o usar defaults (INSTITUTIONAL)
+            p = self.trading_profile  # Shorthand
+            score_very_strong = p.score_very_strong if p else 20
+            score_strong = p.score_strong if p else 10
+            score_moderate = p.score_moderate if p else 5
+            
             if confidence >= (self.config['min_confidence'] * 100):
-                # V6.4: Umbrales escalonados para más oportunidades
-                if score > 20:  # Señal COMPRA MUY FUERTE - Full position
+                # V6.5.2: Umbrales escalonados configurables por perfil
+                if score > score_very_strong:  # Señal COMPRA MUY FUERTE - Full position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
-                elif score > 10:  # Señal COMPRA FUERTE - 75% position
+                elif score > score_strong:  # Señal COMPRA FUERTE - 75% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
-                elif score > 5:  # Señal COMPRA MODERADA - 50% position
+                elif score > score_moderate:  # Señal COMPRA MODERADA - 50% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'MODERATE'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.50
-                elif score < -20:  # Señal VENTA MUY FUERTE
+                elif score < -score_very_strong:  # Señal VENTA MUY FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
-                elif score < -10:  # Señal VENTA FUERTE
+                elif score < -score_strong:  # Señal VENTA FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
-                elif score < -5:  # Señal VENTA MODERADA
+                elif score < -score_moderate:  # Señal VENTA MODERADA
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'MODERATE'
@@ -1636,24 +1666,33 @@ class AutoTradingBot:
                     logger.info(f"   🎯 Consenso: {coherence_report.consensus_signal.name} (Confianza: {coherence_report.consensus_confidence:.1%})")
                     logger.info(f"   💡 Recomendación: {coherence_report.decision_recommendation}")
                     
-                    # ========== V6.4 SISTEMA DE VETO BALANCEADO ==========
-                    # Objetivo: Más trades manteniendo calidad (win rate > 55%)
-                    # NOTA: Umbrales iguales para paper y real mode para mantener calidad
+                    # ========== V6.5.2 SISTEMA DE VETO CON TRADING PROFILES ==========
+                    # Umbrales configurables desde Trading Profile (INSTITUTIONAL/PAPER_AGGRESSIVE/BALANCED)
+                    p = self.trading_profile  # Shorthand para perfil activo
                     
-                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (< 30%)
+                    # Obtener umbrales del perfil o usar defaults (INSTITUTIONAL)
+                    veto_critical = p.coherence_veto_critical if p else 30.0
+                    veto_normal = p.coherence_veto_normal if p else 45.0
+                    coherence_warning = p.coherence_warning if p else 60.0
+                    coherence_good = p.coherence_good if p else 80.0
+                    
+                    profile_name = p.name if p else "HARDCODED"
+                    logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
+                    
+                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja
                     if (coherence_report.coherence_level.value == 'CRITICAL' or 
-                        coherence_report.coherence_score < 30):
-                        logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}%")
+                        coherence_report.coherence_score < veto_critical):
+                        logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}%")
+                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
                     
-                    # NIVEL 2: VETO POR BAJA COHERENCIA - Si < 45% (V6.4: balance entre 40% y 50%)
-                    elif coherence_report.coherence_score < 45:
-                        logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < 45%")
+                    # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil
+                    elif coherence_report.coherence_score < veto_normal:
+                        logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}%")
+                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
                     
                     # NIVEL 3: HOLD recomendado - solo vetar si señal no es muy fuerte
                     elif coherence_report.decision_recommendation == 'HOLD':
@@ -1669,24 +1708,24 @@ class AutoTradingBot:
                             decision['action'] = 'HOLD'
                             decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD")
                     
-                    # NIVEL 4: REDUCCIÓN MODERADA - Coherencia 45-60%
-                    elif coherence_report.coherence_score < 60:
+                    # NIVEL 4: REDUCCIÓN MODERADA - Coherencia entre veto_normal y warning
+                    elif coherence_report.coherence_score < coherence_warning:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
                             decision['amount_usd'] *= 0.60
                             logger.info(f"📊 Coherencia moderada: ${original_amount:.2f} → ${decision['amount_usd']:.2f}")
                             decision['reason'].append(f"📊 Posición reducida 40% por coherencia moderada")
                     
-                    # NIVEL 5: REDUCCIÓN LEVE - Coherencia 60-80%
-                    elif coherence_report.coherence_score < 80:
+                    # NIVEL 5: REDUCCIÓN LEVE - Coherencia entre warning y good
+                    elif coherence_report.coherence_score < coherence_good:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
                             decision['amount_usd'] *= 0.85
                             decision['reason'].append(f"📊 Ajuste 15% (coherencia buena)")
                     
-                    # NIVEL 6: APROBACIÓN COMPLETA - Coherencia >= 80%
+                    # NIVEL 6: APROBACIÓN COMPLETA - Coherencia >= good
                     else:
-                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_report.coherence_score:.1f}%")
+                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_report.coherence_score:.1f}% >= {coherence_good}%")
                         decision['reason'].append(f"✅ Coherencia excelente - Full position")
                     
                     # Log de contradicciones si existen (siempre, para transparencia)
@@ -2264,23 +2303,34 @@ class AutoTradingBot:
         """
         balance = self._get_balance()
         
-        # ========== V6.4 RAMP-UP SYSTEM ==========
-        # Empezar conservador y escalar según track record
+        # ========== V6.5.2 RAMP-UP SYSTEM CON TRADING PROFILES ==========
+        # Factores configurables desde Trading Profile
         total_trades = self.state.get('total_trades', 0)
         winning_trades = self.state.get('winning_trades', 0)
         win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 50
         
-        # Factor de ramp-up basado en número de trades
-        if total_trades < 5:
-            ramp_up_factor = 0.30  # Primeros 5 trades: 30% tamaño
-        elif total_trades < 10:
-            ramp_up_factor = 0.50  # Trades 5-10: 50% tamaño
-        elif total_trades < 20:
-            ramp_up_factor = 0.70  # Trades 10-20: 70% tamaño
-        elif total_trades < 50:
-            ramp_up_factor = 0.85  # Trades 20-50: 85% tamaño
+        # Obtener parámetros del perfil o usar defaults (INSTITUTIONAL)
+        p = self.trading_profile  # Shorthand
+        phase1_trades = p.ramp_up_phase1_trades if p else 5
+        phase2_trades = p.ramp_up_phase2_trades if p else 10
+        phase3_trades = p.ramp_up_phase3_trades if p else 20
+        phase4_trades = p.ramp_up_phase4_trades if p else 50
+        phase1_factor = p.ramp_up_phase1_factor if p else 0.30
+        phase2_factor = p.ramp_up_phase2_factor if p else 0.50
+        phase3_factor = p.ramp_up_phase3_factor if p else 0.70
+        phase4_factor = p.ramp_up_phase4_factor if p else 0.85
+        
+        # Factor de ramp-up basado en número de trades (configurable por perfil)
+        if total_trades < phase1_trades:
+            ramp_up_factor = phase1_factor
+        elif total_trades < phase2_trades:
+            ramp_up_factor = phase2_factor
+        elif total_trades < phase3_trades:
+            ramp_up_factor = phase3_factor
+        elif total_trades < phase4_trades:
+            ramp_up_factor = phase4_factor
         else:
-            ramp_up_factor = 1.0   # 50+ trades: 100% tamaño
+            ramp_up_factor = 1.0   # Después de phase4: 100% tamaño
         
         # Bonus si win rate es alto
         if total_trades >= 10 and win_rate >= 60:

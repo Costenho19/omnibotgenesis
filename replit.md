@@ -2,155 +2,7 @@
 
 ## Overview
 
-OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support for 100,000+ simultaneous users. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
-
-## Recent Changes (Changelog)
-
-### December 2025 - Phase 5: Database Service Unification (In Progress)
-
-**Phase 1 (Discovery & Freeze) - Dec 3, 2025**
-| Task | Status | Description |
-|------|--------|-------------|
-| Call Site Mapping | Done | 14 consumers documented (6 Dashboard + 8 Enterprise) |
-| Feature Flag | Done | `DISABLE_AUTO_MIGRATIONS=true` skips 8 auto-migrations |
-| Pool Telemetry | Done | Background thread logs stats every 5min with PID |
-| Diagnostics Endpoint | Done | `/api/db-diagnostics` shows real-time pool health |
-
-**Phase 2 (Build Unified Gateway) - IMPLEMENTED Dec 3, 2025**:
-- `database_gateway.py` created with fork-safe singleton, dual interfaces
-- `auto_trading_bot.py` dict-style bugs fixed (lines 787, 839, 908, 2050) to tuple access
-- Feature flag `USE_UNIFIED_GATEWAY` added to `database.py` (defaults false)
-- Gunicorn `post_fork` hook configured in `gunicorn.conf.py`
-- Dashboard consumers auto-migrated via `get_db_connection()` abstraction
-- Smoke test passed: 7 real trades, 11/11 widgets OK with gateway enabled
-
-**System Contract**: All modules use tuple-based rows `row[n]` (psycopg3 default), NOT dict access.
-
-**Canary Deployment Ready** (Railway):
-1. Set `USE_UNIFIED_GATEWAY=true` on single worker
-2. Monitor telemetry for 48h
-3. Optimize pool sizing based on metrics
-4. Expand to all workers if stable
-
-**Schema Fix: pending_evaluations - Dec 4, 2025**
-| Change | Description |
-|--------|-------------|
-| Added `trade_id` | INTEGER column for trade reference |
-| Added `due_time` | TIMESTAMP with default NOW() for scheduling |
-| Added `conditions` | JSONB with default '{}' for evaluation conditions |
-| Added `status` | VARCHAR(50) with default 'pending' for workflow state |
-| Created Index | `idx_pending_evaluations_status_due_time` for query optimization |
-| Backfill Logic | `entity_id` to `trade_id` where `entity_type='trade'`, `metadata` to `conditions` |
-
-This fix resolves the error: `column "trade_id" does not exist` in `DatabaseManager.get_due_evaluations()`.
-
-**DATABASE_AUDIT_REPORT.md Reorganization - Dec 4, 2025**
-| Change | Description |
-|--------|-------------|
-| Reduced Size | 2699 → ~600 lines (73% reduction) |
-| Added Dashboard | Section 2 shows quick status, phase progress, blockers |
-| Consolidated Integrity | Section 3 with full 34-table FK list in 3.1.3 |
-| Created Playbooks | Section 5 with SQL templates for each phase |
-| Added Appendix | Schema reference with 42-table catalog |
-| Added Revision History | Version tracking from 1.0 to 3.0 |
-
-Reference document: `docs/core/DATABASE_AUDIT_REPORT.md`
-
-**Technical Reference Document Created - Dec 4, 2025**
-| Metric | Value | Source |
-|--------|-------|--------|
-| Total Python Files | 220+ | Measured via find/wc |
-| omnix_core Lines | 20,131 | Verified |
-| omnix_services Lines | 62,613 | Verified |
-| omnix_dashboard Lines | 9,037 | Verified |
-| Total Codebase | ~100,000 lines | Measured |
-
-Comprehensive technical reference created from exhaustive code analysis of all packages:
-- Complete module inventory with verified line counts
-- Database-to-code mapping
-- Dependency matrix (internal/external)
-- Architecture contracts documented
-- Legacy code identified
-
-Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md`
-
-**Phase 3 (Data Integrity Hardening) - COMPLETED Dec 4, 2025**
-| Task | Status | Description |
-|------|--------|-------------|
-| Orphan Scan | Done | 34/34 tables scanned, 33 clean, 1 resolved |
-| System User | Done | Created `user_id='system'` for orphan resolution |
-| FK Batch 1-3 | Done | 34 new FKs added (analytics, risk, trading) |
-| Total FKs | Done | 38 FKs (90% coverage), exceeded 40% target |
-| Dashboard | Done | 11/11 widgets OK, 7 real trades verified |
-
-All FK constraints use `DEFERRABLE INITIALLY DEFERRED` for transaction safety.
-
-**Dependency Update - Dec 4, 2025**
-| Package | Old Version | New Version | Impact |
-|---------|-------------|-------------|--------|
-| anthropic | 0.51.0 | 0.75.0 | Model name changes future-proofed |
-| python-telegram-bot | 20.7 | 21.9 | No breaking changes (no deprecated APIs used) |
-| psycopg | 3.2.4 | 3.3.1 | Tuple-based row access preserved |
-| pandas | 2.2.2 | 2.2.3 | Bug fixes only |
-| scipy | 1.14.0 | 1.14.1 | Security fix, no API changes used |
-| ccxt | 4.4.35 | 4.5.24 | Exchange updates, API stable |
-| httpx | 0.27.0 | 0.27.2 | Required by PTB 21.9 |
-
-**Verification Completed**:
-- Dashboard: 11/11 widgets OK
-- Database: 7 real trades confirmed (psycopg 3.3.1)
-- Imports: All critical modules verified
-- Contract: Tuple-based `row[n]` access preserved
-
-**Import Architecture Fix - Dec 4, 2025**
-| File | Change |
-|------|--------|
-| `omnix_core/trading_system.py` | Added conditional imports with fallbacks for Flask, jsonify, requests |
-| `omnix_core/trading_system.py` | Added DummyPerformanceTracker, DummyCache, DummyConcurrencyManager placeholder classes |
-| `omnix_core/trading_system.py` | Fixed PostQuantumSecurity import path (omnix_core.security.pqc_security) |
-| `omnix_core/trading_system.py` | Added placeholders for AdvancedOrderBookAnalyzer, VolatilityAnalyzer, etc. |
-| `omnix_core/trading_system.py` | Added conditional imports for DatabaseManager, ConversationalAI, VoiceEngine |
-
-**LSP Status**: 58 static analysis warnings remain (Flask/jsonify conditional imports, dynamic module loading). These do not affect runtime - verified by Code Verification workflow and 11/11 Dashboard widgets.
-
-**Legacy Code Cleanup - Dec 4, 2025**
-| Action | Location | Result |
-|--------|----------|--------|
-| DELETED | `omnix_core/models/` | Empty folder removed (0 imports) |
-| DELETED | `omnix_core/queue/` | Empty folder removed (0 imports) |
-| DELETED | `omnix_services/trading_service/pqc_security.py` | 162-line duplicate removed (0 imports) |
-| FIXED | `omnix_core/strategies/__init__.py` | Added exports for AresProtocolV1, V2, NonMarkovianKernel |
-| FIXED | `omnix_core/security/__init__.py` | Added exports for PostQuantumSecurity |
-| FIXED | `omnix_services/__init__.py` | Added exports for NewsScraperService, SymbolClassifier |
-
-**Note**: Paper trading modules (`omnix_core/bot/paper_trading.py` and `omnix_services/.../paper_trading_manager.py`) were kept - both are actively used by different bot components.
-
-Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md` (Section 9)
-
-**Table Consolidation - Dec 4, 2025**
-| Action | Table Dropped | Reason |
-|--------|---------------|--------|
-| DROPPED | `circuit_breaker_states` | 0 rows, 0 code refs, duplicate of `circuit_breaker_status` |
-| DROPPED | `risk_guardian_logs` | 0 rows, 0 code refs, duplicate of `risk_guardian_events` |
-| DROPPED | `trading_history` | 0 rows, 0 code refs, duplicate of `paper_trading_trades` |
-
-**Results:**
-- Tables: 45 → 42 (3 redundant dropped)
-- FKs: 41 → 38 (adjusted after consolidation, 90% coverage)
-- Dashboard: 11/11 widgets verified OK
-
-Reference document: `docs/core/DATABASE_AUDIT_REPORT.md` (Section 3.2, Phase 3.7)
-
-**MATIC → POL Rebrand Fix - Dec 4, 2025**
-| File | Change |
-|------|--------|
-| `omnix_core/bot/auto_trading_bot.py` | `MATIC/USD` → `POL/USD` in symbol maps and trading pairs |
-| `omnix_core/sessions/user_session_manager.py` | Updated default trading pairs |
-| `omnix_core/trading_system.py` | Updated 7 references (currency list, pairs, asset analysis) |
-| `omnix_services/trading_service/trading_service.py` | Fixed Optional types for RMS validation |
-| `omnix_core/security/pqc_security.py` | Added fallback placeholders for kyber768/dilithium3 |
-
-**Reason**: Polygon (MATIC) rebranded to POL in December 2024. Kraken now uses POL/USD symbol.
+OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -209,6 +61,10 @@ Reference document: `docs/core/DATABASE_AUDIT_REPORT.md` (Section 3.2, Phase 3.7
 | `/api/positions` | Open positions with live prices | `{success, positions, summary, price_source, db_connected}` |
 | `/api/ticker` | Real-time crypto prices | `{prices, source, timestamp}` |
 | `/api/fear-greed` | Market sentiment index | `{value, classification, timestamp}` |
+
+### Trading Profiles System
+
+Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED) to switch between conservative and aggressive settings for various trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 
 ## External Dependencies
 
