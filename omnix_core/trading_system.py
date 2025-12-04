@@ -8,10 +8,54 @@ import logging
 import os
 import time
 import ccxt
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
+try:
+    from flask import Flask, jsonify, request
+    FLASK_AVAILABLE = True
+except ImportError:
+    FLASK_AVAILABLE = False
+    Flask = None
+    jsonify = None
+    request = None
+
 logger = logging.getLogger(__name__)
+
+class DummyPerformanceTracker:
+    """Placeholder for performance tracking when real tracker not available"""
+    response_times = []
+    total_interactions = 0
+    successful_predictions = 0
+    failed_predictions = 0
+    start_time = datetime.now()
+    
+    def track_function_performance(self, *args, **kwargs): pass
+    def get_performance_stats(self): return {}
+    def get_api_stats(self): return {}
+    def get_bottlenecks(self): return []
+    def get_performance_summary(self): return {}
+    def get_real_time_dashboard_data(self): return {}
+    def _calculate_system_health(self): return 100.0
+    def _get_memory_usage(self): return 0.0
+    def _get_cpu_usage(self): return 0.0
+    
+class DummyCache:
+    """Placeholder for intelligent cache when not available"""
+    def get(self, key): return None
+    def set(self, key, value, ttl=None): pass
+    def delete(self, key): pass
+    def get_stats(self): return {}
+
+class DummyConcurrencyManager:
+    """Placeholder for concurrency manager when not available"""
+    def get_stats(self): return {}
+    def get_status(self): return {}
+
+performance_tracker = DummyPerformanceTracker()
+intelligent_cache = DummyCache()
+concurrency_manager = DummyConcurrencyManager()
 
 # Import omnix services
 try:
@@ -24,13 +68,18 @@ try:
     ADVANCED_MODULES_AVAILABLE = True
 except ImportError:
     ADVANCED_MODULES_AVAILABLE = False
+    AdvancedOrderBookAnalyzer = None
+    AdvancedVolatilityAnalyzer = None
+    MicrostructureAnalyzer = None
+    AdvancedRiskManagement = None
     logger.warning("⚠️ Advanced trading modules not available")
 
 try:
-    from omnix_services.trading_service import PostQuantumSecurity
+    from omnix_core.security.pqc_security import PostQuantumSecurity
     PQC_AVAILABLE = True
 except ImportError:
     PQC_AVAILABLE = False
+    PostQuantumSecurity = None
     logger.warning("⚠️ Post-Quantum Security not available")
 
 # Import Mathematical Optimizer and helper functions
@@ -39,6 +88,8 @@ try:
     MATH_OPTIMIZER_AVAILABLE = True
 except ImportError:
     MATH_OPTIMIZER_AVAILABLE = False
+    MathematicalOptimizer = None
+    generate_unique_nonce = lambda: int(time.time() * 1000)
     logger.warning("⚠️ MathematicalOptimizer not available")
 
 # ARES Quantum Protocols - Import and create instances at module level
@@ -62,6 +113,45 @@ except ImportError as e:
     logger.warning(f"⚠️ ARES Quantum Protocols not available: {e}")
 
 TRADING_AVAILABLE = True
+
+# Additional conditional imports for main() function
+try:
+    from omnix_services.database_service import DatabaseManager
+    DATABASE_MANAGER_AVAILABLE = True
+except ImportError:
+    DatabaseManager = None
+    DATABASE_MANAGER_AVAILABLE = False
+
+try:
+    from omnix_services.ai_service.ai_service import ConversationalAI
+    CONVERSATIONAL_AI_AVAILABLE = True
+except ImportError:
+    ConversationalAI = None
+    CONVERSATIONAL_AI_AVAILABLE = False
+
+try:
+    from omnix_services.voice_service import VoiceEngine
+    VOICE_ENGINE_AVAILABLE = True
+except ImportError:
+    VoiceEngine = None
+    VOICE_ENGINE_AVAILABLE = False
+
+try:
+    from omnix_services.advanced_features import AdvancedFeaturesEngine
+    ADVANCED_FEATURES_AVAILABLE = True
+except ImportError:
+    AdvancedFeaturesEngine = None
+    ADVANCED_FEATURES_AVAILABLE = False
+
+try:
+    from omnix_services.telegram_service import EnterpriseTelegramBot
+    TELEGRAM_BOT_AVAILABLE = True
+except ImportError:
+    EnterpriseTelegramBot = None
+    TELEGRAM_BOT_AVAILABLE = False
+
+STRIPE_INTEGRATION_AVAILABLE = False
+setup_stripe_routes = None
 
 class TradingSystem:
     def __init__(self):
