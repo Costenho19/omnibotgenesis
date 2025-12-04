@@ -849,32 +849,91 @@ main.py (755 lines)
 
 ## 9. Legacy and Obsolete Code
 
-### 9.1 Identified Issues
+### 9.1 Legacy Code Audit (December 4, 2025)
+
+**Audit Methodology:**
+- Analyzed folder structure against documented architecture
+- Verified import usage with grep across 220+ Python files
+- Identified unused code, duplicates, and empty placeholders
+- Executed cleanup actions for confirmed dead code
+
+### 9.2 Issues Identified and Resolved
+
+| Location | Type | Severity | Status | Action Taken |
+|----------|------|----------|--------|--------------|
+| `omnix_core/models/` | Empty Folder | Low | ✅ DELETED | Folder removed (never implemented) |
+| `omnix_core/queue/` | Empty Folder | Low | ✅ DELETED | Folder removed (never implemented) |
+| `omnix_services/trading_service/pqc_security.py` | Duplicate | Medium | ✅ DELETED | 162-line duplicate removed (no imports found) |
+| `omnix_core/strategies/__init__.py` | Empty | Low | ✅ FIXED | Added exports for AresProtocolV1, V2, NonMarkovianKernel |
+| `omnix_core/security/__init__.py` | Empty | Low | ✅ FIXED | Added exports for PostQuantumSecurity |
+| `omnix_services/__init__.py` | Empty | Low | ✅ FIXED | Added exports for NewsScraperService, SymbolClassifier |
+
+### 9.3 Remaining Items (Intentional Design)
 
 | Location | Type | Severity | Notes |
 |----------|------|----------|-------|
-| `omnix_core/security/pqc_encryption.py` | Potential Duplicate | Low | Simulated fallback, may be redundant |
-| `omnix_core/models/__init__.py` | Empty Placeholder | Low | Never implemented |
-| `omnix_core/queue/__init__.py` | Empty Placeholder | Low | Never implemented |
-| `omnix_core/strategies/__init__.py` | Empty | Low | Missing exports |
-| `omnix_core/security/__init__.py` | Empty | Low | Missing exports |
-| `omnix_services/trading_service/pqc_security.py` | Duplicate | Medium | Same as omnix_core version |
-| `omnix_services/__init__.py` | Empty | Low | Missing exports |
+| `omnix_core/security/pqc_encryption.py` | Fallback Module | Low | **KEEP** - Simulated PQC for envs without pypqc |
+| `omnix_core/bot/paper_trading.py` | Dual Implementation | Low | **KEEP** - Used by auto_trading_bot.py, 656 lines |
+| `omnix_services/trading_service/paper_trading_manager.py` | Primary Implementation | Low | **KEEP** - Used by enterprise_bot.py, 961 lines |
 
-### 9.2 Code Duplication
+**Note on Paper Trading Modules:**
+Both paper trading modules are actively used:
+- `omnix_core/bot/paper_trading.py`: Used by `auto_trading_bot.py` (line 290, 2017-2018)
+- `omnix_services/.../paper_trading_manager.py`: Used by `enterprise_bot.py` (line 212-214)
 
-| Pattern | Locations | Recommendation |
-|---------|-----------|----------------|
-| PQC Security | `omnix_core/security/`, `omnix_services/trading_service/` | Consolidate to single module |
-| Paper Trading | `omnix_core/bot/paper_trading.py`, `omnix_services/trading_service/paper_trading_manager.py` | Audit for overlap |
+They serve different contexts (core bot vs enterprise services) and should remain separate.
+
+### 9.4 Code Cleanup Summary
+
+```
+LEGACY CODE CLEANUP - December 4, 2025
+═══════════════════════════════════════════════════════════════════
+
+DELETED (Dead Code):
+├── omnix_core/models/          [Empty folder, 0 imports]
+├── omnix_core/queue/           [Empty folder, 0 imports]
+└── omnix_services/trading_service/pqc_security.py  [162 lines, 0 imports]
+
+FIXED (__init__.py exports added):
+├── omnix_core/strategies/__init__.py
+│   └── Exports: AresProtocolV1, AresProtocolV2, NonMarkovianKernel
+├── omnix_core/security/__init__.py
+│   └── Exports: PostQuantumSecurity
+└── omnix_services/__init__.py
+    └── Exports: NewsScraperService, SymbolClassifier
+
+KEPT (Active Code):
+├── omnix_core/security/pqc_encryption.py    [Fallback for no pypqc]
+├── omnix_core/bot/paper_trading.py          [Used by auto_trading_bot]
+└── omnix_services/.../paper_trading_manager.py [Used by enterprise_bot]
+
+LINES REMOVED: ~162 (pqc_security.py duplicate)
+FOLDERS REMOVED: 2 (models/, queue/)
+```
+
+### 9.5 Import Verification Results
+
+**Before Deletion - Import Search:**
+```bash
+# Search for imports of deleted code
+grep -r "from omnix_core.models" .     → 0 matches
+grep -r "from omnix_core.queue" .      → 0 matches
+grep -r "from omnix_services.trading_service.pqc_security" . → 0 matches
+```
+
+**Active Imports (Kept):**
+```bash
+grep -r "from omnix_core.security.pqc_security" . → 1 match (main.py:227)
+grep -r "PaperTradingManager" . → 8 matches (actively used)
+```
 
 ---
 
-## 9.3 Database Population Analysis (December 4, 2025)
+## 9.6 Database Population Analysis (December 4, 2025)
 
 OMNIX is an enterprise-grade modular system designed for 100,000+ users. Many tables are empty because the corresponding modules are **ready but not activated**, or the system is in **paper trading mode**.
 
-### 9.3.1 Current Data Distribution
+### 9.6.1 Current Data Distribution
 
 **Tables WITH Data (Core Functionality Active):**
 
@@ -900,7 +959,7 @@ OMNIX is an enterprise-grade modular system designed for 100,000+ users. Many ta
 | **Circuit Breaker** | `circuit_breaker_states`, `circuit_breaker_status` | 2 | No market interruptions - activates only during flash crashes |
 | **Other** | `performance_metrics`, `risk_metrics_snapshots`, `position_snapshots`, `arbitrage_opportunities`, `detected_patterns`, `limit_checks`, `risk_limits`, `system_config`, `user_contacts`, `whatsapp_messages` | 10 | Various premium/optional features |
 
-### 9.3.2 Modular Architecture Diagram
+### 9.6.2 Modular Architecture Diagram
 
 ```
 OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
@@ -940,7 +999,7 @@ OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 9.3.3 Activation Conditions
+### 9.6.3 Activation Conditions
 
 | Module | Tables Fill When... | Trigger |
 |--------|---------------------|---------|
@@ -952,7 +1011,7 @@ OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
 | **Trade Evaluations** | Enable AI trade analysis | Premium feature activation |
 | **Circuit Breaker** | Market flash crash detected | Automatic on >10% moves |
 
-### 9.3.4 Design Rationale
+### 9.6.4 Design Rationale
 
 **This is CORRECT enterprise design, not a problem:**
 
@@ -1006,7 +1065,8 @@ grep -r "row\['" omnix_*
 | 2.0 | Dec 4, 2025 | Agent | Complete omnix_services/, dashboard, other packages |
 | 2.1 | Dec 4, 2025 | Agent | Verified line counts, added root modules, dashboard utils |
 | 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
-| 2.3 | Dec 4, 2025 | Agent | **Section 9.3 Added**: Database Population Analysis - explains why 38/45 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
+| 2.3 | Dec 4, 2025 | Agent | **Section 9.6 Added**: Database Population Analysis - explains why 38/45 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
+| 2.4 | Dec 4, 2025 | Agent | **Section 9 Expanded - Legacy Code Audit**: Deleted 2 empty folders (models/, queue/), removed 162-line duplicate (pqc_security.py), added proper exports to 3 __init__.py files, documented paper trading module architecture |
 
 ---
 
