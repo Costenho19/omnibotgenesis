@@ -116,6 +116,20 @@ All FK constraints use `DEFERRABLE INITIALLY DEFERRED` for transaction safety.
 
 Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md` (Section 9)
 
+**Table Consolidation - Dec 4, 2025**
+| Action | Table Dropped | Reason |
+|--------|---------------|--------|
+| DROPPED | `circuit_breaker_states` | 0 rows, 0 code refs, duplicate of `circuit_breaker_status` |
+| DROPPED | `risk_guardian_logs` | 0 rows, 0 code refs, duplicate of `risk_guardian_events` |
+| DROPPED | `trading_history` | 0 rows, 0 code refs, duplicate of `paper_trading_trades` |
+
+**Results:**
+- Tables: 45 → 42 (3 redundant dropped)
+- FKs: 41 → 38 (adjusted after consolidation, 90% coverage)
+- Dashboard: 11/11 widgets verified OK
+
+Reference document: `docs/core/DATABASE_AUDIT_REPORT.md` (Section 3.2, Phase 3.7)
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
