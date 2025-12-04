@@ -77,7 +77,7 @@ class UserTradingSession:
             self.trading_pairs = [
                 'BTC/USD', 'ETH/USD', 'SOL/USD',
                 'XRP/USD', 'ADA/USD', 'DOT/USD',
-                'LINK/USD', 'AVAX/USD', 'MATIC/USD',
+                'LINK/USD', 'AVAX/USD', 'POL/USD',
                 'ATOM/USD', 'LTC/USD'
             ]
         if self.created_at is None:

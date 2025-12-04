@@ -94,7 +94,7 @@ class TradingServiceEnterprise:
             if alert_dispatcher:
                 logger.info("   ✅ AlertDispatcher: Risk notifications active")
     
-    def _validate_rms(self, user_id: str, pair: str, side: str, amount: float, price: float = None) -> Dict[str, Any]:
+    def _validate_rms(self, user_id: str, pair: str, side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
         """
         Validate trade against RMS before execution.
         
@@ -159,7 +159,7 @@ class TradingServiceEnterprise:
             logger.error(f"Failed to get account status: {e}")
             return {}
     
-    def get_ticker(self, symbol: str) -> Dict[str, Any]:
+    def get_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
         """
         Get current ticker data for a trading pair.
         
@@ -350,9 +350,12 @@ class TradingServiceEnterprise:
                 try:
                     import json
                     order_bytes = json.dumps(order_data, sort_keys=True).encode()
-                    signature = self.pqc.sign_message(order_bytes)
-                    if signature:
-                        logger.info(f"✅ Order signed with Dilithium-3 ({len(signature)} bytes)")
+                    keypair = self.pqc.generate_keypair_signature()
+                    if keypair:
+                        _, secret_key = keypair
+                        signature = self.pqc.sign_message(order_bytes, secret_key)
+                        if signature:
+                            logger.info(f"✅ Order signed with Dilithium-3 ({len(signature)} bytes)")
                 except Exception as e:
                     logger.warning(f"⚠️ PQC signing failed (continuing): {e}")
             

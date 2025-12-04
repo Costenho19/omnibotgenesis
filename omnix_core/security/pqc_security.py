@@ -23,6 +23,8 @@ try:
     PQC_AVAILABLE = True
 except ImportError:
     PQC_AVAILABLE = False
+    kyber768 = None  # type: ignore
+    dilithium3 = None  # type: ignore
     logging.warning("⚠️ pypqc no disponible - Seguridad PQC desactivada")
 
 

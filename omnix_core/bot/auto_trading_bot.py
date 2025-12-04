@@ -235,7 +235,7 @@ class AutoTradingBot:
         'DOT/USD': 'DOTUSD',
         'LINK/USD': 'LINKUSD',
         'AVAX/USD': 'AVAXUSD',
-        'MATIC/USD': 'MATICUSD',
+        'POL/USD': 'POLUSD',
         'ATOM/USD': 'ATOMUSD',
         'LTC/USD': 'LTCUSD',
     }
@@ -254,7 +254,7 @@ class AutoTradingBot:
         'DOTUSD': 'DOT/USD',
         'LINKUSD': 'LINK/USD',
         'AVAXUSD': 'AVAX/USD',
-        'MATICUSD': 'MATIC/USD',
+        'POLUSD': 'POL/USD',
         'ATOMUSD': 'ATOM/USD',
         'LTCUSD': 'LTC/USD',
         'XLTCZUSD': 'LTC/USD',
@@ -308,7 +308,7 @@ class AutoTradingBot:
             'trading_pairs': [
                 'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
                 'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
-                'LINK/USD', 'AVAX/USD', 'MATIC/USD', # DeFi/L2 líderes
+                'LINK/USD', 'AVAX/USD', 'POL/USD',   # DeFi/L2 líderes (MATIC→POL Dec 2024)
                 'ATOM/USD', 'LTC/USD'               # Ecosistema diversificado
             ],  # V6.5: 11 pares para máximas oportunidades
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
