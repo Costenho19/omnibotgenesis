@@ -56,6 +56,13 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+try:
+    from omnix_core.config.trading_profiles import get_active_profile, TradingProfile
+    TRADING_PROFILES_AVAILABLE = True
+except ImportError:
+    TRADING_PROFILES_AVAILABLE = False
+    logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
+
 # Import Metrics Engine (Prometheus)
 try:
     from omnix_services.monitoring import get_metrics_engine
