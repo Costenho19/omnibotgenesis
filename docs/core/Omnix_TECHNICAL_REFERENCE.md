@@ -543,7 +543,53 @@ omnix_api/
 | `alpaca-trade-api` | (unpinned) | Stock Trading Service | Alpaca API |
 | `dwave-ocean-sdk` | (unpinned) | Quantum optimization | D-Wave integration |
 
-#### 8.1.2 Version Matrix (Audited December 4, 2025)
+#### 8.1.2 Compatibility Prerequisites (CRITICAL)
+
+**⚠️ MUST VERIFY BEFORE ANY UPDATES:**
+
+| Prerequisite | Required | Reason | Verification |
+|--------------|----------|--------|--------------|
+| **Python Version** | ≥3.10 | Flask 3.1.x (≥3.9) + scipy 1.14.1 (≥3.10) | `python --version` on Railway |
+| **httpx Version** | ~=0.27 | python-telegram-bot 21.9 requires exactly 0.27.x | Pin in requirements.txt |
+
+**Railway Python Version Check:**
+```bash
+# SSH to Railway or check build logs
+python --version
+# Must show Python 3.10.x or higher
+```
+
+**httpx Conflict Resolution:**
+```txt
+# CURRENT (INCOMPATIBLE with PTB 21.9):
+httpx>=0.25.0,<1.0.0
+
+# REQUIRED (for python-telegram-bot 21.9):
+httpx~=0.27.2
+```
+
+**Compatibility Matrix (Validated via Internet Research Dec 4, 2025):**
+
+| Package Proposed | Compatible With | Conflicts | Resolution |
+|------------------|-----------------|-----------|------------|
+| psycopg 3.3.1 | Flask 3.1.2, gunicorn 23.0.0 | None | ✅ Safe |
+| scipy 1.14.1 | numpy 1.26.4 | Python 3.9 | Requires Python 3.10+ |
+| pandas 2.2.3 | plotly 5.24.1, numpy 1.26.4 | None | ✅ Safe |
+| pypqc 0.0.6.2 | All (uses stable ABI cp37-abi3) | None | ✅ Safe |
+| ccxt 4.5.24+ | requests 2.32.5 | None | ✅ Safe |
+| anthropic 0.75.0 | httpx 0.27.x | None | ✅ Safe |
+| python-telegram-bot 21.9 | Python 3.10+ | **httpx constraint** | Change to ~=0.27 |
+
+**Anchor Packages (Already Updated - Must Remain Compatible):**
+
+| Package | Version | Python Min | Status |
+|---------|---------|------------|--------|
+| Flask | 3.1.2 | 3.9 | ✅ Anchor |
+| gunicorn | 23.0.0 | 3.7 | ✅ Anchor |
+| plotly | 5.24.1 | 3.8 | ✅ Anchor |
+| requests | 2.32.5 | 3.8 | ✅ Anchor |
+
+#### 8.1.3 Version Matrix (Audited December 4, 2025)
 
 **Packages Requiring Updates:**
 
@@ -576,7 +622,7 @@ omnix_api/
 | `kaleido` | 0.2.1 | 1.2.0 | 🔴 HIGH | Requires external Chrome |
 | `google-generativeai` | 0.8.5 | DEPRECATED | 🔴 HIGH | End of life Aug 2025 |
 
-#### 8.1.3 Risk Analysis and Compatibility Notes
+#### 8.1.4 Risk Analysis and Compatibility Notes
 
 **🟢 LOW RISK - Safe to Update:**
 
@@ -606,7 +652,7 @@ omnix_api/
 | `kaleido` | 0.2.1 | 1.2.0 | **BREAKING CHANGES** - v1.0+ no longer bundles Chrome, requires external Chrome installation. Not suitable for Railway. |
 | `google-generativeai` | 0.8.5 | DEPRECATED | **END OF LIFE: AUGUST 31, 2025** - Must migrate to `google-genai` SDK before deprecation. Requires code changes. |
 
-#### 8.1.4 Deprecation Warnings
+#### 8.1.5 Deprecation Warnings
 
 **⚠️ CRITICAL: Google Generative AI SDK Deprecation**
 
@@ -632,13 +678,13 @@ client = genai.Client(api_key="...")
 response = client.models.generate_content(model='gemini-2.0-flash', contents='...')
 ```
 
-#### 8.1.5 Security Patches
+#### 8.1.6 Security Patches
 
 | Package | Version | CVE/Advisory | Description |
 |---------|---------|--------------|-------------|
 | `pypqc` | 0.0.6.2 | KyberSlash (GMS-2024-382) | Private key recovery via timing attack. Fixed Jan 26, 2024. |
 
-#### 8.1.6 Python Version Compatibility
+#### 8.1.7 Python Version Compatibility
 
 | Package | Python 3.9 | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 |
 |---------|------------|-------------|-------------|-------------|-------------|
@@ -654,7 +700,7 @@ response = client.models.generate_content(model='gemini-2.0-flash', contents='..
 
 **Railway Production:** Verify Python version before updating redis or psycopg.
 
-#### 8.1.7 Dependency Update Plan
+#### 8.1.8 Dependency Update Plan
 
 **Phase A: Low Risk (Immediate)**
 ```
@@ -666,6 +712,9 @@ pypqc==0.0.6.2
 
 **Phase B: Medium Risk (With Testing)**
 ```
+# PREREQUISITE: Change httpx constraint FIRST
+httpx~=0.27.2  # Required for python-telegram-bot 21.9
+
 ccxt>=4.5.24
 python-telegram-bot==21.9
 anthropic==0.75.0
@@ -679,7 +728,7 @@ anthropic==0.75.0
 - Migrate `google-generativeai` → `google-genai` (before Aug 2025)
 - Evaluate NumPy 2.0 migration when ecosystem stabilizes
 
-#### 8.1.8 requirements.txt Issues
+#### 8.1.9 requirements.txt Issues
 
 | Issue | Location | Fix |
 |-------|----------|-----|
@@ -690,6 +739,51 @@ anthropic==0.75.0
 | Unpinned `alpaca-trade-api` | Line 61 | Pin to specific version |
 | Unpinned `flask-cors` | Line 75 | Pin to specific version |
 | Unpinned `dwave-ocean-sdk` | Line 74 | Pin to specific version |
+| **httpx constraint** | Line 47 | Change `>=0.25.0,<1.0.0` to `~=0.27.2` |
+
+#### 8.1.10 Railway Deployment Verification
+
+**Pre-Update Checklist:**
+
+| Step | Command/Action | Expected Result |
+|------|----------------|-----------------|
+| 1. Check Python Version | `python --version` in Railway logs | Python 3.10.x or higher |
+| 2. Verify current packages | `pip freeze` | Baseline versions noted |
+| 3. Backup database | Railway dashboard | Checkpoint created |
+
+**Post-Update Validation:**
+
+```bash
+# Railway deployment test sequence
+1. Deploy to Railway (push to main)
+2. Check build logs for pip install errors
+3. Verify bot startup: "OMNIX V6.5.2 INSTITUTIONAL+ iniciado"
+4. Test Telegram connection: /status command
+5. Test Dashboard: /api/health endpoint
+6. Verify database: /api/db-diagnostics endpoint
+7. Monitor for 1 hour before marking stable
+```
+
+**Rollback Procedure:**
+```bash
+# If errors occur, revert to previous requirements.txt
+git revert HEAD
+git push origin main
+# Railway will auto-deploy previous version
+```
+
+**Python Version Control in Railway:**
+
+Railway determines Python version from these files (in order of precedence):
+1. `runtime.txt` - e.g., `python-3.11.7`
+2. `.python-version` - e.g., `3.11.7`
+3. `Pipfile` - python_version field
+4. Default: Latest stable Python
+
+**Recommended: Create `runtime.txt`:**
+```txt
+python-3.11.7
+```
 
 ### 8.2 Internal Dependency Graph
 
