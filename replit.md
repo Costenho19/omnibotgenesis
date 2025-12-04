@@ -85,6 +85,23 @@ Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md`
 
 All FK constraints use `DEFERRABLE INITIALLY DEFERRED` for transaction safety.
 
+**Dependency Update - Dec 4, 2025**
+| Package | Old Version | New Version | Impact |
+|---------|-------------|-------------|--------|
+| anthropic | 0.51.0 | 0.75.0 | Model name changes future-proofed |
+| python-telegram-bot | 20.7 | 21.9 | No breaking changes (no deprecated APIs used) |
+| psycopg | 3.2.4 | 3.3.1 | Tuple-based row access preserved |
+| pandas | 2.2.2 | 2.2.3 | Bug fixes only |
+| scipy | 1.14.0 | 1.14.1 | Security fix, no API changes used |
+| ccxt | 4.4.35 | 4.5.24 | Exchange updates, API stable |
+| httpx | 0.27.0 | 0.27.2 | Required by PTB 21.9 |
+
+**Verification Completed**:
+- Dashboard: 11/11 widgets OK
+- Database: 7 real trades confirmed (psycopg 3.3.1)
+- Imports: All critical modules verified
+- Contract: Tuple-based `row[n]` access preserved
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
