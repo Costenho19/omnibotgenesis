@@ -253,7 +253,7 @@ class TradingSystem:
             for currency, data in balance.items():
                 if isinstance(data, dict) and data.get('free', 0) > 0:
                     # Filtrar solo monedas importantes para trading
-                    if currency in ['USD', 'EUR', 'BTC', 'ETH', 'ADA', 'AVAX', 'MATIC', 'DOT', 'LINK', 'UNI']:
+                    if currency in ['USD', 'EUR', 'BTC', 'ETH', 'ADA', 'AVAX', 'POL', 'DOT', 'LINK', 'UNI']:
                         available_currencies.append({
                             'currency': currency,
                             'free_balance': data.get('free', 0),
@@ -278,7 +278,7 @@ class TradingSystem:
             
             # Pares principales con USD (verificar disponibilidad en Kraken)
             if 'USD' in currencies:
-                available_cryptos = ['BTC', 'ETH', 'ADA', 'AVAX', 'MATIC', 'DOT', 'LINK']
+                available_cryptos = ['BTC', 'ETH', 'ADA', 'AVAX', 'POL', 'DOT', 'LINK']
                 for crypto in available_cryptos:
                     pair = f"{crypto}/USD"
                     try:
@@ -294,13 +294,13 @@ class TradingSystem:
             if len(crypto_currencies) >= 2:
                 # BTC como base principal
                 if 'BTC' in crypto_currencies:
-                    for crypto in ['ETH', 'ADA', 'AVAX', 'MATIC']:
+                    for crypto in ['ETH', 'ADA', 'AVAX', 'POL']:
                         if crypto in crypto_currencies:
                             optimal_pairs.append(f"{crypto}/BTC")
                 
                 # ETH como base secundaria
                 if 'ETH' in crypto_currencies:
-                    for crypto in ['ADA', 'AVAX', 'MATIC']:
+                    for crypto in ['ADA', 'AVAX', 'POL']:
                         if crypto in crypto_currencies and f"{crypto}/BTC" not in optimal_pairs:
                             optimal_pairs.append(f"{crypto}/ETH")
             
@@ -689,7 +689,7 @@ class TradingSystem:
     
     def get_multi_asset_analysis(self):
         """Análisis de múltiples activos crypto"""
-        assets = ['BTC', 'ETH', 'ADA', 'AVAX', 'MATIC']
+        assets = ['BTC', 'ETH', 'ADA', 'AVAX', 'POL']
         analysis = {}
         
         for asset in assets:
@@ -697,7 +697,7 @@ class TradingSystem:
                 # Simulación de datos múltiples activos
                 base_price = {
                     'BTC': 95000, 'ETH': 3200, 'ADA': 0.45, 
-                    'AVAX': 28, 'MATIC': 0.85
+                    'AVAX': 28, 'POL': 0.55
                 }[asset]
                 
                 change = 2.5  # Cambio promedio conservador
@@ -720,7 +720,7 @@ class TradingSystem:
     def _check_sharia_compliance(self, asset):
         """Verificación de cumplimiento Sharia"""
         # Activos generalmente considerados Sharia-compliant
-        compliant_assets = ['BTC', 'ETH', 'ADA', 'AVAX', 'MATIC']
+        compliant_assets = ['BTC', 'ETH', 'ADA', 'AVAX', 'POL']
         return asset in compliant_assets
     
     def _get_asset_signal(self, asset, change):
@@ -740,7 +740,7 @@ class TradingSystem:
         """Nivel de riesgo por activo"""
         risk_map = {
             'BTC': 'LOW', 'ETH': 'LOW', 'ADA': 'MEDIUM',
-            'AVAX': 'MEDIUM', 'MATIC': 'HIGH'
+            'AVAX': 'MEDIUM', 'POL': 'HIGH'
         }
         return risk_map.get(asset, 'HIGH')
     

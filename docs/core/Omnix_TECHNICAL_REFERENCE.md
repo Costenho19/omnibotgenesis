@@ -79,8 +79,6 @@ omnix/
 | `sessions/` | 1 | 561 | Multi-user sessions | `UserSessionManager`, `UserTradingSession` |
 | `context/` | 1 | 313 | Real data provider | `OMNIXRealContextProvider` |
 | `utils/` | 2 | 360 | Logging, rate limiting | `ColoredFormatter`, `RateLimiter` |
-| `models/` | 0 | 0 | (Empty - placeholder) | - |
-| `queue/` | 0 | 0 | (Empty - placeholder) | - |
 | Root | 1 | 5,486 | Trading system core | `TradingSystem` |
 
 ### 3.2 Key Module Details

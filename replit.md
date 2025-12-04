@@ -130,6 +130,17 @@ Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md` (Section 9)
 
 Reference document: `docs/core/DATABASE_AUDIT_REPORT.md` (Section 3.2, Phase 3.7)
 
+**MATIC → POL Rebrand Fix - Dec 4, 2025**
+| File | Change |
+|------|--------|
+| `omnix_core/bot/auto_trading_bot.py` | `MATIC/USD` → `POL/USD` in symbol maps and trading pairs |
+| `omnix_core/sessions/user_session_manager.py` | Updated default trading pairs |
+| `omnix_core/trading_system.py` | Updated 7 references (currency list, pairs, asset analysis) |
+| `omnix_services/trading_service/trading_service.py` | Fixed Optional types for RMS validation |
+| `omnix_core/security/pqc_security.py` | Added fallback placeholders for kyber768/dilithium3 |
+
+**Reason**: Polygon (MATIC) rebranded to POL in December 2024. Kraken now uses POL/USD symbol.
+
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
