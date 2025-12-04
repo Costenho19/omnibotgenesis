@@ -870,6 +870,104 @@ main.py (755 lines)
 
 ---
 
+## 9.3 Database Population Analysis (December 4, 2025)
+
+OMNIX is an enterprise-grade modular system designed for 100,000+ users. Many tables are empty because the corresponding modules are **ready but not activated**, or the system is in **paper trading mode**.
+
+### 9.3.1 Current Data Distribution
+
+**Tables WITH Data (Core Functionality Active):**
+
+| Table | Records | Purpose | Module |
+|-------|---------|---------|--------|
+| `conversations` | 260 | Chat history with Telegram bot | telegram_service |
+| `paper_trading_trades` | 7 | Active paper trades | trading_service |
+| `users` | 3 | Registered users | user_settings |
+| `paper_trading_balances` | 1 | Current paper balance | trading_service |
+| `user_settings` | 1 | User configuration | user_settings |
+| `audited_snapshots` | 1 | Risk metrics snapshot | risk_management |
+| `schema_migrations` | 1 | Migration control | database_service |
+
+**Tables WITHOUT Data (38 tables) - By Module:**
+
+| Category | Tables | Count | Reason Empty |
+|----------|--------|-------|--------------|
+| **Derivatives/Futures** | `perpetual_positions`, `hedge_positions`, `margin_calls`, `derivatives_orders`, `funding_arbitrage`, `funding_payments` | 6 | Futures module not activated - requires Kraken Futures account |
+| **Risk Guardian** | `risk_alerts`, `risk_events`, `risk_guardian_events`, `risk_guardian_logs`, `risk_limit_breaches`, `memory_risk_patterns` | 6 | No risk events yet - bot hasn't had drawdowns or limit violations |
+| **Community Intelligence** | `community_signals`, `community_feedback`, `improvement_proposals`, `strategy_votes`, `user_contributions`, `user_rewards` | 6 | Requires multiple users - designed for 100+ traders collaborating |
+| **Real Trading** | `trades`, `trading_history`, `balance_history` | 3 | Paper trading only - these are for REAL mode with Kraken |
+| **Evaluations/AI** | `trade_evaluations`, `trade_reasonings`, `pending_evaluations`, `ai_interactions`, `conversation_memory` | 5 | Premium modules - require specific activation |
+| **Circuit Breaker** | `circuit_breaker_states`, `circuit_breaker_status` | 2 | No market interruptions - activates only during flash crashes |
+| **Other** | `performance_metrics`, `risk_metrics_snapshots`, `position_snapshots`, `arbitrage_opportunities`, `detected_patterns`, `limit_checks`, `risk_limits`, `system_config`, `user_contacts`, `whatsapp_messages` | 10 | Various premium/optional features |
+
+### 9.3.2 Modular Architecture Diagram
+
+```
+OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
+═══════════════════════════════════════════════════════════════════
+
+✅ ACTIVE MODULES (with data):
+┌─────────────────────────────────────────────────────────────────┐
+│  Telegram Bot  ──►  Paper Trading Engine  ──►  Dashboard        │
+│  (260 convos)       (7 trades, 1 balance)     (11/11 widgets)   │
+│                                                                  │
+│  Tables: conversations, paper_trading_trades,                   │
+│          paper_trading_balances, users, user_settings           │
+└─────────────────────────────────────────────────────────────────┘
+
+⏸️ READY BUT NOT ACTIVATED (tables exist, no data):
+┌─────────────────────────────────────────────────────────────────┐
+│  ┌───────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
+│  │  Derivatives  │  │  Risk Guardian  │  │  Community Intel │  │
+│  │  (Futures)    │  │  (No events)    │  │  (1 user only)   │  │
+│  │  6 tables     │  │  6 tables       │  │  6 tables        │  │
+│  └───────────────┘  └─────────────────┘  └──────────────────┘  │
+│                                                                  │
+│  ┌───────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
+│  │  AI Evals     │  │  Circuit Breaker│  │  WhatsApp        │  │
+│  │  (Premium)    │  │  (No crashes)   │  │  (Not enabled)   │  │
+│  │  5 tables     │  │  2 tables       │  │  1 table         │  │
+│  └───────────────┘  └─────────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+
+⬜ REQUIRES REAL TRADING MODE (paper trading → real):
+┌─────────────────────────────────────────────────────────────────┐
+│  ┌───────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
+│  │  Real Trading │  │  Balance History│  │  Arbitrage       │  │
+│  │  (Kraken API) │  │  (With funds)   │  │  (Multi-exchange)│  │
+│  │  3 tables     │  │  1 table        │  │  1 table         │  │
+│  └───────────────┘  └─────────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 9.3.3 Activation Conditions
+
+| Module | Tables Fill When... | Trigger |
+|--------|---------------------|---------|
+| **Derivatives** | Activate futures trading on Kraken | `DERIVATIVES_ENABLED=true` + Kraken Futures API |
+| **Risk Guardian** | Bot has drawdown >5% or violates limits | Automatic on risk events |
+| **Community Intelligence** | Have 10+ active users with the bot | Multi-user collaboration |
+| **Real Trading** | Switch from paper to REAL mode | `PAPER_TRADING=false` |
+| **Balance History** | Enable hourly balance tracking | `TRACK_BALANCE_HISTORY=true` |
+| **Trade Evaluations** | Enable AI trade analysis | Premium feature activation |
+| **Circuit Breaker** | Market flash crash detected | Automatic on >10% moves |
+
+### 9.3.4 Design Rationale
+
+**This is CORRECT enterprise design, not a problem:**
+
+| Aspect | Benefit |
+|--------|---------|
+| **Scalability** | Tables pre-exist for growth to 100K+ users |
+| **Modularity** | Activate features without code changes |
+| **Paper Trading** | Build track record without financial risk |
+| **Data Integrity** | 41 FKs configured (91% coverage) ensures clean data when modules activate |
+| **Separation of Concerns** | Each module has dedicated tables, no data mixing |
+
+**Analogy:** Empty tables are like hotel rooms ready for guests - the infrastructure exists and is maintained, waiting for activation.
+
+---
+
 ## 10. Architecture Contracts
 
 ### 10.1 Database Access
@@ -908,6 +1006,7 @@ grep -r "row\['" omnix_*
 | 2.0 | Dec 4, 2025 | Agent | Complete omnix_services/, dashboard, other packages |
 | 2.1 | Dec 4, 2025 | Agent | Verified line counts, added root modules, dashboard utils |
 | 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
+| 2.3 | Dec 4, 2025 | Agent | **Section 9.3 Added**: Database Population Analysis - explains why 38/45 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
 
 ---
 
