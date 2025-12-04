@@ -2,9 +2,9 @@
 
 > **Document:** Database Audit & Remediation Guide  
 > **Location:** `docs/core/DATABASE_AUDIT_REPORT.md`  
-> **Version:** 3.0 (Reorganized)  
+> **Version:** 3.1 (Table Consolidation Complete)  
 > **Last Updated:** December 4, 2025  
-> **Status:** Phase 2 Active, Phase 3-4 Planned
+> **Status:** Phase 3.6 Complete, Phase 4 Pending
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Total Tables | 45 | 45 | ✅ |
-| Foreign Keys | 41 (91%) | 18+ (40%) | ✅ EXCEEDED |
-| Tables with user_id + FK | 41 of 45 | 20+ | ✅ Complete |
-| Redundant Table Pairs | 3 | 0 | ⬜ Pending |
+| Total Tables | 42 | 42 | ✅ Consolidated |
+| Foreign Keys | 38 (90%) | 18+ (40%) | ✅ EXCEEDED |
+| Tables with user_id + FK | 38 of 42 | 20+ | ✅ Complete |
+| Redundant Table Pairs | 0 | 0 | ✅ RESOLVED |
 | Database Services | 2 (dual) | 1 (unified) | 🟡 Canary Active |
 
 ### 1.2 Critical Findings
@@ -39,7 +39,7 @@
 |---|---------|----------|--------------|
 | 1 | 34 tables have user_id without FK constraint | ✅ RESOLVED | Phase 3 ✅ |
 | 2 | Dual database services competing for connections | 🔴 CRITICAL | Phase 2 ✅ (canary) |
-| 3 | 3 pairs of redundant tables causing confusion | 🟠 HIGH | Phase 3.6 |
+| 3 | 3 pairs of redundant tables causing confusion | ✅ RESOLVED | Phase 3.6 ✅ |
 | 4 | 14 tables undocumented in DATABASE.md | ✅ RESOLVED | Done |
 | 5 | Query duplication across endpoints | 🟡 MEDIUM | Phase 4 |
 
@@ -60,9 +60,10 @@
 ║  🟢 Gateway Canary: ACTIVE (USE_UNIFIED_GATEWAY=true)            ║
 ║  🟢 Auto-Migrations: DISABLED (DISABLE_AUTO_MIGRATIONS=true)     ║
 ║  🟢 Trading: No interruptions                                     ║
-║  🟢 FK Coverage: 41/45 tables (91%) ← EXCEEDED TARGET            ║
+║  🟢 FK Coverage: 38/42 tables (90%) ← EXCEEDED TARGET            ║
 ║  🟢 Orphan Scan: Complete - 34/34 tables clean                   ║
 ║  🟢 System User: Created (user_id='system')                      ║
+║  🟢 Table Consolidation: 3 redundant tables removed              ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -143,13 +144,19 @@ All 34 tables requiring FK addition:
 
 **Impact**: Without FKs, orphan records can exist → breaks audits and data integrity.
 
-### 3.2 Redundant Tables
+### 3.2 Redundant Tables ✅ CONSOLIDATED
 
-| Keep | Deprecate | Overlap | Action |
-|------|-----------|---------|--------|
-| `circuit_breaker_status` | `circuit_breaker_states` | 70% | Merge in Phase 3.6 |
-| `risk_guardian_events` | `risk_guardian_logs` | 60% | Merge in Phase 3.6 |
-| `paper_trading_trades` | `trading_history` | 80% | Complex - Phase 4 |
+| Kept | Dropped | Overlap | Status |
+|------|---------|---------|--------|
+| `circuit_breaker_status` | `circuit_breaker_states` | 70% | ✅ DROPPED Dec 4 |
+| `risk_guardian_events` | `risk_guardian_logs` | 60% | ✅ DROPPED Dec 4 |
+| `paper_trading_trades` | `trading_history` | 80% | ✅ DROPPED Dec 4 |
+
+**Consolidation Summary (Dec 4, 2025):**
+- 3 redundant tables dropped: `circuit_breaker_states`, `risk_guardian_logs`, `trading_history`
+- All had 0 rows and 0 code references (verified via grep)
+- Total tables: 45 → 42
+- FK count adjusted: 41 → 38 (3 FKs on dropped tables removed)
 
 ### 3.3 Service Duplication (Resolved by Phase 2)
 
@@ -223,11 +230,12 @@ ALL Consumers → DatabaseGateway → Single Pool → PostgreSQL
 | 3.4 | FK Batch 2 - 8 risk tables | 🟡 MEDIUM | ✅ Done | Dec 4 |
 | 3.5 | FK Batch 3 - 9 trading tables | 🔴 HIGH | ✅ Done | Dec 4 |
 | 3.6 | FK Remaining - 12 pattern/snapshot/other | 🟢 LOW | ✅ Done | Dec 4 |
-| 3.7 | Table Consolidation Prep | 🟡 MEDIUM | ⬜ Deferred | - |
+| 3.7 | Table Consolidation - Drop 3 redundant tables | 🟡 MEDIUM | ✅ Done | Dec 4 |
 
 **Results**:
 - Orphan scan: 34/34 tables clean (1 orphan resolved by creating system user)
-- FKs added: 34 new constraints (total: 41 FKs, 91% coverage)
+- FKs added: 34 new constraints (total: 38 FKs, 90% coverage after consolidation)
+- Table consolidation: 3 redundant tables dropped (45 → 42 tables)
 - Dashboard verified: 11/11 widgets OK, 7 real trades
 
 ---
@@ -594,6 +602,7 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.1 | Dec 4, 2025 | **Table Consolidation Complete**: Dropped 3 redundant tables (circuit_breaker_states, risk_guardian_logs, trading_history). Total: 45→42 tables, 41→38 FKs |
 | 3.0 | Dec 4, 2025 | **Major reorganization**: Consolidated from 2699 to ~600 lines. Added Status Dashboard, consolidated schema refs to appendix, organized phases as tables. |
 | 2.4 | Dec 4, 2025 | Added Phase 3-4 detailed implementation plan |
 | 2.3 | Dec 4, 2025 | Updated Phase 2 canary status, pending_evaluations schema fix |
@@ -617,13 +626,14 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 - [x] Orphan scan executed on all 34 tables (33/34 clean, 1 resolved)
 - [x] Orphan records cleaned/reassigned (created 'system' user)
 - [x] FK Batch 1-3 added (34 FKs total - EXCEEDED target of 15)
-- [ ] Table consolidation playbooks created (deferred to Phase 5)
+- [x] Table consolidation executed (3 redundant tables dropped)
 
 **Verification Evidence (pg_constraint)**:
 - 34 FKs added: All confirmed DEFERRABLE=YES, INITIALLY_DEFERRED=YES
 - 7 original FKs (*_user_id_fkey pattern) already existed
 - System user: `user_id='system'`, created `2025-12-04 07:21:39`
-- Total FK coverage: 41 FKs to users table (91%)
+- Total FK coverage: 38 FKs to users table (90% - adjusted after consolidation)
+- Tables consolidated: 45 → 42 (dropped circuit_breaker_states, risk_guardian_logs, trading_history)
 
 ### Phase 4 Complete When:
 - [ ] All Enterprise consumers using DatabaseGateway
@@ -632,7 +642,7 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 
 ---
 
-**Document Version:** 3.0  
+**Document Version:** 3.1  
 **OMNIX V6.5.2 INSTITUTIONAL+**  
 **Audit Date:** December 2025  
 **Contact:** Development Team
