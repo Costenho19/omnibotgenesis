@@ -28,8 +28,8 @@
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
 | Total Tables | 45 | 45 | ✅ |
-| Foreign Keys | 42 (93%) | 18+ (40%) | ✅ EXCEEDED |
-| Tables with user_id + FK | 42 of 42 | 20+ | ✅ Complete |
+| Foreign Keys | 41 (91%) | 18+ (40%) | ✅ EXCEEDED |
+| Tables with user_id + FK | 41 of 45 | 20+ | ✅ Complete |
 | Redundant Table Pairs | 3 | 0 | ⬜ Pending |
 | Database Services | 2 (dual) | 1 (unified) | 🟡 Canary Active |
 
@@ -60,7 +60,7 @@
 ║  🟢 Gateway Canary: ACTIVE (USE_UNIFIED_GATEWAY=true)            ║
 ║  🟢 Auto-Migrations: DISABLED (DISABLE_AUTO_MIGRATIONS=true)     ║
 ║  🟢 Trading: No interruptions                                     ║
-║  🟢 FK Coverage: 42/45 tables (93%) ← EXCEEDED TARGET            ║
+║  🟢 FK Coverage: 41/45 tables (91%) ← EXCEEDED TARGET            ║
 ║  🟢 Orphan Scan: Complete - 34/34 tables clean                   ║
 ║  🟢 System User: Created (user_id='system')                      ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -227,7 +227,7 @@ ALL Consumers → DatabaseGateway → Single Pool → PostgreSQL
 
 **Results**:
 - Orphan scan: 34/34 tables clean (1 orphan resolved by creating system user)
-- FKs added: 34 new constraints (total: 42 FKs, 93% coverage)
+- FKs added: 34 new constraints (total: 41 FKs, 91% coverage)
 - Dashboard verified: 11/11 widgets OK, 7 real trades
 
 ---
@@ -613,16 +613,22 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 - [ ] Enterprise consumers migrated
 - [ ] Old pool code deprecated
 
-### Phase 3 Complete When:
-- [ ] Orphan scan executed on all 34 tables
-- [ ] Orphan records cleaned/reassigned
-- [ ] FK Batch 1-3 added (15 FKs total)
-- [ ] Table consolidation playbooks created
+### Phase 3 Complete When: ✅ COMPLETED Dec 4, 2025
+- [x] Orphan scan executed on all 34 tables (33/34 clean, 1 resolved)
+- [x] Orphan records cleaned/reassigned (created 'system' user)
+- [x] FK Batch 1-3 added (34 FKs total - EXCEEDED target of 15)
+- [ ] Table consolidation playbooks created (deferred to Phase 5)
+
+**Verification Evidence (pg_constraint)**:
+- 34 FKs added: All confirmed DEFERRABLE=YES, INITIALLY_DEFERRED=YES
+- 7 original FKs (*_user_id_fkey pattern) already existed
+- System user: `user_id='system'`, created `2025-12-04 07:21:39`
+- Total FK coverage: 41 FKs to users table (91%)
 
 ### Phase 4 Complete When:
 - [ ] All Enterprise consumers using DatabaseGateway
 - [ ] Deprecation warnings added
-- [ ] FK count increased to 18+ (from 8)
+- [x] FK count increased to 18+ (from 8) - NOW 41 (EXCEEDED)
 
 ---
 
