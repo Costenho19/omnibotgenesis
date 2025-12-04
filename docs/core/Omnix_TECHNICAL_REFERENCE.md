@@ -31,8 +31,8 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | omnix_services Lines | 62,613 | `wc -l omnix_services/**/*.py` |
 | omnix_dashboard Lines | 9,037 | `wc -l omnix_dashboard/**/*` |
 | Total Estimated Lines | ~95,000 | Sum of all packages |
-| Database Tables | 45 | PostgreSQL metadata |
-| Foreign Key Constraints | 41 (91% coverage) | DATABASE_AUDIT_REPORT.md |
+| Database Tables | 42 | PostgreSQL metadata (3 redundant consolidated) |
+| Foreign Key Constraints | 38 (90% coverage) | DATABASE_AUDIT_REPORT.md |
 | Dashboard Endpoints | 25+ | Blueprint inspection |
 | Flask Blueprints | 6 | app.py |
 
@@ -1021,7 +1021,7 @@ OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
 | **Scalability** | Tables pre-exist for growth to 100K+ users |
 | **Modularity** | Activate features without code changes |
 | **Paper Trading** | Build track record without financial risk |
-| **Data Integrity** | 41 FKs configured (91% coverage) ensures clean data when modules activate |
+| **Data Integrity** | 38 FKs configured (90% coverage) ensures clean data when modules activate |
 | **Separation of Concerns** | Each module has dedicated tables, no data mixing |
 
 **Analogy:** Empty tables are like hotel rooms ready for guests - the infrastructure exists and is maintained, waiting for activation.
@@ -1066,7 +1066,7 @@ grep -r "row\['" omnix_*
 | 2.0 | Dec 4, 2025 | Agent | Complete omnix_services/, dashboard, other packages |
 | 2.1 | Dec 4, 2025 | Agent | Verified line counts, added root modules, dashboard utils |
 | 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
-| 2.3 | Dec 4, 2025 | Agent | **Section 9.6 Added**: Database Population Analysis - explains why 38/45 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
+| 2.3 | Dec 4, 2025 | Agent | **Section 9.6 Added**: Database Population Analysis - explains why 38/42 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
 | 2.4 | Dec 4, 2025 | Agent | **Section 9 Expanded - Legacy Code Audit**: Deleted 2 empty folders (models/, queue/), removed 162-line duplicate (pqc_security.py), added proper exports to 3 __init__.py files, documented paper trading module architecture |
 
 ---

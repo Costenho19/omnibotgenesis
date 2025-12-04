@@ -51,7 +51,7 @@ This fix resolves the error: `column "trade_id" does not exist` in `DatabaseMana
 | Added Dashboard | Section 2 shows quick status, phase progress, blockers |
 | Consolidated Integrity | Section 3 with full 34-table FK list in 3.1.3 |
 | Created Playbooks | Section 5 with SQL templates for each phase |
-| Added Appendix | Schema reference with 45-table catalog |
+| Added Appendix | Schema reference with 42-table catalog |
 | Added Revision History | Version tracking from 1.0 to 3.0 |
 
 Reference document: `docs/core/DATABASE_AUDIT_REPORT.md`
@@ -80,7 +80,7 @@ Reference document: `docs/core/Omnix_TECHNICAL_REFERENCE.md`
 | Orphan Scan | Done | 34/34 tables scanned, 33 clean, 1 resolved |
 | System User | Done | Created `user_id='system'` for orphan resolution |
 | FK Batch 1-3 | Done | 34 new FKs added (analytics, risk, trading) |
-| Total FKs | Done | 41 FKs (91% coverage), exceeded 40% target |
+| Total FKs | Done | 38 FKs (90% coverage), exceeded 40% target |
 | Dashboard | Done | 11/11 widgets OK, 7 real trades verified |
 
 All FK constraints use `DEFERRABLE INITIALLY DEFERRED` for transaction safety.
