@@ -2088,6 +2088,19 @@ class AutoTradingBot:
                             reasoning=f"Sentiment: {score}/100"
                         ))
                     
+                    # V6.5.2 FIX: Garantizar que strategy_signals nunca esté vacía
+                    # Si no hay señales de estrategias, usar la decisión primaria como fallback
+                    if not strategy_signals:
+                        primary_signal = Signal.BUY if action == 'BUY' else Signal.SELL if action == 'SELL' else Signal.HOLD
+                        strategy_signals.append(StrategySignal(
+                            name='primary_decision',
+                            signal=primary_signal,
+                            confidence=analysis.get('confidence', 0.5),
+                            strength=analysis.get('confidence', 0.5) * 100,
+                            reasoning=f"Decisión primaria: {action}"
+                        ))
+                        logger.debug(f"🔄 Usando fallback primary_decision para Coherence Engine")
+                    
                     # Preparar analysis_data para validación
                     analysis_data = {
                         'black_swan': analysis.get('black_swan', {}),

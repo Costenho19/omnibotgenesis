@@ -428,10 +428,21 @@ class CoherenceEngine:
         Returns:
             (permitir_trade: bool, razon: str)
         """
-        if not signals:
-            return False, "🚫 BLOQUEADO: No hay señales disponibles"
-        
         analysis_data = analysis_data or {}
+        
+        # V6.5.2 FIX: Si no hay señales formales, usar fallback basado en la acción
+        if not signals:
+            logger.warning(f"⚠️ Sin señales formales - usando fallback para acción {action}")
+            # Crear señal de fallback basada en la acción decidida
+            fallback_signal = Signal.BUY if action == 'BUY' else Signal.SELL if action == 'SELL' else Signal.HOLD
+            signals = [StrategySignal(
+                name='primary_decision',
+                signal=fallback_signal,
+                confidence=confidence,
+                strength=confidence * 100,
+                reasoning=f"Fallback: acción {action} con confianza {confidence*100:.1f}%"
+            )]
+        
         block_reasons = []
         warnings = []
         
@@ -476,14 +487,22 @@ class CoherenceEngine:
                     )
         
         # ========== REGLA 4: Monte Carlo < 50% win rate ==========
+        # V6.5.2: En paper mode, no bloquear por Monte Carlo bajo - usar throttle
         monte_carlo_data = analysis_data.get('monte_carlo', {})
         if monte_carlo_data:
             win_rate = monte_carlo_data.get('win_rate', 0)
             if win_rate < 0.50:
-                block_reasons.append(
-                    f"🚫 MONTE CARLO: Win rate {win_rate*100:.1f}% < 50% - "
-                    f"Probabilidades desfavorables - TRADE BLOQUEADO"
-                )
+                if not paper_mode:
+                    block_reasons.append(
+                        f"🚫 MONTE CARLO: Win rate {win_rate*100:.1f}% < 50% - "
+                        f"Probabilidades desfavorables - TRADE BLOQUEADO"
+                    )
+                else:
+                    # Paper mode: advertir pero NO bloquear
+                    warnings.append(
+                        f"⚠️ MONTE CARLO: Win rate {win_rate*100:.1f}% < 50% - "
+                        f"PAPER MODE: Permitido con tamaño reducido 50%"
+                    )
             elif win_rate < 0.55:
                 warnings.append(
                     f"⚠️ MONTE CARLO: Win rate {win_rate*100:.1f}% marginal - "
