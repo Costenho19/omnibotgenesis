@@ -12,11 +12,19 @@ import re
 from typing import Optional, Dict, Any, Tuple
 from openai import AsyncOpenAI
 try:
-    import google.generativeai as genai
-    from google.generativeai import types
+    from google import genai
+    from google.genai import types
     GEMINI_AVAILABLE = True
-except:
-    GEMINI_AVAILABLE = False
+    GEMINI_SDK_VERSION = 'new'
+except ImportError:
+    try:
+        import google.generativeai as genai
+        from google.generativeai import types
+        GEMINI_AVAILABLE = True
+        GEMINI_SDK_VERSION = 'legacy'
+    except ImportError:
+        GEMINI_AVAILABLE = False
+        GEMINI_SDK_VERSION = None
 
 try:
     import anthropic
@@ -104,14 +112,16 @@ class AIModelsManager:
             logger.error(f"❌ Error initializing OpenAI: {e}")
     
     def _initialize_gemini(self):
-        """Initialize Google Gemini 2.0"""
+        """Initialize Google Gemini 2.0 with new SDK (google-genai) or legacy fallback"""
         try:
             if GEMINI_AVAILABLE and settings.ai.gemini_key:
-                if hasattr(genai, 'Client'):
+                if GEMINI_SDK_VERSION == 'new':
                     self.gemini_client = genai.Client(api_key=settings.ai.gemini_key)
+                    logger.info("✅ Gemini 2.0 initialized with NEW SDK (google-genai)")
                 else:
                     genai.configure(api_key=settings.ai.gemini_key)
-                logger.info("✅ Gemini 2.0 initialized successfully")
+                    self.gemini_client = True
+                    logger.info("✅ Gemini 2.0 initialized with LEGACY SDK (google-generativeai)")
             else:
                 logger.warning("⚠️ Gemini API key not found or library unavailable")
         except Exception as e:
@@ -270,9 +280,8 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
             return None
     
     def _generate_gemini_sync(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with Gemini 2.0 (Sync)"""
+        """Generate with Gemini 2.0 (Sync) - Supports both new and legacy SDK"""
         try:
-            # Enhanced prompt for deep analysis
             enhanced_prompt = f"""{system_prompt}
 
 IMPORTANTE: Harold necesita análisis PROFUNDO e inteligente:
@@ -282,7 +291,7 @@ Usuario: {prompt}
 
 GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
 
-            if hasattr(genai, 'Client') and self.gemini_client:
+            if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
                 response = self.gemini_client.models.generate_content(
                     model="gemini-2.0-flash-exp",
                     contents=enhanced_prompt,
@@ -294,9 +303,9 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                     )
                 )
                 if response and response.text:
-                    logger.info(f"✅ Gemini generated {len(response.text)} characters")
+                    logger.info(f"✅ Gemini (new SDK) generated {len(response.text)} characters")
                     return response.text
-            else:
+            elif GEMINI_SDK_VERSION == 'legacy':
                 model = genai.GenerativeModel(
                     "gemini-2.0-flash-exp",
                     system_instruction=system_prompt
@@ -311,7 +320,7 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                     )
                 )
                 if response and response.text:
-                    logger.info(f"✅ Gemini generated {len(response.text)} characters")
+                    logger.info(f"✅ Gemini (legacy SDK) generated {len(response.text)} characters")
                     return response.text
             
             return None

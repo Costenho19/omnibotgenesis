@@ -7,7 +7,9 @@ scipy==1.14.1
 ccxt>=4.5.24
 
 # AI & ML
-google-generativeai==0.8.5
+# V6.5.2: Migración a google-genai (nuevo SDK unificado)
+# google-generativeai deprecated desde Aug 2025
+google-genai>=1.0.0
 openai==1.101.0
 anthropic==0.75.0
 
@@ -79,3 +81,5 @@ dwave-ocean-sdk>=6.0.0
 
 # Flask extensions
 flask-cors>=4.0.0
+google-genai
+telegram
