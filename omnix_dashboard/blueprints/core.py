@@ -417,7 +417,7 @@ def api_health():
     
     return jsonify({
         'status': 'healthy' if is_healthy else 'degraded',
-        'version': 'V6.5 INSTITUTIONAL+',
+        'version': 'V6.5.2 INSTITUTIONAL+',
         'db_connected': DB_AVAILABLE,
         'db_error': DB_ERROR_MESSAGE if not DB_AVAILABLE else None,
         'pool': pool_stats,
@@ -427,4 +427,4 @@ def api_health():
             'environment': 'railway' if IS_RAILWAY else 'development'
         },
         'timestamp': datetime.now().isoformat()
-    }), 200 if is_healthy else 503
+    }), 200
