@@ -39,51 +39,77 @@ class InvestorTradeLogger:
     
     def log_trade(
         self,
-        trade_type: str,
-        symbol: str,
-        amount: float,
-        price: float,
-        strategy: str,
-        confidence: float,
-        indicators: Dict[str, Any],
-        reason: str,
+        trade_type: str = None,
+        symbol: str = None,
+        amount: float = None,
+        price: float = 0,
+        strategy: str = None,
+        confidence: float = 0,
+        indicators: Dict[str, Any] = None,
+        reason: str = None,
         pnl: Optional[float] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
+        action: str = None,
+        amount_usd: float = None,
+        score: int = None,
+        strategies_signals: Dict[str, Any] = None,
+        reasoning: str = None,
+        trade_number: int = None,
+        mode: str = None
     ) -> Dict[str, Any]:
         """
         Registrar un trade para reportes de inversores
         
         Args:
-            trade_type: 'BUY' o 'SELL'
+            trade_type: 'BUY' o 'SELL' (o action como alias)
             symbol: Par de trading (ej: BTC/USD)
-            amount: Cantidad
+            amount: Cantidad (o amount_usd como alias)
             price: Precio de ejecución
             strategy: Estrategia utilizada
             confidence: Nivel de confianza (0-1)
-            indicators: Indicadores que activaron el trade
-            reason: Razón del trade en texto
+            indicators: Indicadores que activaron el trade (o strategies_signals)
+            reason: Razón del trade en texto (o reasoning)
             pnl: Profit/Loss si es cierre
             metadata: Datos adicionales
+            action: Alias para trade_type
+            amount_usd: Alias para amount (en USD)
+            score: Puntuación del trade
+            strategies_signals: Alias para indicators
+            reasoning: Alias para reason
+            trade_number: Número de trade
+            mode: Modo de trading (paper/real)
         
         Returns:
             Dict con el trade registrado
         """
+        final_type = trade_type or action or 'UNKNOWN'
+        final_amount = amount if amount is not None else (amount_usd or 0)
+        final_indicators = indicators or strategies_signals or {}
+        final_reason = reason or reasoning or 'No reason provided'
+        final_symbol = symbol or 'UNKNOWN'
+        final_strategy = strategy or mode or 'auto'
+        
+        value_usd = final_amount if amount_usd else (final_amount * price if price else 0)
+        
         trade_record = {
             'id': f"TRD-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}",
             'timestamp': datetime.utcnow().isoformat(),
-            'type': trade_type,
-            'symbol': symbol,
-            'amount': amount,
+            'type': final_type,
+            'symbol': final_symbol,
+            'amount': final_amount,
             'price': price,
-            'value_usd': amount * price,
-            'strategy': strategy,
+            'value_usd': value_usd,
+            'strategy': final_strategy,
             'confidence': confidence,
             'confidence_pct': f"{confidence * 100:.1f}%",
-            'indicators': indicators,
-            'reason': reason,
+            'indicators': final_indicators,
+            'reason': final_reason,
             'pnl': pnl,
-            'pnl_pct': f"{(pnl / (amount * price) * 100):.2f}%" if pnl else None,
-            'metadata': metadata or {}
+            'pnl_pct': f"{(pnl / value_usd * 100):.2f}%" if (pnl and value_usd) else None,
+            'metadata': metadata or {},
+            'score': score,
+            'trade_number': trade_number,
+            'mode': mode
         }
         
         self.trades_log.append(trade_record)
