@@ -107,6 +107,128 @@ def api_trades():
     })
 
 
+@core_bp.route('/api/trades/history')
+@require_api_key
+def api_trades_history():
+    """API endpoint for detailed trade history - PREMIUM with full transparency"""
+    with get_db_connection() as conn:
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database not connected',
+                'trades': [],
+                'statistics': None
+            })
+        
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT id, symbol, side, quantity, entry_price, exit_price, 
+                       profit_loss, status, opened_at, closed_at, strategy
+                FROM paper_trading_trades
+                ORDER BY opened_at DESC
+                LIMIT 100
+            ''')
+            
+            rows = cursor.fetchall()
+            
+            cursor.execute('''
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                    SUM(profit_loss) as total_pnl,
+                    AVG(CASE WHEN profit_loss > 0 THEN profit_loss ELSE NULL END) as avg_win,
+                    AVG(CASE WHEN profit_loss < 0 THEN profit_loss ELSE NULL END) as avg_loss,
+                    MAX(profit_loss) as best_trade,
+                    MIN(profit_loss) as worst_trade
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+            ''')
+            
+            stats_row = cursor.fetchone()
+            cursor.close()
+            
+            trades = []
+            for row in rows:
+                entry_price = float(row[4]) if row[4] else 0
+                exit_price = float(row[5]) if row[5] else 0
+                pnl = float(row[6]) if row[6] else 0
+                quantity = float(row[3]) if row[3] else 0
+                
+                cost = entry_price * quantity
+                pnl_pct = (pnl / cost * 100) if cost > 0 else 0
+                
+                trades.append({
+                    'id': row[0],
+                    'symbol': row[1],
+                    'side': row[2].upper() if row[2] else 'BUY',
+                    'quantity': quantity,
+                    'entry_price': entry_price,
+                    'exit_price': exit_price,
+                    'pnl': round(pnl, 2),
+                    'pnl_pct': round(pnl_pct, 2),
+                    'result': 'WIN' if pnl > 0 else ('LOSS' if pnl < 0 else 'BREAK-EVEN'),
+                    'status': row[7],
+                    'opened_at': row[8].isoformat() if row[8] else None,
+                    'closed_at': row[9].isoformat() if row[9] else None,
+                    'strategy': row[10] or 'auto_trading_bot',
+                    'hold_time': str(row[9] - row[8]) if row[8] and row[9] else None
+                })
+            
+            total_trades = int(stats_row[0] or 0) if stats_row else 0
+            wins = int(stats_row[1] or 0) if stats_row else 0
+            losses = int(stats_row[2] or 0) if stats_row else 0
+            total_pnl = float(stats_row[3] or 0) if stats_row else 0
+            avg_win = float(stats_row[4] or 0) if stats_row else 0
+            avg_loss = float(stats_row[5] or 0) if stats_row else 0
+            best_trade = float(stats_row[6] or 0) if stats_row else 0
+            worst_trade = float(stats_row[7] or 0) if stats_row else 0
+            
+            win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
+            profit_factor = abs(avg_win * wins / (avg_loss * losses)) if losses > 0 and avg_loss != 0 else 0
+            
+            min_trades_for_significance = 30
+            is_statistically_significant = total_trades >= min_trades_for_significance
+            
+            return jsonify({
+                'success': True,
+                'trades': trades,
+                'statistics': {
+                    'total_trades': total_trades,
+                    'winning_trades': wins,
+                    'losing_trades': losses,
+                    'win_rate': round(win_rate, 2),
+                    'total_pnl': round(total_pnl, 2),
+                    'avg_win': round(avg_win, 2),
+                    'avg_loss': round(avg_loss, 2),
+                    'best_trade': round(best_trade, 2),
+                    'worst_trade': round(worst_trade, 2),
+                    'profit_factor': round(profit_factor, 2),
+                    'expectancy': round(total_pnl / total_trades, 2) if total_trades > 0 else 0
+                },
+                'sample_analysis': {
+                    'is_significant': is_statistically_significant,
+                    'current_sample': total_trades,
+                    'minimum_required': min_trades_for_significance,
+                    'confidence_level': min(100, round(total_trades / min_trades_for_significance * 100, 1)),
+                    'warning': None if is_statistically_significant else f'Sample size ({total_trades}) is below minimum ({min_trades_for_significance}) for statistical significance. Metrics may vary significantly as more trades are executed.'
+                },
+                'source': 'PostgreSQL (Railway)',
+                'version': 'V6.5.2 INSTITUTIONAL+',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Trade history API error: {e}")
+            return jsonify({
+                'success': False,
+                'error': str(e),
+                'trades': []
+            })
+
+
 @core_bp.route('/api/equity-curve')
 @require_api_key
 def api_equity_curve():

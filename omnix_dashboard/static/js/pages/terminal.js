@@ -59,7 +59,8 @@ const TerminalApp = (function() {
             { name: 'finnhub', fn: () => OmnixNews.updateFinnhub('news-feed', 'news-source') },
             { name: 'feargreed', fn: () => OmnixFearGreed.update() },
             { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } },
-            { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } }
+            { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } },
+            { name: 'tradehistory', fn: async () => { if (window.TradeHistoryWidget) await TradeHistoryWidget.refresh(); } }
         ];
     }
 
@@ -84,6 +85,10 @@ const TerminalApp = (function() {
         
         if (window.BenchmarkOverlay) {
             BenchmarkOverlay.init('equity-chart', 'equity-panel-header');
+        }
+        
+        if (window.TradeHistoryWidget) {
+            TradeHistoryWidget.init();
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);

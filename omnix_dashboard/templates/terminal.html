@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/riskguardian.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/adaptive.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/benchmarks.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/tradehistory.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -156,6 +157,16 @@
         </div>
     </div>
     
+    <div class="panel trade-history-panel">
+        <div class="panel-header">
+            <span class="panel-title">📋 Trade History</span>
+            <span class="panel-badge">PREMIUM</span>
+        </div>
+        <div id="trade-history-container">
+            <div style="color: var(--text-muted); font-size: 11px;">Loading trade history...</div>
+        </div>
+    </div>
+    
     <div class="status-bar">
         <div class="status-item" id="status-bot">
             <span class="status-dot status-online"></span>
@@ -194,5 +205,6 @@
 <script src="{{ url_for('static', filename='js/components/adaptive.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/benchmarks.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/snapshots.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/tradehistory.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}
