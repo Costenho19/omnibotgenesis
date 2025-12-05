@@ -106,6 +106,18 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED) to switch between conservative and aggressive settings for various trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 
+### Architecture Modernization V7.0 (Planned)
+
+A comprehensive refactoring plan has been created in `docs/core/ARCHITECTURE_REFACTORING_CHECKLIST.md` (v1.2) to modernize the codebase to 2024-2025 standards:
+
+- **Hexagonal Architecture** with Ports & Adapters pattern
+- **SOLID Principles** compliance across all modules
+- **Dependency Injection** using `dependency-injector` library
+- **Protocol-based interfaces** (typing.Protocol) for loose coupling
+- **5 Phases**: Protocols (2-3d) → DI Setup (5-7d) → Adapters (7-10d) → Refactoring (20-30d) → Testing (5-7d)
+- **Total Estimated Effort**: 45-60 days
+- **96 tasks** with acceptance criteria and rollback procedures
+
 ## External Dependencies
 
 ### APIs and Services
