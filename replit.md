@@ -43,88 +43,29 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Derivatives Trading Module**: Paper/real trading modes, MarginEngine, KrakenFuturesClient, HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, Earnings Protector.
 -   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibration for ARES strategies based on market regime.
--   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection (BULL_STRONG, BEAR_PANIC, SIDEWAYS_COMPRESSED, etc.). Caps: 0.5x-3.0x multiplier with safety limits. **V6.5.2 Fix**: Kernel now tracks pair changes and only reseeds when switching pairs or when history is insufficient.
+-   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection. Caps: 0.5x-3.0x multiplier with safety limits.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
-
-### Recent Bug Fixes (Dec 2025)
-
--   **AI Risk Guardian Paper Mode V6.5.2**: Fixed paper mode blocker where Risk Guardian vetoed trades. Now in paper mode, allows trades with 50% position reduction for track record calibration while maintaining full protection in real money mode.
--   **Coherence Engine execute_trade V6.5.2**: Fixed paper mode blocker in execute_trade validation. Now in paper mode, allows trades with 50% position reduction instead of blocking.
--   **Coherence CRITICAL Level Veto V6.5.2**: Fixed paper mode blocker where trades were vetoed by CRITICAL level even when score was above threshold. Now in paper mode, only the numeric score is used (ignores level labeling), allowing trades with 50% position reduction for calibration.
--   **Coherence Engine Fallback V6.5.2**: Fixed critical blocker where trades were blocked when `strategy_signals` was empty. Now synthesizes `primary_decision` fallback signal to allow coherence analysis to proceed.
--   **Monte Carlo Throttle**: Changed from hard block to adaptive throttle in paper mode - trades proceed with 50% position size warning instead of being blocked (real-money protection unchanged).
--   **AutoTradingBot Fallback**: Added guaranteed fallback signal injection in `auto_trading_bot.py` before coherence validation to ensure `strategy_signals` is never empty.
--   **CAES Kernel Seeding**: Fixed issue where Non-Markovian Kernel used wrong pair history. Now tracks `_last_kernel_pair` and only reseeds on pair change or insufficient history.
--   **Tuple-to-Dict Conversion**: Fixed `get_recent_trades()` in `real_data_provider.py` to convert database tuples to dictionaries for proper `.get()` access.
--   **Database Schema**: Added `last_activity` column to `users` table.
--   **Railway Deployment V6.5.2**: Fixed missing `wsgi.py` and `fix_railway_imports.py` files that caused healthcheck failures. Created proper WSGI entrypoint with Gunicorn configuration. Updated `/api/health` to always return HTTP 200 (soft-fail) so Railway healthcheck passes even during DB initialization.
--   **Position Check V6.5.2**: Added `has_open_position_for_symbol()` method to PaperTradingManager. Modified `_execute_smart_trade()` to verify position exists before executing SELL - if no open position, converts SELL to HOLD (prevents "No hay posición abierta" errors). This ensures proper BUY→SELL→BUY trading cycle.
--   **Trade Execution Fix V6.5.2**: Fixed critical issue where trades were being rejected due to cumulative reductions making position size < minimum. Changes: (a) Reduced paper mode penalties from 50% to 25% for Risk Guardian and Coherence Engine; (b) Added size floor that adjusts amounts below minimum UP to minimum before execution; (c) Disabled early rejection in paper mode to allow floor to apply. This ensures 20-50 trades/day target can be achieved.
--   **DatabaseManager.log_risk_event V6.5.2** (Dec 5, 2025): Added missing `log_risk_event()` delegator method in DatabaseManager that forwards to enterprise_service.log_risk_event(). This fixes the recurring `AttributeError: 'DatabaseManager' object has no attribute 'log_risk_event'` that appeared in every trading cycle.
--   **Google Gemini SDK Migration V6.5.2** (Dec 5, 2025): Migrated 6 files from deprecated `google-generativeai` to new `google-genai` SDK with dual SDK support. Added `_extract_gemini_text()` helper for robust response parsing across both SDK versions. Files: ai_models.py, conversational_ai_adapter.py, video/analyzer.py, enterprise_bot.py, community_analyzer.py, main.py.
--   **Websockets Conflict Resolved V6.5.2** (Dec 5, 2025): Removed unused `alpaca-trade-api` dependency from requirements.txt. AlpacaService uses direct REST API calls via `requests` library, not the SDK. Updated websockets to `>=13.0` for full google-genai compatibility.
--   **VETO Scoring Rebalanced V6.5.2** (Dec 5, 2025): Fixed SELL bias caused by disproportionate VETO penalties. In paper mode, penalties reduced: Black Swan (-30→-15), HMM VOLATILE (-15→-8), Regime Change (-20→-10). Real money mode retains full penalties for maximum protection. Logs now show `[PAPER -X]` or `[REAL -X]` labels for transparency.
--   **Database Unification Phase 4.1 V6.5.2** (Dec 5, 2025): Migrated `DatabaseServiceEnterprise.execute_query()` to use unified `DatabaseGateway` pool when `USE_UNIFIED_GATEWAY=true`. All enterprise consumers now automatically benefit from connection pooling. Added deprecation warnings for legacy `_get_connection()` usage. Fallback to direct connections preserved for robustness.
--   **Risk Guardian Events Column Fix V6.5.2** (Dec 5, 2025): Fixed SQL column name mismatch in `log_risk_event()` and `get_risk_events()`. Code was using `risk_type`/`risk_level` but table has `event_type`/`severity`. Now maps API parameters to correct DB columns. Also updated CREATE TABLE schema and cleanup config for consistency.
--   **Paper Trading Schema Fix V6.5.2** (Dec 5, 2025): Fixed critical issue where paper trades were NOT being saved to database. Code was using non-existent columns (`trade_uuid`, `base_quantity`, `quote_notional_usd`, `fee_usd`, `net_realized_pnl_usd`). Now uses actual table columns (`id`, `quantity`, `profit_loss`, `profit_pct`, `status`). Files: paper_trading.py, paper_trading_manager.py.
-
-### V6.5.3 Scoring Fix (Dec 5, 2025)
-
--   **Paper Mode BUY Bias V6.5.3**: Added +8 BUY bias when score is in neutral zone (-5 to +5) in paper mode. This allows the bot to generate BUY signals and open new positions for track record building.
--   **Reduced Paper Mode Penalties V6.5.3**: Black Swan (-15→-5), HMM VOLATILE (-8→-3), Regime Change (-10→-3). Real money mode retains full penalties for maximum protection.
--   **Version Update V6.5.3**: Updated all version references across main.py, daily_summary_service.py, enterprise_bot.py, and auto_trading_bot.py.
-
-### Known Issues (Under Investigation)
-
--   **Strategy Signal Availability**: Quantum Momentum and HMM Regime strategies require volume data. When `volumes=None` (common for some API responses), these strategies don't contribute to the Coherence Engine, reducing signal diversity to ~3/10 strategies.
-
-### Current Performance (Dec 5, 2025)
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| Total Trades | 7 | Sample size below statistical significance (30+ needed) |
-| Win Rate | 71.43% | 5 winners, 2 losers - exceeds 55% target |
-| Total PnL | $102.86 | Positive track record |
-| Best Trade | $100.50 | BTC/USD long |
-| Worst Trade | -$5.15 | BTC/USD stop-loss |
-| Profit Factor | 11.82 | Excellent ratio |
+-   **BUY Bias Escalonado V6.5.3**: Implemented in paper mode for track record generation with varying base and accelerator boosts based on market sentiment (FLOOR_RESCUE, RECOVERY, NEUTRAL, MOMENTUM).
+-   **Fear & Greed Contrarian Strategy V6.5.3**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
+-   **Track Record Accelerator V6.5.3**: 1.3x multiplier for the first 50 trades in paper mode to accelerate track record building, normalizing to 1.0x thereafter.
 
 ### Multi-User Architecture V6.5.2
 
 -   Supports 100,000+ simultaneous users with isolated trading sessions.
--   Redis for fast state management and PostgreSQL for persistence.
--   ThreadPoolExecutor for parallel processing, per-user locks for thread safety.
+-   Utilizes Redis for fast state management and PostgreSQL for persistence.
+-   Employs ThreadPoolExecutor for parallel processing and per-user locks for thread safety.
 
 ### Dashboard API Endpoints
 
-| Endpoint | Purpose | Response Format |
-|----------|---------|-----------------|
-| `/api/health` | System health check | `{status, version, db_connected, db_error, pool, architecture, timestamp}` |
-| `/api/metrics` | Trading performance | `{success, metrics, error, db_connected}` |
-| `/api/trades` | Paper trade history | `{success, trades, error, db_connected}` |
-| `/api/trades/history` | Detailed trade history with P&L, hold times, stats [V6.5.2] | `{success, trades, statistics, sample_analysis, timestamp}` |
-| `/api/positions` | Open positions with live prices | `{success, positions, summary, price_source, db_connected}` |
-| `/api/ticker` | Real-time crypto prices | `{prices, source, timestamp}` |
-| `/api/fear-greed` | Market sentiment index | `{value, classification, timestamp}` |
-| `/api/db-diagnostics` | Database pool diagnostics | `{pool_stats, connections, health}` |
-| `/api/benchmarks` | BTC/SPY benchmark data | `{btc, spy, timestamps}` |
-| `/api/system/adaptive` | Adaptive Engine telemetry | `{regime, parameters, calibration}` |
+-   Provides various API endpoints for system health, trading performance, paper trade history, open positions, real-time prices, market sentiment, database diagnostics, and adaptive engine telemetry.
 
 ### Trading Profiles System
 
-Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED) to switch between conservative and aggressive settings for various trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
+-   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED) to switch between conservative and aggressive settings for trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 
 ### Architecture Modernization V7.0 (Planned)
 
-A comprehensive refactoring plan has been created in `docs/core/ARCHITECTURE_REFACTORING_CHECKLIST.md` (v1.2) to modernize the codebase to 2024-2025 standards:
-
-- **Hexagonal Architecture** with Ports & Adapters pattern
-- **SOLID Principles** compliance across all modules
-- **Dependency Injection** using `dependency-injector` library
-- **Protocol-based interfaces** (typing.Protocol) for loose coupling
-- **5 Phases**: Protocols (2-3d) → DI Setup (5-7d) → Adapters (7-10d) → Refactoring (20-30d) → Testing (5-7d)
-- **Total Estimated Effort**: 45-60 days
-- **96 tasks** with acceptance criteria and rollback procedures
+-   Planned refactoring to Hexagonal Architecture with Ports & Adapters, SOLID Principles, and Dependency Injection using `dependency-injector` for a more modular and maintainable codebase.
 
 ## External Dependencies
 
