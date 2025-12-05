@@ -3540,7 +3540,11 @@ class DatabaseServiceEnterprise:
     
     def log_risk_event(self, risk_type: str, risk_level: str, description: str, 
                        action_taken: str, metadata: Dict = None, user_id: int = None) -> bool:
-        """Registrar evento del AI Risk Guardian"""
+        """Registrar evento del AI Risk Guardian
+        
+        Note: Parameters use risk_type/risk_level for API compatibility,
+        but map to event_type/severity columns in the database.
+        """
         if not self.connected:
             return False
         
@@ -3553,7 +3557,7 @@ class DatabaseServiceEnterprise:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO risk_guardian_events 
-                (risk_type, risk_level, description, action_taken, metadata, user_id)
+                (event_type, severity, description, action_taken, metadata, user_id)
                 VALUES (%s, %s, %s, %s, %s, %s)
             ''', (risk_type, risk_level, description, action_taken, 
                   json.dumps(metadata) if metadata else None, user_id))
@@ -3568,7 +3572,11 @@ class DatabaseServiceEnterprise:
             return False
     
     def get_risk_events(self, limit: int = 50, risk_type: str = None) -> List[Dict]:
-        """Obtener eventos de riesgo"""
+        """Obtener eventos de riesgo
+        
+        Note: Returns risk_type/risk_level keys for API compatibility,
+        but reads from event_type/severity columns in the database.
+        """
         if not self.connected:
             return []
         
@@ -3582,16 +3590,16 @@ class DatabaseServiceEnterprise:
             
             if risk_type:
                 cursor.execute('''
-                    SELECT timestamp, risk_type, risk_level, description, action_taken
+                    SELECT created_at, event_type, severity, description, action_taken
                     FROM risk_guardian_events 
-                    WHERE risk_type = %s
-                    ORDER BY timestamp DESC LIMIT %s
+                    WHERE event_type = %s
+                    ORDER BY created_at DESC LIMIT %s
                 ''', (risk_type, limit))
             else:
                 cursor.execute('''
-                    SELECT timestamp, risk_type, risk_level, description, action_taken
+                    SELECT created_at, event_type, severity, description, action_taken
                     FROM risk_guardian_events 
-                    ORDER BY timestamp DESC LIMIT %s
+                    ORDER BY created_at DESC LIMIT %s
                 ''', (limit,))
             
             rows = cursor.fetchall()
