@@ -64,6 +64,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Google Gemini SDK Migration V6.5.2** (Dec 5, 2025): Migrated 6 files from deprecated `google-generativeai` to new `google-genai` SDK with dual SDK support. Added `_extract_gemini_text()` helper for robust response parsing across both SDK versions. Files: ai_models.py, conversational_ai_adapter.py, video/analyzer.py, enterprise_bot.py, community_analyzer.py, main.py.
 -   **Websockets Conflict Resolved V6.5.2** (Dec 5, 2025): Removed unused `alpaca-trade-api` dependency from requirements.txt. AlpacaService uses direct REST API calls via `requests` library, not the SDK. Updated websockets to `>=13.0` for full google-genai compatibility.
 -   **VETO Scoring Rebalanced V6.5.2** (Dec 5, 2025): Fixed SELL bias caused by disproportionate VETO penalties. In paper mode, penalties reduced: Black Swan (-30→-15), HMM VOLATILE (-15→-8), Regime Change (-20→-10). Real money mode retains full penalties for maximum protection. Logs now show `[PAPER -X]` or `[REAL -X]` labels for transparency.
+-   **Database Unification Phase 4.1 V6.5.2** (Dec 5, 2025): Migrated `DatabaseServiceEnterprise.execute_query()` to use unified `DatabaseGateway` pool when `USE_UNIFIED_GATEWAY=true`. All enterprise consumers now automatically benefit from connection pooling. Added deprecation warnings for legacy `_get_connection()` usage. Fallback to direct connections preserved for robustness.
 
 ### Known Issues (Under Investigation)
 
