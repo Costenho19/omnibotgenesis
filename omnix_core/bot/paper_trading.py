@@ -383,25 +383,27 @@ class PaperTradingManager:
         return False
     
     def _save_paper_trade(self, trade_data: Dict) -> bool:
-        """Guardar trade en PostgreSQL - HISTORIAL PERMANENTE"""
+        """Guardar trade en PostgreSQL - HISTORIAL PERMANENTE
+        
+        Schema V6.5.2 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        id, user_id, symbol, side, quantity, entry_price, exit_price, 
+        profit_loss, profit_pct, strategy, status, opened_at, closed_at
+        """
         try:
             if self.database_service and hasattr(self.database_service, 'execute_query'):
                 self.database_service.execute_query(
                     """
                     INSERT INTO paper_trading_trades 
-                    (user_id, symbol, side, amount, price, total_usd, 
-                     timestamp, is_paper_trade)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    (user_id, symbol, side, quantity, entry_price, strategy, status, opened_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, 'open', NOW())
                     """,
                     (
                         trade_data['user_id'],
                         trade_data['symbol'],
                         trade_data['side'],
-                        trade_data['amount'],
-                        trade_data['price'],
-                        trade_data['total_usd'],
-                        trade_data['timestamp'],
-                        trade_data.get('is_paper_trade', True)
+                        trade_data.get('amount', trade_data.get('quantity', 0)),
+                        trade_data.get('price', trade_data.get('entry_price', 0)),
+                        trade_data.get('strategy', 'auto_trading_bot')
                     )
                 )
                 logger.info(f"✅ Trade guardado en PostgreSQL: {trade_data['side']} {trade_data['symbol']}")
@@ -417,10 +419,14 @@ class PaperTradingManager:
     def _open_position_v2(self, user_id: str, symbol: str, base_quantity: float, 
                          entry_price: float, source_strategy: str = 'auto_trading_bot') -> Optional[str]:
         """
-        Abrir nueva posición (BUY) con schema institucional V2
+        Abrir nueva posición (BUY) con schema V6.5.2
+        
+        Schema V6.5.2 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        id, user_id, symbol, side, quantity, entry_price, exit_price, 
+        profit_loss, profit_pct, strategy, status, opened_at, closed_at
         
         Returns:
-            trade_uuid del trade creado, o None si falla
+            trade_id del trade creado, o None si falla
         """
         try:
             if not self.database_service or not hasattr(self.database_service, 'execute_query'):
@@ -432,38 +438,35 @@ class PaperTradingManager:
             fee_usd = self._calculate_fee(quote_notional_usd)
             total_cost = quote_notional_usd + fee_usd
             
-            # Insertar trade en paper_trading_trades
+            # Insertar trade en paper_trading_trades usando columnas reales
             result = self.database_service.execute_query(
                 """
                 INSERT INTO paper_trading_trades 
-                (user_id, symbol, side, entry_price, base_quantity, 
-                 quote_notional_usd, fee_bps, fee_usd, gross_pnl_usd, 
-                 net_realized_pnl_usd, unrealized_pnl_usd, source_strategy)
-                VALUES (%s, %s, 'buy', %s, %s, %s, %s, %s, 0, NULL, 0, %s)
-                RETURNING trade_uuid
+                (user_id, symbol, side, quantity, entry_price, strategy, status, opened_at)
+                VALUES (%s, %s, 'buy', %s, %s, %s, 'open', NOW())
+                RETURNING id
                 """,
-                (user_id, symbol, entry_price, base_quantity, quote_notional_usd,
-                 self.KRAKEN_FEE_BPS, fee_usd, source_strategy)
+                (user_id, symbol, base_quantity, entry_price, source_strategy),
+                fetch=True
             )
             
-            trade_uuid = result[0][0] if result and len(result) > 0 else None
+            trade_id = result[0][0] if result and len(result) > 0 else None
             
-            if trade_uuid:
+            if trade_id:
                 # Actualizar balance (deducir USD gastado + fees)
                 self.database_service.execute_query(
                     """
                     UPDATE paper_trading_balances
                     SET balance_usd = balance_usd - %s,
-                        available_margin_usd = available_margin_usd - %s,
                         total_trades = total_trades + 1,
                         updated_at = NOW()
                     WHERE user_id = %s
                     """,
-                    (total_cost, total_cost, user_id)
+                    (total_cost, user_id)
                 )
                 
                 logger.info(f"✅ Posición abierta: {base_quantity:.8f} {symbol} @ ${entry_price:,.2f} (fee: ${fee_usd:.2f})")
-                return str(trade_uuid)
+                return str(trade_id)
             
             return None
             
@@ -474,7 +477,11 @@ class PaperTradingManager:
     def _close_position_fifo_v2(self, user_id: str, symbol: str, sell_quantity: float, 
                                 exit_price: float) -> Optional[Dict]:
         """
-        Cerrar posición FIFO (SELL) - V1: Solo soporta sell exacto de 1 posición
+        Cerrar posición FIFO (SELL) - V6.5.2
+        
+        Schema V6.5.2 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        id, user_id, symbol, side, quantity, entry_price, exit_price, 
+        profit_loss, profit_pct, strategy, status, opened_at, closed_at
         
         Returns:
             Dict con P&L info o None si falla
@@ -484,85 +491,71 @@ class PaperTradingManager:
                 logger.error("Database service no disponible")
                 return None
             
-            # Buscar posición abierta más antigua (FIFO)
+            # Buscar posición abierta más antigua (FIFO) usando columnas reales
             result = self.database_service.execute_query(
                 """
-                SELECT id, trade_uuid, entry_price, base_quantity, fee_usd, opened_at
+                SELECT id, entry_price, quantity, opened_at
                 FROM paper_trading_trades
-                WHERE user_id = %s AND symbol = %s AND closed_at IS NULL
+                WHERE user_id = %s AND symbol = %s AND status = 'open'
                 ORDER BY opened_at ASC
                 LIMIT 1
                 """,
-                (user_id, symbol)
+                (user_id, symbol),
+                fetch=True
             )
             
             if not result or len(result) == 0:
                 logger.warning(f"No hay posición abierta para {symbol}")
                 return None
             
-            trade_id, trade_uuid, entry_price, base_quantity, fee_buy, opened_at = result[0]
-            
-            # V1: Validar que la cantidad coincida (no partial fills)
-            if abs(sell_quantity - float(base_quantity)) > 0.00000001:
-                logger.warning(f"V1 no soporta partial sells: {sell_quantity} != {base_quantity}")
-                return None
+            trade_id, entry_price_db, quantity_db, opened_at = result[0]
+            entry_price_float = float(entry_price_db)
+            quantity_float = float(quantity_db)
             
             # Calcular P&L
-            quote_notional_usd = sell_quantity * exit_price
-            fee_sell = self._calculate_fee(quote_notional_usd)
-            gross_pnl_usd = (exit_price - float(entry_price)) * sell_quantity
-            net_realized_pnl_usd = gross_pnl_usd - float(fee_buy) - fee_sell
-            total_proceeds = quote_notional_usd - fee_sell
+            quote_notional_usd = quantity_float * exit_price
+            fee_usd = self._calculate_fee(quote_notional_usd)
+            gross_pnl = (exit_price - entry_price_float) * quantity_float
+            profit_pct = ((exit_price / entry_price_float) - 1) * 100 if entry_price_float > 0 else 0
+            total_proceeds = quote_notional_usd - fee_usd
             
-            # Calcular duración
-            duration_seconds = int((datetime.now() - opened_at).total_seconds())
-            
-            # Cerrar trade
+            # Cerrar trade usando columnas reales
             self.database_service.execute_query(
                 """
                 UPDATE paper_trading_trades
                 SET exit_price = %s,
-                    gross_pnl_usd = %s,
-                    net_realized_pnl_usd = %s,
-                    closed_at = NOW(),
-                    duration_seconds = %s
+                    profit_loss = %s,
+                    profit_pct = %s,
+                    status = 'closed',
+                    closed_at = NOW()
                 WHERE id = %s
                 """,
-                (exit_price, gross_pnl_usd, net_realized_pnl_usd, duration_seconds, trade_id)
+                (exit_price, gross_pnl, profit_pct, trade_id)
             )
             
             # Actualizar balance
-            is_winning_trade = net_realized_pnl_usd > 0
+            is_winning_trade = gross_pnl > 0
             
             self.database_service.execute_query(
                 """
                 UPDATE paper_trading_balances
                 SET balance_usd = balance_usd + %s,
-                    available_margin_usd = available_margin_usd + %s,
-                    total_realized_pnl_usd = total_realized_pnl_usd + %s,
-                    winning_trades = winning_trades + %s,
-                    losing_trades = losing_trades + %s,
                     updated_at = NOW()
                 WHERE user_id = %s
                 """,
-                (total_proceeds, total_proceeds, net_realized_pnl_usd,
-                 1 if is_winning_trade else 0,
-                 0 if is_winning_trade else 1,
-                 user_id)
+                (total_proceeds, user_id)
             )
             
-            logger.info(f"✅ Posición cerrada FIFO: {sell_quantity:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${net_realized_pnl_usd:,.2f}")
+            logger.info(f"✅ Posición cerrada FIFO: {quantity_float:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${gross_pnl:,.2f}")
             
             return {
-                'trade_uuid': str(trade_uuid),
-                'entry_price': float(entry_price),
+                'trade_id': trade_id,
+                'entry_price': entry_price_float,
                 'exit_price': exit_price,
-                'base_quantity': sell_quantity,
-                'gross_pnl_usd': gross_pnl_usd,
-                'net_realized_pnl_usd': net_realized_pnl_usd,
-                'fee_buy': float(fee_buy),
-                'fee_sell': fee_sell,
-                'duration_seconds': duration_seconds,
+                'quantity': quantity_float,
+                'gross_pnl': gross_pnl,
+                'profit_pct': profit_pct,
+                'fee_usd': fee_usd,
                 'is_winning_trade': is_winning_trade
             }
             
@@ -574,6 +567,10 @@ class PaperTradingManager:
         """
         Reporte P&L detallado con posiciones abiertas/cerradas
         
+        Schema V6.5.2 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        id, user_id, symbol, side, quantity, entry_price, exit_price, 
+        profit_loss, profit_pct, strategy, status, opened_at, closed_at
+        
         Returns:
             Dict con summary y lista de trades
         """
@@ -581,17 +578,18 @@ class PaperTradingManager:
             if not self.database_service or not hasattr(self.database_service, 'execute_query'):
                 return {'error': 'Database service no disponible'}
             
-            # Obtener todos los trades
+            # Obtener todos los trades usando columnas reales
             result = self.database_service.execute_query(
                 """
-                SELECT trade_uuid, symbol, side, entry_price, exit_price, 
-                       base_quantity, quote_notional_usd, fee_usd, 
-                       net_realized_pnl_usd, opened_at, closed_at, duration_seconds
+                SELECT id, symbol, side, entry_price, exit_price, 
+                       quantity, profit_loss, profit_pct, strategy,
+                       status, opened_at, closed_at
                 FROM paper_trading_trades
                 WHERE user_id = %s
                 ORDER BY opened_at DESC
                 """,
-                (user_id,)
+                (user_id,),
+                fetch=True
             )
             
             if not result:
@@ -604,41 +602,43 @@ class PaperTradingManager:
             closed_positions = 0
             
             for row in result:
-                trade_uuid, symbol, side, entry_price, exit_price, base_quantity, \
-                quote_notional, fee_usd, net_pnl, opened_at, closed_at, duration = row
+                trade_id, symbol, side, entry_price, exit_price, quantity, \
+                profit_loss, profit_pct, strategy, status, opened_at, closed_at = row
+                
+                entry_price_float = float(entry_price) if entry_price else 0
+                quantity_float = float(quantity) if quantity else 0
                 
                 # Calcular unrealized P&L para posiciones abiertas
                 unrealized_pnl = 0.0
-                if closed_at is None and self.trading_service:
+                if status == 'open' and self.trading_service:
                     try:
                         ticker = self.trading_service.get_ticker(symbol)
                         if ticker and 'last' in ticker:
                             current_price = float(ticker['last'])
-                            unrealized_pnl = (current_price - float(entry_price)) * float(base_quantity)
+                            unrealized_pnl = (current_price - entry_price_float) * quantity_float
                             total_unrealized_pnl += unrealized_pnl
                             open_positions += 1
                     except Exception as e:
                         logger.warning(f"Error calculando unrealized P&L: {e}")
                 else:
                     closed_positions += 1
-                    if net_pnl:
-                        total_realized_pnl += float(net_pnl)
+                    if profit_loss:
+                        total_realized_pnl += float(profit_loss)
                 
                 trades.append({
-                    'trade_uuid': str(trade_uuid),
+                    'trade_id': trade_id,
                     'symbol': symbol,
                     'side': side,
-                    'entry_price': float(entry_price),
+                    'entry_price': entry_price_float,
                     'exit_price': float(exit_price) if exit_price else None,
-                    'base_quantity': float(base_quantity),
-                    'quote_notional_usd': float(quote_notional),
-                    'fee_usd': float(fee_usd),
-                    'net_realized_pnl_usd': float(net_pnl) if net_pnl else None,
-                    'unrealized_pnl_usd': unrealized_pnl if closed_at is None else None,
+                    'quantity': quantity_float,
+                    'profit_loss': float(profit_loss) if profit_loss else None,
+                    'profit_pct': float(profit_pct) if profit_pct else None,
+                    'strategy': strategy,
+                    'unrealized_pnl': unrealized_pnl if status == 'open' else None,
                     'opened_at': opened_at.isoformat() if opened_at else None,
                     'closed_at': closed_at.isoformat() if closed_at else None,
-                    'duration_seconds': duration,
-                    'status': 'closed' if closed_at else 'open'
+                    'status': status
                 })
             
             return {

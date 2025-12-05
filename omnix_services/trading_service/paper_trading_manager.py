@@ -393,15 +393,15 @@ class PaperTradingManager:
             try:
                 if hasattr(self.database_service, 'execute_query'):
                     query = """
-                        SELECT COALESCE(SUM(net_realized_pnl_usd), 0) as daily_pnl
+                        SELECT COALESCE(SUM(profit_loss), 0) as daily_pnl
                         FROM paper_trading_trades
                         WHERE user_id = %s 
                         AND status = 'closed'
-                        AND DATE(close_timestamp) = %s
+                        AND DATE(closed_at) = %s
                     """
-                    result = self.database_service.execute_query(query, (user_id, today_iso))
+                    result = self.database_service.execute_query(query, (user_id, today_iso), fetch=True)
                     if result and len(result) > 0:
-                        return float(result[0].get('daily_pnl', 0.0))
+                        return float(result[0][0]) if result[0][0] else 0.0
             except Exception as query_error:
                 logger.warning(f"Error en query daily PnL: {query_error}")
             
