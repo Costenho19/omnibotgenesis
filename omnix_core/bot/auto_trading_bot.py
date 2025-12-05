@@ -1745,19 +1745,45 @@ class AutoTradingBot:
                     logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
                     
                     # NIVEL 1: VETO CRÍTICO - Coherencia muy baja
-                    if (coherence_report.coherence_level.value == 'CRITICAL' or 
-                        coherence_report.coherence_score < veto_critical):
+                    # V6.5.2 FIX: En paper mode, ignorar nivel CRITICAL y solo usar score numérico
+                    # Esto permite trades para calibración cuando score > umbral aunque nivel sea CRITICAL
+                    is_paper_mode = self.config.get('paper_mode', False)
+                    
+                    if coherence_report.coherence_score < veto_critical:
+                        # Bloquear siempre si score está por debajo del umbral crítico
                         logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                    elif coherence_report.coherence_level.value == 'CRITICAL' and not is_paper_mode:
+                        # En REAL money mode, también bloquear por nivel CRITICAL
+                        logger.error(f"🚨 COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
+                        decision['should_trade'] = False
+                        decision['action'] = 'HOLD'
+                        decision['reason'].append(f"🚨 VETO CRÍTICO: Nivel CRITICAL detectado")
+                    elif coherence_report.coherence_level.value == 'CRITICAL' and is_paper_mode:
+                        # V6.5.2: Paper mode - advertir pero NO bloquear si score > umbral
+                        logger.warning(f"⚠️ COHERENCE CRÍTICO (PAPER MODE): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL pero permitido para calibración")
+                        decision['reason'].append(f"⚠️ PAPER MODE: Nivel CRITICAL permitido (score {coherence_report.coherence_score:.1f}% > {veto_critical}%)")
+                        # Reducir tamaño de posición 50% como precaución
+                        if 'amount_usd' in decision:
+                            decision['amount_usd'] *= 0.50
+                            decision['reason'].append(f"📊 Posición reducida 50% por nivel CRITICAL")
                     
                     # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil
                     elif coherence_report.coherence_score < veto_normal:
-                        logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
-                        decision['should_trade'] = False
-                        decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        if not is_paper_mode:
+                            logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                            decision['should_trade'] = False
+                            decision['action'] = 'HOLD'
+                            decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        else:
+                            # Paper mode: advertir pero permitir con reducción
+                            logger.warning(f"⚠️ COHERENCE BAJO (PAPER MODE): Score={coherence_report.coherence_score:.1f}% - Permitido con reducción")
+                            decision['reason'].append(f"⚠️ PAPER MODE: Coherencia baja permitida")
+                            if 'amount_usd' in decision:
+                                decision['amount_usd'] *= 0.60
+                                decision['reason'].append(f"📊 Posición reducida 40% por coherencia baja")
                     
                     # NIVEL 3: HOLD recomendado - solo vetar si señal no es muy fuerte
                     elif coherence_report.decision_recommendation == 'HOLD':
@@ -1767,8 +1793,15 @@ class AutoTradingBot:
                             if 'amount_usd' in decision:
                                 decision['amount_usd'] *= 0.55
                                 decision['reason'].append(f"⚠️ Señal VERY_STRONG bypassing HOLD - posición reducida 45%")
+                        elif is_paper_mode:
+                            # V6.5.2: Paper mode - permitir HOLD con reducción para calibración
+                            logger.warning(f"⚠️ HOLD (PAPER MODE): Permitido con reducción para calibración")
+                            decision['reason'].append(f"⚠️ PAPER MODE: HOLD permitido con reducción")
+                            if 'amount_usd' in decision:
+                                decision['amount_usd'] *= 0.50
+                                decision['reason'].append(f"📊 Posición reducida 50% por HOLD")
                         else:
-                            # STRONG y MODERATE respetan HOLD
+                            # Real money: STRONG y MODERATE respetan HOLD
                             decision['should_trade'] = False
                             decision['action'] = 'HOLD'
                             decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD")

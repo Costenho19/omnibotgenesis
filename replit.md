@@ -48,6 +48,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Recent Bug Fixes (Dec 2025)
 
+-   **Coherence CRITICAL Level Veto V6.5.2**: Fixed paper mode blocker where trades were vetoed by CRITICAL level even when score was above threshold. Now in paper mode, only the numeric score is used (ignores level labeling), allowing trades with 50% position reduction for calibration.
 -   **Coherence Engine Fallback V6.5.2**: Fixed critical blocker where trades were blocked when `strategy_signals` was empty. Now synthesizes `primary_decision` fallback signal to allow coherence analysis to proceed.
 -   **Monte Carlo Throttle**: Changed from hard block to adaptive throttle in paper mode - trades proceed with 50% position size warning instead of being blocked (real-money protection unchanged).
 -   **AutoTradingBot Fallback**: Added guaranteed fallback signal injection in `auto_trading_bot.py` before coherence validation to ensure `strategy_signals` is never empty.
