@@ -339,7 +339,8 @@ class LimitsEngine:
             metrics.total_balance_usd = self.config.initial_capital
             metrics.available_balance_usd = self.config.initial_capital
         
-        metrics.current_drawdown_pct = ((self.config.initial_capital - metrics.total_balance_usd) / self.config.initial_capital) * 100 if self.config.initial_capital > 0 else 0
+        total_equity = metrics.total_balance_usd + metrics.total_exposure_usd
+        metrics.current_drawdown_pct = ((self.config.initial_capital - total_equity) / self.config.initial_capital) * 100 if self.config.initial_capital > 0 else 0
         if metrics.current_drawdown_pct < 0:
             metrics.current_drawdown_pct = 0
         

@@ -4105,9 +4105,8 @@ class DatabaseServiceEnterprise:
             
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, user_id, limit_type, threshold_value, threshold_unit,
-                       warning_threshold_pct, is_active, cooldown_minutes, 
-                       created_at, updated_at
+                SELECT id, user_id, limit_type, limit_value, current_value,
+                       is_active, created_at, updated_at
                 FROM risk_limits
                 WHERE user_id = %s AND is_active = true
                 ORDER BY limit_type
@@ -4120,12 +4119,12 @@ class DatabaseServiceEnterprise:
                     'user_id': row[1],
                     'limit_type': row[2],
                     'threshold_value': float(row[3]) if row[3] else 0,
-                    'threshold_unit': row[4],
-                    'warning_threshold_pct': float(row[5]) if row[5] else 80.0,
-                    'is_active': row[6],
-                    'cooldown_minutes': row[7],
-                    'created_at': row[8],
-                    'updated_at': row[9]
+                    'threshold_unit': 'PERCENT',
+                    'warning_threshold_pct': 80.0,
+                    'is_active': row[5],
+                    'cooldown_minutes': 60,
+                    'created_at': row[6],
+                    'updated_at': row[7]
                 })
             
             cursor.close()
@@ -4579,9 +4578,9 @@ class DatabaseServiceEnterprise:
             cursor.execute('''
                 SELECT 
                     COUNT(*) as trades_count,
-                    COALESCE(SUM(profit), 0) as daily_pnl,
-                    COALESCE(SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END), 0) as wins,
-                    COALESCE(SUM(CASE WHEN profit < 0 THEN 1 ELSE 0 END), 0) as losses
+                    COALESCE(SUM(profit_loss), 0) as daily_pnl,
+                    COALESCE(SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END), 0) as wins,
+                    COALESCE(SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END), 0) as losses
                 FROM paper_trading_trades
                 WHERE user_id = %s::TEXT 
                 AND DATE(opened_at) = CURRENT_DATE
