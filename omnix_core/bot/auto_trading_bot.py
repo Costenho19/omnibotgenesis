@@ -2194,7 +2194,7 @@ class AutoTradingBot:
             
             # ========== V6.5.2: VERIFICACIÓN DE POSICIÓN ANTES DE SELL ==========
             # En paper mode, SELL solo puede cerrar posiciones existentes
-            # Si no hay posición abierta, convertimos a BUY para generar track record
+            # Si no hay posición abierta, convertir a HOLD para evitar errores
             if self.config['paper_mode'] and action == 'SELL':
                 if self.paper_trading and hasattr(self.paper_trading, 'has_open_position_for_symbol'):
                     user_id = str(self.config.get('harold_user_id', '7014748854'))
@@ -2203,13 +2203,14 @@ class AutoTradingBot:
                     position_check = self.paper_trading.has_open_position_for_symbol(user_id, symbol)
                     
                     if not position_check.get('has_position', False):
-                        # NO hay posición abierta - convertir SELL a BUY para generar trade
+                        # NO hay posición abierta - convertir SELL a HOLD (no abrir longs innecesarios)
                         logger.warning(f"📊 V6.5.2 POSITION CHECK: No hay posición abierta para {symbol}")
-                        logger.info(f"   🔄 Convirtiendo SELL → BUY para generar track record")
-                        action = 'BUY'
-                        analysis['action'] = 'BUY'
+                        logger.info(f"   ⏸️ Convirtiendo SELL → HOLD (esperando señal BUY para abrir posición)")
+                        action = 'HOLD'
+                        analysis['action'] = 'HOLD'
                         if 'reason' in analysis:
-                            analysis['reason'].append(f"🔄 V6.5.2: SELL→BUY (no open position for {symbol})")
+                            analysis['reason'].append(f"⏸️ V6.5.2: SELL→HOLD (no open position for {symbol})")
+                        return {'success': True, 'action': 'HOLD', 'reason': 'No open position to close'}
                     else:
                         # SÍ hay posición - proceder con SELL
                         pos = position_check.get('position', {})
