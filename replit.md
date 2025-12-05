@@ -60,6 +60,23 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Railway Deployment V6.5.2**: Fixed missing `wsgi.py` and `fix_railway_imports.py` files that caused healthcheck failures. Created proper WSGI entrypoint with Gunicorn configuration. Updated `/api/health` to always return HTTP 200 (soft-fail) so Railway healthcheck passes even during DB initialization.
 -   **Position Check V6.5.2**: Added `has_open_position_for_symbol()` method to PaperTradingManager. Modified `_execute_smart_trade()` to verify position exists before executing SELL - if no open position, converts SELL to HOLD (prevents "No hay posición abierta" errors). This ensures proper BUY→SELL→BUY trading cycle.
 -   **Trade Execution Fix V6.5.2**: Fixed critical issue where trades were being rejected due to cumulative reductions making position size < minimum. Changes: (a) Reduced paper mode penalties from 50% to 25% for Risk Guardian and Coherence Engine; (b) Added size floor that adjusts amounts below minimum UP to minimum before execution; (c) Disabled early rejection in paper mode to allow floor to apply. This ensures 20-50 trades/day target can be achieved.
+-   **DatabaseManager.log_risk_event V6.5.2** (Dec 5, 2025): Added missing `log_risk_event()` delegator method in DatabaseManager that forwards to enterprise_service.log_risk_event(). This fixes the recurring `AttributeError: 'DatabaseManager' object has no attribute 'log_risk_event'` that appeared in every trading cycle.
+
+### Known Issues (Under Investigation)
+
+-   **Strategy Signal Availability**: Quantum Momentum and HMM Regime strategies require volume data. When `volumes=None` (common for some API responses), these strategies don't contribute to the Coherence Engine, reducing signal diversity to ~3/10 strategies.
+-   **VETO Scoring Asymmetry**: Black Swan (-30), HMM VOLATILE (-15), and Regime Change (-20) VETOs can dominate the scoring when max_score is low due to missing strategy data. This can cause SELL bias when data is sparse.
+
+### Current Performance (Dec 5, 2025)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Total Trades | 7 | Sample size below statistical significance (30+ needed) |
+| Win Rate | 71.43% | 5 winners, 2 losers - exceeds 55% target |
+| Total PnL | $102.86 | Positive track record |
+| Best Trade | $100.50 | BTC/USD long |
+| Worst Trade | -$5.15 | BTC/USD stop-loss |
+| Profit Factor | 11.82 | Excellent ratio |
 
 ### Multi-User Architecture V6.5.2
 
