@@ -119,7 +119,7 @@ class InvestorTradeLogger:
         if self.db_service:
             self._save_to_db(trade_record)
         
-        logger.info(f"📊 Trade logged: {trade_type} {amount} {symbol} @ ${price:.2f}")
+        logger.info(f"📊 Trade logged: {final_type} ${value_usd:.2f} {final_symbol} @ ${price:.2f}")
         
         return trade_record
     

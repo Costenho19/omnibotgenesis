@@ -2568,6 +2568,7 @@ class AutoTradingBot:
                         # Registrar con verificación criptográfica
                         investor_logger.log_trade(
                             action=action,
+                            symbol=self.config['trading_pair'],
                             amount_usd=amount_usd,
                             price=current_price,
                             confidence=analysis['confidence'],
