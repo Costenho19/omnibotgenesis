@@ -1,9 +1,9 @@
 # OMNIX V6.5.2 INSTITUTIONAL+ - Technical Reference
 
-**Document Version:** 2.3  
+**Document Version:** 2.4  
 **Created:** December 4, 2025  
-**Last Updated:** December 4, 2025  
-**Status:** ✅ COMPLETE (Dependencies Updated - Phases A/B/C Applied)
+**Last Updated:** December 5, 2025  
+**Status:** ✅ COMPLETE (V6.5.2 Trade Execution + Trade History API)
 
 ---
 
@@ -33,7 +33,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | Total Estimated Lines | ~95,000 | Sum of all packages |
 | Database Tables | 42 | PostgreSQL metadata (3 redundant consolidated) |
 | Foreign Key Constraints | 38 (90% coverage) | DATABASE_AUDIT_REPORT.md |
-| Dashboard Endpoints | 25+ | Blueprint inspection |
+| Dashboard Endpoints | 26+ | Blueprint inspection [V6.5.2: +/api/trades/history] |
 | Flask Blueprints | 6 | app.py |
 
 ---
@@ -71,7 +71,7 @@ omnix/
 
 | Subpackage | Files | Lines | Primary Purpose | Key Classes |
 |------------|-------|-------|-----------------|-------------|
-| `bot/` | 2 | 3,925 | Trading automation | `AutoTradingBot`, `PaperTradingManager` |
+| `bot/` | 2 | ~4,100 | Trading automation | `AutoTradingBot`, `PaperTradingManager` | [Updated V6.5.2]
 | `strategies/` | 3 | 1,896 | ARES trading protocols | `AresProtocolV1`, `AresProtocolV2`, `NonMarkovianKernel` |
 | `security/` | 2 | 667 | Post-Quantum Cryptography | `PostQuantumSecurity` |
 | `quantum/` | 4 | 6,248 | QRNG, D-Wave, Physics | `QuantumPhysicsValidator` (4,459 lines) |
@@ -97,9 +97,15 @@ omnix/
 
 ---
 
-#### 3.2.2 omnix_core/bot/auto_trading_bot.py (3,269 lines)
+#### 3.2.2 omnix_core/bot/auto_trading_bot.py (~3,400 lines) [Updated V6.5.2]
 
 **Purpose:** 24/7 automated trading bot with 10 institutional strategies.
+
+**V6.5.2 Trade Execution Improvements:**
+- **Paper Mode Floor**: Ensures trades >= minimum size after all reductions (respects Risk Guardian blocks)
+- **Reduced Penalties**: Paper mode uses 25% reductions (vs 50%) for Risk Guardian and Coherence Engine
+- **Position Check**: Verifies open position exists before SELL to prevent "No position" errors
+- **CAES Kernel Fix**: Tracks pair changes, only reseeds on symbol switch or insufficient history
 
 **10 Trading Strategies:**
 1. Monte Carlo - Probability validation (10,000 simulations)
@@ -254,7 +260,7 @@ omnix_dashboard/
 ├── run.py                  # Development server
 ├── blueprints/
 │   ├── views.py            # HTML routes (/, /terminal, /classic)
-│   ├── core.py             # /api/metrics, /api/trades, /api/health (430 lines)
+│   ├── core.py             # /api/metrics, /api/trades, /api/trades/history, /api/health (~470 lines) [V6.5.2]
 │   ├── market.py           # /api/ticker, /api/fear-greed (390 lines)
 │   ├── intelligence.py     # /api/adaptive, /api/riskguardian (304 lines)
 │   ├── system.py           # /api/debug, /api/db-diagnostics (491 lines)
@@ -268,7 +274,7 @@ omnix_dashboard/
 │   ├── css/                # 19 CSS files (modular components)
 │   └── js/
 │       ├── core/           # api.js, clock.js, utils.js (4 files)
-│       ├── components/     # 11 components (charts, ticker, signals, etc.)
+│       ├── components/     # 12 components (charts, ticker, signals, tradehistory, etc.) [V6.5.2]
 │       └── pages/          # dashboard.js, terminal.js
 └── templates/
     ├── base.html
@@ -296,6 +302,7 @@ omnix_dashboard/
 |-----------|----------|-------|---------|
 | **core** | `/api/metrics` | 35 | Trading performance metrics |
 | **core** | `/api/trades` | 40 | Recent trade history |
+| **core** | `/api/trades/history` | ~60 | Detailed trade history with P&L, hold times, statistical analysis [V6.5.2] |
 | **core** | `/api/positions` | 80 | Open positions with live prices |
 | **core** | `/api/health` | 45 | System health check |
 | **core** | `/api/equity-curve` | 35 | Balance over time |
@@ -324,6 +331,7 @@ omnix_dashboard/
 | News | `news.js` | ~50 | Market news feed |
 | Status Bar | `statusbar.js` | ~80 | System status |
 | Snapshots | `snapshots.js` | 307 | Portfolio snapshots |
+| Trade History | `tradehistory.js` | ~130 | Detailed trade history with P&L [V6.5.2] |
 
 ---
 

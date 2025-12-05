@@ -74,6 +74,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | `/api/health` | System health check | `{status, version, db_connected, db_error, pool, architecture, timestamp}` |
 | `/api/metrics` | Trading performance | `{success, metrics, error, db_connected}` |
 | `/api/trades` | Paper trade history | `{success, trades, error, db_connected}` |
+| `/api/trades/history` | Detailed trade history with P&L, hold times, stats [V6.5.2] | `{success, trades, statistics, sample_analysis, timestamp}` |
 | `/api/positions` | Open positions with live prices | `{success, positions, summary, price_source, db_connected}` |
 | `/api/ticker` | Real-time crypto prices | `{prices, source, timestamp}` |
 | `/api/fear-greed` | Market sentiment index | `{value, classification, timestamp}` |
