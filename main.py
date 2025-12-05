@@ -3,7 +3,7 @@
 """
 OMNIX V6.5.3 INSTITUTIONAL+ - SISTEMA DUAL-MARKET INSTITUCIONAL  
 Sistema de Trading Automático: CRIPTO (24/7) + BOLSA (NYSE/NASDAQ)
-IA Avanzada + AI Risk Guardian V5.4 + Professional Trading Strategy 73% Win Rate
+IA Avanzada + AI Risk Guardian V6.5.3 + Professional Trading Strategy 73% Win Rate
 Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
 Desarrollado por Harold Nunes - Diciembre 2025 - V6.5.3
 
@@ -275,7 +275,7 @@ except Exception as e:
     print(traceback.format_exc())
 
 # =============================================================================
-# 🆕 OMNIX MODULAR SERVICES - ARQUITECTURA REFACTORIZADA V6.0
+# 🆕 OMNIX MODULAR SERVICES - ARQUITECTURA REFACTORIZADA V6.5.3
 # =============================================================================
 
 # Market Data Services (migrated from monolithic main.py)
@@ -437,7 +437,7 @@ except ImportError:
 
 # Logging ya configurado al inicio del archivo (línea 30)
 
-# 🚀 OMNIX V5.1 ENTERPRISE - Sistema Modular Premium
+# 🚀 OMNIX V6.5.3 ENTERPRISE - Sistema Modular Premium
 # Importar DESPUÉS de logger para evitar NameError
 OMNIX_ENTERPRISE_AVAILABLE = False
 TRADING_ENTERPRISE_AVAILABLE = False
@@ -454,7 +454,7 @@ except ImportError as e:
     logger.warning(f"⚠️ OMNIX Enterprise AI modules not available: {e}")
     OMNIX_ENTERPRISE_AVAILABLE = False
 
-# 🏦 OMNIX V5.1 TRADING SERVICE ENTERPRISE
+# 🏦 OMNIX V6.5.3 TRADING SERVICE ENTERPRISE
 try:
     from omnix_services.trading_service import TradingServiceEnterprise
     TRADING_ENTERPRISE_AVAILABLE = True
@@ -463,7 +463,7 @@ except ImportError as e:
     logger.warning(f"⚠️ Trading Service Enterprise not available: {e}")
     TRADING_ENTERPRISE_AVAILABLE = False
 
-# 🎤 OMNIX V5.1 VOICE SERVICE ENTERPRISE
+# 🎤 OMNIX V6.5.3 VOICE SERVICE ENTERPRISE
 VoiceServiceEnterprise = None  # Type hint fix
 VOICE_ENTERPRISE_AVAILABLE = False
 try:
@@ -474,7 +474,7 @@ except ImportError as e:
     logger.warning(f"⚠️ Voice Service Enterprise not available: {e}")
     VOICE_ENTERPRISE_AVAILABLE = False
 
-# 🗄️ OMNIX V5.1 DATABASE SERVICE ENTERPRISE
+# 🗄️ OMNIX V6.5.3 DATABASE SERVICE ENTERPRISE
 DatabaseServiceEnterprise = None  # Type hint fix
 DATABASE_ENTERPRISE_AVAILABLE = False
 try:
