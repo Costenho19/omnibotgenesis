@@ -164,6 +164,26 @@ except ImportError:
     NON_MARKOVIAN_KERNEL_AVAILABLE = False
     logger.warning("⚠️ Non-Markovian Kernel no disponible")
 
+# Import CAES - Confidence-Adaptive Entry System V6.5.2 PREMIUM
+try:
+    from omnix_core.strategies.caes_module import (
+        ConfidenceAdaptiveEntrySystem,
+        get_caes_instance,
+        calculate_adaptive_entry,
+        CAESResult,
+        SubRegimeType
+    )
+    CAES_AVAILABLE = True
+    logger.info("🎯 CAES - Confidence-Adaptive Entry System disponible")
+except ImportError:
+    ConfidenceAdaptiveEntrySystem = None
+    get_caes_instance = None
+    calculate_adaptive_entry = None
+    CAESResult = None
+    SubRegimeType = None
+    CAES_AVAILABLE = False
+    logger.warning("⚠️ CAES no disponible - usando sizing estático")
+
 # Import Memory-Enhanced RMS V6.2 - PREDICTIVE RISK MANAGEMENT
 try:
     from omnix_services.risk_management import (
@@ -1606,38 +1626,57 @@ class AutoTradingBot:
             score_strong = p.score_strong if p else 10
             score_moderate = p.score_moderate if p else 5
             
+            # V6.5.2 CAES: Extraer confianza del kernel para position sizing adaptativo
+            nm_conf_for_caes = None
+            nm_metrics_for_caes = None
+            if non_markovian:
+                nm_conf_for_caes = non_markovian.get('confidence', 50)
+                nm_metrics_for_caes = non_markovian.get('metrics', {})
+            
             if confidence >= (self.config['min_confidence'] * 100):
-                # V6.5.2: Umbrales escalonados configurables por perfil
+                # V6.5.2: Umbrales escalonados configurables por perfil + CAES
                 if score > score_very_strong:  # Señal COMPRA MUY FUERTE - Full position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'VERY_STRONG'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    )
                 elif score > score_strong:  # Señal COMPRA FUERTE - 75% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'STRONG'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    ) * 0.75
                 elif score > score_moderate:  # Señal COMPRA MODERADA - 50% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'MODERATE'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.50
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    ) * 0.50
                 elif score < -score_very_strong:  # Señal VENTA MUY FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'VERY_STRONG'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime)
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    )
                 elif score < -score_strong:  # Señal VENTA FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'STRONG'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.75
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    ) * 0.75
                 elif score < -score_moderate:  # Señal VENTA MODERADA
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'MODERATE'
-                    decision['amount_usd'] = self._calculate_position_size_v52(current_price, kelly, hmm_regime) * 0.50
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                    ) * 0.50
             
             # 🧠 COHERENCE ENGINE V5.4 ULTRA - Validación Premium de Coherencia
             if self.coherence_engine and decision.get('should_trade'):
@@ -2294,23 +2333,50 @@ class AutoTradingBot:
         self,
         current_price: float,
         kelly: Optional[Dict],
-        hmm_regime: Optional[Dict]
+        hmm_regime: Optional[Dict],
+        kernel_confidence: Optional[float] = None,
+        kernel_metrics: Optional[Dict] = None
     ) -> float:
         """
-        V6.4 PREMIUM: Calcular tamaño óptimo de posición
+        V6.5.2 PREMIUM: Calcular tamaño óptimo de posición
+        - CAES: Confidence-Adaptive Entry System (sigmoide + sub-regímenes)
         - Kelly Criterion + HMM Regime + Ramp-Up System
         - Reduce drawdown inicial empezando conservador
+        
+        Args:
+            current_price: Precio actual del activo
+            kelly: Resultados de Kelly Criterion
+            hmm_regime: Régimen detectado por HMM
+            kernel_confidence: Confianza del Non-Markovian Kernel (0-100%)
+            kernel_metrics: Métricas adicionales del kernel
         """
         balance = self._get_balance()
         
+        # ========== V6.5.2 CAES - CONFIDENCE-ADAPTIVE ENTRY SYSTEM ==========
+        caes_multiplier = 1.0
+        caes_result = None
+        
+        if CAES_AVAILABLE and kernel_confidence is not None:
+            try:
+                caes = get_caes_instance()
+                caes_result = caes.calculate_adaptive_parameters(
+                    kernel_confidence=kernel_confidence,
+                    kernel_metrics=kernel_metrics or {}
+                )
+                caes_multiplier = caes_result.position_multiplier
+                
+                self._last_caes_result = caes_result
+                
+            except Exception as e:
+                logger.debug(f"CAES calculation failed: {e}")
+                caes_multiplier = 1.0
+        
         # ========== V6.5.2 RAMP-UP SYSTEM CON TRADING PROFILES ==========
-        # Factores configurables desde Trading Profile
         total_trades = self.state.get('total_trades', 0)
         winning_trades = self.state.get('winning_trades', 0)
         win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 50
         
-        # Obtener parámetros del perfil o usar defaults (INSTITUTIONAL)
-        p = self.trading_profile  # Shorthand
+        p = self.trading_profile
         phase1_trades = p.ramp_up_phase1_trades if p else 5
         phase2_trades = p.ramp_up_phase2_trades if p else 10
         phase3_trades = p.ramp_up_phase3_trades if p else 20
@@ -2320,7 +2386,6 @@ class AutoTradingBot:
         phase3_factor = p.ramp_up_phase3_factor if p else 0.70
         phase4_factor = p.ramp_up_phase4_factor if p else 0.85
         
-        # Factor de ramp-up basado en número de trades (configurable por perfil)
         if total_trades < phase1_trades:
             ramp_up_factor = phase1_factor
         elif total_trades < phase2_trades:
@@ -2330,15 +2395,13 @@ class AutoTradingBot:
         elif total_trades < phase4_trades:
             ramp_up_factor = phase4_factor
         else:
-            ramp_up_factor = 1.0   # Después de phase4: 100% tamaño
+            ramp_up_factor = 1.0
         
-        # Bonus si win rate es alto
         if total_trades >= 10 and win_rate >= 60:
-            ramp_up_factor = min(1.0, ramp_up_factor * 1.15)  # +15% si win rate > 60%
+            ramp_up_factor = min(1.0, ramp_up_factor * 1.15)
         
-        # Penalización si win rate es bajo
         if total_trades >= 10 and win_rate < 45:
-            ramp_up_factor *= 0.70  # -30% si win rate < 45%
+            ramp_up_factor *= 0.70
         
         # Tamaño base según configuración
         base_size = balance * self.config['max_position_pct']
@@ -2346,10 +2409,12 @@ class AutoTradingBot:
         # Aplicar ramp-up
         base_size *= ramp_up_factor
         
+        # ========== V6.5.2 APLICAR CAES MULTIPLIER ==========
+        base_size *= caes_multiplier
+        
         # Ajuste por Kelly Criterion
         if kelly and 'recommended_position_usd' in kelly:
             kelly_size = kelly['recommended_position_usd']
-            # Promediar entre Kelly y base (más peso a Kelly si track record bueno)
             kelly_weight = 0.5 if total_trades < 20 else 0.6
             base_size = base_size * (1 - kelly_weight) + kelly_size * kelly_weight
         
@@ -2359,23 +2424,27 @@ class AutoTradingBot:
             position_multiplier = params.get('position_size_multiplier', 1.0)
             base_size *= position_multiplier
         
-        # V6.4: Protección contra drawdown - reducir si día malo
+        # V6.4: Protección contra drawdown
         daily_loss = self.state.get('daily_profit_loss', 0)
-        if daily_loss < -500:  # Perdimos más de $500 hoy
-            base_size *= 0.50  # Reducir a 50%
+        if daily_loss < -500:
+            base_size *= 0.50
             logger.warning(f"⚠️ V6.4 Drawdown Protection: Día con pérdida ${daily_loss:.2f} - reduciendo posición")
         elif daily_loss < -200:
-            base_size *= 0.75  # Reducir a 75%
+            base_size *= 0.75
         
-        # Límites de seguridad
+        # Límites de seguridad (CAES puede ajustar max según régimen)
         min_size = self.config['min_trade_usd']
-        max_size = balance * 0.15  # V6.4: Máximo 15% (era 25%)
+        max_pct = 0.15
+        if caes_result:
+            max_pct = min(0.15, caes_result.max_position_pct / 100)
+        max_size = balance * max_pct
         
         optimal_size = max(min_size, min(base_size, max_size))
         
         # Log para tracking
-        if total_trades < 20:
-            logger.info(f"📊 V6.4 Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}, Size=${optimal_size:.2f}")
+        if total_trades < 20 or caes_multiplier != 1.0:
+            caes_info = f", CAES={caes_multiplier:.2f}x" if caes_multiplier != 1.0 else ""
+            logger.info(f"📊 V6.5.2 Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}, Size=${optimal_size:.2f}")
         
         return optimal_size
     

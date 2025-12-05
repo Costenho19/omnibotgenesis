@@ -43,6 +43,153 @@ class RegimeType(Enum):
     BREAKOUT = "breakout"
     REVERSAL = "reversal"
     UNKNOWN = "unknown"
+    BULL_STRONG = "bull_strong"
+    BULL_WEAK = "bull_weak"
+    BEAR_PANIC = "bear_panic"
+    BEAR_CONTROLLED = "bear_controlled"
+    SIDEWAYS_COMPRESSED = "sideways_compressed"
+    SIDEWAYS_EXPANDING = "sideways_expanding"
+    BREAKOUT_UP = "breakout_up"
+    BREAKOUT_DOWN = "breakout_down"
+    REVERSAL_BULLISH = "reversal_bullish"
+    REVERSAL_BEARISH = "reversal_bearish"
+
+
+REGIME_OPTIMAL_PARAMS = {
+    RegimeType.BULL_STRONG: {
+        "sl_factor": 0.8,
+        "tp_factor": 1.3,
+        "rr_ratio": 2.5,
+        "trailing_start": 1.0,
+        "max_position_pct": 5.0,
+        "aggression_boost": 1.2
+    },
+    RegimeType.BULL_WEAK: {
+        "sl_factor": 0.9,
+        "tp_factor": 1.0,
+        "rr_ratio": 1.8,
+        "trailing_start": 1.5,
+        "max_position_pct": 3.5,
+        "aggression_boost": 0.85
+    },
+    RegimeType.BEAR_PANIC: {
+        "sl_factor": 0.6,
+        "tp_factor": 0.8,
+        "rr_ratio": 3.0,
+        "trailing_start": 0.5,
+        "max_position_pct": 2.0,
+        "aggression_boost": 0.5
+    },
+    RegimeType.BEAR_CONTROLLED: {
+        "sl_factor": 0.75,
+        "tp_factor": 0.9,
+        "rr_ratio": 2.2,
+        "trailing_start": 0.8,
+        "max_position_pct": 2.5,
+        "aggression_boost": 0.7
+    },
+    RegimeType.SIDEWAYS_COMPRESSED: {
+        "sl_factor": 0.7,
+        "tp_factor": 0.85,
+        "rr_ratio": 1.5,
+        "trailing_start": 0.3,
+        "max_position_pct": 3.0,
+        "aggression_boost": 0.75
+    },
+    RegimeType.SIDEWAYS_EXPANDING: {
+        "sl_factor": 0.85,
+        "tp_factor": 1.1,
+        "rr_ratio": 2.0,
+        "trailing_start": 1.2,
+        "max_position_pct": 3.5,
+        "aggression_boost": 0.9
+    },
+    RegimeType.BREAKOUT_UP: {
+        "sl_factor": 0.7,
+        "tp_factor": 1.5,
+        "rr_ratio": 3.0,
+        "trailing_start": 0.8,
+        "max_position_pct": 4.5,
+        "aggression_boost": 1.3
+    },
+    RegimeType.BREAKOUT_DOWN: {
+        "sl_factor": 0.5,
+        "tp_factor": 0.7,
+        "rr_ratio": 2.5,
+        "trailing_start": 0.4,
+        "max_position_pct": 2.0,
+        "aggression_boost": 0.6
+    },
+    RegimeType.REVERSAL_BULLISH: {
+        "sl_factor": 0.85,
+        "tp_factor": 1.2,
+        "rr_ratio": 2.2,
+        "trailing_start": 1.0,
+        "max_position_pct": 4.0,
+        "aggression_boost": 1.1
+    },
+    RegimeType.REVERSAL_BEARISH: {
+        "sl_factor": 0.6,
+        "tp_factor": 0.8,
+        "rr_ratio": 2.0,
+        "trailing_start": 0.6,
+        "max_position_pct": 2.5,
+        "aggression_boost": 0.65
+    },
+    RegimeType.TRENDING_UP: {
+        "sl_factor": 0.85,
+        "tp_factor": 1.2,
+        "rr_ratio": 2.0,
+        "trailing_start": 1.0,
+        "max_position_pct": 4.0,
+        "aggression_boost": 1.0
+    },
+    RegimeType.TRENDING_DOWN: {
+        "sl_factor": 0.7,
+        "tp_factor": 0.9,
+        "rr_ratio": 2.0,
+        "trailing_start": 0.7,
+        "max_position_pct": 2.5,
+        "aggression_boost": 0.7
+    },
+    RegimeType.RANGING: {
+        "sl_factor": 0.8,
+        "tp_factor": 0.95,
+        "rr_ratio": 1.5,
+        "trailing_start": 0.5,
+        "max_position_pct": 3.0,
+        "aggression_boost": 0.8
+    },
+    RegimeType.HIGH_VOLATILITY: {
+        "sl_factor": 0.6,
+        "tp_factor": 1.0,
+        "rr_ratio": 2.5,
+        "trailing_start": 0.5,
+        "max_position_pct": 2.5,
+        "aggression_boost": 0.6
+    },
+    RegimeType.LOW_VOLATILITY: {
+        "sl_factor": 0.9,
+        "tp_factor": 0.85,
+        "rr_ratio": 1.5,
+        "trailing_start": 0.8,
+        "max_position_pct": 4.0,
+        "aggression_boost": 0.9
+    },
+    RegimeType.UNKNOWN: {
+        "sl_factor": 0.75,
+        "tp_factor": 0.9,
+        "rr_ratio": 1.8,
+        "trailing_start": 1.0,
+        "max_position_pct": 3.0,
+        "aggression_boost": 0.8
+    }
+}
+
+
+def get_regime_params(regime: RegimeType) -> Dict[str, float]:
+    """Obtiene parámetros óptimos para un régimen específico"""
+    return REGIME_OPTIMAL_PARAMS.get(regime, REGIME_OPTIMAL_PARAMS[RegimeType.UNKNOWN])
 
 
 class CalibrationStatus(Enum):
