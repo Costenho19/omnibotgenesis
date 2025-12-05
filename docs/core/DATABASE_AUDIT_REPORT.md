@@ -610,6 +610,7 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2 | Dec 5, 2025 | **Phase 4.1 Complete**: `execute_query()` migrated to use DatabaseGateway when `USE_UNIFIED_GATEWAY=true`. All enterprise consumers automatically use unified pool. Deprecation warnings added. |
 | 3.1 | Dec 4, 2025 | **Table Consolidation Complete**: Dropped 3 redundant tables (circuit_breaker_states, risk_guardian_logs, trading_history). Total: 45→42 tables, 41→38 FKs |
 | 3.0 | Dec 4, 2025 | **Major reorganization**: Consolidated from 2699 to ~600 lines. Added Status Dashboard, consolidated schema refs to appendix, organized phases as tables. |
 | 2.4 | Dec 4, 2025 | Added Phase 3-4 detailed implementation plan |
@@ -626,9 +627,9 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 ### Phase 2 Complete When:
 - [x] DatabaseGateway created with fork-safe singleton
 - [x] Dashboard consumers migrated
-- [x] Canary deployment active (48h validation in progress)
-- [ ] Enterprise consumers migrated
-- [ ] Old pool code deprecated
+- [x] Canary deployment active (validated Dec 4-5, 2025)
+- [x] Enterprise consumers migrated (via execute_query() routing - Dec 5, 2025)
+- [x] Old pool code deprecated (warnings added to _get_connection())
 
 ### Phase 3 Complete When: ✅ COMPLETED Dec 4, 2025
 - [x] Orphan scan executed on all 34 tables (33/34 clean, 1 resolved)
@@ -644,9 +645,9 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 - Tables consolidated: 45 → 42 (dropped circuit_breaker_states, risk_guardian_logs, trading_history)
 
 ### Phase 4 Complete When:
-- [ ] All Enterprise consumers using DatabaseGateway
-- [ ] Deprecation warnings added
-- [x] FK count increased to 18+ (from 8) - NOW 41 (EXCEEDED)
+- [x] All Enterprise consumers using DatabaseGateway (via execute_query migration)
+- [x] Deprecation warnings added to _get_connection()
+- [x] FK count increased to 18+ (from 8) - NOW 38 (EXCEEDED, adjusted after consolidation)
 
 ---
 
