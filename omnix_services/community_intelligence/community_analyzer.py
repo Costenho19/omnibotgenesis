@@ -19,11 +19,20 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
     GEMINI_AVAILABLE = True
+    GEMINI_SDK_VERSION = 'new'
 except ImportError:
-    GEMINI_AVAILABLE = False
-    logger.warning("Gemini no disponible para análisis comunitario")
+    try:
+        import google.generativeai as genai
+        from google.generativeai import types
+        GEMINI_AVAILABLE = True
+        GEMINI_SDK_VERSION = 'legacy'
+    except ImportError:
+        GEMINI_AVAILABLE = False
+        GEMINI_SDK_VERSION = None
+        logger.warning("Gemini no disponible para análisis comunitario")
 
 
 class CommunityAnalyzer:
@@ -49,14 +58,20 @@ class CommunityAnalyzer:
         self.db = database_service
         self.connected = self.db is not None and self.db.connected
         
-        # Mantener AI capabilities intactas (Gemini)
         if GEMINI_AVAILABLE:
             api_key = os.environ.get('GEMINI_API_KEY')
             if api_key:
-                genai.configure(api_key=api_key)
-                self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-                self.ai_available = True
-                logger.info("✅ CommunityAnalyzer con Gemini AI activado")
+                if GEMINI_SDK_VERSION == 'new':
+                    self.gemini_client = genai.Client(api_key=api_key)
+                    self.model = None
+                    self.ai_available = True
+                    logger.info("✅ CommunityAnalyzer con Gemini AI activado (NUEVO SDK)")
+                else:
+                    genai.configure(api_key=api_key)
+                    self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                    self.gemini_client = None
+                    self.ai_available = True
+                    logger.info("✅ CommunityAnalyzer con Gemini AI activado (LEGACY SDK)")
             else:
                 self.ai_available = False
                 logger.warning("⚠️ GEMINI_API_KEY no configurado")
@@ -165,7 +180,7 @@ class CommunityAnalyzer:
         return sorted(patterns, key=lambda x: x['failure_rate'], reverse=True)
     
     def _get_ai_analysis(self, patterns: List[Dict]) -> str:
-        """Obtener análisis AI de los patrones detectados"""
+        """Obtener análisis AI de los patrones detectados - Soporta nuevo y legacy SDK"""
         if not self.ai_available:
             return None
         
@@ -187,8 +202,17 @@ Responde en español, de forma concisa y profesional.
 IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán automáticamente.
 """
             
-            response = self.model.generate_content(prompt)
-            return response.text
+            if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
+                response = self.gemini_client.models.generate_content(
+                    model="gemini-2.0-flash-exp",
+                    contents=prompt
+                )
+                return response.text
+            elif self.model:
+                response = self.model.generate_content(prompt)
+                return response.text
+            
+            return None
             
         except Exception as e:
             logger.error(f"❌ Error getting AI analysis: {e}")

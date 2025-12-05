@@ -28,10 +28,19 @@ except ImportError:
     OPENAI_AVAILABLE = False
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
     GEMINI_AVAILABLE = True
+    GEMINI_SDK_VERSION = 'new'
 except ImportError:
-    GEMINI_AVAILABLE = False
+    try:
+        import google.generativeai as genai
+        from google.generativeai import types
+        GEMINI_AVAILABLE = True
+        GEMINI_SDK_VERSION = 'legacy'
+    except ImportError:
+        GEMINI_AVAILABLE = False
+        GEMINI_SDK_VERSION = None
 
 
 class ConversationalAI:
@@ -66,22 +75,18 @@ class ConversationalAI:
         """Initialize legacy AI clients if enterprise not available"""
         if not self.using_enterprise:
             try:
-                # Inicializar OpenAI
                 if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
                     self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
                     logger.info("✅ OpenAI GPT-4o inicializado correctamente")
                 
-                # Inicializar Gemini (soporta AMBOS SDKs)
                 if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
-                    if hasattr(genai, 'Client'):
-                        # Nuevo SDK (google.genai)
+                    if GEMINI_SDK_VERSION == 'new':
                         self.gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-                        logger.info("✅ Gemini 2.0 Flash inicializado con SDK moderno")
+                        logger.info("✅ Gemini 2.0 Flash inicializado con NUEVO SDK (google-genai)")
                     else:
-                        # SDK Clásico (google.generativeai)
                         genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
                         self.gemini_client = genai.GenerativeModel('gemini-2.0-flash-exp')
-                        logger.info("✅ Gemini 2.0 Flash inicializado correctamente")
+                        logger.info("✅ Gemini 2.0 Flash inicializado con LEGACY SDK")
             except Exception as e:
                 logger.error(f"Error initializing legacy AI clients: {e}")
     

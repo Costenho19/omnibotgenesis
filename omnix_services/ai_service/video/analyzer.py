@@ -89,18 +89,27 @@ class VideoAnalyzerUltra:
                 self.openai_client = None
                 logger.warning("⚠️ OpenAI API key no disponible")
             
-            # Gemini Vision
+            # Gemini Vision - supports new and legacy SDK
             if self.gemini_api_key:
                 try:
-                    import google.generativeai as genai
-                    genai.configure(api_key=self.gemini_api_key)
-                    self.gemini_client = genai
-                    logger.info("✅ Gemini Vision API inicializada")
+                    try:
+                        from google import genai
+                        self.gemini_client = genai.Client(api_key=self.gemini_api_key)
+                        self._gemini_sdk = 'new'
+                        logger.info("✅ Gemini Vision API inicializada (NUEVO SDK)")
+                    except ImportError:
+                        import google.generativeai as genai
+                        genai.configure(api_key=self.gemini_api_key)
+                        self.gemini_client = genai
+                        self._gemini_sdk = 'legacy'
+                        logger.info("✅ Gemini Vision API inicializada (LEGACY SDK)")
                 except Exception as e:
                     logger.warning(f"⚠️ Gemini Vision no disponible: {e}")
                     self.gemini_client = None
+                    self._gemini_sdk = None
             else:
                 self.gemini_client = None
+                self._gemini_sdk = None
                 
         except Exception as e:
             logger.error(f"Error inicializando Vision APIs: {e}")

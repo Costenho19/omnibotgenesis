@@ -4705,13 +4705,23 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as pub_error:
                                 logger.error(f"❌ Kraken PUBLIC falló: {type(pub_error).__name__}: {pub_error}")
                         
-                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad
-                        import google.generativeai as genai
+                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad - V6.5.2 SDK Migration
                         gemini_key = os.environ.get('GEMINI_API_KEY')
+                        gemini_client = None
+                        gemini_sdk_version = None
                         
                         if gemini_key:
-                            genai.configure(api_key=gemini_key)
-                            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+                            try:
+                                from google import genai
+                                gemini_client = genai.Client(api_key=gemini_key)
+                                gemini_sdk_version = 'new'
+                                logger.info("✅ Gemini usando NUEVO SDK (google-genai)")
+                            except ImportError:
+                                import google.generativeai as genai
+                                genai.configure(api_key=gemini_key)
+                                gemini_client = genai.GenerativeModel("gemini-2.0-flash-exp")
+                                gemini_sdk_version = 'legacy'
+                                logger.info("✅ Gemini usando LEGACY SDK (google-generativeai)")
                             
                             # 🔴 INYECTAR CONTEXTO REAL COMPLETO DE OMNIX (TRANSPARENCIA INSTITUCIONAL)
                             omnix_real_context = ""
@@ -4789,12 +4799,19 @@ ESTILO:
 
 Harold pregunta: {text}"""
 
-                            logger.info(f"🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de {len(gemini_prompt)} caracteres")
-                            response = model.generate_content(gemini_prompt)
+                            logger.info(f"🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de {len(gemini_prompt)} caracteres (SDK: {gemini_sdk_version})")
+                            
+                            if gemini_sdk_version == 'new':
+                                response = gemini_client.models.generate_content(
+                                    model="gemini-2.0-flash-exp",
+                                    contents=gemini_prompt
+                                )
+                            else:
+                                response = gemini_client.generate_content(gemini_prompt)
                             
                             if response and response.text:
                                 ai_response = response.text
-                                logger.info(f"✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA: {len(ai_response)} caracteres generados")
+                                logger.info(f"✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA ({gemini_sdk_version}): {len(ai_response)} caracteres generados")
                                 response_text = ai_response
                             else:
                                 logger.error("❌ GEMINI 2.0 respuesta vacía - problema técnico")
