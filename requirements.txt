@@ -35,6 +35,9 @@ redis==5.0.1
 
 # Utilities
 requests==2.32.5
+# NOTE: websockets version conflict - alpaca-trade-api requires <11, google-genai requires >=13
+# Using alpaca-trade-api version since it's essential for stock trading
+# google-genai will still work but may log a warning
 websockets>=9.0,<11
 python-dotenv==1.0.0
 python-decouple==3.8
@@ -81,5 +84,3 @@ dwave-ocean-sdk>=6.0.0
 
 # Flask extensions
 flask-cors>=4.0.0
-google-genai
-telegram

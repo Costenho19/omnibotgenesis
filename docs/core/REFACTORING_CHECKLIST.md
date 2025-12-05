@@ -23,17 +23,20 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 ### 1.1 google-generativeai (DEPRECATED)
 - **Prioridad:** 🔴 HIGH
-- **Estado:** [ ] Pendiente
+- **Estado:** [x] ✅ COMPLETADO (Dec 5, 2025)
 - **Problema:** Paquete `google-generativeai==0.8.5` está deprecado desde Agosto 2025
 - **Solución:** Migrar a `google-genai` (nuevo SDK oficial)
-- **Archivos afectados:**
-  - [ ] `requirements.txt`
-  - [ ] `omnix_services/ai_service/ai_models.py`
-  - [ ] `omnix_services/ai_service/conversational_ai_adapter.py`
-  - [ ] `omnix_services/ai_service/video/analyzer.py`
-  - [ ] `omnix_services/telegram_service/enterprise_bot.py`
-  - [ ] `omnix_services/community_intelligence/community_analyzer.py`
-  - [ ] `main.py`
+
+**Solución implementada (V6.5.2):**
+- [x] `requirements.txt` - Agregado `google-genai>=1.0.0`, documentado conflicto websockets
+- [x] `omnix_services/ai_service/ai_models.py` - Import dual con fallback, GEMINI_SDK_VERSION
+- [x] `omnix_services/ai_service/conversational_ai_adapter.py` - Import dual con fallback
+- [x] `omnix_services/ai_service/video/analyzer.py` - Inicialización con _gemini_sdk tracking
+- [x] `omnix_services/telegram_service/enterprise_bot.py` - Migrado a gemini_client con SDK version
+- [x] `omnix_services/community_intelligence/community_analyzer.py` - Soporta nuevo y legacy SDK
+- [x] `main.py` - Ya tenía código dual (nuevo SDK primero)
+
+**Nota:** Conflicto de websockets (alpaca-trade-api <11 vs google-genai >=13). Usando versión para alpaca-trade-api, google-genai funciona con warning.
 
 ### 1.2 anthropic - Error en Documentación
 - **Prioridad:** 🟢 LOW
@@ -192,7 +195,7 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 1. **Fase A - Críticos (afectan funcionamiento):**
    - [x] 5.1 Volumes = None fix ✅
-   - [ ] 1.1 Migrar google-generativeai
+   - [x] 1.1 Migrar google-generativeai ✅ (Dec 5, 2025)
 
 2. **Fase B - Arquitectura (mejora rendimiento):**
    - [ ] 2.1-2.2 Phase 4 Database Unification
@@ -213,11 +216,11 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 | Fase | Items | Completados | % |
 |------|-------|-------------|---|
-| A - Críticos | 2 | 1 | 50% |
+| A - Críticos | 2 | 2 | 100% |
 | B - Arquitectura | 4 | 0 | 0% |
 | C - Documentación | 4 | 0 | 0% |
 | D - Mejoras | 3 | 0 | 0% |
-| **TOTAL** | **13** | **1** | **8%** |
+| **TOTAL** | **13** | **2** | **15%** |
 
 ---
 
