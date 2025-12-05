@@ -1,7 +1,9 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V6.5.2 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
+🤖 OMNIX AUTO-TRADING BOT V6.5.3 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
 Sistema de trading automático con IA, Risk Guardian, Coherence Engine,
 Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain Intelligence
+
+V6.5.3 FIX (Dec 5, 2025): Reduced paper mode penalties + added BUY bias for track record generation
 
 🚀 V6.5.2 MULTI-USER ARCHITECTURE:
 - Soporte para 100,000+ usuarios simultáneos
