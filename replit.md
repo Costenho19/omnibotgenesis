@@ -58,6 +58,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Tuple-to-Dict Conversion**: Fixed `get_recent_trades()` in `real_data_provider.py` to convert database tuples to dictionaries for proper `.get()` access.
 -   **Database Schema**: Added `last_activity` column to `users` table.
 -   **Railway Deployment V6.5.2**: Fixed missing `wsgi.py` and `fix_railway_imports.py` files that caused healthcheck failures. Created proper WSGI entrypoint with Gunicorn configuration. Updated `/api/health` to always return HTTP 200 (soft-fail) so Railway healthcheck passes even during DB initialization.
+-   **Position Check V6.5.2**: Added `has_open_position_for_symbol()` method to PaperTradingManager. Modified `_execute_smart_trade()` to verify position exists before executing SELL - if no open position, converts SELL to HOLD (prevents "No hay posición abierta" errors). This ensures proper BUY→SELL→BUY trading cycle.
 
 ### Multi-User Architecture V6.5.2
 
