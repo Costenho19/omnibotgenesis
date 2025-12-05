@@ -7,8 +7,8 @@ IA Avanzada + AI Risk Guardian V6.5.3 + Professional Trading Strategy 73% Win Ra
 Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
 Desarrollado por Harold Nunes - Diciembre 2025 - V6.5.3
 
-BUILD_TIMESTAMP = "2025-12-05T20:15:00Z"
-FORCE_REBUILD_VERSION = "6.5.3-paper-buy-bias-fix"
+BUILD_TIMESTAMP = "2025-12-06T00:00:00Z"
+FORCE_REBUILD_VERSION = "6.5.3-position-manager-fix"
 """
 
 # 🧹 LIMPIEZA DE CACHE RAILWAY - EJECUTAR ANTES DE CUALQUIER IMPORT
@@ -65,8 +65,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("=" * 70)
-logger.info("🔥 OMNIX V6.5.3 INSTITUTIONAL+ - BUILD 2025-12-05T20:15:00Z")
-logger.info("🎯 PAPER MODE BUY BIAS FIX - Generación de track record")
+logger.info("🔥 OMNIX V6.5.3 INSTITUTIONAL+ - BUILD 2025-12-06T00:00:00Z")
+logger.info("🎯 POSITION MANAGER FIX - TP/SL dinámico + Symbol tracking")
+logger.info("📊 DynamicPositionManager V6.5.3 PREMIUM INCLUIDO")
 logger.info("=" * 70)
 
 # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
