@@ -165,13 +165,33 @@ def calculate_metrics(trades):
             'avg_trade_duration': 0,
             'best_trade': 0,
             'worst_trade': 0,
-            'expectancy': 0
+            'expectancy': 0,
+            'open_positions': 0
         }
     
+    all_trades_count = len(trades)
+    open_positions = [t for t in trades if t.get('status') == 'open' or t.get('closed_at') is None]
     closed_trades = [t for t in trades if t.get('closed_at') is not None]
     
     if not closed_trades:
-        return calculate_metrics([])
+        return {
+            'total_trades': all_trades_count,
+            'winning_trades': 0,
+            'losing_trades': 0,
+            'win_rate': 0,
+            'total_pnl': 0,
+            'avg_win': 0,
+            'avg_loss': 0,
+            'profit_factor': 0,
+            'sharpe_ratio': 0,
+            'sortino_ratio': 0,
+            'max_drawdown': 0,
+            'avg_trade_duration': 0,
+            'best_trade': 0,
+            'worst_trade': 0,
+            'expectancy': 0,
+            'open_positions': len(open_positions)
+        }
     
     pnls = [float(t.get('pnl', 0) or 0) for t in closed_trades]
     winning = [p for p in pnls if p > 0]
@@ -227,7 +247,9 @@ def calculate_metrics(trades):
     expectancy = (win_rate/100 * avg_win) - ((1 - win_rate/100) * avg_loss)
     
     return {
-        'total_trades': total_trades,
+        'total_trades': all_trades_count,
+        'closed_trades': len(closed_trades),
+        'open_positions': len(open_positions),
         'winning_trades': winning_trades,
         'losing_trades': losing_trades,
         'win_rate': round(win_rate, 2),
