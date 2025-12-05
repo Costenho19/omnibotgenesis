@@ -2192,6 +2192,30 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error en Coherence validation (continuando): {e}")
             
+            # ========== V6.5.2: VERIFICACIÓN DE POSICIÓN ANTES DE SELL ==========
+            # En paper mode, SELL solo puede cerrar posiciones existentes
+            # Si no hay posición abierta, convertimos a BUY para generar track record
+            if self.config['paper_mode'] and action == 'SELL':
+                if self.paper_trading and hasattr(self.paper_trading, 'has_open_position_for_symbol'):
+                    user_id = str(self.config.get('harold_user_id', '7014748854'))
+                    symbol = self.config['trading_pair']
+                    
+                    position_check = self.paper_trading.has_open_position_for_symbol(user_id, symbol)
+                    
+                    if not position_check.get('has_position', False):
+                        # NO hay posición abierta - convertir SELL a BUY para generar trade
+                        logger.warning(f"📊 V6.5.2 POSITION CHECK: No hay posición abierta para {symbol}")
+                        logger.info(f"   🔄 Convirtiendo SELL → BUY para generar track record")
+                        action = 'BUY'
+                        analysis['action'] = 'BUY'
+                        if 'reason' in analysis:
+                            analysis['reason'].append(f"🔄 V6.5.2: SELL→BUY (no open position for {symbol})")
+                    else:
+                        # SÍ hay posición - proceder con SELL
+                        pos = position_check.get('position', {})
+                        logger.info(f"✅ V6.5.2 POSITION CHECK: Posición abierta encontrada")
+                        logger.info(f"   📈 {pos.get('side', 'N/A').upper()} {pos.get('quantity', 0):.6f} @ ${pos.get('entry_price', 0):.2f}")
+            
             # Ejecutar según modo
             if self.config['paper_mode']:
                 # PAPER TRADING V2 - Usa PostgreSQL institucional
