@@ -240,7 +240,7 @@ DEFAULT_LIMITS = [
     ),
     RiskLimit(
         limit_type=RiskLimitType.OPEN_POSITIONS,
-        threshold_value=10,
+        threshold_value=20,
         threshold_unit=ThresholdUnit.COUNT,
         warning_threshold_pct=80.0
     )

@@ -53,6 +53,7 @@ class TradingProfile:
     min_trade_usd: float = 75.0
     max_position_pct: float = 0.12
     stop_loss_pct: float = 0.02
+    take_profit_pct: float = 0.03
     max_daily_loss_pct: float = 0.08
     min_confidence: float = 0.14
     check_interval_seconds: int = 25
@@ -91,6 +92,7 @@ class TradingProfile:
             'min_trade_usd': self.min_trade_usd,
             'max_position_pct': self.max_position_pct,
             'stop_loss_pct': self.stop_loss_pct,
+            'take_profit_pct': self.take_profit_pct,
             'max_daily_loss_pct': self.max_daily_loss_pct,
             'min_confidence': self.min_confidence,
             'check_interval_seconds': self.check_interval_seconds,
@@ -130,6 +132,7 @@ INSTITUTIONAL_PROFILE = TradingProfile(
     min_trade_usd=75.0,
     max_position_pct=0.12,
     stop_loss_pct=0.02,
+    take_profit_pct=0.03,
     max_daily_loss_pct=0.08,
     min_confidence=0.14,
     check_interval_seconds=25,
@@ -169,6 +172,7 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
     min_trade_usd=50.0,
     max_position_pct=0.15,
     stop_loss_pct=0.025,
+    take_profit_pct=0.04,
     max_daily_loss_pct=0.12,
     min_confidence=0.10,
     check_interval_seconds=20,
@@ -207,6 +211,7 @@ BALANCED_PROFILE = TradingProfile(
     min_trade_usd=60.0,
     max_position_pct=0.13,
     stop_loss_pct=0.022,
+    take_profit_pct=0.035,
     max_daily_loss_pct=0.10,
     min_confidence=0.12,
     check_interval_seconds=22,

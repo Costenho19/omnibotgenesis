@@ -360,6 +360,7 @@ class AutoTradingBot:
             'min_trade_usd': p.min_trade_usd if p else 75.0,
             'max_position_pct': p.max_position_pct if p else 0.12,
             'stop_loss_pct': p.stop_loss_pct if p else 0.02,
+            'take_profit_pct': p.take_profit_pct if p else 0.03,
             'max_daily_loss_pct': p.max_daily_loss_pct if p else 0.08,
             'min_confidence': p.min_confidence if p else 0.14,
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
@@ -993,6 +994,105 @@ class AutoTradingBot:
         except Exception as e:
             logger.warning(f"⚠️ V6.4: Error cargando estado persistente (usando valores iniciales): {e}")
     
+    def _check_open_positions_tp_sl(self) -> int:
+        """
+        V6.5.3 PREMIUM: Gestión automática de posiciones con Take Profit y Stop Loss.
+        
+        Verifica todas las posiciones abiertas y cierra automáticamente cuando:
+        - El profit % >= take_profit_pct → Cerrar con ganancia
+        - El loss % >= stop_loss_pct → Cerrar con pérdida (protección de capital)
+        
+        Returns:
+            int: Número de posiciones cerradas
+        """
+        if not self.config['paper_mode'] or not self.paper_trading:
+            return 0
+        
+        positions_closed = 0
+        user_id = str(self.config.get('harold_user_id', '7014748854'))
+        
+        tp_pct = self.config.get('take_profit_pct', 0.03)
+        sl_pct = self.config.get('stop_loss_pct', 0.02)
+        
+        try:
+            open_positions = self.paper_trading.get_open_positions(user_id)
+            
+            if not open_positions:
+                return 0
+            
+            for position in open_positions:
+                symbol = position.get('symbol')
+                entry_price = float(position.get('entry_price', 0))
+                quantity = float(position.get('quantity', 0))
+                trade_id = position.get('id')
+                
+                if not symbol or entry_price <= 0 or quantity <= 0:
+                    continue
+                
+                current_price = None
+                retry_count = 0
+                max_retries = 2
+                
+                while current_price is None and retry_count < max_retries:
+                    try:
+                        current_price = self.trading_service.get_current_price(symbol)
+                        if current_price and current_price > 0:
+                            break
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            time.sleep(0.5)
+                    except Exception as price_err:
+                        retry_count += 1
+                        logger.debug(f"Retry {retry_count}/{max_retries} getting price for {symbol}: {price_err}")
+                
+                if not current_price or current_price <= 0:
+                    logger.debug(f"⚠️ No price available for {symbol}, skipping TP/SL check")
+                    continue
+                
+                pnl_pct = (current_price - entry_price) / entry_price
+                
+                should_close = False
+                close_reason = ""
+                
+                if pnl_pct >= tp_pct:
+                    should_close = True
+                    close_reason = f"✅ TAKE PROFIT alcanzado (+{pnl_pct*100:.2f}% >= +{tp_pct*100:.1f}%)"
+                elif pnl_pct <= -sl_pct:
+                    should_close = True
+                    close_reason = f"🛑 STOP LOSS alcanzado ({pnl_pct*100:.2f}% <= -{sl_pct*100:.1f}%)"
+                
+                if should_close:
+                    logger.info(f"📊 V6.5.3 TP/SL: {symbol} @ ${current_price:.2f} | Entry: ${entry_price:.2f} | {close_reason}")
+                    
+                    try:
+                        result = self.paper_trading._close_position_fifo_v2(
+                            user_id=user_id,
+                            symbol=symbol,
+                            sell_quantity=quantity,
+                            exit_price=current_price
+                        )
+                        
+                        if result:
+                            positions_closed += 1
+                            pnl_usd = result.get('net_pnl_usd', result.get('profit_loss', 0))
+                            logger.info(f"   ✅ Posición cerrada: {symbol} | P&L: ${pnl_usd:.2f}")
+                            
+                            self._paper_trade_count += 1
+                            self.state['paper_trade_count'] = self._paper_trade_count
+                        else:
+                            logger.warning(f"   ⚠️ Error cerrando posición {symbol}: sin resultado")
+                    except Exception as close_err:
+                        logger.warning(f"   ⚠️ Error cerrando posición {symbol}: {close_err}")
+            
+            if positions_closed > 0:
+                logger.info(f"📊 V6.5.3 TP/SL: {positions_closed} posiciones cerradas automáticamente")
+                self._load_persistent_state()
+                
+        except Exception as e:
+            logger.error(f"❌ Error en gestión TP/SL: {e}")
+        
+        return positions_closed
+    
     def _trading_loop(self):
         """Loop principal 24/7 - V6.5.3 MULTI-CRYPTO PREMIUM"""
         logger.info("🔄 Trading loop V6.5.3 MULTI-CRYPTO iniciado - Corriendo 24/7")
@@ -1029,6 +1129,9 @@ class AutoTradingBot:
                     logger.critical("🚨 PARADA DE EMERGENCIA - Pérdidas excesivas")
                     self.stop()
                     break
+                
+                # V6.5.3 PREMIUM: Verificar Take Profit / Stop Loss en posiciones abiertas
+                self._check_open_positions_tp_sl()
                 
                 # V6.4: MULTI-CRYPTO - Escanear el par actual
                 if self.config.get('use_multi_crypto', True) and len(trading_pairs) > 1:
