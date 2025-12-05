@@ -33,6 +33,20 @@ except ImportError:
     REDIS_AVAILABLE = False
     logger.warning("redis no disponible - Cleanup se ejecutará siempre")
 
+USE_UNIFIED_GATEWAY = os.environ.get('USE_UNIFIED_GATEWAY', 'false').lower() == 'true'
+_gateway_instance = None
+
+def _get_gateway():
+    """Lazy-load DatabaseGateway singleton to avoid circular imports."""
+    global _gateway_instance
+    if _gateway_instance is None:
+        try:
+            from omnix_services.database_service.database_gateway import DatabaseGateway
+            _gateway_instance = DatabaseGateway.get_instance()
+        except ImportError as e:
+            logger.warning(f"⚠️ DatabaseGateway not available: {e}")
+    return _gateway_instance
+
 
 class DatabaseServiceEnterprise:
     """
@@ -226,6 +240,10 @@ class DatabaseServiceEnterprise:
         """
         Ejecutar query SQL genérica
         
+        🚀 Phase 4 Database Unification (Dec 2025):
+        - If USE_UNIFIED_GATEWAY=true, uses DatabaseGateway connection pool
+        - Otherwise, uses legacy direct connections
+        
         Args:
             sql: Query SQL a ejecutar
             params: Parámetros para la query (tuple)
@@ -235,16 +253,25 @@ class DatabaseServiceEnterprise:
             
         Returns:
             Lista de tuplas con resultados si es SELECT o RETURNING, None si es INSERT/UPDATE sin fetch
-            
-        Uso:
-            result = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
-            db.execute_query("UPDATE users SET name = %s WHERE id = %s", (name, id))
-            result = db.execute_query("INSERT INTO ... RETURNING id", (data,))
         """
         if not self.connected:
             logger.error("❌ execute_query: Database no conectada")
             return None
-            
+        
+        sql_upper = sql.strip().upper()
+        should_fetch = fetch if fetch is not None else (
+            sql_upper.startswith('SELECT') or 'RETURNING' in sql_upper
+        )
+        
+        if USE_UNIFIED_GATEWAY:
+            gateway = _get_gateway()
+            if gateway and gateway._pool:
+                try:
+                    from omnix_services.database_service.database_gateway import DatabaseGateway
+                    return DatabaseGateway.execute_query(sql, params, fetch=should_fetch)
+                except Exception as e:
+                    logger.warning(f"⚠️ Gateway execute_query failed, falling back: {e}")
+        
         conn = None
         try:
             conn = self._get_connection()
@@ -258,11 +285,6 @@ class DatabaseServiceEnterprise:
                 cursor.execute(sql, params)
             else:
                 cursor.execute(sql)
-            
-            sql_upper = sql.strip().upper()
-            should_fetch = fetch if fetch is not None else (
-                sql_upper.startswith('SELECT') or 'RETURNING' in sql_upper
-            )
             
             if should_fetch:
                 result = cursor.fetchall()
@@ -292,15 +314,26 @@ class DatabaseServiceEnterprise:
         """
         Obtener conexión a PostgreSQL
         
-        🚀 MIGRACIÓN Nov 29, 2025: psycopg3 soporta URLs nativamente.
-        No requiere parsear la URL manualmente.
+        🚀 Phase 4 Database Unification (Dec 2025):
+        - Uses legacy direct connection (deprecated)
+        - For new code, prefer execute_query() which uses DatabaseGateway
+        
+        ⚠️ DEPRECATED: This method creates a new connection each time.
+        Use execute_query() instead for automatic connection pooling.
         """
         if not self.db_url or not PSYCOPG_AVAILABLE:
             return None
         
+        if not USE_UNIFIED_GATEWAY:
+            import warnings
+            warnings.warn(
+                "DatabaseServiceEnterprise._get_connection() creates unpooled connections. "
+                "Set USE_UNIFIED_GATEWAY=true to use the unified connection pool via execute_query().",
+                DeprecationWarning,
+                stacklevel=2
+            )
+        
         try:
-            # psycopg3 soporta URLs directamente - mucho más simple
-            # Agregar sslmode=require para Railway
             conn_string = self.db_url
             if '?' not in conn_string:
                 conn_string += '?sslmode=require'

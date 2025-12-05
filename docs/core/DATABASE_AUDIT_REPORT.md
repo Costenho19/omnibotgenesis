@@ -4,7 +4,7 @@
 > **Location:** `docs/core/DATABASE_AUDIT_REPORT.md`  
 > **Version:** 3.1 (Table Consolidation Complete)  
 > **Last Updated:** December 4, 2025  
-> **Status:** Phase 3.6 Complete, Phase 4 Pending
+> **Status:** Phase 4.1 Complete (execute_query migration)
 
 ---
 
@@ -74,7 +74,7 @@
 | 1 | Discovery & Freeze | ✅ Complete | Dec 3, 2025 | Dec 3, 2025 |
 | 2 | Build Unified Gateway | 🟡 80% | Dec 3, 2025 | - |
 | 3 | Data Integrity Hardening | ✅ Complete | Dec 4, 2025 | Dec 4, 2025 |
-| 4 | Service Unification | ⬜ Pending | - | - |
+| 4 | Service Unification | 🟡 50% | Dec 5, 2025 | - |
 
 ### 2.3 Outstanding Blockers
 
@@ -240,17 +240,25 @@ ALL Consumers → DatabaseGateway → Single Pool → PostgreSQL
 
 ---
 
-### Phase 4: Service Unification ⬜ PENDING
+### Phase 4: Service Unification 🟡 IN PROGRESS
 
 **Goal**: Complete migration, deprecate legacy  
-**Pre-requisite**: Phase 3 FKs stable
+**Pre-requisite**: Phase 3 FKs stable  
+**Started**: December 5, 2025
 
-| Task | Description | Risk | Status |
-|------|-------------|------|--------|
-| 4.1 | Trading Manager Adapter | 🔴 HIGH | ⬜ Pending |
-| 4.2 | Bot Migration (enterprise_bot.py, main.py) | 🔴 HIGH | ⬜ Pending |
-| 4.3 | Legacy Deprecation Warnings | 🟡 MEDIUM | ⬜ Pending |
-| 4.4 | Documentation Update | 🟢 LOW | ⬜ Pending |
+| Task | Description | Risk | Status | Date |
+|------|-------------|------|--------|------|
+| 4.1 | execute_query() Gateway Integration | 🔴 HIGH | ✅ Done | Dec 5 |
+| 4.2 | Bot Migration (enterprise_bot.py, main.py) | 🔴 HIGH | ✅ Implicit | Dec 5 |
+| 4.3 | Legacy Deprecation Warnings | 🟡 MEDIUM | ✅ Done | Dec 5 |
+| 4.4 | Documentation Update | 🟢 LOW | ✅ Done | Dec 5 |
+
+**Implementation Notes (Dec 5, 2025)**:
+- Modified `DatabaseServiceEnterprise.execute_query()` to route through `DatabaseGateway` when `USE_UNIFIED_GATEWAY=true`
+- Added lazy-loaded `_get_gateway()` helper to avoid circular imports
+- Added deprecation warning for `_get_connection()` legacy usage
+- All consumers using `execute_query()` automatically benefit from unified pool
+- Fallback to legacy connections preserved for robustness
 
 ---
 
