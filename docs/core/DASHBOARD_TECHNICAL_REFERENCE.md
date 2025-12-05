@@ -32,10 +32,10 @@ omnix_dashboard/
 ├── run.py                      # WSGI entry point (34 lines)
 ├── __init__.py
 ├── ARCHITECTURE.md             # Technical architecture documentation
-├── blueprints/                 # 6 Blueprints, 31 routes total
+├── blueprints/                 # 6 Blueprints, 34 routes total
 │   ├── __init__.py            # Blueprint exports (22 lines)
 │   ├── views.py               # HTML page routes (29 lines, 3 routes)
-│   ├── core.py                # Core APIs (430 lines, 6 routes)
+│   ├── core.py                # Core APIs (~470 lines, 7 routes) [Updated V6.5.2]
 │   ├── market.py              # Market data (366 lines, 7 routes)
 │   ├── intelligence.py        # External APIs (298 lines, 6 routes)
 │   ├── system.py              # System status (265 lines, 3 routes)
@@ -51,8 +51,8 @@ omnix_dashboard/
 │   ├── terminal.html          # Trading Terminal (extends base)
 │   └── dashboard.html         # Classic Dashboard (extends base)
 └── static/
-    ├── css/                   # Modular CSS (18 files, 1562 lines)
-    └── js/                    # Modular JavaScript (13 files, 1658 lines)
+    ├── css/                   # Modular CSS (19 files, ~1650 lines) [Updated V6.5.2]
+    └── js/                    # Modular JavaScript (14 files, ~1800 lines) [Updated V6.5.2]
 ```
 
 ### 1.2 Blueprint Distribution
@@ -60,13 +60,13 @@ omnix_dashboard/
 | Blueprint | File | Lines | Routes | Protected | Purpose |
 |-----------|------|-------|--------|-----------|---------|
 | `views_bp` | views.py | 29 | 3 | 0 | HTML pages (/, /terminal, /classic) |
-| `core_bp` | core.py | 430 | 6 | 5 | Metrics, trades, equity, portfolio, positions, health |
+| `core_bp` | core.py | ~470 | 7 | 6 | Metrics, trades, trades/history, equity, portfolio, positions, health |
 | `market_bp` | market.py | 366 | 8 | 0 | Crypto, stocks, OHLC, volume, Fear&Greed, benchmarks (public) |
 | `intelligence_bp` | intelligence.py | 305 | 6 | 5 | Finnhub, Alpha Vantage, intelligence summary, news |
 | `system_bp` | system.py | 435 | 4 | 3 | Signals, system status, adaptive, debug |
 | `snapshots_bp` | snapshots.py | 615 | 6 | 6 | Audited snapshots, chain verification, cryptographic audit |
 
-**Security Summary:** 19 protected endpoints / 33 total routes (58% protected)
+**Security Summary:** 20 protected endpoints / 34 total routes (59% protected)
 
 ### 1.3 Utils Package
 
@@ -88,7 +88,7 @@ omnix_dashboard/static/css/
 ├── components/
 │   ├── panel.css, card.css, ticker.css, signal.css
 │   ├── badge.css, chart.css, table.css
-│   ├── news.css, protection.css
+│   ├── news.css, protection.css, tradehistory.css [NEW V6.5.2]
 ├── layouts/
 │   ├── header.css, terminal-grid.css, animations.css
 ├── pages/
@@ -106,7 +106,7 @@ omnix_dashboard/static/js/
 │   ├── clock.js               # 79 lines - Real-time clock
 │   ├── common.js              # 145 lines - Shared refresh logic, startAutoRefresh(), refreshWidgets()
 │   └── timezone.js            # 100 lines - Centralized date/time formatting [NEW Phase 5]
-├── components/                # 918 lines total
+├── components/                # ~1050 lines total
 │   ├── charts.js              # 234 lines - Plotly.react() delta updates, instance tracking
 │   ├── ticker.js              # 84 lines - Crypto price ticker
 │   ├── signals.js             # 66 lines - Trading signals display
@@ -114,7 +114,8 @@ omnix_dashboard/static/js/
 │   ├── news.js                # 94 lines - News feed
 │   ├── feargreed.js           # 101 lines - Fear & Greed gauge
 │   ├── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
-│   └── snapshots.js           # 150 lines - Audited snapshots widget [NEW Phase 5]
+│   ├── snapshots.js           # 150 lines - Audited snapshots widget [NEW Phase 5]
+│   └── tradehistory.js        # ~130 lines - Trade history with P&L details [NEW V6.5.2]
 └── pages/                     # 394 lines total
     ├── terminal.js            # 101 lines - Terminal page controller
     └── dashboard.js           # 293 lines - Dashboard page controller
@@ -320,6 +321,7 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 |-----------|----------|---------|------------------|
 | core.py | `/api/metrics` | Performance metrics | Dec 2024 |
 | core.py | `/api/trades` | Trade history | Dec 2024 |
+| core.py | `/api/trades/history` | Detailed trade history with P&L, hold times, stats | Dec 2025 [V6.5.2] |
 | core.py | `/api/positions` | Open positions | Dec 2024 |
 | core.py | `/api/portfolio` | Portfolio state | Dec 2024 |
 | core.py | `/api/equity-curve` | Equity curve data | Dec 2024 |
@@ -338,7 +340,7 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 | snapshots.py | `/api/snapshots/<id>/audit` | Full audit details | Dec 2025 |
 | snapshots.py | `/api/snapshots/latest` | Get most recent snapshot | Dec 2025 |
 
-**Total Protected: 19 endpoints across 4 blueprints**
+**Total Protected: 20 endpoints across 4 blueprints**
 
 **Public Endpoints (no authentication required):**
 - `/api/market/*` - Public market data (Kraken prices, volume, OHLC, Fear & Greed)
