@@ -48,6 +48,9 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Recent Bug Fixes (Dec 2025)
 
+-   **Coherence Engine Fallback V6.5.2**: Fixed critical blocker where trades were blocked when `strategy_signals` was empty. Now synthesizes `primary_decision` fallback signal to allow coherence analysis to proceed.
+-   **Monte Carlo Throttle**: Changed from hard block to adaptive throttle in paper mode - trades proceed with 50% position size warning instead of being blocked (real-money protection unchanged).
+-   **AutoTradingBot Fallback**: Added guaranteed fallback signal injection in `auto_trading_bot.py` before coherence validation to ensure `strategy_signals` is never empty.
 -   **CAES Kernel Seeding**: Fixed issue where Non-Markovian Kernel used wrong pair history. Now tracks `_last_kernel_pair` and only reseeds on pair change or insufficient history.
 -   **Tuple-to-Dict Conversion**: Fixed `get_recent_trades()` in `real_data_provider.py` to convert database tuples to dictionaries for proper `.get()` access.
 -   **Database Schema**: Added `last_activity` column to `users` table.
