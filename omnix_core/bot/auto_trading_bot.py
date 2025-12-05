@@ -1481,14 +1481,16 @@ class AutoTradingBot:
                     else:
                         score -= 3  # Penalización menor si confianza baja
                 elif regime == 'VOLATILE':
-                    # V6.5.2: HMM VETO configurable por perfil
+                    # V6.5.2: HMM VETO configurable por perfil + penalizaciones reducidas en paper mode
                     p = self.trading_profile  # Shorthand
                     hmm_veto_enabled = p.hmm_veto_enabled if p else True
                     hmm_veto_threshold = p.hmm_veto_confidence_threshold if p else 0.85
                     
                     if hmm_veto_enabled and regime_confidence > hmm_veto_threshold:
-                        score -= 15
-                        decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO (conf > {hmm_veto_threshold:.0%})")
+                        veto_penalty = 8 if is_paper_mode else 15  # V6.5.2: -8 paper, -15 real
+                        score -= veto_penalty
+                        mode_label = "[PAPER -8]" if is_paper_mode else "[REAL -15]"
+                        decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO {mode_label} (conf > {hmm_veto_threshold:.0%})")
                         decision['v52_analysis']['hmm_volatility_veto'] = True
                     else:
                         score -= 5
@@ -1512,13 +1514,17 @@ class AutoTradingBot:
                 hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
                 
                 # Criterio de cambio de régimen crítico
+                # V6.5.2: Penalizaciones reducidas en paper mode para más trades
                 if adaptive_regime in ['EXTREME', 'VOLATILE'] and hmm_detected == 'VOLATILE':
-                    score -= 20  # VETO FUERTE - Doble confirmación de volatilidad extrema
-                    decision['reason'].append(f"🚨 REGIME CHANGE DETECTED: {adaptive_regime} + HMM {hmm_detected} → VETO trading")
+                    veto_penalty = 10 if is_paper_mode else 20  # V6.5.2: -10 paper, -20 real
+                    score -= veto_penalty
+                    mode_label = "[PAPER -10]" if is_paper_mode else "[REAL -20]"
+                    decision['reason'].append(f"🚨 REGIME CHANGE DETECTED: {adaptive_regime} + HMM {hmm_detected} → VETO {mode_label}")
                     decision['v52_analysis']['regime_change_veto'] = True
-                    logger.warning(f"🚨 REGIME CHANGE VETO: Adaptive={adaptive_regime}, HMM={hmm_detected}")
+                    logger.warning(f"🚨 REGIME CHANGE VETO {mode_label}: Adaptive={adaptive_regime}, HMM={hmm_detected}")
                 elif adaptive_regime == 'EXTREME':
-                    score -= 10  # Reducir confianza en mercado extremo
+                    extreme_penalty = 5 if is_paper_mode else 10  # V6.5.2: -5 paper, -10 real
+                    score -= extreme_penalty
                     decision['reason'].append(f"⚡ Adaptive Regime: {adaptive_regime} → Reduciendo exposición")
                     
                 decision['v52_analysis']['adaptive_regime'] = adaptive_regime
