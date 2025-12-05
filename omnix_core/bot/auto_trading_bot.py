@@ -242,6 +242,24 @@ except ImportError:
     USER_SESSION_MANAGER_AVAILABLE = False
     logger.warning("⚠️ User Session Manager no disponible")
 
+# Import Dynamic Position Manager V6.5.3 PREMIUM - ATR-BASED TP/SL
+try:
+    from omnix_services.trading_service.position_manager import (
+        DynamicPositionManager,
+        ATRCalculator,
+        MarketRegime,
+        PositionLevels
+    )
+    POSITION_MANAGER_AVAILABLE = True
+    logger.info("📊 Dynamic Position Manager V6.5.3 PREMIUM disponible")
+except ImportError:
+    DynamicPositionManager = None
+    ATRCalculator = None
+    MarketRegime = None
+    PositionLevels = None
+    POSITION_MANAGER_AVAILABLE = False
+    logger.warning("⚠️ Dynamic Position Manager no disponible")
+
 
 class AutoTradingBot:
     """
@@ -540,6 +558,29 @@ class AutoTradingBot:
                 logger.info("⚠️ Adaptive Parameter Engine no disponible")
             else:
                 logger.info("⚠️ Adaptive Parameter Engine desactivado (requiere Non-Markovian Kernel + Coherence Engine)")
+        
+        # Dynamic Position Manager V6.5.3 PREMIUM - ATR-BASED TP/SL
+        if POSITION_MANAGER_AVAILABLE:
+            try:
+                self.position_manager = DynamicPositionManager(
+                    trading_service=trading_service,
+                    paper_trading=paper_trading,
+                    non_markovian_kernel=self.non_markovian_kernel,
+                    coherence_engine=self.coherence_engine,
+                    risk_guardian=self.risk_guardian,
+                    caes_engine=get_caes_instance() if CAES_AVAILABLE else None,
+                    redis_cache=None
+                )
+                logger.info("📊 Dynamic Position Manager V6.5.3 PREMIUM ACTIVADO")
+                logger.info("   📈 ATR-based TP/SL dinámico por volatilidad")
+                logger.info("   🎯 Trailing Stop inteligente + Break-even automático")
+                logger.info("   🧠 Integrado con Non-Markovian Kernel + Coherence Engine")
+            except Exception as e:
+                self.position_manager = None
+                logger.warning(f"⚠️ Dynamic Position Manager error: {e}")
+        else:
+            self.position_manager = None
+            logger.info("⚠️ Dynamic Position Manager no disponible - usando TP/SL fijos")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot V6.5.3 ULTRA inicializado - Modo: {mode}")
@@ -996,11 +1037,13 @@ class AutoTradingBot:
     
     def _check_open_positions_tp_sl(self) -> int:
         """
-        V6.5.3 PREMIUM: Gestión automática de posiciones con Take Profit y Stop Loss.
+        V6.5.3 PREMIUM: Gestión automática de posiciones con ATR-based TP/SL dinámico.
         
-        Verifica todas las posiciones abiertas y cierra automáticamente cuando:
-        - El profit % >= take_profit_pct → Cerrar con ganancia
-        - El loss % >= stop_loss_pct → Cerrar con pérdida (protección de capital)
+        Usa el DynamicPositionManager para:
+        - TP/SL dinámico basado en ATR y régimen de mercado
+        - Trailing Stop inteligente que sigue las ganancias
+        - Break-even automático para proteger capital
+        - Validación con Coherence Engine y Risk Guardian
         
         Returns:
             int: Número de posiciones cerradas
@@ -1008,9 +1051,34 @@ class AutoTradingBot:
         if not self.config['paper_mode'] or not self.paper_trading:
             return 0
         
-        positions_closed = 0
         user_id = str(self.config.get('harold_user_id', '7014748854'))
         
+        # V6.5.3 PREMIUM: Usar DynamicPositionManager si está disponible
+        if self.position_manager:
+            try:
+                result = self.position_manager.manage_all_positions(user_id, paper_mode=True)
+                
+                positions_closed = result.get('positions_closed', 0)
+                trailing_updates = result.get('trailing_updates', 0)
+                break_even_activations = result.get('break_even_activations', 0)
+                total_pnl = result.get('total_pnl', 0)
+                
+                if trailing_updates > 0 or break_even_activations > 0:
+                    logger.info(f"📊 Position Manager: {trailing_updates} trailing updates, {break_even_activations} break-even activations")
+                
+                if positions_closed > 0:
+                    self._paper_trade_count += positions_closed
+                    self.state['paper_trade_count'] = self._paper_trade_count
+                    self._load_persistent_state()
+                    logger.info(f"📊 V6.5.3 PREMIUM: {positions_closed} posiciones cerradas, P&L: ${total_pnl:.2f}")
+                
+                return positions_closed
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Position Manager error, usando fallback: {e}")
+        
+        # FALLBACK: Sistema básico si Position Manager no está disponible
+        positions_closed = 0
         tp_pct = self.config.get('take_profit_pct', 0.03)
         sl_pct = self.config.get('stop_loss_pct', 0.02)
         
@@ -1024,29 +1092,20 @@ class AutoTradingBot:
                 symbol = position.get('symbol')
                 entry_price = float(position.get('entry_price', 0))
                 quantity = float(position.get('quantity', 0))
-                trade_id = position.get('id')
                 
                 if not symbol or entry_price <= 0 or quantity <= 0:
                     continue
                 
                 current_price = None
-                retry_count = 0
-                max_retries = 2
-                
-                while current_price is None and retry_count < max_retries:
+                for attempt in range(3):
                     try:
                         current_price = self.trading_service.get_current_price(symbol)
                         if current_price and current_price > 0:
                             break
-                        retry_count += 1
-                        if retry_count < max_retries:
-                            time.sleep(0.5)
-                    except Exception as price_err:
-                        retry_count += 1
-                        logger.debug(f"Retry {retry_count}/{max_retries} getting price for {symbol}: {price_err}")
+                    except Exception:
+                        time.sleep(0.3)
                 
                 if not current_price or current_price <= 0:
-                    logger.debug(f"⚠️ No price available for {symbol}, skipping TP/SL check")
                     continue
                 
                 pnl_pct = (current_price - entry_price) / entry_price
@@ -1056,13 +1115,13 @@ class AutoTradingBot:
                 
                 if pnl_pct >= tp_pct:
                     should_close = True
-                    close_reason = f"✅ TAKE PROFIT alcanzado (+{pnl_pct*100:.2f}% >= +{tp_pct*100:.1f}%)"
+                    close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%)"
                 elif pnl_pct <= -sl_pct:
                     should_close = True
-                    close_reason = f"🛑 STOP LOSS alcanzado ({pnl_pct*100:.2f}% <= -{sl_pct*100:.1f}%)"
+                    close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%)"
                 
                 if should_close:
-                    logger.info(f"📊 V6.5.3 TP/SL: {symbol} @ ${current_price:.2f} | Entry: ${entry_price:.2f} | {close_reason}")
+                    logger.info(f"📊 Fallback TP/SL: {symbol} @ ${current_price:.2f} | {close_reason}")
                     
                     try:
                         result = self.paper_trading._close_position_fifo_v2(
@@ -1074,22 +1133,16 @@ class AutoTradingBot:
                         
                         if result:
                             positions_closed += 1
-                            pnl_usd = result.get('net_pnl_usd', result.get('profit_loss', 0))
-                            logger.info(f"   ✅ Posición cerrada: {symbol} | P&L: ${pnl_usd:.2f}")
-                            
                             self._paper_trade_count += 1
                             self.state['paper_trade_count'] = self._paper_trade_count
-                        else:
-                            logger.warning(f"   ⚠️ Error cerrando posición {symbol}: sin resultado")
                     except Exception as close_err:
-                        logger.warning(f"   ⚠️ Error cerrando posición {symbol}: {close_err}")
+                        logger.warning(f"⚠️ Error cerrando {symbol}: {close_err}")
             
             if positions_closed > 0:
-                logger.info(f"📊 V6.5.3 TP/SL: {positions_closed} posiciones cerradas automáticamente")
                 self._load_persistent_state()
                 
         except Exception as e:
-            logger.error(f"❌ Error en gestión TP/SL: {e}")
+            logger.error(f"❌ Error en gestión TP/SL fallback: {e}")
         
         return positions_closed
     
