@@ -51,6 +51,10 @@ externalPort = 80
 localPort = 9000
 externalPort = 9000
 
+[[ports]]
+localPort = 46475
+externalPort = 3000
+
 [deployment]
 deploymentTarget = "vm"
 run = ["python", "-u", "main.py"]

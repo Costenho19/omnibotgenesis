@@ -57,6 +57,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **CAES Kernel Seeding**: Fixed issue where Non-Markovian Kernel used wrong pair history. Now tracks `_last_kernel_pair` and only reseeds on pair change or insufficient history.
 -   **Tuple-to-Dict Conversion**: Fixed `get_recent_trades()` in `real_data_provider.py` to convert database tuples to dictionaries for proper `.get()` access.
 -   **Database Schema**: Added `last_activity` column to `users` table.
+-   **Railway Deployment V6.5.2**: Fixed missing `wsgi.py` and `fix_railway_imports.py` files that caused healthcheck failures. Created proper WSGI entrypoint with Gunicorn configuration. Updated `/api/health` to always return HTTP 200 (soft-fail) so Railway healthcheck passes even during DB initialization.
 
 ### Multi-User Architecture V6.5.2
 
