@@ -63,11 +63,11 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **DatabaseManager.log_risk_event V6.5.2** (Dec 5, 2025): Added missing `log_risk_event()` delegator method in DatabaseManager that forwards to enterprise_service.log_risk_event(). This fixes the recurring `AttributeError: 'DatabaseManager' object has no attribute 'log_risk_event'` that appeared in every trading cycle.
 -   **Google Gemini SDK Migration V6.5.2** (Dec 5, 2025): Migrated 6 files from deprecated `google-generativeai` to new `google-genai` SDK with dual SDK support. Added `_extract_gemini_text()` helper for robust response parsing across both SDK versions. Files: ai_models.py, conversational_ai_adapter.py, video/analyzer.py, enterprise_bot.py, community_analyzer.py, main.py.
 -   **Websockets Conflict Resolved V6.5.2** (Dec 5, 2025): Removed unused `alpaca-trade-api` dependency from requirements.txt. AlpacaService uses direct REST API calls via `requests` library, not the SDK. Updated websockets to `>=13.0` for full google-genai compatibility.
+-   **VETO Scoring Rebalanced V6.5.2** (Dec 5, 2025): Fixed SELL bias caused by disproportionate VETO penalties. In paper mode, penalties reduced: Black Swan (-30→-15), HMM VOLATILE (-15→-8), Regime Change (-20→-10). Real money mode retains full penalties for maximum protection. Logs now show `[PAPER -X]` or `[REAL -X]` labels for transparency.
 
 ### Known Issues (Under Investigation)
 
 -   **Strategy Signal Availability**: Quantum Momentum and HMM Regime strategies require volume data. When `volumes=None` (common for some API responses), these strategies don't contribute to the Coherence Engine, reducing signal diversity to ~3/10 strategies.
--   **VETO Scoring Asymmetry**: Black Swan (-30), HMM VOLATILE (-15), and Regime Change (-20) VETOs can dominate the scoring when max_score is low due to missing strategy data. This can cause SELL bias when data is sparse.
 
 ### Current Performance (Dec 5, 2025)
 

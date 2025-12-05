@@ -207,7 +207,7 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 4. **Fase D - Mejoras (opcional):**
    - [ ] 3.2 Consumir endpoints huérfanos
-   - [ ] 5.2 Rebalancear VETOs
+   - [x] 5.2 Rebalancear VETOs ✅ (Dec 5, 2025) - Paper mode penalties: Black Swan -30→-15, HMM -15→-8, Regime -20→-10
    - [ ] 6.1 Corregir LSP diagnostics
 
 ---
@@ -219,8 +219,8 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 | A - Críticos | 2 | 2 | 100% |
 | B - Arquitectura | 4 | 0 | 0% |
 | C - Documentación | 4 | 0 | 0% |
-| D - Mejoras | 3 | 0 | 0% |
-| **TOTAL** | **13** | **2** | **15%** |
+| D - Mejoras | 3 | 1 | 33% |
+| **TOTAL** | **13** | **3** | **23%** |
 
 ---
 
@@ -232,4 +232,4 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 ---
 
-*Última actualización: 5 de Diciembre, 2025*
+*Última actualización: 5 de Diciembre, 2025 - VETO Rebalancing completado*
