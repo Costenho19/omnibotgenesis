@@ -1436,7 +1436,7 @@ class DatabaseServiceEnterprise:
             cleanup_config = {
                 'conversations': (30, 'created_at', None),  # FIXED Nov 29: era 'timestamp'
                 'trades': (30, 'timestamp', None),
-                'risk_guardian_events': (30, 'timestamp', None),
+                'risk_guardian_events': (30, 'created_at', None),  # FIXED Dec 5: era 'timestamp'
                 'trade_reasonings': (90, 'created_at', None),  # FIXED: era 'timestamp'
                 'trade_evaluations': (90, 'created_at', None),  # FIXED: era 'timestamp'
                 'balance_history': (90, 'timestamp', None),
@@ -2070,22 +2070,23 @@ class DatabaseServiceEnterprise:
             # ==========================================
             
             # Tabla de eventos del AI Risk Guardian
+            # Note: Uses event_type/severity columns (not risk_type/risk_level)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS risk_guardian_events (
                     id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-                    risk_type VARCHAR(50) NOT NULL,
-                    risk_level VARCHAR(20) NOT NULL,
+                    user_id TEXT,
+                    event_type VARCHAR(50) NOT NULL,
+                    severity VARCHAR(20) NOT NULL,
                     description TEXT NOT NULL,
-                    action_taken TEXT NOT NULL,
+                    action_taken VARCHAR(100) NOT NULL,
                     metadata JSONB,
-                    user_id TEXT
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW()
                 )
             ''')
             
             # Índices para risk_guardian_events
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_timestamp ON risk_guardian_events(timestamp DESC)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_type ON risk_guardian_events(risk_type)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_created ON risk_guardian_events(created_at DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_risk_events_event_type ON risk_guardian_events(event_type)')
             
             # ==========================================
             # RISK MANAGEMENT SYSTEM (RMS) TABLES
