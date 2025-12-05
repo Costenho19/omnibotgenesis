@@ -59,6 +59,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Database Schema**: Added `last_activity` column to `users` table.
 -   **Railway Deployment V6.5.2**: Fixed missing `wsgi.py` and `fix_railway_imports.py` files that caused healthcheck failures. Created proper WSGI entrypoint with Gunicorn configuration. Updated `/api/health` to always return HTTP 200 (soft-fail) so Railway healthcheck passes even during DB initialization.
 -   **Position Check V6.5.2**: Added `has_open_position_for_symbol()` method to PaperTradingManager. Modified `_execute_smart_trade()` to verify position exists before executing SELL - if no open position, converts SELL to HOLD (prevents "No hay posición abierta" errors). This ensures proper BUY→SELL→BUY trading cycle.
+-   **Trade Execution Fix V6.5.2**: Fixed critical issue where trades were being rejected due to cumulative reductions making position size < minimum. Changes: (a) Reduced paper mode penalties from 50% to 25% for Risk Guardian and Coherence Engine; (b) Added size floor that adjusts amounts below minimum UP to minimum before execution; (c) Disabled early rejection in paper mode to allow floor to apply. This ensures 20-50 trades/day target can be achieved.
 
 ### Multi-User Architecture V6.5.2
 

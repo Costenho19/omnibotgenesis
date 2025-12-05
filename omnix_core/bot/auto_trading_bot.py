@@ -1862,7 +1862,8 @@ class AutoTradingBot:
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
             
-            if amount_usd < self.config['min_trade_usd']:
+            # V6.5.2: En paper mode, no rechazar inmediatamente - el floor se aplicará después
+            if not self.config.get('paper_mode', False) and amount_usd < self.config['min_trade_usd']:
                 return {'error': 'Cantidad muy pequeña para tradear'}
             
             # 🛡️ AI RISK GUARDIAN - PRIMERA LÍNEA DE DEFENSA
@@ -1907,13 +1908,13 @@ class AutoTradingBot:
                                 'metadata': risk_event.metadata
                             }
                         else:
-                            # V6.5.2: PAPER MODE - Permitir con reducción 50% para calibración
+                            # V6.5.2: PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
                             logger.warning(f"⚠️ AI RISK GUARDIAN (PAPER MODE): {risk_event.description}")
-                            logger.warning(f"   Permitiendo con reducción 50% para calibración de track record")
-                            amount_usd = amount_usd * 0.50
+                            logger.warning(f"   Permitiendo con reducción 25% para calibración de track record")
+                            amount_usd = amount_usd * 0.75  # V6.5.2: Reducido de 0.50 a 0.75 para permitir más trades
                             analysis['amount_usd'] = amount_usd
                             if 'reason' in analysis:
-                                analysis['reason'].append(f"🛡️ PAPER MODE: Risk Guardian permitió con 50% reducción")
+                                analysis['reason'].append(f"🛡️ PAPER MODE: Risk Guardian permitió con 25% reducción")
                     
                     # Trade permitido - verificar ajuste de tamaño
                     adjusted_size = self.risk_guardian.get_adjusted_position_size(amount_usd)
@@ -2176,13 +2177,13 @@ class AutoTradingBot:
                                 'confidence': analysis['confidence']
                             }
                         else:
-                            # V6.5.2: PAPER MODE - Permitir con reducción 50% para calibración
+                            # V6.5.2: PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
                             logger.warning(f"⚠️ COHERENCE ENGINE (PAPER MODE): {reason}")
-                            logger.warning(f"   Permitiendo con reducción 50% para calibración de track record")
-                            amount_usd = amount_usd * 0.50
+                            logger.warning(f"   Permitiendo con reducción 25% para calibración de track record")
+                            amount_usd = amount_usd * 0.75  # V6.5.2: Reducido de 0.50 a 0.75 para permitir más trades
                             analysis['amount_usd'] = amount_usd
                             if 'reason' in analysis:
-                                analysis['reason'].append(f"⚠️ PAPER MODE: Coherence Engine permitió con 50% reducción")
+                                analysis['reason'].append(f"⚠️ PAPER MODE: Coherence Engine permitió con 25% reducción")
                     else:
                         logger.info(f"✅ Coherence validation: {reason}")
                         # Agregar validación a las razones del análisis
@@ -2216,6 +2217,21 @@ class AutoTradingBot:
                         pos = position_check.get('position', {})
                         logger.info(f"✅ V6.5.2 POSITION CHECK: Posición abierta encontrada")
                         logger.info(f"   📈 {pos.get('side', 'N/A').upper()} {pos.get('quantity', 0):.6f} @ ${pos.get('entry_price', 0):.2f}")
+            
+            # ========== V6.5.2: FLOOR MÍNIMO PARA PAPER MODE ==========
+            # Asegurar que después de todas las reducciones, el tamaño sea >= min_trade_usd
+            # NOTA: Solo aplicar si amount_usd > 0 (no sobrescribir ceros intencionales de Risk Guardian)
+            if self.config['paper_mode'] and action != 'HOLD':
+                min_trade = self.config.get('min_trade_usd', 50.0)
+                if amount_usd > 0 and amount_usd < min_trade:
+                    logger.warning(f"📊 V6.5.2 SIZE FLOOR: ${amount_usd:.2f} < ${min_trade:.2f} mínimo")
+                    logger.info(f"   ↗️ Ajustando al mínimo para permitir ejecución")
+                    amount_usd = min_trade
+                    analysis['amount_usd'] = amount_usd
+                elif amount_usd <= 0:
+                    # Monto es 0 o negativo - esto es intencional (Risk Guardian bloqueó)
+                    logger.warning(f"⚠️ V6.5.2: amount_usd={amount_usd} - Risk Guardian bloqueó intencionalmente")
+                    return {'error': 'Trade bloqueado por Risk Guardian (amount=0)', 'blocked': True}
             
             # Ejecutar según modo
             if self.config['paper_mode']:
