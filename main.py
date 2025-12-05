@@ -52,10 +52,10 @@ import re
 import tempfile
 from datetime import datetime, timedelta
 
-# 🔧 OMNIX V6.0 ULTRA - Configuración Centralizada
+# 🔧 OMNIX V6.5.3 INSTITUTIONAL+ - Configuración Centralizada
 from omnix_config import env_config
 
-# 📊 STOCK TRADING MODULE V6.0 - DUAL MARKET SYSTEM
+# 📊 STOCK TRADING MODULE V6.5.3 - DUAL MARKET SYSTEM
 STOCK_TRADING_ENABLED = env_config.get('STOCK_TRADING_ENABLED', default='true', cast_type=bool)
 # Configurar logging ANTES de cualquier uso
 logging.basicConfig(
@@ -65,8 +65,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("=" * 70)
-logger.info("🔥 OMNIX V6.0.5 - BUILD 2025-11-29T04:30:00Z")
-logger.info("🎯 ENTERPRISE BOT KRAKEN FIX - Validación robusta de API")
+logger.info("🔥 OMNIX V6.5.3 INSTITUTIONAL+ - BUILD 2025-12-05T20:15:00Z")
+logger.info("🎯 PAPER MODE BUY BIAS FIX - Generación de track record")
 logger.info("=" * 70)
 
 # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
@@ -590,7 +590,7 @@ if __name__ == "__main__":
     import sys
     
     logger.info("=" * 80)
-    logger.info("🚀 OMNIX V6.0 ULTRA - INICIANDO SISTEMA PRINCIPAL")
+    logger.info("🚀 OMNIX V6.5.3 INSTITUTIONAL+ - INICIANDO SISTEMA PRINCIPAL")
     logger.info("=" * 80)
     
     # Crear instancias de servicios necesarios
@@ -662,7 +662,7 @@ if __name__ == "__main__":
         
         if success:
             logger.info("=" * 80)
-            logger.info("✅ OMNIX V6.0 ULTRA - BOT TELEGRAM OPERATIVO")
+            logger.info("✅ OMNIX V6.5.3 INSTITUTIONAL+ - BOT TELEGRAM OPERATIVO")
             logger.info("📡 Modo: PAPER TRADING - Capital Virtual: $1,000,000")
             logger.info("🧬 ARES V1 (Swing 55-65%) + V2 (Scalping 60-70%) ACTIVOS")
             if derivatives_manager:
@@ -685,10 +685,10 @@ if __name__ == "__main__":
                 logger.error("🗄️ ❌ DATABASE: No disponible")
             logger.info("🗄️ ═════════════════════════════════════════")
             
-            # V6.5.2: Inicializar UserSessionManager y restaurar sesiones multi-usuario
+            # V6.5.3: Inicializar UserSessionManager y restaurar sesiones multi-usuario
             if db_connected:
                 logger.info("")
-                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE V6.5.2 ═══════════")
+                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE V6.5.3 ═══════════")
                 try:
                     from omnix_core.sessions import initialize_session_manager, get_session_manager
                     from omnix_core.cache import get_redis_cache
@@ -698,7 +698,7 @@ if __name__ == "__main__":
                         redis_cache=redis_cache,
                         database_service=db_manager
                     )
-                    logger.info("🚀 UserSessionManager V6.5.2 inicializado - 100K+ usuarios")
+                    logger.info("🚀 UserSessionManager V6.5.3 inicializado - 100K+ usuarios")
                     
                     if hasattr(telegram_bot, 'auto_trading') and telegram_bot.auto_trading:
                         telegram_bot.auto_trading.redis_cache = redis_cache
@@ -711,7 +711,7 @@ if __name__ == "__main__":
                     else:
                         logger.warning("🔄 ⚠️ auto_trading no disponible en telegram_bot")
                 except Exception as e:
-                    logger.error(f"🔄 ❌ Error en restauración V6.5.2: {e}")
+                    logger.error(f"🔄 ❌ Error en restauración V6.5.3: {e}")
                 logger.info("🔄 ═════════════════════════════════════════════════════")
             
             # Iniciar Dashboard en hilo secundario con monitoreo
