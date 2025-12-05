@@ -4,7 +4,8 @@ Testing del Detector de Intent y Calidad de Respuestas
 """
 
 import sys
-sys.path.insert(0, '/home/runner/workspace')
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omnix_services.ai_service.ai_prompts import PromptsContextManager
 
