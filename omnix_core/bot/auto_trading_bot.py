@@ -1782,8 +1782,8 @@ class AutoTradingBot:
                             logger.warning(f"⚠️ COHERENCE BAJO (PAPER MODE): Score={coherence_report.coherence_score:.1f}% - Permitido con reducción")
                             decision['reason'].append(f"⚠️ PAPER MODE: Coherencia baja permitida")
                             if 'amount_usd' in decision:
-                                decision['amount_usd'] *= 0.60
-                                decision['reason'].append(f"📊 Posición reducida 40% por coherencia baja")
+                                decision['amount_usd'] *= 0.65
+                                decision['reason'].append(f"📊 Posición reducida 35% por coherencia baja")
                     
                     # NIVEL 3: HOLD recomendado - solo vetar si señal no es muy fuerte
                     elif coherence_report.decision_recommendation == 'HOLD':
