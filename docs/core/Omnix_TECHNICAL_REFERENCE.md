@@ -1,9 +1,9 @@
 # OMNIX V6.5.2 INSTITUTIONAL+ - Technical Reference
 
-**Document Version:** 2.4  
+**Document Version:** 2.5  
 **Created:** December 4, 2025  
 **Last Updated:** December 5, 2025  
-**Status:** ✅ COMPLETE (V6.5.2 Trade Execution + Trade History API)
+**Status:** ✅ COMPLETE (V6.5.2 - Line counts verified)
 
 ---
 
@@ -71,7 +71,7 @@ omnix/
 
 | Subpackage | Files | Lines | Primary Purpose | Key Classes |
 |------------|-------|-------|-----------------|-------------|
-| `bot/` | 2 | ~4,100 | Trading automation | `AutoTradingBot`, `PaperTradingManager` | [Updated V6.5.2]
+| `bot/` | 2 | ~4,300 | Trading automation | `AutoTradingBot`, `PaperTradingManager` | [Updated V6.5.2]
 | `strategies/` | 3 | 1,896 | ARES trading protocols | `AresProtocolV1`, `AresProtocolV2`, `NonMarkovianKernel` |
 | `security/` | 2 | 667 | Post-Quantum Cryptography | `PostQuantumSecurity` |
 | `quantum/` | 4 | 6,248 | QRNG, D-Wave, Physics | `QuantumPhysicsValidator` (4,459 lines) |
@@ -79,11 +79,11 @@ omnix/
 | `sessions/` | 1 | 561 | Multi-user sessions | `UserSessionManager`, `UserTradingSession` |
 | `context/` | 1 | 313 | Real data provider | `OMNIXRealContextProvider` |
 | `utils/` | 2 | 360 | Logging, rate limiting | `ColoredFormatter`, `RateLimiter` |
-| Root | 1 | 5,486 | Trading system core | `TradingSystem` |
+| Root | 1 | 5,576 | Trading system core | `TradingSystem` |
 
 ### 3.2 Key Module Details
 
-#### 3.2.1 omnix_core/trading_system.py (5,486 lines)
+#### 3.2.1 omnix_core/trading_system.py (5,576 lines)
 
 **Purpose:** Core trading engine with Kraken integration and advanced modules.
 
@@ -97,7 +97,7 @@ omnix/
 
 ---
 
-#### 3.2.2 omnix_core/bot/auto_trading_bot.py (~3,400 lines) [Updated V6.5.2]
+#### 3.2.2 omnix_core/bot/auto_trading_bot.py (3,660 lines) [Updated V6.5.2]
 
 **Purpose:** 24/7 automated trading bot with 10 institutional strategies.
 
@@ -224,7 +224,7 @@ K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
 | `trading_service/advanced_features.py` | 1,216 | Trading enhancements |
 | `ai_service/video/analyzer.py` | 1,086 | Video learning analysis |
 | `monitoring/analytics_engine.py` | 1,092 | Analytics engine |
-| `trading_service/paper_trading_manager.py` | 961 | Paper trading simulation |
+| `trading_service/paper_trading_manager.py` | 1,023 | Paper trading simulation |
 | `adaptive_engine/adaptive_engine.py` | 936 | Auto-calibration |
 
 ### 4.4 Database Service Architecture
@@ -892,7 +892,7 @@ main.py (755 lines)
 |----------|------|----------|-------|
 | `omnix_core/security/pqc_encryption.py` | Fallback Module | Low | **KEEP** - Simulated PQC for envs without pypqc |
 | `omnix_core/bot/paper_trading.py` | Dual Implementation | Low | **KEEP** - Used by auto_trading_bot.py, 656 lines |
-| `omnix_services/trading_service/paper_trading_manager.py` | Primary Implementation | Low | **KEEP** - Used by enterprise_bot.py, 961 lines |
+| `omnix_services/trading_service/paper_trading_manager.py` | Primary Implementation | Low | **KEEP** - Used by enterprise_bot.py, 1,023 lines |
 
 **Note on Paper Trading Modules:**
 Both paper trading modules are actively used:
@@ -1085,6 +1085,7 @@ grep -r "row\['" omnix_*
 | 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
 | 2.3 | Dec 4, 2025 | Agent | **Section 9.6 Added**: Database Population Analysis - explains why 38/42 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
 | 2.4 | Dec 4, 2025 | Agent | **Section 9 Expanded - Legacy Code Audit**: Deleted 2 empty folders (models/, queue/), removed 162-line duplicate (pqc_security.py), added proper exports to 3 __init__.py files, documented paper trading module architecture |
+| 2.5 | Dec 5, 2025 | Agent | **Line counts verified**: auto_trading_bot.py 3,660, trading_system.py 5,576, paper_trading_manager.py 1,023, core.py 552, system.py 491, snapshots.js 307, tradehistory.js 177. All V6.5.2 fixes confirmed implemented. |
 
 ---
 

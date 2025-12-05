@@ -2,7 +2,7 @@
 
 > **Document:** Official Dashboard Technical Reference  
 > **Location:** `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md`  
-> **Last Updated:** December 2025  
+> **Last Updated:** December 5, 2025  
 > **Status:** Production Ready (Phase 5+ Complete)  
 > **Purpose:** Complete API, security, and architecture reference for institutional investors
 
@@ -35,10 +35,10 @@ omnix_dashboard/
 ├── blueprints/                 # 6 Blueprints, 34 routes total
 │   ├── __init__.py            # Blueprint exports (22 lines)
 │   ├── views.py               # HTML page routes (29 lines, 3 routes)
-│   ├── core.py                # Core APIs (~470 lines, 7 routes) [Updated V6.5.2]
+│   ├── core.py                # Core APIs (552 lines, 7 routes) [Updated V6.5.2]
 │   ├── market.py              # Market data (366 lines, 7 routes)
 │   ├── intelligence.py        # External APIs (298 lines, 6 routes)
-│   ├── system.py              # System status (265 lines, 3 routes)
+│   ├── system.py              # System status (491 lines, 4 routes)
 │   └── snapshots.py           # Audited snapshots (610 lines, 6 routes) [NEW Phase 5]
 ├── utils/                      # Shared utilities (625 lines)
 │   ├── __init__.py            # Utils exports (53 lines)
@@ -60,10 +60,10 @@ omnix_dashboard/
 | Blueprint | File | Lines | Routes | Protected | Purpose |
 |-----------|------|-------|--------|-----------|---------|
 | `views_bp` | views.py | 29 | 3 | 0 | HTML pages (/, /terminal, /classic) |
-| `core_bp` | core.py | ~470 | 7 | 6 | Metrics, trades, trades/history, equity, portfolio, positions, health |
+| `core_bp` | core.py | 552 | 7 | 6 | Metrics, trades, trades/history, equity, portfolio, positions, health |
 | `market_bp` | market.py | 366 | 8 | 0 | Crypto, stocks, OHLC, volume, Fear&Greed, benchmarks (public) |
 | `intelligence_bp` | intelligence.py | 305 | 6 | 5 | Finnhub, Alpha Vantage, intelligence summary, news |
-| `system_bp` | system.py | 435 | 4 | 3 | Signals, system status, adaptive, debug |
+| `system_bp` | system.py | 491 | 4 | 3 | Signals, system status, adaptive, debug |
 | `snapshots_bp` | snapshots.py | 615 | 6 | 6 | Audited snapshots, chain verification, cryptographic audit |
 
 **Security Summary:** 20 protected endpoints / 34 total routes (59% protected)
@@ -106,7 +106,7 @@ omnix_dashboard/static/js/
 │   ├── clock.js               # 79 lines - Real-time clock
 │   ├── common.js              # 145 lines - Shared refresh logic, startAutoRefresh(), refreshWidgets()
 │   └── timezone.js            # 100 lines - Centralized date/time formatting [NEW Phase 5]
-├── components/                # ~1050 lines total
+├── components/                # ~1250 lines total
 │   ├── charts.js              # 234 lines - Plotly.react() delta updates, instance tracking
 │   ├── ticker.js              # 84 lines - Crypto price ticker
 │   ├── signals.js             # 66 lines - Trading signals display
@@ -114,8 +114,8 @@ omnix_dashboard/static/js/
 │   ├── news.js                # 94 lines - News feed
 │   ├── feargreed.js           # 101 lines - Fear & Greed gauge
 │   ├── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
-│   ├── snapshots.js           # 150 lines - Audited snapshots widget [NEW Phase 5]
-│   └── tradehistory.js        # ~130 lines - Trade history with P&L details [NEW V6.5.2]
+│   ├── snapshots.js           # 307 lines - Audited snapshots widget [NEW Phase 5]
+│   └── tradehistory.js        # 177 lines - Trade history with P&L details [NEW V6.5.2]
 └── pages/                     # 394 lines total
     ├── terminal.js            # 101 lines - Terminal page controller
     └── dashboard.js           # 293 lines - Dashboard page controller
