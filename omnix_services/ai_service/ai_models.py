@@ -302,9 +302,10 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                         top_k=40
                     )
                 )
-                if response and response.text:
-                    logger.info(f"✅ Gemini (new SDK) generated {len(response.text)} characters")
-                    return response.text
+                text = self._extract_gemini_text(response, 'new')
+                if text:
+                    logger.info(f"✅ Gemini (new SDK) generated {len(text)} characters")
+                    return text
             elif GEMINI_SDK_VERSION == 'legacy':
                 model = genai.GenerativeModel(
                     "gemini-2.0-flash-exp",
@@ -319,9 +320,10 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                         top_k=40
                     )
                 )
-                if response and response.text:
-                    logger.info(f"✅ Gemini (legacy SDK) generated {len(response.text)} characters")
-                    return response.text
+                text = self._extract_gemini_text(response, 'legacy')
+                if text:
+                    logger.info(f"✅ Gemini (legacy SDK) generated {len(text)} characters")
+                    return text
             
             return None
             
@@ -373,6 +375,24 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
             
         except Exception as e:
             logger.error(f"❌ Anthropic generation error: {e}")
+            return None
+    
+    def _extract_gemini_text(self, response, sdk_version: str) -> Optional[str]:
+        """Extract text from Gemini response - handles both new and legacy SDK formats"""
+        if not response:
+            return None
+        try:
+            if hasattr(response, 'text') and response.text:
+                return response.text
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and candidate.content:
+                    if hasattr(candidate.content, 'parts') and candidate.content.parts:
+                        return candidate.content.parts[0].text
+            logger.warning(f"⚠️ Could not extract text from Gemini response (SDK: {sdk_version})")
+            return None
+        except Exception as e:
+            logger.error(f"❌ Error extracting Gemini text: {e}")
             return None
     
     def health_check(self) -> Dict[str, bool]:

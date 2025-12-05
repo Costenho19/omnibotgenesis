@@ -4809,8 +4809,17 @@ Harold pregunta: {text}"""
                             else:
                                 response = gemini_client.generate_content(gemini_prompt)
                             
-                            if response and response.text:
-                                ai_response = response.text
+                            ai_response = None
+                            if response:
+                                if hasattr(response, 'text') and response.text:
+                                    ai_response = response.text
+                                elif hasattr(response, 'candidates') and response.candidates:
+                                    try:
+                                        ai_response = response.candidates[0].content.parts[0].text
+                                    except (IndexError, AttributeError):
+                                        pass
+                            
+                            if ai_response:
                                 logger.info(f"✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA ({gemini_sdk_version}): {len(ai_response)} caracteres generados")
                                 response_text = ai_response
                             else:

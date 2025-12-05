@@ -207,10 +207,18 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
                     model="gemini-2.0-flash-exp",
                     contents=prompt
                 )
-                return response.text
+                if response:
+                    if hasattr(response, 'text') and response.text:
+                        return response.text
+                    elif hasattr(response, 'candidates') and response.candidates:
+                        try:
+                            return response.candidates[0].content.parts[0].text
+                        except (IndexError, AttributeError):
+                            pass
             elif self.model:
                 response = self.model.generate_content(prompt)
-                return response.text
+                if response and hasattr(response, 'text') and response.text:
+                    return response.text
             
             return None
             
