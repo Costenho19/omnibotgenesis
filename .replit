@@ -63,5 +63,6 @@ expertMode = true
 [userenv.shared]
 PAPER_MODE = "TRUE"
 REDIS_URL = "redis://default:GOZQUHyOucycXwFuMlRXZBWIsblTiXnv@shinkansen.proxy.rlwy.net:32595"
+TRADING_PROFILE = "PAPER_AGGRESSIVE"
 
 [userenv.development]

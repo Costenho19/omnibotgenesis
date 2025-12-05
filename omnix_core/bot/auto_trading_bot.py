@@ -1389,7 +1389,7 @@ class AutoTradingBot:
                     decision['reason'].append(f"⚠️ Monte Carlo: {win_rate:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
             
             # 2. Black Swan (peso: 15 puntos - CRÍTICO)
-            # V6.5.2: Penalizaciones reducidas en paper mode para más trades
+            # V6.5.3: Penalizaciones MUY reducidas en paper mode para generar trades
             is_paper_mode = self.config.get('paper_mode', False)
             if black_swan:
                 max_score += 15
@@ -1397,9 +1397,9 @@ class AutoTradingBot:
                 crash_prob = black_swan.get('crash_probability', 50)
                 
                 if risk_level == 'HIGH' or crash_prob > 30:
-                    veto_penalty = 15 if is_paper_mode else 30  # V6.5.2: -15 paper, -30 real
+                    veto_penalty = 5 if is_paper_mode else 30  # V6.5.3: -5 paper, -30 real
                     score -= veto_penalty
-                    mode_label = "[PAPER -15]" if is_paper_mode else "[REAL -30]"
+                    mode_label = "[PAPER -5]" if is_paper_mode else "[REAL -30]"
                     decision['reason'].append(f"🚨 Black Swan: Riesgo {risk_level} {mode_label}")
                 elif risk_level == 'LOW':
                     score += 15
@@ -1481,19 +1481,19 @@ class AutoTradingBot:
                     else:
                         score -= 3  # Penalización menor si confianza baja
                 elif regime == 'VOLATILE':
-                    # V6.5.2: HMM VETO configurable por perfil + penalizaciones reducidas en paper mode
+                    # V6.5.3: HMM VETO muy reducido en paper mode para generar trades
                     p = self.trading_profile  # Shorthand
                     hmm_veto_enabled = p.hmm_veto_enabled if p else True
                     hmm_veto_threshold = p.hmm_veto_confidence_threshold if p else 0.85
                     
                     if hmm_veto_enabled and regime_confidence > hmm_veto_threshold:
-                        veto_penalty = 8 if is_paper_mode else 15  # V6.5.2: -8 paper, -15 real
+                        veto_penalty = 3 if is_paper_mode else 15  # V6.5.3: -3 paper, -15 real
                         score -= veto_penalty
-                        mode_label = "[PAPER -8]" if is_paper_mode else "[REAL -15]"
+                        mode_label = "[PAPER -3]" if is_paper_mode else "[REAL -15]"
                         decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO {mode_label} (conf > {hmm_veto_threshold:.0%})")
                         decision['v52_analysis']['hmm_volatility_veto'] = True
                     else:
-                        score -= 5
+                        score -= 2 if is_paper_mode else 5  # V6.5.3: -2 paper, -5 real
                         decision['reason'].append(f"⚠️ HMM: {regime} moderado")
                 
                 decision['v52_analysis']['market_regime'] = regime
@@ -1514,16 +1514,16 @@ class AutoTradingBot:
                 hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
                 
                 # Criterio de cambio de régimen crítico
-                # V6.5.2: Penalizaciones reducidas en paper mode para más trades
+                # V6.5.3: Penalizaciones MUY reducidas en paper mode para generar trades
                 if adaptive_regime in ['EXTREME', 'VOLATILE'] and hmm_detected == 'VOLATILE':
-                    veto_penalty = 10 if is_paper_mode else 20  # V6.5.2: -10 paper, -20 real
+                    veto_penalty = 3 if is_paper_mode else 20  # V6.5.3: -3 paper, -20 real
                     score -= veto_penalty
-                    mode_label = "[PAPER -10]" if is_paper_mode else "[REAL -20]"
+                    mode_label = "[PAPER -3]" if is_paper_mode else "[REAL -20]"
                     decision['reason'].append(f"🚨 REGIME CHANGE DETECTED: {adaptive_regime} + HMM {hmm_detected} → VETO {mode_label}")
                     decision['v52_analysis']['regime_change_veto'] = True
                     logger.warning(f"🚨 REGIME CHANGE VETO {mode_label}: Adaptive={adaptive_regime}, HMM={hmm_detected}")
                 elif adaptive_regime == 'EXTREME':
-                    extreme_penalty = 5 if is_paper_mode else 10  # V6.5.2: -5 paper, -10 real
+                    extreme_penalty = 2 if is_paper_mode else 10  # V6.5.3: -2 paper, -10 real
                     score -= extreme_penalty
                     decision['reason'].append(f"⚡ Adaptive Regime: {adaptive_regime} → Reduciendo exposición")
                     
@@ -1660,6 +1660,13 @@ class AutoTradingBot:
             decision['confidence'] = confidence / 100.0
             decision['raw_score'] = score
             decision['max_score'] = max_score
+            
+            # V6.5.3 PAPER MODE BUY BIAS: Cuando score está cerca de 0, preferir BUY para abrir posiciones
+            # Esto permite generar track record en paper trading
+            if is_paper_mode and -5 <= score <= 5:
+                score += 8  # Bias hacia BUY en zona neutral
+                decision['reason'].append(f"📊 V6.5.3: Paper Mode BUY Bias +8 (score neutral)")
+                logger.info(f"📊 V6.5.3 PAPER BUY BIAS: score original ~{score-8:.1f} → ajustado {score:.1f}")
             
             # V6.5.2 PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
