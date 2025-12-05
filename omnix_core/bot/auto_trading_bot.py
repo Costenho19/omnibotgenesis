@@ -3096,17 +3096,54 @@ class AutoTradingBot:
         # TODO: Implementar tracking de ganancias/pérdidas
     
     def _get_stats(self) -> Dict:
-        """Obtener estadísticas del bot"""
+        """Obtener estadísticas del bot - V6.5.3: Lee directamente de la DB para datos precisos"""
         total = self.state['total_trades']
         winning = self.state['winning_trades']
+        losing = self.state['losing_trades']
+        total_pnl = self.state['total_profit_loss']
+        
+        # V6.5.3: Intentar obtener datos actualizados de la DB
+        try:
+            if self.database_service and hasattr(self.database_service, 'execute_query'):
+                result = self.database_service.execute_query('''
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                        COALESCE(SUM(profit_loss), 0) as total_pnl
+                    FROM paper_trading_trades
+                    WHERE status = 'closed'
+                ''')
+                if result and len(result) > 0 and result[0]:
+                    row = result[0]
+                    if row and len(row) >= 4:
+                        db_total = int(row[0] or 0)
+                        db_winning = int(row[1] or 0)
+                        db_losing = int(row[2] or 0)
+                        db_pnl = float(row[3] or 0)
+                        
+                        # Usar datos de DB si son más altos (más precisos)
+                        if db_total >= total:
+                            total = db_total
+                            winning = db_winning
+                            losing = db_losing
+                            total_pnl = db_pnl
+                            # Sincronizar state con DB
+                            self.state['total_trades'] = total
+                            self.state['winning_trades'] = winning
+                            self.state['losing_trades'] = losing
+                            self.state['total_profit_loss'] = total_pnl
+        except Exception as e:
+            logger.debug(f"Error refrescando stats de DB: {e}")
+        
         win_rate = (winning / total * 100) if total > 0 else 0
         
         return {
             'total_trades': total,
             'winning_trades': winning,
-            'losing_trades': self.state['losing_trades'],
+            'losing_trades': losing,
             'win_rate': win_rate,
-            'total_profit_loss': self.state['total_profit_loss'],
+            'total_profit_loss': total_pnl,
             'initial_balance': self.state['initial_balance'],
             'roi': 0.0  # TODO: Calcular ROI real
         }
