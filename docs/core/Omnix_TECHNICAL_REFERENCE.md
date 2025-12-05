@@ -459,9 +459,10 @@ omnix_api/
 
 | Package | Version | Used By | Purpose |
 |---------|---------|---------|---------|
-| `google-generativeai` | 0.8.5 | AI Service | Gemini AI (⚠️ DEPRECATED Aug 2025) |
+| `google-genai` | >=1.0.0 | AI Service | Gemini 2.0 Flash (✅ Migrated Dec 5, 2025) |
+| `google-generativeai` | 0.8.5 | AI Service | Legacy fallback (dual SDK support) |
 | `openai` | 1.101.0 | AI Service, Voice Service | GPT-4o, Whisper |
-| `anthropic` | (missing) | AI Service | Claude (needs to be added) |
+| `anthropic` | 0.75.0 | AI Service | Claude AI (✅ Present in requirements.txt) |
 
 **Voice & Media:**
 
@@ -504,7 +505,7 @@ omnix_api/
 | `requests` | 2.32.5 | External APIs | Sync HTTP client |
 | `aiohttp` | >=3.9.0 | Async services | Async HTTP client |
 | `httpx` | >=0.25.0,<1.0.0 | AI services | Modern HTTP client |
-| `websockets` | 12.0 | Real-time feeds | WebSocket support |
+| `websockets` | >=13.0 | Real-time feeds | WebSocket support (updated for google-genai) |
 
 **Security:**
 
@@ -608,7 +609,7 @@ httpx~=0.27.2
 | `scipy` | 1.12.0 | 1.14.1 | ==1.14.1 | 🟢 LOW |
 | `ccxt` | 4.5.1 | 4.5.24+ | >=4.5.24 | 🟡 MEDIUM |
 | `python-telegram-bot` | 20.7 | 22.5 | ==21.9 | 🟡 MEDIUM |
-| `anthropic` | (missing) | 0.75.0 | ==0.75.0 | 🟡 MEDIUM |
+| `anthropic` | 0.75.0 | 0.75.0 | ==0.75.0 | ✅ CURRENT |
 
 **Packages to Keep Current (Stable):**
 
@@ -627,7 +628,7 @@ httpx~=0.27.2
 | `numpy` | 1.26.4 | 2.2.0 | 🔴 HIGH | ABI breaking changes |
 | `redis` | 5.0.1 | 7.1.0 | 🔴 HIGH | Drops Python 3.9 |
 | `kaleido` | 0.2.1 | 1.2.0 | 🔴 HIGH | Requires external Chrome |
-| `google-generativeai` | 0.8.5 | DEPRECATED | 🔴 HIGH | End of life Aug 2025 |
+| `google-generativeai` | 0.8.5 | MIGRATED | ✅ DONE | Migrated to google-genai Dec 5, 2025 |
 
 #### 8.1.4 Risk Analysis and Compatibility Notes
 
@@ -646,7 +647,7 @@ httpx~=0.27.2
 |---------|-------|
 | `ccxt 4.5.24+` | Active development. Must verify Kraken API compatibility. Added `orjson` optional for performance. |
 | `python-telegram-bot 21.9` | **DO NOT UPGRADE TO v22+** - v22 has breaking changes with modular dependencies. v21.9 is last stable before breaking changes. |
-| `anthropic 0.75.0` | **MISSING FROM requirements.txt** but used in code. Must add for Claude support. |
+| `anthropic 0.75.0` | ✅ Present in requirements.txt (verified Dec 5, 2025) |
 
 **Note on OpenAI:** Current version 1.101.0 is stable and should be kept. Do NOT upgrade to v2.x which has breaking API changes.
 
@@ -693,28 +694,38 @@ httpx~=0.27.2
 
 #### 8.1.5 Deprecation Warnings
 
-**⚠️ CRITICAL: Google Generative AI SDK Deprecation**
+**✅ RESOLVED: Google Generative AI SDK Migration (Dec 5, 2025)**
 
 | Item | Details |
 |------|---------|
-| Package | `google-generativeai` |
-| Deprecation Date | August 31, 2025 |
-| Replacement | `google-genai` (new unified SDK) |
-| Migration Guide | https://ai.google.dev/gemini-api/docs/migrate |
-| Impact | `omnix_services/ai_service/` requires code refactoring |
-| Action | Plan migration in dedicated iteration before Aug 2025 |
+| Package | `google-generativeai` → `google-genai` |
+| Status | ✅ **MIGRATED** |
+| Migration Date | December 5, 2025 |
+| Implementation | Dual SDK support with automatic fallback |
 
-**New SDK Example:**
+**Migration Details:**
+
+| File | Changes |
+|------|---------|
+| `requirements.txt` | Added `google-genai>=1.0.0`, `websockets>=13.0` |
+| `ai_models.py` | Dual import, `GEMINI_SDK_VERSION`, `_extract_gemini_text()` helper |
+| `conversational_ai_adapter.py` | Dual import with fallback |
+| `video/analyzer.py` | `_gemini_sdk` tracking for version detection |
+| `enterprise_bot.py` | `gemini_client` with robust text extraction |
+| `community_analyzer.py` | Supports both new and legacy SDK |
+| `main.py` | Already had dual SDK support |
+
+**Websockets Conflict Resolved:** Removed unused `alpaca-trade-api` (AlpacaService uses REST). Updated websockets to >=13.0 for google-genai compatibility.
+
+**SDK Pattern (Current):**
 ```python
-# OLD (deprecated)
-import google.generativeai as genai
-genai.configure(api_key="...")
-model = genai.GenerativeModel('gemini-2.0-flash')
-
-# NEW (google-genai)
-from google import genai
-client = genai.Client(api_key="...")
-response = client.models.generate_content(model='gemini-2.0-flash', contents='...')
+# Dual SDK support with automatic detection
+try:
+    from google import genai  # New SDK
+    GEMINI_SDK_VERSION = "new"
+except ImportError:
+    import google.generativeai as genai  # Legacy fallback
+    GEMINI_SDK_VERSION = "legacy"
 ```
 
 #### 8.1.6 Security Patches

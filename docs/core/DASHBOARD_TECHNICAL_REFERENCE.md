@@ -688,10 +688,13 @@ URGENCY     │ Security +    │ Frontend      │
 | `/api/intelligence/alpha-vantage/technical/<symbol>` | GET | Alpha Vantage indicators |
 | `/api/intelligence/summary` | GET | Intelligence summary |
 
-### System (1)
+### System & Diagnostics (4)
 | Endpoint | Method | Returns |
 |----------|--------|---------|
 | `/api/system/status` | GET | System status |
+| `/api/system/adaptive` | GET | Adaptive Engine telemetry |
+| `/api/db-diagnostics` | GET | Database pool diagnostics |
+| `/api/benchmarks` | GET | BTC/SPY benchmark data for equity chart overlay |
 
 ---
 
