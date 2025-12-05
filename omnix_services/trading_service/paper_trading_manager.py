@@ -959,3 +959,65 @@ class PaperTradingManager:
         except Exception as e:
             logger.error(f"Error obteniendo posiciones abiertas: {e}")
             return []
+    
+    def has_open_position_for_symbol(self, user_id: str, symbol: str) -> Dict:
+        """
+        V6.5.2: Verificar si existe posición abierta para un símbolo específico
+        
+        Args:
+            user_id: ID del usuario
+            symbol: Par de trading (ej: BTC/USD, ETH/USD)
+        
+        Returns:
+            Dict con:
+              - has_position: bool
+              - position: dict con detalles si existe
+              - side: 'buy' o None
+              - quantity: cantidad abierta
+        """
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                logger.warning("has_open_position_for_symbol: Database service no disponible")
+                return {'has_position': False, 'position': None, 'side': None, 'quantity': 0}
+            
+            result = self.database_service.execute_query(
+                """
+                SELECT id, side, quantity, entry_price, opened_at
+                FROM paper_trading_trades
+                WHERE user_id = %s::TEXT 
+                  AND symbol = %s 
+                  AND status = 'open' 
+                  AND closed_at IS NULL
+                ORDER BY opened_at DESC
+                LIMIT 1
+                """,
+                (user_id, symbol)
+            )
+            
+            if not result or len(result) == 0:
+                return {'has_position': False, 'position': None, 'side': None, 'quantity': 0}
+            
+            row = result[0]
+            trade_id, side, quantity, entry_price, opened_at = row
+            
+            position = {
+                'trade_id': str(trade_id),
+                'symbol': symbol,
+                'side': side,
+                'quantity': float(quantity) if quantity else 0,
+                'entry_price': float(entry_price) if entry_price else 0,
+                'opened_at': opened_at.isoformat() if opened_at else None
+            }
+            
+            logger.info(f"📊 has_open_position_for_symbol: {symbol} -> {side} qty={quantity}")
+            
+            return {
+                'has_position': True,
+                'position': position,
+                'side': side,
+                'quantity': float(quantity) if quantity else 0
+            }
+            
+        except Exception as e:
+            logger.error(f"Error verificando posición para {symbol}: {e}")
+            return {'has_position': False, 'position': None, 'side': None, 'quantity': 0}
