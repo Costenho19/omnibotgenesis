@@ -1389,14 +1389,18 @@ class AutoTradingBot:
                     decision['reason'].append(f"⚠️ Monte Carlo: {win_rate:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
             
             # 2. Black Swan (peso: 15 puntos - CRÍTICO)
+            # V6.5.2: Penalizaciones reducidas en paper mode para más trades
+            is_paper_mode = self.config.get('paper_mode', False)
             if black_swan:
                 max_score += 15
                 risk_level = black_swan.get('risk_level', 'MEDIUM')
                 crash_prob = black_swan.get('crash_probability', 50)
                 
                 if risk_level == 'HIGH' or crash_prob > 30:
-                    score -= 30  # VETO - Muy importante
-                    decision['reason'].append(f"🚨 Black Swan: Riesgo {risk_level}")
+                    veto_penalty = 15 if is_paper_mode else 30  # V6.5.2: -15 paper, -30 real
+                    score -= veto_penalty
+                    mode_label = "[PAPER -15]" if is_paper_mode else "[REAL -30]"
+                    decision['reason'].append(f"🚨 Black Swan: Riesgo {risk_level} {mode_label}")
                 elif risk_level == 'LOW':
                     score += 15
                     decision['reason'].append(f"✅ Black Swan: Riesgo BAJO")
