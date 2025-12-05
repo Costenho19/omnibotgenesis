@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5 - Price Ticker Component
+ * OMNIX Dashboard V6.5.3 - Price Ticker Component
  */
 
 const OmnixTicker = (function() {

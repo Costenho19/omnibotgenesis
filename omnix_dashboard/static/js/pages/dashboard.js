@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.2 - Dashboard Page Controller
+ * OMNIX Dashboard V6.5.3 - Dashboard Page Controller
  * With independent error handling per widget
  */
 
@@ -277,7 +277,7 @@ const DashboardApp = (function() {
 
         OmnixCommon.startAutoRefresh(refreshAllData, 10000);
 
-        console.log('OMNIX Dashboard V6.5.2 INSTITUTIONAL+ | Performance Dashboard Active');
+        console.log('OMNIX Dashboard V6.5.3 INSTITUTIONAL+ | Performance Dashboard Active');
     }
 
     function destroy() {

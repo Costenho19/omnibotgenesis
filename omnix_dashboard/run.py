@@ -17,7 +17,7 @@ from omnix_dashboard.utils.database import get_database_url, init_database
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    logger.info(f"OMNIX Dashboard V6.5 INSTITUTIONAL+ starting on port {port}")
+    logger.info(f"OMNIX Dashboard V6.5.3 INSTITUTIONAL+ starting on port {port}")
     
     database_url = get_database_url()
     if database_url:

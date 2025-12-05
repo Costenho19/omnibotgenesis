@@ -1,5 +1,5 @@
 """
-🚀 OMNIX V6.5.2 INSTITUTIONAL+ - USER SESSION MANAGER
+🚀 OMNIX V6.5.3 INSTITUTIONAL+ - USER SESSION MANAGER
 Sistema de sesiones multi-usuario escalable para 100,000+ usuarios simultáneos
 
 ARQUITECTURA:
@@ -149,7 +149,7 @@ class UserSessionManager:
         self.database_service = database_service
         self._local_sessions: Dict[str, UserTradingSession] = {}
         
-        logger.info("🚀 UserSessionManager V6.5.2 INICIALIZADO")
+        logger.info("🚀 UserSessionManager V6.5.3 INICIALIZADO")
         logger.info("   📊 Capacidad: 100,000+ usuarios simultáneos")
         logger.info("   💾 Backend: Redis (estado) + PostgreSQL (persistencia)")
     
@@ -445,7 +445,7 @@ class UserSessionManager:
         Returns:
             Dict con estadísticas de restauración
         """
-        logger.info("🔄 ═══════════ RESTAURACIÓN MULTI-USUARIO V6.5.2 ═══════════")
+        logger.info("🔄 ═══════════ RESTAURACIÓN MULTI-USUARIO V6.5.3 ═══════════")
         
         active_users = self.get_active_sessions()
         

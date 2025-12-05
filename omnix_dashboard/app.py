@@ -1,5 +1,5 @@
 """
-OMNIX Performance Dashboard V6.5 INSTITUTIONAL+
+OMNIX Performance Dashboard V6.5.3 INSTITUTIONAL+
 Professional Institutional-Grade Trading & Portfolio Analytics
 Premium 2025 Design with Portfolio Management - REAL DATA
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     from .utils.database import get_database_url, init_database, DB_AVAILABLE, DB_ERROR_MESSAGE
     
     port = int(os.environ.get('PORT', 5000))
-    logger.info(f"OMNIX Dashboard V6.5 INSTITUTIONAL+ starting on port {port}")
+    logger.info(f"OMNIX Dashboard V6.5.3 INSTITUTIONAL+ starting on port {port}")
     
     database_url = get_database_url()
     if database_url:

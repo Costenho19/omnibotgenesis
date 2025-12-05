@@ -23,7 +23,7 @@ system_bp = Blueprint('system', __name__)
 @system_bp.route('/api/signals/active')
 @require_api_key
 def api_active_signals():
-    """API endpoint for active trading signals - V6.5 connected to real DB"""
+    """API endpoint for active trading signals - V6.5.3 connected to real DB"""
     signals = []
     
     with get_db_connection() as conn:
@@ -128,7 +128,7 @@ def api_active_signals():
 
 @system_bp.route('/api/system/status')
 def api_system_status():
-    """API endpoint for OMNIX system status - V6.5 connected to real DB"""
+    """API endpoint for OMNIX system status - V6.5.3 connected to real DB"""
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
     trades = get_paper_trades(1)
@@ -209,7 +209,7 @@ def api_system_status():
     status = {
         'bot_active': bot_active,
         'trading_enabled': trading_enabled,
-        'version': 'V6.5 INSTITUTIONAL+',
+        'version': 'V6.5.3 INSTITUTIONAL+',
         'uptime': '24/7 Railway',
         'last_activity': datetime.now().isoformat(),
         'database_connected': DB_AVAILABLE,
@@ -273,7 +273,7 @@ def api_system_status():
 @system_bp.route('/api/system/adaptive')
 @require_api_key
 def api_system_adaptive():
-    """API endpoint for Adaptive Parameter Engine V6.5 ULTRA telemetry"""
+    """API endpoint for Adaptive Parameter Engine V6.5.3 ULTRA telemetry"""
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
     current_regime = 'TRENDING'
@@ -351,7 +351,7 @@ def api_system_adaptive():
         }
     
     adaptive_data = {
-        'version': 'V6.5 ULTRA',
+        'version': 'V6.5.3 ULTRA',
         'status': 'ACTIVE',
         'regime': {
             'current': current_regime,

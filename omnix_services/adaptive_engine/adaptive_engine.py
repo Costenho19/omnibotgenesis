@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-OMNIX V6.5 ULTRA - ADAPTIVE PARAMETER ENGINE
+OMNIX V6.5.3 ULTRA - ADAPTIVE PARAMETER ENGINE
 Motor de Auto-Calibración Inteligente para Estrategias ARES
 
 Este módulo implementa un sistema de calibración dinámica que:
@@ -770,7 +770,7 @@ class AdaptiveParameterEngine:
         self._initialized = True
         
         logger.info("=" * 60)
-        logger.info("🎯 ADAPTIVE PARAMETER ENGINE V6.5 INITIALIZED")
+        logger.info("🎯 ADAPTIVE PARAMETER ENGINE V6.5.3 INITIALIZED")
         logger.info("=" * 60)
         logger.info(f"   📊 Smoothing Factor: {smoothing_factor}")
         logger.info(f"   ⏱️ Cooldown: {cooldown_minutes} minutes")

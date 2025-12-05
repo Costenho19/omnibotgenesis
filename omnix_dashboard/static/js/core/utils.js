@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5 - Utility Functions
+ * OMNIX Dashboard V6.5.3 - Utility Functions
  */
 
 const OmnixUtils = (function() {

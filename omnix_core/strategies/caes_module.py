@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 🎯 CAES - CONFIDENCE-ADAPTIVE ENTRY SYSTEM
-OMNIX V6.5.2 INSTITUTIONAL+ - Sistema de Entrada Adaptativa por Confianza
+OMNIX V6.5.3 INSTITUTIONAL+ - Sistema de Entrada Adaptativa por Confianza
 
 Este módulo implementa un sistema de ajuste dinámico de agresividad de trading
 basado en la confianza del Non-Markovian Kernel y el sub-régimen de mercado detectado.
@@ -27,7 +27,7 @@ FÓRMULA PRINCIPAL:
     - 95% conf → 2.8x tamaño (máximo 3x por límites de riesgo)
 
 Harold Nunes - Diciembre 2025
-OMNIX V6.5.2 INSTITUTIONAL+ - Fuera de Serie
+OMNIX V6.5.3 INSTITUTIONAL+ - Fuera de Serie
 """
 
 import logging

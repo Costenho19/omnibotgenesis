@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.2 - Common Functions
+ * OMNIX Dashboard V6.5.3 - Common Functions
  * Shared refresh logic with independent error handling
  */
 

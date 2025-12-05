@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5 - Volume Bars Component
+ * OMNIX Dashboard V6.5.3 - Volume Bars Component
  */
 
 const OmnixVolume = (function() {

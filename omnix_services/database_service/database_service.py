@@ -2419,7 +2419,7 @@ class DatabaseServiceEnterprise:
             logger.info("✅ Video Transcript Cache Table creada")
             
             # ========================================
-            # ADAPTIVE PARAMETER ENGINE V6.5 TABLES
+            # ADAPTIVE PARAMETER ENGINE V6.5.3 TABLES
             # Tablas para auto-calibración dinámica de estrategias ARES
             # ========================================
             

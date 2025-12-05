@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.2 - Trading Profiles System
+OMNIX V6.5.3 - Trading Profiles System
 =======================================
 
 Sistema de perfiles de trading que permite cambiar fácilmente entre 

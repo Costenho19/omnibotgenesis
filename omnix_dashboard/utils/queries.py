@@ -89,7 +89,7 @@ def get_paper_trades(days=30, return_dict=False):
 
 
 def get_balance_history(days=30):
-    """Fetch REAL balance history from database - V6.5 corrected columns"""
+    """Fetch REAL balance history from database - V6.5.3 corrected columns"""
     with get_db_connection() as conn:
         if not conn:
             return []

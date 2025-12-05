@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5 - Real-time Clock
+ * OMNIX Dashboard V6.5.3 - Real-time Clock
  */
 
 const OmnixClock = (function() {

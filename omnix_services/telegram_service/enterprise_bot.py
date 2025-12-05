@@ -4705,7 +4705,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as pub_error:
                                 logger.error(f"❌ Kraken PUBLIC falló: {type(pub_error).__name__}: {pub_error}")
                         
-                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad - V6.5.2 SDK Migration
+                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad - V6.5.3 SDK Migration
                         gemini_key = os.environ.get('GEMINI_API_KEY')
                         gemini_client = None
                         gemini_sdk_version = None

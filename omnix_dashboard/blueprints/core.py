@@ -216,7 +216,7 @@ def api_trades_history():
                     'warning': None if is_statistically_significant else f'Sample size ({total_trades}) is below minimum ({min_trades_for_significance}) for statistical significance. Metrics may vary significantly as more trades are executed.'
                 },
                 'source': 'PostgreSQL (Railway)',
-                'version': 'V6.5.2 INSTITUTIONAL+',
+                'version': 'V6.5.3 INSTITUTIONAL+',
                 'timestamp': datetime.now().isoformat()
             })
             
@@ -270,7 +270,7 @@ def api_equity_curve():
 @core_bp.route('/api/portfolio')
 @require_api_key
 def api_portfolio():
-    """API endpoint for portfolio status - V6.5 connected to real DB"""
+    """API endpoint for portfolio status - V6.5.3 connected to real DB"""
     with get_db_connection() as conn:
         if not conn:
             return jsonify({
@@ -412,7 +412,7 @@ def fetch_coingecko_prices():
 @core_bp.route('/api/positions')
 @require_api_key
 def api_positions():
-    """API endpoint for open positions - V6.5 with real Kraken prices + CoinGecko fallback"""
+    """API endpoint for open positions - V6.5.3 with real Kraken prices + CoinGecko fallback"""
     with get_db_connection() as conn:
         if not conn:
             return jsonify({
@@ -524,7 +524,7 @@ def api_positions():
 
 @core_bp.route('/api/health')
 def api_health():
-    """Health check endpoint - V6.5 with pool stats for Railway healthcheck"""
+    """Health check endpoint - V6.5.3 with pool stats for Railway healthcheck"""
     from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE, DB_POOL
     
     if DB_POOL is None:
@@ -539,7 +539,7 @@ def api_health():
     
     return jsonify({
         'status': 'healthy' if is_healthy else 'degraded',
-        'version': 'V6.5.2 INSTITUTIONAL+',
+        'version': 'V6.5.3 INSTITUTIONAL+',
         'db_connected': DB_AVAILABLE,
         'db_error': DB_ERROR_MESSAGE if not DB_AVAILABLE else None,
         'pool': pool_stats,

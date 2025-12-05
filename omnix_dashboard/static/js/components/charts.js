@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.2 - Chart Components
+ * OMNIX Dashboard V6.5.3 - Chart Components
  * Plotly chart wrappers with delta updates
  */
 

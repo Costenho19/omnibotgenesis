@@ -1,5 +1,5 @@
 """
-OMNIX Exchange Flow Analyzer V6.5
+OMNIX Exchange Flow Analyzer V6.5.3
 ==================================
 
 Análisis de flujos de fondos hacia/desde exchanges.
@@ -97,7 +97,7 @@ class ExchangeFlowAnalyzer:
     
     def __init__(self):
         self.flow_history: Dict[str, FlowHistory] = {}
-        logger.info("📊 ExchangeFlowAnalyzer V6.5 initialized")
+        logger.info("📊 ExchangeFlowAnalyzer V6.5.3 initialized")
     
     def _get_threshold(self, symbol: str) -> float:
         """Obtiene umbral de flujo significativo"""
