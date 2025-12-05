@@ -386,6 +386,11 @@ class AutoTradingBot:
         # V6.4: Cargar estado persistente de la DB
         self._load_persistent_state()
         
+        # V6.5.3: Track Record Accelerator - Contador de trades para bias boost primeros 50
+        self._paper_trade_count = self.state.get('paper_trade_count', 0)
+        if self._paper_trade_count > 0:
+            logger.info(f"📊 V6.5.3 Accelerator: {self._paper_trade_count} trades previos (boost activo hasta 50)")
+        
         # Inicializar balance en Prometheus
         if METRICS_ENGINE_AVAILABLE and metrics:
             mode = 'paper' if self.config['paper_mode'] else 'real'
@@ -1062,6 +1067,12 @@ class AutoTradingBot:
                         logger.info(f"✅ TRADE EJECUTADO: {trade_type} {trade_amount} {self.config['trading_pair']} @ ${trade_price:.2f}")
                         logger.info(f"   📝 Detalles: {result}")
                         self._update_stats(result)
+                        
+                        if self.config['paper_mode'] and trade_type in ['BUY', 'SELL']:
+                            self._paper_trade_count += 1
+                            self.state['paper_trade_count'] = self._paper_trade_count
+                            accel_status = "ACTIVO" if self._paper_trade_count < 50 else "COMPLETADO"
+                            logger.info(f"📊 V6.5.3 Accelerator: Trade #{self._paper_trade_count}/50 - {accel_status}")
                     else:
                         error = result.get('error', 'Unknown error')
                         logger.warning(f"⚠️ Trade no ejecutado: {error}")
@@ -1407,18 +1418,32 @@ class AutoTradingBot:
                     score += 15
                     decision['reason'].append(f"✅ Black Swan: Riesgo BAJO")
             
-            # 3. Sentiment (peso: 10 puntos)
+            # 3. Sentiment + V6.5.3 FEAR & GREED CONTRARIAN STRATEGY
+            # "Be fearful when others are greedy, be greedy when others are fearful" - Warren Buffett
+            # Aplica en ambos modos: agresivo en paper, conservador en real
             if sentiment:
                 max_score += 10
                 sent_score = sentiment.get('overall_score', 50)
+                fear_greed = sentiment.get('fear_greed_index', sent_score)
+                
                 if sent_score > 70:
                     score += 10
                     decision['reason'].append(f"✅ Sentiment: {sent_score:.0f}/100 STRONG")
                 elif sent_score > 55:
                     score += 5
                 elif sent_score < 30:
-                    score -= 10
-                    decision['reason'].append(f"⚠️ Sentiment: {sent_score:.0f}/100 WEAK")
+                    contrarian_boost = 8 if is_paper_mode else 4
+                    score += contrarian_boost
+                    mode_label = "PAPER" if is_paper_mode else "REAL"
+                    decision['reason'].append(f"🎯 V6.5.3: Fear Contrarian +{contrarian_boost} [{mode_label}] (miedo = oportunidad)")
+                    logger.info(f"🎯 V6.5.3 FEAR CONTRARIAN [{mode_label}]: Sentiment {sent_score:.0f}/100 → BUY boost +{contrarian_boost}")
+                
+                if fear_greed < 25:
+                    extreme_fear_boost = 6 if is_paper_mode else 3
+                    score += extreme_fear_boost
+                    mode_label = "PAPER" if is_paper_mode else "REAL"
+                    decision['reason'].append(f"😱 V6.5.3: Extreme Fear +{extreme_fear_boost} [{mode_label}] (F&G: {fear_greed})")
+                    logger.info(f"😱 V6.5.3 EXTREME FEAR [{mode_label}]: F&G={fear_greed} → +{extreme_fear_boost}")
             
             # ========== ESTRATEGIAS V5.2 QUANTUM (peso 60%) ==========
             
@@ -1663,12 +1688,55 @@ class AutoTradingBot:
             decision['raw_score'] = score
             decision['max_score'] = max_score
             
-            # V6.5.3 PAPER MODE BUY BIAS: Cuando score está cerca de 0, preferir BUY para abrir posiciones
-            # Esto permite generar track record en paper trading
-            if is_paper_mode and -5 <= score <= 5:
-                score += 8  # Bias hacia BUY en zona neutral
-                decision['reason'].append(f"📊 V6.5.3: Paper Mode BUY Bias +8 (score neutral)")
-                logger.info(f"📊 V6.5.3 PAPER BUY BIAS: score original ~{score-8:.1f} → ajustado {score:.1f}")
+            # ========== V6.5.3 PAPER MODE BUY BIAS SYSTEM ==========
+            # Sistema escalonado premium para maximizar generación de track record
+            # Objetivo: 20-50 trades/día con win rate > 55%
+            #
+            # ZONAS DE BIAS:
+            # 1. FLOOR ZONE (-25 a -15): Rescate mínimo +18 → genera BUY moderado
+            # 2. RECOVERY ZONE (-15 a -5): Recuperación +15 → impulsa hacia BUY
+            # 3. NEUTRAL ZONE (-5 a +5): Bias estándar +12 → abre posiciones
+            # 4. MOMENTUM ZONE (+5 a +15): Boost adicional +8 → fortalece señal
+            # 5. STRONG ZONE (>+15): Sin bias (ya es señal fuerte natural)
+            
+            original_score = score
+            paper_bias_applied = 0
+            paper_bias_zone = None
+            
+            if is_paper_mode:
+                trade_count = getattr(self, '_paper_trade_count', 0)
+                accelerator_multiplier = 1.3 if trade_count < 50 else 1.0
+                
+                if -25 <= score < -15:
+                    paper_bias_applied = int(18 * accelerator_multiplier)
+                    paper_bias_zone = "FLOOR_RESCUE"
+                    decision['reason'].append(f"🚀 V6.5.3: Floor Rescue Bias +{paper_bias_applied}")
+                elif -15 <= score < -5:
+                    paper_bias_applied = int(15 * accelerator_multiplier)
+                    paper_bias_zone = "RECOVERY"
+                    decision['reason'].append(f"📈 V6.5.3: Recovery Bias +{paper_bias_applied}")
+                elif -5 <= score <= 5:
+                    paper_bias_applied = int(12 * accelerator_multiplier)
+                    paper_bias_zone = "NEUTRAL"
+                    decision['reason'].append(f"📊 V6.5.3: Neutral Bias +{paper_bias_applied}")
+                elif 5 < score <= 15:
+                    paper_bias_applied = int(8 * accelerator_multiplier)
+                    paper_bias_zone = "MOMENTUM"
+                    decision['reason'].append(f"💪 V6.5.3: Momentum Boost +{paper_bias_applied}")
+                
+                if paper_bias_applied > 0:
+                    score += paper_bias_applied
+                    accel_label = " [ACCELERATOR]" if accelerator_multiplier > 1.0 else ""
+                    logger.info(f"🎯 V6.5.3 PAPER BUY BIAS [{paper_bias_zone}]{accel_label}: {original_score:.1f} → {score:.1f} (+{paper_bias_applied})")
+                    
+                    decision['paper_bias'] = {
+                        'zone': paper_bias_zone,
+                        'original_score': original_score,
+                        'bias_applied': paper_bias_applied,
+                        'final_score': score,
+                        'accelerator': accelerator_multiplier > 1.0,
+                        'trade_count': trade_count
+                    }
             
             # V6.5.3 PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
