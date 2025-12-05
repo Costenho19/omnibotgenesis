@@ -1171,11 +1171,12 @@ class AutoTradingBot:
                     )
             
             # 6. HMM Regime Detection - Detectar régimen de mercado
+            # V6.5.2 FIX: Solo requiere prices, volumes es opcional
             hmm_regime = None
             if self.config['use_v52_strategies'] and self.advanced_features:
-                if hasattr(self.advanced_features, 'hmm_regime') and prices and volumes:
+                if hasattr(self.advanced_features, 'hmm_regime') and prices:
                     hmm_regime = self.advanced_features.hmm_regime.detect_regime(
-                        prices=prices[-50:],  # Últimas 50 velas
+                        prices=prices[-50:],
                         volumes=volumes[-50:] if volumes else None
                     )
             
@@ -1188,14 +1189,21 @@ class AutoTradingBot:
                     )
             
             # 8. Quantum Momentum - Estrategia propietaria 6 componentes
+            # V6.5.2 FIX: Usar analyze() con OHLC completo, volumes sintéticos si no disponible
             quantum = None
             if self.config['use_v52_strategies'] and self.advanced_features:
-                if hasattr(self.advanced_features, 'quantum_momentum') and prices and volumes:
-                    quantum = self.advanced_features.quantum_momentum.generate_signal(
-                        prices=prices[-200:],  # Necesita más historia
-                        volumes=volumes[-200:] if volumes else None,
-                        current_price=current_price
-                    )
+                if hasattr(self.advanced_features, 'quantum_momentum') and prices:
+                    try:
+                        ohlc_data = self._get_ohlc_history(pair, days=200)
+                        if ohlc_data and len(ohlc_data.get('closes', [])) >= 60:
+                            quantum = self.advanced_features.quantum_momentum.analyze(
+                                prices=ohlc_data['closes'],
+                                highs=ohlc_data['highs'],
+                                lows=ohlc_data['lows'],
+                                volumes=ohlc_data['volumes']
+                            )
+                    except Exception as e:
+                        logger.debug(f"Quantum Momentum analysis skipped: {e}")
             
             # 9. ADAPTIVE WEIGHTS - Calcular pesos dinámicos ω(t) basados en Hurst y α
             adaptive_weights = None
@@ -2623,11 +2631,121 @@ class AutoTradingBot:
             if hasattr(self.trading_service, 'get_ohlc'):
                 ohlc = self.trading_service.get_ohlc(pair, interval=1440)
                 if ohlc and len(ohlc) > 0:
-                    # OHLC format: [time, open, high, low, close, vwap, volume, count]
                     return [float(candle[6]) for candle in ohlc[-days:]]
             return None
         except:
             return None
+    
+    def _get_ohlc_history(self, pair: str, days: int = 100) -> Optional[Dict[str, List[float]]]:
+        """
+        V6.5.2 FIX: Obtener histórico OHLC completo para estrategias que requieren highs/lows
+        
+        Garantías:
+        - Todas las listas tienen la misma longitud
+        - Volumes nunca es None (usa sintéticos si faltan)
+        - Logging cuando hay problemas
+        
+        Returns:
+            Dict con keys: 'opens', 'highs', 'lows', 'closes', 'volumes'
+            O None si no hay datos suficientes
+        """
+        try:
+            if not hasattr(self.trading_service, 'get_ohlc'):
+                logger.debug(f"Trading service does not have get_ohlc method for {pair}")
+                return None
+            
+            ohlc = self.trading_service.get_ohlc(pair, interval=1440)
+            if not ohlc or len(ohlc) == 0:
+                logger.debug(f"No OHLC data returned for {pair}")
+                return None
+            
+            data = ohlc[-days:]
+            data_len = len(data)
+            
+            opens = []
+            highs = []
+            lows = []
+            closes = []
+            volumes = []
+            
+            for c in data:
+                try:
+                    opens.append(float(c[1]) if c[1] else 0.0)
+                    highs.append(float(c[2]) if c[2] else 0.0)
+                    lows.append(float(c[3]) if c[3] else 0.0)
+                    closes.append(float(c[4]) if c[4] else 0.0)
+                    vol = float(c[6]) if len(c) > 6 and c[6] else 0.0
+                    volumes.append(vol)
+                except (IndexError, TypeError, ValueError):
+                    opens.append(0.0)
+                    highs.append(0.0)
+                    lows.append(0.0)
+                    closes.append(0.0)
+                    volumes.append(0.0)
+            
+            has_valid_volumes = any(v > 0 for v in volumes)
+            if not has_valid_volumes:
+                volumes = self._generate_synthetic_volumes(closes, target_length=data_len)
+                logger.debug(f"📊 Using synthetic volumes for {pair} ({data_len} candles)")
+            
+            if not all(len(arr) == data_len for arr in [opens, highs, lows, closes, volumes]):
+                logger.warning(f"⚠️ OHLC array length mismatch for {pair}, padding to {data_len}")
+                opens = (opens + [0.0] * data_len)[:data_len]
+                highs = (highs + [0.0] * data_len)[:data_len]
+                lows = (lows + [0.0] * data_len)[:data_len]
+                closes = (closes + [0.0] * data_len)[:data_len]
+                volumes = (volumes + [1000.0] * data_len)[:data_len]
+            
+            return {
+                'opens': opens,
+                'highs': highs,
+                'lows': lows,
+                'closes': closes,
+                'volumes': volumes
+            }
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error getting OHLC history for {pair}: {e}")
+            return None
+    
+    def _generate_synthetic_volumes(self, prices: List[float], target_length: int = None) -> List[float]:
+        """
+        V6.5.2 FIX: Generar volúmenes sintéticos basados en price changes
+        cuando Kraken no proporciona datos de volumen
+        
+        Estrategia: volatilidad relativa * base volume
+        Garantiza: Longitud exacta igual a prices (o target_length si se especifica)
+        
+        Args:
+            prices: Lista de precios close
+            target_length: Longitud deseada del output (default: len(prices))
+        """
+        if not prices:
+            return []
+        
+        length = target_length if target_length else len(prices)
+        base_volume = 1000.0
+        
+        if len(prices) < 2:
+            return [base_volume] * length
+        
+        volumes = []
+        for i in range(len(prices)):
+            if i == 0:
+                volumes.append(base_volume)
+            else:
+                prev_price = prices[i-1]
+                if prev_price and prev_price != 0:
+                    price_change = abs(prices[i] - prev_price) / prev_price
+                    vol_factor = 1.0 + min(price_change * 10, 5.0)
+                else:
+                    vol_factor = 1.0
+                volumes.append(base_volume * vol_factor)
+        
+        while len(volumes) < length:
+            volumes.append(base_volume)
+        
+        return volumes[:length]
     
     def _apply_adaptive_parameters(self, strategy_name: str, profile) -> None:
         """
