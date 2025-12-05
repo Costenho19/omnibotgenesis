@@ -226,3 +226,33 @@ class DatabaseManager:
                 logger.warning(f"⚠️ Error marcando evaluación {evaluation_id}: {e}")
                 return False
         return False
+    
+    def log_risk_event(self, risk_type: str, risk_level: str, description: str,
+                       action_taken: str, metadata: dict = None, user_id: int = None) -> bool:
+        """
+        Registrar evento del AI Risk Guardian
+        FIXED Dec 5, 2025: Método faltante que causaba error en cada ciclo de trading
+        
+        Error original: 'DatabaseManager' object has no attribute 'log_risk_event'
+        
+        Args:
+            risk_type: Tipo de riesgo (e.g., 'EXCESSIVE_TRADE_SIZE', 'DRAWDOWN_WARNING')
+            risk_level: Nivel de riesgo (e.g., 'WARNING', 'CRITICAL')
+            description: Descripción del evento
+            action_taken: Acción tomada (e.g., 'REDUCED_POSITION', 'BLOCKED')
+            metadata: Datos adicionales (dict)
+            user_id: ID del usuario (opcional)
+            
+        Returns:
+            True si se guardó correctamente, False en caso contrario
+        """
+        if self.using_enterprise:
+            return self.enterprise_service.log_risk_event(
+                risk_type=risk_type,
+                risk_level=risk_level,
+                description=description,
+                action_taken=action_taken,
+                metadata=metadata,
+                user_id=user_id
+            )
+        return False
