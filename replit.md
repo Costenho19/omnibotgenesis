@@ -34,7 +34,7 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Core Engines
 
--   **AutoTradingBot V6.4 PREMIUM**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection.
+-   **AutoTradingBot V6.5.3 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, paper mode BUY bias for track record.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
 -   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent thresholds (30%/45%) for trade quality and win rate > 55%.
 -   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs with proper Kraken symbol mapping.
@@ -67,6 +67,12 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Database Unification Phase 4.1 V6.5.2** (Dec 5, 2025): Migrated `DatabaseServiceEnterprise.execute_query()` to use unified `DatabaseGateway` pool when `USE_UNIFIED_GATEWAY=true`. All enterprise consumers now automatically benefit from connection pooling. Added deprecation warnings for legacy `_get_connection()` usage. Fallback to direct connections preserved for robustness.
 -   **Risk Guardian Events Column Fix V6.5.2** (Dec 5, 2025): Fixed SQL column name mismatch in `log_risk_event()` and `get_risk_events()`. Code was using `risk_type`/`risk_level` but table has `event_type`/`severity`. Now maps API parameters to correct DB columns. Also updated CREATE TABLE schema and cleanup config for consistency.
 -   **Paper Trading Schema Fix V6.5.2** (Dec 5, 2025): Fixed critical issue where paper trades were NOT being saved to database. Code was using non-existent columns (`trade_uuid`, `base_quantity`, `quote_notional_usd`, `fee_usd`, `net_realized_pnl_usd`). Now uses actual table columns (`id`, `quantity`, `profit_loss`, `profit_pct`, `status`). Files: paper_trading.py, paper_trading_manager.py.
+
+### V6.5.3 Scoring Fix (Dec 5, 2025)
+
+-   **Paper Mode BUY Bias V6.5.3**: Added +8 BUY bias when score is in neutral zone (-5 to +5) in paper mode. This allows the bot to generate BUY signals and open new positions for track record building.
+-   **Reduced Paper Mode Penalties V6.5.3**: Black Swan (-15→-5), HMM VOLATILE (-8→-3), Regime Change (-10→-3). Real money mode retains full penalties for maximum protection.
+-   **Version Update V6.5.3**: Updated all version references across main.py, daily_summary_service.py, enterprise_bot.py, and auto_trading_bot.py.
 
 ### Known Issues (Under Investigation)
 

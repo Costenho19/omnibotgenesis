@@ -118,21 +118,21 @@ except ImportError:
     RMS_AVAILABLE = False
     logger.warning("⚠️ Risk Management System no disponible")
 
-# User Settings Service V6.4 - Configuración Personalizada Premium
+# User Settings Service V6.5.3 - Configuración Personalizada Premium
 try:
     from omnix_services.user_settings import UserSettingsService, RiskProfile
     from omnix_services.user_settings.user_settings_service import get_settings_service
     USER_SETTINGS_AVAILABLE = True
-    logger.info("⚙️ User Settings Service V6.4 disponible")
+    logger.info("⚙️ User Settings Service V6.5.3 disponible")
 except ImportError:
     USER_SETTINGS_AVAILABLE = False
     logger.warning("⚠️ User Settings Service no disponible")
 
-# Notification Services V6.4 PREMIUM - Trade Alerts & Daily Summary
+# Notification Services V6.5.3 PREMIUM - Trade Alerts & Daily Summary
 try:
     from omnix_services.notifications import TradeNotificationService, DailySummaryService
     NOTIFICATIONS_AVAILABLE = True
-    logger.info("📢 Notification Services V6.4 PREMIUM disponibles")
+    logger.info("📢 Notification Services V6.5.3 PREMIUM disponibles")
 except ImportError:
     NOTIFICATIONS_AVAILABLE = False
     TradeNotificationService = None
@@ -203,7 +203,7 @@ class EnterpriseTelegramBot:
             self.trading = self.trading_enterprise  # Referencia al enterprise
             logger.info("🚀 TRADING ENTERPRISE READY - Sistema premium activado")
         
-        # 📢 NOTIFICATION SERVICES V6.4 PREMIUM - Trade Alerts & Daily Summary
+        # 📢 NOTIFICATION SERVICES V6.5.3 PREMIUM - Trade Alerts & Daily Summary
         self.notification_service = None
         self.daily_summary_service = None
         
@@ -563,7 +563,7 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("resume_trading", self.rms_resume_trading_command))
                 logger.info("🛡️ RMS commands registrados: /rms, /rms_limits, /rms_set, /rms_history, /emergency_halt, /resume_trading")
             
-            # ⚙️ Comandos User Settings V6.4 - Configuración Personalizada Premium
+            # ⚙️ Comandos User Settings V6.5.3 - Configuración Personalizada Premium
             if self.user_settings_service:
                 self.application.add_handler(CommandHandler("miconfig", self.miconfig_command))
                 self.application.add_handler(CommandHandler("perfil", self.perfil_command))
@@ -575,11 +575,11 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("pausar", self.pausar_trading_command))
                 self.application.add_handler(CommandHandler("reanudar", self.reanudar_trading_command))
                 self.application.add_handler(CommandHandler("onboarding", self.onboarding_command))
-                logger.info("⚙️ User Settings V6.4 registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
+                logger.info("⚙️ User Settings V6.5.3 registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
             
-            # 📊 Comandos Daily Summary V6.4 PREMIUM - Resúmenes diarios
+            # 📊 Comandos Daily Summary V6.5.3 PREMIUM - Resúmenes diarios
             self.application.add_handler(CommandHandler("resumen", self.resumen_command))
-            logger.info("📊 Daily Summary V6.4 registrado: /resumen")
+            logger.info("📊 Daily Summary V6.5.3 registrado: /resumen")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -617,7 +617,7 @@ class EnterpriseTelegramBot:
                     alert_dispatcher=self.alert_dispatcher
                 )
             
-            # 📢 Inicializar Notification Services V6.4 PREMIUM
+            # 📢 Inicializar Notification Services V6.5.3 PREMIUM
             if NOTIFICATIONS_AVAILABLE:
                 try:
                     trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
@@ -640,7 +640,7 @@ class EnterpriseTelegramBot:
                     if self.paper_trading:
                         self.paper_trading.notification_service = self.notification_service
                     
-                    logger.info("📢 Notification Services V6.4 PREMIUM ACTIVOS")
+                    logger.info("📢 Notification Services V6.5.3 PREMIUM ACTIVOS")
                     logger.info("   🔔 Trade Alerts: Notificaciones en tiempo real")
                     logger.info("   📊 Daily Summary: Resumen diario a las 20:00 UTC")
                 except Exception as e:
@@ -7561,7 +7561,7 @@ Usa `/miconfig` para ver todos los detalles.
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
     async def resumen_command(self, update, context):
-        """Comando /resumen - Generar resumen diario de trading V6.4 PREMIUM"""
+        """Comando /resumen - Generar resumen diario de trading V6.5.3 PREMIUM"""
         try:
             user = update.effective_user
             chat_id = str(update.effective_chat.id)
@@ -7587,7 +7587,7 @@ Usa `/miconfig` para ver todos los detalles.
 El bot está activo y buscando oportunidades.
 Usa `/autotrading status` para ver el estado.
 
-_OMNIX V6.4 INSTITUTIONAL+_""", parse_mode='Markdown')
+_OMNIX V6.5.3 INSTITUTIONAL+_""", parse_mode='Markdown')
             else:
                 await update.message.reply_text("❌ Servicio de resumen no disponible")
                 

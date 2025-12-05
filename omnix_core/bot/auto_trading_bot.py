@@ -5,7 +5,7 @@ Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain
 
 V6.5.3 FIX (Dec 5, 2025): Reduced paper mode penalties + added BUY bias for track record generation
 
-🚀 V6.5.2 MULTI-USER ARCHITECTURE:
+🚀 V6.5.3 MULTI-USER ARCHITECTURE:
 - Soporte para 100,000+ usuarios simultáneos
 - Sesiones aisladas por usuario vía UserSessionManager
 - Estado persistente en Redis + PostgreSQL

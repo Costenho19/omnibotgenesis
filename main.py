@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-OMNIX V6.0 ULTRA - SISTEMA DUAL-MARKET INSTITUCIONAL  
+OMNIX V6.5.3 INSTITUTIONAL+ - SISTEMA DUAL-MARKET INSTITUCIONAL  
 Sistema de Trading Automático: CRIPTO (24/7) + BOLSA (NYSE/NASDAQ)
 IA Avanzada + AI Risk Guardian V5.4 + Professional Trading Strategy 73% Win Rate
 Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
-Desarrollado por Harold Nunes - Noviembre 2025 - V6.0.0
+Desarrollado por Harold Nunes - Diciembre 2025 - V6.5.3
 
-BUILD_TIMESTAMP = "2025-11-29T04:30:00Z"
-FORCE_REBUILD_VERSION = "6.0.5-enterprise-bot-kraken-fix"
+BUILD_TIMESTAMP = "2025-12-05T20:15:00Z"
+FORCE_REBUILD_VERSION = "6.5.3-paper-buy-bias-fix"
 """
 
 # 🧹 LIMPIEZA DE CACHE RAILWAY - EJECUTAR ANTES DE CUALQUIER IMPORT
