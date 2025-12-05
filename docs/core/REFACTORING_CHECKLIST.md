@@ -28,15 +28,15 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 - **Solución:** Migrar a `google-genai` (nuevo SDK oficial)
 
 **Solución implementada (V6.5.2):**
-- [x] `requirements.txt` - Agregado `google-genai>=1.0.0`, documentado conflicto websockets
-- [x] `omnix_services/ai_service/ai_models.py` - Import dual con fallback, GEMINI_SDK_VERSION
+- [x] `requirements.txt` - Agregado `google-genai>=1.0.0`, websockets>=13.0
+- [x] `omnix_services/ai_service/ai_models.py` - Import dual con fallback, GEMINI_SDK_VERSION, `_extract_gemini_text()` helper
 - [x] `omnix_services/ai_service/conversational_ai_adapter.py` - Import dual con fallback
 - [x] `omnix_services/ai_service/video/analyzer.py` - Inicialización con _gemini_sdk tracking
-- [x] `omnix_services/telegram_service/enterprise_bot.py` - Migrado a gemini_client con SDK version
-- [x] `omnix_services/community_intelligence/community_analyzer.py` - Soporta nuevo y legacy SDK
+- [x] `omnix_services/telegram_service/enterprise_bot.py` - Migrado a gemini_client con SDK version + robust text extraction
+- [x] `omnix_services/community_intelligence/community_analyzer.py` - Soporta nuevo y legacy SDK + robust text extraction
 - [x] `main.py` - Ya tenía código dual (nuevo SDK primero)
 
-**Nota:** Conflicto de websockets (alpaca-trade-api <11 vs google-genai >=13). Usando versión para alpaca-trade-api, google-genai funciona con warning.
+**Conflicto websockets RESUELTO (Dec 5, 2025):** Eliminado `alpaca-trade-api` (no se usaba, AlpacaService usa REST directo). Actualizado websockets a >=13.0 para compatibilidad completa con google-genai.
 
 ### 1.2 anthropic - Error en Documentación
 - **Prioridad:** 🟢 LOW
