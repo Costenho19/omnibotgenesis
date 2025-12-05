@@ -43,6 +43,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Derivatives Trading Module**: Paper/real trading modes, MarginEngine, KrakenFuturesClient, HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, Earnings Protector.
 -   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibration for ARES strategies based on market regime.
+-   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection (BULL_STRONG, BEAR_PANIC, SIDEWAYS_COMPRESSED, etc.). Caps: 0.5x-3.0x multiplier with safety limits.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
 
 ### Multi-User Architecture V6.5.2
