@@ -442,6 +442,7 @@ class AutoTradingBot:
         
         # Non-Markovian Memory Kernel V6.1 ULTRA - QUANTUM TEMPORAL MEMORY
         self._last_kernel_pair = None  # V6.5.2: Track pair for kernel seeding
+        self._kernel_needs_reseed = True  # V6.5.2: Flag for pending reseed
         if NON_MARKOVIAN_KERNEL_AVAILABLE:
             try:
                 self.non_markovian_kernel = NonMarkovianKernel(
@@ -1212,35 +1213,42 @@ class AutoTradingBot:
                     min_required = 24
                     kernel_history_len = self.non_markovian_kernel.get_history_length()
                     
-                    # V6.5.2 FIX: Detectar cambio de par para limpiar historia
-                    # Solo hacer seed cuando: 1) Par diferente al último analizado, o 2) No hay suficiente historia
-                    needs_reseed = False
+                    # V6.5.2 FIX: Estado explícito para manejo robusto de cambios de par
+                    is_pair_change = (self._last_kernel_pair is not None and self._last_kernel_pair != pair)
                     
-                    if self._last_kernel_pair is None:
-                        # Primera iteración: seed inicial
-                        needs_reseed = kernel_history_len < min_required
-                        self._last_kernel_pair = pair
-                    elif self._last_kernel_pair != pair:
-                        # Cambio de par: reset obligatorio
-                        needs_reseed = True
-                        logger.info(f"🧠 Pair change detected: {self._last_kernel_pair} -> {pair}")
-                        self._last_kernel_pair = pair
-                    else:
-                        # Mismo par: solo seed si no hay suficiente historia
-                        needs_reseed = kernel_history_len < min_required
+                    # 1) Detectar cambio de par -> marcar para reseed
+                    if is_pair_change:
+                        logger.info(f"🧠 Pair change: {self._last_kernel_pair} -> {pair}")
+                        self._kernel_needs_reseed = True
+                        self.non_markovian_kernel.seed_history([], clear_existing=True)
+                        kernel_history_len = 0
                     
-                    if needs_reseed and prices and len(prices) >= min_required:
-                        loaded = self.non_markovian_kernel.seed_history(prices, clear_existing=True)
-                        logger.debug(f"🧠 Kernel seeded with {loaded} prices for {pair}")
+                    # 2) Verificar si historia insuficiente
+                    if kernel_history_len < min_required:
+                        self._kernel_needs_reseed = True
                     
-                    non_markovian = self.non_markovian_kernel.generate_signal(
-                        current_price=current_price,
-                        market_data={'prices': prices} if prices else None
-                    )
-                    if non_markovian and non_markovian.get('signal') != 'HOLD':
-                        logger.info(f"🧠 Non-Markovian Kernel: {non_markovian.get('signal')} ({non_markovian.get('confidence', 0):.1f}% conf)")
+                    # 3) Intentar reseed si está pendiente
+                    if self._kernel_needs_reseed:
+                        if prices and len(prices) >= min_required:
+                            loaded = self.non_markovian_kernel.seed_history(prices, clear_existing=True)
+                            self._last_kernel_pair = pair
+                            self._kernel_needs_reseed = False
+                            logger.debug(f"🧠 Kernel seeded with {loaded} prices for {pair}")
+                        else:
+                            logger.debug(f"🧠 Reseed pending for {pair} (have {len(prices) if prices else 0}, need {min_required})")
+                    
+                    # 4) Solo generar señal si kernel está listo
+                    if not self._kernel_needs_reseed:
+                        non_markovian = self.non_markovian_kernel.generate_signal(
+                            current_price=current_price,
+                            market_data={'prices': prices} if prices else None
+                        )
+                        if non_markovian and non_markovian.get('signal') != 'HOLD':
+                            logger.info(f"🧠 Non-Markovian Kernel: {non_markovian.get('signal')} ({non_markovian.get('confidence', 0):.1f}% conf)")
                 except Exception as e:
-                    logger.debug(f"Error en Non-Markovian Kernel (continuando): {e}")
+                    # Error -> marcar para reseed en próximo ciclo
+                    self._kernel_needs_reseed = True
+                    logger.debug(f"Error en Non-Markovian Kernel (retry próximo ciclo): {e}")
             
             # 11. Decisión basada en TODOS los análisis + Pesos Adaptativos
             decision = self._make_v52_decision(

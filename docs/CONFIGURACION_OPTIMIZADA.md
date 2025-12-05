@@ -26,25 +26,37 @@ CAES mostraba `Confidence=0.0%` porque el Non-Markovian Kernel mantenia historia
 
 ### Solucion Aplicada (V6.5.2 Final)
 ```python
-# Se inicializa _last_kernel_pair = None en __init__
+# Se inicializan en __init__:
+self._last_kernel_pair = None
+self._kernel_needs_reseed = True  # Flag explicito para retry
 
 # En cada iteracion:
-needs_reseed = False
+is_pair_change = (self._last_kernel_pair is not None and self._last_kernel_pair != pair)
 
-if self._last_kernel_pair is None:
-    # Primera iteracion: seed solo si historia insuficiente
-    needs_reseed = kernel_history_len < min_required
-    self._last_kernel_pair = pair  # SIEMPRE se setea en primera iteracion
-elif self._last_kernel_pair != pair:
-    # Cambio de par: reset obligatorio
-    needs_reseed = True
-    self._last_kernel_pair = pair
-else:
-    # Mismo par: solo seed si historia insuficiente
-    needs_reseed = kernel_history_len < min_required
+# 1) Detectar cambio de par -> marcar para reseed
+if is_pair_change:
+    self._kernel_needs_reseed = True
+    self.non_markovian_kernel.seed_history([], clear_existing=True)
+    kernel_history_len = 0
 
-if needs_reseed and prices and len(prices) >= min_required:
-    self.non_markovian_kernel.seed_history(prices, clear_existing=True)
+# 2) Verificar si historia insuficiente
+if kernel_history_len < min_required:
+    self._kernel_needs_reseed = True
+
+# 3) Intentar reseed si esta pendiente
+if self._kernel_needs_reseed:
+    if prices and len(prices) >= min_required:
+        self.non_markovian_kernel.seed_history(prices, clear_existing=True)
+        self._last_kernel_pair = pair
+        self._kernel_needs_reseed = False  # Solo limpiar flag despues de exito
+
+# 4) Solo generar senal si kernel esta listo
+if not self._kernel_needs_reseed:
+    non_markovian = self.non_markovian_kernel.generate_signal(...)
+
+# 5) En caso de error, marcar para reseed en proximo ciclo
+except Exception as e:
+    self._kernel_needs_reseed = True
 ```
 
 ### Impacto
@@ -54,6 +66,9 @@ if needs_reseed and prices and len(prices) >= min_required:
 - El kernel preserva historia acumulada mientras analiza el mismo par
 - Solo hace reset cuando cambia a un par diferente
 - `generate_signal()` internamente acumula nuevos datos via `update_history()`
+- **Flag explicito `_kernel_needs_reseed`** garantiza retry automatico en todos los casos edge
+- Si datos insuficientes, se mantiene flag hasta que lleguen datos validos
+- Si `generate_signal()` falla, se marca para reseed en proximo ciclo
 
 ---
 

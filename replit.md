@@ -43,8 +43,14 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Derivatives Trading Module**: Paper/real trading modes, MarginEngine, KrakenFuturesClient, HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, Earnings Protector.
 -   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibration for ARES strategies based on market regime.
--   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection (BULL_STRONG, BEAR_PANIC, SIDEWAYS_COMPRESSED, etc.). Caps: 0.5x-3.0x multiplier with safety limits.
+-   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection (BULL_STRONG, BEAR_PANIC, SIDEWAYS_COMPRESSED, etc.). Caps: 0.5x-3.0x multiplier with safety limits. **V6.5.2 Fix**: Kernel now tracks pair changes and only reseeds when switching pairs or when history is insufficient.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
+
+### Recent Bug Fixes (Dec 2025)
+
+-   **CAES Kernel Seeding**: Fixed issue where Non-Markovian Kernel used wrong pair history. Now tracks `_last_kernel_pair` and only reseeds on pair change or insufficient history.
+-   **Tuple-to-Dict Conversion**: Fixed `get_recent_trades()` in `real_data_provider.py` to convert database tuples to dictionaries for proper `.get()` access.
+-   **Database Schema**: Added `last_activity` column to `users` table.
 
 ### Multi-User Architecture V6.5.2
 
