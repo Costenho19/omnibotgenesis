@@ -1890,18 +1890,30 @@ class AutoTradingBot:
                     )
                     
                     if not can_trade:
-                        # RIESGO DETECTADO - BLOQUEAR TRADE
-                        logger.error(f"🛑 AI RISK GUARDIAN BLOQUEÓ TRADE: {risk_event.description}")
-                        logger.error(f"   Acción tomada: {risk_event.action_taken}")
-                        return {
-                            'error': 'BLOQUEADO POR AI RISK GUARDIAN',
-                            'blocked': True,
-                            'risk_type': risk_event.risk_type.value,
-                            'risk_level': risk_event.risk_level.value,
-                            'reason': risk_event.description,
-                            'action_taken': risk_event.action_taken,
-                            'metadata': risk_event.metadata
-                        }
+                        # RIESGO DETECTADO
+                        is_paper_mode = self.config.get('paper_mode', False)
+                        
+                        if not is_paper_mode:
+                            # REAL MODE: BLOQUEAR TRADE
+                            logger.error(f"🛑 AI RISK GUARDIAN BLOQUEÓ TRADE: {risk_event.description}")
+                            logger.error(f"   Acción tomada: {risk_event.action_taken}")
+                            return {
+                                'error': 'BLOQUEADO POR AI RISK GUARDIAN',
+                                'blocked': True,
+                                'risk_type': risk_event.risk_type.value,
+                                'risk_level': risk_event.risk_level.value,
+                                'reason': risk_event.description,
+                                'action_taken': risk_event.action_taken,
+                                'metadata': risk_event.metadata
+                            }
+                        else:
+                            # V6.5.2: PAPER MODE - Permitir con reducción 50% para calibración
+                            logger.warning(f"⚠️ AI RISK GUARDIAN (PAPER MODE): {risk_event.description}")
+                            logger.warning(f"   Permitiendo con reducción 50% para calibración de track record")
+                            amount_usd = amount_usd * 0.50
+                            analysis['amount_usd'] = amount_usd
+                            if 'reason' in analysis:
+                                analysis['reason'].append(f"🛡️ PAPER MODE: Risk Guardian permitió con 50% reducción")
                     
                     # Trade permitido - verificar ajuste de tamaño
                     adjusted_size = self.risk_guardian.get_adjusted_position_size(amount_usd)
@@ -2151,14 +2163,26 @@ class AutoTradingBot:
                     )
                     
                     if not allowed:
-                        logger.warning(f"🚫 TRADE BLOQUEADO POR COHERENCE ENGINE:\n{reason}")
-                        return {
-                            'error': 'BLOQUEADO POR COHERENCE ENGINE',
-                            'blocked': True,
-                            'reason': reason,
-                            'action': action,
-                            'confidence': analysis['confidence']
-                        }
+                        is_paper_mode = self.config.get('paper_mode', False)
+                        
+                        if not is_paper_mode:
+                            # REAL MODE: Bloquear trade
+                            logger.warning(f"🚫 TRADE BLOQUEADO POR COHERENCE ENGINE:\n{reason}")
+                            return {
+                                'error': 'BLOQUEADO POR COHERENCE ENGINE',
+                                'blocked': True,
+                                'reason': reason,
+                                'action': action,
+                                'confidence': analysis['confidence']
+                            }
+                        else:
+                            # V6.5.2: PAPER MODE - Permitir con reducción 50% para calibración
+                            logger.warning(f"⚠️ COHERENCE ENGINE (PAPER MODE): {reason}")
+                            logger.warning(f"   Permitiendo con reducción 50% para calibración de track record")
+                            amount_usd = amount_usd * 0.50
+                            analysis['amount_usd'] = amount_usd
+                            if 'reason' in analysis:
+                                analysis['reason'].append(f"⚠️ PAPER MODE: Coherence Engine permitió con 50% reducción")
                     else:
                         logger.info(f"✅ Coherence validation: {reason}")
                         # Agregar validación a las razones del análisis
