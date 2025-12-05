@@ -137,23 +137,17 @@ Este documento lista todas las discrepancias encontradas entre la documentación
 
 ### 5.1 Volumes = None bloquea estrategias
 - **Prioridad:** 🔴 HIGH
-- **Estado:** [ ] Pendiente
+- **Estado:** [x] ✅ COMPLETADO (Dec 5, 2025)
 - **Problema:** Cuando `_get_volume_history()` retorna None, bloquea quantum y HMM
 - **Ubicación:** `omnix_core/bot/auto_trading_bot.py`
-- **Código problemático:**
-```python
-# Línea 1176 - HMM requiere volumes
-if hasattr(self.advanced_features, 'hmm_regime') and prices and volumes:
-    hmm_regime = ...
 
-# Línea 1193 - Quantum requiere volumes  
-if hasattr(self.advanced_features, 'quantum_momentum') and prices and volumes:
-    quantum = ...
-```
-- **Solución propuesta:**
-  - [ ] Hacer volumes opcional (usar None-safe check)
-  - [ ] O generar volumes sintéticos cuando no disponible
-  - [ ] Agregar logging cuando volumes = None
+**Solución implementada (V6.5.2):**
+- [x] HMM Regime: Cambiada condición de `prices and volumes` a solo `prices`
+- [x] Quantum Momentum: Usa `analyze()` con OHLC completo via nuevo `_get_ohlc_history()`
+- [x] Nuevo método `_get_ohlc_history()`: Devuelve OHLC con volumes sintéticos si faltan
+- [x] Nuevo método `_generate_synthetic_volumes()`: Genera volumes basados en price changes
+- [x] Logging cuando se usan volumes sintéticos
+- [x] Protección contra ZeroDivision y length mismatch
 
 ### 5.2 VETO Scoring Desbalanceado
 - **Prioridad:** 🟡 MED
@@ -197,7 +191,7 @@ if hasattr(self.advanced_features, 'quantum_momentum') and prices and volumes:
 ## Orden de Ejecución Recomendado
 
 1. **Fase A - Críticos (afectan funcionamiento):**
-   - [ ] 5.1 Volumes = None fix
+   - [x] 5.1 Volumes = None fix ✅
    - [ ] 1.1 Migrar google-generativeai
 
 2. **Fase B - Arquitectura (mejora rendimiento):**
@@ -219,11 +213,11 @@ if hasattr(self.advanced_features, 'quantum_momentum') and prices and volumes:
 
 | Fase | Items | Completados | % |
 |------|-------|-------------|---|
-| A - Críticos | 2 | 0 | 0% |
+| A - Críticos | 2 | 1 | 50% |
 | B - Arquitectura | 4 | 0 | 0% |
 | C - Documentación | 4 | 0 | 0% |
 | D - Mejoras | 3 | 0 | 0% |
-| **TOTAL** | **13** | **0** | **0%** |
+| **TOTAL** | **13** | **1** | **8%** |
 
 ---
 
