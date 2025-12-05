@@ -178,7 +178,7 @@ class OMNIXRealContextProvider:
         """Obtener trades recientes"""
         try:
             if self.db_manager:
-                trades = self.db_manager.execute_query(
+                rows = self.db_manager.execute_query(
                     """SELECT id, symbol, side, quantity, entry_price, exit_price, 
                               profit_loss, status, opened_at, closed_at
                        FROM paper_trading_trades 
@@ -186,7 +186,25 @@ class OMNIXRealContextProvider:
                        ORDER BY id DESC LIMIT %s""",
                     (user_id, limit)
                 )
-                return trades if trades else []
+                if rows:
+                    trades = []
+                    for row in rows:
+                        if isinstance(row, tuple) and len(row) >= 8:
+                            trades.append({
+                                'id': row[0],
+                                'symbol': row[1],
+                                'side': row[2],
+                                'quantity': row[3],
+                                'entry_price': row[4],
+                                'exit_price': row[5],
+                                'profit_loss': row[6],
+                                'status': row[7],
+                                'opened_at': row[8] if len(row) > 8 else None,
+                                'closed_at': row[9] if len(row) > 9 else None
+                            })
+                        elif isinstance(row, dict):
+                            trades.append(row)
+                    return trades
             return []
         except Exception as e:
             logger.warning(f"⚠️ Error obteniendo trades recientes: {e}")

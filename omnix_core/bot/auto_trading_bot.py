@@ -441,6 +441,7 @@ class AutoTradingBot:
             logger.info("⚠️ AI Risk Guardian desactivado")
         
         # Non-Markovian Memory Kernel V6.1 ULTRA - QUANTUM TEMPORAL MEMORY
+        self._last_kernel_pair = None  # V6.5.2: Track pair for kernel seeding
         if NON_MARKOVIAN_KERNEL_AVAILABLE:
             try:
                 self.non_markovian_kernel = NonMarkovianKernel(
@@ -1208,12 +1209,29 @@ class AutoTradingBot:
             non_markovian = None
             if self.non_markovian_kernel and current_price:
                 try:
-                    kernel_history_len = self.non_markovian_kernel.get_history_length()
                     min_required = 24
+                    kernel_history_len = self.non_markovian_kernel.get_history_length()
                     
-                    if prices and len(prices) >= min_required and kernel_history_len < min_required:
+                    # V6.5.2 FIX: Detectar cambio de par para limpiar historia
+                    # Solo hacer seed cuando: 1) Par diferente al último analizado, o 2) No hay suficiente historia
+                    needs_reseed = False
+                    
+                    if self._last_kernel_pair is None:
+                        # Primera iteración: seed inicial
+                        needs_reseed = kernel_history_len < min_required
+                        self._last_kernel_pair = pair
+                    elif self._last_kernel_pair != pair:
+                        # Cambio de par: reset obligatorio
+                        needs_reseed = True
+                        logger.info(f"🧠 Pair change detected: {self._last_kernel_pair} -> {pair}")
+                        self._last_kernel_pair = pair
+                    else:
+                        # Mismo par: solo seed si no hay suficiente historia
+                        needs_reseed = kernel_history_len < min_required
+                    
+                    if needs_reseed and prices and len(prices) >= min_required:
                         loaded = self.non_markovian_kernel.seed_history(prices, clear_existing=True)
-                        logger.debug(f"🧠 Kernel seeded with {loaded} prices (chronological order)")
+                        logger.debug(f"🧠 Kernel seeded with {loaded} prices for {pair}")
                     
                     non_markovian = self.non_markovian_kernel.generate_signal(
                         current_price=current_price,
