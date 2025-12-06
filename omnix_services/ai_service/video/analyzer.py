@@ -1064,7 +1064,15 @@ Responde en JSON con esta estructura:
                     max_tokens=1500
                 )
                 
-                result_text = response.choices[0].message.content
+                if not response or not response.choices or len(response.choices) == 0:
+                    logger.warning("⚠️ OpenAI retornó respuesta vacía o sin choices")
+                    return {
+                        'strategy': 'Sin respuesta de OpenAI',
+                        'summary': 'La API no retornó choices válidos',
+                        'confidence': 0.0
+                    }
+                
+                result_text = response.choices[0].message.content if response.choices[0].message else None
                 
                 if result_text:
                     try:
