@@ -119,6 +119,7 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 >    - `Omnix_TECHNICAL_REFERENCE.md` → Arquitectura y patrones
 >    - `TRADING_FLOW_ARCHITECTURE.md` → Flujo de ejecución de trades
 >    - `DATABASE_AUDIT_REPORT.md` → Schema de BD y constraints
+>    - `DASHBOARD_TECHNICAL_REFERENCE.md` → APIs, seguridad y frontend del dashboard
 >
 > 2. **Mantener coherencia**: Cualquier cambio estructural debe reflejarse en la documentación
 >
