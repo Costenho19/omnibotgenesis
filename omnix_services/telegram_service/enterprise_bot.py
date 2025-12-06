@@ -15,6 +15,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 
 # Import centralized settings
 from omnix_config.settings import settings
+from omnix_config import VERSION_BANNER
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ except ImportError:
     ARBITRAGE_AVAILABLE = False
     logger.warning("⚠️ Arbitrage modules no disponibles")
 
-# Community Intelligence - Memoria Colectiva V6.5.3
+# Community Intelligence - Memoria Colectiva
 try:
     from omnix_services.community_intelligence import (
         CommunityFeedbackManager,
@@ -55,7 +56,7 @@ except ImportError:
     COMMUNITY_INTELLIGENCE_AVAILABLE = False
     logger.warning("⚠️ Community Intelligence modules no disponibles")
 
-# Signal Contribution - Crowdsourcing de Alpha V6.5.3
+# Signal Contribution - Crowdsourcing de Alpha
 try:
     from omnix_services.community_intelligence.signal_contribution import SignalContributionManager
     SIGNAL_CONTRIBUTION_AVAILABLE = True
@@ -102,7 +103,7 @@ if STOCK_TRADING_ENABLED:
 else:
     STOCK_MODULE_AVAILABLE = False
 
-# Risk Management System (RMS) V6.5.3
+# Risk Management System (RMS)
 try:
     from omnix_services.risk_management import (
         LimitsEngine,
@@ -118,21 +119,21 @@ except ImportError:
     RMS_AVAILABLE = False
     logger.warning("⚠️ Risk Management System no disponible")
 
-# User Settings Service V6.5.3 - Configuración Personalizada Premium
+# User Settings Service - Configuración Personalizada Premium
 try:
     from omnix_services.user_settings import UserSettingsService, RiskProfile
     from omnix_services.user_settings.user_settings_service import get_settings_service
     USER_SETTINGS_AVAILABLE = True
-    logger.info("⚙️ User Settings Service V6.5.3 disponible")
+    logger.info(f"⚙️ User Settings Service {VERSION_BANNER} disponible")
 except ImportError:
     USER_SETTINGS_AVAILABLE = False
     logger.warning("⚠️ User Settings Service no disponible")
 
-# Notification Services V6.5.3 PREMIUM - Trade Alerts & Daily Summary
+# Notification Services PREMIUM - Trade Alerts & Daily Summary
 try:
     from omnix_services.notifications import TradeNotificationService, DailySummaryService
     NOTIFICATIONS_AVAILABLE = True
-    logger.info("📢 Notification Services V6.5.3 PREMIUM disponibles")
+    logger.info(f"📢 Notification Services {VERSION_BANNER} PREMIUM disponibles")
 except ImportError:
     NOTIFICATIONS_AVAILABLE = False
     TradeNotificationService = None
@@ -203,7 +204,7 @@ class EnterpriseTelegramBot:
             self.trading = self.trading_enterprise  # Referencia al enterprise
             logger.info("🚀 TRADING ENTERPRISE READY - Sistema premium activado")
         
-        # 📢 NOTIFICATION SERVICES V6.5.3 PREMIUM - Trade Alerts & Daily Summary
+        # 📢 NOTIFICATION SERVICES PREMIUM - Trade Alerts & Daily Summary
         self.notification_service = None
         self.daily_summary_service = None
         
@@ -231,7 +232,7 @@ class EnterpriseTelegramBot:
                 database_service=self.db_manager,
                 advanced_features=global_advanced_features if 'global_advanced_features' in globals() else None,
                 paper_trading=self.paper_trading,
-                ai_service=self.ai,  # 🎓 V6.5.3: AI para auto-learning de videos
+                ai_service=self.ai,  # 🎓 AI para auto-learning de videos
                 ares_v1=ares_v1_instance,  # 🧬 ARES V1 Swing Trading - dynamic access
                 ares_v2=ares_v2_instance   # 🧨 ARES V2 Scalping M1 - dynamic access
             )
@@ -259,7 +260,7 @@ class EnterpriseTelegramBot:
             logger.warning(f"⚠️ Real Context Provider no disponible: {e}")
             self.real_context_provider = None
         
-        # 🎥 VIDEO ANALYZER ULTRA V6.5.3 - Análisis avanzado de videos con Vision AI
+        # 🎥 VIDEO ANALYZER ULTRA - Análisis avanzado de videos con Vision AI
         # FIX Nov 29, 2025: Separar inicialización para evitar que falle todo el bloque
         self.video_analyzer_ultra = None
         self.video_learning_integration = None
@@ -268,11 +269,11 @@ class EnterpriseTelegramBot:
         try:
             from omnix_services.ai_service.video.analyzer import VideoAnalyzerUltra
             self.video_analyzer_ultra = VideoAnalyzerUltra(database_service=self.db_manager)
-            logger.info("🎥 Video Analyzer Ultra V6.5.3 inicializado")
+            logger.info(f"🎥 Video Analyzer Ultra {VERSION_BANNER} inicializado")
             logger.info(f"   🎬 GPT-4 Vision: {'✅' if self.video_analyzer_ultra.openai_client else '❌'}")
             logger.info(f"   🧠 Gemini Vision: {'✅' if self.video_analyzer_ultra.gemini_client else '❌'}")
         except Exception as e:
-            logger.warning(f"⚠️ Video Analyzer Ultra V6.5.3 no disponible: {e}")
+            logger.warning(f"⚠️ Video Analyzer Ultra {VERSION_BANNER} no disponible: {e}")
             import traceback
             logger.warning(f"   Traceback: {traceback.format_exc()}")
         
@@ -291,7 +292,7 @@ class EnterpriseTelegramBot:
             except Exception as e:
                 logger.warning(f"⚠️ Video Learning Integration no disponible: {e}")
         
-        # 📊 STOCK TRADING HANDLER V6.5.3 - DUAL MARKET SYSTEM
+        # 📊 STOCK TRADING HANDLER - DUAL MARKET SYSTEM
         if STOCK_MODULE_AVAILABLE:
             try:
                 self.stock_handler = StockCommandsHandler()
@@ -312,7 +313,7 @@ class EnterpriseTelegramBot:
             if STOCK_TRADING_ENABLED:
                 logger.warning("📊 Stock Trading solicitado pero módulo no disponible")
         
-        # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM V6.5.3
+        # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM
         if ARBITRAGE_AVAILABLE:
             try:
                 self.arbitrage_scanner = MultiExchangeArbitragePremium()
@@ -329,7 +330,7 @@ class EnterpriseTelegramBot:
             self.arbitrage_scanner = None
             self.arbitrage_executor = None
         
-        # 🧠 COMMUNITY INTELLIGENCE - MEMORIA COLECTIVA V6.5.3
+        # 🧠 COMMUNITY INTELLIGENCE - MEMORIA COLECTIVA
         if COMMUNITY_INTELLIGENCE_AVAILABLE:
             try:
                 self.feedback_manager = CommunityFeedbackManager(database_service=self.db_manager)
@@ -353,7 +354,7 @@ class EnterpriseTelegramBot:
             self.reward_system = None
             self.community_dashboard = None
         
-        # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.5.3
+        # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA
         if SIGNAL_CONTRIBUTION_AVAILABLE:
             try:
                 self.signal_contribution = SignalContributionManager(
@@ -368,7 +369,7 @@ class EnterpriseTelegramBot:
         else:
             self.signal_contribution = None
         
-        # 🛡️ RISK MANAGEMENT SYSTEM (RMS) V6.5.3 - Control de Riesgo Institucional
+        # 🛡️ RISK MANAGEMENT SYSTEM (RMS) - Control de Riesgo Institucional
         if RMS_AVAILABLE:
             try:
                 self.rms_config = RiskConfig.from_env()
@@ -429,7 +430,7 @@ class EnterpriseTelegramBot:
             self.risk_dashboard = None
             self.rms_config = None
         
-        # ⚙️ USER SETTINGS SERVICE V6.5.3 - Configuración Personalizada Premium
+        # ⚙️ USER SETTINGS SERVICE - Configuración Personalizada Premium
         if USER_SETTINGS_AVAILABLE:
             try:
                 self.user_settings_service = get_settings_service()
@@ -460,7 +461,7 @@ class EnterpriseTelegramBot:
             
             # Comandos principales
             self.application.add_handler(CommandHandler("start", self.start_command))
-            self.application.add_handler(CommandHandler("version", self.version_command))  # V6.5.3
+            self.application.add_handler(CommandHandler("version", self.version_command))
             self.application.add_handler(CommandHandler("precio", self.precio_command))
             self.application.add_handler(CommandHandler("market", self.market_command))
             self.application.add_handler(CommandHandler("help", self.help_command))
@@ -488,7 +489,7 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("paper_buy", self.paper_buy_command))
             self.application.add_handler(CommandHandler("paper_sell", self.paper_sell_command))
             
-            # 📰 News Scraper Commands (V6.5.3 - Análisis de Noticias)
+            # 📰 News Scraper Commands - Análisis de Noticias
             # TODO: Implementar estos comandos
             # self.application.add_handler(CommandHandler("analizar_noticia", self.analyze_news_command))
             # self.application.add_handler(CommandHandler("trending_crypto", self.trending_news_command))
@@ -498,22 +499,22 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("auto_stop", self.auto_stop_command))
             self.application.add_handler(CommandHandler("auto_status", self.auto_status_command))
             
-            # 🎓 Comandos Auto-Learning V6.5.3 - Aprendizaje de videos YouTube
+            # 🎓 Comandos Auto-Learning - Aprendizaje de videos YouTube
             self.application.add_handler(CommandHandler("activar_auto_ajuste", self.activar_auto_ajuste_command))
             self.application.add_handler(CommandHandler("pausar_auto_ajuste", self.pausar_auto_ajuste_command))
             self.application.add_handler(CommandHandler("ver_aprendizaje", self.ver_aprendizaje_command))
             self.application.add_handler(CommandHandler("revertir_cambio", self.revertir_cambio_command))
             
-            # 🛡️ Comandos AI Risk Guardian V6.5.3 - Supervisor de Riesgos
+            # 🛡️ Comandos AI Risk Guardian - Supervisor de Riesgos
             self.application.add_handler(CommandHandler("risk_status", self.risk_status_command))
             self.application.add_handler(CommandHandler("risk_events", self.risk_events_command))
             
-            # 📊 Comandos UNIFICADOS /analizar - Auto-detección Crypto/Stock V6.5.3
+            # 📊 Comandos UNIFICADOS /analizar - Auto-detección Crypto/Stock
             self.application.add_handler(CommandHandler("analizar", self.analyze_stock_command))
             self.application.add_handler(CommandHandler("analizar_premium", self.premium_stock_command))
             logger.info("🔀 Smart Routing activado: /analizar auto-detecta crypto vs stock")
             
-            # 📊 Comandos Stock Trading V6.5.3 - BOLSA DE VALORES (NYSE/NASDAQ)
+            # 📊 Comandos Stock Trading - BOLSA DE VALORES (NYSE/NASDAQ)
             if self.stock_handler and self.stock_handler.enabled:
                 self.application.add_handler(CommandHandler("balance_bolsa", self.balance_stocks_command))
                 self.application.add_handler(CommandHandler("portfolio_bolsa", self.balance_stocks_command))
@@ -523,9 +524,9 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("risk_dashboard", self.stock_risk_dashboard_command))
                 self.application.add_handler(CommandHandler("comprar_bolsa", self.buy_stock_command))
                 self.application.add_handler(CommandHandler("vender_bolsa", self.sell_stock_command))
-                logger.info("📊 Stock Trading V6.5.3 registrado: /stock_status, /risk_dashboard, /comprar_bolsa, /vender_bolsa")
+                logger.info(f"📊 Stock Trading {VERSION_BANNER} registrado: /stock_status, /risk_dashboard, /comprar_bolsa, /vender_bolsa")
             
-            # 💱 Comandos Arbitrage Multi-Exchange Premium V6.5.3
+            # 💱 Comandos Arbitrage Multi-Exchange Premium
             if self.arbitrage_scanner:
                 self.application.add_handler(CommandHandler("arbitrage", self.arbitrage_command))
                 self.application.add_handler(CommandHandler("arbitrage_scan", self.arbitrage_scan_command))
@@ -533,7 +534,7 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("arbitrage_stats", self.arbitrage_stats_command))
                 logger.info("💱 Arbitrage commands registrados: /arbitrage, /arbitrage_scan, /arbitrage_execute, /arbitrage_stats")
             
-            # 🧠 Comandos Community Intelligence - Memoria Colectiva V6.5.3
+            # 🧠 Comandos Community Intelligence - Memoria Colectiva
             if self.feedback_manager:
                 self.application.add_handler(CommandHandler("feedback", self.feedback_command))
                 self.application.add_handler(CommandHandler("community_stats", self.community_stats_command))
@@ -544,7 +545,7 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("analyze_patterns", self.analyze_patterns_command))
                 logger.info("🧠 Community Intelligence commands registrados: /feedback, /community_stats, /top_strategies, /my_contributions, /vote_strategy, /leaderboard")
             
-            # 🚀 Comandos Signal Contribution - Crowdsourcing de Alpha V6.5.3
+            # 🚀 Comandos Signal Contribution - Crowdsourcing de Alpha
             if self.signal_contribution:
                 self.application.add_handler(CommandHandler("share_signal", self.share_signal_command))
                 self.application.add_handler(CommandHandler("community_signals", self.community_signals_command))
@@ -553,7 +554,7 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("execute_signal", self.execute_signal_command))
                 logger.info("🚀 Signal Contribution commands registrados: /share_signal, /community_signals, /my_signals, /alpha_leaderboard")
             
-            # 🛡️ Comandos Risk Management System (RMS) V6.5.3 - Control Institucional
+            # 🛡️ Comandos Risk Management System (RMS) - Control Institucional
             if self.limits_engine:
                 self.application.add_handler(CommandHandler("rms", self.rms_dashboard_command))
                 self.application.add_handler(CommandHandler("rms_limits", self.rms_limits_command))
@@ -563,7 +564,7 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("resume_trading", self.rms_resume_trading_command))
                 logger.info("🛡️ RMS commands registrados: /rms, /rms_limits, /rms_set, /rms_history, /emergency_halt, /resume_trading")
             
-            # ⚙️ Comandos User Settings V6.5.3 - Configuración Personalizada Premium
+            # ⚙️ Comandos User Settings - Configuración Personalizada Premium
             if self.user_settings_service:
                 self.application.add_handler(CommandHandler("miconfig", self.miconfig_command))
                 self.application.add_handler(CommandHandler("perfil", self.perfil_command))
@@ -575,11 +576,11 @@ class EnterpriseTelegramBot:
                 self.application.add_handler(CommandHandler("pausar", self.pausar_trading_command))
                 self.application.add_handler(CommandHandler("reanudar", self.reanudar_trading_command))
                 self.application.add_handler(CommandHandler("onboarding", self.onboarding_command))
-                logger.info("⚙️ User Settings V6.5.3 registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
+                logger.info(f"⚙️ User Settings {VERSION_BANNER} registrados: /miconfig, /perfil, /limites, /proteccion, /estrategias, /cryptos, /autotrading")
             
-            # 📊 Comandos Daily Summary V6.5.3 PREMIUM - Resúmenes diarios
+            # 📊 Comandos Daily Summary PREMIUM - Resúmenes diarios
             self.application.add_handler(CommandHandler("resumen", self.resumen_command))
-            logger.info("📊 Daily Summary V6.5.3 registrado: /resumen")
+            logger.info(f"📊 Daily Summary {VERSION_BANNER} registrado: /resumen")
             
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -617,7 +618,7 @@ class EnterpriseTelegramBot:
                     alert_dispatcher=self.alert_dispatcher
                 )
             
-            # 📢 Inicializar Notification Services V6.5.3 PREMIUM
+            # 📢 Inicializar Notification Services PREMIUM
             if NOTIFICATIONS_AVAILABLE:
                 try:
                     trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
@@ -640,7 +641,7 @@ class EnterpriseTelegramBot:
                     if self.paper_trading:
                         self.paper_trading.notification_service = self.notification_service
                     
-                    logger.info("📢 Notification Services V6.5.3 PREMIUM ACTIVOS")
+                    logger.info(f"📢 Notification Services {VERSION_BANNER} PREMIUM ACTIVOS")
                     logger.info("   🔔 Trade Alerts: Notificaciones en tiempo real")
                     logger.info("   📊 Daily Summary: Resumen diario a las 20:00 UTC")
                 except Exception as e:
@@ -659,7 +660,7 @@ class EnterpriseTelegramBot:
             
             user = update.effective_user
             
-            welcome_message = f"""🚀 **OMNIX V6.5.3 INSTITUTIONAL+**
+            welcome_message = f"""🚀 **OMNIX {VERSION_BANNER}**
 
 ¡Hola {user.first_name}! Soy OMNIX, tu asistente de trading profesional.
 
@@ -708,13 +709,13 @@ Opera bajo tu propio riesgo. /legal para detalles."""
             except:
                 pass
             
-            version_text = f"""🔧 **OMNIX V6.5.3 INSTITUTIONAL+ - BUILD INFO**
+            version_text = f"""🔧 **OMNIX {VERSION_BANNER} - BUILD INFO**
 
-📌 **Version**: V6.5.3
+📌 **Version**: {VERSION_BANNER}
 🕐 **Build**: 2025-12-05T20:15:00Z
 🎯 **Build ID**: paper-mode-buy-bias-fix
 
-**🪙 MULTI-CRIPTO V6.5.3:**
+**🪙 MULTI-CRIPTO:**
 ✅ 50+ criptomonedas soportadas
 ✅ BTC, ETH, ADA, SOL, XRP, DOT, DOGE...
 ✅ Kraken + CoinGecko fallback
@@ -723,19 +724,19 @@ Opera bajo tu propio riesgo. /legal para detalles."""
 🔗 Trading: {'✅ Activo' if has_trading else '⚠️ Paper Mode'}
 📡 Kraken: {'✅ API Conectada' if has_kraken else '⚠️ API Pública'}
 
-✅ Build V6.5.3 confirmado."""
+✅ Build {VERSION_BANNER} confirmado."""
             
-            logger.info(f"🔧 /version responding: V6.5.3")
+            logger.info(f"🔧 /version responding: {VERSION_BANNER}")
             await update.message.reply_text(version_text, parse_mode='Markdown')
         except Exception as e:
             logger.error(f"❌ /version error: {e}")
-            await update.message.reply_text(f"🔧 OMNIX V6.5.3 - Error: {e}")
+            await update.message.reply_text(f"🔧 OMNIX {VERSION_BANNER} - Error: {e}")
 
     async def help_command(self, update, context):
         """Comando /help"""
         try:
-            help_text = """
-**OMNIX V6.5.3 INSTITUTIONAL+ - COMANDOS COMPLETOS**
+            help_text = f"""
+**OMNIX {VERSION_BANNER} - COMANDOS COMPLETOS**
 
 **INFORMACION DE MERCADO:**
 /precio [crypto] - Precio actual (ej: /precio BTC)
@@ -754,7 +755,7 @@ Opera bajo tu propio riesgo. /legal para detalles."""
 /paper_sell BTC 5000 - Vender $5,000 de BTC (simulado)
 *Usa precios REALES de Kraken sin gastar dinero real*
 
-**📈 BOLSA DE VALORES (NYSE/NASDAQ) - V6.5.3:**
+**📈 BOLSA DE VALORES (NYSE/NASDAQ):**
 /balance_bolsa - Ver balance y posiciones en acciones
 /mercado - Estado del mercado (abierto/cerrado)
 /analizar AAPL - Análisis técnico + fundamental completo
@@ -815,7 +816,7 @@ Opera bajo tu propio riesgo. /legal para detalles."""
         """Comando /legal - Disclaimer y términos legales"""
         try:
             legal_text = """
-⚖️ **TÉRMINOS LEGALES Y DISCLAIMER - OMNIX V6.5.3**
+⚖️ **TÉRMINOS LEGALES Y DISCLAIMER - OMNIX**
 
 🔞 **RESTRICCIÓN DE EDAD:**
 Este servicio está disponible SOLO para usuarios mayores de 18 años. Al usar OMNIX confirmas que cumples este requisito legal.
@@ -883,7 +884,7 @@ Las clasificaciones Halal/Haram se basan en investigación académica (Mufti Taq
 
 **CONTACTO:**
 Desarrollador: Harold Nunes
-Sistema: OMNIX V6.5.3 INSTITUTIONAL+
+Sistema: OMNIX INSTITUTIONAL+
 Última actualización: Diciembre 2025
 
 ⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones financieras.
@@ -1042,7 +1043,7 @@ El mejor trade es el que NO haces si no estás seguro.
 /help - Ver todos los comandos
 /analisis BTC - Análisis técnico completo
 
-*Desarrollado por Harold Nunes - Sistema OMNIX V6.5.3*
+*Desarrollado por Harold Nunes - Sistema OMNIX*
 """
             
             await update.message.reply_text(educacion_text, parse_mode='Markdown')
@@ -1079,7 +1080,7 @@ El mejor trade es el que NO haces si no estás seguro.
 **Datos en tiempo real desde Kraken**
 Actualizado: {datetime.now().strftime('%H:%M:%S')}
 
-*Sistema OMNIX V6.5.3 - Harold Nunes*
+*Sistema OMNIX - Harold Nunes*
 """
                 else:
                     mensaje = f"No se pudo obtener precio para {symbol}"
@@ -1200,7 +1201,7 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
    `/analisis ETH` - Análisis técnico completo
    `/arbitrage_scan BTC/USD` - Buscar arbitraje
 
-*OMNIX V6.5.3 INSTITUTIONAL+ - Market Intelligence*
+*OMNIX INSTITUTIONAL+ - Market Intelligence*
 """
             else:
                 response = "❌ No se pudieron obtener datos del mercado. Verifica la conexión con Kraken."
@@ -1631,7 +1632,7 @@ Tip: Usa /balance cada día para tracking automático
 *Usa /balance diariamente para tracking preciso*
 *Usa /educacion para aprender estrategias*
 
-Sistema OMNIX V6.5.3 - Harold Nunes
+Sistema OMNIX - Harold Nunes
 """
             
             await update.message.reply_text(mensaje, parse_mode='Markdown')
@@ -1666,7 +1667,7 @@ Sistema OMNIX V6.5.3 - Harold Nunes
 
 ⚡ **Actualizado:** {datetime.now().strftime('%H:%M:%S')}
 
-*Análisis generado por OMNIX V6.5.3*
+*Análisis generado por OMNIX*
 """
                 
             except Exception as e:
@@ -1682,7 +1683,7 @@ Sistema OMNIX V6.5.3 - Harold Nunes
         """Comando /status"""
         try:
             status_msg = f"""
-🔍 **OMNIX V6.5.3 SYSTEM STATUS**
+🔍 **OMNIX SYSTEM STATUS**
 
 🟢 **Sistema:** OPERATIVO
 🟢 **Trading:** KRAKEN CONECTADO
@@ -1691,7 +1692,7 @@ Sistema OMNIX V6.5.3 - Harold Nunes
 🟢 **Bot Telegram:** FUNCIONANDO
 
 ⚡ **Uptime:** {datetime.now().strftime('%H:%M:%S')}
-🚀 **Versión:** V6.5.3 INSTITUTIONAL+
+🚀 **Versión:** {VERSION_BANNER}
 👨‍💻 **Desarrollador:** Harold Nunes
 🔧 **Plataforma:** Replit Production
 
@@ -2638,7 +2639,7 @@ No se han realizado cambios recientes en el auto-learning
             blocked_emoji = "🛑" if status['is_blocked'] else "✅"
             
             msg = f"""
-🛡️ **AI RISK GUARDIAN V6.5.3 - ESTADO**
+🛡️ **AI RISK GUARDIAN - ESTADO**
 
 {blocked_emoji} **Trading:** {'BLOQUEADO' if status['is_blocked'] else 'PERMITIDO'}
 {'⏱️ **Bloqueado hasta:** ' + status['block_until'] if status['is_blocked'] else ''}
@@ -2796,7 +2797,7 @@ Ejemplo: /risk_events 48
             else:
                 logger.warning(f"⚠️ db_manager not available - user {user_id} NOT registered")
             
-            # ⚙️ USER SETTINGS V6.5.3: Procesamiento de Lenguaje Natural para configuración
+            # ⚙️ USER SETTINGS: Procesamiento de Lenguaje Natural para configuración
             # Detectar peticiones de configuración en lenguaje natural ANTES de enviar a IA
             if self.user_settings_service and USER_SETTINGS_AVAILABLE:
                 nlp_result = self.user_settings_service.process_natural_language_command(user_id, user_message)
@@ -2880,7 +2881,7 @@ Usa: `/autotrading activar ACEPTO`"""
                     await self.auto_status_command(update, context)
                 else:
                     # Mostrar ayuda
-                    await update.message.reply_text("""🤖 AUTO-TRADING BOT V6.5.3
+                    await update.message.reply_text(f"""🤖 AUTO-TRADING BOT {VERSION_BANNER}
                     
 📋 COMANDOS:
 /autotrading start → Iniciar bot 24/7
@@ -3231,7 +3232,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 
             except Exception as ai_error:
                 logger.error(f"❌ Error IA superinteligencia: {ai_error}")
-                fallback_response = f"🧠 OMNIX IA V6.5.3 operativo, {user_name}. Tu mensaje '{user_message}' recibido correctamente."
+                fallback_response = f"🧠 OMNIX IA {VERSION_BANNER} operativo, {user_name}. Tu mensaje '{user_message}' recibido correctamente."
                 await update.message.reply_text(fallback_response)
             
         except Exception as e:
@@ -3746,7 +3747,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/help'):
-                response_text += """❓ **AYUDA - COMANDOS OMNIX V6.5.3 INSTITUTIONAL+**
+                response_text += f"""❓ **AYUDA - COMANDOS OMNIX {VERSION_BANNER}**
 
 🔧 **COMANDOS BÁSICOS:**
 /start - Inicializar sistema
@@ -3781,11 +3782,11 @@ Pregúntame cualquier cosa sobre:
 • Física cuántica aplicada
 • Criptomonedas
 
-*OMNIX V6.5.3 INSTITUTIONAL+ - Harold Nunes*"""
+*OMNIX INSTITUTIONAL+ - Harold Nunes*"""
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/quantum_stats'):
-                # 🎲 QUANTUM ENHANCEMENTS V6.5.3 - Estadísticas QRNG + QAOA
+                # 🎲 QUANTUM ENHANCEMENTS - Estadísticas QRNG + QAOA
                 if hasattr(self, 'auto_trading') and self.auto_trading:
                     stats = self.auto_trading.get_quantum_stats()
                     
@@ -3793,7 +3794,7 @@ Pregúntame cualquier cosa sobre:
                         qrng_stats = stats.get('qrng', {})
                         qaoa_stats = stats.get('qaoa', {})
                         
-                        response_text += """⚛️ **QUANTUM ENHANCEMENTS V6.5.3**
+                        response_text += f"""⚛️ **QUANTUM ENHANCEMENTS {VERSION_BANNER}**
 
 🎲 **QRNG (Quantum Random Number Generator)**
 """
@@ -4189,7 +4190,7 @@ Perdedores: {stats.get('losing_trades', 0)}
                             else:
                                 pairs_display = result.get('trading_pair', 'BTC/USD')
                             
-                            response_text = f"""🤖 **AUTO-TRADING BOT V6.5.3 STATUS**
+                            response_text = f"""🤖 **AUTO-TRADING BOT {VERSION_BANNER} STATUS**
 
 Estado: {status}
 Modo: {result.get('mode', 'PAPER TRADING')}
@@ -4208,7 +4209,7 @@ Win rate: {stats.get('win_rate', 0)*100:.1f}%
 Usa /autotrading start para activar
 Usa /autotrading stop para detener"""
                 else:
-                    response_text = """🤖 AUTO-TRADING BOT V6.5.3
+                    response_text = f"""🤖 AUTO-TRADING BOT {VERSION_BANNER}
                     
 📋 COMANDOS:
 /autotrading start → Iniciar bot 24/7
@@ -4217,7 +4218,7 @@ Usa /autotrading stop para detener"""
 
 ℹ️ EJEMPLO: /autotrading start"""
             
-            # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.5.3
+            # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA
             elif text.startswith('/share_signal'):
                 if self.signal_contribution:
                     parts = text.split()
@@ -4409,7 +4410,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                     logger.error(f"❌ Error enviando respuesta /autotrading: {response.text}")
             
             else:
-                # 🎓 AUTO-LEARNING V6.5.3: DETECCIÓN AUTOMÁTICA DE VIDEOS DE YOUTUBE
+                # 🎓 AUTO-LEARNING: DETECCIÓN AUTOMÁTICA DE VIDEOS DE YOUTUBE
                 import re
                 youtube_pattern = r'(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)'
                 youtube_match = re.search(youtube_pattern, text)
@@ -4644,7 +4645,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                         kraken_auth_available = False
                         
                         try:
-                            # HAROLD FIX V6.5.3: Verificar si hay kraken_client disponible PRIMERO
+                            # HAROLD FIX: Verificar si hay kraken_client disponible PRIMERO
                             ts = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
                             
                             if ts and hasattr(ts, 'kraken_client') and ts.kraken_client:
@@ -4705,7 +4706,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as pub_error:
                                 logger.error(f"❌ Kraken PUBLIC falló: {type(pub_error).__name__}: {pub_error}")
                         
-                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad - V6.5.3 SDK Migration
+                        # FORZAR GEMINI 2.0 DIRECTO como ÚNICA prioridad - SDK Migration
                         gemini_key = os.environ.get('GEMINI_API_KEY')
                         gemini_client = None
                         gemini_sdk_version = None
@@ -4783,7 +4784,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as prompt_error:
                                 logger.warning(f"⚠️ Error usando PromptsContextManager: {prompt_error}")
                                 # Fallback simple conversacional
-                                gemini_prompt = f"""Soy OMNIX V6.5.3 INSTITUTIONAL+, tu asistente de trading institucional.
+                                gemini_prompt = f"""Soy OMNIX {VERSION_BANNER}, tu asistente de trading institucional.
 
 IMPORTANTE: Responde en ESPAÑOL de forma natural y conversacional.
 
@@ -5361,7 +5362,7 @@ Trades: {balance['total_trades']}"""
             self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
 
     def start_polling(self, drop_pending_updates=True):
-        """Iniciar bot en modo polling directo - VERSION ULTRA ROBUSTA V6.5.3
+        """Iniciar bot en modo polling directo - VERSION ULTRA ROBUSTA
         
         Mejoras Dic 2025:
         - Timeout aumentado de 10s a 30s para evitar desconexiones
@@ -5371,7 +5372,7 @@ Trades: {balance['total_trades']}"""
         - Logs detallados para debugging
         """
         try:
-            logger.info("🚀 Iniciando bot Telegram V6.5.3 INSTITUTIONAL+ ROBUSTO...")
+            logger.info(f"🚀 Iniciando bot Telegram {VERSION_BANNER} ROBUSTO...")
             
             # Eliminar webhook si existe
             try:
@@ -5381,7 +5382,7 @@ Trades: {balance['total_trades']}"""
             except:
                 pass
             
-            # SISTEMA ULTRA ROBUSTO DE POLLING V6.5.3
+            # SISTEMA ULTRA ROBUSTO DE POLLING
             def poll_messages():
                 """Polling ultra robusto con reconexión automática infinita"""
                 offset = 0
@@ -5390,7 +5391,7 @@ Trades: {balance['total_trades']}"""
                 base_wait = 5  # segundos base para backoff
                 max_wait = 30  # máximo tiempo de espera
                 
-                logger.info("🔄 Iniciando polling ULTRA ROBUSTO V6.5.3...")
+                logger.info(f"🔄 Iniciando polling ULTRA ROBUSTO {VERSION_BANNER}...")
                 logger.info("⚙️ Config: timeout=30s, reintentos=3, backoff=exponencial")
                 
                 # PROTECCIÓN MÁXIMA: Loop con manejo robusto de errores
@@ -5500,7 +5501,7 @@ Trades: {balance['total_trades']}"""
             polling_thread = threading.Thread(target=poll_messages, daemon=True)
             polling_thread.start()
             
-            logger.info("✅ Bot Telegram V6.5.3 INSTITUTIONAL+ ROBUSTO iniciado")
+            logger.info(f"✅ Bot Telegram {VERSION_BANNER} ROBUSTO iniciado")
             logger.info("🛡️ Reconexión automática ACTIVADA - El bot NUNCA se detendrá por errores de red")
             logger.info(f"📡 Hilo de polling activo: {polling_thread.is_alive()}")
             return True
@@ -5510,7 +5511,7 @@ Trades: {balance['total_trades']}"""
             return False
     
     # ============================================================================
-    # 📊 STOCK TRADING COMMANDS V6.5.3 - BOLSA DE VALORES (NYSE/NASDAQ)
+    # 📊 STOCK TRADING COMMANDS - BOLSA DE VALORES (NYSE/NASDAQ)
     # ============================================================================
     
     async def balance_stocks_command(self, update, context):
@@ -5577,7 +5578,7 @@ Trades: {balance['total_trades']}"""
 {analisis.get('analisis_ia', 'Mercado en análisis...')}
 
 ⚡ **Actualizado:** {datetime.now().strftime('%H:%M:%S')}
-🧬 *Sistema OMNIX Quantum V6.5.3*
+🧬 *Sistema OMNIX Quantum*
 """
                     await update.message.reply_text(mensaje, parse_mode='Markdown')
                     
@@ -5633,7 +5634,7 @@ Trades: {balance['total_trades']}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def premium_stock_command(self, update, context):
-        """Comando /analizar_premium [SYMBOL] - Análisis institucional V6.5.3"""
+        """Comando /analizar_premium [SYMBOL] - Análisis institucional"""
         try:
             symbol = context.args[0].upper() if context.args else None
             
@@ -5685,7 +5686,7 @@ Trades: {balance['total_trades']}"""
    🔗 Non-Markovian: ✅
 
 ⚡ {datetime.now().strftime('%H:%M:%S')}
-🧬 *OMNIX Quantum Premium V6.5.3*
+🧬 *OMNIX Quantum Premium*
 """
                     await update.message.reply_text(mensaje, parse_mode='Markdown')
                     
@@ -5711,7 +5712,7 @@ Trades: {balance['total_trades']}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def stock_status_command(self, update, context):
-        """Comando /stock_status - Estado del sistema V6.5.3"""
+        """Comando /stock_status - Estado del sistema"""
         if not self.stock_handler or not self.stock_handler.enabled:
             await update.message.reply_text("📊 Módulo de bolsa no activado")
             return
@@ -5724,7 +5725,7 @@ Trades: {balance['total_trades']}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     async def stock_risk_dashboard_command(self, update, context):
-        """Comando /risk_dashboard - Dashboard de riesgo institucional V6.5.3"""
+        """Comando /risk_dashboard - Dashboard de riesgo institucional"""
         if not self.stock_handler or not self.stock_handler.enabled:
             await update.message.reply_text("📊 Módulo de bolsa no activado")
             return
@@ -5737,7 +5738,7 @@ Trades: {balance['total_trades']}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     # ==========================================
-    # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM V6.5.3
+    # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM
     # ==========================================
     
     async def arbitrage_command(self, update, context):
@@ -5748,7 +5749,7 @@ Trades: {balance['total_trades']}"""
         
         try:
             response = f"""
-💱 **OMNIX ARBITRAGE PREMIUM V6.5.3**
+💱 **OMNIX ARBITRAGE PREMIUM**
 
 🏦 **Sistema Multi-Exchange Institucional**
    • 8 Exchanges: Kraken, Binance, Coinbase, Bybit, KuCoin, OKX, Gate.io, Bitfinex
@@ -5995,7 +5996,7 @@ Trades: {balance['total_trades']}"""
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
     # ═══════════════════════════════════════════════════════════════════════════
-    # 🧠 COMMUNITY INTELLIGENCE COMMANDS - MEMORIA COLECTIVA V6.5.3
+    # 🧠 COMMUNITY INTELLIGENCE COMMANDS - MEMORIA COLECTIVA
     # ═══════════════════════════════════════════════════════════════════════════
     
     async def feedback_command(self, update, context):
@@ -6132,7 +6133,7 @@ Usa `/my_contributions` para ver tus stats
    `/vote_strategy` - Votar estrategia
    `/my_contributions` - Ver tus stats
 
-*OMNIX V6.5.3 - Community Intelligence*
+*OMNIX - Community Intelligence*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6187,7 +6188,7 @@ Usa `/my_contributions` para ver tus stats
    • Propuestas: +25 pts
    • Feedback útil: +15 pts bonus
 
-*OMNIX V6.5.3 - Community Intelligence*
+*OMNIX - Community Intelligence*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6305,7 +6306,7 @@ Usa `/my_contributions` para ver tus stats
 
 💡 Usa `/feedback` para ganar más puntos
 
-*OMNIX V6.5.3 - Community Intelligence*
+*OMNIX - Community Intelligence*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6363,7 +6364,7 @@ Usa `/my_contributions` para ver tus stats
             response += f"""
 ⏱️ Analizado: {result['analyzed_at']}
 
-*OMNIX V6.5.3 - Community Intelligence*
+*OMNIX - Community Intelligence*
 """
             
             await loading_msg.edit_text(response, parse_mode='Markdown')
@@ -6373,7 +6374,7 @@ Usa `/my_contributions` para ver tus stats
             await update.message.reply_text(f"❌ Error: {str(e)}")
     
     # ═══════════════════════════════════════════════════════════════════
-    # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA V6.5.3
+    # 🚀 SIGNAL CONTRIBUTION - CROWDSOURCING DE ALPHA
     # ═══════════════════════════════════════════════════════════════════
     
     async def share_signal_command(self, update, context):
@@ -6448,7 +6449,7 @@ Usa `/my_contributions` para ver tus stats
 📡 Tu señal ahora es visible para toda la comunidad.
 Usa `/community_signals` para ver todas las señales activas.
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """
             else:
                 response = f"❌ Error: {result.get('error', 'Unknown error')}"
@@ -6482,7 +6483,7 @@ No hay señales activas en este momento.
 🚀 ¡Sé el primero en compartir una señal!
 Usa `/share_signal BTC LONG 95000` para empezar.
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """, parse_mode='Markdown')
                 return
             
@@ -6508,7 +6509,7 @@ Usa `/share_signal BTC LONG 95000` para empezar.
 • `/execute_signal ID` - Ejecutar señal
 • `/share_signal` - Compartir tu propia señal
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6568,7 +6569,7 @@ Usa `/share_signal BTC LONG 95000` para empezar.
 • Las señales exitosas dan +50 puntos
 • Los fallos restan -10 puntos
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6595,7 +6596,7 @@ No hay contribuidores aún.
 🚀 ¡Sé el primero en compartir señales!
 Usa `/share_signal BTC LONG 95000` para empezar.
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """, parse_mode='Markdown')
                 return
             
@@ -6634,7 +6635,7 @@ Usa `/share_signal BTC LONG 95000` para empezar.
 
 💡 Comparte señales exitosas para subir en el ranking!
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """
             
             await update.message.reply_text(response, parse_mode='Markdown')
@@ -6665,7 +6666,7 @@ Usa `/share_signal BTC LONG 95000` para empezar.
 
 📡 Usa `/community_signals` para ver las señales disponibles.
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """, parse_mode='Markdown')
                 return
             
@@ -6697,7 +6698,7 @@ Usa `/share_signal BTC LONG 95000` para empezar.
 
 El contribuidor ganará royalties si la señal es exitosa.
 
-*OMNIX V6.5.3 - Crowdsourcing de Alpha*
+*OMNIX - Crowdsourcing de Alpha*
 """
             else:
                 response = f"❌ Error: {result.get('error', 'Unknown error')}"
@@ -6930,7 +6931,7 @@ Las operaciones ahora se procesarán normalmente.
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # ⚙️ USER SETTINGS V6.5.3 - COMANDOS DE CONFIGURACIÓN PERSONALIZADA PREMIUM
+    # ⚙️ USER SETTINGS - COMANDOS DE CONFIGURACIÓN PERSONALIZADA PREMIUM
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     async def miconfig_command(self, update, context):
@@ -7240,7 +7241,7 @@ Las operaciones ahora se procesarán normalmente.
             if not args:
                 active = settings.active_strategies
                 
-                strategies_text = """📈 **ESTRATEGIAS OMNIX V6.5.3**
+                strategies_text = f"""📈 **ESTRATEGIAS OMNIX {VERSION_BANNER}**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **🟢 TUS ESTRATEGIAS ACTIVAS:**
@@ -7561,7 +7562,7 @@ Usa `/miconfig` para ver todos los detalles.
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
     async def resumen_command(self, update, context):
-        """Comando /resumen - Generar resumen diario de trading V6.5.3 PREMIUM"""
+        """Comando /resumen - Generar resumen diario de trading PREMIUM"""
         try:
             user = update.effective_user
             chat_id = str(update.effective_chat.id)
@@ -7587,7 +7588,7 @@ Usa `/miconfig` para ver todos los detalles.
 El bot está activo y buscando oportunidades.
 Usa `/autotrading status` para ver el estado.
 
-_OMNIX V6.5.3 INSTITUTIONAL+_""", parse_mode='Markdown')
+_OMNIX INSTITUTIONAL+_""", parse_mode='Markdown')
             else:
                 await update.message.reply_text("❌ Servicio de resumen no disponible")
                 
