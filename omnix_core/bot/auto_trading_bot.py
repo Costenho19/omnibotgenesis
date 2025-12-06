@@ -1564,15 +1564,16 @@ class AutoTradingBot:
             if monte_carlo:
                 adjusted_weight = monte_carlo_base_weight * monte_carlo_weight
                 max_score += adjusted_weight
-                win_rate = monte_carlo.get('win_rate', 50)
-                if win_rate > 60:
+                win_rate = monte_carlo.get('win_rate', 0.5)  # V6.5.4: default as decimal
+                win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate  # Handle both formats
+                if win_rate_pct > 60:
                     score += adjusted_weight
-                    decision['reason'].append(f"✅ Monte Carlo: {win_rate:.1f}% win rate (peso: {monte_carlo_weight:.0%})")
-                elif win_rate > 50:
+                    decision['reason'].append(f"✅ Monte Carlo: {win_rate_pct:.1f}% win rate (peso: {monte_carlo_weight:.0%})")
+                elif win_rate_pct > 50:
                     score += adjusted_weight * 0.53
-                elif win_rate < 40:
+                elif win_rate_pct < 40:
                     score -= adjusted_weight
-                    decision['reason'].append(f"⚠️ Monte Carlo: {win_rate:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
+                    decision['reason'].append(f"⚠️ Monte Carlo: {win_rate_pct:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
             
             # 2. Black Swan (peso: 15 puntos - CRÍTICO)
             # Penalizaciones MUY reducidas en paper mode para generar trades
@@ -3649,14 +3650,15 @@ class AutoTradingBot:
         
         # 3. Monte Carlo
         if monte_carlo:
-            win_rate = monte_carlo.get('win_rate', 50)
-            if win_rate >= 70:
+            win_rate = monte_carlo.get('win_rate', 0.5)  # V6.5.4: default as decimal
+            win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate  # Handle both formats
+            if win_rate_pct >= 70:
                 signal_enum = Signal.STRONG_BUY
-            elif win_rate >= 55:
+            elif win_rate_pct >= 55:
                 signal_enum = Signal.BUY
-            elif win_rate <= 30:
+            elif win_rate_pct <= 30:
                 signal_enum = Signal.STRONG_SELL
-            elif win_rate <= 45:
+            elif win_rate_pct <= 45:
                 signal_enum = Signal.SELL
             else:
                 signal_enum = Signal.HOLD
@@ -3664,9 +3666,9 @@ class AutoTradingBot:
             signals.append(StrategySignal(
                 name='monte_carlo',
                 signal=signal_enum,
-                confidence=win_rate / 100.0,
-                strength=win_rate,
-                reasoning=f"{win_rate:.1f}% win probability"
+                confidence=win_rate_pct / 100.0,
+                strength=win_rate_pct,
+                reasoning=f"{win_rate_pct:.1f}% win probability"
             ))
         
         # 4. HMM Regime Detection

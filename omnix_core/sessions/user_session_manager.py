@@ -431,7 +431,7 @@ class UserSessionManager:
                 ''')
                 
                 if result:
-                    active_users = [str(row.get('user_id')) for row in result]
+                    active_users = [str(row[0] if isinstance(row, tuple) else row.get('user_id')) for row in result]
                     logger.info(f"📊 {len(active_users)} sesiones activas en PostgreSQL")
             except Exception as e:
                 logger.warning(f"⚠️ Error leyendo sesiones activas de PostgreSQL: {e}")

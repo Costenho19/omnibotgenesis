@@ -117,7 +117,7 @@ class QuantumRandomNumberGenerator:
             self.stats.failed_requests += 1
             
             if not self.fallback_logged:
-                logger.warning(f"⚠️ QRNG API error {response.status_code} - Usando generador clásico (próximo intento en 5 min)")
+                logger.info(f"ℹ️ QRNG API {response.status_code} - Fallback a generador clásico (próximo intento en 5 min)")
                 self.fallback_logged = True
             
             return None
@@ -129,7 +129,7 @@ class QuantumRandomNumberGenerator:
             self.stats.failed_requests += 1
             
             if not self.fallback_logged:
-                logger.warning(f"⚠️ QRNG conexión fallida - Usando generador clásico (próximo intento en 5 min)")
+                logger.info(f"ℹ️ QRNG timeout/error - Fallback a generador clásico (próximo intento en 5 min)")
                 self.fallback_logged = True
             
             return None
