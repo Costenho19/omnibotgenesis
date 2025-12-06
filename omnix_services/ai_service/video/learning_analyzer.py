@@ -1,8 +1,8 @@
 """
-⚡ OMNIX V5.2 QUANTUM ULTIMATE - VIDEO LEARNING ANALYZER
+⚡ OMNIX V6.5.4 INSTITUTIONAL+ - VIDEO LEARNING ANALYZER
 Sistema de análisis inteligente de videos de trading
 Extrae insights técnicos y genera propuestas de ajuste automáticas
-Desarrollado por Harold Nunes - Noviembre 2025
+Desarrollado por Harold Nunes - V6.5.4 INSTITUTIONAL+
 """
 
 import logging

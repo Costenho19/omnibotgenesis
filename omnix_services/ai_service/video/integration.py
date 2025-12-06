@@ -1,5 +1,5 @@
 """
-🔗 OMNIX V5.3 QUANTUM ULTIMATE - VIDEO LEARNING INTEGRATION
+🔗 OMNIX V6.5.4 INSTITUTIONAL+ - VIDEO LEARNING INTEGRATION
 Integración entre VideoAnalyzerUltra y AutoLearningSystem
 
 FUNCIONALIDAD:
@@ -9,15 +9,20 @@ FUNCIONALIDAD:
 - Aplica cambios automáticamente (si enabled) o propone (si disabled)
 - Mantiene historial completo de aprendizajes
 
-Desarrollado por Harold Nunes - Noviembre 2025
+Desarrollado por Harold Nunes - V6.5.4 INSTITUTIONAL+
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+try:
+    from omnix_config import VERSION_BANNER
+except ImportError:
+    VERSION_BANNER = "V6.5.4 INSTITUTIONAL+"
 
 
 @dataclass
@@ -78,7 +83,7 @@ class VideoLearningIntegration:
         
         logger.info("🔗 Video Learning Integration inicializada")
     
-    def process_video_analysis(self, video_url: str, extract_frames: bool = True) -> Dict:
+    def process_video_analysis(self, video_url: str, extract_frames: bool = True) -> Dict[str, Any]:
         """
         Procesar análisis completo de video y generar propuestas de parámetros
         
@@ -89,9 +94,9 @@ class VideoLearningIntegration:
         Returns:
             Dict con propuestas de aprendizaje
         """
-        logger.info(f"🎥 Procesando video para aprendizaje: {video_url}")
+        logger.info(f"🎥 [{VERSION_BANNER}] Procesando video para aprendizaje: {video_url}")
         
-        result = {
+        result: Dict[str, Any] = {
             'video_url': video_url,
             'timestamp': datetime.now().isoformat(),
             'status': 'processing'

@@ -1,5 +1,5 @@
 """
-🎥 OMNIX V5.3 QUANTUM ULTIMATE - VIDEO ANALYZER ULTRA
+🎥 OMNIX V6.5.4 INSTITUTIONAL+ - VIDEO ANALYZER ULTRA
 Sistema avanzado de análisis de videos de trading con procesamiento visual
 
 CAPACIDADES PREMIUM INSTITUCIONALES:
@@ -11,11 +11,11 @@ CAPACIDADES PREMIUM INSTITUCIONALES:
 
 TECNOLOGÍAS:
 - GPT-4 Vision API para análisis visual de gráficos
-- Gemini 2.0 Flash Multimodal para frames
+- Gemini 2.0 Flash Multimodal para frames (NUEVO SDK google-genai)
 - OpenAI Whisper para transcripciones
 - NLP avanzado para sentimiento
 
-Desarrollado por Harold Nunes - Noviembre 2025 - V5.3 ULTRA
+Desarrollado por Harold Nunes - V6.5.4 INSTITUTIONAL+
 """
 
 import logging
@@ -23,11 +23,15 @@ import os
 import re
 import json
 import tempfile
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
-import requests
 
 logger = logging.getLogger(__name__)
+
+try:
+    from omnix_config import VERSION_BANNER
+except ImportError:
+    VERSION_BANNER = "V6.5.4 INSTITUTIONAL+"
 
 
 class VideoAnalyzerUltra:
@@ -39,7 +43,12 @@ class VideoAnalyzerUltra:
     recomendaciones de trading institucionales.
     """
     
-    def __init__(self, openai_api_key: str = None, gemini_api_key: str = None, database_service = None):
+    def __init__(
+        self, 
+        openai_api_key: Optional[str] = None, 
+        gemini_api_key: Optional[str] = None, 
+        database_service: Optional[Any] = None
+    ):
         """
         Inicializar Video Analyzer Ultra
         
@@ -52,10 +61,12 @@ class VideoAnalyzerUltra:
         self.gemini_api_key = gemini_api_key or os.environ.get('GEMINI_API_KEY')
         self.database_service = database_service
         
-        # Inicializar APIs de visión
+        self.openai_client: Optional[Any] = None
+        self.gemini_client: Optional[Any] = None
+        self._gemini_sdk: Optional[str] = None
+        
         self._init_vision_apis()
         
-        # Patrones técnicos a detectar en gráficos
         self.chart_patterns = [
             'head_and_shoulders', 'inverse_head_and_shoulders',
             'double_top', 'double_bottom',
@@ -65,7 +76,6 @@ class VideoAnalyzerUltra:
             'wedge_rising', 'wedge_falling'
         ]
         
-        # Indicadores visuales a detectar
         self.visual_indicators = [
             'support_level', 'resistance_level',
             'trendline_bullish', 'trendline_bearish',
@@ -73,14 +83,13 @@ class VideoAnalyzerUltra:
             'rsi_divergence', 'macd_divergence'
         ]
         
-        logger.info("🎥 Video Analyzer Ultra V5.3 inicializado")
-        logger.info(f"   🎬 GPT-4 Vision: {'✅' if self.openai_api_key else '❌'}")
-        logger.info(f"   🧠 Gemini Vision: {'✅' if self.gemini_api_key else '❌'}")
+        logger.info(f"🎥 [{VERSION_BANNER}] Video Analyzer Ultra inicializado")
+        logger.info(f"   🎬 GPT-4 Vision: {'✅' if self.openai_client else '❌'}")
+        logger.info(f"   🧠 Gemini Vision: {'✅' if self.gemini_client else '❌'}")
     
-    def _init_vision_apis(self):
+    def _init_vision_apis(self) -> None:
         """Inicializar APIs de visión por computadora"""
         try:
-            # GPT-4 Vision (OpenAI)
             if self.openai_api_key:
                 from openai import OpenAI
                 self.openai_client = OpenAI(api_key=self.openai_api_key)
@@ -89,24 +98,23 @@ class VideoAnalyzerUltra:
                 self.openai_client = None
                 logger.warning("⚠️ OpenAI API key no disponible")
             
-            # Gemini Vision - supports new and legacy SDK
             if self.gemini_api_key:
                 try:
+                    from google import genai
+                    self.gemini_client = genai.Client(api_key=self.gemini_api_key)
+                    self._gemini_sdk = 'new'
+                    logger.info("✅ Gemini Vision API inicializada (NUEVO SDK google-genai)")
+                except ImportError:
                     try:
-                        from google import genai
-                        self.gemini_client = genai.Client(api_key=self.gemini_api_key)
-                        self._gemini_sdk = 'new'
-                        logger.info("✅ Gemini Vision API inicializada (NUEVO SDK)")
-                    except ImportError:
-                        import google.generativeai as genai
-                        genai.configure(api_key=self.gemini_api_key)
-                        self.gemini_client = genai
+                        import google.generativeai as genai_legacy
+                        genai_legacy.configure(api_key=self.gemini_api_key)  # type: ignore[attr-defined]
+                        self.gemini_client = genai_legacy
                         self._gemini_sdk = 'legacy'
-                        logger.info("✅ Gemini Vision API inicializada (LEGACY SDK)")
-                except Exception as e:
-                    logger.warning(f"⚠️ Gemini Vision no disponible: {e}")
-                    self.gemini_client = None
-                    self._gemini_sdk = None
+                        logger.info("✅ Gemini Vision API inicializada (SDK legacy)")
+                    except Exception as legacy_err:
+                        logger.warning(f"⚠️ Gemini Vision no disponible: {legacy_err}")
+                        self.gemini_client = None
+                        self._gemini_sdk = None
             else:
                 self.gemini_client = None
                 self._gemini_sdk = None
@@ -114,7 +122,7 @@ class VideoAnalyzerUltra:
         except Exception as e:
             logger.error(f"Error inicializando Vision APIs: {e}")
     
-    def analyze_video_complete(self, video_url: str, extract_frames: bool = True) -> Dict:
+    def analyze_video_complete(self, video_url: str, extract_frames: bool = True) -> Dict[str, Any]:
         """
         Análisis COMPLETO de video: transcripción + visual + sentimiento
         
@@ -125,9 +133,9 @@ class VideoAnalyzerUltra:
         Returns:
             Dict con análisis completo multi-fuente
         """
-        logger.info(f"🎥 Iniciando análisis ULTRA completo: {video_url}")
+        logger.info(f"🎥 [{VERSION_BANNER}] Iniciando análisis ULTRA completo: {video_url}")
         
-        results = {
+        results: Dict[str, Any] = {
             'video_url': video_url,
             'timestamp': datetime.now().isoformat(),
             'analysis_type': 'ULTRA_COMPLETE',
@@ -135,14 +143,12 @@ class VideoAnalyzerUltra:
         }
         
         try:
-            # 1. ANÁLISIS DE TRANSCRIPCIÓN (texto/audio)
             logger.info("📝 Fase 1: Análisis de transcripción...")
             transcript_analysis = self._analyze_transcript(video_url)
             if transcript_analysis:
                 results['transcript_analysis'] = transcript_analysis
                 results['sources'].append('transcript')
             
-            # 2. ANÁLISIS VISUAL DE FRAMES (gráficos, patrones)
             if extract_frames and (self.openai_client or self.gemini_client):
                 logger.info("🎬 Fase 2: Análisis visual de frames...")
                 visual_analysis = self._analyze_visual_frames(video_url)
@@ -150,24 +156,21 @@ class VideoAnalyzerUltra:
                     results['visual_analysis'] = visual_analysis
                     results['sources'].append('visual')
             
-            # 3. ANÁLISIS DE SENTIMIENTO (tono del trader)
             logger.info("💭 Fase 3: Análisis de sentimiento...")
-            # DEFENSIVE: Solo analizar sentimiento si tenemos transcripción válida
             if transcript_analysis and isinstance(transcript_analysis, dict):
                 raw_text = transcript_analysis.get('raw_text', '')
-                sentiment_analysis = self._analyze_sentiment(raw_text)
-                if sentiment_analysis:
-                    results['sentiment_analysis'] = sentiment_analysis
-                    results['sources'].append('sentiment')
+                if raw_text:
+                    sentiment_analysis = self._analyze_sentiment(raw_text)
+                    if sentiment_analysis:
+                        results['sentiment_analysis'] = sentiment_analysis
+                        results['sources'].append('sentiment')
             else:
                 logger.warning("⚠️ Sin transcripción - saltando análisis de sentimiento")
             
-            # 4. INTEGRACIÓN MULTI-FUENTE
             logger.info("🧠 Fase 4: Integración multi-fuente...")
             integrated_recommendations = self._integrate_multi_source(results)
             results['integrated_recommendations'] = integrated_recommendations
             
-            # 5. CONFIANZA GENERAL
             results['confidence_score'] = self._calculate_confidence(results)
             results['status'] = 'success'
             
@@ -180,24 +183,17 @@ class VideoAnalyzerUltra:
         
         return results
     
-    def _analyze_transcript(self, video_url: str) -> Optional[Dict]:
-        """
-        Analizar transcripción del video para extraer parámetros técnicos
-        
-        Similar al VideoLearningAnalyzer actual pero mejorado
-        """
+    def _analyze_transcript(self, video_url: str) -> Optional[Dict[str, Any]]:
+        """Analizar transcripción del video para extraer parámetros técnicos"""
         try:
-            # Extraer ID del video
             video_id = self._extract_video_id(video_url)
             if not video_id:
                 return None
             
-            # Obtener transcripción (YouTube API o yt-dlp)
             transcript = self._get_transcript(video_id)
             if not transcript:
                 return None
             
-            # Analizar con IA para extraer parámetros
             analysis = self._extract_technical_parameters(transcript)
             
             return {
@@ -221,27 +217,23 @@ class VideoAnalyzerUltra:
             logger.error(f"Error analizando transcripción: {e}")
             return None
     
-    def _analyze_visual_frames(self, video_url: str, num_frames: int = 3) -> Optional[Dict]:
+    def _analyze_visual_frames(self, video_url: str, num_frames: int = 3) -> Optional[Dict[str, Any]]:
         """
         Analizar frames del video para detectar gráficos y patrones visuales
-        
-        NUEVO: Procesamiento visual con GPT-4 Vision / Gemini Vision
         
         Args:
             num_frames: Número de frames a analizar (default: 3, max: 5 para controlar costos API)
         """
         try:
-            # LÍMITE DE SEGURIDAD: Max 5 frames para controlar costos
             num_frames = min(num_frames, 5)
             logger.info(f"🎬 Extrayendo {num_frames} frames clave del video...")
             
-            # Extraer frames representativos del video
             frames = self._extract_key_frames(video_url, num_frames)
             if not frames:
                 logger.warning("⚠️ No se pudieron extraer frames")
                 return None
             
-            visual_findings = {
+            visual_findings: Dict[str, Any] = {
                 'patterns_detected': [],
                 'support_resistance_levels': [],
                 'indicators_visible': [],
@@ -249,38 +241,27 @@ class VideoAnalyzerUltra:
                 'confidence': 0.0
             }
             
-            # Analizar cada frame con Vision API
             for idx, frame_path in enumerate(frames):
                 logger.info(f"   📊 Analizando frame {idx+1}/{len(frames)}...")
                 
                 frame_analysis = self._analyze_frame_with_vision(frame_path)
                 
                 if frame_analysis:
-                    # Agregar patrones detectados
                     visual_findings['patterns_detected'].extend(
                         frame_analysis.get('patterns', [])
                     )
-                    
-                    # Agregar niveles de soporte/resistencia
                     visual_findings['support_resistance_levels'].extend(
                         frame_analysis.get('levels', [])
                     )
-                    
-                    # Agregar indicadores visibles
                     visual_findings['indicators_visible'].extend(
                         frame_analysis.get('indicators', [])
                     )
-                    
-                    # Agregar niveles de precio
                     if 'price_levels' in frame_analysis:
                         visual_findings['price_levels'].extend(
                             frame_analysis['price_levels']
                         )
             
-            # Calcular confianza basada en consistencia entre frames
             visual_findings['confidence'] = self._calculate_visual_confidence(visual_findings)
-            
-            # Eliminar duplicados
             visual_findings['patterns_detected'] = list(set(visual_findings['patterns_detected']))
             visual_findings['indicators_visible'] = list(set(visual_findings['indicators_visible']))
             
@@ -292,39 +273,99 @@ class VideoAnalyzerUltra:
             logger.error(f"Error en análisis visual: {e}")
             return None
     
-    def _analyze_frame_with_vision(self, frame_path: str) -> Optional[Dict]:
-        """
-        Analizar un frame individual usando GPT-4 Vision o Gemini Vision
-        """
+    def _extract_key_frames(self, video_url: str, num_frames: int = 3) -> List[str]:
+        """Extraer frames clave del video usando yt-dlp + ffmpeg"""
         try:
-            # Intentar primero con GPT-4 Vision (más preciso para charts)
+            import yt_dlp
+            
+            video_id = self._extract_video_id(video_url)
+            if not video_id:
+                return []
+            
+            with tempfile.TemporaryDirectory() as tmpdir:
+                video_path = os.path.join(tmpdir, f"{video_id}.mp4")
+                
+                ydl_opts = {
+                    'format': 'worst[ext=mp4]/worst',
+                    'outtmpl': video_path,
+                    'quiet': True,
+                    'no_warnings': True,
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([video_url])
+                
+                if not os.path.exists(video_path):
+                    for f in os.listdir(tmpdir):
+                        if f.endswith(('.mp4', '.webm', '.mkv')):
+                            video_path = os.path.join(tmpdir, f)
+                            break
+                
+                if not os.path.exists(video_path):
+                    logger.warning("⚠️ No se pudo descargar el video")
+                    return []
+                
+                import subprocess
+                
+                result = subprocess.run(
+                    ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                     '-of', 'default=noprint_wrappers=1:nokey=1', video_path],
+                    capture_output=True, text=True
+                )
+                duration = float(result.stdout.strip()) if result.stdout.strip() else 60.0
+                
+                frames = []
+                interval = duration / (num_frames + 1)
+                
+                for i in range(1, num_frames + 1):
+                    timestamp = interval * i
+                    frame_path = os.path.join(tmpdir, f"frame_{i}.jpg")
+                    
+                    subprocess.run([
+                        'ffmpeg', '-ss', str(timestamp), '-i', video_path,
+                        '-vframes', '1', '-q:v', '2', frame_path
+                    ], capture_output=True)
+                    
+                    if os.path.exists(frame_path):
+                        persistent_frame = os.path.join('/tmp', f"omnix_frame_{video_id}_{i}.jpg")
+                        import shutil
+                        shutil.copy(frame_path, persistent_frame)
+                        frames.append(persistent_frame)
+                
+                return frames
+                
+        except ImportError:
+            logger.warning("⚠️ yt-dlp o ffmpeg no disponible para extracción de frames")
+            return []
+        except Exception as e:
+            logger.error(f"Error extrayendo frames: {e}")
+            return []
+    
+    def _analyze_frame_with_vision(self, frame_path: str) -> Optional[Dict[str, Any]]:
+        """Analizar un frame individual usando GPT-4 Vision o Gemini Vision"""
+        try:
             if self.openai_client:
                 return self._analyze_frame_gpt4_vision(frame_path)
-            
-            # Fallback a Gemini Vision
             elif self.gemini_client:
                 return self._analyze_frame_gemini_vision(frame_path)
-            
             else:
                 logger.warning("⚠️ No hay Vision API disponible")
                 return None
-                
         except Exception as e:
             logger.error(f"Error analizando frame: {e}")
             return None
     
-    def _analyze_frame_gpt4_vision(self, frame_path: str) -> Optional[Dict]:
-        """
-        Analizar frame con GPT-4 Vision API
-        """
+    def _analyze_frame_gpt4_vision(self, frame_path: str) -> Optional[Dict[str, Any]]:
+        """Analizar frame con GPT-4 Vision API"""
+        if not self.openai_client:
+            return None
+            
         try:
             import base64
             
-            # Leer y codificar imagen
             with open(frame_path, 'rb') as f:
                 image_data = base64.b64encode(f.read()).decode('utf-8')
             
-            # Prompt especializado para análisis de charts de trading
             prompt = """
 Analiza esta imagen de un gráfico de trading y extrae la siguiente información en formato JSON:
 
@@ -364,30 +405,38 @@ Responde solo con JSON válido:
                 max_tokens=2000
             )
             
-            # Parsear respuesta JSON
             content = response.choices[0].message.content
-            analysis = json.loads(content)
+            if content:
+                clean_content = content.strip()
+                if clean_content.startswith('```json'):
+                    clean_content = clean_content[7:]
+                if clean_content.startswith('```'):
+                    clean_content = clean_content[3:]
+                if clean_content.endswith('```'):
+                    clean_content = clean_content[:-3]
+                
+                analysis = json.loads(clean_content.strip())
+                return analysis
             
-            return analysis
+            return None
             
+        except json.JSONDecodeError as je:
+            logger.warning(f"⚠️ Error parseando JSON de GPT-4 Vision: {je}")
+            return None
         except Exception as e:
             logger.error(f"Error con GPT-4 Vision: {e}")
             return None
     
-    def _analyze_frame_gemini_vision(self, frame_path: str) -> Optional[Dict]:
-        """
-        Analizar frame con Gemini Vision API (fallback)
-        """
+    def _analyze_frame_gemini_vision(self, frame_path: str) -> Optional[Dict[str, Any]]:
+        """Analizar frame con Gemini Vision API (NUEVO SDK google-genai)"""
+        if not self.gemini_client:
+            return None
+            
         try:
             import PIL.Image
             
-            # Cargar imagen
             img = PIL.Image.open(frame_path)
             
-            # Crear modelo Gemini Vision
-            model = self.gemini_client.GenerativeModel(model_name='gemini-2.0-flash-exp')
-            
-            # Prompt especializado para análisis de charts de trading
             prompt = """
 Analiza esta imagen de un gráfico de trading y extrae la siguiente información en formato JSON:
 
@@ -408,31 +457,45 @@ Responde solo con JSON válido:
 }
 """
             
-            # Generar análisis
-            response = model.generate_content([prompt, img])
+            if self._gemini_sdk == 'new':
+                response = self.gemini_client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=[prompt, img]
+                )
+                content = response.text if response else None
+            else:
+                model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
+                response = model.generate_content([prompt, img])
+                content = response.text if response else None
             
-            # Parsear respuesta JSON
-            content = response.text
-            analysis = json.loads(content)
+            if content:
+                clean_content = content.strip()
+                if clean_content.startswith('```json'):
+                    clean_content = clean_content[7:]
+                if clean_content.startswith('```'):
+                    clean_content = clean_content[3:]
+                if clean_content.endswith('```'):
+                    clean_content = clean_content[:-3]
+                
+                analysis = json.loads(clean_content.strip())
+                logger.info("🧠 Análisis con Gemini Vision completado")
+                return analysis
             
-            logger.info("🧠 Análisis con Gemini Vision completado")
-            return analysis
+            return None
             
+        except json.JSONDecodeError as je:
+            logger.warning(f"⚠️ Error parseando JSON de Gemini Vision: {je}")
+            return None
         except Exception as e:
             logger.error(f"Error con Gemini Vision: {e}")
             return None
     
-    def _analyze_sentiment(self, text: str) -> Optional[Dict]:
-        """
-        Analizar sentimiento del trader (bullish, bearish, neutral)
-        
-        NUEVO: Análisis de tono y confianza del trader
-        """
-        try:
-            if not text:
-                return None
+    def _analyze_sentiment(self, text: str) -> Optional[Dict[str, Any]]:
+        """Analizar sentimiento del trader (bullish, bearish, neutral)"""
+        if not text:
+            return None
             
-            # Usar GPT-4 para análisis de sentimiento avanzado
+        try:
             if self.openai_client:
                 prompt = f"""
 Analiza el sentimiento de este texto de un trader sobre el mercado:
@@ -456,24 +519,31 @@ Responde en JSON:
                 )
                 
                 content = response.choices[0].message.content
-                sentiment = json.loads(content)
-                
-                return sentiment
+                if content:
+                    clean_content = content.strip()
+                    if clean_content.startswith('```json'):
+                        clean_content = clean_content[7:]
+                    if clean_content.startswith('```'):
+                        clean_content = clean_content[3:]
+                    if clean_content.endswith('```'):
+                        clean_content = clean_content[:-3]
+                    
+                    sentiment = json.loads(clean_content.strip())
+                    return sentiment
             
             return None
             
+        except json.JSONDecodeError as je:
+            logger.warning(f"⚠️ Error parseando JSON de sentimiento: {je}")
+            return None
         except Exception as e:
             logger.error(f"Error en análisis de sentimiento: {e}")
             return None
     
-    def _integrate_multi_source(self, analysis_results: Dict) -> Dict:
-        """
-        Integrar análisis de múltiples fuentes en recomendaciones unificadas
-        
-        NUEVO: Combina transcripción + visual + sentimiento
-        """
-        recommendations = {
-            'action': 'HOLD',  # BUY, SELL, HOLD
+    def _integrate_multi_source(self, analysis_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Integrar análisis de múltiples fuentes en recomendaciones unificadas"""
+        recommendations: Dict[str, Any] = {
+            'action': 'HOLD',
             'confidence': 0.0,
             'reasons': [],
             'suggested_parameters': {},
@@ -486,10 +556,8 @@ Responde en JSON:
             if sources_count == 0:
                 return recommendations
             
-            # Recopilar señales de todas las fuentes
-            signals = []
+            signals: List[Dict[str, Any]] = []
             
-            # 1. Señales de transcripción
             if 'transcript_analysis' in analysis_results:
                 transcript = analysis_results['transcript_analysis']
                 params = transcript.get('technical_parameters', {})
@@ -501,7 +569,6 @@ Responde en JSON:
                         'params': params
                     })
             
-            # 2. Señales visuales
             if 'visual_analysis' in analysis_results:
                 visual = analysis_results['visual_analysis']
                 patterns = visual.get('patterns_detected', [])
@@ -513,7 +580,6 @@ Responde en JSON:
                         'weight': 0.4
                     })
             
-            # 3. Señales de sentimiento
             if 'sentiment_analysis' in analysis_results:
                 sentiment = analysis_results['sentiment_analysis']
                 signals.append({
@@ -522,13 +588,11 @@ Responde en JSON:
                     'weight': 0.2
                 })
             
-            # Calcular recomendación final (weighted average)
             final_signal = self._calculate_weighted_signal(signals)
             recommendations['action'] = final_signal['action']
             recommendations['confidence'] = final_signal['confidence']
             recommendations['reasons'] = final_signal['reasons']
             
-            # Agregar parámetros sugeridos si disponibles
             if signals and 'params' in signals[0]:
                 recommendations['suggested_parameters'] = signals[0]['params']
             
@@ -539,13 +603,12 @@ Responde en JSON:
         
         return recommendations
     
-    def _calculate_weighted_signal(self, signals: List[Dict]) -> Dict:
+    def _calculate_weighted_signal(self, signals: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calcular señal final ponderada de múltiples fuentes"""
         if not signals:
             return {'action': 'HOLD', 'confidence': 0.0, 'reasons': []}
         
-        # Convertir señales a valores numéricos
-        signal_values = {
+        signal_values: Dict[str, float] = {
             'bullish': 1.0, 'BUY': 1.0,
             'bearish': -1.0, 'SELL': -1.0,
             'neutral': 0.0, 'HOLD': 0.0
@@ -553,18 +616,17 @@ Responde en JSON:
         
         weighted_sum = 0.0
         total_weight = 0.0
-        reasons = []
+        reasons: List[str] = []
         
         for sig in signals:
-            value = signal_values.get(sig['signal'], 0.0)
+            value = signal_values.get(sig.get('signal', 'neutral'), 0.0)
             weight = sig.get('weight', 1.0)
             weighted_sum += value * weight
             total_weight += weight
-            reasons.append(f"{sig['source']}: {sig['signal']}")
+            reasons.append(f"{sig.get('source', 'unknown')}: {sig.get('signal', 'neutral')}")
         
         final_value = weighted_sum / total_weight if total_weight > 0 else 0.0
         
-        # Convertir a acción
         if final_value > 0.3:
             action = 'BUY'
         elif final_value < -0.3:
@@ -580,9 +642,8 @@ Responde en JSON:
             'reasons': reasons
         }
     
-    def _infer_signal_from_params(self, params: Dict) -> str:
+    def _infer_signal_from_params(self, params: Dict[str, Any]) -> str:
         """Inferir señal de trading desde parámetros técnicos"""
-        # Lógica simple - mejorable
         if params.get('RSI_oversold', 30) < 35:
             return 'bullish'
         elif params.get('RSI_overbought', 70) > 65:
@@ -603,17 +664,15 @@ Responde en JSON:
             return 'bearish'
         return 'neutral'
     
-    def _calculate_confidence(self, results: Dict) -> float:
+    def _calculate_confidence(self, results: Dict[str, Any]) -> float:
         """Calcular confianza general del análisis"""
         sources = results.get('sources', [])
         if not sources:
             return 0.0
         
-        # Más fuentes = mayor confianza
-        base_confidence = len(sources) / 3.0  # Max 3 fuentes
+        base_confidence = len(sources) / 3.0
         
-        # Ajustar por confianza individual de cada fuente
-        individual_confidences = []
+        individual_confidences: List[float] = []
         
         if 'transcript_analysis' in results:
             individual_confidences.append(results['transcript_analysis'].get('confidence', 0.5))
@@ -628,16 +687,14 @@ Responde en JSON:
         
         return min(base_confidence * avg_confidence, 1.0)
     
-    def _calculate_visual_confidence(self, visual_findings: Dict) -> float:
+    def _calculate_visual_confidence(self, visual_findings: Dict[str, Any]) -> float:
         """Calcular confianza del análisis visual"""
-        # Más patrones/indicadores detectados = mayor confianza
         patterns_count = len(visual_findings.get('patterns_detected', []))
         indicators_count = len(visual_findings.get('indicators_visible', []))
         levels_count = len(visual_findings.get('support_resistance_levels', []))
         
         total_findings = patterns_count + indicators_count + levels_count
         
-        # Normalizar a 0-1
         return min(total_findings / 10.0, 1.0)
     
     def _extract_video_id(self, url: str) -> Optional[str]:
@@ -656,21 +713,22 @@ Responde en JSON:
     
     def _get_transcript(self, video_id: str) -> Optional[str]:
         """Obtener transcripción REAL del video usando youtube-transcript-api"""
-        logger.info(f"📝 Obteniendo transcripción de video {video_id}...")
+        logger.info(f"📝 [{VERSION_BANNER}] Obteniendo transcripción de video {video_id}...")
         
-        # PASO 0: Verificar caché primero
         if self.database_service:
-            cached = self.database_service.get_cached_transcript(video_id)
-            if cached:
-                logger.info(f"🚀 Transcripción obtenida de caché: {len(cached)} chars")
-                return cached
+            try:
+                cached = self.database_service.get_cached_transcript(video_id)
+                if cached:
+                    logger.info(f"🚀 Transcripción obtenida de caché: {len(cached)} chars")
+                    return cached
+            except Exception:
+                pass
         
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
             from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
             
             try:
-                # MÉTODO 1: Usar get_transcript directamente (más robusto)
                 try:
                     transcript_data = YouTubeTranscriptApi.get_transcript(
                         video_id, 
@@ -683,7 +741,6 @@ Responde en JSON:
                 except Exception as direct_err:
                     logger.warning(f"⚠️ Método directo falló: {direct_err}, intentando list_transcripts...")
                 
-                # MÉTODO 2: list_transcripts (fallback)
                 transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
                 
                 transcript = None
@@ -691,13 +748,13 @@ Responde en JSON:
                     try:
                         transcript = transcript_list.find_transcript([lang])
                         break
-                    except:
+                    except Exception:
                         continue
                 
                 if not transcript:
                     try:
                         transcript = transcript_list.find_generated_transcript(['es', 'en'])
-                    except:
+                    except Exception:
                         for t in transcript_list:
                             transcript = t
                             break
@@ -713,15 +770,14 @@ Responde en JSON:
                     
             except TranscriptsDisabled:
                 logger.warning(f"⚠️ Transcripciones deshabilitadas para video {video_id}")
-                return None
+                return self._get_transcript_ytdlp(video_id)
             except NoTranscriptFound:
                 logger.warning(f"⚠️ No hay transcripción disponible para video {video_id}")
-                return None
+                return self._get_transcript_ytdlp(video_id)
             except VideoUnavailable:
                 logger.warning(f"⚠️ Video {video_id} no disponible")
                 return None
             except Exception as inner_err:
-                # Capturar errores de parsing XML u otros
                 logger.warning(f"⚠️ Error interno obteniendo transcripción: {inner_err}")
                 logger.info("🔄 Intentando fallback con yt-dlp...")
                 return self._get_transcript_ytdlp(video_id)
@@ -737,12 +793,10 @@ Responde en JSON:
     
     def _get_transcript_ytdlp(self, video_id: str, max_retries: int = 3) -> Optional[str]:
         """Obtener transcripción usando yt-dlp como fallback robusto con reintentos"""
-        logger.info(f"🔧 Intentando yt-dlp para video {video_id}...")
+        logger.info(f"🔧 [{VERSION_BANNER}] Intentando yt-dlp para video {video_id}...")
         
         try:
             import yt_dlp
-            import tempfile
-            import os
             import time
             import random
         except ImportError:
@@ -757,7 +811,7 @@ Responde en JSON:
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         ]
         
-        last_error = None
+        last_error: Optional[Exception] = None
         
         for attempt in range(max_retries):
             if attempt > 0:
@@ -832,14 +886,12 @@ Responde en JSON:
                     logger.warning(f"⚠️ yt-dlp extraction error: {ydl_err}")
                     break
         
-        # Intentar Whisper como último recurso para cualquier fallo de subtítulos
-        if last_error or True:  # Siempre intentar Whisper si llegamos aquí
-            error_str = str(last_error) if last_error else "no subtitles found"
-            logger.info(f"🎤 Subtítulos no disponibles ({error_str[:50]}...) - intentando transcripción de audio con Whisper...")
-            whisper_result = self._get_transcript_whisper(video_id)
-            if whisper_result:
-                return whisper_result
-            logger.warning(f"⚠️ Todos los métodos fallaron para video {video_id}")
+        error_str = str(last_error) if last_error else "no subtitles found"
+        logger.info(f"🎤 Subtítulos no disponibles ({error_str[:50]}...) - intentando transcripción de audio con Whisper...")
+        whisper_result = self._get_transcript_whisper(video_id)
+        if whisper_result:
+            return whisper_result
+        logger.warning(f"⚠️ Todos los métodos fallaron para video {video_id}")
         return None
     
     def _get_transcript_whisper(self, video_id: str, max_duration_seconds: int = 600) -> Optional[str]:
@@ -855,12 +907,10 @@ Responde en JSON:
             logger.warning("⚠️ OpenAI client no disponible para Whisper")
             return None
         
-        logger.info(f"🎤 Iniciando transcripción Whisper para video {video_id}...")
+        logger.info(f"🎤 [{VERSION_BANNER}] Iniciando transcripción Whisper para video {video_id}...")
         
         try:
             import yt_dlp
-            import tempfile
-            import os
             
             video_url = f"https://www.youtube.com/watch?v={video_id}"
             
@@ -878,6 +928,7 @@ Responde en JSON:
                 
                 logger.info("📥 Descargando audio del video...")
                 
+                info = None
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(video_url, download=True)
                     
@@ -922,13 +973,16 @@ Responde en JSON:
                         response_format="text"
                     )
                 
-                if transcript_response and len(transcript_response) > 50:
-                    logger.info(f"✅ Transcripción Whisper exitosa: {len(transcript_response)} chars")
-                    # Guardar en caché para futuras solicitudes
+                if transcript_response and len(str(transcript_response)) > 50:
+                    result_text = str(transcript_response)
+                    logger.info(f"✅ Transcripción Whisper exitosa: {len(result_text)} chars")
                     if self.database_service:
-                        duration = info.get('duration', 0) if info else None
-                        self.database_service.save_transcript_cache(video_id, transcript_response, 'whisper', duration)
-                    return transcript_response
+                        try:
+                            duration = info.get('duration', 0) if info else None
+                            self.database_service.save_transcript_cache(video_id, result_text, 'whisper', duration)
+                        except Exception:
+                            pass
+                    return result_text
                 else:
                     logger.warning("⚠️ Whisper retornó transcripción vacía o muy corta")
                     return None
@@ -941,7 +995,7 @@ Responde en JSON:
         """Parsear contenido VTT a texto plano"""
         try:
             lines = vtt_content.split('\n')
-            text_lines = []
+            text_lines: List[str] = []
             
             for line in lines:
                 line = line.strip()
@@ -955,9 +1009,8 @@ Responde en JSON:
                     continue
                 if line.isdigit():
                     continue
-                import re
                 line = re.sub(r'<[^>]+>', '', line)
-                if line and line not in text_lines[-3:] if text_lines else True:
+                if line and (not text_lines or line not in text_lines[-3:]):
                     text_lines.append(line)
             
             full_text = ' '.join(text_lines)
@@ -969,9 +1022,9 @@ Responde en JSON:
             logger.warning(f"⚠️ Error parsing VTT: {e}")
             return None
     
-    def _extract_technical_parameters(self, transcript: str) -> Dict:
+    def _extract_technical_parameters(self, transcript: str) -> Dict[str, Any]:
         """Extraer parámetros técnicos de la transcripción con IA"""
-        logger.info(f"🧠 Analizando transcripción con IA ({len(transcript)} chars)...")
+        logger.info(f"🧠 [{VERSION_BANNER}] Analizando transcripción con IA ({len(transcript)} chars)...")
         
         try:
             if self.openai_client:
@@ -1013,28 +1066,34 @@ Responde en JSON con esta estructura:
                 
                 result_text = response.choices[0].message.content
                 
-                try:
-                    import json
-                    if '```json' in result_text:
-                        result_text = result_text.split('```json')[1].split('```')[0]
-                    elif '```' in result_text:
-                        result_text = result_text.split('```')[1].split('```')[0]
-                    
-                    analysis = json.loads(result_text.strip())
-                    analysis['confidence'] = 0.85
-                    logger.info(f"✅ Análisis IA completado: estrategia={analysis.get('strategy', 'N/A')}")
-                    return analysis
-                except json.JSONDecodeError:
-                    logger.warning("⚠️ No se pudo parsear JSON, retornando texto raw")
+                if result_text:
+                    try:
+                        clean_text = result_text.strip()
+                        if '```json' in clean_text:
+                            clean_text = clean_text.split('```json')[1].split('```')[0]
+                        elif '```' in clean_text:
+                            clean_text = clean_text.split('```')[1].split('```')[0]
+                        
+                        analysis = json.loads(clean_text.strip())
+                        analysis['confidence'] = 0.85
+                        logger.info(f"✅ Análisis IA completado: estrategia={analysis.get('strategy', 'N/A')}")
+                        return analysis
+                    except json.JSONDecodeError:
+                        logger.warning("⚠️ No se pudo parsear JSON, retornando texto raw")
+                        return {
+                            'raw_analysis': result_text,
+                            'strategy': 'Ver análisis completo',
+                            'summary': result_text[:500] if result_text else '',
+                            'confidence': 0.7
+                        }
+                else:
                     return {
-                        'raw_analysis': result_text,
-                        'strategy': 'Ver análisis completo',
-                        'summary': result_text[:500],
-                        'confidence': 0.7
+                        'strategy': 'Sin respuesta de IA',
+                        'summary': 'La IA no generó respuesta',
+                        'confidence': 0.0
                     }
-                    
+                        
             elif self.gemini_client:
-                model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
                 prompt = f"""Analiza esta transcripción de video de trading y extrae los puntos clave, estrategias, indicadores mencionados, y recomendaciones:
 
 {transcript[:8000]}
@@ -1046,9 +1105,19 @@ Proporciona un análisis estructurado con:
 4. Puntos de entrada/salida
 5. Gestión de riesgo"""
                 
-                response = model.generate_content(prompt)
+                if self._gemini_sdk == 'new':
+                    response = self.gemini_client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=prompt
+                    )
+                    content = response.text if response else ''
+                else:
+                    model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
+                    response = model.generate_content(prompt)
+                    content = response.text if response else ''
+                
                 return {
-                    'summary': response.text,
+                    'summary': content,
                     'strategy': 'Ver análisis completo',
                     'confidence': 0.75
                 }
@@ -1061,35 +1130,24 @@ Proporciona un análisis estructurado con:
                 }
                 
         except Exception as e:
-            logger.error(f"❌ Error en análisis IA: {e}")
+            logger.error(f"❌ Error extrayendo parámetros técnicos: {e}")
             return {
-                'raw_text': transcript[:1000] if transcript else '',
-                'error': str(e),
-                'confidence': 0.3
+                'strategy': 'Error en análisis',
+                'summary': f'Error: {str(e)}',
+                'confidence': 0.0
             }
-    
-    def _extract_key_frames(self, video_url: str, num_frames: int) -> List[str]:
-        """
-        Extraer frames clave del video para análisis visual
-        
-        Usa ffmpeg o similar para extraer frames en intervalos regulares
-        """
-        # TODO: Implementar extracción real de frames con ffmpeg
-        logger.info(f"🎬 Extrayendo {num_frames} frames clave...")
-        return []  # Retornar lista de rutas a imágenes de frames
 
 
-# Función helper para uso rápido
-def analyze_trading_video_ultra(video_url: str, extract_frames: bool = True) -> Dict:
+def analyze_video_ultra(video_url: str, extract_frames: bool = True) -> Dict[str, Any]:
     """
-    Analizar video de trading con todas las capacidades ultra
+    Función helper para análisis ultra de video
     
     Args:
         video_url: URL del video de YouTube
-        extract_frames: Si True, analiza frames visuales (más completo pero más lento)
+        extract_frames: Si True, analiza frames visuales
         
     Returns:
-        Dict con análisis completo multi-fuente
+        Dict con análisis completo
     """
     analyzer = VideoAnalyzerUltra()
     return analyzer.analyze_video_complete(video_url, extract_frames=extract_frames)
