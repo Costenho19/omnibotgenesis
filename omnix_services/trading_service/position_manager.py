@@ -661,21 +661,12 @@ class DynamicPositionManager:
             logger.warning(f"⚠️ _get_current_price: Kraken client no disponible")
             return None
         
-        symbol_map = {
-            'BTC/USD': 'XBTUSD', 'ETH/USD': 'ETHUSD', 'SOL/USD': 'SOLUSD',
-            'XRP/USD': 'XRPUSD', 'ADA/USD': 'ADAUSD', 'DOT/USD': 'DOTUSD',
-            'LINK/USD': 'LINKUSD', 'AVAX/USD': 'AVAXUSD', 'POL/USD': 'POLUSD',
-            'ATOM/USD': 'ATOMUSD', 'LTC/USD': 'LTCUSD', 'DOGE/USD': 'DOGEUSD',
-            'MATIC/USD': 'MATICUSD', 'UNI/USD': 'UNIUSD', 'AAVE/USD': 'AAVEUSD',
-            'SHIB/USD': 'SHIBUSD', 'CRV/USD': 'CRVUSD', 'APE/USD': 'APEUSD',
-            'SAND/USD': 'SANDUSD', 'MANA/USD': 'MANAUSD', 'FTM/USD': 'FTMUSD',
-            'BCH/USD': 'BCHUSD', 'TRX/USD': 'TRXUSD', 'ALGO/USD': 'ALGOUSD',
-            'XLM/USD': 'XLMUSD', 'EOS/USD': 'EOSUSD', 'NEAR/USD': 'NEARUSD'
-        }
-        kraken_pair = symbol_map.get(symbol)
-        if not kraken_pair:
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+            kraken_pair = AutoTradingBot.convert_to_kraken_pair(symbol)
+        except ImportError:
             kraken_pair = symbol.replace('/', '')
-            logger.warning(f"⚠️ Símbolo {symbol} no mapeado, usando fallback: {kraken_pair}")
+            logger.warning(f"⚠️ No se pudo importar AutoTradingBot, usando fallback: {kraken_pair}")
         
         for attempt in range(3):
             try:
