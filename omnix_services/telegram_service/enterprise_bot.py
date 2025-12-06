@@ -73,6 +73,15 @@ except ImportError:
     VOICE_SERVICE_AVAILABLE = False
     logger.warning("⚠️ Voice Service no disponible")
 
+# Web Search Service - Búsqueda en internet con Tavily
+try:
+    from omnix_services.web_search_service.search_manager import get_search_manager, WebSearchManager
+    WEB_SEARCH_AVAILABLE = True
+    logger.info("🔍 Web Search Service disponible")
+except ImportError:
+    WEB_SEARCH_AVAILABLE = False
+    logger.warning("⚠️ Web Search Service no disponible")
+
 # ARES Quantum Protocols - Import module for dynamic access to global instances
 try:
     import omnix_core.trading_system as trading_system_module
@@ -494,6 +503,10 @@ class EnterpriseTelegramBot:
             # self.application.add_handler(CommandHandler("analizar_noticia", self.analyze_news_command))
             # self.application.add_handler(CommandHandler("trending_crypto", self.trending_news_command))
             
+            # 🔍 Web Search Command - Búsqueda en internet
+            self.application.add_handler(CommandHandler("buscar", self.buscar_command))
+            logger.info("🔍 Web Search Command registrado: /buscar")
+            
             # 🤖 Comandos Auto-Trading - Trading automático 24/7
             self.application.add_handler(CommandHandler("auto_start", self.auto_start_command))
             self.application.add_handler(CommandHandler("auto_stop", self.auto_stop_command))
@@ -781,6 +794,11 @@ Opera bajo tu propio riesgo. /legal para detalles."""
 /orderbook [crypto] - Analisis de ballenas y liquidez
 /enterprise [crypto] - Analisis completo multi-dimensional
 
+**🔍 BÚSQUEDA EN INTERNET:**
+/buscar [tema] - Buscar información en internet
+Ejemplos: /buscar noticias bitcoin hoy
+También: "busca noticias de ethereum"
+
 **INTERACCION IA:**
 - Escribe cualquier pregunta sobre crypto
 - El sistema responde con analisis inteligente
@@ -811,6 +829,98 @@ Opera bajo tu propio riesgo. /legal para detalles."""
             
         except Exception as e:
             logger.error(f"❌ Error comando help: {e}")
+
+    async def buscar_command(self, update, context):
+        """Comando /buscar - Búsqueda en internet con Tavily"""
+        try:
+            if not WEB_SEARCH_AVAILABLE:
+                await update.message.reply_text(
+                    "⚠️ El servicio de búsqueda web no está disponible.",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            # Obtener el query de los argumentos
+            query = ' '.join(context.args) if context.args else None
+            
+            if not query:
+                await update.message.reply_text(
+                    """🔍 **Búsqueda en Internet**
+                    
+Uso: `/buscar [tu pregunta]`
+
+**Ejemplos:**
+• `/buscar noticias bitcoin hoy`
+• `/buscar qué pasó con ethereum`
+• `/buscar precio solana predicción`
+• `/buscar SEC crypto regulación`
+
+También puedes escribir naturalmente:
+• "busca noticias de bitcoin"
+• "encuentra información sobre solana"
+""",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            # Mostrar que estamos buscando
+            searching_msg = await update.message.reply_text(
+                f"🔍 Buscando: *{query}*...",
+                parse_mode='Markdown'
+            )
+            
+            # Realizar la búsqueda
+            search_manager = get_search_manager()
+            result = search_manager.search(query, max_results=5, force_search=True)
+            
+            if not result.get("success"):
+                error_msg = result.get("error", "Error desconocido")
+                await searching_msg.edit_text(
+                    f"⚠️ No se pudo buscar: {error_msg}",
+                    parse_mode='Markdown'
+                )
+                return
+            
+            # Formatear resultados
+            results = result.get("results", [])
+            answer = result.get("answer", "")
+            from_cache = result.get("from_cache", False)
+            
+            if answer:
+                response = f"""🔍 **Resultado de búsqueda**
+                
+**Pregunta:** {query}
+
+**Respuesta:**
+{answer}
+
+"""
+            else:
+                response = f"""🔍 **Resultados de búsqueda**
+
+**Búsqueda:** {query}
+
+"""
+            
+            if results:
+                response += "**Fuentes encontradas:**\n"
+                for i, r in enumerate(results[:5], 1):
+                    title = r.get("title", "Sin título")[:50]
+                    url = r.get("url", "")
+                    response += f"{i}. [{title}]({url})\n"
+            
+            if from_cache:
+                response += "\n_📦 Resultado en caché (15 min)_"
+            
+            await searching_msg.edit_text(response, parse_mode='Markdown', disable_web_page_preview=True)
+            logger.info(f"🔍 Búsqueda completada: '{query}' - {len(results)} resultados")
+            
+        except Exception as e:
+            logger.error(f"❌ Error en /buscar: {e}")
+            await update.message.reply_text(
+                f"❌ Error al buscar: {str(e)[:100]}",
+                parse_mode='Markdown'
+            )
 
     async def legal_command(self, update, context):
         """Comando /legal - Disclaimer y términos legales"""
@@ -2862,6 +2972,81 @@ Usa: `/autotrading activar ACEPTO`"""
                             response = msg
                         await update.message.reply_text(response, parse_mode='Markdown')
                         return
+            
+            # 🔍 DETECCIÓN NATURAL DE BÚSQUEDA WEB
+            # Detectar si el usuario quiere buscar algo en internet naturalmente
+            if WEB_SEARCH_AVAILABLE:
+                import re
+                search_patterns = [
+                    r'^busca\s+(.+)',        # "busca noticias de bitcoin"
+                    r'^buscar\s+(.+)',       # "buscar ethereum hoy"
+                    r'^encuentra\s+(.+)',    # "encuentra información sobre solana"
+                    r'^search\s+(.+)',       # "search bitcoin news"
+                    r'^find\s+(.+)',         # "find crypto news"
+                ]
+                
+                for pattern in search_patterns:
+                    match = re.match(pattern, user_message.lower().strip())
+                    if match:
+                        search_query = match.group(1).strip()
+                        logger.info(f"🔍 Búsqueda natural detectada: '{search_query}'")
+                        
+                        # Mostrar que estamos buscando
+                        searching_msg = await update.message.reply_text(
+                            f"🔍 Buscando: *{search_query}*...",
+                            parse_mode='Markdown'
+                        )
+                        
+                        try:
+                            search_manager = get_search_manager()
+                            result = search_manager.search(search_query, max_results=5, force_search=True)
+                            
+                            if result.get("success"):
+                                results = result.get("results", [])
+                                answer = result.get("answer", "")
+                                from_cache = result.get("from_cache", False)
+                                
+                                if answer:
+                                    response = f"""🔍 **Resultado de búsqueda**
+
+**Pregunta:** {search_query}
+
+**Respuesta:**
+{answer}
+
+"""
+                                else:
+                                    response = f"""🔍 **Resultados de búsqueda**
+
+**Búsqueda:** {search_query}
+
+"""
+                                
+                                if results:
+                                    response += "**Fuentes encontradas:**\n"
+                                    for i, r in enumerate(results[:5], 1):
+                                        title = r.get("title", "Sin título")[:50]
+                                        url = r.get("url", "")
+                                        response += f"{i}. [{title}]({url})\n"
+                                
+                                if from_cache:
+                                    response += "\n_📦 Resultado en caché (15 min)_"
+                                
+                                await searching_msg.edit_text(response, parse_mode='Markdown', disable_web_page_preview=True)
+                            else:
+                                error_msg = result.get("error", "Error desconocido")
+                                await searching_msg.edit_text(
+                                    f"⚠️ No se pudo buscar: {error_msg}",
+                                    parse_mode='Markdown'
+                                )
+                        except Exception as e:
+                            logger.error(f"❌ Error en búsqueda natural: {e}")
+                            await searching_msg.edit_text(
+                                f"❌ Error al buscar: {str(e)[:100]}",
+                                parse_mode='Markdown'
+                            )
+                        
+                        return  # SALIR - ya procesamos la búsqueda
             
             # ⚡ PRIORIDAD MÁXIMA: Comandos específicos del bot
             # Verificar PRIMERO si es comando /autotrading ANTES de enviar a IA
