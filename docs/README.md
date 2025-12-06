@@ -1,6 +1,6 @@
-# OMNIX V6.5.2 INSTITUTIONAL+ Documentation Index
+# OMNIX V6.5.4 INSTITUTIONAL+ Documentation Index
 
-**Version:** V6.5.2 INSTITUTIONAL+  
+**Version:** V6.5.4 INSTITUTIONAL+  
 **Last Updated:** December 2025
 
 ---
@@ -44,7 +44,7 @@ docs/
 
 ---
 
-## V6.5.2 Key Features
+## V6.5.4 Key Features
 
 ### Core Engines
 - **AutoTradingBot V6.4 PREMIUM** - Multi-crypto scanning, tiered signals
@@ -52,7 +52,7 @@ docs/
 - **Coherence Engine V6.5 ULTRA** - 6-Tier Veto System (45% threshold)
 - **AI Risk Guardian V5.4** - Overtrading and drawdown protection
 
-### New in V6.5.2
+### New in V6.5.4
 - **Adaptive Parameter Engine V6.5 ULTRA** - Auto-calibration per regime
 - **On-Chain Data Intelligence V6.5** - Whale tracking, exchange flows
 - **42 Database Tables** - Complete persistent storage (3 redundant consolidated)
@@ -145,8 +145,8 @@ docs/
 
 | Version | Date | Key Features |
 |---------|------|--------------|
-| V6.5.2 | Dec 2025 | Database Audit, Audited Snapshots, Table Consolidation |
-| V6.5.1 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
+| V6.5.4 | Dec 2025 | Database Audit, Audited Snapshots, Table Consolidation |
+| V6.5.4 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
 | V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
 | V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
 | V6.3 | Nov 2024 | Stock Trading ULTRA, Real Data Integration |
@@ -165,5 +165,5 @@ docs/
 
 ---
 
-**OMNIX V6.5.2 INSTITUTIONAL+**  
+**OMNIX V6.5.4 INSTITUTIONAL+**  
 **Target: $400K seed funding @ $2.5M valuation**

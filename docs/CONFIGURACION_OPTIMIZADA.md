@@ -1,8 +1,8 @@
-# OMNIX V6.5.2 - Configuracion Optimizada
+# OMNIX V6.5.4 - Configuracion Optimizada
 ## Auditoria Tecnica y Recomendaciones
 
 **Fecha:** Diciembre 2025  
-**Version:** 6.5.2 INSTITUTIONAL+
+**Version:** 6.5.4 INSTITUTIONAL+
 
 ---
 
@@ -24,7 +24,7 @@ Se identificaron y corrigieron los siguientes problemas:
 ### Diagnostico
 CAES mostraba `Confidence=0.0%` porque el Non-Markovian Kernel mantenia historia de precios de pares anteriores cuando cambiaba a un nuevo par.
 
-### Solucion Aplicada (V6.5.2 Final)
+### Solucion Aplicada (V6.5.4 Final)
 ```python
 # Se inicializan en __init__:
 self._last_kernel_pair = None

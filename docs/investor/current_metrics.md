@@ -1,4 +1,4 @@
-# OMNIX V6.5.2 - Current System Metrics
+# OMNIX V6.5.4 - Current System Metrics
 ## Real-Time Transparency Report
 
 **Last Updated:** December 5, 2025  
@@ -65,10 +65,10 @@ This is intentional for the calibration phase, but limits trade volume.
 
 | Engine | Status | Version |
 |--------|--------|---------|
-| AutoTradingBot | Active | V6.5.2 |
+| AutoTradingBot | Active | V6.5.4 |
 | Non-Markovian Kernel | Active | V6.5 |
 | Coherence Engine | Active | V6.5 ULTRA |
-| CAES (Adaptive Entry) | Active | V6.5.2 |
+| CAES (Adaptive Entry) | Active | V6.5.4 |
 | ARES Protocol V1 | Active | V1.1.0 |
 | ARES Protocol V2 | Active | V2.1.0 |
 | AI Risk Guardian | Active | V5.4 |

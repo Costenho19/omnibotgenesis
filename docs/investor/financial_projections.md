@@ -1,4 +1,4 @@
-# OMNIX V6.5.2 - Financial Projections
+# OMNIX V6.5.4 - Financial Projections
 ## Conservative, Base Case, and Optimistic Scenarios
 
 **Document Date:** December 2025  

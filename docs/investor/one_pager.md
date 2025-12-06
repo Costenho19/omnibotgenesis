@@ -1,4 +1,4 @@
-# OMNIX V6.5.2 INSTITUTIONAL+
+# OMNIX V6.5.4 INSTITUTIONAL+
 ## Executive Summary | December 2025
 
 ---

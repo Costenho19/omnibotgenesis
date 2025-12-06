@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - News Feed Component
+ * OMNIX Dashboard V6.5.4 - News Feed Component
  */
 
 const OmnixNews = (function() {

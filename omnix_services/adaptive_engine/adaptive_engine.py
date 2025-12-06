@@ -1001,7 +1001,7 @@ class AdaptiveParameterEngine:
             'last_regime': self.signal_processor.last_regime.value if self.signal_processor.last_regime else None,
             'regime_stability': self.signal_processor.get_regime_stability(),
             'total_calibrations': len(self.calibration_history),
-            'version': '6.5.0'
+            'version': '6.5.4'
         }
     
     def get_calibration_history(self, limit: int = 50) -> List[Dict]:

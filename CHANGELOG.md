@@ -1,4 +1,4 @@
-# OMNIX V6.5.2 INSTITUTIONAL+ - Changelog
+# OMNIX V6.5.4 INSTITUTIONAL+ - Changelog
 
 Registro de cambios, correcciones y mejoras del sistema.
 

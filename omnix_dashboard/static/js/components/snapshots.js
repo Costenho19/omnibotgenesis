@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - Audited Snapshots Component
+ * OMNIX Dashboard V6.5.4 - Audited Snapshots Component
  * Displays cryptographically verified snapshots for investor auditing
  */
 

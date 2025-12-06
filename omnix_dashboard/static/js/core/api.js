@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - API Client
+ * OMNIX Dashboard V6.5.4 - API Client
  * Centralized API communication layer with retry/backoff and authentication
  */
 

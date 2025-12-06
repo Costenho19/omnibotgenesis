@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - Trading Signals Component
+ * OMNIX Dashboard V6.5.4 - Trading Signals Component
  */
 
 const OmnixSignals = (function() {

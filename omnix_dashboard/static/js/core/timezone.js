@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - Unified Timezone Management
+ * OMNIX Dashboard V6.5.4 - Unified Timezone Management
  * Provides centralized formatting for all timestamps across the dashboard
  */
 

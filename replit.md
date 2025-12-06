@@ -49,7 +49,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **AI Risk Guardian V6.5.4 Hard Cap**: $20K max trade size absolute limit. min(size, MAX_LIMIT) without exceptions.
 -   **Web Search Service V6.5.4**: Real-time internet search via Tavily API. Auto-detects queries about news/events/current data. Redis cache (15min TTL), rate limiting (30/min).
 
-### Multi-User Architecture V6.5.2
+### Multi-User Architecture V6.5.4
 
 -   Supports 100,000+ simultaneous users with isolated trading sessions.
 -   Utilizes Redis for fast state management and PostgreSQL for persistence.
@@ -164,6 +164,7 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 6, 2025**: Version Unification - All 6.5.0/6.5.1/6.5.2/6.5.3 references updated to 6.5.4 across entire codebase (services, dashboard, docs).
 - **Dec 6, 2025**: Web Search Integration - New `web_search_service/` module with Tavily API. Bot auto-searches internet for news/events queries. Redis cache + rate limiting.
 - **Dec 6, 2025**: Runtime Bug Fixes (Phase 4.6) - 3 fixes from expert log analysis:
   - FIX 1: tuple.get() error in session restore (psycopg3 returns tuples)
@@ -176,6 +177,6 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
   - FIX 2: Hard cap absoluto en Risk Guardian ($20K max)
   - FIX 3: Coherencia sin bypass para paper mode (track record replicable)
   - FIX 4: Eliminado FLOOR_RESCUE/RECOVERY bias (era revenge trading)
-- **Dec 6, 2025**: Complete module audit and documentation update to V6.5.3
+- **Dec 6, 2025**: Complete module audit and documentation update to V6.5.4
 - **Dec 5, 2025**: Gemini 2.0 SDK migration (google-genai)
 - **Dec 4, 2025**: Database audit - 42 tables, 38 FKs (90% coverage)

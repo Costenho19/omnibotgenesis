@@ -1,5 +1,5 @@
 /**
- * OMNIX Dashboard V6.5.3 - Fear & Greed Index Component
+ * OMNIX Dashboard V6.5.4 - Fear & Greed Index Component
  */
 
 const OmnixFearGreed = (function() {

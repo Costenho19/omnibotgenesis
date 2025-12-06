@@ -31,4 +31,4 @@ __all__ = [
     'get_adaptive_engine'
 ]
 
-__version__ = "6.5.0"
+__version__ = "6.5.4"

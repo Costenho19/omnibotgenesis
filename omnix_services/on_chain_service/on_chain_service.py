@@ -77,7 +77,7 @@ class OnChainDataService:
         print(f"On-chain bias: {signal.market_bias}")
     """
     
-    VERSION = "6.5.0"
+    VERSION = "6.5.4"
     
     # Símbolos soportados con tracking completo
     SUPPORTED_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'LTC', 'MATIC', 'AVAX']
