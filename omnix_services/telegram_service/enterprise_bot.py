@@ -4927,6 +4927,10 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                 logger.warning(f"⚠️ Error obteniendo contexto real: {ctx_error}")
                                 omnix_real_context = ""
                             
+                            # 🔍 PREMIUM AUTO WEB SEARCH V6.5.4 - Variables inicializadas fuera del try
+                            web_search_context = ""
+                            web_search_used = False
+                            
                             # USAR SISTEMA DE PROMPTS CONVERSACIONAL NATURAL CON MEMORIA
                             try:
                                 from omnix_services.ai_service.ai_prompts import PromptsContextManager
@@ -4950,6 +4954,35 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                         conversation_hist = pg_messages
                                         logger.info(f"🧠 Memoria PostgreSQL: {len(conversation_hist)} pares cargados (persistente)")
                                 
+                                # 🔍 PREMIUM AUTO WEB SEARCH V6.5.4 - Búsqueda automática en internet
+                                if WEB_SEARCH_AVAILABLE:
+                                    try:
+                                        search_manager = get_search_manager()
+                                        intent_check = search_manager.detect_search_intent(text)
+                                        
+                                        if intent_check.get('needs_search', False):
+                                            search_query = intent_check.get('suggested_query', text)
+                                            logger.info(f"🔍 Auto Web Search detectado: '{search_query}' (confianza: {intent_check.get('confidence', 0):.2f})")
+                                            
+                                            search_result = search_manager.search(search_query, max_results=3)
+                                            
+                                            if search_result.get('success') and search_result.get('results'):
+                                                web_contexts = []
+                                                for r in search_result.get('results', [])[:3]:
+                                                    title = r.get('title', '')
+                                                    content = r.get('content', '')[:300]
+                                                    if title and content:
+                                                        web_contexts.append(f"• {title}: {content}")
+                                                
+                                                if web_contexts:
+                                                    web_search_context = "\n\n🌐 INFORMACIÓN DE INTERNET EN TIEMPO REAL:\n" + "\n".join(web_contexts)
+                                                    web_search_used = len(web_search_context) > 100
+                                                    logger.info(f"🔍 Web Search exitoso: {len(web_search_context)} chars inyectados")
+                                        else:
+                                            logger.debug(f"🔍 Web Search no necesario para: '{text[:50]}...'")
+                                    except Exception as ws_error:
+                                        logger.warning(f"⚠️ Web Search error (continuando sin búsqueda): {ws_error}")
+                                
                                 # Generar prompt conversacional natural CON MEMORIA + QUANTUM PHYSICS VALIDATOR
                                 gemini_prompt = prompts_manager.build_system_prompt(
                                     intent=intent,
@@ -4962,6 +4995,11 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                 # 🔴 Agregar contexto real completo de OMNIX (mercado + auto-trading + balance + posiciones)
                                 if omnix_real_context:
                                     gemini_prompt += f"\n\n{omnix_real_context}"
+                                
+                                # 🔍 Agregar contexto de búsqueda web si está disponible
+                                if web_search_context:
+                                    gemini_prompt += f"\n\n{web_search_context}"
+                                    gemini_prompt += "\n\nIMPORTANTE: Usa la información de internet mostrada arriba para responder con datos actualizados y verificados."
                                 
                                 # Agregar pregunta del usuario
                                 gemini_prompt += f"\n\nPregunta de Harold: {text}\n\nResponde de forma natural y conversacional:"
@@ -5008,6 +5046,11 @@ Harold pregunta: {text}"""
                             if ai_response:
                                 logger.info(f"✅ GEMINI 2.0 SUPERINTELIGENCIA EXITOSA ({gemini_sdk_version}): {len(ai_response)} caracteres generados")
                                 response_text = ai_response
+                                
+                                # 🔍 Agregar indicador de información verificada si hubo búsqueda web exitosa
+                                if web_search_used:
+                                    response_text = f"🔍 *Información verificada en tiempo real*\n\n{response_text}"
+                                    logger.info("🔍 Indicador de búsqueda web añadido a la respuesta")
                             else:
                                 logger.error("❌ GEMINI 2.0 respuesta vacía - problema técnico")
                                 response_text = f"⚠️ GEMINI 2.0 conectado pero sin respuesta - reintentando..."
