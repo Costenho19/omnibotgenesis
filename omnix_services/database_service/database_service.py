@@ -691,6 +691,17 @@ class DatabaseServiceEnterprise:
                 """, (table_name, constraint_name))
                 return cursor.fetchone()[0]
             
+            # Función helper para verificar si columna existe (ADDED Dec 6, 2025)
+            def column_exists(table_name, column_name):
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = %s 
+                        AND column_name = %s
+                    )
+                """, (table_name, column_name))
+                return cursor.fetchone()[0]
+            
             # Lista de FKs a agregar (tabla, columna_fk, constraint_name)
             foreign_keys = [
                 ('trades', 'user_id', 'fk_trades_user'),
@@ -722,6 +733,12 @@ class DatabaseServiceEnterprise:
                 
                 if not cursor.fetchone()[0]:
                     logger.info(f"   ⏭️  Tabla {table} no existe (skip)")
+                    skipped_count += 1
+                    continue
+                
+                # Verificar si la columna existe (ADDED Dec 6, 2025 - defensive migration)
+                if not column_exists(table, column):
+                    logger.info(f"   ⏭️  Columna {column} no existe en {table} (skip)")
                     skipped_count += 1
                     continue
                 
@@ -798,6 +815,24 @@ class DatabaseServiceEnterprise:
                 """, (table_name, constraint_name))
                 return cursor.fetchone()[0]
             
+            # Función helper para verificar si columna existe (ADDED Dec 6, 2025)
+            def column_exists_check(table_name, column_name):
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = %s 
+                        AND column_name = %s
+                    )
+                """, (table_name, column_name))
+                return cursor.fetchone()[0]
+            
+            # Función helper para extraer nombre de columna de condición CHECK
+            def extract_column_from_condition(condition):
+                """Extrae el nombre de columna de una condición como 'status IN (...)'"""
+                import re
+                match = re.match(r'^(\w+)\s+IN\s+', condition)
+                return match.group(1) if match else None
+            
             # Lista de CHECK constraints a agregar
             # (tabla, constraint_name, condición)
             check_constraints = [
@@ -837,6 +872,13 @@ class DatabaseServiceEnterprise:
                 
                 if not cursor.fetchone()[0]:
                     logger.info(f"   ⏭️  Tabla {table} no existe (skip)")
+                    skipped_count += 1
+                    continue
+                
+                # Verificar si la columna referenciada en la condición existe (ADDED Dec 6, 2025)
+                column_name = extract_column_from_condition(condition)
+                if column_name and not column_exists_check(table, column_name):
+                    logger.info(f"   ⏭️  Columna {column_name} no existe en {table} (skip)")
                     skipped_count += 1
                     continue
                 
@@ -1463,6 +1505,18 @@ class DatabaseServiceEnterprise:
                     """, (table_name,))
                     
                     if not cursor.fetchone()[0]:
+                        continue
+                    
+                    # Verificar si columna timestamp existe (ADDED Dec 6, 2025 - defensive cleanup)
+                    cursor.execute("""
+                        SELECT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name = %s AND column_name = %s
+                        )
+                    """, (table_name, timestamp_col))
+                    
+                    if not cursor.fetchone()[0]:
+                        logger.debug(f"   ⏭️  Columna {timestamp_col} no existe en {table_name} (skip cleanup)")
                         continue
                     
                     # Construir query DELETE

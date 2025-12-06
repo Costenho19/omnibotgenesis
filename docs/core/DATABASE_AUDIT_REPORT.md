@@ -267,6 +267,33 @@ ALL Consumers → DatabaseGateway → Single Pool → PostgreSQL
 
 ---
 
+### Phase 4.5: Defensive Migrations ✅ COMPLETE
+
+**Goal**: Eliminate startup warnings from schema mismatches  
+**Completed**: December 6, 2025
+
+| Task | Description | Risk | Status | Date |
+|------|-------------|------|--------|------|
+| 4.5.1 | FK Migrations - verify column exists before ADD CONSTRAINT | 🟢 LOW | ✅ Done | Dec 6 |
+| 4.5.2 | CHECK Migrations - verify column exists before ADD CONSTRAINT | 🟢 LOW | ✅ Done | Dec 6 |
+| 4.5.3 | Cleanup TTL - verify timestamp column exists before DELETE | 🟢 LOW | ✅ Done | Dec 6 |
+
+**Problem Resolved**:
+Startup warnings caused by migrations attempting to add constraints to columns that don't exist in Railway database:
+- `fk_signals_contributor` → column `contributor_id` doesn't exist in `community_signals`
+- `chk_feedback_result` → column `result` doesn't exist in `community_feedback`  
+- Cleanup TTL → column `timestamp` doesn't exist in some tables (uses `created_at`)
+
+**Solution Applied**:
+Added `column_exists()` helper functions to verify column presence before:
+1. Adding FK constraints (`_add_foreign_key_constraints()`)
+2. Adding CHECK constraints (`_add_check_constraints()`)
+3. Executing cleanup DELETEs (`_cleanup_old_data()`)
+
+**Result**: Clean startup with no warnings - migrations are now fully defensive and idempotent.
+
+---
+
 ## 5. Execution Playbooks
 
 ### 5.1 Playbook: Orphan Scan (Phase 3.1)
