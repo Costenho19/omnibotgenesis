@@ -109,6 +109,27 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | `DATABASE_AUDIT_REPORT.md` | Database schema and FK constraints (42 tables) |
 | `DASHBOARD_TECHNICAL_REFERENCE.md` | Flask dashboard documentation |
 
+### Documentation Policy (MANDATORY)
+
+> **REGLA OBLIGATORIA**: La documentación canónica del sistema está en `docs/core/`. 
+> Antes de cualquier operación de modificación o desarrollo, el agente DEBE:
+>
+> 1. **Consultar docs/core/** para obtener contexto del sistema:
+>    - `OMNIX_MODULE_CATALOG.md` → Inventario de módulos y ubicaciones
+>    - `Omnix_TECHNICAL_REFERENCE.md` → Arquitectura y patrones
+>    - `TRADING_FLOW_ARCHITECTURE.md` → Flujo de ejecución de trades
+>    - `DATABASE_AUDIT_REPORT.md` → Schema de BD y constraints
+>
+> 2. **Mantener coherencia**: Cualquier cambio estructural debe reflejarse en la documentación
+>
+> 3. **Actualizar docs/core/** cuando se modifique:
+>    - Nuevos módulos o servicios
+>    - Cambios en flujos de trading
+>    - Modificaciones de schema de BD
+>    - Nuevos endpoints de API
+>
+> **Razón**: Esta política garantiza que el agente tenga contexto completo del sistema (~95,000 líneas de código) y mantenga la coherencia entre código y documentación para presentaciones a inversores.
+
 ## Codebase Statistics (December 6, 2025)
 
 | Package | Modules | Lines |
