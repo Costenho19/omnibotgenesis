@@ -164,6 +164,7 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 6, 2025**: Premium Auto Web Search V6.5.4 - Intelligent detection requires BOTH intent keywords (time-sensitive) AND topic keywords (crypto/finance). Visual indicator "🔍 Información verificada" when search provides >100 char context. Safeguards prevent over-triggering on generic questions.
 - **Dec 6, 2025**: Version Unification - All 6.5.0/6.5.1/6.5.2/6.5.3 references updated to 6.5.4 across entire codebase (services, dashboard, docs).
 - **Dec 6, 2025**: Web Search Integration - New `web_search_service/` module with Tavily API. Bot auto-searches internet for news/events queries. Redis cache + rate limiting.
 - **Dec 6, 2025**: Runtime Bug Fixes (Phase 4.6) - 3 fixes from expert log analysis:
