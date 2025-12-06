@@ -1,10 +1,16 @@
 # OMNIX V7.0 - Architecture Refactoring Checklist
 
-**Document Version:** 1.2  
+**Document Version:** 1.3  
 **Created:** December 5, 2025  
-**Last Updated:** December 5, 2025  
-**Status:** DRAFT - Pending Implementation  
+**Last Updated:** December 6, 2025  
+**Status:** DRAFT - Pending Implementation (Post-Funding)  
 **Estimated Total Effort:** 45-60 days (conservative)
+
+> **RELATED DOCUMENTATION:**
+> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Current V6.5.3 architecture
+> - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory
+> - [TRADING_FLOW_ARCHITECTURE.md](TRADING_FLOW_ARCHITECTURE.md) - Trading execution flow
+> - [DATABASE_AUDIT_REPORT.md](DATABASE_AUDIT_REPORT.md) - Database schema reference
 
 > **IMPORTANT NOTES:**
 > - **Sync adapters:** TradingPort (ccxt), DatabasePort (psycopg) - blocking I/O
@@ -17,7 +23,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive, task-by-task checklist for modernizing OMNIX from V6.5.2 to V7.0, adopting 2024-2025 software engineering standards including:
+This document provides a comprehensive, task-by-task checklist for modernizing OMNIX from V6.5.3 to V7.0, adopting 2024-2025 software engineering standards including:
 
 - **SOLID Principles** compliance
 - **Hexagonal Architecture** (Ports & Adapters)
@@ -43,48 +49,32 @@ This document provides a comprehensive, task-by-task checklist for modernizing O
 
 ## 1. Current State Analysis
 
-### 1.1 SOLID Violations Identified
+> **NOTE:** For detailed current state, see:
+> - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory (~95,000 lines)
+> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Architecture reference V6.5.3
+
+### 1.1 SOLID Violations Identified (V6.5.3)
 
 | Principle | Violation | Files Affected | Severity |
 |-----------|-----------|----------------|----------|
-| **SRP** | Files with 10+ responsibilities | `trading_system.py` (5,576 lines), `enterprise_bot.py` (7,627 lines), `auto_trading_bot.py` (3,660 lines) | HIGH |
-| **SRP** | Database service handles 50+ operations | `database_service.py` (4,818 lines) | HIGH |
+| **SRP** | Files with 10+ responsibilities | `trading_system.py` (5,576), `enterprise_bot.py` (7,654), `auto_trading_bot.py` (3,932) | HIGH |
+| **SRP** | Database service handles 50+ operations | `database_service.py` (4,860 lines) | HIGH |
 | **OCP** | Hard-coded strategy lists requiring modification | `auto_trading_bot.py` lines 110-120 | MEDIUM |
 | **OCP** | if/elif chains for market types | `coherence_engine.py`, `adaptive_engine.py` | MEDIUM |
 | **LSP** | Inconsistent paper trading implementations | `paper_trading.py` vs `paper_trading_manager.py` | LOW |
 | **ISP** | Fat interfaces (DatabaseService 50+ methods) | `database_service.py` | HIGH |
 | **DIP** | Direct imports between layers | `omnix_core` → `omnix_services` | HIGH |
 
-### 1.2 Top 10 Largest Files (Refactoring Priority)
+### 1.2 Summary Statistics (December 6, 2025)
 
-| # | File | Lines | Responsibilities | Priority |
-|---|------|-------|------------------|----------|
-| 1 | `telegram_service/enterprise_bot.py` | 7,627 | Commands, routing, formatting, state | P0 |
-| 2 | `trading_system.py` | 5,576 | Exchange, multi-currency, PQC, analysis | P0 |
-| 3 | `database_service/database_service.py` | 4,818 | 50+ database operations | P0 |
-| 4 | `bot/auto_trading_bot.py` | 3,660 | 10 strategies, coherence, execution | P1 |
-| 5 | `quantum/physics_validator.py` | 4,459 | 24 physics formulas | P2 |
-| 6 | `monitoring/advanced_intelligence.py` | 1,330 | Analytics, predictions | P2 |
-| 7 | `trading_service/advanced_features.py` | 1,216 | Trading enhancements | P2 |
-| 8 | `ai_service/video/analyzer.py` | 1,086 | Video analysis | P3 |
-| 9 | `monitoring/analytics_engine.py` | 1,092 | Metrics, telemetry | P2 |
-| 10 | `trading_service/paper_trading_manager.py` | 1,023 | Paper trade simulation | P1 |
+| Package | Modules | Lines | Refactoring Priority |
+|---------|---------|-------|---------------------|
+| omnix_core | 20 | ~20,131 | P0-P1 |
+| omnix_services | 150+ | ~62,613 | P0-P2 |
+| omnix_dashboard | 40+ | ~9,037 | Well structured |
+| **Total** | **160+** | **~95,000** | |
 
-### 1.3 Current Package Structure
-
-```
-omnix/
-├── omnix_core/           # 18 modules, 20,131 lines - TIGHTLY COUPLED
-├── omnix_services/       # 150+ modules, 62,613 lines - MIXED RESPONSIBILITIES
-├── omnix_dashboard/      # 40+ files, 9,037 lines - WELL STRUCTURED
-├── omnix_api/            # 3 modules - MINIMAL
-├── omnix_config/         # 3 modules - GOOD
-├── omnix_reports/        # 1 module - GOOD
-├── omnix_risk/           # 6 modules - NEEDS CONSOLIDATION
-├── omnix_strategies/     # 1 module - NEEDS EXPANSION
-├── omnix_testing/        # 15+ modules - GOOD
-└── Root Files            # 8 files
-```
+*For complete module breakdown, see [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md)*
 
 ---
 

@@ -1,10 +1,12 @@
-# OMNIX V6.5.2 Dashboard - Technical Reference
+# OMNIX V6.5.3 Dashboard - Technical Reference
 
 > **Document:** Official Dashboard Technical Reference  
 > **Location:** `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md`  
-> **Last Updated:** December 5, 2025  
+> **Last Updated:** December 6, 2025  
 > **Status:** Production Ready (Phase 5+ Complete)  
 > **Purpose:** Complete API, security, and architecture reference for institutional investors
+>
+> **Related:** [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) | [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md)
 
 ---
 
