@@ -108,25 +108,28 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | `DATABASE_AUDIT_REPORT.md` | Database schema and FK constraints (42 tables) |
 | `DASHBOARD_TECHNICAL_REFERENCE.md` | Flask dashboard documentation |
 
-### Documentation Policy (MANDATORY)
+### Documentation Policy (MANDATORY - HIGH PRIORITY)
 
-> **REGLA OBLIGATORIA**: La documentación canónica del sistema está en `docs/core/`. 
-> Antes de cualquier operación de modificación o desarrollo, el agente DEBE:
+> **REGLA OBLIGATORIA - CICLO COMPLETO**: Todo flujo de trabajo en OMNIX:
+> 
+> ## INICIO → Consultar documentación
+> **ANTES** de cualquier modificación o desarrollo, el agente DEBE consultar `docs/core/`:
+> - `OMNIX_MODULE_CATALOG.md` → Inventario de módulos y ubicaciones
+> - `Omnix_TECHNICAL_REFERENCE.md` → Arquitectura y patrones
+> - `TRADING_FLOW_ARCHITECTURE.md` → Flujo de ejecución de trades
+> - `DATABASE_AUDIT_REPORT.md` → Schema de BD y constraints
+> - `DASHBOARD_TECHNICAL_REFERENCE.md` → APIs, seguridad y frontend del dashboard
 >
-> 1. **Consultar docs/core/** para obtener contexto del sistema:
->    - `OMNIX_MODULE_CATALOG.md` → Inventario de módulos y ubicaciones
->    - `Omnix_TECHNICAL_REFERENCE.md` → Arquitectura y patrones
->    - `TRADING_FLOW_ARCHITECTURE.md` → Flujo de ejecución de trades
->    - `DATABASE_AUDIT_REPORT.md` → Schema de BD y constraints
->    - `DASHBOARD_TECHNICAL_REFERENCE.md` → APIs, seguridad y frontend del dashboard
+> ## FIN → Actualizar documentación
+> **DESPUÉS** de completar cualquier cambio, el agente DEBE actualizar `docs/core/`:
+> - Nuevos módulos o servicios
+> - Cambios en flujos de trading
+> - Modificaciones de schema de BD
+> - Nuevos endpoints de API
+> - Cambios de versión o configuración
 >
-> 2. **Mantener coherencia**: Cualquier cambio estructural debe reflejarse en la documentación
->
-> 3. **Actualizar docs/core/** cuando se modifique:
->    - Nuevos módulos o servicios
->    - Cambios en flujos de trading
->    - Modificaciones de schema de BD
->    - Nuevos endpoints de API
+> ## Verificación
+> El código y la documentación deben estar en **TOTAL CONCORDANCIA** antes de cerrar cualquier tarea.
 >
 > **Razón**: Esta política garantiza que el agente tenga contexto completo del sistema (~95,000 líneas de código) y mantenga la coherencia entre código y documentación para presentaciones a inversores.
 
