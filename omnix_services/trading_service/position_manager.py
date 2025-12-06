@@ -652,19 +652,43 @@ class DynamicPositionManager:
             return None
     
     def _get_current_price(self, symbol: str) -> Optional[float]:
-        """Obtiene el precio actual con reintentos"""
+        """Obtiene el precio actual con reintentos usando Kraken API"""
         if not self.trading_service:
+            logger.warning(f"⚠️ _get_current_price: trading_service no disponible")
             return None
+        
+        if not hasattr(self.trading_service, 'kraken') or not self.trading_service.kraken:
+            logger.warning(f"⚠️ _get_current_price: Kraken client no disponible")
+            return None
+        
+        symbol_map = {
+            'BTC/USD': 'XBTUSD', 'ETH/USD': 'ETHUSD', 'SOL/USD': 'SOLUSD',
+            'XRP/USD': 'XRPUSD', 'ADA/USD': 'ADAUSD', 'DOT/USD': 'DOTUSD',
+            'LINK/USD': 'LINKUSD', 'AVAX/USD': 'AVAXUSD', 'POL/USD': 'POLUSD',
+            'ATOM/USD': 'ATOMUSD', 'LTC/USD': 'LTCUSD', 'DOGE/USD': 'DOGEUSD',
+            'MATIC/USD': 'MATICUSD', 'UNI/USD': 'UNIUSD', 'AAVE/USD': 'AAVEUSD',
+            'SHIB/USD': 'SHIBUSD', 'CRV/USD': 'CRVUSD', 'APE/USD': 'APEUSD',
+            'SAND/USD': 'SANDUSD', 'MANA/USD': 'MANAUSD', 'FTM/USD': 'FTMUSD',
+            'BCH/USD': 'BCHUSD', 'TRX/USD': 'TRXUSD', 'ALGO/USD': 'ALGOUSD',
+            'XLM/USD': 'XLMUSD', 'EOS/USD': 'EOSUSD', 'NEAR/USD': 'NEARUSD'
+        }
+        kraken_pair = symbol_map.get(symbol)
+        if not kraken_pair:
+            kraken_pair = symbol.replace('/', '')
+            logger.warning(f"⚠️ Símbolo {symbol} no mapeado, usando fallback: {kraken_pair}")
         
         for attempt in range(3):
             try:
-                price = self.trading_service.get_current_price(symbol)
-                if price and price > 0:
-                    return price
+                ticker = self.trading_service.kraken.get_ticker(kraken_pair)
+                if ticker and 'c' in ticker:
+                    price = float(ticker['c'][0])
+                    if price > 0:
+                        return price
             except Exception as e:
                 logger.debug(f"Intento {attempt+1}/3 obteniendo precio de {symbol}: {e}")
                 time.sleep(0.3)
         
+        logger.warning(f"⚠️ No se pudo obtener precio para {symbol} después de 3 intentos")
         return None
     
     def _close_position(self, user_id: str, position: Dict, 
