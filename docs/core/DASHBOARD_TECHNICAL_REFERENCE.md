@@ -1,4 +1,7 @@
-# OMNIX V6.5.3 Dashboard - Technical Reference
+# OMNIX INSTITUTIONAL+ Dashboard - Technical Reference
+
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
 
 > **Document:** Official Dashboard Technical Reference  
 > **Location:** `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md`  
@@ -37,11 +40,11 @@ omnix_dashboard/
 ├── blueprints/                 # 6 Blueprints, 34 routes total
 │   ├── __init__.py            # Blueprint exports (22 lines)
 │   ├── views.py               # HTML page routes (29 lines, 3 routes)
-│   ├── core.py                # Core APIs (552 lines, 7 routes) [Updated V6.5.2]
+│   ├── core.py                # Core APIs (552 lines, 7 routes)
 │   ├── market.py              # Market data (366 lines, 7 routes)
 │   ├── intelligence.py        # External APIs (298 lines, 6 routes)
 │   ├── system.py              # System status (491 lines, 4 routes)
-│   └── snapshots.py           # Audited snapshots (610 lines, 6 routes) [NEW Phase 5]
+│   └── snapshots.py           # Audited snapshots (610 lines, 6 routes)
 ├── utils/                      # Shared utilities (625 lines)
 │   ├── __init__.py            # Utils exports (53 lines)
 │   ├── database.py            # PostgreSQL connection pool (162 lines)
@@ -53,8 +56,8 @@ omnix_dashboard/
 │   ├── terminal.html          # Trading Terminal (extends base)
 │   └── dashboard.html         # Classic Dashboard (extends base)
 └── static/
-    ├── css/                   # Modular CSS (19 files, ~1650 lines) [Updated V6.5.2]
-    └── js/                    # Modular JavaScript (14 files, ~1800 lines) [Updated V6.5.2]
+    ├── css/                   # Modular CSS (19 files, ~1650 lines)
+    └── js/                    # Modular JavaScript (14 files, ~1800 lines)
 ```
 
 ### 1.2 Blueprint Distribution
@@ -90,7 +93,7 @@ omnix_dashboard/static/css/
 ├── components/
 │   ├── panel.css, card.css, ticker.css, signal.css
 │   ├── badge.css, chart.css, table.css
-│   ├── news.css, protection.css, tradehistory.css [NEW V6.5.2]
+│   ├── news.css, protection.css, tradehistory.css
 ├── layouts/
 │   ├── header.css, terminal-grid.css, animations.css
 ├── pages/
@@ -117,7 +120,7 @@ omnix_dashboard/static/js/
 │   ├── feargreed.js           # 101 lines - Fear & Greed gauge
 │   ├── statusbar.js           # 126 lines - Dynamic status bar (polls /api/health)
 │   ├── snapshots.js           # 307 lines - Audited snapshots widget [NEW Phase 5]
-│   └── tradehistory.js        # 177 lines - Trade history with P&L details [NEW V6.5.2]
+│   └── tradehistory.js        # 177 lines - Trade history with P&L details
 └── pages/                     # 394 lines total
     ├── terminal.js            # 101 lines - Terminal page controller
     └── dashboard.js           # 293 lines - Dashboard page controller
@@ -323,7 +326,7 @@ DASHBOARD_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
 |-----------|----------|---------|------------------|
 | core.py | `/api/metrics` | Performance metrics | Dec 2024 |
 | core.py | `/api/trades` | Trade history | Dec 2024 |
-| core.py | `/api/trades/history` | Detailed trade history with P&L, hold times, stats | Dec 2025 [V6.5.2] |
+| core.py | `/api/trades/history` | Detailed trade history with P&L, hold times, stats | Dec 2025 |
 | core.py | `/api/positions` | Open positions | Dec 2024 |
 | core.py | `/api/portfolio` | Portfolio state | Dec 2024 |
 | core.py | `/api/equity-curve` | Equity curve data | Dec 2024 |
@@ -821,4 +824,4 @@ Add to `package.json`:
 
 ---
 
-*Document generated from OMNIX V6.5.2 Dashboard Audit - Last Updated: December 2025*
+*Document generated from OMNIX INSTITUTIONAL+ Dashboard Audit - Last Updated: December 2025*

@@ -1,13 +1,16 @@
-# OMNIX V6.5.4 - Trading Flow Architecture
+# OMNIX INSTITUTIONAL+ - Trading Flow Architecture
+
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
 
 **Document Version:** 2.0  
 **Created:** December 6, 2025  
-**Updated:** December 6, 2025 - V6.5.4 Institutional Fixes  
+**Updated:** December 6, 2025 - Institutional Fixes  
 **Status:** ✅ COMPLETE - Execution Flow Documentation
 
 ---
 
-## V6.5.4 Institutional Fixes Summary
+## Institutional Fixes Summary
 
 | Fix | Problem | Solution |
 |-----|---------|----------|
@@ -22,7 +25,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     OMNIX V6.5.4 TRADING FLOW (INSTITUTIONAL)               │
+│                     OMNIX INSTITUTIONAL+ TRADING FLOW                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 
                               ┌─────────────────┐
@@ -33,7 +36,7 @@
                                        │
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                          AUTO TRADING BOT V6.5.4                             │
+│                          AUTO TRADING BOT INSTITUTIONAL+                     │
 │                        (auto_trading_bot.py - 3,950+ lines)                  │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
 │  │  Multi-Crypto Scanner (11 pairs)                                       │  │
@@ -44,7 +47,7 @@
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│               V6.5.4 POSITION LIMIT CHECK (FIRST!) - INSTITUTIONAL           │
+│               POSITION LIMIT CHECK (FIRST!) - INSTITUTIONAL                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ _check_position_limit_early() - BEFORE any CPU-intensive analysis      │ │
 │  │ • If positions >= max_open_positions: SKIP to SELL-ONLY mode           │ │
@@ -65,14 +68,14 @@
 │  │ Detection  │  │  Filter    │  │ Momentum   │  │   Swing    │             │
 │  └────────────┘  └────────────┘  └────────────┘  └────────────┘             │
 │  ┌────────────┐  ┌────────────────────────────────────────────┐             │
-│  │  ARES V2   │  │        NON-MARKOVIAN KERNEL V6.5           │             │
+│  │  ARES V2   │  │        NON-MARKOVIAN KERNEL                 │             │
 │  │  Scalping  │  │  K(t-s) = exp(-|t-s|/τ) × [1 + ε×cos(Ω)]  │             │
 │  └────────────┘  └────────────────────────────────────────────┘             │
 └──────────────────────────────────┬───────────────────────────────────────────┘
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                    COHERENCE ENGINE V6.5 - 6-TIER VETO SYSTEM                │
+│                    COHERENCE ENGINE - 6-TIER VETO SYSTEM                     │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ Tier 1: Signal Strength Validation                                      │ │
 │  │ Tier 2: Strategy Consensus (≥45% agreement)                             │ │
@@ -86,12 +89,12 @@
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                     CAES V6.5.4 - CONFIDENCE ADAPTIVE ENTRY                  │
+│                     CAES - CONFIDENCE ADAPTIVE ENTRY                         │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ Position Sizing: multiplier = 0.5 + 2.5 × sigmoid(confidence - 0.5)    │ │
 │  │ Range: 0.5x to 3.0x with safety caps                                    │ │
 │  │                                                                          │ │
-│  │ V6.5.4 INSTITUTIONAL: NO artificial bias applied                        │ │
+│  │ INSTITUTIONAL+: NO artificial bias applied                               │ │
 │  │ • ELIMINADO: FLOOR_RESCUE, RECOVERY (era revenge trading)              │ │
 │  │ • Cada trade es un evento estadístico aislado                          │ │
 │  │ • Score negativo = NO COMPRAR (sin manipulación)                        │ │
@@ -101,7 +104,7 @@
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                 AI RISK GUARDIAN V5.4 + V6.5.4 HARD CAP                      │
+│                 AI RISK GUARDIAN + INSTITUTIONAL HARD CAP                    │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ • Overtrading prevention                                                 │ │
 │  │ • Drawdown protection                                                    │ │
@@ -109,7 +112,7 @@
 │  │ • Daily loss limits                                                      │ │
 │  │ • Position concentration limits                                          │ │
 │  │                                                                          │ │
-│  │ V6.5.4 INSTITUTIONAL: HARD CAP ABSOLUTO                                 │ │
+│  │ INSTITUTIONAL+: HARD CAP ABSOLUTO                                        │ │
 │  │ • max_trade_size_usd = $20,000 - NUNCA excede este límite               │ │
 │  │ • get_adjusted_position_size() aplica: min(size, MAX_LIMIT)             │ │
 │  │ • Sin excepciones, sin "recortes suaves"                                 │ │
@@ -356,7 +359,7 @@ class CAESModule:
         # Sigmoid aggression function
         base = 0.5 + 2.5 * self.sigmoid(confidence - 0.5)
         
-        # V6.5.4: No artificial bias applied
+        # INSTITUTIONAL+: No artificial bias applied
         # boost = 1.0 (eliminated FLOOR_RESCUE/RECOVERY)
         
         # Apply limits
@@ -492,12 +495,12 @@ WHERE user_id = $1;
 
 ---
 
-## 9. V6.5.4 Institutional Practices
+## 9. INSTITUTIONAL+ Practices
 
-### 9.1 No Artificial Bias (ELIMINATED in V6.5.4)
+### 9.1 No Artificial Bias (ELIMINATED in INSTITUTIONAL+)
 
 ```python
-# V6.5.4: NO artificial bias applied
+# INSTITUTIONAL+: NO artificial bias applied
 # Each trade is an isolated statistical event
 # Score negativo = NO COMPRAR (sin manipulación)
 
@@ -515,7 +518,7 @@ if fear_greed_index < 25:  # Extreme fear (valid contrarian strategy)
 ### 9.2 Same Rules for Paper and Real Mode
 
 ```python
-# V6.5.4: Mismas reglas para PAPER y REAL mode
+# INSTITUTIONAL+: Mismas reglas para PAPER y REAL mode
 # La integridad de la señal es más importante que "probar el sistema"
 # Esto genera un track record REPLICABLE en trading real
 
@@ -523,14 +526,14 @@ if coherence_score < veto_critical:
     # SIEMPRE bloquear - sin bypass de paper mode
     decision['should_trade'] = False
     
-# V6.5.4: Sin reducciones suaves en paper mode
+# INSTITUTIONAL+: Sin reducciones suaves en paper mode
 # Si el Risk Guardian bloquea, bloquea. Punto.
 ```
 
 ### 9.3 Hard Cap Absoluto
 
 ```python
-# V6.5.4: Hard cap en Risk Guardian
+# INSTITUTIONAL+: Hard cap en Risk Guardian
 max_trade_size = self.config.get('max_trade_size_usd', 20000)
 adjusted_size = min(calculated_size, max_trade_size)  # NUNCA excede
 ```
@@ -576,5 +579,5 @@ class UserSessionManager:
 
 | Date | Version | Changes |
 |------|---------|---------|
-| Dec 6, 2025 | 2.0 | V6.5.4 Institutional Fixes - eliminated bias, hard cap, no paper bypass |
+| Dec 6, 2025 | 2.0 | INSTITUTIONAL+ Fixes - eliminated bias, hard cap, no paper bypass |
 | Dec 6, 2025 | 1.0 | Initial trading flow architecture documentation |

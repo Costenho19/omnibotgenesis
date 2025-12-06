@@ -1,9 +1,12 @@
-# OMNIX V6.5.3 INSTITUTIONAL+ - Technical Reference
+# OMNIX INSTITUTIONAL+ - Technical Reference
+
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
 
 **Document Version:** 3.0  
 **Created:** December 4, 2025  
 **Last Updated:** December 6, 2025  
-**Status:** ✅ COMPLETE (V6.5.3 - Full Module Audit)
+**Status:** ✅ COMPLETE (Full Module Audit)
 
 **Related Documents:**
 - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory
@@ -17,7 +20,7 @@
 
 ### 1.1 System Overview
 
-OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for:
+OMNIX INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for:
 
 | Capability | Description |
 |------------|-------------|
@@ -39,7 +42,7 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | Total Estimated Lines | ~95,000 | Sum of all packages |
 | Database Tables | 42 | PostgreSQL metadata (3 redundant consolidated) |
 | Foreign Key Constraints | 38 (90% coverage) | DATABASE_AUDIT_REPORT.md |
-| Dashboard Endpoints | 26+ | Blueprint inspection [V6.5.2: +/api/trades/history] |
+| Dashboard Endpoints | 26+ | Blueprint inspection (includes /api/trades/history) |
 | Flask Blueprints | 6 | app.py |
 
 ---
@@ -104,11 +107,11 @@ omnix/
 
 ---
 
-#### 3.2.2 omnix_core/bot/auto_trading_bot.py (3,660 lines) [Updated V6.5.2]
+#### 3.2.2 omnix_core/bot/auto_trading_bot.py (3,660 lines)
 
 **Purpose:** 24/7 automated trading bot with 10 institutional strategies.
 
-**V6.5.2 Trade Execution Improvements:**
+**Trade Execution Improvements:**
 - **Paper Mode Floor**: Ensures trades >= minimum size after all reductions (respects Risk Guardian blocks)
 - **Reduced Penalties**: Paper mode uses 25% reductions (vs 50%) for Risk Guardian and Coherence Engine
 - **Position Check**: Verifies open position exists before SELL to prevent "No position" errors
@@ -267,7 +270,7 @@ omnix_dashboard/
 ├── run.py                  # Development server
 ├── blueprints/
 │   ├── views.py            # HTML routes (/, /terminal, /classic)
-│   ├── core.py             # /api/metrics, /api/trades, /api/trades/history, /api/health (~470 lines) [V6.5.2]
+│   ├── core.py             # /api/metrics, /api/trades, /api/trades/history, /api/health (~470 lines)
 │   ├── market.py           # /api/ticker, /api/fear-greed (390 lines)
 │   ├── intelligence.py     # /api/adaptive, /api/riskguardian (304 lines)
 │   ├── system.py           # /api/debug, /api/db-diagnostics (491 lines)
@@ -281,7 +284,7 @@ omnix_dashboard/
 │   ├── css/                # 19 CSS files (modular components)
 │   └── js/
 │       ├── core/           # api.js, clock.js, utils.js (4 files)
-│       ├── components/     # 12 components (charts, ticker, signals, tradehistory, etc.) [V6.5.2]
+│       ├── components/     # 12 components (charts, ticker, signals, tradehistory, etc.)
 │       └── pages/          # dashboard.js, terminal.js
 └── templates/
     ├── base.html
@@ -309,7 +312,7 @@ omnix_dashboard/
 |-----------|----------|-------|---------|
 | **core** | `/api/metrics` | 35 | Trading performance metrics |
 | **core** | `/api/trades` | 40 | Recent trade history |
-| **core** | `/api/trades/history` | ~60 | Detailed trade history with P&L, hold times, statistical analysis [V6.5.2] |
+| **core** | `/api/trades/history` | ~60 | Detailed trade history with P&L, hold times, statistical analysis |
 | **core** | `/api/positions` | 80 | Open positions with live prices |
 | **core** | `/api/health` | 45 | System health check |
 | **core** | `/api/equity-curve` | 35 | Balance over time |
@@ -338,7 +341,7 @@ omnix_dashboard/
 | News | `news.js` | ~50 | Market news feed |
 | Status Bar | `statusbar.js` | ~80 | System status |
 | Snapshots | `snapshots.js` | 307 | Portfolio snapshots |
-| Trade History | `tradehistory.js` | ~130 | Detailed trade history with P&L [V6.5.2] |
+| Trade History | `tradehistory.js` | ~130 | Detailed trade history with P&L |
 
 ---
 
@@ -814,7 +817,7 @@ anthropic==0.75.0
 # Railway deployment test sequence
 1. Deploy to Railway (push to main)
 2. Check build logs for pip install errors
-3. Verify bot startup: "OMNIX V6.5.2 INSTITUTIONAL+ iniciado"
+3. Verify bot startup: "OMNIX INSTITUTIONAL+ iniciado"
 4. Test Telegram connection: /status command
 5. Test Dashboard: /api/health endpoint
 6. Verify database: /api/db-diagnostics endpoint
@@ -987,7 +990,7 @@ OMNIX is an enterprise-grade modular system designed for 100,000+ users. Many ta
 ### 9.6.2 Modular Architecture Diagram
 
 ```
-OMNIX V6.5.2 MODULAR ARCHITECTURE - DATA FLOW
+OMNIX INSTITUTIONAL+ MODULAR ARCHITECTURE - DATA FLOW
 ═══════════════════════════════════════════════════════════════════
 
 ✅ ACTIVE MODULES (with data):
@@ -1092,7 +1095,7 @@ grep -r "row\['" omnix_*
 | 2.2 | Dec 4, 2025 | Agent | **Major update to Section 8.1**: Complete dependency audit with version matrix, risk analysis, compatibility notes, deprecation warnings (google-generativeai), security patches (pypqc KyberSlash), Python version compatibility table, and phased update plan |
 | 2.3 | Dec 4, 2025 | Agent | **Section 9.6 Added**: Database Population Analysis - explains why 38/42 tables are empty (modular enterprise design, paper trading mode, modules not activated), includes architecture diagram, activation conditions, and design rationale |
 | 2.4 | Dec 4, 2025 | Agent | **Section 9 Expanded - Legacy Code Audit**: Deleted 2 empty folders (models/, queue/), removed 162-line duplicate (pqc_security.py), added proper exports to 3 __init__.py files, documented paper trading module architecture |
-| 2.5 | Dec 5, 2025 | Agent | **Line counts verified**: auto_trading_bot.py 3,660, trading_system.py 5,576, paper_trading_manager.py 1,023, core.py 552, system.py 491, snapshots.js 307, tradehistory.js 177. All V6.5.2 fixes confirmed implemented. |
+| 2.5 | Dec 5, 2025 | Agent | **Line counts verified**: auto_trading_bot.py 3,660, trading_system.py 5,576, paper_trading_manager.py 1,023, core.py 552, system.py 491, snapshots.js 307, tradehistory.js 177. All fixes confirmed implemented. |
 
 ---
 

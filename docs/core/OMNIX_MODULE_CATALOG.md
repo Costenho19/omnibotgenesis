@@ -1,4 +1,7 @@
-# OMNIX V6.5.3 INSTITUTIONAL+ - Module Catalog
+# OMNIX INSTITUTIONAL+ - Module Catalog
+
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
 
 **Document Version:** 1.0  
 **Created:** December 6, 2025  
@@ -80,7 +83,7 @@ omnix_core/
 
 **Purpose:** 24/7 automated trading with 10 institutional strategies.
 
-**V6.5.3 Features:**
+**INSTITUTIONAL+ Features:**
 - Multi-crypto scanning (11 pairs)
 - Tiered signal strength (WEAK → MODERATE → STRONG → ULTRA)
 - Ramp-up system for gradual position increases
@@ -505,7 +508,7 @@ omnix_testing/
 
 ---
 
-## 10. V6.5.3 Specific Features
+## 10. INSTITUTIONAL+ Specific Features
 
 ### 10.1 BUY Bias Escalonado (Paper Mode)
 
@@ -534,4 +537,4 @@ omnix_testing/
 
 | Date | Version | Changes |
 |------|---------|---------|
-| Dec 6, 2025 | 1.0 | Initial complete module catalog for V6.5.3 |
+| Dec 6, 2025 | 1.0 | Initial complete module catalog for INSTITUTIONAL+ |

@@ -1,5 +1,8 @@
 # OMNIX V7.0 - Architecture Refactoring Checklist
 
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
+
 **Document Version:** 1.3  
 **Created:** December 5, 2025  
 **Last Updated:** December 6, 2025  
@@ -7,7 +10,7 @@
 **Estimated Total Effort:** 45-60 days (conservative)
 
 > **RELATED DOCUMENTATION:**
-> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Current V6.5.3 architecture
+> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Current INSTITUTIONAL+ architecture
 > - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory
 > - [TRADING_FLOW_ARCHITECTURE.md](TRADING_FLOW_ARCHITECTURE.md) - Trading execution flow
 > - [DATABASE_AUDIT_REPORT.md](DATABASE_AUDIT_REPORT.md) - Database schema reference
@@ -23,7 +26,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive, task-by-task checklist for modernizing OMNIX from V6.5.3 to V7.0, adopting 2024-2025 software engineering standards including:
+This document provides a comprehensive, task-by-task checklist for modernizing OMNIX from the current INSTITUTIONAL+ release to V7.0, adopting 2024-2025 software engineering standards including:
 
 - **SOLID Principles** compliance
 - **Hexagonal Architecture** (Ports & Adapters)
@@ -51,9 +54,9 @@ This document provides a comprehensive, task-by-task checklist for modernizing O
 
 > **NOTE:** For detailed current state, see:
 > - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory (~95,000 lines)
-> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Architecture reference V6.5.3
+> - [Omnix_TECHNICAL_REFERENCE.md](Omnix_TECHNICAL_REFERENCE.md) - Architecture reference INSTITUTIONAL+
 
-### 1.1 SOLID Violations Identified (V6.5.3)
+### 1.1 SOLID Violations Identified (Current Architecture)
 
 | Principle | Violation | Files Affected | Severity |
 |-----------|-----------|----------------|----------|

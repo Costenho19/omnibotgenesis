@@ -1,4 +1,7 @@
-# OMNIX V6.5.3 Database - Audit Report
+# OMNIX INSTITUTIONAL+ Database - Audit Report
+
+> **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
+> See VERSION_BANNER for the authoritative version string.
 
 > **Document:** Database Audit & Remediation Guide  
 > **Location:** `docs/core/DATABASE_AUDIT_REPORT.md`  
@@ -654,6 +657,6 @@ ALTER TABLE derivatives_orders DROP CONSTRAINT IF EXISTS fk_derivatives_orders_u
 ---
 
 **Document Version:** 3.1  
-**OMNIX V6.5.2 INSTITUTIONAL+**  
+**OMNIX INSTITUTIONAL+**  
 **Audit Date:** December 2025  
 **Contact:** Development Team
