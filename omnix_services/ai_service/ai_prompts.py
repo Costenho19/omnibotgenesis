@@ -418,6 +418,28 @@ DEBES USAR estos números exactos en tu respuesta, NO inventes otros.
 Ejemplo: "El precio actual de BTC es $XX,XXX según Kraken API en vivo."
 """
         
+        # 🔍 INJECT WEB SEARCH RESULTS (Real-time internet data)
+        if additional_context and 'web_search_results' in additional_context:
+            web_context = additional_context['web_search_results']
+            base_prompt += f"""
+
+═══════════════════════════════════════════════════════════════
+                    🔍 INFORMACIÓN DE INTERNET (EN VIVO)
+═══════════════════════════════════════════════════════════════
+
+El sistema buscó información actualizada en internet para responder mejor:
+
+{web_context}
+
+📌 INSTRUCCIONES:
+- USA esta información en tu respuesta
+- Cita las fuentes cuando sea relevante
+- Esta información es MÁS RECIENTE que tu conocimiento base
+- Si contradice tu conocimiento, PRIORIZA los datos de búsqueda
+
+"""
+            logger.info(f"🔍 Web search context injected: {len(web_context)} chars")
+        
         # INJECT CONVERSATION MEMORY (últimos 10 mensajes = 5 pares)
         if conversation_history and len(conversation_history) > 0:
             base_prompt += f"\n\n💬 MEMORIA CONVERSACIONAL ({len(conversation_history)} mensajes):\n"

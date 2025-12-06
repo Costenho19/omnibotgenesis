@@ -16,6 +16,13 @@ from .ai_models import AIModelsManager
 from .ai_styles import VisualStylesManager
 from .ai_prompts import PromptsContextManager
 from omnix_core.cache.redis_cache import cache
+
+WEB_SEARCH_AVAILABLE = False
+try:
+    from omnix_services.web_search_service import get_search_manager
+    WEB_SEARCH_AVAILABLE = True
+except ImportError:
+    get_search_manager = None
 from omnix_core.cache.redis_state import (
     get_conversation_history,
     get_user_preferences,
@@ -139,6 +146,25 @@ class ConversationalAIService:
             additional_context = {}
             if market_data:
                 additional_context.update(market_data)
+            
+            # 4.5 Web Search - Get real-time info if needed
+            web_search_context = None
+            if WEB_SEARCH_AVAILABLE and get_search_manager:
+                try:
+                    search_manager = get_search_manager()
+                    if search_manager.is_available():
+                        intent_check = search_manager.detect_search_intent(user_message)
+                        if intent_check.get("needs_search"):
+                            logger.info(f"🔍 Web search triggered: {intent_check.get('reason')}")
+                            web_search_context = search_manager.get_context_for_ai(
+                                query=intent_check.get("suggested_query", user_message),
+                                max_tokens=2000
+                            )
+                            if web_search_context:
+                                additional_context["web_search_results"] = web_search_context
+                                logger.info(f"✅ Web search context added: {len(web_search_context)} chars")
+                except Exception as e:
+                    logger.warning(f"⚠️ Web search failed (continuing without): {e}")
             
             # 5. Build system prompt WITH CONVERSATION HISTORY + REAL CONTEXT
             system_prompt = self.prompts.build_system_prompt(
