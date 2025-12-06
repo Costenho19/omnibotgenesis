@@ -96,3 +96,30 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **HTTP**: requests, aiohttp, httpx, websockets
 -   **Security**: pypqc (post-quantum)
 -   **Reporting**: plotly, kaleido, reportlab, PyPDF2
+
+## Technical Documentation
+
+**Location:** `docs/core/`
+
+| Document | Purpose |
+|----------|---------|
+| `Omnix_TECHNICAL_REFERENCE.md` | Complete system architecture reference (V3.0) |
+| `OMNIX_MODULE_CATALOG.md` | Exhaustive module inventory (~95,000 lines cataloged) |
+| `TRADING_FLOW_ARCHITECTURE.md` | Trading execution flow with ASCII diagrams |
+| `DATABASE_AUDIT_REPORT.md` | Database schema and FK constraints (42 tables) |
+| `DASHBOARD_TECHNICAL_REFERENCE.md` | Flask dashboard documentation |
+
+## Codebase Statistics (December 6, 2025)
+
+| Package | Modules | Lines |
+|---------|---------|-------|
+| omnix_core | 20 | ~20,131 |
+| omnix_services | 150+ | ~62,613 |
+| omnix_dashboard | 40+ | ~9,037 |
+| **Total** | **160+** | **~95,000** |
+
+## Recent Changes
+
+- **Dec 6, 2025**: Complete module audit and documentation update to V6.5.3
+- **Dec 5, 2025**: Gemini 2.0 SDK migration (google-genai)
+- **Dec 4, 2025**: Database audit - 42 tables, 38 FKs (90% coverage)

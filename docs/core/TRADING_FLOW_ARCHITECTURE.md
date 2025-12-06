@@ -1,0 +1,533 @@
+# OMNIX V6.5.3 - Trading Flow Architecture
+
+**Document Version:** 1.0  
+**Created:** December 6, 2025  
+**Status:** ✅ COMPLETE - Execution Flow Documentation
+
+---
+
+## 1. High-Level Trading Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         OMNIX V6.5.3 TRADING FLOW                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────────────┐
+                              │   ENTRY POINTS  │
+                              │   main.py       │
+                              │   Telegram Bot  │
+                              └────────┬────────┘
+                                       │
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          AUTO TRADING BOT V6.5.3                             │
+│                        (auto_trading_bot.py - 3,932 lines)                   │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │  Multi-Crypto Scanner (11 pairs)                                       │  │
+│  │  • BTC/USD, ETH/USD, SOL/USD, XRP/USD, DOGE/USD, ADA/USD              │  │
+│  │  • DOT/USD, LINK/USD, AVAX/USD, MATIC/USD, ATOM/USD                   │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           10 STRATEGY ANALYSIS                               │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
+│  │ Monte Carlo│  │ Black Swan │  │ Sentiment  │  │   Kelly    │             │
+│  │ (10k sims) │  │ Detection  │  │  Analysis  │  │ Criterion  │             │
+│  └────────────┘  └────────────┘  └────────────┘  └────────────┘             │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
+│  │ HMM Regime │  │  Kalman    │  │  Quantum   │  │  ARES V1   │             │
+│  │ Detection  │  │  Filter    │  │ Momentum   │  │   Swing    │             │
+│  └────────────┘  └────────────┘  └────────────┘  └────────────┘             │
+│  ┌────────────┐  ┌────────────────────────────────────────────┐             │
+│  │  ARES V2   │  │        NON-MARKOVIAN KERNEL V6.5           │             │
+│  │  Scalping  │  │  K(t-s) = exp(-|t-s|/τ) × [1 + ε×cos(Ω)]  │             │
+│  └────────────┘  └────────────────────────────────────────────┘             │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    COHERENCE ENGINE V6.5 - 6-TIER VETO SYSTEM                │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Tier 1: Signal Strength Validation                                      │ │
+│  │ Tier 2: Strategy Consensus (≥45% agreement)                             │ │
+│  │ Tier 3: Risk Limit Verification                                         │ │
+│  │ Tier 4: Regime Alignment Check                                          │ │
+│  │ Tier 5: Memory Coherence Score (≥30%)                                   │ │
+│  │ Tier 6: Final Execution Approval                                        │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                      Target Win Rate: >55%                                   │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                     CAES V6.5.2 - CONFIDENCE ADAPTIVE ENTRY                  │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Position Sizing: multiplier = 0.5 + 2.5 × sigmoid(confidence - 0.5)    │ │
+│  │ Range: 0.5x to 3.0x with safety caps                                    │ │
+│  │                                                                          │ │
+│  │ Sub-Regime Detection:                                                    │ │
+│  │ • FLOOR_RESCUE → +30% base boost                                        │ │
+│  │ • RECOVERY → +20% base boost                                            │ │
+│  │ • NEUTRAL → +10% base boost                                             │ │
+│  │ • MOMENTUM → +5% base boost                                             │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      AI RISK GUARDIAN V5.4 - FINAL CHECK                     │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ • Overtrading prevention                                                 │ │
+│  │ • Drawdown protection                                                    │ │
+│  │ • Revenge trading detection                                              │ │
+│  │ • Daily loss limits                                                      │ │
+│  │ • Position concentration limits                                          │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                    ┌──────────────┴──────────────┐
+                    │                             │
+                    ▼                             ▼
+    ┌───────────────────────────┐   ┌───────────────────────────┐
+    │      PAPER TRADING        │   │       REAL TRADING        │
+    │  (Track Record Mode)      │   │     (Post-Funding)        │
+    │                           │   │                           │
+    │  PaperTradingManager      │   │  KrakenAPIClient          │
+    │  $1M Virtual Balance      │   │  Real Order Execution     │
+    │  Real Kraken Prices       │   │  Actual Funds             │
+    └─────────────┬─────────────┘   └─────────────┬─────────────┘
+                  │                               │
+                  └───────────────┬───────────────┘
+                                  │
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    POSITION MANAGER (DynamicPositionManager)                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ • Open position tracking                                                 │ │
+│  │ • Dynamic TP/SL adjustment                                               │ │
+│  │ • Symbol tracking per user                                               │ │
+│  │ • P&L calculation                                                        │ │
+│  │ • Trade evaluation scheduling                                            │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    DATABASE SERVICE (PostgreSQL + Redis)                     │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ PostgreSQL (Railway):                                                    │ │
+│  │ • paper_trading_trades - Trade history                                   │ │
+│  │ • paper_trading_positions - Open positions                               │ │
+│  │ • paper_trading_balances - Balance tracking                              │ │
+│  │ • balance_history - P&L over time                                        │ │
+│  │                                                                          │ │
+│  │ Redis (Railway):                                                         │ │
+│  │ • Session state caching                                                  │ │
+│  │ • Rate limiting                                                          │ │
+│  │ • Real-time price cache                                                  │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Detailed Trading Cycle
+
+### 2.1 Entry Point (main.py)
+
+```python
+# main.py - Line 1-70
+# 1. Clean Python cache
+# 2. Configure logging
+# 3. Load environment (DATABASE_URL, API keys)
+# 4. Initialize modules (Stock Trading, Stripe, AI)
+# 5. Start AutoTradingBot
+# 6. Run Telegram bot polling
+```
+
+### 2.2 AutoTradingBot Initialization
+
+```python
+# auto_trading_bot.py
+class AutoTradingBot:
+    def __init__(self):
+        # Initialize 10 strategies
+        self.strategies = {
+            'monte_carlo': MonteCarloSimulator(),
+            'black_swan': BlackSwanDetector(),
+            'sentiment': SentimentAnalyzer(),
+            'kelly': KellyCriterion(),
+            'hmm': HMMRegimeDetector(),
+            'kalman': KalmanFilter(),
+            'quantum_momentum': QuantumMomentum(),
+            'ares_v1': AresProtocolV1(),
+            'ares_v2': AresProtocolV2(),
+            'non_markovian': NonMarkovianKernel()
+        }
+        
+        # Initialize support modules
+        self.coherence_engine = CoherenceEngine()
+        self.caes = CAESModule()
+        self.risk_guardian = AIRiskGuardian()
+        self.position_manager = DynamicPositionManager()
+        self.database = DatabaseServiceEnterprise()
+```
+
+### 2.3 Trading Cycle Execution
+
+```python
+async def run_trading_cycle(self):
+    """Main trading loop - runs every 60 seconds"""
+    
+    # Step 1: Scan all 11 crypto pairs
+    for pair in self.CRYPTO_PAIRS:
+        signal = await self.analyze_pair(pair)
+        
+        if signal.strength >= SignalStrength.MODERATE:
+            # Step 2: Coherence Engine validation
+            coherence_result = self.coherence_engine.validate(signal)
+            
+            if coherence_result.approved:
+                # Step 3: CAES position sizing
+                position_size = self.caes.calculate_size(
+                    confidence=signal.confidence,
+                    sub_regime=self.detect_sub_regime()
+                )
+                
+                # Step 4: Risk Guardian final check
+                if self.risk_guardian.approve_trade(signal, position_size):
+                    # Step 5: Execute trade
+                    await self.execute_trade(pair, signal, position_size)
+```
+
+---
+
+## 3. Strategy Analysis Pipeline
+
+### 3.1 Monte Carlo Simulation
+
+```python
+class MonteCarloSimulator:
+    """10,000 path simulations for probability estimation"""
+    
+    def simulate(self, price_data, num_paths=10000):
+        # Generate price paths using GBM
+        # Calculate probability of profit
+        # Return confidence score (0-1)
+```
+
+### 3.2 ARES V1 (Swing Trading)
+
+```python
+class AresProtocolV1:
+    """55-65% win rate target, swing timeframe"""
+    
+    LAYERS = {
+        'ANF': 'Adaptive Noise Filter',    # Filters 90% of noise
+        'ISA': 'Institutional Signal Analysis',  # 6 signals
+        'SXE': 'Smart Execution Engine'    # Hedge fund execution
+    }
+    
+    def analyze(self, candles):
+        # Layer 1: ANF filtering
+        filtered = self.anf.filter(candles)
+        
+        # Layer 2: ISA signals
+        signals = self.isa.analyze(filtered)
+        
+        # Layer 3: SXE execution decision
+        return self.sxe.decide(signals)
+```
+
+### 3.3 Non-Markovian Kernel
+
+```python
+class NonMarkovianKernel:
+    """Memory-based temporal analysis"""
+    
+    def compute_kernel(self, t, s):
+        """K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]"""
+        tau = 12  # hours
+        epsilon = 0.35
+        omega = 0.523  # radians
+        
+        delta = abs(t - s)
+        decay = np.exp(-delta / tau)
+        oscillation = 1 + epsilon * np.cos(omega * delta)
+        
+        return decay * oscillation
+    
+    def get_memory_weighted_signal(self, history):
+        """Weight historical signals by kernel"""
+        weights = [self.compute_kernel(now, t) for t in history.times]
+        return np.average(history.signals, weights=weights)
+```
+
+---
+
+## 4. Coherence Engine (6-Tier Veto)
+
+```python
+class CoherenceEngine:
+    """Validates strategy agreement before execution"""
+    
+    THRESHOLDS = {
+        'quality': 0.30,      # 30% minimum score
+        'consensus': 0.45,    # 45% strategy agreement
+        'win_rate_target': 0.55  # 55% target
+    }
+    
+    def validate(self, signal):
+        result = ValidationResult()
+        
+        # Tier 1: Signal strength
+        if signal.strength < SignalStrength.MODERATE:
+            result.add_veto("Signal too weak")
+            return result
+        
+        # Tier 2: Strategy consensus
+        agreeing = sum(1 for s in self.strategies if s.agrees(signal))
+        consensus = agreeing / len(self.strategies)
+        if consensus < self.THRESHOLDS['consensus']:
+            result.add_veto(f"Low consensus: {consensus:.1%}")
+            return result
+        
+        # Tier 3: Risk limits
+        if not self.risk_limiter.check(signal):
+            result.add_veto("Risk limit exceeded")
+            return result
+        
+        # Tier 4: Regime alignment
+        if not self.regime_aligned(signal):
+            result.add_veto("Regime mismatch")
+            return result
+        
+        # Tier 5: Memory coherence
+        coherence = self.non_markovian.get_coherence_score()
+        if coherence < self.THRESHOLDS['quality']:
+            result.add_veto(f"Low coherence: {coherence:.1%}")
+            return result
+        
+        # Tier 6: Final approval
+        result.approved = True
+        return result
+```
+
+---
+
+## 5. CAES Position Sizing
+
+```python
+class CAESModule:
+    """Confidence-Adaptive Entry System"""
+    
+    def calculate_size(self, confidence, sub_regime):
+        # Sigmoid aggression function
+        base = 0.5 + 2.5 * self.sigmoid(confidence - 0.5)
+        
+        # Sub-regime boost (paper mode BUY bias)
+        boost = self.get_regime_boost(sub_regime)
+        
+        # Apply limits
+        multiplier = min(3.0, max(0.5, base * boost))
+        
+        return self.base_position * multiplier
+    
+    def get_regime_boost(self, sub_regime):
+        BOOSTS = {
+            'FLOOR_RESCUE': 1.30,
+            'RECOVERY': 1.20,
+            'NEUTRAL': 1.10,
+            'MOMENTUM': 1.05
+        }
+        return BOOSTS.get(sub_regime, 1.0)
+    
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x * 10))
+```
+
+---
+
+## 6. Trade Execution Flow
+
+### 6.1 Paper Trading (Current Mode)
+
+```python
+class PaperTradingManager:
+    """Simulated trading with real prices"""
+    
+    async def execute_paper_trade(self, user_id, pair, side, amount_usd):
+        # Get real price from Kraken
+        price = await self.kraken_client.get_price(pair)
+        
+        # Calculate units
+        units = amount_usd / price
+        
+        # Record trade in database
+        trade_id = await self.db.insert_paper_trade(
+            user_id=user_id,
+            symbol=pair,
+            side=side,
+            entry_price=price,
+            units=units,
+            amount_usd=amount_usd
+        )
+        
+        # Update position
+        await self.position_manager.open_position(
+            trade_id=trade_id,
+            symbol=pair,
+            entry_price=price,
+            units=units
+        )
+        
+        # Update balance
+        await self.db.update_paper_balance(user_id, -amount_usd)
+        
+        return trade_id
+```
+
+### 6.2 Position Manager
+
+```python
+class DynamicPositionManager:
+    """Tracks and manages open positions"""
+    
+    async def monitor_positions(self):
+        """Continuous position monitoring loop"""
+        positions = await self.db.get_open_positions()
+        
+        for position in positions:
+            current_price = await self.get_price(position.symbol)
+            
+            # Calculate unrealized P&L
+            pnl = self.calculate_pnl(position, current_price)
+            
+            # Check TP/SL
+            if pnl >= position.take_profit:
+                await self.close_position(position, "Take Profit")
+            elif pnl <= position.stop_loss:
+                await self.close_position(position, "Stop Loss")
+            
+            # Dynamic TP/SL adjustment
+            await self.adjust_targets(position, current_price)
+```
+
+---
+
+## 7. Database Persistence
+
+### 7.1 Trade Recording
+
+```sql
+-- Paper trade insertion
+INSERT INTO paper_trading_trades (
+    user_id, symbol, side, entry_price, 
+    units, amount_usd, timestamp, status
+) VALUES ($1, $2, $3, $4, $5, $6, NOW(), 'open');
+
+-- Position tracking
+INSERT INTO paper_trading_positions (
+    trade_id, user_id, symbol, entry_price,
+    units, take_profit, stop_loss, status
+) VALUES ($1, $2, $3, $4, $5, $6, $7, 'open');
+```
+
+### 7.2 Balance Updates
+
+```sql
+-- Record balance change
+INSERT INTO balance_history (
+    user_id, balance, change_amount, 
+    change_type, timestamp
+) VALUES ($1, $2, $3, $4, NOW());
+
+-- Update paper balance
+UPDATE paper_trading_balances 
+SET balance = balance + $2, updated_at = NOW()
+WHERE user_id = $1;
+```
+
+---
+
+## 8. Signal Tiering System
+
+| Tier | Strength | Confidence | Action |
+|------|----------|------------|--------|
+| **WEAK** | <30% | <0.4 | No trade |
+| **MODERATE** | 30-50% | 0.4-0.6 | Small position (0.5x) |
+| **STRONG** | 50-70% | 0.6-0.8 | Normal position (1.0x) |
+| **ULTRA** | >70% | >0.8 | Enhanced position (up to 3.0x) |
+
+---
+
+## 9. V6.5.3 Paper Mode Optimizations
+
+### 9.1 BUY Bias for Track Record
+
+```python
+# Paper mode applies BUY bias to accelerate track record
+if self.paper_mode:
+    # Track Record Accelerator (first 50 trades)
+    if self.trade_count < 50:
+        signal_boost *= 1.3  # 30% boost
+    
+    # Fear & Greed Contrarian
+    if fear_greed_index < 25:  # Extreme fear
+        buy_probability *= 1.4  # 40% boost for contrarian
+```
+
+### 9.2 Reduced Penalties
+
+```python
+# Paper mode uses reduced penalties for Risk Guardian blocks
+if self.paper_mode:
+    risk_guardian_penalty = 0.25  # 25% vs 50% in real mode
+    coherence_penalty = 0.25      # 25% vs 50% in real mode
+```
+
+---
+
+## 10. Multi-User Session Management
+
+```python
+class UserSessionManager:
+    """100,000+ simultaneous user support"""
+    
+    def __init__(self):
+        self.redis = RedisStateManager()
+        self.db = DatabaseServiceEnterprise()
+        self.executor = ThreadPoolExecutor(max_workers=50)
+        self.user_locks = {}
+    
+    async def get_session(self, user_id):
+        # Check Redis cache first
+        session = await self.redis.get(f"session:{user_id}")
+        if session:
+            return session
+        
+        # Load from database
+        session = await self.db.get_user_session(user_id)
+        
+        # Cache for 5 minutes
+        await self.redis.set(f"session:{user_id}", session, ex=300)
+        
+        return session
+    
+    async def execute_user_trade(self, user_id, trade_params):
+        # Per-user locking for thread safety
+        async with self.get_lock(user_id):
+            session = await self.get_session(user_id)
+            return await self.trading_bot.execute_trade(session, trade_params)
+```
+
+---
+
+## Document Changelog
+
+| Date | Version | Changes |
+|------|---------|---------|
+| Dec 6, 2025 | 1.0 | Initial trading flow architecture documentation |

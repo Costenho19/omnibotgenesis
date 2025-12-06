@@ -1,9 +1,15 @@
-# OMNIX V6.5.2 INSTITUTIONAL+ - Technical Reference
+# OMNIX V6.5.3 INSTITUTIONAL+ - Technical Reference
 
-**Document Version:** 2.5  
+**Document Version:** 3.0  
 **Created:** December 4, 2025  
-**Last Updated:** December 5, 2025  
-**Status:** ✅ COMPLETE (V6.5.2 - Line counts verified)
+**Last Updated:** December 6, 2025  
+**Status:** ✅ COMPLETE (V6.5.3 - Full Module Audit)
+
+**Related Documents:**
+- [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory
+- [TRADING_FLOW_ARCHITECTURE.md](TRADING_FLOW_ARCHITECTURE.md) - Trading execution flow
+- [DATABASE_AUDIT_REPORT.md](DATABASE_AUDIT_REPORT.md) - Database schema reference
+- [DASHBOARD_TECHNICAL_REFERENCE.md](DASHBOARD_TECHNICAL_REFERENCE.md) - Dashboard documentation
 
 ---
 
@@ -11,7 +17,7 @@
 
 ### 1.1 System Overview
 
-OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for:
+OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for:
 
 | Capability | Description |
 |------------|-------------|
@@ -44,7 +50,7 @@ OMNIX V6.5.2 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ```
 omnix/
-├── omnix_core/           # Core trading logic (18 modules, 20,131 lines)
+├── omnix_core/           # Core trading logic (20 modules, 20,131 lines)
 ├── omnix_services/       # Service layer (150+ modules in 22 subpackages + 2 root, 62,613 lines)
 ├── omnix_dashboard/      # Flask web dashboard (40+ files, 9,037 lines)
 ├── omnix_api/            # REST API & Stripe (3 modules)
@@ -64,20 +70,21 @@ omnix/
 ## 3. omnix_core/ - Core Trading System
 
 **Purpose:** Central trading engine, strategies, security, caching, and user sessions.  
-**Total Modules:** 18 across 10 subpackages  
+**Total Modules:** 20 across 9 subpackages (+ 1 root module)  
 **Measured Lines:** 20,131
 
 ### 3.1 Subpackage Inventory (Verified Line Counts)
 
 | Subpackage | Files | Lines | Primary Purpose | Key Classes |
 |------------|-------|-------|-----------------|-------------|
-| `bot/` | 2 | ~4,300 | Trading automation | `AutoTradingBot`, `PaperTradingManager` | [Updated V6.5.2]
-| `strategies/` | 3 | 1,896 | ARES trading protocols | `AresProtocolV1`, `AresProtocolV2`, `NonMarkovianKernel` |
+| `bot/` | 2 | ~4,300 | Trading automation | `AutoTradingBot`, `PaperTradingManager` |
+| `strategies/` | 4 | ~2,196 | ARES protocols, CAES | `AresProtocolV1`, `AresProtocolV2`, `NonMarkovianKernel`, `CAESModule` |
 | `security/` | 2 | 667 | Post-Quantum Cryptography | `PostQuantumSecurity` |
 | `quantum/` | 4 | 6,248 | QRNG, D-Wave, Physics | `QuantumPhysicsValidator` (4,459 lines) |
 | `cache/` | 2 | 534 | Redis caching | `RedisCache`, `RedisStateManager` |
 | `sessions/` | 1 | 561 | Multi-user sessions | `UserSessionManager`, `UserTradingSession` |
 | `context/` | 1 | 313 | Real data provider | `OMNIXRealContextProvider` |
+| `config/` | 1 | ~150 | Trading profiles | `TradingProfiles` |
 | `utils/` | 2 | 360 | Logging, rate limiting | `ColoredFormatter`, `RateLimiter` |
 | Root | 1 | 5,576 | Trading system core | `TradingSystem` |
 
