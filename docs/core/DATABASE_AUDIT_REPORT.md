@@ -294,6 +294,31 @@ Added `column_exists()` helper functions to verify column presence before:
 
 ---
 
+### Phase 4.6: Runtime Bug Fixes ✅ COMPLETE
+
+**Goal**: Fix bugs identified from Railway production logs  
+**Completed**: December 6, 2025
+
+| Task | Description | Risk | Status | Date |
+|------|-------------|------|--------|------|
+| 4.6.1 | Session restore tuple.get() error | 🟡 MEDIUM | ✅ Done | Dec 6 |
+| 4.6.2 | Monte Carlo win_rate 0.5% vs 50% formatting | 🟡 MEDIUM | ✅ Done | Dec 6 |
+| 4.6.3 | QRNG fallback log spam reduction | 🟢 LOW | ✅ Done | Dec 6 |
+
+**Problems Resolved**:
+1. **tuple.get() AttributeError**: psycopg3 returns tuples, not dicts. `row.get('user_id')` failed.
+2. **Win rate 0.5% bug**: Monte Carlo returns decimal (0.49), but logs showed "0.5%" instead of "49%".
+3. **QRNG spam**: Repeated WARNING logs every 5 minutes when ANU API is unavailable.
+
+**Solutions Applied**:
+- **4.6.1**: `user_session_manager.py` L437 - Handle both tuple and dict: `row[0] if isinstance(row, tuple) else row.get('user_id')`
+- **4.6.2**: `auto_trading_bot.py` L1570-1579, L3656-3675 - Normalize: `win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate`
+- **4.6.3**: `quantum/enhancements.py` L122-135 - Downgrade `logger.warning` to `logger.info` for fallback messages
+
+**Result**: Clean logs with correct win rate percentages and reduced noise from QRNG fallbacks.
+
+---
+
 ## 5. Execution Playbooks
 
 ### 5.1 Playbook: Orphan Scan (Phase 3.1)

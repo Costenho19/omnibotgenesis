@@ -162,6 +162,11 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 6, 2025**: Runtime Bug Fixes (Phase 4.6) - 3 fixes from expert log analysis:
+  - FIX 1: tuple.get() error in session restore (psycopg3 returns tuples)
+  - FIX 2: Monte Carlo win_rate 0.5% → 50% formatting (decimal normalization)
+  - FIX 3: QRNG fallback log spam reduced (WARNING → INFO)
+- **Dec 6, 2025**: Defensive Migrations (Phase 4.5) - FK/CHECK/Cleanup skip missing columns
 - **Dec 6, 2025**: Centralized Version Control - Single source of truth in `omnix_config/settings.py`. Removed ~300 hardcoded V6.5.x references across codebase.
 - **Dec 6, 2025**: V6.5.4 Institutional Fixes - 4 critical corrections:
   - FIX 1: Position limits checked at START of cycle (saves CPU)
