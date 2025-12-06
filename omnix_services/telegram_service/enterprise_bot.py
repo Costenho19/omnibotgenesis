@@ -4976,7 +4976,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                                 
                                                 if web_contexts:
                                                     web_search_context = "\n\n🌐 INFORMACIÓN DE INTERNET EN TIEMPO REAL:\n" + "\n".join(web_contexts)
-                                                    web_search_used = len(web_search_context) > 100
+                                                    web_search_used = True  # Mark as used whenever results exist
                                                     logger.info(f"🔍 Web Search exitoso: {len(web_search_context)} chars inyectados")
                                         else:
                                             logger.debug(f"🔍 Web Search no necesario para: '{text[:50]}...'")
@@ -5007,11 +5007,13 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except Exception as prompt_error:
                                 logger.warning(f"⚠️ Error usando PromptsContextManager: {prompt_error}")
                                 # Fallback simple conversacional
+                                web_context_fallback = web_search_context if web_search_context else ""
                                 gemini_prompt = f"""Soy OMNIX {VERSION_BANNER}, tu asistente de trading institucional.
 
 IMPORTANTE: Responde en ESPAÑOL de forma natural y conversacional.
 
 {omnix_real_context}
+{web_context_fallback}
 
 ESTILO:
 - Natural como ChatGPT pero con personalidad
