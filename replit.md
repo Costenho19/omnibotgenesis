@@ -139,8 +139,27 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 | omnix_dashboard | 40+ | ~9,037 |
 | **Total** | **160+** | **~95,000** |
 
+## Version Control (SINGLE SOURCE OF TRUTH)
+
+**Location:** `omnix_config/settings.py`
+
+```python
+VERSION = "6.5.4"
+VERSION_NAME = "INSTITUTIONAL+"
+VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"
+```
+
+**Usage in any module:**
+```python
+from omnix_config import VERSION_BANNER
+logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
+```
+
+> **REGLA**: Para cambiar la versión del sistema, solo modifica `omnix_config/settings.py`. Todos los logs y mensajes usarán automáticamente la nueva versión.
+
 ## Recent Changes
 
+- **Dec 6, 2025**: Centralized Version Control - Single source of truth in `omnix_config/settings.py`. Removed ~300 hardcoded V6.5.x references across codebase.
 - **Dec 6, 2025**: V6.5.4 Institutional Fixes - 4 critical corrections:
   - FIX 1: Position limits checked at START of cycle (saves CPU)
   - FIX 2: Hard cap absoluto en Risk Guardian ($20K max)
