@@ -1,5 +1,5 @@
 """
-📊 OMNIX DAILY SUMMARY SERVICE V6.5.3 PREMIUM
+📊 OMNIX DAILY SUMMARY SERVICE PREMIUM
 Resúmenes diarios automáticos con métricas institucionales
 
 CARACTERÍSTICAS PREMIUM:
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class DailySummaryService:
     """
-    Servicio de Resúmenes Diarios V6.5.3 PREMIUM
+    Servicio de Resúmenes Diarios PREMIUM
     
     Genera y envía resúmenes automáticos con métricas
     institucionales y comparativa vs benchmark.
@@ -41,7 +41,7 @@ class DailySummaryService:
         self._scheduler_thread = None
         self._running = False
         self._load_admin_users()
-        logger.info(f"📊 DailySummaryService V6.5.3 PREMIUM inicializado - Resumen a las {self.summary_hour}:00")
+        logger.info(f"📊 DailySummaryService PREMIUM inicializado - Resumen a las {self.summary_hour}:00")
     
     def _load_admin_users(self):
         """Cargar lista de usuarios admin"""
@@ -353,7 +353,7 @@ class DailySummaryService:
             
             message += f"""
 ━━━━━━━━━━━━━━━━━━━━━
-🤖 _OMNIX V6.5.3 INSTITUTIONAL+_
+🤖 _OMNIX INSTITUTIONAL+_
 """
             
             return message

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-OMNIX V6.5.3 INSTITUTIONAL+ - SISTEMA DUAL-MARKET INSTITUCIONAL  
+OMNIX INSTITUTIONAL+ - SISTEMA DUAL-MARKET INSTITUCIONAL  
 Sistema de Trading Automático: CRIPTO (24/7) + BOLSA (NYSE/NASDAQ)
-IA Avanzada + AI Risk Guardian V6.5.3 + Professional Trading Strategy 73% Win Rate
+IA Avanzada + AI Risk Guardian + Professional Trading Strategy 73% Win Rate
 Post-Quantum Cryptography + Multi-Model AI (GPT-4o + Gemini 2.0 Flash)
-Desarrollado por Harold Nunes - Diciembre 2025 - V6.5.3
+Desarrollado por Harold Nunes - Diciembre 2025
 
 BUILD_TIMESTAMP = "2025-12-06T00:00:00Z"
-FORCE_REBUILD_VERSION = "6.5.3-position-manager-fix"
+FORCE_REBUILD_VERSION = "position-manager-fix"
 """
 
 # 🧹 LIMPIEZA DE CACHE RAILWAY - EJECUTAR ANTES DE CUALQUIER IMPORT
@@ -52,10 +52,10 @@ import re
 import tempfile
 from datetime import datetime, timedelta
 
-# 🔧 OMNIX V6.5.3 INSTITUTIONAL+ - Configuración Centralizada
-from omnix_config import env_config
+# 🔧 OMNIX INSTITUTIONAL+ - Configuración Centralizada
+from omnix_config import env_config, VERSION_BANNER
 
-# 📊 STOCK TRADING MODULE V6.5.3 - DUAL MARKET SYSTEM
+# 📊 STOCK TRADING MODULE - DUAL MARKET SYSTEM
 STOCK_TRADING_ENABLED = env_config.get('STOCK_TRADING_ENABLED', default='true', cast_type=bool)
 # Configurar logging ANTES de cualquier uso
 logging.basicConfig(
@@ -65,9 +65,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("=" * 70)
-logger.info("🔥 OMNIX V6.5.3 INSTITUTIONAL+ - BUILD 2025-12-06T00:00:00Z")
+logger.info(f"🔥 OMNIX {VERSION_BANNER} - BUILD 2025-12-06T00:00:00Z")
 logger.info("🎯 POSITION MANAGER FIX - TP/SL dinámico + Symbol tracking")
-logger.info("📊 DynamicPositionManager V6.5.3 PREMIUM INCLUIDO")
+logger.info(f"📊 DynamicPositionManager PREMIUM INCLUIDO")
 logger.info("=" * 70)
 
 # 🔍 DIAGNÓSTICO CRÍTICO DE BASE DE DATOS - VISIBLE AL INICIO
@@ -276,7 +276,7 @@ except Exception as e:
     print(traceback.format_exc())
 
 # =============================================================================
-# 🆕 OMNIX MODULAR SERVICES - ARQUITECTURA REFACTORIZADA V6.5.3
+# 🆕 OMNIX MODULAR SERVICES - ARQUITECTURA REFACTORIZADA
 # =============================================================================
 
 # Market Data Services (migrated from monolithic main.py)
@@ -438,7 +438,7 @@ except ImportError:
 
 # Logging ya configurado al inicio del archivo (línea 30)
 
-# 🚀 OMNIX V6.5.3 ENTERPRISE - Sistema Modular Premium
+# 🚀 OMNIX ENTERPRISE - Sistema Modular Premium
 # Importar DESPUÉS de logger para evitar NameError
 OMNIX_ENTERPRISE_AVAILABLE = False
 TRADING_ENTERPRISE_AVAILABLE = False
@@ -455,7 +455,7 @@ except ImportError as e:
     logger.warning(f"⚠️ OMNIX Enterprise AI modules not available: {e}")
     OMNIX_ENTERPRISE_AVAILABLE = False
 
-# 🏦 OMNIX V6.5.3 TRADING SERVICE ENTERPRISE
+# 🏦 OMNIX TRADING SERVICE ENTERPRISE
 try:
     from omnix_services.trading_service import TradingServiceEnterprise
     TRADING_ENTERPRISE_AVAILABLE = True
@@ -464,7 +464,7 @@ except ImportError as e:
     logger.warning(f"⚠️ Trading Service Enterprise not available: {e}")
     TRADING_ENTERPRISE_AVAILABLE = False
 
-# 🎤 OMNIX V6.5.3 VOICE SERVICE ENTERPRISE
+# 🎤 OMNIX VOICE SERVICE ENTERPRISE
 VoiceServiceEnterprise = None  # Type hint fix
 VOICE_ENTERPRISE_AVAILABLE = False
 try:
@@ -475,7 +475,7 @@ except ImportError as e:
     logger.warning(f"⚠️ Voice Service Enterprise not available: {e}")
     VOICE_ENTERPRISE_AVAILABLE = False
 
-# 🗄️ OMNIX V6.5.3 DATABASE SERVICE ENTERPRISE
+# 🗄️ OMNIX DATABASE SERVICE ENTERPRISE
 DatabaseServiceEnterprise = None  # Type hint fix
 DATABASE_ENTERPRISE_AVAILABLE = False
 try:
@@ -591,7 +591,7 @@ if __name__ == "__main__":
     import sys
     
     logger.info("=" * 80)
-    logger.info("🚀 OMNIX V6.5.3 INSTITUTIONAL+ - INICIANDO SISTEMA PRINCIPAL")
+    logger.info(f"🚀 OMNIX {VERSION_BANNER} - INICIANDO SISTEMA PRINCIPAL")
     logger.info("=" * 80)
     
     # Crear instancias de servicios necesarios
@@ -663,7 +663,7 @@ if __name__ == "__main__":
         
         if success:
             logger.info("=" * 80)
-            logger.info("✅ OMNIX V6.5.3 INSTITUTIONAL+ - BOT TELEGRAM OPERATIVO")
+            logger.info(f"✅ OMNIX {VERSION_BANNER} - BOT TELEGRAM OPERATIVO")
             logger.info("📡 Modo: PAPER TRADING - Capital Virtual: $1,000,000")
             logger.info("🧬 ARES V1 (Swing 55-65%) + V2 (Scalping 60-70%) ACTIVOS")
             if derivatives_manager:
@@ -686,10 +686,10 @@ if __name__ == "__main__":
                 logger.error("🗄️ ❌ DATABASE: No disponible")
             logger.info("🗄️ ═════════════════════════════════════════")
             
-            # V6.5.3: Inicializar UserSessionManager y restaurar sesiones multi-usuario
+            # Inicializar UserSessionManager y restaurar sesiones multi-usuario
             if db_connected:
                 logger.info("")
-                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE V6.5.3 ═══════════")
+                logger.info("🔄 ═══════════ AUTO-TRADING RESTORE ═══════════")
                 try:
                     from omnix_core.sessions import initialize_session_manager, get_session_manager
                     from omnix_core.cache import get_redis_cache
@@ -699,7 +699,7 @@ if __name__ == "__main__":
                         redis_cache=redis_cache,
                         database_service=db_manager
                     )
-                    logger.info("🚀 UserSessionManager V6.5.3 inicializado - 100K+ usuarios")
+                    logger.info(f"🚀 UserSessionManager inicializado - 100K+ usuarios")
                     
                     if hasattr(telegram_bot, 'auto_trading') and telegram_bot.auto_trading:
                         telegram_bot.auto_trading.redis_cache = redis_cache
@@ -712,7 +712,7 @@ if __name__ == "__main__":
                     else:
                         logger.warning("🔄 ⚠️ auto_trading no disponible en telegram_bot")
                 except Exception as e:
-                    logger.error(f"🔄 ❌ Error en restauración V6.5.3: {e}")
+                    logger.error(f"🔄 ❌ Error en restauración: {e}")
                 logger.info("🔄 ═════════════════════════════════════════════════════")
             
             # Iniciar Dashboard en hilo secundario con monitoreo

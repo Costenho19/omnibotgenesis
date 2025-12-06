@@ -1,6 +1,6 @@
 """
-OMNIX V6.5.3 - Trading Profiles System
-=======================================
+OMNIX - Trading Profiles System
+===============================
 
 Sistema de perfiles de trading que permite cambiar fácilmente entre 
 configuraciones conservadoras y más agresivas sin modificar el código.

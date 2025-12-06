@@ -1,6 +1,6 @@
 """
-OMNIX V6.5.3 INSTITUTIONAL+ Position Manager
-=============================================
+OMNIX INSTITUTIONAL+ Position Manager
+======================================
 Sistema profesional de gestión de posiciones con:
 - ATR Calculator para volatilidad dinámica
 - TP/SL dinámico basado en régimen de mercado
@@ -9,7 +9,6 @@ Sistema profesional de gestión de posiciones con:
 - Integración completa con todos los motores OMNIX
 
 Author: OMNIX Team
-Version: 6.5.3 PREMIUM
 """
 
 import logging
@@ -217,7 +216,7 @@ class ATRCalculator:
 
 class DynamicPositionManager:
     """
-    Gestor de posiciones dinámico V6.5.3 PREMIUM.
+    Gestor de posiciones dinámico PREMIUM.
     
     Integra:
     - ATR Calculator para volatilidad
@@ -262,7 +261,7 @@ class DynamicPositionManager:
         self.trailing_activation_atr = 1.5
         self.break_even_activation_atr = 1.0
         
-        logger.info("📊 DynamicPositionManager V6.5.3 PREMIUM inicializado")
+        logger.info("📊 DynamicPositionManager PREMIUM inicializado")
     
     def calculate_dynamic_levels(self, symbol: str, entry_price: float,
                                   side: str = 'buy', confidence: float = 0.5,
@@ -330,7 +329,7 @@ class DynamicPositionManager:
         tp_pct = ((take_profit - entry_price) / entry_price) * 100
         sl_pct = ((entry_price - stop_loss) / entry_price) * 100
         
-        logger.info(f"""📊 V6.5.3 Niveles Dinámicos Calculados:
+        logger.info(f"""📊 Niveles Dinámicos Calculados:
    Symbol: {symbol} | Entry: ${entry_price:.2f}
    ATR: ${atr_value:.2f} | Régimen: {regime.value}
    TP: ${take_profit:.2f} (+{tp_pct:.2f}%)

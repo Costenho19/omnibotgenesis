@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.3 - Cache Module
+OMNIX - Cache Module
 """
 
 from omnix_core.cache.redis_cache import RedisCache, cache, cache_result, get_redis_cache

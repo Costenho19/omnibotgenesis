@@ -385,7 +385,7 @@ class PaperTradingManager:
     def _save_paper_trade(self, trade_data: Dict) -> bool:
         """Guardar trade en PostgreSQL - HISTORIAL PERMANENTE
         
-        Schema V6.5.3 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
         id, user_id, symbol, side, quantity, entry_price, exit_price, 
         profit_loss, profit_pct, strategy, status, opened_at, closed_at
         """
@@ -419,9 +419,9 @@ class PaperTradingManager:
     def _open_position_v2(self, user_id: str, symbol: str, base_quantity: float, 
                          entry_price: float, source_strategy: str = 'auto_trading_bot') -> Optional[str]:
         """
-        Abrir nueva posición (BUY) con schema V6.5.3
+        Abrir nueva posición (BUY)
         
-        Schema V6.5.3 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
         id, user_id, symbol, side, quantity, entry_price, exit_price, 
         profit_loss, profit_pct, strategy, status, opened_at, closed_at
         
@@ -477,9 +477,9 @@ class PaperTradingManager:
     def _close_position_fifo_v2(self, user_id: str, symbol: str, sell_quantity: float, 
                                 exit_price: float) -> Optional[Dict]:
         """
-        Cerrar posición FIFO (SELL) - V6.5.3
+        Cerrar posición FIFO (SELL)
         
-        Schema V6.5.3 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
         id, user_id, symbol, side, quantity, entry_price, exit_price, 
         profit_loss, profit_pct, strategy, status, opened_at, closed_at
         
@@ -567,7 +567,7 @@ class PaperTradingManager:
         """
         Reporte P&L detallado con posiciones abiertas/cerradas
         
-        Schema V6.5.3 (Dec 5, 2025): Usa columnas reales de paper_trading_trades:
+        Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
         id, user_id, symbol, side, quantity, entry_price, exit_price, 
         profit_loss, profit_pct, strategy, status, opened_at, closed_at
         

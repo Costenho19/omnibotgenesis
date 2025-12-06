@@ -1,5 +1,5 @@
 """
-🚀 OMNIX V6.5.3 INSTITUTIONAL+ - Sessions Module
+🚀 OMNIX INSTITUTIONAL+ - Sessions Module
 Sistema de sesiones multi-usuario para 100,000+ usuarios simultáneos
 """
 

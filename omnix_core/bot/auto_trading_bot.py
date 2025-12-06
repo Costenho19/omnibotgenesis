@@ -352,7 +352,7 @@ class AutoTradingBot:
         # DEBUG: Logging para verificar PAPER_MODE en Railway
         logger.info(f"🔍 PAPER_MODE env var: '{paper_mode_raw}' → paper_mode={paper_mode_env}")
         
-        # V6.5.3: Cargar Trading Profile desde variable de entorno
+        # Cargar Trading Profile desde variable de entorno
         self.trading_profile = None
         if TRADING_PROFILES_AVAILABLE:
             self.trading_profile = get_active_profile()
@@ -369,7 +369,7 @@ class AutoTradingBot:
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
-            'trading_profile': profile_name,  # V6.5.3: Nombre del perfil activo
+            'trading_profile': profile_name,  # Nombre del perfil activo
             'trading_pairs': [
                 'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
                 'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
@@ -408,7 +408,7 @@ class AutoTradingBot:
         # V6.4: Cargar estado persistente de la DB
         self._load_persistent_state()
         
-        # V6.5.3: Track Record Accelerator - Contador de trades para bias boost primeros 50
+        # Track Record Accelerator - Contador de trades para bias boost primeros 50
         self._paper_trade_count = self.state.get('paper_trade_count', 0)
         if self._paper_trade_count > 0:
             logger.info(f"📊 {VERSION_BANNER} Accelerator: {self._paper_trade_count} trades previos (boost activo hasta 50)")
@@ -470,8 +470,8 @@ class AutoTradingBot:
             logger.info("⚠️ AI Risk Guardian desactivado")
         
         # Non-Markovian Memory Kernel V6.1 ULTRA - QUANTUM TEMPORAL MEMORY
-        self._last_kernel_pair = None  # V6.5.3: Track pair for kernel seeding
-        self._kernel_needs_reseed = True  # V6.5.3: Flag for pending reseed
+        self._last_kernel_pair = None  # Track pair for kernel seeding
+        self._kernel_needs_reseed = True  # Flag for pending reseed
         if NON_MARKOVIAN_KERNEL_AVAILABLE:
             try:
                 self.non_markovian_kernel = NonMarkovianKernel(
@@ -593,9 +593,9 @@ class AutoTradingBot:
     
     def _auto_start_if_persistent(self):
         """
-        V6.5.1: Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
+         Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
         Esto garantiza que Railway reinicie con el mismo estado que antes del restart.
-        V6.5.1: Ahora pasa el user_id específico para soportar múltiples usuarios.
+         Ahora pasa el user_id específico para soportar múltiples usuarios.
         """
         if hasattr(self, '_should_auto_start') and self._should_auto_start:
             user_id = getattr(self, '_persistent_user_id', None)
@@ -612,10 +612,10 @@ class AutoTradingBot:
     
     def check_and_restore_auto_trading(self):
         """
-        V6.5.3: Método público para restaurar auto-trading DESPUÉS de que la DB esté conectada.
+         Método público para restaurar auto-trading DESPUÉS de que la DB esté conectada.
         Llamar desde main.py después de verificar que DATABASE está CONECTADA.
         
-        ARQUITECTURA MULTI-USER V6.5.3:
+        ARQUITECTURA MULTI-USER 
         - Usa UserSessionManager para manejar sesiones de 100,000+ usuarios
         - Cada usuario tiene su propia sesión aislada
         - Estado persistente en Redis + PostgreSQL
@@ -689,7 +689,7 @@ class AutoTradingBot:
     
     def _trading_loop_multi_user(self):
         """
-        V6.5.3: Loop de trading que procesa TODOS los usuarios activos
+         Loop de trading que procesa TODOS los usuarios activos
         Usa ThreadPoolExecutor para procesamiento paralelo de usuarios
         
         Arquitectura:
@@ -779,7 +779,7 @@ class AutoTradingBot:
     
     def _process_user_trading_cycle(self, user_id: str, session):
         """
-        V6.5.3: Procesar un ciclo de trading para un usuario específico
+         Procesar un ciclo de trading para un usuario específico
         
         Args:
             user_id: ID del usuario
@@ -856,7 +856,7 @@ class AutoTradingBot:
         """
         V6.5: Persistir estado de auto-trading en user_settings.
         Esto garantiza que el estado sobreviva a reinicios de Railway.
-        V6.5.1: Usa UPSERT para crear registro si no existe.
+         Usa UPSERT para crear registro si no existe.
         """
         if not self.database_service or not hasattr(self.database_service, 'execute_query'):
             logger.debug(f"{VERSION_BANNER}: No se puede persistir estado (sin database_service)")
@@ -912,7 +912,7 @@ class AutoTradingBot:
         Esto garantiza que los contadores de trades y métricas se mantengan
         entre reinicios del bot para que el ramp-up system funcione correctamente.
         
-        V6.5.3 FIX: También carga auto_trading de user_settings para persistir
+        FIX: También carga auto_trading de user_settings para persistir
         el estado entre reinicios de Railway.
         """
         if not self.database_service:
@@ -920,9 +920,9 @@ class AutoTradingBot:
             return
         
         try:
-            # V6.5.1: Cargar configuración de auto-trading de user_settings
+            # Cargar configuración de auto-trading de user_settings
             self._should_auto_start = False  # Flag para auto-iniciar después del __init__
-            self._persistent_user_id = None  # V6.5.1: Guardar user_id para restauración
+            self._persistent_user_id = None  # Guardar user_id para restauración
             try:
                 if hasattr(self.database_service, 'execute_query'):
                     user_settings_result = self.database_service.execute_query('''
@@ -945,7 +945,7 @@ class AutoTradingBot:
                         
                         if auto_trading and not is_paused and trading_enabled:
                             self._should_auto_start = True
-                            self._persistent_user_id = user_id  # V6.5.1: Guardar para restauración
+                            self._persistent_user_id = user_id  # Guardar para restauración
                             logger.info(f"🔄 {VERSION_BANNER}: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
                         elif auto_trading and is_paused:
                             logger.info(f"⏸️ {VERSION_BANNER}: Auto-trading está PAUSADO para user {user_id}")
@@ -1040,7 +1040,7 @@ class AutoTradingBot:
     
     def _check_open_positions_tp_sl(self) -> int:
         """
-        V6.5.3 PREMIUM: Gestión automática de posiciones con ATR-based TP/SL dinámico.
+        PREMIUM: Gestión automática de posiciones con ATR-based TP/SL dinámico.
         
         Usa el DynamicPositionManager para:
         - TP/SL dinámico basado en ATR y régimen de mercado
@@ -1056,7 +1056,7 @@ class AutoTradingBot:
         
         user_id = str(self.config.get('harold_user_id', '7014748854'))
         
-        # V6.5.3 PREMIUM: Usar DynamicPositionManager si está disponible
+        # PREMIUM: Usar DynamicPositionManager si está disponible
         if self.position_manager:
             try:
                 result = self.position_manager.manage_all_positions(user_id, paper_mode=True)
@@ -1150,7 +1150,7 @@ class AutoTradingBot:
         return positions_closed
     
     def _trading_loop(self):
-        """Loop principal 24/7 - V6.5.3 MULTI-CRYPTO PREMIUM"""
+        """Loop principal 24/7 - MULTI-CRYPTO PREMIUM"""
         logger.info(f"🔄 Trading loop {VERSION_BANNER} MULTI-CRYPTO iniciado - Corriendo 24/7")
         logger.info(f"   📊 Configuración: {len(self.config.get('trading_pairs', ['BTC/USD']))} pares, intervalo {self.config['check_interval_seconds']}s")
         logger.info(f"   💰 Modo: {'PAPER' if self.config['paper_mode'] else 'REAL'} | Min trade: ${self.config['min_trade_usd']}")
@@ -1186,10 +1186,10 @@ class AutoTradingBot:
                     self.stop()
                     break
                 
-                # V6.5.4: Verificar Take Profit / Stop Loss en posiciones abiertas
+                # Verificar Take Profit / Stop Loss en posiciones abiertas
                 self._check_open_positions_tp_sl()
                 
-                # ========== V6.5.4 FIX INSTITUCIONAL: LÍMITES AL INICIO ==========
+                # ========== FIX INSTITUCIONAL: LÍMITES AL INICIO ==========
                 # Verificar límite de posiciones ANTES de gastar CPU en análisis de nuevas entradas
                 # Si límite alcanzado, seguimos evaluando para SELLs pero bloqueamos BUYs
                 position_limit_reached = self._check_position_limit_early()
@@ -1225,7 +1225,7 @@ class AutoTradingBot:
                 if analysis and analysis.get('should_trade'):
                     signal_type = analysis.get('signal', 'HOLD')
                     
-                    # V6.5.4 FIX: Si límite de posiciones alcanzado, solo permitir SELL
+                    # FIX: Si límite de posiciones alcanzado, solo permitir SELL
                     if position_limit_reached and signal_type == 'BUY':
                         logger.info(f"🛑 {VERSION_BANNER}: BUY bloqueado - límite de posiciones alcanzado (SELL permitido)")
                         # No ejecutar BUY, continuar con el resto del loop (evaluaciones, TP/SL)
@@ -1357,7 +1357,7 @@ class AutoTradingBot:
                     )
             
             # 6. HMM Regime Detection - Detectar régimen de mercado
-            # V6.5.3 FIX: Solo requiere prices, volumes es opcional
+            # FIX: Solo requiere prices, volumes es opcional
             hmm_regime = None
             if self.config['use_v52_strategies'] and self.advanced_features:
                 if hasattr(self.advanced_features, 'hmm_regime') and prices:
@@ -1375,7 +1375,7 @@ class AutoTradingBot:
                     )
             
             # 8. Quantum Momentum - Estrategia propietaria 6 componentes
-            # V6.5.3 FIX: Usar analyze() con OHLC completo, volumes sintéticos si no disponible
+            # FIX: Usar analyze() con OHLC completo, volumes sintéticos si no disponible
             quantum = None
             if self.config['use_v52_strategies'] and self.advanced_features:
                 if hasattr(self.advanced_features, 'quantum_momentum') and prices:
@@ -1407,7 +1407,7 @@ class AutoTradingBot:
                     min_required = 24
                     kernel_history_len = self.non_markovian_kernel.get_history_length()
                     
-                    # V6.5.3 FIX: Estado explícito para manejo robusto de cambios de par
+                    # FIX: Estado explícito para manejo robusto de cambios de par
                     is_pair_change = (self._last_kernel_pair is not None and self._last_kernel_pair != pair)
                     
                     # 1) Detectar cambio de par -> marcar para reseed
@@ -1575,7 +1575,7 @@ class AutoTradingBot:
                     decision['reason'].append(f"⚠️ Monte Carlo: {win_rate:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
             
             # 2. Black Swan (peso: 15 puntos - CRÍTICO)
-            # V6.5.3: Penalizaciones MUY reducidas en paper mode para generar trades
+            # Penalizaciones MUY reducidas en paper mode para generar trades
             is_paper_mode = self.config.get('paper_mode', False)
             if black_swan:
                 max_score += 15
@@ -1583,7 +1583,7 @@ class AutoTradingBot:
                 crash_prob = black_swan.get('crash_probability', 50)
                 
                 if risk_level == 'HIGH' or crash_prob > 30:
-                    veto_penalty = 5 if is_paper_mode else 30  # V6.5.3: -5 paper, -30 real
+                    veto_penalty = 5 if is_paper_mode else 30  # -5 paper, -30 real
                     score -= veto_penalty
                     mode_label = "[PAPER -5]" if is_paper_mode else "[REAL -30]"
                     decision['reason'].append(f"🚨 Black Swan: Riesgo {risk_level} {mode_label}")
@@ -1591,7 +1591,7 @@ class AutoTradingBot:
                     score += 15
                     decision['reason'].append(f"✅ Black Swan: Riesgo BAJO")
             
-            # 3. Sentiment + V6.5.3 FEAR & GREED CONTRARIAN STRATEGY
+            # 3. Sentiment + FEAR & GREED CONTRARIAN STRATEGY
             # "Be fearful when others are greedy, be greedy when others are fearful" - Warren Buffett
             # Aplica en ambos modos: agresivo en paper, conservador en real
             if sentiment:
@@ -1608,14 +1608,14 @@ class AutoTradingBot:
                     contrarian_boost = 8 if is_paper_mode else 4
                     score += contrarian_boost
                     mode_label = "PAPER" if is_paper_mode else "REAL"
-                    decision['reason'].append(f"🎯 V6.5.3: Fear Contrarian +{contrarian_boost} [{mode_label}] (miedo = oportunidad)")
+                    decision['reason'].append(f"🎯  Fear Contrarian +{contrarian_boost} [{mode_label}] (miedo = oportunidad)")
                     logger.info(f"🎯 {VERSION_BANNER} FEAR CONTRARIAN [{mode_label}]: Sentiment {sent_score:.0f}/100 → BUY boost +{contrarian_boost}")
                 
                 if fear_greed < 25:
                     extreme_fear_boost = 6 if is_paper_mode else 3
                     score += extreme_fear_boost
                     mode_label = "PAPER" if is_paper_mode else "REAL"
-                    decision['reason'].append(f"😱 V6.5.3: Extreme Fear +{extreme_fear_boost} [{mode_label}] (F&G: {fear_greed})")
+                    decision['reason'].append(f"😱  Extreme Fear +{extreme_fear_boost} [{mode_label}] (F&G: {fear_greed})")
                     logger.info(f"😱 {VERSION_BANNER} EXTREME FEAR [{mode_label}]: F&G={fear_greed} → +{extreme_fear_boost}")
             
             # ========== ESTRATEGIAS V5.2 QUANTUM (peso 60%) ==========
@@ -1681,19 +1681,19 @@ class AutoTradingBot:
                     else:
                         score -= 3  # Penalización menor si confianza baja
                 elif regime == 'VOLATILE':
-                    # V6.5.3: HMM VETO muy reducido en paper mode para generar trades
+                    # HMM VETO muy reducido en paper mode para generar trades
                     p = self.trading_profile  # Shorthand
                     hmm_veto_enabled = p.hmm_veto_enabled if p else True
                     hmm_veto_threshold = p.hmm_veto_confidence_threshold if p else 0.85
                     
                     if hmm_veto_enabled and regime_confidence > hmm_veto_threshold:
-                        veto_penalty = 3 if is_paper_mode else 15  # V6.5.3: -3 paper, -15 real
+                        veto_penalty = 3 if is_paper_mode else 15  # -3 paper, -15 real
                         score -= veto_penalty
                         mode_label = "[PAPER -3]" if is_paper_mode else "[REAL -15]"
                         decision['reason'].append(f"🚨 HMM: VOLATILE extremo - VETO {mode_label} (conf > {hmm_veto_threshold:.0%})")
                         decision['v52_analysis']['hmm_volatility_veto'] = True
                     else:
-                        score -= 2 if is_paper_mode else 5  # V6.5.3: -2 paper, -5 real
+                        score -= 2 if is_paper_mode else 5  # -2 paper, -5 real
                         decision['reason'].append(f"⚠️ HMM: {regime} moderado")
                 
                 decision['v52_analysis']['market_regime'] = regime
@@ -1705,7 +1705,7 @@ class AutoTradingBot:
             
             # ADAPTIVE REGIME CROSS-VALIDATION
             # Si adaptive_weights y HMM detectan régimen EXTREME/VOLATILE simultáneamente → VETO
-            # V6.5.3: Configurable por perfil
+            # Configurable por perfil
             p = self.trading_profile  # Shorthand
             regime_change_veto_enabled = p.regime_change_veto_enabled if p else True
             
@@ -1714,16 +1714,16 @@ class AutoTradingBot:
                 hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
                 
                 # Criterio de cambio de régimen crítico
-                # V6.5.3: Penalizaciones MUY reducidas en paper mode para generar trades
+                # Penalizaciones MUY reducidas en paper mode para generar trades
                 if adaptive_regime in ['EXTREME', 'VOLATILE'] and hmm_detected == 'VOLATILE':
-                    veto_penalty = 3 if is_paper_mode else 20  # V6.5.3: -3 paper, -20 real
+                    veto_penalty = 3 if is_paper_mode else 20  # -3 paper, -20 real
                     score -= veto_penalty
                     mode_label = "[PAPER -3]" if is_paper_mode else "[REAL -20]"
                     decision['reason'].append(f"🚨 REGIME CHANGE DETECTED: {adaptive_regime} + HMM {hmm_detected} → VETO {mode_label}")
                     decision['v52_analysis']['regime_change_veto'] = True
                     logger.warning(f"🚨 REGIME CHANGE VETO {mode_label}: Adaptive={adaptive_regime}, HMM={hmm_detected}")
                 elif adaptive_regime == 'EXTREME':
-                    extreme_penalty = 2 if is_paper_mode else 10  # V6.5.3: -2 paper, -10 real
+                    extreme_penalty = 2 if is_paper_mode else 10  # -2 paper, -10 real
                     score -= extreme_penalty
                     decision['reason'].append(f"⚡ Adaptive Regime: {adaptive_regime} → Reduciendo exposición")
                     
@@ -1861,7 +1861,7 @@ class AutoTradingBot:
             decision['raw_score'] = score
             decision['max_score'] = max_score
             
-            # ========== V6.5.4 FIX INSTITUCIONAL: BIAS SYSTEM ELIMINADO ==========
+            # ========== FIX INSTITUCIONAL: BIAS SYSTEM ELIMINADO ==========
             # Práctica institucional: Las instituciones odian el "Recovery Trading" 
             # (venganza contra el mercado). Cada operación es un evento estadístico aislado.
             #
@@ -1873,14 +1873,14 @@ class AutoTradingBot:
             # - Fear & Greed Contrarian ya implementado en sentiment analysis
             # - Cada trade se evalúa por sus méritos matemáticos, no por historia
             #
-            # V6.5.4: El score ya no se manipula artificialmente. Un score negativo
+            # El score ya no se manipula artificialmente. Un score negativo
             # significa NO COMPRAR, punto. Esto genera un track record REPLICABLE.
             
             original_score = score
             # No se aplica bias - cada trade es un evento estadístico independiente
             logger.debug(f"📊 {VERSION_BANNER}: Score final sin bias artificial: {score:.1f}")
             
-            # V6.5.3 PREMIUM: Decisión de trading con umbrales desde Trading Profile
+            # PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
             
             # Obtener score thresholds del perfil o usar defaults (INSTITUTIONAL)
@@ -1889,7 +1889,7 @@ class AutoTradingBot:
             score_strong = p.score_strong if p else 10
             score_moderate = p.score_moderate if p else 5
             
-            # V6.5.3 CAES: Extraer confianza del kernel para position sizing adaptativo
+            # CAES: Extraer confianza del kernel para position sizing adaptativo
             nm_conf_for_caes = None
             nm_metrics_for_caes = None
             if non_markovian:
@@ -1897,7 +1897,7 @@ class AutoTradingBot:
                 nm_metrics_for_caes = non_markovian.get('metrics', {})
             
             if confidence >= (self.config['min_confidence'] * 100):
-                # V6.5.3: Umbrales escalonados configurables por perfil + CAES
+                # Umbrales escalonados configurables por perfil + CAES
                 if score > score_very_strong:  # Señal COMPRA MUY FUERTE - Full position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
@@ -1968,7 +1968,7 @@ class AutoTradingBot:
                     logger.info(f"   🎯 Consenso: {coherence_report.consensus_signal.name} (Confianza: {coherence_report.consensus_confidence:.1%})")
                     logger.info(f"   💡 Recomendación: {coherence_report.decision_recommendation}")
                     
-                    # ========== V6.5.3 SISTEMA DE VETO CON TRADING PROFILES ==========
+                    # ========== SISTEMA DE VETO CON TRADING PROFILES ==========
                     # Umbrales configurables desde Trading Profile (INSTITUTIONAL/PAPER_AGGRESSIVE/BALANCED)
                     p = self.trading_profile  # Shorthand para perfil activo
                     
@@ -1981,7 +1981,7 @@ class AutoTradingBot:
                     profile_name = p.name if p else "HARDCODED"
                     logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
                     
-                    # ========== V6.5.4 FIX INSTITUCIONAL: COHERENCIA SIN BYPASS ==========
+                    # ========== FIX INSTITUCIONAL: COHERENCIA SIN BYPASS ==========
                     # Práctica institucional: Mismas reglas para PAPER y REAL mode.
                     # Si la coherencia es baja, es baja. Punto. No se opera.
                     # La integridad de la señal es más importante que la necesidad de "probar".
@@ -2020,7 +2020,7 @@ class AutoTradingBot:
                             # STRONG y MODERATE respetan HOLD (sin bypass de paper mode)
                             decision['should_trade'] = False
                             decision['action'] = 'HOLD'
-                            decision['reason'].append(f"⚠️ V6.5.4: Coherence Engine recomienda HOLD")
+                            decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD")
                     # ========== FIN FIX INSTITUCIONAL =========
                     
                     # NIVEL 4: REDUCCIÓN MODERADA - Coherencia entre veto_normal y warning
@@ -2079,7 +2079,7 @@ class AutoTradingBot:
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
             
-            # V6.5.3: En paper mode, no rechazar inmediatamente - el floor se aplicará después
+            # En paper mode, no rechazar inmediatamente - el floor se aplicará después
             if not self.config.get('paper_mode', False) and amount_usd < self.config['min_trade_usd']:
                 return {'error': 'Cantidad muy pequeña para tradear'}
             
@@ -2125,10 +2125,10 @@ class AutoTradingBot:
                                 'metadata': risk_event.metadata
                             }
                         else:
-                            # V6.5.3: PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
+                            # PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
                             logger.warning(f"⚠️ AI RISK GUARDIAN (PAPER MODE): {risk_event.description}")
                             logger.warning(f"   Permitiendo con reducción 25% para calibración de track record")
-                            amount_usd = amount_usd * 0.75  # V6.5.3: Reducido de 0.50 a 0.75 para permitir más trades
+                            amount_usd = amount_usd * 0.75  # Reducido de 0.50 a 0.75 para permitir más trades
                             analysis['amount_usd'] = amount_usd
                             if 'reason' in analysis:
                                 analysis['reason'].append(f"🛡️ PAPER MODE: Risk Guardian permitió con 25% reducción")
@@ -2351,7 +2351,7 @@ class AutoTradingBot:
                             reasoning=f"Sentiment: {score}/100"
                         ))
                     
-                    # V6.5.3 FIX: Garantizar que strategy_signals nunca esté vacía
+                    # FIX: Garantizar que strategy_signals nunca esté vacía
                     # Si no hay señales de estrategias, usar la decisión primaria como fallback
                     if not strategy_signals:
                         primary_signal = Signal.BUY if action == 'BUY' else Signal.SELL if action == 'SELL' else Signal.HOLD
@@ -2394,10 +2394,10 @@ class AutoTradingBot:
                                 'confidence': analysis['confidence']
                             }
                         else:
-                            # V6.5.3: PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
+                            # PAPER MODE - Permitir con reducción 25% para calibración (era 50%)
                             logger.warning(f"⚠️ COHERENCE ENGINE (PAPER MODE): {reason}")
                             logger.warning(f"   Permitiendo con reducción 25% para calibración de track record")
-                            amount_usd = amount_usd * 0.75  # V6.5.3: Reducido de 0.50 a 0.75 para permitir más trades
+                            amount_usd = amount_usd * 0.75  # Reducido de 0.50 a 0.75 para permitir más trades
                             analysis['amount_usd'] = amount_usd
                             if 'reason' in analysis:
                                 analysis['reason'].append(f"⚠️ PAPER MODE: Coherence Engine permitió con 25% reducción")
@@ -2410,7 +2410,7 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error en Coherence validation (continuando): {e}")
             
-            # ========== V6.5.3: VERIFICACIÓN DE POSICIÓN ANTES DE SELL ==========
+            # ==========  VERIFICACIÓN DE POSICIÓN ANTES DE SELL ==========
             # En paper mode, SELL solo puede cerrar posiciones existentes
             # Si no hay posición abierta, convertir a HOLD para evitar errores
             if self.config['paper_mode'] and action == 'SELL':
@@ -2427,7 +2427,7 @@ class AutoTradingBot:
                         action = 'HOLD'
                         analysis['action'] = 'HOLD'
                         if 'reason' in analysis:
-                            analysis['reason'].append(f"⏸️ V6.5.3: SELL→HOLD (no open position for {symbol})")
+                            analysis['reason'].append(f"⏸️  SELL→HOLD (no open position for {symbol})")
                         return {'success': True, 'action': 'HOLD', 'reason': 'No open position to close'}
                     else:
                         # SÍ hay posición - proceder con SELL
@@ -2435,7 +2435,7 @@ class AutoTradingBot:
                         logger.info(f"✅ {VERSION_BANNER} POSITION CHECK: Posición abierta encontrada")
                         logger.info(f"   📈 {pos.get('side', 'N/A').upper()} {pos.get('quantity', 0):.6f} @ ${pos.get('entry_price', 0):.2f}")
             
-            # ========== V6.5.3: FLOOR MÍNIMO PARA PAPER MODE ==========
+            # ==========  FLOOR MÍNIMO PARA PAPER MODE ==========
             # Asegurar que después de todas las reducciones, el tamaño sea >= min_trade_usd
             # NOTA: Solo aplicar si amount_usd > 0 (no sobrescribir ceros intencionales de Risk Guardian)
             if self.config['paper_mode'] and action != 'HOLD':
@@ -2693,7 +2693,7 @@ class AutoTradingBot:
         kernel_metrics: Optional[Dict] = None
     ) -> float:
         """
-        V6.5.3 PREMIUM: Calcular tamaño óptimo de posición
+        PREMIUM: Calcular tamaño óptimo de posición
         - CAES: Confidence-Adaptive Entry System (sigmoide + sub-regímenes)
         - Kelly Criterion + HMM Regime + Ramp-Up System
         - Reduce drawdown inicial empezando conservador
@@ -2707,7 +2707,7 @@ class AutoTradingBot:
         """
         balance = self._get_balance()
         
-        # ========== V6.5.3 CAES - CONFIDENCE-ADAPTIVE ENTRY SYSTEM ==========
+        # ========== CAES - CONFIDENCE-ADAPTIVE ENTRY SYSTEM ==========
         caes_multiplier = 1.0
         caes_result = None
         
@@ -2726,7 +2726,7 @@ class AutoTradingBot:
                 logger.debug(f"CAES calculation failed: {e}")
                 caes_multiplier = 1.0
         
-        # ========== V6.5.3 RAMP-UP SYSTEM CON TRADING PROFILES ==========
+        # ========== RAMP-UP SYSTEM CON TRADING PROFILES ==========
         total_trades = self.state.get('total_trades', 0)
         winning_trades = self.state.get('winning_trades', 0)
         win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 50
@@ -2764,7 +2764,7 @@ class AutoTradingBot:
         # Aplicar ramp-up
         base_size *= ramp_up_factor
         
-        # ========== V6.5.3 APLICAR CAES MULTIPLIER ==========
+        # ========== APLICAR CAES MULTIPLIER ==========
         base_size *= caes_multiplier
         
         # Ajuste por Kelly Criterion
@@ -2848,7 +2848,7 @@ class AutoTradingBot:
     
     def _get_ohlc_history(self, pair: str, days: int = 100) -> Optional[Dict[str, List[float]]]:
         """
-        V6.5.3 FIX: Obtener histórico OHLC completo para estrategias que requieren highs/lows
+        FIX: Obtener histórico OHLC completo para estrategias que requieren highs/lows
         
         Garantías:
         - Todas las listas tienen la misma longitud
@@ -2920,7 +2920,7 @@ class AutoTradingBot:
     
     def _generate_synthetic_volumes(self, prices: List[float], target_length: int = None) -> List[float]:
         """
-        V6.5.3 FIX: Generar volúmenes sintéticos basados en price changes
+        FIX: Generar volúmenes sintéticos basados en price changes
         cuando Kraken no proporciona datos de volumen
         
         Estrategia: volatilidad relativa * base volume
@@ -3201,7 +3201,7 @@ class AutoTradingBot:
     
     def _check_position_limit_early(self) -> bool:
         """
-        V6.5.4 FIX INSTITUCIONAL: Verificar límite de posiciones ANTES del análisis.
+        FIX INSTITUCIONAL: Verificar límite de posiciones ANTES del análisis.
         
         Práctica institucional: El check de límites debe ser la PRIMERA validación,
         no la última. Esto ahorra CPU y evita logs innecesarios.
@@ -3249,13 +3249,13 @@ class AutoTradingBot:
         # TODO: Implementar tracking de ganancias/pérdidas
     
     def _get_stats(self) -> Dict:
-        """Obtener estadísticas del bot - V6.5.3: Lee directamente de la DB para datos precisos"""
+        """Obtener estadísticas del bot -  Lee directamente de la DB para datos precisos"""
         total = self.state['total_trades']
         winning = self.state['winning_trades']
         losing = self.state['losing_trades']
         total_pnl = self.state['total_profit_loss']
         
-        # V6.5.3: Intentar obtener datos actualizados de la DB
+        # Intentar obtener datos actualizados de la DB
         try:
             if self.database_service and hasattr(self.database_service, 'execute_query'):
                 result = self.database_service.execute_query('''

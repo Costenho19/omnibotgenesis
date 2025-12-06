@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.3 ULTRA - Adaptive Parameter Engine
+OMNIX ULTRA - Adaptive Parameter Engine
 Sistema de Auto-Calibración Inteligente para ARES Strategies
 
 El motor de parámetros adaptativos modula dinámicamente los parámetros
@@ -13,7 +13,6 @@ Componentes:
 - TelemetryEmitter: Logging y métricas
 
 Autor: OMNIX Team
-Versión: 6.5 INSTITUTIONAL+
 """
 
 from .adaptive_engine import (

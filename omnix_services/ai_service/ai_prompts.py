@@ -1,15 +1,15 @@
 """
-OMNIX V6.5.3 INSTITUTIONAL+ - Prompts & Context Manager
+OMNIX INSTITUTIONAL+ - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
 Escalabilidad: 50K+ usuarios con context caching
 + Quantum Physics Validator for verified scientific responses
 + Real Context Provider for institutional transparency
-+ On-Chain Intelligence V6.5
-+ Adaptive Parameter Engine V6.5.3 ULTRA
-+ Market Intelligence V6.4
++ On-Chain Intelligence
++ Adaptive Parameter Engine ULTRA
++ Market Intelligence
 """
 
-print("✅ ai_prompts.py V6.5.3 CARGADO - REAL CONTEXT PROVIDER + ON-CHAIN + ADAPTIVE ENGINE")
+print("✅ ai_prompts.py CARGADO - REAL CONTEXT PROVIDER + ON-CHAIN + ADAPTIVE ENGINE")
 
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -137,7 +137,7 @@ class PromptsContextManager:
             # Técnicas específicas
             'monte carlo', 'black swan', 'kalman', 'kelly', 'hmm', 'quantum', 'cisne negro',
             'video learning', 'machine learning', 'ia', 'inteligencia artificial',
-            # V6.5.3 Non-Markovian Kernel + On-Chain + Adaptive Engine
+            # Non-Markovian Kernel + On-Chain + Adaptive Engine
             'non-markovian', 'no markoviano', 'markoviano', 'kernel', 'memoria temporal',
             'ares v1', 'ares v2', 'swing trading', 'scalping', 'hamiltoniano', 'entanglement',
             'quantum kelly', 'apalancamiento cuántico', 'memoria cuántica',
@@ -223,7 +223,7 @@ class PromptsContextManager:
         # Base system prompt - INSTITUTIONAL GRADE
         base_prompt = f"""
 ═══════════════════════════════════════════════════════════════
-                    OMNIX V6.5.3 INSTITUTIONAL+
+                    OMNIX INSTITUTIONAL+
            Sistema de Trading Algorítmico Institucional
 ═══════════════════════════════════════════════════════════════
 
@@ -264,7 +264,7 @@ ARQUITECTURA TÉCNICA V6.5:
    - Coherence Engine V5.4: Consenso multi-estrategia (6-Tier Veto)
    - Risk Guardian V5.4: Protección contra overtrading y revenge trading
 
-3. NON-MARKOVIAN MEMORY KERNEL V6.5.3 (CON ON-CHAIN INTELLIGENCE)
+3. NON-MARKOVIAN MEMORY KERNEL (CON ON-CHAIN INTELLIGENCE)
    OMNIX captura dependencias temporales no-Markovianas:
    K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
    
@@ -280,7 +280,7 @@ ARQUITECTURA TÉCNICA V6.5:
      * Bias bearish → 20% boost al score bajista
    - Detecta movimientos de ballenas ANTES de que afecten el precio
 
-4. ON-CHAIN DATA INTELLIGENCE V6.5.3 (100% APIs GRATIS)
+4. ON-CHAIN DATA INTELLIGENCE (100% APIs GRATIS)
    OMNIX monitorea actividad blockchain institucional:
    
    - WhaleTracker (ClankApp): Transacciones >$100K en tiempo real
@@ -294,7 +294,7 @@ ARQUITECTURA TÉCNICA V6.5:
    - Retry con backoff exponencial (1s, 2s, 4s...)
    - Degradación elegante si APIs no disponibles
 
-5. ADAPTIVE PARAMETER ENGINE V6.5.3 ULTRA
+5. ADAPTIVE PARAMETER ENGINE ULTRA
    Auto-calibración de parámetros ARES basada en régimen:
    
    - RegimeSignalProcessor: Procesa señales del Non-Markovian Kernel
@@ -501,17 +501,17 @@ La política de 5x máximo es control de riesgo institucional.
 Priorizamos supervivencia y consistencia sobre ganancias rápidas."
 
 CUANDO PREGUNTEN POR KERNEL NO-MARKOVIANO / MEMORIA CUÁNTICA:
-"OMNIX V6.5.3 implementa un Kernel No-Markoviano genuino con On-Chain Intelligence:
+"OMNIX implementa un Kernel No-Markoviano genuino con On-Chain Intelligence:
 K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
 
 Esto permite capturar dependencias temporales que modelos Markovianos ignoran.
 Con τ=12h, detectamos patrones cíclicos institucionales y memoria de mercado.
-NUEVO EN V6.5: Las señales on-chain (ballenas, flujos de exchanges) ahora
+Las señales on-chain (ballenas, flujos de exchanges) ahora
 BOOST el score del Kernel hasta 20%. Cuando las ballenas mueven capital,
 lo detectamos ANTES de que el precio reaccione."
 
 CUANDO PREGUNTEN POR ON-CHAIN / BALLENAS / WHALE TRACKING:
-"OMNIX V6.5.3 monitorea actividad blockchain institucional en tiempo real:
+"OMNIX monitorea actividad blockchain institucional en tiempo real:
 - WhaleTracker (ClankApp): Transacciones mayores a $100K
 - Arkham Intelligence: Identifica dueños de wallets (Binance, Jump Trading, etc.)
 - ExchangeFlowAnalyzer: Detecta si fluye capital hacia/desde exchanges
@@ -521,7 +521,7 @@ Cuando vemos entradas masivas = posible venta inminente.
 Todo esto alimenta el Non-Markovian Kernel con boost de hasta 20%."
 
 CUANDO PREGUNTEN POR ADAPTIVE PARAMETER ENGINE / PARÁMETROS ADAPTATIVOS:
-"OMNIX V6.5.3 incluye el Adaptive Parameter Engine ULTRA que ajusta automáticamente:
+"OMNIX incluye el Adaptive Parameter Engine ULTRA que ajusta automáticamente:
 - Stop-Loss: Se amplía en mercados volátiles, se ajusta en mercados estables
 - Take-Profit: Se extiende en tendencias fuertes, se reduce en ranging
 - Position Size: Se reduce con alta volatilidad, aumenta con baja volatilidad

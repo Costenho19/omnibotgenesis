@@ -962,7 +962,7 @@ class PaperTradingManager:
     
     def has_open_position_for_symbol(self, user_id: str, symbol: str) -> Dict:
         """
-        V6.5.3: Verificar si existe posición abierta para un símbolo específico
+        Verificar si existe posición abierta para un símbolo específico
         
         Args:
             user_id: ID del usuario

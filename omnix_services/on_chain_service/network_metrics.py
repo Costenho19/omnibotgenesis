@@ -1,6 +1,6 @@
 """
-OMNIX Network Metrics Collector V6.5.3
-=====================================
+OMNIX Network Metrics Collector
+===============================
 
 Recolección de métricas de salud de red blockchain.
 
@@ -78,7 +78,7 @@ class NetworkMetricsCollector:
         self._session: Optional[aiohttp.ClientSession] = None
         self._historical: Dict[str, List[NetworkMetrics]] = {}
         
-        logger.info("📈 NetworkMetricsCollector V6.5.3 initialized")
+        logger.info("📈 NetworkMetricsCollector initialized")
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """Obtiene o crea sesión HTTP"""

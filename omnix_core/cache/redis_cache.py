@@ -182,5 +182,5 @@ cache = RedisCache()
 
 
 def get_redis_cache() -> RedisCache:
-    """Get global Redis cache instance for V6.5.3 multi-user architecture"""
+    """Get global Redis cache instance for multi-user architecture"""
     return cache

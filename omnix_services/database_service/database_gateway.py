@@ -1,5 +1,5 @@
 """
-OMNIX Database Gateway V6.5.3
+OMNIX Database Gateway
 Unified database connection pool for Dashboard and Enterprise services
 
 Phase 2 Implementation (Dec 2025):

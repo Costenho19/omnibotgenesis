@@ -12,12 +12,13 @@ logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from omnix_config import VERSION_BANNER
 from omnix_dashboard.app import app
 from omnix_dashboard.utils.database import get_database_url, init_database
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    logger.info(f"OMNIX Dashboard V6.5.3 INSTITUTIONAL+ starting on port {port}")
+    logger.info(f"OMNIX Dashboard {VERSION_BANNER} starting on port {port}")
     
     database_url = get_database_url()
     if database_url:

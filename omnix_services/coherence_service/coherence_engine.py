@@ -430,7 +430,7 @@ class CoherenceEngine:
         """
         analysis_data = analysis_data or {}
         
-        # V6.5.3 FIX: Si no hay señales formales, usar fallback basado en la acción
+        # FIX: Si no hay señales formales, usar fallback basado en la acción
         if not signals:
             logger.warning(f"⚠️ Sin señales formales - usando fallback para acción {action}")
             # Crear señal de fallback basada en la acción decidida
@@ -487,7 +487,7 @@ class CoherenceEngine:
                     )
         
         # ========== REGLA 4: Monte Carlo < 50% win rate ==========
-        # V6.5.3: En paper mode, no bloquear por Monte Carlo bajo - usar throttle
+        # En paper mode, no bloquear por Monte Carlo bajo - usar throttle
         monte_carlo_data = analysis_data.get('monte_carlo', {})
         if monte_carlo_data:
             win_rate = monte_carlo_data.get('win_rate', 0)

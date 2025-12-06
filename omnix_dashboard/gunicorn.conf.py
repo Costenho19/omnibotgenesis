@@ -1,5 +1,5 @@
 """
-OMNIX Dashboard V6.5.3 - Gunicorn Configuration
+OMNIX Dashboard - Gunicorn Configuration
 Production WSGI server configuration for Railway deployment
 
 Worker class: gevent for async I/O (API calls to Kraken/Finnhub)
@@ -10,6 +10,8 @@ Phase 2 (Dec 2025): Added post_fork hook for DatabaseGateway pool reinit
 import os
 import multiprocessing
 import logging
+
+from omnix_config import VERSION_BANNER
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ enable_stdio_inheritance = True
 preload_app = False
 
 def on_starting(server):
-    print("OMNIX Dashboard V6.5.3 - Gunicorn starting...")
+    print(f"OMNIX Dashboard {VERSION_BANNER} - Gunicorn starting...")
     if USE_UNIFIED_GATEWAY:
         print("  DatabaseGateway mode: UNIFIED (post_fork reinit enabled)")
     else:
@@ -70,7 +72,7 @@ def post_fork(server, worker):
 
 
 def on_exit(server):
-    print("OMNIX Dashboard V6.5.3 - Gunicorn shutting down...")
+    print(f"OMNIX Dashboard {VERSION_BANNER} - Gunicorn shutting down...")
 
 
 def worker_exit(server, worker):

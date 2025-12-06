@@ -1,5 +1,5 @@
 """
-OMNIX Dashboard V6.5.3 - Audited Snapshots Blueprint
+OMNIX Dashboard - Audited Snapshots Blueprint
 Provides cryptographically verified snapshots for investor auditing
 """
 

@@ -267,7 +267,7 @@ class WhaleTracker:
         self._api_failures: Dict[str, List[datetime]] = {}
         self._circuit_open: Dict[str, bool] = {}
         
-        logger.info("🐋 WhaleTracker V6.5.3 initialized - ClankApp + Arkham integration")
+        logger.info("🐋 WhaleTracker initialized - ClankApp + Arkham integration")
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """Obtiene o crea sesión HTTP"""
