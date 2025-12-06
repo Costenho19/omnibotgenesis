@@ -1,18 +1,18 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V6.5.4 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
+🤖 OMNIX AUTO-TRADING BOT INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
 Sistema de trading automático con IA, Risk Guardian, Coherence Engine,
 Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain Intelligence
 
-V6.5.4 FIX (Dec 6, 2025): 4 Institutional Fixes - position limits at start, hard cap, 
+INSTITUTIONAL FIX: 4 Institutional Fixes - position limits at start, hard cap, 
 no paper bypass, no bias system. Track record now REPLICABLE in real trading.
 
-🚀 V6.5.4 MULTI-USER ARCHITECTURE:
+🚀 MULTI-USER ARCHITECTURE:
 - Soporte para 100,000+ usuarios simultáneos
 - Sesiones aisladas por usuario vía UserSessionManager
 - Estado persistente en Redis + PostgreSQL
 - Auto-restauración después de reinicios de Railway
 
-🔥 ESTRATEGIAS V6.5.4 INSTITUTIONAL+ (10 MÓDULOS):
+🔥 ESTRATEGIAS INSTITUTIONAL+ (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -24,14 +24,14 @@ no paper bypass, no bias system. Track record now REPLICABLE in real trading.
 9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
 10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
 
-🧠 MEMORY-ENHANCED RMS V6.5:
+🧠 MEMORY-ENHANCED RMS:
 - MemoryRiskAdapter: Puente entre kernel temporal y gestión de riesgo
 - LimitsEngine: Límites dinámicos ajustados por coherencia de régimen
 - CircuitBreaker: Halt automático por incoherencia de memoria/transición de régimen
 - PositionMonitor: Factor de riesgo basado en divergencia de memoria
 - AlertDispatcher: Alertas predictivas de transiciones de régimen
 
-🎯 V6.5.4 FUNCIONALIDADES:
+🎯 FUNCIONALIDADES:
 - Multi-user sessions: Cada usuario tiene su propia sesión de trading
 - Auto-trading persistente: El estado se guarda en DB y sobrevive reinicios de Railway
 - Adaptive Parameter Engine: Auto-calibración de SL/TP/posición por régimen
@@ -58,6 +58,8 @@ from typing import Dict, Optional, List, Any
 import threading
 
 logger = logging.getLogger(__name__)
+
+from omnix_config import VERSION_BANNER
 
 try:
     from omnix_core.config.trading_profiles import get_active_profile, TradingProfile
@@ -167,7 +169,7 @@ except ImportError:
     NON_MARKOVIAN_KERNEL_AVAILABLE = False
     logger.warning("⚠️ Non-Markovian Kernel no disponible")
 
-# Import CAES - Confidence-Adaptive Entry System V6.5.3 PREMIUM
+# Import CAES - Confidence-Adaptive Entry System PREMIUM
 try:
     from omnix_core.strategies.caes_module import (
         ConfidenceAdaptiveEntrySystem,
@@ -207,7 +209,7 @@ except ImportError:
     MEMORY_ENHANCED_RMS_AVAILABLE = False
     logger.warning("⚠️ Memory-Enhanced RMS no disponible")
 
-# Import Adaptive Parameter Engine V6.5.3 - AUTO-CALIBRATION FOR ARES
+# Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
     from omnix_services.adaptive_engine import (
         AdaptiveParameterEngine,
@@ -216,7 +218,7 @@ try:
         get_adaptive_engine
     )
     ADAPTIVE_PARAMETER_ENGINE_AVAILABLE = True
-    logger.info("🎯 Adaptive Parameter Engine V6.5.3 disponible")
+    logger.info(f"🎯 Adaptive Parameter Engine {VERSION_BANNER} disponible")
 except ImportError:
     AdaptiveParameterEngine = None
     AdaptiveParameterProfile = None
@@ -225,7 +227,7 @@ except ImportError:
     ADAPTIVE_PARAMETER_ENGINE_AVAILABLE = False
     logger.warning("⚠️ Adaptive Parameter Engine no disponible")
 
-# Import User Session Manager V6.5.3 - MULTI-USER SESSIONS (100K+ users)
+# Import User Session Manager - MULTI-USER SESSIONS (100K+ users)
 try:
     from omnix_core.sessions import (
         UserSessionManager,
@@ -234,7 +236,7 @@ try:
         initialize_session_manager
     )
     USER_SESSION_MANAGER_AVAILABLE = True
-    logger.info("🚀 User Session Manager V6.5.3 disponible - 100K+ usuarios")
+    logger.info(f"🚀 User Session Manager {VERSION_BANNER} disponible - 100K+ usuarios")
 except ImportError:
     UserSessionManager = None
     UserTradingSession = None
@@ -243,7 +245,7 @@ except ImportError:
     USER_SESSION_MANAGER_AVAILABLE = False
     logger.warning("⚠️ User Session Manager no disponible")
 
-# Import Dynamic Position Manager V6.5.3 PREMIUM - ATR-BASED TP/SL
+# Import Dynamic Position Manager PREMIUM - ATR-BASED TP/SL
 try:
     from omnix_services.trading_service.position_manager import (
         DynamicPositionManager,
@@ -252,7 +254,7 @@ try:
         PositionLevels
     )
     POSITION_MANAGER_AVAILABLE = True
-    logger.info("📊 Dynamic Position Manager V6.5.3 PREMIUM disponible")
+    logger.info(f"📊 Dynamic Position Manager {VERSION_BANNER} PREMIUM disponible")
 except ImportError:
     DynamicPositionManager = None
     ATRCalculator = None
@@ -264,7 +266,7 @@ except ImportError:
 
 class AutoTradingBot:
     """
-    Bot de Trading Automático 24/7 - V6.5.3 INSTITUTIONAL+
+    Bot de Trading Automático 24/7 - INSTITUTIONAL+
     
     Usa TODAS las 10 estrategias avanzadas para tomar decisiones óptimas
     Incluye modo PAPER TRADING con $1M virtual para testing
@@ -409,7 +411,7 @@ class AutoTradingBot:
         # V6.5.3: Track Record Accelerator - Contador de trades para bias boost primeros 50
         self._paper_trade_count = self.state.get('paper_trade_count', 0)
         if self._paper_trade_count > 0:
-            logger.info(f"📊 V6.5.3 Accelerator: {self._paper_trade_count} trades previos (boost activo hasta 50)")
+            logger.info(f"📊 {VERSION_BANNER} Accelerator: {self._paper_trade_count} trades previos (boost activo hasta 50)")
         
         # Inicializar balance en Prometheus
         if METRICS_ENGINE_AVAILABLE and metrics:
@@ -530,7 +532,7 @@ class AutoTradingBot:
             else:
                 logger.info("⚠️ Memory-Enhanced RMS desactivado")
         
-        # Adaptive Parameter Engine V6.5.3 - AUTO-CALIBRATION FOR ARES
+        # Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
         if ADAPTIVE_PARAMETER_ENGINE_AVAILABLE and self.non_markovian_kernel and self.coherence_engine:
             try:
                 self.adaptive_engine = get_adaptive_engine(
@@ -546,7 +548,7 @@ class AutoTradingBot:
                 
                 self.adaptive_engine.register_callback(on_calibration)
                 
-                logger.info("🎯 Adaptive Parameter Engine V6.5.3 ACTIVADO - Auto-calibración dinámica")
+                logger.info(f"🎯 Adaptive Parameter Engine {VERSION_BANNER} ACTIVADO - Auto-calibración dinámica")
                 logger.info("   ⚙️ ARES V1/V2 parámetros se ajustan por régimen de mercado")
                 logger.info("   🧠 Integrado con Non-Markovian Memory Kernel")
                 logger.info("   🔒 Validado por Coherence Engine + Risk Guardian")
@@ -560,7 +562,7 @@ class AutoTradingBot:
             else:
                 logger.info("⚠️ Adaptive Parameter Engine desactivado (requiere Non-Markovian Kernel + Coherence Engine)")
         
-        # Dynamic Position Manager V6.5.3 PREMIUM - ATR-BASED TP/SL
+        # Dynamic Position Manager PREMIUM - ATR-BASED TP/SL
         if POSITION_MANAGER_AVAILABLE:
             try:
                 self.position_manager = DynamicPositionManager(
@@ -572,7 +574,7 @@ class AutoTradingBot:
                     caes_engine=get_caes_instance() if CAES_AVAILABLE else None,
                     redis_cache=None
                 )
-                logger.info("📊 Dynamic Position Manager V6.5.3 PREMIUM ACTIVADO")
+                logger.info(f"📊 Dynamic Position Manager {VERSION_BANNER} PREMIUM ACTIVADO")
                 logger.info("   📈 ATR-based TP/SL dinámico por volatilidad")
                 logger.info("   🎯 Trailing Stop inteligente + Break-even automático")
                 logger.info("   🧠 Integrado con Non-Markovian Kernel + Coherence Engine")
@@ -584,7 +586,7 @@ class AutoTradingBot:
             logger.info("⚠️ Dynamic Position Manager no disponible - usando TP/SL fijos")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
-        logger.info(f"🤖 AutoTradingBot V6.5.3 ULTRA inicializado - Modo: {mode}")
+        logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
         
         # V6.5: Auto-iniciar si el estado persistente indica que debería estar activo
         self._auto_start_if_persistent()
@@ -597,16 +599,16 @@ class AutoTradingBot:
         """
         if hasattr(self, '_should_auto_start') and self._should_auto_start:
             user_id = getattr(self, '_persistent_user_id', None)
-            logger.info(f"🔄 V6.5.1: Iniciando auto-trading automáticamente para user {user_id}...")
+            logger.info(f"🔄 {VERSION_BANNER}: Iniciando auto-trading automáticamente para user {user_id}...")
             try:
                 result = self.start(user_id=user_id)
                 if result.get('success'):
-                    logger.info(f"✅ V6.5.1: Auto-trading restaurado exitosamente para user {user_id}")
+                    logger.info(f"✅ {VERSION_BANNER}: Auto-trading restaurado exitosamente para user {user_id}")
                 else:
                     error = result.get('error', 'Unknown error')
-                    logger.warning(f"⚠️ V6.5.1: No se pudo restaurar auto-trading: {error}")
+                    logger.warning(f"⚠️ {VERSION_BANNER}: No se pudo restaurar auto-trading: {error}")
             except Exception as e:
-                logger.error(f"❌ V6.5.1: Error restaurando auto-trading: {e}")
+                logger.error(f"❌ {VERSION_BANNER}: Error restaurando auto-trading: {e}")
     
     def check_and_restore_auto_trading(self):
         """
@@ -620,11 +622,11 @@ class AutoTradingBot:
         - El ciclo de trading actual ejecuta operaciones para TODOS los usuarios activos
         """
         if not self.database_service or not hasattr(self.database_service, 'execute_query'):
-            logger.warning("⚠️ V6.5.3: check_and_restore - No hay database_service disponible")
+            logger.warning(f"⚠️ {VERSION_BANNER}: check_and_restore - No hay database_service disponible")
             return False
         
         try:
-            logger.info("🔍 V6.5.3: Verificando estado persistente (MULTI-USER 100K+)...")
+            logger.info(f"🔍 {VERSION_BANNER}: Verificando estado persistente (MULTI-USER 100K+)...")
             
             if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
                 session_manager = get_session_manager()
@@ -641,13 +643,13 @@ class AutoTradingBot:
                         self.state['running'] = True
                         self._start_trading_loop()
                     
-                    logger.info(f"✅ V6.5.3: {result['restored']} sesiones restauradas - Trading loop ACTIVO")
+                    logger.info(f"✅ {VERSION_BANNER}: {result['restored']} sesiones restauradas - Trading loop ACTIVO")
                     return True
                 else:
-                    logger.info("📊 V6.5.3: No hay sesiones activas que restaurar")
+                    logger.info(f"📊 {VERSION_BANNER}: No hay sesiones activas que restaurar")
                     return False
             else:
-                logger.info("🔄 V6.5.3: Fallback a restauración legacy...")
+                logger.info(f"🔄 {VERSION_BANNER}: Fallback a restauración legacy...")
                 user_settings_result = self.database_service.execute_query('''
                     SELECT auto_trading, is_paused, trading_enabled, user_id
                     FROM user_settings
@@ -657,14 +659,14 @@ class AutoTradingBot:
                 
                 if user_settings_result and len(user_settings_result) > 0:
                     total_users = len(user_settings_result)
-                    logger.info(f"🔄 V6.5.3: Encontrados {total_users} usuario(s) con auto_trading activo")
+                    logger.info(f"🔄 {VERSION_BANNER}: Encontrados {total_users} usuario(s) con auto_trading activo")
                     
                     first_user = user_settings_result[0]
                     user_id = first_user.get('user_id', 'unknown')
                     
                     result = self.start(user_id=user_id)
                     if result.get('success'):
-                        logger.info(f"✅ V6.5.3: Trading iniciado para user {user_id}")
+                        logger.info(f"✅ {VERSION_BANNER}: Trading iniciado para user {user_id}")
                         if total_users > 1:
                             logger.info(f"📊 Nota: {total_users - 1} usuarios adicionales en cola")
                         return True
@@ -672,7 +674,7 @@ class AutoTradingBot:
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ V6.5.3: Error en check_and_restore_auto_trading: {e}")
+            logger.error(f"❌ {VERSION_BANNER}: Error en check_and_restore_auto_trading: {e}")
             return False
     
     def _start_trading_loop(self):
@@ -683,7 +685,7 @@ class AutoTradingBot:
         
         self._thread = threading.Thread(target=self._trading_loop_multi_user, daemon=True)
         self._thread.start()
-        logger.info("🚀 V6.5.3: Trading loop MULTI-USER iniciado")
+        logger.info(f"🚀 {VERSION_BANNER}: Trading loop MULTI-USER iniciado")
     
     def _trading_loop_multi_user(self):
         """
@@ -698,7 +700,7 @@ class AutoTradingBot:
         """
         from concurrent.futures import ThreadPoolExecutor, as_completed
         
-        logger.info("🔄 V6.5.3: Iniciando loop de trading multi-usuario...")
+        logger.info(f"🔄 {VERSION_BANNER}: Iniciando loop de trading multi-usuario...")
         
         max_workers = min(32, (os.cpu_count() or 1) * 4)
         user_locks: Dict[str, threading.Lock] = {}
@@ -745,7 +747,7 @@ class AutoTradingBot:
                 logger.error(f"❌ Error en trading loop: {e}")
                 time.sleep(30)
         
-        logger.info("🛑 V6.5.3: Trading loop multi-usuario detenido")
+        logger.info(f"🛑 {VERSION_BANNER}: Trading loop multi-usuario detenido")
     
     def _safe_process_user(self, user_id: str, lock: threading.Lock, session_manager) -> bool:
         """
@@ -857,7 +859,7 @@ class AutoTradingBot:
         V6.5.1: Usa UPSERT para crear registro si no existe.
         """
         if not self.database_service or not hasattr(self.database_service, 'execute_query'):
-            logger.debug("V6.5: No se puede persistir estado (sin database_service)")
+            logger.debug(f"{VERSION_BANNER}: No se puede persistir estado (sin database_service)")
             return
         
         try:
@@ -868,7 +870,7 @@ class AutoTradingBot:
                     ON CONFLICT (user_id) DO UPDATE 
                     SET auto_trading = EXCLUDED.auto_trading, updated_at = NOW()
                 ''', (user_id, active))
-                logger.info(f"💾 V6.5.1: Estado auto_trading={active} persistido para user {user_id}")
+                logger.info(f"💾 {VERSION_BANNER}: Estado auto_trading={active} persistido para user {user_id}")
             else:
                 if active:
                     result = self.database_service.execute_query('''
@@ -885,7 +887,7 @@ class AutoTradingBot:
                                 SET auto_trading = true, updated_at = NOW()
                                 WHERE user_id = %s
                             ''', (uid,))
-                            logger.info(f"💾 V6.5.1: auto_trading=true persistido para user {uid}")
+                            logger.info(f"💾 {VERSION_BANNER}: auto_trading=true persistido para user {uid}")
                     else:
                         self.database_service.execute_query('''
                             INSERT INTO user_settings (user_id, auto_trading, trading_enabled, updated_at)
@@ -893,16 +895,16 @@ class AutoTradingBot:
                             ON CONFLICT (user_id) DO UPDATE 
                             SET auto_trading = true, updated_at = NOW()
                         ''')
-                        logger.info("💾 V6.5.1: auto_trading=true persistido para default_admin")
+                        logger.info(f"💾 {VERSION_BANNER}: auto_trading=true persistido para default_admin")
                 else:
                     self.database_service.execute_query('''
                         UPDATE user_settings 
                         SET auto_trading = false, updated_at = NOW()
                         WHERE auto_trading = true
                     ''')
-                    logger.info("💾 V6.5.1: auto_trading=false persistido para todos los usuarios")
+                    logger.info(f"💾 {VERSION_BANNER}: auto_trading=false persistido para todos los usuarios")
         except Exception as e:
-            logger.warning(f"⚠️ V6.5.1: Error persistiendo auto_trading: {e}")
+            logger.warning(f"⚠️ {VERSION_BANNER}: Error persistiendo auto_trading: {e}")
     
     def _load_persistent_state(self):
         """
@@ -914,7 +916,7 @@ class AutoTradingBot:
         el estado entre reinicios de Railway.
         """
         if not self.database_service:
-            logger.info("📊 V6.5: Sin database_service - usando estado inicial")
+            logger.info(f"📊 {VERSION_BANNER}: Sin database_service - usando estado inicial")
             return
         
         try:
@@ -944,15 +946,15 @@ class AutoTradingBot:
                         if auto_trading and not is_paused and trading_enabled:
                             self._should_auto_start = True
                             self._persistent_user_id = user_id  # V6.5.1: Guardar para restauración
-                            logger.info(f"🔄 V6.5.1: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
+                            logger.info(f"🔄 {VERSION_BANNER}: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
                         elif auto_trading and is_paused:
-                            logger.info(f"⏸️ V6.5.1: Auto-trading está PAUSADO para user {user_id}")
+                            logger.info(f"⏸️ {VERSION_BANNER}: Auto-trading está PAUSADO para user {user_id}")
                         elif auto_trading and not trading_enabled:
-                            logger.info(f"🔒 V6.5.1: Trading DESHABILITADO para user {user_id}")
+                            logger.info(f"🔒 {VERSION_BANNER}: Trading DESHABILITADO para user {user_id}")
                     else:
-                        logger.info("📊 V6.5.1: No hay usuarios con auto_trading activo")
+                        logger.info(f"📊 {VERSION_BANNER}: No hay usuarios con auto_trading activo")
             except Exception as e:
-                logger.warning(f"⚠️ V6.5.1: Error cargando auto_trading de user_settings: {e}")
+                logger.warning(f"⚠️ {VERSION_BANNER}: Error cargando auto_trading de user_settings: {e}")
             
             # Cargar estadísticas de trades cerrados
             from datetime import datetime, timedelta
@@ -1071,7 +1073,7 @@ class AutoTradingBot:
                     self._paper_trade_count += positions_closed
                     self.state['paper_trade_count'] = self._paper_trade_count
                     self._load_persistent_state()
-                    logger.info(f"📊 V6.5.3 PREMIUM: {positions_closed} posiciones cerradas, P&L: ${total_pnl:.2f}")
+                    logger.info(f"📊 {VERSION_BANNER} PREMIUM: {positions_closed} posiciones cerradas, P&L: ${total_pnl:.2f}")
                 
                 return positions_closed
                 
@@ -1149,7 +1151,7 @@ class AutoTradingBot:
     
     def _trading_loop(self):
         """Loop principal 24/7 - V6.5.3 MULTI-CRYPTO PREMIUM"""
-        logger.info("🔄 Trading loop V6.5.3 MULTI-CRYPTO iniciado - Corriendo 24/7")
+        logger.info(f"🔄 Trading loop {VERSION_BANNER} MULTI-CRYPTO iniciado - Corriendo 24/7")
         logger.info(f"   📊 Configuración: {len(self.config.get('trading_pairs', ['BTC/USD']))} pares, intervalo {self.config['check_interval_seconds']}s")
         logger.info(f"   💰 Modo: {'PAPER' if self.config['paper_mode'] else 'REAL'} | Min trade: ${self.config['min_trade_usd']}")
         
@@ -1176,7 +1178,7 @@ class AutoTradingBot:
                 # V6.5: Log periódico de estado para confirmar que está corriendo
                 if cycle_counter % log_interval == 0:
                     win_rate = (self.state['winning_trades'] / self.state['total_trades'] * 100) if self.state['total_trades'] > 0 else 0
-                    logger.info(f"📈 V6.5.4 STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
+                    logger.info(f"📈 {VERSION_BANNER} STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
                 
                 # Verificar parada de emergencia
                 if self._check_emergency_stop():
@@ -1225,7 +1227,7 @@ class AutoTradingBot:
                     
                     # V6.5.4 FIX: Si límite de posiciones alcanzado, solo permitir SELL
                     if position_limit_reached and signal_type == 'BUY':
-                        logger.info(f"🛑 V6.5.4: BUY bloqueado - límite de posiciones alcanzado (SELL permitido)")
+                        logger.info(f"🛑 {VERSION_BANNER}: BUY bloqueado - límite de posiciones alcanzado (SELL permitido)")
                         # No ejecutar BUY, continuar con el resto del loop (evaluaciones, TP/SL)
                     elif signal_type != 'HOLD':
                         # Ejecutar SELL siempre, o BUY solo si no hay límite alcanzado
@@ -1243,7 +1245,7 @@ class AutoTradingBot:
                             if self.config['paper_mode'] and trade_type in ['BUY', 'SELL']:
                                 self._paper_trade_count += 1
                                 self.state['paper_trade_count'] = self._paper_trade_count
-                                logger.info(f"📊 V6.5.4: Trade #{self._paper_trade_count} registrado")
+                                logger.info(f"📊 {VERSION_BANNER}: Trade #{self._paper_trade_count} registrado")
                         else:
                             error = result.get('error', 'Unknown error')
                             logger.warning(f"⚠️ Trade no ejecutado: {error}")
@@ -1263,7 +1265,7 @@ class AutoTradingBot:
                 logger.error(f"   Traceback: {traceback.format_exc()}")
                 time.sleep(30)  # V6.4: Esperar 30s (era 60s) antes de reintentar
         
-        logger.info(f"🔄 Trading loop V6.5.4 terminado después de {cycle_counter} ciclos")
+        logger.info(f"🔄 Trading loop {VERSION_BANNER} terminado después de {cycle_counter} ciclos")
     
     def _check_predictive_alerts(self, current_price: float):
         """
@@ -1607,14 +1609,14 @@ class AutoTradingBot:
                     score += contrarian_boost
                     mode_label = "PAPER" if is_paper_mode else "REAL"
                     decision['reason'].append(f"🎯 V6.5.3: Fear Contrarian +{contrarian_boost} [{mode_label}] (miedo = oportunidad)")
-                    logger.info(f"🎯 V6.5.3 FEAR CONTRARIAN [{mode_label}]: Sentiment {sent_score:.0f}/100 → BUY boost +{contrarian_boost}")
+                    logger.info(f"🎯 {VERSION_BANNER} FEAR CONTRARIAN [{mode_label}]: Sentiment {sent_score:.0f}/100 → BUY boost +{contrarian_boost}")
                 
                 if fear_greed < 25:
                     extreme_fear_boost = 6 if is_paper_mode else 3
                     score += extreme_fear_boost
                     mode_label = "PAPER" if is_paper_mode else "REAL"
                     decision['reason'].append(f"😱 V6.5.3: Extreme Fear +{extreme_fear_boost} [{mode_label}] (F&G: {fear_greed})")
-                    logger.info(f"😱 V6.5.3 EXTREME FEAR [{mode_label}]: F&G={fear_greed} → +{extreme_fear_boost}")
+                    logger.info(f"😱 {VERSION_BANNER} EXTREME FEAR [{mode_label}]: F&G={fear_greed} → +{extreme_fear_boost}")
             
             # ========== ESTRATEGIAS V5.2 QUANTUM (peso 60%) ==========
             
@@ -1876,7 +1878,7 @@ class AutoTradingBot:
             
             original_score = score
             # No se aplica bias - cada trade es un evento estadístico independiente
-            logger.debug(f"📊 V6.5.4: Score final sin bias artificial: {score:.1f}")
+            logger.debug(f"📊 {VERSION_BANNER}: Score final sin bias artificial: {score:.1f}")
             
             # V6.5.3 PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
@@ -1987,21 +1989,21 @@ class AutoTradingBot:
                     
                     # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (SIEMPRE bloquea)
                     if coherence_report.coherence_score < veto_critical:
-                        logger.error(f"🚨 V6.5.4 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
                     
                     # NIVEL 1B: CRITICAL level también bloquea (sin bypass)
                     elif coherence_report.coherence_level.value == 'CRITICAL':
-                        logger.error(f"🚨 V6.5.4 COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
+                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Nivel CRITICAL detectado")
                     
                     # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil (SIEMPRE bloquea)
                     elif coherence_report.coherence_score < veto_normal:
-                        logger.warning(f"🛑 V6.5.4 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        logger.warning(f"🛑 {VERSION_BANNER} COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
@@ -2420,7 +2422,7 @@ class AutoTradingBot:
                     
                     if not position_check.get('has_position', False):
                         # NO hay posición abierta - convertir SELL a HOLD (no abrir longs innecesarios)
-                        logger.warning(f"📊 V6.5.3 POSITION CHECK: No hay posición abierta para {symbol}")
+                        logger.warning(f"📊 {VERSION_BANNER} POSITION CHECK: No hay posición abierta para {symbol}")
                         logger.info(f"   ⏸️ Convirtiendo SELL → HOLD (esperando señal BUY para abrir posición)")
                         action = 'HOLD'
                         analysis['action'] = 'HOLD'
@@ -2430,7 +2432,7 @@ class AutoTradingBot:
                     else:
                         # SÍ hay posición - proceder con SELL
                         pos = position_check.get('position', {})
-                        logger.info(f"✅ V6.5.3 POSITION CHECK: Posición abierta encontrada")
+                        logger.info(f"✅ {VERSION_BANNER} POSITION CHECK: Posición abierta encontrada")
                         logger.info(f"   📈 {pos.get('side', 'N/A').upper()} {pos.get('quantity', 0):.6f} @ ${pos.get('entry_price', 0):.2f}")
             
             # ========== V6.5.3: FLOOR MÍNIMO PARA PAPER MODE ==========
@@ -2439,13 +2441,13 @@ class AutoTradingBot:
             if self.config['paper_mode'] and action != 'HOLD':
                 min_trade = self.config.get('min_trade_usd', 50.0)
                 if amount_usd > 0 and amount_usd < min_trade:
-                    logger.warning(f"📊 V6.5.3 SIZE FLOOR: ${amount_usd:.2f} < ${min_trade:.2f} mínimo")
+                    logger.warning(f"📊 {VERSION_BANNER} SIZE FLOOR: ${amount_usd:.2f} < ${min_trade:.2f} mínimo")
                     logger.info(f"   ↗️ Ajustando al mínimo para permitir ejecución")
                     amount_usd = min_trade
                     analysis['amount_usd'] = amount_usd
                 elif amount_usd <= 0:
                     # Monto es 0 o negativo - esto es intencional (Risk Guardian bloqueó)
-                    logger.warning(f"⚠️ V6.5.3: amount_usd={amount_usd} - Risk Guardian bloqueó intencionalmente")
+                    logger.warning(f"⚠️ {VERSION_BANNER}: amount_usd={amount_usd} - Risk Guardian bloqueó intencionalmente")
                     return {'error': 'Trade bloqueado por Risk Guardian (amount=0)', 'blocked': True}
             
             # Ejecutar según modo
@@ -2485,7 +2487,7 @@ class AutoTradingBot:
                 # V6.5: Log detallado del registro en base de datos
                 trade_id = result.get('trade_id') or result.get('order_id', 'N/A')
                 db_status = "📦 Guardado en DB" if result.get('trade_id') else "⚠️ Sin confirmación DB"
-                logger.info(f"   💾 V6.5.3 REGISTRO: Trade #{self.state['total_trades']} | ID: {trade_id} | {db_status}")
+                logger.info(f"   💾 {VERSION_BANNER} REGISTRO: Trade #{self.state['total_trades']} | ID: {trade_id} | {db_status}")
                 
                 # V6.5: Verificar que el trade existe en la base de datos
                 if self.database_service and hasattr(self.database_service, 'execute_query'):
@@ -2498,9 +2500,9 @@ class AutoTradingBot:
                             # Tuple access: SELECT COUNT(*) → first column
                             row = verify_result[0]
                             recent_count = int(row[0] or 0) if row and len(row) > 0 else 0
-                            logger.info(f"   ✅ V6.5.3 VERIFICACIÓN: {recent_count} trade(s) registrado(s) en último minuto")
+                            logger.info(f"   ✅ {VERSION_BANNER} VERIFICACIÓN: {recent_count} trade(s) registrado(s) en último minuto")
                     except Exception as e:
-                        logger.debug(f"V6.5: Error verificando registro: {e}")
+                        logger.debug(f"{VERSION_BANNER}: Error verificando registro: {e}")
                 
                 # 🔒 REGISTRAR TRADE CON VERIFICACIÓN CRIPTOGRÁFICA
                 if investor_logger:
@@ -2797,7 +2799,7 @@ class AutoTradingBot:
         # Log para tracking
         if total_trades < 20 or caes_multiplier != 1.0:
             caes_info = f", CAES={caes_multiplier:.2f}x" if caes_multiplier != 1.0 else ""
-            logger.info(f"📊 V6.5.3 Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}, Size=${optimal_size:.2f}")
+            logger.info(f"📊 {VERSION_BANNER} Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}, Size=${optimal_size:.2f}")
         
         return optimal_size
     
@@ -3217,7 +3219,7 @@ class AutoTradingBot:
                 current_count = len(open_positions) if open_positions else 0
                 
                 if current_count >= max_positions:
-                    logger.warning(f"🛑 V6.5.4 LÍMITE ALCANZADO: {current_count}/{max_positions} posiciones abiertas")
+                    logger.warning(f"🛑 {VERSION_BANNER} LÍMITE ALCANZADO: {current_count}/{max_positions} posiciones abiertas")
                     logger.warning(f"   Saltando análisis de 10 estrategias para ahorrar CPU")
                     return True
                     
