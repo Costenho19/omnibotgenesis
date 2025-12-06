@@ -1,11 +1,15 @@
 """
-OMNIX V6.0 ENTERPRISE - Configuración Centralizada Premium
-Nivel: Enterprise Grade
-Escalabilidad: 50K+ usuarios
-
-Migrado a env_manager.py para gestión robusta de variables de entorno
-con precedencia: Replit Secrets > .env.local > defaults
+OMNIX Configuration - Centralized Settings
+Enterprise Grade | 50K+ users scalability
 """
+
+# ============================================================
+# VERSION CONTROL - SINGLE SOURCE OF TRUTH
+# ============================================================
+VERSION = "6.5.4"
+VERSION_NAME = "INSTITUTIONAL+"
+VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"
+# ============================================================
 
 import os
 from dataclasses import dataclass

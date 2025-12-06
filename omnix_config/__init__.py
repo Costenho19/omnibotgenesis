@@ -1,9 +1,9 @@
 """
-OMNIX V6.0 ULTRA - Configuration Package
-Centraliza toda la configuración del sistema con gestión avanzada de variables de entorno
+OMNIX Configuration Package
+Centralized system configuration with advanced environment variable management
 """
 
-from .settings import settings
+from .settings import settings, VERSION, VERSION_NAME, VERSION_BANNER
 from .env_manager import (
     EnvConfig,
     env_config,
@@ -15,6 +15,9 @@ from .env_manager import (
 
 __all__ = [
     'settings',
+    'VERSION',
+    'VERSION_NAME', 
+    'VERSION_BANNER',
     'EnvConfig',
     'env_config',
     'get_env',
