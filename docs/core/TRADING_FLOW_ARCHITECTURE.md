@@ -1,8 +1,20 @@
-# OMNIX V6.5.3 - Trading Flow Architecture
+# OMNIX V6.5.4 - Trading Flow Architecture
 
-**Document Version:** 1.0  
+**Document Version:** 2.0  
 **Created:** December 6, 2025  
+**Updated:** December 6, 2025 - V6.5.4 Institutional Fixes  
 **Status:** ✅ COMPLETE - Execution Flow Documentation
+
+---
+
+## V6.5.4 Institutional Fixes Summary
+
+| Fix | Problem | Solution |
+|-----|---------|----------|
+| **FIX 1** | Límites verificados al final | Límites verificados AL INICIO del ciclo |
+| **FIX 2** | Risk Guardian con límites "blandos" | Hard cap absoluto: min(size, MAX_LIMIT) |
+| **FIX 3** | Paper mode bypass de coherencia | Mismas reglas para paper y real |
+| **FIX 4** | FLOOR_RESCUE/RECOVERY bias (revenge trading) | Eliminado - cada trade es evento aislado |
 
 ---
 
@@ -10,7 +22,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         OMNIX V6.5.3 TRADING FLOW                           │
+│                     OMNIX V6.5.4 TRADING FLOW (INSTITUTIONAL)               │
 └─────────────────────────────────────────────────────────────────────────────┘
 
                               ┌─────────────────┐
@@ -21,13 +33,24 @@
                                        │
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                          AUTO TRADING BOT V6.5.3                             │
-│                        (auto_trading_bot.py - 3,932 lines)                   │
+│                          AUTO TRADING BOT V6.5.4                             │
+│                        (auto_trading_bot.py - 3,950+ lines)                  │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
 │  │  Multi-Crypto Scanner (11 pairs)                                       │  │
 │  │  • BTC/USD, ETH/USD, SOL/USD, XRP/USD, DOGE/USD, ADA/USD              │  │
 │  │  • DOT/USD, LINK/USD, AVAX/USD, MATIC/USD, ATOM/USD                   │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│               V6.5.4 POSITION LIMIT CHECK (FIRST!) - INSTITUTIONAL           │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ _check_position_limit_early() - BEFORE any CPU-intensive analysis      │ │
+│  │ • If positions >= max_open_positions: SKIP to SELL-ONLY mode           │ │
+│  │ • Saves CPU by avoiding 10-strategy analysis when limit reached        │ │
+│  │ • Only processes TP/SL and evaluations in SELL-ONLY mode               │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────┬───────────────────────────────────────────┘
                                    │
                                    ▼
@@ -63,28 +86,33 @@
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                     CAES V6.5.2 - CONFIDENCE ADAPTIVE ENTRY                  │
+│                     CAES V6.5.4 - CONFIDENCE ADAPTIVE ENTRY                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ Position Sizing: multiplier = 0.5 + 2.5 × sigmoid(confidence - 0.5)    │ │
 │  │ Range: 0.5x to 3.0x with safety caps                                    │ │
 │  │                                                                          │ │
-│  │ Sub-Regime Detection:                                                    │ │
-│  │ • FLOOR_RESCUE → +30% base boost                                        │ │
-│  │ • RECOVERY → +20% base boost                                            │ │
-│  │ • NEUTRAL → +10% base boost                                             │ │
-│  │ • MOMENTUM → +5% base boost                                             │ │
+│  │ V6.5.4 INSTITUTIONAL: NO artificial bias applied                        │ │
+│  │ • ELIMINADO: FLOOR_RESCUE, RECOVERY (era revenge trading)              │ │
+│  │ • Cada trade es un evento estadístico aislado                          │ │
+│  │ • Score negativo = NO COMPRAR (sin manipulación)                        │ │
+│  │ • Fear & Greed Contrarian mantenido (estrategia válida)                 │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────┬───────────────────────────────────────────┘
                                    │
                                    ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                      AI RISK GUARDIAN V5.4 - FINAL CHECK                     │
+│                 AI RISK GUARDIAN V5.4 + V6.5.4 HARD CAP                      │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ • Overtrading prevention                                                 │ │
 │  │ • Drawdown protection                                                    │ │
 │  │ • Revenge trading detection                                              │ │
 │  │ • Daily loss limits                                                      │ │
 │  │ • Position concentration limits                                          │ │
+│  │                                                                          │ │
+│  │ V6.5.4 INSTITUTIONAL: HARD CAP ABSOLUTO                                 │ │
+│  │ • max_trade_size_usd = $20,000 - NUNCA excede este límite               │ │
+│  │ • get_adjusted_position_size() aplica: min(size, MAX_LIMIT)             │ │
+│  │ • Sin excepciones, sin "recortes suaves"                                 │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────┬───────────────────────────────────────────┘
                                    │
@@ -328,8 +356,8 @@ class CAESModule:
         # Sigmoid aggression function
         base = 0.5 + 2.5 * self.sigmoid(confidence - 0.5)
         
-        # Sub-regime boost (paper mode BUY bias)
-        boost = self.get_regime_boost(sub_regime)
+        # V6.5.4: No artificial bias applied
+        # boost = 1.0 (eliminated FLOOR_RESCUE/RECOVERY)
         
         # Apply limits
         multiplier = min(3.0, max(0.5, base * boost))
@@ -464,29 +492,47 @@ WHERE user_id = $1;
 
 ---
 
-## 9. V6.5.3 Paper Mode Optimizations
+## 9. V6.5.4 Institutional Practices
 
-### 9.1 BUY Bias for Track Record
+### 9.1 No Artificial Bias (ELIMINATED in V6.5.4)
 
 ```python
-# Paper mode applies BUY bias to accelerate track record
-if self.paper_mode:
-    # Track Record Accelerator (first 50 trades)
-    if self.trade_count < 50:
-        signal_boost *= 1.3  # 30% boost
-    
-    # Fear & Greed Contrarian
-    if fear_greed_index < 25:  # Extreme fear
-        buy_probability *= 1.4  # 40% boost for contrarian
+# V6.5.4: NO artificial bias applied
+# Each trade is an isolated statistical event
+# Score negativo = NO COMPRAR (sin manipulación)
+
+# ELIMINADO (era revenge trading):
+# - FLOOR_RESCUE: Compraba cuando score era muy negativo
+# - RECOVERY: Compraba cuando score era negativo
+# - Track Record Accelerator: 1.3x boost primeros 50 trades
+
+# MANTENIDO (estrategia válida):
+# Fear & Greed Contrarian - comprar en miedo extremo
+if fear_greed_index < 25:  # Extreme fear (valid contrarian strategy)
+    buy_signal_boost *= 1.4  # 40% boost
 ```
 
-### 9.2 Reduced Penalties
+### 9.2 Same Rules for Paper and Real Mode
 
 ```python
-# Paper mode uses reduced penalties for Risk Guardian blocks
-if self.paper_mode:
-    risk_guardian_penalty = 0.25  # 25% vs 50% in real mode
-    coherence_penalty = 0.25      # 25% vs 50% in real mode
+# V6.5.4: Mismas reglas para PAPER y REAL mode
+# La integridad de la señal es más importante que "probar el sistema"
+# Esto genera un track record REPLICABLE en trading real
+
+if coherence_score < veto_critical:
+    # SIEMPRE bloquear - sin bypass de paper mode
+    decision['should_trade'] = False
+    
+# V6.5.4: Sin reducciones suaves en paper mode
+# Si el Risk Guardian bloquea, bloquea. Punto.
+```
+
+### 9.3 Hard Cap Absoluto
+
+```python
+# V6.5.4: Hard cap en Risk Guardian
+max_trade_size = self.config.get('max_trade_size_usd', 20000)
+adjusted_size = min(calculated_size, max_trade_size)  # NUNCA excede
 ```
 
 ---
@@ -530,4 +576,5 @@ class UserSessionManager:
 
 | Date | Version | Changes |
 |------|---------|---------|
+| Dec 6, 2025 | 2.0 | V6.5.4 Institutional Fixes - eliminated bias, hard cap, no paper bypass |
 | Dec 6, 2025 | 1.0 | Initial trading flow architecture documentation |

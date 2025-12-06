@@ -1,8 +1,8 @@
-# OMNIX V6.5.3 INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5.4 INSTITUTIONAL+ - Automated Trading System
 
 ## Overview
 
-OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -34,7 +34,7 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Core Engines
 
--   **AutoTradingBot V6.5.3 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, paper mode BUY bias for track record.
+-   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, V6.5.4 position limit early-check.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
 -   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent thresholds (30%/45%) for trade quality and win rate > 55%.
 -   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs with proper Kraken symbol mapping.
@@ -43,11 +43,10 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Derivatives Trading Module**: Paper/real trading modes, MarginEngine, KrakenFuturesClient, HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, Earnings Protector.
 -   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibration for ARES strategies based on market regime.
--   **CAES V6.5.2 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function and sub-regime detection. Caps: 0.5x-3.0x multiplier with safety limits.
+-   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function. Caps: 0.5x-3.0x multiplier with safety limits. V6.5.4: No artificial bias applied.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
--   **BUY Bias Escalonado V6.5.3**: Implemented in paper mode for track record generation with varying base and accelerator boosts based on market sentiment (FLOOR_RESCUE, RECOVERY, NEUTRAL, MOMENTUM).
--   **Fear & Greed Contrarian Strategy V6.5.3**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
--   **Track Record Accelerator V6.5.3**: 1.3x multiplier for the first 50 trades in paper mode to accelerate track record building, normalizing to 1.0x thereafter.
+-   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
+-   **AI Risk Guardian V6.5.4 Hard Cap**: $20K max trade size absolute limit. min(size, MAX_LIMIT) without exceptions.
 
 ### Multi-User Architecture V6.5.2
 
@@ -142,6 +141,11 @@ OMNIX V6.5.3 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ## Recent Changes
 
+- **Dec 6, 2025**: V6.5.4 Institutional Fixes - 4 critical corrections:
+  - FIX 1: Position limits checked at START of cycle (saves CPU)
+  - FIX 2: Hard cap absoluto en Risk Guardian ($20K max)
+  - FIX 3: Coherencia sin bypass para paper mode (track record replicable)
+  - FIX 4: Eliminado FLOOR_RESCUE/RECOVERY bias (era revenge trading)
 - **Dec 6, 2025**: Complete module audit and documentation update to V6.5.3
 - **Dec 5, 2025**: Gemini 2.0 SDK migration (google-genai)
 - **Dec 4, 2025**: Database audit - 42 tables, 38 FKs (90% coverage)

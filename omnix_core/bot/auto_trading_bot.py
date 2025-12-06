@@ -1,17 +1,18 @@
 """
-🤖 OMNIX AUTO-TRADING BOT V6.5.3 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
+🤖 OMNIX AUTO-TRADING BOT V6.5.4 INSTITUTIONAL+ - TRADING AUTOMÁTICO 24/7
 Sistema de trading automático con IA, Risk Guardian, Coherence Engine,
 Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain Intelligence
 
-V6.5.3 FIX (Dec 5, 2025): Reduced paper mode penalties + added BUY bias for track record generation
+V6.5.4 FIX (Dec 6, 2025): 4 Institutional Fixes - position limits at start, hard cap, 
+no paper bypass, no bias system. Track record now REPLICABLE in real trading.
 
-🚀 V6.5.3 MULTI-USER ARCHITECTURE:
+🚀 V6.5.4 MULTI-USER ARCHITECTURE:
 - Soporte para 100,000+ usuarios simultáneos
 - Sesiones aisladas por usuario vía UserSessionManager
 - Estado persistente en Redis + PostgreSQL
 - Auto-restauración después de reinicios de Railway
 
-🔥 ESTRATEGIAS V6.5.3 INSTITUTIONAL+ (10 MÓDULOS):
+🔥 ESTRATEGIAS V6.5.4 INSTITUTIONAL+ (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -30,7 +31,7 @@ V6.5.3 FIX (Dec 5, 2025): Reduced paper mode penalties + added BUY bias for trac
 - PositionMonitor: Factor de riesgo basado en divergencia de memoria
 - AlertDispatcher: Alertas predictivas de transiciones de régimen
 
-🎯 V6.5.3 NUEVAS FUNCIONALIDADES:
+🎯 V6.5.4 FUNCIONALIDADES:
 - Multi-user sessions: Cada usuario tiene su propia sesión de trading
 - Auto-trading persistente: El estado se guarda en DB y sobrevive reinicios de Railway
 - Adaptive Parameter Engine: Auto-calibración de SL/TP/posición por régimen
@@ -1175,7 +1176,7 @@ class AutoTradingBot:
                 # V6.5: Log periódico de estado para confirmar que está corriendo
                 if cycle_counter % log_interval == 0:
                     win_rate = (self.state['winning_trades'] / self.state['total_trades'] * 100) if self.state['total_trades'] > 0 else 0
-                    logger.info(f"📈 V6.5.3 STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
+                    logger.info(f"📈 V6.5.4 STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
                 
                 # Verificar parada de emergencia
                 if self._check_emergency_stop():
@@ -1183,8 +1184,16 @@ class AutoTradingBot:
                     self.stop()
                     break
                 
-                # V6.5.3 PREMIUM: Verificar Take Profit / Stop Loss en posiciones abiertas
+                # V6.5.4: Verificar Take Profit / Stop Loss en posiciones abiertas
                 self._check_open_positions_tp_sl()
+                
+                # ========== V6.5.4 FIX INSTITUCIONAL: LÍMITES AL INICIO ==========
+                # Verificar límite de posiciones ANTES de gastar CPU en análisis de nuevas entradas
+                # Si límite alcanzado, seguimos evaluando para SELLs pero bloqueamos BUYs
+                position_limit_reached = self._check_position_limit_early()
+                # La bandera position_limit_reached se usa más abajo para bloquear solo BUY
+                # NO hacemos continue - continuamos evaluando coherencia, risk guardian, y SELLs
+                # ========== FIN FIX INSTITUCIONAL ==========
                 
                 # V6.4: MULTI-CRYPTO - Escanear el par actual
                 if self.config.get('use_multi_crypto', True) and len(trading_pairs) > 1:
@@ -1212,26 +1221,32 @@ class AutoTradingBot:
                     self._check_predictive_alerts(current_price)
                 
                 if analysis and analysis.get('should_trade'):
-                    logger.info(f"🎯 SEÑAL DE TRADE DETECTADA - {self.config['trading_pair']} - Ejecutando...")
-                    # Ejecutar trade
-                    result = self._execute_smart_trade(analysis)
+                    signal_type = analysis.get('signal', 'HOLD')
                     
-                    if result.get('success'):
-                        trade_type = result.get('type', 'unknown')
-                        trade_amount = result.get('amount', 0)
-                        trade_price = result.get('price', 0)
-                        logger.info(f"✅ TRADE EJECUTADO: {trade_type} {trade_amount} {self.config['trading_pair']} @ ${trade_price:.2f}")
-                        logger.info(f"   📝 Detalles: {result}")
-                        self._update_stats(result)
+                    # V6.5.4 FIX: Si límite de posiciones alcanzado, solo permitir SELL
+                    if position_limit_reached and signal_type == 'BUY':
+                        logger.info(f"🛑 V6.5.4: BUY bloqueado - límite de posiciones alcanzado (SELL permitido)")
+                        # No ejecutar BUY, continuar con el resto del loop (evaluaciones, TP/SL)
+                    elif signal_type != 'HOLD':
+                        # Ejecutar SELL siempre, o BUY solo si no hay límite alcanzado
+                        logger.info(f"🎯 SEÑAL DE TRADE DETECTADA - {self.config['trading_pair']} - Ejecutando {signal_type}...")
+                        result = self._execute_smart_trade(analysis)
                         
-                        if self.config['paper_mode'] and trade_type in ['BUY', 'SELL']:
-                            self._paper_trade_count += 1
-                            self.state['paper_trade_count'] = self._paper_trade_count
-                            accel_status = "ACTIVO" if self._paper_trade_count < 50 else "COMPLETADO"
-                            logger.info(f"📊 V6.5.3 Accelerator: Trade #{self._paper_trade_count}/50 - {accel_status}")
-                    else:
-                        error = result.get('error', 'Unknown error')
-                        logger.warning(f"⚠️ Trade no ejecutado: {error}")
+                        if result.get('success'):
+                            trade_type = result.get('type', 'unknown')
+                            trade_amount = result.get('amount', 0)
+                            trade_price = result.get('price', 0)
+                            logger.info(f"✅ TRADE EJECUTADO: {trade_type} {trade_amount} {self.config['trading_pair']} @ ${trade_price:.2f}")
+                            logger.info(f"   📝 Detalles: {result}")
+                            self._update_stats(result)
+                            
+                            if self.config['paper_mode'] and trade_type in ['BUY', 'SELL']:
+                                self._paper_trade_count += 1
+                                self.state['paper_trade_count'] = self._paper_trade_count
+                                logger.info(f"📊 V6.5.4: Trade #{self._paper_trade_count} registrado")
+                        else:
+                            error = result.get('error', 'Unknown error')
+                            logger.warning(f"⚠️ Trade no ejecutado: {error}")
                 
                 # 🧠 Procesar evaluaciones pendientes cada N ciclos
                 evaluation_check_counter += 1
@@ -1248,7 +1263,7 @@ class AutoTradingBot:
                 logger.error(f"   Traceback: {traceback.format_exc()}")
                 time.sleep(30)  # V6.4: Esperar 30s (era 60s) antes de reintentar
         
-        logger.info(f"🔄 Trading loop V6.5.3 terminado después de {cycle_counter} ciclos")
+        logger.info(f"🔄 Trading loop V6.5.4 terminado después de {cycle_counter} ciclos")
     
     def _check_predictive_alerts(self, current_price: float):
         """
@@ -1844,55 +1859,24 @@ class AutoTradingBot:
             decision['raw_score'] = score
             decision['max_score'] = max_score
             
-            # ========== V6.5.3 PAPER MODE BUY BIAS SYSTEM ==========
-            # Sistema escalonado premium para maximizar generación de track record
-            # Objetivo: 20-50 trades/día con win rate > 55%
+            # ========== V6.5.4 FIX INSTITUCIONAL: BIAS SYSTEM ELIMINADO ==========
+            # Práctica institucional: Las instituciones odian el "Recovery Trading" 
+            # (venganza contra el mercado). Cada operación es un evento estadístico aislado.
             #
-            # ZONAS DE BIAS:
-            # 1. FLOOR ZONE (-25 a -15): Rescate mínimo +18 → genera BUY moderado
-            # 2. RECOVERY ZONE (-15 a -5): Recuperación +15 → impulsa hacia BUY
-            # 3. NEUTRAL ZONE (-5 a +5): Bias estándar +12 → abre posiciones
-            # 4. MOMENTUM ZONE (+5 a +15): Boost adicional +8 → fortalece señal
-            # 5. STRONG ZONE (>+15): Sin bias (ya es señal fuerte natural)
+            # ELIMINADO (era revenge trading disfrazado):
+            # - FLOOR_RESCUE: Compraba cuando score era muy negativo (venganza)
+            # - RECOVERY: Compraba cuando score era negativo (recuperación emocional)
+            #
+            # MANTENIDO (estrategia válida):
+            # - Fear & Greed Contrarian ya implementado en sentiment analysis
+            # - Cada trade se evalúa por sus méritos matemáticos, no por historia
+            #
+            # V6.5.4: El score ya no se manipula artificialmente. Un score negativo
+            # significa NO COMPRAR, punto. Esto genera un track record REPLICABLE.
             
             original_score = score
-            paper_bias_applied = 0
-            paper_bias_zone = None
-            
-            if is_paper_mode:
-                trade_count = getattr(self, '_paper_trade_count', 0)
-                accelerator_multiplier = 1.3 if trade_count < 50 else 1.0
-                
-                if -25 <= score < -15:
-                    paper_bias_applied = int(18 * accelerator_multiplier)
-                    paper_bias_zone = "FLOOR_RESCUE"
-                    decision['reason'].append(f"🚀 V6.5.3: Floor Rescue Bias +{paper_bias_applied}")
-                elif -15 <= score < -5:
-                    paper_bias_applied = int(15 * accelerator_multiplier)
-                    paper_bias_zone = "RECOVERY"
-                    decision['reason'].append(f"📈 V6.5.3: Recovery Bias +{paper_bias_applied}")
-                elif -5 <= score <= 5:
-                    paper_bias_applied = int(12 * accelerator_multiplier)
-                    paper_bias_zone = "NEUTRAL"
-                    decision['reason'].append(f"📊 V6.5.3: Neutral Bias +{paper_bias_applied}")
-                elif 5 < score <= 15:
-                    paper_bias_applied = int(8 * accelerator_multiplier)
-                    paper_bias_zone = "MOMENTUM"
-                    decision['reason'].append(f"💪 V6.5.3: Momentum Boost +{paper_bias_applied}")
-                
-                if paper_bias_applied > 0:
-                    score += paper_bias_applied
-                    accel_label = " [ACCELERATOR]" if accelerator_multiplier > 1.0 else ""
-                    logger.info(f"🎯 V6.5.3 PAPER BUY BIAS [{paper_bias_zone}]{accel_label}: {original_score:.1f} → {score:.1f} (+{paper_bias_applied})")
-                    
-                    decision['paper_bias'] = {
-                        'zone': paper_bias_zone,
-                        'original_score': original_score,
-                        'bias_applied': paper_bias_applied,
-                        'final_score': score,
-                        'accelerator': accelerator_multiplier > 1.0,
-                        'trade_count': trade_count
-                    }
+            # No se aplica bias - cada trade es un evento estadístico independiente
+            logger.debug(f"📊 V6.5.4: Score final sin bias artificial: {score:.1f}")
             
             # V6.5.3 PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
@@ -1995,48 +1979,34 @@ class AutoTradingBot:
                     profile_name = p.name if p else "HARDCODED"
                     logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
                     
-                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja
-                    # V6.5.3 FIX: En paper mode, ignorar nivel CRITICAL y solo usar score numérico
-                    # Esto permite trades para calibración cuando score > umbral aunque nivel sea CRITICAL
-                    is_paper_mode = self.config.get('paper_mode', False)
+                    # ========== V6.5.4 FIX INSTITUCIONAL: COHERENCIA SIN BYPASS ==========
+                    # Práctica institucional: Mismas reglas para PAPER y REAL mode.
+                    # Si la coherencia es baja, es baja. Punto. No se opera.
+                    # La integridad de la señal es más importante que la necesidad de "probar".
+                    # Esto genera un track record REPLICABLE en trading real.
                     
+                    # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (SIEMPRE bloquea)
                     if coherence_report.coherence_score < veto_critical:
-                        # Bloquear siempre si score está por debajo del umbral crítico
-                        logger.error(f"🚨 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                        logger.error(f"🚨 V6.5.4 COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
-                    elif coherence_report.coherence_level.value == 'CRITICAL' and not is_paper_mode:
-                        # En REAL money mode, también bloquear por nivel CRITICAL
-                        logger.error(f"🚨 COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
+                    
+                    # NIVEL 1B: CRITICAL level también bloquea (sin bypass)
+                    elif coherence_report.coherence_level.value == 'CRITICAL':
+                        logger.error(f"🚨 V6.5.4 COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Nivel CRITICAL detectado")
-                    elif coherence_report.coherence_level.value == 'CRITICAL' and is_paper_mode:
-                        # V6.5.3: Paper mode - advertir pero NO bloquear si score > umbral
-                        logger.warning(f"⚠️ COHERENCE CRÍTICO (PAPER MODE): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL pero permitido para calibración")
-                        decision['reason'].append(f"⚠️ PAPER MODE: Nivel CRITICAL permitido (score {coherence_report.coherence_score:.1f}% > {veto_critical}%)")
-                        # Reducir tamaño de posición 50% como precaución
-                        if 'amount_usd' in decision:
-                            decision['amount_usd'] *= 0.50
-                            decision['reason'].append(f"📊 Posición reducida 50% por nivel CRITICAL")
                     
-                    # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil
+                    # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil (SIEMPRE bloquea)
                     elif coherence_report.coherence_score < veto_normal:
-                        if not is_paper_mode:
-                            logger.warning(f"🛑 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
-                            decision['should_trade'] = False
-                            decision['action'] = 'HOLD'
-                            decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
-                        else:
-                            # Paper mode: advertir pero permitir con reducción
-                            logger.warning(f"⚠️ COHERENCE BAJO (PAPER MODE): Score={coherence_report.coherence_score:.1f}% - Permitido con reducción")
-                            decision['reason'].append(f"⚠️ PAPER MODE: Coherencia baja permitida")
-                            if 'amount_usd' in decision:
-                                decision['amount_usd'] *= 0.65
-                                decision['reason'].append(f"📊 Posición reducida 35% por coherencia baja")
+                        logger.warning(f"🛑 V6.5.4 COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        decision['should_trade'] = False
+                        decision['action'] = 'HOLD'
+                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
                     
-                    # NIVEL 3: HOLD recomendado - solo vetar si señal no es muy fuerte
+                    # NIVEL 3: HOLD recomendado - solo señales VERY_STRONG pueden pasar
                     elif coherence_report.decision_recommendation == 'HOLD':
                         signal_strength = decision.get('signal_strength', 'MODERATE')
                         if signal_strength == 'VERY_STRONG':
@@ -2044,18 +2014,12 @@ class AutoTradingBot:
                             if 'amount_usd' in decision:
                                 decision['amount_usd'] *= 0.55
                                 decision['reason'].append(f"⚠️ Señal VERY_STRONG bypassing HOLD - posición reducida 45%")
-                        elif is_paper_mode:
-                            # V6.5.3: Paper mode - permitir HOLD con reducción para calibración
-                            logger.warning(f"⚠️ HOLD (PAPER MODE): Permitido con reducción para calibración")
-                            decision['reason'].append(f"⚠️ PAPER MODE: HOLD permitido con reducción")
-                            if 'amount_usd' in decision:
-                                decision['amount_usd'] *= 0.50
-                                decision['reason'].append(f"📊 Posición reducida 50% por HOLD")
                         else:
-                            # Real money: STRONG y MODERATE respetan HOLD
+                            # STRONG y MODERATE respetan HOLD (sin bypass de paper mode)
                             decision['should_trade'] = False
                             decision['action'] = 'HOLD'
-                            decision['reason'].append(f"⚠️ Coherence Engine recomienda HOLD")
+                            decision['reason'].append(f"⚠️ V6.5.4: Coherence Engine recomienda HOLD")
+                    # ========== FIN FIX INSTITUCIONAL =========
                     
                     # NIVEL 4: REDUCCIÓN MODERADA - Coherencia entre veto_normal y warning
                     elif coherence_report.coherence_score < coherence_warning:
@@ -3232,6 +3196,36 @@ class AutoTradingBot:
             
         except Exception as e:
             logger.error(f"Error procesando evaluaciones pendientes: {e}")
+    
+    def _check_position_limit_early(self) -> bool:
+        """
+        V6.5.4 FIX INSTITUCIONAL: Verificar límite de posiciones ANTES del análisis.
+        
+        Práctica institucional: El check de límites debe ser la PRIMERA validación,
+        no la última. Esto ahorra CPU y evita logs innecesarios.
+        
+        Returns:
+            True si el límite está alcanzado (no abrir nuevas posiciones)
+            False si hay espacio para nuevas posiciones
+        """
+        try:
+            max_positions = self.config.get('max_open_positions', 20)
+            
+            if self.database_service:
+                user_id = self.config.get('user_id', 'system')
+                open_positions = self.database_service.get_open_positions(user_id)
+                current_count = len(open_positions) if open_positions else 0
+                
+                if current_count >= max_positions:
+                    logger.warning(f"🛑 V6.5.4 LÍMITE ALCANZADO: {current_count}/{max_positions} posiciones abiertas")
+                    logger.warning(f"   Saltando análisis de 10 estrategias para ahorrar CPU")
+                    return True
+                    
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error verificando límite de posiciones: {e}")
+            return False
     
     def _check_emergency_stop(self) -> bool:
         """Verificar si debemos detener por pérdidas excesivas"""

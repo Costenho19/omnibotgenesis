@@ -98,6 +98,9 @@ class AIRiskGuardian:
             'max_risk_per_trade_pct': 0.02,  # 2% por trade
             'min_balance_threshold': 1000,  # Balance mínimo para operar
             'max_position_size_small_account': 50,  # Si balance < $1000
+            
+            # V6.5.4 FIX INSTITUCIONAL: Hard Cap Absoluto
+            'max_trade_size_usd': 20000,  # NUNCA exceder este límite - SIN EXCEPCIONES
         }
         
         # Estado interno
@@ -467,15 +470,28 @@ class AIRiskGuardian:
     
     def get_adjusted_position_size(self, original_size: float) -> float:
         """
-        Ajusta el tamaño de posición según el factor de reducción actual
+        Ajusta el tamaño de posición según el factor de reducción actual.
+        
+        V6.5.4 FIX INSTITUCIONAL: Aplica hard cap ABSOLUTO.
+        Práctica institucional: Si size > MAX_LIMIT, se recorta a MAX_LIMIT exactos.
+        No hay negociación ni "recortes suaves". Hard limit es hard limit.
         
         Args:
             original_size: Tamaño original propuesto
         
         Returns:
-            Tamaño ajustado según riesgos detectados
+            Tamaño ajustado según riesgos detectados, NUNCA excede max_trade_size_usd
         """
-        return original_size * self.size_reduction_factor
+        adjusted_size = original_size * self.size_reduction_factor
+        
+        # V6.5.4: HARD CAP ABSOLUTO - Sin excepciones
+        max_trade_size = self.config.get('max_trade_size_usd', 20000)
+        
+        if adjusted_size > max_trade_size:
+            logger.warning(f"🛑 V6.5.4 HARD CAP: ${adjusted_size:,.2f} → ${max_trade_size:,.2f} (límite absoluto)")
+            adjusted_size = max_trade_size
+        
+        return adjusted_size
     
     def get_status(self) -> Dict:
         """Retorna estado actual del Risk Guardian"""
