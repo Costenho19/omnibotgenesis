@@ -47,6 +47,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
 -   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
 -   **AI Risk Guardian V6.5.4 Hard Cap**: $20K max trade size absolute limit. min(size, MAX_LIMIT) without exceptions.
+-   **Web Search Service V6.5.4**: Real-time internet search via Tavily API. Auto-detects queries about news/events/current data. Redis cache (15min TTL), rate limiting (30/min).
 
 ### Multi-User Architecture V6.5.2
 
@@ -79,6 +80,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Alternative.me**: Fear and Greed Index.
 -   **Finnhub**: Market news and sentiment.
 -   **Alpha Vantage**: Technical indicators.
+-   **Tavily**: Real-time web search for AI responses (1,000 free/month).
 -   **ANU QRNG**: Quantum random numbers.
 
 ### Databases
@@ -162,6 +164,7 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 6, 2025**: Web Search Integration - New `web_search_service/` module with Tavily API. Bot auto-searches internet for news/events queries. Redis cache + rate limiting.
 - **Dec 6, 2025**: Runtime Bug Fixes (Phase 4.6) - 3 fixes from expert log analysis:
   - FIX 1: tuple.get() error in session restore (psycopg3 returns tuples)
   - FIX 2: Monte Carlo win_rate 0.5% → 50% formatting (decimal normalization)

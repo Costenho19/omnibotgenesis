@@ -223,6 +223,7 @@ K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
 | **voice_service/** | 3 | ~500 | `VoiceServiceEnterprise`, `VoiceEngine` | openai (whisper) |
 | **user_settings/** | 3 | 693 | `UserSettingsService` (693), `RiskProfile`, `TradingLimits` | - |
 | **concurrency/** | 4 | ~600 | `IntelligentCacheSystem`, `OptimizedConcurrencyManager`, `ScalableResourceManager` | - |
+| **web_search_service/** | 2 | ~400 | `TavilySearchClient`, `WebSearchManager` | tavily-python |
 
 ### 4.3 Largest Modules (>500 lines)
 
