@@ -26,15 +26,22 @@ from .tavily_search import TavilySearchClient, get_tavily_client
 
 
 SEARCH_INTENT_KEYWORDS = [
+    # Time-sensitive triggers (HIGH PRIORITY - require current info)
     "qué pasó", "what happened", "noticias", "news", "hoy", "today",
     "ayer", "yesterday", "esta semana", "this week", "últimas", "latest",
-    "recientes", "recent", "actual", "current", "ahora", "now",
-    "precio actual", "current price", "última hora", "breaking",
+    "recientes", "recent", "última hora", "breaking",
     "anunció", "announced", "reportó", "reported", "dijo", "said",
     "según", "according to", "fuentes", "sources", "rumor", "rumores",
     "predicción", "prediction", "forecast", "pronóstico",
     "por qué subió", "why did it go up", "por qué bajó", "why did it drop",
-    "qué está pasando", "what's happening", "busca", "search", "encuentra", "find"
+    "qué está pasando", "what's happening", "busca", "search", "encuentra", "find",
+    # V6.5.4 Premium - Event-specific triggers (not generic conversation)
+    "pasó algo", "sucedió", "ocurrió",
+    "2024", "2025", "diciembre", "december",
+    "subió", "bajó", "cayó", "dropped", "rose", "fell", "crashed", "pumped",
+    "rally", "dump", "pump", "crash",
+    "halving", "etf", "aprobación", "approval",
+    "elon musk", "trump", "biden", "powell", "gensler"
 ]
 
 CRYPTO_FINANCE_KEYWORDS = [
@@ -156,12 +163,17 @@ class WebSearchManager:
                 topic_score += 1
                 matched_topic_keywords.append(keyword)
         
-        is_question = any(q in message_lower for q in ["?", "qué", "what", "cuál", "which", "cómo", "how", "por qué", "why", "cuándo", "when"])
+        is_question = any(q in message_lower for q in ["?", "qué", "what", "cuál", "which", "cómo", "how", "por qué", "why", "cuándo", "when", "dónde", "where"])
         
+        # V6.5.4 Premium: Balanced scoring to avoid over-triggering
         total_score = intent_score * 2 + topic_score + (1 if is_question else 0)
         confidence = min(total_score / 10, 1.0)
         
-        needs_search = confidence >= 0.3 or (intent_score >= 1 and topic_score >= 1)
+        # V6.5.4: Require BOTH intent keyword AND topic keyword to trigger
+        # This prevents generic questions from triggering search
+        # Only exception: explicit search commands ("busca", "search", "encuentra")
+        explicit_search = any(cmd in message_lower for cmd in ["busca ", "buscar ", "encuentra ", "search ", "find "])
+        needs_search = explicit_search or (intent_score >= 1 and topic_score >= 1) or (is_question and intent_score >= 1 and topic_score >= 1)
         
         suggested_query = message
         if matched_topic_keywords and not matched_intent_keywords:

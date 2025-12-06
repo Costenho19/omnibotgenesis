@@ -158,9 +158,19 @@ class ConversationalAI:
                         )
                     )
                 
-                # Extraer respuesta del resultado
+                # Extraer respuesta del resultado (V6.5.4 Premium: con indicador de búsqueda)
                 if result and 'response' in result:
-                    return result['response']
+                    response_text = result['response']
+                    
+                    # V6.5.4 Premium: Agregar indicador visual si usó búsqueda web
+                    if result.get('web_search_used'):
+                        web_indicator = "\n\n🔍 *Información verificada en tiempo real*"
+                        # Solo agregar si no está ya presente
+                        if "Información verificada" not in response_text:
+                            response_text = response_text + web_indicator
+                        logger.info(f"🔍 Web search used for this response (query: {result.get('web_search_query', 'N/A')[:50]})")
+                    
+                    return response_text
                 else:
                     logger.error("❌ No response from enterprise service")
                     return self._fallback_response()

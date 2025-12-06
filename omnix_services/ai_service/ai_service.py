@@ -147,22 +147,36 @@ class ConversationalAIService:
             if market_data:
                 additional_context.update(market_data)
             
-            # 4.5 Web Search - Get real-time info if needed
+            # 4.5 Web Search V6.5.4 PREMIUM - Automatic real-time info fetching
             web_search_context = None
+            web_search_used = False
+            web_search_query = None
             if WEB_SEARCH_AVAILABLE and get_search_manager:
                 try:
                     search_manager = get_search_manager()
                     if search_manager.is_available():
                         intent_check = search_manager.detect_search_intent(user_message)
                         if intent_check.get("needs_search"):
-                            logger.info(f"🔍 Web search triggered: {intent_check.get('reason')}")
+                            web_search_query = intent_check.get("suggested_query", user_message)
+                            logger.info(f"🔍 Web search triggered: {intent_check.get('reason')} | Query: {web_search_query[:50]}...")
+                            
+                            # Get both context and quick answer for premium experience
                             web_search_context = search_manager.get_context_for_ai(
-                                query=intent_check.get("suggested_query", user_message),
-                                max_tokens=2000
+                                query=web_search_query,
+                                max_tokens=2500  # Increased for richer context
                             )
-                            if web_search_context:
+                            
+                            # V6.5.4: Only mark as used if we got meaningful context (>100 chars)
+                            if web_search_context and len(web_search_context) > 100:
                                 additional_context["web_search_results"] = web_search_context
+                                additional_context["web_search_notice"] = (
+                                    "IMPORTANTE: La siguiente información fue obtenida de internet en tiempo real. "
+                                    "Úsala para responder con datos actualizados y verificados."
+                                )
+                                web_search_used = True
                                 logger.info(f"✅ Web search context added: {len(web_search_context)} chars")
+                            elif web_search_context:
+                                logger.info(f"⚠️ Web search returned minimal context ({len(web_search_context)} chars) - not marking as used")
                 except Exception as e:
                     logger.warning(f"⚠️ Web search failed (continuing without): {e}")
             
@@ -205,14 +219,17 @@ class ConversationalAIService:
                 'intent': intent
             })
             
-            # 9. Return response with metadata
+            # 9. Return response with metadata (V6.5.4 Premium: includes web search info)
             return {
                 'success': True,
                 'response': styled_response,
                 'intent': intent,
                 'context': context,
                 'model_used': self.models.primary_model,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat(),
+                # V6.5.4 Premium: Web search metadata for UI indicators
+                'web_search_used': web_search_used,
+                'web_search_query': web_search_query if web_search_used else None
             }
             
         except Exception as e:
