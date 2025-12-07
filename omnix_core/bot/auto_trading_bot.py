@@ -263,6 +263,21 @@ except ImportError:
     POSITION_MANAGER_AVAILABLE = False
     logger.warning("⚠️ Dynamic Position Manager no disponible")
 
+try:
+    from omnix_services.execution_service import (
+        ExecutionProtocol,
+        ExecutionDecision,
+        EXECUTION_SERVICE_AVAILABLE
+    )
+    EXECUTION_PROTOCOL_AVAILABLE = EXECUTION_SERVICE_AVAILABLE
+    if EXECUTION_PROTOCOL_AVAILABLE:
+        logger.info(f"🎯 Execution Protocol {VERSION_BANNER} INSTITUTIONAL+ disponible")
+except ImportError:
+    ExecutionProtocol = None
+    ExecutionDecision = None
+    EXECUTION_PROTOCOL_AVAILABLE = False
+    logger.warning("⚠️ Execution Protocol no disponible")
+
 
 class AutoTradingBot:
     """
@@ -584,6 +599,23 @@ class AutoTradingBot:
         else:
             self.position_manager = None
             logger.info("⚠️ Dynamic Position Manager no disponible - usando TP/SL fijos")
+        
+        if EXECUTION_PROTOCOL_AVAILABLE:
+            try:
+                self.execution_protocol = ExecutionProtocol(
+                    trading_service=trading_service
+                )
+                logger.info(f"🎯 Execution Protocol {VERSION_BANNER} INSTITUTIONAL+ ACTIVADO")
+                logger.info("   📊 LiquidityAnalyzer: TBLR + Hidden Liquidity Detection")
+                logger.info("   📈 MicroVolatilityEngine: Regime Detection + Asymmetric Response")
+                logger.info("   🔗 CrossAssetCorrelationEngine: Contagion Risk + Safe-Haven Flows")
+                logger.info("   🎯 Decision Matrix: TWAP/VWAP/ICEBERG + Slippage Prediction")
+            except Exception as e:
+                self.execution_protocol = None
+                logger.warning(f"⚠️ Execution Protocol error: {e}")
+        else:
+            self.execution_protocol = None
+            logger.info("⚠️ Execution Protocol no disponible")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
