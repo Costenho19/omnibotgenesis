@@ -184,6 +184,10 @@ class EnterpriseTelegramBot:
         self._message_timers: Dict[str, asyncio.Task] = {}
         self._message_aggregation_delay = 1.5
         
+        self._sync_message_buffers: Dict[str, List[Dict[str, Any]]] = {}
+        self._sync_message_timers: Dict[str, Any] = {}
+        self._sync_buffer_lock = threading.Lock()
+        
         # 🏦 TRADING SERVICE ENTERPRISE CON FALLBACK SEGURO
         self.trading_enterprise_enabled = False
         try:
@@ -5649,6 +5653,63 @@ Trades: {balance['total_trades']}"""
             logger.error(f"❌ Error _handle_paper_positions_direct: {e}")
             self.send_telegram_text_safe(chat_id, f"⚠️ Error: {e}")
 
+    def _process_sync_aggregated_messages(self, user_id: str, chat_id: int):
+        """Procesar mensajes agregados de forma síncrona (para polling manual)"""
+        try:
+            with self._sync_buffer_lock:
+                if user_id not in self._sync_message_buffers or not self._sync_message_buffers[user_id]:
+                    return
+                
+                buffered_messages = self._sync_message_buffers.pop(user_id, [])
+                if user_id in self._sync_message_timers:
+                    del self._sync_message_timers[user_id]
+            
+            if not buffered_messages:
+                return
+            
+            combined_text = " ".join([msg['text'] for msg in buffered_messages if msg.get('text')])
+            first_msg = buffered_messages[0]
+            original_user_id = first_msg['user_id']
+            
+            logger.info(f"📦 SYNC MENSAJE AGREGADO ({len(buffered_messages)} partes) de user:{user_id}: {combined_text[:100]}...")
+            
+            self.handle_direct_message(chat_id, combined_text, user_id=original_user_id)
+            
+        except Exception as e:
+            logger.error(f"❌ Error procesando sync mensajes agregados: {e}")
+
+    def _buffer_sync_message(self, user_id: str, chat_id: int, text: str, original_user_id: int):
+        """Agregar mensaje al buffer síncrono con debounce de 1.5s"""
+        try:
+            with self._sync_buffer_lock:
+                if user_id in self._sync_message_timers:
+                    self._sync_message_timers[user_id].cancel()
+                    logger.info(f"🔄 SYNC Timer cancelado para {user_id} - agregando mensaje al buffer")
+                
+                if user_id not in self._sync_message_buffers:
+                    self._sync_message_buffers[user_id] = []
+                
+                self._sync_message_buffers[user_id].append({
+                    'text': text,
+                    'chat_id': chat_id,
+                    'user_id': original_user_id,
+                    'timestamp': time.time()
+                })
+                
+                logger.info(f"📥 SYNC Mensaje #{len(self._sync_message_buffers[user_id])} buffered de {user_id}: {text[:50]}...")
+                
+                timer = threading.Timer(
+                    self._message_aggregation_delay,
+                    self._process_sync_aggregated_messages,
+                    args=(user_id, chat_id)
+                )
+                timer.start()
+                self._sync_message_timers[user_id] = timer
+                
+        except Exception as e:
+            logger.error(f"❌ Error en buffer sync: {e}")
+            self.handle_direct_message(chat_id, text, user_id=original_user_id)
+
     def start_polling(self, drop_pending_updates=True):
         """Iniciar bot en modo polling directo - VERSION ULTRA ROBUSTA
         
@@ -5714,9 +5775,9 @@ Trades: {balance['total_trades']}"""
                                         # PROTECCIÓN CRÍTICA: Envolver procesamiento en try/except
                                         # para que errores en handlers NO detengan el polling
                                         try:
-                                            logger.info(f"📧 Procesando mensaje: '{text}' de chat:{chat_id} user:{user_id}")
+                                            logger.info(f"📧 Recibido mensaje: '{text[:50]}...' de chat:{chat_id} user:{user_id}")
                                             
-                                            # FIX Nov 30, 2025: Detectar comandos de paper trading
+                                            # FIX Nov 30, 2025: Detectar comandos de paper trading (sin aggregation)
                                             if text.startswith('/paper_buy ') and self.paper_trading:
                                                 self._handle_paper_buy_direct(chat_id, user_id, text)
                                             elif text.startswith('/paper_sell ') and self.paper_trading:
@@ -5727,8 +5788,10 @@ Trades: {balance['total_trades']}"""
                                                 self._handle_paper_balance_direct(chat_id, user_id)
                                             elif text.startswith('/paper_positions') and self.paper_trading:
                                                 self._handle_paper_positions_direct(chat_id, user_id)
-                                            else:
+                                            elif text.startswith('/'):
                                                 self.handle_direct_message(chat_id, text, user_id=user_id)
+                                            else:
+                                                self._buffer_sync_message(str(user_id), chat_id, text, user_id)
                                         except Exception as handler_error:
                                             # Log error pero CONTINUAR procesando - polling no debe morir
                                             logger.error(f"❌ Error procesando mensaje de {chat_id}: {handler_error}")
