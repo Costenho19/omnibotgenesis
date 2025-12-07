@@ -108,6 +108,34 @@ omnix_core/
 - `execute_signal()` - Trade execution with veto system
 - `scan_all_pairs()` - 11-pair crypto scanner
 
+**V6.5.4 Contradiction Monitor (Lines ~2054-2070):**
+
+Passive logging system to detect decision contradictions for future optimization.
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `coherence_rec` | `coherence_report.decision_recommendation` | HOLD/BUY/SELL from Coherence Engine |
+| `final_action` | `decision['action']` | Final trade decision |
+| `coherence_pct` | `coherence_report.coherence_score` | Coherence percentage (0-100%) |
+| `signal_strength` | `decision['signal_strength']` | WEAK/MODERATE/STRONG/VERY_STRONG/ULTRA |
+| `amount` | `decision['amount_usd']` | Trade size in USD |
+| `symbol` | `getattr(self, 'current_symbol', 'UNKNOWN')` | Trading pair (safe access) |
+
+**Trigger Condition:**
+```python
+# Guard: solo ejecutar si coherence_report existe y tiene atributos requeridos
+if coherence_report and hasattr(coherence_report, 'decision_recommendation'):
+    if coherence_rec == 'HOLD' and final_action in ['BUY', 'SELL'] and decision.get('should_trade'):
+        logger.warning(f"⚡ CONTRADICTION MONITOR V6.5.4: ...")
+```
+
+**Log Format:**
+```
+⚡ CONTRADICTION MONITOR V6.5.4: Coherence=HOLD (53.4%) vs Final=BUY | Signal=VERY_STRONG | Amount=$1500.00 | Symbol=BTC/USD
+```
+
+**Purpose:** Phase 1 monitoring only - does NOT modify trading behavior. Data collected for future Phase 2 automated mitigation decisions.
+
 ---
 
 #### 1.2.3 ARES Protocols (ares_v1.py, ares_v2.py)

@@ -2051,19 +2051,21 @@ class AutoTradingBot:
                     # ========== V6.5.4 CONTRADICTION MONITOR ==========
                     # Log cuando Coherence recomienda HOLD pero decision final es BUY/SELL
                     # Esto es para MONITOREO - no cambia el comportamiento del trading
-                    coherence_rec = coherence_report.decision_recommendation
-                    final_action = decision.get('action', 'HOLD')
-                    if coherence_rec == 'HOLD' and final_action in ['BUY', 'SELL'] and decision.get('should_trade'):
-                        signal_strength = decision.get('signal_strength', 'UNKNOWN')
-                        amount = decision.get('amount_usd', 0)
-                        coherence_pct = coherence_report.coherence_score
-                        symbol = getattr(self, 'current_symbol', 'UNKNOWN')
-                        logger.warning(
-                            f"⚡ CONTRADICTION MONITOR V6.5.4: "
-                            f"Coherence={coherence_rec} ({coherence_pct:.1f}%) vs Final={final_action} | "
-                            f"Signal={signal_strength} | Amount=${amount:.2f} | "
-                            f"Symbol={symbol}"
-                        )
+                    # Guard: solo ejecutar si coherence_report existe y tiene atributos requeridos
+                    if coherence_report and hasattr(coherence_report, 'decision_recommendation'):
+                        coherence_rec = coherence_report.decision_recommendation
+                        final_action = decision.get('action', 'HOLD')
+                        if coherence_rec == 'HOLD' and final_action in ['BUY', 'SELL'] and decision.get('should_trade'):
+                            signal_strength = decision.get('signal_strength', 'UNKNOWN')
+                            amount = decision.get('amount_usd', 0)
+                            coherence_pct = getattr(coherence_report, 'coherence_score', 0)
+                            symbol = getattr(self, 'current_symbol', 'UNKNOWN')
+                            logger.warning(
+                                f"⚡ CONTRADICTION MONITOR V6.5.4: "
+                                f"Coherence={coherence_rec} ({coherence_pct:.1f}%) vs Final={final_action} | "
+                                f"Signal={signal_strength} | Amount=${amount:.2f} | "
+                                f"Symbol={symbol}"
+                            )
                     # ========== END CONTRADICTION MONITOR ==========
                     
                 except Exception as e:
