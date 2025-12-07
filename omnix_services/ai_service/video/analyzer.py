@@ -711,6 +711,112 @@ Responde en JSON:
         
         return None
     
+    def get_transcript_robust(self, video_url: str) -> Dict[str, Any]:
+        """
+        Método PÚBLICO y ROBUSTO para obtener transcripción de YouTube.
+        Unifica todos los fallbacks en un solo punto de entrada.
+        
+        Args:
+            video_url: URL completa del video de YouTube
+            
+        Returns:
+            Dict con:
+                - 'success': bool
+                - 'transcript': str (si éxito)
+                - 'method': str (método que funcionó)
+                - 'error': str (si falló)
+                - 'video_id': str
+        """
+        result: Dict[str, Any] = {
+            'success': False,
+            'transcript': None,
+            'method': None,
+            'error': None,
+            'video_id': None,
+            'attempts': []
+        }
+        
+        video_id = self._extract_video_id(video_url)
+        if not video_id:
+            result['error'] = "No se pudo extraer el ID del video de la URL"
+            logger.error(f"❌ {result['error']}: {video_url}")
+            return result
+        
+        result['video_id'] = video_id
+        logger.info(f"🎬 [{VERSION_BANNER}] Obteniendo transcripción robusta para video {video_id}...")
+        
+        if self.database_service:
+            try:
+                cached = self.database_service.get_cached_transcript(video_id)
+                if cached and len(cached) > 50:
+                    result['success'] = True
+                    result['transcript'] = cached
+                    result['method'] = 'cache'
+                    logger.info(f"🚀 Transcripción obtenida de caché: {len(cached)} chars")
+                    return result
+            except Exception as cache_err:
+                result['attempts'].append(f"cache: {str(cache_err)[:50]}")
+        
+        try:
+            from youtube_transcript_api import YouTubeTranscriptApi
+            
+            try:
+                transcript_data = YouTubeTranscriptApi.get_transcript(
+                    video_id, 
+                    languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
+                )
+                if transcript_data:
+                    full_text = ' '.join([entry['text'] for entry in transcript_data])
+                    if len(full_text) > 50:
+                        result['success'] = True
+                        result['transcript'] = full_text
+                        result['method'] = 'youtube-transcript-api (direct)'
+                        logger.info(f"✅ Transcripción directa: {len(full_text)} chars")
+                        return result
+            except Exception as direct_err:
+                result['attempts'].append(f"yt-api-direct: {str(direct_err)[:50]}")
+                logger.warning(f"⚠️ Método directo falló: {direct_err}")
+            
+            try:
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                for t in transcript_list:
+                    try:
+                        data = t.fetch()
+                        full_text = ' '.join([entry['text'] for entry in data])
+                        if len(full_text) > 50:
+                            result['success'] = True
+                            result['transcript'] = full_text
+                            result['method'] = f'youtube-transcript-api (list - {t.language})'
+                            logger.info(f"✅ Transcripción via list: {len(full_text)} chars")
+                            return result
+                    except Exception:
+                        continue
+            except Exception as list_err:
+                result['attempts'].append(f"yt-api-list: {str(list_err)[:50]}")
+                logger.warning(f"⚠️ list_transcripts falló: {list_err}")
+                
+        except ImportError:
+            result['attempts'].append("youtube-transcript-api not installed")
+        except Exception as api_err:
+            result['attempts'].append(f"yt-api: {str(api_err)[:50]}")
+        
+        logger.info("🔧 Intentando yt-dlp como fallback...")
+        ytdlp_transcript = self._get_transcript_ytdlp(video_id)
+        if ytdlp_transcript and len(ytdlp_transcript) > 50:
+            result['success'] = True
+            result['transcript'] = ytdlp_transcript
+            result['method'] = 'yt-dlp'
+            logger.info(f"✅ Transcripción yt-dlp: {len(ytdlp_transcript)} chars")
+            return result
+        else:
+            result['attempts'].append("yt-dlp: no subtitles found")
+        
+        if not result['success']:
+            result['error'] = f"No se pudo obtener transcripción. Intentos: {', '.join(result['attempts'][:3])}"
+            logger.warning(f"⚠️ {result['error']}")
+        
+        return result
+    
     def _get_transcript(self, video_id: str) -> Optional[str]:
         """Obtener transcripción REAL del video usando youtube-transcript-api"""
         logger.info(f"📝 [{VERSION_BANNER}] Obteniendo transcripción de video {video_id}...")

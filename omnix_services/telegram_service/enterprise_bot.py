@@ -3171,162 +3171,44 @@ Usa: `/autotrading activar ACEPTO`"""
                 
                 logger.info(f"🎥 URL de YouTube detectada en handle_message: {video_url}")
                 
-                # Mostrar mensaje de procesamiento
-                processing_msg = await update.message.reply_text("🎬 Video de YouTube detectado - Analizando con IA...")
+                processing_msg = await update.message.reply_text("🎬 Video de YouTube detectado - Obteniendo transcripción...")
                 
                 try:
-                    # Intentar análisis con VideoAnalyzerUltra si está disponible
-                    video_analysis = None
-                    
-                    if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
-                        logger.info("🎬 Usando VideoAnalyzerUltra para análisis de YouTube")
-                        try:
-                            video_analysis = self.video_analyzer_ultra.analyze_video_complete(video_url, extract_frames=True)
-                            if video_analysis and video_analysis.get('status') == 'success':
-                                logger.info(f"✅ VideoAnalyzerUltra completó análisis con confianza: {video_analysis.get('confidence_score', 0):.2%}")
-                        except Exception as va_error:
-                            logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
-                    
-                    # Construir contexto para la IA con el análisis del video
                     video_context = f"ANÁLISIS DE VIDEO DE YOUTUBE: {video_url}\n\n"
                     has_real_content = False
+                    error_detail = ""
                     
-                    if video_analysis and video_analysis.get('status') == 'success':
-                        # Incluir resultados del análisis
-                        if 'transcript_analysis' in video_analysis:
-                            ta = video_analysis['transcript_analysis']
-                            video_context += f"📝 TRANSCRIPCIÓN ANALIZADA:\n"
-                            
-                            # Nuevo formato: summary y key_insights del análisis IA
-                            if ta.get('summary'):
-                                video_context += f"📋 RESUMEN: {ta['summary']}\n\n"
-                                has_real_content = True
-                            
-                            if ta.get('trading_strategy') or ta.get('strategy'):
-                                strategy = ta.get('trading_strategy') or ta.get('strategy')
-                                video_context += f"🎯 Estrategia: {strategy}\n"
-                                has_real_content = True
-                            
-                            if ta.get('timeframe'):
-                                video_context += f"⏱️ Timeframe: {ta['timeframe']}\n"
-                            
-                            if ta.get('assets_mentioned') or ta.get('assets'):
-                                assets = ta.get('assets_mentioned') or ta.get('assets', [])
-                                if assets:
-                                    video_context += f"💰 Activos: {', '.join(assets) if isinstance(assets, list) else assets}\n"
-                            
-                            if ta.get('indicators'):
-                                video_context += f"📊 Indicadores: {ta['indicators']}\n"
-                            
-                            if ta.get('key_insights'):
-                                insights = ta['key_insights']
-                                if isinstance(insights, list):
-                                    video_context += f"💡 Puntos clave:\n"
-                                    for i, insight in enumerate(insights[:5], 1):
-                                        video_context += f"   {i}. {insight}\n"
-                                    has_real_content = True
-                            
-                            if ta.get('risk_management'):
-                                rm = ta['risk_management']
-                                video_context += f"🛡️ Gestión de riesgo: {rm}\n"
-                            
-                            if ta.get('entry_exit'):
-                                ee = ta['entry_exit']
-                                video_context += f"🚀 Entrada/Salida: {ee}\n"
-                            
-                            # Technical parameters (formato antiguo)
-                            if ta.get('technical_parameters') and isinstance(ta['technical_parameters'], dict):
-                                params = ta['technical_parameters']
-                                if params:
-                                    video_context += f"📈 Parámetros técnicos: {params}\n"
-                            
-                            # Raw text parcial si no hay análisis estructurado
-                            if not has_real_content and ta.get('raw_text'):
-                                raw = ta['raw_text'][:2000]
-                                video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO:\n{raw}\n"
-                                has_real_content = True
-                        
-                        if 'visual_analysis' in video_analysis:
-                            va = video_analysis['visual_analysis']
-                            video_context += f"\n🎬 ANÁLISIS VISUAL:\n"
-                            if va.get('patterns_detected'):
-                                video_context += f"- Patrones detectados: {', '.join(va['patterns_detected'])}\n"
-                            if va.get('support_resistance_levels'):
-                                video_context += f"- Niveles S/R: {va['support_resistance_levels']}\n"
-                        
-                        if 'sentiment_analysis' in video_analysis:
-                            sa = video_analysis['sentiment_analysis']
-                            video_context += f"\n💭 SENTIMIENTO: {sa.get('sentiment', 'neutral')} (Risk appetite: {sa.get('risk_appetite', 'moderate')})\n"
-                        
-                        if 'integrated_recommendations' in video_analysis:
-                            ir = video_analysis['integrated_recommendations']
-                            video_context += f"\n🧠 RECOMENDACIONES INTEGRADAS:\n{ir}\n"
-                        
-                        video_context += f"\n✅ Confianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
-                    
-                    if not has_real_content:
-                        # Fallback: intentar obtener transcripción directamente
-                        logger.info("🔄 Fallback en handle_message: Intentando youtube-transcript-api directamente")
+                    if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
+                        logger.info("🎬 Usando get_transcript_robust() para obtener transcripción")
                         try:
-                            from youtube_transcript_api import YouTubeTranscriptApi
-                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match:
-                                video_id = video_id_match.group(1)
-                                logger.info(f"🎬 Video ID extraído en handle_message: {video_id}")
+                            transcript_result = self.video_analyzer_ultra.get_transcript_robust(video_url)
+                            
+                            if transcript_result.get('success') and transcript_result.get('transcript'):
+                                transcript_text = transcript_result['transcript']
+                                method = transcript_result.get('method', 'unknown')
+                                logger.info(f"✅ Transcripción obtenida via {method}: {len(transcript_text)} chars")
                                 
-                                # MÉTODO 1: get_transcript directo (más robusto)
-                                try:
-                                    transcript_data = YouTubeTranscriptApi.get_transcript(
-                                        video_id, 
-                                        languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
-                                    )
-                                    if transcript_data:
-                                        full_text = ' '.join([e['text'] for e in transcript_data])
-                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                        has_real_content = True
-                                        logger.info(f"✅ Transcripción directa obtenida en handle_message: {len(full_text)} chars")
-                                except Exception as direct_err:
-                                    logger.warning(f"⚠️ Método directo falló en handle_message: {direct_err}")
-                                    
-                                    # MÉTODO 2: list_transcripts (fallback del fallback)
-                                    try:
-                                        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                                        for t in transcript_list:
-                                            data = t.fetch()
-                                            full_text = ' '.join([e['text'] for e in data])
-                                            video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                            has_real_content = True
-                                            logger.info(f"✅ Transcripción via list_transcripts en handle_message: {len(full_text)} chars")
-                                            break
-                                    except Exception as list_err:
-                                        logger.warning(f"⚠️ list_transcripts también falló: {list_err}")
-                        except ImportError:
-                            logger.error("❌ youtube-transcript-api no está instalada")
-                        except Exception as fallback_err:
-                            logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
-                    
-                    # MÉTODO 3: yt-dlp (fallback final más robusto)
-                    if not has_real_content:
-                        logger.info("🔧 Fallback final en handle_message: Intentando yt-dlp")
-                        try:
-                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match and hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
-                                video_id = video_id_match.group(1)
-                                ytdlp_transcript = self.video_analyzer_ultra._get_transcript_ytdlp(video_id)
-                                if ytdlp_transcript and len(ytdlp_transcript) > 50:
-                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
-                                    has_real_content = True
-                                    logger.info(f"✅ Transcripción yt-dlp obtenida en handle_message: {len(ytdlp_transcript)} chars")
-                        except Exception as ytdlp_err:
-                            logger.warning(f"⚠️ yt-dlp también falló en handle_message: {ytdlp_err}")
+                                video_context += f"📜 TRANSCRIPCIÓN DEL VIDEO ({len(transcript_text)} chars):\n{transcript_text[:4000]}\n"
+                                video_context += f"\n✅ Método usado: {method}"
+                                has_real_content = True
+                            else:
+                                error_detail = transcript_result.get('error', 'Error desconocido')
+                                logger.warning(f"⚠️ Transcripción falló: {error_detail}")
+                        except Exception as va_error:
+                            error_detail = str(va_error)
+                            logger.error(f"❌ Error en get_transcript_robust: {va_error}")
+                    else:
+                        error_detail = "VideoAnalyzerUltra no disponible"
+                        logger.warning(f"⚠️ {error_detail}")
                     
                     if not has_real_content:
-                        video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
+                        video_context += f"\n⚠️ No se pudo obtener la transcripción del video.\n"
+                        video_context += f"Razón: {error_detail}\n"
+                        video_context += "El video puede tener subtítulos deshabilitados, ser privado, o estar bloqueado por región."
                     
                     video_context += f"\n\nMensaje original del usuario: {user_message}"
                     
-                    # Generar respuesta con contexto del video
-                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
+                    logger.info(f"🧠 Enviando a IA con contexto de video: {len(video_context)} chars, tiene_contenido: {has_real_content}")
                     ai_response = self.ai.generate_response(
                         user_message=video_context,
                         user_name=user_name,
@@ -3336,12 +3218,13 @@ Usa: `/autotrading activar ACEPTO`"""
                     )
                     
                     if not ai_response:
-                        ai_response = f"🎬 Recibí el video de YouTube pero no pude analizarlo completamente. ¿Podrías describir qué aspectos del video te gustaría que analice?"
+                        if has_real_content:
+                            ai_response = f"🎬 Obtuve la transcripción del video ({len(transcript_text)} chars) pero no pude generar una respuesta. ¿Qué aspecto te gustaría que analice?"
+                        else:
+                            ai_response = f"🎬 No pude obtener la transcripción del video.\n\n❌ {error_detail}\n\n¿Puedes compartirme de qué trata el video para ayudarte?"
                     
-                    # Enviar respuesta
                     await processing_msg.edit_text(ai_response[:4000])
                     
-                    # Guardar en DB
                     if self.db_manager:
                         try:
                             self.db_manager.save_conversation(
@@ -3354,11 +3237,11 @@ Usa: `/autotrading activar ACEPTO`"""
                             logger.warning(f"⚠️ Error guardando conversación de video: {db_error}")
                     
                     logger.info(f"✅ Análisis de video YouTube completado: {len(ai_response)} chars")
-                    return  # SALIR - ya procesamos el video
+                    return
                     
                 except Exception as video_error:
                     logger.error(f"❌ Error procesando video YouTube: {video_error}")
-                    await processing_msg.edit_text(f"❌ Error analizando el video. Por favor intenta de nuevo o describe lo que quieres analizar.")
+                    await processing_msg.edit_text(f"❌ Error analizando el video: {str(video_error)[:100]}. Por favor intenta de nuevo.")
                     return
             
             # 🚀 GENERAR RESPUESTA CON SUPERINTELIGENCIA OMNIX
@@ -4657,7 +4540,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                     logger.error(f"❌ Error enviando respuesta /autotrading: {response.text}")
             
             else:
-                # 🎓 AUTO-LEARNING: DETECCIÓN AUTOMÁTICA DE VIDEOS DE YOUTUBE
+                # 🎓 AUTO-LEARNING: DETECCIÓN AUTOMÁTICA DE VIDEOS DE YOUTUBE (V6.5.4 SIMPLIFICADO)
                 import re
                 youtube_pattern = r'(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)'
                 youtube_match = re.search(youtube_pattern, text)
@@ -4669,131 +4552,49 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                     if not video_url.startswith('http'):
                         video_url = 'https://' + video_url
                     
-                    # Enviar mensaje de procesamiento
                     send_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendMessage"
                     processing_data = {
                         'chat_id': chat_id,
-                        'text': "🎬 Video de YouTube detectado - Analizando transcripción con IA...",
+                        'text': "🎬 Video de YouTube detectado - Obteniendo transcripción...",
                         'parse_mode': 'Markdown'
                     }
                     requests.post(send_url, json=processing_data)
                     
-                    # FIX Nov 29, 2025: USAR VideoAnalyzerUltra para obtener transcripción REAL
                     video_context = f"ANÁLISIS DE VIDEO DE YOUTUBE: {video_url}\n\n"
                     has_real_content = False
+                    error_detail = ""
                     
-                    # PASO 1: Intentar con VideoAnalyzerUltra (preferido)
                     if hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
-                        logger.info("🎬 Usando VideoAnalyzerUltra para análisis en handle_direct_message")
+                        logger.info("🎬 Usando get_transcript_robust() para obtener transcripción")
                         try:
-                            video_analysis = self.video_analyzer_ultra.analyze_video_complete(video_url, extract_frames=False)
-                            if video_analysis and video_analysis.get('status') == 'success':
-                                logger.info(f"✅ VideoAnalyzerUltra completó análisis: {video_analysis.get('confidence_score', 0):.2%}")
+                            transcript_result = self.video_analyzer_ultra.get_transcript_robust(video_url)
+                            
+                            if transcript_result.get('success') and transcript_result.get('transcript'):
+                                transcript_text = transcript_result['transcript']
+                                method = transcript_result.get('method', 'unknown')
+                                logger.info(f"✅ Transcripción obtenida via {method}: {len(transcript_text)} chars")
                                 
-                                if 'transcript_analysis' in video_analysis:
-                                    ta = video_analysis['transcript_analysis']
-                                    
-                                    if ta.get('summary'):
-                                        video_context += f"📋 RESUMEN: {ta['summary']}\n\n"
-                                        has_real_content = True
-                                    
-                                    if ta.get('trading_strategy') or ta.get('strategy'):
-                                        strategy = ta.get('trading_strategy') or ta.get('strategy')
-                                        video_context += f"🎯 Estrategia: {strategy}\n"
-                                        has_real_content = True
-                                    
-                                    if ta.get('timeframe'):
-                                        video_context += f"⏱️ Timeframe: {ta['timeframe']}\n"
-                                    
-                                    if ta.get('indicators'):
-                                        video_context += f"📊 Indicadores: {ta['indicators']}\n"
-                                    
-                                    if ta.get('key_insights'):
-                                        insights = ta['key_insights']
-                                        if isinstance(insights, list):
-                                            video_context += f"💡 Puntos clave:\n"
-                                            for i, insight in enumerate(insights[:5], 1):
-                                                video_context += f"   {i}. {insight}\n"
-                                            has_real_content = True
-                                    
-                                    if ta.get('risk_management'):
-                                        video_context += f"🛡️ Gestión de riesgo: {ta['risk_management']}\n"
-                                    
-                                    if ta.get('entry_exit'):
-                                        video_context += f"🚀 Entrada/Salida: {ta['entry_exit']}\n"
-                                    
-                                    if not has_real_content and ta.get('raw_text'):
-                                        raw = ta['raw_text'][:2000]
-                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO:\n{raw}\n"
-                                        has_real_content = True
-                                
-                                video_context += f"\n✅ Confianza del análisis: {video_analysis.get('confidence_score', 0):.1%}"
+                                video_context += f"📜 TRANSCRIPCIÓN DEL VIDEO ({len(transcript_text)} chars):\n{transcript_text[:4000]}\n"
+                                video_context += f"\n✅ Método usado: {method}"
+                                has_real_content = True
+                            else:
+                                error_detail = transcript_result.get('error', 'Error desconocido')
+                                logger.warning(f"⚠️ Transcripción falló: {error_detail}")
                         except Exception as va_error:
-                            logger.warning(f"⚠️ VideoAnalyzerUltra falló: {va_error}")
-                    
-                    # PASO 2: Fallback directo a youtube-transcript-api
-                    if not has_real_content:
-                        logger.info("🔄 Fallback: Intentando youtube-transcript-api directamente")
-                        try:
-                            from youtube_transcript_api import YouTubeTranscriptApi
-                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match:
-                                video_id = video_id_match.group(1)
-                                logger.info(f"🎬 Video ID extraído: {video_id}")
-                                
-                                # MÉTODO 1: get_transcript directo (más robusto)
-                                try:
-                                    transcript_data = YouTubeTranscriptApi.get_transcript(
-                                        video_id, 
-                                        languages=['es', 'en', 'es-419', 'es-ES', 'en-US', 'en-GB']
-                                    )
-                                    if transcript_data:
-                                        full_text = ' '.join([e['text'] for e in transcript_data])
-                                        video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                        has_real_content = True
-                                        logger.info(f"✅ Transcripción directa obtenida (método directo): {len(full_text)} chars")
-                                except Exception as direct_err:
-                                    logger.warning(f"⚠️ Método directo falló: {direct_err}")
-                                    
-                                    # MÉTODO 2: list_transcripts (fallback del fallback)
-                                    try:
-                                        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                                        for t in transcript_list:
-                                            data = t.fetch()
-                                            full_text = ' '.join([e['text'] for e in data])
-                                            video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(full_text)} chars):\n{full_text[:3000]}\n"
-                                            has_real_content = True
-                                            logger.info(f"✅ Transcripción obtenida via list_transcripts: {len(full_text)} chars")
-                                            break
-                                    except Exception as list_err:
-                                        logger.warning(f"⚠️ list_transcripts también falló: {list_err}")
-                        except ImportError:
-                            logger.error("❌ youtube-transcript-api no está instalada")
-                        except Exception as fallback_err:
-                            logger.warning(f"⚠️ Fallback transcripción falló: {fallback_err}")
-                    
-                    # PASO 3: Fallback final con yt-dlp (más robusto)
-                    if not has_real_content:
-                        logger.info("🔧 Fallback final: Intentando yt-dlp")
-                        try:
-                            video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]+)', video_url)
-                            if video_id_match and hasattr(self, 'video_analyzer_ultra') and self.video_analyzer_ultra:
-                                video_id = video_id_match.group(1)
-                                ytdlp_transcript = self.video_analyzer_ultra._get_transcript_ytdlp(video_id)
-                                if ytdlp_transcript and len(ytdlp_transcript) > 50:
-                                    video_context += f"\n📜 TRANSCRIPCIÓN DEL VIDEO ({len(ytdlp_transcript)} chars):\n{ytdlp_transcript[:3000]}\n"
-                                    has_real_content = True
-                                    logger.info(f"✅ Transcripción yt-dlp obtenida: {len(ytdlp_transcript)} chars")
-                        except Exception as ytdlp_err:
-                            logger.warning(f"⚠️ yt-dlp también falló: {ytdlp_err}")
+                            error_detail = str(va_error)
+                            logger.error(f"❌ Error en get_transcript_robust: {va_error}")
+                    else:
+                        error_detail = "VideoAnalyzerUltra no disponible"
+                        logger.warning(f"⚠️ {error_detail}")
                     
                     if not has_real_content:
-                        video_context += "\n⚠️ No se pudo obtener la transcripción del video. Puede que tenga subtítulos deshabilitados o sea privado."
+                        video_context += f"\n⚠️ No se pudo obtener la transcripción del video.\n"
+                        video_context += f"Razón: {error_detail}\n"
+                        video_context += "El video puede tener subtítulos deshabilitados, ser privado, o estar bloqueado por región."
                     
                     video_context += f"\n\nMensaje original del usuario: {text}"
                     
-                    # PASO 3: Generar respuesta con IA usando el contexto del video
-                    logger.info(f"🧠 Enviando a IA con contexto de video: {len(video_context)} chars")
+                    logger.info(f"🧠 Enviando a IA con contexto de video: {len(video_context)} chars, tiene_contenido: {has_real_content}")
                     response_text = ""
                     try:
                         if hasattr(self.ai, 'generate_response'):
@@ -4820,14 +4621,19 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                 response_text = result
                         
                         if not response_text or not isinstance(response_text, str):
-                            response_text = f"🎬 Recibí el video pero tuve problemas procesándolo. ¿Puedes decirme qué aspecto te gustaría que analice?"
+                            if has_real_content:
+                                response_text = f"🎬 Analicé el video pero no pude generar una respuesta. La transcripción tiene {len(transcript_text)} caracteres."
+                            else:
+                                response_text = f"🎬 No pude obtener la transcripción del video.\n\n❌ {error_detail}\n\n¿Puedes compartirme de qué trata el video para ayudarte?"
                         
                         logger.info(f"✅ IA respondió al video: {len(response_text)} chars")
                     except Exception as ai_error:
                         logger.warning(f"⚠️ Error IA en video: {ai_error}")
-                        response_text = f"🎬 Hubo un error analizando el video. Por favor, intenta de nuevo."
+                        if has_real_content:
+                            response_text = f"🎬 Obtuve la transcripción del video ({len(transcript_text)} chars) pero hubo un error al analizarla. ¿Qué aspecto te gustaría que revise?"
+                        else:
+                            response_text = f"🎬 No pude procesar el video.\n\n❌ {error_detail}\n\n¿Puedes describirme de qué trata para ayudarte?"
                     
-                    # Enviar respuesta
                     data = {
                         'chat_id': chat_id,
                         'text': response_text[:4000],
