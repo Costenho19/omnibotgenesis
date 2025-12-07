@@ -70,6 +70,15 @@ except ImportError:
     VolatilityClass = None
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
+try:
+    from omnix_core.utils.logger import get_institutional_logger, InstitutionalDecisionLogger
+    INSTITUTIONAL_LOGGER_AVAILABLE = True
+    institutional_logger = get_institutional_logger()
+except ImportError:
+    INSTITUTIONAL_LOGGER_AVAILABLE = False
+    institutional_logger = None
+    logger.warning("⚠️ Institutional Decision Logger no disponible")
+
 # Import Metrics Engine (Prometheus)
 try:
     from omnix_services.monitoring import get_metrics_engine
@@ -1532,7 +1541,15 @@ class AutoTradingBot:
                     decision['reasoning_summary'] = reasoning.get('summary', '')
                     decision['reasoning_explanation'] = reasoning.get('full_explanation', '')
                     
-                    logger.info(f"🧠 Razonamiento generado: {reasoning.get('summary', '')[:100]}")
+                    # V6.5.4: Log institutional AI_NARRATIVE (post-decision, NOT decision-making)
+                    logger.info(f"🧠 AI_NARRATIVE (post-decisión): {reasoning.get('summary', '')[:100]}")
+                    if institutional_logger and decision.get('decision_id'):
+                        institutional_logger.log_ai_narrative(
+                            symbol=pair,
+                            decision_id=decision.get('decision_id'),
+                            direction=decision.get('action', 'HOLD'),
+                            explanation=reasoning.get('summary', '')
+                        )
                 except Exception as e:
                     logger.warning(f"Error generando razonamiento (no crítico): {e}")
                     decision['reasoning'] = None
@@ -1572,13 +1589,25 @@ class AutoTradingBot:
         - Detecta patrones cíclicos y coherencia de régimen
         """
         try:
+            # V6.5.4: Get symbol for institutional logging
+            symbol = self.config.get('trading_pair', 'UNKNOWN')
+            
+            # V6.5.4: Generate decision_id early for complete traceability
+            decision_id = None
+            if institutional_logger:
+                decision_id = institutional_logger._generate_decision_id(symbol)
+            
             decision = {
                 'should_trade': False,
                 'action': 'HOLD',
                 'confidence': 0.0,
                 'reason': [],
                 'v52_analysis': {},
-                'current_price': current_price
+                'current_price': current_price,
+                'symbol': symbol,
+                'decision_id': decision_id,
+                'veto_chain': [],
+                'guards_passed': []
             }
             
             score = 0  # Score de confianza (-100 a +100)
@@ -2035,11 +2064,41 @@ class AutoTradingBot:
                     majority_count = max(coherence_report.bullish_count, coherence_report.bearish_count)
                     min_majority_required = 5 if profile_name == "PAPER_OPTIMIZED" else 4
                     
+                    # V6.5.4: Log TRADE_CANDIDATE when a trade signal is generated
+                    # Uses pre-generated decision_id for complete lifecycle correlation
+                    if institutional_logger and decision.get('should_trade') and decision.get('decision_id'):
+                        institutional_logger.log_trade_candidate(
+                            symbol=decision.get('symbol', 'UNKNOWN'),
+                            direction=decision.get('action', 'HOLD'),
+                            size_usd=decision.get('amount_usd', 0),
+                            coherence_score=coherence_report.coherence_score,
+                            mc_win_rate=monte_carlo.get('win_rate', 50) if monte_carlo else 50,
+                            mc_expected_return=monte_carlo.get('expected_return', 0) if monte_carlo else 0,
+                            user_id=getattr(self, 'current_user_id', None),
+                            profile=profile_name,
+                            hmm_regime=hmm_regime.get('regime') if hmm_regime else None,
+                            volatility_class=decision.get('volatility_class'),
+                            decision_id=decision.get('decision_id')
+                        )
+                    
                     if total_signals >= 6 and majority_count < min_majority_required:
                         logger.warning(f"🚫 V6.5.4 CONSENSUS GATE: Solo {majority_count}/{total_signals} estrategias de acuerdo (mínimo {min_majority_required})")
+                        # V6.5.4: Log institutional veto
+                        if institutional_logger and decision.get('decision_id'):
+                            institutional_logger.log_veto_consensus(
+                                symbol=decision.get('symbol', 'UNKNOWN'),
+                                decision_id=decision.get('decision_id'),
+                                agreement=majority_count,
+                                total=total_signals,
+                                required=min_majority_required,
+                                direction=decision.get('action')
+                            )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚫 Consenso insuficiente: {majority_count}/{total_signals} < {min_majority_required}")
+                        decision['veto_chain'].append('CONSENSUS')
+                    else:
+                        decision['guards_passed'].append('CONSENSUS')
                     # ========== END CONSENSUS GATE ==========
                     
                     # ========== FIX INSTITUCIONAL: COHERENCIA SIN BYPASS ==========
@@ -2051,23 +2110,53 @@ class AutoTradingBot:
                     # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (SIEMPRE bloquea)
                     if coherence_report.coherence_score < veto_critical:
                         logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                        # V6.5.4: Log institutional veto
+                        if institutional_logger and decision.get('decision_id'):
+                            institutional_logger.log_veto_coherence(
+                                symbol=decision.get('symbol', 'UNKNOWN'),
+                                decision_id=decision.get('decision_id'),
+                                score=coherence_report.coherence_score,
+                                threshold=veto_critical,
+                                direction=decision.get('action')
+                            )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                        decision['veto_chain'].append('COHERENCE_CRITICAL')
                     
                     # NIVEL 1B: CRITICAL level también bloquea (sin bypass)
                     elif coherence_report.coherence_level.value == 'CRITICAL':
                         logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
+                        # V6.5.4: Log institutional veto
+                        if institutional_logger and decision.get('decision_id'):
+                            institutional_logger.log_veto_coherence(
+                                symbol=decision.get('symbol', 'UNKNOWN'),
+                                decision_id=decision.get('decision_id'),
+                                score=coherence_report.coherence_score,
+                                threshold=veto_critical,
+                                direction=decision.get('action')
+                            )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🚨 VETO CRÍTICO: Nivel CRITICAL detectado")
+                        decision['veto_chain'].append('COHERENCE_LEVEL_CRITICAL')
                     
                     # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil (SIEMPRE bloquea)
                     elif coherence_report.coherence_score < veto_normal:
                         logger.warning(f"🛑 {VERSION_BANNER} COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        # V6.5.4: Log institutional veto
+                        if institutional_logger and decision.get('decision_id'):
+                            institutional_logger.log_veto_coherence(
+                                symbol=decision.get('symbol', 'UNKNOWN'),
+                                decision_id=decision.get('decision_id'),
+                                score=coherence_report.coherence_score,
+                                threshold=veto_normal,
+                                direction=decision.get('action')
+                            )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
                         decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        decision['veto_chain'].append('COHERENCE')
                     
                     # NIVEL 3: HOLD recomendado - solo señales VERY_STRONG pueden pasar
                     elif coherence_report.decision_recommendation == 'HOLD':
@@ -2127,6 +2216,35 @@ class AutoTradingBot:
                                 f"Symbol={symbol}"
                             )
                     # ========== END CONTRADICTION MONITOR ==========
+                    
+                    # ========== V6.5.4 INSTITUTIONAL FINAL DECISION LOG ==========
+                    if institutional_logger and decision.get('decision_id'):
+                        veto_chain = decision.get('veto_chain', [])
+                        guards_passed = decision.get('guards_passed', [])
+                        dec_id = decision.get('decision_id')
+                        sym = decision.get('symbol', 'UNKNOWN')
+                        
+                        if decision.get('should_trade') and decision.get('action') in ['BUY', 'SELL'] and not veto_chain:
+                            # Trade passed all gates - add COHERENCE to guards_passed and log VALIDATED
+                            if 'COHERENCE' not in guards_passed:
+                                guards_passed.append('COHERENCE')
+                            institutional_logger.log_trade_validated(
+                                symbol=sym,
+                                decision_id=dec_id,
+                                direction=decision.get('action'),
+                                size_usd=decision.get('amount_usd', 0),
+                                guards_passed=guards_passed
+                            )
+                        elif veto_chain:
+                            # Trade rejected by one or more vetos
+                            institutional_logger.log_trade_rejected(
+                                symbol=sym,
+                                decision_id=dec_id,
+                                direction=decision.get('action', 'HOLD'),
+                                size_usd=decision.get('amount_usd', 0),
+                                veto_chain=veto_chain
+                            )
+                    # ========== END INSTITUTIONAL FINAL DECISION LOG ==========
                     
                 except Exception as e:
                     logger.error(f"❌ Error en Coherence Engine V5.4: {e}")
@@ -2191,6 +2309,17 @@ class AutoTradingBot:
                     if not can_trade:
                         # RIESGO DETECTADO
                         is_paper_mode = self.config.get('paper_mode', False)
+                        decision_id = analysis.get('decision_id')
+                        symbol = analysis.get('symbol', 'UNKNOWN')
+                        
+                        # V6.5.4: Log institutional veto
+                        if institutional_logger and decision_id:
+                            institutional_logger.log_veto_risk_guardian(
+                                symbol=symbol,
+                                decision_id=decision_id,
+                                reason=f"{risk_event.risk_type.value}: {risk_event.description}",
+                                direction=action
+                            )
                         
                         if not is_paper_mode:
                             # REAL MODE: BLOQUEAR TRADE
@@ -2619,6 +2748,19 @@ class AutoTradingBot:
                 trade_id = result.get('trade_id') or result.get('order_id', 'N/A')
                 db_status = "📦 Guardado en DB" if result.get('trade_id') else "⚠️ Sin confirmación DB"
                 logger.info(f"   💾 {VERSION_BANNER} REGISTRO: Trade #{self.state['total_trades']} | ID: {trade_id} | {db_status}")
+                
+                # V6.5.4: Log institutional TRADE_EXECUTED
+                decision_id = analysis.get('decision_id')
+                if institutional_logger and decision_id:
+                    entry_price = result.get('entry_price') or result.get('price', 0)
+                    institutional_logger.log_trade_executed(
+                        symbol=self.config['trading_pair'],
+                        decision_id=decision_id,
+                        direction=action,
+                        size_usd=amount_usd,
+                        entry_price=float(entry_price) if entry_price else 0,
+                        order_id=str(trade_id)
+                    )
                 
                 # V6.5: Verificar que el trade existe en la base de datos
                 if self.database_service and hasattr(self.database_service, 'execute_query'):
