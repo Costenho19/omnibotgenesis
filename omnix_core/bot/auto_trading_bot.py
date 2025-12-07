@@ -62,10 +62,12 @@ logger = logging.getLogger(__name__)
 from omnix_config import VERSION_BANNER
 
 try:
-    from omnix_core.config.trading_profiles import get_active_profile, TradingProfile
+    from omnix_core.config.trading_profiles import get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
     TRADING_PROFILES_AVAILABLE = False
+    get_sl_tp_for_symbol = None
+    VolatilityClass = None
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 # Import Metrics Engine (Prometheus)
@@ -1116,8 +1118,8 @@ class AutoTradingBot:
         
         # FALLBACK: Sistema básico si Position Manager no está disponible
         positions_closed = 0
-        tp_pct = self.config.get('take_profit_pct', 0.03)
-        sl_pct = self.config.get('stop_loss_pct', 0.02)
+        default_tp_pct = self.config.get('take_profit_pct', 0.03)
+        default_sl_pct = self.config.get('stop_loss_pct', 0.02)
         
         try:
             open_positions = self.paper_trading.get_open_positions(user_id)
@@ -1132,6 +1134,17 @@ class AutoTradingBot:
                 
                 if not symbol or entry_price <= 0 or quantity <= 0:
                     continue
+                
+                # V6.5.4: SL/TP diferenciado por volatilidad del par
+                if get_sl_tp_for_symbol and self.trading_profile:
+                    sl_tp_config = get_sl_tp_for_symbol(symbol, self.trading_profile)
+                    tp_pct = sl_tp_config['take_profit_pct']
+                    sl_pct = sl_tp_config['stop_loss_pct']
+                    vol_class = sl_tp_config.get('volatility_class', 'NORMAL')
+                else:
+                    tp_pct = default_tp_pct
+                    sl_pct = default_sl_pct
+                    vol_class = 'NORMAL'
                 
                 current_price = None
                 for attempt in range(3):
@@ -1152,10 +1165,10 @@ class AutoTradingBot:
                 
                 if pnl_pct >= tp_pct:
                     should_close = True
-                    close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%)"
+                    close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%) [Vol:{vol_class}]"
                 elif pnl_pct <= -sl_pct:
                     should_close = True
-                    close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%)"
+                    close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%) [Vol:{vol_class}]"
                 
                 if should_close:
                     logger.info(f"📊 Fallback TP/SL: {symbol} @ ${current_price:.2f} | {close_reason}")
