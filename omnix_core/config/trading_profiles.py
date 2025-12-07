@@ -40,6 +40,81 @@ class ProfileName(Enum):
     PAPER_OPTIMIZED = "PAPER_OPTIMIZED"
 
 
+class VolatilityClass(Enum):
+    """Clasificación de volatilidad por par"""
+    HIGH = "HIGH"
+    NORMAL = "NORMAL"
+
+
+PAIR_VOLATILITY_CLASS: Dict[str, VolatilityClass] = {
+    "DOT/USD": VolatilityClass.HIGH,
+    "DOTUSD": VolatilityClass.HIGH,
+    "AVAX/USD": VolatilityClass.HIGH,
+    "AVAXUSD": VolatilityClass.HIGH,
+    "SOL/USD": VolatilityClass.HIGH,
+    "SOLUSD": VolatilityClass.HIGH,
+    "LINK/USD": VolatilityClass.HIGH,
+    "LINKUSD": VolatilityClass.HIGH,
+    "ATOM/USD": VolatilityClass.HIGH,
+    "ATOMUSD": VolatilityClass.HIGH,
+    "POL/USD": VolatilityClass.HIGH,
+    "POLUSD": VolatilityClass.HIGH,
+    "BTC/USD": VolatilityClass.NORMAL,
+    "BTCUSD": VolatilityClass.NORMAL,
+    "XXBTZUSD": VolatilityClass.NORMAL,
+    "ETH/USD": VolatilityClass.NORMAL,
+    "ETHUSD": VolatilityClass.NORMAL,
+    "XETHZUSD": VolatilityClass.NORMAL,
+    "XRP/USD": VolatilityClass.NORMAL,
+    "XRPUSD": VolatilityClass.NORMAL,
+    "LTC/USD": VolatilityClass.NORMAL,
+    "LTCUSD": VolatilityClass.NORMAL,
+    "ADA/USD": VolatilityClass.NORMAL,
+    "ADAUSD": VolatilityClass.NORMAL,
+}
+
+
+def get_volatility_class(symbol: str) -> VolatilityClass:
+    """Obtener clasificación de volatilidad para un par"""
+    normalized = symbol.upper().replace("/", "")
+    for key, value in PAIR_VOLATILITY_CLASS.items():
+        if normalized in key.replace("/", ""):
+            return value
+    return VolatilityClass.NORMAL
+
+
+def get_sl_tp_for_symbol(symbol: str, profile: Optional['TradingProfile'] = None) -> Dict[str, Any]:
+    """
+    Obtener stop-loss y take-profit correctos para un símbolo basado en volatilidad.
+    
+    Args:
+        symbol: Par de trading (ej: DOT/USD, BTC/USD)
+        profile: Perfil de trading activo (si None, usa el activo)
+    
+    Returns:
+        Dict con 'stop_loss_pct' y 'take_profit_pct'
+    """
+    if profile is None:
+        profile = get_active_profile()
+    
+    vol_class = get_volatility_class(symbol)
+    
+    if vol_class == VolatilityClass.HIGH:
+        sl = profile.stop_loss_pct_high_vol
+        tp = profile.take_profit_pct_high_vol
+        logger.debug(f"📊 {symbol} -> HIGH volatility: SL={sl*100:.1f}%, TP={tp*100:.1f}%")
+    else:
+        sl = profile.stop_loss_pct
+        tp = profile.take_profit_pct
+        logger.debug(f"📊 {symbol} -> NORMAL volatility: SL={sl*100:.1f}%, TP={tp*100:.1f}%")
+    
+    return {
+        'stop_loss_pct': sl,
+        'take_profit_pct': tp,
+        'volatility_class': vol_class.value
+    }
+
+
 @dataclass
 class TradingProfile:
     """
@@ -54,7 +129,9 @@ class TradingProfile:
     min_trade_usd: float = 75.0
     max_position_pct: float = 0.12
     stop_loss_pct: float = 0.02
+    stop_loss_pct_high_vol: float = 0.025
     take_profit_pct: float = 0.03
+    take_profit_pct_high_vol: float = 0.035
     max_daily_loss_pct: float = 0.08
     min_confidence: float = 0.14
     check_interval_seconds: int = 25
@@ -133,7 +210,9 @@ INSTITUTIONAL_PROFILE = TradingProfile(
     min_trade_usd=75.0,
     max_position_pct=0.12,
     stop_loss_pct=0.02,
+    stop_loss_pct_high_vol=0.03,
     take_profit_pct=0.03,
+    take_profit_pct_high_vol=0.04,
     max_daily_loss_pct=0.08,
     min_confidence=0.14,
     check_interval_seconds=25,
@@ -173,7 +252,9 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
     min_trade_usd=50.0,
     max_position_pct=0.15,
     stop_loss_pct=0.025,
+    stop_loss_pct_high_vol=0.035,
     take_profit_pct=0.04,
+    take_profit_pct_high_vol=0.05,
     max_daily_loss_pct=0.12,
     min_confidence=0.10,
     check_interval_seconds=20,
@@ -212,7 +293,9 @@ BALANCED_PROFILE = TradingProfile(
     min_trade_usd=60.0,
     max_position_pct=0.13,
     stop_loss_pct=0.022,
+    stop_loss_pct_high_vol=0.032,
     take_profit_pct=0.035,
+    take_profit_pct_high_vol=0.045,
     max_daily_loss_pct=0.10,
     min_confidence=0.12,
     check_interval_seconds=22,
@@ -246,13 +329,15 @@ BALANCED_PROFILE = TradingProfile(
 PAPER_OPTIMIZED_PROFILE = TradingProfile(
     name="PAPER_OPTIMIZED",
     description="Perfil optimizado para paper trading - Diseñado para inversores. "
-                "Stop-loss ajustado (1.5%), take-profit rápido, Coherence Engine estricto (5/6). "
-                "Prioriza track record positivo sobre volumen de trades.",
+                "Stop-loss diferenciado por volatilidad (1.5% estables, 2.5% volátiles). "
+                "Coherence Engine estricto (5/6). Prioriza track record positivo.",
     
     min_trade_usd=100.0,
     max_position_pct=0.10,
     stop_loss_pct=0.015,
+    stop_loss_pct_high_vol=0.025,
     take_profit_pct=0.025,
+    take_profit_pct_high_vol=0.035,
     max_daily_loss_pct=0.05,
     min_confidence=0.18,
     check_interval_seconds=30,
