@@ -2016,6 +2016,19 @@ class AutoTradingBot:
                     profile_name = p.name if p else "HARDCODED"
                     logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
                     
+                    # ========== V6.5.4 CONSENSUS GATE - 5/6 TIERS REQUIRED ==========
+                    # Para PAPER_OPTIMIZED: Requiere mayoría clara (5+ de 6 estrategias de acuerdo)
+                    total_signals = coherence_report.bullish_count + coherence_report.bearish_count + coherence_report.neutral_count
+                    majority_count = max(coherence_report.bullish_count, coherence_report.bearish_count)
+                    min_majority_required = 5 if profile_name == "PAPER_OPTIMIZED" else 4
+                    
+                    if total_signals >= 6 and majority_count < min_majority_required:
+                        logger.warning(f"🚫 V6.5.4 CONSENSUS GATE: Solo {majority_count}/{total_signals} estrategias de acuerdo (mínimo {min_majority_required})")
+                        decision['should_trade'] = False
+                        decision['action'] = 'HOLD'
+                        decision['reason'].append(f"🚫 Consenso insuficiente: {majority_count}/{total_signals} < {min_majority_required}")
+                    # ========== END CONSENSUS GATE ==========
+                    
                     # ========== FIX INSTITUCIONAL: COHERENCIA SIN BYPASS ==========
                     # Práctica institucional: Mismas reglas para PAPER y REAL mode.
                     # Si la coherencia es baja, es baja. Punto. No se opera.

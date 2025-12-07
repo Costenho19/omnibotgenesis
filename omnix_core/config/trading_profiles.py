@@ -37,6 +37,7 @@ class ProfileName(Enum):
     INSTITUTIONAL = "INSTITUTIONAL"
     PAPER_AGGRESSIVE = "PAPER_AGGRESSIVE"
     BALANCED = "BALANCED"
+    PAPER_OPTIMIZED = "PAPER_OPTIMIZED"
 
 
 @dataclass
@@ -242,10 +243,51 @@ BALANCED_PROFILE = TradingProfile(
 )
 
 
+PAPER_OPTIMIZED_PROFILE = TradingProfile(
+    name="PAPER_OPTIMIZED",
+    description="Perfil optimizado para paper trading - Diseñado para inversores. "
+                "Stop-loss ajustado (1.5%), take-profit rápido, Coherence Engine estricto (5/6). "
+                "Prioriza track record positivo sobre volumen de trades.",
+    
+    min_trade_usd=100.0,
+    max_position_pct=0.10,
+    stop_loss_pct=0.015,
+    take_profit_pct=0.025,
+    max_daily_loss_pct=0.05,
+    min_confidence=0.18,
+    check_interval_seconds=30,
+    trades_per_day_target=15,
+    
+    coherence_veto_critical=40.0,
+    coherence_veto_normal=55.0,
+    coherence_warning=70.0,
+    coherence_good=85.0,
+    
+    ramp_up_phase1_factor=0.25,
+    ramp_up_phase2_factor=0.45,
+    ramp_up_phase3_factor=0.65,
+    ramp_up_phase4_factor=0.80,
+    ramp_up_phase1_trades=10,
+    ramp_up_phase2_trades=25,
+    ramp_up_phase3_trades=50,
+    ramp_up_phase4_trades=100,
+    
+    hmm_veto_enabled=True,
+    hmm_veto_confidence_threshold=0.80,
+    
+    score_very_strong=25,
+    score_strong=15,
+    score_moderate=8,
+    
+    regime_change_veto_enabled=True
+)
+
+
 TRADING_PROFILES: Dict[str, TradingProfile] = {
     "INSTITUTIONAL": INSTITUTIONAL_PROFILE,
     "PAPER_AGGRESSIVE": PAPER_AGGRESSIVE_PROFILE,
-    "BALANCED": BALANCED_PROFILE
+    "BALANCED": BALANCED_PROFILE,
+    "PAPER_OPTIMIZED": PAPER_OPTIMIZED_PROFILE
 }
 
 

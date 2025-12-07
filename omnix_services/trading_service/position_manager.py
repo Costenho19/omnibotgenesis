@@ -256,10 +256,10 @@ class DynamicPositionManager:
         self._position_levels: Dict[str, PositionLevels] = {}
         self._trailing_state: Dict[str, Dict] = {}
         
-        self.base_tp_multiplier = 2.5
-        self.base_sl_multiplier = 1.5
-        self.trailing_activation_atr = 1.5
-        self.break_even_activation_atr = 1.0
+        self.base_tp_multiplier = 2.0
+        self.base_sl_multiplier = 1.0
+        self.trailing_activation_atr = 1.0
+        self.break_even_activation_atr = 0.7
         
         logger.info("📊 DynamicPositionManager PREMIUM inicializado")
     
