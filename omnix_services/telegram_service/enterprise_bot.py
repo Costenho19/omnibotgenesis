@@ -7,9 +7,10 @@ Extraído de main.py para arquitectura limpia y mantenible
 import logging
 import os
 import time
+import asyncio
 import requests
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
@@ -178,6 +179,10 @@ class EnterpriseTelegramBot:
         self.is_running = False
         self.db_manager = db_manager  # MEMORIA PERSISTENTE POSTGRESQL
         self.ai = ConversationalAIService()  # SUPERINTELIGENCIA PARA HAROLD
+        
+        self._message_buffers: Dict[str, List[Dict[str, Any]]] = {}
+        self._message_timers: Dict[str, asyncio.Task] = {}
+        self._message_aggregation_delay = 1.5
         
         # 🏦 TRADING SERVICE ENTERPRISE CON FALLBACK SEGURO
         self.trading_enterprise_enabled = False
@@ -2872,24 +2877,77 @@ Ejemplo: /risk_events 48
         except:
             return None
 
+    async def _process_aggregated_messages(self, user_id: str, context):
+        """Procesar mensajes agregados después del delay de debounce"""
+        try:
+            if user_id not in self._message_buffers or not self._message_buffers[user_id]:
+                return
+            
+            buffered_messages = self._message_buffers.pop(user_id, [])
+            if user_id in self._message_timers:
+                del self._message_timers[user_id]
+            
+            if not buffered_messages:
+                return
+            
+            combined_text = " ".join([msg['text'] for msg in buffered_messages if msg.get('text')])
+            first_msg = buffered_messages[0]
+            update = first_msg['update']
+            user = first_msg['user']
+            user_name = first_msg['user_name']
+            telegram_chat_id = first_msg['telegram_chat_id']
+            
+            logger.info(f"📦 MENSAJE AGREGADO ({len(buffered_messages)} partes) de {user_name}: {combined_text[:100]}...")
+            
+            await self._process_message_content(update, context, combined_text, user, user_id, user_name, telegram_chat_id)
+            
+        except Exception as e:
+            logger.error(f"❌ Error procesando mensajes agregados: {e}")
+
     async def handle_message(self, update, context):
-        """Manejar mensajes con SUPERINTELIGENCIA + VOZ AUTOMÁTICA"""
+        """Manejar mensajes con SUPERINTELIGENCIA + VOZ AUTOMÁTICA + AGREGACIÓN"""
         try:
             user_message = update.message.text
             user = update.effective_user
             user_id = str(user.id)
             user_name = user.first_name or "Usuario"
-            # FIX Nov 29, 2025: Obtener chat_id correcto para memoria
-            telegram_chat_id = str(update.effective_chat.id)  # Distinto de user_id en grupos
+            telegram_chat_id = str(update.effective_chat.id)
             
-            # 🔍 DEBUG Nov 29: Log detallado para diagnosticar detección de YouTube
-            logger.info(f"🧠 MENSAJE RECIBIDO de {user_name} ({user_id}): {user_message}")
-            logger.info(f"🔍 DEBUG YOUTUBE: text='{user_message}', caption='{update.message.caption}'")
-            logger.info(f"🔍 DEBUG YOUTUBE: entities={update.message.entities}")
-            logger.info(f"🔍 DEBUG YOUTUBE: reply_to={update.message.reply_to_message}")
-            if update.message.reply_to_message:
-                logger.info(f"🔍 DEBUG YOUTUBE: reply_text='{update.message.reply_to_message.text}', reply_caption='{update.message.reply_to_message.caption}'")
-            logger.info(f"🎤 DEBUG: user_id='{user_id}', esperado='{settings.TELEGRAM_ADMIN_ID}', coincide={user_id == settings.TELEGRAM_ADMIN_ID}")
+            if user_id in self._message_timers:
+                self._message_timers[user_id].cancel()
+                logger.info(f"🔄 Timer cancelado para {user_name} - agregando mensaje al buffer")
+            
+            if user_id not in self._message_buffers:
+                self._message_buffers[user_id] = []
+            
+            self._message_buffers[user_id].append({
+                'text': user_message,
+                'update': update,
+                'user': user,
+                'user_name': user_name,
+                'telegram_chat_id': telegram_chat_id,
+                'timestamp': time.time()
+            })
+            
+            logger.info(f"📥 Mensaje #{len(self._message_buffers[user_id])} buffered de {user_name}: {user_message[:50]}...")
+            
+            async def delayed_process():
+                await asyncio.sleep(self._message_aggregation_delay)
+                await self._process_aggregated_messages(user_id, context)
+            
+            self._message_timers[user_id] = asyncio.create_task(delayed_process())
+            
+        except Exception as e:
+            logger.error(f"❌ Error en handle_message (agregación): {e}")
+            try:
+                await update.message.reply_text("🤖 OMNIX procesando... Sistema operativo.")
+            except:
+                pass
+
+    async def _process_message_content(self, update, context, user_message: str, user, user_id: str, user_name: str, telegram_chat_id: str):
+        """Procesar el contenido del mensaje (original o agregado)"""
+        try:
+            logger.info(f"🧠 PROCESANDO MENSAJE de {user_name} ({user_id}): {user_message[:100]}...")
             
             # ✅ FIX CRÍTICO: Garantizar que usuario existe ANTES de cualquier DB write
             # Esto previene FK constraint violations en conversations, trades, signals, etc.
@@ -3421,7 +3479,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 await update.message.reply_text(fallback_response)
             
         except Exception as e:
-            logger.error(f"❌ Error crítico handle_message: {e}")
+            logger.error(f"❌ Error crítico _process_message_content: {e}")
             try:
                 await update.message.reply_text("🤖 OMNIX procesando... Sistema operativo.")
             except:

@@ -164,6 +164,7 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 7, 2025**: Message Aggregation V6.5.4 - Fixed duplicate bot responses when user pastes long messages that Telegram splits into parts. System now buffers messages for 1.5s and combines them before processing. Location: `enterprise_bot.py` (`_message_buffers`, `_message_timers`, `_process_aggregated_messages`).
 - **Dec 7, 2025**: Contradiction Monitor V6.5.4 - New logging system to detect when Coherence Engine recommends HOLD but final decision is BUY/SELL. Logs include: coherence %, signal strength, amount, symbol. For monitoring only - does not change trading behavior. Use Railway logs to analyze patterns.
 - **Dec 7, 2025**: Premium+ Web Search V6.5.4 - Extended keyword coverage for stocks/equities. New intent triggers: "resumen", days of week, "cierre/apertura", "rendimiento". New topic keywords: "bolsa", "s&p 500", "nasdaq", "dow jones", major companies (AAPL, MSFT, NVDA), macro terms (CPI, PPI, GDP). Queries like "dame un resumen de la bolsa del viernes" now trigger web search.
 - **Dec 6, 2025**: Premium Auto Web Search V6.5.4 - Intelligent detection requires BOTH intent keywords (time-sensitive) AND topic keywords (crypto/finance). Visual indicator "🔍 Información verificada" when search provides >100 char context. Safeguards prevent over-triggering on generic questions.
