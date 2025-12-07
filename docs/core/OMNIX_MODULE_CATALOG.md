@@ -214,6 +214,7 @@ multiplier = 0.5 + 2.5 × sigmoid(confidence_score - 0.5)
 | **voice_service/** | 3 | ~500 | TTS, Whisper |
 | **user_settings/** | 3 | 693 | User preferences |
 | **concurrency/** | 4 | ~600 | Cache, resource management |
+| **web_search_service/** | 2 | ~400 | Tavily web search + intent detection |
 
 ### 2.2 Critical Modules (>1,000 lines)
 
@@ -317,6 +318,60 @@ risk_management/
 - `detect_regime()` - Market regime classification
 - `calibrate_parameters()` - Dynamic parameter adjustment
 - `get_optimal_settings()` - Regime-specific configurations
+
+---
+
+### 2.8 Web Search Service Premium+ V6.5.4
+
+**Purpose:** Real-time internet search for AI responses with intelligent intent detection.
+
+**Architecture:**
+```
+web_search_service/
+├── tavily_search.py    # ~200 lines - Tavily API client
+└── search_manager.py   # ~400 lines - Intent detection + caching
+```
+
+**Key Classes:**
+- `TavilySearchClient` - Tavily API integration (search, Q&A, context)
+- `WebSearchManager` - Caching, rate limiting, intent detection
+
+**Premium+ V6.5.4 Features:**
+
+| Feature | Description |
+|---------|-------------|
+| **Dual-Trigger Detection** | Requires BOTH intent + topic keywords to trigger search |
+| **Redis Caching** | 15-minute TTL, reduces API calls |
+| **Rate Limiting** | 30 searches/minute safeguard |
+| **Visual Indicator** | "🔍 Información verificada" banner in AI responses |
+
+**Intent Keywords (37 triggers):**
+- Time-sensitive: "hoy", "ayer", "noticias", "qué pasó", "últimas"
+- Summary: "resumen", "reporte", "análisis", "cierre", "apertura"
+- Performance: "rendimiento", "comportamiento", "returns"
+- Days of week: "lunes" through "domingo" (Spanish + English)
+- Temporal: "semana pasada", "mes pasado", "esta mañana", "anoche"
+
+**Topic Keywords (70+ triggers):**
+- **Crypto**: bitcoin, ethereum, solana, xrp, dogecoin, altcoins, memecoin
+- **Exchanges**: binance, coinbase, kraken, bybit, okx, kucoin
+- **Stock Market**: bolsa, wall street, stock market, acciones, equities
+- **US Indices**: nasdaq, nyse, s&p 500, dow jones, russell
+- **ETFs**: spy, qqq, dia, iwm, vti, voo, arkk
+- **Companies**: apple, microsoft, google, amazon, tesla, nvidia, meta
+- **Macro**: fed, cpi, ppi, gdp, unemployment, payrolls
+- **Conditions**: bull, bear, volatility, vix, fear, greed
+
+**Integration Points:**
+1. `ai_service.py` → Calls `get_search_manager().get_context_for_ai()`
+2. `enterprise_bot.py` → Displays "🔍 Información verificada" banner
+3. `redis_cache.py` → Caches search results
+
+**Example Queries that Trigger Search:**
+- "dame un resumen de la bolsa del viernes" ✅
+- "qué pasó con bitcoin hoy" ✅
+- "noticias de nvidia esta semana" ✅
+- "cómo cerró el s&p 500 ayer" ✅
 
 ---
 
