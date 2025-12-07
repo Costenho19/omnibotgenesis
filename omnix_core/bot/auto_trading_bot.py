@@ -267,6 +267,7 @@ try:
     from omnix_services.execution_service import (
         ExecutionProtocol,
         ExecutionDecision,
+        ExecutionUrgency,
         EXECUTION_SERVICE_AVAILABLE
     )
     EXECUTION_PROTOCOL_AVAILABLE = EXECUTION_SERVICE_AVAILABLE
@@ -275,6 +276,7 @@ try:
 except ImportError:
     ExecutionProtocol = None
     ExecutionDecision = None
+    ExecutionUrgency = None
     EXECUTION_PROTOCOL_AVAILABLE = False
     logger.warning("⚠️ Execution Protocol no disponible")
 
@@ -2502,6 +2504,56 @@ class AutoTradingBot:
                     # Monto es 0 o negativo - esto es intencional (Risk Guardian bloqueó)
                     logger.warning(f"⚠️ {VERSION_BANNER}: amount_usd={amount_usd} - Risk Guardian bloqueó intencionalmente")
                     return {'error': 'Trade bloqueado por Risk Guardian (amount=0)', 'blocked': True}
+            
+            # ==========  EXECUTION PROTOCOL INSTITUTIONAL+ ==========
+            # Analyze execution conditions BEFORE placing the trade
+            execution_decision = None
+            if self.execution_protocol and EXECUTION_PROTOCOL_AVAILABLE:
+                try:
+                    # Get execution analysis from the 4-layer protocol
+                    symbol = self.config['trading_pair']
+                    side = action.lower()
+                    
+                    execution_decision = self.execution_protocol.get_execution_decision(
+                        symbol=symbol,
+                        side=side,
+                        size_usd=amount_usd,
+                        urgency=ExecutionUrgency.NORMAL if ExecutionUrgency else 'normal'
+                    )
+                    
+                    # Log execution analysis
+                    if execution_decision:
+                        logger.info(f"🎯 {VERSION_BANNER} EXECUTION PROTOCOL:")
+                        logger.info(f"   📊 Style: {execution_decision.recommended_style.value}")
+                        logger.info(f"   💧 Liquidity: {execution_decision.liquidity_score:.1f}")
+                        logger.info(f"   📈 Volatility: {execution_decision.volatility_regime}")
+                        logger.info(f"   🔗 Correlation Risk: {execution_decision.correlation_risk:.1f}")
+                        logger.info(f"   ⚡ Slippage Est: {execution_decision.slippage.expected_slippage_bps:.1f} bps")
+                        logger.info(f"   🎯 Should Execute: {execution_decision.should_execute}")
+                        
+                        # Add execution metadata to analysis for investor logs
+                        analysis['execution_protocol'] = {
+                            'style': execution_decision.recommended_style.value,
+                            'liquidity_score': execution_decision.liquidity_score,
+                            'volatility': execution_decision.volatility_regime,
+                            'correlation_risk': execution_decision.correlation_risk,
+                            'contagion_risk': execution_decision.contagion_risk,
+                            'slippage_bps': execution_decision.slippage.expected_slippage_bps,
+                            'market_condition': execution_decision.market_condition.value,
+                            'should_execute': execution_decision.should_execute
+                        }
+                        
+                        # V6.5.4: If correlation risk >= 80, reduce size by 50%
+                        if execution_decision.correlation_risk >= 80:
+                            original_size = amount_usd
+                            amount_usd = amount_usd * 0.5
+                            logger.warning(f"🚨 HIGH Correlation Risk ({execution_decision.correlation_risk:.1f}): Size reduced ${original_size:.2f} → ${amount_usd:.2f}")
+                            analysis['amount_usd'] = amount_usd
+                            if 'reason' in analysis:
+                                analysis['reason'].append(f"⚠️ Execution Protocol: Size reduced 50% (correlation risk {execution_decision.correlation_risk:.0f}%)")
+                        
+                except Exception as e:
+                    logger.warning(f"⚠️ Execution Protocol analysis error (continuing): {e}")
             
             # Ejecutar según modo
             if self.config['paper_mode']:

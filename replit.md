@@ -48,6 +48,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
 -   **AI Risk Guardian V6.5.4 Hard Cap**: $20K max trade size absolute limit. min(size, MAX_LIMIT) without exceptions.
 -   **Web Search Service V6.5.4**: Real-time internet search via Tavily API. Auto-detects queries about news/events/current data. Redis cache (15min TTL), rate limiting (30/min).
+-   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level). LiquidityAnalyzer (TBLR, Order Book Depth, Hidden Liquidity), MicroVolatilityEngine (tick clustering, regime detection, asymmetric response), CrossAssetCorrelationEngine (rolling correlation, contagion risk, safe-haven flows), ExecutionProtocol orchestrator (TWAP/VWAP/ICEBERG decision matrix, slippage prediction, AI oversight).
 
 ### Multi-User Architecture V6.5.4
 
@@ -164,6 +165,7 @@ logger.info(f"[{VERSION_BANNER}] Sistema iniciado...")
 
 ## Recent Changes
 
+- **Dec 7, 2025**: Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM - New 4-layer institutional-grade trade execution system. Components: LiquidityAnalyzer (TBLR metrics, order book depth, hidden liquidity detection), MicroVolatilityEngine (tick clustering, regime detection, asymmetric response), CrossAssetCorrelationEngine (rolling correlation matrix, contagion risk, safe-haven flows), ExecutionProtocol orchestrator (TWAP/VWAP/ICEBERG decision matrix, slippage prediction). Location: `omnix_services/execution_service/`. Integrated with AutoTradingBot.
 - **Dec 7, 2025**: Message Aggregation V6.5.4 - Fixed duplicate bot responses when user pastes long messages that Telegram splits into parts. System now buffers messages for 1.5s and combines them before processing. Location: `enterprise_bot.py` (`_message_buffers`, `_message_timers`, `_process_aggregated_messages`).
 - **Dec 7, 2025**: Contradiction Monitor V6.5.4 - New logging system to detect when Coherence Engine recommends HOLD but final decision is BUY/SELL. Logs include: coherence %, signal strength, amount, symbol. For monitoring only - does not change trading behavior. Use Railway logs to analyze patterns.
 - **Dec 7, 2025**: Premium+ Web Search V6.5.4 - Extended keyword coverage for stocks/equities. New intent triggers: "resumen", days of week, "cierre/apertura", "rendimiento". New topic keywords: "bolsa", "s&p 500", "nasdaq", "dow jones", major companies (AAPL, MSFT, NVDA), macro terms (CPI, PPI, GDP). Queries like "dame un resumen de la bolsa del viernes" now trigger web search.

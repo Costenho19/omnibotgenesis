@@ -44,10 +44,11 @@ except ImportError as e:
     logger.warning(f"CrossAssetCorrelationEngine not available: {e}")
 
 try:
-    from .execution_protocol import ExecutionProtocol, ExecutionDecision
+    from .execution_protocol import ExecutionProtocol, ExecutionDecision, ExecutionUrgency
     EXECUTION_PROTOCOL_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"ExecutionProtocol not available: {e}")
+    ExecutionUrgency = None
 
 EXECUTION_SERVICE_AVAILABLE = (
     LIQUIDITY_AVAILABLE or 
@@ -69,6 +70,7 @@ __all__ = [
     'CrossAssetCorrelationEngine',
     'ExecutionProtocol',
     'ExecutionDecision',
+    'ExecutionUrgency',
     'EXECUTION_SERVICE_AVAILABLE',
     'LIQUIDITY_AVAILABLE',
     'MICRO_VOLATILITY_AVAILABLE',
