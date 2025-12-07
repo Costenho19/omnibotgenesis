@@ -41,17 +41,46 @@ SEARCH_INTENT_KEYWORDS = [
     "subió", "bajó", "cayó", "dropped", "rose", "fell", "crashed", "pumped",
     "rally", "dump", "pump", "crash",
     "halving", "etf", "aprobación", "approval",
-    "elon musk", "trump", "biden", "powell", "gensler"
+    "elon musk", "trump", "biden", "powell", "gensler",
+    # V6.5.4 Premium+ - Summary and report triggers
+    "resumen", "summary", "reporte", "report", "análisis", "analysis",
+    "cierre", "close", "apertura", "open", "sesión", "session",
+    "comportamiento", "performance", "rendimiento", "returns",
+    # V6.5.4 Premium+ - Days of week (temporal context)
+    "lunes", "monday", "martes", "tuesday", "miércoles", "wednesday",
+    "jueves", "thursday", "viernes", "friday", "sábado", "saturday", "domingo", "sunday",
+    "semana pasada", "last week", "mes pasado", "last month",
+    "esta mañana", "this morning", "anoche", "last night"
 ]
 
 CRYPTO_FINANCE_KEYWORDS = [
-    "bitcoin", "btc", "ethereum", "eth", "crypto", "criptomoneda",
+    # Crypto assets
+    "bitcoin", "btc", "ethereum", "eth", "crypto", "criptomoneda", "criptomonedas",
     "solana", "sol", "xrp", "ripple", "dogecoin", "doge", "cardano", "ada",
+    "avalanche", "avax", "polkadot", "dot", "chainlink", "link", "polygon", "matic",
+    "litecoin", "ltc", "cosmos", "atom", "altcoin", "altcoins", "memecoin",
+    # Exchanges & platforms
+    "binance", "coinbase", "kraken", "ftx", "gemini", "bybit", "okx", "kucoin",
+    # Stock market - US
+    "bolsa", "bolsa de valores", "stock market", "wall street",
+    "nasdaq", "nyse", "s&p", "s&p 500", "dow jones", "dow", "russell",
+    "acciones", "stocks", "equities", "equity", "acción",
+    # Stock market - Indices & ETFs
+    "spy", "qqq", "dia", "iwm", "vti", "voo", "arkk",
+    "índice", "index", "indices", "futures", "futuros",
+    # Sectors & companies
+    "tech", "tecnología", "tecnológicas", "financieras", "bancarias",
+    "apple", "aapl", "microsoft", "msft", "google", "googl", "amazon", "amzn",
+    "tesla", "tsla", "nvidia", "nvda", "meta", "netflix", "nflx",
+    # Macro & regulators
     "fed", "federal reserve", "powell", "sec", "regulación", "regulation",
-    "etf", "blackrock", "grayscale", "binance", "coinbase", "kraken",
+    "etf", "blackrock", "grayscale", "vanguard", "fidelity",
     "mercado", "market", "trading", "inversión", "investment",
-    "inflación", "inflation", "tasas", "rates", "interest",
-    "acciones", "stocks", "nasdaq", "s&p", "dow jones"
+    "inflación", "inflation", "tasas", "rates", "interest", "cpi", "ppi",
+    "gdp", "pib", "unemployment", "desempleo", "jobs", "empleos", "nóminas", "payrolls",
+    # Market conditions
+    "bull", "bear", "bullish", "bearish", "alcista", "bajista",
+    "volatilidad", "volatility", "vix", "fear", "greed", "miedo", "codicia"
 ]
 
 
