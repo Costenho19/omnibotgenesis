@@ -15,7 +15,7 @@
 
 | Component | Description |
 |-----------|-------------|
-| **12+ AI Strategies** | Monte Carlo, HMM, Kalman Filter, Non-Markovian Memory, ARES V1/V2 working in consensus |
+| **10 Core AI Strategies + 6 Support Modules** | Monte Carlo, HMM, Kalman Filter, Non-Markovian Memory, ARES V1/V2 + Risk Guardian, Coherence Engine, etc. |
 | **6-Tier Coherence Engine** | Validates every trade decision across all strategies before execution |
 | **InstitutionalDecisionLogger V6.5.4** | Audit trail compatible with Grafana/Loki/ELK - 11 lifecycle events per trade |
 | **Execution Protocol PREMIUM** | Citadel/Jump Trading-level execution (TWAP/VWAP/ICEBERG) |
@@ -55,6 +55,21 @@
 | **InstitutionalMetricsCalculator** | Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide |
 | **PDF Report Generator** | 989-line institutional PDF with Monte Carlo projections (10,000 real iterations) |
 | **Dual Dashboard Architecture** | Flask API (port 5000) + Streamlit investor visualization (port 8080) |
+
+---
+
+### USER EXPERIENCE & INTERACTION
+
+| Feature | Description |
+|---------|-------------|
+| **40+ Telegram Commands** | Complete trading functionality via simple commands (/precio, /paper_buy, /analisis) |
+| **Interactive Button Menu** | One-click navigation without memorizing commands |
+| **Voice Responses** | AI replies with audio messages for hands-free operation |
+| **Real-Time Web Search** | `/buscar` command searches internet for latest news via Tavily |
+| **Price Alerts** | Custom notifications when prices hit target levels |
+| **5 Risk Profiles** | Ultraconservador → Institucional - one command to switch |
+| **Community Intelligence** | Feedback system with gamified points and leaderboards |
+| **Sharia Compliance Check** | `/sharia [crypto]` for Islamic finance verification |
 
 ---
 

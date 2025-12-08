@@ -82,7 +82,7 @@ Risk Guardian Reviews → Execution Protocol Executes → Logger Records
 
 ### 3.1 Core Trading Strategies (Signal Generators)
 
-These 10 strategies generate signals that are weighted and scored:
+These 10 core strategies generate signals that are weighted and scored:
 
 | # | Strategy | Type | Purpose | Role in Scoring |
 |---|----------|------|---------|-----------------|
@@ -537,6 +537,32 @@ WHERE status = 'CLOSED';
 - **Branching:** main (production), develop (testing)
 - **Deployments:** Railway auto-deploy from main
 - **Audit:** Git history preserved indefinitely
+
+### 10.5 User Interface & Accessibility
+
+OMNIX provides multiple interaction methods for end-users:
+
+| Interface | Description | Audit Logging |
+|-----------|-------------|---------------|
+| **Telegram Bot** | Primary user interface with 40+ commands | All commands logged |
+| **Interactive Menus** | Button-based navigation (no typing required) | Callback actions logged |
+| **Voice Responses** | AI audio replies for accessibility | Response events logged |
+| **Web Search** | Real-time internet search via `/buscar` | Search queries logged |
+| **Dashboards** | Flask API + Streamlit visualization | Access logged |
+
+**Command Categories:**
+- Market Data (8 commands): `/precio`, `/market`, `/balance`, etc.
+- Paper Trading (5 commands): `/paper_start`, `/paper_buy`, `/paper_sell`, etc.
+- Stock Trading (6 commands): `/analizar`, `/comprar_bolsa`, etc.
+- Advanced Analysis (7 commands): `/montecarlo`, `/blackswan`, `/sentiment`, etc.
+- Configuration (8 commands): `/miconfig`, `/perfil`, `/limites`, etc.
+- Community (5 commands): `/feedback`, `/community_stats`, etc.
+
+**Community Intelligence System:**
+- Users can report strategy performance via `/feedback`
+- Gamified point system rewards contributions
+- Leaderboard ranks top contributors
+- Collective wisdom improves strategy calibration
 
 ---
 
