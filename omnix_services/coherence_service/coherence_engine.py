@@ -613,7 +613,7 @@ class CoherenceEngine:
                 was_correct = False
                 if outcome == 'profit' and signal_value > 0:
                     was_correct = True
-                elif outcome == 'loss' and signal_value < 0:
+                elif outcome == 'profit' and signal_value < 0:
                     was_correct = True
                     
                 if was_correct:
@@ -630,14 +630,42 @@ class CoherenceEngine:
                 base_weight = self.strategy_weights.get(name, 0.1)
                 raw_weights[name] = hit_rate * pnl_factor * base_weight
         
-        clamped = {name: max(min_weight, min(max_weight, w)) 
-                   for name, w in raw_weights.items()}
-        
-        total = sum(clamped.values())
+        total = sum(raw_weights.values())
         if total > 0:
-            calibrated = {name: round(w / total, 4) for name, w in clamped.items()}
+            normalized = {name: w / total for name, w in raw_weights.items()}
         else:
+            normalized = self.strategy_weights.copy()
+        
+        n = len(normalized)
+        min_sum = n * min_weight
+        max_sum = n * max_weight
+        
+        if min_sum > 1.0 or max_sum < 1.0:
+            logger.warning(f"⚠️ Infeasible bounds: {n} strategies with [{min_weight}, {max_weight}] cannot sum to 1.0")
             calibrated = self.strategy_weights.copy()
+        else:
+            result = {name: max(min_weight, min(max_weight, w)) for name, w in normalized.items()}
+            
+            for _ in range(50):
+                current_sum = sum(result.values())
+                if abs(current_sum - 1.0) < 0.0001:
+                    break
+                    
+                delta = 1.0 - current_sum
+                if delta > 0:
+                    adjustable = [n for n in result if result[n] < max_weight - 0.0001]
+                else:
+                    adjustable = [n for n in result if result[n] > min_weight + 0.0001]
+                
+                if not adjustable:
+                    break
+                    
+                per_item = delta / len(adjustable)
+                for name in adjustable:
+                    new_val = result[name] + per_item
+                    result[name] = max(min_weight, min(max_weight, new_val))
+            
+            calibrated = {name: round(w, 4) for name, w in result.items()}
         
         logger.info("🔧 Calibrated Coherence Engine weights:")
         for name, weight in sorted(calibrated.items(), key=lambda x: -x[1]):
