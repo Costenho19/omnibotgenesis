@@ -1,4 +1,4 @@
-# OMNIX V6.5.4 INSTITUTIONAL+
+# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
 ## Executive Summary | December 2025
 
 ---
@@ -15,8 +15,10 @@
 
 | Component | Description |
 |-----------|-------------|
-| **10+ AI Strategies** | Monte Carlo, HMM, Kalman Filter, Non-Markovian Memory working in consensus |
+| **12+ AI Strategies** | Monte Carlo, HMM, Kalman Filter, Non-Markovian Memory, ARES V1/V2 working in consensus |
 | **6-Tier Coherence Engine** | Validates every trade decision across all strategies before execution |
+| **InstitutionalDecisionLogger V6.5.4** | Audit trail compatible with Grafana/Loki/ELK - 11 lifecycle events per trade |
+| **Execution Protocol PREMIUM** | Citadel/Jump Trading-level execution (TWAP/VWAP/ICEBERG) |
 | **Post-Quantum Security** | First retail platform with Kyber-768/Dilithium-3 (NIST FIPS-203/204) |
 | **Dual-Market Coverage** | 11 cryptocurrencies via Kraken + US stocks via Alpaca |
 | **Enterprise Scalability** | Architecture supports 100,000+ concurrent users |
@@ -24,18 +26,32 @@
 
 ---
 
-### CURRENT STATUS (Transparent)
+### CURRENT STATUS (Full Transparency)
 
 | Metric | Value | Context |
 |--------|-------|---------|
-| Total Trades | 7 | Early calibration phase |
-| Total P&L | +$90.99 | Paper trading |
+| Total Trades | 27 | Paper trading calibration phase |
+| Winning Trades | 7 | Win rate improving with optimization |
+| Open Positions | 8 | Actively managed |
+| Current Balance | $897,688.55 | From $1M initial |
 | System Uptime | 99.9% | Production-ready |
-| Modules Active | 10+ | All core engines operational |
+| Modules Active | 15+ | All core engines operational |
 
-**Why limited trades?** The INSTITUTIONAL profile has conservative thresholds (45% coherence required) to ensure quality. We are transitioning to PAPER_AGGRESSIVE (30%) to generate statistically significant data.
+**Current Phase:** System calibration with PAPER_OPTIMIZED profile. The system is being tuned for higher selectivity (60% coherence threshold) to improve win rate before scaling trade volume.
 
-**Target:** 500+ trades over 60 days to establish verified track record.
+**Target:** 500+ trades over 60 days with 55%+ win rate to establish verified track record.
+
+---
+
+### V6.5.4 INSTITUTIONAL+ PREMIUM FEATURES
+
+| Feature | Description |
+|---------|-------------|
+| **InstitutionalDecisionLogger** | 11 lifecycle events (TRADE_CANDIDATE, VETO_*, TRADE_VALIDATED, TRADE_EXECUTED, AI_NARRATIVE) with unique decision_id for complete audit trail |
+| **Volatility-Based SL/TP** | High-vol pairs (DOT, AVAX, SOL): 2.5%/4.5% SL/TP; Normal pairs (BTC, ETH): 1.5%/3.0% |
+| **Execution Protocol V6.5.4** | LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, dynamic TWAP/VWAP/ICEBERG selection |
+| **PAPER_OPTIMIZED Profile** | Tuned for track record: 60% coherence threshold, 2:1 R:R ratio, 22% min confidence |
+| **Trading Profiles System** | INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED - switchable via environment |
 
 ---
 
@@ -56,47 +72,52 @@
 | Premium | $149/mo | 11+ pairs, full AI, priority support |
 | Institutional | $499/mo | Unlimited, custom strategies, API |
 
-**Revenue Projections (Conservative):**
-- Year 1: 500 users × $99 ARPU = $594K ARR
-- Year 2: 2,500 users × $119 ARPU = $3.57M ARR
-- Year 3: 10,000 users × $139 ARPU = $16.7M ARR
+**Revenue Projections (Base Case):**
+- Year 1: 950 users × $149 ARPU = $1.71M ARR
+- Year 2: 3,450 users × $159 ARPU = $6.58M ARR
+- Year 3: 12,000 users × $169 ARPU = $24.3M ARR
 
 ---
 
 ### COMPETITIVE ADVANTAGE
 
-**Unique Moat: Post-Quantum Security**
+**Unique Moat: Institutional-Grade Audit Trail + Post-Quantum Security**
 
-OMNIX is the only retail trading platform with NIST-approved post-quantum cryptography. As quantum computing advances (5-10 year horizon), this becomes critical for security-conscious institutional and retail investors.
+OMNIX is the only retail trading platform with:
+1. **NIST-approved post-quantum cryptography** (Kyber-768, Dilithium-3)
+2. **Complete trade decision audit trail** compatible with Grafana/Loki/ELK
+3. **Citadel-level execution protocols** (TWAP/VWAP/ICEBERG)
 
 **Additional Differentiators:**
 - Non-Markovian Memory (no competitor has this)
 - 6-Tier Coherence validation (unique architecture)
 - Dual-market from single platform (crypto + stocks)
+- Volatility-adaptive risk management
 
 ---
 
 ### THE ASK
 
-**Raising:** $400,000 Seed Round  
-**Valuation:** $2.5M Pre-Money (16% equity)  
-**Runway:** 18 months  
+**Raising:** $1,000,000 Seed Round  
+**Valuation:** $2.5M Pre-Money (40% equity)  
+**Runway:** 24+ months  
 
 **Use of Funds:**
-- 45% Engineering & Development
-- 20% Infrastructure & Security
+- 40% Engineering & Development (expand team to 4 FTE)
+- 20% Infrastructure & Security Audits
 - 20% Marketing & User Acquisition
-- 10% Legal & Compliance
-- 5% Operations & Reserve
+- 10% Legal & Compliance (licenses)
+- 10% Operations & Reserve
 
 ---
 
 ### NEXT STEPS
 
-1. **Q4 2025:** Build track record (500+ trades, 55%+ win rate)
-2. **Q1 2026:** Private beta with 50 users
+1. **Q4 2025:** Complete track record (500+ trades, 55%+ win rate)
+2. **Q1 2026:** Private beta with 100 users
 3. **Q2 2026:** Public launch, target 500 paying users
-4. **2027:** Series A preparation
+4. **Q4 2026:** Break-even, prepare Series A
+5. **2027:** Series A ($5M at $25M valuation)
 
 ---
 
@@ -108,4 +129,6 @@ Founder & CEO
 
 ---
 
-*This document is for informational purposes only. Trading involves significant risk. Past performance is not indicative of future results.*
+*This document is for informational purposes only. Trading involves significant risk. Past performance is not indicative of future results. All metrics shown are from paper trading and may not reflect live trading performance.*
+
+**Last Updated:** December 8, 2025

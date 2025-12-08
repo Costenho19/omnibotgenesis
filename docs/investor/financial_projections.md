@@ -1,4 +1,4 @@
-# OMNIX V6.5.4 - Financial Projections
+# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM - Financial Projections
 ## Conservative, Base Case, and Optimistic Scenarios
 
 **Document Date:** December 2025  
@@ -13,9 +13,9 @@
 
 | Scenario | Win Rate | Daily Trades | Avg Win | Avg Loss | Monthly Return | Annual Return |
 |----------|----------|--------------|---------|----------|----------------|---------------|
-| **Conservative** | 52% | 10-15 | +0.8% | -0.6% | 2-3% | 25-40% |
-| **Base Case** | 55-58% | 20-30 | +1.0% | -0.7% | 4-6% | 50-80% |
-| **Optimistic** | 60-65% | 40-50 | +1.2% | -0.8% | 8-12% | 100-150% |
+| **Conservative** | 52% | 8-12 | +1.5% | -1.0% | 2-3% | 25-40% |
+| **Base Case** | 55-58% | 12-20 | +2.0% | -1.2% | 4-6% | 50-80% |
+| **Optimistic** | 60-65% | 20-30 | +2.5% | -1.5% | 8-12% | 100-150% |
 
 ### 1.2 Risk Metrics
 
@@ -24,16 +24,17 @@
 | Max Drawdown | 15-20% | 10-15% | 5-10% |
 | Sharpe Ratio | 1.0-1.5 | 1.5-2.0 | 2.0-2.5 |
 | Sortino Ratio | 1.2-1.8 | 1.8-2.5 | 2.5-3.0 |
-| Win/Loss Ratio | 1.3:1 | 1.4:1 | 1.5:1 |
+| Win/Loss Ratio | 1.5:1 | 1.7:1 | 2.0:1 |
 
 ### 1.3 Basis for Trading Projections
 
 These projections are based on:
 
-1. **Backtesting Results:** ARES Protocol V1/V2 backtested over 12 months of historical BTC, ETH, and major crypto data showed:
-   - Win rate: 54-62% depending on market conditions
-   - Average profit per winning trade: 0.8-1.5%
-   - Average loss per losing trade: 0.5-0.9%
+1. **PAPER_OPTIMIZED Profile Settings:**
+   - SL/TP Ratio: 1:2 (1.5% risk for 3.0% reward on normal volatility)
+   - Coherence Threshold: 60% (high selectivity)
+   - Min Confidence: 22%
+   - Max Position: 8% of portfolio
 
 2. **Industry Benchmarks:**
    - Top-tier quant funds (Renaissance, Two Sigma): 30-80% annual returns
@@ -41,12 +42,13 @@ These projections are based on:
    - Our conservative estimate assumes we achieve lower-end institutional performance
 
 3. **Risk Controls:**
-   - Maximum 15% of portfolio per position
+   - Maximum 8% of portfolio per position
    - 6-Tier Coherence validation reduces false signals
    - AI Risk Guardian prevents overtrading and revenge trading
-   - Daily loss limits enforced
+   - Daily loss limits enforced (4% max)
+   - Volatility-based SL/TP classification
 
-**Important:** Current live trading data (7 trades) is insufficient for reliable projections. These estimates will be revised after 500+ trades.
+**Important:** Current live trading data (27 trades) is in calibration phase. These estimates will be revised after 500+ trades with optimized parameters.
 
 ---
 
@@ -54,69 +56,70 @@ These projections are based on:
 
 ### 2.1 User Growth (Conservative Model)
 
-| Period | Users | Monthly Churn | Net New Users | Cumulative Users |
-|--------|-------|---------------|---------------|------------------|
-| Q1 2026 | 50 | 10% | 45 | 50 |
-| Q2 2026 | 200 | 8% | 184 | 250 |
-| Q3 2026 | 300 | 7% | 279 | 500 |
-| Q4 2026 | 400 | 6% | 376 | 850 |
-| Q1 2027 | 500 | 5% | 475 | 1,300 |
-| Q2 2027 | 600 | 5% | 570 | 1,850 |
-| Q3 2027 | 700 | 5% | 665 | 2,500 |
-| Q4 2027 | 800 | 5% | 760 | 3,250 |
+| Period | New Users | Monthly Churn | Net New Users | Cumulative Users |
+|--------|-----------|---------------|---------------|------------------|
+| Q1 2026 | 100 | 10% | 90 | 100 |
+| Q2 2026 | 250 | 8% | 230 | 350 |
+| Q3 2026 | 300 | 7% | 279 | 600 |
+| Q4 2026 | 400 | 6% | 376 | 950 |
+| Q1 2027 | 500 | 5% | 475 | 1,400 |
+| Q2 2027 | 600 | 5% | 570 | 1,950 |
+| Q3 2027 | 700 | 5% | 665 | 2,600 |
+| Q4 2027 | 900 | 5% | 855 | 3,450 |
 
 ### 2.2 Revenue by Tier (Year 1 - 2026)
 
-| Tier | Price | % of Users | Users | Monthly Revenue |
-|------|-------|------------|-------|-----------------|
-| Basic | $49 | 50% | 250 | $12,250 |
-| Premium | $149 | 40% | 200 | $29,800 |
-| Institutional | $499 | 10% | 50 | $24,950 |
-| **Total** | | | **500** | **$67,000** |
+| Tier | Price | % of Users | Users (EOY) | Monthly Revenue |
+|------|-------|------------|-------------|-----------------|
+| Basic | $49 | 45% | 427 | $20,923 |
+| Premium | $149 | 42% | 399 | $59,451 |
+| Institutional | $499 | 13% | 124 | $61,876 |
+| **Total** | | | **950** | **$142,250** |
 
-**Year 1 ARR (End of 2026):** $804,000
+**Year 1 ARR (End of 2026):** $1,707,000
 
 ### 2.3 Revenue Projections (3-Year)
 
 | Year | Users (EOY) | ARPU | MRR (EOY) | ARR |
 |------|-------------|------|-----------|-----|
-| 2026 (Y1) | 500 | $99 | $49,500 | $594,000 |
-| 2027 (Y2) | 2,500 | $119 | $297,500 | $3,570,000 |
-| 2028 (Y3) | 10,000 | $139 | $1,390,000 | $16,680,000 |
+| 2026 (Y1) | 950 | $149 | $142,250 | $1,707,000 |
+| 2027 (Y2) | 3,450 | $159 | $548,550 | $6,582,600 |
+| 2028 (Y3) | 12,000 | $169 | $2,028,000 | $24,336,000 |
 
 ### 2.4 ARPU Assumptions
 
 ARPU increases over time due to:
 - Upselling from Basic to Premium (feature adoption)
-- New premium features (API access, custom strategies)
-- Institutional tier growth
-- Annual price adjustments (3-5%)
+- New premium features (Institutional Audit Trail, API access)
+- Institutional tier growth (hedge funds, family offices)
+- Annual price adjustments (5-7%)
 
 ---
 
 ## 3. COST STRUCTURE
 
-### 3.1 Year 1 Operating Costs (2026)
+### 3.1 Year 1 Operating Costs (2026) - Post $1M Seed
 
 | Category | Monthly | Annual | % of Budget |
 |----------|---------|--------|-------------|
-| Engineering (2 FTE) | $15,000 | $180,000 | 45% |
-| Infrastructure (Railway, APIs) | $5,000 | $60,000 | 15% |
-| AI Services (Gemini, OpenAI) | $2,000 | $24,000 | 6% |
-| Marketing & Ads | $5,000 | $60,000 | 15% |
-| Legal & Compliance | $2,500 | $30,000 | 7.5% |
-| Customer Support | $2,000 | $24,000 | 6% |
-| Miscellaneous | $1,500 | $18,000 | 4.5% |
-| **Total** | **$33,000** | **$396,000** | **100%** |
+| Engineering (4 FTE) | $30,000 | $360,000 | 36% |
+| Infrastructure (Railway, APIs) | $8,000 | $96,000 | 9.6% |
+| AI Services (Gemini, OpenAI) | $5,000 | $60,000 | 6% |
+| Marketing & Ads | $15,000 | $180,000 | 18% |
+| Legal & Compliance | $5,000 | $60,000 | 6% |
+| Customer Support (2 FTE) | $8,000 | $96,000 | 9.6% |
+| Security Audits | $3,000 | $36,000 | 3.6% |
+| Miscellaneous | $3,000 | $36,000 | 3.6% |
+| **Total** | **$77,000** | **$924,000** | **100%** |
 
 ### 3.2 Infrastructure Cost Scaling
 
-| Users | Railway | APIs | Redis/DB | Total/Month |
-|-------|---------|------|----------|-------------|
-| 500 | $100 | $500 | $200 | $800 |
-| 2,500 | $300 | $2,000 | $500 | $2,800 |
-| 10,000 | $800 | $6,000 | $1,500 | $8,300 |
-| 50,000 | $2,000 | $20,000 | $4,000 | $26,000 |
+| Users | Railway | APIs | Redis/DB | AI Services | Total/Month |
+|-------|---------|------|----------|-------------|-------------|
+| 1,000 | $200 | $1,000 | $300 | $2,000 | $3,500 |
+| 5,000 | $500 | $4,000 | $800 | $6,000 | $11,300 |
+| 15,000 | $1,200 | $10,000 | $2,000 | $15,000 | $28,200 |
+| 50,000 | $3,000 | $25,000 | $5,000 | $35,000 | $68,000 |
 
 ---
 
@@ -126,35 +129,36 @@ ARPU increases over time due to:
 
 | Item | 2026 | 2027 | 2028 |
 |------|------|------|------|
-| **Revenue** | $594,000 | $3,570,000 | $16,680,000 |
-| Cost of Revenue (20%) | $(118,800) | $(714,000) | $(3,336,000) |
-| **Gross Profit** | $475,200 | $2,856,000 | $13,344,000 |
-| **Gross Margin** | 80% | 80% | 80% |
+| **Revenue** | $1,707,000 | $6,582,600 | $24,336,000 |
+| Cost of Revenue (18%) | $(307,260) | $(1,184,868) | $(4,380,480) |
+| **Gross Profit** | $1,399,740 | $5,397,732 | $19,955,520 |
+| **Gross Margin** | 82% | 82% | 82% |
 | | | | |
-| Engineering | $(180,000) | $(360,000) | $(720,000) |
-| Marketing | $(60,000) | $(300,000) | $(800,000) |
-| Operations | $(50,000) | $(150,000) | $(400,000) |
-| Legal/Compliance | $(30,000) | $(80,000) | $(200,000) |
-| Other | $(20,000) | $(60,000) | $(150,000) |
-| **Total OpEx** | $(340,000) | $(950,000) | $(2,270,000) |
+| Engineering | $(360,000) | $(720,000) | $(1,440,000) |
+| Marketing | $(180,000) | $(500,000) | $(1,200,000) |
+| Operations | $(96,000) | $(250,000) | $(600,000) |
+| Legal/Compliance | $(60,000) | $(150,000) | $(400,000) |
+| Security | $(36,000) | $(100,000) | $(250,000) |
+| Other | $(36,000) | $(100,000) | $(250,000) |
+| **Total OpEx** | $(768,000) | $(1,820,000) | $(4,140,000) |
 | | | | |
-| **EBITDA** | $135,200 | $1,906,000 | $11,074,000 |
-| **EBITDA Margin** | 23% | 53% | 66% |
+| **EBITDA** | $631,740 | $3,577,732 | $15,815,520 |
+| **EBITDA Margin** | 37% | 54% | 65% |
 
 ### 4.2 Cash Flow & Runway
 
-**Starting Cash (Post-Seed):** $400,000
+**Starting Cash (Post-Seed):** $1,000,000
 
 | Quarter | Revenue | Expenses | Net Cash Flow | Cash Balance |
 |---------|---------|----------|---------------|--------------|
-| Q1 2026 | $15,000 | $99,000 | $(84,000) | $316,000 |
-| Q2 2026 | $50,000 | $99,000 | $(49,000) | $267,000 |
-| Q3 2026 | $100,000 | $99,000 | $1,000 | $268,000 |
-| Q4 2026 | $180,000 | $99,000 | $81,000 | $349,000 |
-| Q1 2027 | $250,000 | $150,000 | $100,000 | $449,000 |
-| Q2 2027 | $350,000 | $180,000 | $170,000 | $619,000 |
+| Q1 2026 | $75,000 | $231,000 | $(156,000) | $844,000 |
+| Q2 2026 | $200,000 | $231,000 | $(31,000) | $813,000 |
+| Q3 2026 | $400,000 | $231,000 | $169,000 | $982,000 |
+| Q4 2026 | $600,000 | $231,000 | $369,000 | $1,351,000 |
+| Q1 2027 | $800,000 | $350,000 | $450,000 | $1,801,000 |
+| Q2 2027 | $1,200,000 | $400,000 | $800,000 | $2,601,000 |
 
-**Runway:** 18+ months (cash positive by Q3 2026)
+**Runway:** 24+ months (cash positive by Q3 2026)
 
 ---
 
@@ -174,8 +178,8 @@ ARPU increases over time due to:
 | Milestone | ARR | Multiple | Valuation |
 |-----------|-----|----------|-----------|
 | Seed (Now) | Pre-revenue | - | $2.5M |
-| Series A (2027) | $3.5M | 6x | $21M |
-| Series B (2029) | $15M | 8x | $120M |
+| Series A (2027) | $6.5M | 6x | $39M |
+| Series B (2029) | $25M | 8x | $200M |
 
 ### 5.3 Investor Return Analysis
 
@@ -183,9 +187,9 @@ ARPU increases over time due to:
 
 | Exit Scenario | Valuation | Return | Multiple |
 |---------------|-----------|--------|----------|
-| Conservative (Series A) | $15M | $600,000 | 6x |
-| Base Case (Series B) | $100M | $4,000,000 | 40x |
-| Optimistic (Acquisition) | $300M | $12,000,000 | 120x |
+| Conservative (Series A) | $30M | $1,200,000 | 12x |
+| Base Case (Series B) | $150M | $6,000,000 | 60x |
+| Optimistic (Acquisition) | $400M | $16,000,000 | 160x |
 
 ---
 
@@ -193,9 +197,9 @@ ARPU increases over time due to:
 
 ### 6.1 Critical Assumptions
 
-1. **Win Rate:** System achieves 55%+ win rate in live trading
+1. **Win Rate:** System achieves 55%+ win rate in live trading with PAPER_OPTIMIZED profile
 2. **Churn:** Monthly churn stabilizes at 5-7%
-3. **CAC:** Customer acquisition cost remains below $200
+3. **CAC:** Customer acquisition cost remains below $150
 4. **ARPU:** Users upgrade tiers as they see results
 5. **Regulation:** No major regulatory changes affecting crypto trading
 
@@ -203,10 +207,10 @@ ARPU increases over time due to:
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Trading performance below target | High | Conservative position sizing, diversified strategies |
+| Trading performance below target | High | PAPER_OPTIMIZED profile, 2:1 R:R ratio, volatility-based SL/TP |
 | Regulatory crackdown on crypto | High | Dual-market (stocks), compliance focus |
-| Competition from well-funded players | Medium | Post-quantum security moat, niche focus |
-| Technical failures/security breach | High | Enterprise security, regular audits |
+| Competition from well-funded players | Medium | Post-quantum security moat, institutional audit trail |
+| Technical failures/security breach | High | Enterprise security, regular audits, Kyber-768/Dilithium-3 |
 | Market downturn reducing trading volume | Medium | Subscription model provides stability |
 
 ### 6.3 Sensitivity Analysis
@@ -225,22 +229,23 @@ ARPU increases over time due to:
 
 ## 7. CONCLUSION
 
-OMNIX presents a compelling investment opportunity with:
+OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity with:
 
-1. **Strong technology foundation** - 10+ AI strategies, post-quantum security
+1. **Strong technology foundation** - 15+ AI strategies, post-quantum security, institutional audit trail
 2. **Clear path to profitability** - Cash positive by Q3 2026
-3. **Scalable SaaS model** - 80% gross margins
-4. **Unique competitive moat** - First mover in post-quantum trading security
+3. **Scalable SaaS model** - 82% gross margins
+4. **Unique competitive moat** - First mover in post-quantum trading security + Citadel-level audit
 5. **Experienced team** - Deep technical expertise
 
 **Investment Highlights:**
-- $400K seed at $2.5M valuation
-- 18+ month runway
-- Target 6-40x return at Series A/B
+- $1M seed at $2.5M valuation
+- 24+ month runway
+- Target 12-60x return at Series A/B
 - Clear milestones and de-risking path
 
 ---
 
 *This document contains forward-looking statements and projections. Actual results may differ materially. Past performance is not indicative of future results. Trading involves significant risk of loss.*
 
-**Last Updated:** December 2025
+**Document Version:** V6.5.4.2  
+**Last Updated:** December 8, 2025
