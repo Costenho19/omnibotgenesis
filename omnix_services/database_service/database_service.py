@@ -133,8 +133,8 @@ class DatabaseServiceEnterprise:
                     try:
                         from omnix_config.env_manager import env_config
                         redis_url = env_config.get('REDIS_URL', 'redis://localhost:6379')
-                    except:
-                        redis_url = 'redis://localhost:6379'
+                    except Exception:
+                        redis_url = os.environ.get('REDIS_URL', 'redis://shinkansen.proxy.rlwy.net:32595')
                 self.redis_client = redis.from_url(redis_url, decode_responses=True)
             except Exception as e:
                 logger.warning(f"Redis no disponible para cleanup tracking: {e}")
@@ -300,15 +300,15 @@ class DatabaseServiceEnterprise:
             if conn:
                 try:
                     conn.rollback()
-                except:
-                    pass
+                except Exception:
+                    logger.debug("Rollback failed during error handling")
             raise
         finally:
             if conn:
                 try:
                     conn.close()
-                except:
-                    pass
+                except Exception:
+                    logger.debug("Connection close failed")
     
     def _get_connection(self):
         """
@@ -1166,16 +1166,15 @@ class DatabaseServiceEnterprise:
                     ON CONFLICT (migration_name) DO NOTHING
                 """, (migration_name, migration_hash))
                 conn.commit()
-            except:
-                pass
+            except Exception:
+                logger.debug("Failed to log migration failure")
             
             conn.rollback()
             
-            # Liberar lock si se adquirió
             try:
                 cursor.execute("SELECT pg_advisory_unlock(999888777)")
-            except:
-                pass
+            except Exception:
+                logger.debug("Failed to release advisory lock")
         
         finally:
             conn.close()

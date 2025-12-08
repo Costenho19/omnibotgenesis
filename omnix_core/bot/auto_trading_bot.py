@@ -3255,11 +3255,11 @@ class AutoTradingBot:
                     # Kraken devuelve 'ZUSD' (formato Kraken) o 'USD'
                     usd_balance = float(balance.get('ZUSD', balance.get('USD', 0)))
                     
-                    print(f"💰 Balance detectado: ${usd_balance:.2f} (Kraken data: {balance})")
+                    logger.info(f"💰 Balance detectado: ${usd_balance:.2f} (Kraken data: {balance})")
                     return usd_balance
                 return 0.0
         except Exception as e:
-            print(f"❌ ERROR obteniendo balance: {e}")
+            logger.error(f"❌ ERROR obteniendo balance: {e}")
             return 0.0
     
     def _get_price_history(self, pair: str, days: int = 100) -> Optional[List[float]]:
@@ -3270,7 +3270,8 @@ class AutoTradingBot:
                 if ohlc and len(ohlc) > 0:
                     return [float(candle[4]) for candle in ohlc[-days:]]
             return None
-        except:
+        except Exception as e:
+            logger.debug(f"Error getting price history for {pair}: {e}")
             return None
     
     def _get_volume_history(self, pair: str, days: int = 100) -> Optional[List[float]]:
@@ -3281,7 +3282,8 @@ class AutoTradingBot:
                 if ohlc and len(ohlc) > 0:
                     return [float(candle[6]) for candle in ohlc[-days:]]
             return None
-        except:
+        except Exception as e:
+            logger.debug(f"Error getting volume history for {pair}: {e}")
             return None
     
     def _get_ohlc_history(self, pair: str, days: int = 100) -> Optional[Dict[str, List[float]]]:

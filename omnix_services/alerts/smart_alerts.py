@@ -278,8 +278,8 @@ class SmartAlertEngine:
                 ticker = self.trading.kraken.get_ticker(pair)
                 if ticker:
                     return float(ticker.get('last', 0))
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Error getting price for {pair}: {e}")
         return None
     
     def _calculate_rsi(self, pair: str, period: int = 14) -> Optional[float]:
@@ -312,7 +312,8 @@ class SmartAlertEngine:
             rsi = 100 - (100 / (1 + rs))
             
             return rsi
-        except:
+        except Exception as e:
+            logger.debug(f"Error calculating RSI for {pair}: {e}")
             return None
     
     def _calculate_volatility(self, pair: str) -> Optional[float]:
@@ -333,7 +334,8 @@ class SmartAlertEngine:
             volatility = statistics.stdev(returns) if len(returns) > 1 else 0
             
             return volatility
-        except:
+        except Exception as e:
+            logger.debug(f"Error calculating volatility for {pair}: {e}")
             return None
     
     def _get_price_history(self, pair: str, days: int = 30) -> Optional[List[float]]:
@@ -343,8 +345,8 @@ class SmartAlertEngine:
                 ohlc = self.trading.kraken.get_ohlc(pair, interval=1440)  # Daily
                 if ohlc and len(ohlc) > 0:
                     return [float(candle[4]) for candle in ohlc[-days:]]  # Close prices
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Error getting price history for {pair}: {e}")
         return None
     
     def get_status(self) -> Dict:

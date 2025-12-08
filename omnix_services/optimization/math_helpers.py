@@ -74,7 +74,8 @@ class MathematicalOptimizer:
                 'sharpe_ratio': sharpe_ratio,
                 'optimization_confidence': 0.85
             }
-        except:
+        except Exception as e:
+            logging.getLogger(__name__).debug(f"Portfolio optimization error: {e}")
             return {'optimal_weights': {}, 'expected_return': 0, 'risk': 0, 'sharpe_ratio': 0}
 
 

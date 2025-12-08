@@ -41,10 +41,10 @@ def create_app():
             'https://*.railway.app',
             'https://*.up.railway.app', 
             'https://*.replit.dev',
-            'https://*.repl.co',
-            'http://localhost:5000',
-            'http://127.0.0.1:5000'
+            'https://*.repl.co'
         ]
+        if not IS_RAILWAY:
+            ALLOWED_ORIGINS.extend(['http://localhost:5000', 'http://127.0.0.1:5000'])
     CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
     
     DASHBOARD_API_KEY = os.environ.get('DASHBOARD_API_KEY')
