@@ -101,6 +101,7 @@ omnix_services/ai_service/
 │   ├── style_renderer.py # StyleRendererProtocol
 │   └── context_provider.py
 ├── providers/            # Concrete AI implementations
+│   ├── base_provider.py  # Abstract base with type-safe async generators
 │   ├── gemini_provider.py
 │   ├── openai_provider.py
 │   ├── anthropic_provider.py
@@ -108,8 +109,23 @@ omnix_services/ai_service/
 ├── adapters/             # Legacy compatibility
 │   └── legacy_adapter.py
 ├── testing/              # Mock implementations
-│   └── fakes.py
+│   └── fakes.py          # FakeAIGateway, TestAIServiceContainer
 └── container.py          # DI container (dependency-injector)
+```
+
+**Type Safety Pattern (Conditional SDKs):**
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sdk import Client  # IDE type hints only
+
+try:
+    from sdk import Client
+    SDK_AVAILABLE = True
+except ImportError:
+    Client = None
+    SDK_AVAILABLE = False
 ```
 
 **Usage (New - Recommended):**

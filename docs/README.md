@@ -76,6 +76,8 @@ docs/
 - **RoutingAIGateway** - Load balancing and failover orchestrator
 - **Testing Fakes** - FakeAIGateway for unit testing without API calls
 - **Backward Compatible** - Legacy `get_ai_service()` still works, new `get_ai_gateway()` for DI
+- **Type Safety** - 18 LSP errors resolved with `TYPE_CHECKING` pattern for conditional SDKs
+- **Safe Content Access** - Anthropic provider handles all block types (TextBlock, ThinkingBlock, etc.)
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity

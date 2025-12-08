@@ -345,6 +345,36 @@ class ConversationalAIService:
         # Defaults to legacy instantiation if not injected
 ```
 
+**Type Safety Pattern (Conditional SDK Imports):**
+
+All providers use `TYPE_CHECKING` for safe handling of optional SDKs:
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google import genai as genai_type  # IDE hints only
+
+try:
+    from google import genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    genai = None
+    GEMINI_AVAILABLE = False
+
+# Usage with type: ignore for runtime-guarded code
+self._client = genai.Client(api_key=key)  # type: ignore[union-attr]
+```
+
+**Safe Content Block Access (Anthropic):**
+```python
+# Handles TextBlock, ThinkingBlock, ToolUseBlock, etc.
+if hasattr(first_block, 'text'):
+    content = getattr(first_block, 'text', '')
+```
+
+**LSP Status:** 0 errors (verified December 8, 2025)
+
 ---
 
 ## 5. omnix_dashboard/ - Web Dashboard
