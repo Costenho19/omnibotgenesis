@@ -2,7 +2,7 @@
 
 ## Overview
 
-OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record (500+ trades, 55%+ win rate) for investor presentations, targeting **$1M seed funding at $11.5M pre-money valuation** from UAE/GCC investors. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -34,125 +34,62 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Core Engines
 
--   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, V6.5.4 position limit early-check.
+-   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, position limit early-check.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
--   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent thresholds (30%/45%) for trade quality and win rate > 55%.
--   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs with proper Kraken symbol mapping.
--   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading. Hard cap of $20K max trade size.
--   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization, Markowitz and Black-Litterman models, dynamic position sizing.
--   **Derivatives Trading Module**: Paper/real trading modes, MarginEngine, KrakenFuturesClient, HedgingService.
--   **Stock Trading Premium V6.3 ULTRA**: 9 active institutional modules: Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, Earnings Protector.
--   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibration for ARES strategies based on market regime.
--   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using sigmoid aggression function. Caps: 0.5x-3.0x multiplier with safety limits, without artificial bias.
+-   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent thresholds for trade quality and win rate > 55%.
+-   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs.
+-   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading, with a hard cap of $20K max trade size.
+-   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization using Markowitz and Black-Litterman models, with dynamic position sizing.
+-   **Derivatives Trading Module**: Supports paper/real trading modes, including MarginEngine, KrakenFuturesClient, and HedgingService.
+-   **Stock Trading Premium V6.3 ULTRA**: Incorporates 9 institutional modules including Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
+-   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibrates ARES strategies based on market regime.
+-   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using a sigmoid aggression function.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
--   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate contrarian and extreme fear boosts.
--   **Web Search Service V6.5.4**: Real-time internet search via Tavily API. Auto-detects queries about news/events/current data. Redis cache (15min TTL), rate limiting (30/min).
--   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and ExecutionProtocol orchestrator for dynamic decision-making (TWAP/VWAP/ICEBERG).
--   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions. Emits structured JSON events (TRADE_CANDIDATE, VETO_COHERENCE, VETO_CONSENSUS, VETO_DRAWDOWN, VETO_RISK_GUARDIAN, VETO_HMM_REGIME, VETO_POSITION_LIMIT, TRADE_VALIDATED, TRADE_EXECUTED, TRADE_REJECTED, AI_NARRATIVE) with unique decision_id for lifecycle correlation. Compatible with Grafana/Loki/ELK. Located in `omnix_core/utils/logger.py`.
--   **Volatility-Based SL/TP Classification V6.5.4**: High-volatility pairs (DOT, AVAX, SOL, LINK, ATOM, POL) use 2.5%/4.5% SL/TP; normal-volatility pairs (BTC, ETH, XRP, LTC, ADA) use 1.5%/3.0%. Function `get_sl_tp_for_symbol()` in AutoTradingBot fallback.
--   **InstitutionalMetricsCalculator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_metrics.py`): Sharpe, Sortino, Calmar ratios calculated per-pair and portfolio-wide. Industry-standard risk-adjusted metrics for UAE/GCC investor presentations.
--   **InstitutionalReportGenerator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_report.py`): PDF report generator with professional formatting for investors. Includes executive summary, risk metrics, per-pair analysis, and calibration details.
--   **Streamlit Dashboard V6.5.4 PREMIUM** (`omnix_dashboard/streamlit_app.py`): Interactive investor dashboard with Plotly charts, real-time metrics visualization, and performance grade display.
+-   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate boosts.
+-   **Web Search Service V6.5.4**: Real-time internet search via Tavily API with Redis caching and rate limiting.
+-   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and an ExecutionProtocol orchestrator for dynamic decision-making.
+-   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions, emitting structured JSON events for various trade lifecycle stages.
+-   **Volatility-Based SL/TP Classification V6.5.4**: Differentiates Stop Loss/Take Profit percentages based on crypto pair volatility.
+-   **InstitutionalMetricsCalculator V6.5.4 PREMIUM**: Calculates Sharpe, Sortino, and Calmar ratios per-pair and portfolio-wide for investor presentations.
+-   **InstitutionalReportGenerator V6.5.4 PREMIUM**: Generates professional PDF reports for investors.
+-   **Streamlit Dashboard V6.5.4 PREMIUM**: Interactive investor dashboard with Plotly charts, real-time metrics, and performance grading.
 
 ### Multi-User Architecture V6.5.4
 
 -   Supports 100,000+ simultaneous users with isolated trading sessions.
--   Utilizes Redis for fast state management and PostgreSQL for persistence.
--   Employs ThreadPoolExecutor for parallel processing and per-user locks for thread safety.
+-   Uses Redis for fast state management and PostgreSQL for persistence.
+-   Employs ThreadPoolExecutor for parallel processing and per-user locks.
 
 ### Dashboard Architecture (V6.5.4 PREMIUM)
 
--   **Flask Dashboard** (port 5000): Primary API and web terminal for operations
-    - `/api/metrics/institutional`: Portfolio-wide and per-pair Sharpe/Sortino/Calmar
-    - `/api/report/pdf`: Professional PDF report for investor presentations
-    - `/api/system/calibration`: WIN_RATE_OPTIMIZED profile calibration data
-    - All standard endpoints for health, trades, market data, signals
--   **Streamlit Dashboard** (port 8080): Interactive investor visualization
-    - Consumes Flask API via `OmnixAPIClient` class
-    - Dark theme with Plotly charts
-    - Performance grade display (A/B/C/D based on Sharpe)
-    - Per-pair analysis tables
--   **API Client** (`omnix_dashboard/api_client.py`): Service-to-service communication
-    - Configurable base URL via `OMNIX_API_URL` environment variable
-    - Defaults to `http://localhost:5000` for local development
+-   **Flask Dashboard** (port 5000): Primary API and web terminal, providing endpoints for metrics, reports, system calibration, and standard market data.
+-   **Streamlit Dashboard** (port 8080): Interactive investor visualization consuming the Flask API, featuring a dark theme, Plotly charts, performance grades, and per-pair analysis.
+-   **API Client**: Service-to-service communication via `OmnixAPIClient`, configurable by environment variable.
 
 ### Trading Profiles System
 
--   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED) to switch between conservative and aggressive settings for trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
--   **WIN_RATE_OPTIMIZED V2 PREMIUM (Dec 8, 2025)**: Institutional-grade profile with per-pair calibration. Trades BTC/USD, XRP/USD, ADA/USD, LINK/USD. Uses `PairCalibration` system with tiers (PROVEN/CALIBRATING/EXCLUDED). Differentiated SL/TP per symbol: BTC/XRP (1.2%/3.5%), ADA (0.9%/2.0%), LINK (1.0%/2.5%). Max position sizing: BTC $50K, XRP $40K, LINK $30K, ADA $25K. Portfolio weights: BTC 40%, XRP 30%, ADA 15%, LINK 15%. **Circuit Breaker por par**: BTC/XRP max 2% drawdown diario, ADA/LINK max 1%. Check interval 15s. Set `TRADING_PROFILE=WIN_RATE_OPTIMIZED` in Railway to activate.
+-   Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, WIN_RATE_OPTIMIZED) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
+-   **WIN_RATE_OPTIMIZED V2 PREMIUM**: Institutional-grade profile with per-pair calibration for specific cryptocurrencies, differentiated SL/TP, max position sizing, portfolio weights, and per-pair daily drawdown circuit breakers.
 
 ### Migration Tools (V6.5.4 Premium)
 
--   **Migration Watchdog** (`scripts/migration_watchdog.py`): Closes orphan positions in excluded symbols before profile switch. Modes: `analyze`, `execute`, `force`.
--   **Migration Test Suite** (`scripts/test_migration.py`): Automated verification of profile config, symbol filters, and no orphan positions.
--   **Symbol Filter**: Blocks trades in non-allowed symbols. Logs JSON events for audit trail.
+-   **Migration Watchdog**: Closes orphan positions in excluded symbols before profile switches.
+-   **Migration Test Suite**: Automated verification of profile configurations.
+-   **Symbol Filter**: Blocks trades in non-allowed symbols.
 -   **Premium Observability**: Structured JSON logs for SL/TP triggers with Prometheus metrics.
 
 ### AI Service Architecture (SOLID + Dependency Injection)
 
-The `omnix_services/ai_service/` module has been refactored following SOLID principles and dependency injection patterns:
+The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection, supporting multiple AI providers via a unified interface, ensuring type safety and modularity.
 
-**Directory Structure:**
-```
-omnix_services/ai_service/
-├── interfaces/           # Protocol definitions (PEP 544)
-│   ├── ai_gateway.py     # AIGatewayProtocol for text generation
-│   ├── prompt_builder.py # PromptBuilderProtocol
-│   ├── style_renderer.py # StyleRendererProtocol
-│   └── context_provider.py
-├── providers/            # Concrete AI implementations
-│   ├── base_provider.py  # Abstract base with type-safe async generators
-│   ├── gemini_provider.py
-│   ├── openai_provider.py
-│   ├── anthropic_provider.py
-│   └── routing_gateway.py  # Load balancing + failover
-├── adapters/             # Legacy compatibility
-│   └── legacy_adapter.py
-├── testing/              # Mock implementations
-│   └── fakes.py          # FakeAIGateway, TestAIServiceContainer
-└── container.py          # DI container (dependency-injector)
-```
+### Web Search Service Architecture
 
-**Type Safety Pattern (Conditional SDKs):**
-```python
-from typing import TYPE_CHECKING
+The `omnix_services/web_search_service/` is structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and `TavilySearch` client. The `IntentDetector` identifies if a message requires a web search based on keywords.
 
-if TYPE_CHECKING:
-    from sdk import Client  # IDE type hints only
+### Video Analyzer Utilities
 
-try:
-    from sdk import Client
-    SDK_AVAILABLE = True
-except ImportError:
-    Client = None
-    SDK_AVAILABLE = False
-```
-
-**Usage (New - Recommended):**
-```python
-from omnix_services.ai_service import get_ai_gateway, TextGenerationRequest
-gateway = get_ai_gateway()
-response = await gateway.generate_text(TextGenerationRequest(prompt="..."))
-```
-
-**Usage (Legacy - Backward Compatible):**
-```python
-from omnix_services.ai_service import get_ai_service
-service = get_ai_service()
-response = await service.generate_response(chat_id, message)
-```
-
-**SOLID Compliance:**
-- **S**: Each provider has single responsibility (one AI model)
-- **O**: New providers added without modifying existing code
-- **L**: Any provider is interchangeable via Protocol
-- **I**: Small, focused interfaces
-- **D**: High-level modules depend on abstractions (AIGatewayProtocol)
-
-### Architecture Modernization V7.0 (In Progress)
-
--   AI Service module refactored with SOLID + DI (completed Dec 8, 2025).
--   Remaining modules planned for gradual migration to Hexagonal Architecture.
+-   **parse_vision_json()**: Centralized JSON parsing for Vision API responses, handling markdown code blocks.
+-   **CHART_ANALYSIS_PROMPT**: Shared prompt constant for chart analysis across Vision APIs.
 
 ## External Dependencies
 
@@ -174,25 +111,3 @@ response = await service.generate_response(chat_id, message)
 
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
-
-## Recent Changes (December 8, 2025)
-
-### Panel Premium V6.5.4 Updates
-
--   **InstitutionalMetricsCalculator** (`omnix_services/analytics/institutional_metrics.py`): Sharpe, Sortino, Calmar ratios calculated per-pair and portfolio-wide using daily equity curves. Industry-standard risk-adjusted metrics for UAE/GCC investor presentations.
--   **Monte Carlo Real Simulation**: 10,000 numpy iterations per horizon (30/90/180 days) for PDF reports - genuine stochastic simulation, not static calculations.
--   **PDF Report Generator** (`omnix_services/analytics/institutional_report.py`): 989-line institutional PDF with 6 sections: cover, benchmarks, Monte Carlo projections, team/governance, roadmap 2026, architecture.
--   **Centralized Finnhub Service**: `/api/news` now uses centralized `finnhub_service` pattern - eliminates 422/429 API errors and provides consistent key handling.
--   **OmnixAPIClient Separation**: Complete service isolation enforced - Streamlit consumes Flask API exclusively via `OmnixAPIClient`, no direct backend imports.
--   **Streamlit Sidebar**: Replaced placeholder image with styled gradient text "OMNIX V6.5.4".
--   **Type Safety**: Fixed Optional type annotations in `api_client.py` and `institutional_report.py` - 0 LSP errors.
-
-### System Audit Status
-
-| Component | Status |
-|-----------|--------|
-| Flask Dashboard (5000) | 12/12 widgets OK |
-| PostgreSQL | 42 tables, 27 real trades |
-| PDF Generation | 13.6 KB output verified |
-| API Endpoints | All 200 OK |
-| Browser Console | No errors (Tailwind CDN warning only) |
