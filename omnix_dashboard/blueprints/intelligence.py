@@ -60,29 +60,41 @@ def _get_alpha_vantage_service():
 
 @intelligence_bp.route('/api/news')
 def api_news():
-    """API endpoint for financial news"""
-    url = 'https://api.coingecko.com/api/v3/news'
-    data = http_get_with_timeout(url, headers={'accept': 'application/json'}, timeout=10, fallback=None)
-    
-    if data and data.get('data'):
-        raw_news = data.get('data', [])[:10]
-        news = []
-        for item in raw_news:
-            news.append({
-                'title': item.get('title', ''),
-                'description': item.get('description', '')[:150] + '...' if item.get('description') else '',
-                'url': item.get('url', ''),
-                'source': item.get('news_site', 'CoinGecko'),
-                'published': item.get('created_at', ''),
-                'category': 'crypto'
-            })
+    """API endpoint for financial news via centralized Finnhub service"""
+    try:
+        finnhub_service = _get_finnhub_service()
         
-        return jsonify({
-            'success': True,
-            'news': news,
-            'source': 'CoinGecko News',
-            'timestamp': datetime.now().isoformat()
-        })
+        if finnhub_service and finnhub_service.is_available():
+            raw_news = finnhub_service.get_general_news('crypto')
+            
+            if raw_news and len(raw_news) > 0:
+                news = []
+                for item in raw_news[:10]:
+                    dt = item.get('datetime')
+                    if isinstance(dt, datetime):
+                        published = dt.isoformat()
+                    elif isinstance(dt, (int, float)):
+                        published = datetime.fromtimestamp(dt).isoformat()
+                    else:
+                        published = ''
+                    
+                    news.append({
+                        'title': item.get('headline', ''),
+                        'description': item.get('summary', '')[:150] + '...' if item.get('summary') else '',
+                        'url': item.get('url', ''),
+                        'source': item.get('source', 'Finnhub'),
+                        'published': published,
+                        'category': 'crypto'
+                    })
+                
+                return jsonify({
+                    'success': True,
+                    'news': news,
+                    'source': 'Finnhub News',
+                    'timestamp': datetime.now().isoformat()
+                })
+    except Exception as e:
+        logger.warning(f"Finnhub service error in /api/news: {e}")
     
     news = [
         {
