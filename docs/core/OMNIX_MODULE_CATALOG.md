@@ -3,9 +3,10 @@
 > **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
 > See VERSION_BANNER for the authoritative version string.
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Created:** December 6, 2025  
-**Status:** ✅ COMPLETE - Exhaustive Module Inventory
+**Last Updated:** December 8, 2025  
+**Status:** ✅ COMPLETE - Exhaustive Module Inventory (AI Service DI Added)
 
 ---
 
@@ -223,7 +224,7 @@ multiplier = 0.5 + 2.5 × sigmoid(confidence_score - 0.5)
 | **database_service/** | 4 | 4,860 | PostgreSQL operations |
 | **telegram_service/** | 5 | 7,654 | Telegram bot interface |
 | **trading_service/** | 15 | ~4,500 | Trade execution, analysis |
-| **ai_service/** | 13 | ~4,200 | Multi-AI integration |
+| **ai_service/** | 21 | ~5,500 | Multi-AI integration (SOLID + DI refactored Dec 8, 2025) |
 | **monitoring/** | 5 | ~3,600 | Metrics, Risk Guardian |
 | **risk_management/** | 8 | ~3,200 | Limits, alerts, circuit breaker |
 | **derivatives/** | 7 | ~4,100 | Futures, margin, hedging |
@@ -243,6 +244,82 @@ multiplier = 0.5 + 2.5 × sigmoid(confidence_score - 0.5)
 | **user_settings/** | 3 | 693 | User preferences |
 | **concurrency/** | 4 | ~600 | Cache, resource management |
 | **web_search_service/** | 2 | ~400 | Tavily web search + intent detection |
+
+### 2.3 AI Service Architecture (SOLID + Dependency Injection)
+
+**Refactored:** December 8, 2025  
+**Pattern:** Hexagonal Architecture with Ports & Adapters
+
+The AI Service module has been fully refactored following SOLID principles with dependency injection:
+
+```
+omnix_services/ai_service/
+├── interfaces/               # Protocol definitions (PEP 544)
+│   ├── __init__.py
+│   ├── ai_gateway.py         # AIGatewayProtocol, TextGenerationRequest/Response
+│   ├── prompt_builder.py     # PromptBuilderProtocol
+│   ├── style_renderer.py     # StyleRendererProtocol
+│   └── context_provider.py   # ContextProviderProtocol
+├── providers/                # Concrete AI implementations
+│   ├── __init__.py
+│   ├── gemini_provider.py    # GeminiAIGateway (Primary)
+│   ├── openai_provider.py    # OpenAIGateway (Fallback)
+│   ├── anthropic_provider.py # AnthropicGateway (Fallback)
+│   └── routing_gateway.py    # RoutingAIGateway (load balancing + failover)
+├── adapters/                 # Legacy compatibility
+│   └── legacy_adapter.py     # LegacyAIServiceAdapter
+├── testing/                  # Mock implementations for unit tests
+│   └── fakes.py              # FakeAIGateway, InMemoryContextProvider
+├── container.py              # AIServiceContainer (dependency-injector library)
+├── ai_service.py             # ConversationalAIService (DI-enabled)
+├── ai_models.py              # AIModelsManager
+├── ai_styles.py              # VisualStylesManager
+├── ai_prompts.py             # PromptsContextManager
+└── __init__.py               # Public API exports
+```
+
+**Key Interfaces (Protocols):**
+
+| Interface | Purpose | Methods |
+|-----------|---------|---------|
+| `AIGatewayProtocol` | Text generation contract | `generate_text()`, `generate_stream()`, `health_check()` |
+| `PromptBuilderProtocol` | System prompt construction | `build_system_prompt()`, `build_context_prompt()` |
+| `StyleRendererProtocol` | Visual formatting | `render_response()`, `format_error()` |
+| `ContextProviderProtocol` | Trading context | `get_market_context()`, `get_trading_context()` |
+
+**Provider Implementations:**
+
+| Provider | Model | Priority | Features |
+|----------|-------|----------|----------|
+| `GeminiAIGateway` | Gemini 2.0 Flash | Primary | Streaming, async |
+| `OpenAIGateway` | GPT-4o | Fallback 1 | Streaming, async |
+| `AnthropicGateway` | Claude 3.5 | Fallback 2 | Streaming, async |
+| `RoutingAIGateway` | All | Orchestrator | Load balancing, automatic failover |
+
+**Usage Examples:**
+
+```python
+# New DI-based API (Recommended)
+from omnix_services.ai_service import get_ai_gateway, TextGenerationRequest
+gateway = get_ai_gateway()
+response = await gateway.generate_text(TextGenerationRequest(prompt="Analyze BTC"))
+
+# Legacy API (Backward Compatible)
+from omnix_services.ai_service import get_ai_service
+service = get_ai_service()
+response = await service.generate_response(chat_id, message)
+
+# Testing with Fakes
+from omnix_services.ai_service.testing import FakeAIGateway
+fake_gateway = FakeAIGateway(responses={"default": "Mocked response"})
+```
+
+**SOLID Compliance:**
+- **S (Single Responsibility)**: Each provider handles exactly one AI model
+- **O (Open/Closed)**: New providers added without modifying existing code
+- **L (Liskov Substitution)**: Any provider interchangeable via Protocol
+- **I (Interface Segregation)**: Small, focused interfaces
+- **D (Dependency Inversion)**: High-level modules depend on abstractions
 
 ### 2.2 Critical Modules (>1,000 lines)
 

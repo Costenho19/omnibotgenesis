@@ -1,7 +1,7 @@
 # OMNIX V6.5.4 INSTITUTIONAL+ Documentation Index
 
 **Version:** V6.5.4 INSTITUTIONAL+  
-**Last Updated:** December 2025
+**Last Updated:** December 8, 2025
 
 ---
 
@@ -11,6 +11,8 @@
 |----------|----------|-------------|
 | **Project Overview** | `/replit.md` | Main project documentation |
 | **Technical Reference** | `docs/core/Omnix_TECHNICAL_REFERENCE.md` | Complete architecture, modules, dependencies |
+| **Module Catalog** | `docs/core/OMNIX_MODULE_CATALOG.md` | Exhaustive module inventory |
+| **Architecture Refactoring** | `docs/core/ARCHITECTURE_REFACTORING_CHECKLIST.md` | V7.0 modernization roadmap (AI Service completed) |
 | **Database Reference** | `docs/core/DATABASE_AUDIT_REPORT.md` | Schema, SQL statements, audit & FK analysis |
 | **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | API, security, and architecture reference |
 | **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
@@ -66,6 +68,14 @@ docs/
 - **Dual Dashboard Architecture** - Flask API (port 5000) + Streamlit investor visualization (port 8080)
 - **OmnixAPIClient** - Complete service isolation (Streamlit consumes Flask API exclusively)
 - **Centralized Finnhub Service** - Eliminates 422/429 API errors with consistent key handling
+
+### AI Service Modernization (Dec 8, 2025)
+- **SOLID + Dependency Injection** - AI Service refactored with `dependency-injector` library
+- **Protocol-based Interfaces** - PEP 544 Protocols for AIGateway, PromptBuilder, StyleRenderer
+- **Multi-Provider Support** - GeminiAIGateway (primary), OpenAIGateway, AnthropicGateway with automatic failover
+- **RoutingAIGateway** - Load balancing and failover orchestrator
+- **Testing Fakes** - FakeAIGateway for unit testing without API calls
+- **Backward Compatible** - Legacy `get_ai_service()` still works, new `get_ai_gateway()` for DI
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity
@@ -152,6 +162,7 @@ docs/
 
 | Version | Date | Key Features |
 |---------|------|--------------|
+| V6.5.4 | Dec 8, 2025 | AI Service SOLID/DI Refactoring, Protocol-based Interfaces |
 | V6.5.4 | Dec 2025 | Database Audit, Audited Snapshots, Table Consolidation |
 | V6.5.4 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
 | V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |

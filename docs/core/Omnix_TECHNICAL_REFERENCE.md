@@ -3,10 +3,10 @@
 > **Version Control**: Current system version is defined in `omnix_config/settings.py`. 
 > See VERSION_BANNER for the authoritative version string.
 
-**Document Version:** 3.0  
+**Document Version:** 3.1  
 **Created:** December 4, 2025  
-**Last Updated:** December 6, 2025  
-**Status:** ✅ COMPLETE (Full Module Audit)
+**Last Updated:** December 8, 2025  
+**Status:** ✅ COMPLETE (Full Module Audit + AI Service DI Refactoring)
 
 **Related Documents:**
 - [OMNIX_MODULE_CATALOG.md](OMNIX_MODULE_CATALOG.md) - Complete module inventory
@@ -203,7 +203,7 @@ K(t-s) = exp(-|t-s|/τ) × [1 + ε × cos(Ω(t-s))]
 |------------|-------|-----------|---------------------|--------------|
 | **database_service/** | 4 | 4,818 | `DatabaseGateway`, `DatabaseManager`, `DatabaseServiceEnterprise` | psycopg, psycopg_pool |
 | **trading_service/** | 15 | ~4,500 | `TradingServiceEnterprise`, `KrakenAPIClient`, `MonteCarloSimulator` | ccxt, requests |
-| **ai_service/** | 13 | ~4,200 | `ConversationalBrain` (622), `VideoLearningAnalyzer` (1,086) | google-generativeai, openai |
+| **ai_service/** | 21 | ~5,500 | `AIGatewayProtocol`, `RoutingAIGateway`, `ConversationalAIService` | google-genai, openai, anthropic, dependency-injector |
 | **telegram_service/** | 5 | 7,627 | `EnterpriseTelegramBot` (7,627), `CallbackHandler` (793) | python-telegram-bot |
 | **monitoring/** | 5 | ~3,600 | `MetricsEngine`, `AIRiskGuardian` (558), `AdvancedIntelligence` (1,330) | prometheus_client |
 | **risk_management/** | 8 | ~3,200 | `LimitsEngine` (531), `AlertDispatcher` (607), `MemoryRiskAdapter` | - |
@@ -253,6 +253,97 @@ database_service/
 - Feature flag: `USE_UNIFIED_GATEWAY` (default: false)
 - Telemetry: Pool stats logged every 5 minutes
 - **Contract:** All code uses tuple-based rows `row[n]`, NOT dict access
+
+### 4.5 AI Service Architecture (SOLID + Dependency Injection)
+
+**Refactored:** December 8, 2025  
+**Pattern:** Hexagonal Architecture with Ports & Adapters  
+**Library:** `dependency-injector` for DI container
+
+```
+omnix_services/ai_service/
+├── interfaces/               # Protocol definitions (PEP 544)
+│   ├── __init__.py
+│   ├── ai_gateway.py         # AIGatewayProtocol, TextGenerationRequest/Response
+│   ├── prompt_builder.py     # PromptBuilderProtocol
+│   ├── style_renderer.py     # StyleRendererProtocol
+│   └── context_provider.py   # ContextProviderProtocol
+├── providers/                # Concrete AI implementations
+│   ├── __init__.py
+│   ├── gemini_provider.py    # GeminiAIGateway (Primary)
+│   ├── openai_provider.py    # OpenAIGateway (Fallback 1)
+│   ├── anthropic_provider.py # AnthropicGateway (Fallback 2)
+│   └── routing_gateway.py    # RoutingAIGateway (orchestrator)
+├── adapters/                 # Legacy compatibility layer
+│   └── legacy_adapter.py     # LegacyAIServiceAdapter
+├── testing/                  # Mock implementations
+│   └── fakes.py              # FakeAIGateway, InMemoryContextProvider
+├── container.py              # AIServiceContainer (DI container)
+├── ai_service.py             # ConversationalAIService (DI-enabled)
+├── ai_models.py              # AIModelsManager
+├── ai_styles.py              # VisualStylesManager
+├── ai_prompts.py             # PromptsContextManager
+└── __init__.py               # Public API: get_ai_gateway(), get_ai_service()
+```
+
+**Key Interfaces (Protocol-based):**
+
+| Interface | Purpose | Key Methods |
+|-----------|---------|-------------|
+| `AIGatewayProtocol` | Text generation | `generate_text()`, `generate_stream()`, `health_check()` |
+| `PromptBuilderProtocol` | Prompt construction | `build_system_prompt()`, `build_context_prompt()` |
+| `StyleRendererProtocol` | Response formatting | `render_response()`, `format_error()` |
+| `ContextProviderProtocol` | Trading context | `get_market_context()`, `get_trading_context()` |
+
+**Provider Priority (RoutingAIGateway):**
+
+| Priority | Provider | Model | Use Case |
+|----------|----------|-------|----------|
+| 1 | `GeminiAIGateway` | Gemini 2.0 Flash | Primary - fastest, best cost |
+| 2 | `OpenAIGateway` | GPT-4o | Fallback - complex reasoning |
+| 3 | `AnthropicGateway` | Claude 3.5 | Fallback - long context |
+
+**Usage Patterns:**
+
+```python
+# NEW: DI-based API (Recommended for new code)
+from omnix_services.ai_service import get_ai_gateway, TextGenerationRequest
+gateway = get_ai_gateway()
+response = await gateway.generate_text(TextGenerationRequest(
+    prompt="Analyze BTC market",
+    max_tokens=1000,
+    temperature=0.7
+))
+
+# LEGACY: Backward-compatible API (Existing code)
+from omnix_services.ai_service import get_ai_service
+service = get_ai_service()
+response = await service.generate_response(chat_id, message)
+
+# TESTING: Mock implementations
+from omnix_services.ai_service.testing import FakeAIGateway
+fake = FakeAIGateway(responses={"default": "Mocked response"})
+```
+
+**SOLID Compliance:**
+- **S**: Each provider has single responsibility (one AI model)
+- **O**: New providers added without modifying existing code
+- **L**: Any provider interchangeable via Protocol
+- **I**: Small, focused interfaces (4 protocols)
+- **D**: High-level modules depend on abstractions (AIGatewayProtocol)
+
+**ConversationalAIService DI Support:**
+```python
+class ConversationalAIService:
+    def __init__(
+        self,
+        models_manager: Optional[AIModelsManager] = None,
+        styles_manager: Optional[VisualStylesManager] = None,
+        prompts_manager: Optional[PromptsContextManager] = None,
+        ai_gateway: Optional["RoutingAIGateway"] = None,
+    ):
+        # Defaults to legacy instantiation if not injected
+```
 
 ---
 
