@@ -1,3 +1,18 @@
+import logging
+import os
+import requests
+
+logger = logging.getLogger(__name__)
+
+ADMIN_IDS = {8058533871, 1234567890}
+
+def is_admin(user_id):
+    """Verificar si un usuario es administrador"""
+    try:
+        return int(user_id) in ADMIN_IDS
+    except (ValueError, TypeError):
+        return False
+
 class OmnixAdvancedIntelligence:
     """Sistema de Inteligencia Avanzada OMNIX - MEJORAS HAROLD"""
     
@@ -97,9 +112,9 @@ ANÁLISIS TÉCNICO MULTI-TIMEFRAME:
 - Soportes: ${technical_data['support_levels'][0]:,.2f}, ${technical_data['support_levels'][1]:,.2f}
 
 ELLIOTT WAVE + FIBONACCI:
-- Patrón Detectado: {elliott_wave['wave_pattern'] if elliott_wave else 'Requiere datos reales'}
-- Confianza: {elliott_wave['confidence']:.1%} if elliott_wave else 'N/A'
-- Próximo Target: ${elliott_wave['next_target']:,.2f} if elliott_wave else 'N/A'
+- Patrón Detectado: {elliott_wave.get('wave_pattern', 'N/A') if elliott_wave else 'Requiere datos reales'}
+- Confianza: {f"{elliott_wave.get('confidence', 0):.1%}" if elliott_wave else 'N/A'}
+- Próximo Target: {f"${elliott_wave.get('next_target', 0):,.2f}" if elliott_wave else 'N/A'}
 
 ANÁLISIS ORDER BOOK:
 - Estado: {'Datos en tiempo real disponibles' if order_book else 'Requiere conexión WebSocket'}
