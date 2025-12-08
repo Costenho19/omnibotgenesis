@@ -410,16 +410,37 @@ class AutoTradingBot:
         # Usar valores del perfil si está disponible, sino valores por defecto
         p = self.trading_profile  # Shorthand
         
+        # V6.5.4: Obtener símbolos permitidos del perfil (si hay restricción)
+        default_pairs = [
+            'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
+            'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
+            'LINK/USD', 'AVAX/USD', 'POL/USD',   # DeFi/L2 líderes (MATIC→POL Dec 2024)
+            'ATOM/USD', 'LTC/USD'               # Ecosistema diversificado
+        ]
+        
+        # V6.5.4 WIN_RATE_OPTIMIZED: Usar allowed_symbols del perfil si existe
+        if p and hasattr(p, 'extra_params') and p.extra_params:
+            allowed = p.extra_params.get('allowed_symbols', None)
+            excluded = p.extra_params.get('excluded_symbols', [])
+            
+            if allowed:
+                # Usar SOLO los símbolos permitidos
+                trading_pairs_list = [s for s in allowed if s in default_pairs or s.replace('/', '') in [d.replace('/', '') for d in default_pairs]]
+                logger.info(f"📊 WIN_RATE_OPTIMIZED: Trading SOLO {trading_pairs_list}")
+            elif excluded:
+                # Excluir símbolos de la lista por defecto
+                trading_pairs_list = [s for s in default_pairs if s not in excluded]
+                logger.info(f"📊 Símbolos excluidos: {excluded}")
+            else:
+                trading_pairs_list = default_pairs
+        else:
+            trading_pairs_list = default_pairs
+        
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
             'trading_profile': profile_name,  # Nombre del perfil activo
-            'trading_pairs': [
-                'BTC/USD', 'ETH/USD', 'SOL/USD',     # Top 3 por capitalización
-                'XRP/USD', 'ADA/USD', 'DOT/USD',     # Altcoins tier 1
-                'LINK/USD', 'AVAX/USD', 'POL/USD',   # DeFi/L2 líderes (MATIC→POL Dec 2024)
-                'ATOM/USD', 'LTC/USD'               # Ecosistema diversificado
-            ],  # V6.5: 11 pares para máximas oportunidades
+            'trading_pairs': trading_pairs_list,  # V6.5.4: Pares según perfil activo
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
             'check_interval_seconds': p.check_interval_seconds if p else 25,
             'min_trade_usd': p.min_trade_usd if p else 75.0,

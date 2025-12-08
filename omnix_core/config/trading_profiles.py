@@ -38,6 +38,7 @@ class ProfileName(Enum):
     PAPER_AGGRESSIVE = "PAPER_AGGRESSIVE"
     BALANCED = "BALANCED"
     PAPER_OPTIMIZED = "PAPER_OPTIMIZED"
+    WIN_RATE_OPTIMIZED = "WIN_RATE_OPTIMIZED"
 
 
 class VolatilityClass(Enum):
@@ -368,11 +369,63 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
 )
 
 
+WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
+    name="WIN_RATE_OPTIMIZED",
+    description="Perfil V6.5.4 optimizado para WIN RATE 55%+. "
+                "SOLO opera BTC/USD y XRP/USD (55-66% win rate probado). "
+                "SL ajustado (1.2%), TP amplio (3.5%) = R:R 2.9:1. "
+                "Check cada 15s para SL reactivo. Alta selectividad.",
+    
+    min_trade_usd=150.0,
+    max_position_pct=0.10,
+    stop_loss_pct=0.012,
+    stop_loss_pct_high_vol=0.018,
+    take_profit_pct=0.035,
+    take_profit_pct_high_vol=0.050,
+    max_daily_loss_pct=0.03,
+    min_confidence=0.25,
+    check_interval_seconds=15,
+    trades_per_day_target=8,
+    
+    coherence_veto_critical=50.0,
+    coherence_veto_normal=65.0,
+    coherence_warning=78.0,
+    coherence_good=90.0,
+    
+    ramp_up_phase1_factor=0.25,
+    ramp_up_phase2_factor=0.45,
+    ramp_up_phase3_factor=0.65,
+    ramp_up_phase4_factor=0.80,
+    ramp_up_phase1_trades=10,
+    ramp_up_phase2_trades=25,
+    ramp_up_phase3_trades=50,
+    ramp_up_phase4_trades=100,
+    
+    hmm_veto_enabled=True,
+    hmm_veto_confidence_threshold=0.70,
+    
+    score_very_strong=30,
+    score_strong=20,
+    score_moderate=12,
+    
+    regime_change_veto_enabled=True,
+    
+    extra_params={
+        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'LINK/USD', 'ATOM/USD', 'POL/USD', 'ADA/USD', 'LTC/USD'],
+        'risk_reward_min': 2.5,
+        'force_sl_execution': True,
+        'sl_check_interval_seconds': 10
+    }
+)
+
+
 TRADING_PROFILES: Dict[str, TradingProfile] = {
     "INSTITUTIONAL": INSTITUTIONAL_PROFILE,
     "PAPER_AGGRESSIVE": PAPER_AGGRESSIVE_PROFILE,
     "BALANCED": BALANCED_PROFILE,
-    "PAPER_OPTIMIZED": PAPER_OPTIMIZED_PROFILE
+    "PAPER_OPTIMIZED": PAPER_OPTIMIZED_PROFILE,
+    "WIN_RATE_OPTIMIZED": WIN_RATE_OPTIMIZED_PROFILE
 }
 
 
