@@ -1,5 +1,5 @@
 """
-OMNIX Web Search Service V6.5.4 INSTITUTIONAL+
+OMNIX INSTITUTIONAL+ - Web Search Service
 
 Provides real-time web search capabilities using Tavily API.
 Integrates with AI services to enhance responses with current information.

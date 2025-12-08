@@ -1,6 +1,6 @@
 """
-OMNIX Execution Protocol V6.5.4 INSTITUTIONAL+ - Cross-Asset Correlation Engine
-================================================================================
+OMNIX Execution Protocol INSTITUTIONAL+ - Cross-Asset Correlation Engine
+=========================================================================
 Institutional-grade cross-asset correlation analysis for systemic risk detection
 
 Components:

@@ -1,6 +1,6 @@
 """
-OMNIX Execution Protocol V6.5.4 INSTITUTIONAL+ - Liquidity Analyzer
-====================================================================
+OMNIX Execution Protocol INSTITUTIONAL+ - Liquidity Analyzer
+=============================================================
 Institutional-grade liquidity analysis for optimal execution
 
 Components:

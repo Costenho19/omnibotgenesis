@@ -1,5 +1,5 @@
 """
-Tavily Search Client V6.5.4 INSTITUTIONAL+
+OMNIX INSTITUTIONAL+ - Tavily Search Client
 
 Direct integration with Tavily Search API for real-time web searches.
 Optimized for AI/RAG applications with context-aware responses.

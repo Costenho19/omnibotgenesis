@@ -1,6 +1,6 @@
 """
-OMNIX Execution Protocol V6.5.4 INSTITUTIONAL+ - Micro Volatility Engine
-=========================================================================
+OMNIX Execution Protocol INSTITUTIONAL+ - Micro Volatility Engine
+==================================================================
 Institutional-grade tick-by-tick volatility analysis and regime detection
 
 Components:

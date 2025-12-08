@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
+OMNIX INSTITUTIONAL+ PREMIUM - API Client
 API Client for Streamlit Dashboard
 
 Cliente para consumir métricas desde el API Flask principal.

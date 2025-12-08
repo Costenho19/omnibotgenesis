@@ -1,5 +1,5 @@
 """
-Web Search Manager V6.5.4 INSTITUTIONAL+
+OMNIX INSTITUTIONAL+ - Web Search Manager
 
 Orchestrates web searches with intelligent caching, rate limiting,
 and automatic intent detection for AI-assisted searches.

@@ -1,5 +1,5 @@
 """
-OMNIX Execution Protocol V6.5.4 INSTITUTIONAL+
+OMNIX Execution Protocol INSTITUTIONAL+
 Institutional-grade execution analysis and optimization
 
 Components:

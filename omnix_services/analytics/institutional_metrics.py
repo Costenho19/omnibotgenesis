@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
+OMNIX INSTITUTIONAL+ PREMIUM
 Institutional Metrics Calculator - Sharpe, Sortino, Calmar Ratios
 
 Para inversores institucionales que exigen métricas estándar de la industria.

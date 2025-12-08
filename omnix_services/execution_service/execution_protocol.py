@@ -1,5 +1,5 @@
 """
-OMNIX Execution Protocol V6.5.4 INSTITUTIONAL+
+OMNIX Execution Protocol INSTITUTIONAL+
 Main orchestrator for institutional-grade execution analysis
 
 Integrates:
