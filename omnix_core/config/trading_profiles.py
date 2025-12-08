@@ -47,6 +47,231 @@ class VolatilityClass(Enum):
     NORMAL = "NORMAL"
 
 
+class CalibrationTier(Enum):
+    """Tier de calibración basado en datos históricos"""
+    PROVEN = "PROVEN"           # Historial probado con win rate > 50%
+    CALIBRATING = "CALIBRATING" # Pocos datos, requiere protección extra
+    EXCLUDED = "EXCLUDED"       # Excluido por mal rendimiento
+
+
+@dataclass
+class PairCalibration:
+    """
+    Calibración institucional por par de trading.
+    
+    V6.5.4 PREMIUM - Sistema de calibración cuantitativo basado en:
+    - Volatilidad histórica del par
+    - Win rate observado
+    - Drawdown máximo registrado
+    """
+    symbol: str
+    tier: CalibrationTier
+    stop_loss_pct: float
+    take_profit_pct: float
+    min_confidence: float
+    risk_reward_ratio: float
+    max_position_pct: float = 0.10
+    notes: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'symbol': self.symbol,
+            'tier': self.tier.value,
+            'stop_loss_pct': self.stop_loss_pct,
+            'take_profit_pct': self.take_profit_pct,
+            'min_confidence': self.min_confidence,
+            'risk_reward_ratio': self.risk_reward_ratio,
+            'max_position_pct': self.max_position_pct,
+            'notes': self.notes
+        }
+
+
+# ============================================================================
+# CALIBRACIÓN PREMIUM POR PAR - WIN_RATE_OPTIMIZED V2
+# ============================================================================
+# Basado en análisis de 27 trades históricos (Dec 2025)
+# Objetivo: Win Rate 55%+ con R:R mínimo 2.0:1
+# ============================================================================
+
+PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
+    # TIER: PROVEN - Historial probado con win rate positivo
+    "BTC/USD": PairCalibration(
+        symbol="BTC/USD",
+        tier=CalibrationTier.PROVEN,
+        stop_loss_pct=0.012,      # 1.2%
+        take_profit_pct=0.035,    # 3.5%
+        min_confidence=0.25,
+        risk_reward_ratio=2.92,   # 3.5/1.2 = 2.92
+        notes="Win rate 55% histórico. Base sólida del portafolio."
+    ),
+    "XRP/USD": PairCalibration(
+        symbol="XRP/USD",
+        tier=CalibrationTier.PROVEN,
+        stop_loss_pct=0.012,      # 1.2%
+        take_profit_pct=0.035,    # 3.5%
+        min_confidence=0.25,
+        risk_reward_ratio=2.92,
+        notes="Win rate 66% histórico. Mejor rendimiento del set."
+    ),
+    
+    # TIER: CALIBRATING - Pocos datos, SL estricto como protección
+    "ADA/USD": PairCalibration(
+        symbol="ADA/USD",
+        tier=CalibrationTier.CALIBRATING,
+        stop_loss_pct=0.009,      # 0.9% - SL estricto
+        take_profit_pct=0.020,    # 2.0%
+        min_confidence=0.30,      # Mayor exigencia
+        risk_reward_ratio=2.22,   # 2.0/0.9 = 2.22
+        max_position_pct=0.08,    # Posición reducida
+        notes="Solo 2 trades históricos. ADA es lenta y predecible."
+    ),
+    "LINK/USD": PairCalibration(
+        symbol="LINK/USD",
+        tier=CalibrationTier.CALIBRATING,
+        stop_loss_pct=0.010,      # 1.0%
+        take_profit_pct=0.025,    # 2.5%
+        min_confidence=0.28,      # Mayor exigencia
+        risk_reward_ratio=2.50,   # 2.5/1.0 = 2.50
+        max_position_pct=0.08,    # Posición reducida
+        notes="Solo 1 trade histórico. Volatilidad moderada."
+    ),
+    
+    # TIER: EXCLUDED - No operar bajo ninguna circunstancia
+    "SOL/USD": PairCalibration(
+        symbol="SOL/USD",
+        tier=CalibrationTier.EXCLUDED,
+        stop_loss_pct=0.0,
+        take_profit_pct=0.0,
+        min_confidence=1.0,
+        risk_reward_ratio=0.0,
+        notes="EXCLUIDO: 0% win rate, -$1,952 pérdida (93% del total)"
+    ),
+    "ETH/USD": PairCalibration(
+        symbol="ETH/USD",
+        tier=CalibrationTier.EXCLUDED,
+        stop_loss_pct=0.0,
+        take_profit_pct=0.0,
+        min_confidence=1.0,
+        risk_reward_ratio=0.0,
+        notes="EXCLUIDO: 0% win rate, alta volatilidad"
+    ),
+    "AVAX/USD": PairCalibration(
+        symbol="AVAX/USD",
+        tier=CalibrationTier.EXCLUDED,
+        stop_loss_pct=0.0,
+        take_profit_pct=0.0,
+        min_confidence=1.0,
+        risk_reward_ratio=0.0,
+        notes="EXCLUIDO: 0% win rate, segundo peor rendimiento"
+    ),
+}
+
+
+KRAKEN_SYMBOL_MAP: Dict[str, str] = {
+    "XXBTZUSD": "BTC/USD",
+    "XETHZUSD": "ETH/USD",
+    "XXRPZUSD": "XRP/USD",
+    "XLTCZUSD": "LTC/USD",
+    "XXLMZUSD": "XLM/USD",
+    "ADAUSD": "ADA/USD",
+    "SOLUSD": "SOL/USD",
+    "DOTUSD": "DOT/USD",
+    "LINKUSD": "LINK/USD",
+    "AVAXUSD": "AVAX/USD",
+    "ATOMUSD": "ATOM/USD",
+    "POLUSD": "POL/USD",
+    "BTCUSD": "BTC/USD",
+    "ETHUSD": "ETH/USD",
+    "XRPUSD": "XRP/USD",
+}
+
+
+def normalize_symbol(symbol: str) -> str:
+    """
+    Normaliza símbolos de Kraken al formato estándar BASE/QUOTE.
+    
+    Ejemplos:
+        XXBTZUSD -> BTC/USD
+        XRPUSD -> XRP/USD
+        BTC/USD -> BTC/USD
+    """
+    upper = symbol.upper().strip()
+    
+    if upper in KRAKEN_SYMBOL_MAP:
+        return KRAKEN_SYMBOL_MAP[upper]
+    
+    if "/" in upper:
+        return upper
+    
+    if upper.endswith("USD"):
+        base = upper[:-3]
+        if base.startswith("XX") and base.endswith("Z"):
+            base = base[2:-1]
+        elif base.startswith("X") and len(base) > 3:
+            base = base[1:]
+        return f"{base}/USD"
+    
+    return upper
+
+
+def get_pair_calibration(symbol: str) -> Optional[PairCalibration]:
+    """
+    Obtener calibración institucional para un par específico.
+    
+    V6.5.4 PREMIUM - Retorna parámetros de trading calibrados por par.
+    
+    Args:
+        symbol: Par de trading (ej: BTC/USD, ADA/USD, XXBTZUSD)
+    
+    Returns:
+        PairCalibration o None si el par no está calibrado
+    """
+    normalized = normalize_symbol(symbol)
+    
+    calibration = PAIR_CALIBRATIONS.get(normalized)
+    if calibration:
+        logger.debug(f"📊 Calibración {calibration.tier.value} para {symbol} ({normalized}): "
+                    f"SL={calibration.stop_loss_pct*100:.1f}%, "
+                    f"TP={calibration.take_profit_pct*100:.1f}%, "
+                    f"R:R={calibration.risk_reward_ratio:.2f}")
+    return calibration
+
+
+def is_symbol_allowed(symbol: str, profile: Optional['TradingProfile'] = None) -> bool:
+    """
+    Verificar si un símbolo está permitido para trading.
+    
+    V6.5.4 PREMIUM - Usa calibración por par si está disponible.
+    
+    Args:
+        symbol: Par de trading
+        profile: Perfil activo (opcional)
+    
+    Returns:
+        True si el símbolo está permitido
+    """
+    calibration = get_pair_calibration(symbol)
+    if calibration:
+        allowed = calibration.tier != CalibrationTier.EXCLUDED
+        if not allowed:
+            logger.warning(f"🚫 {symbol} BLOQUEADO: {calibration.notes}")
+        return allowed
+    
+    if profile is None:
+        profile = get_active_profile()
+    
+    allowed_symbols = profile.extra_params.get('allowed_symbols', [])
+    excluded_symbols = profile.extra_params.get('excluded_symbols', [])
+    
+    normalized = symbol.upper()
+    if allowed_symbols:
+        return any(s.upper() in normalized or normalized in s.upper() for s in allowed_symbols)
+    if excluded_symbols:
+        return not any(s.upper() in normalized or normalized in s.upper() for s in excluded_symbols)
+    
+    return True
+
+
 PAIR_VOLATILITY_CLASS: Dict[str, VolatilityClass] = {
     "DOT/USD": VolatilityClass.HIGH,
     "DOTUSD": VolatilityClass.HIGH,
@@ -371,10 +596,10 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
 
 WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     name="WIN_RATE_OPTIMIZED",
-    description="Perfil V6.5.4 optimizado para WIN RATE 55%+. "
-                "Opera BTC/USD, XRP/USD y ADA/USD (pares con mejor historial). "
-                "SL ajustado (1.2%), TP amplio (3.5%) = R:R 2.9:1. "
-                "Check cada 15s para SL reactivo. Alta selectividad.",
+    description="Perfil V6.5.4 PREMIUM - Win Rate 55%+ con calibración por par. "
+                "Opera BTC/USD, XRP/USD, ADA/USD, LINK/USD. "
+                "SL/TP diferenciados por símbolo. Tier PROVEN vs CALIBRATING. "
+                "Check cada 15s. Institucional-grade.",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,
@@ -385,7 +610,7 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     max_daily_loss_pct=0.03,
     min_confidence=0.25,
     check_interval_seconds=15,
-    trades_per_day_target=8,
+    trades_per_day_target=12,
     
     coherence_veto_critical=50.0,
     coherence_veto_normal=65.0,
@@ -411,9 +636,10 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     regime_change_veto_enabled=True,
     
     extra_params={
-        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'LINK/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
-        'risk_reward_min': 2.5,
+        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD', 'LINK/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
+        'use_pair_calibration': True,
+        'risk_reward_min': 2.0,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10
     }

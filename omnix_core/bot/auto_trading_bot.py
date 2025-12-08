@@ -62,12 +62,19 @@ logger = logging.getLogger(__name__)
 from omnix_config import VERSION_BANNER
 
 try:
-    from omnix_core.config.trading_profiles import get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass
+    from omnix_core.config.trading_profiles import (
+        get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass,
+        get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration
+    )
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
     TRADING_PROFILES_AVAILABLE = False
     get_sl_tp_for_symbol = None
+    get_pair_calibration = None
+    is_symbol_allowed = None
     VolatilityClass = None
+    CalibrationTier = None
+    PairCalibration = None
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 try:
@@ -1200,8 +1207,15 @@ class AutoTradingBot:
                 if not symbol or entry_price <= 0 or quantity <= 0:
                     continue
                 
-                # V6.5.4: SL/TP diferenciado por volatilidad del par
-                if get_sl_tp_for_symbol and self.trading_profile:
+                # V6.5.4 PREMIUM: Calibración por par si está disponible
+                calibration = get_pair_calibration(symbol) if get_pair_calibration else None
+                
+                if calibration and calibration.tier != CalibrationTier.EXCLUDED:
+                    tp_pct = calibration.take_profit_pct
+                    sl_pct = calibration.stop_loss_pct
+                    vol_class = calibration.tier.value
+                    logger.debug(f"📊 Calibración {vol_class} para {symbol}: SL={sl_pct*100:.1f}%, TP={tp_pct*100:.1f}%")
+                elif get_sl_tp_for_symbol and self.trading_profile:
                     sl_tp_config = get_sl_tp_for_symbol(symbol, self.trading_profile)
                     tp_pct = sl_tp_config['take_profit_pct']
                     sl_pct = sl_tp_config['stop_loss_pct']
@@ -2402,7 +2416,35 @@ class AutoTradingBot:
             # ==========================================================================
             current_symbol = analysis.get('symbol') or self.config.get('trading_pair', 'BTC/USD')
             
-            if self.trading_profile and hasattr(self.trading_profile, 'extra_params'):
+            # V6.5.4 PREMIUM: Verificar calibración por par primero
+            if is_symbol_allowed and not is_symbol_allowed(current_symbol, self.trading_profile):
+                profile_name = self.trading_profile.name if self.trading_profile else "DEFAULT"
+                calibration = get_pair_calibration(current_symbol) if get_pair_calibration else None
+                
+                import json as json_mod
+                from datetime import datetime as dt_mod
+                
+                filter_event = {
+                    "event": "SYMBOL_BLOCKED",
+                    "timestamp": dt_mod.utcnow().isoformat() + "Z",
+                    "symbol": current_symbol,
+                    "profile": profile_name,
+                    "calibration_tier": calibration.tier.value if calibration else "UNKNOWN",
+                    "calibration_notes": calibration.notes if calibration else "Sin calibración",
+                    "action": action,
+                    "amount_usd": amount_usd
+                }
+                logger.warning(f"🚫 SYMBOL FILTER V6.5.4 PREMIUM: {current_symbol} BLOQUEADO")
+                logger.info(f"📊 SYMBOL_FILTER: {json_mod.dumps(filter_event)}")
+                
+                return {
+                    'success': False,
+                    'blocked': True,
+                    'error': f'Símbolo {current_symbol} no permitido en perfil {profile_name}',
+                    'reason': 'SYMBOL_FILTER_VETO',
+                    'calibration_tier': calibration.tier.value if calibration else "UNKNOWN"
+                }
+            elif self.trading_profile and hasattr(self.trading_profile, 'extra_params'):
                 allowed_symbols = self.trading_profile.extra_params.get('allowed_symbols', None)
                 
                 if allowed_symbols and current_symbol not in allowed_symbols:
