@@ -177,19 +177,25 @@ ARPU increases over time due to:
 
 | Milestone | ARR | Multiple | Valuation |
 |-----------|-----|----------|-----------|
-| Seed (Now) | Pre-revenue | - | $2.5M |
+| Seed (Now) | Pre-revenue | - | $8M |
 | Series A (2027) | $6.5M | 6x | $39M |
 | Series B (2029) | $25M | 8x | $200M |
 
+**Why $8M Valuation is Justified:**
+- Median AI fintech seed: $10-18M (Carta, Aventis Advisors 2024)
+- Unique IP: Non-Markovian Kernel, InstitutionalDecisionLogger, Post-Quantum Security
+- Competitor 3Commas valued at $180M with fewer features
+- See `valuation_analysis.md` for detailed methodology
+
 ### 5.3 Investor Return Analysis
 
-**$100,000 investment at Seed ($2.5M valuation) = 4% equity**
+**$250,000 investment at Seed ($8M valuation) = 2.4% equity**
 
 | Exit Scenario | Valuation | Return | Multiple |
 |---------------|-----------|--------|----------|
-| Conservative (Series A) | $30M | $1,200,000 | 12x |
-| Base Case (Series B) | $150M | $6,000,000 | 60x |
-| Optimistic (Acquisition) | $400M | $16,000,000 | 160x |
+| Conservative (Series A) | $39M | $936,000 | 3.7x |
+| Base Case (Series B) | $150M | $3,600,000 | 14.4x |
+| Optimistic (Acquisition) | $400M | $9,600,000 | 38.4x |
 
 ---
 
@@ -238,10 +244,11 @@ OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity
 5. **Experienced team** - Deep technical expertise
 
 **Investment Highlights:**
-- $1M seed at $2.5M valuation
+- $2.5M seed at $8M valuation (24% dilution)
 - 24+ month runway
-- Target 12-60x return at Series A/B
+- Target 4-40x return at Series A/B
 - Clear milestones and de-risking path
+- Unique IP: Non-Markovian Kernel, Post-Quantum Security, Institutional Audit Trail
 
 ---
 
