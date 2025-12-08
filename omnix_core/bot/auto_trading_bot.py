@@ -291,6 +291,22 @@ except ImportError:
     EXECUTION_PROTOCOL_AVAILABLE = False
     logger.warning("⚠️ Execution Protocol no disponible")
 
+# Import Algorithmic Rollback Protocol V6.5.4 - AUTO-REVERT ON POST-DEPLOY DRAWDOWN
+try:
+    from omnix_core.risk.rollback_protocol import (
+        AlgorithmicRollbackProtocol,
+        get_arp_instance,
+        RollbackResult
+    )
+    ARP_AVAILABLE = True
+    logger.info(f"🔄 Algorithmic Rollback Protocol {VERSION_BANNER} disponible")
+except ImportError:
+    AlgorithmicRollbackProtocol = None
+    get_arp_instance = None
+    RollbackResult = None
+    ARP_AVAILABLE = False
+    logger.warning("⚠️ Algorithmic Rollback Protocol no disponible")
+
 
 class AutoTradingBot:
     """
@@ -854,6 +870,25 @@ class AutoTradingBot:
             self.state['emergency_stop'] = False
             self.config['active'] = True
             
+            # V6.5.4: Register deploy with Algorithmic Rollback Protocol
+            if ARP_AVAILABLE:
+                try:
+                    arp = get_arp_instance()
+                    # Create snapshot of current config before deploy
+                    current_config = {
+                        'trading_profile': self.trading_profile.name if self.trading_profile else 'UNKNOWN',
+                        'max_aggression': getattr(self, '_max_aggression', 3.0),
+                        'min_confidence': self.config.get('min_confidence', 0.6),
+                        'max_daily_loss_pct': self.config.get('max_daily_loss_pct', 0.08),
+                        'max_position_pct': self.config.get('max_position_pct', 0.12),
+                        'coherence_thresholds': self.config.get('coherence_thresholds', {})
+                    }
+                    snapshot_file = arp.create_pre_deploy_snapshot(current_config)
+                    arp.register_deploy(balance, snapshot_file)
+                    logger.info(f"🔄 ARP: Deploy registrado con balance inicial ${balance:.2f}")
+                except Exception as e:
+                    logger.warning(f"⚠️ ARP registration failed: {e}")
+            
             # V6.5: Persistir estado en user_settings
             self._persist_auto_trading_state(user_id, active=True)
             
@@ -1241,6 +1276,35 @@ class AutoTradingBot:
                     logger.critical("🚨 PARADA DE EMERGENCIA - Pérdidas excesivas")
                     self.stop()
                     break
+                
+                # V6.5.4: Check Algorithmic Rollback Protocol (post-deploy drawdown protection)
+                if ARP_AVAILABLE and cycle_counter % 10 == 0:  # Check every 10 cycles
+                    try:
+                        arp = get_arp_instance()
+                        current_balance = self._get_balance()
+                        rollback_result = arp.check_rollback_needed(current_balance)
+                        
+                        if rollback_result.rollback_triggered:
+                            logger.critical(f"🔄 ARP ROLLBACK TRIGGERED: {rollback_result.message}")
+                            # Execute rollback
+                            rollback_exec = arp.execute_rollback()
+                            self.state['emergency_stop'] = True
+                            self.state['running'] = False  # Immediate halt flag
+                            self.config['active'] = False
+                            
+                            # V6.5.4: Persist halted state to prevent auto-restart
+                            self._persist_auto_trading_state(active=False)
+                            
+                            if rollback_exec.get('success'):
+                                logger.critical("🛑 Trading halted - Configuration rolled back successfully")
+                            else:
+                                logger.critical(f"🚨 CRITICAL: Rollback failed: {rollback_exec.get('message')}")
+                                logger.critical("🚨 TRADING HALTED - Manual intervention required")
+                            
+                            # Immediate exit from loop - do not continue to next iteration
+                            return  # Exit _trading_loop entirely
+                    except Exception as e:
+                        logger.debug(f"ARP check failed: {e}")
                 
                 # Verificar Take Profit / Stop Loss en posiciones abiertas
                 self._check_open_positions_tp_sl()
@@ -2981,15 +3045,30 @@ class AutoTradingBot:
         balance = self._get_balance()
         
         # ========== CAES - CONFIDENCE-ADAPTIVE ENTRY SYSTEM ==========
+        # V6.5.4: Incluye validación ATR para mitigar conflicto de interés
         caes_multiplier = 1.0
         caes_result = None
         
         if CAES_AVAILABLE and kernel_confidence is not None:
             try:
                 caes = get_caes_instance()
+                
+                # V6.5.4 CONFLICT OF INTEREST MITIGATION: Calcular ATR ratio
+                # ATR ratio es una métrica EXTERNA e INDEPENDIENTE del Kernel
+                atr_ratio = 1.0  # Default: volatilidad normal
+                if kernel_metrics:
+                    # Intentar obtener ATR de las métricas del kernel o del análisis
+                    current_atr = kernel_metrics.get('atr', kernel_metrics.get('volatility', 0))
+                    historical_atr = kernel_metrics.get('atr_avg', kernel_metrics.get('volatility_avg', 0))
+                    
+                    if historical_atr and historical_atr > 0 and current_atr:
+                        atr_ratio = current_atr / historical_atr
+                        logger.debug(f"🎯 CAES ATR Validation: current={current_atr:.4f}, avg={historical_atr:.4f}, ratio={atr_ratio:.2f}")
+                
                 caes_result = caes.calculate_adaptive_parameters(
                     kernel_confidence=kernel_confidence,
-                    kernel_metrics=kernel_metrics or {}
+                    kernel_metrics=kernel_metrics or {},
+                    atr_ratio=atr_ratio  # V6.5.4: Pass ATR for independent validation
                 )
                 caes_multiplier = caes_result.position_multiplier
                 

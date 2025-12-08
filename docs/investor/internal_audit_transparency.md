@@ -149,15 +149,28 @@ The Coherence Engine aggregates multi-strategy votes and applies weighted agreem
 
 ### 4.2 Decision Outcomes
 
-The engine returns one of three outcomes:
+The engine returns a **binary decision** (no ambiguous middle ground):
 
 | Outcome | When Applied | Action |
 |---------|--------------|--------|
-| **PASS** | Scores meet profile thresholds | Trade proceeds |
-| **BLOCK** | Scores below minimum thresholds | Trade rejected |
-| **REVIEW** | Borderline scores or overrides | May proceed with adjustments |
+| **PERMITTED** (`True`) | All thresholds met | Trade proceeds |
+| **BLOCKED** (`False`) | Any threshold failed | Trade rejected |
 
-**Note:** The specific thresholds are configurable per Trading Profile. Override decisions are logged when triggered.
+**Warnings vs Blocks:**
+- Warnings are logged but do NOT create a "review" zone
+- The decision is always binary: proceed or block
+- If any blocking rule triggers, the trade is rejected
+
+**Auditor Question:** *"Who decides if a borderline trade can proceed?"*
+
+**Answer:** Nobody. There is no discretionary zone. The algorithm either permits or blocks. Warnings are informational only and may suggest position size reduction, but the trade either happens or doesn't.
+
+**Blocking Rules (from `coherence_engine.py`):**
+1. Contradiction 5+ vs 3+ strategies → BLOCK
+2. Black Swan HIGH/EXTREME risk → BLOCK
+3. Coherence score < threshold (10% paper, 30% real) → BLOCK
+4. Confidence < 60% (real mode only) → BLOCK
+5. Monte Carlo win rate < 50% (real mode only) → BLOCK
 
 ### 4.3 Profile-Driven Thresholds
 
@@ -301,13 +314,42 @@ The Risk Guardian is an autonomous module that monitors all trading activity:
 The Confidence-Adaptive Entry System (CAES) dynamically sizes positions:
 
 ```
-Position Size = Base Size × Kernel Confidence × Regime Factor
+Position Size = Base Size × Aggression Factor × Regime Multiplier
 
 Where:
-- Base Size = Account Balance × Max Position %
-- Kernel Confidence = Non-Markovian confidence (0.5x - 3.0x)
-- Regime Factor = HMM regime adjustment (0.7x - 1.2x)
+- Base Size = Account Balance × Base Position %
+- Aggression Factor = Sigmoid function of Kernel Confidence (0.5x - 3.0x)
+- Regime Multiplier = Sub-regime adjustment (0.5x - 1.3x)
 ```
+
+#### 7.2.1 Conflict of Interest Mitigation
+
+**Auditor Question:** *"How does OMNIX prevent the Non-Markovian Kernel from self-proclaiming high confidence to maximize sizing?"*
+
+**Safeguards Implemented (in `omnix_core/strategies/caes_module.py`):**
+
+| Safeguard | Implementation | Effect |
+|-----------|----------------|--------|
+| **Hard System Cap** | `max_aggression = 3.0` | Absolute ceiling regardless of confidence |
+| **Regime Multiplier** | Sub-regime detection reduces aggression | BEAR_PANIC = 0.5x, BREAKOUT_DOWN = 0.6x |
+| **Max Position % per Regime** | `max_position_pct` varies by regime | BEAR_PANIC = 2%, BULL_STRONG = 5% |
+| **Sigmoid Saturation** | Confidence >95% yields diminishing returns | Prevents runaway aggression |
+| **ATR-Based Validation** | External volatility check caps aggression | ATR > 2x → Cap at 1.5x |
+
+**How It Works:**
+1. Raw Kernel Confidence (0-100%) → Sigmoid function → Base Aggression (0.5x - 3.0x)
+2. Sub-regime detected from volatility/momentum → Regime Multiplier (0.5x - 1.3x)
+3. **ATR Validation (Independent):** If ATR ratio > 2.0 → Hard cap at 1.5x; if > 1.5 → Cap at 2.0x
+4. Final Aggression = min(Base × Regime, ATR_cap, System_cap)
+5. Position limited by regime-specific `max_position_pct`
+
+**Independence Guarantee:** The ATR ratio is calculated from historical price data, completely independent of the Kernel's confidence calculation. The Kernel cannot influence the ATR metric.
+
+**Audit Trail:** CAES logs every calculation including:
+- Raw Kernel Confidence input
+- ATR ratio and cap applied (if any)
+- Sub-regime detected
+- Final aggression factor after all validations
 
 ### 7.3 Stop-Loss / Take-Profit by Volatility
 
@@ -440,7 +482,56 @@ WHERE status = 'CLOSED';
 | Risk Limits | Dual approval (Harold + Iván) |
 | Infrastructure | Staged rollout with rollback plan |
 
-### 10.3 Version Control
+### 10.3 Error Recovery & Emergency Protocols
+
+**Auditor Question:** *"If a change causes unexpected losses, what is the hard-coded recovery protocol?"*
+
+**Two-Layer Protection System:**
+
+#### Layer 1: Emergency Stop (from `auto_trading_bot.py`)
+
+| Protection | Implementation | Trigger |
+|------------|----------------|---------|
+| **Emergency Stop** | `_check_emergency_stop()` | Drawdown > `max_daily_loss_pct` |
+| **Trading Halt** | `emergency_stop = True` | Blocks all new trades immediately |
+
+#### Layer 2: Algorithmic Rollback Protocol (from `omnix_core/risk/rollback_protocol.py`)
+
+| Protection | Implementation | Trigger |
+|------------|----------------|---------|
+| **Pre-Deploy Snapshot** | `create_pre_deploy_snapshot()` | Before any config change |
+| **Deploy Registration** | `register_deploy()` | Records initial balance & timestamp |
+| **Drawdown Monitoring** | `check_rollback_needed()` | Continuous post-deploy check |
+| **1-Hour Warning** | Warning if drawdown > 0.5% | Prepares for potential revert |
+| **Auto-Revert** | `execute_rollback()` | If drawdown > 1% within 24h |
+
+**How the ARP Works:**
+1. Before deploy: System creates snapshot of current config
+2. Deploy registered with initial balance
+3. Continuous monitoring: `check_rollback_needed(current_balance)`
+4. If drawdown > 0.5% in first hour → Warning logged
+5. If drawdown > 1% within 24h → Auto-revert to previous snapshot
+6. Rollback restores previous config WITHOUT human intervention
+7. All rollback events logged for audit
+
+**Code Location:** `omnix_core/risk/rollback_protocol.py`
+
+**Configurable Parameters:**
+- `drawdown_threshold_1h`: 0.5% (warning)
+- `drawdown_threshold_24h`: 1.0% (auto-revert)
+- `auto_revert_enabled`: True (can be disabled for manual review)
+
+**Integration Points (from `auto_trading_bot.py`):**
+- `start()`: Creates config snapshot + registers deploy with initial balance
+- `_trading_loop()`: Checks ARP every 10 cycles, immediate halt on trigger
+- Persists halted state to prevent auto-restart by orchestrators
+
+**Known Limitations (Roadmap for V7.0):**
+- Config snapshots stored in local filesystem (ephemeral in containerized environments)
+- Balance monitoring uses cached state; real-time P&L sync improvements planned
+- Full deployment rollback requires Railway/Kubernetes integration beyond bot scope
+
+### 10.4 Version Control
 
 - **Repository:** GitHub (private)
 - **Branching:** main (production), develop (testing)

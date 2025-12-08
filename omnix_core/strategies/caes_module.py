@@ -294,7 +294,8 @@ class ConfidenceAdaptiveEntrySystem:
                                        kernel_metrics: Optional[Dict] = None,
                                        volatility: float = 0.0,
                                        momentum: float = 0.0,
-                                       volume_ratio: float = 1.0) -> CAESResult:
+                                       volume_ratio: float = 1.0,
+                                       atr_ratio: float = 1.0) -> CAESResult:
         """
         Calcula todos los parámetros adaptativos basados en confianza y régimen.
         
@@ -306,12 +307,19 @@ class ConfidenceAdaptiveEntrySystem:
         - Punto de inicio de trailing stop
         - Límite máximo de posición
         
+        MITIGACIÓN DE CONFLICTO DE INTERÉS (V6.5.4):
+        El Kernel Confidence es validado por métricas externas independientes:
+        1. ATR ratio (volatilidad histórica) - Si ATR > 2x normal, cap aggression at 1.5x
+        2. Regime multiplier - Módulo independiente reduce aggression en regímenes adversos
+        3. Hard system cap - Máximo absoluto de 3.0x
+        
         Args:
             kernel_confidence: Confianza del Non-Markovian Kernel (0-100%)
             kernel_metrics: Métricas adicionales del kernel (opcional)
             volatility: Volatilidad actual (0-1)
             momentum: Momentum actual (-1 a 1)
             volume_ratio: Ratio de volumen vs promedio
+            atr_ratio: ATR actual / ATR promedio histórico (1.0 = normal, >2.0 = muy alta)
             
         Returns:
             CAESResult con todos los parámetros calculados
@@ -324,8 +332,30 @@ class ConfidenceAdaptiveEntrySystem:
         base_aggression = self.calculate_sigmoid_aggression(confidence)
         
         regime_multiplier = self.regime_multipliers.get(sub_regime, 1.0)
+        
+        # ============================================================
+        # V6.5.4 CONFLICT OF INTEREST MITIGATION: ATR-Based Validation
+        # ============================================================
+        # El ATR ratio es una métrica EXTERNA e INDEPENDIENTE del Kernel.
+        # Si la volatilidad está muy alta, capea la agresividad sin importar
+        # qué tan alta sea la confianza del Kernel.
+        # Esto previene que el Kernel se "auto-proclame" muy confiable
+        # en condiciones de mercado peligrosas.
+        
+        atr_cap = self.max_aggression  # Default: sin cap adicional
+        if atr_ratio > 2.0:
+            # Volatilidad muy alta: cap agresivo a 1.5x máximo
+            atr_cap = 1.5
+            logger.warning(f"⚠️ ATR VALIDATION: ATR ratio {atr_ratio:.2f} > 2.0 → Capping aggression at 1.5x")
+        elif atr_ratio > 1.5:
+            # Volatilidad elevada: cap a 2.0x
+            atr_cap = 2.0
+            logger.info(f"📊 ATR VALIDATION: ATR ratio {atr_ratio:.2f} > 1.5 → Capping aggression at 2.0x")
+        
+        # Aplicar todos los multiplicadores y caps
         final_aggression = base_aggression * regime_multiplier
-        final_aggression = max(self.min_aggression, min(self.max_aggression, final_aggression))
+        final_aggression = min(final_aggression, atr_cap)  # ATR cap (independiente)
+        final_aggression = max(self.min_aggression, min(self.max_aggression, final_aggression))  # System caps
         
         risk_params = self.regime_risk_params.get(sub_regime, self.regime_risk_params[SubRegimeType.UNKNOWN])
         
