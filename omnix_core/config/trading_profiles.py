@@ -328,41 +328,41 @@ BALANCED_PROFILE = TradingProfile(
 
 PAPER_OPTIMIZED_PROFILE = TradingProfile(
     name="PAPER_OPTIMIZED",
-    description="Perfil optimizado para paper trading - Diseñado para inversores. "
-                "Stop-loss diferenciado por volatilidad (1.5% estables, 2.5% volátiles). "
-                "Coherence Engine estricto (5/6). Prioriza track record positivo.",
+    description="Perfil optimizado para paper trading V6.5.4 - Diseñado para inversores. "
+                "Ratio R:R mejorado (SL 1.5%/TP 3.0% estables, SL 2.5%/TP 4.5% volátiles). "
+                "Coherence Engine estricto (5/6). Alta selectividad para win rate 55%+.",
     
     min_trade_usd=100.0,
-    max_position_pct=0.10,
+    max_position_pct=0.08,
     stop_loss_pct=0.015,
     stop_loss_pct_high_vol=0.025,
-    take_profit_pct=0.025,
-    take_profit_pct_high_vol=0.035,
-    max_daily_loss_pct=0.05,
-    min_confidence=0.18,
-    check_interval_seconds=30,
-    trades_per_day_target=15,
+    take_profit_pct=0.030,
+    take_profit_pct_high_vol=0.045,
+    max_daily_loss_pct=0.04,
+    min_confidence=0.22,
+    check_interval_seconds=35,
+    trades_per_day_target=12,
     
-    coherence_veto_critical=40.0,
-    coherence_veto_normal=55.0,
-    coherence_warning=70.0,
-    coherence_good=85.0,
+    coherence_veto_critical=45.0,
+    coherence_veto_normal=60.0,
+    coherence_warning=75.0,
+    coherence_good=88.0,
     
-    ramp_up_phase1_factor=0.25,
-    ramp_up_phase2_factor=0.45,
-    ramp_up_phase3_factor=0.65,
-    ramp_up_phase4_factor=0.80,
-    ramp_up_phase1_trades=10,
-    ramp_up_phase2_trades=25,
-    ramp_up_phase3_trades=50,
-    ramp_up_phase4_trades=100,
+    ramp_up_phase1_factor=0.20,
+    ramp_up_phase2_factor=0.40,
+    ramp_up_phase3_factor=0.60,
+    ramp_up_phase4_factor=0.75,
+    ramp_up_phase1_trades=15,
+    ramp_up_phase2_trades=35,
+    ramp_up_phase3_trades=70,
+    ramp_up_phase4_trades=120,
     
     hmm_veto_enabled=True,
-    hmm_veto_confidence_threshold=0.80,
+    hmm_veto_confidence_threshold=0.75,
     
-    score_very_strong=25,
-    score_strong=15,
-    score_moderate=8,
+    score_very_strong=28,
+    score_strong=18,
+    score_moderate=10,
     
     regime_change_veto_enabled=True
 )
