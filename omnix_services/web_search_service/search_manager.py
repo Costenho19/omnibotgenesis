@@ -9,17 +9,19 @@ import os
 import json
 import hashlib
 import logging
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, TYPE_CHECKING, Callable
 from datetime import datetime, timedelta
 import asyncio
 
 logger = logging.getLogger("OMNIX.WebSearchManager")
 
+REDIS_AVAILABLE = False
+get_redis_client: Optional[Callable[[], Any]] = None
+
 try:
-    from omnix_core.cache.redis_cache import get_redis_client
+    from omnix_core.cache.redis_cache import get_redis_client  # type: ignore[import-not-found]
     REDIS_AVAILABLE = True
 except ImportError:
-    REDIS_AVAILABLE = False
     logger.warning("⚠️ Redis cache not available for web search")
 
 from .tavily_search import TavilySearchClient, get_tavily_client
@@ -114,7 +116,7 @@ class WebSearchManager:
     
     def _init_redis(self):
         """Initialize Redis connection for caching"""
-        if REDIS_AVAILABLE:
+        if REDIS_AVAILABLE and get_redis_client is not None:
             try:
                 self.redis = get_redis_client()
                 if self.redis:
@@ -245,6 +247,8 @@ class WebSearchManager:
         Returns:
             Dict with search results or error
         """
+        cache_key: Optional[str] = None
+        
         if not force_search:
             intent = self.detect_search_intent(query)
             if not intent["needs_search"]:
@@ -286,7 +290,7 @@ class WebSearchManager:
         
         result = self.tavily.search(query, max_results=max_results)
         
-        if result["success"] and use_cache:
+        if result["success"] and use_cache and cache_key:
             self._set_cache(cache_key, result)
         
         result["from_cache"] = False
@@ -312,6 +316,8 @@ class WebSearchManager:
         Returns:
             Context string ready to inject into AI prompt, or None
         """
+        cache_key: Optional[str] = None
+        
         if use_cache:
             cache_key = self._get_cache_key(query, "context")
             cached = self._check_cache(cache_key)
@@ -330,7 +336,7 @@ class WebSearchManager:
         
         context = self.tavily.get_search_context(query, max_tokens=max_tokens)
         
-        if context and use_cache:
+        if context and use_cache and cache_key:
             self._set_cache(cache_key, {"context": context})
         
         return context
@@ -348,6 +354,8 @@ class WebSearchManager:
         Returns:
             Direct answer string, or None
         """
+        cache_key: Optional[str] = None
+        
         if use_cache:
             cache_key = self._get_cache_key(question, "qna")
             cached = self._check_cache(cache_key)
@@ -365,7 +373,7 @@ class WebSearchManager:
         
         answer = self.tavily.qna_search(question)
         
-        if answer and use_cache:
+        if answer and use_cache and cache_key:
             self._set_cache(cache_key, {"answer": answer})
         
         return answer
