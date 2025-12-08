@@ -114,17 +114,82 @@ class MigrationRunner:
             self._conn = None
     
     def _ensure_migrations_table(self, cursor) -> None:
-        """Create schema_migrations table if not exists"""
+        """Create or upgrade schema_migrations table"""
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS schema_migrations (
-                version VARCHAR(50) PRIMARY KEY,
-                description TEXT NOT NULL,
-                checksum VARCHAR(20) NOT NULL,
-                applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                execution_time_ms INTEGER,
-                success BOOLEAN DEFAULT TRUE
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables 
+                WHERE table_name = 'schema_migrations'
             )
         """)
+        table_exists = cursor.fetchone()[0]
+        
+        if table_exists:
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name = 'schema_migrations'
+            """)
+            columns = [row[0] for row in cursor.fetchall()]
+            
+            if 'version' not in columns:
+                logger.info("Upgrading legacy schema_migrations table - adding version column...")
+                cursor.execute("""
+                    ALTER TABLE schema_migrations 
+                    ADD COLUMN IF NOT EXISTS version VARCHAR(50)
+                """)
+                if 'migration_name' in columns:
+                    cursor.execute("""
+                        UPDATE schema_migrations 
+                        SET version = migration_name 
+                        WHERE version IS NULL
+                    """)
+            
+            cursor.execute("""
+                SELECT constraint_name FROM information_schema.table_constraints 
+                WHERE table_name = 'schema_migrations' 
+                AND constraint_type = 'UNIQUE'
+                AND constraint_name LIKE '%version%'
+            """)
+            if not cursor.fetchone():
+                logger.info("Adding unique constraint on version column...")
+                try:
+                    cursor.execute("""
+                        ALTER TABLE schema_migrations 
+                        ADD CONSTRAINT schema_migrations_version_unique UNIQUE (version)
+                    """)
+                except Exception:
+                    pass
+            
+            if 'description' not in columns:
+                cursor.execute("""
+                    ALTER TABLE schema_migrations 
+                    ADD COLUMN IF NOT EXISTS description TEXT DEFAULT ''
+                """)
+            
+            if 'checksum' not in columns:
+                cursor.execute("""
+                    ALTER TABLE schema_migrations 
+                    ADD COLUMN IF NOT EXISTS checksum VARCHAR(20) DEFAULT ''
+                """)
+            
+            if 'execution_time_ms' not in columns:
+                cursor.execute("""
+                    ALTER TABLE schema_migrations 
+                    ADD COLUMN IF NOT EXISTS execution_time_ms INTEGER DEFAULT 0
+                """)
+        else:
+            cursor.execute("""
+                CREATE TABLE schema_migrations (
+                    id SERIAL PRIMARY KEY,
+                    version VARCHAR(50) UNIQUE NOT NULL,
+                    migration_name TEXT,
+                    migration_hash TEXT,
+                    description TEXT DEFAULT '',
+                    checksum VARCHAR(20) DEFAULT '',
+                    executed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    execution_time_ms INTEGER DEFAULT 0,
+                    success BOOLEAN DEFAULT TRUE
+                )
+            """)
     
     def _get_applied_versions(self, cursor) -> List[str]:
         """Get list of already applied migration versions"""
@@ -157,13 +222,13 @@ class MigrationRunner:
     ) -> None:
         """Record migration execution in schema_migrations table"""
         cursor.execute("""
-            INSERT INTO schema_migrations (version, description, checksum, execution_time_ms, success)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO schema_migrations (version, migration_name, description, checksum, execution_time_ms, success)
+            VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (version) DO UPDATE SET
-                applied_at = CURRENT_TIMESTAMP,
+                executed_at = CURRENT_TIMESTAMP,
                 execution_time_ms = EXCLUDED.execution_time_ms,
                 success = EXCLUDED.success
-        """, (migration.version, migration.description, migration.checksum, execution_time_ms, success))
+        """, (migration.version, migration.version, migration.description, migration.checksum, execution_time_ms, success))
     
     def run_pending_migrations(self, registry: MigrationRegistry) -> dict:
         """
