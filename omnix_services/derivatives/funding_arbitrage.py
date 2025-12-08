@@ -202,19 +202,17 @@ class FundingArbitrageAnalyzer:
         Returns:
             FundingOpportunity si es rentable
         """
-        if self.futures_client:
-            ticker = self.futures_client.get_ticker(symbol)
-            if not ticker:
-                return None
-            
-            funding_rate = ticker.funding_rate
-            spot_price = ticker.index_price
-            perp_price = ticker.mark_price
-        else:
-            import random
-            funding_rate = random.uniform(-0.0002, 0.0005)
-            spot_price = 95000 if symbol == "BTC" else 3500
-            perp_price = spot_price * (1 + random.uniform(-0.001, 0.001))
+        if not self.futures_client:
+            logger.warning(f"No futures client available for {symbol}")
+            return None
+        
+        ticker = self.futures_client.get_ticker(symbol)
+        if not ticker:
+            return None
+        
+        funding_rate = ticker.funding_rate
+        spot_price = ticker.index_price
+        perp_price = ticker.mark_price
         
         if funding_rate < self.config.min_funding_rate:
             return None

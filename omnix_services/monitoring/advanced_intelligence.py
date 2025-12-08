@@ -29,41 +29,11 @@ class OmnixAdvancedIntelligence:
         return alerts
     
     def analyze_market_momentum(self):
-        """Análisis de momentum avanzado"""
-        # Simulación de análisis real con datos de mercado
-        # Valores estimados basados en condiciones típicas del mercado
-        current_price = 95000  # Estimado BTC
-        sma_20 = 93000  # SMA 20 estimado
-        
-        # Calcular momentum real basado en precio actual vs SMA
-        momentum_score = min(0.9, max(0.3, (current_price / sma_20) - 1 + 0.6))
-        if momentum_score > 0.7:
-            return {
-                'type': 'MOMENTUM_BULLISH',
-                'score': momentum_score,
-                'message': f'📈 Momentum alcista detectado ({momentum_score:.2f}) - Considerar posiciones largas'
-            }
-        elif momentum_score < 0.4:
-            return {
-                'type': 'MOMENTUM_BEARISH', 
-                'score': momentum_score,
-                'message': f'📉 Momentum bajista detectado ({momentum_score:.2f}) - Precaución recomendada'
-            }
+        """Análisis de momentum avanzado - Requiere datos de mercado reales"""
         return None
     
     def detect_extreme_volatility(self):
-        """Detector de volatilidad extrema"""
-        # Cambio estimado 24h
-        change_24h = 2.5  # Estimado 2.5% cambio típico
-        
-        # Volatilidad real basada en cambio 24h
-        volatility = min(0.15, max(0.02, abs(change_24h) / 100))
-        if volatility > 0.1:
-            return {
-                'type': 'HIGH_VOLATILITY',
-                'value': volatility,
-                'message': f'⚡ Alta volatilidad detectada ({volatility:.3f}) - Ajustar stop-loss'
-            }
+        """Detector de volatilidad extrema - Requiere datos de mercado reales"""
         return None
     
     def scan_arbitrage_opportunities(self):

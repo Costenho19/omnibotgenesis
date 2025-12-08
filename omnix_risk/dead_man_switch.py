@@ -337,19 +337,12 @@ class DeadManSwitch:
                     message=f"Exchange error: {str(e)[:50]}"
                 )
         
-        if self._last_heartbeat_time:
-            age = (datetime.utcnow() - self._last_heartbeat_time).total_seconds() * 1000
-            passed = age < timeout_ms
-        else:
-            passed = True
-            self._last_heartbeat_time = datetime.utcnow()
-        
         return HealthCheck(
             check_type=CheckType.EXCHANGE_HEARTBEAT,
-            passed=passed,
-            value="OK (simulated)",
+            passed=False,
+            value="NO_CONNECTION",
             threshold=f"{timeout_ms}ms",
-            message="Heartbeat OK" if passed else "Heartbeat stale"
+            message="Trading service not available - no exchange connection"
         )
     
     def _check_latency(self) -> HealthCheck:
@@ -363,25 +356,24 @@ class DeadManSwitch:
                 self._latency_samples.append(current_latency)
                 if len(self._latency_samples) > self._max_latency_samples:
                     self._latency_samples = self._latency_samples[-self._max_latency_samples:]
-            else:
-                current_latency = 50
-        else:
-            import random
-            current_latency = random.uniform(30, 150)
-            self._latency_samples.append(current_latency)
-            if len(self._latency_samples) > self._max_latency_samples:
-                self._latency_samples = self._latency_samples[-self._max_latency_samples:]
-        
-        avg_latency = statistics.mean(self._latency_samples) if self._latency_samples else current_latency
-        
-        passed = current_latency < threshold_ms
+                
+                avg_latency = statistics.mean(self._latency_samples) if self._latency_samples else current_latency
+                passed = current_latency < threshold_ms
+                
+                return HealthCheck(
+                    check_type=CheckType.LATENCY,
+                    passed=passed,
+                    value=f"{current_latency:.0f}ms (avg: {avg_latency:.0f}ms)",
+                    threshold=f"{threshold_ms}ms",
+                    message="Latency OK" if passed else "HIGH LATENCY"
+                )
         
         return HealthCheck(
             check_type=CheckType.LATENCY,
-            passed=passed,
-            value=f"{current_latency:.0f}ms (avg: {avg_latency:.0f}ms)",
+            passed=False,
+            value="N/A",
             threshold=f"{threshold_ms}ms",
-            message="Latency OK" if passed else "HIGH LATENCY"
+            message="WebSocket not connected - latency unavailable"
         )
     
     def _check_orderbook_freshness(self) -> HealthCheck:
@@ -425,8 +417,13 @@ class DeadManSwitch:
                 pass
         
         if current_price is None:
-            import random
-            current_price = 95000 + random.uniform(-100, 100)
+            return HealthCheck(
+                check_type=CheckType.DATA_INTEGRITY,
+                passed=False,
+                value="NO_DATA",
+                threshold=f"{spike_threshold}%",
+                message="Unable to get price from exchange"
+            )
         
         if self._last_price is not None and current_price is not None:
             change_pct = abs((current_price - self._last_price) / self._last_price * 100)
@@ -452,17 +449,23 @@ class DeadManSwitch:
         """Check if slippage is within normal range"""
         threshold_bps = self._config['slippage_threshold_bps']
         
-        import random
-        current_slippage = random.uniform(2, 15)
-        
-        passed = current_slippage < threshold_bps
+        if self._trading_service and hasattr(self._trading_service, 'last_slippage_bps'):
+            current_slippage = self._trading_service.last_slippage_bps
+            passed = current_slippage < threshold_bps
+            return HealthCheck(
+                check_type=CheckType.SLIPPAGE_NORMAL,
+                passed=passed,
+                value=f"{current_slippage:.1f} bps",
+                threshold=f"{threshold_bps} bps",
+                message="Slippage OK" if passed else "HIGH SLIPPAGE"
+            )
         
         return HealthCheck(
             check_type=CheckType.SLIPPAGE_NORMAL,
-            passed=passed,
-            value=f"{current_slippage:.1f} bps",
+            passed=True,
+            value="N/A",
             threshold=f"{threshold_bps} bps",
-            message="Slippage OK" if passed else "HIGH SLIPPAGE"
+            message="No recent trades - slippage unavailable"
         )
     
     def _check_websocket(self) -> HealthCheck:
