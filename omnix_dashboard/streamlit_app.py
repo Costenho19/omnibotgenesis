@@ -119,7 +119,17 @@ def main():
     st.markdown("---")
     
     with st.sidebar:
-        st.image("https://via.placeholder.com/150x50/0E1117/00D4AA?text=OMNIX", width=150)
+        st.markdown("""
+        <div style="padding: 10px 0; margin-bottom: 15px;">
+            <span style="font-size: 28px; font-weight: 800; 
+                background: linear-gradient(90deg, #00D4AA, #4DABF7);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;">
+                OMNIX
+            </span>
+            <span style="font-size: 12px; color: #8B92A5; margin-left: 5px;">V6.5.4</span>
+        </div>
+        """, unsafe_allow_html=True)
         st.markdown("### Navigation")
         page = st.radio("", ["Overview", "Risk Metrics", "Pair Analysis", "Calibration"])
         st.markdown("---")

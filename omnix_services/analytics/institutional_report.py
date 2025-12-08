@@ -128,7 +128,7 @@ class InstitutionalReportGenerator:
     def generate_report(
         self,
         metrics: Dict[str, Any],
-        calibration: Dict[str, Any] = None,
+        calibration: Optional[Dict[str, Any]] = None,
         company_name: str = "OMNIX V7.0 INSTITUTIONAL+",
         period: str = "All Time",
         include_benchmarks: bool = True,
@@ -962,7 +962,7 @@ class InstitutionalReportGenerator:
         else:
             return "Needs Work"
     
-    def save_to_file(self, pdf_bytes: bytes, filename: str = None) -> str:
+    def save_to_file(self, pdf_bytes: bytes, filename: Optional[str] = None) -> str:
         if filename is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"OMNIX_Institutional_Report_{timestamp}.pdf"
