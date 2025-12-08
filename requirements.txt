@@ -84,3 +84,4 @@ tavily-python
 telegram
 plotly
 streamlit
+dependency-injector
