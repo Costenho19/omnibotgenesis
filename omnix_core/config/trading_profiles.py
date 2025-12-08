@@ -372,7 +372,7 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
 WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     name="WIN_RATE_OPTIMIZED",
     description="Perfil V6.5.4 optimizado para WIN RATE 55%+. "
-                "SOLO opera BTC/USD y XRP/USD (55-66% win rate probado). "
+                "Opera BTC/USD, XRP/USD y ADA/USD (pares con mejor historial). "
                 "SL ajustado (1.2%), TP amplio (3.5%) = R:R 2.9:1. "
                 "Check cada 15s para SL reactivo. Alta selectividad.",
     
@@ -411,8 +411,8 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     regime_change_veto_enabled=True,
     
     extra_params={
-        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'LINK/USD', 'ATOM/USD', 'POL/USD', 'ADA/USD', 'LTC/USD'],
+        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'LINK/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
         'risk_reward_min': 2.5,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10
