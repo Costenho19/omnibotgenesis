@@ -1,5 +1,5 @@
 """
-🚀 OMNIX INSTITUTIONAL+ - USER SESSION MANAGER
+OMNIX INSTITUTIONAL+ - USER SESSION MANAGER
 Sistema de sesiones multi-usuario escalable para 100,000+ usuarios simultáneos
 
 ARQUITECTURA:

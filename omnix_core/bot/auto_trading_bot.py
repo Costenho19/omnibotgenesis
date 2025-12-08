@@ -6,13 +6,13 @@ Non-Markovian Kernel, Memory-Enhanced RMS, Adaptive Parameter Engine, y On-Chain
 INSTITUTIONAL FIX: 4 Institutional Fixes - position limits at start, hard cap, 
 no paper bypass, no bias system. Track record now REPLICABLE in real trading.
 
-🚀 MULTI-USER ARCHITECTURE:
+MULTI-USER ARCHITECTURE:
 - Soporte para 100,000+ usuarios simultáneos
 - Sesiones aisladas por usuario vía UserSessionManager
 - Estado persistente en Redis + PostgreSQL
 - Auto-restauración después de reinicios de Railway
 
-🔥 ESTRATEGIAS INSTITUTIONAL+ (10 MÓDULOS):
+ESTRATEGIAS INSTITUTIONAL+ (10 MÓDULOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -24,25 +24,25 @@ no paper bypass, no bias system. Track record now REPLICABLE in real trading.
 9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
 10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
 
-🧠 MEMORY-ENHANCED RMS:
+MEMORY-ENHANCED RMS:
 - MemoryRiskAdapter: Puente entre kernel temporal y gestión de riesgo
 - LimitsEngine: Límites dinámicos ajustados por coherencia de régimen
 - CircuitBreaker: Halt automático por incoherencia de memoria/transición de régimen
 - PositionMonitor: Factor de riesgo basado en divergencia de memoria
 - AlertDispatcher: Alertas predictivas de transiciones de régimen
 
-🎯 FUNCIONALIDADES:
+FUNCIONALIDADES:
 - Multi-user sessions: Cada usuario tiene su propia sesión de trading
 - Auto-trading persistente: El estado se guarda en DB y sobrevive reinicios de Railway
 - Adaptive Parameter Engine: Auto-calibración de SL/TP/posición por régimen
 - On-Chain Intelligence: Whale tracking via ClankApp + Arkham
 - Logging detallado: Cada operación se registra con verificación
 
-💰 MODOS DE OPERACIÓN:
+MODOS DE OPERACIÓN:
 - PAPER TRADING: $1,000,000 virtual (recomendado para testing)
 - REAL TRADING: Dinero real en Kraken (solo para producción)
 
-🔒 SEGURIDAD:
+SEGURIDAD:
 - Firma Post-Quantum de todos los trades
 - Validaciones múltiples antes de ejecutar
 - Parada automática si pérdidas > límite configurable

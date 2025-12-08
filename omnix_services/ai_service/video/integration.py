@@ -1,5 +1,5 @@
 """
-🔗 OMNIX V6.5.4 INSTITUTIONAL+ - VIDEO LEARNING INTEGRATION
+🔗 OMNIX INSTITUTIONAL+ - VIDEO LEARNING INTEGRATION
 Integración entre VideoAnalyzerUltra y AutoLearningSystem
 
 FUNCIONALIDAD:
@@ -9,7 +9,7 @@ FUNCIONALIDAD:
 - Aplica cambios automáticamente (si enabled) o propone (si disabled)
 - Mantiene historial completo de aprendizajes
 
-Desarrollado por Harold Nunes - V6.5.4 INSTITUTIONAL+
+Desarrollado por Harold Nunes - OMNIX INSTITUTIONAL+
 """
 
 import logging

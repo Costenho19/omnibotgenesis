@@ -1,12 +1,14 @@
 """
 OMNIX INSTITUTIONAL+ - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
-Escalabilidad: 50K+ usuarios con context caching
-+ Quantum Physics Validator for verified scientific responses
-+ Real Context Provider for institutional transparency
-+ On-Chain Intelligence
-+ Adaptive Parameter Engine ULTRA
-+ Market Intelligence
+
+Features:
+- Escalabilidad: 50K+ usuarios con context caching
+- Quantum Physics Validator for verified scientific responses
+- Real Context Provider for institutional transparency
+- On-Chain Intelligence
+- Adaptive Parameter Engine ULTRA
+- Market Intelligence
 """
 
 print("✅ ai_prompts.py CARGADO - REAL CONTEXT PROVIDER + ON-CHAIN + ADAPTIVE ENGINE")

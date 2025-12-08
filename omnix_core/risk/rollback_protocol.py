@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🔄 ALGORITHMIC ROLLBACK PROTOCOL (ARP) V6.5.4
+🔄 ALGORITHMIC ROLLBACK PROTOCOL (ARP)
 OMNIX INSTITUTIONAL+ - Protocolo de Rollback Automático
 
 Este módulo implementa auto-revert de configuración cuando se detecta
@@ -15,8 +15,7 @@ REGLAS:
     - Si drawdown > 0.5% en la primera hora → Warning + Preparar revert
     - Snapshots de configuración guardados antes de cada deploy
 
-Harold Nunes - Diciembre 2025
-OMNIX INSTITUTIONAL+ - Respuesta a Auditoría Axiomática
+Harold Nunes - OMNIX INSTITUTIONAL+
 """
 
 import logging

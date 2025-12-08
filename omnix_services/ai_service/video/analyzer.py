@@ -1,5 +1,5 @@
 """
-🎥 OMNIX V6.5.4 INSTITUTIONAL+ - VIDEO ANALYZER ULTRA
+🎥 OMNIX INSTITUTIONAL+ - VIDEO ANALYZER ULTRA
 Sistema avanzado de análisis de videos de trading con procesamiento visual
 
 CAPACIDADES PREMIUM INSTITUCIONALES:
@@ -15,7 +15,7 @@ TECNOLOGÍAS:
 - OpenAI Whisper para transcripciones
 - NLP avanzado para sentimiento
 
-Desarrollado por Harold Nunes - V6.5.4 INSTITUTIONAL+
+Desarrollado por Harold Nunes - OMNIX INSTITUTIONAL+
 """
 
 import logging

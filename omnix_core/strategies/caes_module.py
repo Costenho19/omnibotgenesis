@@ -26,8 +26,7 @@ FÓRMULA PRINCIPAL:
     - 85% conf → 2.2x tamaño
     - 95% conf → 2.8x tamaño (máximo 3x por límites de riesgo)
 
-Harold Nunes - Diciembre 2025
-OMNIX INSTITUTIONAL+ - Fuera de Serie
+Harold Nunes - OMNIX INSTITUTIONAL+
 """
 
 import logging

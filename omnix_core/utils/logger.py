@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.4 INSTITUTIONAL+ - Centralized Logging System
+OMNIX INSTITUTIONAL+ - Centralized Logging System
 Features: Structured logging, rotation, monitoring integration, institutional decision logging
 """
 
@@ -76,7 +76,7 @@ class DecisionPayload:
 
 class InstitutionalDecisionLogger:
     """
-    OMNIX V6.5.4 INSTITUTIONAL+ - Premium Decision Logger
+    OMNIX INSTITUTIONAL+ - Premium Decision Logger
     
     Citadel/Jump Trading level logging for:
     - Complete trade lifecycle traceability
