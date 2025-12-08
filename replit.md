@@ -64,7 +64,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 ### Trading Profiles System
 
 -   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED) to switch between conservative and aggressive settings for trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
--   **WIN_RATE_OPTIMIZED V2 PREMIUM (Dec 8, 2025)**: Institutional-grade profile with per-pair calibration. Trades BTC/USD, XRP/USD, ADA/USD, LINK/USD. Uses `PairCalibration` system with tiers (PROVEN/CALIBRATING/EXCLUDED). Differentiated SL/TP per symbol: BTC/XRP (1.2%/3.5%), ADA (0.9%/2.0%), LINK (1.0%/2.5%). Max position sizing: BTC $50K, XRP $40K, LINK $30K, ADA $25K. Portfolio weights: BTC 40%, XRP 30%, ADA 15%, LINK 15%. Check interval 15s. Set `TRADING_PROFILE=WIN_RATE_OPTIMIZED` in Railway to activate.
+-   **WIN_RATE_OPTIMIZED V2 PREMIUM (Dec 8, 2025)**: Institutional-grade profile with per-pair calibration. Trades BTC/USD, XRP/USD, ADA/USD, LINK/USD. Uses `PairCalibration` system with tiers (PROVEN/CALIBRATING/EXCLUDED). Differentiated SL/TP per symbol: BTC/XRP (1.2%/3.5%), ADA (0.9%/2.0%), LINK (1.0%/2.5%). Max position sizing: BTC $50K, XRP $40K, LINK $30K, ADA $25K. Portfolio weights: BTC 40%, XRP 30%, ADA 15%, LINK 15%. **Circuit Breaker por par**: BTC/XRP max 2% drawdown diario, ADA/LINK max 1%. Check interval 15s. Set `TRADING_PROFILE=WIN_RATE_OPTIMIZED` in Railway to activate.
 
 ### Migration Tools (V6.5.4 Premium)
 

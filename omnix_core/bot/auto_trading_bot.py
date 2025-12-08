@@ -541,6 +541,17 @@ class AutoTradingBot:
             self.risk_guardian = None
             logger.info("⚠️ AI Risk Guardian desactivado")
         
+        # V6.5.4 PREMIUM: Per-Pair Circuit Breaker - Drawdown diario por par
+        from datetime import datetime as dt_init, timezone as tz_init
+        today_utc = dt_init.now(tz_init.utc).strftime('%Y-%m-%d')
+        self.daily_drawdown_per_pair = {
+            "BTC/USD": {"pnl": 0.0, "date": today_utc},
+            "XRP/USD": {"pnl": 0.0, "date": today_utc},
+            "ADA/USD": {"pnl": 0.0, "date": today_utc},
+            "LINK/USD": {"pnl": 0.0, "date": today_utc},
+        }
+        logger.info("🔌 Per-Pair Circuit Breaker V6.5.4 ACTIVADO - Drawdown diario por símbolo")
+        
         # Non-Markovian Memory Kernel V6.1 ULTRA - QUANTUM TEMPORAL MEMORY
         self._last_kernel_pair = None  # Track pair for kernel seeding
         self._kernel_needs_reseed = True  # Flag for pending reseed
@@ -1285,12 +1296,16 @@ class AutoTradingBot:
                             self._paper_trade_count += 1
                             self.state['paper_trade_count'] = self._paper_trade_count
                             
+                            realized_pnl = sl_tp_event["pnl_usd"]
+                            
+                            self.update_pair_drawdown(symbol, realized_pnl)
+                            
                             close_event = {
                                 "event": "POSITION_CLOSED",
                                 "timestamp": dt_module.utcnow().isoformat() + "Z",
                                 "symbol": symbol,
                                 "trigger": sl_tp_event["trigger_type"],
-                                "realized_pnl": sl_tp_event["pnl_usd"],
+                                "realized_pnl": realized_pnl,
                                 "trade_count": self._paper_trade_count
                             }
                             logger.info(f"✅ CLOSE PREMIUM: {json_module.dumps(close_event)}")
@@ -2474,6 +2489,32 @@ class AutoTradingBot:
                         'allowed_symbols': allowed_symbols
                     }
             
+            # ==========================================================================
+            # V6.5.4 PREMIUM: PER-PAIR CIRCUIT BREAKER - BLOQUEA SI DRAWDOWN DIARIO EXCEDIDO
+            # ==========================================================================
+            if action != 'HOLD':
+                current_balance = self._get_balance()
+                if not self.check_circuit_breaker(current_symbol, current_balance):
+                    decision_id = analysis.get('decision_id')
+                    
+                    if institutional_logger and decision_id:
+                        try:
+                            institutional_logger.log_event(
+                                event_type="VETO_CIRCUIT_BREAKER",
+                                symbol=current_symbol,
+                                decision_id=decision_id,
+                                reason="Daily drawdown limit exceeded for pair"
+                            )
+                        except Exception:
+                            pass
+                    
+                    return {
+                        'success': False,
+                        'blocked': True,
+                        'error': f'Circuit Breaker: {current_symbol} bloqueado por drawdown diario',
+                        'reason': 'CIRCUIT_BREAKER_VETO'
+                    }
+            
             # 🛡️ AI RISK GUARDIAN - PRIMERA LÍNEA DE DEFENSA
             if self.risk_guardian and action != 'HOLD':
                 try:
@@ -3282,6 +3323,119 @@ class AutoTradingBot:
             logger.info(f"📊 {VERSION_BANNER} Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}, Size=${optimal_size:.2f}")
         
         return optimal_size
+    
+    # ==========================================================================
+    # V6.5.4 PREMIUM: PER-PAIR CIRCUIT BREAKER - INSTITUTIONAL GRADE
+    # ==========================================================================
+    
+    def check_circuit_breaker(self, symbol: str, balance: float) -> bool:
+        """
+        V6.5.4 PREMIUM: Verifica si el par está bloqueado por circuit breaker.
+        
+        Returns:
+            True si el trade está permitido, False si está bloqueado
+        """
+        import json as json_cb
+        from datetime import datetime as dt_cb, timezone as tz_cb
+        
+        normalized = self._normalize_symbol_for_calibration(symbol)
+        if normalized not in self.daily_drawdown_per_pair:
+            return True
+        
+        self._reset_daily_drawdown_if_needed(normalized)
+        
+        calibration = get_pair_calibration(normalized) if get_pair_calibration else None
+        if not calibration:
+            return True
+        
+        max_dd_pct = calibration.max_daily_drawdown_pct
+        allowed_loss = balance * max_dd_pct
+        current_dd = abs(self.daily_drawdown_per_pair[normalized]["pnl"])
+        
+        if current_dd >= allowed_loss:
+            veto_event = {
+                "event": "VETO_CIRCUIT_BREAKER",
+                "symbol": normalized,
+                "max_dd_pct": max_dd_pct,
+                "allowed_loss_usd": round(allowed_loss, 2),
+                "current_dd_usd": round(current_dd, 2),
+                "calibration_tier": calibration.tier.value,
+                "status": "BLOCKED",
+                "timestamp": dt_cb.now(tz_cb.utc).isoformat()
+            }
+            logger.warning(f"🔌 CIRCUIT BREAKER: {normalized} BLOQUEADO - DD ${current_dd:.2f} >= ${allowed_loss:.2f}")
+            logger.info(f"📊 CIRCUIT_BREAKER: {json_cb.dumps(veto_event)}")
+            return False
+        
+        return True
+    
+    def update_pair_drawdown(self, symbol: str, pnl: float) -> None:
+        """
+        V6.5.4 PREMIUM: Actualiza el drawdown acumulado para un par.
+        Se llama al cerrar cada trade.
+        """
+        import json as json_upd
+        from datetime import datetime as dt_upd, timezone as tz_upd
+        
+        normalized = self._normalize_symbol_for_calibration(symbol)
+        if normalized not in self.daily_drawdown_per_pair:
+            self.daily_drawdown_per_pair[normalized] = {
+                "pnl": 0.0,
+                "date": dt_upd.now(tz_upd.utc).strftime('%Y-%m-%d')
+            }
+        
+        self._reset_daily_drawdown_if_needed(normalized)
+        
+        old_pnl = self.daily_drawdown_per_pair[normalized]["pnl"]
+        new_pnl = old_pnl + pnl
+        self.daily_drawdown_per_pair[normalized]["pnl"] = new_pnl
+        
+        update_event = {
+            "event": "DRAWDOWN_UPDATE",
+            "symbol": normalized,
+            "trade_pnl": round(pnl, 2),
+            "daily_pnl": round(new_pnl, 2),
+            "timestamp": dt_upd.now(tz_upd.utc).isoformat()
+        }
+        logger.info(f"📊 DRAWDOWN_TRACKER: {json_upd.dumps(update_event)}")
+    
+    def _reset_daily_drawdown_if_needed(self, symbol: str) -> None:
+        """
+        V6.5.4 PREMIUM: Reset automático del drawdown a las 00:00 UTC.
+        """
+        import json as json_rst
+        from datetime import datetime as dt_rst, timezone as tz_rst
+        
+        today_utc = dt_rst.now(tz_rst.utc).strftime('%Y-%m-%d')
+        record = self.daily_drawdown_per_pair.get(symbol)
+        
+        if record and record["date"] != today_utc:
+            old_pnl = record["pnl"]
+            record["date"] = today_utc
+            record["pnl"] = 0.0
+            
+            reset_event = {
+                "event": "DRAWDOWN_RESET",
+                "symbol": symbol,
+                "previous_pnl": round(old_pnl, 2),
+                "new_date": today_utc,
+                "timestamp": dt_rst.now(tz_rst.utc).isoformat()
+            }
+            logger.info(f"🔄 DRAWDOWN_RESET: {json_rst.dumps(reset_event)}")
+    
+    def _normalize_symbol_for_calibration(self, symbol: str) -> str:
+        """Normaliza símbolo Kraken a formato estándar para calibración"""
+        if symbol in self.DISPLAY_SYMBOL_MAP:
+            return self.DISPLAY_SYMBOL_MAP[symbol]
+        if '/' in symbol:
+            return symbol
+        if len(symbol) >= 6:
+            return f"{symbol[:-3]}/{symbol[-3:]}"
+        return symbol
+    
+    # ==========================================================================
+    # END CIRCUIT BREAKER
+    # ==========================================================================
     
     def _get_balance(self) -> float:
         """Obtener balance disponible en USD (paper o real)"""
