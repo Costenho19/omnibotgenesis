@@ -1,13 +1,19 @@
 """
-OMNIX V5.1 ENTERPRISE - Redis Cache System
+OMNIX V6.5.4 ENTERPRISE - Redis Cache System
 Performance: 10x faster responses
 Capacity: 50K+ concurrent users
+
+V6.5.4 Updates:
+- Added get_redis_client() for raw client access
+- Added reconnect() method for lazy recovery
+- Improved cache_result with normalized/hashed keys
 """
 
 import json
 import redis
 import logging
-from typing import Any, Optional
+import hashlib
+from typing import Any, Optional, Callable
 from functools import wraps
 from omnix_config.settings import settings
 
@@ -148,27 +154,111 @@ class RedisCache:
         except Exception as e:
             logger.error(f"Cache TTL error: {e}")
             return -1
+    
+    def reconnect(self) -> bool:
+        """
+        Attempt to reconnect to Redis if connection was lost.
+        Returns True if connection is now available.
+        """
+        if self.client:
+            try:
+                self.client.ping()
+                return True
+            except Exception:
+                self.client = None
+        
+        try:
+            redis_url = settings.redis.url if hasattr(settings.redis, 'url') else None
+            if not redis_url:
+                from omnix_config.env_manager import env_config
+                redis_url = env_config.get('REDIS_URL')
+            
+            if redis_url:
+                self.client = redis.from_url(
+                    redis_url,
+                    decode_responses=True,
+                    socket_keepalive=True,
+                    socket_connect_timeout=10,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30
+                )
+            else:
+                self.client = redis.Redis(
+                    host=settings.redis.host,
+                    port=settings.redis.port,
+                    db=settings.redis.db,
+                    password=settings.redis.password,
+                    decode_responses=True,
+                    socket_keepalive=True,
+                    socket_connect_timeout=5,
+                    retry_on_timeout=True
+                )
+            
+            self.client.ping()
+            logger.info("✅ Redis reconnected successfully!")
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️ Redis reconnect failed: {e}")
+            self.client = None
+            return False
+    
+    def is_connected(self) -> bool:
+        """Check if Redis connection is active"""
+        if not self.client:
+            return False
+        try:
+            self.client.ping()
+            return True
+        except Exception:
+            return False
+
+
+def _normalize_cache_key(prefix: str, func_name: str, args: tuple, kwargs: dict) -> str:
+    """
+    Generate a normalized, hashed cache key.
+    Serializes all argument values for uniqueness while using hash for security.
+    """
+    try:
+        def serialize_arg(a):
+            if isinstance(a, (dict, list)):
+                return json.dumps(a, sort_keys=True, default=str)
+            elif isinstance(a, set):
+                return json.dumps(sorted(str(x) for x in a), default=str)
+            else:
+                return repr(a)
+        
+        key_data = {
+            "func": func_name,
+            "args": [serialize_arg(a) for a in args],
+            "kwargs": {k: serialize_arg(v) for k, v in sorted(kwargs.items())}
+        }
+        key_json = json.dumps(key_data, sort_keys=True, default=str)
+        key_hash = hashlib.sha256(key_json.encode()).hexdigest()[:16]
+        return f"{prefix}:{func_name}:{key_hash}"
+    except Exception:
+        fallback_hash = hashlib.md5(f"{args}:{kwargs}".encode()).hexdigest()[:12]
+        return f"{prefix}:{func_name}:{fallback_hash}"
 
 
 # Decorator para cache automático
 def cache_result(ttl: int = 300, key_prefix: str = ""):
-    """Decorator to cache function results"""
+    """
+    Decorator to cache function results.
+    V6.5.4: Uses normalized/hashed keys for security and consistency.
+    """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Generate cache key
-            cache_key = f"{key_prefix}:{func.__name__}:{str(args)}:{str(kwargs)}"
+            cache_key = _normalize_cache_key(key_prefix, func.__name__, args, kwargs)
             
-            # Try to get from cache
             cached = cache.get(cache_key)
             if cached is not None:
                 logger.debug(f"Cache HIT: {cache_key}")
                 return cached
             
-            # Execute function
             result = func(*args, **kwargs)
             
-            # Store in cache
             cache.set(cache_key, result, ttl)
             logger.debug(f"Cache MISS: {cache_key}")
             
@@ -184,3 +274,21 @@ cache = RedisCache()
 def get_redis_cache() -> RedisCache:
     """Get global Redis cache instance for multi-user architecture"""
     return cache
+
+
+def get_redis_client() -> Optional[redis.Redis]:
+    """
+    Get raw Redis client for direct access.
+    Used by WebSearchManager and other services that need native Redis operations.
+    
+    Returns:
+        Redis client instance or None if not connected
+    """
+    global cache
+    if cache.client:
+        return cache.client
+    
+    if cache.reconnect():
+        return cache.client
+    
+    return None
