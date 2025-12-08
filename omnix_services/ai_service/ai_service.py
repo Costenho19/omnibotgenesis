@@ -1,14 +1,15 @@
 """
-OMNIX V6.4 ENTERPRISE - Conversational AI Service
+OMNIX INSTITUTIONAL+ - Conversational AI Service
 Main orchestrator for AI functionality
-Reemplaza la clase ConversationalAI de main.py (1,133 líneas)
+
+Refactored for dependency injection while maintaining backward compatibility.
 Escalabilidad: 50K+ usuarios con stateless design
 + Real Context Provider for institutional transparency
 """
 
-print("✅ ai_service.py V6.4 CARGADO - REAL CONTEXT PROVIDER")
+print("✅ ai_service.py CARGADO - REAL CONTEXT PROVIDER + DI")
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from datetime import datetime
 import logging
 
@@ -16,6 +17,9 @@ from .ai_models import AIModelsManager
 from .ai_styles import VisualStylesManager
 from .ai_prompts import PromptsContextManager
 from omnix_core.cache.redis_cache import cache
+
+if TYPE_CHECKING:
+    from .providers.routing_gateway import RoutingAIGateway
 
 WEB_SEARCH_AVAILABLE = False
 try:
@@ -49,25 +53,38 @@ class ConversationalAIService:
     
     Orchestrates AI models, prompts, styles, and context management.
     Designed for horizontal scaling with stateless architecture.
+    
+    Supports dependency injection for better testing and flexibility.
     """
     
-    def __init__(self):
-        """Initialize AI service with all managers"""
+    def __init__(
+        self,
+        models_manager: Optional[AIModelsManager] = None,
+        styles_manager: Optional[VisualStylesManager] = None,
+        prompts_manager: Optional[PromptsContextManager] = None,
+        ai_gateway: Optional["RoutingAIGateway"] = None,
+    ):
+        """
+        Initialize AI service with optional injected dependencies.
         
-        # Initialize sub-managers
-        self.models = AIModelsManager()
-        self.styles = VisualStylesManager()
-        self.prompts = PromptsContextManager()
+        Args:
+            models_manager: AIModelsManager instance (created if None)
+            styles_manager: VisualStylesManager instance (created if None)
+            prompts_manager: PromptsContextManager instance (created if None)
+            ai_gateway: RoutingAIGateway for new DI-based AI calls (optional)
+        """
         
-        # ✅ REDIS-BACKED STATE (Horizontal Scaling Ready)
+        self.models = models_manager or AIModelsManager()
+        self.styles = styles_manager or VisualStylesManager()
+        self.prompts = prompts_manager or PromptsContextManager()
+        self._ai_gateway = ai_gateway
+        
         self.conversation_history = get_conversation_history()
         self.user_preferences = get_user_preferences()
         self.market_context = get_market_context()
         
-        # Intelligence level
         self.intelligence_level = "ULTRA_COMPETITIVE_ENTERPRISE"
         
-        # Prediction models configuration
         self.prediction_models = {
             'monte_carlo_advanced': {'active': True, 'accuracy': 0.847},
             'lstm_neural_network': {'active': True, 'accuracy': 0.823},
@@ -76,22 +93,31 @@ class ConversationalAIService:
             'ensemble_meta_model': {'active': True, 'accuracy': 0.872}
         }
         
-        logger.info("🧠 Conversational AI Service initialized successfully")
-        logger.info(f"🚀 Intelligence level: {self.intelligence_level}")
+        logger.info("Conversational AI Service initialized (DI-enabled)")
+        logger.info(f"Intelligence level: {self.intelligence_level}")
         
-        # Check AI models health
         health = self.models.health_check()
-        logger.info(f"🔍 AI Models Health: {health}")
+        logger.info(f"AI Models Health: {health}")
         
-        # 🔴 INITIALIZE REAL CONTEXT PROVIDER (Institutional Transparency)
         if REAL_CONTEXT_AVAILABLE and create_real_context_provider:
             try:
                 existing = get_real_context_provider()
                 if existing is None:
                     create_real_context_provider()
-                    logger.info("🔴 Real Context Provider initialized from ConversationalAIService")
+                    logger.info("Real Context Provider initialized from ConversationalAIService")
             except Exception as e:
-                logger.warning(f"⚠️ Could not initialize Real Context Provider: {e}")
+                logger.warning(f"Could not initialize Real Context Provider: {e}")
+    
+    @property
+    def ai_gateway(self) -> Optional["RoutingAIGateway"]:
+        """Get the AI gateway (lazy-loaded if not injected)."""
+        if self._ai_gateway is None:
+            try:
+                from .container import get_ai_gateway
+                self._ai_gateway = get_ai_gateway()
+            except Exception:
+                pass
+        return self._ai_gateway
     
     @rate_limit(
         max_requests=30, 
@@ -327,13 +353,18 @@ class ConversationalAIService:
         }
 
 
-# Global service instance (singleton pattern)
-# TODO: Replace with dependency injection for better testing
-_ai_service_instance = None
+_ai_service_instance: Optional[ConversationalAIService] = None
 
 
 def get_ai_service() -> ConversationalAIService:
-    """Get singleton AI service instance"""
+    """
+    Get singleton AI service instance.
+    
+    NOTE: ConversationalAIService now supports dependency injection.
+    For new code, prefer using the DI container:
+        from omnix_services.ai_service import get_ai_gateway
+        gateway = get_ai_gateway()
+    """
     global _ai_service_instance
     if _ai_service_instance is None:
         _ai_service_instance = ConversationalAIService()

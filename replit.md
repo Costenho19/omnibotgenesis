@@ -88,9 +88,55 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Symbol Filter**: Blocks trades in non-allowed symbols. Logs JSON events for audit trail.
 -   **Premium Observability**: Structured JSON logs for SL/TP triggers with Prometheus metrics.
 
-### Architecture Modernization V7.0 (Planned)
+### AI Service Architecture (SOLID + Dependency Injection)
 
--   Planned refactoring to Hexagonal Architecture with Ports & Adapters, SOLID Principles, and Dependency Injection using `dependency-injector` for a more modular and maintainable codebase.
+The `omnix_services/ai_service/` module has been refactored following SOLID principles and dependency injection patterns:
+
+**Directory Structure:**
+```
+omnix_services/ai_service/
+├── interfaces/           # Protocol definitions (PEP 544)
+│   ├── ai_gateway.py     # AIGatewayProtocol for text generation
+│   ├── prompt_builder.py # PromptBuilderProtocol
+│   ├── style_renderer.py # StyleRendererProtocol
+│   └── context_provider.py
+├── providers/            # Concrete AI implementations
+│   ├── gemini_provider.py
+│   ├── openai_provider.py
+│   ├── anthropic_provider.py
+│   └── routing_gateway.py  # Load balancing + failover
+├── adapters/             # Legacy compatibility
+│   └── legacy_adapter.py
+├── testing/              # Mock implementations
+│   └── fakes.py
+└── container.py          # DI container (dependency-injector)
+```
+
+**Usage (New - Recommended):**
+```python
+from omnix_services.ai_service import get_ai_gateway, TextGenerationRequest
+gateway = get_ai_gateway()
+response = await gateway.generate_text(TextGenerationRequest(prompt="..."))
+```
+
+**Usage (Legacy - Backward Compatible):**
+```python
+from omnix_services.ai_service import get_ai_service
+service = get_ai_service()
+response = await service.generate_response(chat_id, message)
+```
+
+**SOLID Compliance:**
+- **S**: Each provider has single responsibility (one AI model)
+- **O**: New providers added without modifying existing code
+- **L**: Any provider is interchangeable via Protocol
+- **I**: Small, focused interfaces
+- **D**: High-level modules depend on abstractions (AIGatewayProtocol)
+
+### Architecture Modernization V7.0 (In Progress)
+
+-   AI Service module refactored with SOLID + DI (completed Dec 8, 2025).
+-   Remaining modules planned for gradual migration to Hexagonal Architecture.
 
 ## External Dependencies
 
