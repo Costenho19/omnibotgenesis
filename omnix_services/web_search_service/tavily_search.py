@@ -7,10 +7,13 @@ Optimized for AI/RAG applications with context-aware responses.
 
 import os
 import logging
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, TYPE_CHECKING
 from datetime import datetime
 
 logger = logging.getLogger("OMNIX.WebSearch")
+
+if TYPE_CHECKING:
+    from tavily import TavilyClient as TavilyClientType
 
 TAVILY_AVAILABLE = False
 try:
@@ -19,10 +22,10 @@ try:
     logger.info("✅ Tavily SDK loaded successfully")
 except ImportError:
     logger.warning("⚠️ Tavily SDK not installed - web search disabled")
-    TavilyClient = None
-    MissingAPIKeyError = Exception
-    InvalidAPIKeyError = Exception
-    UsageLimitExceededError = Exception
+    TavilyClient = None  # type: ignore[misc, assignment]
+    MissingAPIKeyError = Exception  # type: ignore[misc, assignment]
+    InvalidAPIKeyError = Exception  # type: ignore[misc, assignment]
+    UsageLimitExceededError = Exception  # type: ignore[misc, assignment]
 
 
 class TavilySearchClient:
@@ -36,11 +39,11 @@ class TavilySearchClient:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize Tavily client with API key"""
         self.api_key = api_key or os.getenv("TAVILY_API_KEY")
-        self.client = None
+        self.client: Optional[Any] = None
         self.available = False
-        self.last_error = None
+        self.last_error: Optional[str] = None
         self.search_count = 0
-        self.last_search_time = None
+        self.last_search_time: Optional[datetime] = None
         
         self._initialize()
     
@@ -57,7 +60,7 @@ class TavilySearchClient:
             return
         
         try:
-            self.client = TavilyClient(api_key=self.api_key)
+            self.client = TavilyClient(api_key=self.api_key)  # type: ignore[misc]
             self.available = True
             logger.info("✅ Tavily Search Client initialized successfully")
         except MissingAPIKeyError:
@@ -111,7 +114,7 @@ class TavilySearchClient:
             if exclude_domains:
                 kwargs["exclude_domains"] = exclude_domains
             
-            response = self.client.search(**kwargs)
+            response = self.client.search(**kwargs)  # type: ignore[union-attr]
             
             results = []
             for item in response.get("results", []):
@@ -165,7 +168,7 @@ class TavilySearchClient:
             return None
         
         try:
-            context = self.client.get_search_context(
+            context = self.client.get_search_context(  # type: ignore[union-attr]
                 query=query,
                 max_tokens=max_tokens
             )
@@ -191,7 +194,7 @@ class TavilySearchClient:
             return None
         
         try:
-            answer = self.client.qna_search(query=query)
+            answer = self.client.qna_search(query=query)  # type: ignore[union-attr]
             logger.info(f"✅ Tavily Q&A: '{query[:50]}...' → answer received")
             return answer
         except Exception as e:
