@@ -78,6 +78,15 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Symbol Filter**: Blocks trades in non-allowed symbols.
 -   **Premium Observability**: Structured JSON logs for SL/TP triggers with Prometheus metrics.
 
+### Database Migration System (V6.5.4)
+
+The `omnix_services/database_service/migrations/` module provides versioned database migrations:
+-   **MigrationRunner**: Executes migrations with advisory locks, transactions, and rollback on failure.
+-   **MigrationRegistry**: Maintains ordered list of migrations with version tracking.
+-   **Auto-upgrade**: Handles legacy `schema_migrations` tables from Railway.
+-   **Migrations run automatically** in main.py after cache cleanup, before service initialization.
+-   **Pattern**: Each migration returns True/False; must be idempotent (ADD COLUMN IF NOT EXISTS, etc.).
+
 ### AI Service Architecture (SOLID + Dependency Injection)
 
 The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection, supporting multiple AI providers via a unified interface, ensuring type safety and modularity.
