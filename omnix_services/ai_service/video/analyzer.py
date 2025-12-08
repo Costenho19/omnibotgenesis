@@ -28,6 +28,56 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
+def parse_vision_json(content: Optional[str], source: str = "AI") -> Optional[Dict[str, Any]]:
+    """
+    Parse JSON response from Vision APIs, handling markdown code blocks.
+    
+    Args:
+        content: Raw response content from AI model
+        source: Name of the source for logging (e.g., "GPT-4", "Gemini")
+        
+    Returns:
+        Parsed dict or None if parsing fails
+    """
+    if not content:
+        return None
+    
+    try:
+        clean_content = content.strip()
+        if clean_content.startswith('```json'):
+            clean_content = clean_content[7:]
+        if clean_content.startswith('```'):
+            clean_content = clean_content[3:]
+        if clean_content.endswith('```'):
+            clean_content = clean_content[:-3]
+        
+        return json.loads(clean_content.strip())
+    except json.JSONDecodeError as je:
+        logger.warning(f"⚠️ Error parseando JSON de {source}: {je}")
+        return None
+
+
+CHART_ANALYSIS_PROMPT = """
+Analiza esta imagen de un gráfico de trading y extrae la siguiente información en formato JSON:
+
+1. **Patrones técnicos visibles** (head_and_shoulders, double_top, triangles, flags, etc.)
+2. **Niveles de soporte y resistencia** (precio aproximado si es visible)
+3. **Indicadores técnicos visibles** (RSI, MACD, moving averages, volume, etc.)
+4. **Niveles de precio críticos** (si son visibles en el chart)
+5. **Señal de trading** (bullish, bearish, neutral)
+
+Responde solo con JSON válido:
+{
+  "patterns": ["pattern1", "pattern2"],
+  "levels": [{"type": "support", "price": 50000}, {"type": "resistance", "price": 52000}],
+  "indicators": ["RSI", "MACD", "EMA_20"],
+  "price_levels": [50000, 51000, 52000],
+  "signal": "bullish",
+  "confidence": 0.85
+}
+"""
+
 try:
     from omnix_config import VERSION_BANNER
 except ImportError:
@@ -366,33 +416,13 @@ class VideoAnalyzerUltra:
             with open(frame_path, 'rb') as f:
                 image_data = base64.b64encode(f.read()).decode('utf-8')
             
-            prompt = """
-Analiza esta imagen de un gráfico de trading y extrae la siguiente información en formato JSON:
-
-1. **Patrones técnicos visibles** (head_and_shoulders, double_top, triangles, flags, etc.)
-2. **Niveles de soporte y resistencia** (precio aproximado si es visible)
-3. **Indicadores técnicos visibles** (RSI, MACD, moving averages, volume, etc.)
-4. **Niveles de precio críticos** (si son visibles en el chart)
-5. **Señal de trading** (bullish, bearish, neutral)
-
-Responde solo con JSON válido:
-{
-  "patterns": ["pattern1", "pattern2"],
-  "levels": [{"type": "support", "price": 50000}, {"type": "resistance", "price": 52000}],
-  "indicators": ["RSI", "MACD", "EMA_20"],
-  "price_levels": [50000, 51000, 52000],
-  "signal": "bullish",
-  "confidence": 0.85
-}
-"""
-            
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": prompt},
+                            {"type": "text", "text": CHART_ANALYSIS_PROMPT},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -406,23 +436,8 @@ Responde solo con JSON válido:
             )
             
             content = response.choices[0].message.content
-            if content:
-                clean_content = content.strip()
-                if clean_content.startswith('```json'):
-                    clean_content = clean_content[7:]
-                if clean_content.startswith('```'):
-                    clean_content = clean_content[3:]
-                if clean_content.endswith('```'):
-                    clean_content = clean_content[:-3]
-                
-                analysis = json.loads(clean_content.strip())
-                return analysis
+            return parse_vision_json(content, "GPT-4 Vision")
             
-            return None
-            
-        except json.JSONDecodeError as je:
-            logger.warning(f"⚠️ Error parseando JSON de GPT-4 Vision: {je}")
-            return None
         except Exception as e:
             logger.error(f"Error con GPT-4 Vision: {e}")
             return None
@@ -437,55 +452,22 @@ Responde solo con JSON válido:
             
             img = PIL.Image.open(frame_path)
             
-            prompt = """
-Analiza esta imagen de un gráfico de trading y extrae la siguiente información en formato JSON:
-
-1. **Patrones técnicos visibles** (head_and_shoulders, double_top, triangles, flags, etc.)
-2. **Niveles de soporte y resistencia** (precio aproximado si es visible)
-3. **Indicadores técnicos visibles** (RSI, MACD, moving averages, volume, etc.)
-4. **Niveles de precio críticos** (si son visibles en el chart)
-5. **Señal de trading** (bullish, bearish, neutral)
-
-Responde solo con JSON válido:
-{
-  "patterns": ["pattern1", "pattern2"],
-  "levels": [{"type": "support", "price": 50000}, {"type": "resistance", "price": 52000}],
-  "indicators": ["RSI", "MACD", "EMA_20"],
-  "price_levels": [50000, 51000, 52000],
-  "signal": "bullish",
-  "confidence": 0.85
-}
-"""
-            
             if self._gemini_sdk == 'new':
                 response = self.gemini_client.models.generate_content(
                     model='gemini-2.0-flash',
-                    contents=[prompt, img]
+                    contents=[CHART_ANALYSIS_PROMPT, img]
                 )
                 content = response.text if response else None
             else:
                 model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
-                response = model.generate_content([prompt, img])
+                response = model.generate_content([CHART_ANALYSIS_PROMPT, img])
                 content = response.text if response else None
             
-            if content:
-                clean_content = content.strip()
-                if clean_content.startswith('```json'):
-                    clean_content = clean_content[7:]
-                if clean_content.startswith('```'):
-                    clean_content = clean_content[3:]
-                if clean_content.endswith('```'):
-                    clean_content = clean_content[:-3]
-                
-                analysis = json.loads(clean_content.strip())
+            analysis = parse_vision_json(content, "Gemini Vision")
+            if analysis:
                 logger.info("🧠 Análisis con Gemini Vision completado")
-                return analysis
+            return analysis
             
-            return None
-            
-        except json.JSONDecodeError as je:
-            logger.warning(f"⚠️ Error parseando JSON de Gemini Vision: {je}")
-            return None
         except Exception as e:
             logger.error(f"Error con Gemini Vision: {e}")
             return None
@@ -519,23 +501,10 @@ Responde en JSON:
                 )
                 
                 content = response.choices[0].message.content
-                if content:
-                    clean_content = content.strip()
-                    if clean_content.startswith('```json'):
-                        clean_content = clean_content[7:]
-                    if clean_content.startswith('```'):
-                        clean_content = clean_content[3:]
-                    if clean_content.endswith('```'):
-                        clean_content = clean_content[:-3]
-                    
-                    sentiment = json.loads(clean_content.strip())
-                    return sentiment
+                return parse_vision_json(content, "Sentiment Analysis")
             
             return None
             
-        except json.JSONDecodeError as je:
-            logger.warning(f"⚠️ Error parseando JSON de sentimiento: {je}")
-            return None
         except Exception as e:
             logger.error(f"Error en análisis de sentimiento: {e}")
             return None
