@@ -96,39 +96,27 @@ ANÁLISIS TÉCNICO MULTI-TIMEFRAME:
 - Resistencias: ${technical_data['resistance_levels'][0]:,.2f}, ${technical_data['resistance_levels'][1]:,.2f}
 - Soportes: ${technical_data['support_levels'][0]:,.2f}, ${technical_data['support_levels'][1]:,.2f}
 
-ELLIOTT WAVE + FIBONACCI (SOLICITADO POR SOCIO MAYOR):
-- Patrón Detectado: {elliott_wave['wave_pattern']}
-- Confianza: {elliott_wave['confidence']:.1%}
-- Próximo Target: ${elliott_wave['next_target']:,.2f}
-- Retroceso Fibonacci 61.8%: ${elliott_wave['fibonacci_levels'].get('61.8%', 0):,.2f}
-- Retroceso Fibonacci 38.2%: ${elliott_wave['fibonacci_levels'].get('38.2%', 0):,.2f}
+ELLIOTT WAVE + FIBONACCI:
+- Patrón Detectado: {elliott_wave['wave_pattern'] if elliott_wave else 'Requiere datos reales'}
+- Confianza: {elliott_wave['confidence']:.1%} if elliott_wave else 'N/A'
+- Próximo Target: ${elliott_wave['next_target']:,.2f} if elliott_wave else 'N/A'
 
-ANÁLISIS ORDER BOOK (DETECCIÓN MANIPULACIÓN):
-- Spread Bid-Ask: ${order_book['bid_ask_spread']:.2f}
-- Profundidad Mercado: {order_book['market_depth_score']:.1%}
-- Riesgo Spoofing: {order_book['spoofing_risk']:.1%}
-- Rating Liquidez: {order_book['liquidity_rating']}
-- ⚠️ Alerta Manipulación: {'SÍ' if order_book.get('manipulation_warning', False) else 'NO'}
+ANÁLISIS ORDER BOOK:
+- Estado: {'Datos en tiempo real disponibles' if order_book else 'Requiere conexión WebSocket'}
 
-ANÁLISIS ESTADÍSTICO AVANZADO:
-- Estado Dominante: {statistical_analysis['dominant_state'].replace('_', ' ').title()}
-- Probabilidad Alcista: {statistical_analysis['market_states']['bullish_probability']:.1%}
-- Probabilidad Bajista: {statistical_analysis['market_states']['bearish_probability']:.1%}
-- Tiempo Análisis: {statistical_analysis.get('analysis_time', 'N/A')}
-- Riesgo Evento Extremo: {statistical_analysis['extreme_event_risk']:.2%}
-- Correlación BTC-ETH: {statistical_analysis['market_correlation']['btc_eth_correlation']:.2f}
+ANÁLISIS ESTADÍSTICO:
+- Estado: {'Análisis disponible' if statistical_analysis else 'Requiere datos de mercado'}
 
 ANÁLISIS DE NOTICIAS CRYPTO (TIEMPO REAL):
 - Sentimiento General: {news_sentiment['sentiment']} (Score: {news_sentiment['score']})
 - Fuente: {news_sentiment['source']}
 - Headlines Recientes: {', '.join(news_sentiment['headlines'])}
 
-MÉTRICAS ON-CHAIN AVANZADAS:
+MÉTRICAS ON-CHAIN:
 - BTC Circulante: {onchain_metrics.get('total_bitcoins', 0):,.0f} BTC
 - Hash Rate: {onchain_metrics.get('hash_rate', 0):.2e} H/s
 - Dificultad: {onchain_metrics.get('difficulty', 0):,.0f}
 - Volumen Trading: {onchain_metrics.get('trade_volume_btc', 0):,.0f} BTC
-- Revenue Mineros: ${onchain_metrics.get('miners_revenue_usd', 0):,.0f}
 """
             except Exception as e:
                 logger.debug(f"Error datos avanzados: {e}")
@@ -981,45 +969,8 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             }
     
     def _get_order_book_analysis(self):
-        """Análisis del libro de órdenes en tiempo real"""
-        try:
-            # Valores estimados del mercado
-            current_price = 95000  # BTC estimado
-            volatility = 0.025  # 2.5% volatilidad típica
-            
-            # Simulación de análisis de order book avanzado
-            # En implementación real usaríamos Kraken WebSocket
-            
-            # Métricas simuladas basadas en patrones reales
-            # Spread basado en volatilidad real del mercado
-            bid_ask_spread = min(25, max(5, current_price * 0.0005))  # 0.05% del precio
-            market_depth_score = min(0.95, max(0.7, 0.9 - volatility))
-            
-            # Detección de spoofing/manipulación
-            spoofing_probability = 0.15 if bid_ask_spread > 20 else 0.05
-            
-            # Concentración de órdenes
-            # Ratio basado en condiciones de mercado
-            large_orders_ratio = 0.3 + (volatility * 0.5)
-            
-            return {
-                'bid_ask_spread': bid_ask_spread,
-                'market_depth_score': market_depth_score,
-                'spoofing_risk': spoofing_probability,
-                'large_orders_concentration': large_orders_ratio,
-                'liquidity_rating': 'Alta' if market_depth_score > 0.8 else 'Media',
-                'manipulation_warning': spoofing_probability > 0.1,
-                'source': 'Order Book Analysis OMNIX'
-            }
-        except Exception as e:
-            logger.debug(f"Error Order Book: {e}")
-            return {
-                'bid_ask_spread': 10,
-                'market_depth_score': 0.8,
-                'spoofing_risk': 0.05,
-                'liquidity_rating': 'Media',
-                'source': 'Estimado'
-            }
+        """Análisis del libro de órdenes - Requiere conexión WebSocket real"""
+        return None
     
     def _get_statistical_analysis(self, market_data):
         """Análisis estadístico avanzado basado en modelos matemáticos"""
