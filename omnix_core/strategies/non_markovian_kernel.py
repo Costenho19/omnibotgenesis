@@ -364,10 +364,10 @@ class NonMarkovianKernel:
         )
         
         return {
-            "trend_coherence": round(trend_coherence, 2),
-            "volatility_coherence": round(volatility_coherence, 2),
-            "memory_coherence": round(memory_coherence, 2),
-            "overall_coherence": round(overall_coherence, 2)
+            "trend_coherence": round(float(trend_coherence), 2),
+            "volatility_coherence": round(float(volatility_coherence), 2),
+            "memory_coherence": round(float(memory_coherence), 2),
+            "overall_coherence": round(float(overall_coherence), 2)
         }
     
     def integrate_on_chain_signal(self, on_chain_data: Dict) -> None:
@@ -628,3 +628,106 @@ LAST SIGNAL: {self._last_signal or 'N/A'} ({self._last_confidence:.1f}% confiden
                 "last_confidence": self._last_confidence
             }
         }
+    
+    @classmethod
+    def calibrated_for_timeframe(cls, timeframe: str) -> "NonMarkovianKernel":
+        """
+        Factory method to create a kernel calibrated for specific timeframe.
+        
+        IMPORTANT: All parameters are in BAR COUNTS, not hours.
+        The kernel operates on discrete bar indices, so τ/ω must be scaled
+        to the timeframe's bar duration to preserve the intended memory behavior.
+        
+        Calibration targets:
+        - Memory horizon: ~12-24 hours of effective memory
+        - Cycle detection: ~12h and ~24h market cycles
+        - Minimum 1 week of data for statistical significance
+        
+        Args:
+            timeframe: One of '1m', '5m', '15m', '1h', '4h', '1d', '1w'
+            
+        Returns:
+            Calibrated NonMarkovianKernel instance
+        """
+        timeframe_minutes = {
+            '1m': 1,
+            '5m': 5,
+            '15m': 15,
+            '1h': 60,
+            '4h': 240,
+            '1d': 1440,
+            '1w': 10080
+        }
+        
+        if timeframe not in timeframe_minutes:
+            logger.warning(f"Unknown timeframe '{timeframe}', using default '4h' calibration")
+            timeframe = '4h'
+        
+        bar_minutes = timeframe_minutes[timeframe]
+        
+        target_memory_hours = 12.0
+        target_cycle_hours = 12.0
+        target_window_hours = 168.0
+        
+        tau_bars = (target_memory_hours * 60) / bar_minutes
+        omega_bars = (2 * 3.14159) / ((target_cycle_hours * 60) / bar_minutes)
+        window_bars = int((target_window_hours * 60) / bar_minutes)
+        
+        window_bars = max(24, min(window_bars, 1000))
+        tau_bars = max(3.0, min(tau_bars, 500.0))
+        omega_bars = max(0.01, min(omega_bars, 2.0))
+        
+        epsilon_by_timeframe = {
+            '1m': 0.25,
+            '5m': 0.28,
+            '15m': 0.30,
+            '1h': 0.35,
+            '4h': 0.40,
+            '1d': 0.45,
+            '1w': 0.50
+        }
+        epsilon = epsilon_by_timeframe[timeframe]
+        
+        logger.info(f"🧠 Creating Non-Markovian Kernel for {timeframe}:")
+        logger.info(f"   τ = {tau_bars:.1f} bars (~{target_memory_hours}h memory)")
+        logger.info(f"   ε = {epsilon:.2f}")
+        logger.info(f"   Ω = {omega_bars:.4f} rad/bar (~{target_cycle_hours}h cycle)")
+        logger.info(f"   Window = {window_bars} bars (~{target_window_hours}h)")
+        
+        return cls(
+            tau=tau_bars,
+            epsilon=epsilon,
+            omega=omega_bars,
+            window_size=window_bars
+        )
+    
+    def recalibrate(self, tau: Optional[float] = None, 
+                    epsilon: Optional[float] = None,
+                    omega: Optional[float] = None) -> None:
+        """
+        Dynamically recalibrate kernel parameters based on market conditions.
+        
+        This allows the Adaptive Parameter Engine to fine-tune the kernel
+        during different market regimes without losing historical data.
+        
+        Args:
+            tau: New memory decay constant (if provided)
+            epsilon: New oscillation amplitude (if provided)
+            omega: New oscillation frequency (if provided)
+        """
+        if tau is not None:
+            old_tau = self.tau
+            self.tau = max(1.0, min(200.0, tau))
+            logger.info(f"🔧 Recalibrated τ: {old_tau:.2f} → {self.tau:.2f}")
+        
+        if epsilon is not None:
+            old_epsilon = self.epsilon
+            self.epsilon = max(0.0, min(1.0, epsilon))
+            logger.info(f"🔧 Recalibrated ε: {old_epsilon:.3f} → {self.epsilon:.3f}")
+        
+        if omega is not None:
+            old_omega = self.omega
+            self.omega = max(0.01, min(3.14, omega))
+            logger.info(f"🔧 Recalibrated Ω: {old_omega:.3f} → {self.omega:.3f}")
+        
+        self._kernel_cache = None

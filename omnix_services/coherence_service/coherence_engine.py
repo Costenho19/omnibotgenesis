@@ -562,6 +562,95 @@ class CoherenceEngine:
         # TRADE PERMITIDO (sin advertencias)
         logger.info(f"✅ TRADE PERMITIDO - Coherencia: {report.coherence_score:.1f}%")
         return True, f"✅ APROBADO | Coherencia: {report.coherence_score:.1f}% | Sin contradicciones"
+    
+    def calibrate_weights_from_performance(
+        self, 
+        trade_history: List[Dict],
+        min_weight: float = 0.02,
+        max_weight: float = 0.35
+    ) -> Dict[str, float]:
+        """
+        Calibrate strategy weights based on historical trade performance.
+        
+        Methodology:
+        1. For each trade, identify which strategies signaled correctly
+        2. Calculate hit rate (correct signals / total signals) per strategy
+        3. Weight by profitability contribution
+        4. Apply regularization (min/max floors)
+        5. Normalize to sum = 1.0
+        
+        Args:
+            trade_history: List of trades with structure:
+                {
+                    'strategy_signals': {'strategy_name': signal_value, ...},
+                    'actual_outcome': 'profit' | 'loss',
+                    'pnl_percent': float
+                }
+            min_weight: Minimum weight per strategy (default 0.02)
+            max_weight: Maximum weight per strategy (default 0.35)
+            
+        Returns:
+            Dict with calibrated weights per strategy
+        """
+        if not trade_history:
+            logger.warning("⚠️ No trade history for calibration, using defaults")
+            return self.strategy_weights.copy()
+        
+        strategy_stats = {name: {'wins': 0, 'total': 0, 'pnl_contribution': 0.0}
+                         for name in self.strategy_weights.keys()}
+        
+        for trade in trade_history:
+            signals = trade.get('strategy_signals', {})
+            outcome = trade.get('actual_outcome', 'loss')
+            pnl = trade.get('pnl_percent', 0.0)
+            
+            for strategy_name, signal_value in signals.items():
+                if strategy_name not in strategy_stats:
+                    continue
+                    
+                strategy_stats[strategy_name]['total'] += 1
+                
+                was_correct = False
+                if outcome == 'profit' and signal_value > 0:
+                    was_correct = True
+                elif outcome == 'loss' and signal_value < 0:
+                    was_correct = True
+                    
+                if was_correct:
+                    strategy_stats[strategy_name]['wins'] += 1
+                    strategy_stats[strategy_name]['pnl_contribution'] += abs(pnl)
+        
+        raw_weights = {}
+        for name, stats in strategy_stats.items():
+            if stats['total'] == 0:
+                raw_weights[name] = self.strategy_weights.get(name, 0.1)
+            else:
+                hit_rate = stats['wins'] / stats['total']
+                pnl_factor = 1.0 + (stats['pnl_contribution'] / (stats['total'] * 2.0))
+                base_weight = self.strategy_weights.get(name, 0.1)
+                raw_weights[name] = hit_rate * pnl_factor * base_weight
+        
+        clamped = {name: max(min_weight, min(max_weight, w)) 
+                   for name, w in raw_weights.items()}
+        
+        total = sum(clamped.values())
+        if total > 0:
+            calibrated = {name: round(w / total, 4) for name, w in clamped.items()}
+        else:
+            calibrated = self.strategy_weights.copy()
+        
+        logger.info("🔧 Calibrated Coherence Engine weights:")
+        for name, weight in sorted(calibrated.items(), key=lambda x: -x[1]):
+            old_weight = self.strategy_weights.get(name, 0)
+            change = ((weight - old_weight) / old_weight * 100) if old_weight > 0 else 0
+            logger.info(f"   {name}: {old_weight:.2%} → {weight:.2%} ({change:+.1f}%)")
+        
+        return calibrated
+    
+    def apply_calibrated_weights(self, calibrated_weights: Dict[str, float]) -> None:
+        """Apply calibrated weights to the engine."""
+        self.strategy_weights = calibrated_weights.copy()
+        logger.info("✅ Applied calibrated weights to Coherence Engine")
 
 
 # ============================================
