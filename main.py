@@ -89,6 +89,28 @@ if db_url:
         logger.info(f"   Preview: {db_url[:25]}...")
     else:
         logger.info(f"   Preview: {db_url[:15]}... (formato inusual)")
+    
+    # 🔄 MIGRACIONES AUTOMÁTICAS V6.5.4 - Ejecutar ANTES de inicializar servicios
+    try:
+        from omnix_services.database_service.migrations import MigrationRunner, MIGRATIONS
+        
+        logger.info("🔄 Ejecutando migraciones de base de datos...")
+        migration_runner = MigrationRunner(db_url)
+        migration_result = migration_runner.run_pending_migrations(MIGRATIONS)
+        
+        if migration_result['success']:
+            if migration_result['applied'] > 0:
+                logger.info(f"✅ Migraciones aplicadas: {migration_result['applied']}")
+            else:
+                logger.info("✅ Base de datos actualizada - sin migraciones pendientes")
+        else:
+            logger.error(f"❌ Error en migraciones: {migration_result['errors']}")
+            # No detener el bot, solo advertir
+    except ImportError as e:
+        logger.warning(f"⚠️ Sistema de migraciones no disponible: {e}")
+    except Exception as e:
+        logger.error(f"❌ Error ejecutando migraciones: {e}")
+        # Continuar con el arranque del bot
 else:
     logger.error("❌ DATABASE_URL NO ENCONTRADA - LA MEMORIA NO FUNCIONARÁ")
     logger.error("   Variables disponibles: " + ", ".join(sorted([k for k in os.environ.keys() if 'DATA' in k.upper() or 'PG' in k.upper() or 'SQL' in k.upper()][:5])))
