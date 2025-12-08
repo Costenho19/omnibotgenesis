@@ -90,14 +90,13 @@ class MigrationRunner:
         self._conn = None
     
     def _get_connection(self):
-        """Get database connection"""
+        """Get database connection using psycopg3"""
         if self._conn is None:
             try:
-                import psycopg2
-                self._conn = psycopg2.connect(self.database_url)
-                self._conn.autocommit = False
+                import psycopg
+                self._conn = psycopg.connect(self.database_url, autocommit=False)
             except ImportError:
-                logger.error("psycopg2 not installed")
+                logger.error("psycopg3 (psycopg) not installed")
                 raise
             except Exception as e:
                 logger.error(f"Failed to connect to database: {e}")
