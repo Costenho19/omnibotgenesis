@@ -65,6 +65,7 @@ class PairCalibration:
     - Drawdown máximo registrado
     - Position sizing institucional
     - Portfolio weighting (Markowitz-style)
+    - Circuit breaker por par (drawdown diario máximo)
     """
     symbol: str
     tier: CalibrationTier
@@ -75,6 +76,7 @@ class PairCalibration:
     max_position_pct: float = 0.10
     max_position_usd: float = 50000.0
     portfolio_weight: float = 0.25
+    max_daily_drawdown_pct: float = 0.02
     notes: str = ""
     
     def to_dict(self) -> Dict[str, Any]:
@@ -88,6 +90,7 @@ class PairCalibration:
             'max_position_pct': self.max_position_pct,
             'max_position_usd': self.max_position_usd,
             'portfolio_weight': self.portfolio_weight,
+            'max_daily_drawdown_pct': self.max_daily_drawdown_pct,
             'notes': self.notes
         }
 
@@ -111,6 +114,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         max_position_pct=0.10,
         max_position_usd=50000.0,   # $50K max position
         portfolio_weight=0.40,      # 40% del portafolio
+        max_daily_drawdown_pct=0.02, # 2% circuit breaker
         notes="Win rate 55% histórico. Base sólida del portafolio."
     ),
     "XRP/USD": PairCalibration(
@@ -123,6 +127,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         max_position_pct=0.10,
         max_position_usd=40000.0,   # $40K max position
         portfolio_weight=0.30,      # 30% del portafolio
+        max_daily_drawdown_pct=0.02, # 2% circuit breaker
         notes="Win rate 66% histórico. Mejor rendimiento del set."
     ),
     
@@ -137,6 +142,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         max_position_pct=0.08,      # Posición reducida
         max_position_usd=25000.0,   # $25K max position
         portfolio_weight=0.15,      # 15% del portafolio
+        max_daily_drawdown_pct=0.01, # 1% circuit breaker (estricto)
         notes="Solo 2 trades históricos. ADA es lenta y predecible."
     ),
     "LINK/USD": PairCalibration(
@@ -149,6 +155,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         max_position_pct=0.08,      # Posición reducida
         max_position_usd=30000.0,   # $30K max position
         portfolio_weight=0.15,      # 15% del portafolio
+        max_daily_drawdown_pct=0.01, # 1% circuit breaker (estricto)
         notes="Solo 1 trade histórico. Volatilidad moderada."
     ),
     
