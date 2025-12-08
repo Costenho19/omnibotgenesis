@@ -24,16 +24,16 @@ class OmnixAPIClient:
     Consume métricas desde el servicio Flask principal.
     """
     
-    def __init__(self, base_url: str = None, api_key: str = None):
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
         self.base_url = base_url or API_BASE_URL
         self.api_key = api_key or API_KEY
         self.timeout = 30
-        self.headers = {}
+        self.headers: Dict[str, str] = {}
         if self.api_key:
             self.headers['X-API-Key'] = self.api_key
         logger.info(f"📡 OmnixAPIClient inicializado - Base URL: {self.base_url}")
     
-    def _request(self, endpoint: str, method: str = 'GET', params: Dict = None) -> Dict[str, Any]:
+    def _request(self, endpoint: str, method: str = 'GET', params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.base_url}{endpoint}"
         try:
             response = requests.request(
