@@ -50,6 +50,9 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and ExecutionProtocol orchestrator for dynamic decision-making (TWAP/VWAP/ICEBERG).
 -   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions. Emits structured JSON events (TRADE_CANDIDATE, VETO_COHERENCE, VETO_CONSENSUS, VETO_DRAWDOWN, VETO_RISK_GUARDIAN, VETO_HMM_REGIME, VETO_POSITION_LIMIT, TRADE_VALIDATED, TRADE_EXECUTED, TRADE_REJECTED, AI_NARRATIVE) with unique decision_id for lifecycle correlation. Compatible with Grafana/Loki/ELK. Located in `omnix_core/utils/logger.py`.
 -   **Volatility-Based SL/TP Classification V6.5.4**: High-volatility pairs (DOT, AVAX, SOL, LINK, ATOM, POL) use 2.5%/3.5% SL/TP; normal-volatility pairs (BTC, ETH, XRP, LTC, ADA) use 1.5%/2.5%. Function `get_sl_tp_for_symbol()` in AutoTradingBot fallback.
+-   **InstitutionalMetricsCalculator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_metrics.py`): Sharpe, Sortino, Calmar ratios calculated per-pair and portfolio-wide. Industry-standard risk-adjusted metrics for UAE/GCC investor presentations.
+-   **InstitutionalReportGenerator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_report.py`): PDF report generator with professional formatting for investors. Includes executive summary, risk metrics, per-pair analysis, and calibration details.
+-   **Streamlit Dashboard V6.5.4 PREMIUM** (`omnix_dashboard/streamlit_app.py`): Interactive investor dashboard with Plotly charts, real-time metrics visualization, and performance grade display.
 
 ### Multi-User Architecture V6.5.4
 

@@ -550,3 +550,209 @@ def api_health():
         },
         'timestamp': datetime.now().isoformat()
     }), 200
+
+
+@core_bp.route('/api/metrics/institutional')
+@require_api_key
+def api_institutional_metrics():
+    """
+    V6.5.4 INSTITUTIONAL+ PREMIUM
+    Métricas institucionales: Sharpe, Sortino, Calmar por par
+    Para presentaciones a inversores y fondos
+    """
+    from omnix_dashboard.utils.database import DB_AVAILABLE
+    
+    try:
+        from omnix_services.analytics.institutional_metrics import (
+            InstitutionalMetricsCalculator,
+            MetricPeriod,
+            TradeRecord
+        )
+        
+        result = get_paper_trades(365, return_dict=True)
+        
+        if not result['success'] or not result['trades']:
+            return jsonify({
+                'success': False,
+                'error': 'No trade data available',
+                'db_connected': DB_AVAILABLE,
+                'metrics': None
+            })
+        
+        trades = result['trades']
+        
+        trade_records = []
+        for t in trades:
+            if t.get('closed_at') is None:
+                continue
+            
+            try:
+                entry_time = t.get('opened_at')
+                exit_time = t.get('closed_at')
+                
+                if isinstance(entry_time, str):
+                    entry_time = datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                if isinstance(exit_time, str):
+                    exit_time = datetime.fromisoformat(exit_time.replace('Z', '+00:00'))
+                
+                pnl_usd = float(t.get('pnl', 0) or 0)
+                entry_price = float(t.get('entry_price', 0) or 1)
+                exit_price = float(t.get('exit_price', 0) or entry_price)
+                side = t.get('side', 'buy').lower()
+                
+                if side == 'buy':
+                    pnl_pct = (exit_price - entry_price) / entry_price if entry_price else 0
+                else:
+                    pnl_pct = (entry_price - exit_price) / entry_price if entry_price else 0
+                
+                trade_records.append(TradeRecord(
+                    symbol=t.get('symbol', 'UNKNOWN'),
+                    pnl_usd=pnl_usd,
+                    pnl_pct=pnl_pct,
+                    entry_time=entry_time,
+                    exit_time=exit_time,
+                    side=side,
+                    size_usd=float(t.get('position_size', 0) or 0)
+                ))
+            except Exception as parse_err:
+                logger.debug(f"Error parsing trade for metrics: {parse_err}")
+                continue
+        
+        if not trade_records:
+            return jsonify({
+                'success': False,
+                'error': 'No closed trades available for metrics',
+                'db_connected': DB_AVAILABLE,
+                'metrics': None
+            })
+        
+        calculator = InstitutionalMetricsCalculator()
+        portfolio_metrics = calculator.calculate_portfolio_metrics(trade_records, "all_time")
+        
+        return jsonify({
+            'success': True,
+            'metrics': portfolio_metrics.to_dict(),
+            'summary': calculator.get_summary_for_investors().get('summary', {}),
+            'db_connected': DB_AVAILABLE,
+            'calculated_at': datetime.now().isoformat()
+        })
+        
+    except ImportError as ie:
+        logger.error(f"InstitutionalMetrics module not available: {ie}")
+        return jsonify({
+            'success': False,
+            'error': 'Institutional metrics module not available',
+            'metrics': None
+        }), 500
+    except Exception as e:
+        logger.error(f"Error calculating institutional metrics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'metrics': None
+        }), 500
+
+
+@core_bp.route('/api/report/pdf')
+@require_api_key
+def api_generate_pdf_report():
+    """
+    V6.5.4 INSTITUTIONAL+ PREMIUM
+    Genera informe PDF institucional para inversores
+    """
+    from flask import Response
+    
+    try:
+        from omnix_services.analytics.institutional_metrics import (
+            InstitutionalMetricsCalculator,
+            TradeRecord
+        )
+        from omnix_services.analytics.institutional_report import get_report_generator
+        from omnix_core.config.trading_profiles import PAIR_CALIBRATIONS
+        
+        result = get_paper_trades(365, return_dict=True)
+        
+        if not result['success'] or not result['trades']:
+            return jsonify({
+                'success': False,
+                'error': 'No trade data available for report'
+            }), 400
+        
+        trades = result['trades']
+        
+        trade_records = []
+        for t in trades:
+            if t.get('closed_at') is None:
+                continue
+            try:
+                entry_time = t.get('opened_at')
+                exit_time = t.get('closed_at')
+                
+                if isinstance(entry_time, str):
+                    entry_time = datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                if isinstance(exit_time, str):
+                    exit_time = datetime.fromisoformat(exit_time.replace('Z', '+00:00'))
+                
+                pnl_usd = float(t.get('pnl', 0) or 0)
+                entry_price = float(t.get('entry_price', 0) or 1)
+                exit_price = float(t.get('exit_price', 0) or entry_price)
+                side = t.get('side', 'buy').lower()
+                
+                if side == 'buy':
+                    pnl_pct = (exit_price - entry_price) / entry_price if entry_price else 0
+                else:
+                    pnl_pct = (entry_price - exit_price) / entry_price if entry_price else 0
+                
+                trade_records.append(TradeRecord(
+                    symbol=t.get('symbol', 'UNKNOWN'),
+                    pnl_usd=pnl_usd,
+                    pnl_pct=pnl_pct,
+                    entry_time=entry_time,
+                    exit_time=exit_time,
+                    side=side,
+                    size_usd=float(t.get('position_size', 0) or 0)
+                ))
+            except Exception:
+                continue
+        
+        if not trade_records:
+            return jsonify({
+                'success': False,
+                'error': 'No closed trades available for report'
+            }), 400
+        
+        calculator = InstitutionalMetricsCalculator()
+        portfolio_metrics = calculator.calculate_portfolio_metrics(trade_records, "all_time")
+        
+        report_gen = get_report_generator()
+        pdf_bytes = report_gen.generate_report(
+            metrics=portfolio_metrics.to_dict(),
+            calibration=PAIR_CALIBRATIONS,
+            company_name="OMNIX V6.5.4 INSTITUTIONAL+",
+            period="All Time"
+        )
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"OMNIX_Report_{timestamp}.pdf"
+        
+        return Response(
+            pdf_bytes,
+            mimetype='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename={filename}',
+                'Content-Length': len(pdf_bytes)
+            }
+        )
+        
+    except ImportError as ie:
+        logger.error(f"Report module not available: {ie}")
+        return jsonify({
+            'success': False,
+            'error': 'Report generator module not available'
+        }), 500
+    except Exception as e:
+        logger.error(f"Error generating PDF report: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
