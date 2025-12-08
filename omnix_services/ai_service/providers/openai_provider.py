@@ -19,12 +19,17 @@ from .base_provider import BaseAIProvider
 
 logger = logging.getLogger(__name__)
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openai import OpenAI as OpenAIType, AsyncOpenAI as AsyncOpenAIType
+
 try:
     from openai import OpenAI, AsyncOpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
-    OpenAI = None  # type: ignore
-    AsyncOpenAI = None  # type: ignore
+    OpenAI = None
+    AsyncOpenAI = None
     OPENAI_AVAILABLE = False
     logger.warning("openai not installed")
 
@@ -54,8 +59,8 @@ class OpenAIProvider(BaseAIProvider):
             return
 
         try:
-            self._client = OpenAI(api_key=self.api_key)
-            self._async_client = AsyncOpenAI(api_key=self.api_key)
+            self._client = OpenAI(api_key=self.api_key)  # type: ignore[misc]
+            self._async_client = AsyncOpenAI(api_key=self.api_key)  # type: ignore[misc]
             self._available = True
             logger.info("OpenAI provider initialized")
         except Exception as e:

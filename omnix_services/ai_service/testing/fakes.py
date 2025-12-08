@@ -157,10 +157,23 @@ class FakeAIGateway(RoutingAIGateway):
         return self._fake_openai
 
 
+class TestAIServiceContainer(containers.DeclarativeContainer):
+    """Test container with configurable fake providers."""
+    config = providers.Configuration()
+    
+    fake_gateway = providers.Singleton(
+        FakeAIGateway,
+        default_response=config.default_response,
+        should_fail=config.should_fail,
+    )
+
+    ai_gateway = fake_gateway
+
+
 def create_test_container(
     default_response: str = "Test response.",
     should_fail: bool = False,
-) -> "TestAIServiceContainer":
+) -> TestAIServiceContainer:
     """
     Create a test container with fake providers.
     
@@ -170,14 +183,7 @@ def create_test_container(
         response = await gateway.generate_text(request)
         assert response.success
     """
-
-    class TestAIServiceContainer(containers.DeclarativeContainer):
-        fake_gateway = providers.Singleton(
-            FakeAIGateway,
-            default_response=default_response,
-            should_fail=should_fail,
-        )
-
-        ai_gateway = fake_gateway
-
-    return TestAIServiceContainer()
+    container = TestAIServiceContainer()
+    container.config.default_response.from_value(default_response)
+    container.config.should_fail.from_value(should_fail)
+    return container

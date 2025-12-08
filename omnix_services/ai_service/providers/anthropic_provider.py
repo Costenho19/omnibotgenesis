@@ -19,12 +19,17 @@ from .base_provider import BaseAIProvider
 
 logger = logging.getLogger(__name__)
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from anthropic import Anthropic as AnthropicType, AsyncAnthropic as AsyncAnthropicType
+
 try:
     from anthropic import Anthropic, AsyncAnthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
-    Anthropic = None  # type: ignore
-    AsyncAnthropic = None  # type: ignore
+    Anthropic = None
+    AsyncAnthropic = None
     ANTHROPIC_AVAILABLE = False
     logger.warning("anthropic not installed")
 
@@ -54,8 +59,8 @@ class AnthropicProvider(BaseAIProvider):
             return
 
         try:
-            self._client = Anthropic(api_key=self.api_key)
-            self._async_client = AsyncAnthropic(api_key=self.api_key)
+            self._client = Anthropic(api_key=self.api_key)  # type: ignore[misc]
+            self._async_client = AsyncAnthropic(api_key=self.api_key)  # type: ignore[misc]
             self._available = True
             logger.info("Anthropic provider initialized")
         except Exception as e:
@@ -118,7 +123,7 @@ class AnthropicProvider(BaseAIProvider):
             if response.content and len(response.content) > 0:
                 first_block = response.content[0]
                 if hasattr(first_block, 'text'):
-                    content = first_block.text
+                    content = getattr(first_block, 'text', '')
 
             latency_ms = (time.time() - start_time) * 1000
             tokens_used = (

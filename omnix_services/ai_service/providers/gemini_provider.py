@@ -19,13 +19,19 @@ from .base_provider import BaseAIProvider
 
 logger = logging.getLogger(__name__)
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google import genai as genai_type
+    from google.genai import types as types_type
+
 try:
     from google import genai
     from google.genai import types
     GEMINI_AVAILABLE = True
 except ImportError:
-    genai = None  # type: ignore
-    types = None  # type: ignore
+    genai = None
+    types = None
     GEMINI_AVAILABLE = False
     logger.warning("google-genai not installed")
 
@@ -54,7 +60,7 @@ class GeminiProvider(BaseAIProvider):
             return
 
         try:
-            self._client = genai.Client(api_key=self.api_key)
+            self._client = genai.Client(api_key=self.api_key)  # type: ignore[union-attr]
             self._available = True
             logger.info("Gemini provider initialized")
         except Exception as e:
@@ -112,7 +118,7 @@ class GeminiProvider(BaseAIProvider):
             response = self._client.models.generate_content(
                 model=self.default_model,
                 contents="".join(contents),
-                config=types.GenerateContentConfig(
+                config=types.GenerateContentConfig(  # type: ignore[union-attr]
                     max_output_tokens=request.max_tokens,
                     temperature=request.temperature,
                 ),
@@ -154,7 +160,7 @@ class GeminiProvider(BaseAIProvider):
             response = self._client.models.generate_content_stream(
                 model=self.default_model,
                 contents="".join(contents),
-                config=types.GenerateContentConfig(
+                config=types.GenerateContentConfig(  # type: ignore[union-attr]
                     max_output_tokens=request.max_tokens,
                     temperature=request.temperature,
                 ),
