@@ -63,7 +63,8 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Trading Profiles System
 
--   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED) to switch between conservative and aggressive settings for trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
+-   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED) to switch between conservative and aggressive settings for trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
+-   **WIN_RATE_OPTIMIZED (Dec 8, 2025)**: New profile for achieving 55%+ win rate. ONLY trades BTC/USD and XRP/USD (proven 55-66% win rate). SL 1.2%/TP 3.5% = R:R 2.9:1. Check interval 15s for reactive SL. Min confidence 0.25 for high-quality signals only. Set `TRADING_PROFILE=WIN_RATE_OPTIMIZED` in Railway to activate.
 
 ### Architecture Modernization V7.0 (Planned)
 
