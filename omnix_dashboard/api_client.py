@@ -79,6 +79,9 @@ class OmnixAPIClient:
     def get_fear_greed(self) -> Dict[str, Any]:
         return self._request('/api/market/fear-greed')
     
+    def get_calibration(self) -> Dict[str, Any]:
+        return self._request('/api/system/calibration')
+    
     def download_pdf_report(self) -> Optional[bytes]:
         url = f"{self.base_url}/api/report/pdf"
         try:

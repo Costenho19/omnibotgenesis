@@ -60,9 +60,21 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   Utilizes Redis for fast state management and PostgreSQL for persistence.
 -   Employs ThreadPoolExecutor for parallel processing and per-user locks for thread safety.
 
-### Dashboard API Endpoints
+### Dashboard Architecture (V6.5.4 PREMIUM)
 
--   Provides various API endpoints for system health, trading performance, paper trade history, open positions, real-time prices, market sentiment, database diagnostics, and adaptive engine telemetry.
+-   **Flask Dashboard** (port 5000): Primary API and web terminal for operations
+    - `/api/metrics/institutional`: Portfolio-wide and per-pair Sharpe/Sortino/Calmar
+    - `/api/report/pdf`: Professional PDF report for investor presentations
+    - `/api/system/calibration`: WIN_RATE_OPTIMIZED profile calibration data
+    - All standard endpoints for health, trades, market data, signals
+-   **Streamlit Dashboard** (port 8080): Interactive investor visualization
+    - Consumes Flask API via `OmnixAPIClient` class
+    - Dark theme with Plotly charts
+    - Performance grade display (A/B/C/D based on Sharpe)
+    - Per-pair analysis tables
+-   **API Client** (`omnix_dashboard/api_client.py`): Service-to-service communication
+    - Configurable base URL via `OMNIX_API_URL` environment variable
+    - Defaults to `http://localhost:5000` for local development
 
 ### Trading Profiles System
 

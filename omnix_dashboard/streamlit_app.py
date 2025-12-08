@@ -100,9 +100,16 @@ def load_metrics():
 
 def load_calibration():
     try:
-        from omnix_core.config.trading_profiles import PAIR_CALIBRATIONS
-        return PAIR_CALIBRATIONS
-    except Exception:
+        client = get_api_client()
+        response = client.get_calibration()
+        
+        if not response.get('success'):
+            return {}
+        
+        return response.get('calibration', {})
+        
+    except Exception as e:
+        st.error(f"Error loading calibration: {e}")
         return {}
 
 
