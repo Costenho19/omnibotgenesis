@@ -195,13 +195,15 @@ Múltiplo típico sobre costo de replicación: 3-5x
 
 **Valoración Ajustada:** $12.0M × 0.45 = **$5.4M**
 
-### 5.3 Recomendación Final
+### 5.3 Recomendación Final (Optimizado para Dubai/UAE)
 
 | Escenario | Valoración | Seed Round | Dilución |
 |-----------|------------|------------|----------|
-| **Mínimo Aceptable** | $5M | $1.5M | 23% |
-| **Target (Recomendado)** | $8M | $2.5M | 24% |
-| **Stretch Goal** | $12M | $3.5M | 23% |
+| **Conservador** | $8M | $700K | 8% |
+| **Target (Recomendado)** | **$11.5M** | **$1M** | **8%** |
+| **Stretch Goal** | $17.25M | $1.5M | 8% |
+
+**Nota:** La valoración promedio de seed en MENA es $18.9M (MAGNiTT 2024). Nuestra propuesta de $11.5M ofrece upside significativo para inversores tempranos.
 
 ---
 
@@ -261,7 +263,13 @@ Múltiplo típico sobre costo de replicación: 3-5x
 
 **Valoración justa: $5-12M** dependiendo del apetito de riesgo del inversor.
 
-**Recomendación:** Solicitar **$2.5M seed @ $8M pre-money** (24% dilución).
+**Recomendación para Dubai/UAE:** Solicitar **$1M seed @ $11.5M pre-money** (8% dilución).
+
+Esta estructura es ideal para el mercado de UAE porque:
+1. Valoración por debajo del promedio MENA ($18.9M) - ofrece upside
+2. Dilución mínima (8%) - mantiene control del fundador
+3. Monto manejable ($1M) - típico para Dubai Angel Investors
+4. Runway suficiente (18-24 meses) - hasta Series A
 
 ---
 

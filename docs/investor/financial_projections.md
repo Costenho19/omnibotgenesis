@@ -177,25 +177,35 @@ ARPU increases over time due to:
 
 | Milestone | ARR | Multiple | Valuation |
 |-----------|-----|----------|-----------|
-| Seed (Now) | Pre-revenue | - | $8M |
+| Seed (Now) | Pre-revenue | - | $11.5M |
 | Series A (2027) | $6.5M | 6x | $39M |
 | Series B (2029) | $25M | 8x | $200M |
 
-**Why $8M Valuation is Justified:**
-- Median AI fintech seed: $10-18M (Carta, Aventis Advisors 2024)
+**Why $11.5M Valuation is Justified:**
+- MENA seed mean valuation: $18.9M (MAGNiTT 2024) - we're below market
+- Global AI fintech seed median: $10-18M (Carta 2024)
 - Unique IP: Non-Markovian Kernel, InstitutionalDecisionLogger, Post-Quantum Security
 - Competitor 3Commas valued at $180M with fewer features
+- Recent: Zinit raised $8M seed at $48M valuation (Dec 2025)
 - See `valuation_analysis.md` for detailed methodology
 
 ### 5.3 Investor Return Analysis
 
-**$250,000 investment at Seed ($8M valuation) = 2.4% equity**
+**$125,000 investment at Seed ($11.5M valuation) = 1% equity**
 
 | Exit Scenario | Valuation | Return | Multiple |
 |---------------|-----------|--------|----------|
-| Conservative (Series A) | $39M | $936,000 | 3.7x |
-| Base Case (Series B) | $150M | $3,600,000 | 14.4x |
-| Optimistic (Acquisition) | $400M | $9,600,000 | 38.4x |
+| Series A | $39M | $390,000 | 3.1x |
+| Series B | $150M | $1,500,000 | 12x |
+| Acquisition | $400M | $4,000,000 | 32x |
+
+**Full $1M investment (8% equity):**
+
+| Exit Scenario | Valuation | Return | Multiple |
+|---------------|-----------|--------|----------|
+| Series A | $39M | $3,120,000 | 3.1x |
+| Series B | $150M | $12,000,000 | 12x |
+| Acquisition | $400M | $32,000,000 | 32x |
 
 ---
 
@@ -244,11 +254,12 @@ OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity
 5. **Experienced team** - Deep technical expertise
 
 **Investment Highlights:**
-- $2.5M seed at $8M valuation (24% dilution)
-- 24+ month runway
-- Target 4-40x return at Series A/B
+- $1M seed at $11.5M valuation (8% dilution only)
+- 18-24 month runway to Series A
+- Target 3-32x return at Series A/B/Acquisition
 - Clear milestones and de-risking path
 - Unique IP: Non-Markovian Kernel, Post-Quantum Security, Institutional Audit Trail
+- Below MENA market average ($18.9M) - significant upside for early investors
 
 ---
 
