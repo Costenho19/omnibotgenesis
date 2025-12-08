@@ -3,15 +3,15 @@ OMNIX INSTITUTIONAL+ - Web Search Manager
 
 Orchestrates web searches with intelligent caching, rate limiting,
 and automatic intent detection for AI-assisted searches.
+
+Refactored to follow SOLID principles - IntentDetector extracted.
 """
 
-import os
 import json
 import hashlib
 import logging
-from typing import Optional, Dict, List, Any, TYPE_CHECKING, Callable
+from typing import Optional, Dict, List, Any, Callable
 from datetime import datetime, timedelta
-import asyncio
 
 logger = logging.getLogger("OMNIX.WebSearchManager")
 
@@ -25,65 +25,7 @@ except ImportError:
     logger.warning("⚠️ Redis cache not available for web search")
 
 from .tavily_search import TavilySearchClient, get_tavily_client
-
-
-SEARCH_INTENT_KEYWORDS = [
-    # Time-sensitive triggers (HIGH PRIORITY - require current info)
-    "qué pasó", "what happened", "noticias", "news", "hoy", "today",
-    "ayer", "yesterday", "esta semana", "this week", "últimas", "latest",
-    "recientes", "recent", "última hora", "breaking",
-    "anunció", "announced", "reportó", "reported", "dijo", "said",
-    "según", "according to", "fuentes", "sources", "rumor", "rumores",
-    "predicción", "prediction", "forecast", "pronóstico",
-    "por qué subió", "why did it go up", "por qué bajó", "why did it drop",
-    "qué está pasando", "what's happening", "busca", "search", "encuentra", "find",
-    # V6.5.4 Premium - Event-specific triggers (not generic conversation)
-    "pasó algo", "sucedió", "ocurrió",
-    "2024", "2025", "diciembre", "december",
-    "subió", "bajó", "cayó", "dropped", "rose", "fell", "crashed", "pumped",
-    "rally", "dump", "pump", "crash",
-    "halving", "etf", "aprobación", "approval",
-    "elon musk", "trump", "biden", "powell", "gensler",
-    # V6.5.4 Premium+ - Summary and report triggers
-    "resumen", "summary", "reporte", "report", "análisis", "analysis",
-    "cierre", "close", "apertura", "open", "sesión", "session",
-    "comportamiento", "performance", "rendimiento", "returns",
-    # V6.5.4 Premium+ - Days of week (temporal context)
-    "lunes", "monday", "martes", "tuesday", "miércoles", "wednesday",
-    "jueves", "thursday", "viernes", "friday", "sábado", "saturday", "domingo", "sunday",
-    "semana pasada", "last week", "mes pasado", "last month",
-    "esta mañana", "this morning", "anoche", "last night"
-]
-
-CRYPTO_FINANCE_KEYWORDS = [
-    # Crypto assets
-    "bitcoin", "btc", "ethereum", "eth", "crypto", "criptomoneda", "criptomonedas",
-    "solana", "sol", "xrp", "ripple", "dogecoin", "doge", "cardano", "ada",
-    "avalanche", "avax", "polkadot", "dot", "chainlink", "link", "polygon", "matic",
-    "litecoin", "ltc", "cosmos", "atom", "altcoin", "altcoins", "memecoin",
-    # Exchanges & platforms
-    "binance", "coinbase", "kraken", "ftx", "gemini", "bybit", "okx", "kucoin",
-    # Stock market - US
-    "bolsa", "bolsa de valores", "stock market", "wall street",
-    "nasdaq", "nyse", "s&p", "s&p 500", "dow jones", "dow", "russell",
-    "acciones", "stocks", "equities", "equity", "acción",
-    # Stock market - Indices & ETFs
-    "spy", "qqq", "dia", "iwm", "vti", "voo", "arkk",
-    "índice", "index", "indices", "futures", "futuros",
-    # Sectors & companies
-    "tech", "tecnología", "tecnológicas", "financieras", "bancarias",
-    "apple", "aapl", "microsoft", "msft", "google", "googl", "amazon", "amzn",
-    "tesla", "tsla", "nvidia", "nvda", "meta", "netflix", "nflx",
-    # Macro & regulators
-    "fed", "federal reserve", "powell", "sec", "regulación", "regulation",
-    "etf", "blackrock", "grayscale", "vanguard", "fidelity",
-    "mercado", "market", "trading", "inversión", "investment",
-    "inflación", "inflation", "tasas", "rates", "interest", "cpi", "ppi",
-    "gdp", "pib", "unemployment", "desempleo", "jobs", "empleos", "nóminas", "payrolls",
-    # Market conditions
-    "bull", "bear", "bullish", "bearish", "alcista", "bajista",
-    "volatilidad", "volatility", "vix", "fear", "greed", "miedo", "codicia"
-]
+from .intent_detector import IntentDetector, get_intent_detector
 
 
 class WebSearchManager:
@@ -91,19 +33,22 @@ class WebSearchManager:
     Intelligent Web Search Manager
     
     Features:
-    - Automatic search intent detection
+    - Automatic search intent detection (via IntentDetector)
     - Redis caching with configurable TTL
     - Rate limiting to control costs
     - Fallback handling when API unavailable
+    
+    SOLID: Uses IntentDetector for search intent detection (SRP).
     """
     
     CACHE_TTL = 900
     RATE_LIMIT_SEARCHES = 30
     RATE_LIMIT_WINDOW = 60
     
-    def __init__(self):
+    def __init__(self, intent_detector: IntentDetector = None):  # type: ignore[assignment]
         """Initialize the search manager"""
         self.tavily = get_tavily_client()
+        self.intent_detector = intent_detector or get_intent_detector()
         self.redis = None
         self._init_redis()
         
@@ -173,60 +118,14 @@ class WebSearchManager:
     
     def detect_search_intent(self, message: str) -> Dict[str, Any]:
         """
-        Detect if a message requires a web search
+        Detect if a message requires a web search.
+        
+        Delegates to IntentDetector following Single Responsibility Principle.
         
         Returns:
             Dict with 'needs_search', 'confidence', 'suggested_query', 'reason'
         """
-        message_lower = message.lower()
-        
-        intent_score = 0
-        matched_intent_keywords = []
-        for keyword in SEARCH_INTENT_KEYWORDS:
-            if keyword in message_lower:
-                intent_score += 1
-                matched_intent_keywords.append(keyword)
-        
-        topic_score = 0
-        matched_topic_keywords = []
-        for keyword in CRYPTO_FINANCE_KEYWORDS:
-            if keyword in message_lower:
-                topic_score += 1
-                matched_topic_keywords.append(keyword)
-        
-        is_question = any(q in message_lower for q in ["?", "qué", "what", "cuál", "which", "cómo", "how", "por qué", "why", "cuándo", "when", "dónde", "where"])
-        
-        # V6.5.4 Premium: Balanced scoring to avoid over-triggering
-        total_score = intent_score * 2 + topic_score + (1 if is_question else 0)
-        confidence = min(total_score / 10, 1.0)
-        
-        # V6.5.4: Require BOTH intent keyword AND topic keyword to trigger
-        # This prevents generic questions from triggering search
-        # Only exception: explicit search commands ("busca", "search", "encuentra")
-        explicit_search = any(cmd in message_lower for cmd in ["busca ", "buscar ", "encuentra ", "search ", "find "])
-        needs_search = explicit_search or (intent_score >= 1 and topic_score >= 1) or (is_question and intent_score >= 1 and topic_score >= 1)
-        
-        suggested_query = message
-        if matched_topic_keywords and not matched_intent_keywords:
-            suggested_query = f"{message} últimas noticias"
-        
-        reason = None
-        if needs_search:
-            if matched_intent_keywords:
-                reason = f"Detected search intent: {', '.join(matched_intent_keywords[:3])}"
-            elif matched_topic_keywords:
-                reason = f"Topic requires current info: {', '.join(matched_topic_keywords[:3])}"
-            else:
-                reason = "Question format detected"
-        
-        return {
-            "needs_search": needs_search,
-            "confidence": confidence,
-            "suggested_query": suggested_query,
-            "reason": reason,
-            "intent_keywords": matched_intent_keywords,
-            "topic_keywords": matched_topic_keywords
-        }
+        return self.intent_detector.detect(message)
     
     def search(
         self, 
