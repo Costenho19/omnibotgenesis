@@ -6,7 +6,7 @@ Abstract base class for all AI providers following Template Method pattern.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional, List, AsyncIterator
+from typing import Optional, List, AsyncIterator, Any
 
 from ..interfaces.ai_gateway import (
     TextGenerationRequest,
@@ -61,8 +61,8 @@ class BaseAIProvider(ABC):
         self,
         request: TextGenerationRequest
     ) -> AsyncIterator[str]:
-        """Stream text generation."""
-        ...
+        """Stream text generation (async generator)."""
+        yield ""  # type: ignore
 
     @abstractmethod
     def get_models(self) -> List[ModelInfo]:

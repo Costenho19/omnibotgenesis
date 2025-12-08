@@ -23,6 +23,8 @@ try:
     from openai import OpenAI, AsyncOpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
+    OpenAI = None  # type: ignore
+    AsyncOpenAI = None  # type: ignore
     OPENAI_AVAILABLE = False
     logger.warning("openai not installed")
 

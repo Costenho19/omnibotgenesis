@@ -23,6 +23,8 @@ try:
     from anthropic import Anthropic, AsyncAnthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
+    Anthropic = None  # type: ignore
+    AsyncAnthropic = None  # type: ignore
     ANTHROPIC_AVAILABLE = False
     logger.warning("anthropic not installed")
 
@@ -114,7 +116,9 @@ class AnthropicProvider(BaseAIProvider):
 
             content = ""
             if response.content and len(response.content) > 0:
-                content = response.content[0].text
+                first_block = response.content[0]
+                if hasattr(first_block, 'text'):
+                    content = first_block.text
 
             latency_ms = (time.time() - start_time) * 1000
             tokens_used = (

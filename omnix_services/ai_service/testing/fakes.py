@@ -96,6 +96,7 @@ class FakeAIProvider(BaseAIProvider):
         self,
         request: TextGenerationRequest
     ) -> AsyncIterator[str]:
+        """Stream text from fake provider."""
         self._call_count += 1
         self._last_request = request
 

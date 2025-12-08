@@ -24,6 +24,8 @@ try:
     from google.genai import types
     GEMINI_AVAILABLE = True
 except ImportError:
+    genai = None  # type: ignore
+    types = None  # type: ignore
     GEMINI_AVAILABLE = False
     logger.warning("google-genai not installed")
 
