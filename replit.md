@@ -2,7 +2,7 @@
 
 ## Overview
 
-OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $400K seed funding at $2.5M valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record (500+ trades, 55%+ win rate) for investor presentations, targeting **$1M seed funding at $11.5M pre-money valuation** from UAE/GCC investors. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -49,7 +49,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 -   **Web Search Service V6.5.4**: Real-time internet search via Tavily API. Auto-detects queries about news/events/current data. Redis cache (15min TTL), rate limiting (30/min).
 -   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and ExecutionProtocol orchestrator for dynamic decision-making (TWAP/VWAP/ICEBERG).
 -   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions. Emits structured JSON events (TRADE_CANDIDATE, VETO_COHERENCE, VETO_CONSENSUS, VETO_DRAWDOWN, VETO_RISK_GUARDIAN, VETO_HMM_REGIME, VETO_POSITION_LIMIT, TRADE_VALIDATED, TRADE_EXECUTED, TRADE_REJECTED, AI_NARRATIVE) with unique decision_id for lifecycle correlation. Compatible with Grafana/Loki/ELK. Located in `omnix_core/utils/logger.py`.
--   **Volatility-Based SL/TP Classification V6.5.4**: High-volatility pairs (DOT, AVAX, SOL, LINK, ATOM, POL) use 2.5%/3.5% SL/TP; normal-volatility pairs (BTC, ETH, XRP, LTC, ADA) use 1.5%/2.5%. Function `get_sl_tp_for_symbol()` in AutoTradingBot fallback.
+-   **Volatility-Based SL/TP Classification V6.5.4**: High-volatility pairs (DOT, AVAX, SOL, LINK, ATOM, POL) use 2.5%/4.5% SL/TP; normal-volatility pairs (BTC, ETH, XRP, LTC, ADA) use 1.5%/3.0%. Function `get_sl_tp_for_symbol()` in AutoTradingBot fallback.
 -   **InstitutionalMetricsCalculator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_metrics.py`): Sharpe, Sortino, Calmar ratios calculated per-pair and portfolio-wide. Industry-standard risk-adjusted metrics for UAE/GCC investor presentations.
 -   **InstitutionalReportGenerator V6.5.4 PREMIUM** (`omnix_services/analytics/institutional_report.py`): PDF report generator with professional formatting for investors. Includes executive summary, risk metrics, per-pair analysis, and calibration details.
 -   **Streamlit Dashboard V6.5.4 PREMIUM** (`omnix_dashboard/streamlit_app.py`): Interactive investor dashboard with Plotly charts, real-time metrics visualization, and performance grade display.
@@ -112,3 +112,25 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## Recent Changes (December 8, 2025)
+
+### Panel Premium V6.5.4 Updates
+
+-   **InstitutionalMetricsCalculator** (`omnix_services/analytics/institutional_metrics.py`): Sharpe, Sortino, Calmar ratios calculated per-pair and portfolio-wide using daily equity curves. Industry-standard risk-adjusted metrics for UAE/GCC investor presentations.
+-   **Monte Carlo Real Simulation**: 10,000 numpy iterations per horizon (30/90/180 days) for PDF reports - genuine stochastic simulation, not static calculations.
+-   **PDF Report Generator** (`omnix_services/analytics/institutional_report.py`): 989-line institutional PDF with 6 sections: cover, benchmarks, Monte Carlo projections, team/governance, roadmap 2026, architecture.
+-   **Centralized Finnhub Service**: `/api/news` now uses centralized `finnhub_service` pattern - eliminates 422/429 API errors and provides consistent key handling.
+-   **OmnixAPIClient Separation**: Complete service isolation enforced - Streamlit consumes Flask API exclusively via `OmnixAPIClient`, no direct backend imports.
+-   **Streamlit Sidebar**: Replaced placeholder image with styled gradient text "OMNIX V6.5.4".
+-   **Type Safety**: Fixed Optional type annotations in `api_client.py` and `institutional_report.py` - 0 LSP errors.
+
+### System Audit Status
+
+| Component | Status |
+|-----------|--------|
+| Flask Dashboard (5000) | 12/12 widgets OK |
+| PostgreSQL | 42 tables, 27 real trades |
+| PDF Generation | 13.6 KB output verified |
+| API Endpoints | All 200 OK |
+| Browser Console | No errors (Tailwind CDN warning only) |

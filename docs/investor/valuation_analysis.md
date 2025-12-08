@@ -10,13 +10,15 @@ Basado en un análisis exhaustivo de:
 2. **Capacidades técnicas reales** de OMNIX
 3. **Diferenciadores únicos** vs competidores
 
-**Conclusión: La valoración de $2.5M es significativamente BAJA.**
+**Conclusión: Valoración de $11.5M pre-money es competitiva y justificada.**
 
-| Escenario | Valoración Propuesta | Seed Round | Equity |
+| Escenario | Valoración Pre-Money | Seed Round | Equity |
 |-----------|---------------------|------------|--------|
-| **Conservador** | $5M | $1.5M | 23% |
-| **Base Case** | $8M | $2.5M | 24% |
-| **Agresivo** | $12M | $3.5M | 23% |
+| **Conservador** | $8M | $800K | 9% |
+| **Base Case (Target)** | $11.5M | $1M | 8% |
+| **Agresivo** | $15M | $1.5M | 9% |
+
+**Inversores objetivo:** UAE/GCC (Dubai, Abu Dhabi, Riyadh)
 
 ---
 

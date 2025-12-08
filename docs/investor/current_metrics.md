@@ -98,8 +98,20 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | **InstitutionalDecisionLogger** | 11 lifecycle events per trade decision with unique decision_id |
 | **Volatility-Based SL/TP** | Automatic classification of pairs by volatility |
 | **Execution Protocol PREMIUM** | Citadel-level TWAP/VWAP/ICEBERG execution |
-| **Trading Profiles System** | 4 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED |
+| **Trading Profiles System** | 5 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED |
 | **Audit Trail Events** | TRADE_CANDIDATE, VETO_COHERENCE, VETO_CONSENSUS, VETO_DRAWDOWN, VETO_RISK_GUARDIAN, VETO_HMM_REGIME, VETO_POSITION_LIMIT, TRADE_VALIDATED, TRADE_EXECUTED, TRADE_REJECTED, AI_NARRATIVE |
+
+### V6.5.4 PREMIUM Panel Features (Dec 8, 2025)
+
+| Feature | Description |
+|---------|-------------|
+| **InstitutionalMetricsCalculator** | Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide |
+| **PDF Report Generator** | 989-line institutional PDF with Monte Carlo projections |
+| **Monte Carlo Real Simulation** | 10,000 numpy iterations per horizon (30/90/180 days) |
+| **Streamlit Dashboard** | Interactive investor visualization with Plotly charts |
+| **OmnixAPIClient** | Service separation - Streamlit consumes Flask API exclusively |
+| **Centralized Finnhub Service** | Real-time news via centralized service (no 422/429 errors) |
+| **Dual Dashboard Architecture** | Flask (port 5000) + Streamlit (port 8080) |
 
 ### Infrastructure
 

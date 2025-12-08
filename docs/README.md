@@ -47,7 +47,7 @@ docs/
 ## V6.5.4 Key Features
 
 ### Core Engines
-- **AutoTradingBot V6.4 PREMIUM** - Multi-crypto scanning, tiered signals
+- **AutoTradingBot V6.5.4 INSTITUTIONAL+** - Multi-crypto scanning, tiered signals
 - **Non-Markovian Memory Kernel V6.5** - Regime transitions, cyclical patterns
 - **Coherence Engine V6.5 ULTRA** - 6-Tier Veto System (45% threshold)
 - **AI Risk Guardian V5.4** - Overtrading and drawdown protection
@@ -59,6 +59,13 @@ docs/
 - **25+ Dashboard API Endpoints** - Real-time data access
 - **Audited Snapshots** - Cryptographic verification for investors
 - **38 Foreign Keys** - 90% referential integrity coverage
+
+### V6.5.4 PREMIUM Panel Features (Dec 2025)
+- **InstitutionalMetricsCalculator** - Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide
+- **PDF Report Generator** - 989-line institutional PDF with Monte Carlo projections (10,000 real numpy iterations)
+- **Dual Dashboard Architecture** - Flask API (port 5000) + Streamlit investor visualization (port 8080)
+- **OmnixAPIClient** - Complete service isolation (Streamlit consumes Flask API exclusively)
+- **Centralized Finnhub Service** - Eliminates 422/429 API errors with consistent key handling
 
 ### Portfolio Management (6 Modules)
 1. Risk Parity
@@ -166,4 +173,4 @@ docs/
 ---
 
 **OMNIX V6.5.4 INSTITUTIONAL+**  
-**Target: $400K seed funding @ $2.5M valuation**
+**Target: $1M seed funding @ $11.5M pre-money valuation (UAE/GCC)**
