@@ -150,6 +150,49 @@ class TestPostQuantumSecurity(unittest.TestCase):
         self.assertTrue(info['quantum_resistant'])
         self.assertEqual(info['algorithms']['encryption'], 'Kyber-768 (ML-KEM-768)')
         self.assertEqual(info['algorithms']['signature'], 'Dilithium-3 (ML-DSA-65)')
+    
+    def test_secure_api_key(self):
+        """Test API key encryption using PQC"""
+        import hashlib
+        import base64
+        from omnix_core.security.pqc_security import PostQuantumSecurity
+        pqc = PostQuantumSecurity()
+        keypair = pqc.generate_keypair_encryption()
+        public_key, secret_key = keypair
+        test_api_key = "sk-test-api-key-12345"
+        result = pqc.secure_api_key(test_api_key, public_key)
+        self.assertIsNotNone(result)
+        self.assertIn('ciphertext', result)
+        self.assertIn('encrypted_key', result)
+        self.assertIn('timestamp', result)
+        self.assertEqual(result['algorithm'], 'Kyber-768 (ML-KEM-768)')
+        ciphertext = base64.b64decode(result['ciphertext'])
+        encrypted_key = base64.b64decode(result['encrypted_key'])
+        decrypted_secret = pqc.decapsulate_secret(ciphertext, secret_key)
+        self.assertIsNotNone(decrypted_secret)
+        key_hash = hashlib.sha256(decrypted_secret).digest()
+        decrypted_api_key = bytes(a ^ b for a, b in zip(encrypted_key, key_hash[:len(encrypted_key)]))
+        self.assertEqual(decrypted_api_key.decode('utf-8'), test_api_key)
+    
+    def test_secure_api_key_tamper_detection(self):
+        """Test that tampering with encrypted API key is detected"""
+        import hashlib
+        import base64
+        from omnix_core.security.pqc_security import PostQuantumSecurity
+        pqc = PostQuantumSecurity()
+        keypair = pqc.generate_keypair_encryption()
+        public_key, secret_key = keypair
+        test_api_key = "sk-original-key"
+        result = pqc.secure_api_key(test_api_key, public_key)
+        self.assertIsNotNone(result)
+        ciphertext = base64.b64decode(result['ciphertext'])
+        tampered_ciphertext = bytes([b ^ 0xFF for b in ciphertext[:10]]) + ciphertext[10:]
+        tampered_secret = pqc.decapsulate_secret(tampered_ciphertext, secret_key)
+        if tampered_secret:
+            encrypted_key = base64.b64decode(result['encrypted_key'])
+            key_hash = hashlib.sha256(tampered_secret).digest()
+            decrypted_wrong = bytes(a ^ b for a, b in zip(encrypted_key, key_hash[:len(encrypted_key)]))
+            self.assertNotEqual(decrypted_wrong.decode('utf-8', errors='replace'), test_api_key)
 
 
 class TestPQCKeySizes(unittest.TestCase):
