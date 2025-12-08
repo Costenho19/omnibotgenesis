@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM - Pitch Deck para Inversores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-bottom: 1px solid #1a1a2e;
+            position: relative;
+        }
+        
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed, #00d4ff);
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #00d4ff;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            color: #7c3aed;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.3rem;
+            color: #b0b0c0;
+            max-width: 900px;
+        }
+        
+        .highlight {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .card {
+            background: linear-gradient(145deg, #12121a 0%, #1a1a2e 100%);
+            border: 1px solid #2a2a4e;
+            border-radius: 16px;
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+        }
+        
+        .card h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card p {
+            font-size: 1.1rem;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            color: #7a7a8c;
+            margin-top: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid #7c3aed;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #7c3aed;
+            margin: 5px;
+        }
+        
+        .badge.green {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #10b981;
+        }
+        
+        .badge.blue {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .badge.gold {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a4e;
+        }
+        
+        th {
+            background: #1a1a2e;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #00d4ff, #7c3aed);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 40px;
+            padding-left: 30px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00d4ff;
+        }
+        
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .team-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .warning-box {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .warning-box h4 {
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+        
+        .cta {
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px 40px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 40px;
+            font-weight: 600;
+        }
+        
+        .slide-number {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 1rem;
+            color: #4a4a5c;
+        }
+        
+        .logo {
+            font-size: 1.2rem;
+            color: #7c3aed;
+            position: absolute;
+            top: 30px;
+            right: 40px;
+        }
+        
+        .transparent-note {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .transparent-note h4 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        
+        .premium-feature {
+            background: linear-gradient(145deg, #1a1a2e 0%, #2a2a4e 100%);
+            border: 2px solid #7c3aed;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+        
+        @media print {
+            .slide {
+                page-break-after: always;
+                min-height: auto;
+                padding: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SLIDE 1: Portada -->
+    <section class="slide" id="slide-1">
+        <span class="logo">OMNIX</span>
+        <h1>OMNIX V6.5.4</h1>
+        <h2>INSTITUTIONAL+ PREMIUM - Sistema de Trading Automatizado</h2>
+        <p>Plataforma de trading con IA de grado empresarial, seguridad post-cuántica, auditorías institucionales y protocolos de ejecución nivel Citadel.</p>
+        
+        <div style="margin-top: 40px;">
+            <span class="badge blue">Potenciado por IA</span>
+            <span class="badge">Seguridad Post-Cuántica</span>
+            <span class="badge green">Operación 24/7</span>
+            <span class="badge gold">Auditoría Institucional</span>
+            <span class="badge">Multi-Activo</span>
+        </div>
+        
+        <div class="transparent-note">
+            <h4>Compromiso de Transparencia</h4>
+            <p style="font-size: 1rem;">Todos los datos en esta presentación reflejan métricas reales del sistema. No se inflan las proyecciones. Creemos en construir confianza con los inversores a través de la honestidad.</p>
+        </div>
+        
+        <p style="margin-top: 40px; font-size: 1rem; color: #7a7a8c;">
+            Ronda Seed: $1,000,000 @ Valoración $11.5M (8% dilución)<br>
+            Optimizado para Inversores UAE/GCC | Diciembre 2025
+        </p>
+        <span class="slide-number">1/12</span>
+    </section>
+
+    <!-- SLIDE 2: El Problema -->
+    <section class="slide" id="slide-2">
+        <span class="logo">OMNIX</span>
+        <h2>El Problema</h2>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>🎰 Realidad del Trading Retail</h3>
+                <p>El 95% de los traders retail pierden dinero. Decisiones emocionales, falta de disciplina y mercados 24/7 crean condiciones imposibles para el trading manual.</p>
+            </div>
+            
+            <div class="card">
+                <h3>🔒 Brecha Institucional</h3>
+                <p>Las herramientas profesionales de trading cuestan $50K-500K/año. Los inversores retail están excluidos de algoritmos institucionales y gestión de riesgo.</p>
+            </div>
+            
+            <div class="card">
+                <h3>⚠️ Riesgos de Seguridad</h3>
+                <p>La encriptación actual será vulnerada por computadoras cuánticas en 10 años. La mayoría de sistemas de trading no están preparados para amenazas post-cuánticas.</p>
+            </div>
+            
+            <div class="card">
+                <h3>📊 Sin Rastro de Auditoría</h3>
+                <p>Las plataformas retail no ofrecen transparencia en decisiones. Los inversores no pueden verificar por qué se tomaron o rechazaron operaciones. Sin rastro de cumplimiento.</p>
+            </div>
+        </div>
+        
+        <span class="slide-number">2/12</span>
+    </section>
+
+    <!-- SLIDE 3: Nuestra Solución -->
+    <section class="slide" id="slide-3">
+        <span class="logo">OMNIX</span>
+        <h2>Nuestra Solución</h2>
+        
+        <p style="font-size: 1.5rem; color: #ffffff; margin-bottom: 40px;">
+            OMNIX democratiza la tecnología de trading institucional con transparencia completa y registro de decisiones de grado auditoría.
+        </p>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>🧠 Motor de Decisiones IA</h3>
+                <p>15+ estrategias coordinadas incluyendo Monte Carlo, HMM, Memoria No-Markoviana, Filtros Kalman y protocolos ARES trabajando en consenso.</p>
+            </div>
+            
+            <div class="card">
+                <h3>⚛️ Seguridad Cuántica</h3>
+                <p>Primera plataforma de trading retail con criptografía post-cuántica Kyber-768 y Dilithium-3, compatible con estándares NIST FIPS-203/204.</p>
+            </div>
+            
+            <div class="card premium-feature">
+                <h3>📋 Auditoría Institucional</h3>
+                <p>InstitutionalDecisionLogger V6.5.4: 11 eventos de ciclo de vida por operación con decision_id único. Compatible con Grafana/Loki/ELK.</p>
+            </div>
+            
+            <div class="card premium-feature">
+                <h3>🏛️ Ejecución Nivel Citadel</h3>
+                <p>Execution Protocol V6.5.4 PREMIUM: LiquidityAnalyzer, MicroVolatilityEngine, selección dinámica TWAP/VWAP/ICEBERG.</p>
+            </div>
+        </div>
+        
+        <span class="slide-number">3/12</span>
+    </section>
+
+    <!-- SLIDE 4: Tecnología -->
+    <section class="slide" id="slide-4">
+        <span class="logo">OMNIX</span>
+        <h2>Stack Tecnológico V6.5.4</h2>
+        
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3>Motores Principales</h3>
+                <table>
+                    <tr>
+                        <td>Non-Markovian Memory Kernel</td>
+                        <td><span class="badge green">V6.5</span></td>
+                    </tr>
+                    <tr>
+                        <td>Coherence Engine ULTRA</td>
+                        <td><span class="badge green">V6.5</span></td>
+                    </tr>
+                    <tr>
+                        <td>Protocolo ARES V1/V2</td>
+                        <td><span class="badge green">Activo</span></td>
+                    </tr>
+                    <tr>
+                        <td>Sistema de Entrada Adaptativo CAES</td>
+                        <td><span class="badge green">V6.5.4</span></td>
+                    </tr>
+                    <tr>
+                        <td>AI Risk Guardian</td>
+                        <td><span class="badge green">V5.4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Monte Carlo (Mejorado Cuánticamente)</td>
+                        <td><span class="badge green">Activo</span></td>
+                    </tr>
+                    <tr>
+                        <td>InstitutionalDecisionLogger</td>
+                        <td><span class="badge gold">V6.5.4 NUEVO</span></td>
+                    </tr>
+                    <tr>
+                        <td>Execution Protocol PREMIUM</td>
+                        <td><span class="badge gold">V6.5.4 NUEVO</span></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div>
+                <h3>Seguridad e Infraestructura</h3>
+                <table>
+                    <tr>
+                        <td>Encriptación Post-Cuántica</td>
+                        <td>Kyber-768 / Dilithium-3</td>
+                    </tr>
+                    <tr>
+                        <td>IA Principal</td>
+                        <td>Google Gemini 2.0 Flash</td>
+                    </tr>
+                    <tr>
+                        <td>IA de Respaldo</td>
+                        <td>OpenAI GPT-4o / Claude</td>
+                    </tr>
+                    <tr>
+                        <td>Base de Datos</td>
+                        <td>PostgreSQL + Redis</td>
+                    </tr>
+                    <tr>
+                        <td>Despliegue</td>
+                        <td>Railway (24/7)</td>
+                    </tr>
+                    <tr>
+                        <td>Capacidad de Usuarios</td>
+                        <td>100,000+ concurrentes</td>
+                    </tr>
+                    <tr>
+                        <td>Compatibilidad Auditoría</td>
+                        <td>Grafana/Loki/ELK/BigQuery</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <span class="slide-number">4/12</span>
+    </section>
+
+    <!-- SLIDE 5: Rastro de Auditoría Institucional -->
+    <section class="slide" id="slide-5">
+        <span class="logo">OMNIX</span>
+        <h2>Rastro de Auditoría Institucional V6.5.4</h2>
+        <p style="color: #7c3aed; margin-bottom: 20px;">Primera plataforma retail con registro de decisiones de grado hedge fund</p>
+        
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3>11 Eventos del Ciclo de Vida</h3>
+                <table>
+                    <tr><td>TRADE_CANDIDATE</td><td>Señal generada</td></tr>
+                    <tr><td>VETO_COHERENCE</td><td>Bloqueado por coherencia</td></tr>
+                    <tr><td>VETO_CONSENSUS</td><td>Desacuerdo de estrategias</td></tr>
+                    <tr><td>VETO_DRAWDOWN</td><td>Límite de pérdida diaria</td></tr>
+                    <tr><td>VETO_RISK_GUARDIAN</td><td>Monitor de riesgo IA</td></tr>
+                    <tr><td>VETO_HMM_REGIME</td><td>Régimen desfavorable</td></tr>
+                    <tr><td>VETO_POSITION_LIMIT</td><td>Máximo de posiciones alcanzado</td></tr>
+                    <tr><td>TRADE_VALIDATED</td><td>Todos los filtros pasados</td></tr>
+                    <tr><td>TRADE_EXECUTED</td><td>Orden colocada</td></tr>
+                    <tr><td>TRADE_REJECTED</td><td>Rechazo final</td></tr>
+                    <tr><td>AI_NARRATIVE</td><td>Explicación post-decisión</td></tr>
+                </table>
+            </div>
+            
+            <div>
+                <h3>Ejemplo de Log</h3>
+                <div style="background: #12121a; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 0.85rem; color: #10b981;">
+                    <pre style="white-space: pre-wrap;">
+{
+  "decision_id": "DEC-20251208-5355493B",
+  "event_type": "TRADE_VALIDATED",
+  "timestamp": "2025-12-08T00:22:32Z",
+  "symbol": "ADA/USD",
+  "direction": "BUY",
+  "position_size_usd": 42393.75,
+  "guards_passed": [
+    "CONSENSUS",
+    "COHERENCE"
+  ],
+  "profile": "PAPER_OPTIMIZED"
+}
+                    </pre>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <span class="badge blue">Listo para Grafana</span>
+                    <span class="badge blue">Compatible ELK</span>
+                    <span class="badge blue">BigQuery/Snowflake</span>
+                </div>
+            </div>
+        </div>
+        
+        <span class="slide-number">5/12</span>
+    </section>
+
+    <!-- SLIDE 6: Estado Actual (TRANSPARENTE) -->
+    <section class="slide" id="slide-6">
+        <span class="logo">OMNIX</span>
+        <h2>Estado Actual</h2>
+        <p style="color: #fbbf24; margin-bottom: 20px;">Transparencia Total: Datos Reales al 8 de Diciembre 2025</p>
+        
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="card metric">
+                <div class="metric-value">27</div>
+                <div class="metric-label">Operaciones Totales</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-value">$897K</div>
+                <div class="metric-label">Balance Actual</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-value">25.9%</div>
+                <div class="metric-label">Tasa de Aciertos Actual</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-value">8</div>
+                <div class="metric-label">Posiciones Abiertas</div>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <h4>⚠️ Contexto Importante</h4>
+            <p style="font-size: 1rem; color: #d1d5db;">
+                El sistema está en <strong>fase de calibración</strong>. Las operaciones iniciales usaron umbrales bajos (30% coherencia) que permitieron señales débiles.
+                <br><br>
+                <strong>Correcciones V6.5.4 Aplicadas:</strong><br>
+                • Ratio SL/TP mejorado a 2:1 (1.5% riesgo por 3.0% recompensa)<br>
+                • Umbral de coherencia elevado a 60%<br>
+                • SL/TP basado en volatilidad (pares de alta volatilidad tienen stops más amplios)<br>
+                • Rastro de auditoría institucional agregado para transparencia completa
+                <br><br>
+                <strong>Objetivo:</strong> 500+ operaciones en 60 días con 55%+ tasa de aciertos.
+            </p>
+        </div>
+        
+        <span class="slide-number">6/12</span>
+    </section>
+
+    <!-- SLIDE 7: Proyecciones -->
+    <section class="slide" id="slide-7">
+        <span class="logo">OMNIX</span>
+        <h2>Proyecciones Financieras</h2>
+        <p style="color: #7a7a8c; margin-bottom: 20px;">Estimaciones conservadoras basadas en perfil PAPER_OPTIMIZED optimizado</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Métrica</th>
+                    <th>Conservador</th>
+                    <th>Caso Base</th>
+                    <th>Optimista</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Operaciones Diarias</td>
+                    <td>8-12</td>
+                    <td>12-20</td>
+                    <td>20-30</td>
+                </tr>
+                <tr>
+                    <td>Tasa de Aciertos</td>
+                    <td>52%</td>
+                    <td>55-58%</td>
+                    <td>60-65%</td>
+                </tr>
+                <tr>
+                    <td>Retorno Mensual</td>
+                    <td>2-3%</td>
+                    <td>4-6%</td>
+                    <td>8-12%</td>
+                </tr>
+                <tr>
+                    <td>Retorno Anual</td>
+                    <td>25-40%</td>
+                    <td>50-80%</td>
+                    <td>100-150%</td>
+                </tr>
+                <tr>
+                    <td>Drawdown Máximo</td>
+                    <td>15-20%</td>
+                    <td>10-15%</td>
+                    <td>5-10%</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="transparent-note">
+            <h4>Base de Proyecciones</h4>
+            <p style="font-size: 1rem;">
+                Basado en configuración PAPER_OPTIMIZED: umbral de coherencia 60%, ratio R:R 2:1, confianza mínima 22%, SL/TP adaptativo a volatilidad.
+            </p>
+        </div>
+        
+        <span class="slide-number">7/12</span>
+    </section>
+
+    <!-- SLIDE 8: Modelo de Negocio -->
+    <section class="slide" id="slide-8">
+        <span class="logo">OMNIX</span>
+        <h2>Modelo de Negocio</h2>
+        
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="card">
+                <h3>💎 Básico</h3>
+                <p style="font-size: 2rem; color: #00d4ff; margin: 20px 0;">$49/mes</p>
+                <ul style="color: #b0b0c0; font-size: 0.95rem;">
+                    <li>1 par de trading</li>
+                    <li>Gestión de riesgo básica</li>
+                    <li>Notificaciones Telegram</li>
+                    <li>Soporte comunitario</li>
+                </ul>
+            </div>
+            
+            <div class="card" style="border-color: #7c3aed; box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);">
+                <h3>🚀 Premium</h3>
+                <p style="font-size: 2rem; color: #7c3aed; margin: 20px 0;">$149/mes</p>
+                <ul style="color: #b0b0c0; font-size: 0.95rem;">
+                    <li>11 pares crypto + acciones</li>
+                    <li>Análisis IA completo</li>
+                    <li>Rastro de auditoría institucional</li>
+                    <li>Soporte prioritario</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h3>🏛️ Institucional</h3>
+                <p style="font-size: 2rem; color: #10b981; margin: 20px 0;">$499/mes</p>
+                <ul style="color: #b0b0c0; font-size: 0.95rem;">
+                    <li>Pares ilimitados</li>
+                    <li>Estrategias personalizadas</li>
+                    <li>Acceso API + Grafana</li>
+                    <li>Gerente dedicado</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 50px;">Proyecciones de Ingresos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th>Usuarios</th>
+                    <th>ARPU</th>
+                    <th>MRR</th>
+                    <th>ARR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2026 (Año 1)</td>
+                    <td>950</td>
+                    <td>$149</td>
+                    <td>$142,250</td>
+                    <td>$1.71M</td>
+                </tr>
+                <tr>
+                    <td>2027 (Año 2)</td>
+                    <td>3,450</td>
+                    <td>$159</td>
+                    <td>$548,550</td>
+                    <td>$6.58M</td>
+                </tr>
+                <tr>
+                    <td>2028 (Año 3)</td>
+                    <td>12,000</td>
+                    <td>$169</td>
+                    <td>$2.03M</td>
+                    <td>$24.3M</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <span class="slide-number">8/12</span>
+    </section>
+
+    <!-- SLIDE 9: Mercado -->
+    <section class="slide" id="slide-9">
+        <span class="logo">OMNIX</span>
+        <h2>Oportunidad de Mercado</h2>
+        
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="card metric">
+                <div class="metric-value">$2.1T</div>
+                <div class="metric-label">Capitalización Global Crypto</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-value">$18.8B</div>
+                <div class="metric-label">Mercado Trading Algorítmico (2024)</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-value">12.2%</div>
+                <div class="metric-label">CAGR (2024-2030)</div>
+            </div>
+        </div>
+        
+        <div class="grid" style="margin-top: 50px;">
+            <div class="card">
+                <h3>🎯 Segmento Objetivo</h3>
+                <p>21M inversores crypto sofisticados (top 5% de 420M holders). Estos usuarios entienden el riesgo, buscan automatización y valoran la transparencia.</p>
+            </div>
+            
+            <div class="card">
+                <h3>📈 Meta de Captura</h3>
+                <p>0.05% del segmento objetivo = 10,500 usuarios de pago. Meta conservadora alcanzable con marketing enfocado y track record probado.</p>
+            </div>
+        </div>
+        
+        <span class="slide-number">9/12</span>
+    </section>
+
+    <!-- SLIDE 10: Ventaja Competitiva -->
+    <section class="slide" id="slide-10">
+        <span class="logo">OMNIX</span>
+        <h2>Ventaja Competitiva</h2>
+        
+        <div class="grid">
+            <div class="card premium-feature">
+                <h3>🔐 Seguridad Post-Cuántica</h3>
+                <p>Única plataforma retail de trading con Kyber-768/Dilithium-3 aprobado por NIST. A prueba de computación cuántica antes que la competencia.</p>
+            </div>
+            
+            <div class="card premium-feature">
+                <h3>📋 Rastro de Auditoría Institucional</h3>
+                <p>11 eventos de ciclo de vida por operación con decision_id único. Listo para Grafana/Loki/ELK. Cumplimiento de hedge fund a precio retail.</p>
+            </div>
+            
+            <div class="card premium-feature">
+                <h3>🏛️ Ejecución Nivel Citadel</h3>
+                <p>LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelation. Selección dinámica TWAP/VWAP/ICEBERG por operación.</p>
+            </div>
+            
+            <div class="card">
+                <h3>🧠 Memoria No-Markoviana</h3>
+                <p>IA única que recuerda patrones de mercado a través del tiempo. Ningún competidor tiene esta arquitectura de memoria temporal.</p>
+            </div>
+        </div>
+        
+        <span class="slide-number">10/12</span>
+    </section>
+
+    <!-- SLIDE 11: La Solicitud -->
+    <section class="slide" id="slide-11">
+        <span class="logo">OMNIX</span>
+        <h2>La Solicitud</h2>
+        
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <div class="card metric" style="margin-bottom: 30px;">
+                    <div class="metric-value">$1,000,000</div>
+                    <div class="metric-label">Ronda Seed</div>
+                </div>
+                <div class="card metric">
+                    <div class="metric-value">$11.5M</div>
+                    <div class="metric-label">Valoración Pre-Money</div>
+                </div>
+                <div class="card metric" style="margin-top: 30px;">
+                    <div class="metric-value" style="color: #10b981;">8%</div>
+                    <div class="metric-label">Solo Dilución</div>
+                </div>
+            </div>
+            
+            <div>
+                <h3>Uso de Fondos</h3>
+                <table>
+                    <tr><td>Ingeniería (6 FTE)</td><td>40%</td></tr>
+                    <tr><td>Infraestructura y Seguridad</td><td>20%</td></tr>
+                    <tr><td>Marketing y Crecimiento</td><td>20%</td></tr>
+                    <tr><td>Legal y Cumplimiento (DIFC/ADGM)</td><td>10%</td></tr>
+                    <tr><td>Operaciones y Reserva</td><td>10%</td></tr>
+                </table>
+                
+                <p style="margin-top: 30px; font-size: 1.1rem;">
+                    <strong>Runway:</strong> 18-24 meses hasta Serie A<br>
+                    <strong>Contexto de Valoración:</strong> Promedio seed MENA es $18.9M - ofrecemos upside
+                </p>
+            </div>
+        </div>
+        
+        <span class="slide-number">11/12</span>
+    </section>
+
+    <!-- SLIDE 12: Hoja de Ruta y Contacto -->
+    <section class="slide" id="slide-12">
+        <span class="logo">OMNIX</span>
+        <h2>Hoja de Ruta y Próximos Pasos</h2>
+        
+        <div class="timeline">
+            <div class="timeline-item">
+                <h3>Q4 2025</h3>
+                <p>Completar track record: 500+ operaciones, 55%+ tasa de aciertos con perfil PAPER_OPTIMIZED</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Q1 2026</h3>
+                <p>Beta privada: 100 usuarios, refinar UX, recopilar feedback</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Q2 2026</h3>
+                <p>Lanzamiento público: Objetivo 500 usuarios de pago, impulso de marketing</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Q4 2026</h3>
+                <p>Break-even: 950 usuarios, preparar materiales Serie A</p>
+            </div>
+            <div class="timeline-item">
+                <h3>2027</h3>
+                <p>Serie A: $5M a valoración $25M+, escalar a 5,000 usuarios</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 60px; text-align: center;">
+            <h3 style="color: #ffffff;">¿Listo para Democratizar el Trading Institucional?</h3>
+            <p style="font-size: 1.2rem; margin-top: 20px;">
+                <strong>Harold</strong> | Fundador y CEO<br>
+                [Email] | [Telegram] | [Sitio Web]
+            </p>
+        </div>
+        
+        <span class="slide-number">12/12</span>
+    </section>
+
+    <footer style="padding: 40px; text-align: center; color: #4a4a5c; font-size: 0.9rem;">
+        <p>Este documento es solo para propósitos informativos. El trading implica riesgo significativo. El rendimiento pasado no garantiza resultados futuros.</p>
+        <p style="margin-top: 10px;">OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM | Diciembre 2025</p>
+    </footer>
+
+</body>
+</html>
