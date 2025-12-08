@@ -116,6 +116,16 @@ The `omnix_services/web_search_service/` is structured with an `IntentDetector` 
 -   **Tavily**: Real-time web search for AI responses.
 -   **ANU QRNG**: Quantum random numbers.
 
+### Redis Cache System (V6.5.4)
+
+The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching:
+-   **RedisCache**: Singleton class with automatic connection management
+-   **get_redis_client()**: Returns raw Redis client for direct access (used by WebSearchManager)
+-   **get_redis_cache()**: Returns the RedisCache wrapper instance
+-   **reconnect()**: Lazy recovery method when Redis connection is lost
+-   **cache_result decorator**: Function caching with normalized SHA256-hashed keys for security
+-   **Key normalization**: Deterministic cache keys even with dict/list/set arguments
+
 ### Databases
 
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
