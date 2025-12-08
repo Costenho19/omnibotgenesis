@@ -59,10 +59,12 @@ class PairCalibration:
     """
     Calibración institucional por par de trading.
     
-    V6.5.4 PREMIUM - Sistema de calibración cuantitativo basado en:
+    V6.5.4 PREMIUM INSTITUTIONAL - Sistema de calibración cuantitativo basado en:
     - Volatilidad histórica del par
     - Win rate observado
     - Drawdown máximo registrado
+    - Position sizing institucional
+    - Portfolio weighting (Markowitz-style)
     """
     symbol: str
     tier: CalibrationTier
@@ -71,6 +73,8 @@ class PairCalibration:
     min_confidence: float
     risk_reward_ratio: float
     max_position_pct: float = 0.10
+    max_position_usd: float = 50000.0
+    portfolio_weight: float = 0.25
     notes: str = ""
     
     def to_dict(self) -> Dict[str, Any]:
@@ -82,6 +86,8 @@ class PairCalibration:
             'min_confidence': self.min_confidence,
             'risk_reward_ratio': self.risk_reward_ratio,
             'max_position_pct': self.max_position_pct,
+            'max_position_usd': self.max_position_usd,
+            'portfolio_weight': self.portfolio_weight,
             'notes': self.notes
         }
 
@@ -98,19 +104,25 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     "BTC/USD": PairCalibration(
         symbol="BTC/USD",
         tier=CalibrationTier.PROVEN,
-        stop_loss_pct=0.012,      # 1.2%
-        take_profit_pct=0.035,    # 3.5%
+        stop_loss_pct=0.012,        # 1.2%
+        take_profit_pct=0.035,      # 3.5%
         min_confidence=0.25,
-        risk_reward_ratio=2.92,   # 3.5/1.2 = 2.92
+        risk_reward_ratio=2.92,     # 3.5/1.2 = 2.92
+        max_position_pct=0.10,
+        max_position_usd=50000.0,   # $50K max position
+        portfolio_weight=0.40,      # 40% del portafolio
         notes="Win rate 55% histórico. Base sólida del portafolio."
     ),
     "XRP/USD": PairCalibration(
         symbol="XRP/USD",
         tier=CalibrationTier.PROVEN,
-        stop_loss_pct=0.012,      # 1.2%
-        take_profit_pct=0.035,    # 3.5%
+        stop_loss_pct=0.012,        # 1.2%
+        take_profit_pct=0.035,      # 3.5%
         min_confidence=0.25,
         risk_reward_ratio=2.92,
+        max_position_pct=0.10,
+        max_position_usd=40000.0,   # $40K max position
+        portfolio_weight=0.30,      # 30% del portafolio
         notes="Win rate 66% histórico. Mejor rendimiento del set."
     ),
     
@@ -118,21 +130,25 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     "ADA/USD": PairCalibration(
         symbol="ADA/USD",
         tier=CalibrationTier.CALIBRATING,
-        stop_loss_pct=0.009,      # 0.9% - SL estricto
-        take_profit_pct=0.020,    # 2.0%
-        min_confidence=0.30,      # Mayor exigencia
-        risk_reward_ratio=2.22,   # 2.0/0.9 = 2.22
-        max_position_pct=0.08,    # Posición reducida
+        stop_loss_pct=0.009,        # 0.9% - SL estricto
+        take_profit_pct=0.020,      # 2.0%
+        min_confidence=0.30,        # Mayor exigencia
+        risk_reward_ratio=2.22,     # 2.0/0.9 = 2.22
+        max_position_pct=0.08,      # Posición reducida
+        max_position_usd=25000.0,   # $25K max position
+        portfolio_weight=0.15,      # 15% del portafolio
         notes="Solo 2 trades históricos. ADA es lenta y predecible."
     ),
     "LINK/USD": PairCalibration(
         symbol="LINK/USD",
         tier=CalibrationTier.CALIBRATING,
-        stop_loss_pct=0.010,      # 1.0%
-        take_profit_pct=0.025,    # 2.5%
-        min_confidence=0.28,      # Mayor exigencia
-        risk_reward_ratio=2.50,   # 2.5/1.0 = 2.50
-        max_position_pct=0.08,    # Posición reducida
+        stop_loss_pct=0.010,        # 1.0%
+        take_profit_pct=0.025,      # 2.5%
+        min_confidence=0.28,        # Mayor exigencia
+        risk_reward_ratio=2.50,     # 2.5/1.0 = 2.50
+        max_position_pct=0.08,      # Posición reducida
+        max_position_usd=30000.0,   # $30K max position
+        portfolio_weight=0.15,      # 15% del portafolio
         notes="Solo 1 trade histórico. Volatilidad moderada."
     ),
     
