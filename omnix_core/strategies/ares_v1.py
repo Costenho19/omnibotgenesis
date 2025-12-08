@@ -583,8 +583,8 @@ class AresProtocolV1:
             logger.info("🧬 INICIANDO ANÁLISIS ARES QUANTUM PROTOCOL")
             logger.info("=" * 70)
             
-            # CAPA 1: QUANTUM STRUCTURE FILTER
-            qsf_approved, qsf_reason = self.quantum_structure_filter(market_data)
+            # CAPA 1: QUANTUM STRUCTURE FILTER (ANF)
+            qsf_approved, qsf_reason = self.adaptive_noise_filter(market_data)
             if not qsf_approved:
                 logger.warning(f"❌ QSF REJECTED: {qsf_reason}")
                 return {

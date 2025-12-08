@@ -232,21 +232,43 @@ class BacktestingEngine:
     def _strategy_ma_cross(self, candle: pd.Series, params: Dict):
         """
         Simple Moving Average Crossover Strategy
-        BUY when fast MA crosses above slow MA
+        BUY when fast MA (10) crosses above slow MA (30)
         SELL when fast MA crosses below slow MA
         """
-        # This is a placeholder - real implementation would need historical MA calculation
-        # For now, random signals for testing infrastructure
+        if len(self.price_history) < 30:
+            return
         
         price = candle['close']
+        prices = np.array(self.price_history)
         
-        # Random signal for testing (replace with real MA logic)
-        if np.random.random() < 0.05:  # 5% chance of signal
-            if self.position is None:
-                # Open long position
-                self._open_position('long', price, candle['timestamp'])
-            else:
-                # Close position
+        fast_period = params.get('fast_period', 10)
+        slow_period = params.get('slow_period', 30)
+        
+        fast_ma_current = np.mean(prices[-fast_period:])
+        slow_ma_current = np.mean(prices[-slow_period:])
+        
+        if len(prices) > slow_period:
+            fast_ma_prev = np.mean(prices[-fast_period-1:-1])
+            slow_ma_prev = np.mean(prices[-slow_period-1:-1])
+        else:
+            return
+        
+        bullish_cross = fast_ma_prev <= slow_ma_prev and fast_ma_current > slow_ma_current
+        bearish_cross = fast_ma_prev >= slow_ma_prev and fast_ma_current < slow_ma_current
+        
+        if bullish_cross and self.position is None:
+            self._open_position('long', price, candle['timestamp'])
+            self.position['stop_loss'] = price * 0.97
+            self.position['take_profit'] = [price * 1.05]
+        elif bearish_cross and self.position is not None:
+            self._close_position(price, candle['timestamp'])
+        
+        if self.position is not None:
+            stop_loss = self.position.get('stop_loss')
+            take_profit = self.position.get('take_profit', [])
+            if stop_loss and price <= stop_loss:
+                self._close_position(price, candle['timestamp'])
+            elif take_profit and price >= take_profit[0]:
                 self._close_position(price, candle['timestamp'])
     
     def _strategy_rsi_divergence(self, candle: pd.Series, params: Dict):
@@ -438,11 +460,12 @@ class BacktestingEngine:
             'type': position_type,
             'size': position_size,
             'entry_price': entry_price,
-            'entry_time': timestamp
+            'entry_time': timestamp,
+            'invested_capital': position_value
         }
         
-        # Deduct commission from capital
-        self.capital -= commission
+        # Deduct invested capital from available capital
+        self.capital -= position_value
         
         logger.debug(f"📈 OPEN {position_type.upper()}: {position_size:.6f} @ ${entry_price:,.2f}")
     
@@ -496,18 +519,20 @@ class BacktestingEngine:
         if self.position is None:
             return self.capital
         
-        # Calculate unrealized PnL
+        # Calculate current position value
         pos_type = self.position['type']
         pos_size = self.position['size']
         entry_price = self.position['entry_price']
         
+        # For long positions: current value is current_price * size
+        # For short positions: PnL = (entry_price - current_price) * size
         if pos_type == 'long':
-            unrealized_pnl = (current_price - entry_price) * pos_size
-        else:  # short
+            position_value = current_price * pos_size
+        else:  # short - we borrowed at entry_price, return at current_price
             unrealized_pnl = (entry_price - current_price) * pos_size
+            position_value = self.position.get('invested_capital', entry_price * pos_size) + unrealized_pnl
         
-        position_value = current_price * pos_size
-        return self.capital + position_value + unrealized_pnl
+        return self.capital + position_value
     
     def _print_summary(self, metrics: Dict):
         """Print backtest summary"""
