@@ -1236,7 +1236,27 @@ class AutoTradingBot:
                     close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%) [Vol:{vol_class}]"
                 
                 if should_close:
-                    logger.info(f"📊 Fallback TP/SL: {symbol} @ ${current_price:.2f} | {close_reason}")
+                    import json as json_module
+                    from datetime import datetime as dt_module
+                    
+                    sl_tp_event = {
+                        "event": "SL_TP_TRIGGERED",
+                        "timestamp": dt_module.utcnow().isoformat() + "Z",
+                        "symbol": symbol,
+                        "entry_price": entry_price,
+                        "exit_price": current_price,
+                        "quantity": quantity,
+                        "pnl_pct": round(pnl_pct * 100, 4),
+                        "pnl_usd": round((current_price - entry_price) * quantity, 2),
+                        "trigger_type": "TAKE_PROFIT" if pnl_pct >= tp_pct else "STOP_LOSS",
+                        "sl_threshold_pct": round(sl_pct * 100, 2),
+                        "tp_threshold_pct": round(tp_pct * 100, 2),
+                        "volatility_class": vol_class,
+                        "profile": self.config.get('trading_profile', 'UNKNOWN'),
+                        "check_interval_s": self.config.get('check_interval_seconds', 25)
+                    }
+                    logger.info(f"📊 SL/TP PREMIUM: {json_module.dumps(sl_tp_event)}")
+                    logger.info(f"   🎯 {close_reason}")
                     
                     try:
                         result = self.paper_trading._close_position_fifo_v2(
@@ -1250,6 +1270,16 @@ class AutoTradingBot:
                             positions_closed += 1
                             self._paper_trade_count += 1
                             self.state['paper_trade_count'] = self._paper_trade_count
+                            
+                            close_event = {
+                                "event": "POSITION_CLOSED",
+                                "timestamp": dt_module.utcnow().isoformat() + "Z",
+                                "symbol": symbol,
+                                "trigger": sl_tp_event["trigger_type"],
+                                "realized_pnl": sl_tp_event["pnl_usd"],
+                                "trade_count": self._paper_trade_count
+                            }
+                            logger.info(f"✅ CLOSE PREMIUM: {json_module.dumps(close_event)}")
                     except Exception as close_err:
                         logger.warning(f"⚠️ Error cerrando {symbol}: {close_err}")
             
@@ -2366,6 +2396,41 @@ class AutoTradingBot:
             # En paper mode, no rechazar inmediatamente - el floor se aplicará después
             if not self.config.get('paper_mode', False) and amount_usd < self.config['min_trade_usd']:
                 return {'error': 'Cantidad muy pequeña para tradear'}
+            
+            # ==========================================================================
+            # V6.5.4 PREMIUM: SYMBOL FILTER - BLOQUEA TRADES EN SÍMBOLOS NO PERMITIDOS
+            # ==========================================================================
+            current_symbol = analysis.get('symbol') or self.config.get('trading_pair', 'BTC/USD')
+            
+            if self.trading_profile and hasattr(self.trading_profile, 'extra_params'):
+                allowed_symbols = self.trading_profile.extra_params.get('allowed_symbols', None)
+                
+                if allowed_symbols and current_symbol not in allowed_symbols:
+                    profile_name = self.trading_profile.name
+                    logger.warning(f"🚫 SYMBOL FILTER V6.5.4: {current_symbol} NO PERMITIDO en perfil {profile_name}")
+                    logger.info(f"   📋 Símbolos permitidos: {allowed_symbols}")
+                    
+                    import json as json_mod
+                    from datetime import datetime as dt_mod
+                    
+                    filter_event = {
+                        "event": "SYMBOL_BLOCKED",
+                        "timestamp": dt_mod.utcnow().isoformat() + "Z",
+                        "symbol": current_symbol,
+                        "profile": profile_name,
+                        "allowed_symbols": allowed_symbols,
+                        "action": action,
+                        "amount_usd": amount_usd
+                    }
+                    logger.info(f"📊 SYMBOL_FILTER: {json_mod.dumps(filter_event)}")
+                    
+                    return {
+                        'success': False,
+                        'blocked': True,
+                        'error': f'Símbolo {current_symbol} no permitido en perfil {profile_name}',
+                        'reason': 'SYMBOL_FILTER_VETO',
+                        'allowed_symbols': allowed_symbols
+                    }
             
             # 🛡️ AI RISK GUARDIAN - PRIMERA LÍNEA DE DEFENSA
             if self.risk_guardian and action != 'HOLD':

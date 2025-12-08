@@ -203,6 +203,49 @@ class MetricsEngine:
             registry=self.registry
         )
         
+        # =============================================================================
+        # V6.5.4 PREMIUM: MÉTRICAS SL/TP MONITORING
+        # =============================================================================
+        
+        self.sl_tp_checks_total = Counter(
+            'omnix_sl_tp_checks_total',
+            'Total de checks SL/TP ejecutados',
+            ['symbol', 'profile'],
+            registry=self.registry
+        )
+        
+        self.sl_tp_triggers = Counter(
+            'omnix_sl_tp_triggers_total',
+            'SL/TP triggers ejecutados',
+            ['symbol', 'trigger_type'],
+            registry=self.registry
+        )
+        
+        self.sl_tp_check_interval = Gauge(
+            'omnix_sl_tp_check_interval_seconds',
+            'Intervalo real entre checks SL/TP',
+            registry=self.registry
+        )
+        
+        self.sl_tp_last_check = Gauge(
+            'omnix_sl_tp_last_check_timestamp',
+            'Timestamp del último check SL/TP',
+            registry=self.registry
+        )
+        
+        self.positions_monitored = Gauge(
+            'omnix_positions_monitored',
+            'Número de posiciones siendo monitoreadas',
+            ['symbol'],
+            registry=self.registry
+        )
+        
+        self.profile_active = Info(
+            'omnix_trading_profile',
+            'Perfil de trading activo',
+            registry=self.registry
+        )
+        
         # Video analysis
         self.video_analyses = Counter(
             'omnix_video_analyses_total',
@@ -355,6 +398,41 @@ class MetricsEngine:
     def record_video_analysis(self, status: str):
         """Registrar análisis de video"""
         self.video_analyses.labels(status=status).inc()
+    
+    # =============================================================================
+    # V6.5.4 PREMIUM: MÉTODOS SL/TP MONITORING
+    # =============================================================================
+    
+    def record_sl_tp_check(self, symbol: str, profile: str):
+        """Registrar check SL/TP ejecutado"""
+        self.sl_tp_checks_total.labels(symbol=symbol, profile=profile).inc()
+        self.sl_tp_last_check.set(time.time())
+    
+    def record_sl_tp_trigger(self, symbol: str, trigger_type: str):
+        """
+        Registrar SL/TP trigger ejecutado
+        
+        Args:
+            symbol: Par de trading
+            trigger_type: 'STOP_LOSS' o 'TAKE_PROFIT'
+        """
+        self.sl_tp_triggers.labels(symbol=symbol, trigger_type=trigger_type).inc()
+    
+    def update_sl_tp_interval(self, interval_seconds: float):
+        """Actualizar intervalo real de checks SL/TP"""
+        self.sl_tp_check_interval.set(interval_seconds)
+    
+    def update_positions_monitored(self, symbol: str, count: int):
+        """Actualizar número de posiciones monitoreadas por símbolo"""
+        self.positions_monitored.labels(symbol=symbol).set(count)
+    
+    def set_active_profile(self, profile_name: str, allowed_symbols: list):
+        """Registrar perfil activo y símbolos permitidos"""
+        self.profile_active.info({
+            'name': profile_name,
+            'allowed_symbols': ','.join(allowed_symbols) if allowed_symbols else 'ALL',
+            'timestamp': datetime.now().isoformat()
+        })
     
     # =============================================================================
     # EXPORT
