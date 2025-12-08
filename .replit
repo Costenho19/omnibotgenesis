@@ -20,6 +20,10 @@ args = "Code Verification"
 task = "workflow.run"
 args = "Dashboard Preview"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Streamlit Dashboard"
+
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -43,6 +47,18 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "Streamlit Dashboard"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd omnix_dashboard && streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
+waitForPort = 8080
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -56,8 +72,8 @@ localPort = 42791
 externalPort = 3000
 
 [[ports]]
-localPort = 43955
-externalPort = 3001
+localPort = 8080
+externalPort = 8080
 
 [deployment]
 deploymentTarget = "vm"

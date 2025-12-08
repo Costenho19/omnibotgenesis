@@ -4,18 +4,23 @@ Streamlit Dashboard - Investor-Grade Visualization
 
 Para presentaciones a inversores UAE/GCC.
 Métricas Sharpe, Sortino, Calmar con visualización profesional.
+
+DEPLOYMENT:
+- Development: streamlit run omnix_dashboard/streamlit_app.py --server.port 8501
+- Railway: railway up --service omnix-dashboard
+- Set OMNIX_API_URL to point to the Flask API service
 """
 
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
 import os
 import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from omnix_dashboard.api_client import get_api_client
 
 st.set_page_config(
     page_title="OMNIX V6.5.4 INSTITUTIONAL+",
@@ -80,58 +85,13 @@ st.markdown("""
 
 def load_metrics():
     try:
-        from omnix_services.analytics.institutional_metrics import (
-            InstitutionalMetricsCalculator,
-            TradeRecord
-        )
-        from omnix_services.database_service.database_service import get_database_service
+        client = get_api_client()
+        response = client.get_institutional_metrics()
         
-        db = get_database_service()
-        if not db:
+        if not response.get('success'):
             return None
         
-        trades_raw = db.get_closed_trades(limit=500)
-        if not trades_raw:
-            return None
-        
-        trades = []
-        for t in trades_raw:
-            try:
-                entry_time = t.get('opened_at') or t.get('entry_time') or datetime.now(timezone.utc)
-                exit_time = t.get('closed_at') or t.get('exit_time') or datetime.now(timezone.utc)
-                
-                if isinstance(entry_time, str):
-                    entry_time = datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
-                if isinstance(exit_time, str):
-                    exit_time = datetime.fromisoformat(exit_time.replace('Z', '+00:00'))
-                
-                pnl_usd = float(t.get('pnl', 0) or t.get('realized_pnl', 0) or 0)
-                entry_price = float(t.get('entry_price', 1) or 1)
-                exit_price = float(t.get('exit_price', 0) or entry_price)
-                side = t.get('side', 'buy').lower()
-                
-                if side == 'buy':
-                    pnl_pct = (exit_price - entry_price) / entry_price if entry_price else 0
-                else:
-                    pnl_pct = (entry_price - exit_price) / entry_price if entry_price else 0
-                
-                trades.append(TradeRecord(
-                    symbol=t.get('symbol', 'UNKNOWN'),
-                    pnl_usd=pnl_usd,
-                    pnl_pct=pnl_pct,
-                    entry_time=entry_time,
-                    exit_time=exit_time,
-                    side=side,
-                    size_usd=float(t.get('position_size', 0) or 0)
-                ))
-            except Exception:
-                continue
-        
-        if not trades:
-            return None
-        
-        calculator = InstitutionalMetricsCalculator()
-        return calculator.calculate_portfolio_metrics(trades, "all_time")
+        return response.get('metrics')
         
     except Exception as e:
         st.error(f"Error loading metrics: {e}")
@@ -188,17 +148,22 @@ def render_overview(metrics):
             st.metric("Sharpe Ratio", "0.00")
         return
     
+    total_trades = metrics.get('total_trades', 0)
+    win_rate = metrics.get('win_rate', 0)
+    total_pnl = metrics.get('total_pnl', 0)
+    sharpe_ratio = metrics.get('sharpe_ratio', 0)
+    pair_metrics = metrics.get('pair_metrics', {})
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric(
             "Total Trades",
-            f"{metrics.total_trades:,}",
-            delta=f"+{metrics.total_trades}" if metrics.total_trades > 0 else None
+            f"{total_trades:,}",
+            delta=f"+{total_trades}" if total_trades > 0 else None
         )
     
     with col2:
-        win_rate = metrics.win_rate * 100
         color = "normal" if win_rate >= 55 else "inverse"
         st.metric(
             "Win Rate",
@@ -208,19 +173,19 @@ def render_overview(metrics):
         )
     
     with col3:
-        pnl_color = "normal" if metrics.total_pnl >= 0 else "inverse"
+        pnl_color = "normal" if total_pnl >= 0 else "inverse"
         st.metric(
             "Total P&L",
-            f"${metrics.total_pnl:,.2f}",
+            f"${total_pnl:,.2f}",
             delta_color=pnl_color
         )
     
     with col4:
-        sharpe_color = "normal" if metrics.sharpe_ratio >= 1.0 else "inverse"
+        sharpe_color = "normal" if sharpe_ratio >= 1.0 else "inverse"
         st.metric(
             "Sharpe Ratio",
-            f"{metrics.sharpe_ratio:.3f}",
-            delta="Good" if metrics.sharpe_ratio >= 1.5 else "Needs work" if metrics.sharpe_ratio < 1.0 else "Acceptable",
+            f"{sharpe_ratio:.3f}",
+            delta="Good" if sharpe_ratio >= 1.5 else "Needs work" if sharpe_ratio < 1.0 else "Acceptable",
             delta_color=sharpe_color
         )
     
@@ -230,9 +195,9 @@ def render_overview(metrics):
     
     with col1:
         st.markdown("### P&L by Pair")
-        if metrics.pair_metrics:
-            pairs = list(metrics.pair_metrics.keys())
-            pnls = [pm.total_pnl for pm in metrics.pair_metrics.values()]
+        if pair_metrics:
+            pairs = list(pair_metrics.keys())
+            pnls = [pm.get('total_pnl', 0) for pm in pair_metrics.values()]
             colors = [DARK_THEME['positive'] if p >= 0 else DARK_THEME['negative'] for p in pnls]
             
             fig = go.Figure(data=[
@@ -249,9 +214,9 @@ def render_overview(metrics):
     
     with col2:
         st.markdown("### Win Rate by Pair")
-        if metrics.pair_metrics:
-            pairs = list(metrics.pair_metrics.keys())
-            win_rates = [pm.win_rate * 100 for pm in metrics.pair_metrics.values()]
+        if pair_metrics:
+            pairs = list(pair_metrics.keys())
+            win_rates = [pm.get('win_rate', 0) for pm in pair_metrics.values()]
             
             fig = go.Figure(data=[
                 go.Bar(x=pairs, y=win_rates, marker_color=DARK_THEME['blue'])
@@ -276,6 +241,12 @@ def render_risk_metrics(metrics):
         st.warning("No trade data available")
         return
     
+    sharpe_ratio = metrics.get('sharpe_ratio', 0)
+    sortino_ratio = metrics.get('sortino_ratio', 0)
+    calmar_ratio = metrics.get('calmar_ratio', 0)
+    max_drawdown = metrics.get('max_drawdown', 0)
+    profit_factor = metrics.get('profit_factor', 0)
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -285,11 +256,11 @@ def render_risk_metrics(metrics):
             <p class="metric-value">{:.3f}</p>
             <p style="color: #8B92A5; font-size: 12px;">Return / Total Risk</p>
         </div>
-        """.format(metrics.sharpe_ratio), unsafe_allow_html=True)
+        """.format(sharpe_ratio), unsafe_allow_html=True)
         
-        interpretation = "Excellent" if metrics.sharpe_ratio >= 2.0 else \
-                        "Good" if metrics.sharpe_ratio >= 1.0 else \
-                        "Fair" if metrics.sharpe_ratio >= 0.5 else "Poor"
+        interpretation = "Excellent" if sharpe_ratio >= 2.0 else \
+                        "Good" if sharpe_ratio >= 1.0 else \
+                        "Fair" if sharpe_ratio >= 0.5 else "Poor"
         st.info(f"Interpretation: **{interpretation}**")
     
     with col2:
@@ -299,11 +270,11 @@ def render_risk_metrics(metrics):
             <p class="metric-value" style="color: #4DABF7;">{:.3f}</p>
             <p style="color: #8B92A5; font-size: 12px;">Return / Downside Risk</p>
         </div>
-        """.format(metrics.sortino_ratio), unsafe_allow_html=True)
+        """.format(sortino_ratio), unsafe_allow_html=True)
         
-        interpretation = "Excellent" if metrics.sortino_ratio >= 3.0 else \
-                        "Good" if metrics.sortino_ratio >= 1.5 else \
-                        "Fair" if metrics.sortino_ratio >= 0.5 else "Poor"
+        interpretation = "Excellent" if sortino_ratio >= 3.0 else \
+                        "Good" if sortino_ratio >= 1.5 else \
+                        "Fair" if sortino_ratio >= 0.5 else "Poor"
         st.info(f"Interpretation: **{interpretation}**")
     
     with col3:
@@ -313,11 +284,11 @@ def render_risk_metrics(metrics):
             <p class="metric-value" style="color: #9B59B6;">{:.3f}</p>
             <p style="color: #8B92A5; font-size: 12px;">Annualized Return / Max DD</p>
         </div>
-        """.format(metrics.calmar_ratio), unsafe_allow_html=True)
+        """.format(calmar_ratio), unsafe_allow_html=True)
         
-        interpretation = "Excellent" if metrics.calmar_ratio >= 3.0 else \
-                        "Good" if metrics.calmar_ratio >= 1.0 else \
-                        "Fair" if metrics.calmar_ratio >= 0.5 else "Needs work"
+        interpretation = "Excellent" if calmar_ratio >= 3.0 else \
+                        "Good" if calmar_ratio >= 1.0 else \
+                        "Fair" if calmar_ratio >= 0.5 else "Needs work"
         st.info(f"Interpretation: **{interpretation}**")
     
     st.markdown("---")
@@ -326,14 +297,14 @@ def render_risk_metrics(metrics):
     
     with col1:
         st.markdown("### Risk Indicators")
-        st.metric("Max Drawdown", f"{metrics.max_drawdown * 100:.2f}%")
-        st.metric("Profit Factor", f"{metrics.profit_factor:.2f}")
+        st.metric("Max Drawdown", f"{max_drawdown:.2f}%")
+        st.metric("Profit Factor", f"{profit_factor:.2f}")
     
     with col2:
         st.markdown("### Performance Grade")
-        grade = 'A' if metrics.sharpe_ratio >= 2.0 else \
-                'B' if metrics.sharpe_ratio >= 1.0 else \
-                'C' if metrics.sharpe_ratio >= 0.5 else 'D'
+        grade = 'A' if sharpe_ratio >= 2.0 else \
+                'B' if sharpe_ratio >= 1.0 else \
+                'C' if sharpe_ratio >= 0.5 else 'D'
         
         grade_colors = {'A': '#00D4AA', 'B': '#4DABF7', 'C': '#FFD93D', 'D': '#FF6B6B'}
         
@@ -348,22 +319,24 @@ def render_risk_metrics(metrics):
 def render_pair_analysis(metrics):
     st.markdown("## Per-Pair Performance Analysis")
     
-    if not metrics or not metrics.pair_metrics:
+    pair_metrics = metrics.get('pair_metrics', {}) if metrics else {}
+    
+    if not pair_metrics:
         st.warning("No pair data available")
         return
     
     data = []
-    for symbol, pm in metrics.pair_metrics.items():
+    for symbol, pm in pair_metrics.items():
         data.append({
             'Symbol': symbol,
-            'Trades': pm.total_trades,
-            'Win Rate': f"{pm.win_rate * 100:.1f}%",
-            'Total P&L': f"${pm.total_pnl:.2f}",
-            'Sharpe': f"{pm.sharpe_ratio:.3f}",
-            'Sortino': f"{pm.sortino_ratio:.3f}",
-            'Calmar': f"{pm.calmar_ratio:.3f}",
-            'Profit Factor': f"{pm.profit_factor:.2f}",
-            'Max DD': f"{pm.max_drawdown * 100:.2f}%"
+            'Trades': pm.get('total_trades', 0),
+            'Win Rate': f"{pm.get('win_rate', 0):.1f}%",
+            'Total P&L': f"${pm.get('total_pnl', 0):.2f}",
+            'Sharpe': f"{pm.get('sharpe_ratio', 0):.3f}",
+            'Sortino': f"{pm.get('sortino_ratio', 0):.3f}",
+            'Calmar': f"{pm.get('calmar_ratio', 0):.3f}",
+            'Profit Factor': f"{pm.get('profit_factor', 0):.2f}",
+            'Max DD': f"{pm.get('max_drawdown', 0):.2f}%"
         })
     
     df = pd.DataFrame(data)
@@ -371,21 +344,21 @@ def render_pair_analysis(metrics):
     
     st.markdown("---")
     
-    symbols = list(metrics.pair_metrics.keys())
+    symbols = list(pair_metrics.keys())
     selected = st.selectbox("Select pair for detailed analysis", symbols)
     
     if selected:
-        pm = metrics.pair_metrics[selected]
+        pm = pair_metrics[selected]
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Avg Win", f"${pm.avg_win:.2f}")
+            st.metric("Avg Win", f"${pm.get('avg_win', 0):.2f}")
         with col2:
-            st.metric("Avg Loss", f"${pm.avg_loss:.2f}")
+            st.metric("Avg Loss", f"${pm.get('avg_loss', 0):.2f}")
         with col3:
-            st.metric("Largest Win", f"${pm.largest_win:.2f}")
+            st.metric("Largest Win", f"${pm.get('largest_win', 0):.2f}")
         with col4:
-            st.metric("Largest Loss", f"${pm.largest_loss:.2f}")
+            st.metric("Largest Loss", f"${pm.get('largest_loss', 0):.2f}")
 
 
 def render_calibration(calibration):
