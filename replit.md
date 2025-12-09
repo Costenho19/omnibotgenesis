@@ -7,6 +7,45 @@ OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 **V6.5.4b Changes (Dec 9, 2025)**: 
 1. **Bug Fix**: Corrected `analysis.get('signal')` → `analysis.get('action')` in auto_trading_bot.py (lines 1417-1431). This bug caused validated trades to never execute because 'signal' key didn't exist, defaulting to HOLD.
 2. **Threshold Adjustments**: Reduced PRODUCTION_STABLE thresholds (coherence_veto_critical 50%→25%, scores 30/20/12→15/8/4) to enable trade generation.
+3. **Hexagonal Architecture Phase 1**: Created `omnix/ports/` with 12 Protocol interfaces following SOLID principles (Dec 9, 2025).
+
+## Hexagonal Architecture (V7.0 Foundation)
+
+Phase 1 completed: Protocol Ports defined in `omnix/ports/`. These interfaces coexist with current architecture and will be gradually integrated.
+
+### Protocol Ports Structure
+
+```
+omnix/
+└── ports/
+    ├── driven/                    # Output ports (towards external services)
+    │   ├── trading_port.py        # TradingPort (Kraken, Alpaca, Paper)
+    │   ├── database_port.py       # DatabasePort, TradeRepositoryPort, PositionRepositoryPort, UserRepositoryPort
+    │   ├── cache_port.py          # CachePort (Redis)
+    │   ├── ai_inference_port.py   # AIInferencePort (Gemini, OpenAI, Claude)
+    │   ├── market_data_port.py    # MarketDataPort, TechnicalIndicatorPort
+    │   └── notification_port.py   # NotificationPort (Telegram)
+    └── driver/                    # Input ports (from users)
+        ├── rest_api_port.py       # RestApiPort (Flask)
+        └── telegram_port.py       # TelegramPort (Bot commands)
+```
+
+### Usage
+
+```python
+from omnix.ports.driven import TradingPort, CachePort, AIInferencePort
+from omnix.ports.driver import TelegramPort
+
+# Type checking with isinstance (runtime_checkable)
+if isinstance(my_service, TradingPort):
+    my_service.execute_order(...)
+```
+
+### Verification
+
+```bash
+python -m omnix.ports.verify_ports  # Validates all 12 protocols
+```
 
 ## User Preferences
 
