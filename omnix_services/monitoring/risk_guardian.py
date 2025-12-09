@@ -137,8 +137,25 @@ class AIRiskGuardian:
                 - can_trade: True si se puede tradear, False si está bloqueado
                 - risk_event: Evento de riesgo si se detectó algo
         """
+        import time
+        import json
+        
+        check_id = f"RG_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        start_time = time.time()
+        checks_timing = {}
+        
         # 1. Verificar si hay bloqueo activo
+        t0 = time.time()
         if self._is_blocked():
+            checks_timing['block_check_ms'] = round((time.time() - t0) * 1000, 2)
+            logger.info(json.dumps({
+                "event": "RISK_GUARDIAN_BLOCKED",
+                "check_id": check_id,
+                "reason": self.block_reason,
+                "block_until": self.block_until.isoformat() if self.block_until else None,
+                "timing": checks_timing,
+                "timestamp": datetime.utcnow().isoformat()
+            }))
             return False, RiskEvent(
                 risk_type=RiskType.OVERTRADING,
                 risk_level=RiskLevel.CRITICAL,
@@ -146,32 +163,98 @@ class AIRiskGuardian:
                 action_taken="TRADE_BLOCKED",
                 metadata={'reason': self.block_reason}
             )
+        checks_timing['block_check_ms'] = round((time.time() - t0) * 1000, 2)
         
         # 2. Overtrading Detection
+        t0 = time.time()
         can_trade, event = self._check_overtrading(recent_trades)
+        checks_timing['overtrading_check_ms'] = round((time.time() - t0) * 1000, 2)
         if not can_trade:
+            self._log_risk_check(check_id, "overtrading", event, checks_timing, start_time)
             return False, event
         
         # 3. Drawdown Protection
+        t0 = time.time()
         can_trade, event = self._check_drawdown(balance, recent_trades)
+        checks_timing['drawdown_check_ms'] = round((time.time() - t0) * 1000, 2)
         if not can_trade:
+            self._log_risk_check(check_id, "drawdown", event, checks_timing, start_time)
             return False, event
         
         # 4. Revenge Trading Detection
+        t0 = time.time()
         can_trade, event = self._check_revenge_trading(recent_trades)
+        checks_timing['revenge_check_ms'] = round((time.time() - t0) * 1000, 2)
         if not can_trade:
+            self._log_risk_check(check_id, "revenge_trading", event, checks_timing, start_time)
             return False, event
         
         # 5. Capital Protection
         if proposed_trade_size:
+            t0 = time.time()
             can_trade, event = self._check_capital_protection(
                 balance, proposed_trade_size
             )
+            checks_timing['capital_check_ms'] = round((time.time() - t0) * 1000, 2)
             if not can_trade:
+                self._log_risk_check(check_id, "capital_protection", event, checks_timing, start_time)
                 return False, event
         
         # Todo OK - se puede tradear
+        total_time = (time.time() - start_time) * 1000
+        
+        # V6.5.4: Emit sync check event for latency monitoring
+        sync_latency_threshold_ms = 500
+        if total_time > sync_latency_threshold_ms:
+            logger.warning(json.dumps({
+                "event": "RISK_GUARDIAN_SYNC_CHECK",
+                "check_id": check_id,
+                "sync_status": "HIGH_LATENCY",
+                "total_latency_ms": round(total_time, 2),
+                "threshold_ms": sync_latency_threshold_ms,
+                "timing_breakdown": checks_timing,
+                "recommendation": "Review database connectivity or system load",
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        else:
+            logger.debug(json.dumps({
+                "event": "RISK_GUARDIAN_SYNC_CHECK",
+                "check_id": check_id,
+                "sync_status": "OK",
+                "total_latency_ms": round(total_time, 2),
+                "timing_breakdown": checks_timing,
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        
+        logger.debug(json.dumps({
+            "event": "RISK_GUARDIAN_PASSED",
+            "check_id": check_id,
+            "balance": round(balance, 2),
+            "proposed_size": round(proposed_trade_size, 2) if proposed_trade_size else None,
+            "recent_trades_count": len(recent_trades),
+            "total_latency_ms": round(total_time, 2),
+            "timing_breakdown": checks_timing,
+            "timestamp": datetime.utcnow().isoformat()
+        }))
+        
         return True, None
+    
+    def _log_risk_check(self, check_id: str, risk_type: str, event: Optional[RiskEvent], timing: Dict, start_time: float):
+        """Log structured risk check result"""
+        import json
+        import time
+        total_time = (time.time() - start_time) * 1000
+        logger.warning(json.dumps({
+            "event": "RISK_GUARDIAN_REJECTED",
+            "check_id": check_id,
+            "risk_type": risk_type,
+            "risk_level": event.risk_level.value if event else "UNKNOWN",
+            "description": event.description if event else None,
+            "action_taken": event.action_taken if event else None,
+            "total_latency_ms": round(total_time, 2),
+            "timing_breakdown": timing,
+            "timestamp": datetime.utcnow().isoformat()
+        }))
     
     def _is_blocked(self) -> bool:
         """Verifica si el trading está bloqueado temporalmente"""

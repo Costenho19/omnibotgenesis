@@ -571,17 +571,60 @@ class ParameterCalibrator:
         volatility_factor = microstructure.get('volatility_indicator', 1.0)
         liquidity_factor = microstructure.get('liquidity_score', 0.5)
         
+        volatility_adjustment_applied = None
+        liquidity_adjustment_applied = None
+        
         if volatility_factor > 1.5:
             target_sl *= 1.2
             target_size *= 0.7
+            volatility_adjustment_applied = "high_volatility: SL*1.2, Size*0.7"
         elif volatility_factor < 0.5:
             target_sl *= 0.8
+            volatility_adjustment_applied = "low_volatility: SL*0.8"
         
         if liquidity_factor < 0.3:
             target_size *= 0.8
             target_threshold += 0.05
+            liquidity_adjustment_applied = "low_liquidity: Size*0.8, Threshold+0.05"
         
         confidence_weight = regime_confidence * self.smoothing_factor
+        
+        logger.debug(json.dumps({
+            "event": "ADAPTIVE_CALIBRATION_CALCULATION",
+            "strategy": current_profile.strategy_name,
+            "profile": current_profile.strategy_name,
+            "regime": regime.value,
+            "baseline_params": {
+                "stop_loss_pct": round(baseline.stop_loss_pct, 4),
+                "take_profit_pct": round(baseline.take_profit_pct, 4),
+                "position_size_factor": round(baseline.position_size_factor, 4),
+                "entry_threshold": round(baseline.entry_threshold, 4)
+            },
+            "regime_adjustments": {
+                "sl_multiplier": adjustments['stop_loss_multiplier'],
+                "tp_multiplier": adjustments['take_profit_multiplier'],
+                "size_multiplier": adjustments['position_size_multiplier'],
+                "threshold_delta": adjustments['entry_threshold_delta']
+            },
+            "microstructure_factors": {
+                "volatility_factor": round(volatility_factor, 4),
+                "liquidity_factor": round(liquidity_factor, 4),
+                "volatility_adjustment": volatility_adjustment_applied,
+                "liquidity_adjustment": liquidity_adjustment_applied
+            },
+            "target_params_before_smoothing": {
+                "stop_loss_pct": round(target_sl, 4),
+                "take_profit_pct": round(target_tp, 4),
+                "position_size_factor": round(target_size, 4),
+                "entry_threshold": round(target_threshold, 4)
+            },
+            "smoothing": {
+                "regime_confidence": round(regime_confidence, 4),
+                "smoothing_factor": round(self.smoothing_factor, 4),
+                "confidence_weight": round(confidence_weight, 4)
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }))
         
         new_profile = AdaptiveParameterProfile(
             strategy_name=current_profile.strategy_name,
@@ -826,12 +869,43 @@ class AdaptiveParameterEngine:
         microstructure: Dict
     ) -> Dict:
         """Calibra una estrategia específica"""
+        calibration_id = f"{strategy_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        
+        logger.debug(json.dumps({
+            "event": "ADAPTIVE_CALIBRATION_STARTED",
+            "calibration_id": calibration_id,
+            "strategy": strategy_name,
+            "profile": current_profile.strategy_name,
+            "regime": regime.value,
+            "regime_confidence": round(confidence, 4),
+            "current_params": {
+                "stop_loss_pct": round(current_profile.stop_loss_pct, 4),
+                "take_profit_pct": round(current_profile.take_profit_pct, 4),
+                "position_size_factor": round(current_profile.position_size_factor, 4),
+                "entry_threshold": round(current_profile.entry_threshold, 4)
+            },
+            "volatility": round(microstructure.get('volatility_indicator', 1.0), 4),
+            "microstructure": {
+                "volatility_indicator": round(microstructure.get('volatility_indicator', 1.0), 4),
+                "liquidity_score": round(microstructure.get('liquidity_score', 0.5), 4),
+                "spread_percentile": round(microstructure.get('spread_percentile', 0.5), 4)
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }))
+        
         can_calibrate, cooldown_reason = self.cooldown.can_calibrate(
             strategy_name, regime, confidence
         )
         
         if not can_calibrate:
-            logger.info(f"⏳ Calibration blocked for {strategy_name}: {cooldown_reason}")
+            logger.info(json.dumps({
+                "event": "ADAPTIVE_CALIBRATION_FAILURE",
+                "calibration_id": calibration_id,
+                "strategy": strategy_name,
+                "failure_type": "cooldown_blocked",
+                "reason": cooldown_reason,
+                "timestamp": datetime.utcnow().isoformat()
+            }))
             return {
                 'status': 'blocked',
                 'reason': cooldown_reason
@@ -842,7 +916,20 @@ class AdaptiveParameterEngine:
         )
         
         if not self._validate_with_governance(new_profile, regime):
-            logger.warning(f"🛡️ Calibration rejected by governance for {strategy_name}")
+            logger.warning(json.dumps({
+                "event": "ADAPTIVE_CALIBRATION_FAILURE",
+                "calibration_id": calibration_id,
+                "strategy": strategy_name,
+                "failure_type": "governance_rejected",
+                "reason": "governance_validation_failed",
+                "proposed_params": {
+                    "stop_loss_pct": round(new_profile.stop_loss_pct, 4),
+                    "take_profit_pct": round(new_profile.take_profit_pct, 4),
+                    "position_size_factor": round(new_profile.position_size_factor, 4),
+                    "entry_threshold": round(new_profile.entry_threshold, 4)
+                },
+                "timestamp": datetime.utcnow().isoformat()
+            }))
             return {
                 'status': 'rejected',
                 'reason': 'Failed governance validation'
@@ -875,10 +962,36 @@ class AdaptiveParameterEngine:
             except Exception as e:
                 logger.error(f"Callback error: {e}")
         
-        logger.info(f"✅ Calibration applied for {strategy_name}")
-        logger.info(f"   SL: {previous_params.get('stop_loss_pct', 0):.3f} → {new_profile.stop_loss_pct:.3f}")
-        logger.info(f"   TP: {previous_params.get('take_profit_pct', 0):.3f} → {new_profile.take_profit_pct:.3f}")
-        logger.info(f"   Size: {previous_params.get('position_size_factor', 1):.2f} → {new_profile.position_size_factor:.2f}")
+        logger.info(json.dumps({
+            "event": "ADAPTIVE_CALIBRATION_RESULT",
+            "calibration_id": calibration_id,
+            "status": "applied",
+            "strategy": strategy_name,
+            "profile": current_profile.strategy_name,
+            "regime": regime.value,
+            "regime_confidence": round(confidence, 4),
+            "volatility_indicator": round(microstructure.get('volatility_indicator', 1.0), 4),
+            "previous_params": {
+                "stop_loss_pct": round(previous_params.get('stop_loss_pct', 0), 4),
+                "take_profit_pct": round(previous_params.get('take_profit_pct', 0), 4),
+                "position_size_factor": round(previous_params.get('position_size_factor', 1), 4),
+                "entry_threshold": round(previous_params.get('entry_threshold', 0.7), 4)
+            },
+            "new_params": {
+                "stop_loss_pct": round(new_profile.stop_loss_pct, 4),
+                "take_profit_pct": round(new_profile.take_profit_pct, 4),
+                "position_size_factor": round(new_profile.position_size_factor, 4),
+                "entry_threshold": round(new_profile.entry_threshold, 4)
+            },
+            "changes": {
+                "stop_loss_pct": round(new_profile.stop_loss_pct - previous_params.get('stop_loss_pct', 0), 4),
+                "take_profit_pct": round(new_profile.take_profit_pct - previous_params.get('take_profit_pct', 0), 4),
+                "position_size_factor": round(new_profile.position_size_factor - previous_params.get('position_size_factor', 1), 4),
+                "entry_threshold": round(new_profile.entry_threshold - previous_params.get('entry_threshold', 0.7), 4)
+            },
+            "calibration_count": new_profile.calibration_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }))
         
         return {
             'status': 'applied',

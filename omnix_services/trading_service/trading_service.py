@@ -101,20 +101,41 @@ class TradingServiceEnterprise:
         Returns:
             Dict with 'approved', 'reason', and 'warnings'
         """
-        result = {'approved': True, 'reason': None, 'warnings': []}
+        import time
+        import json
+        from datetime import datetime
+        
+        validation_id = f"RMS_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        start_time = time.time()
+        
+        result = {'approved': True, 'reason': None, 'warnings': [], 'validation_id': validation_id}
         
         if not self.rms_enabled:
             return result
         
         # Check Circuit Breaker first
+        cb_start = time.time()
         if self.circuit_breaker and self.circuit_breaker.is_trading_halted(user_id):
+            cb_latency = (time.time() - cb_start) * 1000
             result['approved'] = False
             result['reason'] = 'Trading halted by Circuit Breaker'
-            logger.warning(f"🛑 RMS: Trade rejected for {user_id} - Circuit Breaker active")
+            logger.warning(json.dumps({
+                "event": "RMS_VALIDATION_REJECTED",
+                "validation_id": validation_id,
+                "user_id": user_id,
+                "pair": pair,
+                "side": side,
+                "reason": "circuit_breaker_active",
+                "cb_check_latency_ms": round(cb_latency, 2),
+                "timestamp": datetime.utcnow().isoformat()
+            }))
             return result
+        cb_latency = (time.time() - cb_start) * 1000
         
         # Validate with LimitsEngine
+        limits_latency = 0
         if self.limits_engine:
+            limits_start = time.time()
             try:
                 trade_value = amount * (price or 1.0)
                 validation = self.limits_engine.validate_trade(
@@ -125,19 +146,54 @@ class TradingServiceEnterprise:
                     price=price or 0,
                     trade_value=trade_value
                 )
+                limits_latency = (time.time() - limits_start) * 1000
                 
                 if not validation.get('approved', True):
                     result['approved'] = False
                     result['reason'] = validation.get('reason', 'Trade rejected by LimitsEngine')
-                    logger.warning(f"🛡️ RMS: Trade rejected - {result['reason']}")
+                    logger.warning(json.dumps({
+                        "event": "RMS_VALIDATION_REJECTED",
+                        "validation_id": validation_id,
+                        "user_id": user_id,
+                        "pair": pair,
+                        "side": side,
+                        "amount": amount,
+                        "reason": result['reason'],
+                        "limits_check_latency_ms": round(limits_latency, 2),
+                        "timestamp": datetime.utcnow().isoformat()
+                    }))
                 
                 if validation.get('warnings'):
                     result['warnings'] = validation['warnings']
                     
             except Exception as e:
+                limits_latency = (time.time() - limits_start) * 1000
                 logger.error(f"⚠️ RMS validation error: {e}")
-                # Allow trade but log warning
                 result['warnings'].append(f"RMS validation failed: {e}")
+        
+        total_latency = (time.time() - start_time) * 1000
+        
+        # Log sync verification with timing
+        if total_latency > 100:  # Alert if RMS validation takes >100ms
+            logger.warning(json.dumps({
+                "event": "RMS_SYNC_LATENCY_WARNING",
+                "validation_id": validation_id,
+                "user_id": user_id,
+                "pair": pair,
+                "total_latency_ms": round(total_latency, 2),
+                "cb_latency_ms": round(cb_latency, 2),
+                "limits_latency_ms": round(limits_latency, 2),
+                "threshold_ms": 100,
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        else:
+            logger.debug(json.dumps({
+                "event": "RMS_VALIDATION_COMPLETE",
+                "validation_id": validation_id,
+                "approved": result['approved'],
+                "total_latency_ms": round(total_latency, 2),
+                "timestamp": datetime.utcnow().isoformat()
+            }))
         
         return result
     

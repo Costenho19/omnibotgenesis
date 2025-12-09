@@ -85,6 +85,12 @@ class CoherenceEngine:
             'sharia_compliance': 0.04    # Filtro ético
         }
         
+        # Consecutive rejection tracking V6.5.4
+        self._consecutive_rejections = 0
+        self._rejection_history = []  # List of (timestamp, reason) tuples
+        self._max_rejection_history = 100
+        self._rejection_alert_threshold = 5  # Alert after 5 consecutive rejections
+        
         logger.info("🧠 Coherence Engine inicializado con 9 estrategias")
     
     def analyze_coherence(self, signals: List[StrategySignal]) -> CoherenceReport:
@@ -544,14 +550,54 @@ class CoherenceEngine:
             )
         
         # ========== DECISIÓN FINAL ==========
+        import json
+        
         if block_reasons:
-            # TRADE BLOQUEADO
+            # TRADE BLOQUEADO - Track consecutive rejections
+            self._consecutive_rejections += 1
+            rejection_entry = (datetime.utcnow(), block_reasons[0] if block_reasons else "Unknown")
+            self._rejection_history.append(rejection_entry)
+            if len(self._rejection_history) > self._max_rejection_history:
+                self._rejection_history.pop(0)
+            
             reason_text = "\n".join(block_reasons)
             if warnings:
                 reason_text += "\n\n⚠️ ADVERTENCIAS ADICIONALES:\n" + "\n".join(warnings)
             
-            logger.warning(f"🚫 TRADE BLOQUEADO por Coherence Engine:\n{reason_text}")
+            # Alert if consecutive rejections exceed threshold
+            if self._consecutive_rejections >= self._rejection_alert_threshold:
+                rejection_reasons = {}
+                for _, reason in self._rejection_history[-self._rejection_alert_threshold:]:
+                    key = reason[:50] if len(reason) > 50 else reason
+                    rejection_reasons[key] = rejection_reasons.get(key, 0) + 1
+                
+                logger.warning(json.dumps({
+                    "event": "COHERENCE_CONSECUTIVE_REJECTIONS_ALERT",
+                    "consecutive_count": self._consecutive_rejections,
+                    "threshold": self._rejection_alert_threshold,
+                    "action": action,
+                    "coherence_score": round(report.coherence_score, 2),
+                    "bullish_count": len(bullish),
+                    "bearish_count": len(bearish),
+                    "neutral_count": len(neutral),
+                    "recent_rejection_reasons": rejection_reasons,
+                    "recommendation": "Review trading profile configuration or market conditions",
+                    "timestamp": datetime.utcnow().isoformat()
+                }))
+            
+            logger.warning(f"🚫 TRADE BLOQUEADO por Coherence Engine (#{self._consecutive_rejections} consecutivo):\n{reason_text}")
             return False, reason_text
+        
+        # TRADE PERMITIDO - Reset consecutive rejections counter
+        if self._consecutive_rejections > 0:
+            logger.info(json.dumps({
+                "event": "COHERENCE_REJECTION_STREAK_ENDED",
+                "previous_streak": self._consecutive_rejections,
+                "action": action,
+                "coherence_score": round(report.coherence_score, 2),
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        self._consecutive_rejections = 0
         
         # TRADE PERMITIDO (con advertencias opcionales)
         if warnings:

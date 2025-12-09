@@ -251,23 +251,39 @@ class OnChainDataService:
         Returns:
             OnChainSignal consolidada
         """
+        import time
+        import json
+        
+        signal_id = f"OC_{symbol}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        pipeline_start = time.time()
+        latency_breakdown = {}
+        
         # Verificar cache
         cache_key = f"{symbol}_{hours}"
         if cache_key in self._signal_cache:
             timestamp, signal = self._signal_cache[cache_key]
             if datetime.utcnow() - timestamp < timedelta(seconds=self.cache_ttl):
+                logger.debug(json.dumps({
+                    "event": "ONCHAIN_CACHE_HIT",
+                    "signal_id": signal_id,
+                    "symbol": symbol,
+                    "cache_age_seconds": (datetime.utcnow() - timestamp).total_seconds(),
+                    "timestamp": datetime.utcnow().isoformat()
+                }))
                 return signal
         
         if weights is None:
             weights = self.DEFAULT_WEIGHTS
         
         # Recolectar datos en paralelo
+        t0 = time.time()
         whale_task = self.whale_tracker.get_whale_transactions(symbol, hours)
         metrics_task = self.metrics_collector.get_metrics(symbol)
         
         transactions, network_metrics = await asyncio.gather(
             whale_task, metrics_task
         )
+        latency_breakdown['api_fetch_ms'] = round((time.time() - t0) * 1000, 2)
         
         # Análisis de whales
         whale_analysis = self.whale_tracker.analyze_whale_activity(transactions)
@@ -326,11 +342,41 @@ class OnChainDataService:
             except Exception as e:
                 logger.warning(f"Kernel integration error: {e}")
         
+        # Calculate total pipeline latency
+        total_latency = (time.time() - pipeline_start) * 1000
+        latency_breakdown['total_pipeline_ms'] = round(total_latency, 2)
+        
+        # Log latency metrics
+        if total_latency > 2000:  # Alert if pipeline takes >2 seconds
+            logger.warning(json.dumps({
+                "event": "ONCHAIN_LATENCY_WARNING",
+                "signal_id": signal_id,
+                "symbol": symbol,
+                "total_latency_ms": round(total_latency, 2),
+                "latency_breakdown": latency_breakdown,
+                "threshold_ms": 2000,
+                "whale_tx_count": len(transactions),
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        else:
+            logger.debug(json.dumps({
+                "event": "ONCHAIN_SIGNAL_GENERATED",
+                "signal_id": signal_id,
+                "symbol": symbol,
+                "market_bias": signal.market_bias.value,
+                "composite_score": round(signal.composite_score, 4),
+                "confidence": round(signal.confidence, 4),
+                "total_latency_ms": round(total_latency, 2),
+                "latency_breakdown": latency_breakdown,
+                "timestamp": datetime.utcnow().isoformat()
+            }))
+        
         logger.info(
             f"🔗 On-chain signal for {symbol}: "
             f"bias={signal.market_bias.value}, "
             f"score={signal.composite_score:.3f}, "
-            f"confidence={signal.confidence:.2f}"
+            f"confidence={signal.confidence:.2f}, "
+            f"latency={total_latency:.0f}ms"
         )
         
         return signal
