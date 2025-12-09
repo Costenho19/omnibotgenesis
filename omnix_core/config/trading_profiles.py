@@ -732,7 +732,8 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
             'KalmanFilter',
             'NonMarkovianKernel',
             'CoherenceEngine',
-            'RiskGuardian'
+            'RiskGuardian',
+            'SentimentAnalysis'
         ],
         'strategies_experimental': [
             'ARES_V1',
