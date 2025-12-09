@@ -187,7 +187,7 @@ ARPU increases over time due to:
 - Unique IP: Non-Markovian Kernel, InstitutionalDecisionLogger, Post-Quantum Security
 - Competitor 3Commas valued at $180M with fewer features
 - Recent: Zinit raised $8M seed at $48M valuation (Dec 2025)
-- See `valuation_analysis.md` for detailed methodology
+- See Section 5 of this document for detailed valuation methodology
 
 ### 5.3 Investor Return Analysis
 

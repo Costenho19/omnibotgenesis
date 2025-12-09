@@ -156,6 +156,6 @@ Founder & CEO
 
 *This document is for informational purposes only. Trading involves significant risk. Past performance is not indicative of future results. All metrics shown are from paper trading and may not reflect live trading performance.*
 
-**Valuation Analysis:** See `valuation_analysis.md` for detailed market comparables and methodology.
+**Valuation Analysis:** See `financial_projections.md` Section 5 for detailed market comparables and methodology.
 
 **Last Updated:** December 8, 2025
