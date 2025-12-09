@@ -106,6 +106,10 @@ The `omnix_services/ai_service/` module is refactored with SOLID principles and 
 
 **Known Technical Debt:** Import-time print statements in ai_service.py and ai_prompts.py (debug noise, low priority cleanup).
 
+**Planned Improvements:**
+- `docs/core/AI_SERVICE_REFACTORING_ROADMAP.md`: Phases 2-3 for completing DI Container and refactoring ConversationalAIService (371 lines)
+- `docs/core/SEMANTIC_ROUTER_IMPLEMENTATION.md`: Deterministic message classification using Gemini/OpenAI Structured Outputs (replaces 60+ hardcoded keywords with 7 enum values). Execute after 200+ trades.
+
 ### Web Search Service Architecture
 
 The `omnix_services/web_search_service/` is structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and `TavilySearch` client. The `IntentDetector` identifies if a message requires a web search based on keywords.
