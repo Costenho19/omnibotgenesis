@@ -5,7 +5,8 @@ Stock trading execution and portfolio management
 
 import os
 import logging
-from typing import Dict, List, Optional
+import time
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 import requests
 
@@ -35,6 +36,9 @@ class AlpacaService:
             'APCA-API-SECRET-KEY': self.api_secret
         }
         
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
+        
         self.connected = False
         if self.api_key and self.api_secret:
             self.connected = self._test_connection()
@@ -42,15 +46,42 @@ class AlpacaService:
                 mode = "PAPER" if paper_trading else "LIVE"
                 logger.info(f"✅ Alpaca API conectada - Modo {mode}")
     
+    def _request(
+        self,
+        method: str,
+        url: str,
+        max_retries: int = 3,
+        timeout: int = 15,
+        **kwargs
+    ) -> Optional[requests.Response]:
+        """Execute request with retries and exponential backoff"""
+        for attempt in range(max_retries):
+            try:
+                response = self.session.request(method, url, timeout=timeout, **kwargs)
+                if response.status_code == 429:
+                    wait = 2 ** attempt
+                    logger.warning(f"Rate limited, waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                return response
+            except requests.exceptions.Timeout:
+                logger.warning(f"Alpaca timeout (attempt {attempt + 1}/{max_retries})")
+            except requests.exceptions.ConnectionError:
+                logger.warning(f"Alpaca connection error (attempt {attempt + 1}/{max_retries})")
+            except Exception as e:
+                logger.error(f"Alpaca request error: {e}")
+                break
+            
+            if attempt < max_retries - 1:
+                time.sleep(0.5 * (attempt + 1))
+        
+        return None
+    
     def _test_connection(self) -> bool:
         """Test API connection"""
         try:
-            response = requests.get(
-                f'{self.base_url}/v2/account',
-                headers=self.headers,
-                timeout=10
-            )
-            return response.status_code == 200
+            response = self._request('GET', f'{self.base_url}/v2/account')
+            return response is not None and response.status_code == 200
         except Exception as e:
             logger.error(f"❌ Error connecting to Alpaca: {e}")
             return False
@@ -69,13 +100,9 @@ class AlpacaService:
             return None
         
         try:
-            response = requests.get(
-                f'{self.base_url}/v2/account',
-                headers=self.headers,
-                timeout=10
-            )
+            response = self._request('GET', f'{self.base_url}/v2/account')
             
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 data = response.json()
                 return {
                     'cash': float(data.get('cash', 0)),
@@ -97,13 +124,9 @@ class AlpacaService:
             return []
         
         try:
-            response = requests.get(
-                f'{self.base_url}/v2/positions',
-                headers=self.headers,
-                timeout=10
-            )
+            response = self._request('GET', f'{self.base_url}/v2/positions')
             
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 positions = response.json()
                 return [
                     {
@@ -128,13 +151,9 @@ class AlpacaService:
             return None
         
         try:
-            response = requests.get(
-                f'{self.data_url}/v2/stocks/{symbol}/trades/latest',
-                headers=self.headers,
-                timeout=10
-            )
+            response = self._request('GET', f'{self.data_url}/v2/stocks/{symbol}/trades/latest')
             
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 data = response.json()
                 return float(data['trade']['p'])
         except Exception as e:
@@ -179,25 +198,20 @@ class AlpacaService:
             }
             
             if qty:
-                order_data['qty'] = qty
+                order_data['qty'] = str(qty)
             elif notional:
-                order_data['notional'] = notional
+                order_data['notional'] = str(notional)
             else:
                 raise ValueError("Must specify qty or notional")
             
             if limit_price:
-                order_data['limit_price'] = limit_price
+                order_data['limit_price'] = str(limit_price)
             if stop_price:
-                order_data['stop_price'] = stop_price
+                order_data['stop_price'] = str(stop_price)
             
-            response = requests.post(
-                f'{self.base_url}/v2/orders',
-                headers=self.headers,
-                json=order_data,
-                timeout=10
-            )
+            response = self._request('POST', f'{self.base_url}/v2/orders', json=order_data)
             
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 order = response.json()
                 logger.info(f"✅ Order created: {side.upper()} {qty or notional} {symbol}")
                 return {
@@ -210,8 +224,10 @@ class AlpacaService:
                     'status': order['status'],
                     'filled_avg_price': order.get('filled_avg_price')
                 }
+            elif response:
+                logger.error(f"❌ Order failed (status {response.status_code}): {response.text}")
             else:
-                logger.error(f"❌ Order failed: {response.text}")
+                logger.error(f"❌ Order failed: API request returned None after retries")
         except Exception as e:
             logger.error(f"Error creating order: {e}")
         
@@ -223,12 +239,8 @@ class AlpacaService:
             return False
         
         try:
-            response = requests.delete(
-                f'{self.base_url}/v2/orders/{order_id}',
-                headers=self.headers,
-                timeout=10
-            )
-            return response.status_code == 200
+            response = self._request('DELETE', f'{self.base_url}/v2/orders/{order_id}')
+            return response is not None and response.status_code == 200
         except Exception as e:
             logger.error(f"Error canceling order: {e}")
             return False
@@ -242,14 +254,9 @@ class AlpacaService:
             return []
         
         try:
-            response = requests.get(
-                f'{self.base_url}/v2/orders',
-                headers=self.headers,
-                params={'status': status},
-                timeout=10
-            )
+            response = self._request('GET', f'{self.base_url}/v2/orders', params={'status': status})
             
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 return response.json()
         except Exception as e:
             logger.error(f"Error getting orders: {e}")
@@ -262,12 +269,17 @@ class AlpacaService:
             return False
         
         try:
-            response = requests.delete(
-                f'{self.base_url}/v2/positions/{symbol}',
-                headers=self.headers,
-                timeout=10
-            )
-            return response.status_code == 200
+            response = self._request('DELETE', f'{self.base_url}/v2/positions/{symbol}')
+            return response is not None and response.status_code == 200
         except Exception as e:
             logger.error(f"Error closing position {symbol}: {e}")
+            return False
+    
+    def health_check(self) -> bool:
+        """Check if Alpaca API is accessible"""
+        try:
+            response = self._request('GET', f'{self.base_url}/v2/clock')
+            return response is not None and response.status_code == 200
+        except Exception as e:
+            logger.error(f"Alpaca health check failed: {e}")
             return False

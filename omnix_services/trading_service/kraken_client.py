@@ -102,7 +102,7 @@ class KrakenAPIClient:
                     
                     headers = {
                         'API-Key': self.api_key,
-                        'API-Sign': self._generate_signature(endpoint, data, nonce)
+                        'API-Sign': self._generate_signature(endpoint, data, str(nonce))
                     }
                     
                     response = self.session.post(url, data=data, headers=headers, timeout=15)
