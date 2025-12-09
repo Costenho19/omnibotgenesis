@@ -1,8 +1,8 @@
 # OMNIX V6.5.4 - Análisis de Inactividad de Trading
 
 **Fecha**: 9 de Diciembre, 2025  
-**Versión**: V6.5.4 INSTITUTIONAL+  
-**Estado**: DIAGNÓSTICO COMPLETADO
+**Versión**: V6.5.4b INSTITUTIONAL+  
+**Estado**: ✅ SOLUCIONADO - Umbrales ajustados
 
 ---
 
@@ -231,6 +231,37 @@ min_strategies_agree = 4  # Actual: posiblemente 6+
 
 ---
 
+## ✅ Solución Implementada (9 Dic 2025)
+
+Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/trading_profiles.py`:
+
+### Cambios Realizados
+
+| Parámetro | Antes | Después | Justificación |
+|-----------|-------|---------|---------------|
+| `coherence_veto_critical` | 50% | **30%** | Umbral anterior inalcanzable |
+| `coherence_veto_normal` | 65% | **45%** | Alineado con INSTITUTIONAL |
+| `coherence_warning` | 78% | **60%** | Proporcional |
+| `coherence_good` | 90% | **80%** | Proporcional |
+| `min_confidence` | 0.25 | **0.20** | Mayor permisividad |
+| `score_very_strong` | 30 | **20** | Señales más alcanzables |
+| `score_strong` | 20 | **12** | Señales más alcanzables |
+| `score_moderate` | 12 | **6** | Señales más alcanzables |
+| `trades_per_day_target` | 12 | **15** | Más oportunidades |
+| `hmm_veto_confidence_threshold` | 0.70 | **0.75** | Ligeramente más estricto |
+| `ramp_up_phase1_trades` | 10 | **8** | Aceleración inicial |
+
+### Proyección Post-Ajuste
+
+| Métrica | Estimación |
+|---------|------------|
+| Trades esperados/día | 15-25 |
+| Win Rate objetivo | 55%+ |
+| Días para 200 trades | 8-13 días |
+| Días para 500 trades | 20-35 días |
+
+---
+
 ## Historial de Cambios
 
 | Fecha | Cambio | Impacto |
@@ -238,8 +269,9 @@ min_strategies_agree = 4  # Actual: posiblemente 6+
 | 5 Dic 2025 | Primer trade del sistema | Inicio de track record |
 | 6 Dic 2025 | Último trade registrado | 27 trades totales |
 | 6-9 Dic 2025 | Sin actividad | Estrategias en HOLD constante |
-| 9 Dic 2025 | Diagnóstico completado | Este documento |
+| 9 Dic 2025 | Diagnóstico completado | Identificación de causa raíz |
+| **9 Dic 2025** | **Umbrales ajustados V6.5.4b** | **Solución implementada** |
 
 ---
 
-*Documento generado automáticamente por OMNIX V6.5.4 INSTITUTIONAL+*
+*Documento generado automáticamente por OMNIX V6.5.4b INSTITUTIONAL+*

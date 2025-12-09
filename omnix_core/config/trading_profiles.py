@@ -676,7 +676,8 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
                 "USA: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
                 "Coherence Engine, Risk Guardian, Non-Markovian Kernel. "
                 "DESACTIVADO: ARES V1/V2 (en calibración experimental). "
-                "Métricas = Estrategias en producción. Listo para presentar a inversores.",
+                "Métricas = Estrategias en producción. Listo para presentar a inversores. "
+                "V6.5.4b: Umbrales ajustados para generar trades (Dec 2025).",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,
@@ -685,30 +686,30 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     take_profit_pct=0.035,
     take_profit_pct_high_vol=0.050,
     max_daily_loss_pct=0.03,
-    min_confidence=0.25,
+    min_confidence=0.20,
     check_interval_seconds=15,
-    trades_per_day_target=12,
+    trades_per_day_target=15,
     
-    coherence_veto_critical=50.0,
-    coherence_veto_normal=65.0,
-    coherence_warning=78.0,
-    coherence_good=90.0,
+    coherence_veto_critical=30.0,
+    coherence_veto_normal=45.0,
+    coherence_warning=60.0,
+    coherence_good=80.0,
     
-    ramp_up_phase1_factor=0.25,
-    ramp_up_phase2_factor=0.45,
-    ramp_up_phase3_factor=0.65,
-    ramp_up_phase4_factor=0.80,
-    ramp_up_phase1_trades=10,
-    ramp_up_phase2_trades=25,
-    ramp_up_phase3_trades=50,
-    ramp_up_phase4_trades=100,
+    ramp_up_phase1_factor=0.30,
+    ramp_up_phase2_factor=0.50,
+    ramp_up_phase3_factor=0.70,
+    ramp_up_phase4_factor=0.85,
+    ramp_up_phase1_trades=8,
+    ramp_up_phase2_trades=20,
+    ramp_up_phase3_trades=40,
+    ramp_up_phase4_trades=80,
     
     hmm_veto_enabled=True,
-    hmm_veto_confidence_threshold=0.70,
+    hmm_veto_confidence_threshold=0.75,
     
-    score_very_strong=30,
-    score_strong=20,
-    score_moderate=12,
+    score_very_strong=20,
+    score_strong=12,
+    score_moderate=6,
     
     regime_change_veto_enabled=True,
     

@@ -1,8 +1,10 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5.4b INSTITUTIONAL+ - Automated Trading System
 
 ## Overview
 
-OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 20-50 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 15-25 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+
+**V6.5.4b Changes (Dec 9, 2025)**: Adjusted PRODUCTION_STABLE thresholds to enable trade generation. Reduced coherence_veto_critical from 50% to 30%, score thresholds reduced proportionally.
 
 ## User Preferences
 
@@ -70,7 +72,7 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 -   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 -   **WIN_RATE_OPTIMIZED V2 PREMIUM**: Institutional-grade profile with per-pair calibration for specific cryptocurrencies, differentiated SL/TP, max position sizing, portfolio weights, and per-pair daily drawdown circuit breakers.
--   **PRODUCTION_STABLE V6.5.4**: Investor-ready profile using 10 proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production.
+-   **PRODUCTION_STABLE V6.5.4b**: Investor-ready profile using 10 proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production. Thresholds adjusted Dec 9, 2025 to enable trade generation.
 
 ### Strategy Separation (V6.5.4)
 
