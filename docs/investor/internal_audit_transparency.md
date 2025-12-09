@@ -93,7 +93,7 @@ These 10 core strategies generate signals that are weighted and scored:
 | 5 | HMM Regime Detection | Machine Learning | Detect TRENDING/RANGING/VOLATILE | Regime context |
 | 6 | Kalman Filter | Signal Processing | Adaptive signal filtering | Weighted signal |
 | 7 | Quantum Momentum | Proprietary | 6-component score (EMA/RSI/MACD/Volume/HP/ATR) | Primary signal |
-| 8 | Black Swan Detection | Risk | Kurtosis/Skewness anomaly detection | Veto power |
+| 8 | Risk Guardian | Protection | Overtrading prevention, drawdown protection | Veto power |
 | 9 | Coherence Engine | Validation | 6-tier consensus threshold system | Gate keeper |
 | 10 | Non-Markovian Kernel | Proprietary | Temporal memory with K(t-s) decay function | Confidence boost |
 

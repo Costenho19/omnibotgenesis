@@ -80,7 +80,7 @@
 | 5 | **HMM Regime Detection** | Machine Learning | Detects TRENDING/RANGING/VOLATILE |
 | 6 | **Kalman Filter** | Signal Processing | Filters noise from price signals |
 | 7 | **Quantum Momentum** | Proprietary | 6-component technical score (EMA/RSI/MACD/Volume/HP/ATR) |
-| 8 | **Black Swan Detection** | Risk | Kurtosis/Skewness anomaly detection |
+| 8 | **Risk Guardian** | Protection | Overtrading prevention, drawdown protection |
 | 9 | **Coherence Engine** | Validation | 6-tier consensus threshold system |
 | 10 | **Non-Markovian Kernel** | Proprietary | Temporal memory with decay function |
 
