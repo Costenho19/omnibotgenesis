@@ -4,7 +4,9 @@
 
 OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 15-25 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
-**V6.5.4b Changes (Dec 9, 2025)**: Adjusted PRODUCTION_STABLE thresholds to enable trade generation. Reduced coherence_veto_critical from 50% to 30%, score thresholds reduced proportionally.
+**V6.5.4b Changes (Dec 9, 2025)**: 
+1. **Bug Fix**: Corrected `analysis.get('signal')` → `analysis.get('action')` in auto_trading_bot.py (lines 1417-1431). This bug caused validated trades to never execute because 'signal' key didn't exist, defaulting to HOLD.
+2. **Threshold Adjustments**: Reduced PRODUCTION_STABLE thresholds (coherence_veto_critical 50%→25%, scores 30/20/12→15/8/4) to enable trade generation.
 
 ## User Preferences
 

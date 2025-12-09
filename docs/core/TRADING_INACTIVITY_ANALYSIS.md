@@ -2,7 +2,7 @@
 
 **Fecha**: 9 de Diciembre, 2025  
 **Versión**: V6.5.4b INSTITUTIONAL+  
-**Estado**: 🔄 BAJO EVALUACIÓN - Umbrales ajustados, pendiente verificación en Railway
+**Estado**: ✅ CORREGIDO - Bug de ejecución identificado y solucionado
 
 ---
 
@@ -231,15 +231,37 @@ min_strategies_agree = 4  # Actual: posiblemente 6+
 
 ---
 
-## 🔄 Solución Implementada (9 Dic 2025) - BAJO EVALUACIÓN
+## ✅ Solución Implementada (9 Dic 2025) - CORREGIDO
 
-Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/trading_profiles.py`.
+### Bug Crítico Identificado
 
-**IMPORTANTE**: Los cambios requieren verificación en Railway después del deploy:
-1. Hacer push a GitHub
-2. Esperar auto-deploy en Railway
-3. Verificar logs por señales BUY/SELL
-4. Confirmar generación de trades en 24-48 horas
+**Problema**: Los trades se validaban (`TRADE_VALIDATED`) pero **nunca se ejecutaban**.
+
+**Causa Raíz**: En `auto_trading_bot.py`, líneas 1414 y 1426-1431 usaban:
+```python
+signal_type = analysis.get('signal', 'HOLD')  # ❌ INCORRECTO
+```
+
+Pero el diccionario `decision` usa `'action'` no `'signal'`:
+```python
+decision['action'] = 'BUY'  # ✅ Campo correcto
+```
+
+Resultado: `signal` no existía → default a `'HOLD'` → condición `signal_type != 'HOLD'` siempre False → trades nunca ejecutados.
+
+### Fix Aplicado (V6.5.4b)
+
+```python
+# ANTES (bug)
+signal_type = analysis.get('signal', 'HOLD')
+
+# DESPUÉS (fix)
+signal_type = analysis.get('action', 'HOLD')
+```
+
+**Archivos modificados**: `omnix_core/bot/auto_trading_bot.py` (líneas 1417-1418, 1430-1431)
+
+### Umbrales Ajustados (complementario)
 
 ### Cambios Realizados en PRODUCTION_STABLE
 
@@ -285,7 +307,8 @@ Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/t
 | 6 Dic 2025 | Último trade registrado | 27 trades totales |
 | 6-9 Dic 2025 | Sin actividad | Estrategias en HOLD constante |
 | 9 Dic 2025 | Diagnóstico completado | Identificación de causa raíz |
-| **9 Dic 2025** | **Umbrales ajustados V6.5.4b** | **Pendiente verificación en Railway** |
+| 9 Dic 2025 | Umbrales ajustados V6.5.4b | Coherence 25%, Scores 15/8/4 |
+| **9 Dic 2025** | **Bug de ejecución corregido** | **signal→action fix aplicado** |
 
 ---
 
