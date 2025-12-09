@@ -33,8 +33,8 @@ OMNIX is an enterprise-grade algorithmic trading platform designed for 24/7 auto
 │  ┌──────▼─────────────────▼─────────────────────▼─────────┐ │
 │  │                  Trading Core                          │ │
 │  │  ┌───────────┐ ┌───────────┐ ┌───────────────────────┐ │ │
-│  │  │ ARES V1   │ │ ARES V2   │ │ Non-Markovian Kernel  │ │ │
-│  │  │ Protocol  │ │ Scalping  │ │ (Regime Detection)    │ │ │
+│  │  │ Quantum   │ │  Monte    │ │ Non-Markovian Kernel  │ │ │
+│  │  │ Momentum  │ │   Carlo   │ │ (Regime Detection)    │ │ │
 │  │  └───────────┘ └───────────┘ └───────────────────────┘ │ │
 │  │  ┌───────────┐ ┌───────────┐ ┌───────────────────────┐ │ │
 │  │  │ Coherence │ │   Risk    │ │ Adaptive Parameter    │ │ │
@@ -78,9 +78,10 @@ OMNIX is an enterprise-grade algorithmic trading platform designed for 24/7 auto
 
 | Module | Type | Description |
 |--------|------|-------------|
-| ARES V1 | Trend Following | 3-layer institutional analysis (ANF/ISA/SXE) |
-| ARES V2 | Scalping | 1-minute timeframe, 60-70% win rate target |
+| Quantum Momentum | Multi-Indicator | Triple EMA + RSI + MACD + Volume + HP Filter + ATR |
 | Monte Carlo | Risk Simulation | 10,000 iteration projections |
+| Kelly Criterion | Position Sizing | Mathematical optimal sizing |
+| Black Swan | Risk Detection | Kurtosis/Skewness anomaly detection |
 | Kalman Filter | Noise Reduction | Smooths price signals |
 | HMM (Hidden Markov) | Regime Detection | Identifies market states |
 | Non-Markovian Kernel | Memory Analysis | Detects patterns standard models miss |
@@ -183,7 +184,7 @@ Every trade generates 11 lifecycle events with unique decision IDs:
   "symbol": "BTC/USD",
   "direction": "BUY",
   "coherence_score": 0.72,
-  "strategies_agreed": ["ARES_V1", "ARES_V2", "HMM"],
+  "strategies_agreed": ["QuantumMomentum", "MonteCarlo", "HMM"],
   "risk_guardian_approved": true,
   "timestamp": "2025-12-08T14:30:22.456Z"
 }

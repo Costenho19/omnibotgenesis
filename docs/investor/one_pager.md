@@ -15,7 +15,7 @@
 
 | Component | Description |
 |-----------|-------------|
-| **10 Core AI Strategies + 6 Support Modules** | Monte Carlo, HMM, Kalman Filter, Non-Markovian Memory, ARES V1/V2 + Risk Guardian, Coherence Engine, etc. |
+| **10 Core AI Strategies + 6 Support Modules** | Quantum Momentum, Monte Carlo, HMM, Kalman Filter, Kelly Criterion, Black Swan, Non-Markovian Memory + Risk Guardian, Coherence Engine |
 | **6-Tier Coherence Engine** | Validates every trade decision across all strategies before execution |
 | **InstitutionalDecisionLogger V6.5.4** | Audit trail compatible with Grafana/Loki/ELK - 11 lifecycle events per trade |
 | **Execution Protocol PREMIUM** | Citadel/Jump Trading-level execution (TWAP/VWAP/ICEBERG) |
@@ -51,7 +51,7 @@
 | **Volatility-Based SL/TP** | High-vol pairs (DOT, AVAX, SOL): 2.5%/4.5% SL/TP; Normal pairs (BTC, ETH): 1.5%/3.0% |
 | **Execution Protocol V6.5.4** | LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, dynamic TWAP/VWAP/ICEBERG selection |
 | **PAPER_OPTIMIZED Profile** | Tuned for track record: 60% coherence threshold, 2:1 R:R ratio, 22% min confidence |
-| **Trading Profiles System** | 5 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED - switchable via environment |
+| **Trading Profiles System** | 6 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE - switchable via environment |
 | **InstitutionalMetricsCalculator** | Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide |
 | **PDF Report Generator** | 989-line institutional PDF with Monte Carlo projections (10,000 real iterations) |
 | **Dual Dashboard Architecture** | Flask API (port 5000) + Streamlit investor visualization (port 8080) |

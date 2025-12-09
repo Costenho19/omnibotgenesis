@@ -68,8 +68,14 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 ### Trading Profiles System
 
--   Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, WIN_RATE_OPTIMIZED) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
+-   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 -   **WIN_RATE_OPTIMIZED V2 PREMIUM**: Institutional-grade profile with per-pair calibration for specific cryptocurrencies, differentiated SL/TP, max position sizing, portfolio weights, and per-pair daily drawdown circuit breakers.
+-   **PRODUCTION_STABLE V6.5.4**: Investor-ready profile using only proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production.
+
+### Strategy Separation (V6.5.4)
+
+-   **Production Strategies**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian.
+-   **Experimental Strategies** (in `docs/experimental/`): ARES V1 (Swing), ARES V2 (Scalping) - under calibration, not included in investor metrics.
 
 ### Migration Tools (V6.5.4 Premium)
 
