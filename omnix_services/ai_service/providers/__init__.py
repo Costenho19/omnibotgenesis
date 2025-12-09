@@ -9,6 +9,9 @@ from .openai_provider import OpenAIProvider
 from .gemini_provider import GeminiProvider
 from .anthropic_provider import AnthropicProvider
 from .routing_gateway import RoutingAIGateway
+from .redis_context_provider import RedisContextProvider
+from .omnix_prompt_builder import OmnixPromptBuilder
+from .omnix_style_renderer import OmnixStyleRenderer
 
 __all__ = [
     "BaseAIProvider",
@@ -16,4 +19,7 @@ __all__ = [
     "GeminiProvider",
     "AnthropicProvider",
     "RoutingAIGateway",
+    "RedisContextProvider",
+    "OmnixPromptBuilder",
+    "OmnixStyleRenderer",
 ]

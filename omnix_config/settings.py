@@ -116,6 +116,12 @@ class Settings:
     # Post-Quantum Cryptography
     PQC_ENABLED: bool = True
     
+    # AI Service DI Feature Flags (Phase 2 - Refactoring Roadmap)
+    USE_DI_CONTEXT_PROVIDER: bool = False
+    USE_DI_PROMPT_BUILDER: bool = False
+    USE_DI_STYLE_RENDERER: bool = False
+    AI_SERVICE_V2_ENABLED: bool = False
+    
     @classmethod
     def is_production(cls) -> bool:
         """Check if running in production"""

@@ -15,6 +15,9 @@ from .providers.gemini_provider import GeminiProvider
 from .providers.openai_provider import OpenAIProvider
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.routing_gateway import RoutingAIGateway
+from .providers.redis_context_provider import RedisContextProvider
+from .providers.omnix_prompt_builder import OmnixPromptBuilder
+from .providers.omnix_style_renderer import OmnixStyleRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +74,18 @@ class AIServiceContainer(containers.DeclarativeContainer):
         gemini=gemini_provider,
         openai=openai_provider,
         anthropic=anthropic_provider,
+    )
+
+    context_provider = providers.Singleton(
+        RedisContextProvider,
+    )
+
+    prompt_builder = providers.Singleton(
+        OmnixPromptBuilder,
+    )
+
+    style_renderer = providers.Singleton(
+        OmnixStyleRenderer,
     )
 
 
