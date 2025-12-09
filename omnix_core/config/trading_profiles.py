@@ -39,6 +39,7 @@ class ProfileName(Enum):
     BALANCED = "BALANCED"
     PAPER_OPTIMIZED = "PAPER_OPTIMIZED"
     WIN_RATE_OPTIMIZED = "WIN_RATE_OPTIMIZED"
+    PRODUCTION_STABLE = "PRODUCTION_STABLE"
 
 
 class VolatilityClass(Enum):
@@ -669,12 +670,85 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
 )
 
 
+PRODUCTION_STABLE_PROFILE = TradingProfile(
+    name="PRODUCTION_STABLE",
+    description="Perfil V6.5.4 PRODUCTION STABLE - Solo estrategias probadas para inversores. "
+                "USA: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
+                "Coherence Engine, Risk Guardian, Non-Markovian Kernel. "
+                "DESACTIVADO: ARES V1/V2 (en calibración experimental). "
+                "Métricas = Estrategias en producción. Listo para presentar a inversores.",
+    
+    min_trade_usd=150.0,
+    max_position_pct=0.10,
+    stop_loss_pct=0.012,
+    stop_loss_pct_high_vol=0.018,
+    take_profit_pct=0.035,
+    take_profit_pct_high_vol=0.050,
+    max_daily_loss_pct=0.03,
+    min_confidence=0.25,
+    check_interval_seconds=15,
+    trades_per_day_target=12,
+    
+    coherence_veto_critical=50.0,
+    coherence_veto_normal=65.0,
+    coherence_warning=78.0,
+    coherence_good=90.0,
+    
+    ramp_up_phase1_factor=0.25,
+    ramp_up_phase2_factor=0.45,
+    ramp_up_phase3_factor=0.65,
+    ramp_up_phase4_factor=0.80,
+    ramp_up_phase1_trades=10,
+    ramp_up_phase2_trades=25,
+    ramp_up_phase3_trades=50,
+    ramp_up_phase4_trades=100,
+    
+    hmm_veto_enabled=True,
+    hmm_veto_confidence_threshold=0.70,
+    
+    score_very_strong=30,
+    score_strong=20,
+    score_moderate=12,
+    
+    regime_change_veto_enabled=True,
+    
+    extra_params={
+        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD', 'LINK/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
+        'use_pair_calibration': True,
+        'risk_reward_min': 2.0,
+        'force_sl_execution': True,
+        'sl_check_interval_seconds': 10,
+        'ares_enabled': False,
+        'ares_v1_enabled': False,
+        'ares_v2_enabled': False,
+        'quantum_optimization_enabled': False,
+        'strategies_active': [
+            'QuantumMomentum',
+            'MonteCarlo',
+            'KellyCriterion',
+            'BlackSwan',
+            'HMMRegime',
+            'KalmanFilter',
+            'NonMarkovianKernel',
+            'CoherenceEngine',
+            'RiskGuardian'
+        ],
+        'strategies_experimental': [
+            'ARES_V1',
+            'ARES_V2'
+        ]
+    }
+)
+
+
 TRADING_PROFILES: Dict[str, TradingProfile] = {
     "INSTITUTIONAL": INSTITUTIONAL_PROFILE,
     "PAPER_AGGRESSIVE": PAPER_AGGRESSIVE_PROFILE,
     "BALANCED": BALANCED_PROFILE,
     "PAPER_OPTIMIZED": PAPER_OPTIMIZED_PROFILE,
-    "WIN_RATE_OPTIMIZED": WIN_RATE_OPTIMIZED_PROFILE
+    "WIN_RATE_OPTIMIZED": WIN_RATE_OPTIMIZED_PROFILE,
+    "PRODUCTION_STABLE": PRODUCTION_STABLE_PROFILE
 }
 
 

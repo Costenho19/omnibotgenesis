@@ -1966,10 +1966,23 @@ class AutoTradingBot:
                     decision['reason'].append(f"⚠️ Kelly: Posición óptima muy baja")
             
             # ========== ESTRATEGIAS ARES QUANTUM (peso 35%) ==========
+            # V6.5.4: ARES puede deshabilitarse via perfil PRODUCTION_STABLE
+            ares_v1_enabled = True
+            ares_v2_enabled = True
+            if TRADING_PROFILES_AVAILABLE:
+                try:
+                    active_profile = get_active_profile()
+                    ares_v1_enabled = active_profile.extra_params.get('ares_v1_enabled', True)
+                    ares_v2_enabled = active_profile.extra_params.get('ares_v2_enabled', True)
+                    if not ares_v1_enabled or not ares_v2_enabled:
+                        logger.info(f"📊 PRODUCTION_STABLE: ARES V1={ares_v1_enabled}, V2={ares_v2_enabled}")
+                        decision['v52_analysis']['ares_disabled_by_profile'] = True
+                except Exception:
+                    pass
             
             # 8. ARES V1 Swing Trading (peso: 20 puntos - INSTITUCIONAL 55-65% win rate)
             try:
-                if self.ares_v1 is not None and hasattr(self.ares_v1, 'analyze'):
+                if ares_v1_enabled and self.ares_v1 is not None and hasattr(self.ares_v1, 'analyze'):
                     max_score += 20
                     ares_result = self.ares_v1.analyze(analysis)
                     
@@ -2006,7 +2019,7 @@ class AutoTradingBot:
             
             # 9. ARES V2 Scalping M1 (peso: 15 puntos - ULTRA-RÁPIDO 60-70% win rate)
             try:
-                if self.ares_v2 is not None and hasattr(self.ares_v2, 'analyze'):
+                if ares_v2_enabled and self.ares_v2 is not None and hasattr(self.ares_v2, 'analyze'):
                     max_score += 15
                     ares_v2_result = self.ares_v2.analyze(analysis)
                     
@@ -2622,7 +2635,16 @@ class AutoTradingBot:
             
             # ARES Kill-Switch - solo se ejecuta si pasó el fail-safe
             # (Real trading CON Kraken disponible)
-            if action != 'HOLD' and is_real_trading:
+            # V6.5.4: Respeta configuración del perfil PRODUCTION_STABLE
+            ares_killswitch_enabled = True
+            if TRADING_PROFILES_AVAILABLE:
+                try:
+                    active_profile = get_active_profile()
+                    ares_killswitch_enabled = active_profile.extra_params.get('ares_enabled', True)
+                except Exception:
+                    pass
+            
+            if action != 'HOLD' and is_real_trading and ares_killswitch_enabled:
                 try:
                     ares_blocked = False
                     ares_block_reason = []
