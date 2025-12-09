@@ -347,7 +347,7 @@ def api_system_adaptive():
             'Kalman_Filter': {'weight': 0.70, 'trades_24h': 0, 'win_rate': 51.0, 'status': 'ACTIVE'},
             'HMM_Regime': {'weight': 0.65, 'trades_24h': 0, 'win_rate': 50.0, 'status': 'ACTIVE'},
             'Non_Markovian': {'weight': 0.80, 'trades_24h': 0, 'win_rate': 54.0, 'status': 'ACTIVE'},
-            'ARES_CRYPTO': {'weight': 0.72, 'trades_24h': 0, 'win_rate': 53.0, 'status': 'ACTIVE'}
+            'Quantum_Momentum': {'weight': 0.72, 'trades_24h': 0, 'win_rate': 53.0, 'status': 'ACTIVE'}
         }
     
     adaptive_data = {

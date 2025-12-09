@@ -93,8 +93,8 @@ These 10 core strategies generate signals that are weighted and scored:
 | 5 | HMM Regime Detection | Machine Learning | Detect TRENDING/RANGING/VOLATILE | Regime context |
 | 6 | Kalman Filter | Signal Processing | Adaptive signal filtering | Weighted signal |
 | 7 | Quantum Momentum | Proprietary | 6-component score (EMA/RSI/MACD/Volume/HP/ATR) | Primary signal |
-| 8 | ARES V1 | Swing Trading | Institutional swing strategy | Weighted signal |
-| 9 | ARES V2 | Scalping | Ultra-fast M1 scalping | Weighted signal |
+| 8 | Black Swan Detection | Risk | Kurtosis/Skewness anomaly detection | Veto power |
+| 9 | Coherence Engine | Validation | 6-tier consensus threshold system | Gate keeper |
 | 10 | Non-Markovian Kernel | Proprietary | Temporal memory with K(t-s) decay function | Confidence boost |
 
 **Note:** Win rate targets (55%+) are system goals, not guaranteed outcomes. Actual performance depends on market conditions and profile configuration.
@@ -641,7 +641,7 @@ Investors have the right to:
 │                    OMNIX V6.5.4 INSTITUTIONAL+              │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │ Monte Carlo │  │ Kalman      │  │ ARES V1/V2  │ +7 more │
+│  │ Monte Carlo │  │ Kalman      │  │ Q.Momentum  │ +7 more │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
 │         │                │                │                 │
 │         └────────────────┼────────────────┘                 │

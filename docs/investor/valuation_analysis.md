@@ -63,7 +63,7 @@ Basado en un análisis exhaustivo de:
 |---------|--------|----------|
 | **Non-Markovian Memory Kernel** | Implementado (631 líneas) | ALTO - Ningún competidor tiene esto |
 | **6-Tier Coherence Engine** | Implementado | ALTO - Arquitectura única de validación |
-| **ARES Protocol V1/V2** | Implementado | MEDIO-ALTO - Estrategias propietarias |
+| **Quantum Momentum Engine** | Implementado | MEDIO-ALTO - Estrategia propietaria multi-indicador |
 | **CAES (Adaptive Entry System)** | Implementado | MEDIO - Sizing dinámico |
 | **InstitutionalDecisionLogger** | Implementado (548 líneas) | ALTO - Audit trail institucional |
 | **Post-Quantum Encryption** | Simulado (Kyber/Dilithium) | MEDIO - Framework listo para producción |
@@ -150,7 +150,7 @@ Usando múltiplo conservador de 3x forward revenue:
 |------------|------------------------------|
 | Non-Markovian Kernel | $300K-500K (6-12 meses PhD level) |
 | Coherence Engine | $200K-300K |
-| ARES Protocols | $150K-250K |
+| Trading Strategies Suite | $150K-250K |
 | InstitutionalDecisionLogger | $100K-150K |
 | Post-Quantum Framework | $100K-200K |
 | Multi-User Infrastructure | $200K-300K |
