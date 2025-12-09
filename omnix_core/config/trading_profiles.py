@@ -105,12 +105,13 @@ class PairCalibration:
 
 PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     # TIER: PROVEN - Historial probado con win rate positivo
+    # V6.5.4b: min_confidence reducido para generar trades
     "BTC/USD": PairCalibration(
         symbol="BTC/USD",
         tier=CalibrationTier.PROVEN,
         stop_loss_pct=0.012,        # 1.2%
         take_profit_pct=0.035,      # 3.5%
-        min_confidence=0.25,
+        min_confidence=0.18,        # V6.5.4b: 0.25 -> 0.18
         risk_reward_ratio=2.92,     # 3.5/1.2 = 2.92
         max_position_pct=0.10,
         max_position_usd=50000.0,   # $50K max position
@@ -123,7 +124,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         tier=CalibrationTier.PROVEN,
         stop_loss_pct=0.012,        # 1.2%
         take_profit_pct=0.035,      # 3.5%
-        min_confidence=0.25,
+        min_confidence=0.18,        # V6.5.4b: 0.25 -> 0.18
         risk_reward_ratio=2.92,
         max_position_pct=0.10,
         max_position_usd=40000.0,   # $40K max position
@@ -133,12 +134,13 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     ),
     
     # TIER: CALIBRATING - Pocos datos, SL estricto como protección
+    # V6.5.4b: min_confidence reducido para generar trades
     "ADA/USD": PairCalibration(
         symbol="ADA/USD",
         tier=CalibrationTier.CALIBRATING,
         stop_loss_pct=0.009,        # 0.9% - SL estricto
         take_profit_pct=0.020,      # 2.0%
-        min_confidence=0.30,        # Mayor exigencia
+        min_confidence=0.22,        # V6.5.4b: 0.30 -> 0.22
         risk_reward_ratio=2.22,     # 2.0/0.9 = 2.22
         max_position_pct=0.08,      # Posición reducida
         max_position_usd=25000.0,   # $25K max position
@@ -151,7 +153,7 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
         tier=CalibrationTier.CALIBRATING,
         stop_loss_pct=0.010,        # 1.0%
         take_profit_pct=0.025,      # 2.5%
-        min_confidence=0.28,        # Mayor exigencia
+        min_confidence=0.20,        # V6.5.4b: 0.28 -> 0.20
         risk_reward_ratio=2.50,     # 2.5/1.0 = 2.50
         max_position_pct=0.08,      # Posición reducida
         max_position_usd=30000.0,   # $30K max position
@@ -686,30 +688,30 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     take_profit_pct=0.035,
     take_profit_pct_high_vol=0.050,
     max_daily_loss_pct=0.03,
-    min_confidence=0.20,
+    min_confidence=0.15,
     check_interval_seconds=15,
     trades_per_day_target=15,
     
-    coherence_veto_critical=30.0,
-    coherence_veto_normal=45.0,
-    coherence_warning=60.0,
-    coherence_good=80.0,
+    coherence_veto_critical=25.0,
+    coherence_veto_normal=40.0,
+    coherence_warning=55.0,
+    coherence_good=75.0,
     
-    ramp_up_phase1_factor=0.30,
-    ramp_up_phase2_factor=0.50,
-    ramp_up_phase3_factor=0.70,
-    ramp_up_phase4_factor=0.85,
-    ramp_up_phase1_trades=8,
-    ramp_up_phase2_trades=20,
-    ramp_up_phase3_trades=40,
-    ramp_up_phase4_trades=80,
+    ramp_up_phase1_factor=0.35,
+    ramp_up_phase2_factor=0.55,
+    ramp_up_phase3_factor=0.75,
+    ramp_up_phase4_factor=0.90,
+    ramp_up_phase1_trades=5,
+    ramp_up_phase2_trades=15,
+    ramp_up_phase3_trades=35,
+    ramp_up_phase4_trades=70,
     
     hmm_veto_enabled=True,
-    hmm_veto_confidence_threshold=0.75,
+    hmm_veto_confidence_threshold=0.90,  # V6.5.4b: solo veta HMM con 90%+ confianza (permite más trades)
     
-    score_very_strong=20,
-    score_strong=12,
-    score_moderate=6,
+    score_very_strong=15,
+    score_strong=8,
+    score_moderate=4,
     
     regime_change_veto_enabled=True,
     

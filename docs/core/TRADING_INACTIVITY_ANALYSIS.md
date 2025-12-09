@@ -2,7 +2,7 @@
 
 **Fecha**: 9 de Diciembre, 2025  
 **Versión**: V6.5.4b INSTITUTIONAL+  
-**Estado**: ✅ SOLUCIONADO - Umbrales ajustados
+**Estado**: 🔄 BAJO EVALUACIÓN - Umbrales ajustados, pendiente verificación en Railway
 
 ---
 
@@ -231,25 +231,40 @@ min_strategies_agree = 4  # Actual: posiblemente 6+
 
 ---
 
-## ✅ Solución Implementada (9 Dic 2025)
+## 🔄 Solución Implementada (9 Dic 2025) - BAJO EVALUACIÓN
 
-Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/trading_profiles.py`:
+Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/trading_profiles.py`.
 
-### Cambios Realizados
+**IMPORTANTE**: Los cambios requieren verificación en Railway después del deploy:
+1. Hacer push a GitHub
+2. Esperar auto-deploy en Railway
+3. Verificar logs por señales BUY/SELL
+4. Confirmar generación de trades en 24-48 horas
+
+### Cambios Realizados en PRODUCTION_STABLE
 
 | Parámetro | Antes | Después | Justificación |
 |-----------|-------|---------|---------------|
-| `coherence_veto_critical` | 50% | **30%** | Umbral anterior inalcanzable |
-| `coherence_veto_normal` | 65% | **45%** | Alineado con INSTITUTIONAL |
-| `coherence_warning` | 78% | **60%** | Proporcional |
-| `coherence_good` | 90% | **80%** | Proporcional |
-| `min_confidence` | 0.25 | **0.20** | Mayor permisividad |
-| `score_very_strong` | 30 | **20** | Señales más alcanzables |
-| `score_strong` | 20 | **12** | Señales más alcanzables |
-| `score_moderate` | 12 | **6** | Señales más alcanzables |
+| `coherence_veto_critical` | 50% | **25%** | Umbral anterior inalcanzable |
+| `coherence_veto_normal` | 65% | **40%** | Alineado con BALANCED |
+| `coherence_warning` | 78% | **55%** | Proporcional |
+| `coherence_good` | 90% | **75%** | Proporcional |
+| `min_confidence` | 0.25 | **0.15** | Mayor permisividad |
+| `score_very_strong` | 30 | **15** | Señales más alcanzables |
+| `score_strong` | 20 | **8** | Señales más alcanzables |
+| `score_moderate` | 12 | **4** | Señales más alcanzables |
 | `trades_per_day_target` | 12 | **15** | Más oportunidades |
-| `hmm_veto_confidence_threshold` | 0.70 | **0.75** | Ligeramente más estricto |
-| `ramp_up_phase1_trades` | 10 | **8** | Aceleración inicial |
+| `hmm_veto_confidence_threshold` | 0.70 | **0.90** | Solo veta con 90%+ confianza |
+| `ramp_up_phase1_trades` | 10 | **5** | Aceleración inicial |
+
+### Cambios en Calibraciones por Par
+
+| Par | min_confidence Antes | min_confidence Después |
+|-----|---------------------|----------------------|
+| BTC/USD | 0.25 | **0.18** |
+| XRP/USD | 0.25 | **0.18** |
+| ADA/USD | 0.30 | **0.22** |
+| LINK/USD | 0.28 | **0.20** |
 
 ### Proyección Post-Ajuste
 
@@ -270,7 +285,7 @@ Se ajustaron los umbrales del perfil `PRODUCTION_STABLE` en `omnix_core/config/t
 | 6 Dic 2025 | Último trade registrado | 27 trades totales |
 | 6-9 Dic 2025 | Sin actividad | Estrategias en HOLD constante |
 | 9 Dic 2025 | Diagnóstico completado | Identificación de causa raíz |
-| **9 Dic 2025** | **Umbrales ajustados V6.5.4b** | **Solución implementada** |
+| **9 Dic 2025** | **Umbrales ajustados V6.5.4b** | **Pendiente verificación en Railway** |
 
 ---
 
