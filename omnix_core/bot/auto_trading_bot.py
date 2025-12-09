@@ -1411,9 +1411,10 @@ class AutoTradingBot:
                 if analysis:
                     should_trade = analysis.get('should_trade', False)
                     confidence = analysis.get('confidence', 0)
-                    signal = analysis.get('signal', 'HOLD')
+                    # V6.5.4b FIX: Usar 'action' no 'signal' - decision usa 'action'
+                    action_signal = analysis.get('action', 'HOLD')
                     reason = analysis.get('reason', 'N/A')
-                    logger.info(f"   📊 Análisis: {signal} | Confianza: {confidence:.2%} | Trade: {'SÍ' if should_trade else 'NO'} | Razón: {reason[:50]}...")
+                    logger.info(f"   📊 Análisis: {action_signal} | Confianza: {confidence:.2%} | Trade: {'SÍ' if should_trade else 'NO'} | Razón: {reason[:50]}...")
                 else:
                     logger.warning(f"   ⚠️ Sin datos de análisis para {self.config['trading_pair']}")
                 
@@ -1423,7 +1424,8 @@ class AutoTradingBot:
                     self._check_predictive_alerts(current_price)
                 
                 if analysis and analysis.get('should_trade'):
-                    signal_type = analysis.get('signal', 'HOLD')
+                    # V6.5.4b FIX: Usar 'action' no 'signal' - decision usa 'action' para BUY/SELL/HOLD
+                    signal_type = analysis.get('action', 'HOLD')
                     
                     # FIX: Si límite de posiciones alcanzado, solo permitir SELL
                     if position_limit_reached and signal_type == 'BUY':
