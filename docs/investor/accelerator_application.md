@@ -37,7 +37,7 @@ OMNIX is an AI-powered trading system that brings institutional-grade technology
 
 | What We Do | How It Works |
 |------------|--------------|
-| Multi-AI consensus | 15+ strategies must agree before executing a trade |
+| Multi-AI consensus | 10 production strategies must agree before executing a trade |
 | Risk management | Automatic stop-losses, position sizing, drawdown protection |
 | 24/7 monitoring | Cloud-deployed, never sleeps |
 | Simple interface | Telegram bot with 40+ commands, no technical knowledge needed |
@@ -62,7 +62,7 @@ OMNIX is an AI-powered trading system that brings institutional-grade technology
 | Product status | Live | Running 24/7 on Railway |
 | Trades executed | 27 | Paper trading calibration phase |
 | System uptime | 99.9% | Production-grade infrastructure |
-| AI strategies | 15+ | All operational |
+| AI strategies | 10 | Production-ready |
 | Exchanges integrated | 2 | Kraken (crypto), Alpaca (stocks) |
 
 **Current phase:** Building verifiable track record (target: 500+ trades, 55%+ win rate over 60 days)
@@ -103,7 +103,7 @@ OMNIX is an AI-powered trading system that brings institutional-grade technology
 
 | Competitor | Weakness | Our Advantage |
 |------------|----------|---------------|
-| 3Commas ($180M valuation) | Basic bots, no AI consensus | 15+ AI strategies with 6-tier validation |
+| 3Commas ($180M valuation) | Basic bots, no AI consensus | 10 AI strategies with 6-tier validation |
 | Cryptohopper | Single-strategy focus | Multi-market (crypto + stocks) |
 | TradingView | Charting only, no execution | End-to-end execution |
 | Manual trading | Emotional, inconsistent | 24/7 disciplined AI |

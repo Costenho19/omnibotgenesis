@@ -247,7 +247,7 @@ ARPU increases over time due to:
 
 OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity with:
 
-1. **Strong technology foundation** - 15+ AI strategies, post-quantum security, institutional audit trail
+1. **Strong technology foundation** - 10 production AI strategies, post-quantum security, institutional audit trail
 2. **Clear path to profitability** - Cash positive by Q3 2026
 3. **Scalable SaaS model** - 82% gross margins
 4. **Unique competitive moat** - First mover in post-quantum trading security + Citadel-level audit

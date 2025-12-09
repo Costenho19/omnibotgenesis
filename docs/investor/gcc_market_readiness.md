@@ -187,7 +187,7 @@ Designed for:
 2. **Post-Quantum Security** - Ahead of regional competitors by 5+ years
 3. **Institutional Audit Trail** - Required for family offices and regulators
 4. **Dual-Market** - Crypto AND stocks from one platform
-5. **AI Consensus** - 15+ strategies working together (no competitor has this)
+5. **AI Consensus** - 10 production strategies working together (no competitor has this)
 
 ---
 
