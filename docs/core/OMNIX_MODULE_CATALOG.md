@@ -275,7 +275,37 @@ omnix_services/ai_service/
 ├── ai_models.py              # AIModelsManager
 ├── ai_styles.py              # VisualStylesManager
 ├── ai_prompts.py             # PromptsContextManager
+├── video/                    # Video Learning Module (2,120 lines)
+│   ├── analyzer.py           # VideoAnalyzerUltra (1,346 lines)
+│   ├── learning_analyzer.py  # VideoLearningAnalyzer (344 lines)
+│   └── integration.py        # VideoLearningIntegration (416 lines)
 └── __init__.py               # Public API exports
+```
+
+### 2.3.1 Video Learning Module (Added Dec 9, 2025)
+
+**Purpose:** Advanced video analysis for trading education and parameter auto-tuning.
+
+| Component | Lines | Purpose |
+|-----------|-------|---------|
+| `VideoAnalyzerUltra` | 1,346 | Multi-modal video analysis (visual + audio) |
+| `VideoLearningAnalyzer` | 344 | Technical parameter extraction from transcripts |
+| `VideoLearningIntegration` | 416 | Bridges video insights to AutoLearningSystem |
+
+**Capabilities:**
+- GPT-4 Vision API for chart pattern detection
+- Gemini 2.0 Flash Multimodal for frame analysis
+- OpenAI Whisper for audio transcription
+- Automatic RSI/EMA/MACD parameter extraction
+- Safe parameter change proposals with validation
+
+**Key Classes:**
+```python
+from omnix_services.ai_service.video import (
+    VideoAnalyzerUltra,      # Visual + audio analysis
+    VideoLearningAnalyzer,   # Parameter extraction
+    VideoLearningIntegration # AutoLearning bridge
+)
 ```
 
 **Key Interfaces (Protocols):**
@@ -321,6 +351,38 @@ fake_gateway = FakeAIGateway(responses={"default": "Mocked response"})
 - **I (Interface Segregation)**: Small, focused interfaces
 - **D (Dependency Inversion)**: High-level modules depend on abstractions
 
+### 2.3.2 Quantum Physics Validator Integration
+
+**Location:** `omnix_core/quantum/physics_validator.py` (4,460 lines)  
+**Integration:** `ai_prompts.py` imports with graceful fallback
+
+The AI Service integrates with the Quantum Physics Validator to ensure scientifically accurate responses about quantum optics and QRNG physics. The integration uses optional import pattern:
+
+```python
+# ai_prompts.py - Graceful fallback pattern
+try:
+    from omnix_core.quantum.physics_validator import get_quantum_physics_context
+    QUANTUM_PHYSICS_VALIDATOR_AVAILABLE = True
+except ImportError:
+    QUANTUM_PHYSICS_VALIDATOR_AVAILABLE = False
+```
+
+**Status:** ✅ VERIFIED (Dec 9, 2025) - Integration works with graceful degradation when validator unavailable.
+
+### 2.3.3 Known Technical Debt (AI Service)
+
+**Import-Time Side Effects (Low Priority):**
+
+The following modules emit logs/prints at import time. These do not affect functionality but should be cleaned up in future refactoring:
+
+| File | Line | Side Effect | Impact |
+|------|------|-------------|--------|
+| `ai_service.py` | 10 | `print("✅ ai_service.py CARGADO...")` | Debug noise in logs |
+| `ai_prompts.py` | 14 | `print("✅ ai_prompts.py CARGADO...")` | Debug noise in logs |
+| `ai_prompts.py` | 27, 38 | `logger.info()` on import | Expected behavior (startup confirmation) |
+
+**Recommendation:** Future cleanup should convert prints to DEBUG-level logging with feature flag control. Not blocking for production.
+
 ### 2.2 Critical Modules (>1,000 lines)
 
 | Module | Lines | Purpose |
@@ -329,7 +391,7 @@ fake_gateway = FakeAIGateway(responses={"default": "Mocked response"})
 | `database_service/database_service.py` | 4,860 | Enterprise DB operations |
 | `monitoring/advanced_intelligence.py` | 1,330 | Advanced analytics |
 | `trading_service/advanced_features.py` | 1,216 | Trading enhancements |
-| `ai_service/video/analyzer.py` | 1,086 | Video learning |
+| `ai_service/video/analyzer.py` | 1,346 | Video learning (VideoAnalyzerUltra) |
 | `monitoring/analytics_engine.py` | 1,092 | Performance analytics |
 | `trading_service/paper_trading_manager.py` | 1,023 | Paper trading simulation |
 

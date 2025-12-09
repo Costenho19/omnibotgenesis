@@ -70,11 +70,11 @@ OMNIX V6.5.4 INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and 
 
 -   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
 -   **WIN_RATE_OPTIMIZED V2 PREMIUM**: Institutional-grade profile with per-pair calibration for specific cryptocurrencies, differentiated SL/TP, max position sizing, portfolio weights, and per-pair daily drawdown circuit breakers.
--   **PRODUCTION_STABLE V6.5.4**: Investor-ready profile using only proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production.
+-   **PRODUCTION_STABLE V6.5.4**: Investor-ready profile using 10 proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production.
 
 ### Strategy Separation (V6.5.4)
 
--   **Production Strategies**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian.
+-   **Production Strategies (10)**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis.
 -   **Experimental Strategies** (in `docs/experimental/`): ARES V1 (Swing), ARES V2 (Scalping) - under calibration, not included in investor metrics.
 
 ### Migration Tools (V6.5.4 Premium)
@@ -95,7 +95,16 @@ The `omnix_services/database_service/migrations/` module provides versioned data
 
 ### AI Service Architecture (SOLID + Dependency Injection)
 
-The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection, supporting multiple AI providers via a unified interface, ensuring type safety and modularity.
+The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection:
+
+**Structure:**
+- `interfaces/`: Protocol definitions (AIGatewayProtocol, PromptBuilderProtocol, etc.)
+- `providers/`: Gemini (primary), OpenAI, Anthropic with RoutingAIGateway for failover
+- `video/`: Video Learning module (2,120 lines) - VideoAnalyzerUltra, VideoLearningAnalyzer
+- `container.py`: DI Container using dependency-injector library
+- `ai_prompts.py`: Integrates Quantum Physics Validator (4,460 lines) for scientific accuracy
+
+**Known Technical Debt:** Import-time print statements in ai_service.py and ai_prompts.py (debug noise, low priority cleanup).
 
 ### Web Search Service Architecture
 
