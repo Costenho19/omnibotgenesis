@@ -21,7 +21,7 @@
 |------------|-------------|
 | Non-Markovian Memory Kernel | Sistema de memoria temporal único a nivel mundial |
 | 6-Tier Coherence Engine | Validación de consenso entre estrategias |
-| 15+ Estrategias AI | Monte Carlo, HMM, Kalman, ARES V1/V2, etc. |
+| 10+ Estrategias AI | Quantum Momentum, Monte Carlo, HMM, Kalman, Kelly, etc. |
 | Post-Quantum Security | Kyber-768, Dilithium-3 (NIST FIPS-203/204) |
 | InstitutionalDecisionLogger | Audit trail de nivel hedge fund |
 | Execution Protocol PREMIUM | TWAP/VWAP/ICEBERG institucional |

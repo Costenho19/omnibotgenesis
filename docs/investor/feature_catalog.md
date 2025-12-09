@@ -79,9 +79,9 @@
 | 4 | **Kelly Criterion** | Sizing | Calculates optimal bet size |
 | 5 | **HMM Regime Detection** | Machine Learning | Detects TRENDING/RANGING/VOLATILE |
 | 6 | **Kalman Filter** | Signal Processing | Filters noise from price signals |
-| 7 | **Quantum Momentum** | Proprietary | 6-component technical score |
-| 8 | **ARES V1** | Swing Trading | Medium-term institutional strategy |
-| 9 | **ARES V2** | Scalping | Ultra-fast M1 timeframe |
+| 7 | **Quantum Momentum** | Proprietary | 6-component technical score (EMA/RSI/MACD/Volume/HP/ATR) |
+| 8 | **Black Swan Detection** | Risk | Kurtosis/Skewness anomaly detection |
+| 9 | **Coherence Engine** | Validation | 6-tier consensus threshold system |
 | 10 | **Non-Markovian Kernel** | Proprietary | Temporal memory with decay function |
 
 ### 2.2 Support Modules (Protection & Execution)

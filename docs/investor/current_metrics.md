@@ -80,8 +80,8 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | Non-Markovian Kernel | Active | V6.5 |
 | Coherence Engine | Active | V6.5 ULTRA |
 | CAES (Adaptive Entry) | Active | V6.5.4 |
-| ARES Protocol V1 | Active | V1.1.0 |
-| ARES Protocol V2 | Active | V2.1.0 |
+| Quantum Momentum | Active | V6.5.4 |
+| Kelly Criterion | Active | V6.5.4 |
 | AI Risk Guardian | Active | V5.4 |
 | Monte Carlo | Active | Quantum-Enhanced |
 | Kalman Filter | Active | Standard |
