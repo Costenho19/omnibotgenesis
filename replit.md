@@ -4,55 +4,6 @@
 
 OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 15-25 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
-**V6.5.4b Changes (Dec 9, 2025)**: 
-1. **Bug Fix**: Corrected `analysis.get('signal')` → `analysis.get('action')` in auto_trading_bot.py (lines 1417-1431). This bug caused validated trades to never execute because 'signal' key didn't exist, defaulting to HOLD.
-2. **Threshold Adjustments**: Reduced PRODUCTION_STABLE thresholds (coherence_veto_critical 50%→25%, scores 30/20/12→15/8/4) to enable trade generation.
-3. **Hexagonal Architecture Phase 1**: Created `omnix/ports/` with 12 Protocol interfaces following SOLID principles (Dec 9, 2025).
-
-**V6.5.4c Changes (Dec 10, 2025)**:
-4. **AI Truthfulness Fix**: Created `PaperTradingRepository` to fetch REAL trade data from PostgreSQL. The AI was INVENTING trade history, win rates, and P&L data. Now queries `paper_trading_trades` and `paper_trading_balances` tables directly.
-5. **Integration with ConversationalAI**: Added `_fetch_trade_performance()` method that injects real data into AI context when user asks about trades/balance/performance.
-6. **Honest Reporting**: Prompts now display real data or explicitly state "no trades found" - never fabricates statistics.
-7. **User-scoped Data Pipeline**: Complete `user_id` propagation chain: `generate_response(user_id)` → `_fetch_real_market_data(user_id)` → `_fetch_trade_performance(user_id)` → `PaperTradingRepository.get_full_performance_context(user_id)`. Multi-tenant isolation now supported.
-
-## Hexagonal Architecture (V7.0 Foundation)
-
-Phase 1 completed: Protocol Ports defined in `omnix/ports/`. These interfaces coexist with current architecture and will be gradually integrated.
-
-### Protocol Ports Structure
-
-```
-omnix/
-└── ports/
-    ├── driven/                    # Output ports (towards external services)
-    │   ├── trading_port.py        # TradingPort (Kraken, Alpaca, Paper)
-    │   ├── database_port.py       # DatabasePort, TradeRepositoryPort, PositionRepositoryPort, UserRepositoryPort
-    │   ├── cache_port.py          # CachePort (Redis)
-    │   ├── ai_inference_port.py   # AIInferencePort (Gemini, OpenAI, Claude)
-    │   ├── market_data_port.py    # MarketDataPort, TechnicalIndicatorPort
-    │   └── notification_port.py   # NotificationPort (Telegram)
-    └── driver/                    # Input ports (from users)
-        ├── rest_api_port.py       # RestApiPort (Flask)
-        └── telegram_port.py       # TelegramPort (Bot commands)
-```
-
-### Usage
-
-```python
-from omnix.ports.driven import TradingPort, CachePort, AIInferencePort
-from omnix.ports.driver import TelegramPort
-
-# Type checking with isinstance (runtime_checkable)
-if isinstance(my_service, TradingPort):
-    my_service.execute_order(...)
-```
-
-### Verification
-
-```bash
-python -m omnix.ports.verify_ports  # Validates all 12 protocols
-```
-
 ## User Preferences
 
 **Communication**: Simple, everyday language (Spanish primary).
@@ -83,21 +34,21 @@ python -m omnix.ports.verify_ports  # Validates all 12 protocols
 
 ### Core Engines
 
--   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, ramp-up system, HMM quality filter, drawdown protection, position limit early-check.
+The system features several core engines:
+-   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, HMM quality filter, drawdown protection.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
--   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent thresholds for trade quality and win rate > 55%.
--   **Multi-Crypto Scanner V6.5**: Scans 11 crypto pairs.
+-   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent trade quality.
 -   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading, with a hard cap of $20K max trade size.
--   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization using Markowitz and Black-Litterman models, with dynamic position sizing.
+-   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization using Markowitz and Black-Litterman models.
 -   **Derivatives Trading Module**: Supports paper/real trading modes, including MarginEngine, KrakenFuturesClient, and HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: Incorporates 9 institutional modules including Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
 -   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibrates ARES strategies based on market regime.
--   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence using a sigmoid aggression function.
+-   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence.
 -   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
--   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes with appropriate boosts.
--   **Web Search Service V6.5.4**: Real-time internet search via Tavily API with Redis caching and rate limiting.
--   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and an ExecutionProtocol orchestrator for dynamic decision-making.
--   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions, emitting structured JSON events for various trade lifecycle stages.
+-   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes.
+-   **Web Search Service V6.5.4**: Real-time internet search via Tavily API with Redis caching.
+-   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and an ExecutionProtocol orchestrator.
+-   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions.
 -   **Volatility-Based SL/TP Classification V6.5.4**: Differentiates Stop Loss/Take Profit percentages based on crypto pair volatility.
 -   **InstitutionalMetricsCalculator V6.5.4 PREMIUM**: Calculates Sharpe, Sortino, and Calmar ratios per-pair and portfolio-wide for investor presentations.
 -   **InstitutionalReportGenerator V6.5.4 PREMIUM**: Generates professional PDF reports for investors.
@@ -105,68 +56,34 @@ python -m omnix.ports.verify_ports  # Validates all 12 protocols
 
 ### Multi-User Architecture V6.5.4
 
--   Supports 100,000+ simultaneous users with isolated trading sessions.
--   Uses Redis for fast state management and PostgreSQL for persistence.
--   Employs ThreadPoolExecutor for parallel processing and per-user locks.
+Supports 100,000+ simultaneous users with isolated trading sessions using Redis for state management and PostgreSQL for persistence, employing ThreadPoolExecutor for parallel processing and per-user locks.
 
 ### Dashboard Architecture (V6.5.4 PREMIUM)
 
--   **Flask Dashboard** (port 5000): Primary API and web terminal, providing endpoints for metrics, reports, system calibration, and standard market data.
--   **Streamlit Dashboard** (port 8080): Interactive investor visualization consuming the Flask API, featuring a dark theme, Plotly charts, performance grades, and per-pair analysis.
--   **API Client**: Service-to-service communication via `OmnixAPIClient`, configurable by environment variable.
+-   **Flask Dashboard** (port 5000): Primary API and web terminal, providing endpoints for metrics, reports, system calibration, and market data.
+-   **Streamlit Dashboard** (port 8080): Interactive investor visualization consuming the Flask API.
+-   **API Client**: Service-to-service communication via `OmnixAPIClient`.
 
 ### Trading Profiles System
 
--   Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) to adjust trading parameters like Coherence Engine veto, Ramp-Up System, Score Thresholds, HMM VETO, and Regime Change VETO.
--   **WIN_RATE_OPTIMIZED V2 PREMIUM**: Institutional-grade profile with per-pair calibration for specific cryptocurrencies, differentiated SL/TP, max position sizing, portfolio weights, and per-pair daily drawdown circuit breakers.
--   **PRODUCTION_STABLE V6.5.4b**: Investor-ready profile using 10 proven strategies (QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis). ARES V1/V2 disabled for track record consistency. Metrics match strategies in production. Thresholds adjusted Dec 9, 2025 to enable trade generation.
+Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4b` is an investor-ready profile using 10 proven strategies.
 
 ### Strategy Separation (V6.5.4)
 
 -   **Production Strategies (10)**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis.
--   **Experimental Strategies** (in `docs/experimental/`): ARES V1 (Swing), ARES V2 (Scalping) - under calibration, not included in investor metrics.
+-   **Experimental Strategies**: ARES V1 (Swing), ARES V2 (Scalping) - under calibration.
 
-### Migration Tools (V6.5.4 Premium)
+### Hexagonal Architecture (V7.0 Foundation)
 
--   **Migration Watchdog**: Closes orphan positions in excluded symbols before profile switches.
--   **Migration Test Suite**: Automated verification of profile configurations.
--   **Symbol Filter**: Blocks trades in non-allowed symbols.
--   **Premium Observability**: Structured JSON logs for SL/TP triggers with Prometheus metrics.
+Phase 1 completed with protocol ports defined in `omnix/ports/` for both driven (output) and driver (input) interfaces, adhering to SOLID principles.
 
-### Database Migration System (V6.5.4)
+### AI Service Architecture
 
-The `omnix_services/database_service/migrations/` module provides versioned database migrations:
--   **MigrationRunner**: Executes migrations with advisory locks, transactions, and rollback on failure.
--   **MigrationRegistry**: Maintains ordered list of migrations with version tracking.
--   **Auto-upgrade**: Handles legacy `schema_migrations` tables from Railway.
--   **Migrations run automatically** in main.py after cache cleanup, before service initialization.
--   **Pattern**: Each migration returns True/False; must be idempotent (ADD COLUMN IF NOT EXISTS, etc.).
-
-### AI Service Architecture (SOLID + Dependency Injection)
-
-The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection:
-
-**Structure:**
-- `interfaces/`: Protocol definitions (AIGatewayProtocol, PromptBuilderProtocol, etc.)
-- `providers/`: Gemini (primary), OpenAI, Anthropic with RoutingAIGateway for failover
-- `video/`: Video Learning module (2,120 lines) - VideoAnalyzerUltra, VideoLearningAnalyzer
-- `container.py`: DI Container using dependency-injector library
-- `ai_prompts.py`: Integrates Quantum Physics Validator (4,460 lines) for scientific accuracy
-
-**Known Technical Debt:** Import-time print statements in ai_service.py and ai_prompts.py (debug noise, low priority cleanup).
-
-**Planned Improvements:**
-- `docs/core/AI_SERVICE_REFACTORING_ROADMAP.md`: Phases 2-3 for completing DI Container and refactoring ConversationalAIService (371 lines)
-- `docs/core/SEMANTIC_ROUTER_IMPLEMENTATION.md`: Deterministic message classification using Gemini/OpenAI Structured Outputs (replaces 60+ hardcoded keywords with 7 enum values). Execute after 200+ trades.
+The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection, including interfaces, providers (Gemini, OpenAI, Anthropic), a video learning module, and a DI container. It integrates a Quantum Physics Validator for scientific accuracy in prompts and now fetches real trade data from PostgreSQL to ensure truthful reporting.
 
 ### Web Search Service Architecture
 
-The `omnix_services/web_search_service/` is structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and `TavilySearch` client. The `IntentDetector` identifies if a message requires a web search based on keywords.
-
-### Video Analyzer Utilities
-
--   **parse_vision_json()**: Centralized JSON parsing for Vision API responses, handling markdown code blocks.
--   **CHART_ANALYSIS_PROMPT**: Shared prompt constant for chart analysis across Vision APIs.
+Structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and `TavilySearch` client to determine and execute web searches based on user intent.
 
 ## External Dependencies
 
@@ -186,13 +103,7 @@ The `omnix_services/web_search_service/` is structured with an `IntentDetector` 
 
 ### Redis Cache System (V6.5.4)
 
-The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching:
--   **RedisCache**: Singleton class with automatic connection management
--   **get_redis_client()**: Returns raw Redis client for direct access (used by WebSearchManager)
--   **get_redis_cache()**: Returns the RedisCache wrapper instance
--   **reconnect()**: Lazy recovery method when Redis connection is lost
--   **cache_result decorator**: Function caching with normalized SHA256-hashed keys for security
--   **Key normalization**: Deterministic cache keys even with dict/list/set arguments
+The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching with a singleton `RedisCache`, automatic connection management, and function caching with SHA256-hashed keys.
 
 ### Databases
 
