@@ -1,29 +1,8 @@
-# OMNIX V6.5.4c INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5.4c INSTITUTIONAL+
 
 ## Overview
 
-OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
-
-## V6.5.4c Changes (December 10, 2025)
-
-1. **ARES V1+V2 Production Calibration**: Promoted from experimental to Production Calibration phase
-   - ARES V1 (Swing): 70% min confidence - Alpha generation strategy
-   - ARES V2 (Scalping): 75% min confidence - High-frequency alpha strategy
-   - Max 3 trades/day (shared) - Conservative position limit
-   - Lateral markets allowed - Expanded opportunity set
-   - **Status**: Passed backtesting, now in live calibration for track record
-2. **Risk Parameters Clarification**: 
-   - **3% Daily Loss Limit (PRODUCTION_STABLE)**: Active profile circuit breaker (8% hard ceiling system-wide)
-   - **Portfolio Weights**: Per-pair allocation (BTC: 40%, XRP: 30%, ADA/LINK: 15% each)
-   - **Daily Drawdown per Pair**: BTC/XRP: 2%, ADA/LINK: 1% (stricter for calibrating pairs)
-   - **Excluded Pairs**: ETH, SOL, AVAX (0% win rate historically)
-3. **AI Truthfulness Fix**: PaperTradingRepository ensures real PostgreSQL data in AI responses
-4. **Hexagonal Architecture Phase 1**: 12 Protocol interfaces in `omnix/ports/`
-5. **CRITICAL FIX - Overtrading Protection V6.5.4c**:
-   - **Daily Trade Limit**: Verifica trades del día vs `ares_max_daily_trades` (default: 3)
-   - **Duplicate Position Block**: Impide abrir BUY si ya existe posición abierta para el símbolo
-   - **Safety-First**: Errores de DB o excepciones fuerzan HOLD (no trading ciego)
-   - **Scope**: Paper trading mode (para real trading se necesita implementación adicional con Kraken API)
+OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
 ## User Preferences
 
@@ -55,60 +34,45 @@ OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 
 ### Core Engines
 
-The system features several core engines:
--   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, HMM quality filter, drawdown protection.
--   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
--   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent trade quality.
--   **AI Risk Guardian V5.4**: Multi-layer risk protection system:
-    - **Daily Loss Circuit Breaker**: Profile-specific (PRODUCTION_STABLE: 3%, max system-wide: 8%)
-    - **Overtrading Prevention**: Blocks excessive trade frequency
-    - **Revenge Trading Detection**: Prevents emotional trading after losses
-    - **Position Size Cap**: $20K max trade size (hard limit)
--   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization using Markowitz and Black-Litterman models.
--   **Derivatives Trading Module**: Supports paper/real trading modes, including MarginEngine, KrakenFuturesClient, and HedgingService.
--   **Stock Trading Premium V6.3 ULTRA**: Incorporates 9 institutional modules including Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
--   **Adaptive Parameter Engine V6.5 ULTRA**: Auto-calibrates ARES strategies based on market regime.
--   **CAES V6.5.4 (Confidence-Adaptive Entry System)**: Dynamic position sizing based on Non-Markovian Kernel confidence.
--   **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics using free APIs.
--   **Fear & Greed Contrarian Strategy V6.5.4**: Applies in both paper and real modes.
--   **Web Search Service V6.5.4**: Real-time internet search via Tavily API with Redis caching.
--   **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution system (Citadel/Jump Trading level) including LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, and an ExecutionProtocol orchestrator.
--   **InstitutionalDecisionLogger V6.5.4**: Investor-grade audit trail logging for all trade decisions.
--   **Volatility-Based SL/TP Classification V6.5.4**: Differentiates Stop Loss/Take Profit percentages based on crypto pair volatility.
--   **InstitutionalMetricsCalculator V6.5.4 PREMIUM**: Calculates Sharpe, Sortino, and Calmar ratios per-pair and portfolio-wide for investor presentations.
--   **InstitutionalReportGenerator V6.5.4 PREMIUM**: Generates professional PDF reports for investors.
--   **Streamlit Dashboard V6.5.4 PREMIUM**: Interactive investor dashboard with Plotly charts, real-time metrics, and performance grading.
+The system integrates several core engines:
+- **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, HMM quality filter, drawdown protection.
+- **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring.
+- **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System with multi-layer consensus and veto gates. See `auto_trading_bot.py:2220-2300` for full gating logic.
+- **AI Risk Guardian V5.4**: Daily loss circuit breaker (PRODUCTION_STABLE: 3%, system max: 8%), overtrading prevention, revenge trading detection, $20K max position cap.
+- **Portfolio Management V6.4 INSTITUTIONAL+**: Markowitz and Black-Litterman optimization.
+- **CAES V6.5.4**: Confidence-Adaptive Entry System. Aggression multiplier (0.5x-3x) based on Non-Markovian Kernel confidence; regime limits may allow up to 6% capital.
+- **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics.
+- **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution.
+- **InstitutionalDecisionLogger**: Complete audit trail for regulatory compliance.
+- **InstitutionalMetricsCalculator**: Sharpe, Sortino, Calmar ratios for investor reporting.
 
-### Multi-User Architecture V6.5.4
+### Multi-User Architecture
 
-Supports 100,000+ simultaneous users with isolated trading sessions using Redis for state management and PostgreSQL for persistence, employing ThreadPoolExecutor for parallel processing and per-user locks.
+Supports 100,000+ simultaneous users with isolated trading sessions using Redis for state management and PostgreSQL for persistence, ThreadPoolExecutor for parallel processing, and per-user locks.
 
-### Dashboard Architecture (V6.5.4 PREMIUM)
+### Dashboard Architecture
 
--   **Flask Dashboard** (port 5000): Primary API and web terminal, providing endpoints for metrics, reports, system calibration, and market data.
--   **Streamlit Dashboard** (port 8080): Interactive investor visualization consuming the Flask API.
--   **API Client**: Service-to-service communication via `OmnixAPIClient`.
+Includes a Flask Dashboard (primary API and web terminal) and a Streamlit Dashboard (interactive investor visualization) that consumes the Flask API via `OmnixAPIClient`.
 
 ### Trading Profiles System
 
-Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile with ARES enabled for track record generation.
+Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile, with ARES V1 (Swing) and ARES V2 (Scalping) strategies in production calibration for track record generation.
 
-### Strategy Separation (V6.5.4c)
+### Strategy Separation
 
--   **Production Strategies (10)**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis.
--   **Production Calibration Strategies (2)**: ARES V1 (Swing), ARES V2 (Scalping) - Passed backtesting phase, now in live calibration for track record generation. Tracked separately from production metrics.
+Strategies are categorized into Production (e.g., QuantumMomentum, Monte Carlo, Black Swan) and Production Calibration (ARES V1 and V2), with the latter tracked separately.
 
-### Hexagonal Architecture (V7.0 Foundation)
+### Hexagonal Architecture
 
-Phase 1 completed with protocol ports defined in `omnix/ports/` for both driven (output) and driver (input) interfaces, adhering to SOLID principles.
+Phase 1 completed with protocol interfaces defined in `omnix/ports/` for driven and driver interfaces, adhering to SOLID principles.
 
 ### AI Service Architecture
 
-The `omnix_services/ai_service/` module is refactored with SOLID principles and dependency injection, including interfaces, providers (Gemini, OpenAI, Anthropic), a video learning module, and a DI container. It integrates a Quantum Physics Validator for scientific accuracy in prompts and now fetches real trade data from PostgreSQL to ensure truthful reporting.
+Refactored with SOLID principles and dependency injection, integrating interfaces, providers (Gemini, OpenAI, Anthropic), a video learning module, and a DI container. It includes a Quantum Physics Validator and fetches real trade data from PostgreSQL for truthful reporting.
 
 ### Web Search Service Architecture
 
-Structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and `TavilySearch` client to determine and execute web searches based on user intent.
+Structured with an `IntentDetector`, `SearchManager`, and `TavilySearch` client for intent-based web searches.
 
 ## External Dependencies
 
@@ -124,78 +88,38 @@ Structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and 
 -   **Finnhub**: Market news and sentiment.
 -   **Alpha Vantage**: Technical indicators.
 -   **Tavily**: Real-time web search for AI responses.
--   **ANU QRNG**: Quantum random numbers with resilience protocol.
+-   **ANU QRNG**: Quantum random numbers with resilience protocol (falls back to `numpy.random` if unavailable).
 
-### Quantum Resilience Protocol (V6.4)
+### Redis Cache System
 
-The system implements a robust fallback mechanism for the Quantum Random Number Generator:
-
-1. **Primary Source**: ANU Quantum API (Australian National University) - True quantum randomness from vacuum fluctuations
-2. **Intelligent Cooldown**: After API failure, system waits 5 minutes before retry to avoid log spam
-3. **Fallback Mode**: If QRNG unavailable, automatically switches to numpy.random (PRNG)
-4. **Auto-Recovery**: System automatically returns to quantum source when API becomes available again
-5. **Transparency**: Stats tracked in `QRNGStats` dataclass for audit trail (success/failure rates, cache hits)
-
-### Redis Cache System (V6.5.4)
-
-The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching with a singleton `RedisCache`, automatic connection management, and function caching with SHA256-hashed keys.
+The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching with a singleton `RedisCache`, automatic connection management, and function caching.
 
 ### Databases
 
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
 
-## Documentation
+## B2B Value Proposition (Prop Firms & Family Offices)
 
-**Consolidated December 10, 2025** - Organized into core, architecture, and audits.
+**Target Clients**: Mid-to-large Prop Firms and Family Offices seeking automated risk management.
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| INDEX.md | `docs/core/` | Navigation hub |
-| ARCHITECTURE_REFERENCE.md | `docs/core/` | Modules, ports, dashboard APIs |
-| TRADING_OPERATIONS.md | `docs/core/` | Profiles, flow, operations |
-| MODERNIZATION_ROADMAP.md | `docs/core/` | V7.0 plans (DEFERRED) |
-| B2C_IMPLEMENTATION_PLAN.md | `docs/core/` | SaaS monetization roadmap |
-| ARCHITECTURE_AUDIT_2025.md | `docs/architecture/` | Code audit, SOLID violations, target structure |
-| MIGRATION_ROADMAP.md | `docs/architecture/` | Strangler Fig migration (5 phases) |
-| DATABASE_AUDIT_REPORT.md | `docs/audits/` | DB integrity audit |
-| INTERNAL_AUDIT_TRANSPARENCY.md | `docs/audits/` | Investor due diligence |
+### The 3-Day Risk Reduction Framework
 
-**Single Source of Truth:** Trading parameters are in `omnix_core/config/trading_profiles.py`. Documentation reflects code, not the other way around.
+| Day | Risk Axis | OMNIX Component | Client Impact |
+|-----|-----------|-----------------|---------------|
+| **Day 1** | Algorithmic Risk | Coherence Engine + Risk Guardian | Prevents catastrophic single-day losses via 6-Tier Veto System |
+| **Day 2** | Volatility Risk | Adaptive Parameter Engine + CAES | Ensures consistency across changing market conditions |
+| **Day 3** | Information Asymmetry | On-Chain Intelligence + Non-Markovian Kernel | Provides alpha edge over retail systems |
 
-## Architecture Modernization (2025)
+### Institutional-Grade Features
 
-**Status:** DEFERRED until 500 trades - See `docs/architecture/` for aligned roadmaps
+- **6-Tier Veto System**: Consensus shortfall (5/6 or 4/6 required) or score below veto_critical = immediate BLOCK
+- **CAES Position Sizing**: Aggression multiplier 0.5x-3x based on kernel confidence; regime max up to 6% capital
+- **Institutional Decision Logger**: Complete audit trail for regulatory compliance
+- **InstitutionalMetricsCalculator**: Sharpe, Sortino, Calmar ratios for investor reporting
 
-| Fase | Nombre | Trigger | Estado |
-|------|--------|---------|--------|
-| 0 | Foundation | AHORA (bajo riesgo) | ⬜ Pendiente |
-| 1 | Bootstrap | AHORA (bajo riesgo) | ⬜ Pendiente |
-| 2 | Domain/App | 500 trades | 🔒 Bloqueado |
-| 3 | Interfaces | 500 trades | 🔒 Bloqueado |
-| 4 | Cleanup | 500 trades + 14 días | 🔒 Bloqueado |
+### Proof of Concept (PoC) Offering
 
-**Documentos Coherentes:**
-- `docs/core/MODERNIZATION_ROADMAP.md` - AI Service DI (200/400/500 trades)
-- `docs/architecture/ARCHITECTURE_AUDIT_2025.md` - Código audit + AI Service como modelo
-- `docs/architecture/MIGRATION_ROADMAP.md` - Strangler Fig (aligned con 500 trades)
+> **30-Day PoC** (Commercial Proposal): Paper trading access with full transparency. Includes code review session with architects to demonstrate coherence between Risk Guardian and Institutional Decision Logger.
 
-**AI Service como Modelo:** `omnix_services/ai_service/` implementa DI, protocols, providers correctamente - usar como plantilla para otros módulos.
-
-## B2C Monetization Objectives
-
-**Target Product:** OMNIX Asesor Personal IA
-
-| Milestone | Users | MRR | Timeline |
-|-----------|-------|-----|----------|
-| MVP | 50 | $950 | Month 2 |
-| Growth | 200 | $5,800 | Month 6 |
-| Scale | 500+ | $24,500 | Month 12 |
-
-**Pricing Plans:**
-- Free: 3 análisis/día (lead generation)
-- Basic ($19): 20 análisis/día + 5 señales
-- Pro ($29): 100 análisis + portfolio advisor + voz
-- Premium ($49): Ilimitado + on-chain + reportes PDF
-
-**Implementation Status:** See `docs/core/B2C_IMPLEMENTATION_PLAN.md` for detailed roadmap.
+**License**: $15,000/year for institutional access with dedicated support.
