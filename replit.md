@@ -14,6 +14,11 @@ OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 2. **Drawdown Limit Increased**: 10% → 15% to allow trading during recovery
 3. **AI Truthfulness Fix**: PaperTradingRepository ensures real PostgreSQL data in AI responses
 4. **Hexagonal Architecture Phase 1**: 12 Protocol interfaces in `omnix/ports/`
+5. **CRITICAL FIX - Overtrading Protection V6.5.4c**:
+   - **Daily Trade Limit**: Verifica trades del día vs `ares_max_daily_trades` (default: 3)
+   - **Duplicate Position Block**: Impide abrir BUY si ya existe posición abierta para el símbolo
+   - **Safety-First**: Errores de DB o excepciones fuerzan HOLD (no trading ciego)
+   - **Scope**: Paper trading mode (para real trading se necesita implementación adicional con Kraken API)
 
 ## User Preferences
 
