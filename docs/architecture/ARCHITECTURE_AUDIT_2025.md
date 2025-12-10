@@ -135,6 +135,61 @@ OMNIX V6.5.4c/
 | Hexagonal Ports | `omnix/ports/` | Protocols definidos correctamente |
 | Trading Profiles | `omnix_core/config/` | Single source of truth |
 
+### 2.4 AI Service como Modelo de Referencia (CRÍTICO)
+
+El módulo `omnix_services/ai_service/` **YA implementa** arquitectura moderna correctamente. Debe usarse como **plantilla** para refactorizar otros módulos.
+
+**Estructura actual de AI Service:**
+```
+omnix_services/ai_service/
+├── interfaces/                    # Protocols (ports)
+│   ├── ai_gateway.py             # AIGatewayProtocol
+│   ├── context_provider.py       # ContextProviderProtocol
+│   ├── prompt_builder.py         # PromptBuilderProtocol
+│   └── style_renderer.py         # StyleRendererProtocol
+├── providers/                     # Adapters (implementaciones)
+│   ├── gemini_provider.py        # Implements AIGatewayProtocol
+│   ├── openai_provider.py        # Implements AIGatewayProtocol
+│   ├── anthropic_provider.py     # Implements AIGatewayProtocol
+│   ├── routing_gateway.py        # Multi-provider routing
+│   └── ...
+├── adapters/                      # Legacy compatibility
+│   └── legacy_adapter.py
+├── testing/                       # Mocks for unit tests
+│   └── fakes.py
+├── container.py                   # DI Container
+└── ai_service.py                  # Main service (orchestrator)
+```
+
+**Patrones a replicar:**
+1. **Protocols en interfaces/** - Contratos separados de implementaciones
+2. **Providers en providers/** - Cada proveedor implementa Protocol
+3. **Container DI** - Factory con lazy initialization
+4. **Legacy adapter** - Backward compatibility sin romper código existente
+5. **Testing fakes** - Mocks que implementan Protocols
+
+### 2.5 Hexagonal Ports Existentes (Fase 1 Completa)
+
+Los ports en `omnix/ports/` ya están definidos y deben **integrarse**, no reemplazarse:
+
+**Driven Ports (Output):**
+| Port | Archivo | Propósito |
+|------|---------|-----------|
+| `TradingPort` | `driven/trading_port.py` | Exchange adapters |
+| `DatabasePort` | `driven/database_port.py` | PostgreSQL repositories |
+| `CachePort` | `driven/cache_port.py` | Redis operations |
+| `AIInferencePort` | `driven/ai_inference_port.py` | LLM providers |
+| `MarketDataPort` | `driven/market_data_port.py` | Market data |
+| `NotificationPort` | `driven/notification_port.py` | Telegram messaging |
+
+**Driver Ports (Input):**
+| Port | Archivo | Propósito |
+|------|---------|-----------|
+| `RestApiPort` | `driver/rest_api_port.py` | Flask API endpoints |
+| `TelegramPort` | `driver/telegram_port.py` | Bot command handlers |
+
+**Estado:** Definidos pero NO integrados. Fase 2 del MODERNIZATION_ROADMAP pendiente.
+
 ---
 
 ## 3. Problemas Identificados

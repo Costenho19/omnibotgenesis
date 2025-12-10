@@ -1,9 +1,9 @@
 # OMNIX Architecture Migration Roadmap
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** December 10, 2025  
 **Pattern:** Strangler Fig  
-**Status:** APPROVED - Ready for Execution
+**Status:** APPROVED - Aligned with MODERNIZATION_ROADMAP.md
 
 ---
 
@@ -11,9 +11,39 @@
 
 Este documento define el plan de migración incremental de OMNIX V6.5.4c hacia una arquitectura Clean/Hexagonal moderna, manteniendo la estabilidad de producción en Railway.
 
-**Duración Total:** 6-8 semanas  
+**Duración Total:** 6-8 semanas (después de 500 trades)  
 **Riesgo de Producción:** BAJO (migración incremental)  
 **Compatibilidad:** 100% backward compatible durante migración
+
+---
+
+## IMPORTANTE: Coherencia con MODERNIZATION_ROADMAP.md
+
+Este documento **complementa** `docs/core/MODERNIZATION_ROADMAP.md`. Los timelines están alineados:
+
+| Trigger | Documento | Acción |
+|---------|-----------|--------|
+| 200 trades | MODERNIZATION_ROADMAP | AI Service DI Phase 2 |
+| 400 trades | MODERNIZATION_ROADMAP | AI Service Refactor Phase 3 |
+| **500 trades** | **ESTE DOCUMENTO** | **Migración Arquitectura General** |
+| Win rate 55%+ 14 días | MODERNIZATION_ROADMAP | Semantic Router |
+
+**Prioridad:** Track record > Refactoring. NO ejecutar Fase 2-4 hasta completar 500 trades.
+
+---
+
+## Componentes a Preservar (NO modificar)
+
+Estos componentes YA están bien estructurados y sirven como **modelo**:
+
+| Componente | Ubicación | Razón |
+|------------|-----------|-------|
+| AI Service | `omnix_services/ai_service/` | DI container, protocols, providers |
+| Hexagonal Ports | `omnix/ports/` | 8 protocols definidos (Fase 1 completa) |
+| Trading Profiles | `omnix_core/config/trading_profiles.py` | Single source of truth |
+| Database Gateway | `omnix_services/database_service/` | Connection pool funcional |
+
+**Regla:** Replicar patrones del AI Service, no reinventarlos
 
 ---
 
@@ -74,13 +104,15 @@ from omnix_core.config import TradingProfiles  # No changes needed
 
 ## 2. Fases de Migración
 
-| Fase | Nombre | Duración | Objetivo | Deliverable |
-|------|--------|----------|----------|-------------|
-| 0 | Foundation | 1 semana | Preparar infraestructura | pyproject.toml, lint, types |
-| 1 | Bootstrap & Config | 1 semana | Limpiar entry point | Container DI, settings central |
-| 2 | Domain & Application | 2 semanas | Separar lógica de negocio | Domain puro, use cases |
-| 3 | Interfaces | 1 semana | Flask/Telegram via ports | Blueprints desacoplados |
-| 4 | Cleanup | 1 semana | Eliminar legacy | Estructura final |
+| Fase | Nombre | Duración | Trigger | Estado |
+|------|--------|----------|---------|--------|
+| 0 | Foundation | 1 semana | **AHORA** (no afecta trading) | ⬜ Pendiente |
+| 1 | Bootstrap & Config | 1 semana | **AHORA** (bajo riesgo) | ⬜ Pendiente |
+| 2 | Domain & Application | 2 semanas | **500 trades** | 🔒 Bloqueado |
+| 3 | Interfaces | 1 semana | **500 trades** | 🔒 Bloqueado |
+| 4 | Cleanup | 1 semana | **500 trades + 14 días estable** | 🔒 Bloqueado |
+
+**Nota:** Fases 0-1 son de **bajo riesgo** y pueden ejecutarse durante track record generation. Fases 2-4 requieren milestone de 500 trades para minimizar riesgo de regresión
 
 ---
 
