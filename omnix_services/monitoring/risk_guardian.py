@@ -404,8 +404,8 @@ class AIRiskGuardian:
             self._log_event(event)
             return False, event
         
-        # CHECK 2: Pérdida > 10% → Reducir tamaño
-        if drawdown_pct < -10:
+        # CHECK 2: Pérdida > 12% → Reducir tamaño (V6.5.4c: updated from 10%)
+        if drawdown_pct < -12:
             self.size_reduction_factor = 0.5  # Reducir a 50%
             
             event = RiskEvent(

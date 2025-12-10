@@ -165,8 +165,8 @@ class RiskConfig:
     default_daily_loss_limit_usd: float = 20_000.0
     default_daily_loss_limit_pct: float = 2.0
     
-    default_max_drawdown_usd: float = 100_000.0
-    default_max_drawdown_pct: float = 10.0
+    default_max_drawdown_usd: float = 150_000.0  # V6.5.4c: 15% of initial capital
+    default_max_drawdown_pct: float = 15.0  # V6.5.4c: Increased from 10% for track record generation
     
     default_max_concentration_pct: float = 25.0
     
@@ -222,7 +222,7 @@ DEFAULT_LIMITS = [
     ),
     RiskLimit(
         limit_type=RiskLimitType.MAX_DRAWDOWN,
-        threshold_value=10.0,
+        threshold_value=15.0,  # V6.5.4c: Increased from 10% for track record generation
         threshold_unit=ThresholdUnit.PERCENT,
         warning_threshold_pct=80.0
     ),
