@@ -14,6 +14,13 @@
 | [MODERNIZATION_ROADMAP.md](MODERNIZATION_ROADMAP.md) | V7.0 refactoring plans (DEFERRED until 500+ trades) | Developers |
 | [B2C_IMPLEMENTATION_PLAN.md](B2C_IMPLEMENTATION_PLAN.md) | SaaS monetization roadmap ($19-$49 plans) | Product/Business |
 
+## Architecture Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [../architecture/ARCHITECTURE_AUDIT_2025.md](../architecture/ARCHITECTURE_AUDIT_2025.md) | Code audit, problems identified, target structure |
+| [../architecture/MIGRATION_ROADMAP.md](../architecture/MIGRATION_ROADMAP.md) | Strangler Fig migration plan (5 phases) |
+
 ## Investor Documentation
 
 | Document | Purpose |

@@ -123,7 +123,7 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ## Documentation
 
-**Consolidated December 10, 2025** - Reduced from 12 files to 4 core docs + audits.
+**Consolidated December 10, 2025** - Organized into core, architecture, and audits.
 
 | Document | Location | Purpose |
 |----------|----------|---------|
@@ -132,10 +132,26 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 | TRADING_OPERATIONS.md | `docs/core/` | Profiles, flow, operations |
 | MODERNIZATION_ROADMAP.md | `docs/core/` | V7.0 plans (DEFERRED) |
 | B2C_IMPLEMENTATION_PLAN.md | `docs/core/` | SaaS monetization roadmap |
+| ARCHITECTURE_AUDIT_2025.md | `docs/architecture/` | Code audit, SOLID violations, target structure |
+| MIGRATION_ROADMAP.md | `docs/architecture/` | Strangler Fig migration (5 phases) |
 | DATABASE_AUDIT_REPORT.md | `docs/audits/` | DB integrity audit |
 | INTERNAL_AUDIT_TRANSPARENCY.md | `docs/audits/` | Investor due diligence |
 
 **Single Source of Truth:** Trading parameters are in `omnix_core/config/trading_profiles.py`. Documentation reflects code, not the other way around.
+
+## Architecture Modernization (2025)
+
+**Status:** PLANNED - See `docs/architecture/` for details
+
+| Fase | Nombre | Objetivo | Estado |
+|------|--------|----------|--------|
+| 0 | Foundation | pyproject.toml, lint, types | Pendiente |
+| 1 | Bootstrap | Config central, DI container | Pendiente |
+| 2 | Domain/App | Clean architecture layers | Pendiente |
+| 3 | Interfaces | Flask blueprints via ports | Pendiente |
+| 4 | Cleanup | Eliminar legacy | Pendiente |
+
+**Target Structure:** `src/omnix/` con domain/, application/, infrastructure/, interfaces/, config/, bootstrap/
 
 ## B2C Monetization Objectives
 
