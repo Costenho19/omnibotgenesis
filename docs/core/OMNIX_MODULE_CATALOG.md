@@ -43,8 +43,9 @@ omnix_core/
 │   ├── caes_module.py        # ~300 lines - Confidence-Adaptive Entry System
 │   └── non_markovian_kernel.py # 630 lines - Temporal Memory Kernel
 ├── security/
-│   ├── pqc_security.py       # 468 lines - Real Post-Quantum (Kyber-768, Dilithium-3)
-│   └── pqc_encryption.py     # 199 lines - Simulated fallback
+│   └── pqc_security.py       # 468 lines - Real Post-Quantum (Kyber-768, Dilithium-3)
+├── risk/
+│   └── rollback_protocol.py  # Algorithmic Rollback Protocol V6.5.4
 ├── quantum/
 │   ├── physics_validator.py  # 4,459 lines - 24 verified physics formulas
 │   ├── testing_framework.py  # 852 lines - AI response validation
@@ -720,17 +721,76 @@ omnix_testing/
 
 ---
 
-## 9. Trading Profiles
+## 9. Additional Packages
 
-| Profile | Use Case | Settings |
-|---------|----------|----------|
-| **INSTITUTIONAL** | Conservative, real money | Full veto system |
-| **PAPER_AGGRESSIVE** | Track record building | Reduced vetoes, BUY bias |
-| **BALANCED** | Mixed mode | Moderate settings |
+### 9.1 omnix/ - Hexagonal Architecture (V7.0 Foundation)
+
+```
+omnix/
+├── ports/
+│   ├── driven/              # Output ports (infrastructure)
+│   │   ├── ai_inference_port.py
+│   │   ├── cache_port.py
+│   │   ├── database_port.py
+│   │   ├── market_data_port.py
+│   │   ├── notification_port.py
+│   │   └── trading_port.py
+│   ├── driver/              # Input ports (application)
+│   │   ├── rest_api_port.py
+│   │   └── telegram_port.py
+│   └── verify_ports.py      # Port verification utility
+```
+
+**Status:** Phase 1 COMPLETED (Dec 9, 2025) - 12 Protocol interfaces defined.
+
+### 9.2 omnix_risk/ - Risk Management Utilities
+
+```
+omnix_risk/
+├── audit_logger.py          # Institutional audit logging
+├── cascade_protection.py    # Cascade failure protection
+├── dead_man_switch.py       # Dead man switch protocol
+├── portfolio_summary.py     # Portfolio analytics
+├── reactivation_engine.py   # System reactivation logic
+└── usd_risk_calculator.py   # USD risk calculations
+```
+
+### 9.3 omnix_strategies/ - Strategy Modules
+
+```
+omnix_strategies/
+└── regime_switcher.py       # Market regime strategy switching
+```
+
+### 9.4 omnix_api/ - API Layer
+
+```
+omnix_api/
+├── payments/
+│   └── stripe_integration.py  # Stripe payment processing
+└── routes/                    # API route definitions
+```
 
 ---
 
-## 10. INSTITUTIONAL+ Specific Features
+## 10. Trading Profiles (V6.5.4c)
+
+| Profile | Use Case | ARES Status | Drawdown Limit |
+|---------|----------|-------------|----------------|
+| **PRODUCTION_STABLE** | Track record building | V1+V2 ACTIVE (experimental) | 15% |
+| **INSTITUTIONAL** | Conservative, real money | DISABLED | 10% |
+| **PAPER_AGGRESSIVE** | Aggressive testing | ENABLED | 15% |
+| **BALANCED** | Mixed mode | DISABLED | 10% |
+
+**V6.5.4c Changes:**
+- ARES V1 (Swing): 70% min confidence, active
+- ARES V2 (Scalping): 75% min confidence, active
+- Max 3 trades/day (shared between V1/V2)
+- Lateral markets allowed (require_trend=False)
+
+---
+
+## 11. INSTITUTIONAL+ Specific Features
 
 ### 10.1 BUY Bias Escalonado (Paper Mode)
 
@@ -760,3 +820,5 @@ omnix_testing/
 | Date | Version | Changes |
 |------|---------|---------|
 | Dec 6, 2025 | 1.0 | Initial complete module catalog for INSTITUTIONAL+ |
+| Dec 8, 2025 | 1.1 | Added AI Service DI architecture |
+| Dec 10, 2025 | 1.2 | **V6.5.4c Sync**: Removed pqc_encryption.py (never existed), added omnix/, omnix_risk/, omnix_strategies/, omnix_api/, updated trading profiles with ARES activation and 15% drawdown |
