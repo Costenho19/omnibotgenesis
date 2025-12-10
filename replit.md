@@ -1,8 +1,19 @@
-# OMNIX V6.5.4b INSTITUTIONAL+ - Automated Trading System
+# OMNIX V6.5.4c INSTITUTIONAL+ - Automated Trading System
 
 ## Overview
 
-OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 15-25 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+
+## V6.5.4c Changes (December 10, 2025)
+
+1. **ARES V1+V2 Activation**: Enabled in PRODUCTION_STABLE profile for track record generation
+   - ARES V1 (Swing): 70% min confidence
+   - ARES V2 (Scalping): 75% min confidence
+   - Max 3 trades/day (shared)
+   - Lateral markets allowed
+2. **Drawdown Limit Increased**: 10% → 15% to allow trading during recovery
+3. **AI Truthfulness Fix**: PaperTradingRepository ensures real PostgreSQL data in AI responses
+4. **Hexagonal Architecture Phase 1**: 12 Protocol interfaces in `omnix/ports/`
 
 ## User Preferences
 
@@ -66,12 +77,12 @@ Supports 100,000+ simultaneous users with isolated trading sessions using Redis 
 
 ### Trading Profiles System
 
-Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4b` is an investor-ready profile using 10 proven strategies.
+Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile with ARES enabled for track record generation.
 
-### Strategy Separation (V6.5.4)
+### Strategy Separation (V6.5.4c)
 
 -   **Production Strategies (10)**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis.
--   **Experimental Strategies**: ARES V1 (Swing), ARES V2 (Scalping) - under calibration.
+-   **Experimental Strategies**: ARES V1 (Swing), ARES V2 (Scalping) - **ACTIVE** in PRODUCTION_STABLE but tracked separately from production metrics.
 
 ### Hexagonal Architecture (V7.0 Foundation)
 

@@ -1,6 +1,8 @@
 # ARES V1/V2 - Experimental Trading Strategies
-## Status: Under Calibration (Not in Production)
+## Status: ACTIVE in Paper Trading (V6.5.4c)
 ### December 2025
+
+> **UPDATE Dec 10, 2025:** ARES V1+V2 are now **ACTIVE** in PRODUCTION_STABLE profile for track record generation. They remain classified as experimental for investor metric separation.
 
 ---
 
@@ -32,10 +34,12 @@ ARES (Advanced Regime-aware Entry System) is a set of experimental trading strat
 - Risk/Reward: 2:1 minimum
 - Timeframe: 4H to 1D
 
-### Current Status
+### Current Status (V6.5.4c)
 - Implementation: Complete
-- Backtesting: In progress
-- Live Calibration: Pending
+- Backtesting: Complete
+- **Live Calibration: ACTIVE** (Dec 10, 2025)
+- Minimum Confidence: 70%
+- Max Daily Trades: 3 (shared with V2)
 
 ---
 
@@ -55,10 +59,27 @@ Ultra-fast 1-minute timeframe strategy for high-frequency opportunities.
 - Risk/Reward: 1.5:1
 - Timeframe: M1 to M5
 
-### Current Status
+### Current Status (V6.5.4c)
 - Implementation: Complete
-- Backtesting: In progress
-- Live Calibration: Pending
+- Backtesting: Complete
+- **Live Calibration: ACTIVE** (Dec 10, 2025)
+- Minimum Confidence: 75%
+- Max Daily Trades: 3 (shared with V1)
+
+---
+
+## V6.5.4c CONFIGURATION
+
+```python
+# PRODUCTION_STABLE Profile Settings
+ares_enabled = True
+ares_v1_enabled = True
+ares_v2_enabled = True
+ares_v1_min_confidence = 0.70
+ares_v2_min_confidence = 0.75
+ares_max_daily_trades = 3
+ares_require_trend = False  # Allows lateral markets
+```
 
 ---
 
