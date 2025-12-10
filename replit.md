@@ -13,6 +13,7 @@ OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 4. **AI Truthfulness Fix**: Created `PaperTradingRepository` to fetch REAL trade data from PostgreSQL. The AI was INVENTING trade history, win rates, and P&L data. Now queries `paper_trading_trades` and `paper_trading_balances` tables directly.
 5. **Integration with ConversationalAI**: Added `_fetch_trade_performance()` method that injects real data into AI context when user asks about trades/balance/performance.
 6. **Honest Reporting**: Prompts now display real data or explicitly state "no trades found" - never fabricates statistics.
+7. **User-scoped Data Pipeline**: Complete `user_id` propagation chain: `generate_response(user_id)` → `_fetch_real_market_data(user_id)` → `_fetch_trade_performance(user_id)` → `PaperTradingRepository.get_full_performance_context(user_id)`. Multi-tenant isolation now supported.
 
 ## Hexagonal Architecture (V7.0 Foundation)
 
