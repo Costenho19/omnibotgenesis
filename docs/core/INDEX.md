@@ -12,6 +12,7 @@
 | [ARCHITECTURE_REFERENCE.md](ARCHITECTURE_REFERENCE.md) | Complete module catalog, protocol ports, dashboard APIs | Developers |
 | [TRADING_OPERATIONS.md](TRADING_OPERATIONS.md) | Trading profiles, flow architecture, operational guides | Operators |
 | [MODERNIZATION_ROADMAP.md](MODERNIZATION_ROADMAP.md) | V7.0 refactoring plans (DEFERRED until 500+ trades) | Developers |
+| [B2C_IMPLEMENTATION_PLAN.md](B2C_IMPLEMENTATION_PLAN.md) | SaaS monetization roadmap ($19-$49 plans) | Product/Business |
 
 ## Investor Documentation
 

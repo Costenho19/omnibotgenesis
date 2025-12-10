@@ -131,7 +131,26 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 | ARCHITECTURE_REFERENCE.md | `docs/core/` | Modules, ports, dashboard APIs |
 | TRADING_OPERATIONS.md | `docs/core/` | Profiles, flow, operations |
 | MODERNIZATION_ROADMAP.md | `docs/core/` | V7.0 plans (DEFERRED) |
+| B2C_IMPLEMENTATION_PLAN.md | `docs/core/` | SaaS monetization roadmap |
 | DATABASE_AUDIT_REPORT.md | `docs/audits/` | DB integrity audit |
 | INTERNAL_AUDIT_TRANSPARENCY.md | `docs/audits/` | Investor due diligence |
 
 **Single Source of Truth:** Trading parameters are in `omnix_core/config/trading_profiles.py`. Documentation reflects code, not the other way around.
+
+## B2C Monetization Objectives
+
+**Target Product:** OMNIX Asesor Personal IA
+
+| Milestone | Users | MRR | Timeline |
+|-----------|-------|-----|----------|
+| MVP | 50 | $950 | Month 2 |
+| Growth | 200 | $5,800 | Month 6 |
+| Scale | 500+ | $24,500 | Month 12 |
+
+**Pricing Plans:**
+- Free: 3 análisis/día (lead generation)
+- Basic ($19): 20 análisis/día + 5 señales
+- Pro ($29): 100 análisis + portfolio advisor + voz
+- Premium ($49): Ilimitado + on-chain + reportes PDF
+
+**Implementation Status:** See `docs/core/B2C_IMPLEMENTATION_PLAN.md` for detailed roadmap.
