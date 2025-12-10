@@ -2877,6 +2877,88 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error en Coherence validation (continuando): {e}")
             
+            # ==========  V6.5.4c: LÍMITE DIARIO DE TRADES ==========
+            # Bloquear nuevos trades si ya alcanzamos el límite del día
+            # APLICA A PAPER Y REAL TRADING para consistencia
+            if action != 'HOLD':
+                try:
+                    from omnix_core.config.trading_profiles import get_active_profile
+                    active_profile = get_active_profile()
+                    max_daily_trades = active_profile.extra_params.get('ares_max_daily_trades', 3)
+                    
+                    if self.paper_trading and hasattr(self.paper_trading, 'get_today_trades_count'):
+                        user_id = str(self.config.get('harold_user_id', '7014748854'))
+                        today_stats = self.paper_trading.get_today_trades_count(user_id)
+                        
+                        if 'error' in today_stats:
+                            logger.error(f"🛑 {VERSION_BANNER} DAILY LIMIT CHECK FAILED: {today_stats['error']}")
+                            logger.warning(f"   ⏸️ Forzando HOLD por error de DB (safety-first)")
+                            return {
+                                'success': True,
+                                'action': 'HOLD',
+                                'reason': f'DB error during daily limit check: {today_stats["error"]}',
+                                'blocked': True,
+                                'veto_type': 'DB_ERROR_VETO'
+                            }
+                        
+                        trades_today = today_stats.get('count', 0)
+                        
+                        if trades_today >= max_daily_trades:
+                            logger.warning(f"🛑 {VERSION_BANNER} LÍMITE DIARIO ALCANZADO: {trades_today}/{max_daily_trades} trades hoy")
+                            logger.info(f"   ⏸️ Convirtiendo {action} → HOLD (esperar mañana)")
+                            return {
+                                'success': True, 
+                                'action': 'HOLD', 
+                                'reason': f'Daily trade limit reached: {trades_today}/{max_daily_trades}',
+                                'blocked': True,
+                                'veto_type': 'DAILY_LIMIT'
+                            }
+                        else:
+                            logger.info(f"✅ {VERSION_BANNER} DAILY LIMIT CHECK: {trades_today}/{max_daily_trades} trades - OK")
+                except Exception as e:
+                    logger.error(f"🛑 {VERSION_BANNER} DAILY LIMIT CHECK EXCEPTION: {e}")
+                    logger.warning(f"   ⏸️ Forzando HOLD por excepción (safety-first)")
+                    return {
+                        'success': True,
+                        'action': 'HOLD',
+                        'reason': f'Exception during daily limit check: {str(e)}',
+                        'blocked': True,
+                        'veto_type': 'EXCEPTION_VETO'
+                    }
+            
+            # ==========  V6.5.4c: VERIFICACIÓN DE POSICIÓN DUPLICADA ANTES DE BUY ==========
+            # APLICA A PAPER Y REAL TRADING - BUY no debe abrir si ya existe posición
+            if action == 'BUY':
+                if self.paper_trading and hasattr(self.paper_trading, 'count_open_positions_for_symbol'):
+                    user_id = str(self.config.get('harold_user_id', '7014748854'))
+                    symbol = self.config['trading_pair']
+                    
+                    try:
+                        open_count = self.paper_trading.count_open_positions_for_symbol(user_id, symbol)
+                        
+                        if open_count > 0:
+                            logger.warning(f"🛑 {VERSION_BANNER} POSICIÓN DUPLICADA BLOQUEADA: {open_count} posiciones abiertas para {symbol}")
+                            logger.info(f"   ⏸️ Convirtiendo BUY → HOLD (esperar cierre de posición actual)")
+                            return {
+                                'success': True, 
+                                'action': 'HOLD', 
+                                'reason': f'Duplicate position blocked: {open_count} open positions for {symbol}',
+                                'blocked': True,
+                                'veto_type': 'DUPLICATE_POSITION'
+                            }
+                        else:
+                            logger.info(f"✅ {VERSION_BANNER} DUPLICATE CHECK: No open positions for {symbol} - OK")
+                    except Exception as e:
+                        logger.error(f"🛑 {VERSION_BANNER} DUPLICATE CHECK EXCEPTION: {e}")
+                        logger.warning(f"   ⏸️ Forzando HOLD por excepción (safety-first)")
+                        return {
+                            'success': True,
+                            'action': 'HOLD',
+                            'reason': f'Exception during duplicate check: {str(e)}',
+                            'blocked': True,
+                            'veto_type': 'EXCEPTION_VETO'
+                        }
+            
             # ==========  VERIFICACIÓN DE POSICIÓN ANTES DE SELL ==========
             # En paper mode, SELL solo puede cerrar posiciones existentes
             # Si no hay posición abierta, convertir a HOLD para evitar errores

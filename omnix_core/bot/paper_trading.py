@@ -654,3 +654,118 @@ class PaperTradingManager:
         except Exception as e:
             logger.error(f"Error generando reporte P&L: {e}")
             return {'error': str(e)}
+    
+    def has_open_position_for_symbol(self, user_id: str, symbol: str) -> Dict:
+        """
+        V6.5.4c: Verificar si existe una posición abierta para un símbolo específico.
+        
+        Args:
+            user_id: ID del usuario
+            symbol: Par de trading (ej: BTC/USD)
+        
+        Returns:
+            Dict con has_position: bool y position: Dict si existe
+        """
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                return {'has_position': False, 'error': 'Database service no disponible'}
+            
+            result = self.database_service.execute_query(
+                """
+                SELECT id, symbol, side, quantity, entry_price, opened_at
+                FROM paper_trading_trades
+                WHERE user_id = %s AND symbol = %s AND status = 'open'
+                ORDER BY opened_at ASC
+                LIMIT 1
+                """,
+                (user_id, symbol),
+                fetch=True
+            )
+            
+            if result and len(result) > 0:
+                row = result[0]
+                return {
+                    'has_position': True,
+                    'position': {
+                        'trade_id': row[0],
+                        'symbol': row[1],
+                        'side': row[2],
+                        'quantity': float(row[3]),
+                        'entry_price': float(row[4]),
+                        'opened_at': row[5]
+                    }
+                }
+            
+            return {'has_position': False}
+            
+        except Exception as e:
+            logger.error(f"Error verificando posición abierta: {e}")
+            return {'has_position': False, 'error': str(e)}
+    
+    def get_today_trades_count(self, user_id: str) -> Dict:
+        """
+        V6.5.4c: Contar trades abiertos HOY (desde medianoche UTC).
+        
+        Args:
+            user_id: ID del usuario
+        
+        Returns:
+            Dict con count: int y trades: list
+        """
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                return {'count': 0, 'error': 'Database service no disponible'}
+            
+            result = self.database_service.execute_query(
+                """
+                SELECT COUNT(*) as count
+                FROM paper_trading_trades
+                WHERE user_id = %s 
+                AND DATE(opened_at) = CURRENT_DATE
+                """,
+                (user_id,),
+                fetch=True
+            )
+            
+            count = int(result[0][0]) if result and result[0][0] else 0
+            
+            return {
+                'count': count,
+                'date': datetime.now().strftime('%Y-%m-%d')
+            }
+            
+        except Exception as e:
+            logger.error(f"Error contando trades de hoy: {e}")
+            return {'count': 0, 'error': str(e)}
+    
+    def count_open_positions_for_symbol(self, user_id: str, symbol: str) -> int:
+        """
+        V6.5.4c: Contar cuántas posiciones abiertas existen para un símbolo.
+        Usado para detectar posiciones duplicadas.
+        
+        Args:
+            user_id: ID del usuario
+            symbol: Par de trading
+        
+        Returns:
+            int: Número de posiciones abiertas para este símbolo
+        """
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                return 0
+            
+            result = self.database_service.execute_query(
+                """
+                SELECT COUNT(*) as count
+                FROM paper_trading_trades
+                WHERE user_id = %s AND symbol = %s AND status = 'open'
+                """,
+                (user_id, symbol),
+                fetch=True
+            )
+            
+            return int(result[0][0]) if result and result[0][0] else 0
+            
+        except Exception as e:
+            logger.error(f"Error contando posiciones abiertas: {e}")
+            return 0
