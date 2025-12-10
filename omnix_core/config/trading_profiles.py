@@ -674,12 +674,12 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
 
 PRODUCTION_STABLE_PROFILE = TradingProfile(
     name="PRODUCTION_STABLE",
-    description="Perfil V6.5.4 PRODUCTION STABLE - Solo estrategias probadas para inversores. "
-                "USA: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
-                "Coherence Engine, Risk Guardian, Non-Markovian Kernel. "
-                "DESACTIVADO: ARES V1/V2 (en calibración experimental). "
-                "Métricas = Estrategias en producción. Listo para presentar a inversores. "
-                "V6.5.4b: Umbrales ajustados para generar trades (Dec 2025).",
+    description="Perfil V6.5.4c PRODUCTION STABLE - Estrategias probadas + ARES experimental. "
+                "PRODUCCIÓN: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
+                "Coherence Engine, Risk Guardian, Non-Markovian Kernel, SentimentAnalysis. "
+                "EXPERIMENTAL: ARES V1 (Swing 70%) + V2 (Scalping 75%) - Max 3 trades/día. "
+                "Métricas de producción separadas de experimentales. "
+                "V6.5.4c: ARES activado para track record (Dec 10, 2025).",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,
@@ -722,9 +722,15 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10,
-        'ares_enabled': False,
-        'ares_v1_enabled': False,
-        'ares_v2_enabled': False,
+        # V6.5.4c: ARES V1+V2 activados para generar track record (Dec 10, 2025)
+        # NOTA: ARES sigue siendo EXPERIMENTAL - no incluido en strategies_active
+        'ares_enabled': True,
+        'ares_v1_enabled': True,
+        'ares_v2_enabled': True,
+        'ares_v1_min_confidence': 0.70,  # 70% confianza mínima para V1 (swing)
+        'ares_v2_min_confidence': 0.75,  # 75% confianza mínima para V2 (scalping)
+        'ares_max_daily_trades': 3,      # Máximo 3 trades/día (compartido V1+V2)
+        'ares_require_trend': False,     # Permitir mercados laterales (V2 especialidad)
         'quantum_optimization_enabled': False,
         'strategies_active': [
             'QuantumMomentum',
