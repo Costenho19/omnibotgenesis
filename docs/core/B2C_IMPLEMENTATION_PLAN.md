@@ -383,50 +383,73 @@ ENABLE_ONCHAIN=true
 ENABLE_PORTFOLIO_ADVISOR=true
 ```
 
-### 5.3 CI/CD Pipeline
+### 5.3 CI/CD Pipeline (Railway Auto-Deploy)
 
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy OMNIX B2C
+**OMNIX utiliza Railway con auto-deploy nativo.** No se usa GitHub Actions.
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+#### Flujo de Deploy
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run tests
-        run: pytest tests/ -v
-      - name: Lint
-        run: ruff check .
-
-  deploy-staging:
-    needs: test
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Railway Staging
-        run: railway up --environment staging
-
-  deploy-production:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Railway Production
-        run: railway up --environment production
 ```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Git Push   │ ──▶ │   Railway   │ ──▶ │    Build    │ ──▶ │   Deploy    │
+│  to main    │     │   Detect    │     │  Container  │     │  Production │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+#### Archivos de Configuración
+
+**Procfile** (para Gunicorn/Flask):
+```
+web: gunicorn wsgi:app -b 0.0.0.0:$PORT --workers 2 --threads 4
+```
+
+**railway.json** (para Bot principal):
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python -u main.py",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+#### Proceso de Deploy
+
+| Paso | Acción | Automático |
+|------|--------|------------|
+| 1 | Push a branch `main` | Manual |
+| 2 | Railway detecta cambio | ✅ Auto |
+| 3 | Nixpacks build (instala requirements.txt) | ✅ Auto |
+| 4 | Deploy a producción | ✅ Auto |
+| 5 | Health check | ✅ Auto |
+
+#### Rollback
+
+Si hay errores después del deploy:
+
+1. **Railway Dashboard** → Deployments → Seleccionar deploy anterior
+2. Click **"Redeploy"** en la versión estable
+3. El rollback es instantáneo (no rebuild)
+
+#### Ambientes
+
+| Ambiente | Branch | URL |
+|----------|--------|-----|
+| Production | `main` | omnix-production.up.railway.app |
+| Staging (futuro) | `staging` | omnix-staging.up.railway.app |
+
+#### Pre-Deploy Checklist (Manual)
+
+Antes de push a main:
+- [ ] Tests locales pasan (`pytest tests/ -v`)
+- [ ] Sin errores de lint (`ruff check .`)
+- [ ] Variables de entorno actualizadas en Railway
+- [ ] Migraciones de DB verificadas
 
 ### 5.4 Monitoring Stack
 
