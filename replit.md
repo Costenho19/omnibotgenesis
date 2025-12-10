@@ -6,12 +6,17 @@ OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 
 ## V6.5.4c Changes (December 10, 2025)
 
-1. **ARES V1+V2 Activation**: Enabled in PRODUCTION_STABLE profile for track record generation
-   - ARES V1 (Swing): 70% min confidence
-   - ARES V2 (Scalping): 75% min confidence
-   - Max 3 trades/day (shared)
-   - Lateral markets allowed
-2. **Drawdown Limit Increased**: 10% → 15% to allow trading during recovery
+1. **ARES V1+V2 Production Calibration**: Promoted from experimental to Production Calibration phase
+   - ARES V1 (Swing): 70% min confidence - Alpha generation strategy
+   - ARES V2 (Scalping): 75% min confidence - High-frequency alpha strategy
+   - Max 3 trades/day (shared) - Conservative position limit
+   - Lateral markets allowed - Expanded opportunity set
+   - **Status**: Passed backtesting, now in live calibration for track record
+2. **Risk Parameters Clarification**: 
+   - **3% Daily Loss Limit (PRODUCTION_STABLE)**: Active profile circuit breaker (8% hard ceiling system-wide)
+   - **Portfolio Weights**: Per-pair allocation (BTC: 40%, XRP: 30%, ADA/LINK: 15% each)
+   - **Daily Drawdown per Pair**: BTC/XRP: 2%, ADA/LINK: 1% (stricter for calibrating pairs)
+   - **Excluded Pairs**: ETH, SOL, AVAX (0% win rate historically)
 3. **AI Truthfulness Fix**: PaperTradingRepository ensures real PostgreSQL data in AI responses
 4. **Hexagonal Architecture Phase 1**: 12 Protocol interfaces in `omnix/ports/`
 5. **CRITICAL FIX - Overtrading Protection V6.5.4c**:
@@ -54,7 +59,11 @@ The system features several core engines:
 -   **AutoTradingBot V6.5.4 INSTITUTIONAL+**: Multi-crypto scanning, tiered signal strength, HMM quality filter, drawdown protection.
 -   **Non-Markovian Memory Kernel V6.5**: Detects regime transitions, recognizes cyclical patterns, performs memory coherence scoring, and integrates on-chain signals.
 -   **Coherence Engine V6.5 ULTRA**: 6-Tier Veto System for validating strategy agreement, maintaining consistent trade quality.
--   **AI Risk Guardian V5.4**: Monitors for overtrading, drawdown, and prevents revenge trading, with a hard cap of $20K max trade size.
+-   **AI Risk Guardian V5.4**: Multi-layer risk protection system:
+    - **Daily Loss Circuit Breaker**: Profile-specific (PRODUCTION_STABLE: 3%, max system-wide: 8%)
+    - **Overtrading Prevention**: Blocks excessive trade frequency
+    - **Revenge Trading Detection**: Prevents emotional trading after losses
+    - **Position Size Cap**: $20K max trade size (hard limit)
 -   **Portfolio Management V6.4 INSTITUTIONAL+**: Goldman-Sachs level optimization using Markowitz and Black-Litterman models.
 -   **Derivatives Trading Module**: Supports paper/real trading modes, including MarginEngine, KrakenFuturesClient, and HedgingService.
 -   **Stock Trading Premium V6.3 ULTRA**: Incorporates 9 institutional modules including Monte Carlo, Kalman Filter, HMM, ARES-STOCK, Non-Markovian Memory, Coherence Engine, Risk Guardian, Gap Protection, and Earnings Protector.
@@ -87,7 +96,7 @@ Configurable profiles (INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZE
 ### Strategy Separation (V6.5.4c)
 
 -   **Production Strategies (10)**: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman Filter, Non-Markovian Kernel, Coherence Engine, Risk Guardian, SentimentAnalysis.
--   **Experimental Strategies**: ARES V1 (Swing), ARES V2 (Scalping) - **ACTIVE** in PRODUCTION_STABLE but tracked separately from production metrics.
+-   **Production Calibration Strategies (2)**: ARES V1 (Swing), ARES V2 (Scalping) - Passed backtesting phase, now in live calibration for track record generation. Tracked separately from production metrics.
 
 ### Hexagonal Architecture (V7.0 Foundation)
 
@@ -115,7 +124,17 @@ Structured with an `IntentDetector` (SRP), `SearchManager` (orchestration), and 
 -   **Finnhub**: Market news and sentiment.
 -   **Alpha Vantage**: Technical indicators.
 -   **Tavily**: Real-time web search for AI responses.
--   **ANU QRNG**: Quantum random numbers.
+-   **ANU QRNG**: Quantum random numbers with resilience protocol.
+
+### Quantum Resilience Protocol (V6.4)
+
+The system implements a robust fallback mechanism for the Quantum Random Number Generator:
+
+1. **Primary Source**: ANU Quantum API (Australian National University) - True quantum randomness from vacuum fluctuations
+2. **Intelligent Cooldown**: After API failure, system waits 5 minutes before retry to avoid log spam
+3. **Fallback Mode**: If QRNG unavailable, automatically switches to numpy.random (PRNG)
+4. **Auto-Recovery**: System automatically returns to quantum source when API becomes available again
+5. **Transparency**: Stats tracked in `QRNGStats` dataclass for audit trail (success/failure rates, cache hits)
 
 ### Redis Cache System (V6.5.4)
 
