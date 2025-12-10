@@ -120,3 +120,18 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## Documentation
+
+**Consolidated December 10, 2025** - Reduced from 12 files to 4 core docs + audits.
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| INDEX.md | `docs/core/` | Navigation hub |
+| ARCHITECTURE_REFERENCE.md | `docs/core/` | Modules, ports, dashboard APIs |
+| TRADING_OPERATIONS.md | `docs/core/` | Profiles, flow, operations |
+| MODERNIZATION_ROADMAP.md | `docs/core/` | V7.0 plans (DEFERRED) |
+| DATABASE_AUDIT_REPORT.md | `docs/audits/` | DB integrity audit |
+| INTERNAL_AUDIT_TRANSPARENCY.md | `docs/audits/` | Investor due diligence |
+
+**Single Source of Truth:** Trading parameters are in `omnix_core/config/trading_profiles.py`. Documentation reflects code, not the other way around.
