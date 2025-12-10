@@ -141,17 +141,22 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ## Architecture Modernization (2025)
 
-**Status:** PLANNED - See `docs/architecture/` for details
+**Status:** DEFERRED until 500 trades - See `docs/architecture/` for aligned roadmaps
 
-| Fase | Nombre | Objetivo | Estado |
-|------|--------|----------|--------|
-| 0 | Foundation | pyproject.toml, lint, types | Pendiente |
-| 1 | Bootstrap | Config central, DI container | Pendiente |
-| 2 | Domain/App | Clean architecture layers | Pendiente |
-| 3 | Interfaces | Flask blueprints via ports | Pendiente |
-| 4 | Cleanup | Eliminar legacy | Pendiente |
+| Fase | Nombre | Trigger | Estado |
+|------|--------|---------|--------|
+| 0 | Foundation | AHORA (bajo riesgo) | ⬜ Pendiente |
+| 1 | Bootstrap | AHORA (bajo riesgo) | ⬜ Pendiente |
+| 2 | Domain/App | 500 trades | 🔒 Bloqueado |
+| 3 | Interfaces | 500 trades | 🔒 Bloqueado |
+| 4 | Cleanup | 500 trades + 14 días | 🔒 Bloqueado |
 
-**Target Structure:** `src/omnix/` con domain/, application/, infrastructure/, interfaces/, config/, bootstrap/
+**Documentos Coherentes:**
+- `docs/core/MODERNIZATION_ROADMAP.md` - AI Service DI (200/400/500 trades)
+- `docs/architecture/ARCHITECTURE_AUDIT_2025.md` - Código audit + AI Service como modelo
+- `docs/architecture/MIGRATION_ROADMAP.md` - Strangler Fig (aligned con 500 trades)
+
+**AI Service como Modelo:** `omnix_services/ai_service/` implementa DI, protocols, providers correctamente - usar como plantilla para otros módulos.
 
 ## B2C Monetization Objectives
 
