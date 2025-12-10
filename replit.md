@@ -9,6 +9,11 @@ OMNIX V6.5.4b INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 2. **Threshold Adjustments**: Reduced PRODUCTION_STABLE thresholds (coherence_veto_critical 50%→25%, scores 30/20/12→15/8/4) to enable trade generation.
 3. **Hexagonal Architecture Phase 1**: Created `omnix/ports/` with 12 Protocol interfaces following SOLID principles (Dec 9, 2025).
 
+**V6.5.4c Changes (Dec 10, 2025)**:
+4. **AI Truthfulness Fix**: Created `PaperTradingRepository` to fetch REAL trade data from PostgreSQL. The AI was INVENTING trade history, win rates, and P&L data. Now queries `paper_trading_trades` and `paper_trading_balances` tables directly.
+5. **Integration with ConversationalAI**: Added `_fetch_trade_performance()` method that injects real data into AI context when user asks about trades/balance/performance.
+6. **Honest Reporting**: Prompts now display real data or explicitly state "no trades found" - never fabricates statistics.
+
 ## Hexagonal Architecture (V7.0 Foundation)
 
 Phase 1 completed: Protocol Ports defined in `omnix/ports/`. These interfaces coexist with current architecture and will be gradually integrated.

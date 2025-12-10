@@ -8,6 +8,7 @@ import logging
 import os
 import asyncio
 from datetime import datetime
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,8 @@ class ConversationalAI:
                 logger.info(f"🧠 MEMORIA: Usando chat_id={chat_id_int} (original: chat_id='{chat_id}', user_id='{user_id}')")
                 
                 # 📊 FIX: OBTENER DATOS REALES DE KRAKEN ANTES DE GENERAR RESPUESTA
-                real_market_data = self._fetch_real_market_data(trading_system, user_message)
+                # FIX Dec 10, 2025: Pasar user_id para obtener datos de trading específicos del usuario
+                real_market_data = self._fetch_real_market_data(trading_system, user_message, user_id=user_id)
                 
                 # RAILWAY FIX: Usar asyncio de forma segura
                 try:
@@ -187,11 +189,12 @@ class ConversationalAI:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()
     
-    def _fetch_real_market_data(self, trading_system, user_message: str) -> dict:
+    def _fetch_real_market_data(self, trading_system, user_message: str, user_id: Optional[str] = None) -> dict:
         """
         📊 OBTENER DATOS REALES DE MERCADO - SISTEMA MULTI-CRIPTO V6.1
         
         FIX Nov 29, 2025: Soporte para 50+ criptomonedas (Cardano, Solana, XRP, etc.)
+        FIX Dec 10, 2025: Acepta user_id para obtener datos de trading específicos del usuario.
         """
         import re
         import requests
@@ -360,7 +363,79 @@ class ConversationalAI:
         except:
             pass
         
+        # 📊 FIX Dec 10, 2025: Obtener datos REALES de trading desde PostgreSQL
+        # Esto evita que el AI invente datos de trades/balance/win rate
+        # FIX Dec 10, 2025 v2: Ahora pasa user_id correctamente para soporte multi-usuario
+        trade_performance = self._fetch_trade_performance(user_message, user_id=user_id)
+        if trade_performance:
+            market_data['trade_performance'] = trade_performance
+            logger.info(f"📊 Trade performance data added: {trade_performance.get('statistics', {}).get('total_trades', 0)} trades")
+        
         return market_data
+    
+    def _fetch_trade_performance(self, user_message: str, user_id: Optional[str] = None) -> dict:
+        """
+        📊 FIX Dec 10, 2025: Obtener datos REALES de trading desde PostgreSQL.
+        
+        PROBLEMA: El AI estaba inventando datos de trades, win rate, P&L.
+        SOLUCIÓN: Consultar PostgreSQL directamente via PaperTradingRepository.
+        
+        Args:
+            user_message: Mensaje del usuario para detectar intención
+            user_id: ID del usuario para filtrar datos (opcional, si None retorna datos globales)
+        
+        Solo se ejecuta si el usuario pregunta por:
+        - Balance, saldo, fondos
+        - Historial, trades, operaciones
+        - Rendimiento, performance, win rate
+        - Estadísticas, métricas
+        """
+        message_lower = user_message.lower()
+        
+        # Detectar si el usuario pregunta por datos de trading
+        trade_keywords = [
+            'balance', 'saldo', 'fondos', 'dinero', 'capital',
+            'historial', 'trades', 'operaciones', 'history',
+            'rendimiento', 'performance', 'win rate', 'winrate',
+            'estadísticas', 'métricas', 'metrics', 'stats',
+            'ganadores', 'perdedores', 'p&l', 'pnl', 'profit',
+            'cuantos trades', 'cuántos trades', 'informe', 'report'
+        ]
+        
+        needs_trade_data = any(keyword in message_lower for keyword in trade_keywords)
+        
+        if not needs_trade_data:
+            return None
+        
+        logger.info(f"📊 Detected trade/performance query - fetching REAL data from PostgreSQL (user_id={user_id})")
+        
+        try:
+            from omnix_services.database_service.paper_trading_repository import get_paper_trading_repository
+            
+            repo = get_paper_trading_repository()
+            performance = repo.get_full_performance_context(user_id=user_id)
+            
+            if performance.get('has_real_data'):
+                logger.info(f"✅ REAL trade data obtained from PostgreSQL")
+            else:
+                logger.info(f"📊 No trade data in PostgreSQL - will inform user honestly")
+            
+            return performance
+            
+        except ImportError as e:
+            logger.error(f"❌ Cannot import PaperTradingRepository: {e}")
+            return {
+                'has_real_data': False,
+                'error': 'Repository not available',
+                'statistics': {'total_trades': 0, 'data_source': 'unavailable'}
+            }
+        except Exception as e:
+            logger.error(f"❌ Error fetching trade performance: {e}")
+            return {
+                'has_real_data': False,
+                'error': str(e),
+                'statistics': {'total_trades': 0, 'data_source': 'error'}
+            }
     
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
         """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL

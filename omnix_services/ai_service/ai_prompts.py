@@ -405,6 +405,64 @@ ARQUITECTURA TÉCNICA V6.5:
                 mode_emoji = "📝" if mode == 'PAPER' else "💰"
                 base_prompt += f"- **Modo:** {mode_emoji} {mode} TRADING\n"
             
+            # 📊 FIX Dec 10, 2025: DATOS REALES DE TRADING DESDE POSTGRESQL
+            # Esto evita que el AI invente datos de trades/balance/win rate
+            if 'trade_performance' in additional_context:
+                perf = additional_context['trade_performance']
+                stats = perf.get('statistics', {})
+                recent = perf.get('recent_trades', {})
+                balance_db = perf.get('balance', {})
+                
+                has_real_data = perf.get('has_real_data', False)
+                
+                base_prompt += "\n\n📊 **DATOS REALES DE TRADING (PostgreSQL):**\n"
+                
+                if has_real_data:
+                    # Estadísticas reales
+                    total_trades = stats.get('total_trades', 0)
+                    winning = stats.get('winning_trades', 0)
+                    losing = stats.get('losing_trades', 0)
+                    win_rate = stats.get('win_rate', 0)
+                    total_pnl = stats.get('total_pnl', 0)
+                    
+                    base_prompt += f"- **Total Trades Cerrados:** {total_trades}\n"
+                    base_prompt += f"- **Ganadores:** {winning} | **Perdedores:** {losing}\n"
+                    base_prompt += f"- **Win Rate:** {win_rate:.1f}%\n"
+                    pnl_emoji = "🟢" if total_pnl >= 0 else "🔴"
+                    base_prompt += f"- **P&L Total:** {pnl_emoji} ${total_pnl:,.2f}\n"
+                    
+                    # Trades recientes
+                    trades_list = recent.get('trades', [])
+                    if trades_list:
+                        base_prompt += f"\n**Últimos {len(trades_list)} Trades:**\n"
+                        for t in trades_list[:5]:
+                            pnl = t.get('profit_loss', 0)
+                            emoji = "✅" if pnl > 0 else "❌"
+                            symbol = t.get('symbol', 'N/A')
+                            side = t.get('side', 'N/A').upper()
+                            base_prompt += f"  {emoji} {symbol} {side}: ${pnl:,.2f}\n"
+                    
+                    # Balance de DB
+                    if balance_db.get('balance_usd') is not None:
+                        base_prompt += f"\n**Balance DB:** ${balance_db['balance_usd']:,.2f} USD\n"
+                    
+                    base_prompt += f"\n🔗 **Fuente:** PostgreSQL en vivo ({stats.get('data_source', 'postgresql')})\n"
+                else:
+                    # No hay datos - DECIR LA VERDAD
+                    base_prompt += """
+⚠️ **SIN DATOS DE TRADES EN BASE DE DATOS**
+- La consulta a PostgreSQL no retornó trades cerrados.
+- Esto puede significar:
+  1. El bot aún no ha ejecutado trades que se hayan cerrado
+  2. Los trades están en estado OPEN (no cerrados)
+  3. Hay un problema de conexión con la base de datos
+
+🚨 **INSTRUCCIÓN CRÍTICA:**
+DEBES informar al usuario que NO hay datos de trades en la base de datos.
+NO INVENTES datos de trades, win rate, P&L o balance.
+Di honestamente: "Actualmente no hay trades cerrados registrados en la base de datos."
+"""
+            
             # Datos legacy
             if 'price' in additional_context:
                 base_prompt += f"- Bitcoin: ${additional_context['price']:,.2f} USD\n"
