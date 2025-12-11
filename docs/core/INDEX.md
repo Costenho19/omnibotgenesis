@@ -1,6 +1,6 @@
-# OMNIX V6.5.4c INSTITUTIONAL+ Documentation Index
+# OMNIX V6.5.4d INSTITUTIONAL+ Documentation Index
 
-**Last Updated:** December 10, 2025  
+**Last Updated:** December 11, 2025  
 **Authoritative Version:** `omnix_config/settings.py` → `VERSION_BANNER`
 
 ---
@@ -20,6 +20,7 @@
 |----------|---------|
 | [../architecture/ARCHITECTURE_AUDIT_2025.md](../architecture/ARCHITECTURE_AUDIT_2025.md) | Code audit, problems identified, target structure |
 | [../architecture/MIGRATION_ROADMAP.md](../architecture/MIGRATION_ROADMAP.md) | Strangler Fig migration plan (5 phases) |
+| [TECHNICAL_DEBT.md](TECHNICAL_DEBT.md) | Known technical debt and deferred items |
 
 ## Investor Documentation
 
@@ -27,6 +28,7 @@
 |----------|---------|
 | [../audits/INTERNAL_AUDIT_TRANSPARENCY.md](../audits/INTERNAL_AUDIT_TRANSPARENCY.md) | Investor due diligence report |
 | [../audits/DATABASE_AUDIT_REPORT.md](../audits/DATABASE_AUDIT_REPORT.md) | Database integrity audit status |
+| [../audits/AUDIT_REPORT_20251208.md](../audits/AUDIT_REPORT_20251208.md) | Code-to-documentation verification |
 
 ---
 
@@ -34,7 +36,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX V6.5.4c INSTITUTIONAL+                 │
+│                    OMNIX V6.5.4d INSTITUTIONAL+                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACES                                                     │
 │  ├── Telegram Bot (enterprise_bot.py)                          │
@@ -42,10 +44,11 @@
 │  └── Streamlit Dashboard (port 8080) - Investor Charts         │
 ├─────────────────────────────────────────────────────────────────┤
 │  CORE ENGINES                                                   │
-│  ├── AutoTradingBot V6.5.4 - Multi-crypto scanner              │
+│  ├── AutoTradingBot V6.5.4d - Multi-crypto scanner + Emergency SL│
 │  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto system           │
 │  ├── Non-Markovian Kernel V6.5 - Temporal memory               │
 │  ├── Risk Guardian V5.4 - Drawdown + overtrading protection    │
+│  ├── Macro Trend Veto - Kalman/HMM bearish blocking (V6.5.4d)  │
 │  └── ARES V1/V2 (Swing/Scalping) - ACTIVE in PRODUCTION_STABLE │
 ├─────────────────────────────────────────────────────────────────┤
 │  DATA LAYER                                                     │
@@ -67,12 +70,23 @@
 
 | Metric | Status | Target |
 |--------|--------|--------|
-| Track Record Trades | 27 | 500+ |
+| Version | V6.5.4d | — |
+| Track Record Trades | ~30 | 500+ |
 | Win Rate Target | 55%+ | Investor-grade |
-| Active Profile | PRODUCTION_STABLE V6.5.4c | — |
+| Active Profile | PRODUCTION_STABLE V6.5.4d | — |
 | ARES Status | ACTIVE (V1: 70%, V2: 75% confidence) | Track record generation |
 | Drawdown Limit | 15% | Allows recovery trading |
+| Database Tables | 42 | ✅ Complete |
 | Database FK Coverage | 90% (38/42 tables) | ✅ Complete |
+
+### V6.5.4d Key Changes
+
+| Change | Description |
+|--------|-------------|
+| Emergency Stop Loss | 2% max absolute loss per position (class-level constant) |
+| Entry Thresholds | score_moderate=12 (same as strong), only STRONG/VERY_STRONG trades |
+| ADA/USD Excluded | Permanently blocked (0% win rate) |
+| Macro Trend Veto | Kalman BEARISH -15pts, HMM trending_bear -10pts |
 
 ---
 
@@ -84,6 +98,7 @@
 | Investor Audits | `docs/audits/` | Founders |
 | Runtime Config | `omnix_core/config/` | Codebase (single source of truth) |
 | API Reference | Flask `/api/` endpoints | Auto-generated from code |
+| Technical Debt | `docs/core/TECHNICAL_DEBT.md` | Development Team |
 
 **Note:** Trading parameters should reference `omnix_core/config/trading_profiles.py` directly, not documentation. Documentation reflects code, not the other way around.
 
@@ -95,6 +110,7 @@
 |------|-------|
 | Trading Profiles | `omnix_core/config/trading_profiles.py` |
 | System Version | `omnix_config/settings.py` → `VERSION_BANNER` |
-| Hexagonal Ports | `omnix/ports/*.py` (12 protocol interfaces) |
+| Hexagonal Ports | `omnix/ports/*.py` (8 protocol interfaces) |
 | Dashboard APIs | `omnix_dashboard/app.py` |
 | AI Service | `omnix_services/ai_service/` |
+| Emergency SL Constant | `omnix_core/bot/auto_trading_bot.py` → `EMERGENCY_SL_PCT` |

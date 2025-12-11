@@ -130,3 +130,27 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 > **30-Day PoC** (Commercial Proposal): Paper trading access with full transparency. Includes code review session with architects to demonstrate coherence between Risk Guardian and Institutional Decision Logger.
 
 **License**: $15,000/year for institutional access with dedicated support.
+
+## Documentation Status (December 2025)
+
+### Auditoría Completada
+
+| Documento | Estado | Última Actualización |
+|-----------|--------|---------------------|
+| `docs/core/ARCHITECTURE_REFERENCE.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
+| `docs/core/INDEX.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
+| `docs/core/TECHNICAL_DEBT.md` | ✅ Creado | Dec 11, 2025 |
+| `docs/architecture/ARCHITECTURE_AUDIT_2025.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
+| `docs/audits/AUDIT_REPORT_20251208.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
+
+### Deuda Técnica Registrada
+
+Todo refactoring está **diferido** hasta completar 500 trades para track record:
+
+- Hexagonal ports definidos pero no integrados (V7.0)
+- main.py monolítico (V7.0)
+- 80 bare except clauses
+- 55 excepciones silenciadas
+- enterprise_bot.py 7,812 líneas
+
+Ver `docs/core/TECHNICAL_DEBT.md` para registro completo.

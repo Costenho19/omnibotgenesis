@@ -1,17 +1,28 @@
-# OMNIX V6.5.4c Architecture Audit
+# OMNIX V6.5.4d Architecture Audit
 
-**Version:** 1.0  
-**Date:** December 10, 2025  
+**Version:** 1.1  
+**Date:** December 11, 2025  
 **Auditor:** Architecture Review Board  
-**Status:** DIAGNOSTIC COMPLETE
+**Status:** DIAGNOSTIC COMPLETE - REFACTORING DEFERRED
 
 ---
 
 ## Executive Summary
 
-Este documento presenta una auditoría completa del codebase OMNIX V6.5.4c, identificando problemas de arquitectura y proponiendo una estructura objetivo alineada con las mejores prácticas Python 2025.
+Este documento presenta una auditoría completa del codebase OMNIX V6.5.4d, identificando problemas de arquitectura y proponiendo una estructura objetivo alineada con las mejores prácticas Python 2025.
 
 **Hallazgo Principal:** El sistema tiene funcionalidad enterprise robusta pero sufre de acoplamiento excesivo, responsabilidades mezcladas, y ausencia de boundaries de dominio claros. La reestructuración permitirá escalar a B2C SaaS.
+
+**Decisión V6.5.4d:** Todo refactoring está **DIFERIDO** hasta completar el milestone de 500 trades para track record de inversionistas. Ver `docs/core/TECHNICAL_DEBT.md` para registro de deuda técnica.
+
+### V6.5.4d Trading Improvements (December 2025)
+
+| Cambio | Implementación | Impacto |
+|--------|---------------|---------|
+| Emergency Stop Loss | `EMERGENCY_SL_PCT = 0.02` (clase) | Limita pérdidas a 2% máximo |
+| Entry Thresholds | `score_moderate = 12` (igual a strong) | Solo trades STRONG/VERY_STRONG |
+| ADA/USD Excluded | `CalibrationTier.EXCLUDED` | Bloquea par con 0% win rate |
+| Macro Trend Veto | Kalman -15pts, HMM -10pts | Bloquea trades en tendencia bajista |
 
 ---
 
@@ -87,44 +98,55 @@ Outbound Ports: Interfaces para sistemas externos (IMarketData)
 
 ## 2. Diagnóstico del Estado Actual
 
-### 2.1 Estructura de Directorios
+### 2.1 Estructura de Directorios (V6.5.4d - Actualizado)
 
 ```
-OMNIX V6.5.4c/
-├── omnix/                    # Hexagonal ports (incompleto)
+OMNIX V6.5.4d/
+├── omnix/                    # Hexagonal ports (definidos, no integrados)
 │   └── ports/
-│       ├── driven/           # 6 output ports definidos
-│       └── driver/           # 2 input ports definidos
-├── omnix_api/                # Stripe integration (abandonado)
-├── omnix_config/             # Settings dispersos
-├── omnix_core/               # Mezcla domain + infrastructure
-│   ├── bot/                  # AutoTradingBot (monolítico)
-│   ├── cache/                # Redis implementation
-│   ├── config/               # Trading profiles
-│   ├── strategies/           # ARES, Non-Markovian (domain)
-│   └── ...
-├── omnix_dashboard/          # Flask app + blueprints
-├── omnix_risk/               # Risk services (duplicado)
-├── omnix_services/           # 20+ servicios mezclados
-│   ├── ai_service/           # Bien estructurado (SOLID)
+│       ├── driven/           # 6 output ports (TradingPort, DatabasePort, etc.)
+│       └── driver/           # 2 input ports (RestApiPort, TelegramPort)
+├── omnix_api/                # Stripe integration (B2C preparación)
+├── omnix_config/             # Settings, env_manager
+├── omnix_core/
+│   ├── bot/                  # AutoTradingBot V6.5.4d + EMERGENCY_SL_PCT
+│   ├── cache/                # RedisCache, RedisState
+│   ├── config/               # Trading profiles (single source of truth)
+│   ├── context/              # Real data provider
+│   ├── quantum/              # Physics validator, QAOA
+│   ├── risk/                 # Rollback protocol
+│   ├── security/             # Post-quantum cryptography
+│   ├── sessions/             # User session manager
+│   ├── strategies/           # ARES V1/V2, CAES, Non-Markovian
+│   └── utils/                # Logger, rate limiter
+├── omnix_dashboard/          # Flask (5000) + Streamlit (8080)
+├── omnix_reports/            # Pitch deck generator
+├── omnix_risk/               # Portfolio summary, cascade protection
+├── omnix_services/           # 24 service subpackages
+│   ├── ai_service/           # SOLID compliant (model for refactoring)
+│   ├── coherence_service/    # CoherenceEngine V6.5 ULTRA
 │   ├── database_service/     # DatabaseGateway
-│   ├── telegram_service/     # Enterprise bot
-│   └── ...
-├── omnix_strategies/         # Regime switcher (huérfano)
+│   ├── execution_service/    # Execution Protocol V6.5.4d
+│   ├── monitoring/           # Risk Guardian V5.4
+│   ├── telegram_service/     # Enterprise bot (7.8k lines)
+│   ├── trading_service/      # Strategies: Monte Carlo, Kalman, HMM, etc.
+│   └── ...                   # 17 more subpackages
+├── omnix_strategies/         # Regime switcher (legacy, consider deprecation)
 ├── omnix_testing/            # Backtesting framework
-└── main.py                   # Bootstrap monolítico
+└── main.py                   # Bootstrap (monolítico - V7.0 refactor)
 ```
 
-### 2.2 Métricas de Código
+### 2.2 Métricas de Código (Actualizadas)
 
 | Métrica | Valor | Evaluación |
 |---------|-------|------------|
-| Archivos Python | ~180 | Alto |
-| Líneas de código | ~45,000 | Significativo |
-| Paquetes top-level | 11 | Fragmentado |
+| Archivos Python | ~268 | Alto |
+| Líneas de código | ~114,000 | Enterprise scale |
+| Paquetes top-level | 13 | Fragmentado |
 | Tests | ~5 | ❌ Insuficiente |
 | Type coverage | ~20% | ⚠️ Bajo |
 | Imports circulares | Varios | ❌ Problemático |
+| Database tables | 42 | ✅ Completo |
 
 ### 2.3 Componentes Bien Estructurados
 
@@ -551,7 +573,7 @@ railway.json                       # Railway: main.py
 
 ## Conclusión
 
-OMNIX V6.5.4c tiene funcionalidad enterprise robusta pero necesita reestructuración arquitectónica para:
+OMNIX V6.5.4d tiene funcionalidad enterprise robusta pero necesita reestructuración arquitectónica para:
 
 1. **Escalar a B2C** - Multi-tenant, rate limiting, auth
 2. **Mantener calidad** - Tests, DI, separation of concerns

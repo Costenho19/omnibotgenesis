@@ -244,6 +244,73 @@ if hasattr(first_block, 'text'):
 
 ---
 
+## 9. V6.5.4d Trading Improvements (December 11, 2025)
+
+### Trading Quality Enhancements
+
+The following changes were implemented to improve win rate and reduce losses:
+
+| Change | Code Location | Implementation |
+|--------|---------------|----------------|
+| Emergency Stop Loss | `auto_trading_bot.py:332` | `EMERGENCY_SL_PCT = 0.02` class constant |
+| Entry Thresholds | `trading_profiles.py` | `score_moderate=12` (same as `score_strong`) |
+| ADA/USD Exclusion | `trading_profiles.py` | `CalibrationTier.EXCLUDED` + `excluded_symbols` |
+| Macro Trend Veto | `auto_trading_bot.py` | Kalman -15pts, HMM -10pts penalties |
+
+### Emergency Stop Loss Priority
+
+```python
+# Order of SL/TP checks:
+1. Emergency SL (loss > 2%) → IMMEDIATE EXIT
+2. Take Profit check
+3. Calibrated Stop Loss per pair
+```
+
+### Entry Signal Changes
+
+| Parameter | V6.5.4c | V6.5.4d | Effect |
+|-----------|---------|---------|--------|
+| score_strong | 12 | 12 | No change |
+| score_moderate | 10 | 12 | MODERATE signals disabled |
+| score_very_strong | 15 | 15 | No change |
+
+**Result:** Only STRONG (≥12) or VERY_STRONG (≥15) signals generate trades.
+
+### Macro Trend Veto Logic
+
+```python
+# Applied to decision scoring before final trade approval
+if kalman_trend == "BEARISH" and kalman_strength > 0.6:
+    score -= 15  # High-confidence bearish blocks most trades
+    
+if hmm_regime == "trending_bear":
+    score -= 10  # Additional penalty for bear regime
+```
+
+### Verification Status
+
+| Item | Status |
+|------|--------|
+| Code Verification (5/5 modules) | ✅ PASSED |
+| Architect Review | ✅ APPROVED |
+| Ready for Railway Deployment | ✅ YES |
+
+---
+
+## 10. Technical Debt Documentation
+
+A comprehensive technical debt registry has been created at `docs/core/TECHNICAL_DEBT.md` documenting:
+
+- Hexagonal ports not integrated (deferred to V7.0)
+- main.py monolithic bootstrap
+- 80 bare except clauses
+- 55 silenced exceptions
+- Large files requiring splitting
+
+All refactoring is **intentionally deferred** until the 500-trade milestone for investor track record.
+
+---
+
 *Audit performed by: OMNIX Replit Agent*  
 *Verification method: Automated code scanning + manual review*  
-*Updated: December 8, 2025 - AI Service DI Refactoring + Type Safety Fixes*
+*Updated: December 11, 2025 - V6.5.4d Trading Improvements + Technical Debt Registry*

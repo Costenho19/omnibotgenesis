@@ -1,7 +1,7 @@
-# OMNIX V6.5.4c Architecture Reference
+# OMNIX V6.5.4d Architecture Reference
 
-**Version:** 6.5.4c INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 10, 2025  
+**Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
+**Last Updated:** December 11, 2025  
 **Status:** Active Production System
 
 ---
@@ -13,6 +13,7 @@
 3. [Dashboard Architecture](#3-dashboard-architecture)
 4. [Service Layer](#4-service-layer)
 5. [Data Layer](#5-data-layer)
+6. [V6.5.4d Changes](#6-v654d-changes)
 
 ---
 
@@ -22,94 +23,89 @@
 
 | Module | Location | Purpose | Dependencies |
 |--------|----------|---------|--------------|
-| AutoTradingBot V6.5.4 | `omnix_core/auto_trading_bot.py` | Multi-crypto scanner, tiered signals, HMM filter | All strategies |
+| AutoTradingBot V6.5.4d | `omnix_core/bot/auto_trading_bot.py` | Multi-crypto scanner, tiered signals, HMM filter, emergency SL | All strategies |
 | TradingSystem V6.5 | `omnix_core/trading_system.py` | Order execution orchestrator | Kraken client |
-| CoherenceEngine V6.5 ULTRA | `omnix_core/strategies/coherence_engine.py` | 6-tier veto system | Strategy votes |
-| Non-Markovian Kernel V6.5 | `omnix_core/strategies/non_markovian_memory.py` | Temporal memory + on-chain signals | Redis cache |
-| Risk Guardian V5.4 | `omnix_core/risk/risk_guardian.py` | Overtrading + drawdown protection | Trade history |
+| CoherenceEngine V6.5 ULTRA | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto system | Strategy votes |
+| Non-Markovian Kernel V6.5 | `omnix_core/strategies/non_markovian_kernel.py` | Temporal memory + on-chain signals | Redis cache |
+| Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Overtrading + drawdown protection | Trade history |
 
 ### 1.2 Signal Generation Strategies
 
 | Strategy | Location | Signal Type | Weight |
 |----------|----------|-------------|--------|
-| QuantumMomentum | `omnix_core/strategies/quantum_momentum.py` | Primary directional | High |
-| Monte Carlo | `omnix_core/strategies/monte_carlo.py` | Probability validation | High |
-| Kelly Criterion | `omnix_core/strategies/kelly_criterion.py` | Position sizing | Medium |
-| Black Swan | `omnix_core/strategies/black_swan_detector.py` | Veto on extreme risk | Veto power |
-| HMM Regime | `omnix_core/strategies/hmm_regime.py` | Market state context | Context |
-| Kalman Filter | `omnix_core/strategies/kalman_filter.py` | Signal noise reduction | Medium |
-| Sentiment Analysis | `omnix_core/strategies/sentiment_analysis.py` | Market sentiment | Low |
+| QuantumMomentum | `omnix_services/trading_service/quantum_momentum.py` | Primary directional | High |
+| Monte Carlo | `omnix_services/trading_service/monte_carlo.py` | Probability validation | High |
+| Kelly Criterion | `omnix_services/trading_service/kelly_criterion.py` | Position sizing | Medium |
+| Black Swan | `omnix_services/trading_service/black_swan.py` | Veto on extreme risk | Veto power |
+| HMM Regime | `omnix_services/trading_service/hmm_regime.py` | Market state context | Context |
+| Kalman Filter | `omnix_services/trading_service/kalman_filter.py` | Signal noise reduction | Medium |
 
-### 1.3 Experimental Strategies (ARES)
+### 1.3 ARES Strategies (Production Calibration)
 
-| Strategy | Status | Min Confidence | Purpose |
-|----------|--------|---------------|---------|
-| ARES V1 (Swing) | ACTIVE | 70% | Multi-day positions |
-| ARES V2 (Scalping) | ACTIVE | 75% | Intraday quick trades |
+| Strategy | Location | Status | Min Confidence | Purpose |
+|----------|----------|--------|---------------|---------|
+| ARES V1 (Swing) | `omnix_core/strategies/ares_v1.py` | ACTIVE | 70% | Multi-day positions |
+| ARES V2 (Scalping) | `omnix_core/strategies/ares_v2.py` | ACTIVE | 75% | Intraday quick trades |
 
 **Note:** ARES strategies share 3 trades/day limit, tracked separately from production metrics.
 
 ### 1.4 Support Modules
 
-| Module | Purpose | Trigger |
-|--------|---------|---------|
-| CAES (Confidence-Adaptive Entry) | Dynamic position sizing | Every trade |
-| Adaptive Parameter Engine | Auto-calibration by regime | Regime change |
-| On-Chain Intelligence | Whale tracking, DeFi metrics | Market analysis |
-| Execution Protocol V6.5.4 | 4-layer institutional execution | Trade execution |
-| InstitutionalDecisionLogger | Audit trail for investor reports | All decisions |
+| Module | Location | Purpose | Trigger |
+|--------|----------|---------|---------|
+| CAES V6.5.4 | `omnix_core/strategies/caes_module.py` | Dynamic position sizing (0.5x-3x) | Every trade |
+| Adaptive Parameter Engine | `omnix_services/adaptive_engine/adaptive_engine.py` | Auto-calibration by regime | Regime change |
+| On-Chain Intelligence | `omnix_services/on_chain_service/on_chain_service.py` | Whale tracking, DeFi metrics | Market analysis |
+| Execution Protocol V6.5.4d | `omnix_services/execution_service/execution_protocol.py` | 4-layer institutional execution | Trade execution |
+| InstitutionalDecisionLogger | `omnix_core/utils/logger.py` | Audit trail for investor reports | All decisions |
 
-### 1.5 AI Service Architecture
+### 1.5 AI Service Architecture (SOLID Compliant)
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| ConversationalAIService | `omnix_services/ai_service/ai_service.py` | Main orchestrator (371 lines) |
-| RoutingAIGateway | `omnix_services/ai_service/gateway.py` | Multi-provider routing |
+| ConversationalAIService | `omnix_services/ai_service/ai_service.py` | Main orchestrator |
+| RoutingAIGateway | `omnix_services/ai_service/providers/routing_gateway.py` | Multi-provider routing |
 | Providers | `omnix_services/ai_service/providers/` | Gemini, OpenAI, Anthropic |
 | DI Container | `omnix_services/ai_service/container.py` | 3 providers registered |
-| Quantum Physics Validator | `omnix_services/ai_service/quantum_validator.py` | Scientific accuracy |
-| Web Search Service | `omnix_services/ai_service/web_search/` | Tavily integration |
+| Quantum Physics Validator | `omnix_core/quantum/physics_validator.py` | Scientific accuracy |
+| Web Search Service | `omnix_services/web_search_service/` | Tavily integration |
 
 ---
 
 ## 2. Hexagonal Ports
 
-OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. Phase 1 complete.
+OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. **Phase 1 complete, Phase 2 (integration) deferred to V7.0.**
 
 ### 2.1 Driven Ports (Output - System calls external)
 
 | Port | File | Purpose | Methods |
 |------|------|---------|---------|
-| ExchangePort | `exchange.py` | Exchange operations | `place_order()`, `get_balance()`, `get_ticker()` |
-| DatabasePort | `database.py` | Data persistence | `execute_query()`, `save_trade()`, `get_user()` |
-| CachePort | `cache.py` | Caching operations | `get()`, `set()`, `delete()`, `exists()` |
-| NotificationPort | `notification.py` | User notifications | `send_telegram()`, `send_email()` |
-| AIGatewayPort | `ai_gateway.py` | AI model calls | `generate_text()`, `analyze_image()` |
-| MarketDataPort | `market_data.py` | Market prices | `get_ohlcv()`, `get_order_book()` |
+| TradingPort | `driven/trading_port.py` | Exchange operations | `execute_order()`, `get_balance()` |
+| DatabasePort | `driven/database_port.py` | Data persistence | `execute_query()`, `save_trade()` |
+| CachePort | `driven/cache_port.py` | Caching operations | `get()`, `set()`, `delete()` |
+| NotificationPort | `driven/notification_port.py` | User notifications | `send_message()` |
+| AIInferencePort | `driven/ai_inference_port.py` | AI model calls | `generate()` |
+| MarketDataPort | `driven/market_data_port.py` | Market prices | `get_ohlcv()`, `get_ticker()` |
 
 ### 2.2 Driver Ports (Input - External calls system)
 
 | Port | File | Purpose | Methods |
 |------|------|---------|---------|
-| TradingBotPort | `trading_bot.py` | Bot control | `start()`, `stop()`, `get_status()` |
-| UserCommandPort | `user_command.py` | User inputs | `handle_command()`, `parse_input()` |
-| WebhookPort | `webhook.py` | External events | `handle_exchange_event()`, `handle_alert()` |
-| SchedulerPort | `scheduler.py` | Timed tasks | `schedule_task()`, `run_cron()` |
-| HealthCheckPort | `health_check.py` | System monitoring | `check_health()`, `get_metrics()` |
-| ConfigPort | `config.py` | Configuration | `get_profile()`, `update_settings()` |
+| RestApiPort | `driver/rest_api_port.py` | Flask API handlers | HTTP endpoints |
+| TelegramPort | `driver/telegram_port.py` | Bot command handlers | Message handling |
 
 ### 2.3 Port Implementation Status
 
-| Port | Protocol Defined | Adapter Implemented | Tests |
-|------|-----------------|---------------------|-------|
-| ExchangePort | ✅ | ✅ KrakenAdapter | ⬜ |
-| DatabasePort | ✅ | ✅ PostgresAdapter | ⬜ |
-| CachePort | ✅ | ✅ RedisAdapter | ⬜ |
-| NotificationPort | ✅ | ✅ TelegramAdapter | ⬜ |
-| AIGatewayPort | ✅ | ✅ GeminiAdapter | ⬜ |
-| MarketDataPort | ✅ | ✅ KrakenDataAdapter | ⬜ |
-| TradingBotPort | ✅ | ⬜ Planned V7.0 | ⬜ |
-| UserCommandPort | ✅ | ⬜ Planned V7.0 | ⬜ |
+| Port | Protocol Defined | Adapter Exists | Integrated via DI |
+|------|-----------------|----------------|-------------------|
+| TradingPort | ✅ | ✅ KrakenClient | ⬜ Deferred V7.0 |
+| DatabasePort | ✅ | ✅ DatabaseGateway | ⬜ Deferred V7.0 |
+| CachePort | ✅ | ✅ RedisCache | ⬜ Deferred V7.0 |
+| NotificationPort | ✅ | ✅ TelegramUtils | ⬜ Deferred V7.0 |
+| AIInferencePort | ✅ | ✅ AI Providers | ✅ Via container.py |
+| MarketDataPort | ✅ | ✅ KrakenData | ⬜ Deferred V7.0 |
+
+**Technical Debt Note:** Adapters exist but are not injected through ports. Services import implementations directly. Full DI integration planned for V7.0 after 500-trade milestone.
 
 ---
 
@@ -129,9 +125,9 @@ OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. Phase 1
 
 **Key Files:**
 - `app.py` - Main Flask application
+- `blueprints/` - Route modules (core, market, system, intelligence, snapshots, views)
 - `utils/database.py` - Database connection via Gateway
-- `utils/metrics_calculator.py` - Sharpe, Sortino, Calmar
-- `utils/report_generator.py` - PDF report creation
+- `utils/queries.py` - SQL query templates
 
 ### 3.2 Streamlit Dashboard (Port 8080)
 
@@ -147,7 +143,7 @@ OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. Phase 1
 
 ### 3.3 API Client
 
-**Location:** `omnix_dashboard/utils/api_client.py`
+**Location:** `omnix_dashboard/api_client.py`
 
 ```python
 class OmnixAPIClient:
@@ -161,16 +157,34 @@ class OmnixAPIClient:
 
 ## 4. Service Layer
 
-### 4.1 Services Catalog
+### 4.1 Services Catalog (24 Subpackages)
 
 | Service | Location | Purpose |
 |---------|----------|---------|
-| TradingService | `omnix_services/trading_service/` | Order management |
+| TradingService | `omnix_services/trading_service/` | Order management, strategies |
 | PaperTradingManager | `omnix_services/trading_service/paper_trading_manager.py` | Paper trade execution |
 | TelegramService | `omnix_services/telegram_service/` | Bot interface |
-| AIService | `omnix_services/ai_service/` | Conversational AI |
+| AIService | `omnix_services/ai_service/` | Conversational AI (SOLID) |
 | DatabaseService | `omnix_services/database_service/` | Data access |
-| MarketDataService | `omnix_services/market_data_service/` | Price feeds |
+| CoherenceService | `omnix_services/coherence_service/` | 6-tier veto engine |
+| ExecutionService | `omnix_services/execution_service/` | Trade execution protocol |
+| MonitoringService | `omnix_services/monitoring/` | Risk Guardian, metrics |
+| AdaptiveEngine | `omnix_services/adaptive_engine/` | Parameter auto-calibration |
+| OnChainService | `omnix_services/on_chain_service/` | Blockchain analytics |
+| PortfolioManagement | `omnix_services/portfolio_management/` | Institutional optimization |
+| RiskManagement | `omnix_services/risk_management/` | Circuit breaker, limits |
+| MarketData | `omnix_services/market_data/` | Price feeds, sentiment |
+| MarketIntelligence | `omnix_services/market_intelligence/` | Fear/Greed, news |
+| StockTrading | `omnix_services/stock_trading/` | Alpaca integration |
+| Derivatives | `omnix_services/derivatives/` | Futures, hedging |
+| Analytics | `omnix_services/analytics/` | Fibonacci, patterns |
+| Alerts | `omnix_services/alerts/` | Smart notifications |
+| Notifications | `omnix_services/notifications/` | Telegram, daily summary |
+| UserSettings | `omnix_services/user_settings/` | Per-user configuration |
+| VoiceService | `omnix_services/voice_service/` | Voice commands |
+| WebSearchService | `omnix_services/web_search_service/` | Tavily search |
+| CommunityIntelligence | `omnix_services/community_intelligence/` | Social signals |
+| Concurrency | `omnix_services/concurrency/` | Thread management |
 
 ### 4.2 Database Gateway
 
@@ -235,28 +249,72 @@ Features:
 
 ---
 
+## 6. V6.5.4d Changes
+
+### 6.1 Entry Threshold Adjustment
+
+| Parameter | V6.5.4c | V6.5.4d | Effect |
+|-----------|---------|---------|--------|
+| score_strong | 12 | 12 | No change |
+| score_moderate | 10 | **12** | MODERATE signals disabled |
+| score_very_strong | 15 | 15 | No change |
+
+**Result:** Only STRONG (≥12) or VERY_STRONG (≥15) trades allowed. No more MODERATE entries.
+
+### 6.2 Emergency Stop Loss
+
+```python
+class AutoTradingBot:
+    EMERGENCY_SL_PCT = 0.02  # 2% maximum absolute loss
+```
+
+**Priority Order:**
+1. Emergency SL (loss > 2%) - IMMEDIATE EXIT
+2. Take Profit check
+3. Calibrated Stop Loss
+
+### 6.3 Symbol Exclusions
+
+| Symbol | Status | Reason |
+|--------|--------|--------|
+| ADA/USD | EXCLUDED | 0% win rate over 12 trades |
+
+### 6.4 Macro Trend Veto
+
+| Condition | Penalty | Effect |
+|-----------|---------|--------|
+| Kalman BEARISH (strength > 0.6) | -15 points | Blocks most trades |
+| HMM trending_bear state | -10 points | Additional penalty |
+
+---
+
 ## Appendix: Directory Structure
 
 ```
 omnix/
-├── ports/                    # 12 hexagonal protocol interfaces
-│   ├── driven/               # Output ports (Exchange, DB, Cache, etc.)
-│   └── driver/               # Input ports (Bot, Commands, Webhooks)
+├── ports/                    # 8 hexagonal protocol interfaces
+│   ├── driven/               # Output ports (Trading, DB, Cache, AI, Market, Notification)
+│   └── driver/               # Input ports (RestApi, Telegram)
+├── omnix_api/                # Stripe integration (B2C planned)
+├── omnix_config/             # Settings, env manager
 ├── omnix_core/
-│   ├── config/
-│   │   └── trading_profiles.py  # Single source of truth for profiles
-│   ├── strategies/           # All trading strategies
-│   ├── risk/                 # Risk management modules
-│   └── cache/                # Redis integration
-├── omnix_services/
-│   ├── ai_service/           # Conversational AI
-│   ├── database_service/     # Database Gateway
-│   ├── trading_service/      # Paper/real trading
-│   └── telegram_service/     # Bot interface
-├── omnix_dashboard/
-│   ├── app.py                # Flask API (port 5000)
-│   └── streamlit_app.py      # Investor dashboard (port 8080)
-└── docs/
-    ├── core/                 # Technical documentation
-    └── audits/               # Investor-facing audits
+│   ├── bot/                  # AutoTradingBot V6.5.4d
+│   ├── cache/                # Redis integration
+│   ├── config/               # Trading profiles (single source of truth)
+│   ├── context/              # Real data provider
+│   ├── quantum/              # Physics validator, QAOA
+│   ├── risk/                 # Rollback protocol
+│   ├── security/             # Post-quantum cryptography
+│   ├── sessions/             # User session manager
+│   ├── strategies/           # ARES V1/V2, CAES, Non-Markovian
+│   └── utils/                # Logger, rate limiter
+├── omnix_dashboard/          # Flask + Streamlit dashboards
+├── omnix_reports/            # Pitch deck generator
+├── omnix_risk/               # Portfolio summary, cascade protection
+├── omnix_services/           # 24 service subpackages
+├── omnix_strategies/         # Regime switcher (legacy)
+├── omnix_testing/            # Backtesting framework
+├── docs/                     # Technical documentation
+├── main.py                   # Bootstrap entry point
+└── requirements.txt          # Python dependencies
 ```

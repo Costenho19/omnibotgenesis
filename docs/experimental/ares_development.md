@@ -1,8 +1,8 @@
 # ARES V1/V2 - Experimental Trading Strategies
-## Status: ACTIVE in Paper Trading (V6.5.4c)
+## Status: ACTIVE in Paper Trading (V6.5.4d)
 ### December 2025
 
-> **UPDATE Dec 10, 2025:** ARES V1+V2 are now **ACTIVE** in PRODUCTION_STABLE profile for track record generation. They remain classified as experimental for investor metric separation.
+> **UPDATE Dec 11, 2025:** ARES V1+V2 are now **ACTIVE** in PRODUCTION_STABLE profile for track record generation. They remain classified as experimental for investor metric separation. V6.5.4d adds macro trend veto (Kalman/HMM) to prevent trades in bearish trends.
 
 ---
 
@@ -34,12 +34,13 @@ ARES (Advanced Regime-aware Entry System) is a set of experimental trading strat
 - Risk/Reward: 2:1 minimum
 - Timeframe: 4H to 1D
 
-### Current Status (V6.5.4c)
+### Current Status (V6.5.4d)
 - Implementation: Complete
 - Backtesting: Complete
-- **Live Calibration: ACTIVE** (Dec 10, 2025)
+- **Live Calibration: ACTIVE** (Dec 11, 2025)
 - Minimum Confidence: 70%
 - Max Daily Trades: 3 (shared with V2)
+- Macro Trend Veto: Active (Kalman/HMM)
 
 ---
 
@@ -59,16 +60,17 @@ Ultra-fast 1-minute timeframe strategy for high-frequency opportunities.
 - Risk/Reward: 1.5:1
 - Timeframe: M1 to M5
 
-### Current Status (V6.5.4c)
+### Current Status (V6.5.4d)
 - Implementation: Complete
 - Backtesting: Complete
-- **Live Calibration: ACTIVE** (Dec 10, 2025)
+- **Live Calibration: ACTIVE** (Dec 11, 2025)
 - Minimum Confidence: 75%
 - Max Daily Trades: 3 (shared with V1)
+- Macro Trend Veto: Active (Kalman/HMM)
 
 ---
 
-## V6.5.4c CONFIGURATION
+## V6.5.4d CONFIGURATION
 
 ```python
 # PRODUCTION_STABLE Profile Settings
@@ -79,6 +81,11 @@ ares_v1_min_confidence = 0.70
 ares_v2_min_confidence = 0.75
 ares_max_daily_trades = 3
 ares_require_trend = False  # Allows lateral markets
+
+# V6.5.4d Additions
+score_moderate = 12  # Same as score_strong (MODERATE disabled)
+emergency_sl_pct = 0.02  # 2% max absolute loss
+macro_trend_veto = True  # Kalman/HMM bearish blocking
 ```
 
 ---

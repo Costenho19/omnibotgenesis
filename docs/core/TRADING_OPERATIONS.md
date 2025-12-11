@@ -1,7 +1,7 @@
-# OMNIX V6.5.4c Trading Operations
+# OMNIX V6.5.4d Trading Operations
 
-**Version:** 6.5.4c INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 10, 2025  
+**Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
+**Last Updated:** December 11, 2025  
 **Active Profile:** PRODUCTION_STABLE
 
 ---
