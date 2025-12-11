@@ -324,6 +324,10 @@ class AutoTradingBot:
     Escanea 11 pares de crypto para máximas oportunidades
     """
     
+    # V6.5.4d: EMERGENCY STOP LOSS - Límite máximo absoluto de pérdida por posición
+    # Este valor NO puede ser sobrescrito por calibraciones de par
+    EMERGENCY_SL_PCT = 0.02  # 2% máximo absoluto
+    
     # V6.5: Mapeo completo de símbolos estándar a formato Kraken
     # NOTA: Kraken usa XBT para Bitcoin (no BTC) - esto es crítico
     # API pública acepta formato corto (XBTUSD) pero retorna formato largo (XXBTZUSD)
@@ -1253,7 +1257,22 @@ class AutoTradingBot:
                 should_close = False
                 close_reason = ""
                 
-                if pnl_pct >= tp_pct:
+                # V6.5.4d: LÍMITE MÁXIMO ABSOLUTO - PRIMERO verificar emergency SL
+                # Esto es un "circuit breaker" a nivel de posición individual
+                # IMPORTANTE: Este check va PRIMERO antes de cualquier otro SL
+                # Usa self.EMERGENCY_SL_PCT definido a nivel de clase (2%)
+                
+                # ORDEN DE PRIORIDAD:
+                # 1. Emergency SL (pérdida > 2%) - MÁXIMA PRIORIDAD
+                # 2. Take Profit
+                # 3. Stop Loss configurado por calibración
+                
+                if pnl_pct <= -self.EMERGENCY_SL_PCT:
+                    # EMERGENCIA: Pérdida mayor al límite absoluto - CIERRA INMEDIATAMENTE
+                    should_close = True
+                    close_reason = f"🚨 EMERGENCY SL V6.5.4d ({pnl_pct*100:.2f}%) - MAX LOSS EXCEEDED [Limit:{self.EMERGENCY_SL_PCT*100:.1f}%]"
+                    logger.warning(f"🚨 EMERGENCY STOP LOSS: {symbol} pérdida {pnl_pct*100:.2f}% > límite absoluto {self.EMERGENCY_SL_PCT*100:.1f}%")
+                elif pnl_pct >= tp_pct:
                     should_close = True
                     close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%) [Vol:{vol_class}]"
                 elif pnl_pct <= -sl_pct:
@@ -2124,6 +2143,38 @@ class AutoTradingBot:
             original_score = score
             # No se aplica bias - cada trade es un evento estadístico independiente
             logger.debug(f"📊 {VERSION_BANNER}: Score final sin bias artificial: {score:.1f}")
+            
+            # ==========================================================================
+            # V6.5.4d: MACRO TREND FILTER - No comprar contra la tendencia principal
+            # ==========================================================================
+            macro_trend_veto = False
+            if kalman and score > 0:  # Solo aplicar a señales de compra
+                kalman_trend = kalman.get('trend', 'NEUTRAL')
+                kalman_strength = kalman.get('trend_strength', 0)
+                
+                # Si Kalman detecta tendencia BEARISH fuerte, aplicar veto
+                if kalman_trend == 'BEARISH' and kalman_strength > 0.5:
+                    veto_penalty = 15  # Penalización fuerte
+                    score -= veto_penalty
+                    macro_trend_veto = True
+                    decision['reason'].append(f"📉 MACRO TREND VETO V6.5.4d: Kalman BEARISH ({kalman_strength:.1%}) → -15 pts")
+                    decision['v52_analysis']['macro_trend_veto'] = True
+                    decision['v52_analysis']['macro_trend_reason'] = f"Kalman BEARISH strength={kalman_strength:.2f}"
+                    logger.warning(f"📉 MACRO TREND VETO: Kalman BEARISH ({kalman_strength:.1%}) - Reduciendo score de {original_score} a {score}")
+            
+            # Si HMM detecta tendencia bajista fuerte, aplicar veto adicional
+            if hmm_regime and score > 0 and not macro_trend_veto:
+                hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
+                hmm_confidence = hmm_regime.get('confidence', 0)
+                
+                if hmm_detected == 'BEARISH' and hmm_confidence > 0.7:
+                    veto_penalty = 12
+                    score -= veto_penalty
+                    decision['reason'].append(f"📉 MACRO TREND VETO V6.5.4d: HMM BEARISH ({hmm_confidence:.0%}) → -12 pts")
+                    decision['v52_analysis']['macro_trend_veto'] = True
+                    decision['v52_analysis']['macro_trend_reason'] = f"HMM BEARISH conf={hmm_confidence:.2f}"
+                    logger.warning(f"📉 MACRO TREND VETO: HMM BEARISH ({hmm_confidence:.0%}) - Reduciendo score de {original_score} a {score}")
+            # ==========================================================================
             
             # PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%

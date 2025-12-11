@@ -137,16 +137,16 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     # V6.5.4b: min_confidence reducido para generar trades
     "ADA/USD": PairCalibration(
         symbol="ADA/USD",
-        tier=CalibrationTier.CALIBRATING,
-        stop_loss_pct=0.009,        # 0.9% - SL estricto
-        take_profit_pct=0.020,      # 2.0%
-        min_confidence=0.22,        # V6.5.4b: 0.30 -> 0.22
-        risk_reward_ratio=2.22,     # 2.0/0.9 = 2.22
-        max_position_pct=0.08,      # Posición reducida
-        max_position_usd=25000.0,   # $25K max position
-        portfolio_weight=0.15,      # 15% del portafolio
-        max_daily_drawdown_pct=0.01, # 1% circuit breaker (estricto)
-        notes="Solo 2 trades históricos. ADA es lenta y predecible."
+        tier=CalibrationTier.EXCLUDED,  # V6.5.4d: EXCLUIDO - 0% win rate en 12 trades, -$4,261 pérdida
+        stop_loss_pct=0.0,
+        take_profit_pct=0.0,
+        min_confidence=1.0,
+        risk_reward_ratio=0.0,
+        max_position_pct=0.0,
+        max_position_usd=0.0,
+        portfolio_weight=0.0,
+        max_daily_drawdown_pct=0.0,
+        notes="EXCLUIDO V6.5.4d: 0% win rate en 12 trades (Dec 2025), -$4,261 pérdida total. Peor rendimiento del set."
     ),
     "LINK/USD": PairCalibration(
         symbol="LINK/USD",
@@ -709,15 +709,18 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     hmm_veto_enabled=True,
     hmm_veto_confidence_threshold=0.90,  # V6.5.4b: solo veta HMM con 90%+ confianza (permite más trades)
     
-    score_very_strong=15,
-    score_strong=8,
-    score_moderate=4,
+    # V6.5.4d: Umbrales SUBIDOS - Solo señales STRONG o VERY_STRONG
+    # Antes: moderate=4 aceptaba trades débiles. Ahora: moderate >= strong para deshabilitarlo
+    score_very_strong=20,  # V6.5.4d: 15 -> 20 (más selectivo)
+    score_strong=12,       # V6.5.4d: 8 -> 12 (mínimo aceptable)
+    score_moderate=12,     # V6.5.4d: 4 -> 12 (IGUAL QUE STRONG = MODERATE deshabilitado)
     
     regime_change_veto_enabled=True,
     
     extra_params={
-        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD', 'LINK/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
+        # V6.5.4d: ADA/USD removido de allowed_symbols (0% win rate)
+        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'LINK/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD'],
         'use_pair_calibration': True,
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
