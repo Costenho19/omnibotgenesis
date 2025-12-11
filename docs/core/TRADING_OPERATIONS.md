@@ -78,7 +78,7 @@ Step 5: Execution
 
 ## 2. Trading Profiles
 
-### 2.1 Active Profile: PRODUCTION_STABLE V6.5.4c
+### 2.1 Active Profile: PRODUCTION_STABLE V6.5.4d
 
 **Source of Truth:** `omnix_core/config/trading_profiles.py`
 
@@ -95,15 +95,19 @@ Step 5: Execution
 | `sl_pct_normal_vol` | 1.5% | Stop loss (normal volatility) |
 | `tp_pct_high_vol` | 4.5% | Take profit (high volatility) |
 | `tp_pct_normal_vol` | 3.0% | Take profit (normal volatility) |
+| `emergency_sl_pct` | 2.0% | **V6.5.4d:** Max absolute loss per position |
+| `score_moderate` | 12 | **V6.5.4d:** Same as score_strong (MODERATE disabled) |
 
-### 2.2 V6.5.4c Changes (December 10, 2025)
+### 2.2 V6.5.4d Changes (December 11, 2025)
 
 | Change | From | To | Reason |
 |--------|------|-----|--------|
-| Drawdown limit | 10% | 15% | Allow trading during recovery |
-| ARES V1 | Disabled | Active (70%) | Track record generation |
-| ARES V2 | Disabled | Active (75%) | Track record generation |
-| ARES daily limit | N/A | 3 trades | Controlled exposure |
+| Emergency SL | N/A | 2% max | Prevent excessive per-trade losses |
+| Entry thresholds | score_moderate=9 | score_moderate=12 | Only STRONG/VERY_STRONG signals |
+| ADA/USD | Allowed | Blocked | 0% win rate over 12 trades |
+| Macro trend veto | N/A | Kalman/HMM | Block trades in bearish trends |
+| ARES V1 | Active (70%) | Active (70%) | Continues track record generation |
+| ARES V2 | Active (75%) | Active (75%) | Continues track record generation |
 
 ### 2.3 Available Profiles
 
