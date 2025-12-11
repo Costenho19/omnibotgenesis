@@ -1,8 +1,15 @@
-# OMNIX V6.5.4c INSTITUTIONAL+
+# OMNIX V6.5.4d INSTITUTIONAL+
 
 ## Overview
 
-OMNIX V6.5.4c INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for 24/7 operation with multi-user support. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory with On-Chain Data Intelligence, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+
+## Recent Changes (V6.5.4d - December 2024)
+
+1. **Entry Thresholds Raised**: score_moderate=12 (same as score_strong), effectively disabling MODERATE signals - only STRONG (≥12) or VERY_STRONG (≥15) trades allowed
+2. **Emergency Stop Loss**: 2% maximum absolute loss per position enforced as class-level constant BEFORE any TP/SL calibration checks
+3. **ADA/USD Excluded**: Permanently blocked from trading (0% win rate over 12 trades)
+4. **Macro Trend Veto**: Kalman BEARISH trend (strength >0.6) applies -15 penalty; HMM trending_bear applies -10 penalty - blocks trades in downtrends
 
 ## User Preferences
 
