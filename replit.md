@@ -42,7 +42,7 @@ The system integrates several core engines:
 - **Portfolio Management V6.4 INSTITUTIONAL+**: Markowitz and Black-Litterman optimization.
 - **CAES V6.5.4**: Confidence-Adaptive Entry System. Aggression multiplier (0.5x-3x) based on Non-Markovian Kernel confidence; regime limits may allow up to 6% capital.
 - **On-Chain Data Intelligence V6.5**: Institutional-grade blockchain analytics.
-- **Execution Protocol V6.5.4 INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution.
+- **Execution Protocol V6.5.4c INSTITUTIONAL+ PREMIUM**: 4-layer institutional-grade trade execution with Data Integrity Block (blocks trades when liquidity or correlation data unavailable).
 - **InstitutionalDecisionLogger**: Complete audit trail for regulatory compliance.
 - **InstitutionalMetricsCalculator**: Sharpe, Sortino, Calmar ratios for investor reporting.
 
