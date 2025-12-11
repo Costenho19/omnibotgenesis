@@ -154,3 +154,20 @@ Todo refactoring está **diferido** hasta completar 500 trades para track record
 - enterprise_bot.py 7,812 líneas
 
 Ver `docs/core/TECHNICAL_DEBT.md` para registro completo.
+
+## Refactoring Status (V7.0 Migration)
+
+### Fase 0: Foundation ✅ COMPLETADA (Dec 11, 2025)
+
+| Entregable | Ubicación |
+|------------|-----------|
+| Dependency Graph | `docs/architecture/phase0/DEPENDENCY_GRAPH.md` |
+| ADR-001 | `docs/adr/ADR-001-hexagonal-migration-strategy.md` |
+| Module Catalog | `docs/architecture/MODULE_CATALOG.md` |
+| pyproject.toml | `/pyproject.toml` |
+| src/omnix/ structure | `/src/omnix/` |
+| Smoke tests | `tests/test_smoke.py` (13/13 pass) |
+
+### Próxima Fase: 1 - Bootstrap & Config
+
+Ver `docs/architecture/MIGRATION_ROADMAP.md` para plan completo.

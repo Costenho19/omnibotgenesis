@@ -106,13 +106,25 @@ from omnix_core.config import TradingProfiles  # No changes needed
 
 | Fase | Nombre | Duración | Trigger | Estado |
 |------|--------|----------|---------|--------|
-| 0 | Foundation | 1 semana | **AHORA** (no afecta trading) | ⬜ Pendiente |
+| 0 | Foundation | 1 semana | **AHORA** (no afecta trading) | ✅ **COMPLETADA** (Dec 11, 2025) |
 | 1 | Bootstrap & Config | 1 semana | **AHORA** (bajo riesgo) | ⬜ Pendiente |
 | 2 | Domain & Application | 2 semanas | **500 trades** | 🔒 Bloqueado |
 | 3 | Interfaces | 1 semana | **500 trades** | 🔒 Bloqueado |
 | 4 | Cleanup | 1 semana | **500 trades + 14 días estable** | 🔒 Bloqueado |
 
 **Nota:** Fases 0-1 son de **bajo riesgo** y pueden ejecutarse durante track record generation. Fases 2-4 requieren milestone de 500 trades para minimizar riesgo de regresión
+
+### 2.1 Fase 0 - Entregables Completados (Dec 11, 2025)
+
+| Entregable | Ubicación | Estado |
+|------------|-----------|--------|
+| Dependency Graph | `docs/architecture/phase0/DEPENDENCY_GRAPH.md` | ✅ |
+| ADR-001 | `docs/adr/ADR-001-hexagonal-migration-strategy.md` | ✅ |
+| Module Catalog | `docs/architecture/MODULE_CATALOG.md` | ✅ |
+| pyproject.toml | `/pyproject.toml` | ✅ |
+| src/omnix/ structure | `/src/omnix/` | ✅ |
+| Smoke tests | `tests/test_smoke.py` | ✅ (13/13 pass) |
+| pytest config | `tests/conftest.py` | ✅ |
 
 ---
 
