@@ -128,9 +128,15 @@ class ExecutionDecision:
     warnings: List[str] = field(default_factory=list)
     confidence: float = 0.5
     timestamp: datetime = field(default_factory=datetime.now)
+    data_integrity_block: bool = False
+    block_reason: str = ""
+    liquidity_data_available: bool = True
+    correlation_data_available: bool = True
     
     @property
     def should_execute(self) -> bool:
+        if self.data_integrity_block:
+            return False
         return (
             self.timing.execute_now and
             self.slippage.is_acceptable and
@@ -161,6 +167,10 @@ class ExecutionDecision:
             'urgency': self.urgency.value,
             'market_condition': self.market_condition.value,
             'should_execute': self.should_execute,
+            'data_integrity_block': self.data_integrity_block,
+            'block_reason': self.block_reason,
+            'liquidity_data_available': self.liquidity_data_available,
+            'correlation_data_available': self.correlation_data_available,
             'liquidity_score': round(self.liquidity_score, 2),
             'volatility_regime': self.volatility_regime,
             'correlation_risk': round(self.correlation_risk, 2),
@@ -325,17 +335,28 @@ class ExecutionProtocol:
             ExecutionDecision with all recommendations
         """
         with self._lock:
-            cache_key = f"{symbol}:{side}:{size_usd}:{urgency.value}"
-            
-            if not force_refresh and cache_key in self._decision_cache:
-                cached, cache_time = self._decision_cache[cache_key]
-                if time.time() - cache_time < self._cache_ttl:
-                    return cached
-            
             try:
                 liquidity_data = self._get_liquidity_data(symbol)
                 volatility_data = self._get_volatility_data(symbol)
                 correlation_data = self._get_correlation_data()
+                
+                liquidity_available = liquidity_data.get('available', False)
+                correlation_available = correlation_data.get('available', False)
+                data_integrity_block = False
+                block_reason = ""
+                
+                if not liquidity_available and not correlation_available:
+                    data_integrity_block = True
+                    block_reason = "CRITICAL: Both liquidity and correlation data unavailable - execution blocked for safety"
+                    logger.warning(f"[{VERSION_BANNER}] 🛑 DATA INTEGRITY BLOCK: {block_reason}")
+                elif not liquidity_available:
+                    data_integrity_block = True
+                    block_reason = "CRITICAL: Liquidity data unavailable - cannot assess execution risk"
+                    logger.warning(f"[{VERSION_BANNER}] 🛑 DATA INTEGRITY BLOCK: {block_reason}")
+                elif not correlation_available:
+                    data_integrity_block = True
+                    block_reason = "CRITICAL: Correlation/contagion data unavailable - cannot assess systemic risk"
+                    logger.warning(f"[{VERSION_BANNER}] 🛑 DATA INTEGRITY BLOCK: {block_reason}")
                 
                 market_condition = self._assess_market_condition(
                     liquidity_data, volatility_data, correlation_data
@@ -358,6 +379,9 @@ class ExecutionProtocol:
                     slippage, market_condition, correlation_data, volatility_data
                 )
                 
+                if data_integrity_block:
+                    warnings.insert(0, f"🛑 BLOCKED: {block_reason}")
+                
                 confidence = self._calculate_confidence(
                     liquidity_data, volatility_data, correlation_data
                 )
@@ -378,16 +402,24 @@ class ExecutionProtocol:
                     safe_haven_flow=correlation_data.get('safe_haven_flow', 'NEUTRAL'),
                     execution_params=params,
                     warnings=warnings,
-                    confidence=confidence
+                    confidence=confidence,
+                    data_integrity_block=data_integrity_block,
+                    block_reason=block_reason,
+                    liquidity_data_available=liquidity_available,
+                    correlation_data_available=correlation_available
                 )
                 
-                self._decision_cache[cache_key] = (decision, time.time())
-                
-                logger.info(
-                    f"[{VERSION_BANNER}] Execution decision for {symbol} {side} ${size_usd:.0f}: "
-                    f"{style.value.upper()} | {market_condition.value} | "
-                    f"Slippage: {slippage.expected_slippage_bps:.1f}bps"
-                )
+                if data_integrity_block:
+                    logger.warning(
+                        f"[{VERSION_BANNER}] 🛑 EXECUTION BLOCKED for {symbol} {side} ${size_usd:.0f}: "
+                        f"{block_reason}"
+                    )
+                else:
+                    logger.info(
+                        f"[{VERSION_BANNER}] Execution decision for {symbol} {side} ${size_usd:.0f}: "
+                        f"{style.value.upper()} | {market_condition.value} | "
+                        f"Slippage: {slippage.expected_slippage_bps:.1f}bps"
+                    )
                 
                 return decision
                 

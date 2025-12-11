@@ -3037,6 +3037,33 @@ class AutoTradingBot:
                             'should_execute': execution_decision.should_execute
                         }
                         
+                        # V6.5.4c: DATA INTEGRITY BLOCK - If critical data unavailable, BLOCK trade
+                        if execution_decision.data_integrity_block:
+                            logger.warning(f"🛑 {VERSION_BANNER} DATA INTEGRITY BLOCK ACTIVATED")
+                            logger.warning(f"   Reason: {execution_decision.block_reason}")
+                            logger.warning(f"   Liquidity Data: {'✅' if execution_decision.liquidity_data_available else '❌'}")
+                            logger.warning(f"   Correlation Data: {'✅' if execution_decision.correlation_data_available else '❌'}")
+                            
+                            # Log to institutional logger if available
+                            if institutional_logger:
+                                decision_id = analysis.get('decision_id')
+                                if decision_id:
+                                    institutional_logger.log_veto_coherence(
+                                        symbol=self.config['trading_pair'],
+                                        decision_id=decision_id,
+                                        veto_type="DATA_INTEGRITY_BLOCK",
+                                        reason=execution_decision.block_reason,
+                                        coherence_score=0.0
+                                    )
+                            
+                            return {
+                                'error': f"DATA_INTEGRITY_BLOCK: {execution_decision.block_reason}",
+                                'blocked': True,
+                                'block_type': 'DATA_INTEGRITY_BLOCK',
+                                'liquidity_data_available': execution_decision.liquidity_data_available,
+                                'correlation_data_available': execution_decision.correlation_data_available
+                            }
+                        
                         # V6.5.4: If correlation risk >= 80, reduce size by 50%
                         if execution_decision.correlation_risk >= 80:
                             original_size = amount_usd
