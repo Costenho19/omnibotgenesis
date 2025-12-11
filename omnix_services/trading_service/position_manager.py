@@ -429,6 +429,30 @@ class DynamicPositionManager:
         tp_distance = atr_value * regime_mult['tp'] * conf_adj['tp_extension']
         sl_distance = atr_value * regime_mult['sl']
         
+        # V6.5.4c FIX: Aplicar límites máximos de SL/TP del perfil de calibración
+        # Esto evita que el ATR genere SL demasiado grandes que nunca se ejecutan
+        try:
+            from omnix_core.config.trading_profiles import get_pair_calibration
+            calibration = get_pair_calibration(symbol)
+            if calibration:
+                max_sl_pct = calibration.stop_loss_pct
+                max_tp_pct = calibration.take_profit_pct
+                max_sl_distance = entry_price * max_sl_pct
+                max_tp_distance = entry_price * max_tp_pct
+                
+                # Usar el menor entre ATR y el límite del perfil
+                sl_distance = min(sl_distance, max_sl_distance)
+                tp_distance = min(tp_distance, max_tp_distance)
+                
+                logger.debug(f"📊 SL/TP limitado por calibración {symbol}: SL={sl_distance/entry_price*100:.2f}%, TP={tp_distance/entry_price*100:.2f}%")
+        except Exception as e:
+            logger.debug(f"⚠️ Calibración no disponible para {symbol}: {e}")
+            # Fallback: usar límites conservadores del perfil PRODUCTION_STABLE
+            max_sl_pct = 0.018  # 1.8% máximo
+            max_tp_pct = 0.05   # 5% máximo
+            sl_distance = min(sl_distance, entry_price * max_sl_pct)
+            tp_distance = min(tp_distance, entry_price * max_tp_pct)
+        
         take_profit = entry_price + tp_distance
         stop_loss = entry_price - sl_distance
         

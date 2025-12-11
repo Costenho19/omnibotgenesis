@@ -1404,6 +1404,15 @@ class AutoTradingBot:
                     pair_index = (pair_index + 1) % len(trading_pairs)
                     logger.info(f"🔍 Escaneando {current_pair} ({pair_index+1}/{len(trading_pairs)})")
                 
+                # ========== V6.5.4c FIX: VERIFICAR EXCLUSIÓN ANTES DE ANÁLISIS ==========
+                # Evita gastar recursos analizando pares que están EXCLUIDOS
+                current_symbol = self.config.get('trading_pair', 'BTC/USD')
+                if is_symbol_allowed and not is_symbol_allowed(current_symbol, self.trading_profile):
+                    logger.warning(f"🚫 {VERSION_BANNER} SÍMBOLO EXCLUIDO: {current_symbol} - Saltando análisis")
+                    time.sleep(1)  # Pequeña pausa para no saturar logs
+                    continue  # Saltar al siguiente par
+                # ========== FIN FIX EXCLUSIÓN ==========
+                
                 # Análisis completo
                 analysis = self._analyze_market()
                 
@@ -3970,26 +3979,40 @@ class AutoTradingBot:
     
     def _check_position_limit_early(self) -> bool:
         """
-        FIX INSTITUCIONAL: Verificar límite de posiciones ANTES del análisis.
+        FIX INSTITUCIONAL V6.5.4c: Verificar límite de posiciones ANTES del análisis.
         
         Práctica institucional: El check de límites debe ser la PRIMERA validación,
         no la última. Esto ahorra CPU y evita logs innecesarios.
+        
+        V6.5.4c: Usa paper_trading para obtener posiciones correctamente.
+        Límite: máximo 10 posiciones totales (reducido de 20).
         
         Returns:
             True si el límite está alcanzado (no abrir nuevas posiciones)
             False si hay espacio para nuevas posiciones
         """
         try:
-            max_positions = self.config.get('max_open_positions', 20)
+            max_positions = self.config.get('max_open_positions', 10)  # V6.5.4c: Reducido a 10
             
-            if self.database_service:
+            # V6.5.4c: Usar paper_trading para obtener posiciones correctamente
+            if self.paper_trading and self.config.get('paper_mode', False):
+                user_id = str(self.config.get('harold_user_id', '7014748854'))
+                open_positions = self.paper_trading.get_open_positions(user_id)
+                current_count = len(open_positions) if open_positions else 0
+                
+                if current_count >= max_positions:
+                    logger.warning(f"🛑 {VERSION_BANNER} LÍMITE GLOBAL ALCANZADO: {current_count}/{max_positions} posiciones abiertas")
+                    logger.warning(f"   Saltando análisis de nuevas entradas - esperando cierres de SL/TP")
+                    return True
+                    
+            elif self.database_service:
+                # Fallback para real trading
                 user_id = self.config.get('user_id', 'system')
                 open_positions = self.database_service.get_open_positions(user_id)
                 current_count = len(open_positions) if open_positions else 0
                 
                 if current_count >= max_positions:
                     logger.warning(f"🛑 {VERSION_BANNER} LÍMITE ALCANZADO: {current_count}/{max_positions} posiciones abiertas")
-                    logger.warning(f"   Saltando análisis de 10 estrategias para ahorrar CPU")
                     return True
                     
             return False
