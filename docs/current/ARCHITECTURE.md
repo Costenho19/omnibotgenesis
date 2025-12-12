@@ -318,3 +318,67 @@ omnix/
 ├── main.py                   # Bootstrap entry point
 └── requirements.txt          # Python dependencies
 ```
+
+---
+
+## Appendix B: Module Migration Map (V7.0 Target)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  src/omnix/                    LEGACY → TARGET                          │
+│                                                                          │
+│  ├── domain/                 ← omnix_core/strategies/                   │
+│  │   ├── trading/                omnix_core/risk/                       │
+│  │   ├── risk/                   omnix_services/coherence_service/      │
+│  │   └── strategies/             omnix_services/monitoring/ (domain)    │
+│  │                                                                       │
+│  ├── application/            ← omnix_core/bot/                          │
+│  │   ├── trading/                omnix_services/execution_service/      │
+│  │   ├── analysis/               omnix_services/ai_service/             │
+│  │   └── reports/                omnix_reports/                         │
+│  │                                                                       │
+│  ├── infrastructure/         ← omnix_core/cache/                        │
+│  │   ├── persistence/            omnix_services/database_service/       │
+│  │   ├── external/               omnix_services/trading_service/        │
+│  │   └── notifications/          omnix_services/market_data/            │
+│  │                                                                       │
+│  ├── interfaces/             ← omnix_dashboard/                         │
+│  │   ├── flask_app/              omnix_services/telegram_service/       │
+│  │   └── telegram/                                                       │
+│  │                                                                       │
+│  ├── config/                 ← omnix_config/                            │
+│  │   └── settings.py             omnix_core/config/                     │
+│  │                                                                       │
+│  └── bootstrap/              ← main.py                                  │
+│      └── container.py                                                    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Appendix C: Dependency Injection Status
+
+| Component | Current | Target |
+|-----------|---------|--------|
+| AI Service | DI Container | Keep (reference model) |
+| Database | Singleton | Inject via port |
+| Redis Cache | Singleton | Inject via port |
+| Kraken Client | Direct import | Inject via port |
+| Telegram Bot | Direct import | Inject via port |
+| Risk Guardian | Direct import | Inject via port |
+
+---
+
+## Appendix D: Type Coverage
+
+| Package | Estimated Coverage | Target |
+|---------|-------------------|--------|
+| `omnix_core/` | ~15% | 60% |
+| `omnix_services/ai_service/` | ~60% | 80% |
+| `omnix_services/` (other) | ~10% | 60% |
+| `omnix_dashboard/` | ~5% | 40% |
+
+---
+
+*Last updated: December 12, 2025*
