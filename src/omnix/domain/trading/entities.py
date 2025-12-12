@@ -244,6 +244,24 @@ class Position:
     user_id: Optional[str] = None
     strategy: str = ""
     
+    def calculate_pnl(self, current_price: float) -> float:
+        """Calculate unrealized P&L at current price."""
+        if self.direction == TradeDirection.BUY:
+            return (current_price - self.average_entry) * self.quantity
+        return (self.average_entry - current_price) * self.quantity
+    
+    def calculate_pnl_percentage(self, current_price: float) -> float:
+        """Calculate P&L as percentage of entry."""
+        if self.average_entry == 0:
+            return 0.0
+        pnl = self.calculate_pnl(current_price)
+        cost_basis = self.average_entry * self.quantity
+        return (pnl / cost_basis) * 100 if cost_basis != 0 else 0.0
+    
+    def market_value(self, current_price: float) -> float:
+        """Calculate current market value of position."""
+        return current_price * self.quantity
+    
     def update_pnl(self, current_price: float) -> None:
         """Update unrealized P&L and track drawdown."""
         if self.direction == TradeDirection.BUY:

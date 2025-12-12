@@ -86,3 +86,4 @@ plotly
 streamlit
 dependency-injector
 pydantic-settings
+pytest-asyncio

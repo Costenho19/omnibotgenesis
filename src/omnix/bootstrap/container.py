@@ -112,6 +112,7 @@ class Container:
     
     _trading_adapter: Optional[Any] = field(default=None, repr=False)
     _risk_adapter: Optional[Any] = field(default=None, repr=False)
+    _coherence_adapter: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -145,6 +146,13 @@ class Container:
         if self._risk_adapter is None:
             self._risk_adapter = self._create_risk_adapter()
         return self._risk_adapter
+    
+    @property
+    def coherence_adapter(self):
+        """Get coherence engine adapter (Phase 2)."""
+        if self._coherence_adapter is None:
+            self._coherence_adapter = self._create_coherence_adapter()
+        return self._coherence_adapter
     
     @property
     def use_app_layer(self) -> bool:
@@ -205,6 +213,15 @@ class Container:
             logger.warning("Container: RiskGuardianAdapter not available")
             return None
     
+    def _create_coherence_adapter(self):
+        """Create coherence engine adapter (Phase 2)."""
+        try:
+            from src.omnix.infrastructure.adapters.coherence_adapter import CoherenceEngineAdapter
+            return CoherenceEngineAdapter()
+        except ImportError:
+            logger.warning("Container: CoherenceEngineAdapter not available")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         container = cls()
@@ -221,6 +238,7 @@ class Container:
             'settings': self.settings is not None,
             'trading_adapter': self.trading_adapter is not None,
             'risk_adapter': self.risk_adapter is not None,
+            'coherence_adapter': self.coherence_adapter is not None,
             'use_app_layer': self.use_app_layer,
         }
     
