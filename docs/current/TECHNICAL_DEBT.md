@@ -163,15 +163,56 @@ Previously documented paths did not match actual code locations. Updated in:
 
 ---
 
-## 5. Undocumented Packages
+## 5. Legacy & Dormant Packages
 
-The following packages exist but were not in original documentation:
+Based on the comprehensive Functional Domain Map audit (December 12, 2025), the following packages have been identified as LEGACY, DORMANT, or requiring evaluation:
+
+### 5.1 Confirmed DORMANT (No Active Imports)
+
+| Package | Location | Reason | Recommendation | Phase |
+|---------|----------|--------|----------------|-------|
+| **alerts** | `omnix_services/alerts/` | `notifications/` service is used instead; no active imports in trading pipeline | Consolidate functionality into `notifications/` or deprecate | V7.0 Phase 4 |
+| **concurrency** | `omnix_services/concurrency/` | Redis session management supersedes this; imported only by `main.py` but functions not actively called | Verify no external scripts depend on it, then deprecate | V7.0 Phase 4 |
+
+### 5.2 Confirmed LEGACY (Superseded by Newer Code)
+
+| Package | Location | Superseded By | Recommendation | Phase |
+|---------|----------|---------------|----------------|-------|
+| **regime_switcher** | `omnix_strategies/regime_switcher.py` | `adaptive_engine/` provides dynamic regime adaptation | Archive and deprecate | V7.0 Phase 4 |
+
+### 5.3 PARTIAL Integration (Requires Evaluation)
+
+| Package | Location | Current Usage | Recommendation | Phase |
+|---------|----------|---------------|----------------|-------|
+| **community_intelligence** | `omnix_services/community_intelligence/` | Only imported by Telegram commands in `enterprise_bot.py`; not integrated into trading pipeline; database tables may be empty | Evaluate: (1) Integrate into trading signals, or (2) Archive as B2C feature for future SaaS | V7.0 Phase 2+ |
+| **derivatives** | `omnix_services/derivatives/` | Conditional import in `main.py`; not in main execution loop | Keep as STRATEGIC capability; add feature flag before production activation | V7.0 Phase 3 |
+
+### 5.4 Previously Undocumented (Now Documented)
 
 | Package | Purpose | Status |
 |---------|---------|--------|
-| `omnix_reports/` | Pitch deck PDF generation | Now documented |
-| `omnix_strategies/` | Regime switcher (legacy) | Consider deprecation |
-| `omnix_api/` | Stripe integration (B2C prep) | Future use |
+| `omnix_reports/` | Pitch deck PDF generation | Now documented in Functional Domain Map |
+| `omnix_api/` | Stripe integration (B2C prep) | Documented as STRATEGIC - future use |
+| `omnix_risk/` | Additional risk utilities | Now documented in Domain 4: Risk & Protection |
+
+### 5.5 Deprecation Checklist
+
+Before deprecating any package:
+
+1. **Verify no imports:**
+   ```bash
+   grep -r "from omnix_services.alerts" . --include="*.py"
+   grep -r "from omnix_services.concurrency" . --include="*.py"
+   grep -r "from omnix_strategies" . --include="*.py"
+   ```
+
+2. **Check database tables:** Ensure no active data would be orphaned
+
+3. **Review Railway logs:** Confirm no runtime calls
+
+4. **Create deprecation ADR:** Document decision in `docs/transformation/adr/`
+
+5. **Move to archive:** Relocate to `docs/history/deprecated/` before deletion
 
 ---
 
@@ -235,4 +276,4 @@ IMPACT ↑
 ---
 
 *Document maintained by: OMNIX Development Team*  
-*Last reviewed: December 11, 2025*
+*Last reviewed: December 12, 2025*

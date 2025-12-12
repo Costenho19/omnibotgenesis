@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d Architecture Reference
 
 **Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 11, 2025  
+**Last Updated:** December 12, 2025  
 **Status:** Active Production System
 
 ---
@@ -14,6 +14,21 @@
 4. [Service Layer](#4-service-layer)
 5. [Data Layer](#5-data-layer)
 6. [V6.5.4d Changes](#6-v654d-changes)
+7. [Functional Domain Map](#7-functional-domain-map)
+   - [7.1 Resumen de Dominios](#71-resumen-de-dominios)
+   - [7.2 Trading Signal Fabric](#72-dominio-1-trading-signal-fabric)
+   - [7.3 Market & Data Ingestion](#73-dominio-2-market--data-ingestion)
+   - [7.4 Execution & Brokerage](#74-dominio-3-execution--brokerage)
+   - [7.5 Risk & Protection](#75-dominio-4-risk--protection)
+   - [7.6 AI & Communication](#76-dominio-5-ai--communication)
+   - [7.7 User Interfaces](#77-dominio-6-user-interfaces)
+   - [7.8 Persistence & Analytics](#78-dominio-7-persistence--analytics)
+   - [7.9 Security & Quantum](#79-dominio-8-security--quantum)
+   - [7.10 Portfolio Optimization](#710-dominio-9-portfolio-optimization)
+   - [7.11 B2C SaaS](#711-dominio-10-b2c-saas-strategic)
+   - [7.12 Legacy/Dormant Modules](#712-dominio-11-legacydormant-modules)
+   - [7.13 Data Flow End-to-End](#713-flujo-de-datos-end-to-end)
+   - [7.14 Cross-Domain Dependencies](#714-dependencias-cruzadas-entre-dominios)
 
 ---
 
