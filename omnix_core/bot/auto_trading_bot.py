@@ -3136,6 +3136,21 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.warning(f"⚠️ Execution Protocol analysis error (continuing): {e}")
             
+            # ==========================================================================
+            # V6.5.4d CRITICAL: ÚLTIMA LÍNEA DE DEFENSA - BLOQUEAR SÍMBOLOS EXCLUIDOS
+            # Esta verificación es REDUNDANTE pero CRÍTICA para evitar trades en símbolos excluidos
+            # IMPORTANTE: Usar el símbolo del análisis (más confiable que config que puede estar stale)
+            # ==========================================================================
+            execution_symbol = analysis.get('symbol') or self.config.get('trading_pair', 'BTC/USD')
+            if action == 'BUY' and is_symbol_allowed and not is_symbol_allowed(execution_symbol, self.trading_profile):
+                logger.critical(f"🚨 V6.5.4d ÚLTIMA DEFENSA: BUY BLOQUEADO en {execution_symbol} - Símbolo excluido")
+                return {
+                    'success': False,
+                    'blocked': True,
+                    'error': f'ÚLTIMA DEFENSA: {execution_symbol} está en lista de exclusión',
+                    'reason': 'FINAL_SYMBOL_FILTER_VETO'
+                }
+            
             # Ejecutar según modo
             if self.config['paper_mode']:
                 # PAPER TRADING V2 - Usa PostgreSQL institucional
