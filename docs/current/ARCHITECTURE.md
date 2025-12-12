@@ -288,6 +288,378 @@ class AutoTradingBot:
 
 ---
 
+## 7. Functional Domain Map
+
+Esta sección organiza todos los módulos de OMNIX por **capacidad de negocio**, documentando su propósito funcional, APIs externas consumidas, y relaciones entre dominios.
+
+### 7.1 Resumen de Dominios
+
+| # | Dominio | Propósito | Estado | Paquetes Principales |
+|---|---------|-----------|--------|---------------------|
+| 1 | **Trading Signal Fabric** | Generación y validación de señales | CORE | trading_service, coherence_service, strategies/ |
+| 2 | **Market & Data Ingestion** | Datos de mercado y enriquecimiento | CORE | market_data, market_intelligence, on_chain_service |
+| 3 | **Execution & Brokerage** | Ejecución de órdenes en exchanges | CORE | execution_service, trading_system.py, kraken_client |
+| 4 | **Risk & Protection** | Gestión de riesgo y protección | CORE | risk_management, monitoring, omnix_risk/ |
+| 5 | **AI & Communication** | IA conversacional y búsqueda | CORE | ai_service, web_search_service, voice_service |
+| 6 | **User Interfaces** | Interfaces de usuario | INTERFACE | telegram_service, omnix_dashboard/ |
+| 7 | **Persistence & Analytics** | Almacenamiento y métricas | INFRASTRUCTURE | database_service, cache/, analytics |
+| 8 | **Security & Quantum** | Seguridad post-cuántica | CORE | security/, quantum/ |
+| 9 | **Portfolio Optimization** | Optimización institucional | SUPPORT | portfolio_management, optimization |
+| 10 | **B2C SaaS** | Monetización futura | STRATEGIC | omnix_api/, user_settings |
+| 11 | **Legacy/Dormant** | Código legacy o sin usar | LEGACY | alerts, concurrency, regime_switcher |
+
+---
+
+### 7.2 Dominio 1: Trading Signal Fabric
+
+**Propósito:** Generación, agregación y validación de señales de trading mediante múltiples estrategias con consenso.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **TradingService** | `omnix_services/trading_service/` | Estrategias de señal (Quantum Momentum, Monte Carlo, HMM, Kalman, Kelly, Black Swan) | Kraken REST/WebSocket | auto_trading_bot.py |
+| **CoherenceService** | `omnix_services/coherence_service/` | Sistema de veto 6-Tier para consenso de señales | Ninguna | auto_trading_bot.py |
+| **AdaptiveEngine** | `omnix_services/adaptive_engine/` | Auto-calibración de parámetros por régimen de mercado | Ninguna | auto_trading_bot.py |
+| **NonMarkovianKernel** | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal + integración on-chain | Redis | auto_trading_bot.py |
+| **CAES Module** | `omnix_core/strategies/caes_module.py` | Position sizing dinámico (0.5x-3x) | Ninguna | auto_trading_bot.py |
+| **ARES V1/V2** | `omnix_core/strategies/ares_v1.py, ares_v2.py` | Swing + Scalping para track record | Ninguna | auto_trading_bot.py |
+| **Optimization** | `omnix_services/optimization/` | ML-based weight optimization, auto-learner | Ninguna | auto_trading_bot.py |
+
+**Flujo interno:**
+```
+Estrategias (6+) → CoherenceEngine (veto) → AdaptiveEngine (calibración) → CAES (sizing) → Señal Final
+```
+
+---
+
+### 7.3 Dominio 2: Market & Data Ingestion
+
+**Propósito:** Obtención de datos de mercado, on-chain, noticias y sentimiento para enriquecer análisis.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **MarketData** | `omnix_services/market_data/` | Precios, orderbook, arbitrage scanner | Kraken REST/WebSocket | trading_service, dashboard |
+| **MarketIntelligence** | `omnix_services/market_intelligence/` | Fear & Greed, noticias, indicadores técnicos | AlphaVantage, Finnhub, Alternative.me | dashboard, ai_service |
+| **OnChainService** | `omnix_services/on_chain_service/` | Whale tracking, exchange flows, network metrics | Arkham, Clank (planned) | NonMarkovianKernel |
+| **WebSearchService** | `omnix_services/web_search_service/` | Búsqueda web en tiempo real | Tavily | ai_service, enterprise_bot |
+| **NewsScraper** | `omnix_services/news_scraper.py` | Scraping de noticias | Ninguna | market_intelligence |
+| **SymbolClassifier** | `omnix_services/symbol_classifier.py` | Clasificación crypto/stock de símbolos | Ninguna | enterprise_bot |
+| **RealDataProvider** | `omnix_core/context/real_data_provider.py` | Proveedor de datos reales vs mock | Depende del contexto | auto_trading_bot |
+
+**APIs Externas Consumidas:**
+
+| API | Servicio | Datos Proporcionados | Rate Limit |
+|-----|----------|---------------------|------------|
+| Kraken REST | market_data | OHLCV, ticker, orderbook | 15 req/min |
+| Kraken WebSocket | market_data | Real-time prices, trades | Streaming |
+| AlphaVantage | market_intelligence | Technical indicators (RSI, MACD) | 5 req/min (free) |
+| Finnhub | market_intelligence | News, sentiment, fundamentals | 60 req/min |
+| Alternative.me | market_intelligence | Fear & Greed Index | 30 req/hour |
+| Tavily | web_search_service | Web search results | Per API key |
+
+---
+
+### 7.4 Dominio 3: Execution & Brokerage
+
+**Propósito:** Ejecución de órdenes en exchanges con protocolo institucional de 4 capas.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **ExecutionService** | `omnix_services/execution_service/` | Protocolo 4-capas: liquidez, correlación, micro-volatilidad | Ninguna (usa kraken_client) | auto_trading_bot |
+| **TradingSystem** | `omnix_core/trading_system.py` | Orquestador de ejecución de órdenes | Kraken REST | main.py, enterprise_bot |
+| **KrakenClient** | `omnix_services/trading_service/kraken_client.py` | Cliente de Kraken para crypto | Kraken REST | trading_system, execution_service |
+| **PaperTradingManager** | `omnix_services/trading_service/paper_trading_manager.py` | Ejecución simulada para paper trading | Ninguna | auto_trading_bot, enterprise_bot |
+| **Derivatives** | `omnix_services/derivatives/` | Futuros Kraken, margin, hedging | Kraken Futures API | main.py (condicional) |
+| **StockTrading** | `omnix_services/stock_trading/` | Trading de acciones | Alpaca API | enterprise_bot |
+| **PositionManager** | `omnix_services/trading_service/position_manager.py` | Gestión de posiciones abiertas | Ninguna | auto_trading_bot |
+
+**Exchanges Soportados:**
+
+| Exchange | Tipo | Estado | Paquete |
+|----------|------|--------|---------|
+| Kraken Spot | Crypto | CORE - Producción | kraken_client.py |
+| Kraken Futures | Crypto Derivatives | STRATEGIC | derivatives/ |
+| Alpaca | Stocks | SUPPORT | stock_trading/ |
+
+---
+
+### 7.5 Dominio 4: Risk & Protection
+
+**Propósito:** Gestión de riesgo multinivel con circuit breakers, límites y protección de portfolio.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **RiskManagement** | `omnix_services/risk_management/` | Circuit breaker, límites, position monitor | Ninguna | auto_trading_bot, enterprise_bot |
+| **Monitoring** | `omnix_services/monitoring/` | Risk Guardian V5.4, métricas, performance tracker | Ninguna | auto_trading_bot |
+| **OmnixRisk** | `omnix_risk/` | Audit logger, cascade protection, dead man switch, USD calculator | Ninguna | trading_system, dashboard |
+| **MemoryRiskAdapter** | `omnix_services/risk_management/memory_risk_adapter.py` | Adaptador kernel → risk system | Ninguna | auto_trading_bot |
+| **RollbackProtocol** | `omnix_core/risk/rollback_protocol.py` | Rollback de trades fallidos | Ninguna | auto_trading_bot |
+
+**Capas de Protección:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Capa 1: Emergency SL (2% max loss)                         │
+│  Capa 2: Risk Guardian (daily loss limit, overtrading)      │
+│  Capa 3: Circuit Breaker (halt on extreme events)           │
+│  Capa 4: Cascade Protection (portfolio-level stops)         │
+│  Capa 5: Dead Man Switch (inactivity protection)            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 7.6 Dominio 5: AI & Communication
+
+**Propósito:** IA conversacional multi-proveedor, búsqueda web y servicios de voz.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **AIService** | `omnix_services/ai_service/` | Orquestador AI con DI container (modelo SOLID) | Gemini, OpenAI, Anthropic | enterprise_bot, auto_trading_bot |
+| **Providers** | `omnix_services/ai_service/providers/` | Gemini (primario), OpenAI, Anthropic (fallback) | Ver abajo | ai_service |
+| **VideoAnalyzer** | `omnix_services/ai_service/video/` | Análisis de video para aprendizaje | OpenAI Whisper | enterprise_bot |
+| **VoiceService** | `omnix_services/voice_service/` | STT (Whisper) + TTS para respuestas de voz | OpenAI Whisper | enterprise_bot, trading_system |
+| **QuantumPhysicsValidator** | `omnix_core/quantum/physics_validator.py` | Validación de precisión científica en respuestas | Ninguna | ai_prompts |
+
+**Proveedores AI:**
+
+| Proveedor | Modelo | Rol | Rate Limit |
+|-----------|--------|-----|------------|
+| Google Gemini | 2.0 Flash | Primario | 60 RPM |
+| OpenAI | GPT-4o | Backup | Per API key |
+| Anthropic | Claude | Fallback | Per API key |
+
+---
+
+### 7.7 Dominio 6: User Interfaces
+
+**Propósito:** Interfaces de usuario para interacción con el sistema.
+
+| Paquete | Ubicación | Función | Puerto | Importado Por |
+|---------|-----------|---------|--------|---------------|
+| **TelegramService** | `omnix_services/telegram_service/` | Bot Telegram (7,812 líneas) | N/A | main.py |
+| **FlaskDashboard** | `omnix_dashboard/` | API REST + terminal web | 5000 | Streamlit, usuarios |
+| **StreamlitDashboard** | `omnix_dashboard/streamlit_app.py` | Visualización interactiva para inversores | 8080 | N/A |
+| **Notifications** | `omnix_services/notifications/` | Trade notifications, daily summary | N/A | auto_trading_bot |
+| **InlineKeyboards** | `omnix_services/telegram_service/inline_keyboards.py` | Botones interactivos Telegram | N/A | enterprise_bot |
+
+**Endpoints Dashboard (selección):**
+
+| Categoría | Endpoints | Función |
+|-----------|-----------|---------|
+| Métricas | `/api/metrics`, `/api/sharpe` | Performance trading |
+| Reportes | `/api/report/pdf` | Generación PDF |
+| Market | `/api/market/prices` | Precios real-time |
+| Health | `/api/health`, `/api/db-diagnostics` | Estado sistema |
+
+---
+
+### 7.8 Dominio 7: Persistence & Analytics
+
+**Propósito:** Almacenamiento de datos, caching y generación de reportes analíticos.
+
+| Paquete | Ubicación | Función | Tecnología | Importado Por |
+|---------|-----------|---------|------------|---------------|
+| **DatabaseService** | `omnix_services/database_service/` | Gateway PostgreSQL, migraciones | PostgreSQL | 45+ archivos |
+| **RedisCache** | `omnix_core/cache/` | Caching, estado de sesión | Redis | trading_service, ai_service |
+| **Analytics** | `omnix_services/analytics/` | Institutional metrics, Fibonacci, volume profile | Ninguna | dashboard, omnix_reports |
+| **OmnixReports** | `omnix_reports/` | Generador de pitch deck PDF | ReportLab | dashboard |
+
+**Tablas PostgreSQL (42 total):**
+
+| Categoría | Tablas | Propósito |
+|-----------|--------|-----------|
+| Core User | 4 | users, user_settings, sessions, preferences |
+| Trading | 5 | paper_trading_trades, paper_trading_balances, orders, positions |
+| Risk | 8 | risk_guardian_events, circuit_breaker_logs, limits |
+| Derivatives | 6 | futures_positions, hedging_records |
+| Community | 5 | signal_contributions, rewards, feedback |
+| Analytics | 6 | decision_logs, snapshots, calibration_history |
+
+---
+
+### 7.9 Dominio 8: Security & Quantum
+
+**Propósito:** Seguridad post-cuántica y mejoras cuánticas para trading.
+
+| Paquete | Ubicación | Función | APIs Externas | Importado Por |
+|---------|-----------|---------|---------------|---------------|
+| **PQCSecurity** | `omnix_core/security/pqc_security.py` | Encriptación Dilithium post-cuántica | Ninguna | trading_system, trading_service |
+| **QuantumEnhancements** | `omnix_core/quantum/enhancements.py` | QRNG (Quantum Random Number Generator) | ANU QRNG | monte_carlo, enterprise_bot |
+| **DWaveQAOA** | `omnix_core/quantum/dwave_qaoa.py` | Optimización cuántica (futuro) | D-Wave (planned) | Ninguno actualmente |
+| **PhysicsValidator** | `omnix_core/quantum/physics_validator.py` | Validación científica de respuestas AI | Ninguna | ai_prompts |
+| **TestingFramework** | `omnix_core/quantum/testing_framework.py` | Tests para componentes cuánticos | Ninguna | tests/ |
+
+---
+
+### 7.10 Dominio 9: Portfolio Optimization
+
+**Propósito:** Optimización de portfolio a nivel institucional.
+
+| Paquete | Ubicación | Función | Algoritmos | Importado Por |
+|---------|-----------|---------|------------|---------------|
+| **PortfolioManagement** | `omnix_services/portfolio_management/` | Optimización institucional | Markowitz, Black-Litterman, HRP | auto_trading_bot |
+| **PortfolioOptimizer** | `.../institutional/portfolio_optimizer.py` | Engine de optimización | Kelly Criterion, Risk Parity | portfolio_management |
+| **ExposureManager** | `.../institutional/exposure_manager.py` | Gestión de exposición | CVaR | portfolio_management |
+| **VolatilityTargeting** | `.../institutional/volatility_targeting.py` | Targeting de volatilidad | Volatility scaling | portfolio_management |
+
+---
+
+### 7.11 Dominio 10: B2C SaaS (STRATEGIC)
+
+**Propósito:** Infraestructura para monetización futura del producto.
+
+| Paquete | Ubicación | Función | APIs Externas | Estado |
+|---------|-----------|---------|---------------|--------|
+| **OmnixAPI** | `omnix_api/` | Integración Stripe para pagos | Stripe | STRATEGIC - Scaffolded |
+| **UserSettings** | `omnix_services/user_settings/` | Configuración por usuario, perfiles de riesgo | Ninguna | ACTIVE |
+
+**Planes B2C Planificados:**
+
+| Plan | Precio | Funciones |
+|------|--------|-----------|
+| Básico | $19/mes | Alertas, análisis básico |
+| Pro | $29/mes | Trading signals, AI assistant |
+| Premium | $49/mes | Full access, portfolio optimization |
+
+---
+
+### 7.12 Dominio 11: Legacy/Dormant Modules
+
+**Propósito:** Código legacy o sin uso activo que requiere evaluación.
+
+| Paquete | Ubicación | Estado | Razón | Recomendación |
+|---------|-----------|--------|-------|---------------|
+| **Alerts** | `omnix_services/alerts/` | DORMANT | notifications/ se usa en su lugar | Consolidar en notifications/ o deprecar |
+| **Concurrency** | `omnix_services/concurrency/` | LEGACY | Redis session management reemplaza | Deprecar después de confirmar no hay dependencias |
+| **RegimeSwitcher** | `omnix_strategies/regime_switcher.py` | LEGACY | Reemplazado por adaptive_engine | Deprecar en V7.0 |
+| **CommunityIntelligence** | `omnix_services/community_intelligence/` | PARTIAL | Solo usado por Telegram commands | Evaluar integración con trading pipeline o archivar |
+
+**Plan de Remediación:** Ver `docs/current/TECHNICAL_DEBT.md`
+
+---
+
+### 7.13 Flujo de Datos End-to-End
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         OMNIX V6.5.4d DATA FLOW                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐      │
+│  │   EXTERNAL APIs  │    │   ON-CHAIN DATA  │    │   NEWS/SENTIMENT │      │
+│  │  (Kraken, Alpaca)│    │  (Whale, Flows)  │    │ (Finnhub, F&G)   │      │
+│  └────────┬─────────┘    └────────┬─────────┘    └────────┬─────────┘      │
+│           │                       │                       │                 │
+│           ▼                       ▼                       ▼                 │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                     MARKET DATA INGESTION                          │    │
+│  │  market_data/ + market_intelligence/ + on_chain_service/           │    │
+│  └────────────────────────────────┬───────────────────────────────────┘    │
+│                                   │                                         │
+│                                   ▼                                         │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                      REDIS CACHE (TTL: 60s-1hr)                    │    │
+│  │  omnix_core/cache/redis_cache.py                                   │    │
+│  └────────────────────────────────┬───────────────────────────────────┘    │
+│                                   │                                         │
+│                                   ▼                                         │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                     SIGNAL GENERATION STACK                        │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────┐ │    │
+│  │  │ Quantum     │  │ Monte Carlo │  │ HMM Regime  │  │ Kalman    │ │    │
+│  │  │ Momentum    │  │             │  │             │  │ Filter    │ │    │
+│  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────┬─────┘ │    │
+│  │         └─────────────────┴─────────────────┴───────────────┘       │    │
+│  │                                   │                                 │    │
+│  │                    ┌──────────────▼──────────────┐                  │    │
+│  │                    │   Non-Markovian Kernel      │◄── on_chain     │    │
+│  │                    │   (Temporal Memory)         │                  │    │
+│  │                    └──────────────┬──────────────┘                  │    │
+│  └───────────────────────────────────┼────────────────────────────────┘    │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                    COHERENCE ENGINE (6-Tier Veto)                  │    │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  │    │
+│  │  │ Tier 1  │  │ Tier 2  │  │ Tier 3  │  │ Tier 4  │  │ Tier 5  │  │    │
+│  │  │ Signal  │→ │ Context │→ │ Risk    │→ │ Memory  │→ │ Macro   │  │    │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────┘  │    │
+│  │                                                           │        │    │
+│  │                                                    ┌──────▼──────┐ │    │
+│  │                                                    │ Tier 6 VETO │ │    │
+│  │                                                    │ (Final Gate)│ │    │
+│  │                                                    └──────┬──────┘ │    │
+│  └───────────────────────────────────────────────────────────┼────────┘    │
+│                                                              │              │
+│                                      ┌───────────────────────┘              │
+│                                      │ PASS/BLOCK                           │
+│                                      ▼                                      │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                        RISK GUARDIAN V5.4                          │    │
+│  │  Daily Loss Check → Overtrading Check → Revenge Trade Check        │    │
+│  └────────────────────────────────────┬───────────────────────────────┘    │
+│                                       │ APPROVED                            │
+│                                       ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                    EXECUTION PROTOCOL (4-Layer)                    │    │
+│  │  Liquidity Check → Correlation Check → Micro-Volatility → Execute  │    │
+│  └────────────────────────────────────┬───────────────────────────────┘    │
+│                                       │                                     │
+│           ┌───────────────────────────┼───────────────────────────┐        │
+│           │                           │                           │        │
+│           ▼                           ▼                           ▼        │
+│  ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐   │
+│  │   POSTGRESQL    │    │   TELEGRAM/DASHBOARD │    │   INVESTOR      │   │
+│  │   (42 tables)   │    │   (Notifications)    │    │   REPORTS       │   │
+│  └─────────────────┘    └──────────────────────┘    └─────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 7.14 Dependencias Cruzadas Entre Dominios
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CROSS-DOMAIN DEPENDENCY MATRIX                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  auto_trading_bot.py (HUB CENTRAL)                                          │
+│  ├── omnix_services/monitoring/           (Risk Guardian)                   │
+│  ├── omnix_services/optimization/         (Adaptive Weights)                │
+│  ├── omnix_services/ai_service/           (Video Learning)                  │
+│  ├── omnix_services/coherence_service/    (6-Tier Veto)                     │
+│  ├── omnix_services/risk_management/      (Circuit Breaker, Limits)         │
+│  ├── omnix_services/adaptive_engine/      (Parameter Calibration)           │
+│  ├── omnix_services/trading_service/      (Position Manager)                │
+│  ├── omnix_services/execution_service/    (Execution Protocol)              │
+│  ├── omnix_core/strategies/               (Non-Markovian, CAES, ARES)       │
+│  ├── omnix_core/config/                   (Trading Profiles)                │
+│  ├── omnix_core/sessions/                 (User Sessions)                   │
+│  └── omnix_core/risk/                     (Rollback Protocol)               │
+│                                                                             │
+│  enterprise_bot.py (TELEGRAM INTERFACE)                                     │
+│  ├── omnix_services/ai_service/           (Conversational AI)               │
+│  ├── omnix_services/trading_service/      (Trading Commands)                │
+│  ├── omnix_services/market_data/          (Arbitrage Scanner)               │
+│  ├── omnix_services/community_intelligence/ (Signal Contribution)           │
+│  ├── omnix_services/voice_service/        (Voice Responses)                 │
+│  ├── omnix_services/web_search_service/   (Web Search)                      │
+│  ├── omnix_services/stock_trading/        (Stock Commands)                  │
+│  ├── omnix_services/risk_management/      (Risk Dashboard)                  │
+│  ├── omnix_services/user_settings/        (User Preferences)                │
+│  ├── omnix_services/notifications/        (Trade Alerts)                    │
+│  └── omnix_core/quantum/                  (QRNG, Physics Validator)         │
+│                                                                             │
+│  NonMarkovianKernel (BRIDGE TO ON-CHAIN)                                    │
+│  └── omnix_services/on_chain_service/     (Whale + Exchange Flows)          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Appendix: Directory Structure
 
 ```
