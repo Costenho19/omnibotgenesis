@@ -1,23 +1,39 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ Documentation Index
+# OMNIX V6.5.4d Documentation Hub
 
-**Version:** V6.5.4 INSTITUTIONAL+  
-**Last Updated:** December 8, 2025
+**Version:** V6.5.4d INSTITUTIONAL+ PREMIUM  
+**Last Updated:** December 12, 2025  
+**Status:** Production on Railway | Track Record Generation Active
 
 ---
 
-## Quick Navigation
+## Quick Navigation by Role
 
-| Document | Location | Description |
-|----------|----------|-------------|
-| **Project Overview** | `/replit.md` | Main project documentation |
-| **Technical Reference** | `docs/core/Omnix_TECHNICAL_REFERENCE.md` | Complete architecture, modules, dependencies |
-| **Module Catalog** | `docs/core/OMNIX_MODULE_CATALOG.md` | Exhaustive module inventory |
-| **Architecture Refactoring** | `docs/core/ARCHITECTURE_REFACTORING_CHECKLIST.md` | V7.0 modernization roadmap (AI Service completed) |
-| **Database Reference** | `docs/core/DATABASE_AUDIT_REPORT.md` | Schema, SQL statements, audit & FK analysis |
-| **Dashboard Reference** | `docs/core/DASHBOARD_TECHNICAL_REFERENCE.md` | API, security, and architecture reference |
-| **Railway Deployment** | `docs/deployment/RAILWAY_DEPLOYMENT.md` | Production deployment |
-| **Dashboard Setup** | `docs/deployment/RAILWAY_DASHBOARD_SETUP.md` | Dashboard configuration |
-| **Testing Suite** | `omnix_testing/README.md` | Backtesting and validation |
+### For Developers
+| Document | Description |
+|----------|-------------|
+| [Current Architecture](current/ARCHITECTURE.md) | System modules, ports, services (V6.5.4d) |
+| [Technical Debt](current/TECHNICAL_DEBT.md) | Known issues, deferred refactoring |
+| [Migration Plan](transformation/MIGRATION_PLAN.md) | V7.0 hexagonal architecture roadmap |
+| [ADRs](transformation/adr/) | Architecture Decision Records |
+
+### For Operators
+| Document | Description |
+|----------|-------------|
+| [Trading Operations](current/TRADING_OPERATIONS.md) | Profiles, risk management, troubleshooting |
+| [Railway Deployment](operations/deployment/RAILWAY_DEPLOYMENT.md) | Production deployment guide |
+| [Dashboard Setup](operations/deployment/RAILWAY_DASHBOARD_SETUP.md) | Flask + Streamlit configuration |
+
+### For Investors
+| Document | Description |
+|----------|-------------|
+| [One Pager](business/investor/one_pager.md) | Executive summary |
+| [Financial Projections](business/investor/financial_projections.md) | Revenue forecasts |
+| [Pitch Deck](business/investor/pitch_deck.html) | Full presentation |
+
+### For Business/Product
+| Document | Description |
+|----------|-------------|
+| [B2C SaaS Plan](business/B2C_SAAS_PLAN.md) | "Asesor Personal IA" monetization roadmap |
 
 ---
 
@@ -25,165 +41,122 @@
 
 ```
 docs/
-├── README.md                              # This index file
+├── README.md                         <- You are here (global index)
 │
-├── core/                                  # Core reference docs
-│   ├── Omnix_TECHNICAL_REFERENCE.md       # System architecture, modules, dependencies
-│   ├── DATABASE_AUDIT_REPORT.md           # Database schema, SQL, audit & integrity
-│   └── DASHBOARD_TECHNICAL_REFERENCE.md   # Dashboard API & security (19 protected endpoints)
+├── current/                          <- V6.5.4d System State
+│   ├── ARCHITECTURE.md               <- Modules, ports, services, DB schema
+│   ├── TRADING_OPERATIONS.md         <- Profiles, ARES, risk management
+│   └── TECHNICAL_DEBT.md             <- Known issues, deferred work
 │
-├── deployment/                            # Deployment guides
-│   ├── RAILWAY_DEPLOYMENT.md              # Railway production setup
-│   └── RAILWAY_DASHBOARD_SETUP.md         # Dashboard configuration
+├── transformation/                   <- V7.0 Migration Plan
+│   ├── ARCHITECTURE_AUDIT.md         <- Diagnostic, problems identified
+│   ├── MIGRATION_PLAN.md             <- Strangler Fig phases, timeline
+│   └── adr/                          <- Architecture Decision Records
+│       └── ADR-001-hexagonal.md      <- Hexagonal migration strategy
 │
-├── testing/                               # Testing documentation
-│   └── (see omnix_testing/README.md)
+├── business/                         <- Business & Product
+│   ├── B2C_SAAS_PLAN.md              <- SaaS monetization ($19-$49 plans)
+│   └── investor/                     <- Pitch decks, projections
 │
-└── archive/                               # Historical documentation
-    ├── historical/                        # Past version docs
-    └── ivan/                              # Ivan documentation
+├── operations/                       <- Operational Guides
+│   ├── deployment/                   <- Railway guides
+│   └── experimental/                 <- ARES development, quantum roadmap
+│
+├── compliance/                       <- Audits & Verification
+│   └── audits/                       <- Code audits, DB audits
+│
+└── history/                          <- Archived Documentation
+    └── archive/                      <- Historical decisions
 ```
 
 ---
 
-## V6.5.4 Key Features
+## Current System Overview (V6.5.4d)
 
-### Core Engines
-- **AutoTradingBot V6.5.4 INSTITUTIONAL+** - Multi-crypto scanning, tiered signals
-- **Non-Markovian Memory Kernel V6.5** - Regime transitions, cyclical patterns
-- **Coherence Engine V6.5 ULTRA** - 6-Tier Veto System (45% threshold)
-- **AI Risk Guardian V5.4** - Overtrading and drawdown protection
-
-### New in V6.5.4
-- **Adaptive Parameter Engine V6.5 ULTRA** - Auto-calibration per regime
-- **On-Chain Data Intelligence V6.5** - Whale tracking, exchange flows
-- **42 Database Tables** - Complete persistent storage (3 redundant consolidated)
-- **25+ Dashboard API Endpoints** - Real-time data access
-- **Audited Snapshots** - Cryptographic verification for investors
-- **38 Foreign Keys** - 90% referential integrity coverage
-
-### V6.5.4 PREMIUM Panel Features (Dec 2025)
-- **InstitutionalMetricsCalculator** - Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide
-- **PDF Report Generator** - 989-line institutional PDF with Monte Carlo projections (10,000 real numpy iterations)
-- **Dual Dashboard Architecture** - Flask API (port 5000) + Streamlit investor visualization (port 8080)
-- **OmnixAPIClient** - Complete service isolation (Streamlit consumes Flask API exclusively)
-- **Centralized Finnhub Service** - Eliminates 422/429 API errors with consistent key handling
-
-### AI Service Modernization (Dec 8, 2025)
-- **SOLID + Dependency Injection** - AI Service refactored with `dependency-injector` library
-- **Protocol-based Interfaces** - PEP 544 Protocols for AIGateway, PromptBuilder, StyleRenderer
-- **Multi-Provider Support** - GeminiAIGateway (primary), OpenAIGateway, AnthropicGateway with automatic failover
-- **RoutingAIGateway** - Load balancing and failover orchestrator
-- **Testing Fakes** - FakeAIGateway for unit testing without API calls
-- **Backward Compatible** - Legacy `get_ai_service()` still works, new `get_ai_gateway()` for DI
-- **Type Safety** - 18 LSP errors resolved with `TYPE_CHECKING` pattern for conditional SDKs
-- **Safe Content Access** - Anthropic provider handles all block types (TextBlock, ThinkingBlock, etc.)
-
-### Portfolio Management (6 Modules)
-1. Risk Parity
-2. Black-Litterman
-3. Kelly Criterion
-4. HRP (Hierarchical Risk Parity)
-5. Mean-Variance
-6. CVaR Optimization
-
-### Protection Modules (9 Active)
-1. Monte Carlo
-2. Kalman Filter
-3. HMM (Hidden Markov Model)
-4. ARES-STOCK
-5. Non-Markovian Memory
-6. Coherence Engine
-7. Risk Guardian
-8. Gap Protection
-9. Earnings Protector
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    OMNIX V6.5.4d INSTITUTIONAL+                  │
+├─────────────────────────────────────────────────────────────────┤
+│  INTERFACES                                                      │
+│  ├── Telegram Bot (enterprise_bot.py) - Primary user interface  │
+│  ├── Flask Dashboard (port 5000) - API + Web terminal           │
+│  └── Streamlit Dashboard (port 8080) - Investor visualization   │
+├─────────────────────────────────────────────────────────────────┤
+│  CORE ENGINES                                                    │
+│  ├── AutoTradingBot V6.5.4d - Multi-crypto scanner + 2% SL      │
+│  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto system            │
+│  ├── Non-Markovian Kernel V6.5 - Temporal memory                │
+│  ├── Risk Guardian V5.4 - Drawdown + overtrading protection     │
+│  └── ARES V1/V2 (Swing/Scalping) - Track record generation      │
+├─────────────────────────────────────────────────────────────────┤
+│  DATA LAYER                                                      │
+│  ├── PostgreSQL (Railway) - 42 tables, 90% FK coverage          │
+│  ├── Redis (Railway) - Caching + state management               │
+│  └── DatabaseGateway - Unified connection pool                  │
+├─────────────────────────────────────────────────────────────────┤
+│  EXTERNAL APIs                                                   │
+│  ├── Kraken - Crypto data + execution                           │
+│  ├── Alpaca - Stock data                                        │
+│  ├── Gemini 2.0 Flash - Primary AI                              │
+│  └── Tavily - Web search                                        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Database Summary
+## V6.5.4d Key Changes (December 2025)
 
-| Category | Tables | Status |
-|----------|--------|--------|
-| Core Trading | 5 | Active |
-| User Management | 4 | Active |
-| Risk Management | 8 | Active |
-| Derivatives | 6 | Active |
-| AI/Conversations | 3 | Active |
-| Community | 5 | Active |
-| Other | 11 | Active |
-| **TOTAL** | **42** | Audited Dec 2025 |
-
-**Full Reference**: See [DATABASE_AUDIT_REPORT.md](core/DATABASE_AUDIT_REPORT.md) for:
-- Complete CREATE TABLE SQL statements
-- Foreign key analysis (38 FKs, 90% coverage)
-- Table consolidation history (3 redundant tables dropped)
-- Remediation plan
+| Change | Implementation | Impact |
+|--------|---------------|--------|
+| Emergency Stop Loss | `EMERGENCY_SL_PCT = 0.02` | Max 2% loss per position |
+| Entry Thresholds | `score_moderate = 12` | Only STRONG/VERY_STRONG trades |
+| ADA/USD Excluded | `CalibrationTier.EXCLUDED` | Blocked (0% win rate) |
+| Macro Trend Veto | Kalman -15pts, HMM -10pts | Blocks bearish trend trades |
 
 ---
 
-## Getting Started
+## Track Record Progress
 
-### For Developers
-1. Read `replit.md` - Project overview
-2. Read `docs/core/Omnix_TECHNICAL_REFERENCE.md` - Architecture and dependencies
-3. Review `docs/core/DATABASE_AUDIT_REPORT.md` - Database schema & SQL
+| Metric | Current | Target | Timeline |
+|--------|---------|--------|----------|
+| Trades | ~30 | 500+ | 8-9 weeks |
+| Win Rate | TBD | 55%+ | Ongoing |
+| ARES Strategies | Active | Track record | Separate metrics |
 
-### For Deployment
-1. Read `docs/deployment/RAILWAY_DEPLOYMENT.md` - Main deployment
-2. Read `docs/deployment/RAILWAY_DASHBOARD_SETUP.md` - Dashboard
-
-### For Testing
-1. Read `omnix_testing/README.md` - Testing suite
-2. Run `python omnix_testing/run_premium_validation.py` - Validation
+**Goal:** Generate verifiable paper trading track record for $1M seed funding at $11.5M pre-money valuation.
 
 ---
 
-## External Dependencies
+## Migration Status (V7.0)
 
-### APIs & Services
-| Service | Purpose | Required |
-|---------|---------|----------|
-| Kraken | Crypto trading | Yes |
-| Alpaca | Stock trading | Optional |
-| Google Gemini | Primary AI | Yes |
-| OpenAI | AI backup | Optional |
-| Anthropic | AI fallback | Optional |
-| Finnhub | News/sentiment | Yes |
-| Alpha Vantage | Technical indicators | Yes |
-| Telegram | Bot interface | Yes |
+| Phase | Name | Status |
+|-------|------|--------|
+| 0 | Foundation | ✅ Complete (Dec 11, 2025) |
+| 1 | Bootstrap & Config | ⬜ Ready to start |
+| 2 | Domain & Application | 🔒 Blocked (500 trades) |
+| 3 | Interfaces | 🔒 Blocked (500 trades) |
+| 4 | Cleanup | 🔒 Blocked (500 trades + 14 days) |
 
-### Databases
-| Service | Purpose |
-|---------|---------|
-| PostgreSQL (Railway) | Main persistence (42 tables) |
-| Redis (Railway) | Cache & state |
+See [MIGRATION_PLAN.md](transformation/MIGRATION_PLAN.md) for details.
 
 ---
 
-## Version History
+## Document Governance
 
-| Version | Date | Key Features |
-|---------|------|--------------|
-| V6.5.4 | Dec 8, 2025 | AI Service SOLID/DI Refactoring, Protocol-based Interfaces |
-| V6.5.4 | Dec 2025 | Database Audit, Audited Snapshots, Table Consolidation |
-| V6.5.4 | Dec 2025 | Dashboard Data Reliability, Status Bar, Price Fallback |
-| V6.5 | Dec 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
-| V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
-| V6.3 | Nov 2024 | Stock Trading ULTRA, Real Data Integration |
-| V6.2 | Oct 2024 | RMS Memory-Enhanced, Derivatives |
-| V6.1 | Oct 2024 | Non-Markovian Kernel, Coherence Engine |
-| V6.0 | Sep 2024 | Multi-Exchange Arbitrage, Institutional Compliance |
+| Type | Owner | Update Frequency |
+|------|-------|------------------|
+| Current Architecture | Development Team | Per release |
+| Trading Operations | Operations Team | Per parameter change |
+| Migration Plan | Architecture Team | Per phase completion |
+| Investor Docs | Founders | Per milestone |
+| Compliance/Audits | Founders | Per audit cycle |
 
----
-
-## Support
-
-- **Technical Issues:** Review documentation first
-- **Architecture Questions:** See `Omnix_TECHNICAL_REFERENCE.md`
-- **Database:** See `DATABASE_AUDIT_REPORT.md`
-- **Deployment:** See deployment guides
+**Single Source of Truth:**
+- Trading parameters: `omnix_core/config/trading_profiles.py`
+- System version: `omnix_config/settings.py` → `VERSION_BANNER`
+- Project overview: `/replit.md`
 
 ---
 
-**OMNIX V6.5.4 INSTITUTIONAL+**  
-**Target: $1M seed funding @ $11.5M pre-money valuation (UAE/GCC)**
+*OMNIX V6.5.4d INSTITUTIONAL+ PREMIUM*  
+*Target: $1M seed @ $11.5M pre-money valuation*
