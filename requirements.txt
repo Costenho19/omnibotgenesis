@@ -85,3 +85,4 @@ telegram
 plotly
 streamlit
 dependency-injector
+pydantic-settings

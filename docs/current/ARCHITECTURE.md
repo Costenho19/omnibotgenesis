@@ -15,6 +15,7 @@
 5. [Data Layer](#5-data-layer)
 6. [V6.5.4d Changes](#6-v654d-changes)
 7. [Functional Domain Map](#7-functional-domain-map)
+8. [Bootstrap Architecture (V7.0 Phase 1)](#8-bootstrap-architecture-v70-phase-1)
    - [7.1 Resumen de Dominios](#71-resumen-de-dominios)
    - [7.2 Trading Signal Fabric](#72-dominio-1-trading-signal-fabric)
    - [7.3 Market & Data Ingestion](#73-dominio-2-market--data-ingestion)
@@ -682,6 +683,112 @@ grep -r "from omnix_services.<package>" . --include="*.py"
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 8. Bootstrap Architecture (V7.0 Phase 1)
+
+**Status:** Completed December 12, 2025  
+**Purpose:** Centralized configuration and dependency injection for V7.0 migration
+
+### 8.1 Settings Module
+
+**Location:** `src/omnix/config/settings.py`
+
+Provides centralized access to all environment variables with sensible defaults:
+
+```python
+from src.omnix.config import get_settings
+
+settings = get_settings()
+print(settings.trading_profile)  # 'PRODUCTION_STABLE'
+print(settings.paper_mode)       # True
+print(settings.database_url)     # Database connection string
+```
+
+**Key Properties:**
+
+| Category | Properties |
+|----------|------------|
+| Database | `database_url`, `redis_url`, `db_pool_min`, `db_pool_max` |
+| Trading | `trading_profile`, `paper_mode`, `max_trade_usd`, `drawdown_limit` |
+| API Keys | `kraken_api_key`, `telegram_bot_token`, `gemini_api_key`, `openai_api_key` |
+| Features | `enable_ares_v1`, `enable_ares_v2`, `use_unified_gateway` |
+| Environment | `is_railway`, `is_replit`, `log_level`, `port` |
+
+### 8.2 DI Container
+
+**Location:** `src/omnix/bootstrap/container.py`
+
+Provides dependency injection with Protocol interfaces:
+
+```python
+from src.omnix.bootstrap import Container, get_container
+
+container = get_container()
+db = container.database      # IDatabaseGateway
+cache = container.cache      # IRedisCache
+settings = container.settings
+```
+
+**Protocol Interfaces:**
+
+| Protocol | Purpose | Null Object |
+|----------|---------|-------------|
+| `IDatabaseGateway` | PostgreSQL access | `NullDatabase` |
+| `IRedisCache` | Redis caching | `NullCache` |
+| `ITradingService` | Trading operations | N/A |
+| `IMarketDataService` | Market data | N/A |
+
+### 8.3 Bootstrap Runtime
+
+**Location:** `src/omnix/bootstrap/runtime.py`
+
+Orchestrates application startup:
+
+```python
+from src.omnix.bootstrap import bootstrap_omnix
+
+result = bootstrap_omnix()
+if result.success:
+    container = result.container
+    # Application ready
+```
+
+**Bootstrap Sequence:**
+
+1. Configure logging
+2. Validate environment variables
+3. Initialize DI container
+4. Verify database connection
+5. Prime Redis cache
+6. Return `BootstrapResult`
+
+### 8.4 Backward Compatibility
+
+Legacy code continues to work without changes. New code can use centralized imports:
+
+```python
+# Legacy (still works)
+import os
+db_url = os.environ.get('DATABASE_URL')
+
+# New (recommended)
+from src.omnix.config import get_settings
+settings = get_settings()
+db_url = settings.database_url
+```
+
+### 8.5 Tests
+
+**Location:** `tests/test_phase1_bootstrap.py`
+
+16 tests covering:
+- Settings singleton and caching
+- Container creation and health checks
+- Protocol interface imports
+- Environment variable reading
+- Bootstrap runtime execution
 
 ---
 

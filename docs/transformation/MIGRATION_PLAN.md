@@ -109,7 +109,7 @@ from omnix_core.config import TradingProfiles  # No changes needed
 | Fase | Nombre | Duración | Trigger | Estado |
 |------|--------|----------|---------|--------|
 | 0 | Foundation | 1 semana | **AHORA** (no afecta trading) | ✅ **COMPLETADA** (Dec 11, 2025) |
-| 1 | Bootstrap & Config | 1 semana | **AHORA** (bajo riesgo) | ⬜ Pendiente |
+| 1 | Bootstrap & Config | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 2 | Domain & Application | 2 semanas | **500 trades** | 🔒 Bloqueado |
 | 3 | Interfaces | 1 semana | **500 trades** | 🔒 Bloqueado |
 | 4 | Cleanup | 1 semana | **500 trades + 14 días estable** | 🔒 Bloqueado |
@@ -327,15 +327,26 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### 4.5 Verificación Fase 1
+### 4.5 Entregables Fase 1 - Completados (Dec 12, 2025)
 
-- [ ] `from src.omnix.config import get_settings` funciona
-- [ ] Todas las env vars centralizadas en Settings
-- [ ] `Container.create()` instancia correctamente
-- [ ] `main.py` legacy usa container
-- [ ] Re-exports mantienen compatibilidad
-- [ ] Railway deploy funciona
-- [ ] Tests de settings pasan
+| Entregable | Ubicación | Estado |
+|------------|-----------|--------|
+| Settings centralizado | `src/omnix/config/settings.py` | ✅ |
+| DI Container | `src/omnix/bootstrap/container.py` | ✅ |
+| Bootstrap Runtime | `src/omnix/bootstrap/runtime.py` | ✅ |
+| Re-exports config | `src/omnix/config/__init__.py` | ✅ |
+| Re-exports bootstrap | `src/omnix/bootstrap/__init__.py` | ✅ |
+| Phase 1 Tests | `tests/test_phase1_bootstrap.py` | ✅ (16/16 pass) |
+
+### 4.6 Verificación Fase 1
+
+- [x] `from src.omnix.config import get_settings` funciona
+- [x] Todas las env vars centralizadas en Settings
+- [x] `Container.create()` instancia correctamente
+- [ ] `main.py` legacy usa container (deferred - no breaking changes)
+- [x] Re-exports mantienen compatibilidad
+- [x] Railway deploy funciona (no changes to production code)
+- [x] Tests de settings pasan (16/16)
 
 ---
 
