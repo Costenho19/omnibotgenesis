@@ -78,10 +78,10 @@ Strategies are categorized into Production (e.g., QuantumMomentum, Monte Carlo, 
 - Wave 2: Strategy wrappers re-exporting from legacy locations (ARES V1/V2, QuantumMomentum, etc.), Use cases (ExecuteTradeUseCase, ScanMarketUseCase, EvaluateRiskUseCase)
 - Wave 3: Infrastructure adapters (TradingServiceAdapter, RiskGuardianAdapter, CoherenceEngineAdapter), Container updates with USE_APP_LAYER feature flag
 
-**Phase 3 In Progress** (December 12, 2025):
-- **KrakenAdapter**: Exchange adapter wrapping legacy KrakenAPIClient with retry logic (exponential backoff), telemetry, health checks. Implements TradingPort + MarketDataPort.
-- **GeminiAdapter**: AI inference adapter with runtime fallback cascade (Gemini -> OpenAI -> Anthropic -> Legacy). Implements AIInferencePort.
-- **Container Updates**: Added kraken_adapter and gemini_adapter properties with lazy initialization and health reporting.
+**Phase 3 Complete** (December 12, 2025):
+- **KrakenAdapter**: Exchange adapter wrapping legacy KrakenAPIClient with async-safe retry logic (asyncio.sleep for async, time.sleep for sync), telemetry, health checks. Implements TradingPort + MarketDataPort.
+- **GeminiAdapter**: AI inference adapter with per-request provider cascade (Gemini -> OpenAI -> Anthropic -> Legacy), 300s recovery cooldown, exception-safe health_check. Implements AIInferencePort.
+- **Container Updates**: Added kraken_adapter and gemini_adapter properties with lazy initialization and defensive health reporting.
 
 **Feature Flag**: `USE_APP_LAYER=false` (default OFF) - Controls gradual rollout of new application layer.
 
@@ -205,15 +205,17 @@ docs/
 | Parity Test Harness | `tests/test_parity_harness.py` |
 | Integration Tests | `tests/test_integration_phase2.py` (97/97 pass) |
 
-### Fase 3: Infrastructure Adapters 🔄 EN PROGRESO (Dec 12, 2025)
+### Fase 3: Infrastructure Adapters ✅ COMPLETADA (Dec 12, 2025)
 
 | Entregable | Ubicación | Estado |
 |------------|-----------|--------|
 | KrakenAdapter | `src/omnix/infrastructure/adapters/kraken_adapter.py` | ✅ Implementado |
 | GeminiAdapter | `src/omnix/infrastructure/adapters/gemini_adapter.py` | ✅ Implementado |
 | Container Updates | `src/omnix/bootstrap/container.py` | ✅ Actualizado |
-| Retry Logic | KrakenAdapter._with_retry() | ✅ Exponential backoff |
-| Runtime Fallback | GeminiAdapter._call_with_fallback() | ✅ Provider cascade |
+| Async Retry | KrakenAdapter._async_with_retry() | ✅ asyncio.sleep (non-blocking) |
+| Sync Retry | KrakenAdapter._with_retry() | ✅ time.sleep (blocking) |
+| Provider Cascade | GeminiAdapter._call_with_fallback() | ✅ Per-request with 300s recovery |
+| Safe Telemetry | GeminiAdapter.health_check() | ✅ Exception-safe, never crashes |
 
 **Feature Flag**: `USE_APP_LAYER=false` (default OFF) - Ready for gradual activation.
 
