@@ -612,11 +612,44 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
     hmm_veto_enabled=True,
     hmm_veto_confidence_threshold=0.75,
     
-    score_very_strong=28,
-    score_strong=18,
-    score_moderate=10,
+    score_very_strong=20,
+    score_strong=12,
+    score_moderate=12,
     
-    regime_change_veto_enabled=True
+    regime_change_veto_enabled=True,
+    
+    extra_params={
+        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'LINK/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD'],
+        'use_pair_calibration': True,
+        'risk_reward_min': 2.0,
+        'force_sl_execution': True,
+        'sl_check_interval_seconds': 10,
+        'ares_enabled': True,
+        'ares_v1_enabled': True,
+        'ares_v2_enabled': True,
+        'ares_v1_min_confidence': 0.70,
+        'ares_v2_min_confidence': 0.75,
+        'ares_max_daily_trades': 3,
+        'ares_require_trend': False,
+        'quantum_optimization_enabled': False,
+        'strategies_active': [
+            'QuantumMomentum',
+            'MonteCarlo',
+            'KellyCriterion',
+            'BlackSwan',
+            'HMMRegime',
+            'KalmanFilter',
+            'NonMarkovianKernel',
+            'CoherenceEngine',
+            'RiskGuardian',
+            'SentimentAnalysis'
+        ],
+        'strategies_experimental': [
+            'ARES_V1',
+            'ARES_V2'
+        ]
+    }
 )
 
 
