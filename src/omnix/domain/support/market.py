@@ -269,9 +269,11 @@ class CoherenceResult:
             "vote_count": self.vote_count,
             "bullish_count": self.bullish_count,
             "bearish_count": self.bearish_count,
+            "neutral_count": self.neutral_count,
             "veto_active": self.veto_active,
             "veto_strategy": self.veto_strategy,
             "veto_reason": self.veto_reason,
             "tier_results": self.tier_results,
+            "tier_breakdown": self.tier_breakdown,
             "votes": [v.to_dict() for v in self.votes],
         }
