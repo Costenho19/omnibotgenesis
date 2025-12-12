@@ -101,12 +101,17 @@ class Container:
     
     Provides lazy-loaded access to infrastructure services.
     Uses Null Object pattern for graceful degradation when services unavailable.
+    
+    Phase 2 Update: Added application layer ports and adapters.
     """
     
     _database: Optional[IDatabaseGateway] = field(default=None, repr=False)
     _cache: Optional[IRedisCache] = field(default=None, repr=False)
     _settings: Optional[Any] = field(default=None, repr=False)
     _initialized: bool = field(default=False, repr=False)
+    
+    _trading_adapter: Optional[Any] = field(default=None, repr=False)
+    _risk_adapter: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -126,6 +131,25 @@ class Container:
         if self._cache is None:
             self._cache = self._create_cache()
         return self._cache
+    
+    @property
+    def trading_adapter(self):
+        """Get trading adapter (Phase 2)."""
+        if self._trading_adapter is None:
+            self._trading_adapter = self._create_trading_adapter()
+        return self._trading_adapter
+    
+    @property
+    def risk_adapter(self):
+        """Get risk adapter (Phase 2)."""
+        if self._risk_adapter is None:
+            self._risk_adapter = self._create_risk_adapter()
+        return self._risk_adapter
+    
+    @property
+    def use_app_layer(self) -> bool:
+        """Check if application layer is enabled."""
+        return getattr(self.settings, 'use_app_layer', False)
     
     def _create_database(self) -> IDatabaseGateway:
         try:
@@ -163,6 +187,24 @@ class Container:
         
         return NullCache()
     
+    def _create_trading_adapter(self):
+        """Create trading adapter (Phase 2)."""
+        try:
+            from src.omnix.infrastructure.adapters.trading_adapter import TradingServiceAdapter
+            return TradingServiceAdapter()
+        except ImportError:
+            logger.warning("Container: TradingServiceAdapter not available")
+            return None
+    
+    def _create_risk_adapter(self):
+        """Create risk adapter (Phase 2)."""
+        try:
+            from src.omnix.infrastructure.adapters.risk_adapter import RiskGuardianAdapter
+            return RiskGuardianAdapter()
+        except ImportError:
+            logger.warning("Container: RiskGuardianAdapter not available")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         container = cls()
@@ -177,6 +219,9 @@ class Container:
             'database': self.database.is_connected() if hasattr(self.database, 'is_connected') else False,
             'cache': self.cache.is_connected() if hasattr(self.cache, 'is_connected') else False,
             'settings': self.settings is not None,
+            'trading_adapter': self.trading_adapter is not None,
+            'risk_adapter': self.risk_adapter is not None,
+            'use_app_layer': self.use_app_layer,
         }
     
     def __repr__(self) -> str:

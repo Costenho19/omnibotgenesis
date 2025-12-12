@@ -68,6 +68,8 @@ def _create_pydantic_settings_class():
         use_unified_gateway: bool = Field(default=False, validation_alias="USE_UNIFIED_GATEWAY")
         disable_auto_migrations: bool = Field(default=False, validation_alias="DISABLE_AUTO_MIGRATIONS")
         
+        use_app_layer: bool = Field(default=False, validation_alias="USE_APP_LAYER")
+        
         railway_environment: Optional[str] = Field(default=None, validation_alias="RAILWAY_ENVIRONMENT")
         railway_project_id: Optional[str] = Field(default=None, validation_alias="RAILWAY_PROJECT_ID")
         
@@ -251,6 +253,10 @@ class Settings:
     @property
     def disable_auto_migrations(self) -> bool:
         return self._get_bool('DISABLE_AUTO_MIGRATIONS', False)
+    
+    @property
+    def use_app_layer(self) -> bool:
+        return self._get_bool('USE_APP_LAYER', False)
     
     @property
     def is_railway(self) -> bool:

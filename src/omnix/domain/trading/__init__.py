@@ -1,10 +1,7 @@
 """
-OMNIX V7.0 Domain Layer
-========================
-Phase 2: Domain & Application Migration
-
-This layer contains pure business logic with no infrastructure dependencies.
-All entities and value objects are framework-agnostic.
+OMNIX V7.0 Trading Domain
+=========================
+Core trading entities and strategies.
 """
 
 from src.omnix.domain.trading.entities import (
@@ -23,13 +20,6 @@ from src.omnix.domain.trading.value_objects import (
     ConfidenceScore,
     PriceLevel,
 )
-from src.omnix.domain.risk.entities import (
-    RiskAlert,
-    LimitState,
-    CircuitState,
-    RiskLevel,
-    AlertType,
-)
 
 __all__ = [
     "Trade",
@@ -44,9 +34,4 @@ __all__ = [
     "SymbolPair",
     "ConfidenceScore",
     "PriceLevel",
-    "RiskAlert",
-    "LimitState",
-    "CircuitState",
-    "RiskLevel",
-    "AlertType",
 ]

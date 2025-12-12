@@ -71,7 +71,16 @@ Strategies are categorized into Production (e.g., QuantumMomentum, Monte Carlo, 
 
 ### Hexagonal Architecture
 
-Phase 1 completed with protocol interfaces defined in `omnix/ports/` for driven and driver interfaces, adhering to SOLID principles.
+**Phase 1 Complete**: Bootstrap & Config - Centralized Settings with Pydantic, DI Container, Bootstrap Runtime.
+
+**Phase 2 In Progress** (December 12, 2025):
+- Wave 1: Domain entities (Trade, Position, Signal, RiskAlert), value objects (Money, Quantity, SymbolPair, ConfidenceScore), market support entities (MarketSnapshot, StrategyVote, CoherenceResult)
+- Wave 2: Strategy wrappers re-exporting from legacy locations (ARES V1/V2, QuantumMomentum, etc.), Use cases (ExecuteTradeUseCase, ScanMarketUseCase, EvaluateRiskUseCase)
+- Wave 3: Infrastructure adapters (TradingServiceAdapter, RiskGuardianAdapter), Container updates with USE_APP_LAYER feature flag
+
+**Feature Flag**: `USE_APP_LAYER=false` (default OFF) - Controls gradual rollout of new application layer.
+
+Protocol interfaces defined in `src/omnix/ports/` for driven and driver interfaces, adhering to SOLID principles.
 
 ### AI Service Architecture
 
