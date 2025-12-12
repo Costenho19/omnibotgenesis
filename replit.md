@@ -131,29 +131,32 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 **License**: $15,000/year for institutional access with dedicated support.
 
-## Documentation Status (December 2025)
+## Documentation Structure (December 2025)
 
-### Auditoría Completada
+```
+docs/
+├── README.md                    <- Global index with role-based navigation
+├── current/                     <- V6.5.4d System State
+│   ├── ARCHITECTURE.md          <- Modules, ports, services, DB schema
+│   ├── TRADING_OPERATIONS.md    <- Profiles, ARES, risk management
+│   └── TECHNICAL_DEBT.md        <- Known issues, deferred work
+├── transformation/              <- V7.0 Migration Plan
+│   ├── ARCHITECTURE_AUDIT.md    <- Diagnostic, problems identified
+│   ├── MIGRATION_PLAN.md        <- Strangler Fig phases, timeline
+│   └── adr/                     <- Architecture Decision Records
+├── business/                    <- B2C SaaS, investor docs
+├── operations/                  <- Railway deployment, experimental
+├── compliance/                  <- Audits, verification
+└── history/                     <- Archived documentation
+```
 
-| Documento | Estado | Última Actualización |
-|-----------|--------|---------------------|
-| `docs/core/ARCHITECTURE_REFERENCE.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
-| `docs/core/INDEX.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
-| `docs/core/TECHNICAL_DEBT.md` | ✅ Creado | Dec 11, 2025 |
-| `docs/architecture/ARCHITECTURE_AUDIT_2025.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
-| `docs/audits/AUDIT_REPORT_20251208.md` | ✅ Actualizado V6.5.4d | Dec 11, 2025 |
+### Key Documents
 
-### Deuda Técnica Registrada
-
-Todo refactoring está **diferido** hasta completar 500 trades para track record:
-
-- Hexagonal ports definidos pero no integrados (V7.0)
-- main.py monolítico (V7.0)
-- 80 bare except clauses
-- 55 excepciones silenciadas
-- enterprise_bot.py 7,812 líneas
-
-Ver `docs/core/TECHNICAL_DEBT.md` para registro completo.
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Architecture | `docs/current/ARCHITECTURE.md` | System modules, ports, services |
+| Technical Debt | `docs/current/TECHNICAL_DEBT.md` | Known issues, refactoring backlog |
+| Migration Plan | `docs/transformation/MIGRATION_PLAN.md` | V7.0 hexagonal roadmap |
 
 ## Refactoring Status (V7.0 Migration)
 
@@ -162,12 +165,12 @@ Ver `docs/core/TECHNICAL_DEBT.md` para registro completo.
 | Entregable | Ubicación |
 |------------|-----------|
 | Dependency Graph | `docs/architecture/phase0/DEPENDENCY_GRAPH.md` |
-| ADR-001 | `docs/adr/ADR-001-hexagonal-migration-strategy.md` |
-| Module Catalog | `docs/architecture/MODULE_CATALOG.md` |
+| ADR-001 | `docs/transformation/adr/ADR-001-hexagonal.md` |
+| Module Catalog | Merged into `docs/current/ARCHITECTURE.md` |
 | pyproject.toml | `/pyproject.toml` |
 | src/omnix/ structure | `/src/omnix/` |
 | Smoke tests | `tests/test_smoke.py` (13/13 pass) |
 
 ### Próxima Fase: 1 - Bootstrap & Config
 
-Ver `docs/architecture/MIGRATION_ROADMAP.md` para plan completo.
+Ver `docs/transformation/MIGRATION_PLAN.md` para plan completo.
