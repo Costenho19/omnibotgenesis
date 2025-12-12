@@ -172,7 +172,13 @@ Based on the comprehensive Functional Domain Map audit (December 12, 2025), the 
 | Package | Location | Reason | Recommendation | Phase |
 |---------|----------|--------|----------------|-------|
 | **alerts** | `omnix_services/alerts/` | `notifications/` service is used instead; no active imports in trading pipeline | Consolidate functionality into `notifications/` or deprecate | V7.0 Phase 4 |
-| **concurrency** | `omnix_services/concurrency/` | Redis session management supersedes this; imported only by `main.py` but functions not actively called | Verify no external scripts depend on it, then deprecate | V7.0 Phase 4 |
+| **on_chain_service** | `omnix_services/on_chain_service/` | No active imports in codebase; APIs (Arkham, Clank) not integrated | Activate with feature flag when APIs available | V7.0 Phase 3 |
+
+### 5.1b ACTIVE but Candidate for Consolidation
+
+| Package | Location | Reason | Recommendation | Phase |
+|---------|----------|--------|----------------|-------|
+| **concurrency** | `omnix_services/concurrency/` | Actively imported by `main.py` (IntelligentCacheSystem, OptimizedConcurrencyManager) | Evaluate consolidation with Redis cache system | V7.0 Phase 2 |
 
 ### 5.2 Confirmed LEGACY (Superseded by Newer Code)
 
