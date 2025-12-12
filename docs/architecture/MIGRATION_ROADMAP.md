@@ -620,14 +620,33 @@ class KrakenAdapter(IMarketData, IOrderExecutor):
 
 | ID | Tarea | Horas | Prioridad |
 |----|-------|-------|-----------|
-| 4.1 | Eliminar re-exports de compatibilidad | 2 | P0 |
-| 4.2 | Eliminar paquetes legacy vacíos | 2 | P0 |
-| 4.3 | Actualizar imports en todo el codebase | 4 | P0 |
-| 4.4 | Configurar import linter (no cross-layer imports) | 2 | P1 |
-| 4.5 | Eliminar código muerto | 4 | P1 |
-| 4.6 | Actualizar documentación | 4 | P1 |
-| 4.7 | Final test coverage report | 2 | P1 |
-| 4.8 | Performance benchmarks | 2 | P2 |
+| 4.1 | Mover `main.py` y `wsgi.py` a `src/omnix/bootstrap/` | 2 | P0 |
+| 4.2 | Crear directorio `scripts/` y mover utilidades de la raíz | 2 | P0 |
+| 4.3 | Mover `test_railway_startup.py` a `tests/integration/` | 1 | P1 |
+| 4.4 | Actualizar Procfile y railway.json con nuevas rutas | 1 | P0 |
+| 4.5 | Evaluar y eliminar `start_dashboard.py` si es redundante | 1 | P1 |
+| 4.6 | Eliminar re-exports de compatibilidad | 2 | P0 |
+| 4.7 | Eliminar paquetes legacy vacíos | 2 | P0 |
+| 4.8 | Actualizar imports en todo el codebase | 4 | P0 |
+| 4.9 | Configurar import linter (no cross-layer imports) | 2 | P1 |
+| 4.10 | Eliminar código muerto | 4 | P1 |
+| 4.11 | Actualizar documentación | 4 | P1 |
+| 4.12 | Final test coverage report | 2 | P1 |
+| 4.13 | Performance benchmarks | 2 | P2 |
+
+### 7.1.1 Archivos Raíz a Reorganizar
+
+| Archivo | Destino | Notas |
+|---------|---------|-------|
+| `main.py` | `src/omnix/bootstrap/main.py` | Entrypoint principal |
+| `wsgi.py` | `src/omnix/bootstrap/wsgi.py` | Producción WSGI |
+| `start_dashboard.py` | `scripts/` o DELETE | Evaluar redundancia |
+| `chat_with_bot.py` | `scripts/` | Utilidad testing |
+| `generate_investor_report.py` | `scripts/` | Reportes inversores |
+| `send_telegram_message.py` | `scripts/` | Utilidad Telegram |
+| `get_my_telegram_id.py` | `scripts/` | Helper Telegram |
+| `test_railway_startup.py` | `tests/integration/` | Test deployment |
+| `verify_code.py` | `scripts/` | Verificación código |
 
 ### 7.2 Paquetes a Eliminar
 

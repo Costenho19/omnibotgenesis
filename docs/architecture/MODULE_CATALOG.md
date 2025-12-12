@@ -226,7 +226,34 @@ This catalog documents all modules in OMNIX V6.5.4d with their purpose, dependen
 
 ---
 
-## 4. Dependency Injection Status
+## 4. Root Files (Cleanup in Phase 4)
+
+**Purpose:** Scripts, entrypoints, and utilities in project root  
+**Migration Status:** Reorganize in Phase 4 (Cleanup)  
+**Files:** 9
+
+| File | Purpose | Target Location | Priority |
+|------|---------|-----------------|----------|
+| `main.py` | Bot entrypoint | `src/omnix/bootstrap/main.py` | P0 |
+| `wsgi.py` | Production WSGI entry | `src/omnix/bootstrap/wsgi.py` | P0 |
+| `start_dashboard.py` | Dashboard launcher | `scripts/start_dashboard.py` or DELETE if redundant | P1 |
+| `chat_with_bot.py` | Testing utility | `scripts/chat_with_bot.py` | P2 |
+| `generate_investor_report.py` | Investor reports | `scripts/generate_investor_report.py` | P1 |
+| `send_telegram_message.py` | Telegram utility | `scripts/send_telegram_message.py` | P2 |
+| `get_my_telegram_id.py` | Telegram ID helper | `scripts/get_my_telegram_id.py` | P2 |
+| `test_railway_startup.py` | Deployment test | `tests/integration/test_railway_startup.py` | P1 |
+| `verify_code.py` | Code verification | `scripts/verify_code.py` or `tests/` | P2 |
+
+**Migration Action:** 
+- Phase 4.1: Move `main.py` and `wsgi.py` to bootstrap
+- Phase 4.2: Create `scripts/` directory and move utilities
+- Phase 4.3: Move tests to `tests/integration/`
+- Phase 4.4: Update Procfile and railway.json paths
+- Phase 4.5: Evaluate `start_dashboard.py` redundancy
+
+---
+
+## 5. Dependency Injection Status
 
 | Component | Current | Target |
 |-----------|---------|--------|
@@ -239,7 +266,7 @@ This catalog documents all modules in OMNIX V6.5.4d with their purpose, dependen
 
 ---
 
-## 5. Type Coverage
+## 6. Type Coverage
 
 | Package | Estimated Coverage | Target |
 |---------|-------------------|--------|
@@ -251,4 +278,4 @@ This catalog documents all modules in OMNIX V6.5.4d with their purpose, dependen
 ---
 
 *Document maintained as part of Phase 0 Foundation*  
-*Last updated: December 11, 2025*
+*Last updated: December 12, 2025*
