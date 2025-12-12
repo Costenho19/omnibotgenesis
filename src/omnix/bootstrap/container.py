@@ -114,6 +114,9 @@ class Container:
     _risk_adapter: Optional[Any] = field(default=None, repr=False)
     _coherence_adapter: Optional[Any] = field(default=None, repr=False)
     
+    _kraken_adapter: Optional[Any] = field(default=None, repr=False)
+    _gemini_adapter: Optional[Any] = field(default=None, repr=False)
+    
     @property
     def settings(self):
         if self._settings is None:
@@ -153,6 +156,20 @@ class Container:
         if self._coherence_adapter is None:
             self._coherence_adapter = self._create_coherence_adapter()
         return self._coherence_adapter
+    
+    @property
+    def kraken_adapter(self):
+        """Get Kraken exchange adapter (Phase 3)."""
+        if self._kraken_adapter is None:
+            self._kraken_adapter = self._create_kraken_adapter()
+        return self._kraken_adapter
+    
+    @property
+    def gemini_adapter(self):
+        """Get Gemini AI adapter (Phase 3)."""
+        if self._gemini_adapter is None:
+            self._gemini_adapter = self._create_gemini_adapter()
+        return self._gemini_adapter
     
     @property
     def use_app_layer(self) -> bool:
@@ -222,6 +239,24 @@ class Container:
             logger.warning("Container: CoherenceEngineAdapter not available")
             return None
     
+    def _create_kraken_adapter(self):
+        """Create Kraken exchange adapter (Phase 3)."""
+        try:
+            from src.omnix.infrastructure.adapters.kraken_adapter import KrakenAdapter
+            return KrakenAdapter()
+        except ImportError:
+            logger.warning("Container: KrakenAdapter not available")
+            return None
+    
+    def _create_gemini_adapter(self):
+        """Create Gemini AI adapter (Phase 3)."""
+        try:
+            from src.omnix.infrastructure.adapters.gemini_adapter import GeminiAdapter
+            return GeminiAdapter()
+        except ImportError:
+            logger.warning("Container: GeminiAdapter not available")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         container = cls()
@@ -232,15 +267,27 @@ class Container:
         return container
     
     def health_check(self) -> dict:
-        return {
+        health = {
             'database': self.database.is_connected() if hasattr(self.database, 'is_connected') else False,
             'cache': self.cache.is_connected() if hasattr(self.cache, 'is_connected') else False,
             'settings': self.settings is not None,
             'trading_adapter': self.trading_adapter is not None,
             'risk_adapter': self.risk_adapter is not None,
             'coherence_adapter': self.coherence_adapter is not None,
+            'kraken_adapter': self._kraken_adapter is not None,
+            'gemini_adapter': self._gemini_adapter is not None,
             'use_app_layer': self.use_app_layer,
         }
+        
+        if self._kraken_adapter is not None:
+            kraken_health = self._kraken_adapter.health_check()
+            health['kraken_connected'] = kraken_health.get('connected', False)
+        
+        if self._gemini_adapter is not None:
+            gemini_health = self._gemini_adapter.health_check()
+            health['gemini_provider'] = gemini_health.get('provider', 'unknown')
+        
+        return health
     
     def __repr__(self) -> str:
         health = self.health_check()
