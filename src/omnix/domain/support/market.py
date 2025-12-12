@@ -214,6 +214,7 @@ class CoherenceResult:
     veto_reason: Optional[str] = None
     
     tier_results: Dict[int, bool] = field(default_factory=dict)
+    tier_breakdown: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     
     evaluated_at: datetime = field(default_factory=datetime.utcnow)
     
@@ -231,6 +232,11 @@ class CoherenceResult:
     def bearish_count(self) -> int:
         """Count of bearish votes."""
         return sum(1 for v in self.votes if v.is_bearish)
+    
+    @property
+    def neutral_count(self) -> int:
+        """Count of neutral votes."""
+        return sum(1 for v in self.votes if not v.is_bullish and not v.is_bearish)
     
     def add_vote(self, vote: StrategyVote) -> None:
         """Add a strategy vote."""

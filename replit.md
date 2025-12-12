@@ -180,6 +180,28 @@ docs/
 | src/omnix/ structure | `/src/omnix/` |
 | Smoke tests | `tests/test_smoke.py` (13/13 pass) |
 
-### Próxima Fase: 1 - Bootstrap & Config
+### Fase 1: Bootstrap & Config ✅ COMPLETADA (Dec 11, 2025)
+
+| Entregable | Ubicación |
+|------------|-----------|
+| Centralized Settings | `src/omnix/config/settings.py` |
+| DI Container | `src/omnix/bootstrap/container.py` |
+| Bootstrap Runtime | `src/omnix/bootstrap/__init__.py` |
+| Phase 1 Tests | `tests/test_phase1_bootstrap.py` (12/12 pass) |
+
+### Fase 2: Domain & Application ✅ COMPLETADA (Dec 12, 2025)
+
+| Entregable | Ubicación |
+|------------|-----------|
+| Domain Entities | `src/omnix/domain/trading/entities.py` |
+| Value Objects | `src/omnix/domain/trading/value_objects.py`, `src/omnix/domain/support/market.py` |
+| Use Cases | `src/omnix/application/trading/` (Execute, Scan, ManagePositions, CoherenceReport) |
+| Infrastructure Adapters | `src/omnix/infrastructure/adapters/` (Trading, Risk, Coherence) |
+| Parity Test Harness | `tests/test_parity_harness.py` |
+| Integration Tests | `tests/test_integration_phase2.py` (97/97 pass) |
+
+**Feature Flag**: `USE_APP_LAYER=false` (default OFF) - Ready for gradual activation.
+
+### Próxima Fase: 3 - Flask & Telegram Refactoring
 
 Ver `docs/transformation/MIGRATION_PLAN.md` para plan completo.
