@@ -23,11 +23,11 @@ logger = logging.getLogger(__name__)
 
 # Import omnix services
 try:
-    from omnix_services.ai_service import ConversationalAIService
+    from omnix_services.ai_service import ConversationalAI
     OMNIX_ENTERPRISE_AVAILABLE = True
 except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False
-    logger.warning("⚠️ ConversationalAIService no disponible")
+    logger.warning("⚠️ ConversationalAI no disponible")
 
 try:
     from omnix_services.trading_service import TradingServiceEnterprise
@@ -179,7 +179,7 @@ class EnterpriseTelegramBot:
         self.application = None
         self.is_running = False
         self.db_manager = db_manager  # MEMORIA PERSISTENTE POSTGRESQL
-        self.ai = ConversationalAIService()  # SUPERINTELIGENCIA PARA HAROLD
+        self.ai = ConversationalAI()  # SUPERINTELIGENCIA PARA HAROLD (adapter correcto)
         
         self._message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._message_timers: Dict[str, asyncio.Task] = {}
