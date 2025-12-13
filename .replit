@@ -33,7 +33,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -u scripts/verify_code.py"
+args = "cd /home/runner/workspace && python -m pytest tests/test_code_verification.py tests/test_version_consistency.py -v --tb=short"
 
 [[workflows.workflow]]
 name = "Dashboard Preview"

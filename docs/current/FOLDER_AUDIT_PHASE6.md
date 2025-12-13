@@ -23,7 +23,7 @@ All cleanup tasks have been completed successfully.
 | `src/omnix/` | Growing | New hexagonal architecture V7.0 | ✅ KEPT |
 | `docs/` | N/A | Documentation | ✅ KEPT |
 | `tests/` | N/A | Test suite | ✅ KEPT |
-| `scripts/` | N/A | Utility scripts | ✅ KEPT |
+| `tools/` | N/A | Operational CLIs | ✅ NEW (Dec 13) |
 | `sql/` | N/A | SQL migrations | ✅ KEPT |
 | `omnix_testing/` | 24 (internal) | Backtesting dev tools | ✅ KEPT |
 
@@ -35,12 +35,17 @@ All cleanup tasks have been completed successfully.
 | `reports/` | 0 | Only PDF artifact | ✅ **MOVED to docs/history/** | Dec 13 |
 | `omnix_risk/` | 1 (self-ref) | Only internal reference | ✅ **DELETED** | Dec 13 |
 | `omnix/` | N/A | Legacy ports location | ✅ **DELETED** | Dec 13 |
+| `scripts/` | N/A | Lacked architectural coherence | ✅ **REFACTORED** | Dec 13 |
 
 ### ✅ MIGRATED
 
 | From | To | Refs Updated | Status |
 |------|-----|--------------|--------|
 | `omnix/ports/` | `src/omnix/ports/` | tests/test_smoke.py | ✅ COMPLETE |
+| `scripts/verify_*.py` | `tests/test_*.py` | Workflow updated | ✅ COMPLETE |
+| `scripts/*_telegram*.py` | `tools/telegram/` | README added | ✅ COMPLETE |
+| `scripts/generate_*.py` | `tools/operations/` | README added | ✅ COMPLETE |
+| `scripts/log_trades_*.py` | `omnix_services/analytics/` | __init__.py updated | ✅ COMPLETE |
 
 ## Phase 6 Execution Summary
 
