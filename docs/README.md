@@ -132,9 +132,9 @@ docs/
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Foundation | ✅ Complete (Dec 11, 2025) |
-| 1 | Bootstrap & Config | ⬜ Ready to start |
-| 2 | Domain & Application | 🔒 Blocked (500 trades) |
-| 3 | Interfaces | 🔒 Blocked (500 trades) |
+| 1 | Bootstrap & Config | ✅ Complete (Dec 12, 2025) |
+| 2 | Domain & Application | ✅ Complete (Dec 12, 2025) |
+| 3 | Infrastructure Adapters | ✅ Complete (Dec 12, 2025) |
 | 4 | Cleanup | 🔒 Blocked (500 trades + 14 days) |
 
 See [MIGRATION_PLAN.md](transformation/MIGRATION_PLAN.md) for details.

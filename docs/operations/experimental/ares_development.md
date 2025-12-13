@@ -47,7 +47,7 @@ ARES (Advanced Regime-aware Entry System) is a set of experimental trading strat
 ## ARES V2 - Scalping Protocol
 
 ### Design Philosophy
-Ultra-fast 1-minute timeframe strategy for high-frequency opportunities.
+Fast scalping strategy for quick opportunities on short timeframes.
 
 ### Indicators
 - EMA 5/13 crossover
@@ -58,7 +58,7 @@ Ultra-fast 1-minute timeframe strategy for high-frequency opportunities.
 ### Target Metrics
 - Win Rate: 60-70%
 - Risk/Reward: 1.5:1
-- Timeframe: M1 to M5
+- Timeframe: 15m to 1h
 
 ### Current Status (V6.5.4d)
 - Implementation: Complete

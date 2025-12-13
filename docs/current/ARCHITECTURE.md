@@ -114,14 +114,14 @@ OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. **Phase
 
 | Port | Protocol Defined | Adapter Exists | Integrated via DI |
 |------|-----------------|----------------|-------------------|
-| TradingPort | ✅ | ✅ KrakenClient | ⬜ Deferred V7.0 |
+| TradingPort | ✅ | ✅ KrakenAdapter | ✅ Via container.py (Dec 12, 2025) |
 | DatabasePort | ✅ | ✅ DatabaseGateway | ⬜ Deferred V7.0 |
 | CachePort | ✅ | ✅ RedisCache | ⬜ Deferred V7.0 |
 | NotificationPort | ✅ | ✅ TelegramUtils | ⬜ Deferred V7.0 |
-| AIInferencePort | ✅ | ✅ AI Providers | ✅ Via container.py |
-| MarketDataPort | ✅ | ✅ KrakenData | ⬜ Deferred V7.0 |
+| AIInferencePort | ✅ | ✅ GeminiAdapter | ✅ Via container.py (Dec 12, 2025) |
+| MarketDataPort | ✅ | ✅ KrakenAdapter | ✅ Via container.py (Dec 12, 2025) |
 
-**Technical Debt Note:** Adapters exist but are not injected through ports. Services import implementations directly. Full DI integration planned for V7.0 after 500-trade milestone.
+**Note:** Phase 3 (Dec 12, 2025) added KrakenAdapter and GeminiAdapter implementing TradingPort, MarketDataPort, and AIInferencePort respectively. Remaining ports deferred to V7.0 Phase 4.
 
 ---
 

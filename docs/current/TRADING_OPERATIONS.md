@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d Trading Operations
 
 **Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 11, 2025  
+**Last Updated:** December 13, 2025  
 **Active Profile:** PRODUCTION_STABLE
 
 ---
@@ -58,10 +58,13 @@ Step 4: Risk Guardian Review
 
 Step 5: Execution
 ├── CAES position sizing
+├── **V6.5.4d: FINAL_SYMBOL_FILTER_VETO** (última línea de defensa)
 ├── Order placement (market/limit)
 ├── TP/SL setting (volatility-based)
 └── Decision logging (audit trail)
 ```
+
+> **V6.5.4d Security:** Added `FINAL_SYMBOL_FILTER_VETO` as last line of defense before trade execution. This redundant check blocks BUY orders on excluded symbols (e.g., ADA/USD) even if earlier filters fail. Uses `analysis.get('symbol')` as primary source.
 
 ### 1.2 Trade Lifecycle
 
@@ -128,6 +131,31 @@ TRADING_PROFILE=PRODUCTION_STABLE
 ```
 
 **Note:** Profile changes take effect after bot restart.
+
+### 2.5 PAPER_OPTIMIZED Hardening (December 13, 2025)
+
+**V6.5.4d Update:** PAPER_OPTIMIZED profile was hardened to match PRODUCTION_STABLE safety requirements:
+
+| Parameter | Before | After | Reason |
+|-----------|--------|-------|--------|
+| `score_very_strong` | 28 | 20 | Align with production |
+| `score_strong` | 18 | 12 | Align with production |
+| `score_moderate` | 10 | 12 | Disable MODERATE signals |
+| `allowed_symbols` | All | BTC/USD, XRP/USD, LINK/USD | Focus on proven pairs |
+| `excluded_symbols` | None | SOL, ETH, DOT, AVAX, ATOM, POL, LTC, ADA | Block underperforming pairs |
+
+**Configuration in code:**
+```python
+PAPER_OPTIMIZED_PROFILE.extra_params = {
+    'allowed_symbols': ['BTC/USD', 'XRP/USD', 'LINK/USD'],
+    'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 
+                         'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD'],
+    'use_pair_calibration': True,
+    'ares_enabled': True,
+    'ares_v1_enabled': True,
+    'ares_v2_enabled': True
+}
+```
 
 ---
 

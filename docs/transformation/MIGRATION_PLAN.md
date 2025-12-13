@@ -110,8 +110,8 @@ from omnix_core.config import TradingProfiles  # No changes needed
 |------|--------|----------|---------|--------|
 | 0 | Foundation | 1 semana | **AHORA** (no afecta trading) | ✅ **COMPLETADA** (Dec 11, 2025) |
 | 1 | Bootstrap & Config | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
-| 2 | Domain & Application | 2 semanas | **500 trades** | 🔒 Bloqueado |
-| 3 | Interfaces | 1 semana | **500 trades** | 🔒 Bloqueado |
+| 2 | Domain & Application | 2 semanas | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
+| 3 | Infrastructure Adapters | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 4 | Cleanup | 1 semana | **500 trades + 14 días estable** | 🔒 Bloqueado |
 
 **Nota:** Fases 0-1 son de **bajo riesgo** y pueden ejecutarse durante track record generation. Fases 2-4 requieren milestone de 500 trades para minimizar riesgo de regresión
