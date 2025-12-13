@@ -2,14 +2,20 @@
 OMNIX V5.1 ENTERPRISE - Visual Styles System
 Ultra Premium Visual Response Formatting
 Solicitado por Harold - Sistema de emojis y formato avanzado
+
+FIX Dec 13, 2025: Pipeline idempotente que aplica exactamente UN badge por palabra.
+Evita transformaciones en cascada que rompían el texto.
 """
 
 import re
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Set, Tuple
 from omnix_core.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Emojis comunes para detectar texto ya procesado
+EMOJI_PATTERN = re.compile(r'[\U0001F300-\U0001F9FF\U00002600-\U000026FF\U00002700-\U000027BF]')
 
 
 class VisualStylesManager:
