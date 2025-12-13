@@ -144,27 +144,13 @@ class VisualStylesManager:
         try:
             processed_text = response_text
             
-            # 1️⃣ DETECTAR Y COLOREAR SUBTÍTULOS
-            for pattern, replacement in self.subtitle_patterns.items():
-                processed_text = re.sub(
-                    pattern, 
-                    replacement, 
-                    processed_text, 
-                    flags=re.IGNORECASE
-                )
-            
-            # 2️⃣ TRANSFORMACIONES PREMIUM DE PALABRAS
-            for word, premium_word in self.premium_transformations.items():
-                # Replace different cases
-                processed_text = processed_text.replace(word, premium_word)
-                processed_text = processed_text.replace(
-                    word.capitalize(), 
-                    premium_word
-                )
-                processed_text = processed_text.replace(
-                    word.upper(), 
-                    premium_word.upper()
-                )
+            # FIX Dec 13, 2025: DESHABILITADO subtitle_patterns y premium_transformations
+            # Causaban transformaciones en cascada que rompían el texto:
+            # Ejemplo: "PAPER TRADING" → "PAPER 🟩 💹🎯 💹🎯 TRADING 🟩 📡⚡ SEÑAL..."
+            # El AI de Gemini ya genera texto legible, no necesita transformación agresiva.
+            #
+            # Si se quiere re-habilitar en el futuro, usar una lista de "palabras ya procesadas"
+            # para evitar transformaciones múltiples en la misma palabra.
             
             # 3️⃣ AÑADIR BULLETS FANCY
             if '\n-' in processed_text or '\n•' in processed_text:
