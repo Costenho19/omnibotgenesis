@@ -71,7 +71,6 @@
 |--------|----------|---------|---------|
 | CAES V6.5.4 | `omnix_core/strategies/caes_module.py` | Dynamic position sizing (0.5x-3x) | Every trade |
 | Adaptive Parameter Engine | `omnix_services/adaptive_engine/adaptive_engine.py` | Auto-calibration by regime | Regime change |
-| On-Chain Intelligence | `omnix_services/on_chain_service/on_chain_service.py` | Whale tracking, DeFi metrics | Market analysis |
 | Execution Protocol V6.5.4d | `omnix_services/execution_service/execution_protocol.py` | 4-layer institutional execution | Trade execution |
 | InstitutionalDecisionLogger | `omnix_core/utils/logger.py` | Audit trail for investor reports | All decisions |
 
@@ -186,7 +185,6 @@ class OmnixAPIClient:
 | ExecutionService | `omnix_services/execution_service/` | Trade execution protocol |
 | MonitoringService | `omnix_services/monitoring/` | Risk Guardian, metrics |
 | AdaptiveEngine | `omnix_services/adaptive_engine/` | Parameter auto-calibration |
-| OnChainService | `omnix_services/on_chain_service/` | Blockchain analytics |
 | PortfolioManagement | `omnix_services/portfolio_management/` | Institutional optimization |
 | RiskManagement | `omnix_services/risk_management/` | Circuit breaker, limits |
 | MarketData | `omnix_services/market_data/` | Price feeds, sentiment |
@@ -194,7 +192,6 @@ class OmnixAPIClient:
 | StockTrading | `omnix_services/stock_trading/` | Alpaca integration |
 | Derivatives | `omnix_services/derivatives/` | Futures, hedging |
 | Analytics | `omnix_services/analytics/` | Fibonacci, patterns |
-| Alerts | `omnix_services/alerts/` | Smart notifications |
 | Notifications | `omnix_services/notifications/` | Telegram, daily summary |
 | UserSettings | `omnix_services/user_settings/` | Per-user configuration |
 | VoiceService | `omnix_services/voice_service/` | Voice commands |
@@ -540,22 +537,25 @@ Estrategias (6+) → CoherenceEngine (veto) → AdaptiveEngine (calibración) �
 
 ### 7.12 Dominio 11: Legacy/Dormant Modules
 
-**Propósito:** Código legacy o sin uso activo que requiere evaluación.
+**Propósito:** Código legacy o sin uso activo. Actualizado en Phase 4.10 (Dec 13, 2025).
 
-| Paquete | Ubicación | Estado | Razón | Recomendación |
-|---------|-----------|--------|-------|---------------|
-| **Alerts** | `omnix_services/alerts/` | DORMANT | No hay imports activos; notifications/ se usa en su lugar | Consolidar en notifications/ o deprecar |
-| **Concurrency** | `omnix_services/concurrency/` | ACTIVE | Importado en `main.py` (IntelligentCacheSystem, OptimizedConcurrencyManager) | Mantener; evaluar consolidación en V7.0 |
-| **RegimeSwitcher** | `omnix_strategies/regime_switcher.py` | LEGACY | Sin imports directos; funcionalidad en adaptive_engine | Deprecar en V7.0 |
-| **CommunityIntelligence** | `omnix_services/community_intelligence/` | PARTIAL | Solo usado por Telegram commands | Evaluar integración con trading pipeline o archivar |
-| **OnChainService** | `omnix_services/on_chain_service/` | DORMANT | Sin imports activos; APIs externas no integradas | Activar en V7.0 con feature flag |
+| Paquete | Ubicación | Estado | Razón | Acción |
+|---------|-----------|--------|-------|--------|
+| **Alerts** | `omnix_services/alerts/` | ❌ **REMOVED** | 0 imports externos; notifications/ se usa en su lugar | Eliminado en Phase 4.10 |
+| **Concurrency** | `omnix_services/concurrency/` | ACTIVE | Importado en `main.py` (IntelligentCacheSystem, OptimizedConcurrencyManager) | Mantener |
+| **RegimeSwitcher** | `omnix_strategies/regime_switcher.py` | ❌ **REMOVED** | 0 imports directos; funcionalidad en adaptive_engine | Eliminado en Phase 4.10 |
+| **CommunityIntelligence** | `omnix_services/community_intelligence/` | PARTIAL | Solo usado por Telegram commands | Evaluar en V7.0 |
+| **OnChainService** | `omnix_services/on_chain_service/` | ❌ **REMOVED** | 0 imports externos; APIs nunca integradas | Eliminado en Phase 4.10 |
 
-**Nota Importante:** Verificar imports reales antes de deprecar:
+**Verificación de Eliminación (Dec 13, 2025):**
 ```bash
-grep -r "from omnix_services.<package>" . --include="*.py"
+# Confirmado 0 imports antes de eliminar:
+grep -r "from omnix_services.alerts" --include="*.py"      # 0 resultados
+grep -r "from omnix_strategies.regime_switcher" --include="*.py"  # 0 resultados
+grep -r "from omnix_services.on_chain_service" --include="*.py"   # 0 resultados (solo self-refs)
 ```
 
-**Plan de Remediación:** Ver `docs/current/TECHNICAL_DEBT.md`
+**Referencia:** Ver `docs/current/IMPORT_AUDIT.md` para auditoría completa
 
 ---
 
