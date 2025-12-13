@@ -3210,7 +3210,7 @@ Usa: `/autotrading activar ACEPTO`"""
                     video_context += f"\n\nMensaje original del usuario: {user_message}"
                     
                     logger.info(f"🧠 Enviando a IA con contexto de video: {len(video_context)} chars, tiene_contenido: {has_real_content}")
-                    ai_response = self.ai.generate_response(
+                    ai_response = await self.ai.generate_response_async(
                         user_message=video_context,
                         user_name=user_name,
                         chat_id=telegram_chat_id,
@@ -3250,8 +3250,8 @@ Usa: `/autotrading activar ACEPTO`"""
             thinking_message = await update.message.reply_text("🧠 OMNIX IA")
             
             try:
-                # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
-                ai_response = self.ai.generate_response(
+                # FIX Dec 13, 2025: Usar versión async para evitar deadlock en event loop
+                ai_response = await self.ai.generate_response_async(
                     user_message=user_message,
                     user_name=user_name,
                     chat_id=telegram_chat_id,
@@ -3484,8 +3484,8 @@ Usa: `/autotrading activar ACEPTO`"""
                     logger.info(f"🎤 Texto transcrito: {transcribed_text}")
                     
                     # Procesar con la IA directamente (sin FakeUpdate)
-                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
-                    ai_response = self.ai.generate_response(
+                    # FIX Dec 13, 2025: Usar versión async para evitar deadlock
+                    ai_response = await self.ai.generate_response_async(
                         user_message=transcribed_text,
                         user_name=user_name,
                         chat_id=telegram_chat_id,
@@ -3642,8 +3642,8 @@ Usa: `/autotrading activar ACEPTO`"""
                     else:
                         full_context = f"El usuario envió un video para análisis:\n{analysis_result}"
                     
-                    # FIX Nov 29, 2025: Pasar chat_id y user_id explícitos para memoria
-                    ai_response = self.ai.generate_response(
+                    # FIX Dec 13, 2025: Usar versión async para evitar deadlock
+                    ai_response = await self.ai.generate_response_async(
                         user_message=full_context,
                         user_name=user_name,
                         chat_id=telegram_chat_id,

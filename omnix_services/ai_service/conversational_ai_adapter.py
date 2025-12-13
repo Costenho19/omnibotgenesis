@@ -91,12 +91,70 @@ class ConversationalAI:
             except Exception as e:
                 logger.error(f"Error initializing legacy AI clients: {e}")
     
+    async def generate_response_async(self, user_message, user_name="Usuario", chat_id="", user_id=None, trading_system=None):
+        """
+        🚀 ASYNC ENTERPRISE-GRADE RESPONSE GENERATION
+        
+        FIX Dec 13, 2025: Versión async para evitar deadlock en telegram handlers.
+        Usar esta versión desde handlers async de python-telegram-bot.
+        """
+        try:
+            if self.using_enterprise:
+                logger.info(f"🚀 [ASYNC] Generando respuesta ENTERPRISE para {user_name}")
+                
+                chat_id_int = 0
+                if chat_id:
+                    try:
+                        chat_id_int = int(chat_id)
+                    except (ValueError, TypeError):
+                        chat_id_int = 0
+                
+                if chat_id_int == 0 and user_id:
+                    try:
+                        chat_id_int = int(user_id)
+                    except (ValueError, TypeError):
+                        chat_id_int = 0
+                
+                logger.info(f"🧠 MEMORIA: chat_id={chat_id_int}")
+                
+                real_market_data = self._fetch_real_market_data(trading_system, user_message, user_id=user_id)
+                
+                result = await self.enterprise_service.generate_response(
+                    chat_id=chat_id_int,
+                    user_message=user_message,
+                    user_name=user_name,
+                    market_data=real_market_data,
+                    apply_visual_style=True
+                )
+                
+                if result and 'response' in result:
+                    response_text = result['response']
+                    if result.get('web_search_used'):
+                        web_indicator = "\n\n🔍 *Información verificada en tiempo real*"
+                        if "Información verificada" not in response_text:
+                            response_text = response_text + web_indicator
+                        logger.info(f"🔍 Web search used")
+                    return response_text
+                else:
+                    logger.error("❌ No response from enterprise service")
+                    return self._fallback_response()
+            else:
+                logger.warning("⚠️ Using legacy AI generation")
+                return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
+        except RateLimitExceeded as e:
+            logger.warning(f"⚠️ Rate limit exceeded: {e}")
+            return "⚠️ Has alcanzado el límite de mensajes por minuto. Por favor espera un momento."
+        except Exception as e:
+            logger.error(f"❌ Error generating async response: {e}", exc_info=True)
+            return self._fallback_response()
+    
     def generate_response(self, user_message, user_name="Usuario", chat_id="", user_id=None, trading_system=None):
         """
-        🚀 ENTERPRISE-GRADE RESPONSE GENERATION
+        🚀 ENTERPRISE-GRADE RESPONSE GENERATION (SYNC VERSION)
         
         Mantiene compatibilidad con firma vieja pero usa sistema enterprise modular
         FIX Nov 28, 2025: Ahora pasa DATOS REALES de Kraken al AI
+        WARNING: NO usar desde handlers async de telegram - usar generate_response_async() en su lugar
         """
         try:
             if self.using_enterprise:
