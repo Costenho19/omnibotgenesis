@@ -608,13 +608,148 @@ resource_manager = ScalableResourceManager()
 
 # ==================== TELEGRAM BOT INITIALIZATION ====================
 
+# =============================================================================
+# 🏗️ USE_APP_LAYER FEATURE FLAG - V7.0 Hexagonal Architecture Migration
+# =============================================================================
+# Set USE_APP_LAYER=true to use the new hexagonal architecture with:
+# - Flask App Factory (src/omnix/interfaces/flask_app.py)
+# - DI Container (src/omnix/bootstrap/container.py)
+# - TelegramBotAdapter (src/omnix/infrastructure/adapters/telegram_adapter.py)
+#
+# Default: false (use legacy architecture for production stability)
+# =============================================================================
+
+USE_APP_LAYER = env_config.get('USE_APP_LAYER', default='false', cast_type=bool)
+
 if __name__ == "__main__":
     import signal
     import sys
     
     logger.info("=" * 80)
     logger.info(f"🚀 OMNIX {VERSION_BANNER} - INICIANDO SISTEMA PRINCIPAL")
+    logger.info(f"🏗️ USE_APP_LAYER: {USE_APP_LAYER}")
     logger.info("=" * 80)
+    
+    # =============================================================================
+    # NEW PATH: Hexagonal Architecture with DI Container (USE_APP_LAYER=true)
+    # =============================================================================
+    # STATUS: EXPERIMENTAL - Infrastructure ready, handler wiring pending
+    # 
+    # This path demonstrates V7.0 hexagonal architecture:
+    # - DI Container for service resolution
+    # - Flask App Factory for dashboard
+    # - TelegramBotAdapter for bot operations
+    #
+    # PENDING (requires application layer orchestration):
+    # - Command/message handlers registration via use cases
+    # - Full lifecycle coordination with Flask
+    # - Integration tests for end-to-end flow
+    # =============================================================================
+    if USE_APP_LAYER:
+        logger.info("🏗️ Usando nueva arquitectura hexagonal V7.0 (EXPERIMENTAL)...")
+        try:
+            from src.omnix.bootstrap.container import get_container
+            from src.omnix.interfaces.flask_app import create_app
+            
+            container = get_container()
+            logger.info(f"✅ DI Container inicializado")
+            
+            db_manager = container.database_manager
+            if db_manager:
+                logger.info("✅ DatabaseManager obtenido del Container")
+                db_health = db_manager.health_check() if hasattr(db_manager, 'health_check') else {}
+                logger.info(f"   📊 DB Connected: {db_health.get('database_connected', 'N/A')}")
+            else:
+                logger.warning("⚠️ DatabaseManager no disponible en Container")
+            
+            telegram_adapter = container.telegram_adapter
+            if telegram_adapter:
+                logger.info(f"✅ TelegramBotAdapter obtenido del Container")
+                logger.info(f"   📊 Adapter Health: {telegram_adapter.health_check()}")
+            else:
+                logger.error("❌ TelegramBotAdapter no disponible - V7.0 no puede iniciar sin Telegram")
+                sys.exit(1)
+            
+            flask_app = create_app(container=container)
+            logger.info("✅ Flask App Factory creado con Container DI")
+            
+            shutdown_event = threading.Event()
+            telegram_task = None
+            
+            def signal_handler(sig, frame):
+                logger.info(f"\n🛑 Señal {sig} recibida - Apagando sistema V7.0...")
+                shutdown_event.set()
+                if telegram_task and not telegram_task.done():
+                    telegram_task.cancel()
+                sys.exit(0)
+            
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
+            
+            import asyncio
+            
+            async def start_v7_system():
+                started = await telegram_adapter.start()
+                if started:
+                    logger.info("✅ TelegramBotAdapter iniciado correctamente")
+                else:
+                    logger.warning("⚠️ TelegramBotAdapter.start() retornó False")
+                return started
+            
+            async def stop_v7_system():
+                if telegram_adapter:
+                    await telegram_adapter.stop()
+                    logger.info("✅ TelegramBotAdapter detenido")
+            
+            def start_flask_dashboard():
+                dashboard_port = int(os.environ.get('PORT', 5000))
+                logger.info(f"🌐 Dashboard V7.0 iniciando en puerto {dashboard_port}...")
+                flask_app.run(host='0.0.0.0', port=dashboard_port, debug=False, use_reloader=False)
+            
+            dashboard_thread = threading.Thread(target=start_flask_dashboard, name="DashboardV7Thread", daemon=True)
+            dashboard_thread.start()
+            
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                bot_started = loop.run_until_complete(start_v7_system())
+                
+                if not bot_started:
+                    logger.error("❌ TelegramBotAdapter no pudo iniciar")
+                    sys.exit(1)
+                
+                logger.info("=" * 80)
+                logger.info(f"✅ OMNIX V7.0 HEXAGONAL - SISTEMA OPERATIVO")
+                logger.info("🏗️ Arquitectura: Flask Factory + DI Container + Adapters")
+                logger.info(f"📊 Container Health: {container.health_check()}")
+                logger.info("=" * 80)
+                
+                while not shutdown_event.is_set():
+                    time.sleep(5)
+                    if not dashboard_thread.is_alive():
+                        logger.error("❌ Dashboard V7.0 murió - reiniciando...")
+                        sys.exit(1)
+                    if telegram_adapter and not telegram_adapter.is_running():
+                        logger.warning("⚠️ TelegramAdapter ya no está corriendo")
+                        
+            except KeyboardInterrupt:
+                logger.info("🛑 Interrupción recibida - apagando V7.0...")
+            finally:
+                loop.run_until_complete(stop_v7_system())
+                loop.close()
+                sys.exit(0)
+                
+        except Exception as e:
+            logger.error(f"❌ Error crítico en V7.0: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            sys.exit(1)
+    
+    # =============================================================================
+    # LEGACY PATH: Original Architecture (USE_APP_LAYER=false, default)
+    # =============================================================================
+    logger.info("🔧 Usando arquitectura legacy...")
     
     # Crear instancias de servicios necesarios
     try:

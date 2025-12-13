@@ -116,6 +116,8 @@ class Container:
     
     _kraken_adapter: Optional[Any] = field(default=None, repr=False)
     _gemini_adapter: Optional[Any] = field(default=None, repr=False)
+    _telegram_adapter: Optional[Any] = field(default=None, repr=False)
+    _database_manager: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -170,6 +172,20 @@ class Container:
         if self._gemini_adapter is None:
             self._gemini_adapter = self._create_gemini_adapter()
         return self._gemini_adapter
+    
+    @property
+    def telegram_adapter(self):
+        """Get Telegram bot adapter (Phase 3b)."""
+        if self._telegram_adapter is None:
+            self._telegram_adapter = self._create_telegram_adapter()
+        return self._telegram_adapter
+    
+    @property
+    def database_manager(self):
+        """Get legacy DatabaseManager (for backward compatibility)."""
+        if self._database_manager is None:
+            self._database_manager = self._create_database_manager()
+        return self._database_manager
     
     @property
     def use_app_layer(self) -> bool:
@@ -257,6 +273,25 @@ class Container:
             logger.warning("Container: GeminiAdapter not available")
             return None
     
+    def _create_telegram_adapter(self):
+        """Create Telegram bot adapter (Phase 3b)."""
+        try:
+            from src.omnix.infrastructure.adapters.telegram_adapter import TelegramBotAdapter
+            db_manager = self.database_manager
+            return TelegramBotAdapter(_db_manager=db_manager)
+        except ImportError:
+            logger.warning("Container: TelegramBotAdapter not available")
+            return None
+    
+    def _create_database_manager(self):
+        """Create legacy DatabaseManager (for backward compatibility)."""
+        try:
+            from omnix_services.database_service import DatabaseManager
+            return DatabaseManager()
+        except ImportError:
+            logger.warning("Container: DatabaseManager not available")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         container = cls()
@@ -276,6 +311,8 @@ class Container:
             'coherence_adapter': self.coherence_adapter is not None,
             'kraken_adapter': self._kraken_adapter is not None,
             'gemini_adapter': self._gemini_adapter is not None,
+            'telegram_adapter': self._telegram_adapter is not None,
+            'database_manager': self._database_manager is not None,
             'use_app_layer': self.use_app_layer,
         }
         
@@ -286,6 +323,10 @@ class Container:
         if self._gemini_adapter is not None:
             gemini_health = self._gemini_adapter.health_check()
             health['gemini_provider'] = gemini_health.get('provider', 'unknown')
+        
+        if self._telegram_adapter is not None:
+            telegram_health = self._telegram_adapter.health_check()
+            health['telegram_running'] = telegram_health.get('running', False)
         
         return health
     
