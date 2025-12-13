@@ -89,7 +89,7 @@
 
 ## 2. Hexagonal Ports
 
-OMNIX uses hexagonal architecture with protocol ports in `omnix/ports/`. **Phase 1 complete, Phase 2 (integration) deferred to V7.0.**
+OMNIX uses hexagonal architecture with protocol ports in `src/omnix/ports/` (migrated from legacy `omnix/ports/` on Dec 13, 2025). **Phase 1 complete, Phase 2 (integration) deferred to V7.0.**
 
 ### 2.1 Driven Ports (Output - System calls external)
 

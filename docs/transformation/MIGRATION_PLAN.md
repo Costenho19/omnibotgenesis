@@ -41,7 +41,7 @@ Estos componentes YA están bien estructurados y sirven como **modelo**:
 | Componente | Ubicación | Razón |
 |------------|-----------|-------|
 | AI Service | `omnix_services/ai_service/` | DI container, protocols, providers |
-| Hexagonal Ports | `omnix/ports/` | 8 protocols definidos (Fase 1 completa) |
+| Hexagonal Ports | `src/omnix/ports/` | 8 protocols definidos (Fase 1 completa, migrado Dec 13) |
 | Trading Profiles | `omnix_core/config/trading_profiles.py` | Single source of truth |
 | Database Gateway | `omnix_services/database_service/` | Connection pool funcional |
 

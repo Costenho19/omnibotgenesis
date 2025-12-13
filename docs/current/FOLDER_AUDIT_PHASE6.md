@@ -106,7 +106,31 @@ grep -r "from omnix_reports" --include="*.py" # Should return 0
 
 ---
 
+## Post-Phase 6 Bug Fixes
+
+### Dec 13, 2025 - TradingSystem NameError Fix
+
+**Issue:** Bot failed to start on Railway with `NameError: name 'TradingSystem' is not defined`
+
+**Location:** `omnix_services/telegram_service/enterprise_bot.py` line 221
+
+**Root Cause:** `TradingSystem` was used directly without importing. The module `omnix_core.trading_system` was imported as `trading_system_module` but the class was accessed without the module prefix.
+
+**Fix Applied:**
+```python
+# Before (broken):
+self.trading = TradingSystem()
+
+# After (fixed):
+self.trading = trading_system_module.TradingSystem() if trading_system_module else None
+```
+
+**Status:** ✅ FIXED - Ready for Railway deploy
+
+---
+
 *Audit completed: December 13, 2025*  
 *Phase 6.1: Dead Code Removal - COMPLETE*  
 *Phase 6.2: Consolidation & Migration - COMPLETE*  
+*Post-Phase 6: Bug fix applied (TradingSystem NameError)*  
 *Auditor: OMNIX Automated Import Scanner*

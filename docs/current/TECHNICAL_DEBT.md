@@ -20,7 +20,7 @@ This document registers known technical debt in OMNIX V6.5.4d. All items are **i
 
 | Issue | Description |
 |-------|-------------|
-| Ports Defined | 8 protocol interfaces in `omnix/ports/` |
+| Ports Defined | 8 protocol interfaces in `src/omnix/ports/` |
 | Adapters Exist | KrakenClient, DatabaseGateway, RedisCache, etc. |
 | Problem | ~~Adapters don't implement ports~~ **3 adapters now implement ports** |
 | Impact | Remaining 5 ports still use direct imports |
