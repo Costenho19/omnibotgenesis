@@ -5,6 +5,11 @@ This validates Python syntax and imports without starting the Telegram bot.
 Use this to verify code changes before pushing to GitHub → Railway.
 """
 import sys
+import os
+
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 def verify_imports():
     """Verify critical imports without starting services"""

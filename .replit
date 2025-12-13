@@ -28,12 +28,12 @@ args = "Streamlit Dashboard"
 name = "Code Verification"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -u verify_code.py"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -u scripts/verify_code.py"
 
 [[workflows.workflow]]
 name = "Dashboard Preview"
