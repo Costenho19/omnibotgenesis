@@ -129,8 +129,35 @@ self.trading = trading_system_module.TradingSystem() if trading_system_module el
 
 ---
 
+### Dec 13, 2025 - TypeError: await on bool Fix
+
+**Issue:** Bot failed to start with `TypeError: object bool can't be used in 'await' expression`
+
+**Location:** `src/omnix/bootstrap/main_entry.py` line 204
+
+**Root Cause:** `start_polling()` in `enterprise_bot.py` is a synchronous function that starts a daemon thread and returns `True/False`. The code was incorrectly using `await bot.start_polling()`.
+
+**Fix Applied:**
+```python
+# Before (broken):
+await bot.start_polling()
+
+# After (fixed):
+result = bot.start_polling()
+if asyncio.iscoroutine(result):
+    await result
+elif result:
+    logger.info("Bot started with thread-based polling. Keeping process alive...")
+    while hasattr(bot, 'is_running') and bot.is_running:
+        await asyncio.sleep(1)
+```
+
+**Status:** ✅ FIXED - Ready for Railway deploy
+
+---
+
 *Audit completed: December 13, 2025*  
 *Phase 6.1: Dead Code Removal - COMPLETE*  
 *Phase 6.2: Consolidation & Migration - COMPLETE*  
-*Post-Phase 6: Bug fix applied (TradingSystem NameError)*  
+*Post-Phase 6: Bug fixes applied (TradingSystem NameError, await on bool TypeError)*  
 *Auditor: OMNIX Automated Import Scanner*

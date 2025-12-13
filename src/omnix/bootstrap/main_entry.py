@@ -189,6 +189,7 @@ def initialize_services_v7():
 
 async def run_telegram_bot_legacy(services: dict):
     """Run the Telegram bot using legacy EnterpriseTelegramBot."""
+    import asyncio
     from omnix_services.telegram_service import EnterpriseTelegramBot
     from omnix_config import env_config
     
@@ -199,11 +200,21 @@ async def run_telegram_bot_legacy(services: dict):
     bot = EnterpriseTelegramBot()
     
     if hasattr(bot, 'run'):
-        await bot.run()
+        result = bot.run()
+        if asyncio.iscoroutine(result):
+            await result
     elif hasattr(bot, 'start_polling'):
-        await bot.start_polling()
+        result = bot.start_polling()
+        if asyncio.iscoroutine(result):
+            await result
+        elif result:
+            logger.info("Bot started with thread-based polling. Keeping process alive...")
+            while hasattr(bot, 'is_running') and bot.is_running:
+                await asyncio.sleep(1)
     elif hasattr(bot, 'run_polling'):
-        await bot.run_polling()
+        result = bot.run_polling()
+        if asyncio.iscoroutine(result):
+            await result
     else:
         logger.error("EnterpriseTelegramBot has no run/polling method")
         raise AttributeError("Cannot start Telegram bot - no run method found")
