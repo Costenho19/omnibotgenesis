@@ -38,10 +38,14 @@ class CommunityDashboard:
     
     def __init__(self, database_service=None):
         self.db = database_service
-        self.connected = self.db is not None and self.db.connected
         
-        if self.connected:
-            logger.info("✅ CommunityDashboard conectado a database_service centralizado")
+        if self.db is not None:
+            logger.info("✅ CommunityDashboard inicializado con database_service")
+    
+    @property
+    def connected(self):
+        """Lazy connection check - evaluates each time for late-binding db_manager."""
+        return self.db is not None and self.db.connected
     
     def get_global_stats(self) -> Dict[str, Any]:
         """

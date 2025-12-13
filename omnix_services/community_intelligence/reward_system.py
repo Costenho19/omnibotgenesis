@@ -107,10 +107,14 @@ class RewardSystem:
             database_service: DatabaseManager o DatabaseServiceEnterprise instance
         """
         self.db = database_service
-        self.connected = self.db is not None and self.db.connected
         
-        if self.connected:
-            logger.info("✅ RewardSystem conectado con DatabaseService")
+        if self.db is not None:
+            logger.info("✅ RewardSystem inicializado con DatabaseService")
+    
+    @property
+    def connected(self):
+        """Lazy connection check - evaluates each time for late-binding db_manager."""
+        return self.db is not None and self.db.connected
     
     def _get_connection_DEPRECATED(self):
         """DEPRECATED: Ahora usa database_service centralizado"""

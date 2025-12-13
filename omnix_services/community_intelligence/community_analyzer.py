@@ -56,7 +56,6 @@ class CommunityAnalyzer:
             database_service: DatabaseManager o DatabaseServiceEnterprise instance
         """
         self.db = database_service
-        self.connected = self.db is not None and self.db.connected
         
         if GEMINI_AVAILABLE:
             api_key = os.environ.get('GEMINI_API_KEY')
@@ -77,6 +76,11 @@ class CommunityAnalyzer:
                 logger.warning("⚠️ GEMINI_API_KEY no configurado")
         else:
             self.ai_available = False
+    
+    @property
+    def connected(self):
+        """Lazy connection check - evaluates each time for late-binding db_manager."""
+        return self.db is not None and self.db.connected
     
     def _get_connection_DEPRECATED(self):
         """DEPRECATED: Ahora usa database_service centralizado"""

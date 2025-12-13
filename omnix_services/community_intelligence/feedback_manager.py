@@ -43,12 +43,16 @@ class CommunityFeedbackManager:
             database_service: DatabaseManager o DatabaseServiceEnterprise instance
         """
         self.db = database_service
-        self.connected = self.db is not None and self.db.connected
         
-        if self.connected:
-            logger.info("✅ CommunityFeedbackManager conectado a DatabaseService")
+        if self.db is not None:
+            logger.info("✅ CommunityFeedbackManager inicializado con DatabaseService")
         else:
             logger.warning("⚠️ Database no disponible para Community Feedback")
+    
+    @property
+    def connected(self):
+        """Lazy connection check - evaluates each time for late-binding db_manager."""
+        return self.db is not None and self.db.connected
     
     def submit_feedback(self, user_id: str, username: str, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -70,13 +70,17 @@ class SignalContributionManager:
             reward_system: RewardSystem instance (opcional)
         """
         self.db = database_service
-        self.connected = self.db is not None and self.db.connected
         self.reward_system = reward_system
         
-        if self.connected:
-            logger.info("✅ SignalContributionManager conectado a DatabaseService")
+        if self.db is not None:
+            logger.info("✅ SignalContributionManager inicializado con DatabaseService")
         else:
             logger.warning("⚠️ Database no disponible para Signal Contribution")
+    
+    @property
+    def connected(self):
+        """Lazy connection check - evaluates each time for late-binding db_manager."""
+        return self.db is not None and self.db.connected
     
     def share_signal(self, user_id: str, username: str, signal_data: Dict) -> Dict:
         """
