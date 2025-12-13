@@ -374,6 +374,15 @@ class DatabaseGateway:
         """Get the last error message if any."""
         instance = cls.get_instance()
         return instance._error_message
+    
+    @property
+    def connected(self) -> bool:
+        """Property for compatibility with community_intelligence modules.
+        
+        Returns True if database connection is healthy.
+        Use DatabaseGateway.is_connected() for class-level access.
+        """
+        return self._connected and self._pool is not None
 
 
 def get_gateway_pool():

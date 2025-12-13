@@ -76,6 +76,29 @@ from omnix_services.database_service import database_gateway  # Direct coupling
 
 **Resolution Plan:** Inject dependencies through Flask extensions
 
+### 1.4 Community Intelligence Interface Mismatch (RESOLVED)
+
+**Status:** ✅ Resolved (Dec 13, 2025)
+
+| Issue | Description |
+|-------|-------------|
+| Problem | All 5 community_intelligence modules checked `db.connected` |
+| Root Cause | DatabaseGateway only had `is_connected()` method, no `connected` property |
+| Impact | Modules reported "❌ Disconnected" despite database being healthy |
+
+**Resolution:**
+Added `@property connected` to `DatabaseGateway` that delegates to internal state:
+```python
+@property
+def connected(self) -> bool:
+    return self._connected and self._pool is not None
+```
+
+**Files affected:**
+- `omnix_services/database_service/database_gateway.py` - Added property
+
+**Verification:** All 5 Community Intelligence modules now report "✅ Connected"
+
 ---
 
 ## 2. Code Quality Debt
