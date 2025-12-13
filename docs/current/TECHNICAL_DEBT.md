@@ -14,16 +14,26 @@ This document registers known technical debt in OMNIX V6.5.4d. All items are **i
 
 ## 1. Architecture Debt
 
-### 1.1 Hexagonal Ports Not Integrated (CRITICAL)
+### 1.1 Hexagonal Ports Not Integrated (PARTIALLY RESOLVED)
 
-**Status:** Deferred to V7.0
+**Status:** Partially resolved (Dec 12, 2025) - 3 of 8 ports integrated
 
 | Issue | Description |
 |-------|-------------|
 | Ports Defined | 8 protocol interfaces in `omnix/ports/` |
 | Adapters Exist | KrakenClient, DatabaseGateway, RedisCache, etc. |
-| Problem | Adapters don't implement ports; services import directly |
-| Impact | No dependency inversion, testing requires full infrastructure |
+| Problem | ~~Adapters don't implement ports~~ **3 adapters now implement ports** |
+| Impact | Remaining 5 ports still use direct imports |
+
+**Phase 3 Progress (Dec 12, 2025):**
+| Port | Adapter | Status |
+|------|---------|--------|
+| TradingPort | KrakenAdapter | ✅ Integrated via container.py |
+| MarketDataPort | KrakenAdapter | ✅ Integrated via container.py |
+| AIInferencePort | GeminiAdapter | ✅ Integrated via container.py |
+| DatabasePort | DatabaseGateway | ⬜ Deferred V7.0 |
+| CachePort | RedisCache | ⬜ Deferred V7.0 |
+| NotificationPort | TelegramUtils | ⬜ Deferred V7.0 |
 
 **Current State:**
 ```python
