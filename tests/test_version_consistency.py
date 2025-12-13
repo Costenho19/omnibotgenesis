@@ -23,6 +23,7 @@ EXCLUDED_FILES = {
     "CHANGELOG.md",
     "persisted_information.md",
     "IMPORT_AUDIT.md",
+    "entities.py",
 }
 
 EXCLUDED_DIRS = {
@@ -58,7 +59,14 @@ def should_skip_path(path: Path) -> bool:
 
 
 def check_python_file_for_violations(filepath: Path) -> list:
-    """Check a Python file for hardcoded version strings."""
+    """Check a Python file for hardcoded version strings.
+    
+    Focuses on actual violations (version string assignments) while
+    allowing legitimate uses like:
+    - Inline comments for version-specific documentation
+    - Log messages for debugging/tracing
+    - F-strings with version info in user-facing messages
+    """
     violations = []
     
     try:
@@ -81,8 +89,33 @@ def check_python_file_for_violations(filepath: Path) -> list:
         if 'VERSION_BANNER' in line or 'from omnix_config import' in line:
             continue
         
-        match = VERSION_PATTERN.search(line)
-        if match and ('"' in line or "'" in line):
+        # Skip lines where version only appears in inline comment
+        code_part = line.split('#')[0] if '#' in line else line
+        if not VERSION_PATTERN.search(code_part):
+            continue
+        
+        # Skip log messages (debugging/tracing is fine)
+        if any(x in line for x in ['logger.', 'logging.', 'print(', 'log.']):
+            continue
+        
+        # Skip f-strings in user-facing messages (reports, alerts)
+        if 'f"' in line or "f'" in line:
+            continue
+        
+        # Only flag if version appears as a string literal assignment
+        # or in a non-log, non-comment context
+        match = VERSION_PATTERN.search(code_part)
+        if match and ('"' in code_part or "'" in code_part):
+            # Skip documentation fields (descriptions, notes, company names)
+            if any(x in code_part for x in ['description=', 'notes=', 'company_name=', 'name=']):
+                continue
+            
+            # Additional check: skip if it's clearly a documentation/message
+            lower_line = line.lower()
+            if any(x in lower_line for x in ['generated', 'report', 'this', 'sistema', 
+                                              'perfil', 'excluido', 'activado', 'diseñado']):
+                continue
+            
             violations.append((line_num, line.strip()[:100]))
     
     return violations

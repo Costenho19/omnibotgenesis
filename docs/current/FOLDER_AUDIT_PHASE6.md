@@ -83,15 +83,21 @@ OMNIX/
 │   └── bootstrap/
 ├── omnix_core/          <- Legacy runtime (essential)
 ├── omnix_services/      <- Legacy services (essential)
+│   └── analytics/       <- InvestorTradeLogger (NEW - Dec 13)
 ├── omnix_config/        <- Configuration (essential)
 ├── omnix_dashboard/     <- Dashboard (essential)
 ├── omnix_api/           <- API (essential)
 ├── omnix_testing/       <- Dev/backtesting tools
 ├── docs/                <- Documentation
-├── tests/               <- Test suite
-├── scripts/             <- Utility scripts
+├── tests/               <- Test suite (pytest)
+│   └── integration/     <- Integration tests
+├── tools/               <- Operational CLIs (NEW - Dec 13)
+│   ├── telegram/        <- Telegram utilities
+│   └── operations/      <- Report generators, watchdogs
 └── sql/                 <- Migrations
 ```
+
+**Note**: `scripts/` folder was removed Dec 13, 2025. Contents migrated to tests/, tools/, and omnix_services/analytics/.
 
 ## Folders Removed (Phase 6)
 

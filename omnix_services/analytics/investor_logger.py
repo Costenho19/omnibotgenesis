@@ -32,10 +32,15 @@ class InvestorTradeLogger:
         self.db_service = db_service
         self.log_dir = log_dir
         self.trades_log = []
-        
-        os.makedirs(log_dir, exist_ok=True)
+        self._dir_created = False
         
         logger.info("📊 InvestorTradeLogger inicializado")
+    
+    def _ensure_log_dir(self) -> None:
+        """Lazily create log directory on first write"""
+        if not self._dir_created:
+            os.makedirs(self.log_dir, exist_ok=True)
+            self._dir_created = True
     
     def log_trade(
         self,
@@ -125,6 +130,7 @@ class InvestorTradeLogger:
     
     def _save_to_file(self, trade: Dict) -> None:
         """Guardar trade en archivo JSON"""
+        self._ensure_log_dir()
         date_str = datetime.utcnow().strftime('%Y-%m-%d')
         filepath = os.path.join(self.log_dir, f"trades_{date_str}.json")
         

@@ -96,19 +96,12 @@ except ImportError:
     metrics = None
     logger.warning("⚠️ MetricsEngine no disponible - métricas Prometheus desactivadas")
 
-# Import investor logger (será importado cuando esté disponible)
+# Import investor logger from omnix_services.analytics
 try:
-    from scripts.log_trades_for_investors import investor_logger
+    from omnix_services.analytics.investor_logger import investor_logger
 except ImportError:
-    # Si falla, intentar importación relativa
-    try:
-        import sys
-        import os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scripts'))
-        from log_trades_for_investors import investor_logger
-    except:
-        investor_logger = None
-        logger.warning("InvestorTradeLogger no disponible - logging desactivado")
+    investor_logger = None
+    logger.warning("InvestorTradeLogger no disponible - logging desactivado")
 
 # Import Adaptive Weight System (V5.2 QUANTUM ULTIMATE)
 try:
