@@ -21,6 +21,12 @@ from src.omnix.application.ports.repository_ports import (
     ITradeRepository,
     IPositionRepository,
 )
+from src.omnix.application.ports.telegram_port import (
+    ITelegramBot,
+    ITelegramNotifier,
+    TelegramMessage,
+    TelegramResponse,
+)
 
 __all__ = [
     "ITradingService",
@@ -31,4 +37,8 @@ __all__ = [
     "ISignalRepository",
     "ITradeRepository",
     "IPositionRepository",
+    "ITelegramBot",
+    "ITelegramNotifier",
+    "TelegramMessage",
+    "TelegramResponse",
 ]
