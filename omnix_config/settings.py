@@ -6,7 +6,7 @@ Enterprise Grade | 50K+ users scalability
 # ============================================================
 # VERSION CONTROL - SINGLE SOURCE OF TRUTH
 # ============================================================
-VERSION = "6.5.4"
+VERSION = "6.5.4d"
 VERSION_NAME = "INSTITUTIONAL+"
 VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"
 # ============================================================

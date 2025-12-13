@@ -21,9 +21,10 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omnix_dashboard.api_client import get_api_client
+from omnix_config import VERSION_BANNER
 
 st.set_page_config(
-    page_title="OMNIX V6.5.4 INSTITUTIONAL+",
+    page_title=f"OMNIX {VERSION_BANNER}",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -114,12 +115,12 @@ def load_calibration():
 
 
 def main():
-    st.markdown('<p class="header-title">OMNIX V6.5.4 INSTITUTIONAL+</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="header-title">OMNIX {VERSION_BANNER}</p>', unsafe_allow_html=True)
     st.markdown("### Investor-Grade Trading Analytics Dashboard")
     st.markdown("---")
     
     with st.sidebar:
-        st.markdown("""
+        st.markdown(f"""
         <div style="padding: 10px 0; margin-bottom: 15px;">
             <span style="font-size: 28px; font-weight: 800; 
                 background: linear-gradient(90deg, #00D4AA, #4DABF7);
@@ -127,7 +128,7 @@ def main():
                 -webkit-text-fill-color: transparent;">
                 OMNIX
             </span>
-            <span style="font-size: 12px; color: #8B92A5; margin-left: 5px;">V6.5.4</span>
+            <span style="font-size: 12px; color: #8B92A5; margin-left: 5px;">{VERSION_BANNER}</span>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")

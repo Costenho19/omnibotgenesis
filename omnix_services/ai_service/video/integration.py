@@ -19,10 +19,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-try:
-    from omnix_config import VERSION_BANNER
-except ImportError:
-    VERSION_BANNER = "V6.5.4 INSTITUTIONAL+"
+from omnix_config import VERSION_BANNER
 
 
 @dataclass

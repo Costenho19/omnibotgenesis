@@ -1,6 +1,7 @@
 /**
- * OMNIX Dashboard V6.5.4 - Terminal Page Controller
+ * OMNIX Dashboard - Terminal Page Controller
  * With independent error handling per widget
+ * Version: Synced with omnix_config.VERSION_BANNER
  */
 
 const TerminalApp = (function() {
@@ -93,7 +94,7 @@ const TerminalApp = (function() {
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
 
-        console.log('OMNIX Terminal V6.5.4 INSTITUTIONAL+ | Trading Terminal Active');
+        console.log('OMNIX Terminal V6.5.4d INSTITUTIONAL+ | Trading Terminal Active');
     }
 
     function destroy() {

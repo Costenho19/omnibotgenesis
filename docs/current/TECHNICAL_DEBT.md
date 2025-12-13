@@ -148,6 +148,58 @@ Previously documented paths did not match actual code locations. Updated in:
 
 ---
 
+## 3.5 Phase 4: Version Normalization (COMPLETE - Dec 13, 2025)
+
+**Issue:** ~30+ files had hardcoded version strings instead of using centralized `VERSION_BANNER` from `omnix_config/settings.py`.
+
+**Root Cause:** Organic growth without enforcement of single source of truth for version.
+
+**Solution Implemented:**
+
+| Action | Files Modified |
+|--------|----------------|
+| Updated VERSION to 6.5.4d | `omnix_config/settings.py` |
+| Import VERSION_BANNER | `omnix_dashboard/streamlit_app.py` |
+| Import VERSION_BANNER | `omnix_services/ai_service/video/analyzer.py` |
+| Import VERSION_BANNER | `omnix_services/ai_service/video/integration.py` |
+| Import VERSION_BANNER | `omnix_services/ai_service/providers/omnix_style_renderer.py` |
+| Import VERSION_BANNER | `omnix_services/ai_service/providers/omnix_prompt_builder.py` |
+| Created version checker | `scripts/verify_version_consistency.py` |
+
+**Central Version Location:**
+```python
+# omnix_config/settings.py
+VERSION = "6.5.4d"
+VERSION_NAME = "INSTITUTIONAL+"
+VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"  # "V6.5.4d INSTITUTIONAL+"
+```
+
+**Usage Pattern:**
+```python
+from omnix_config import VERSION_BANNER
+logger.info(f"OMNIX {VERSION_BANNER} started")
+```
+
+**Preserved Historical Comments:**
+- Calibration comments in `trading_profiles.py` (V6.5.4b, V6.5.4c, V6.5.4d) remain as historical audit trail
+- Docstrings in test files remain unchanged
+
+**Prevention:**
+- `scripts/verify_version_consistency.py` detects hardcoded versions in Python, JS, and HTML
+- Run before major releases: `python scripts/verify_version_consistency.py`
+
+**JavaScript Limitation:**
+JavaScript cannot dynamically import Python constants. When updating VERSION:
+1. Update `omnix_config/settings.py` (central source)
+2. Manually update console.log statements in:
+   - `omnix_dashboard/static/js/pages/terminal.js`
+   - `omnix_dashboard/static/js/pages/dashboard.js`
+3. Run `python scripts/verify_version_consistency.py` to verify
+
+**Status:** ✅ COMPLETE
+
+---
+
 ## 4. Testing Debt
 
 ### 4.1 Test Coverage (CRITICAL - Deferred)

@@ -10,6 +10,7 @@ Part of Phase 2: Complete DI Container (AI Service Refactoring Roadmap)
 import re
 from typing import Optional, TYPE_CHECKING
 from omnix_core.utils.logger import get_logger
+from omnix_config import VERSION_BANNER
 from omnix_services.ai_service.interfaces.style_renderer import (
     StyleRendererProtocol,
     RenderOptions,
@@ -26,8 +27,8 @@ logger = get_logger(__name__)
 SIGNATURE_BY_STYLE = {
     ResponseStyle.MINIMAL: "",
     ResponseStyle.STANDARD: "\n\n— OMNIX",
-    ResponseStyle.PREMIUM: "\n\n━━━━━━━━━━━━\n🤖 OMNIX V6.5.4 INSTITUTIONAL+",
-    ResponseStyle.INSTITUTIONAL: "\n\n━━━━━━━━━━━━━━━━━━━━\n🏦 OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM\n🔐 Enterprise-Grade Trading Intelligence"
+    ResponseStyle.PREMIUM: f"\n\n━━━━━━━━━━━━\n🤖 OMNIX {VERSION_BANNER}",
+    ResponseStyle.INSTITUTIONAL: f"\n\n━━━━━━━━━━━━━━━━━━━━\n🏦 OMNIX {VERSION_BANNER} PREMIUM\n🔐 Enterprise-Grade Trading Intelligence"
 }
 
 

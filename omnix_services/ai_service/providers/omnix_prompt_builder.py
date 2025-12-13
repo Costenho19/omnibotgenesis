@@ -9,6 +9,7 @@ Part of Phase 2: Complete DI Container (AI Service Refactoring Roadmap)
 
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
 from omnix_core.utils.logger import get_logger
+from omnix_config import VERSION_BANNER
 from omnix_services.ai_service.interfaces.prompt_builder import (
     PromptBuilderProtocol,
     PromptContext,
@@ -188,7 +189,7 @@ class OmnixPromptBuilder:
         
         parts = []
         
-        parts.append("Eres OMNIX V6.5.4 INSTITUTIONAL+, un asistente de trading institucional avanzado.")
+        parts.append(f"Eres OMNIX {VERSION_BANNER}, un asistente de trading institucional avanzado.")
         parts.append(f"\nUsuario: {context.user_name}")
         
         intent_instructions = self.get_intent_specific_instructions(context.intent)

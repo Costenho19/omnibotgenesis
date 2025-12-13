@@ -13,8 +13,14 @@ if project_root not in sys.path:
 
 def verify_imports():
     """Verify critical imports without starting services"""
+    try:
+        from omnix_config import VERSION_BANNER
+        version_str = VERSION_BANNER
+    except ImportError:
+        version_str = "V6.5.4d INSTITUTIONAL+"
+    
     print("=" * 60)
-    print("OMNIX V6.0 ULTRA - Code Verification")
+    print(f"OMNIX {version_str} - Code Verification")
     print("=" * 60)
     print()
     
