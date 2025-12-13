@@ -152,12 +152,49 @@ elif result:
         await asyncio.sleep(1)
 ```
 
-**Status:** ✅ FIXED - Ready for Railway deploy
+**Status:** ✅ SUPERSEDED by async refactor below
+
+---
+
+### Dec 13, 2025 - Async Native Polling Refactor (MAJOR)
+
+**Issue:** Previous polling implementation used synchronous `requests.get()` in threads, blocking scalability for high concurrency (100k+ users).
+
+**Solution:** Refactored `start_polling()` to use python-telegram-bot v20+ native async:
+
+**Files Modified:**
+- `omnix_services/telegram_service/enterprise_bot.py` - Replaced sync `start_polling()` with async version
+- `src/omnix/bootstrap/main_entry.py` - Simplified to `await bot.start_polling()`
+
+**Key Changes:**
+```python
+# Before (blocking threads):
+def start_polling(self):
+    polling_thread = threading.Thread(target=poll_messages)
+    polling_thread.start()
+    return True
+
+# After (100% async native):
+async def start_polling(self, drop_pending_updates=True):
+    await self.application.initialize()
+    await self.application.start()
+    await self.application.updater.start_polling()
+    while self.is_running:
+        await asyncio.sleep(1)
+```
+
+**Benefits:**
+- 100% async/await (no threads)
+- Native reconnection via python-telegram-bot
+- Scalable for 100k+ concurrent users
+- Graceful shutdown with SIGINT/SIGTERM
+
+**Status:** ✅ COMPLETE - Ready for Railway deploy
 
 ---
 
 *Audit completed: December 13, 2025*  
 *Phase 6.1: Dead Code Removal - COMPLETE*  
 *Phase 6.2: Consolidation & Migration - COMPLETE*  
-*Post-Phase 6: Bug fixes applied (TradingSystem NameError, await on bool TypeError)*  
+*Post-Phase 6: Async Native Polling Refactor*  
 *Auditor: OMNIX Automated Import Scanner*
