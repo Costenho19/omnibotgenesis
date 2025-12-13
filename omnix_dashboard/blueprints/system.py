@@ -489,3 +489,80 @@ def api_db_diagnostics():
         'phase': 'Phase 1: Discovery & Freeze',
         'documentation': 'docs/core/DATABASE_AUDIT_REPORT.md (Section 14)'
     })
+
+
+@system_bp.route('/api/health/bootstrap')
+def api_health_bootstrap():
+    """
+    Phase 5: DI Container and Adapter Health Telemetry
+    
+    Returns initialization status for all V7.0 hexagonal architecture components:
+    - Database and Cache connectivity
+    - Phase 2 adapters (Trading, Risk, Coherence)
+    - Phase 3 adapters (Kraken, Gemini, Telegram)
+    - Application layer feature flag status
+    """
+    container_health = {
+        'available': False,
+        'database': False,
+        'cache': False,
+        'settings': False,
+        'use_app_layer': False,
+        'adapters': {
+            'trading': False,
+            'risk': False,
+            'coherence': False,
+            'kraken': {'available': False, 'connected': False},
+            'gemini': {'available': False, 'provider': 'none'},
+            'telegram': {'available': False, 'running': False}
+        },
+        'database_manager': False
+    }
+    
+    try:
+        from src.omnix.bootstrap.container import get_container
+        container = get_container()
+        container_health['available'] = True
+        
+        health = container.health_check()
+        container_health['database'] = health.get('database', False)
+        container_health['cache'] = health.get('cache', False)
+        container_health['settings'] = health.get('settings', False)
+        container_health['use_app_layer'] = health.get('use_app_layer', False)
+        container_health['database_manager'] = health.get('database_manager', False)
+        
+        container_health['adapters']['trading'] = health.get('trading_adapter', False)
+        container_health['adapters']['risk'] = health.get('risk_adapter', False)
+        container_health['adapters']['coherence'] = health.get('coherence_adapter', False)
+        
+        container_health['adapters']['kraken'] = {
+            'available': health.get('kraken_adapter', False),
+            'connected': health.get('kraken_connected', False)
+        }
+        container_health['adapters']['gemini'] = {
+            'available': health.get('gemini_adapter', False),
+            'provider': health.get('gemini_provider', 'none')
+        }
+        container_health['adapters']['telegram'] = {
+            'available': health.get('telegram_adapter', False),
+            'running': health.get('telegram_running', False)
+        }
+        
+    except ImportError as e:
+        container_health['error'] = f'Container not available: {str(e)}'
+    except Exception as e:
+        container_health['error'] = f'Health check failed: {str(e)}'
+    
+    overall_healthy = (
+        container_health['available'] and
+        container_health['database'] and
+        container_health['settings']
+    )
+    
+    return jsonify({
+        'success': True,
+        'healthy': overall_healthy,
+        'container': container_health,
+        'version': 'V7.0 Phase 5',
+        'timestamp': datetime.now().isoformat()
+    })

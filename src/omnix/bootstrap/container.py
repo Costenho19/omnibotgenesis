@@ -259,28 +259,61 @@ class Container:
         """Create Kraken exchange adapter (Phase 3)."""
         try:
             from src.omnix.infrastructure.adapters.kraken_adapter import KrakenAdapter
-            return KrakenAdapter()
+            logger.info("Container: Initializing KrakenAdapter...")
+            adapter = KrakenAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('connected', False):
+                    logger.info("Container: KrakenAdapter initialized - connected to Kraken API")
+                else:
+                    logger.warning("Container: KrakenAdapter initialized but not connected to Kraken API")
+            else:
+                logger.info("Container: KrakenAdapter initialized (no health_check available)")
+            return adapter
         except ImportError:
-            logger.warning("Container: KrakenAdapter not available")
+            logger.warning("Container: KrakenAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize KrakenAdapter: {e}")
             return None
     
     def _create_gemini_adapter(self):
         """Create Gemini AI adapter (Phase 3)."""
         try:
             from src.omnix.infrastructure.adapters.gemini_adapter import GeminiAdapter
-            return GeminiAdapter()
+            logger.info("Container: Initializing GeminiAdapter...")
+            adapter = GeminiAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                provider = health.get('provider', 'unknown')
+                if health.get('healthy', False):
+                    logger.info(f"Container: GeminiAdapter initialized - active provider: {provider}")
+                else:
+                    logger.warning(f"Container: GeminiAdapter initialized but unhealthy - provider: {provider}")
+            else:
+                logger.info("Container: GeminiAdapter initialized (no health_check available)")
+            return adapter
         except ImportError:
-            logger.warning("Container: GeminiAdapter not available")
+            logger.warning("Container: GeminiAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize GeminiAdapter: {e}")
             return None
     
     def _create_telegram_adapter(self):
         """Create Telegram bot adapter (Phase 3b)."""
         try:
             from src.omnix.infrastructure.adapters.telegram_adapter import TelegramBotAdapter
+            logger.info("Container: Initializing TelegramBotAdapter...")
             db_manager = self.database_manager
-            return TelegramBotAdapter(_db_manager=db_manager)
+            adapter = TelegramBotAdapter(_db_manager=db_manager)
+            logger.info("Container: TelegramBotAdapter initialized")
+            return adapter
         except ImportError:
-            logger.warning("Container: TelegramBotAdapter not available")
+            logger.warning("Container: TelegramBotAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize TelegramBotAdapter: {e}")
             return None
     
     def _create_database_manager(self):
@@ -294,11 +327,14 @@ class Container:
     
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
+        logger.info(f"Container: Creating new DI Container (lazy={lazy})")
         container = cls()
         if not lazy:
+            logger.info("Container: Eager initialization - loading database and cache...")
             _ = container.database
             _ = container.cache
             container._initialized = True
+            logger.info("Container: Eager initialization complete")
         return container
     
     def health_check(self) -> dict:
@@ -316,15 +352,15 @@ class Container:
             'use_app_layer': self.use_app_layer,
         }
         
-        if self._kraken_adapter is not None:
+        if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):
             kraken_health = self._kraken_adapter.health_check()
             health['kraken_connected'] = kraken_health.get('connected', False)
         
-        if self._gemini_adapter is not None:
+        if self._gemini_adapter is not None and hasattr(self._gemini_adapter, 'health_check'):
             gemini_health = self._gemini_adapter.health_check()
             health['gemini_provider'] = gemini_health.get('provider', 'unknown')
         
-        if self._telegram_adapter is not None:
+        if self._telegram_adapter is not None and hasattr(self._telegram_adapter, 'health_check'):
             telegram_health = self._telegram_adapter.health_check()
             health['telegram_running'] = telegram_health.get('running', False)
         
