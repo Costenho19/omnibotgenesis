@@ -80,6 +80,8 @@ from omnix_services.database_service import database_gateway  # Direct coupling
 
 **Status:** ✅ Resolved (Dec 13, 2025)
 
+**Issue 1: Missing `connected` property in DatabaseGateway**
+
 | Issue | Description |
 |-------|-------------|
 | Problem | All 5 community_intelligence modules checked `db.connected` |
@@ -94,10 +96,41 @@ def connected(self) -> bool:
     return self._connected and self._pool is not None
 ```
 
-**Files affected:**
-- `omnix_services/database_service/database_gateway.py` - Added property
+**Issue 2: Early-binding connection check at `__init__` time**
 
-**Verification:** All 5 Community Intelligence modules now report "✅ Connected"
+| Issue | Description |
+|-------|-------------|
+| Problem | Modules set `self.connected = self.db is not None and self.db.connected` once in `__init__` |
+| Root Cause | If `db_manager` is None at bot startup, modules stay permanently "Disconnected" |
+| Impact | On Railway where DB initializes after bot, modules never see the connection |
+
+**Resolution:**
+Changed from early-binding variable to lazy `@property` evaluation in all 5 modules:
+```python
+# BEFORE (early-binding - problem)
+def __init__(self, database_service=None):
+    self.db = database_service
+    self.connected = self.db is not None and self.db.connected  # Set once!
+
+# AFTER (lazy evaluation - fix)
+def __init__(self, database_service=None):
+    self.db = database_service
+
+@property
+def connected(self):
+    """Lazy connection check - evaluates each time for late-binding db_manager."""
+    return self.db is not None and self.db.connected
+```
+
+**Files affected:**
+- `omnix_services/database_service/database_gateway.py` - Added `@property connected`
+- `omnix_services/community_intelligence/feedback_manager.py` - Changed to `@property`
+- `omnix_services/community_intelligence/reward_system.py` - Changed to `@property`
+- `omnix_services/community_intelligence/signal_contribution.py` - Changed to `@property`
+- `omnix_services/community_intelligence/community_dashboard.py` - Changed to `@property`
+- `omnix_services/community_intelligence/community_analyzer.py` - Changed to `@property`
+
+**Verification:** All 5 Community Intelligence modules now dynamically check connection status
 
 ---
 
