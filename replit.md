@@ -73,3 +73,34 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## V7.0 Migration Progress
+
+### Phase 6: Folder Audit & Cleanup (COMPLETE - Dec 13, 2025)
+
+**Dead Code Removed:**
+- `omnix_reports/` - 0 external imports
+- `reports/` - PDF moved to docs/history/
+- `omnix_risk/` - Only self-references (dead code)
+- `omnix/` - Legacy ports location
+
+**Migrated:**
+- `omnix/ports/` → `src/omnix/ports/` (test imports updated)
+
+**Current Structure:**
+```
+OMNIX/
+├── src/omnix/           <- Hexagonal V7.0 (ports, domain, etc.)
+├── omnix_core/          <- Legacy runtime (essential)
+├── omnix_services/      <- Legacy services (essential)
+├── omnix_config/        <- Configuration (essential)
+├── omnix_dashboard/     <- Dashboard (essential)
+├── omnix_api/           <- API (essential)
+├── omnix_testing/       <- Dev/backtesting tools
+├── docs/                <- Documentation
+├── tests/               <- Test suite
+├── scripts/             <- Utility scripts
+└── sql/                 <- Migrations
+```
+
+See `docs/current/FOLDER_AUDIT_PHASE6.md` for full audit details.

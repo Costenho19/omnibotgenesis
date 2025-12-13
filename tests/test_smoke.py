@@ -50,17 +50,17 @@ class TestPortsImports:
 
     def test_import_driven_ports(self):
         """Driven ports should be importable."""
-        from omnix.ports import driven
+        from src.omnix.ports import driven
         assert driven is not None
 
     def test_import_driver_ports(self):
         """Driver ports should be importable."""
-        from omnix.ports import driver
+        from src.omnix.ports import driver
         assert driver is not None
 
     def test_import_trading_port(self):
         """Trading port protocol should be importable."""
-        from omnix.ports.driven.trading_port import TradingPort
+        from src.omnix.ports.driven.trading_port import TradingPort
         assert TradingPort is not None
 
 

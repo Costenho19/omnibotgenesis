@@ -16,11 +16,11 @@ Driver Ports (Input - from users):
 - TelegramPort: Bot command handlers
 
 Usage:
-    from omnix.ports.driven import TradingPort, CachePort
-    from omnix.ports.driver import TelegramPort
+    from src.omnix.ports.driven import TradingPort, CachePort
+    from src.omnix.ports.driver import TelegramPort
 """
 
-from omnix.ports import driven
-from omnix.ports import driver
+from src.omnix.ports import driven
+from src.omnix.ports import driver
 
 __all__ = ["driven", "driver"]

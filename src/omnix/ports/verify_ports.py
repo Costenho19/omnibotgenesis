@@ -5,7 +5,7 @@ OMNIX Ports Verification Script
 This script verifies that all Protocol ports can be imported correctly,
 are properly decorated with @runtime_checkable, and have no broken imports.
 
-Run: python -m omnix.ports.verify_ports
+Run: python -m src.omnix.ports.verify_ports
 
 Exit codes:
 - 0: All verifications passed
@@ -18,21 +18,21 @@ from typing import List, Tuple, Type
 
 
 EXPECTED_DRIVEN_PROTOCOLS = [
-    ("omnix.ports.driven.trading_port", "TradingPort"),
-    ("omnix.ports.driven.database_port", "DatabasePort"),
-    ("omnix.ports.driven.database_port", "TradeRepositoryPort"),
-    ("omnix.ports.driven.database_port", "PositionRepositoryPort"),
-    ("omnix.ports.driven.database_port", "UserRepositoryPort"),
-    ("omnix.ports.driven.cache_port", "CachePort"),
-    ("omnix.ports.driven.ai_inference_port", "AIInferencePort"),
-    ("omnix.ports.driven.market_data_port", "MarketDataPort"),
-    ("omnix.ports.driven.market_data_port", "TechnicalIndicatorPort"),
-    ("omnix.ports.driven.notification_port", "NotificationPort"),
+    ("src.omnix.ports.driven.trading_port", "TradingPort"),
+    ("src.omnix.ports.driven.database_port", "DatabasePort"),
+    ("src.omnix.ports.driven.database_port", "TradeRepositoryPort"),
+    ("src.omnix.ports.driven.database_port", "PositionRepositoryPort"),
+    ("src.omnix.ports.driven.database_port", "UserRepositoryPort"),
+    ("src.omnix.ports.driven.cache_port", "CachePort"),
+    ("src.omnix.ports.driven.ai_inference_port", "AIInferencePort"),
+    ("src.omnix.ports.driven.market_data_port", "MarketDataPort"),
+    ("src.omnix.ports.driven.market_data_port", "TechnicalIndicatorPort"),
+    ("src.omnix.ports.driven.notification_port", "NotificationPort"),
 ]
 
 EXPECTED_DRIVER_PROTOCOLS = [
-    ("omnix.ports.driver.rest_api_port", "RestApiPort"),
-    ("omnix.ports.driver.telegram_port", "TelegramPort"),
+    ("src.omnix.ports.driver.rest_api_port", "RestApiPort"),
+    ("src.omnix.ports.driver.telegram_port", "TelegramPort"),
 ]
 
 
@@ -63,8 +63,8 @@ def verify_imports() -> Tuple[bool, List[Type], List[str]]:
             print(f"❌ {class_name}: {e}")
     
     try:
-        from omnix.ports import driven, driver
-        print("✅ Package exports (omnix.ports)")
+        from src.omnix.ports import driven, driver
+        print("✅ Package exports (src.omnix.ports)")
     except ImportError as e:
         errors.append(f"Package exports: {e}")
         print(f"❌ Package exports: {e}")
@@ -127,7 +127,7 @@ def verify_package_structure() -> Tuple[bool, List[str]]:
     print("=" * 60)
     
     try:
-        from omnix.ports.driven import __all__ as driven_all
+        from src.omnix.ports.driven import __all__ as driven_all
         expected_driven = {name for _, name in EXPECTED_DRIVEN_PROTOCOLS}
         missing_driven = expected_driven - set(driven_all)
         if missing_driven:
@@ -139,7 +139,7 @@ def verify_package_structure() -> Tuple[bool, List[str]]:
         errors.append(f"driven package: {e}")
     
     try:
-        from omnix.ports.driver import __all__ as driver_all
+        from src.omnix.ports.driver import __all__ as driver_all
         expected_driver = {name for _, name in EXPECTED_DRIVER_PROTOCOLS}
         missing_driver = expected_driver - set(driver_all)
         if missing_driver:
