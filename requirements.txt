@@ -87,3 +87,4 @@ streamlit
 dependency-injector
 pydantic-settings
 pytest-asyncio
+import-linter

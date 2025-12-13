@@ -113,7 +113,19 @@ from omnix_core.config import TradingProfiles  # No changes needed
 | 2 | Domain & Application | 2 semanas | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 3 | Infrastructure Adapters | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 3b | Flask Factory & Telegram Migration | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 13, 2025) |
-| 4 | Cleanup | 1 semana | **500 trades + 14 días estable** | 🔒 Bloqueado |
+| 4 | Cleanup & Organization | 1 semana | **AHORA** (bajo riesgo) | ✅ **EN PROGRESO** (Dec 13, 2025) |
+
+### 2.2 Phase 4 Progress (Dec 13, 2025)
+
+| Deliverable | Status | Notes |
+|-------------|--------|-------|
+| Thin wrappers (main.py, wsgi.py) | ✅ | Delegate to src/omnix/bootstrap/ |
+| scripts/ directory | ✅ | Utility scripts moved |
+| tests/integration/ | ✅ | test_railway_startup.py moved |
+| Import Audit | ✅ | See docs/current/IMPORT_AUDIT.md |
+| Dead code identified | ✅ | alerts/, regime_switcher, on_chain_service |
+| import-linter | ✅ | 3 contracts passing |
+| Documentation updates | 🔄 | In progress |
 
 **Nota:** Fases 0-1 son de **bajo riesgo** y pueden ejecutarse durante track record generation. Fases 2-4 requieren milestone de 500 trades para minimizar riesgo de regresión
 

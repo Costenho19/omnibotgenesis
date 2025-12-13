@@ -59,3 +59,43 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
 ]
+
+[tool.importlinter]
+root_package = "src.omnix"
+include_external_packages = false
+
+[[tool.importlinter.contracts]]
+name = "Domain Cannot Import Application"
+type = "forbidden"
+source_modules = [
+    "src.omnix.domain",
+]
+forbidden_modules = [
+    "src.omnix.application",
+]
+comment = "Domain layer cannot depend on application layer (inverted dependency)"
+
+[[tool.importlinter.contracts]]
+name = "Domain Cannot Import Infrastructure"
+type = "forbidden"
+source_modules = [
+    "src.omnix.domain",
+]
+forbidden_modules = [
+    "src.omnix.infrastructure.adapters",
+]
+comment = "Domain layer cannot depend on infrastructure implementations"
+
+[[tool.importlinter.contracts]]
+name = "Legacy Bridge Allowed"
+type = "layers"
+layers = [
+    "interfaces",
+    "infrastructure",
+    "application",
+    "domain",
+]
+containers = [
+    "src.omnix",
+]
+comment = "Permissive layering - legacy imports from omnix_* are allowed during migration"
