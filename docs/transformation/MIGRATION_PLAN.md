@@ -113,19 +113,21 @@ from omnix_core.config import TradingProfiles  # No changes needed
 | 2 | Domain & Application | 2 semanas | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 3 | Infrastructure Adapters | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 12, 2025) |
 | 3b | Flask Factory & Telegram Migration | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 13, 2025) |
-| 4 | Cleanup & Organization | 1 semana | **AHORA** (bajo riesgo) | ✅ **EN PROGRESO** (Dec 13, 2025) |
+| 4 | Cleanup & Organization | 1 semana | **AHORA** (bajo riesgo) | ✅ **COMPLETADA** (Dec 13, 2025) |
 
 ### 2.2 Phase 4 Progress (Dec 13, 2025)
 
 | Deliverable | Status | Notes |
 |-------------|--------|-------|
-| Thin wrappers (main.py, wsgi.py) | ✅ | Delegate to src/omnix/bootstrap/ |
-| scripts/ directory | ✅ | Utility scripts moved |
-| tests/integration/ | ✅ | test_railway_startup.py moved |
-| Import Audit | ✅ | See docs/current/IMPORT_AUDIT.md |
-| Dead code identified | ✅ | alerts/, regime_switcher, on_chain_service |
-| import-linter | ✅ | 3 contracts passing |
-| Documentation updates | 🔄 | In progress |
+| 4.1-4.3: Thin wrappers (main.py, wsgi.py) | ✅ | Delegate to src/omnix/bootstrap/ |
+| 4.4: scripts/ directory | ✅ | Utility scripts moved |
+| 4.5: tests/integration/ | ✅ | test_railway_startup.py moved |
+| 4.6-4.8: Import Audit | ✅ | See docs/current/IMPORT_AUDIT.md |
+| 4.9: import-linter | ✅ | 3 contracts passing |
+| 4.10: Dead code removal | ✅ | **REMOVED** (Dec 13): alerts/, regime_switcher.py, on_chain_service/ |
+| 4.11: Documentation updates | ✅ | IMPORT_AUDIT.md, ARCHITECTURE.md updated |
+
+**Phase 4 COMPLETE** (Dec 13, 2025): 10-pillar stability audit passed, dead code removed.
 
 **Nota:** Fases 0-1 son de **bajo riesgo** y pueden ejecutarse durante track record generation. Fases 2-4 requieren milestone de 500 trades para minimizar riesgo de regresión
 
