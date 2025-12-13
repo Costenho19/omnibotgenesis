@@ -218,7 +218,7 @@ class EnterpriseTelegramBot:
         self.trading = None  # Inicializar siempre
         if not self.trading_enterprise_enabled:
             logger.info("📦 Usando Trading System legacy (fallback)")
-            self.trading = TradingSystem()
+            self.trading = trading_system_module.TradingSystem() if trading_system_module else None
         else:
             self.trading = self.trading_enterprise  # Referencia al enterprise
             logger.info("🚀 TRADING ENTERPRISE READY - Sistema premium activado")
