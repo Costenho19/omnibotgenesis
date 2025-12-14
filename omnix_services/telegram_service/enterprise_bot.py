@@ -5574,6 +5574,18 @@ Trades: {balance['total_trades']}"""
             logger.info("🛡️ Reconexión automática NATIVA activada")
             logger.info("⚡ Alta concurrencia habilitada (100k+ usuarios)")
             
+            # 🤖 FIX Dec 14, 2025: Restaurar auto-trading al iniciar el bot
+            # Esto verifica si había usuarios con auto_trading=true y restaura el loop
+            if self.auto_trading:
+                try:
+                    restored = self.auto_trading.check_and_restore_auto_trading()
+                    if restored:
+                        logger.info("🤖 Auto-Trading RESTAURADO - Loop de trading activo")
+                    else:
+                        logger.info("📊 Auto-Trading: No hay sesiones activas para restaurar")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error restaurando auto-trading: {e}")
+            
             try:
                 while self.is_running:
                     await asyncio.sleep(1)
