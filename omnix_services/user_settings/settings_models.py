@@ -5,7 +5,7 @@ Modelos de datos para configuración personalizada de usuarios
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -248,8 +248,10 @@ class UserSettings:
             return False, "Trading deshabilitado en tu configuración"
         
         if self.is_paused:
-            if self.pause_until and datetime.now() < self.pause_until:
-                minutes_left = int((self.pause_until - datetime.now()).total_seconds() / 60)
+            now_utc = datetime.now(timezone.utc)
+            pause_until_aware = self.pause_until.replace(tzinfo=timezone.utc) if self.pause_until and self.pause_until.tzinfo is None else self.pause_until
+            if pause_until_aware and now_utc < pause_until_aware:
+                minutes_left = int((pause_until_aware - now_utc).total_seconds() / 60)
                 return False, f"Trading pausado por protección. Reanuda en {minutes_left} minutos. Razón: {self.pause_reason}"
             else:
                 return True, "OK"

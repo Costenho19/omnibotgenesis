@@ -12,7 +12,7 @@ Maneja:
 import logging
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple, List
 
 from .settings_models import (
@@ -120,8 +120,11 @@ class UserSettingsService:
         """Obtener configuración del usuario (crea una nueva si no existe)"""
         if user_id in self._settings_cache:
             cached = self._settings_cache[user_id]
-            if cached.updated_at and (datetime.now() - cached.updated_at).seconds < 300:
-                return cached
+            if cached.updated_at:
+                now = datetime.now(timezone.utc)
+                updated = cached.updated_at.replace(tzinfo=timezone.utc) if cached.updated_at.tzinfo is None else cached.updated_at
+                if (now - updated).seconds < 300:
+                    return cached
         
         conn = self._get_connection()
         if not conn:
