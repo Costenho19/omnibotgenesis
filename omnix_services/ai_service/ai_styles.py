@@ -142,6 +142,23 @@ class VisualStylesManager:
         
         return result
     
+    def _has_omnix_header(self, text: str) -> bool:
+        """
+        Detect if text already has an OMNIX header to avoid duplication.
+        FIX Dec 14, 2025: Gemini learns header pattern from conversation history.
+        """
+        header_patterns = [
+            'OMNIX INSIGHTS',
+            'CRYPTO INTELLIGENCE',
+            'TRADING SIGNALS',
+            'MARKET ANALYSIS',
+            'SUCCESS METRICS',
+            'CRITICAL ALERTS',
+            'FINANCIAL DATA',
+        ]
+        first_lines = text[:200] if len(text) > 200 else text
+        return any(pattern in first_lines for pattern in header_patterns)
+    
     def apply_ultra_visual_style(
         self, 
         response_text: str, 
@@ -170,14 +187,31 @@ class VisualStylesManager:
                 processed_text = processed_text.replace('\n-', f'\n{fancy_bullet}')
                 processed_text = processed_text.replace('\n•', f'\n{fancy_bullet}')
             
-            selected_emojis = self.emoji_sets.get(intent, self.emoji_sets['crypto'])
-            header_emoji = selected_emojis[0] if selected_emojis else '🤖'
-            color_header = self.color_headers.get(intent, self.color_headers['general'])
+            # FIX Dec 14, 2025: Skip header if already present (Gemini learned pattern from history)
+            already_has_header = self._has_omnix_header(response_text)
             
             current_time = datetime.now().strftime('%H:%M')
             price_display = f"${current_price:,.2f}" if current_price > 0 else "$0.00"
             
-            final_response = f"""{header_emoji} {color_header} {header_emoji}
+            if already_has_header:
+                # Only add footer, skip header to avoid duplication
+                logger.debug("Header already detected in AI response, skipping header addition")
+                final_response = f"""{processed_text}
+
+{self.premium_separators['subsection']}
+🤖💎 OMNIX V5.1 • 🚀 • ENTERPRISE ⚡
+
+📊 Live: {price_display} USD • 💹 Kraken • 🧠 Gemini AI
+🚀 Trading 24/7 • ⏰ {current_time} • 🌐 Global
+
+🔵 PO 🔴 YT 🔵 TG • 💚 37 🔥 1 👁️ 1232"""
+            else:
+                # Add full header + footer
+                selected_emojis = self.emoji_sets.get(intent, self.emoji_sets['crypto'])
+                header_emoji = selected_emojis[0] if selected_emojis else '🤖'
+                color_header = self.color_headers.get(intent, self.color_headers['general'])
+                
+                final_response = f"""{header_emoji} {color_header} {header_emoji}
 {self.premium_separators['section']}
 
 {processed_text}
