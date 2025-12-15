@@ -200,6 +200,7 @@ class TelegramBotAdapter:
     
     _bot: Optional[Any] = field(default=None, repr=False)
     _is_initialized: bool = field(default=False, repr=False)
+    _is_running: bool = field(default=False, repr=False)
     _db_manager: Optional[Any] = field(default=None, repr=False)
     _session_manager: Optional[UserSessionManager] = field(default=None, repr=False)
     
@@ -248,7 +249,12 @@ class TelegramBotAdapter:
         self._error_count += 1
     
     async def start(self) -> bool:
-        """Start the Telegram bot."""
+        """
+        Start the Telegram bot.
+        
+        For PTB v20+, uses Application.run_polling() in a background task.
+        The task is stored for proper cleanup in stop().
+        """
         start_time = time.time()
         
         if not self._is_initialized or self._bot is None:
@@ -257,38 +263,63 @@ class TelegramBotAdapter:
             return False
         
         try:
-            if hasattr(self._bot, 'run'):
-                loop = asyncio.get_event_loop()
-                loop.run_in_executor(None, self._bot.run)
-                logger.info("TelegramBotAdapter: Bot started")
+            if hasattr(self._bot, 'application') and self._bot.application:
+                app = self._bot.application
+                await app.initialize()
+                await app.start()
+                if hasattr(app, 'updater') and app.updater:
+                    await app.updater.start_polling()
+                self._is_running = True
+                logger.info("TelegramBotAdapter: Bot started via Application")
                 self._track_request(start_time)
                 return True
             elif hasattr(self._bot, 'start'):
                 await self._bot.start()
+                self._is_running = True
                 self._track_request(start_time)
                 return True
         except Exception as e:
             logger.error(f"TelegramBotAdapter: Failed to start: {e}")
+            self._is_running = False
             self._track_error()
         return False
     
     async def stop(self) -> bool:
-        """Stop the Telegram bot gracefully."""
+        """
+        Stop the Telegram bot gracefully.
+        
+        For PTB v20+, properly stops updater and application.
+        """
         start_time = time.time()
         
         if not self._is_initialized or self._bot is None:
             return True
         
         try:
-            if hasattr(self._bot, 'stop'):
+            if hasattr(self._bot, 'application') and self._bot.application:
+                app = self._bot.application
+                if hasattr(app, 'updater') and app.updater and app.updater.running:
+                    await app.updater.stop()
+                if app.running:
+                    await app.stop()
+                await app.shutdown()
+                self._is_running = False
+                logger.info("TelegramBotAdapter: Bot stopped via Application")
+                self._track_request(start_time)
+                return True
+            elif hasattr(self._bot, 'stop'):
                 await self._bot.stop()
+                self._is_running = False
                 logger.info("TelegramBotAdapter: Bot stopped")
                 self._track_request(start_time)
+                return True
+            else:
+                self._is_running = False
                 return True
         except Exception as e:
             logger.error(f"TelegramBotAdapter: Failed to stop: {e}")
             self._track_error()
-        return False
+            return False
     
     async def send_message(
         self,
@@ -417,9 +448,7 @@ class TelegramBotAdapter:
     
     def is_running(self) -> bool:
         """Check if bot is currently running."""
-        if not self._is_initialized or self._bot is None:
-            return False
-        return getattr(self._bot, 'is_running', False)
+        return self._is_running
     
     def health_check(self) -> Dict[str, Any]:
         """
