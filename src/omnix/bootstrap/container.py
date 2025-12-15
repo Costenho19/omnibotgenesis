@@ -234,6 +234,12 @@ class Container:
         import os
         return os.getenv("USE_DATABASE_PORT", "false").lower() == "true"
     
+    @property
+    def use_telegram_port(self) -> bool:
+        """Check if TelegramPort is enabled (Phase 4D)."""
+        import os
+        return os.getenv("USE_TELEGRAM_PORT", "false").lower() == "true"
+    
     def _create_database(self) -> IDatabaseGateway:
         try:
             from omnix_services.database_service.database_gateway import DatabaseGateway
@@ -465,6 +471,7 @@ class Container:
             'use_notification_port': self.use_notification_port,
             'use_cache_port': self.use_cache_port,
             'use_database_port': self.use_database_port,
+            'use_telegram_port': self.use_telegram_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):
