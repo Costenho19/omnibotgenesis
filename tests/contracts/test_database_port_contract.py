@@ -378,6 +378,14 @@ class TestDatabaseAdapterGracefulDegradation:
         """health_check must indicate unhealthy when gateway unavailable."""
         health = broken_adapter.health_check()
         assert health['healthy'] is False
+    
+    def test_health_check_does_not_inflate_telemetry(self, broken_adapter):
+        """health_check must not increment query counters (telemetry isolation)."""
+        initial_query_count = broken_adapter._query_count
+        initial_request_count = broken_adapter._request_count
+        broken_adapter.health_check()
+        assert broken_adapter._query_count == initial_query_count
+        assert broken_adapter._request_count == initial_request_count
 
 
 class TestDatabaseAdapterContainerIntegration:

@@ -201,6 +201,9 @@ class DatabaseAdapter:
         
         Implements DatabasePort.health_check.
         
+        Note: Does NOT issue queries when gateway unavailable (graceful degradation).
+        Version probe is a lightweight internal check that doesn't inflate telemetry.
+        
         Returns:
             Dict with:
             - connected: bool
@@ -241,10 +244,11 @@ class DatabaseAdapter:
         
         latency_ms = 0.0
         version = 'unknown'
-        if connected:
+        
+        if connected and gateway is not None:
             start = time.time()
             try:
-                rows = self.execute_query("SELECT version()")
+                rows = gateway.execute_query("SELECT version()")
                 latency_ms = (time.time() - start) * 1000
                 if rows and len(rows) > 0:
                     version = str(rows[0][0])[:50]
