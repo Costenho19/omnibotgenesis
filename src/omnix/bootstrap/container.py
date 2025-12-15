@@ -117,6 +117,9 @@ class Container:
     _kraken_adapter: Optional[Any] = field(default=None, repr=False)
     _gemini_adapter: Optional[Any] = field(default=None, repr=False)
     _telegram_adapter: Optional[Any] = field(default=None, repr=False)
+    _notification_adapter: Optional[Any] = field(default=None, repr=False)
+    _cache_adapter: Optional[Any] = field(default=None, repr=False)
+    _database_adapter: Optional[Any] = field(default=None, repr=False)
     _database_manager: Optional[Any] = field(default=None, repr=False)
     
     @property
@@ -188,9 +191,48 @@ class Container:
         return self._database_manager
     
     @property
+    def notification_adapter(self):
+        """Get notification adapter (Phase 4A)."""
+        if self._notification_adapter is None:
+            self._notification_adapter = self._create_notification_adapter()
+        return self._notification_adapter
+    
+    @property
+    def cache_adapter(self):
+        """Get cache adapter (Phase 4B)."""
+        if self._cache_adapter is None:
+            self._cache_adapter = self._create_cache_adapter()
+        return self._cache_adapter
+    
+    @property
+    def database_adapter(self):
+        """Get database adapter (Phase 4C)."""
+        if self._database_adapter is None:
+            self._database_adapter = self._create_database_adapter()
+        return self._database_adapter
+    
+    @property
     def use_app_layer(self) -> bool:
         """Check if application layer is enabled."""
         return getattr(self.settings, 'use_app_layer', False)
+    
+    @property
+    def use_notification_port(self) -> bool:
+        """Check if NotificationPort is enabled (Phase 4A)."""
+        import os
+        return os.getenv("USE_NOTIFICATION_PORT", "false").lower() == "true"
+    
+    @property
+    def use_cache_port(self) -> bool:
+        """Check if CachePort is enabled (Phase 4B)."""
+        import os
+        return os.getenv("USE_CACHE_PORT", "false").lower() == "true"
+    
+    @property
+    def use_database_port(self) -> bool:
+        """Check if DatabasePort is enabled (Phase 4C)."""
+        import os
+        return os.getenv("USE_DATABASE_PORT", "false").lower() == "true"
     
     def _create_database(self) -> IDatabaseGateway:
         try:
@@ -325,6 +367,73 @@ class Container:
             logger.warning("Container: DatabaseManager not available")
             return None
     
+    def _create_notification_adapter(self):
+        """Create notification adapter (Phase 4A)."""
+        try:
+            from src.omnix.infrastructure.adapters.notification_adapter import NotificationAdapter
+            logger.info("Container: Initializing NotificationAdapter...")
+            telegram_adapter = self.telegram_adapter
+            adapter = NotificationAdapter(telegram_adapter=telegram_adapter)
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: NotificationAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: NotificationAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: NotificationAdapter initialized")
+            return adapter
+        except ImportError:
+            logger.warning("Container: NotificationAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize NotificationAdapter: {e}")
+            return None
+    
+    def _create_cache_adapter(self):
+        """Create cache adapter (Phase 4B)."""
+        try:
+            from src.omnix.infrastructure.adapters.cache_adapter import CacheAdapter
+            logger.info("Container: Initializing CacheAdapter...")
+            adapter = CacheAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('connected', False):
+                    logger.info("Container: CacheAdapter initialized - connected to Redis")
+                else:
+                    logger.warning("Container: CacheAdapter initialized but not connected to Redis")
+            else:
+                logger.info("Container: CacheAdapter initialized")
+            return adapter
+        except ImportError:
+            logger.warning("Container: CacheAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize CacheAdapter: {e}")
+            return None
+    
+    def _create_database_adapter(self):
+        """Create database adapter (Phase 4C)."""
+        try:
+            from src.omnix.infrastructure.adapters.database_adapter import DatabaseAdapter
+            logger.info("Container: Initializing DatabaseAdapter...")
+            adapter = DatabaseAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('connected', False):
+                    logger.info("Container: DatabaseAdapter initialized - connected to PostgreSQL")
+                else:
+                    logger.warning("Container: DatabaseAdapter initialized but not connected to PostgreSQL")
+            else:
+                logger.info("Container: DatabaseAdapter initialized")
+            return adapter
+        except ImportError:
+            logger.warning("Container: DatabaseAdapter not available (import failed)")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize DatabaseAdapter: {e}")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         logger.info(f"Container: Creating new DI Container (lazy={lazy})")
@@ -348,8 +457,14 @@ class Container:
             'kraken_adapter': self._kraken_adapter is not None,
             'gemini_adapter': self._gemini_adapter is not None,
             'telegram_adapter': self._telegram_adapter is not None,
+            'notification_adapter': self._notification_adapter is not None,
+            'cache_adapter': self._cache_adapter is not None,
+            'database_adapter': self._database_adapter is not None,
             'database_manager': self._database_manager is not None,
             'use_app_layer': self.use_app_layer,
+            'use_notification_port': self.use_notification_port,
+            'use_cache_port': self.use_cache_port,
+            'use_database_port': self.use_database_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):
