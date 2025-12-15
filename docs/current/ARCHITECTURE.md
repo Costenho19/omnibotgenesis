@@ -352,7 +352,7 @@ Estrategias (6+) → CoherenceEngine (veto) → AdaptiveEngine (calibración) �
 |---------|-----------|---------|---------------|---------------|
 | **MarketData** | `omnix_services/market_data/` | Precios, orderbook, arbitrage scanner | Kraken REST/WebSocket | trading_service, dashboard |
 | **MarketIntelligence** | `omnix_services/market_intelligence/` | Fear & Greed, noticias, indicadores técnicos | AlphaVantage, Finnhub, Alternative.me | dashboard, ai_service |
-| **OnChainService** | `omnix_services/on_chain_service/` | Whale tracking, exchange flows, network metrics | *APIs planned but not yet integrated* | Not actively imported (DORMANT) |
+| ~~OnChainService~~ | ~~`omnix_services/on_chain_service/`~~ | ~~Whale tracking, exchange flows~~ | ~~Planned~~ | **REMOVED** (Dec 15, 2025 - folder never created) |
 | **WebSearchService** | `omnix_services/web_search_service/` | Búsqueda web en tiempo real | Tavily | ai_service, enterprise_bot |
 | **NewsScraper** | `omnix_services/news_scraper.py` | Scraping de noticias | Ninguna | market_intelligence |
 | **SymbolClassifier** | `omnix_services/symbol_classifier.py` | Clasificación crypto/stock de símbolos | Ninguna | enterprise_bot |
@@ -402,7 +402,7 @@ Estrategias (6+) → CoherenceEngine (veto) → AdaptiveEngine (calibración) �
 |---------|-----------|---------|---------------|---------------|
 | **RiskManagement** | `omnix_services/risk_management/` | Circuit breaker, límites, position monitor | Ninguna | auto_trading_bot, enterprise_bot |
 | **Monitoring** | `omnix_services/monitoring/` | Risk Guardian V5.4, métricas, performance tracker | Ninguna | auto_trading_bot |
-| **OmnixRisk** | `omnix_risk/` | Audit logger, cascade protection, dead man switch, USD calculator | Ninguna | trading_system, dashboard |
+| ~~OmnixRisk~~ | ~~`omnix_risk/`~~ | ~~Audit logger, cascade protection~~ | ~~Ninguna~~ | **REMOVED** (Dec 13, 2025 - Phase 6 cleanup) |
 | **MemoryRiskAdapter** | `omnix_services/risk_management/memory_risk_adapter.py` | Adaptador kernel → risk system | Ninguna | auto_trading_bot |
 | **RollbackProtocol** | `omnix_core/risk/rollback_protocol.py` | Rollback de trades fallidos | Ninguna | auto_trading_bot |
 
