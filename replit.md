@@ -80,6 +80,19 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 **Estructura: 100% COMPLETA | Activación: 37.5%**
 
+**Session 2 Update (16 Dic 2025):**
+- `container.py`: Añadido `initialize_v7_services()` para logging detallado al arranque
+- `ai_gateway_shim.py`: Captura errores HTTP (401/403/429) con mensajes descriptivos
+- `enterprise_bot.py`: Integración condicional con DI container V7
+- `main_entry.py`: Inicialización V7 solo cuando flags están activos
+- 15 tests de integración pasando (incluyendo runtime flag toggle)
+
+**Para activar V7 en Railway:**
+```bash
+USE_AI_PORT=true     # Activa AIGatewayShim
+USE_VOICE_PORT=true  # Activa VoiceServiceAdapter
+```
+
 | Componente | Estado |
 |------------|--------|
 | 8/8 Ports definidos | ✅ Completo |
