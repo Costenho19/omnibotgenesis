@@ -252,3 +252,94 @@ def get_voice_service():
             return None
     
     return _legacy_voice_instance
+
+
+def initialize_v7_services() -> dict:
+    """
+    Initialize V7 AI and Voice services at application startup.
+    
+    Logs detailed status of each service and returns health summary.
+    Call this from main_entry.py or EnterpriseTelegramBot.__init__
+    """
+    result = {
+        'ai_service': {'type': 'unknown', 'healthy': False, 'error': None},
+        'voice_service': {'type': 'unknown', 'healthy': False, 'error': None}
+    }
+    
+    logger.info("=" * 60)
+    logger.info("🚀 INITIALIZING V7 SERVICES")
+    logger.info("=" * 60)
+    
+    use_ai_port = _is_use_ai_port_enabled()
+    use_voice_port = _is_use_voice_port_enabled()
+    
+    logger.info(f"📌 Feature Flags:")
+    logger.info(f"   USE_AI_PORT = {use_ai_port}")
+    logger.info(f"   USE_VOICE_PORT = {use_voice_port}")
+    
+    try:
+        ai_service = get_ai_gateway()
+        if ai_service:
+            service_type = type(ai_service).__name__
+            result['ai_service']['type'] = service_type
+            
+            if hasattr(ai_service, 'health_check'):
+                health = ai_service.health_check()
+                result['ai_service']['healthy'] = health.get('healthy', True)
+                logger.info(f"✅ AI Service: {service_type}")
+                logger.info(f"   Health: {health}")
+            else:
+                result['ai_service']['healthy'] = True
+                logger.info(f"✅ AI Service: {service_type} (legacy, no health_check)")
+        else:
+            result['ai_service']['error'] = 'Service is None'
+            logger.error("❌ AI Service: Failed to initialize")
+    except Exception as e:
+        result['ai_service']['error'] = str(e)
+        logger.error(f"❌ AI Service initialization error: {e}")
+    
+    try:
+        voice_service = get_voice_service()
+        if voice_service:
+            service_type = type(voice_service).__name__
+            result['voice_service']['type'] = service_type
+            
+            if hasattr(voice_service, 'health_check'):
+                health = voice_service.health_check()
+                tts_ok = health.get('tts_available', False)
+                stt_ok = health.get('stt_available', False)
+                result['voice_service']['healthy'] = tts_ok or stt_ok
+                logger.info(f"✅ Voice Service: {service_type}")
+                logger.info(f"   TTS: {'✅' if tts_ok else '❌'}, STT: {'✅' if stt_ok else '❌'}")
+            else:
+                result['voice_service']['healthy'] = True
+                logger.info(f"✅ Voice Service: {service_type} (legacy, no health_check)")
+        else:
+            result['voice_service']['error'] = 'Service is None'
+            logger.error("❌ Voice Service: Failed to initialize")
+    except Exception as e:
+        result['voice_service']['error'] = str(e)
+        logger.error(f"❌ Voice Service initialization error: {e}")
+    
+    logger.info("=" * 60)
+    logger.info(f"🏁 V7 SERVICES READY: AI={result['ai_service']['healthy']}, Voice={result['voice_service']['healthy']}")
+    logger.info("=" * 60)
+    
+    return result
+
+
+def get_v7_services_status() -> dict:
+    """
+    Get current status of V7 services without reinitializing.
+    Useful for health endpoints and diagnostics.
+    """
+    return {
+        'use_ai_port': _is_use_ai_port_enabled(),
+        'use_voice_port': _is_use_voice_port_enabled(),
+        'ai_gateway_type': type(_v7_gateway_shim).__name__ if _v7_gateway_shim else (
+            type(_legacy_gateway_instance).__name__ if _legacy_gateway_instance else 'None'
+        ),
+        'voice_service_type': type(_voice_adapter_instance).__name__ if _voice_adapter_instance else (
+            type(_legacy_voice_instance).__name__ if _legacy_voice_instance else 'None'
+        ),
+    }

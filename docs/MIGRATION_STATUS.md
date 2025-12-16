@@ -4,6 +4,15 @@
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 37.5%
 
+### Último Update (16 Dic 2025 - Session 2)
+
+**Mejoras en AI/Voice V7:**
+- `container.py`: Añadido `initialize_v7_services()` para logging detallado al arranque
+- `ai_gateway_shim.py`: Captura de códigos HTTP (401/403/429) con mensajes descriptivos
+- `enterprise_bot.py`: Integración con DI container V7 al inicializar
+- `main_entry.py`: Inicialización V7 en ruta legacy para logging consistente
+- `test_v7_services_integration.py`: 13 tests de integración (todos pasando)
+
 ---
 
 ## Resumen Ejecutivo

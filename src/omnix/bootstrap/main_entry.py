@@ -136,6 +136,21 @@ def initialize_services_legacy():
     
     logger.info("Legacy services loaded successfully")
     
+    use_ai_port = os.environ.get('USE_AI_PORT', 'false').lower() == 'true'
+    use_voice_port = os.environ.get('USE_VOICE_PORT', 'false').lower() == 'true'
+    
+    if use_ai_port or use_voice_port:
+        try:
+            from omnix_services.ai_service.container import initialize_v7_services
+            v7_status = initialize_v7_services()
+            logger.info(f"V7 AI/Voice services initialized: {v7_status}")
+        except ImportError:
+            logger.info("V7 container not available - using pure legacy mode")
+        except Exception as e:
+            logger.warning(f"V7 services initialization failed: {e}")
+    else:
+        logger.info("V7 feature flags disabled - skipping V7 initialization")
+    
     return {
         'database_manager': DatabaseManager,
         'performance_tracker': AdvancedPerformanceTracker(),

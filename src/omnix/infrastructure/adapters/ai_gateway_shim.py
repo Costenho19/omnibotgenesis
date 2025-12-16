@@ -25,6 +25,48 @@ from src.omnix.ports.driven.ai_text_gateway_port import (
 
 logger = logging.getLogger(__name__)
 
+HTTP_ERROR_MESSAGES = {
+    400: "Bad request - prompt may be invalid",
+    401: "API key invalid or expired",
+    403: "Access denied - verify API permissions",
+    404: "Model not found or unavailable",
+    429: "Rate limit exceeded - quota exhausted",
+    500: "Provider internal error",
+    503: "Provider temporarily unavailable",
+}
+
+
+def _extract_http_status(error: Exception) -> tuple[int, str]:
+    """
+    Extract HTTP status code and message from various exception types.
+    
+    Returns:
+        Tuple of (http_code, error_message). http_code is 0 if not HTTP-related.
+    """
+    error_str = str(error)
+    
+    if hasattr(error, 'status_code'):
+        code = error.status_code
+        msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
+        return code, msg
+    
+    if hasattr(error, 'response') and hasattr(error.response, 'status_code'):
+        code = error.response.status_code
+        msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
+        return code, msg
+    
+    if hasattr(error, 'code'):
+        code = error.code if isinstance(error.code, int) else 0
+        if code:
+            msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
+            return code, msg
+    
+    for code in [401, 403, 404, 429, 500, 503]:
+        if str(code) in error_str:
+            return code, HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
+    
+    return 0, error_str
+
 
 class AIGatewayShim:
     """
@@ -150,7 +192,22 @@ class AIGatewayShim:
         except Exception as e:
             self._error_count += 1
             latency_ms = (time.time() - start_time) * 1000
-            logger.error(f"AIGatewayShim: generate_text error: {e}")
+            
+            http_code, http_msg = _extract_http_status(e)
+            
+            if http_code:
+                logger.error(
+                    f"❌ AIGatewayShim [Gemini] HTTP {http_code}: {http_msg}\n"
+                    f"   Provider: {self._primary_provider.value}\n"
+                    f"   Full error: {e}"
+                )
+            else:
+                logger.error(f"❌ AIGatewayShim: generate_text error: {e}")
+            
+            logger.warning(
+                f"⚠️ FALLBACK CHAIN: Gemini failed → "
+                f"(OpenAI/Anthropic fallback not yet implemented in V7 shim)"
+            )
             
             return TextGenerationResponse(
                 content="",
@@ -158,7 +215,11 @@ class AIGatewayShim:
                 model_used="unknown",
                 latency_ms=latency_ms,
                 success=False,
-                error_message=str(e)
+                error_message=f"[HTTP {http_code}] {http_msg}" if http_code else str(e),
+                metadata={
+                    'http_code': http_code,
+                    'provider_failed': self._primary_provider.value,
+                }
             )
     
     async def generate_text_stream(
@@ -200,8 +261,19 @@ class AIGatewayShim:
                 
         except Exception as e:
             self._error_count += 1
-            logger.error(f"AIGatewayShim: generate_text_stream error: {e}")
-            yield f"[Error: {str(e)}]"
+            http_code, http_msg = _extract_http_status(e)
+            
+            if http_code:
+                logger.error(
+                    f"❌ AIGatewayShim [Gemini] STREAM HTTP {http_code}: {http_msg}\n"
+                    f"   Provider: {self._primary_provider.value}\n"
+                    f"   Full error: {e}"
+                )
+            else:
+                logger.error(f"❌ AIGatewayShim: generate_text_stream error: {e}")
+            
+            error_text = f"[HTTP {http_code}] {http_msg}" if http_code else str(e)
+            yield f"[Error: {error_text}]"
     
     def get_available_models(self) -> List[ModelInfo]:
         """Get list of available AI models."""

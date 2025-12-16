@@ -73,7 +73,20 @@ try:
     logger.info("🎤 Voice Service disponible")
 except ImportError:
     VOICE_SERVICE_AVAILABLE = False
-    logger.warning("⚠️ Voice Service no disponible")
+
+# V7 DI Container - Hexagonal Architecture
+try:
+    from omnix_services.ai_service.container import (
+        initialize_v7_services,
+        get_ai_gateway,
+        get_voice_service,
+        get_v7_services_status,
+    )
+    V7_CONTAINER_AVAILABLE = True
+    logger.info("🔷 V7 DI Container disponible")
+except ImportError:
+    V7_CONTAINER_AVAILABLE = False
+    logger.warning("⚠️ V7 DI Container no disponible - usando legacy")
 
 # Web Search Service - Búsqueda en internet con Tavily
 try:
@@ -188,6 +201,27 @@ class EnterpriseTelegramBot:
         self._sync_message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._sync_message_timers: Dict[str, Any] = {}
         self._sync_buffer_lock = threading.Lock()
+        
+        # 🔷 V7 HEXAGONAL SERVICES INITIALIZATION
+        self.v7_services_status = None
+        self.v7_ai_gateway = None
+        self.v7_voice_service = None
+        
+        if V7_CONTAINER_AVAILABLE:
+            try:
+                status = get_v7_services_status()
+                use_ai = status.get('use_ai_port', False)
+                use_voice = status.get('use_voice_port', False)
+                
+                if use_ai or use_voice:
+                    self.v7_services_status = initialize_v7_services()
+                    self.v7_ai_gateway = get_ai_gateway() if use_ai else None
+                    self.v7_voice_service = get_voice_service() if use_voice else None
+                    logger.info(f"🔷 V7 Active: AI={status['ai_gateway_type']}, Voice={status['voice_service_type']}")
+                else:
+                    logger.info("🔷 V7 feature flags disabled - using legacy services")
+            except Exception as e:
+                logger.error(f"❌ V7 Services initialization error: {e}")
         
         # 🏦 TRADING SERVICE ENTERPRISE CON FALLBACK SEGURO
         self.trading_enterprise_enabled = False
