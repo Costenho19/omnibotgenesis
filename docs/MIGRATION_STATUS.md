@@ -4,14 +4,34 @@
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 37.5%
 
-### Último Update (16 Dic 2025 - Session 2)
+### Último Update (16 Dic 2025 - Session 3)
 
-**Mejoras en AI/Voice V7:**
-- `container.py`: Añadido `initialize_v7_services()` para logging detallado al arranque
-- `ai_gateway_shim.py`: Captura de códigos HTTP (401/403/429) con mensajes descriptivos
-- `enterprise_bot.py`: Integración con DI container V7 al inicializar
-- `main_entry.py`: Inicialización V7 en ruta legacy para logging consistente
-- `test_v7_services_integration.py`: 13 tests de integración (todos pasando)
+**Corrección Crítica de Integración V7 ↔ Legacy:**
+- `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
+- Ahora USE_AI_PORT=true usa el mismo failover que legacy: Gemini → OpenAI → Anthropic
+- `container.py`: Inyecta `AIModelsManager` al crear `AIGatewayShim`
+- `ai_error_handler.py`: Sistema de clasificación de errores con 8 categorías
+- `ai_models.py`: Timeouts adaptivos (Gemini 20s, OpenAI 15s, Anthropic 15s)
+- Skip inteligente para errores non-retryable (401, 403, 404)
+
+**Fallback con Cooldown (Production-Ready):**
+- `_is_v7_shim_in_cooldown()`: Previene hot-loops (5 min cooldown)
+- `_reset_v7_shim()`: Limpia shim + manager + marca timestamp de fallo
+- `fallback_to_legacy`: Flag que asegura fallback en mismo request
+- Sin lazy-loading: Container tiene control total del ciclo de vida
+
+**Antes (bug):**
+```
+USE_AI_PORT=true → AIGatewayShim → GeminiAdapter → Solo Gemini ❌
+```
+
+**Ahora (corregido):**
+```
+USE_AI_PORT=true → AIGatewayShim → AIModelsManager → Gemini/OpenAI/Anthropic ✅
+Manager falla → Cooldown 5min → RoutingAIGateway (legacy) ✅
+```
+
+**Tests:** 22/22 pasando (incluyendo degradation y cooldown scenarios)
 
 ---
 

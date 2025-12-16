@@ -1,19 +1,27 @@
 """
 OMNIX V7.0 AI Gateway Compatibility Shim
 =========================================
-Bridges GeminiAdapter (AIInferencePort) with AITextGatewayPort (legacy compatible).
+Bridges V7 Hexagonal Architecture with Legacy AIModelsManager.
 
-This shim allows GeminiAdapter to replace RoutingAIGateway from legacy code.
-It translates TextGenerationRequest/Response to prompt-based calls.
+ARCHITECTURE DECISION (Dec 16, 2025):
+This shim is a PURE ADAPTER that delegates to the legacy AIModelsManager,
+which contains all the production-tested logic:
+- Multi-provider failover (Gemini → OpenAI → Anthropic)
+- Intelligent error classification (retryable vs non-retryable)
+- Adaptive timeouts (Gemini 20s, OpenAI 15s, Anthropic 15s)
+- Exponential backoff for rate limits
 
-Migration Status: Phase 3 - AI Service Integration
+The shim ONLY translates between:
+- V7 TextGenerationRequest/Response ↔ Legacy prompt/response format
+
+This follows the Strangler Fig pattern: new interface wraps legacy implementation.
 """
 
 import asyncio
 import logging
 import time
 from datetime import datetime
-from typing import Dict, Any, List, Optional, AsyncIterator
+from typing import Dict, Any, List, Optional, AsyncIterator, Union
 
 from src.omnix.ports.driven.ai_text_gateway_port import (
     AITextGatewayPort,
@@ -25,189 +33,158 @@ from src.omnix.ports.driven.ai_text_gateway_port import (
 
 logger = logging.getLogger(__name__)
 
-HTTP_ERROR_MESSAGES = {
-    400: "Bad request - prompt may be invalid",
-    401: "API key invalid or expired",
-    403: "Access denied - verify API permissions",
-    404: "Model not found or unavailable",
-    429: "Rate limit exceeded - quota exhausted",
-    500: "Provider internal error",
-    503: "Provider temporarily unavailable",
-}
-
-
-def _extract_http_status(error: Exception) -> tuple[int, str]:
-    """
-    Extract HTTP status code and message from various exception types.
-    
-    Returns:
-        Tuple of (http_code, error_message). http_code is 0 if not HTTP-related.
-    """
-    error_str = str(error)
-    
-    if hasattr(error, 'status_code'):
-        code = error.status_code
-        msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
-        return code, msg
-    
-    if hasattr(error, 'response') and hasattr(error.response, 'status_code'):
-        code = error.response.status_code
-        msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
-        return code, msg
-    
-    if hasattr(error, 'code'):
-        code = error.code if isinstance(error.code, int) else 0
-        if code:
-            msg = HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
-            return code, msg
-    
-    for code in [401, 403, 404, 429, 500, 503]:
-        if str(code) in error_str:
-            return code, HTTP_ERROR_MESSAGES.get(code, f"HTTP {code} error")
-    
-    return 0, error_str
-
 
 class AIGatewayShim:
     """
     Compatibility shim that implements AITextGatewayPort.
     
-    Wraps GeminiAdapter to provide the same interface as RoutingAIGateway.
-    This enables feature flag switching between legacy and V7 AI services.
+    DELEGATES to legacy AIModelsManager for actual AI generation.
+    This ensures USE_AI_PORT=true uses the same proven failover logic
+    as the legacy system.
     
     Translation:
-    - TextGenerationRequest.prompt → GeminiAdapter.generate_text(prompt)
-    - GeminiAdapter response (str) → TextGenerationResponse
-    
-    Features:
-    - Provider fallback chain (Gemini → OpenAI → Anthropic)
-    - Streaming support
-    - Request/response telemetry
-    - Health monitoring
+    - TextGenerationRequest → AIModelsManager.generate(prompt, system_prompt)
+    - AIModelsManager response (str) → TextGenerationResponse
     """
     
     def __init__(
         self,
-        gemini_adapter: Optional[Any] = None,
+        ai_models_manager: Optional[Any] = None,
         primary_provider: ModelProvider = ModelProvider.GEMINI,
-        fallback_order: Optional[List[ModelProvider]] = None,
-        max_retries: int = 3,
     ):
         """
         Initialize the AI Gateway Shim.
         
         Args:
-            gemini_adapter: GeminiAdapter instance (lazy-loaded if None)
-            primary_provider: Primary AI provider to use
-            fallback_order: Order of providers for failover
-            max_retries: Maximum retry attempts
+            ai_models_manager: Legacy AIModelsManager instance (lazy-loaded if None)
+            primary_provider: Primary AI provider (for metadata only)
         """
-        self._gemini_adapter = gemini_adapter
+        self._ai_models_manager = ai_models_manager
         self._primary_provider = primary_provider
-        self._fallback_order = fallback_order or [
-            ModelProvider.GEMINI,
-            ModelProvider.OPENAI,
-            ModelProvider.ANTHROPIC,
-        ]
-        self._max_retries = max_retries
         
         self._request_count = 0
         self._error_count = 0
+        self._success_count = 0
         self._last_request: Optional[datetime] = None
         self._provider_used: ModelProvider = primary_provider
+        self._initialized = False
     
-    def _get_adapter(self) -> Optional[Any]:
-        """Lazy-load GeminiAdapter."""
-        if self._gemini_adapter is not None:
-            return self._gemini_adapter
+    def _get_manager(self) -> Optional[Any]:
+        """
+        Get the injected AIModelsManager (NO lazy initialization).
         
-        try:
-            from src.omnix.infrastructure.adapters.gemini_adapter import GeminiAdapter
-            self._gemini_adapter = GeminiAdapter()
-            logger.info("AIGatewayShim: GeminiAdapter loaded")
-            return self._gemini_adapter
-        except ImportError as e:
-            logger.warning(f"AIGatewayShim: GeminiAdapter not available: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"AIGatewayShim: Failed to load GeminiAdapter: {e}")
-            return None
+        This method only returns the manager if it was explicitly injected
+        during construction. It does NOT create a new manager to avoid
+        violating the container's cooldown mechanism.
+        
+        The container is responsible for injecting the manager when creating
+        the shim. If no manager was injected, returns None and the shim
+        reports unhealthy, triggering fallback to RoutingAIGateway.
+        """
+        return self._ai_models_manager
     
-    def _build_prompt(self, request: TextGenerationRequest) -> str:
-        """Build full prompt from request, including system prompt if provided."""
-        if request.system_prompt:
-            return f"{request.system_prompt}\n\n{request.prompt}"
-        return request.prompt
+    def _build_prompt(self, request: TextGenerationRequest) -> tuple[str, str]:
+        """
+        Extract prompt and system_prompt from request.
+        
+        Returns:
+            Tuple of (prompt, system_prompt)
+        """
+        return request.prompt, request.system_prompt or ""
+    
+    def _determine_provider_used(self, manager: Any) -> ModelProvider:
+        """Determine which provider was actually used from manager state."""
+        if hasattr(manager, 'last_provider_used'):
+            provider_name = manager.last_provider_used
+            if 'gemini' in provider_name.lower():
+                return ModelProvider.GEMINI
+            elif 'gpt' in provider_name.lower() or 'openai' in provider_name.lower():
+                return ModelProvider.OPENAI
+            elif 'claude' in provider_name.lower() or 'anthropic' in provider_name.lower():
+                return ModelProvider.ANTHROPIC
+        return self._primary_provider
     
     async def generate_text(
         self,
         request: TextGenerationRequest
     ) -> TextGenerationResponse:
         """
-        Generate text using GeminiAdapter.
+        Generate text by delegating to legacy AIModelsManager.
         
-        Translates TextGenerationRequest to prompt-based call and wraps
-        the response in TextGenerationResponse.
+        The AIModelsManager handles:
+        - Provider selection and failover
+        - Error classification and retry logic
+        - Timeout management
+        - Response validation
         """
         self._request_count += 1
         self._last_request = datetime.utcnow()
         start_time = time.time()
         
-        adapter = self._get_adapter()
-        if adapter is None:
+        manager = self._get_manager()
+        if manager is None:
             self._error_count += 1
             return TextGenerationResponse(
                 content="",
                 provider_used=self._primary_provider,
                 model_used="unknown",
                 success=False,
-                error_message="AI adapter not available"
+                error_message="AIModelsManager not available - check legacy service initialization"
             )
         
-        prompt = self._build_prompt(request)
+        prompt, system_prompt = self._build_prompt(request)
         
         try:
-            response_text = await adapter.generate_text(
+            response_text = await manager.generate(
                 prompt=prompt,
-                max_tokens=request.max_tokens,
-                temperature=request.temperature
+                system_prompt=system_prompt,
+                max_retries=3
             )
             
             latency_ms = (time.time() - start_time) * 1000
-            provider_name = getattr(adapter, '_provider_name', 'gemini')
-            self._provider_used = ModelProvider(provider_name) if provider_name in ['gemini', 'openai', 'anthropic'] else ModelProvider.GEMINI
             
-            return TextGenerationResponse(
-                content=response_text,
-                provider_used=self._provider_used,
-                model_used=adapter.get_model_info().get('name', 'gemini-2.0-flash'),
-                latency_ms=latency_ms,
-                success=True,
-                metadata={
-                    'user_id': request.user_id,
-                    'adapter': 'GeminiAdapter'
-                }
-            )
-            
+            if response_text:
+                self._success_count += 1
+                self._provider_used = self._determine_provider_used(manager)
+                
+                model_name = "gemini-2.0-flash"
+                if self._provider_used == ModelProvider.OPENAI:
+                    model_name = "gpt-4o"
+                elif self._provider_used == ModelProvider.ANTHROPIC:
+                    model_name = "claude-sonnet-4"
+                
+                return TextGenerationResponse(
+                    content=response_text,
+                    provider_used=self._provider_used,
+                    model_used=model_name,
+                    latency_ms=latency_ms,
+                    success=True,
+                    metadata={
+                        'user_id': request.user_id,
+                        'adapter': 'AIGatewayShim',
+                        'backend': 'AIModelsManager'
+                    }
+                )
+            else:
+                self._error_count += 1
+                return TextGenerationResponse(
+                    content="",
+                    provider_used=self._primary_provider,
+                    model_used="unknown",
+                    latency_ms=latency_ms,
+                    success=False,
+                    error_message="All AI providers failed - check Railway logs for diagnostics",
+                    metadata={
+                        'adapter': 'AIGatewayShim',
+                        'hint': 'Verify API keys: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY'
+                    }
+                )
+                
         except Exception as e:
             self._error_count += 1
             latency_ms = (time.time() - start_time) * 1000
             
-            http_code, http_msg = _extract_http_status(e)
-            
-            if http_code:
-                logger.error(
-                    f"❌ AIGatewayShim [Gemini] HTTP {http_code}: {http_msg}\n"
-                    f"   Provider: {self._primary_provider.value}\n"
-                    f"   Full error: {e}"
-                )
-            else:
-                logger.error(f"❌ AIGatewayShim: generate_text error: {e}")
-            
-            logger.warning(
-                f"⚠️ FALLBACK CHAIN: Gemini failed → "
-                f"(OpenAI/Anthropic fallback not yet implemented in V7 shim)"
-            )
+            logger.error(f"❌ AIGatewayShim.generate_text exception: {e}")
             
             return TextGenerationResponse(
                 content="",
@@ -215,10 +192,10 @@ class AIGatewayShim:
                 model_used="unknown",
                 latency_ms=latency_ms,
                 success=False,
-                error_message=f"[HTTP {http_code}] {http_msg}" if http_code else str(e),
+                error_message=str(e),
                 metadata={
-                    'http_code': http_code,
-                    'provider_failed': self._primary_provider.value,
+                    'adapter': 'AIGatewayShim',
+                    'exception_type': type(e).__name__
                 }
             )
     
@@ -229,68 +206,46 @@ class AIGatewayShim:
         """
         Stream text response from AI model.
         
-        Note: If GeminiAdapter doesn't support streaming natively,
-        this falls back to generating the full response and yielding it.
+        Note: AIModelsManager doesn't support native streaming,
+        so we generate the full response and yield it.
         """
         self._request_count += 1
         self._last_request = datetime.utcnow()
         
-        adapter = self._get_adapter()
-        if adapter is None:
-            self._error_count += 1
-            yield "[Error: AI adapter not available]"
-            return
+        response = await self.generate_text(request)
         
-        prompt = self._build_prompt(request)
-        
-        try:
-            if hasattr(adapter, 'generate_text_stream'):
-                async for chunk in adapter.generate_text_stream(
-                    prompt=prompt,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature
-                ):
-                    yield chunk
-            else:
-                response_text = await adapter.generate_text(
-                    prompt=prompt,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature
-                )
-                yield response_text
-                
-        except Exception as e:
-            self._error_count += 1
-            http_code, http_msg = _extract_http_status(e)
-            
-            if http_code:
-                logger.error(
-                    f"❌ AIGatewayShim [Gemini] STREAM HTTP {http_code}: {http_msg}\n"
-                    f"   Provider: {self._primary_provider.value}\n"
-                    f"   Full error: {e}"
-                )
-            else:
-                logger.error(f"❌ AIGatewayShim: generate_text_stream error: {e}")
-            
-            error_text = f"[HTTP {http_code}] {http_msg}" if http_code else str(e)
-            yield f"[Error: {error_text}]"
+        if response.success:
+            yield response.content
+        else:
+            yield f"[Error: {response.error_message}]"
     
     def get_available_models(self) -> List[ModelInfo]:
         """Get list of available AI models."""
+        manager = self._get_manager()
         models = []
         
-        for provider in self._fallback_order:
-            if self.is_provider_available(provider):
-                model_name = {
-                    ModelProvider.GEMINI: "gemini-2.0-flash",
-                    ModelProvider.OPENAI: "gpt-4o",
-                    ModelProvider.ANTHROPIC: "claude-3-sonnet",
-                }.get(provider, "unknown")
-                
+        if manager:
+            if hasattr(manager, 'openai_client') and manager.openai_client:
                 models.append(ModelInfo(
-                    provider=provider,
-                    model_name=model_name,
+                    provider=ModelProvider.OPENAI,
+                    model_name="gpt-4o",
                     max_tokens=4096,
+                    supports_streaming=True,
+                ))
+            
+            if hasattr(manager, 'gemini_client') and manager.gemini_client:
+                models.append(ModelInfo(
+                    provider=ModelProvider.GEMINI,
+                    model_name="gemini-2.0-flash",
+                    max_tokens=8000,
+                    supports_streaming=True,
+                ))
+            
+            if hasattr(manager, 'anthropic_client') and manager.anthropic_client:
+                models.append(ModelInfo(
+                    provider=ModelProvider.ANTHROPIC,
+                    model_name="claude-sonnet-4",
+                    max_tokens=4000,
                     supports_streaming=True,
                 ))
         
@@ -298,42 +253,73 @@ class AIGatewayShim:
     
     def is_provider_available(self, provider: ModelProvider) -> bool:
         """Check if a specific provider is configured and available."""
-        adapter = self._get_adapter()
-        if adapter is None:
+        manager = self._get_manager()
+        if not manager:
             return False
         
-        providers = getattr(adapter, '_providers', {})
-        return provider.value in providers
+        if provider == ModelProvider.OPENAI:
+            return hasattr(manager, 'openai_client') and manager.openai_client is not None
+        elif provider == ModelProvider.GEMINI:
+            return hasattr(manager, 'gemini_client') and manager.gemini_client is not None
+        elif provider == ModelProvider.ANTHROPIC:
+            return hasattr(manager, 'anthropic_client') and manager.anthropic_client is not None
+        
+        return False
     
     def get_primary_provider(self) -> ModelProvider:
         """Get the primary/default AI provider."""
         return self._primary_provider
     
     def health_check(self) -> Dict[str, Any]:
-        """Check health of AI gateway and providers."""
-        adapter = self._get_adapter()
+        """
+        Check health of AI gateway and providers.
         
-        if adapter is None:
+        Reports healthy=True only if manager is available AND at least one
+        provider has a valid client. This ensures the container can fallback
+        to legacy gateway if the shim is unhealthy.
+        """
+        manager = self._get_manager()
+        
+        if manager is None:
             return {
                 'healthy': False,
-                'providers': {},
+                'initialized': False,
+                'backend': 'AIModelsManager (not available)',
+                'providers': {'gemini': False, 'openai': False, 'anthropic': False},
                 'primary_provider': self._primary_provider.value,
                 'request_count': self._request_count,
+                'success_count': self._success_count,
                 'error_count': self._error_count,
+                'error_rate': self._error_count / max(self._request_count, 1),
+                'last_request': self._last_request.isoformat() if self._last_request else None,
             }
         
-        adapter_health = adapter.health_check() if hasattr(adapter, 'health_check') else {}
+        providers_status = {}
+        for provider in [ModelProvider.GEMINI, ModelProvider.OPENAI, ModelProvider.ANTHROPIC]:
+            providers_status[provider.value] = self.is_provider_available(provider)
+        
+        at_least_one_available = any(providers_status.values())
+        error_rate = self._error_count / max(self._request_count, 1)
+        too_many_errors = error_rate > 0.8 and self._request_count >= 5
+        
+        healthy = at_least_one_available and not too_many_errors
         
         return {
-            'healthy': True,
-            'providers': {p.value: self.is_provider_available(p) for p in self._fallback_order},
+            'healthy': healthy,
+            'initialized': self._initialized,
+            'backend': 'AIModelsManager (legacy with full failover)',
+            'providers': providers_status,
+            'providers_count': sum(1 for v in providers_status.values() if v),
             'primary_provider': self._primary_provider.value,
             'request_count': self._request_count,
+            'success_count': self._success_count,
             'error_count': self._error_count,
-            'adapter_health': adapter_health,
+            'success_rate': self._success_count / max(self._request_count, 1),
+            'error_rate': error_rate,
+            'last_request': self._last_request.isoformat() if self._last_request else None,
         }
 
 
-def get_ai_gateway_shim() -> AIGatewayShim:
+def get_ai_gateway_shim(ai_models_manager: Optional[Any] = None) -> AIGatewayShim:
     """Factory function to create AIGatewayShim instance."""
-    return AIGatewayShim()
+    return AIGatewayShim(ai_models_manager=ai_models_manager)

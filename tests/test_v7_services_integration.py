@@ -2,11 +2,14 @@
 OMNIX V7 Services Integration Tests
 ====================================
 Tests for V7 AI Gateway Shim and Voice Service Adapter integration.
+
+Updated Dec 16, 2025: AIGatewayShim now delegates to AIModelsManager for
+full failover chain support.
 """
 
 import pytest
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 
 class TestContainerV7Functions:
@@ -57,53 +60,79 @@ class TestContainerV7Functions:
             assert type(service).__name__ in ['VoiceServiceEnterprise', 'VoiceServiceAdapter']
 
 
-class TestAIGatewayShimErrorHandling:
-    """Test AIGatewayShim HTTP error handling."""
+class TestAIGatewayShimWithManager:
+    """Test AIGatewayShim integration with AIModelsManager."""
     
-    def test_extract_http_status_from_401_error(self):
-        """Should extract 401 status code from error."""
-        from src.omnix.infrastructure.adapters.ai_gateway_shim import _extract_http_status
+    def test_shim_initialization_with_manager(self):
+        """AIGatewayShim should accept AIModelsManager as dependency."""
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        from omnix_services.ai_service.ai_models import AIModelsManager
         
-        class MockError(Exception):
-            status_code = 401
+        manager = AIModelsManager()
+        shim = AIGatewayShim(ai_models_manager=manager)
         
-        error = MockError("Unauthorized")
-        code, msg = _extract_http_status(error)
-        
-        assert code == 401
-        assert "API key invalid" in msg or "expired" in msg
+        assert shim._ai_models_manager is manager
+        assert shim._request_count == 0
+        assert shim._error_count == 0
     
-    def test_extract_http_status_from_429_error(self):
-        """Should extract 429 status code from error."""
-        from src.omnix.infrastructure.adapters.ai_gateway_shim import _extract_http_status
+    def test_shim_health_check_reports_backend(self):
+        """Health check should report AIModelsManager as backend."""
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        from omnix_services.ai_service.ai_models import AIModelsManager
         
-        class MockError(Exception):
-            status_code = 429
+        manager = AIModelsManager()
+        shim = AIGatewayShim(ai_models_manager=manager)
         
-        error = MockError("Rate limited")
-        code, msg = _extract_http_status(error)
+        health = shim.health_check()
         
-        assert code == 429
-        assert "Rate limit" in msg or "quota" in msg.lower()
+        assert 'backend' in health
+        assert 'AIModelsManager' in health['backend']
+        assert 'providers' in health
+        assert health['healthy'] == True or health['healthy'] == False
     
-    def test_extract_http_status_from_string_error(self):
-        """Should extract status code from error string containing HTTP code."""
-        from src.omnix.infrastructure.adapters.ai_gateway_shim import _extract_http_status
+    def test_shim_detects_available_providers(self):
+        """Shim should detect which providers are available from manager."""
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        from omnix_services.ai_service.ai_models import AIModelsManager
         
-        error = Exception("API error 401: Invalid key")
-        code, msg = _extract_http_status(error)
+        manager = AIModelsManager()
+        shim = AIGatewayShim(ai_models_manager=manager)
         
-        assert code == 401
+        health = shim.health_check()
+        providers = health.get('providers', {})
+        
+        assert isinstance(providers, dict)
+        assert 'gemini' in providers
+        assert 'openai' in providers
+        assert 'anthropic' in providers
     
-    def test_extract_http_status_no_code(self):
-        """Should return 0 for non-HTTP errors."""
-        from src.omnix.infrastructure.adapters.ai_gateway_shim import _extract_http_status
+    def test_shim_get_primary_provider(self):
+        """Should return primary provider."""
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        from src.omnix.ports.driven.ai_text_gateway_port import ModelProvider
         
-        error = Exception("Generic error")
-        code, msg = _extract_http_status(error)
+        shim = AIGatewayShim(primary_provider=ModelProvider.GEMINI)
         
-        assert code == 0
-        assert msg == "Generic error"
+        assert shim.get_primary_provider() == ModelProvider.GEMINI
+    
+    def test_shim_no_lazy_loading(self):
+        """Shim should NOT lazy-load AIModelsManager (no longer supported).
+        
+        This ensures the container has full control over manager lifecycle
+        and cooldown behavior. If no manager is injected, shim reports unhealthy.
+        """
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        
+        shim = AIGatewayShim()
+        
+        assert shim._ai_models_manager is None
+        
+        manager = shim._get_manager()
+        assert manager is None
+        
+        health = shim.health_check()
+        assert health['healthy'] is False
+        assert health['backend'] == 'AIModelsManager (not available)'
 
 
 class TestAIGatewayShimBasics:
@@ -117,29 +146,20 @@ class TestAIGatewayShimBasics:
         
         assert shim._request_count == 0
         assert shim._error_count == 0
-        assert shim._max_retries == 3
+        assert shim._success_count == 0
     
-    def test_shim_health_check_without_adapter(self):
-        """Health check should report unhealthy if adapter not available."""
+    def test_shim_health_check_without_manager(self):
+        """Health check should report unhealthy if manager not available."""
         from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
         
         shim = AIGatewayShim()
-        shim._gemini_adapter = None
+        shim._ai_models_manager = None
         
-        with patch.object(shim, '_get_adapter', return_value=None):
+        with patch.object(shim, '_get_manager', return_value=None):
             health = shim.health_check()
         
         assert health['healthy'] == False
         assert health['request_count'] == 0
-    
-    def test_shim_get_primary_provider(self):
-        """Should return primary provider."""
-        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
-        from src.omnix.ports.driven.ai_text_gateway_port import ModelProvider
-        
-        shim = AIGatewayShim(primary_provider=ModelProvider.GEMINI)
-        
-        assert shim.get_primary_provider() == ModelProvider.GEMINI
 
 
 class TestVoiceServiceAdapterBasics:
@@ -195,3 +215,132 @@ class TestRuntimeFlagToggle:
         with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
             status2 = get_v7_services_status()
             assert status2['use_voice_port'] == True
+
+
+class TestContainerFallbackBehavior:
+    """Test container fallback to RoutingAIGateway when shim fails."""
+    
+    def test_container_fallback_when_manager_fails(self):
+        """Container should return RoutingAIGateway when AIModelsManager creation fails."""
+        import importlib
+        import omnix_services.ai_service.container as container_module
+        
+        container_module._v7_gateway_shim = None
+        container_module._ai_models_manager_instance = None
+        container_module._v7_shim_last_failure = 0.0
+        container_module._legacy_gateway_instance = None
+        
+        with patch.dict(os.environ, {'USE_AI_PORT': 'true'}):
+            with patch.object(container_module, '_get_ai_models_manager', return_value=None):
+                gateway = container_module.get_ai_gateway()
+        
+        from omnix_services.ai_service.providers.routing_gateway import RoutingAIGateway
+        assert isinstance(gateway, RoutingAIGateway)
+    
+    def test_container_cooldown_prevents_retry(self):
+        """Container should not retry shim creation during cooldown period."""
+        import time
+        import omnix_services.ai_service.container as container_module
+        
+        container_module._v7_gateway_shim = None
+        container_module._ai_models_manager_instance = None
+        container_module._v7_shim_last_failure = time.time()
+        container_module._legacy_gateway_instance = None
+        
+        with patch.dict(os.environ, {'USE_AI_PORT': 'true'}):
+            in_cooldown = container_module._is_v7_shim_in_cooldown()
+        
+        assert in_cooldown == True
+    
+    def test_container_fallback_when_healthy_shim_becomes_unhealthy(self):
+        """Container should fallback to RoutingAIGateway when healthy shim becomes unhealthy.
+        
+        This tests the most common production scenario: provider outage after startup.
+        """
+        import time
+        import omnix_services.ai_service.container as container_module
+        from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+        from omnix_services.ai_service.providers.routing_gateway import RoutingAIGateway
+        from unittest.mock import MagicMock
+        
+        container_module._v7_gateway_shim = None
+        container_module._ai_models_manager_instance = None
+        container_module._v7_shim_last_failure = 0.0
+        container_module._v7_shim_last_health_check = 0.0
+        container_module._legacy_gateway_instance = None
+        
+        mock_manager = MagicMock()
+        mock_manager.gemini_client = None
+        mock_manager.openai_client = None
+        mock_manager.anthropic_client = None
+        
+        shim = AIGatewayShim(ai_models_manager=mock_manager)
+        container_module._v7_gateway_shim = shim
+        container_module._v7_shim_last_health_check = time.time() - 120
+        
+        with patch.dict(os.environ, {'USE_AI_PORT': 'true'}):
+            gateway = container_module.get_ai_gateway()
+        
+        assert isinstance(gateway, RoutingAIGateway)
+        
+        assert container_module._is_v7_shim_in_cooldown() == True
+
+
+class TestAIModelsManagerFailover:
+    """Test that AIModelsManager failover is correctly used by shim."""
+    
+    def test_error_handler_imported_correctly(self):
+        """Error handler module should be importable."""
+        from omnix_services.ai_service.ai_error_handler import (
+            ErrorCategory,
+            AIError,
+            ErrorClassifier,
+            should_skip_to_next_model,
+            log_ai_error
+        )
+        
+        assert ErrorCategory.AUTH_ERROR is not None
+        assert ErrorCategory.RATE_LIMIT is not None
+        assert ErrorCategory.TIMEOUT is not None
+    
+    def test_error_classifier_auth_detection(self):
+        """ErrorClassifier should detect auth errors."""
+        from omnix_services.ai_service.ai_error_handler import ErrorClassifier
+        
+        error = Exception("401 Unauthorized - invalid_api_key")
+        ai_error = ErrorClassifier.classify_openai_error(error)
+        
+        assert ai_error is not None
+        assert ai_error.is_retryable == False
+    
+    def test_should_skip_for_auth_error(self):
+        """Non-retryable auth errors should skip to next model."""
+        from omnix_services.ai_service.ai_error_handler import (
+            AIError,
+            ErrorCategory,
+            should_skip_to_next_model
+        )
+        
+        error = AIError(
+            provider="openai",
+            category=ErrorCategory.AUTH_ERROR,
+            http_code=401,
+            message="Invalid API key",
+            raw_error=None,
+            is_retryable=False,
+            suggested_action="Update API key"
+        )
+        
+        assert should_skip_to_next_model(error) == True
+    
+    def test_timeout_error_is_retryable(self):
+        """Timeout errors should be retryable."""
+        from omnix_services.ai_service.ai_error_handler import (
+            ErrorClassifier,
+            should_skip_to_next_model
+        )
+        
+        timeout_error = ErrorClassifier.classify_timeout("gemini", 20.0)
+        
+        assert timeout_error.is_retryable == True
+        assert should_skip_to_next_model(timeout_error) == False

@@ -129,6 +129,9 @@ _legacy_gateway_instance = None
 _v7_gateway_shim = None
 _v7_shim_last_health_check = 0.0
 _V7_HEALTH_CHECK_INTERVAL = 60.0
+_V7_SHIM_COOLDOWN_SECONDS = 300.0
+_v7_shim_last_failure = 0.0
+_ai_models_manager_instance = None
 
 
 def _is_use_ai_port_enabled() -> bool:
@@ -136,20 +139,68 @@ def _is_use_ai_port_enabled() -> bool:
     return os.environ.get('USE_AI_PORT', 'false').lower() == 'true'
 
 
+def _get_ai_models_manager():
+    """Get or create singleton AIModelsManager instance."""
+    global _ai_models_manager_instance
+    if _ai_models_manager_instance is None:
+        try:
+            from omnix_services.ai_service.ai_models import AIModelsManager
+            _ai_models_manager_instance = AIModelsManager()
+            logger.info("✅ AIModelsManager singleton created (with full failover chain)")
+        except Exception as e:
+            logger.error(f"❌ Failed to create AIModelsManager: {e}")
+            return None
+    return _ai_models_manager_instance
+
+
+def _reset_v7_shim():
+    """
+    Reset V7 shim and manager singletons and mark failure timestamp.
+    
+    After reset, the system will use legacy gateway until cooldown expires.
+    This prevents hot-loop recreation attempts when manager is unavailable.
+    """
+    global _v7_gateway_shim, _ai_models_manager_instance, _v7_shim_last_health_check, _v7_shim_last_failure
+    import time
+    _v7_gateway_shim = None
+    _ai_models_manager_instance = None
+    _v7_shim_last_health_check = 0.0
+    _v7_shim_last_failure = time.time()
+    logger.info(f"🔄 V7 shim reset - using legacy gateway for {_V7_SHIM_COOLDOWN_SECONDS}s cooldown")
+
+
+def _is_v7_shim_in_cooldown() -> bool:
+    """Check if we're in cooldown period after a shim failure."""
+    import time
+    if _v7_shim_last_failure == 0.0:
+        return False
+    elapsed = time.time() - _v7_shim_last_failure
+    return elapsed < _V7_SHIM_COOLDOWN_SECONDS
+
+
 def get_ai_gateway():
     """
     Get the AI gateway with V7.0 port switching.
     
-    V7.0 Migration: When USE_AI_PORT=true, uses AIGatewayShim (hexagonal).
-    AIGatewayShim wraps GeminiAdapter and provides AIGatewayProtocol interface.
-    Otherwise, uses legacy RoutingAIGateway.
+    V7.0 Migration (Dec 16, 2025): When USE_AI_PORT=true, uses AIGatewayShim.
+    
+    ARCHITECTURE: AIGatewayShim is now a PURE ADAPTER that delegates to
+    AIModelsManager (legacy). This ensures the shim uses the same proven
+    failover logic: Gemini → OpenAI → Anthropic with intelligent error handling.
+    
+    FAILOVER BEHAVIOR:
+    - If shim initialization fails → falls back to RoutingAIGateway
+    - If health check fails (manager None, no providers, high error rate) → resets and falls back
+    - If USE_AI_PORT=false → uses RoutingAIGateway directly
     
     Per-request evaluation with periodic health revalidation allows dynamic fallback.
     """
     global _legacy_gateway_instance, _v7_gateway_shim, _v7_shim_last_health_check
     import time
     
-    if _is_use_ai_port_enabled():
+    fallback_to_legacy = False
+    
+    if _is_use_ai_port_enabled() and not _is_v7_shim_in_cooldown():
         try:
             current_time = time.time()
             need_health_check = (
@@ -159,27 +210,40 @@ def get_ai_gateway():
             
             if _v7_gateway_shim is None:
                 from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
-                _v7_gateway_shim = AIGatewayShim()
+                ai_manager = _get_ai_models_manager()
+                if ai_manager is None:
+                    logger.warning("⚠️ AIModelsManager creation failed, using RoutingAIGateway")
+                    _reset_v7_shim()
+                    fallback_to_legacy = True
+                else:
+                    _v7_gateway_shim = AIGatewayShim(ai_models_manager=ai_manager)
+                    logger.info("✅ AIGatewayShim created with AIModelsManager backend")
             
-            if need_health_check:
+            if not fallback_to_legacy and _v7_gateway_shim is not None and need_health_check:
                 health = _v7_gateway_shim.health_check()
                 _v7_shim_last_health_check = current_time
                 
                 if not health.get('healthy', False):
-                    logger.warning("⚠️ AIGatewayShim unhealthy, falling back to RoutingAIGateway")
-                    _v7_gateway_shim = None
+                    logger.warning(
+                        f"⚠️ AIGatewayShim unhealthy: providers={health.get('providers')}, "
+                        f"error_rate={health.get('error_rate', 0):.2f} - falling back to RoutingAIGateway"
+                    )
+                    _reset_v7_shim()
+                    fallback_to_legacy = True
                 else:
-                    logger.debug("✅ USE_AI_PORT=true - Using AIGatewayShim (V7.0 hexagonal)")
+                    logger.debug(f"✅ USE_AI_PORT=true - AIGatewayShim healthy: {health.get('providers', {})}")
                     return _v7_gateway_shim
-            else:
+            elif not fallback_to_legacy and _v7_gateway_shim is not None:
                 return _v7_gateway_shim
                 
         except ImportError as e:
             logger.warning(f"⚠️ AIGatewayShim import failed: {e}, using RoutingAIGateway")
-            _v7_gateway_shim = None
+            _reset_v7_shim()
+            fallback_to_legacy = True
         except Exception as e:
             logger.error(f"❌ AIGatewayShim error: {e}, using RoutingAIGateway")
-            _v7_gateway_shim = None
+            _reset_v7_shim()
+            fallback_to_legacy = True
     
     if _legacy_gateway_instance is None:
         container = get_container()
