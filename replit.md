@@ -49,6 +49,14 @@ The system employs a hexagonal architecture, with completed phases including Boo
 ### AI Service Architecture
 Refactored with SOLID principles and dependency injection, integrating interfaces, providers (Gemini, OpenAI, Anthropic), a video learning module, and a DI container.
 
+**Error Handling System (Dec 16, 2025):**
+- `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)
+- SDK-specific error detection for Gemini, OpenAI, Anthropic exceptions
+- Intelligent retry/failover: non-retryable (401, 403, 404) skip immediately to next model
+- Retryable errors (429, 500, 503, timeout) use exponential backoff
+- Timeouts: Gemini 20s, OpenAI 15s, Anthropic 15s
+- Structured logging with diagnostic messages: `❌ PROVIDER [CODE] Message | Acción sugerida`
+
 ### Web Search Service Architecture
 Structured with an `IntentDetector`, `SearchManager`, and `TavilySearch` client for intent-based web searches.
 

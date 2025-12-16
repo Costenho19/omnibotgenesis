@@ -35,8 +35,20 @@ except:
 from omnix_config.settings import settings
 from omnix_core.cache.redis_cache import cache, cache_result
 from omnix_core.utils.logger import get_logger
+from omnix_services.ai_service.ai_error_handler import (
+    ErrorClassifier, 
+    ErrorCategory, 
+    AIError,
+    log_ai_error,
+    should_skip_to_next_model
+)
 
 logger = get_logger(__name__)
+
+# Timeouts adaptativos por proveedor (2025 best practices)
+TIMEOUT_GEMINI = 20.0   # Gemini necesita más tiempo para function calling
+TIMEOUT_OPENAI = 15.0   # OpenAI es generalmente más rápido
+TIMEOUT_ANTHROPIC = 15.0  # Claude similar a OpenAI
 
 
 class AIModelsManager:
@@ -148,6 +160,10 @@ class AIModelsManager:
         """
         Generate AI response with automatic fallback, retry logic, and validation
         
+        Uses intelligent error classification to:
+        - Skip immediately to next model on non-retryable errors (401, 403, 404)
+        - Retry with backoff on retryable errors (429, 500, 503, timeout)
+        
         Args:
             prompt: User prompt
             system_prompt: System instructions
@@ -163,58 +179,78 @@ class AIModelsManager:
             model_priority = [self.primary_model] + self.fallback_models
         
         total_attempts = 0
-        last_error = None
+        last_error: Optional[AIError] = None
+        errors_summary: list = []
         
         for model_name in model_priority:
+            model_failed_permanently = False
+            
             for attempt in range(max_retries):
                 total_attempts += 1
-                try:
-                    response = None
-                    
-                    if 'gpt' in model_name.lower():
-                        response = await self._generate_openai_async(prompt, system_prompt)
-                    elif 'gemini' in model_name.lower():
-                        response = await self._generate_gemini_async(prompt, system_prompt)
-                    elif 'claude' in model_name.lower():
-                        response = await self._generate_anthropic_async(prompt, system_prompt)
-                    
-                    is_valid, reason = self._validate_response(response)
-                    
-                    if is_valid:
-                        logger.info(f"[SUCCESS] {model_name} generated valid response (attempt {attempt + 1}, total: {total_attempts})")
-                        return response
-                    else:
-                        logger.warning(f"[VALIDATION] {model_name} response invalid: {reason}")
-                        if attempt < max_retries - 1:
-                            delay = self._calculate_backoff_delay(attempt)
-                            logger.info(f"[RETRY] Waiting {delay:.2f}s before retry...")
-                            await asyncio.sleep(delay)
-                        continue
-                    
-                except asyncio.TimeoutError:
-                    logger.warning(f"[TIMEOUT] {model_name} attempt {attempt + 1} timed out")
-                    last_error = "timeout"
-                except Exception as e:
-                    logger.error(f"[ERROR] {model_name} attempt {attempt + 1} failed: {type(e).__name__}: {e}")
-                    last_error = str(e)
+                response = None
+                ai_error = None
                 
-                if attempt < max_retries - 1:
-                    delay = self._calculate_backoff_delay(attempt)
-                    logger.info(f"[RETRY] Backoff {delay:.2f}s before next attempt...")
-                    await asyncio.sleep(delay)
+                if 'gpt' in model_name.lower():
+                    response, ai_error = await self._generate_openai_async(prompt, system_prompt)
+                elif 'gemini' in model_name.lower():
+                    response, ai_error = await self._generate_gemini_async(prompt, system_prompt)
+                elif 'claude' in model_name.lower():
+                    response, ai_error = await self._generate_anthropic_async(prompt, system_prompt)
+                
+                if ai_error:
+                    last_error = ai_error
+                    errors_summary.append(f"{ai_error.provider}:{ai_error.category.value}")
+                    
+                    if should_skip_to_next_model(ai_error):
+                        logger.warning(f"[SKIP] {model_name} → Error no-retryable: {ai_error.message}")
+                        model_failed_permanently = True
+                        break  # Exit inner loop, continue to next model
+                    
+                    if ai_error.is_retryable and attempt < max_retries - 1:
+                        delay = self._calculate_backoff_delay(attempt)
+                        logger.info(f"[RETRY] {model_name} intento {attempt + 1}/{max_retries} - esperando {delay:.2f}s")
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        continue
+                
+                is_valid, reason = self._validate_response(response)
+                
+                if is_valid:
+                    logger.info(f"✅ [SUCCESS] {model_name} generó respuesta válida (intento {attempt + 1}, total: {total_attempts})")
+                    return response
+                else:
+                    logger.warning(f"[VALIDATION] {model_name} respuesta inválida: {reason}")
+                    if attempt < max_retries - 1:
+                        delay = self._calculate_backoff_delay(attempt)
+                        await asyncio.sleep(delay)
+                    continue
             
-            logger.warning(f"[FALLBACK] {model_name} exhausted {max_retries} retries, trying next model...")
+            if model_failed_permanently:
+                logger.info(f"[NEXT] Saltando a siguiente modelo después de error no-retryable en {model_name}")
+            else:
+                logger.warning(f"[FALLBACK] {model_name} agotó {max_retries} reintentos, probando siguiente modelo...")
         
-        logger.error(f"[CRITICAL] All AI models failed after {total_attempts} total attempts. Last error: {last_error}")
+        error_msg = last_error.log_message() if last_error else "Unknown"
+        suggestion = last_error.suggested_action if last_error else "Revisar configuración de API keys"
+        logger.error(f"[CRITICAL] Todos los modelos AI fallaron después de {total_attempts} intentos | Errores: {errors_summary} | Último: {error_msg}")
+        logger.error(f"[DIAGNOSTIC] Acción sugerida: {suggestion}")
         return None
     
-    async def _generate_openai_async(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with OpenAI GPT-4o (Async with timeout)"""
+    async def _generate_openai_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with OpenAI GPT-4o (Async with timeout) - Returns (response, error)"""
         if not self.openai_client:
-            return None
+            return None, AIError(
+                provider="openai",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="OpenAI client no inicializado - Falta OPENAI_API_KEY",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar OPENAI_API_KEY en Railway"
+            )
         
         try:
-            # Enhanced system prompt for Harold
             enhanced_system = f"""{system_prompt}
 
 🧠 SUPERINTELIGENCIA GPT-4o PARA HAROLD:
@@ -230,7 +266,6 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
 
 ⚠️ IMPORTANTE: Harold necesita demostración de superinteligencia en cada respuesta."""
 
-            # TIMEOUT DE 10 SEGUNDOS para GPT-4o
             response = await asyncio.wait_for(
                 self.openai_client.chat.completions.create(
                     model="gpt-4o",
@@ -244,7 +279,7 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
                     presence_penalty=0.1,
                     frequency_penalty=0.1
                 ),
-                timeout=10.0
+                timeout=TIMEOUT_OPENAI
             )
             
             result = response.choices[0].message.content if response.choices else None
@@ -252,35 +287,48 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
             if result:
                 logger.info(f"✅ GPT-4o generated {len(result)} characters")
             
-            return result
+            return result, None
         
         except asyncio.TimeoutError:
-            logger.warning("⚠️ OpenAI timeout (10s) - intentando siguiente modelo")
-            return None
+            ai_error = ErrorClassifier.classify_timeout("openai", TIMEOUT_OPENAI)
+            log_ai_error(ai_error)
+            return None, ai_error
         except Exception as e:
-            logger.error(f"❌ OpenAI generation error: {e}")
-            return None
+            ai_error = ErrorClassifier.classify_openai_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
     
-    async def _generate_gemini_async(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with Gemini 2.0 (Async via thread pool with timeout)"""
-        try:
-            # Gemini SDK doesn't have native async, run in thread pool WITH TIMEOUT
-            loop = asyncio.get_event_loop()
-            # TIMEOUT DE 8 SEGUNDOS - Si Gemini tarda más, abortar y pasar al siguiente
-            result = await asyncio.wait_for(
-                loop.run_in_executor(None, self._generate_gemini_sync, prompt, system_prompt),
-                timeout=8.0
+    async def _generate_gemini_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Gemini 2.0 (Async via thread pool with timeout) - Returns (response, error)"""
+        if not self.gemini_client:
+            return None, AIError(
+                provider="gemini",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="Gemini client no inicializado - Falta GEMINI_API_KEY",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar GEMINI_API_KEY en Railway"
             )
-            return result
+        
+        try:
+            loop = asyncio.get_event_loop()
+            result, sync_error = await asyncio.wait_for(
+                loop.run_in_executor(None, self._generate_gemini_sync, prompt, system_prompt),
+                timeout=TIMEOUT_GEMINI
+            )
+            return result, sync_error
         except asyncio.TimeoutError:
-            logger.warning("⚠️ Gemini timeout (8s) - intentando siguiente modelo")
-            return None
+            ai_error = ErrorClassifier.classify_timeout("gemini", TIMEOUT_GEMINI)
+            log_ai_error(ai_error)
+            return None, ai_error
         except Exception as e:
-            logger.error(f"❌ Gemini async generation error: {e}")
-            return None
+            ai_error = ErrorClassifier.classify_gemini_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
     
-    def _generate_gemini_sync(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with Gemini 2.0 (Sync) - Supports both new and legacy SDK"""
+    def _generate_gemini_sync(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Gemini 2.0 (Sync) - Supports both new and legacy SDK - Returns (response, error)"""
         try:
             enhanced_prompt = f"""{system_prompt}
 
@@ -305,7 +353,7 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                 text = self._extract_gemini_text(response, 'new')
                 if text:
                     logger.info(f"✅ Gemini (new SDK) generated {len(text)} characters")
-                    return text
+                    return text, None
             elif GEMINI_SDK_VERSION == 'legacy':
                 model = genai.GenerativeModel(
                     "gemini-2.0-flash-exp",
@@ -323,40 +371,46 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
                 text = self._extract_gemini_text(response, 'legacy')
                 if text:
                     logger.info(f"✅ Gemini (legacy SDK) generated {len(text)} characters")
-                    return text
+                    return text, None
             
-            return None
+            return None, None
             
         except Exception as e:
-            logger.error(f"❌ Gemini generation error: {e}")
-            return None
+            ai_error = ErrorClassifier.classify_gemini_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
     
-    async def _generate_anthropic_async(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with Anthropic Claude (Async via thread pool with timeout)"""
+    async def _generate_anthropic_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Anthropic Claude (Async via thread pool with timeout) - Returns (response, error)"""
         if not self.anthropic_client:
-            return None
+            return None, AIError(
+                provider="anthropic",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="Anthropic client no inicializado - Falta ANTHROPIC_API_KEY",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar ANTHROPIC_API_KEY en Railway"
+            )
         
         try:
-            # Anthropic SDK doesn't have native async, run in thread pool WITH TIMEOUT
             loop = asyncio.get_event_loop()
-            # TIMEOUT DE 8 SEGUNDOS - Si Claude tarda más, abortar
-            result = await asyncio.wait_for(
+            result, sync_error = await asyncio.wait_for(
                 loop.run_in_executor(None, self._generate_anthropic_sync, prompt, system_prompt),
-                timeout=8.0
+                timeout=TIMEOUT_ANTHROPIC
             )
-            return result
+            return result, sync_error
         except asyncio.TimeoutError:
-            logger.warning("⚠️ Claude timeout (8s) - abortando")
-            return None
+            ai_error = ErrorClassifier.classify_timeout("anthropic", TIMEOUT_ANTHROPIC)
+            log_ai_error(ai_error)
+            return None, ai_error
         except Exception as e:
-            logger.error(f"❌ Anthropic async generation error: {e}")
-            return None
+            ai_error = ErrorClassifier.classify_anthropic_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
     
-    def _generate_anthropic_sync(self, prompt: str, system_prompt: str) -> Optional[str]:
-        """Generate with Anthropic Claude (Sync)"""
-        if not self.anthropic_client:
-            return None
-        
+    def _generate_anthropic_sync(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Anthropic Claude (Sync) - Returns (response, error)"""
         try:
             response = self.anthropic_client.messages.create(
                 model="claude-sonnet-4-20250514",
@@ -371,11 +425,12 @@ GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
             if result:
                 logger.info(f"✅ Claude generated {len(result)} characters")
             
-            return result
+            return result, None
             
         except Exception as e:
-            logger.error(f"❌ Anthropic generation error: {e}")
-            return None
+            ai_error = ErrorClassifier.classify_anthropic_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
     
     def _extract_gemini_text(self, response, sdk_version: str) -> Optional[str]:
         """Extract text from Gemini response - handles both new and legacy SDK formats"""
