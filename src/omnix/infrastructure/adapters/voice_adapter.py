@@ -53,30 +53,31 @@ class VoiceServiceAdapter:
         Initialize voice adapter.
         
         Args:
-            voice_service: VoiceServiceEnterprise instance (lazy-loaded if None)
+            voice_service: VoiceServiceEnterprise instance (MUST be injected by container).
+                          NO lazy-loading - container controls the lifecycle.
         """
         self._voice_service = voice_service
         self._request_count = 0
         self._error_count = 0
         self._last_request: Optional[datetime] = None
         self._cache: Dict[str, str] = {}
+        
+        if voice_service is not None:
+            logger.info("✅ VoiceServiceAdapter initialized with injected VoiceServiceEnterprise")
     
     def _get_voice_service(self) -> Optional[Any]:
-        """Lazy-load VoiceServiceEnterprise."""
-        if self._voice_service is not None:
-            return self._voice_service
+        """
+        Get the injected VoiceServiceEnterprise (NO lazy initialization).
         
-        try:
-            from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
-            self._voice_service = VoiceServiceEnterprise()
-            logger.info("VoiceServiceAdapter: VoiceServiceEnterprise loaded")
-            return self._voice_service
-        except ImportError as e:
-            logger.warning(f"VoiceServiceAdapter: VoiceServiceEnterprise not available: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"VoiceServiceAdapter: Failed to load VoiceServiceEnterprise: {e}")
-            return None
+        This method only returns the service if it was explicitly injected
+        during construction. It does NOT create a new service to avoid
+        violating the container's cooldown mechanism.
+        
+        The container is responsible for injecting the service when creating
+        the adapter. If no service was injected, returns None and the adapter
+        reports unhealthy, triggering fallback to legacy VoiceServiceEnterprise.
+        """
+        return self._voice_service
     
     def _language_to_code(self, language: VoiceLanguage) -> str:
         """Convert VoiceLanguage enum to language code string."""
@@ -299,30 +300,50 @@ class VoiceServiceAdapter:
         return deleted_count
     
     def health_check(self) -> Dict[str, Any]:
-        """Check health of voice services."""
+        """
+        Check health of voice services.
+        
+        Reports healthy=True only if service is available AND at least one
+        capability (TTS or STT) is working. This ensures the container can
+        fallback to legacy service if the adapter is unhealthy.
+        """
         import tempfile
         
         service = self._get_voice_service()
         
         if service is None:
             return {
+                'healthy': False,
+                'backend': 'VoiceServiceEnterprise (not available)',
                 'tts_available': False,
                 'stt_available': False,
                 'cache_size': len(self._cache),
                 'temp_dir_exists': os.path.exists(tempfile.gettempdir()),
                 'request_count': self._request_count,
                 'error_count': self._error_count,
+                'error_rate': self._error_count / max(self._request_count, 1),
             }
         
         service_health = service.health_check() if hasattr(service, 'health_check') else {}
         
+        tts_available = service_health.get('tts_available', False)
+        stt_available = service_health.get('stt_available', False)
+        at_least_one_available = tts_available or stt_available
+        error_rate = self._error_count / max(self._request_count, 1)
+        too_many_errors = error_rate > 0.8 and self._request_count >= 5
+        
+        healthy = at_least_one_available and not too_many_errors
+        
         return {
-            'tts_available': service_health.get('tts_available', False),
-            'stt_available': service_health.get('stt_available', False),
+            'healthy': healthy,
+            'backend': 'VoiceServiceEnterprise (legacy with TTS/STT)',
+            'tts_available': tts_available,
+            'stt_available': stt_available,
             'cache_size': len(self._cache),
             'temp_dir_exists': os.path.exists(tempfile.gettempdir()),
             'request_count': self._request_count,
             'error_count': self._error_count,
+            'error_rate': error_rate,
             'service_health': service_health,
         }
 

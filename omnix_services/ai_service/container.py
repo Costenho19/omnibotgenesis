@@ -255,12 +255,57 @@ def get_ai_gateway():
 _voice_adapter_instance = None
 _voice_last_health_check = 0.0
 _VOICE_HEALTH_CHECK_INTERVAL = 60.0
+_VOICE_COOLDOWN_SECONDS = 300.0
+_voice_adapter_last_failure = 0.0
 _legacy_voice_instance = None
+_voice_enterprise_instance = None
 
 
 def _is_use_voice_port_enabled() -> bool:
     """Check USE_VOICE_PORT flag per-request for dynamic fallback."""
     return os.environ.get('USE_VOICE_PORT', 'false').lower() == 'true'
+
+
+def _get_voice_enterprise():
+    """Get or create VoiceServiceEnterprise instance."""
+    global _voice_enterprise_instance
+    if _voice_enterprise_instance is None:
+        try:
+            from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+            _voice_enterprise_instance = VoiceServiceEnterprise()
+            logger.info("✅ VoiceServiceEnterprise created for adapter injection")
+        except Exception as e:
+            logger.error(f"❌ Failed to create VoiceServiceEnterprise: {e}")
+            return None
+    return _voice_enterprise_instance
+
+
+def _reset_voice_adapter():
+    """
+    Reset V7 voice adapter (NOT the enterprise service) and mark failure timestamp.
+    
+    After reset, the system will use legacy service until cooldown expires.
+    This prevents hot-loop recreation attempts when adapter is unavailable.
+    
+    NOTE: We do NOT reset _voice_enterprise_instance because the underlying
+    service (gTTS/Whisper) is still valid. Only the adapter wrapper had issues.
+    After cooldown, we can recreate the adapter using the same enterprise service.
+    """
+    global _voice_adapter_instance, _voice_last_health_check, _voice_adapter_last_failure
+    import time
+    _voice_adapter_instance = None
+    _voice_last_health_check = 0.0
+    _voice_adapter_last_failure = time.time()
+    logger.info(f"🔄 V7 voice adapter reset - using legacy service for {_VOICE_COOLDOWN_SECONDS}s cooldown")
+
+
+def _is_voice_in_cooldown() -> bool:
+    """Check if we're in cooldown period after a voice adapter failure."""
+    import time
+    if _voice_adapter_last_failure == 0.0:
+        return False
+    elapsed = time.time() - _voice_adapter_last_failure
+    return elapsed < _VOICE_COOLDOWN_SECONDS
 
 
 def get_voice_service():
@@ -270,12 +315,23 @@ def get_voice_service():
     V7.0 Migration: When USE_VOICE_PORT=true, uses VoiceServiceAdapter (hexagonal).
     Otherwise, uses legacy VoiceServiceEnterprise.
     
-    Per-request evaluation with periodic health revalidation.
+    ARCHITECTURE: VoiceServiceAdapter is a PURE ADAPTER that delegates to
+    VoiceServiceEnterprise (legacy). This ensures the adapter uses the same
+    proven TTS/STT logic as the legacy system.
+    
+    FALLBACK BEHAVIOR:
+    - If adapter initialization fails → falls back to VoiceServiceEnterprise
+    - If health check fails (service None, no TTS/STT, high error rate) → resets and falls back
+    - If USE_VOICE_PORT=false → uses VoiceServiceEnterprise directly
+    
+    Per-request evaluation with periodic health revalidation allows dynamic fallback.
     """
     global _voice_adapter_instance, _voice_last_health_check, _legacy_voice_instance
     import time
     
-    if _is_use_voice_port_enabled():
+    fallback_to_legacy = False
+    
+    if _is_use_voice_port_enabled() and not _is_voice_in_cooldown():
         try:
             current_time = time.time()
             need_health_check = (
@@ -285,27 +341,41 @@ def get_voice_service():
             
             if _voice_adapter_instance is None:
                 from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
-                _voice_adapter_instance = VoiceServiceAdapter()
+                voice_enterprise = _get_voice_enterprise()
+                if voice_enterprise is None:
+                    logger.warning("⚠️ VoiceServiceEnterprise creation failed, using legacy")
+                    _reset_voice_adapter()
+                    fallback_to_legacy = True
+                else:
+                    _voice_adapter_instance = VoiceServiceAdapter(voice_service=voice_enterprise)
+                    logger.info("✅ VoiceServiceAdapter created with VoiceServiceEnterprise backend")
             
-            if need_health_check:
+            if not fallback_to_legacy and _voice_adapter_instance is not None and need_health_check:
                 health = _voice_adapter_instance.health_check()
                 _voice_last_health_check = current_time
                 
-                if not (health.get('tts_available', False) or health.get('stt_available', False)):
-                    logger.warning("⚠️ VoiceServiceAdapter unhealthy, falling back to VoiceServiceEnterprise")
-                    _voice_adapter_instance = None
+                if not health.get('healthy', False):
+                    logger.warning(
+                        f"⚠️ VoiceServiceAdapter unhealthy: tts={health.get('tts_available')}, "
+                        f"stt={health.get('stt_available')}, error_rate={health.get('error_rate', 0):.2f} - "
+                        f"falling back to VoiceServiceEnterprise"
+                    )
+                    _reset_voice_adapter()
+                    fallback_to_legacy = True
                 else:
-                    logger.debug("✅ USE_VOICE_PORT=true - Using VoiceServiceAdapter (V7.0 hexagonal)")
+                    logger.debug(f"✅ USE_VOICE_PORT=true - VoiceServiceAdapter healthy: {health}")
                     return _voice_adapter_instance
-            else:
+            elif not fallback_to_legacy and _voice_adapter_instance is not None:
                 return _voice_adapter_instance
                 
         except ImportError as e:
             logger.warning(f"⚠️ VoiceServiceAdapter import failed: {e}, using VoiceServiceEnterprise")
-            _voice_adapter_instance = None
+            _reset_voice_adapter()
+            fallback_to_legacy = True
         except Exception as e:
             logger.error(f"❌ VoiceServiceAdapter error: {e}, using VoiceServiceEnterprise")
-            _voice_adapter_instance = None
+            _reset_voice_adapter()
+            fallback_to_legacy = True
     
     if _legacy_voice_instance is None:
         try:

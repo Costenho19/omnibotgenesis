@@ -286,6 +286,155 @@ class TestContainerFallbackBehavior:
         assert container_module._is_v7_shim_in_cooldown() == True
 
 
+class TestVoiceAdapterFallbackBehavior:
+    """Test VoiceServiceAdapter fallback to VoiceServiceEnterprise when adapter fails."""
+    
+    def test_voice_adapter_no_lazy_loading(self):
+        """VoiceServiceAdapter should NOT lazy-load VoiceServiceEnterprise.
+        
+        This ensures the container has full control over service lifecycle
+        and cooldown behavior. If no service is injected, adapter reports unhealthy.
+        """
+        from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+        
+        adapter = VoiceServiceAdapter()
+        
+        assert adapter._voice_service is None
+        
+        service = adapter._get_voice_service()
+        assert service is None
+        
+        health = adapter.health_check()
+        assert health['healthy'] is False
+        assert health['backend'] == 'VoiceServiceEnterprise (not available)'
+    
+    def test_voice_container_fallback_when_service_fails(self):
+        """Container should return VoiceServiceEnterprise when adapter creation fails."""
+        import omnix_services.ai_service.container as container_module
+        
+        container_module._voice_adapter_instance = None
+        container_module._voice_enterprise_instance = None
+        container_module._voice_adapter_last_failure = 0.0
+        container_module._legacy_voice_instance = None
+        
+        with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
+            with patch.object(container_module, '_get_voice_enterprise', return_value=None):
+                service = container_module.get_voice_service()
+        
+        from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+        assert isinstance(service, VoiceServiceEnterprise)
+    
+    def test_voice_container_cooldown_prevents_retry(self):
+        """Container should not retry voice adapter creation during cooldown period."""
+        import time
+        import omnix_services.ai_service.container as container_module
+        
+        container_module._voice_adapter_instance = None
+        container_module._voice_enterprise_instance = None
+        container_module._voice_adapter_last_failure = time.time()
+        container_module._legacy_voice_instance = None
+        
+        with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
+            in_cooldown = container_module._is_voice_in_cooldown()
+        
+        assert in_cooldown == True
+    
+    def test_voice_container_fallback_when_healthy_adapter_becomes_unhealthy(self):
+        """Container should fallback to VoiceServiceEnterprise when healthy adapter becomes unhealthy.
+        
+        This tests the most common production scenario: gTTS/Whisper outage after startup.
+        """
+        import time
+        import omnix_services.ai_service.container as container_module
+        from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+        from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+        from unittest.mock import MagicMock
+        
+        container_module._voice_adapter_instance = None
+        container_module._voice_enterprise_instance = None
+        container_module._voice_adapter_last_failure = 0.0
+        container_module._voice_last_health_check = 0.0
+        container_module._legacy_voice_instance = None
+        
+        mock_service = MagicMock()
+        mock_service.health_check.return_value = {
+            'tts_available': False,
+            'stt_available': False,
+        }
+        
+        adapter = VoiceServiceAdapter(voice_service=mock_service)
+        container_module._voice_adapter_instance = adapter
+        container_module._voice_last_health_check = time.time() - 120
+        
+        with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
+            service = container_module.get_voice_service()
+        
+        assert isinstance(service, VoiceServiceEnterprise)
+        
+        assert container_module._is_voice_in_cooldown() == True
+    
+    def test_voice_adapter_recovers_after_cooldown(self):
+        """After cooldown expires, container should try to recreate VoiceServiceAdapter.
+        
+        This verifies the recovery path: cooldown expires → adapter recreated with 
+        VoiceServiceEnterprise injected.
+        """
+        import time
+        import omnix_services.ai_service.container as container_module
+        from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+        
+        container_module._voice_adapter_instance = None
+        container_module._voice_enterprise_instance = None
+        container_module._voice_adapter_last_failure = time.time() - 400
+        container_module._voice_last_health_check = 0.0
+        container_module._legacy_voice_instance = None
+        
+        assert container_module._is_voice_in_cooldown() == False
+        
+        with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
+            service = container_module.get_voice_service()
+        
+        assert isinstance(service, VoiceServiceAdapter)
+        
+        assert container_module._voice_enterprise_instance is not None
+    
+    def test_voice_full_cycle_failure_cooldown_recovery(self):
+        """Full cycle test: healthy → failure → cooldown → recovery.
+        
+        Simulates production scenario:
+        1. Adapter healthy and working
+        2. Adapter becomes unhealthy → fallback to legacy
+        3. During cooldown → stays on legacy
+        4. Cooldown expires → recovers to adapter
+        """
+        import time
+        import omnix_services.ai_service.container as container_module
+        from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+        from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+        
+        container_module._voice_adapter_instance = None
+        container_module._voice_enterprise_instance = None
+        container_module._voice_adapter_last_failure = 0.0
+        container_module._voice_last_health_check = 0.0
+        container_module._legacy_voice_instance = None
+        
+        with patch.dict(os.environ, {'USE_VOICE_PORT': 'true'}):
+            service1 = container_module.get_voice_service()
+            assert isinstance(service1, VoiceServiceAdapter)
+            
+            container_module._reset_voice_adapter()
+            assert container_module._is_voice_in_cooldown() == True
+            
+            service2 = container_module.get_voice_service()
+            assert isinstance(service2, VoiceServiceEnterprise)
+            
+            container_module._voice_adapter_last_failure = time.time() - 400
+            assert container_module._is_voice_in_cooldown() == False
+            
+            service3 = container_module.get_voice_service()
+            assert isinstance(service3, VoiceServiceAdapter)
+
+
 class TestAIModelsManagerFailover:
     """Test that AIModelsManager failover is correctly used by shim."""
     
