@@ -125,11 +125,36 @@ def get_container() -> AIServiceContainer:
     return _container_instance
 
 
-def get_ai_gateway() -> RoutingAIGateway:
+USE_AI_PORT = os.environ.get('USE_AI_PORT', 'false').lower() == 'true'
+_ai_gateway_instance = None
+
+def get_ai_gateway():
     """
-    Get the AI gateway from the container.
+    Get the AI gateway with V7.0 port switching.
     
-    Convenience function for direct access to the gateway.
+    V7.0 Migration: When USE_AI_PORT=true, uses GeminiAdapter (hexagonal).
+    Otherwise, uses legacy RoutingAIGateway.
     """
+    global _ai_gateway_instance
+    if _ai_gateway_instance is not None:
+        return _ai_gateway_instance
+    
+    if USE_AI_PORT:
+        try:
+            from src.omnix.infrastructure.adapters.gemini_adapter import GeminiAdapter
+            adapter = GeminiAdapter()
+            health = adapter.health_check()
+            if health.get('available_providers'):
+                logger.info("✅ USE_AI_PORT=true - Using GeminiAdapter (V7.0 hexagonal)")
+                _ai_gateway_instance = adapter
+                return _ai_gateway_instance
+            else:
+                logger.warning("⚠️ GeminiAdapter has no providers, falling back to RoutingAIGateway")
+        except ImportError as e:
+            logger.warning(f"⚠️ GeminiAdapter import failed: {e}, using RoutingAIGateway")
+        except Exception as e:
+            logger.error(f"❌ GeminiAdapter creation failed: {e}, using RoutingAIGateway")
+    
     container = get_container()
-    return container.ai_gateway()
+    _ai_gateway_instance = container.ai_gateway()
+    return _ai_gateway_instance

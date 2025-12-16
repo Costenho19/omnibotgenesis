@@ -34,12 +34,32 @@ except ImportError:
     logger.warning("redis no disponible - Cleanup se ejecutará siempre")
 
 USE_UNIFIED_GATEWAY = os.environ.get('USE_UNIFIED_GATEWAY', 'false').lower() == 'true'
+USE_DATABASE_PORT = os.environ.get('USE_DATABASE_PORT', 'false').lower() == 'true'
 _gateway_instance = None
 
 def _get_gateway():
-    """Lazy-load DatabaseGateway singleton to avoid circular imports."""
+    """Lazy-load database gateway with V7.0 port switching.
+    
+    V7.0 Migration: When USE_DATABASE_PORT=true, uses DatabaseAdapter (hexagonal).
+    Otherwise, uses legacy DatabaseGateway directly.
+    """
     global _gateway_instance
     if _gateway_instance is None:
+        if USE_DATABASE_PORT:
+            try:
+                from src.omnix.infrastructure.adapters.database_adapter import DatabaseAdapter
+                adapter = DatabaseAdapter()
+                if adapter.is_connected():
+                    logger.info("✅ USE_DATABASE_PORT=true - Using DatabaseAdapter (V7.0 hexagonal)")
+                    _gateway_instance = adapter
+                    return _gateway_instance
+                else:
+                    logger.warning("⚠️ DatabaseAdapter not connected, falling back to DatabaseGateway")
+            except ImportError as e:
+                logger.warning(f"⚠️ DatabaseAdapter import failed: {e}, using DatabaseGateway")
+            except Exception as e:
+                logger.error(f"❌ DatabaseAdapter creation failed: {e}, using DatabaseGateway")
+        
         try:
             from omnix_services.database_service.database_gateway import DatabaseGateway
             _gateway_instance = DatabaseGateway.get_instance()

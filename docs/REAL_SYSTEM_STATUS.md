@@ -134,18 +134,33 @@ Para que el sistema funcione HOY (sin V7), estos módulos deben estar OK:
 
 ## Plan de Integración V7
 
-### Fase 1: Diagnóstico Completo (HOY)
+### Fase 1: Diagnóstico Completo (16 Dic 2025) ✅
 - [x] Mapear adapters y dependencias
 - [x] Documentar estado real
-- [ ] Verificar cada adapter individualmente
+- [x] Verificar cada adapter individualmente
 
-### Fase 2: Conectar Adapters de Bajo Riesgo
-- [ ] CacheAdapter - validado con tests, listo para USE_CACHE_PORT=true
-- [ ] DatabaseAdapter - necesita tests de queries
+### Fase 2: Conectar Adapters de Bajo Riesgo (16 Dic 2025)
+- [x] CacheAdapter - **INTEGRADO** ✅
+  - Switch implementado en `omnix_core/cache/redis_cache.py`
+  - USE_CACHE_PORT=false → RedisCache (legacy)
+  - USE_CACHE_PORT=true → CacheAdapter (V7.0)
+  - Compatibilidad legacy: `.client`, `.reconnect()` expuestos
+  - Shadow comparison: 10/10 matches
+  - Tests: 26/26 pasando con ambos modos
+- [x] DatabaseAdapter - **INTEGRADO**
+  - Switch implementado en `omnix_services/database_service/database_service.py`
+  - USE_DATABASE_PORT=false → DatabaseGateway (legacy)
+  - USE_DATABASE_PORT=true → DatabaseAdapter (V7.0)
+  - Tests: 35/35 pasando
 
-### Fase 3: Conectar Adapters de AI/Trading
-- [ ] GeminiAdapter - verificar conexión a Gemini API
-- [ ] TradingAdapter - verificar paper trading funciona
+### Fase 3: Conectar Adapters de AI/Trading (16 Dic 2025)
+- [~] GeminiAdapter - **PARCIALMENTE INTEGRADO** ⚠️
+  - Switch implementado en `omnix_services/ai_service/container.py`
+  - USE_AI_PORT=false → RoutingAIGateway (legacy) ← **USAR ESTE**
+  - USE_AI_PORT=true → GeminiAdapter (V7.0) ← **NO ACTIVAR AÚN**
+  - Problema: GeminiAdapter no tiene interface compatible con AIGatewayProtocol
+  - Pendiente: Crear shim de compatibilidad antes de activar
+- [ ] TradingAdapter - pendiente verificación paper trading
 
 ### Fase 4: Conectar Interfaces
 - [ ] TelegramAdapter - reemplazar EnterpriseTelegramBot

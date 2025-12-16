@@ -267,12 +267,41 @@ def cache_result(ttl: int = 300, key_prefix: str = ""):
     return decorator
 
 
-# Global cache instance
-cache = RedisCache()
+# Global cache instance with V7.0 port switching
+def _create_cache_instance():
+    """Create cache instance based on USE_CACHE_PORT flag.
+    
+    V7.0 Migration: When USE_CACHE_PORT=true, uses CacheAdapter (hexagonal).
+    Otherwise, uses legacy RedisCache directly.
+    """
+    import os
+    use_cache_port = os.getenv("USE_CACHE_PORT", "false").lower() == "true"
+    
+    if use_cache_port:
+        try:
+            from src.omnix.infrastructure.adapters.cache_adapter import CacheAdapter
+            adapter = CacheAdapter()
+            if adapter.is_connected():
+                logger.info("✅ USE_CACHE_PORT=true - Using CacheAdapter (V7.0 hexagonal)")
+                return adapter
+            else:
+                logger.warning("⚠️ CacheAdapter not connected, falling back to RedisCache")
+        except ImportError as e:
+            logger.warning(f"⚠️ CacheAdapter import failed: {e}, using RedisCache")
+        except Exception as e:
+            logger.error(f"❌ CacheAdapter creation failed: {e}, using RedisCache")
+    
+    return RedisCache()
 
 
-def get_redis_cache() -> RedisCache:
-    """Get global Redis cache instance for multi-user architecture"""
+cache = _create_cache_instance()
+
+
+def get_redis_cache():
+    """Get global Redis cache instance for multi-user architecture.
+    
+    Returns CacheAdapter or RedisCache depending on USE_CACHE_PORT flag.
+    """
     return cache
 
 

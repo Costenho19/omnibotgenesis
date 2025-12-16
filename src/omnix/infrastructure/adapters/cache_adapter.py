@@ -57,6 +57,28 @@ class CacheAdapter:
         self._error_count = 0
         self._last_request: Optional[datetime] = None
     
+    @property
+    def client(self):
+        """Legacy compatibility: expose underlying Redis client.
+        
+        Required for functions like get_redis_client() that expect
+        direct access to the Redis client object.
+        """
+        cache = self._get_redis_cache()
+        if cache and hasattr(cache, 'client'):
+            return cache.client
+        return None
+    
+    def reconnect(self) -> bool:
+        """Legacy compatibility: attempt to reconnect to Redis.
+        
+        Required for fallback logic in get_redis_client().
+        """
+        cache = self._get_redis_cache()
+        if cache and hasattr(cache, 'reconnect'):
+            return cache.reconnect()
+        return False
+    
     def _get_redis_cache(self) -> Optional[Any]:
         """Lazy-load RedisCache singleton."""
         if self._redis_cache is not None:
