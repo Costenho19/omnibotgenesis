@@ -17,6 +17,22 @@ from src.omnix.ports.driven.database_port import (
 )
 from src.omnix.ports.driven.cache_port import CachePort
 from src.omnix.ports.driven.ai_inference_port import AIInferencePort
+from src.omnix.ports.driven.ai_text_gateway_port import (
+    AITextGatewayPort,
+    TextGenerationRequest,
+    TextGenerationResponse,
+    ModelInfo,
+    ModelProvider,
+)
+from src.omnix.ports.driven.ai_voice_port import (
+    AIVoicePort,
+    TTSRequest,
+    TTSResponse,
+    STTRequest,
+    STTResponse,
+    VoiceLanguage,
+    VoiceBiometricsResult,
+)
 from src.omnix.ports.driven.market_data_port import MarketDataPort, TechnicalIndicatorPort
 from src.omnix.ports.driven.notification_port import NotificationPort
 
@@ -28,6 +44,18 @@ __all__ = [
     "UserRepositoryPort",
     "CachePort",
     "AIInferencePort",
+    "AITextGatewayPort",
+    "TextGenerationRequest",
+    "TextGenerationResponse",
+    "ModelInfo",
+    "ModelProvider",
+    "AIVoicePort",
+    "TTSRequest",
+    "TTSResponse",
+    "STTRequest",
+    "STTResponse",
+    "VoiceLanguage",
+    "VoiceBiometricsResult",
     "MarketDataPort",
     "TechnicalIndicatorPort",
     "NotificationPort",

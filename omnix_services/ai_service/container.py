@@ -125,36 +125,88 @@ def get_container() -> AIServiceContainer:
     return _container_instance
 
 
-USE_AI_PORT = os.environ.get('USE_AI_PORT', 'false').lower() == 'true'
-_ai_gateway_instance = None
+_legacy_gateway_instance = None
+_v7_gateway_shim = None
+
+
+def _is_use_ai_port_enabled() -> bool:
+    """Check USE_AI_PORT flag per-request for dynamic fallback."""
+    return os.environ.get('USE_AI_PORT', 'false').lower() == 'true'
+
 
 def get_ai_gateway():
     """
     Get the AI gateway with V7.0 port switching.
     
-    V7.0 Migration: When USE_AI_PORT=true, uses GeminiAdapter (hexagonal).
+    V7.0 Migration: When USE_AI_PORT=true, uses AIGatewayShim (hexagonal).
+    AIGatewayShim wraps GeminiAdapter and provides AIGatewayProtocol interface.
     Otherwise, uses legacy RoutingAIGateway.
+    
+    Per-request evaluation allows dynamic fallback if V7 adapter fails.
     """
-    global _ai_gateway_instance
-    if _ai_gateway_instance is not None:
-        return _ai_gateway_instance
+    global _legacy_gateway_instance, _v7_gateway_shim
     
-    if USE_AI_PORT:
+    if _is_use_ai_port_enabled():
         try:
-            from src.omnix.infrastructure.adapters.gemini_adapter import GeminiAdapter
-            adapter = GeminiAdapter()
-            health = adapter.health_check()
-            if health.get('available_providers'):
-                logger.info("✅ USE_AI_PORT=true - Using GeminiAdapter (V7.0 hexagonal)")
-                _ai_gateway_instance = adapter
-                return _ai_gateway_instance
+            if _v7_gateway_shim is None:
+                from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
+                _v7_gateway_shim = AIGatewayShim()
+            
+            health = _v7_gateway_shim.health_check()
+            if health.get('healthy', False):
+                logger.debug("✅ USE_AI_PORT=true - Using AIGatewayShim (V7.0 hexagonal)")
+                return _v7_gateway_shim
             else:
-                logger.warning("⚠️ GeminiAdapter has no providers, falling back to RoutingAIGateway")
+                logger.warning("⚠️ AIGatewayShim unhealthy, falling back to RoutingAIGateway")
         except ImportError as e:
-            logger.warning(f"⚠️ GeminiAdapter import failed: {e}, using RoutingAIGateway")
+            logger.warning(f"⚠️ AIGatewayShim import failed: {e}, using RoutingAIGateway")
         except Exception as e:
-            logger.error(f"❌ GeminiAdapter creation failed: {e}, using RoutingAIGateway")
+            logger.error(f"❌ AIGatewayShim error: {e}, using RoutingAIGateway")
     
-    container = get_container()
-    _ai_gateway_instance = container.ai_gateway()
-    return _ai_gateway_instance
+    if _legacy_gateway_instance is None:
+        container = get_container()
+        _legacy_gateway_instance = container.ai_gateway()
+    
+    return _legacy_gateway_instance
+
+
+_voice_adapter_instance = None
+
+
+def _is_use_voice_port_enabled() -> bool:
+    """Check USE_VOICE_PORT flag per-request for dynamic fallback."""
+    return os.environ.get('USE_VOICE_PORT', 'false').lower() == 'true'
+
+
+def get_voice_service():
+    """
+    Get the voice service with V7.0 port switching.
+    
+    V7.0 Migration: When USE_VOICE_PORT=true, uses VoiceServiceAdapter (hexagonal).
+    Otherwise, uses legacy VoiceServiceEnterprise.
+    """
+    global _voice_adapter_instance
+    
+    if _is_use_voice_port_enabled():
+        try:
+            if _voice_adapter_instance is None:
+                from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+                _voice_adapter_instance = VoiceServiceAdapter()
+            
+            health = _voice_adapter_instance.health_check()
+            if health.get('tts_available', False) or health.get('stt_available', False):
+                logger.debug("✅ USE_VOICE_PORT=true - Using VoiceServiceAdapter (V7.0 hexagonal)")
+                return _voice_adapter_instance
+            else:
+                logger.warning("⚠️ VoiceServiceAdapter unhealthy, falling back to VoiceServiceEnterprise")
+        except ImportError as e:
+            logger.warning(f"⚠️ VoiceServiceAdapter import failed: {e}, using VoiceServiceEnterprise")
+        except Exception as e:
+            logger.error(f"❌ VoiceServiceAdapter error: {e}, using VoiceServiceEnterprise")
+    
+    try:
+        from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+        return VoiceServiceEnterprise()
+    except ImportError:
+        logger.error("❌ VoiceServiceEnterprise not available")
+        return None
