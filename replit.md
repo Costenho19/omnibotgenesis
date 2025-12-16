@@ -76,21 +76,35 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ## V7.0 Migration Progress
 
-### Phase 6: Folder Audit & Cleanup (COMPLETE - Dec 13, 2025)
+### Hexagonal Architecture Status (Dec 16, 2025)
 
-**Dead Code Removed:**
-- `omnix_reports/` - 0 external imports
-- `reports/` - PDF moved to docs/history/
-- `omnix_risk/` - Only self-references (dead code)
-- `omnix/` - Legacy ports location
+**Estructura: 100% COMPLETA | Activación: 37.5%**
 
-**Migrated:**
-- `omnix/ports/` → `src/omnix/ports/` (test imports updated)
+| Componente | Estado |
+|------------|--------|
+| 8/8 Ports definidos | ✅ Completo |
+| 9/9 Adapters implementados | ✅ Completo |
+| Domain Layer | ✅ Completo |
+| Application Layer (5 Use Cases) | ✅ Completo |
+| DI Container | ✅ 509 líneas |
 
-**Current Structure:**
+**Ports Activos en Producción:**
+- TradingPort, MarketDataPort, AIInferencePort (3/8)
+
+**Ports Diferidos (feature flags = false):**
+- DatabasePort, CachePort, NotificationPort, TelegramPort, RestApiPort
+
+Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
+
+### Current Structure
 ```
 OMNIX/
-├── src/omnix/           <- Hexagonal V7.0 (ports, domain, etc.)
+├── src/omnix/           <- Hexagonal V7.0 (100% implementado)
+│   ├── ports/           <- 8 protocols (driven + driver)
+│   ├── infrastructure/  <- 9 adapters
+│   ├── domain/          <- Entities, VOs, 10 strategies
+│   ├── application/     <- 5 use cases
+│   └── bootstrap/       <- DI Container
 ├── omnix_core/          <- Legacy runtime (essential)
 ├── omnix_services/      <- Legacy services (essential)
 ├── omnix_config/        <- Configuration (essential)
@@ -103,7 +117,8 @@ OMNIX/
 └── sql/                 <- Migrations
 ```
 
-See `docs/current/FOLDER_AUDIT_PHASE6.md` for full audit details.
-
-### Codebase Audit (Dec 15, 2025)
-Full code vs documentation audit completed. Results: 100% verification of Trading System, AI Service, User Settings, and Telegram Bot. Hexagonal migration at 37.5% (3/8 ports integrated). See `docs/current/CODEBASE_AUDIT_REPORT.md` for complete analysis.
+### Migration Documents
+- `docs/transformation/REWRITE_PLAN_V7.md` - Plan de 6 fases (49-68 días)
+- `docs/transformation/TRACEABILITY_MATRIX.md` - 123 componentes mapeados
+- `docs/current/HEXAGONAL_MIGRATION_STATUS.md` - Estado actual detallado
+- `docs/current/COMPLETE_FUNCTIONALITY_MAP.md` - 11 dominios, 346 archivos
