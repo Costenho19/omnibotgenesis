@@ -117,8 +117,20 @@ OMNIX/
 └── sql/                 <- Migrations
 ```
 
-### Migration Documents
-- `docs/transformation/REWRITE_PLAN_V7.md` - Plan de 6 fases (49-68 días)
-- `docs/transformation/TRACEABILITY_MATRIX.md` - 123 componentes mapeados
-- `docs/current/HEXAGONAL_MIGRATION_STATUS.md` - Estado actual detallado
+### Documentation Structure (Updated Dec 16, 2025)
+```
+docs/
+├── README.md                 <- Índice principal
+├── MIGRATION_STATUS.md       <- Estado V7.0 consolidado
+├── current/                  <- Arquitectura actual
+├── operations/               <- DEPLOYMENT.md, configuración
+├── reference/                <- TRACEABILITY_MATRIX.md, ADRs
+├── business/investor/        <- Pitch deck, proyecciones
+├── compliance/audits/        <- Reportes de auditoría
+└── history/                  <- Archivados por mes (2025-11/, 2025-12/)
+```
+
+### Key Documents
+- `docs/MIGRATION_STATUS.md` - Estado consolidado V7.0
+- `docs/reference/TRACEABILITY_MATRIX.md` - 123 componentes mapeados
 - `docs/current/COMPLETE_FUNCTIONALITY_MAP.md` - 11 dominios, 346 archivos
