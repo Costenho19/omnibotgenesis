@@ -88,12 +88,50 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 **Estructura: 100% COMPLETA | Activación: 37.5%**
 
-**Session 2 Update (16 Dic 2025):**
-- `container.py`: Añadido `initialize_v7_services()` para logging detallado al arranque
-- `ai_gateway_shim.py`: Captura errores HTTP (401/403/429) con mensajes descriptivos
-- `enterprise_bot.py`: Integración condicional con DI container V7
-- `main_entry.py`: Inicialización V7 solo cuando flags están activos
-- 15 tests de integración pasando (incluyendo runtime flag toggle)
+**Session 3 Update (16 Dic 2025) - PRODUCTION-READY:**
+- `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
+- `container.py`: Sistema de fallback con cooldown (5 min) para prevenir hot-loops
+- Sin lazy-loading en adapters - Container tiene control total del ciclo de vida
+- 22 tests de integración pasando (incluyendo degradation y cooldown scenarios)
+
+### Patrón de Migración V7: Shim como Puente Puro
+
+**REGLA DE ORO**: El shim NO reimplementa lógica, solo traduce interfaces.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ARQUITECTURA DE MIGRACIÓN (STRANGLER FIG)                  │
+├─────────────────────────────────────────────────────────────┤
+│  V7 Request → Shim → Legacy Service → Failover completo    │
+│                ↓                                            │
+│           Si falla → Cooldown 5min → Legacy Gateway         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Principios del Patrón:**
+1. **Shim = Traductor puro** - Solo convierte Request/Response entre interfaces
+2. **Container controla ciclo de vida** - Inyecta dependencias, maneja cooldowns
+3. **Fallback automático** - Si V7 falla → legacy por 5 min → retry
+4. **Sin lazy-loading** - Evita violación de cooldown
+5. **Tests cubren 3 escenarios**: fallo inicial, degradación mid-operation, cooldown
+
+**Archivos clave del patrón:**
+```python
+# Container (omnix_services/ai_service/container.py)
+_is_v7_shim_in_cooldown()  # Previene hot-loops
+_reset_v7_shim()            # Limpia shim + manager + timestamp
+fallback_to_legacy = True   # Flag para mismo-request fallback
+
+# Shim (src/omnix/infrastructure/adapters/ai_gateway_shim.py)
+def _get_manager(self):
+    return self._ai_models_manager  # NO lazy-load, solo injected
+```
+
+**Para aplicar a nuevos ports:**
+1. Crear shim que SOLO traduzca interfaces
+2. Usar container para inyectar servicio legacy
+3. Implementar cooldown con `_reset_*_shim()` y `_is_*_in_cooldown()`
+4. Tests: fallo inicial, degradación, cooldown
 
 **Para activar V7 en Railway:**
 ```bash
