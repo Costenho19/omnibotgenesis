@@ -153,13 +153,23 @@ Para que el sistema funcione HOY (sin V7), estos módulos deben estar OK:
   - USE_DATABASE_PORT=true → DatabaseAdapter (V7.0)
   - Tests: 35/35 pasando
 
-### Fase 3: Conectar Adapters de AI/Trading (16 Dic 2025)
-- [~] GeminiAdapter - **PARCIALMENTE INTEGRADO** ⚠️
-  - Switch implementado en `omnix_services/ai_service/container.py`
-  - USE_AI_PORT=false → RoutingAIGateway (legacy) ← **USAR ESTE**
-  - USE_AI_PORT=true → GeminiAdapter (V7.0) ← **NO ACTIVAR AÚN**
-  - Problema: GeminiAdapter no tiene interface compatible con AIGatewayProtocol
-  - Pendiente: Crear shim de compatibilidad antes de activar
+### Fase 3: Conectar Adapters de AI/Voice (16 Dic 2025) ✅
+- [x] AIGatewayShim - **INTEGRADO** ✅
+  - Nuevo port: `src/omnix/ports/driven/ai_text_gateway_port.py`
+  - Nuevo shim: `src/omnix/infrastructure/adapters/ai_gateway_shim.py`
+  - Switch en `omnix_services/ai_service/container.py` (get_ai_gateway)
+  - USE_AI_PORT=false → RoutingAIGateway (legacy)
+  - USE_AI_PORT=true → AIGatewayShim (wraps GeminiAdapter)
+  - Evaluación per-request para fallback dinámico
+  - Health check: ✅ Healthy
+- [x] VoiceServiceAdapter - **INTEGRADO** ✅
+  - Nuevo port: `src/omnix/ports/driven/ai_voice_port.py`
+  - Nuevo adapter: `src/omnix/infrastructure/adapters/voice_adapter.py`
+  - Switch en `omnix_services/ai_service/container.py` (get_voice_service)
+  - USE_VOICE_PORT=false → VoiceServiceEnterprise (legacy)
+  - USE_VOICE_PORT=true → VoiceServiceAdapter (V7.0)
+  - TTS (gTTS): ✅ Disponible
+  - STT (Whisper): Integrado
 - [ ] TradingAdapter - pendiente verificación paper trading
 
 ### Fase 4: Conectar Interfaces
@@ -170,6 +180,23 @@ Para que el sistema funcione HOY (sin V7), estos módulos deben estar OK:
 - [ ] USE_APP_LAYER=true
 - [ ] Testing E2E completo
 - [ ] 48h validación en Railway
+
+---
+
+## Feature Flags Actualizados (16 Dic 2025)
+
+```bash
+# Disponibles para activar (tests pasando)
+USE_CACHE_PORT=true      # CacheAdapter - Listo
+USE_DATABASE_PORT=true   # DatabaseAdapter - Listo
+USE_AI_PORT=true         # AIGatewayShim - Listo
+USE_VOICE_PORT=true      # VoiceServiceAdapter - Listo
+
+# Pendientes
+USE_TRADING_PORT=false   # TradingAdapter - Pendiente
+USE_TELEGRAM_PORT=false  # TelegramAdapter - Pendiente
+USE_APP_LAYER=false      # Application Layer - Pendiente
+```
 
 ---
 

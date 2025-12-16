@@ -58,6 +58,8 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | TradingPort | TradingAdapter, KrakenAdapter | ✅ | - |
 | MarketDataPort | KrakenAdapter | ✅ | - |
 | AIInferencePort | GeminiAdapter | ✅ | - |
+| AITextGatewayPort | AIGatewayShim | ⬜ | `USE_AI_PORT=false` |
+| AIVoicePort | VoiceServiceAdapter | ⬜ | `USE_VOICE_PORT=false` |
 | DatabasePort | DatabaseAdapter | ⬜ | `USE_DATABASE_PORT=false` |
 | CachePort | CacheAdapter | ⬜ | `USE_CACHE_PORT=false` |
 | NotificationPort | NotificationAdapter | ⬜ | `USE_NOTIFICATION_PORT=false` |
@@ -77,23 +79,30 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 # Activos
 USE_UNIFIED_GATEWAY=true
 
-# Pendientes de activación
-USE_APP_LAYER=false
-USE_DATABASE_PORT=false
-USE_CACHE_PORT=false
+# Listos para activar (16 Dic 2025)
+USE_CACHE_PORT=false      # CacheAdapter - Tests pasando
+USE_DATABASE_PORT=false   # DatabaseAdapter - Tests pasando
+USE_AI_PORT=false         # AIGatewayShim - Health OK
+USE_VOICE_PORT=false      # VoiceServiceAdapter - TTS disponible
+
+# Pendientes de validación
+USE_TRADING_PORT=false
 USE_NOTIFICATION_PORT=false
 USE_TELEGRAM_PORT=false
+USE_APP_LAYER=false
 ```
 
 ### Plan de Activación
 
 | Paso | Flag | Riesgo | Validación |
 |------|------|--------|------------|
-| 1 | `USE_CACHE_PORT=true` | BAJO | Health check Redis |
-| 2 | `USE_DATABASE_PORT=true` | MEDIO | Query comparison |
-| 3 | `USE_NOTIFICATION_PORT=true` | BAJO | Test message |
-| 4 | `USE_TELEGRAM_PORT=true` | MEDIO | Command testing |
-| 5 | `USE_APP_LAYER=true` | ALTO | Full E2E test |
+| 1 | `USE_CACHE_PORT=true` | BAJO | Health check Redis ✅ |
+| 2 | `USE_DATABASE_PORT=true` | MEDIO | Query comparison ✅ |
+| 3 | `USE_AI_PORT=true` | BAJO | AIGatewayShim health ✅ |
+| 4 | `USE_VOICE_PORT=true` | BAJO | TTS/STT health ✅ |
+| 5 | `USE_NOTIFICATION_PORT=true` | BAJO | Test message |
+| 6 | `USE_TELEGRAM_PORT=true` | MEDIO | Command testing |
+| 7 | `USE_APP_LAYER=true` | ALTO | Full E2E test |
 
 ---
 
@@ -107,6 +116,8 @@ USE_TELEGRAM_PORT=false
 | 3 | Infrastructure Adapters | Dec 12, 2025 |
 | 3b | Flask Factory & Telegram | Dec 13, 2025 |
 | 4 | Cleanup & Organization | Dec 13, 2025 |
+| 5 | Cache/DB Port Integration | Dec 16, 2025 |
+| 6 | AI/Voice Port Integration | Dec 16, 2025 |
 
 ---
 

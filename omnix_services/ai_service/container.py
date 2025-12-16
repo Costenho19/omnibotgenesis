@@ -127,6 +127,8 @@ def get_container() -> AIServiceContainer:
 
 _legacy_gateway_instance = None
 _v7_gateway_shim = None
+_v7_shim_last_health_check = 0.0
+_V7_HEALTH_CHECK_INTERVAL = 60.0
 
 
 def _is_use_ai_port_enabled() -> bool:
@@ -142,26 +144,42 @@ def get_ai_gateway():
     AIGatewayShim wraps GeminiAdapter and provides AIGatewayProtocol interface.
     Otherwise, uses legacy RoutingAIGateway.
     
-    Per-request evaluation allows dynamic fallback if V7 adapter fails.
+    Per-request evaluation with periodic health revalidation allows dynamic fallback.
     """
-    global _legacy_gateway_instance, _v7_gateway_shim
+    global _legacy_gateway_instance, _v7_gateway_shim, _v7_shim_last_health_check
+    import time
     
     if _is_use_ai_port_enabled():
         try:
+            current_time = time.time()
+            need_health_check = (
+                _v7_gateway_shim is None or 
+                (current_time - _v7_shim_last_health_check) > _V7_HEALTH_CHECK_INTERVAL
+            )
+            
             if _v7_gateway_shim is None:
                 from src.omnix.infrastructure.adapters.ai_gateway_shim import AIGatewayShim
                 _v7_gateway_shim = AIGatewayShim()
             
-            health = _v7_gateway_shim.health_check()
-            if health.get('healthy', False):
-                logger.debug("✅ USE_AI_PORT=true - Using AIGatewayShim (V7.0 hexagonal)")
-                return _v7_gateway_shim
+            if need_health_check:
+                health = _v7_gateway_shim.health_check()
+                _v7_shim_last_health_check = current_time
+                
+                if not health.get('healthy', False):
+                    logger.warning("⚠️ AIGatewayShim unhealthy, falling back to RoutingAIGateway")
+                    _v7_gateway_shim = None
+                else:
+                    logger.debug("✅ USE_AI_PORT=true - Using AIGatewayShim (V7.0 hexagonal)")
+                    return _v7_gateway_shim
             else:
-                logger.warning("⚠️ AIGatewayShim unhealthy, falling back to RoutingAIGateway")
+                return _v7_gateway_shim
+                
         except ImportError as e:
             logger.warning(f"⚠️ AIGatewayShim import failed: {e}, using RoutingAIGateway")
+            _v7_gateway_shim = None
         except Exception as e:
             logger.error(f"❌ AIGatewayShim error: {e}, using RoutingAIGateway")
+            _v7_gateway_shim = None
     
     if _legacy_gateway_instance is None:
         container = get_container()
@@ -171,6 +189,9 @@ def get_ai_gateway():
 
 
 _voice_adapter_instance = None
+_voice_last_health_check = 0.0
+_VOICE_HEALTH_CHECK_INTERVAL = 60.0
+_legacy_voice_instance = None
 
 
 def _is_use_voice_port_enabled() -> bool:
@@ -184,29 +205,50 @@ def get_voice_service():
     
     V7.0 Migration: When USE_VOICE_PORT=true, uses VoiceServiceAdapter (hexagonal).
     Otherwise, uses legacy VoiceServiceEnterprise.
+    
+    Per-request evaluation with periodic health revalidation.
     """
-    global _voice_adapter_instance
+    global _voice_adapter_instance, _voice_last_health_check, _legacy_voice_instance
+    import time
     
     if _is_use_voice_port_enabled():
         try:
+            current_time = time.time()
+            need_health_check = (
+                _voice_adapter_instance is None or
+                (current_time - _voice_last_health_check) > _VOICE_HEALTH_CHECK_INTERVAL
+            )
+            
             if _voice_adapter_instance is None:
                 from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
                 _voice_adapter_instance = VoiceServiceAdapter()
             
-            health = _voice_adapter_instance.health_check()
-            if health.get('tts_available', False) or health.get('stt_available', False):
-                logger.debug("✅ USE_VOICE_PORT=true - Using VoiceServiceAdapter (V7.0 hexagonal)")
-                return _voice_adapter_instance
+            if need_health_check:
+                health = _voice_adapter_instance.health_check()
+                _voice_last_health_check = current_time
+                
+                if not (health.get('tts_available', False) or health.get('stt_available', False)):
+                    logger.warning("⚠️ VoiceServiceAdapter unhealthy, falling back to VoiceServiceEnterprise")
+                    _voice_adapter_instance = None
+                else:
+                    logger.debug("✅ USE_VOICE_PORT=true - Using VoiceServiceAdapter (V7.0 hexagonal)")
+                    return _voice_adapter_instance
             else:
-                logger.warning("⚠️ VoiceServiceAdapter unhealthy, falling back to VoiceServiceEnterprise")
+                return _voice_adapter_instance
+                
         except ImportError as e:
             logger.warning(f"⚠️ VoiceServiceAdapter import failed: {e}, using VoiceServiceEnterprise")
+            _voice_adapter_instance = None
         except Exception as e:
             logger.error(f"❌ VoiceServiceAdapter error: {e}, using VoiceServiceEnterprise")
+            _voice_adapter_instance = None
     
-    try:
-        from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
-        return VoiceServiceEnterprise()
-    except ImportError:
-        logger.error("❌ VoiceServiceEnterprise not available")
-        return None
+    if _legacy_voice_instance is None:
+        try:
+            from omnix_services.voice_service.voice_service import VoiceServiceEnterprise
+            _legacy_voice_instance = VoiceServiceEnterprise()
+        except ImportError:
+            logger.error("❌ VoiceServiceEnterprise not available")
+            return None
+    
+    return _legacy_voice_instance
