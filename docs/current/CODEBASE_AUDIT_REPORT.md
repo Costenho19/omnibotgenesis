@@ -1,12 +1,24 @@
-# OMNIX V6.5.4d - Auditoría Completa Código vs Documentación
+# OMNIX V6.5.4d - Auditoría Código vs Documentación
 
 **Fecha**: 15 de Diciembre 2025  
 **Auditor**: OMNIX Agent  
 **Estado**: COMPLETO
 
+> **Nota**: Este es el resumen ejecutivo. Para detalles completos archivo por archivo, ver [Auditoría Completa](../history/2025-12/CODEBASE_AUDIT_REPORT_FULL.md).
+
 ---
 
 ## Resumen Ejecutivo
+
+### Métricas Globales
+
+| Categoría | Cantidad | Estado |
+|-----------|----------|--------|
+| Archivos Python analizados | 346 | ✅ |
+| Documentos .md analizados | 38 | ✅ |
+| Discrepancias encontradas | 4 | ⚠️ |
+| Ports hexagonales definidos | 8 | ✅ |
+| Ports integrados con DI | 3 (37.5%) | ⚠️ |
 
 ### Inventario de Código
 | Paquete | Archivos Python | Estado |
