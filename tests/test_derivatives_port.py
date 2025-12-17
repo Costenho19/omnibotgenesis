@@ -190,7 +190,7 @@ class TestDerivativesAdapter:
         assert adapter._derivatives_manager is None
         assert adapter._futures_client is None
         assert adapter._hedging_service is None
-        assert adapter._options_pricer is None
+        assert adapter._margin_engine is None
         assert adapter._initialized is False
     
     def test_adapter_with_injected_services(self):

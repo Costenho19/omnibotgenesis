@@ -156,7 +156,7 @@ class TestPortfolioAdapter:
         assert adapter._portfolio_engine is None
         assert adapter._portfolio_optimizer is None
         assert adapter._exposure_manager is None
-        assert adapter._rebalancer is None
+        assert adapter._risk_model_engine is None
         assert adapter._initialized is False
     
     def test_adapter_with_injected_services(self):

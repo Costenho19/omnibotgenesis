@@ -7,7 +7,7 @@ Wrapped Legacy Services:
 - DerivativesManager (omnix_services/derivatives/)
 - KrakenFuturesClient (omnix_services/exchange/)
 - HedgingService (omnix_services/derivatives/)
-- OptionsPricer (omnix_services/derivatives/)
+- MarginEngine (omnix_services/derivatives/)
 
 Feature flag: USE_DERIVATIVES_PORT
 """
@@ -47,12 +47,12 @@ class DerivativesAdapter:
         derivatives_manager: Any = None,
         futures_client: Any = None,
         hedging_service: Any = None,
-        options_pricer: Any = None
+        margin_engine: Any = None
     ):
         self._derivatives_manager = derivatives_manager
         self._futures_client = futures_client
         self._hedging_service = hedging_service
-        self._options_pricer = options_pricer
+        self._margin_engine = margin_engine
         self._initialized = False
         self._active_hedges: List[HedgeOrder] = []
         logger.info("DerivativesAdapter: Initialized with lazy-loaded services")
@@ -83,12 +83,12 @@ class DerivativesAdapter:
             except ImportError:
                 logger.warning("DerivativesAdapter: HedgingService not available")
         
-        if self._options_pricer is None:
+        if self._margin_engine is None:
             try:
-                from omnix_services.derivatives.options_pricer import OptionsPricer
-                self._options_pricer = OptionsPricer()
+                from omnix_services.derivatives.margin_engine import MarginEngine
+                self._margin_engine = MarginEngine()
             except ImportError:
-                logger.warning("DerivativesAdapter: OptionsPricer not available")
+                logger.warning("DerivativesAdapter: MarginEngine not available")
         
         self._initialized = True
     
@@ -527,7 +527,7 @@ class DerivativesAdapter:
             'derivatives_manager': self._derivatives_manager is not None,
             'futures_client': self._futures_client is not None,
             'hedging_service': self._hedging_service is not None,
-            'options_pricer': self._options_pricer is not None,
+            'margin_engine': self._margin_engine is not None,
         }
         
         healthy_count = sum(1 for v in components.values() if v)

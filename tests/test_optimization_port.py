@@ -159,8 +159,8 @@ class TestOptimizationAdapter:
         
         assert adapter._auto_optimizer is None
         assert adapter._adaptive_weights is None
+        assert adapter._performance_optimizer is None
         assert adapter._ml_module is None
-        assert adapter._performance_analyzer is None
         assert adapter._initialized is False
     
     def test_adapter_with_injected_services(self):

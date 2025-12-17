@@ -6,8 +6,8 @@ Adapter implementing OptimizationPort by wrapping legacy optimization services.
 Wrapped Legacy Services:
 - AutoOptimizer (omnix_services/optimization/)
 - AdaptiveWeights (omnix_services/optimization/)
+- PerformanceOptimizer (omnix_services/optimization/)
 - MLModule (omnix_services/ml/)
-- PerformanceAnalyzer (omnix_services/analytics/)
 
 Feature flag: USE_OPTIMIZATION_PORT
 """
@@ -58,13 +58,13 @@ class OptimizationAdapter:
         self,
         auto_optimizer: Any = None,
         adaptive_weights: Any = None,
-        ml_module: Any = None,
-        performance_analyzer: Any = None
+        performance_optimizer: Any = None,
+        ml_module: Any = None
     ):
         self._auto_optimizer = auto_optimizer
         self._adaptive_weights = adaptive_weights
+        self._performance_optimizer = performance_optimizer
         self._ml_module = ml_module
-        self._performance_analyzer = performance_analyzer
         self._initialized = False
         self._active_runs: Dict[str, OptimizationResult] = {}
         self._weight_sets: List[WeightSet] = []
@@ -107,12 +107,12 @@ class OptimizationAdapter:
             except ImportError:
                 logger.warning("OptimizationAdapter: MLModule not available")
         
-        if self._performance_analyzer is None:
+        if self._performance_optimizer is None:
             try:
-                from omnix_services.analytics.performance_analyzer import PerformanceAnalyzer
-                self._performance_analyzer = PerformanceAnalyzer()
+                from omnix_services.optimization.performance_optimizer import PerformanceOptimizer
+                self._performance_optimizer = PerformanceOptimizer()
             except ImportError:
-                logger.warning("OptimizationAdapter: PerformanceAnalyzer not available")
+                logger.warning("OptimizationAdapter: PerformanceOptimizer not available")
         
         self._initialized = True
     
@@ -328,8 +328,8 @@ class OptimizationAdapter:
         self._ensure_services()
         
         try:
-            if self._performance_analyzer and hasattr(self._performance_analyzer, 'forecast'):
-                result = self._performance_analyzer.forecast(horizon_days)
+            if self._performance_optimizer and hasattr(self._performance_optimizer, 'forecast'):
+                result = self._performance_optimizer.forecast(horizon_days)
                 
                 if isinstance(result, dict):
                     return PerformanceForecast(
@@ -431,8 +431,8 @@ class OptimizationAdapter:
         self._ensure_services()
         
         try:
-            if self._performance_analyzer and hasattr(self._performance_analyzer, 'recommend'):
-                return self._performance_analyzer.recommend()
+            if self._performance_optimizer and hasattr(self._performance_optimizer, 'recommend'):
+                return self._performance_optimizer.recommend()
         except Exception as e:
             logger.error(f"OptimizationAdapter: get_parameter_recommendations error: {e}")
         
@@ -450,7 +450,7 @@ class OptimizationAdapter:
             'auto_optimizer': self._auto_optimizer is not None,
             'adaptive_weights': self._adaptive_weights is not None,
             'ml_module': self._ml_module is not None,
-            'performance_analyzer': self._performance_analyzer is not None,
+            'performance_optimizer': self._performance_optimizer is not None,
         }
         
         healthy_count = sum(1 for v in components.values() if v)

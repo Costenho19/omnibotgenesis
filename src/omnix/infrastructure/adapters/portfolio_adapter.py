@@ -7,7 +7,7 @@ Wrapped Legacy Services:
 - PortfolioEngine (omnix_services/portfolio/)
 - PortfolioOptimizer (omnix_services/portfolio/)
 - ExposureManager (omnix_services/portfolio/)
-- Rebalancer (omnix_services/portfolio/)
+- RiskModelEngine (omnix_services/portfolio/)
 
 Feature flag: USE_PORTFOLIO_PORT
 """
@@ -46,12 +46,12 @@ class PortfolioAdapter:
         portfolio_engine: Any = None,
         portfolio_optimizer: Any = None,
         exposure_manager: Any = None,
-        rebalancer: Any = None
+        risk_model_engine: Any = None
     ):
         self._portfolio_engine = portfolio_engine
         self._portfolio_optimizer = portfolio_optimizer
         self._exposure_manager = exposure_manager
-        self._rebalancer = rebalancer
+        self._risk_model_engine = risk_model_engine
         self._initialized = False
         self._active_plan: Optional[AllocationPlan] = None
         logger.info("PortfolioAdapter: Initialized with lazy-loaded services")
@@ -82,12 +82,12 @@ class PortfolioAdapter:
             except ImportError:
                 logger.warning("PortfolioAdapter: ExposureManager not available")
         
-        if self._rebalancer is None:
+        if self._risk_model_engine is None:
             try:
-                from omnix_services.portfolio.rebalancer import Rebalancer
-                self._rebalancer = Rebalancer()
+                from omnix_services.portfolio.risk_model_engine import RiskModelEngine
+                self._risk_model_engine = RiskModelEngine()
             except ImportError:
-                logger.warning("PortfolioAdapter: Rebalancer not available")
+                logger.warning("PortfolioAdapter: RiskModelEngine not available")
         
         self._initialized = True
     
@@ -242,12 +242,12 @@ class PortfolioAdapter:
         command_id = str(uuid.uuid4())[:8]
         
         try:
-            if self._rebalancer and hasattr(self._rebalancer, 'calculate'):
+            if self._portfolio_optimizer and hasattr(self._portfolio_optimizer, 'calculate_rebalance'):
                 target_dict = None
                 if targets:
                     target_dict = {t.symbol: t.target_weight_pct for t in targets}
                 
-                result = self._rebalancer.calculate(strategy.value, target_dict)
+                result = self._portfolio_optimizer.calculate_rebalance(strategy.value, target_dict)
                 
                 if isinstance(result, dict):
                     orders = []
@@ -298,8 +298,8 @@ class PortfolioAdapter:
         self._ensure_services()
         
         try:
-            if self._rebalancer and hasattr(self._rebalancer, 'execute'):
-                result = self._rebalancer.execute({
+            if self._portfolio_optimizer and hasattr(self._portfolio_optimizer, 'execute_rebalance'):
+                result = self._portfolio_optimizer.execute_rebalance({
                     'id': command.command_id,
                     'orders': [
                         {'symbol': o.symbol, 'side': o.side, 'quantity': o.quantity}
@@ -446,7 +446,7 @@ class PortfolioAdapter:
             'portfolio_engine': self._portfolio_engine is not None,
             'portfolio_optimizer': self._portfolio_optimizer is not None,
             'exposure_manager': self._exposure_manager is not None,
-            'rebalancer': self._rebalancer is not None,
+            'risk_model_engine': self._risk_model_engine is not None,
         }
         
         healthy_count = sum(1 for v in components.values() if v)
