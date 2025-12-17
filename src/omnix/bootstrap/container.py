@@ -611,24 +611,92 @@ class Container:
             return None
     
     def _create_risk_control_adapter(self):
-        """Create risk control adapter (Phase 5) - placeholder."""
-        logger.warning("Container: RiskControlAdapter not yet implemented")
-        return None
+        """Create risk control adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.risk_control_adapter import RiskControlAdapter
+            logger.info("Container: Initializing RiskControlAdapter...")
+            adapter = RiskControlAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: RiskControlAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: RiskControlAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: RiskControlAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: RiskControlAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize RiskControlAdapter: {e}")
+            return None
     
     def _create_derivatives_adapter(self):
-        """Create derivatives adapter (Phase 5) - placeholder."""
-        logger.warning("Container: DerivativesAdapter not yet implemented")
-        return None
+        """Create derivatives adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.derivatives_adapter import DerivativesAdapter
+            logger.info("Container: Initializing DerivativesAdapter...")
+            adapter = DerivativesAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: DerivativesAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: DerivativesAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: DerivativesAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: DerivativesAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize DerivativesAdapter: {e}")
+            return None
     
     def _create_portfolio_adapter(self):
-        """Create portfolio adapter (Phase 5) - placeholder."""
-        logger.warning("Container: PortfolioAdapter not yet implemented")
-        return None
+        """Create portfolio adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.portfolio_adapter import PortfolioAdapter
+            logger.info("Container: Initializing PortfolioAdapter...")
+            adapter = PortfolioAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: PortfolioAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: PortfolioAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: PortfolioAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: PortfolioAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize PortfolioAdapter: {e}")
+            return None
     
     def _create_optimization_adapter(self):
-        """Create optimization adapter (Phase 5) - placeholder."""
-        logger.warning("Container: OptimizationAdapter not yet implemented")
-        return None
+        """Create optimization adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.optimization_adapter import OptimizationAdapter
+            logger.info("Container: Initializing OptimizationAdapter...")
+            adapter = OptimizationAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: OptimizationAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: OptimizationAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: OptimizationAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: OptimizationAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize OptimizationAdapter: {e}")
+            return None
     
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
@@ -668,6 +736,14 @@ class Container:
             'use_onchain_port': self.use_onchain_port,
             'use_market_intel_port': self.use_market_intel_port,
             'use_execution_port': self.use_execution_port,
+            'use_risk_control_port': self.use_risk_control_port,
+            'use_derivatives_port': self.use_derivatives_port,
+            'risk_control_adapter': self._risk_control_adapter is not None,
+            'derivatives_adapter': self._derivatives_adapter is not None,
+            'portfolio_adapter': self._portfolio_adapter is not None,
+            'optimization_adapter': self._optimization_adapter is not None,
+            'use_portfolio_port': self.use_portfolio_port,
+            'use_optimization_port': self.use_optimization_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):

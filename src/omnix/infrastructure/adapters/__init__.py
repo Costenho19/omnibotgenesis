@@ -28,6 +28,10 @@ from src.omnix.infrastructure.adapters.cache_adapter import CacheAdapter
 from src.omnix.infrastructure.adapters.database_adapter import DatabaseAdapter
 from src.omnix.infrastructure.adapters.market_intel_adapter import MarketIntelAdapter
 from src.omnix.infrastructure.adapters.execution_adapter import ExecutionAdapter
+from src.omnix.infrastructure.adapters.risk_control_adapter import RiskControlAdapter
+from src.omnix.infrastructure.adapters.derivatives_adapter import DerivativesAdapter
+from src.omnix.infrastructure.adapters.portfolio_adapter import PortfolioAdapter
+from src.omnix.infrastructure.adapters.optimization_adapter import OptimizationAdapter
 
 __all__ = [
     "TradingServiceAdapter",
@@ -41,4 +45,8 @@ __all__ = [
     "DatabaseAdapter",
     "MarketIntelAdapter",
     "ExecutionAdapter",
+    "RiskControlAdapter",
+    "DerivativesAdapter",
+    "PortfolioAdapter",
+    "OptimizationAdapter",
 ]

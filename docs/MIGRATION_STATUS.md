@@ -10,7 +10,29 @@
 > - El sistema sigue usando 100% código legacy en Railway
 > - Los ports TradingPort, MarketDataPort, AIInferencePort tienen adapters pero **no están activos**
 
-### Último Update (16 Dic 2025 - Session 3)
+### Último Update (17 Dic 2025 - Session 5)
+
+**Implementación de 6 Nuevos Driven Ports (Phase 5):**
+- **MarketIntelPort**: Sentiment analysis, technical indicators, news aggregation
+- **ExecutionPort**: Liquidity analysis, correlation, slippage prediction, order routing
+- **RiskControlPort**: Circuit breakers, limits engine, position monitoring, alerts
+- **DerivativesPort**: Futures contracts, hedging, margin management, funding analysis
+- **PortfolioPort**: Portfolio view, rebalancing, exposure management, allocation plans
+- **OptimizationPort**: Parameter optimization, adaptive weights, ML learning, forecasts
+
+**Tests:** 120/120 pasando para los 6 nuevos ports
+
+**Adapters Implementados:**
+- MarketIntelAdapter (wraps FearGreedService, AlphaVantageService, FinnhubService)
+- ExecutionAdapter (wraps ExecutionProtocol, LiquidityAnalyzer, CorrelationEngine)
+- RiskControlAdapter (wraps CircuitBreakerManager, LimitsEngine, PositionMonitor)
+- DerivativesAdapter (wraps DerivativesManager, KrakenFuturesClient, HedgingService)
+- PortfolioAdapter (wraps PortfolioEngine, PortfolioOptimizer, ExposureManager)
+- OptimizationAdapter (wraps AutoOptimizer, AdaptiveWeights, MLModule)
+
+---
+
+### Update (16 Dic 2025 - Session 3)
 
 **Corrección Crítica de Integración V7 ↔ Legacy:**
 - `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
@@ -47,11 +69,12 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Métrica | Estado |
 |---------|--------|
-| Ports definidos | 9/9 ✅ |
-| Adapters implementados | 10/10 ✅ |
-| Ports activos en producción | **0/9 (0%)** |
-| Feature flags pendientes | 9 (todos) |
+| Ports definidos | **15/15 ✅** |
+| Adapters implementados | **16/16 ✅** |
+| Ports activos en producción | **0/15 (0%)** |
+| Feature flags pendientes | 15 (todos) |
 | Próximo a activar | `USE_AI_PORT=true` |
+| Tests nuevos ports | **120/120 ✅** |
 
 ---
 
@@ -102,6 +125,12 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | CachePort | CacheAdapter | ✅ | ⬜ | `USE_CACHE_PORT=false` |
 | NotificationPort | NotificationAdapter | ✅ | ⬜ | `USE_NOTIFICATION_PORT=false` |
 | **OnChainDataPort** | OnChainDataAdapter | ✅ | ⬜ | `USE_ONCHAIN_PORT=false` |
+| **MarketIntelPort** | MarketIntelAdapter | ✅ | ⬜ | `USE_MARKET_INTEL_PORT=false` |
+| **ExecutionPort** | ExecutionAdapter | ✅ | ⬜ | `USE_EXECUTION_PORT=false` |
+| **RiskControlPort** | RiskControlAdapter | ✅ | ⬜ | `USE_RISK_CONTROL_PORT=false` |
+| **DerivativesPort** | DerivativesAdapter | ✅ | ⬜ | `USE_DERIVATIVES_PORT=false` |
+| **PortfolioPort** | PortfolioAdapter | ✅ | ⬜ | `USE_PORTFOLIO_PORT=false` |
+| **OptimizationPort** | OptimizationAdapter | ✅ | ⬜ | `USE_OPTIMIZATION_PORT=false` |
 
 ### Driver Ports (Entrada)
 
