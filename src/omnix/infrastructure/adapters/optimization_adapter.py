@@ -33,6 +33,19 @@ from src.omnix.ports.driven.optimization_port import (
 logger = logging.getLogger(__name__)
 
 
+class NullAdaptiveWeights:
+    """Null object fallback when AdaptiveWeights is not available."""
+    
+    def get_all(self, category: str = None) -> list:
+        return []
+    
+    def update(self, data: dict) -> bool:
+        return True
+    
+    def get_current_weights(self) -> dict:
+        return {}
+
+
 class OptimizationAdapter:
     """
     Adapter wrapping legacy optimization services.
@@ -72,9 +85,20 @@ class OptimizationAdapter:
         if self._adaptive_weights is None:
             try:
                 from omnix_services.optimization.adaptive_weights import AdaptiveWeights
-                self._adaptive_weights = AdaptiveWeights.get_instance() if hasattr(AdaptiveWeights, 'get_instance') else None
-            except (ImportError, TypeError) as e:
+                if hasattr(AdaptiveWeights, 'get_instance'):
+                    self._adaptive_weights = AdaptiveWeights.get_instance()
+                else:
+                    import inspect
+                    sig = inspect.signature(AdaptiveWeights.__init__)
+                    params = [p for p in sig.parameters.keys() if p != 'self']
+                    if params:
+                        logger.info(f"OptimizationAdapter: AdaptiveWeights requires params: {params}, using NullAdaptiveWeights")
+                        self._adaptive_weights = NullAdaptiveWeights()
+                    else:
+                        self._adaptive_weights = AdaptiveWeights()
+            except (ImportError, TypeError, Exception) as e:
                 logger.warning(f"OptimizationAdapter: AdaptiveWeights not available: {e}")
+                self._adaptive_weights = NullAdaptiveWeights()
         
         if self._ml_module is None:
             try:
