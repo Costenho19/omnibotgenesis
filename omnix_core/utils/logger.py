@@ -534,6 +534,9 @@ def setup_logging(service_name: str = "omnix"):
     # Suppress noisy loggers
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger('telegram').setLevel(logging.WARNING)
     
     logging.info(f"✅ Logging system initialized - Service: {service_name}, Level: {settings.monitoring.log_level}")
 
