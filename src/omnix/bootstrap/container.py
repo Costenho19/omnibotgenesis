@@ -121,6 +121,7 @@ class Container:
     _cache_adapter: Optional[Any] = field(default=None, repr=False)
     _database_adapter: Optional[Any] = field(default=None, repr=False)
     _database_manager: Optional[Any] = field(default=None, repr=False)
+    _onchain_adapter: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -239,6 +240,19 @@ class Container:
         """Check if TelegramPort is enabled (Phase 4D)."""
         import os
         return os.getenv("USE_TELEGRAM_PORT", "false").lower() == "true"
+    
+    @property
+    def use_onchain_port(self) -> bool:
+        """Check if OnChainDataPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_ONCHAIN_PORT", "false").lower() == "true"
+    
+    @property
+    def onchain_adapter(self):
+        """Get on-chain data adapter (Phase 5)."""
+        if self._onchain_adapter is None:
+            self._onchain_adapter = self._create_onchain_adapter()
+        return self._onchain_adapter
     
     def _create_database(self) -> IDatabaseGateway:
         try:
@@ -440,6 +454,34 @@ class Container:
             logger.error(f"Container: Failed to initialize DatabaseAdapter: {e}")
             return None
     
+    def _create_onchain_adapter(self):
+        """Create on-chain data adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.onchain import OnChainDataAdapter, BlockchainInfoProvider
+            logger.info("Container: Initializing OnChainDataAdapter...")
+            
+            legacy_service = None
+            try:
+                from omnix_services.monitoring.advanced_intelligence import MarketIntelligenceSystem
+                legacy_service = MarketIntelligenceSystem()
+            except Exception:
+                pass
+            
+            provider = BlockchainInfoProvider()
+            adapter = OnChainDataAdapter(
+                blockchain_info_provider=provider,
+                legacy_service=legacy_service
+            )
+            
+            logger.info(f"Container: OnChainDataAdapter initialized (enabled={self.use_onchain_port})")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: OnChainDataAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize OnChainDataAdapter: {e}")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         logger.info(f"Container: Creating new DI Container (lazy={lazy})")
@@ -467,11 +509,13 @@ class Container:
             'cache_adapter': self._cache_adapter is not None,
             'database_adapter': self._database_adapter is not None,
             'database_manager': self._database_manager is not None,
+            'onchain_adapter': self._onchain_adapter is not None,
             'use_app_layer': self.use_app_layer,
             'use_notification_port': self.use_notification_port,
             'use_cache_port': self.use_cache_port,
             'use_database_port': self.use_database_port,
             'use_telegram_port': self.use_telegram_port,
+            'use_onchain_port': self.use_onchain_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):
