@@ -26,6 +26,8 @@ from src.omnix.infrastructure.adapters.telegram_adapter import TelegramBotAdapte
 from src.omnix.infrastructure.adapters.notification_adapter import NotificationAdapter
 from src.omnix.infrastructure.adapters.cache_adapter import CacheAdapter
 from src.omnix.infrastructure.adapters.database_adapter import DatabaseAdapter
+from src.omnix.infrastructure.adapters.market_intel_adapter import MarketIntelAdapter
+from src.omnix.infrastructure.adapters.execution_adapter import ExecutionAdapter
 
 __all__ = [
     "TradingServiceAdapter",
@@ -37,4 +39,6 @@ __all__ = [
     "NotificationAdapter",
     "CacheAdapter",
     "DatabaseAdapter",
+    "MarketIntelAdapter",
+    "ExecutionAdapter",
 ]

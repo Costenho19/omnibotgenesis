@@ -35,6 +35,34 @@ from src.omnix.ports.driven.ai_voice_port import (
 )
 from src.omnix.ports.driven.market_data_port import MarketDataPort, TechnicalIndicatorPort
 from src.omnix.ports.driven.notification_port import NotificationPort
+from src.omnix.ports.driven.market_intel_port import (
+    MarketIntelPort,
+    SentimentSnapshot,
+    SentimentLevel,
+    TechnicalIndicator,
+    IndicatorType,
+    NewsArticle,
+    NewsCategory,
+    MacroEvent,
+    EarningsEvent,
+    MarketIntelRequest,
+    MarketIntelResponse,
+)
+from src.omnix.ports.driven.execution_port import (
+    ExecutionPort,
+    LiquidityReport,
+    VolatilityMetrics,
+    VolatilityRegime,
+    CorrelationMatrix,
+    ContagionLevel,
+    SlippagePrediction,
+    ExecutionTiming,
+    ExecutionOrder,
+    ExecutionResult,
+    ExecutionStyle,
+    ExecutionUrgency,
+    MarketCondition,
+)
 
 __all__ = [
     "TradingPort",
@@ -59,4 +87,28 @@ __all__ = [
     "MarketDataPort",
     "TechnicalIndicatorPort",
     "NotificationPort",
+    "MarketIntelPort",
+    "SentimentSnapshot",
+    "SentimentLevel",
+    "TechnicalIndicator",
+    "IndicatorType",
+    "NewsArticle",
+    "NewsCategory",
+    "MacroEvent",
+    "EarningsEvent",
+    "MarketIntelRequest",
+    "MarketIntelResponse",
+    "ExecutionPort",
+    "LiquidityReport",
+    "VolatilityMetrics",
+    "VolatilityRegime",
+    "CorrelationMatrix",
+    "ContagionLevel",
+    "SlippagePrediction",
+    "ExecutionTiming",
+    "ExecutionOrder",
+    "ExecutionResult",
+    "ExecutionStyle",
+    "ExecutionUrgency",
+    "MarketCondition",
 ]

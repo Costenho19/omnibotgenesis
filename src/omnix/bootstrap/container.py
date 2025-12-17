@@ -122,6 +122,12 @@ class Container:
     _database_adapter: Optional[Any] = field(default=None, repr=False)
     _database_manager: Optional[Any] = field(default=None, repr=False)
     _onchain_adapter: Optional[Any] = field(default=None, repr=False)
+    _market_intel_adapter: Optional[Any] = field(default=None, repr=False)
+    _execution_adapter: Optional[Any] = field(default=None, repr=False)
+    _risk_control_adapter: Optional[Any] = field(default=None, repr=False)
+    _derivatives_adapter: Optional[Any] = field(default=None, repr=False)
+    _portfolio_adapter: Optional[Any] = field(default=None, repr=False)
+    _optimization_adapter: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -253,6 +259,84 @@ class Container:
         if self._onchain_adapter is None:
             self._onchain_adapter = self._create_onchain_adapter()
         return self._onchain_adapter
+    
+    @property
+    def use_market_intel_port(self) -> bool:
+        """Check if MarketIntelPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_MARKET_INTEL_PORT", "false").lower() == "true"
+    
+    @property
+    def use_execution_port(self) -> bool:
+        """Check if ExecutionPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_EXECUTION_PORT", "false").lower() == "true"
+    
+    @property
+    def use_risk_control_port(self) -> bool:
+        """Check if RiskControlPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_RISK_CONTROL_PORT", "false").lower() == "true"
+    
+    @property
+    def use_derivatives_port(self) -> bool:
+        """Check if DerivativesPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_DERIVATIVES_PORT", "false").lower() == "true"
+    
+    @property
+    def use_portfolio_port(self) -> bool:
+        """Check if PortfolioPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_PORTFOLIO_PORT", "false").lower() == "true"
+    
+    @property
+    def use_optimization_port(self) -> bool:
+        """Check if OptimizationPort is enabled (Phase 5)."""
+        import os
+        return os.getenv("USE_OPTIMIZATION_PORT", "false").lower() == "true"
+    
+    @property
+    def market_intel_adapter(self):
+        """Get market intelligence adapter (Phase 5)."""
+        if self._market_intel_adapter is None:
+            self._market_intel_adapter = self._create_market_intel_adapter()
+        return self._market_intel_adapter
+    
+    @property
+    def execution_adapter(self):
+        """Get execution adapter (Phase 5)."""
+        if self._execution_adapter is None:
+            self._execution_adapter = self._create_execution_adapter()
+        return self._execution_adapter
+    
+    @property
+    def risk_control_adapter(self):
+        """Get risk control adapter (Phase 5)."""
+        if self._risk_control_adapter is None:
+            self._risk_control_adapter = self._create_risk_control_adapter()
+        return self._risk_control_adapter
+    
+    @property
+    def derivatives_adapter(self):
+        """Get derivatives adapter (Phase 5)."""
+        if self._derivatives_adapter is None:
+            self._derivatives_adapter = self._create_derivatives_adapter()
+        return self._derivatives_adapter
+    
+    @property
+    def portfolio_adapter(self):
+        """Get portfolio adapter (Phase 5)."""
+        if self._portfolio_adapter is None:
+            self._portfolio_adapter = self._create_portfolio_adapter()
+        return self._portfolio_adapter
+    
+    @property
+    def optimization_adapter(self):
+        """Get optimization adapter (Phase 5)."""
+        if self._optimization_adapter is None:
+            self._optimization_adapter = self._create_optimization_adapter()
+        return self._optimization_adapter
     
     def _create_database(self) -> IDatabaseGateway:
         try:
@@ -482,6 +566,70 @@ class Container:
             logger.error(f"Container: Failed to initialize OnChainDataAdapter: {e}")
             return None
     
+    def _create_market_intel_adapter(self):
+        """Create market intelligence adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.market_intel_adapter import MarketIntelAdapter
+            logger.info("Container: Initializing MarketIntelAdapter...")
+            adapter = MarketIntelAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: MarketIntelAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: MarketIntelAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: MarketIntelAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: MarketIntelAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize MarketIntelAdapter: {e}")
+            return None
+    
+    def _create_execution_adapter(self):
+        """Create execution adapter (Phase 5)."""
+        try:
+            from src.omnix.infrastructure.adapters.execution_adapter import ExecutionAdapter
+            logger.info("Container: Initializing ExecutionAdapter...")
+            adapter = ExecutionAdapter()
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: ExecutionAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: ExecutionAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: ExecutionAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: ExecutionAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize ExecutionAdapter: {e}")
+            return None
+    
+    def _create_risk_control_adapter(self):
+        """Create risk control adapter (Phase 5) - placeholder."""
+        logger.warning("Container: RiskControlAdapter not yet implemented")
+        return None
+    
+    def _create_derivatives_adapter(self):
+        """Create derivatives adapter (Phase 5) - placeholder."""
+        logger.warning("Container: DerivativesAdapter not yet implemented")
+        return None
+    
+    def _create_portfolio_adapter(self):
+        """Create portfolio adapter (Phase 5) - placeholder."""
+        logger.warning("Container: PortfolioAdapter not yet implemented")
+        return None
+    
+    def _create_optimization_adapter(self):
+        """Create optimization adapter (Phase 5) - placeholder."""
+        logger.warning("Container: OptimizationAdapter not yet implemented")
+        return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         logger.info(f"Container: Creating new DI Container (lazy={lazy})")
@@ -510,12 +658,16 @@ class Container:
             'database_adapter': self._database_adapter is not None,
             'database_manager': self._database_manager is not None,
             'onchain_adapter': self._onchain_adapter is not None,
+            'market_intel_adapter': self._market_intel_adapter is not None,
+            'execution_adapter': self._execution_adapter is not None,
             'use_app_layer': self.use_app_layer,
             'use_notification_port': self.use_notification_port,
             'use_cache_port': self.use_cache_port,
             'use_database_port': self.use_database_port,
             'use_telegram_port': self.use_telegram_port,
             'use_onchain_port': self.use_onchain_port,
+            'use_market_intel_port': self.use_market_intel_port,
+            'use_execution_port': self.use_execution_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):
