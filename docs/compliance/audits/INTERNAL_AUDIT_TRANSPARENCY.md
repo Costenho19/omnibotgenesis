@@ -108,9 +108,11 @@ These modules provide protection and execution but do not generate trading signa
 | 1 | Risk Guardian V5.4 | Overtrading prevention, drawdown protection |
 | 2 | Coherence Engine V6.5 | Threshold-based validation |
 | 3 | Adaptive Parameter Engine | Auto-calibration by regime |
-| 4 | On-Chain Intelligence | Whale tracking, blockchain analytics |
+| 4 | On-Chain Intelligence V7.0 | Whale tracking, blockchain analytics (Blockchain.info API) |
 | 5 | Execution Protocol | Trade execution (market/limit orders) |
 | 6 | Fear & Greed Contrarian | Score adjustment on extreme sentiment |
+
+**Note:** On-Chain Intelligence has been upgraded to a dedicated port in V7.0 architecture. See Section 10.6 for details.
 
 ### 3.3 Signal Generation Process
 
@@ -596,6 +598,77 @@ OMNIX provides multiple interaction methods for end-users:
 - Leaderboard ranks top contributors
 - Collective wisdom improves strategy calibration
 
+### 10.6 Hexagonal Architecture V7.0 (Migration)
+
+OMNIX is undergoing a strategic migration to hexagonal (ports & adapters) architecture using the **Strangler Fig Pattern**. This enables gradual migration while maintaining 24/7 operation.
+
+> **IMPORTANT:** The legacy system (V6.5.4) remains fully active in production. The V7.0 architecture is 100% implemented but not yet activated. All trading operations use the proven legacy codebase.
+
+**Current Status (December 2025):**
+
+| Metric | Status |
+|--------|--------|
+| Ports Defined | **9/9** (100%) |
+| Adapters Implemented | **10/10** (100%) |
+| Active in Production | **0/9** (0%) |
+| Production System | **Legacy V6.5.4** |
+| Pattern | Strangler Fig with Feature Flags |
+
+**Architecture Structure:**
+
+```
+src/omnix/           ← V7.0 Hexagonal (100% implemented, NOT ACTIVE)
+├── ports/           ← 9 protocol interfaces
+├── infrastructure/  ← 10 adapters
+├── domain/          ← Business logic (strategies, risk, on-chain)
+├── application/     ← Use cases + orchestration services
+└── bootstrap/       ← DI Container (535 lines)
+
+omnix_core/          ← Legacy V6.5.4 (CURRENTLY ACTIVE)
+omnix_services/      ← Legacy services (CURRENTLY ACTIVE)
+```
+
+**Migration Feature Flags:**
+
+All flags are currently set to `false`. The system runs on legacy code while V7 components are validated in staging.
+
+| Flag | Functionality | Risk | Fallback | Dependencies |
+|------|--------------|------|----------|--------------|
+| `USE_AI_PORT` | AI gateway with Gemini→OpenAI→Anthropic failover | Low | 5min cooldown → RoutingAIGateway | Includes AIInferencePort |
+| `USE_VOICE_PORT` | Voice transcription (Whisper) | Low | Legacy voice_controller | Requires USE_AI_PORT |
+| `USE_DATABASE_PORT` | PostgreSQL adapter | Medium | DatabaseGateway singleton | Must pair with USE_CACHE_PORT |
+| `USE_CACHE_PORT` | Redis adapter | Low | RedisCache singleton | Must pair with USE_DATABASE_PORT |
+| `USE_NOTIFICATION_PORT` | Telegram notifications | Low | telegram_utils module | None |
+| `USE_TELEGRAM_PORT` | Bot command handling | Medium | EnterpriseBot class | None |
+| `USE_ONCHAIN_PORT` | Blockchain data (Blockchain.info) | Low | Legacy analytics module | None |
+| `USE_TRADING_PORT` | Trading execution (Kraken) | High | Legacy trading_service | Includes MarketDataPort |
+| `USE_APP_LAYER` | Full application layer | High | All legacy services | Master flag (activates all)
+
+**Cooldown/Fallback Mechanism:**
+
+```
+V7 Request → Adapter → Success → Continue V7
+                    → Failure → Record failure
+                              → Cooldown 5 min
+                              → Route to Legacy
+                              → After 5 min → Retry V7
+```
+
+This pattern ensures:
+1. Zero-downtime during migration
+2. Automatic recovery from V7 failures
+3. Comprehensive logging for audit
+4. Gradual risk reduction via staged activation
+
+**Activation Sequence (Planned):**
+1. `USE_AI_PORT` (robust fallback, no dependencies)
+2. `USE_ONCHAIN_PORT` (independent data source)
+3. `USE_CACHE_PORT` + `USE_DATABASE_PORT` (together)
+4. `USE_NOTIFICATION_PORT`
+5. `USE_TELEGRAM_PORT`
+6. `USE_VOICE_PORT`
+7. `USE_APP_LAYER` (final activation)
+
 ---
 
 ## 11. DECLARATION OF INTEGRITY
@@ -636,6 +709,8 @@ Investors have the right to:
 
 ### 12.1 System Architecture
 
+**Legacy Architecture (V6.5.4 - Currently Active in Production):**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    OMNIX V6.5.4 INSTITUTIONAL+              │
@@ -663,6 +738,48 @@ Investors have the right to:
 │              └───────────────────────┘                      │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**Hexagonal Architecture V7.0 (Implemented, Pending Activation):**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    src/omnix/ V7.0 HEXAGONAL                │
+├─────────────────────────────────────────────────────────────┤
+│  PORTS (9 Protocols)                                        │
+│  ├── Driven: AI, Voice, Database, Cache, Notification      │
+│  │           Trading, MarketData, OnChainData               │
+│  └── Driver: Telegram, RestApi                              │
+├─────────────────────────────────────────────────────────────┤
+│  ADAPTERS (10 Implementations)                              │
+│  ├── AIGatewayShim, VoiceServiceAdapter                    │
+│  ├── DatabaseAdapter, CacheAdapter, NotificationAdapter    │
+│  ├── TradingAdapter, KrakenAdapter, OnChainDataAdapter     │
+│  └── TelegramBotAdapter, FlaskBlueprints                   │
+├─────────────────────────────────────────────────────────────┤
+│  DOMAIN (Pure Business Logic)                               │
+│  ├── 10 Trading Strategies (Monte Carlo, Kalman, etc.)     │
+│  ├── Risk Guardian, Coherence Engine                        │
+│  └── Entities, Value Objects (Money, Quantity, Trade)      │
+├─────────────────────────────────────────────────────────────┤
+│  BOOTSTRAP                                                  │
+│  └── DI Container (535 lines) + Feature Flag Control       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 12.1.1 Ports & Adapters Inventory
+
+| Port | Adapter | Status | Feature Flag |
+|------|---------|--------|--------------|
+| AITextGatewayPort | AIGatewayShim | Ready | `USE_AI_PORT` |
+| AIVoicePort | VoiceServiceAdapter | Ready | `USE_VOICE_PORT` |
+| DatabasePort | DatabaseAdapter | Ready | `USE_DATABASE_PORT` |
+| CachePort | CacheAdapter | Ready | `USE_CACHE_PORT` |
+| NotificationPort | NotificationAdapter | Ready | `USE_NOTIFICATION_PORT` |
+| TradingPort | TradingAdapter | Ready | `USE_TRADING_PORT` |
+| MarketDataPort | KrakenAdapter | Ready | (w/ Trading) |
+| OnChainDataPort | OnChainDataAdapter | Ready | `USE_ONCHAIN_PORT` |
+| TelegramPort | TelegramBotAdapter | Ready | `USE_TELEGRAM_PORT` |
+| RestApiPort | FlaskBlueprints | Ready | `USE_APP_LAYER` |
 
 ### 12.2 Database Schema (Key Tables)
 
@@ -703,9 +820,15 @@ This Internal Audit & Transparency Report has been prepared by the OMNIX foundin
 - Harold, Founder & CEO
 - Iván, Co-founder & CTO
 
-**Document Version:** 1.0  
-**Last Updated:** December 2025  
+**Document Version:** 1.1  
+**Last Updated:** December 17, 2025  
 **Next Review:** March 2026
+
+**Version 1.1 Changes:**
+- Added Section 10.6: Hexagonal Architecture V7.0 (Migration)
+- Updated Section 12.1: Added V7.0 architecture diagram and ports/adapters inventory
+- Updated On-Chain Intelligence reference to V7.0 dedicated port
+- Added 9 feature flags documentation with activation sequence
 
 ---
 
