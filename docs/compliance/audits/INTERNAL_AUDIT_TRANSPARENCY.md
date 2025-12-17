@@ -5,8 +5,8 @@
 ---
 
 **Document Classification:** Internal Audit Report  
-**Version:** 1.0  
-**Date:** December 2025  
+**Version:** 1.2  
+**Date:** December 17, 2025  
 **Prepared for:** Due Diligence Review by Prospective Investors  
 
 ---
@@ -766,20 +766,104 @@ Investors have the right to:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 12.1.1 Ports & Adapters Inventory
+### 12.1.1 Driven Ports (System → External Services)
 
-| Port | Adapter | Status | Feature Flag |
-|------|---------|--------|--------------|
-| AITextGatewayPort | AIGatewayShim | Ready | `USE_AI_PORT` |
-| AIVoicePort | VoiceServiceAdapter | Ready | `USE_VOICE_PORT` |
-| DatabasePort | DatabaseAdapter | Ready | `USE_DATABASE_PORT` |
-| CachePort | CacheAdapter | Ready | `USE_CACHE_PORT` |
-| NotificationPort | NotificationAdapter | Ready | `USE_NOTIFICATION_PORT` |
-| TradingPort | TradingAdapter | Ready | `USE_TRADING_PORT` |
-| MarketDataPort | KrakenAdapter | Ready | (w/ Trading) |
-| OnChainDataPort | OnChainDataAdapter | Ready | `USE_ONCHAIN_PORT` |
-| TelegramPort | TelegramBotAdapter | Ready | `USE_TELEGRAM_PORT` |
-| RestApiPort | FlaskBlueprints | Ready | `USE_APP_LAYER` |
+These ports define interfaces for services the system calls outward.
+
+| # | Port | Source File | Methods | Feature Flag | Adapter |
+|---|------|-------------|---------|--------------|---------|
+| 1 | **AITextGatewayPort** | `ai_text_gateway_port.py` | `generate_text()`, `generate_with_context()` | `USE_AI_PORT` | AIGatewayShim |
+| 2 | **AIVoicePort** | `ai_voice_port.py` | `transcribe()`, `synthesize()` | `USE_VOICE_PORT` | VoiceServiceAdapter |
+| 3 | **AIInferencePort** | `ai_inference_port.py` | `infer()`, `batch_infer()` | (w/ AI_PORT) | GeminiAdapter |
+| 4 | **DatabasePort** | `database_port.py` | `execute()`, `fetch_one()`, `fetch_all()` | `USE_DATABASE_PORT` | DatabaseAdapter |
+| 5 | **CachePort** | `cache_port.py` | `get()`, `set()`, `delete()`, `exists()` | `USE_CACHE_PORT` | CacheAdapter |
+| 6 | **NotificationPort** | `notification_port.py` | `send()`, `send_alert()`, `broadcast()` | `USE_NOTIFICATION_PORT` | NotificationAdapter |
+| 7 | **TradingPort** | `trading_port.py` | `place_order()`, `cancel_order()`, `get_balance()` | `USE_TRADING_PORT` | TradingServiceAdapter |
+| 8 | **MarketDataPort** | `market_data_port.py` | `get_ticker()`, `get_ohlc()`, `get_orderbook()` | (w/ TRADING_PORT) | KrakenAdapter |
+| 9 | **OnChainDataPort** | `onchain_data_port.py` | `get_metrics()`, `get_whale_activity()`, `get_network_health()`, `get_exchange_flows()` | `USE_ONCHAIN_PORT` | OnChainDataAdapter |
+
+**Sub-Protocols (within DatabasePort):**
+- `TradeRepositoryPort`: CRUD operations for trades
+- `PositionRepositoryPort`: CRUD operations for positions
+- `UserRepositoryPort`: CRUD operations for users
+
+**Sub-Protocols (within MarketDataPort):**
+- `TechnicalIndicatorPort`: RSI, MACD, Bollinger Bands, etc.
+
+### 12.1.2 Driver Ports (External Services → System)
+
+These ports define interfaces for external services calling into the system.
+
+| # | Port | Source File | Methods | Feature Flag | Adapter |
+|---|------|-------------|---------|--------------|---------|
+| 1 | **TelegramPort** | `telegram_port.py` | `start()`, `handle_message()`, `send_response()` | `USE_TELEGRAM_PORT` | TelegramBotAdapter |
+| 2 | **RestApiPort** | `rest_api_port.py` | `register_routes()`, `handle_request()` | `USE_APP_LAYER` | Flask Blueprints |
+
+### 12.1.3 Adapters Inventory
+
+**Primary Adapters (10):**
+
+| # | Adapter | Source File | Implements Port | Status |
+|---|---------|-------------|-----------------|--------|
+| 1 | AIGatewayShim | `ai_gateway_shim.py` | AITextGatewayPort | ✅ Ready |
+| 2 | VoiceServiceAdapter | `voice_adapter.py` | AIVoicePort | ✅ Ready |
+| 3 | GeminiAdapter | `gemini_adapter.py` | AIInferencePort | ✅ Ready |
+| 4 | DatabaseAdapter | `database_adapter.py` | DatabasePort | ✅ Ready |
+| 5 | CacheAdapter | `cache_adapter.py` | CachePort | ✅ Ready |
+| 6 | NotificationAdapter | `notification_adapter.py` | NotificationPort | ✅ Ready |
+| 7 | TradingServiceAdapter | `trading_adapter.py` | TradingPort | ✅ Ready |
+| 8 | KrakenAdapter | `kraken_adapter.py` | MarketDataPort, TradingPort | ✅ Ready |
+| 9 | OnChainDataAdapter | `onchain/onchain_adapter.py` | OnChainDataPort | ✅ Ready |
+| 10 | TelegramBotAdapter | `telegram_adapter.py` | TelegramPort | ✅ Ready |
+
+**Auxiliary Adapters (3):**
+
+| Adapter | Source File | Purpose |
+|---------|-------------|---------|
+| RiskGuardianAdapter | `risk_adapter.py` | Wrapper for legacy Risk Guardian |
+| CoherenceEngineAdapter | `coherence_adapter.py` | Wrapper for legacy Coherence Engine |
+| BlockchainInfoProvider | `onchain/blockchain_info_provider.py` | Provider for OnChainDataAdapter (Blockchain.info API) |
+
+### 12.1.4 Feature Flag Dependency Map
+
+```
+                         USE_APP_LAYER=false
+                              (Master)
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+        ▼                        ▼                        ▼
+  USE_AI_PORT=false      USE_TRADING_PORT=false    USE_TELEGRAM_PORT=false
+        │                        │                        │
+        │                   ┌────┴────┐              TelegramBotAdapter
+        │                   │         │
+        │              MarketData  KrakenAdapter
+        │              Port (incl)
+        │
+   ┌────┴────┐
+   │         │
+USE_VOICE  AIInference
+_PORT=false Port (incl)
+   │         │
+Voice     GeminiAdapter
+Adapter
+
+  USE_DATABASE_PORT=false ←──MUST PAIR──→ USE_CACHE_PORT=false
+           │                                      │
+    DatabaseAdapter                         CacheAdapter
+
+  USE_NOTIFICATION_PORT=false          USE_ONCHAIN_PORT=false
+           │                                    │
+    NotificationAdapter               OnChainDataAdapter
+                                              │
+                                    BlockchainInfoProvider
+```
+
+**Dependency Rules:**
+1. `USE_VOICE_PORT` requires `USE_AI_PORT` to be active first
+2. `USE_DATABASE_PORT` and `USE_CACHE_PORT` must be activated together
+3. `USE_TRADING_PORT` includes `MarketDataPort` and `AIInferencePort`
+4. `USE_APP_LAYER` is the master flag that activates the full application layer
 
 ### 12.2 Database Schema (Key Tables)
 
@@ -820,15 +904,17 @@ This Internal Audit & Transparency Report has been prepared by the OMNIX foundin
 - Harold, Founder & CEO
 - Iván, Co-founder & CTO
 
-**Document Version:** 1.1  
+**Document Version:** 1.2  
 **Last Updated:** December 17, 2025  
 **Next Review:** March 2026
 
-**Version 1.1 Changes:**
-- Added Section 10.6: Hexagonal Architecture V7.0 (Migration)
-- Updated Section 12.1: Added V7.0 architecture diagram and ports/adapters inventory
-- Updated On-Chain Intelligence reference to V7.0 dedicated port
-- Added 9 feature flags documentation with activation sequence
+**Version History:**
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.2 | Dec 17, 2025 | Expanded Section 12.1 with detailed ports/adapters inventory verified against codebase: 9 Driven Ports, 2 Driver Ports, 10 Primary Adapters, 3 Auxiliary Adapters. Added feature flag dependency map with visual diagram and dependency rules. |
+| 1.1 | Dec 17, 2025 | Added Section 10.6: Hexagonal Architecture V7.0 (Migration). Updated Section 12.1: Added V7.0 architecture diagram. Updated On-Chain Intelligence reference to V7.0 dedicated port. Added 9 feature flags documentation with activation sequence. |
+| 1.0 | Dec 2025 | Initial release for investor due diligence. |
 
 ---
 
