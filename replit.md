@@ -84,9 +84,17 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ## V7.0 Migration Progress
 
-### Hexagonal Architecture Status (Dec 16, 2025)
+### Hexagonal Architecture Status (Dec 17, 2025)
 
-**Estructura: 100% COMPLETA | Activación: 37.5%**
+**Estructura: 100% COMPLETA | Activación: 0%**
+
+**Session 4 Update (17 Dic 2025) - OnChainDataPort Added:**
+- Added `OnChainDataPort` - 9th port for blockchain analytics
+- `OnChainDataAdapter` with BlockchainInfoProvider (Blockchain.info API)
+- Domain layer: `src/omnix/domain/onchain/` with services
+- Feature flag: `USE_ONCHAIN_PORT=false`
+- Runbook: `docs/operations/RUNBOOK_ONCHAIN_PORT_ACTIVATION.md`
+- Tests: 24/24 passing in `tests/test_onchain_port.py`
 
 **Session 3 Update (16 Dic 2025) - PRODUCTION-READY:**
 - `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
@@ -141,17 +149,17 @@ USE_VOICE_PORT=true  # Activa VoiceServiceAdapter
 
 | Componente | Estado |
 |------------|--------|
-| 8/8 Ports definidos | ✅ Completo |
-| 9/9 Adapters implementados | ✅ Completo |
+| 9/9 Ports definidos | ✅ Completo |
+| 10/10 Adapters implementados | ✅ Completo |
 | Domain Layer | ✅ Completo |
 | Application Layer (5 Use Cases) | ✅ Completo |
-| DI Container | ✅ 509 líneas |
+| DI Container | ✅ 535 líneas |
 
 **Ports Activos en Producción:**
-- TradingPort, MarketDataPort, AIInferencePort (3/8)
+- Ninguno (0/9) - Todos los feature flags en false
 
 **Ports Diferidos (feature flags = false):**
-- DatabasePort, CachePort, NotificationPort, TelegramPort, RestApiPort
+- AIPort, VoicePort, DatabasePort, CachePort, NotificationPort, TelegramPort, OnChainPort, RestApiPort
 
 Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
 
@@ -159,9 +167,10 @@ Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
 ```
 OMNIX/
 ├── src/omnix/           <- Hexagonal V7.0 (100% implementado)
-│   ├── ports/           <- 8 protocols (driven + driver)
-│   ├── infrastructure/  <- 9 adapters
+│   ├── ports/           <- 9 protocols (driven + driver)
+│   ├── infrastructure/  <- 10 adapters
 │   ├── domain/          <- Entities, VOs, 10 strategies
+│   │   └── onchain/     <- On-chain analytics (NEW)
 │   ├── application/     <- 5 use cases
 │   └── bootstrap/       <- DI Container
 ├── omnix_core/          <- Legacy runtime (essential)

@@ -47,10 +47,10 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Métrica | Estado |
 |---------|--------|
-| Ports definidos | 8/8 ✅ |
-| Adapters implementados | 9/9 ✅ |
-| Ports activos en producción | **0/8 (0%)** |
-| Feature flags pendientes | 8 (todos) |
+| Ports definidos | 9/9 ✅ |
+| Adapters implementados | 10/10 ✅ |
+| Ports activos en producción | **0/9 (0%)** |
+| Feature flags pendientes | 9 (todos) |
 | Próximo a activar | `USE_AI_PORT=true` |
 
 ---
@@ -61,13 +61,15 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 ┌─────────────────────────────────────────────────────────────────┐
 │                    src/omnix/ (V7.0 Hexagonal)                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  PORTS (8 protocols)                                             │
+│  PORTS (9 protocols)                                             │
 │  ├── Driven: Trading, MarketData, AI, Database, Cache, Notify   │
+│  ├── Driven: OnChainData (NEW - 17 Dic 2025)                     │
 │  └── Driver: Telegram, RestApi                                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  ADAPTERS (9 implementaciones)                                   │
+│  ADAPTERS (10 implementaciones)                                  │
 │  ├── KrakenAdapter, GeminiAdapter, TradingAdapter               │
 │  ├── DatabaseAdapter, CacheAdapter, NotificationAdapter         │
+│  ├── OnChainDataAdapter (NEW - Blockchain.info provider)        │
 │  └── TelegramBotAdapter, RiskAdapter, CoherenceAdapter          │
 ├─────────────────────────────────────────────────────────────────┤
 │  DOMAIN (lógica de negocio pura)                                │
@@ -99,6 +101,7 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | DatabasePort | DatabaseAdapter | ✅ | ⬜ | `USE_DATABASE_PORT=false` |
 | CachePort | CacheAdapter | ✅ | ⬜ | `USE_CACHE_PORT=false` |
 | NotificationPort | NotificationAdapter | ✅ | ⬜ | `USE_NOTIFICATION_PORT=false` |
+| **OnChainDataPort** | OnChainDataAdapter | ✅ | ⬜ | `USE_ONCHAIN_PORT=false` |
 
 ### Driver Ports (Entrada)
 
@@ -122,6 +125,7 @@ USE_DATABASE_PORT=false
 USE_TRADING_PORT=false
 USE_NOTIFICATION_PORT=false
 USE_TELEGRAM_PORT=false
+USE_ONCHAIN_PORT=false    # NEW - On-chain blockchain data
 USE_APP_LAYER=false       # Activa toda la capa de aplicación
 ```
 
