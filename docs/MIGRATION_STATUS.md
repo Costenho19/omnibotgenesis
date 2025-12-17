@@ -154,21 +154,32 @@ USE_DATABASE_PORT=false
 USE_TRADING_PORT=false
 USE_NOTIFICATION_PORT=false
 USE_TELEGRAM_PORT=false
-USE_ONCHAIN_PORT=false    # NEW - On-chain blockchain data
+USE_ONCHAIN_PORT=false    # On-chain blockchain data
+USE_MARKET_INTEL_PORT=false    # Phase 5A - Market intelligence
+USE_EXECUTION_PORT=false       # Phase 5A - Order execution
+USE_RISK_CONTROL_PORT=false    # Phase 5A - Risk management
+USE_DERIVATIVES_PORT=false     # Phase 5B - Derivatives trading
+USE_PORTFOLIO_PORT=false       # Phase 5C - Portfolio management
+USE_OPTIMIZATION_PORT=false    # Phase 5C - Parameter optimization
 USE_APP_LAYER=false       # Activa toda la capa de aplicación
 ```
 
 ### Plan de Activación (Priorizado)
 
-| Paso | Flag | Riesgo | Rollback | Validación Requerida |
-|------|------|--------|----------|----------------------|
-| **1** | `USE_AI_PORT=true` | **BAJO** | ✅ 5min cooldown → legacy | Monitor 24h, verificar Gemini→OpenAI failover |
-| 2 | `USE_VOICE_PORT=true` | BAJO | ✅ Legacy voice_controller | Probar /voz después de AI estable |
-| 3 | `USE_CACHE_PORT=true` | BAJO | ✅ RedisCache directo | Health check Redis |
-| 4 | `USE_DATABASE_PORT=true` | MEDIO | ✅ DatabaseGateway directo | Query comparison |
-| 5 | `USE_NOTIFICATION_PORT=true` | BAJO | ✅ telegram_utils directo | Test message |
-| 6 | `USE_TELEGRAM_PORT=true` | MEDIO | ✅ EnterpriseBot directo | Command testing |
-| 7 | `USE_APP_LAYER=true` | **ALTO** | ✅ Múltiples fallbacks | Full E2E test 48h |
+| Paso | Flag | Riesgo | Rollback | Runbook | Validación |
+|------|------|--------|----------|---------|------------|
+| **1** | `USE_AI_PORT=true` | **BAJO** | ✅ 5min cooldown → legacy | N/A | 24h, Gemini→OpenAI failover |
+| 2 | `USE_VOICE_PORT=true` | BAJO | ✅ Legacy voice_controller | N/A | /voz después de AI estable |
+| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | ✅ Legacy services | [RUNBOOK](RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) | Sentiment health check |
+| 4 | `USE_EXECUTION_PORT=true` | MEDIO | ✅ ExecutionProtocol | [RUNBOOK](RUNBOOK_EXECUTION_PORT_ACTIVATION.md) | Order routing test |
+| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | ✅ AIRiskGuardian | [RUNBOOK](RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) | Circuit breaker test |
+| 6 | `USE_DERIVATIVES_PORT=true` | **ALTO** | ✅ DerivativesManager | [RUNBOOK](RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) | Paper position test |
+| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | ✅ PortfolioEngine | [RUNBOOK](RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) | Allocation health |
+| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | ✅ AutoOptimizer | [RUNBOOK](RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) | Weight update test |
+| 9 | `USE_CACHE_PORT=true` | BAJO | ✅ RedisCache directo | N/A | Health check Redis |
+| 10 | `USE_DATABASE_PORT=true` | MEDIO | ✅ DatabaseGateway | N/A | Query comparison |
+| 11 | `USE_TELEGRAM_PORT=true` | MEDIO | ✅ EnterpriseBot | N/A | Command testing |
+| 12 | `USE_APP_LAYER=true` | **ALTO** | ✅ Múltiples fallbacks | N/A | Full E2E test 48h |
 
 ### ¿Por qué AI Port primero?
 
