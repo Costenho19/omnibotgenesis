@@ -1,8 +1,14 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 16 de Diciembre 2025  
+**Fecha**: 17 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 37.5%
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
+
+> ⚠️ **REALIDAD vs DOCUMENTACIÓN (corregido 17 Dic 2025):**
+> - La documentación anterior decía "37.5% activación (3/8 ports activos)"
+> - La REALIDAD es **0% activación** - todos los feature flags están en `false`
+> - El sistema sigue usando 100% código legacy en Railway
+> - Los ports TradingPort, MarketDataPort, AIInferencePort tienen adapters pero **no están activos**
 
 ### Último Update (16 Dic 2025 - Session 3)
 
@@ -31,7 +37,7 @@ USE_AI_PORT=true → AIGatewayShim → AIModelsManager → Gemini/OpenAI/Anthrop
 Manager falla → Cooldown 5min → RoutingAIGateway (legacy) ✅
 ```
 
-**Tests:** 22/22 pasando (incluyendo degradation y cooldown scenarios)
+**Tests:** 31/31 pasando (incluyendo degradation, cooldown, y voice scenarios)
 
 ---
 
@@ -43,8 +49,9 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 |---------|--------|
 | Ports definidos | 8/8 ✅ |
 | Adapters implementados | 9/9 ✅ |
-| Ports activos en producción | 3/8 (37.5%) |
-| Feature flags pendientes | 5 |
+| Ports activos en producción | **0/8 (0%)** |
+| Feature flags pendientes | 8 (todos) |
+| Próximo a activar | `USE_AI_PORT=true` |
 
 ---
 
@@ -82,56 +89,60 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 ### Driven Ports (Salida)
 
-| Port | Adapter | Activo | Feature Flag |
-|------|---------|--------|--------------|
-| TradingPort | TradingAdapter, KrakenAdapter | ✅ | - |
-| MarketDataPort | KrakenAdapter | ✅ | - |
-| AIInferencePort | GeminiAdapter | ✅ | - |
-| AITextGatewayPort | AIGatewayShim | ⬜ | `USE_AI_PORT=false` |
-| AIVoicePort | VoiceServiceAdapter | ⬜ | `USE_VOICE_PORT=false` |
-| DatabasePort | DatabaseAdapter | ⬜ | `USE_DATABASE_PORT=false` |
-| CachePort | CacheAdapter | ⬜ | `USE_CACHE_PORT=false` |
-| NotificationPort | NotificationAdapter | ⬜ | `USE_NOTIFICATION_PORT=false` |
+| Port | Adapter | Listo | Activo | Feature Flag |
+|------|---------|-------|--------|--------------|
+| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ⬜ | `USE_TRADING_PORT=false` |
+| MarketDataPort | KrakenAdapter | ✅ | ⬜ | (incluido en TradingPort) |
+| AIInferencePort | GeminiAdapter | ✅ | ⬜ | (incluido en AI Port) |
+| **AITextGatewayPort** | AIGatewayShim | ✅ | ⬜ | `USE_AI_PORT=false` ← **PRÓXIMO** |
+| AIVoicePort | VoiceServiceAdapter | ✅ | ⬜ | `USE_VOICE_PORT=false` |
+| DatabasePort | DatabaseAdapter | ✅ | ⬜ | `USE_DATABASE_PORT=false` |
+| CachePort | CacheAdapter | ✅ | ⬜ | `USE_CACHE_PORT=false` |
+| NotificationPort | NotificationAdapter | ✅ | ⬜ | `USE_NOTIFICATION_PORT=false` |
 
 ### Driver Ports (Entrada)
 
-| Port | Adapter | Activo | Feature Flag |
-|------|---------|--------|--------------|
-| TelegramPort | TelegramBotAdapter | ⬜ | `USE_TELEGRAM_PORT=false` |
-| RestApiPort | Flask Blueprints | ⬜ | `USE_APP_LAYER=false` |
+| Port | Adapter | Listo | Activo | Feature Flag |
+|------|---------|-------|--------|--------------|
+| TelegramPort | TelegramBotAdapter | ✅ | ⬜ | `USE_TELEGRAM_PORT=false` |
+| RestApiPort | Flask Blueprints | ✅ | ⬜ | `USE_APP_LAYER=false` |
 
 ---
 
 ## Feature Flags
 
+**Estado actual (17 Dic 2025): TODOS EN FALSE**
+
 ```bash
-# Activos
-USE_UNIFIED_GATEWAY=true
-
-# Listos para activar (16 Dic 2025)
-USE_CACHE_PORT=false      # CacheAdapter - Tests pasando
-USE_DATABASE_PORT=false   # DatabaseAdapter - Tests pasando
-USE_AI_PORT=false         # AIGatewayShim - Health OK
-USE_VOICE_PORT=false      # VoiceServiceAdapter - TTS disponible
-
-# Pendientes de validación
+# Todos desactivados - Sistema usa 100% legacy
+USE_AI_PORT=false         # ← PRÓXIMO A ACTIVAR
+USE_VOICE_PORT=false      # Depende de AI Port
+USE_CACHE_PORT=false      
+USE_DATABASE_PORT=false   
 USE_TRADING_PORT=false
 USE_NOTIFICATION_PORT=false
 USE_TELEGRAM_PORT=false
-USE_APP_LAYER=false
+USE_APP_LAYER=false       # Activa toda la capa de aplicación
 ```
 
-### Plan de Activación
+### Plan de Activación (Priorizado)
 
-| Paso | Flag | Riesgo | Validación |
-|------|------|--------|------------|
-| 1 | `USE_CACHE_PORT=true` | BAJO | Health check Redis ✅ |
-| 2 | `USE_DATABASE_PORT=true` | MEDIO | Query comparison ✅ |
-| 3 | `USE_AI_PORT=true` | BAJO | AIGatewayShim health ✅ |
-| 4 | `USE_VOICE_PORT=true` | BAJO | TTS/STT health ✅ |
-| 5 | `USE_NOTIFICATION_PORT=true` | BAJO | Test message |
-| 6 | `USE_TELEGRAM_PORT=true` | MEDIO | Command testing |
-| 7 | `USE_APP_LAYER=true` | ALTO | Full E2E test |
+| Paso | Flag | Riesgo | Rollback | Validación Requerida |
+|------|------|--------|----------|----------------------|
+| **1** | `USE_AI_PORT=true` | **BAJO** | ✅ 5min cooldown → legacy | Monitor 24h, verificar Gemini→OpenAI failover |
+| 2 | `USE_VOICE_PORT=true` | BAJO | ✅ Legacy voice_controller | Probar /voz después de AI estable |
+| 3 | `USE_CACHE_PORT=true` | BAJO | ✅ RedisCache directo | Health check Redis |
+| 4 | `USE_DATABASE_PORT=true` | MEDIO | ✅ DatabaseGateway directo | Query comparison |
+| 5 | `USE_NOTIFICATION_PORT=true` | BAJO | ✅ telegram_utils directo | Test message |
+| 6 | `USE_TELEGRAM_PORT=true` | MEDIO | ✅ EnterpriseBot directo | Command testing |
+| 7 | `USE_APP_LAYER=true` | **ALTO** | ✅ Múltiples fallbacks | Full E2E test 48h |
+
+### ¿Por qué AI Port primero?
+
+1. **Tiene fallback robusto**: Si falla, cooldown 5min → usa RoutingAIGateway legacy
+2. **No tiene dependientes**: Puede fallar sin afectar otros servicios
+3. **Voice depende de AI**: Activar AI primero prepara el camino
+4. **Logging completo**: El shim registra todos los errores con categorización
 
 ---
 
@@ -167,4 +178,4 @@ USE_APP_LAYER=false
 
 ---
 
-*Última actualización: 16 de Diciembre 2025*
+*Última actualización: 17 de Diciembre 2025*
