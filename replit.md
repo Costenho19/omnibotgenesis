@@ -60,6 +60,8 @@ Refactored with SOLID principles and dependency injection, integrating interface
 - Previene falsos positivos donde preguntas complejas (ej: "resumen" → "resume") disparaban comandos
 - Flujo AI-first: Todo texto libre va a la IA, solo comandos explícitos (`/pause`, `/resume`, etc) ejecutan acciones
 - Cumple con TelegramPort protocol: `handle_message()` para texto → IA, `handle_command()` para `/comandos`
+- IntentClassificationAdapter añadido al DI Container (Phase 6) con soporte para legacy NLP shim
+- Componentes creados: IntentClassificationPort, IntentResolutionService, ConfirmActionUseCase (pendientes de integración completa)
 
 **Error Handling System (Dec 16, 2025):**
 - `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)

@@ -32,6 +32,10 @@ from src.omnix.infrastructure.adapters.risk_control_adapter import RiskControlAd
 from src.omnix.infrastructure.adapters.derivatives_adapter import DerivativesAdapter
 from src.omnix.infrastructure.adapters.portfolio_adapter import PortfolioAdapter
 from src.omnix.infrastructure.adapters.optimization_adapter import OptimizationAdapter
+from src.omnix.infrastructure.adapters.intent_classification_adapter import (
+    IntentClassificationAdapter,
+    NLPCommandShim,
+)
 
 __all__ = [
     "TradingServiceAdapter",
@@ -49,4 +53,6 @@ __all__ = [
     "DerivativesAdapter",
     "PortfolioAdapter",
     "OptimizationAdapter",
+    "IntentClassificationAdapter",
+    "NLPCommandShim",
 ]
