@@ -55,6 +55,12 @@ Refactored with SOLID principles and dependency injection, integrating interface
 - Uses `asyncio.to_thread` wrapper around legacy `send_telegram_response_with_voice` to prevent event loop blocking
 - Voice generated for AI responses > 20 chars when `VOICE_SERVICE_AVAILABLE=true`
 
+**AI-First Command Detection (Dec 18, 2025):**
+- FIX CRÍTICO: NLP command detection ahora solo procesa mensajes que empiezan con `/`
+- Previene falsos positivos donde preguntas complejas (ej: "resumen" → "resume") disparaban comandos
+- Flujo AI-first: Todo texto libre va a la IA, solo comandos explícitos (`/pause`, `/resume`, etc) ejecutan acciones
+- Cumple con TelegramPort protocol: `handle_message()` para texto → IA, `handle_command()` para `/comandos`
+
 **Error Handling System (Dec 16, 2025):**
 - `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)
 - SDK-specific error detection for Gemini, OpenAI, Anthropic exceptions

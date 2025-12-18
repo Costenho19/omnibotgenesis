@@ -3004,14 +3004,18 @@ Ejemplo: /risk_events 48
             else:
                 logger.warning(f"⚠️ db_manager not available - user {user_id} NOT registered")
             
-            # ⚙️ USER SETTINGS: Procesamiento de Lenguaje Natural para configuración
-            # Detectar peticiones de configuración en lenguaje natural ANTES de enviar a IA
-            if self.user_settings_service and USER_SETTINGS_AVAILABLE:
+            # ⚙️ USER SETTINGS: Procesamiento de comandos de configuración
+            # FIX Dec 18, 2025: AI-FIRST - Solo procesar NLP config si mensaje es comando explícito
+            # Los comandos SIEMPRE empiezan con "/" - no procesar texto libre como comandos
+            # Esto previene falsos positivos como "resumen" → "resume" en preguntas complejas
+            is_explicit_command = user_message.strip().startswith('/')
+            
+            if is_explicit_command and self.user_settings_service and USER_SETTINGS_AVAILABLE:
                 nlp_result = self.user_settings_service.process_natural_language_command(user_id, user_message)
                 
                 if nlp_result:
                     action, params = nlp_result
-                    logger.info(f"⚙️ NLP detectó acción de configuración: {action} con params: {params}")
+                    logger.info(f"⚙️ COMANDO EXPLÍCITO detectado: {action} con params: {params}")
                     
                     if action == 'update_risk':
                         suggested = params.get('suggested_profile')
