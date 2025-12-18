@@ -2812,28 +2812,35 @@ class DatabaseServiceEnterprise:
             ''')
             has_last_activity = cursor.fetchone() is not None
             
+            # FIX Dec 18, 2025: Convertir user_id a telegram_id (bigint) si es numérico
+            telegram_id_safe = None
+            if user_id and user_id.isdigit():
+                telegram_id_safe = int(user_id)
+            
             if has_last_activity:
-                # UPSERT con last_activity
+                # UPSERT con last_activity y telegram_id
                 cursor.execute('''
-                    INSERT INTO users (user_id, username, first_name, language_code, created_at, last_activity)
-                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    INSERT INTO users (user_id, telegram_id, username, first_name, language_code, created_at, last_activity)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ON CONFLICT (user_id) DO UPDATE SET
                         last_activity = CURRENT_TIMESTAMP,
+                        telegram_id = COALESCE(EXCLUDED.telegram_id, users.telegram_id),
                         username = COALESCE(EXCLUDED.username, users.username),
                         first_name = COALESCE(EXCLUDED.first_name, users.first_name),
                         language_code = COALESCE(EXCLUDED.language_code, users.language_code)
-                ''', (user_id, username_safe, first_name_safe, language_code))
+                ''', (user_id, telegram_id_safe, username_safe, first_name_safe, language_code))
             else:
-                # UPSERT SIN last_activity (tabla legacy)
+                # UPSERT SIN last_activity (tabla legacy) pero con telegram_id
                 logger.warning("⚠️ Columna last_activity no existe - usando UPSERT legacy")
                 cursor.execute('''
-                    INSERT INTO users (user_id, username, first_name, language_code, created_at)
-                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    INSERT INTO users (user_id, telegram_id, username, first_name, language_code, created_at)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                     ON CONFLICT (user_id) DO UPDATE SET
+                        telegram_id = COALESCE(EXCLUDED.telegram_id, users.telegram_id),
                         username = COALESCE(EXCLUDED.username, users.username),
                         first_name = COALESCE(EXCLUDED.first_name, users.first_name),
                         language_code = COALESCE(EXCLUDED.language_code, users.language_code)
-                ''', (user_id, username_safe, first_name_safe, language_code))
+                ''', (user_id, telegram_id_safe, username_safe, first_name_safe, language_code))
             
             conn.commit()
             cursor.close()
