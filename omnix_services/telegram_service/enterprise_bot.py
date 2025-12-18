@@ -4613,9 +4613,10 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                     try:
                         if hasattr(self.ai, 'generate_response'):
                             import asyncio
+                            effective_user_name = self._get_user_name_from_db(str(effective_user_id)) or "Usuario"
                             result = self.ai.generate_response(
                                 user_message=video_context,
-                                user_name="Harold",
+                                user_name=effective_user_name,
                                 chat_id=str(chat_id),
                                 user_id=str(effective_user_id),
                                 trading_system=self.trading
@@ -4866,9 +4867,11 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                         logger.warning(f"⚠️ Web Search error (continuando sin búsqueda): {ws_error}")
                                 
                                 # Generar prompt conversacional natural CON MEMORIA + QUANTUM PHYSICS VALIDATOR
+                                # FIX Dec 18, 2025: Obtener nombre real del usuario
+                                dynamic_user_name = self._get_user_name_from_db(str(effective_user_id)) or "Usuario"
                                 gemini_prompt = prompts_manager.build_system_prompt(
                                     intent=intent,
-                                    user_name='Harold',
+                                    user_name=dynamic_user_name,
                                     additional_context=additional_context,
                                     conversation_history=conversation_hist,
                                     user_message=text  # Pass message for quantum physics detection
@@ -4884,11 +4887,16 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                     gemini_prompt += "\n\nIMPORTANTE: Usa la información de internet mostrada arriba para responder con datos actualizados y verificados."
                                 
                                 # Agregar pregunta del usuario
-                                gemini_prompt += f"\n\nPregunta de Harold: {text}\n\nResponde de forma natural y conversacional:"
+                                gemini_prompt += f"\n\nPregunta de {dynamic_user_name}: {text}\n\nResponde de forma natural y conversacional:"
                                 
                             except Exception as prompt_error:
                                 logger.warning(f"⚠️ Error usando PromptsContextManager: {prompt_error}")
                                 # Fallback simple conversacional
+                                # FIX Dec 18, 2025: NO re-llamar a DB, usar fallback directo
+                                try:
+                                    _ = dynamic_user_name
+                                except NameError:
+                                    dynamic_user_name = "Usuario"  # Default sin DB lookup
                                 web_context_fallback = web_search_context if web_search_context else ""
                                 gemini_prompt = f"""Soy OMNIX {VERSION_BANNER}, tu asistente de trading institucional.
 
@@ -4905,7 +4913,7 @@ ESTILO:
 - Usa emojis apropiados: 🤖 🚀 📊 ₿ 💰
 - SIEMPRE usa los datos reales mostrados arriba - NUNCA inventes
 
-Harold pregunta: {text}"""
+{dynamic_user_name} pregunta: {text}"""
 
                             logger.info(f"🚀 LLAMANDO GEMINI 2.0 DIRECTO con prompt de {len(gemini_prompt)} caracteres (SDK: {gemini_sdk_version})")
                             
@@ -5303,7 +5311,13 @@ Harold pregunta: {text}"""
         except Exception as e:
             logger.error(f"❌ Error _send_dual_response: {e}")
             try:
-                await update.message.reply_text(response_text[:4000] if len(response_text) > 4000 else response_text)
+                # FIX Dec 18, 2025: Enviar en partes si es muy largo
+                if len(response_text) > 4000:
+                    parts = self.split_text_smart(response_text, 4000)
+                    for part in parts:
+                        await update.message.reply_text(part)
+                else:
+                    await update.message.reply_text(response_text)
             except:
                 pass
             return False
@@ -5324,21 +5338,56 @@ Harold pregunta: {text}"""
         """HAROLD FIX: Dividir mensajes largos inteligentemente - AHORA USA send_telegram_text_safe"""
         return self.send_telegram_text_safe(chat_id, text, parse_mode='Markdown')
 
-    def generate_smart_response(self, text):
-        """FUNCIÓN REDIRIGIDA - USA SUPERINTELIGENCIA PARA HAROLD"""
+    def generate_smart_response(self, text, user_name=None, chat_id=None, user_id=None):
+        """FIX Dec 18, 2025: Ahora soporta multi-usuario con parámetros dinámicos"""
         try:
-            logger.info(f"🔄 Redirigiendo a superinteligencia para Harold...")
-            # FIX Nov 29, 2025: Usar parámetros nombrados para memoria
+            effective_user_id = user_id or str(settings.TELEGRAM_ADMIN_ID)
+            effective_chat_id = chat_id or str(settings.TELEGRAM_ADMIN_ID)
+            effective_user_name = user_name or self._get_user_name_from_db(effective_user_id) or "Usuario"
+            
+            logger.info(f"🔄 generate_smart_response para {effective_user_name} (user_id={effective_user_id})")
             return self.ai.generate_response(
                 user_message=text,
-                user_name="Harold",
-                chat_id=str(settings.TELEGRAM_ADMIN_ID),
-                user_id=str(settings.TELEGRAM_ADMIN_ID),
+                user_name=effective_user_name,
+                chat_id=effective_chat_id,
+                user_id=effective_user_id,
                 trading_system=self.trading
             )
         except Exception as e:
             logger.error(f"❌ Error generate_smart_response: {e}")
             return f"🤖 Sistema procesando: '{text}'\n\n💰 Balance real verificado con Kraken\n✅ IA superinteligente operativa"
+    
+    def _get_user_name_from_db(self, user_id: str) -> str:
+        """Obtener nombre del usuario desde la base de datos.
+        
+        FIX Dec 18, 2025: NUNCA lanza excepciones - siempre retorna None en caso de error.
+        Esto garantiza que el bot siga funcionando aunque la DB no esté disponible.
+        """
+        try:
+            if not self.db_manager:
+                return None
+            if not hasattr(self.db_manager, '_get_connection'):
+                return None
+            conn = self.db_manager._get_connection()
+            if not conn:
+                return None
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT first_name FROM users WHERE user_id = %s", (str(user_id),))
+                result = cursor.fetchone()
+                cursor.close()
+                conn.close()
+                if result and result[0]:
+                    return result[0]
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                return None
+        except Exception as e:
+            logger.debug(f"⚠️ Could not get user name from DB: {e}")
+        return None
 
     # ============================================================================
     # 📊 PAPER TRADING DIRECT HANDLERS - FIX Nov 30, 2025
