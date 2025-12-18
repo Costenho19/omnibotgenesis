@@ -458,29 +458,62 @@ class TelegramBotAdapter:
         EnterpriseTelegramBot.start_polling() or Application.run_polling().
         
         This method blocks until the bot is stopped.
+        Handles both sync and async legacy implementations with proper lifecycle.
         """
         if not self._is_initialized or self._bot is None:
             logger.error("TelegramBotAdapter: Cannot run_polling - bot not initialized")
             return
         
+        if self._is_running:
+            logger.warning("TelegramBotAdapter: run_polling already active, ignoring duplicate call")
+            return
+        
+        app = None
         try:
             if hasattr(self._bot, 'start_polling'):
+                start_polling = self._bot.start_polling
                 logger.info("TelegramBotAdapter: Starting polling via legacy start_polling()")
-                await self._bot.start_polling()
+                self._is_running = True
+                
+                if asyncio.iscoroutinefunction(start_polling):
+                    await start_polling()
+                else:
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(None, start_polling)
+                    
             elif hasattr(self._bot, 'application') and self._bot.application:
                 app = self._bot.application
                 logger.info("TelegramBotAdapter: Starting polling via Application.updater")
+                
+                if not app.running:
+                    await app.initialize()
+                    await app.start()
+                
                 if hasattr(app, 'updater') and app.updater:
                     await app.updater.start_polling()
                     self._is_running = True
+                    
                     while self._is_running:
                         await asyncio.sleep(1)
             else:
                 logger.error("TelegramBotAdapter: No polling method available")
+                return
+                
         except Exception as e:
             logger.error(f"TelegramBotAdapter: run_polling error: {e}")
             self._track_error()
             raise
+        finally:
+            self._is_running = False
+            if app is not None:
+                try:
+                    if hasattr(app, 'updater') and app.updater and app.updater.running:
+                        await app.updater.stop()
+                    if app.running:
+                        await app.stop()
+                    await app.shutdown()
+                except Exception as cleanup_error:
+                    logger.warning(f"TelegramBotAdapter: cleanup error: {cleanup_error}")
     
     def health_check(self) -> Dict[str, Any]:
         """

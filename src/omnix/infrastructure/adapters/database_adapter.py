@@ -56,12 +56,25 @@ class DatabaseAdapter:
         Legacy compatibility property.
         
         Some legacy services access database_service._pool directly.
-        This property delegates to get_pool() for backward compatibility.
+        This property delegates to the gateway's current pool without
+        mutating telemetry counters.
+        
+        Unlike get_pool(), this property:
+        - Does NOT increment request_count
+        - Does NOT log errors
+        - Always returns the gateway's current pool (not cached)
         
         Returns:
             Connection pool if available, None otherwise
         """
-        return self.get_pool()
+        gateway = self._get_database_gateway()
+        if gateway is None:
+            return None
+        
+        try:
+            return gateway.get_pool()
+        except Exception:
+            return None
     
     def _get_database_gateway(self) -> Optional[Any]:
         """Lazy-load DatabaseGateway singleton."""
