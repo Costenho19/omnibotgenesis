@@ -49,6 +49,12 @@ The system employs a hexagonal architecture, with completed phases including Boo
 ### AI Service Architecture
 Refactored with SOLID principles and dependency injection, integrating interfaces, providers (Gemini, OpenAI, Anthropic), a video learning module, and a DI container.
 
+**Voice Service / Dual Response (Dec 18, 2025):**
+- VoiceServiceAdapter integrated into DI Container with `USE_VOICE_PORT` flag
+- All users receive dual response (text + audio) when voice service is available
+- Uses `asyncio.to_thread` wrapper around legacy `send_telegram_response_with_voice` to prevent event loop blocking
+- Voice generated for AI responses > 20 chars when `VOICE_SERVICE_AVAILABLE=true`
+
 **Error Handling System (Dec 16, 2025):**
 - `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)
 - SDK-specific error detection for Gemini, OpenAI, Anthropic exceptions
