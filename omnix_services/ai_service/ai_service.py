@@ -320,9 +320,7 @@ class ConversationalAIService:
 🔧 **Acciones recomendadas:**
 1. Verificar conexión a internet
 2. Intentar de nuevo en unos segundos
-3. Si persiste, contactar soporte técnico
-
-💎 OMNIX V5.1 Enterprise"""
+3. Si persiste, contactar soporte técnico"""
     
     def clear_history(self, chat_id: int):
         """Clear conversation history for chat_id from Redis"""

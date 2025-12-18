@@ -194,35 +194,12 @@ class VisualStylesManager:
             price_display = f"${current_price:,.2f}" if current_price > 0 else "$0.00"
             
             if already_has_header:
-                # Only add footer, skip header to avoid duplication
+                # Only return processed text without footer duplication
                 logger.debug("Header already detected in AI response, skipping header addition")
-                final_response = f"""{processed_text}
-
-{self.premium_separators['subsection']}
-🤖💎 OMNIX V5.1 • 🚀 • ENTERPRISE ⚡
-
-📊 Live: {price_display} USD • 💹 Kraken • 🧠 Gemini AI
-🚀 Trading 24/7 • ⏰ {current_time} • 🌐 Global
-
-🔵 PO 🔴 YT 🔵 TG • 💚 37 🔥 1 👁️ 1232"""
+                final_response = processed_text
             else:
-                # Add full header + footer
-                selected_emojis = self.emoji_sets.get(intent, self.emoji_sets['crypto'])
-                header_emoji = selected_emojis[0] if selected_emojis else '🤖'
-                color_header = self.color_headers.get(intent, self.color_headers['general'])
-                
-                final_response = f"""{header_emoji} {color_header} {header_emoji}
-{self.premium_separators['section']}
-
-{processed_text}
-
-{self.premium_separators['subsection']}
-🤖💎 OMNIX V5.1 • 🚀 • ENTERPRISE ⚡
-
-📊 Live: {price_display} USD • 💹 Kraken • 🧠 Gemini AI
-🚀 Trading 24/7 • ⏰ {current_time} • 🌐 Global
-
-🔵 PO 🔴 YT 🔵 TG • 💚 37 🔥 1 👁️ 1232"""
+                # Return processed text only (clean, professional)
+                final_response = processed_text
             
             return final_response
             
