@@ -2,20 +2,20 @@
 
 **Fecha**: 18 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 17.6% (3/17 ports)
 
 ---
 
 ## Resumen Ejecutivo
 
-La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omnix/`. El sistema legacy sigue operando 24/7 en Railway. **Ningún port está activo en producción** - todos los feature flags están en `false`.
+La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omnix/`. El sistema opera en Railway con **3 ports V7 activos** (AI, Gateway, Voice) y el resto usando legacy.
 
 | Métrica | Valor |
 |---------|-------|
 | Driven Ports | **15** |
 | Driver Ports | **2** |
 | Adapters | **19** |
-| Ports activos en producción | **0 (0%)** |
+| Ports activos en producción | **3 (17.6%)** |
 | Tests pasando | **120/120** |
 
 ---
@@ -27,8 +27,8 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | Port | Adapter | Feature Flag | Runbook |
 |------|---------|--------------|---------|
 | ai_inference_port | gemini_adapter | (incluido en AI) | - |
-| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` | - |
-| ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` | - |
+| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=true` ✅ | - |
+| ai_voice_port | voice_adapter | `USE_VOICE_PORT=true` ✅ | - |
 | cache_port | cache_adapter | `USE_CACHE_PORT=false` | - |
 | database_port | database_adapter | `USE_DATABASE_PORT=false` | - |
 | derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` | [Runbook](../operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) |
@@ -77,25 +77,68 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 ---
 
-## Feature Flags (Todos en FALSE)
+## Feature Flags - Lista Completa Variables Strangler Fig
+
+**Estado actual en Railway (18 Dic 2025)**
+
+### 🟢 Ya activas (3):
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_AI_PORT=true` | Usa AIGatewayShim en lugar del legacy AI service. Tiene fallback automático con cooldown de 5 min si falla |
+| `USE_UNIFIED_GATEWAY=true` | Enruta todas las llamadas AI por un gateway único (Gemini → OpenAI → Anthropic) |
+| `USE_VOICE_PORT=true` | Usa VoiceServiceAdapter para transcripción de audio (Whisper) y síntesis (ElevenLabs) |
+
+### 🔴 Pendientes de activar (12):
+
+**Infraestructura:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_CACHE_PORT=true` | Usa CacheAdapter (Redis) en lugar de acceso directo. Maneja TTL, invalidación, health checks |
+| `USE_DATABASE_PORT=true` | Usa DatabaseAdapter (PostgreSQL) con connection pooling, retry automático, transacciones |
+| `USE_NOTIFICATION_PORT=true` | Centraliza notificaciones (Telegram, email futuro) con cola y rate limiting |
+| `USE_TELEGRAM_PORT=true` | Usa TelegramAdapter para envío/recepción de mensajes con retry y formateo |
+| `USE_ONCHAIN_PORT=true` | Usa OnChainDataAdapter para datos blockchain (whale alerts, liquidaciones, flujos) |
+
+**Trading Core:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_MARKET_INTEL_PORT=true` | Usa MarketIntelAdapter para datos de mercado unificados (Kraken, Alpaca, CoinGecko) |
+| `USE_EXECUTION_PORT=true` | Usa ExecutionAdapter para órdenes. **Crítico**: controla ejecución real de trades |
+| `USE_RISK_CONTROL_PORT=true` | Usa RiskControlAdapter para validación de posiciones, límites, stop-loss automático |
+| `USE_DERIVATIVES_PORT=true` | Usa DerivativesAdapter para opciones y futuros (Greeks, pricing, hedging) |
+| `USE_PORTFOLIO_PORT=true` | Usa PortfolioAdapter para gestión de cartera institucional, rebalanceo, allocations |
+| `USE_OPTIMIZATION_PORT=true` | Usa OptimizationAdapter para calibración adaptativa de parámetros (CAES, pesos) |
+
+**Capa de Aplicación:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_APP_LAYER=true` | Activa los 5 Use Cases V7 completos (AnalyzeMarket, ExecuteTrade, etc.) en lugar del flujo legacy |
+
+### 📋 Variables para copiar a Railway:
 
 ```bash
-# Estado actual en Railway (18 Dic 2025)
-USE_AI_PORT=false              # Próximo a activar
-USE_VOICE_PORT=false
-USE_CACHE_PORT=false
-USE_DATABASE_PORT=false
-USE_TRADING_PORT=false
-USE_NOTIFICATION_PORT=false
-USE_TELEGRAM_PORT=false
-USE_ONCHAIN_PORT=false
-USE_MARKET_INTEL_PORT=false
-USE_EXECUTION_PORT=false
-USE_RISK_CONTROL_PORT=false
-USE_DERIVATIVES_PORT=false
-USE_PORTFOLIO_PORT=false
-USE_OPTIMIZATION_PORT=false
-USE_APP_LAYER=false
+# Ya activas
+USE_AI_PORT=true
+USE_UNIFIED_GATEWAY=true
+USE_VOICE_PORT=true
+
+# Pendientes de activar
+USE_CACHE_PORT=true
+USE_DATABASE_PORT=true
+USE_NOTIFICATION_PORT=true
+USE_TELEGRAM_PORT=true
+USE_ONCHAIN_PORT=true
+USE_MARKET_INTEL_PORT=true
+USE_EXECUTION_PORT=true
+USE_RISK_CONTROL_PORT=true
+USE_DERIVATIVES_PORT=true
+USE_PORTFOLIO_PORT=true
+USE_OPTIMIZATION_PORT=true
+USE_APP_LAYER=true
 ```
 
 ---

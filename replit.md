@@ -86,7 +86,7 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ### Hexagonal Architecture Status (Dec 18, 2025)
 
-**Estructura: 100% COMPLETA | Activación: 0%**
+**Estructura: 100% COMPLETA | Activación: 17.6% (3/17 ports)**
 
 | Métrica | Valor |
 |---------|-------|
@@ -95,17 +95,19 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 | **Total Ports** | **17** |
 | Adapters | **19** |
 | Tests pasando | 120/120 |
-| Ports activos | 0 (0%) |
+| Ports activos | **3 (17.6%)** |
 
-**Session 5 Update (18 Dic 2025) - Documentation Cleanup:**
-- Documentación auditada y actualizada
-- Audit obsoleto movido a `docs/history/2025-12/`
-- Conteos corregidos en todos los documentos
+**🟢 Variables Activas en Railway:**
+| Variable | Función |
+|----------|---------|
+| `USE_AI_PORT=true` | AIGatewayShim con fallback 5min cooldown |
+| `USE_UNIFIED_GATEWAY=true` | Gateway unificado Gemini→OpenAI→Anthropic |
+| `USE_VOICE_PORT=true` | VoiceServiceAdapter (Whisper/ElevenLabs) |
 
-**Session 4 Update (17 Dic 2025) - Phase 5 Complete:**
-- 6 nuevos driven ports: MarketIntel, Execution, RiskControl, Derivatives, Portfolio, Optimization
-- 6 nuevos adapters con runbooks operacionales
-- Tests: 120/120 pasando
+**🔴 Variables Pendientes (12):**
+`USE_CACHE_PORT`, `USE_DATABASE_PORT`, `USE_NOTIFICATION_PORT`, `USE_TELEGRAM_PORT`, `USE_ONCHAIN_PORT`, `USE_MARKET_INTEL_PORT`, `USE_EXECUTION_PORT`, `USE_RISK_CONTROL_PORT`, `USE_DERIVATIVES_PORT`, `USE_PORTFOLIO_PORT`, `USE_OPTIMIZATION_PORT`, `USE_APP_LAYER`
+
+Ver `docs/MIGRATION_STATUS.md` para descripción completa de cada variable.
 
 ### Patrón de Migración V7: Shim como Puente Puro
 
@@ -146,12 +148,6 @@ def _get_manager(self):
 3. Implementar cooldown con `_reset_*_shim()` y `_is_*_in_cooldown()`
 4. Tests: fallo inicial, degradación, cooldown
 
-**Para activar V7 en Railway:**
-```bash
-USE_AI_PORT=true     # Activa AIGatewayShim
-USE_VOICE_PORT=true  # Activa VoiceServiceAdapter
-```
-
 | Componente | Estado |
 |------------|--------|
 | 17/17 Ports definidos | ✅ Completo |
@@ -160,11 +156,8 @@ USE_VOICE_PORT=true  # Activa VoiceServiceAdapter
 | Application Layer (5 Use Cases) | ✅ Completo |
 | DI Container | ✅ 535+ líneas |
 
-**Ports Activos en Producción:**
-- Ninguno (0/17) - Todos los feature flags en false
-
 **Próximo a Activar:**
-- `USE_AI_PORT=true` (riesgo bajo, tiene fallback con cooldown 5min)
+- `USE_CACHE_PORT=true` (riesgo bajo)
 
 Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
 

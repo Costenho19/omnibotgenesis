@@ -1,14 +1,13 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 17 de Diciembre 2025  
+**Fecha**: 18 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 17.6% (3/17 ports)
 
-> ⚠️ **REALIDAD vs DOCUMENTACIÓN (corregido 17 Dic 2025):**
-> - La documentación anterior decía "37.5% activación (3/8 ports activos)"
-> - La REALIDAD es **0% activación** - todos los feature flags están en `false`
-> - El sistema sigue usando 100% código legacy en Railway
-> - Los ports TradingPort, MarketDataPort, AIInferencePort tienen adapters pero **no están activos**
+> ✅ **UPDATE 18 Dic 2025:**
+> - 3 ports activos en Railway: `USE_AI_PORT`, `USE_UNIFIED_GATEWAY`, `USE_VOICE_PORT`
+> - 12 variables pendientes de activar (11 ports + USE_APP_LAYER)
+> - Sistema usa mezcla V7 (AI/Voice) + Legacy (resto)
 
 ### Último Update (17 Dic 2025 - Session 5)
 
@@ -72,9 +71,9 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | Driven Ports definidos | **15 ✅** |
 | Driver Ports definidos | **2 ✅** |
 | Adapters implementados | **19 ✅** |
-| Ports activos en producción | **0 (0%)** |
-| Feature flags pendientes | 15 (todos) |
-| Próximo a activar | `USE_AI_PORT=true` |
+| Ports activos en producción | **3 (17.6%)** |
+| Feature flags pendientes | 12 |
+| Próximo a activar | `USE_CACHE_PORT=true` |
 | Tests nuevos ports | **120/120 ✅** |
 
 ---
@@ -125,8 +124,8 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | TradingPort | TradingAdapter, KrakenAdapter | ✅ | ⬜ | `USE_TRADING_PORT=false` |
 | MarketDataPort | KrakenAdapter | ✅ | ⬜ | (incluido en TradingPort) |
 | AIInferencePort | GeminiAdapter | ✅ | ⬜ | (incluido en AI Port) |
-| **AITextGatewayPort** | AIGatewayShim | ✅ | ⬜ | `USE_AI_PORT=false` ← **PRÓXIMO** |
-| AIVoicePort | VoiceServiceAdapter | ✅ | ⬜ | `USE_VOICE_PORT=false` |
+| **AITextGatewayPort** | AIGatewayShim | ✅ | ✅ | `USE_AI_PORT=true` |
+| AIVoicePort | VoiceServiceAdapter | ✅ | ✅ | `USE_VOICE_PORT=true` |
 | DatabasePort | DatabaseAdapter | ✅ | ⬜ | `USE_DATABASE_PORT=false` |
 | CachePort | CacheAdapter | ✅ | ⬜ | `USE_CACHE_PORT=false` |
 | NotificationPort | NotificationAdapter | ✅ | ⬜ | `USE_NOTIFICATION_PORT=false` |
@@ -147,27 +146,68 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 ---
 
-## Feature Flags
+## Feature Flags - Lista Completa Variables Strangler Fig
 
-**Estado actual (17 Dic 2025): TODOS EN FALSE**
+**Estado actual (18 Dic 2025)**
+
+### 🟢 Ya activas en Railway (3):
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_AI_PORT=true` | Usa AIGatewayShim en lugar del legacy AI service. Tiene fallback automático con cooldown de 5 min si falla |
+| `USE_UNIFIED_GATEWAY=true` | Enruta todas las llamadas AI por un gateway único (Gemini → OpenAI → Anthropic) |
+| `USE_VOICE_PORT=true` | Usa VoiceServiceAdapter para transcripción de audio (Whisper) y síntesis (ElevenLabs) |
+
+### 🔴 Pendientes de activar (12):
+
+**Infraestructura:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_CACHE_PORT=true` | Usa CacheAdapter (Redis) en lugar de acceso directo. Maneja TTL, invalidación, health checks |
+| `USE_DATABASE_PORT=true` | Usa DatabaseAdapter (PostgreSQL) con connection pooling, retry automático, transacciones |
+| `USE_NOTIFICATION_PORT=true` | Centraliza notificaciones (Telegram, email futuro) con cola y rate limiting |
+| `USE_TELEGRAM_PORT=true` | Usa TelegramAdapter para envío/recepción de mensajes con retry y formateo |
+| `USE_ONCHAIN_PORT=true` | Usa OnChainDataAdapter para datos blockchain (whale alerts, liquidaciones, flujos) |
+
+**Trading Core:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_MARKET_INTEL_PORT=true` | Usa MarketIntelAdapter para datos de mercado unificados (Kraken, Alpaca, CoinGecko) |
+| `USE_EXECUTION_PORT=true` | Usa ExecutionAdapter para órdenes. **Crítico**: controla ejecución real de trades |
+| `USE_RISK_CONTROL_PORT=true` | Usa RiskControlAdapter para validación de posiciones, límites, stop-loss automático |
+| `USE_DERIVATIVES_PORT=true` | Usa DerivativesAdapter para opciones y futuros (Greeks, pricing, hedging) |
+| `USE_PORTFOLIO_PORT=true` | Usa PortfolioAdapter para gestión de cartera institucional, rebalanceo, allocations |
+| `USE_OPTIMIZATION_PORT=true` | Usa OptimizationAdapter para calibración adaptativa de parámetros (CAES, pesos) |
+
+**Capa de Aplicación:**
+
+| Variable | Qué hace |
+|----------|----------|
+| `USE_APP_LAYER=true` | Activa los 5 Use Cases V7 completos (AnalyzeMarket, ExecuteTrade, etc.) en lugar del flujo legacy |
+
+### 📋 Variables para copiar a Railway:
 
 ```bash
-# Todos desactivados - Sistema usa 100% legacy
-USE_AI_PORT=false         # ← PRÓXIMO A ACTIVAR
-USE_VOICE_PORT=false      # Depende de AI Port
-USE_CACHE_PORT=false      
-USE_DATABASE_PORT=false   
-USE_TRADING_PORT=false
-USE_NOTIFICATION_PORT=false
-USE_TELEGRAM_PORT=false
-USE_ONCHAIN_PORT=false    # On-chain blockchain data
-USE_MARKET_INTEL_PORT=false    # Phase 5A - Market intelligence
-USE_EXECUTION_PORT=false       # Phase 5A - Order execution
-USE_RISK_CONTROL_PORT=false    # Phase 5A - Risk management
-USE_DERIVATIVES_PORT=false     # Phase 5B - Derivatives trading
-USE_PORTFOLIO_PORT=false       # Phase 5C - Portfolio management
-USE_OPTIMIZATION_PORT=false    # Phase 5C - Parameter optimization
-USE_APP_LAYER=false       # Activa toda la capa de aplicación
+# Ya activas
+USE_AI_PORT=true
+USE_UNIFIED_GATEWAY=true
+USE_VOICE_PORT=true
+
+# Pendientes de activar (en orden recomendado)
+USE_CACHE_PORT=true
+USE_DATABASE_PORT=true
+USE_NOTIFICATION_PORT=true
+USE_TELEGRAM_PORT=true
+USE_ONCHAIN_PORT=true
+USE_MARKET_INTEL_PORT=true
+USE_EXECUTION_PORT=true
+USE_RISK_CONTROL_PORT=true
+USE_DERIVATIVES_PORT=true
+USE_PORTFOLIO_PORT=true
+USE_OPTIMIZATION_PORT=true
+USE_APP_LAYER=true
 ```
 
 ### Plan de Activación (Priorizado)
@@ -228,4 +268,4 @@ USE_APP_LAYER=false       # Activa toda la capa de aplicación
 
 ---
 
-*Última actualización: 17 de Diciembre 2025*
+*Última actualización: 18 de Diciembre 2025*
