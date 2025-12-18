@@ -1,9 +1,13 @@
 # OMNIX V6.5.4 INSTITUTIONAL+ - Audit Report
 
+> **SUPERSEDED**: Este documento fue archivado el 18 de Diciembre 2025.  
+> Los conteos de ports/adapters están desactualizados.  
+> Ver [HEXAGONAL_MIGRATION_STATUS.md](../../current/HEXAGONAL_MIGRATION_STATUS.md) para estado actual.
+
 **Audit Date:** December 8, 2025  
 **Audit Type:** Comprehensive Code-to-Documentation Verification  
 **Last Updated:** December 8, 2025 (AI Service DI Added)  
-**Status:** COMPLETED
+**Status:** ARCHIVED (Superseded)
 
 ---
 

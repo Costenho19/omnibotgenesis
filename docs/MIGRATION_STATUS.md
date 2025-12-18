@@ -69,9 +69,10 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Métrica | Estado |
 |---------|--------|
-| Ports definidos | **15/15 ✅** |
-| Adapters implementados | **16/16 ✅** |
-| Ports activos en producción | **0/15 (0%)** |
+| Driven Ports definidos | **15 ✅** |
+| Driver Ports definidos | **2 ✅** |
+| Adapters implementados | **19 ✅** |
+| Ports activos en producción | **0 (0%)** |
 | Feature flags pendientes | 15 (todos) |
 | Próximo a activar | `USE_AI_PORT=true` |
 | Tests nuevos ports | **120/120 ✅** |
@@ -84,16 +85,21 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 ┌─────────────────────────────────────────────────────────────────┐
 │                    src/omnix/ (V7.0 Hexagonal)                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  PORTS (9 protocols)                                             │
-│  ├── Driven: Trading, MarketData, AI, Database, Cache, Notify   │
-│  ├── Driven: OnChainData (NEW - 17 Dic 2025)                     │
-│  └── Driver: Telegram, RestApi                                   │
+│  PORTS (17 protocols)                                            │
+│  ├── Driven (15): Trading, MarketData, AI, Database, Cache,     │
+│  │   Notify, OnChain, MarketIntel, Execution, RiskControl,      │
+│  │   Derivatives, Portfolio, Optimization, AIVoice, AIInference │
+│  └── Driver (2): Telegram, RestApi                               │
 ├─────────────────────────────────────────────────────────────────┤
-│  ADAPTERS (10 implementaciones)                                  │
-│  ├── KrakenAdapter, GeminiAdapter, TradingAdapter               │
-│  ├── DatabaseAdapter, CacheAdapter, NotificationAdapter         │
-│  ├── OnChainDataAdapter (NEW - Blockchain.info provider)        │
-│  └── TelegramBotAdapter, RiskAdapter, CoherenceAdapter          │
+│  ADAPTERS (19 implementaciones)                                  │
+│  ├── Core: KrakenAdapter, GeminiAdapter, TradingAdapter         │
+│  ├── Data: DatabaseAdapter, CacheAdapter, NotificationAdapter   │
+│  ├── AI: AIGatewayShim, VoiceAdapter                            │
+│  ├── Risk: RiskAdapter, RiskControlAdapter, CoherenceAdapter    │
+│  ├── Trading: ExecutionAdapter, DerivativesAdapter              │
+│  ├── Portfolio: PortfolioAdapter, OptimizationAdapter           │
+│  ├── Intel: MarketIntelAdapter, OnChainAdapter                  │
+│  └── Interface: TelegramAdapter                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  DOMAIN (lógica de negocio pura)                                │
 │  ├── 10 estrategias de trading                                  │
@@ -104,7 +110,7 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 │  └── ExecuteTrade, ScanMarket, ManagePositions, EvaluateRisk    │
 ├─────────────────────────────────────────────────────────────────┤
 │  BOOTSTRAP                                                       │
-│  └── DI Container (509 líneas), Settings (Pydantic)             │
+│  └── DI Container (535+ líneas), Settings (Pydantic)            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

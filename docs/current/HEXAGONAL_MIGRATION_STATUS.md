@@ -1,167 +1,178 @@
 # OMNIX V7.0 - Estado de Migración Hexagonal
 
-**Fecha**: 16 de Diciembre 2025  
-**Estado**: ESTRUCTURA 100% COMPLETA | ACTIVACIÓN 37.5%
+**Fecha**: 18 de Diciembre 2025  
+**Patrón**: Strangler Fig  
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
 
 ---
 
 ## Resumen Ejecutivo
 
-La arquitectura hexagonal está **completamente implementada** en `src/omnix/`. Sin embargo, solo 3 de 8 ports están **activos en producción**. Los demás tienen feature flags desactivados para migración gradual (Strangler Fig pattern).
+La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omnix/`. El sistema legacy sigue operando 24/7 en Railway. **Ningún port está activo en producción** - todos los feature flags están en `false`.
+
+| Métrica | Valor |
+|---------|-------|
+| Driven Ports | **15** |
+| Driver Ports | **2** |
+| Adapters | **19** |
+| Ports activos en producción | **0 (0%)** |
+| Tests pasando | **120/120** |
 
 ---
 
-## Estado de Ports y Adapters
+## Inventario de Ports
 
-### Driven Ports (Salida - hacia infraestructura)
+### Driven Ports (15 - Salida hacia infraestructura)
 
-| Port | Adapter | Implementado | Activo en Prod | Feature Flag |
-|------|---------|--------------|----------------|--------------|
-| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ✅ | - |
-| MarketDataPort | KrakenAdapter | ✅ | ✅ | - |
-| AIInferencePort | GeminiAdapter | ✅ | ✅ | - |
-| DatabasePort | DatabaseAdapter | ✅ | ⬜ | `USE_DATABASE_PORT=false` |
-| CachePort | CacheAdapter | ✅ | ⬜ | `USE_CACHE_PORT=false` |
-| NotificationPort | NotificationAdapter | ✅ | ⬜ | `USE_NOTIFICATION_PORT=false` |
+| Port | Adapter | Feature Flag | Runbook |
+|------|---------|--------------|---------|
+| ai_inference_port | gemini_adapter | (incluido en AI) | - |
+| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` | - |
+| ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` | - |
+| cache_port | cache_adapter | `USE_CACHE_PORT=false` | - |
+| database_port | database_adapter | `USE_DATABASE_PORT=false` | - |
+| derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` | [Runbook](../operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) |
+| execution_port | execution_adapter | `USE_EXECUTION_PORT=false` | [Runbook](../operations/RUNBOOK_EXECUTION_PORT_ACTIVATION.md) |
+| market_data_port | kraken_adapter | (incluido en Trading) | - |
+| market_intel_port | market_intel_adapter | `USE_MARKET_INTEL_PORT=false` | [Runbook](../operations/RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) |
+| notification_port | notification_adapter | `USE_NOTIFICATION_PORT=false` | - |
+| onchain_data_port | onchain_adapter | `USE_ONCHAIN_PORT=false` | [Runbook](../operations/RUNBOOK_ONCHAIN_PORT_ACTIVATION.md) |
+| optimization_port | optimization_adapter | `USE_OPTIMIZATION_PORT=false` | [Runbook](../operations/RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) |
+| portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` | [Runbook](../operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) |
+| risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` | [Runbook](../operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) |
+| trading_port | trading_adapter | `USE_TRADING_PORT=false` | - |
 
-### Driver Ports (Entrada - desde interfaces)
+### Driver Ports (2 - Entrada desde interfaces)
 
-| Port | Adapter | Implementado | Activo en Prod | Feature Flag |
-|------|---------|--------------|----------------|--------------|
-| TelegramPort | TelegramBotAdapter | ✅ | ⬜ | `USE_TELEGRAM_PORT=false` |
-| RestApiPort | Flask Blueprints | ✅ | ⬜ | `USE_APP_LAYER=false` |
-
----
-
-## Detalle de Implementaciones
-
-### Adapters Implementados (9 total)
-
-| Adapter | Ubicación | Líneas | Funcionalidad |
-|---------|-----------|--------|---------------|
-| TradingAdapter | `infrastructure/adapters/trading_adapter.py` | ~200 | Wrapper TradingService legacy |
-| KrakenAdapter | `infrastructure/adapters/kraken_adapter.py` | ~300 | Kraken REST/WS client |
-| GeminiAdapter | `infrastructure/adapters/gemini_adapter.py` | ~250 | AI provider routing |
-| DatabaseAdapter | `infrastructure/adapters/database_adapter.py` | 262 | PostgreSQL via DatabaseGateway |
-| CacheAdapter | `infrastructure/adapters/cache_adapter.py` | 293 | Redis via RedisCache |
-| NotificationAdapter | `infrastructure/adapters/notification_adapter.py` | 255 | Telegram messaging |
-| TelegramBotAdapter | `infrastructure/adapters/telegram_adapter.py` | 650+ | EnterpriseBot wrapper |
-| RiskAdapter | `infrastructure/adapters/risk_adapter.py` | ~150 | RiskGuardian wrapper |
-| CoherenceAdapter | `infrastructure/adapters/coherence_adapter.py` | ~150 | CoherenceEngine wrapper |
-
-### Domain Layer
-
-| Componente | Ubicación | Estado |
-|------------|-----------|--------|
-| Trade Entity | `domain/trading/entities.py` | ✅ |
-| Position Entity | `domain/trading/entities.py` | ✅ |
-| Signal Entity | `domain/trading/entities.py` | ✅ |
-| Money ValueObject | `domain/trading/value_objects.py` | ✅ |
-| Quantity ValueObject | `domain/trading/value_objects.py` | ✅ |
-| RiskEvent Entity | `domain/risk/entities.py` | ✅ |
-| 10 Estrategias | `domain/trading/strategies/` | ✅ |
-| RiskGuardian | `domain/risk/risk_guardian.py` | ✅ |
-
-### Application Layer (Use Cases)
-
-| Use Case | Ubicación | Estado |
-|----------|-----------|--------|
-| ExecuteTradeUseCase | `application/trading/execute_trade.py` | ✅ |
-| ScanMarketUseCase | `application/trading/scan_market.py` | ✅ |
-| ManagePositionsUseCase | `application/trading/manage_positions.py` | ✅ |
-| CoherenceReportUseCase | `application/trading/coherence_report.py` | ✅ |
-| EvaluateRiskUseCase | `application/risk/evaluate_risk.py` | ✅ |
-
-### Bootstrap Layer
-
-| Componente | Ubicación | Estado |
-|------------|-----------|--------|
-| DI Container | `bootstrap/container.py` | ✅ 509 líneas |
-| Main Entry | `bootstrap/main_entry.py` | ✅ |
-| WSGI Entry | `bootstrap/wsgi_entry.py` | ✅ |
-| Runtime | `bootstrap/runtime.py` | ✅ |
-| Settings | `config/settings.py` | ✅ Pydantic |
+| Port | Adapter | Feature Flag |
+|------|---------|--------------|
+| telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=false` |
+| rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
 
 ---
 
-## Feature Flags
+## Inventario de Adapters (19)
+
+| Adapter | Ubicación | Servicio Legacy Wrapped |
+|---------|-----------|------------------------|
+| ai_gateway_shim | `adapters/ai_gateway_shim.py` | AIModelsManager |
+| cache_adapter | `adapters/cache_adapter.py` | RedisCache |
+| coherence_adapter | `adapters/coherence_adapter.py` | CoherenceEngine |
+| database_adapter | `adapters/database_adapter.py` | DatabaseGateway |
+| derivatives_adapter | `adapters/derivatives_adapter.py` | DerivativesManager |
+| execution_adapter | `adapters/execution_adapter.py` | ExecutionProtocol |
+| gemini_adapter | `adapters/gemini_adapter.py` | GeminiAIGateway |
+| kraken_adapter | `adapters/kraken_adapter.py` | KrakenClient |
+| market_intel_adapter | `adapters/market_intel_adapter.py` | FearGreedService, AlphaVantage, Finnhub |
+| notification_adapter | `adapters/notification_adapter.py` | Telegram messaging |
+| onchain_adapter | `adapters/onchain/onchain_adapter.py` | Blockchain.info API |
+| optimization_adapter | `adapters/optimization_adapter.py` | AutoOptimizer, AdaptiveWeights |
+| portfolio_adapter | `adapters/portfolio_adapter.py` | PortfolioEngine |
+| risk_adapter | `adapters/risk_adapter.py` | RiskGuardian |
+| risk_control_adapter | `adapters/risk_control_adapter.py` | CircuitBreakerManager |
+| telegram_adapter | `adapters/telegram_adapter.py` | EnterpriseBot |
+| trading_adapter | `adapters/trading_adapter.py` | TradingService |
+| voice_adapter | `adapters/voice_adapter.py` | VoiceController |
+| blockchain_info_provider | `adapters/onchain/blockchain_info_provider.py` | Blockchain.info REST |
+
+---
+
+## Feature Flags (Todos en FALSE)
 
 ```bash
-# Activos en producción (Railway)
-USE_APP_LAYER=false          # Application layer desactivado
-USE_NOTIFICATION_PORT=false  # NotificationPort desactivado
-USE_CACHE_PORT=false         # CachePort desactivado
-USE_DATABASE_PORT=false      # DatabasePort desactivado
-USE_TELEGRAM_PORT=false      # TelegramPort desactivado
-```
-
-### Para activar migración completa:
-
-```bash
-# En Railway (después de validar en staging)
-USE_APP_LAYER=true
-USE_NOTIFICATION_PORT=true
-USE_CACHE_PORT=true
-USE_DATABASE_PORT=true
-USE_TELEGRAM_PORT=true
+# Estado actual en Railway (18 Dic 2025)
+USE_AI_PORT=false              # Próximo a activar
+USE_VOICE_PORT=false
+USE_CACHE_PORT=false
+USE_DATABASE_PORT=false
+USE_TRADING_PORT=false
+USE_NOTIFICATION_PORT=false
+USE_TELEGRAM_PORT=false
+USE_ONCHAIN_PORT=false
+USE_MARKET_INTEL_PORT=false
+USE_EXECUTION_PORT=false
+USE_RISK_CONTROL_PORT=false
+USE_DERIVATIVES_PORT=false
+USE_PORTFOLIO_PORT=false
+USE_OPTIMIZATION_PORT=false
+USE_APP_LAYER=false
 ```
 
 ---
 
-## Cálculo del Progreso
+## Plan de Activación (12 Pasos)
 
-### Estructura: 100%
-- 8/8 ports definidos ✅
-- 9/9 adapters implementados ✅
-- Domain layer completo ✅
-- Application layer completo ✅
-- Bootstrap/DI Container ✅
+| Paso | Flag | Riesgo | Dependencias |
+|------|------|--------|--------------|
+| 1 | `USE_AI_PORT=true` | BAJO | Ninguna - tiene fallback 5min cooldown |
+| 2 | `USE_VOICE_PORT=true` | BAJO | AI Port |
+| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | Ninguna |
+| 4 | `USE_EXECUTION_PORT=true` | MEDIO | Trading Port (recomendado) |
+| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | Ninguna |
+| 6 | `USE_DERIVATIVES_PORT=true` | ALTO | Risk Control Port |
+| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | Risk Control Port |
+| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | Portfolio Port |
+| 9 | `USE_CACHE_PORT=true` | BAJO | Ninguna |
+| 10 | `USE_DATABASE_PORT=true` | MEDIO | Cache Port (recomendado) |
+| 11 | `USE_TELEGRAM_PORT=true` | MEDIO | AI, Voice Ports |
+| 12 | `USE_APP_LAYER=true` | ALTO | Todos los anteriores |
 
-### Activación: 37.5%
-- 3/8 ports activos en producción
-- TradingPort, MarketDataPort, AIInferencePort
-
-### Progreso Total: 68.75%
-- (100% estructura + 37.5% activación) / 2
-
----
-
-## Pasos para 100% Activación
-
-| Paso | Acción | Riesgo | Rollback |
-|------|--------|--------|----------|
-| 1 | Activar `USE_CACHE_PORT=true` en staging | BAJO | Flag → false |
-| 2 | Activar `USE_DATABASE_PORT=true` en staging | MEDIO | Flag → false |
-| 3 | Activar `USE_NOTIFICATION_PORT=true` en staging | BAJO | Flag → false |
-| 4 | Activar `USE_TELEGRAM_PORT=true` en staging | MEDIO | Flag → false |
-| 5 | Activar `USE_APP_LAYER=true` en staging | ALTO | Flag → false |
-| 6 | Validar 48h sin errores | - | - |
-| 7 | Activar todo en producción (Railway) | - | Rollback git |
+**Protocolo por paso:**
+1. Activar flag en Railway
+2. Monitorear 48h
+3. Verificar health checks
+4. Si falla → rollback automático (flag=false)
+5. Si OK → siguiente paso
 
 ---
 
-## Estructura de Carpetas V7.0
+## Estructura de Código V7.0
 
 ```
 src/omnix/
-├── application/           # Use Cases
-│   ├── ports/            # Application-level ports
-│   ├── risk/             # Risk use cases
-│   └── trading/          # Trading use cases
-├── bootstrap/            # DI Container, startup
-├── config/               # Pydantic settings
-├── domain/               # Business logic (puro)
-│   ├── risk/             # Risk entities & services
-│   ├── support/          # Shared domain support
-│   └── trading/          # Trading entities & strategies
-├── infrastructure/       # Adapters
-│   └── adapters/         # 9 adapters implementados
-├── interfaces/           # Flask, etc
-└── ports/                # Protocol definitions
-    ├── driven/           # 6 output ports
-    └── driver/           # 2 input ports
+├── ports/                    # 17 protocols
+│   ├── driven/              # 15 ports de salida
+│   └── driver/              # 2 ports de entrada
+├── infrastructure/
+│   └── adapters/            # 19 adapters
+│       └── onchain/         # 2 adapters blockchain
+├── domain/                   # Lógica de negocio pura
+│   ├── trading/             # Entities, VOs, 10 strategies
+│   ├── risk/                # RiskGuardian, entities
+│   └── onchain/             # On-chain analytics
+├── application/             # 5 use cases
+│   ├── trading/
+│   └── risk/
+└── bootstrap/
+    └── container.py         # DI Container (535+ líneas)
 ```
 
 ---
 
-*Última actualización: 16 de Diciembre 2025*
+## Timeline de Implementación
+
+| Fase | Descripción | Completado |
+|------|-------------|------------|
+| 0 | Foundation | 11 Dic 2025 |
+| 1 | Bootstrap & Config | 12 Dic 2025 |
+| 2 | Domain & Application | 12 Dic 2025 |
+| 3 | Infrastructure Adapters | 12 Dic 2025 |
+| 3b | Flask Factory & Telegram | 13 Dic 2025 |
+| 4 | Cleanup & Organization | 13 Dic 2025 |
+| 5A | AI/Voice Port Integration | 16 Dic 2025 |
+| 5B | Market Intel/Execution/Risk Control | 17 Dic 2025 |
+| 5C | Derivatives/Portfolio/Optimization | 17 Dic 2025 |
+| 6 | OnChain Data Port | 17 Dic 2025 |
+
+---
+
+## Documentos Relacionados
+
+- [MIGRATION_STATUS.md](../MIGRATION_STATUS.md) - Estado consolidado
+- [COMPLETE_FUNCTIONALITY_MAP.md](COMPLETE_FUNCTIONALITY_MAP.md) - Referencia sistema legacy
+- [TRACEABILITY_MATRIX.md](../reference/TRACEABILITY_MATRIX.md) - Mapeo de componentes
+- [ADR-001-hexagonal.md](../reference/adr/ADR-001-hexagonal.md) - Decisión arquitectónica
+
+---
+
+*Última actualización: 18 de Diciembre 2025*

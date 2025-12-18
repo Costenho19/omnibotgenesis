@@ -84,23 +84,28 @@ The `omnix_core/cache/redis_cache.py` module provides enterprise-grade caching w
 
 ## V7.0 Migration Progress
 
-### Hexagonal Architecture Status (Dec 17, 2025)
+### Hexagonal Architecture Status (Dec 18, 2025)
 
 **Estructura: 100% COMPLETA | Activación: 0%**
 
-**Session 4 Update (17 Dic 2025) - OnChainDataPort Added:**
-- Added `OnChainDataPort` - 9th port for blockchain analytics
-- `OnChainDataAdapter` with BlockchainInfoProvider (Blockchain.info API)
-- Domain layer: `src/omnix/domain/onchain/` with services
-- Feature flag: `USE_ONCHAIN_PORT=false`
-- Runbook: `docs/operations/RUNBOOK_ONCHAIN_PORT_ACTIVATION.md`
-- Tests: 24/24 passing in `tests/test_onchain_port.py`
+| Métrica | Valor |
+|---------|-------|
+| Driven Ports | 15 |
+| Driver Ports | 2 |
+| **Total Ports** | **17** |
+| Adapters | **19** |
+| Tests pasando | 120/120 |
+| Ports activos | 0 (0%) |
 
-**Session 3 Update (16 Dic 2025) - PRODUCTION-READY:**
-- `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
-- `container.py`: Sistema de fallback con cooldown (5 min) para prevenir hot-loops
-- Sin lazy-loading en adapters - Container tiene control total del ciclo de vida
-- 22 tests de integración pasando (incluyendo degradation y cooldown scenarios)
+**Session 5 Update (18 Dic 2025) - Documentation Cleanup:**
+- Documentación auditada y actualizada
+- Audit obsoleto movido a `docs/history/2025-12/`
+- Conteos corregidos en todos los documentos
+
+**Session 4 Update (17 Dic 2025) - Phase 5 Complete:**
+- 6 nuevos driven ports: MarketIntel, Execution, RiskControl, Derivatives, Portfolio, Optimization
+- 6 nuevos adapters con runbooks operacionales
+- Tests: 120/120 pasando
 
 ### Patrón de Migración V7: Shim como Puente Puro
 
@@ -149,17 +154,17 @@ USE_VOICE_PORT=true  # Activa VoiceServiceAdapter
 
 | Componente | Estado |
 |------------|--------|
-| 9/9 Ports definidos | ✅ Completo |
-| 10/10 Adapters implementados | ✅ Completo |
+| 17/17 Ports definidos | ✅ Completo |
+| 19/19 Adapters implementados | ✅ Completo |
 | Domain Layer | ✅ Completo |
 | Application Layer (5 Use Cases) | ✅ Completo |
-| DI Container | ✅ 535 líneas |
+| DI Container | ✅ 535+ líneas |
 
 **Ports Activos en Producción:**
-- Ninguno (0/9) - Todos los feature flags en false
+- Ninguno (0/17) - Todos los feature flags en false
 
-**Ports Diferidos (feature flags = false):**
-- AIPort, VoicePort, DatabasePort, CachePort, NotificationPort, TelegramPort, OnChainPort, RestApiPort
+**Próximo a Activar:**
+- `USE_AI_PORT=true` (riesgo bajo, tiene fallback con cooldown 5min)
 
 Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
 
@@ -167,20 +172,19 @@ Ver `docs/current/HEXAGONAL_MIGRATION_STATUS.md` para detalle completo.
 ```
 OMNIX/
 ├── src/omnix/           <- Hexagonal V7.0 (100% implementado)
-│   ├── ports/           <- 9 protocols (driven + driver)
-│   ├── infrastructure/  <- 10 adapters
+│   ├── ports/           <- 17 protocols (15 driven + 2 driver)
+│   ├── infrastructure/  <- 19 adapters
 │   ├── domain/          <- Entities, VOs, 10 strategies
-│   │   └── onchain/     <- On-chain analytics (NEW)
 │   ├── application/     <- 5 use cases
-│   └── bootstrap/       <- DI Container
+│   └── bootstrap/       <- DI Container (535+ líneas)
 ├── omnix_core/          <- Legacy runtime (essential)
 ├── omnix_services/      <- Legacy services (essential)
 ├── omnix_config/        <- Configuration (essential)
 ├── omnix_dashboard/     <- Dashboard (essential)
 ├── omnix_api/           <- API (essential)
 ├── omnix_testing/       <- Dev/backtesting tools
-├── docs/                <- Documentation
-├── tests/               <- Test suite
+├── docs/                <- Documentation (reorganizada 18 Dic)
+├── tests/               <- Test suite (120/120 pasando)
 ├── scripts/             <- Utility scripts
 └── sql/                 <- Migrations
 ```
