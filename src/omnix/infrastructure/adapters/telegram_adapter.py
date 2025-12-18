@@ -250,10 +250,13 @@ class TelegramBotAdapter:
     
     async def start(self) -> bool:
         """
-        Start the Telegram bot.
+        Start the Telegram bot (initialization only).
         
-        For PTB v20+, uses Application.run_polling() in a background task.
-        The task is stored for proper cleanup in stop().
+        For PTB v20+, initializes and starts the Application but does NOT
+        mark _is_running=True. That flag is controlled by run_polling().
+        
+        NOTE: This method prepares the bot but does NOT block.
+        Call run_polling() after start() to enter the blocking loop.
         """
         start_time = time.time()
         
@@ -265,22 +268,18 @@ class TelegramBotAdapter:
         try:
             if hasattr(self._bot, 'application') and self._bot.application:
                 app = self._bot.application
-                await app.initialize()
-                await app.start()
-                if hasattr(app, 'updater') and app.updater:
-                    await app.updater.start_polling()
-                self._is_running = True
+                if not app.running:
+                    await app.initialize()
+                    await app.start()
                 logger.info("TelegramBotAdapter: Bot started via Application")
                 self._track_request(start_time)
                 return True
             elif hasattr(self._bot, 'start'):
                 await self._bot.start()
-                self._is_running = True
                 self._track_request(start_time)
                 return True
         except Exception as e:
             logger.error(f"TelegramBotAdapter: Failed to start: {e}")
-            self._is_running = False
             self._track_error()
         return False
     
@@ -452,13 +451,12 @@ class TelegramBotAdapter:
     
     async def run_polling(self) -> None:
         """
-        Run the bot polling loop.
+        Run the bot polling loop (blocking).
         
-        Legacy compatibility method - delegates to the underlying
-        EnterpriseTelegramBot.start_polling() or Application.run_polling().
+        PTB v21 pattern: Uses Application.updater.start_polling() + blocking loop.
+        This method blocks until the bot is stopped or interrupted.
         
-        This method blocks until the bot is stopped.
-        Handles both sync and async legacy implementations with proper lifecycle.
+        Call start() first to initialize, then run_polling() to enter the loop.
         """
         if not self._is_initialized or self._bot is None:
             logger.error("TelegramBotAdapter: Cannot run_polling - bot not initialized")
@@ -470,7 +468,27 @@ class TelegramBotAdapter:
         
         app = None
         try:
-            if hasattr(self._bot, 'start_polling'):
+            if hasattr(self._bot, 'application') and self._bot.application:
+                app = self._bot.application
+                
+                if not app.running:
+                    logger.info("TelegramBotAdapter: Initializing Application...")
+                    await app.initialize()
+                    await app.start()
+                
+                if hasattr(app, 'updater') and app.updater:
+                    logger.info("TelegramBotAdapter: Starting updater.start_polling()...")
+                    await app.updater.start_polling(allowed_updates=["message", "callback_query", "inline_query"])
+                    self._is_running = True
+                    logger.info("TelegramBotAdapter: Polling ACTIVE - entering blocking loop")
+                    
+                    while self._is_running:
+                        await asyncio.sleep(1)
+                else:
+                    logger.error("TelegramBotAdapter: No updater available on Application")
+                    return
+                    
+            elif hasattr(self._bot, 'start_polling'):
                 start_polling = self._bot.start_polling
                 logger.info("TelegramBotAdapter: Starting polling via legacy start_polling()")
                 self._is_running = True
@@ -480,31 +498,19 @@ class TelegramBotAdapter:
                 else:
                     loop = asyncio.get_event_loop()
                     await loop.run_in_executor(None, start_polling)
-                    
-            elif hasattr(self._bot, 'application') and self._bot.application:
-                app = self._bot.application
-                logger.info("TelegramBotAdapter: Starting polling via Application.updater")
-                
-                if not app.running:
-                    await app.initialize()
-                    await app.start()
-                
-                if hasattr(app, 'updater') and app.updater:
-                    await app.updater.start_polling()
-                    self._is_running = True
-                    
-                    while self._is_running:
-                        await asyncio.sleep(1)
             else:
                 logger.error("TelegramBotAdapter: No polling method available")
                 return
                 
+        except asyncio.CancelledError:
+            logger.info("TelegramBotAdapter: Polling cancelled")
         except Exception as e:
             logger.error(f"TelegramBotAdapter: run_polling error: {e}")
             self._track_error()
             raise
         finally:
             self._is_running = False
+            logger.info("TelegramBotAdapter: Cleaning up polling...")
             if app is not None:
                 try:
                     if hasattr(app, 'updater') and app.updater and app.updater.running:
@@ -512,6 +518,7 @@ class TelegramBotAdapter:
                     if app.running:
                         await app.stop()
                     await app.shutdown()
+                    logger.info("TelegramBotAdapter: Application shutdown complete")
                 except Exception as cleanup_error:
                     logger.warning(f"TelegramBotAdapter: cleanup error: {cleanup_error}")
     
