@@ -128,6 +128,7 @@ class Container:
     _derivatives_adapter: Optional[Any] = field(default=None, repr=False)
     _portfolio_adapter: Optional[Any] = field(default=None, repr=False)
     _optimization_adapter: Optional[Any] = field(default=None, repr=False)
+    _voice_adapter: Optional[Any] = field(default=None, repr=False)
     
     @property
     def settings(self):
@@ -297,6 +298,12 @@ class Container:
         return os.getenv("USE_OPTIMIZATION_PORT", "false").lower() == "true"
     
     @property
+    def use_voice_port(self) -> bool:
+        """Check if VoicePort is enabled (Phase 5 - Voice/TTS)."""
+        import os
+        return os.getenv("USE_VOICE_PORT", "false").lower() == "true"
+    
+    @property
     def market_intel_adapter(self):
         """Get market intelligence adapter (Phase 5)."""
         if self._market_intel_adapter is None:
@@ -337,6 +344,13 @@ class Container:
         if self._optimization_adapter is None:
             self._optimization_adapter = self._create_optimization_adapter()
         return self._optimization_adapter
+    
+    @property
+    def voice_adapter(self):
+        """Get voice adapter (Phase 5 - Voice/TTS)."""
+        if self._voice_adapter is None:
+            self._voice_adapter = self._create_voice_adapter()
+        return self._voice_adapter
     
     def _create_database(self) -> IDatabaseGateway:
         try:
@@ -698,6 +712,37 @@ class Container:
             logger.error(f"Container: Failed to initialize OptimizationAdapter: {e}")
             return None
     
+    def _create_voice_adapter(self):
+        """Create voice adapter (Phase 5 - Voice/TTS)."""
+        try:
+            from src.omnix.infrastructure.adapters.voice_adapter import VoiceServiceAdapter
+            logger.info("Container: Initializing VoiceServiceAdapter...")
+            voice_service = None
+            try:
+                from omnix_services.voice_service import VoiceServiceEnterprise
+                voice_service = VoiceServiceEnterprise()
+                logger.info("Container: VoiceServiceEnterprise injected into VoiceServiceAdapter")
+            except ImportError:
+                logger.warning("Container: VoiceServiceEnterprise not available, adapter will use fallback")
+            except Exception as e:
+                logger.warning(f"Container: Failed to create VoiceServiceEnterprise: {e}")
+            adapter = VoiceServiceAdapter(voice_service=voice_service)
+            if hasattr(adapter, 'health_check'):
+                health = adapter.health_check()
+                if health.get('healthy', False):
+                    logger.info("Container: VoiceServiceAdapter initialized - healthy")
+                else:
+                    logger.warning("Container: VoiceServiceAdapter initialized but unhealthy")
+            else:
+                logger.info("Container: VoiceServiceAdapter initialized")
+            return adapter
+        except ImportError as e:
+            logger.warning(f"Container: VoiceServiceAdapter not available (import failed): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Container: Failed to initialize VoiceServiceAdapter: {e}")
+            return None
+    
     @classmethod
     def create(cls, lazy: bool = True) -> "Container":
         logger.info(f"Container: Creating new DI Container (lazy={lazy})")
@@ -742,8 +787,10 @@ class Container:
             'derivatives_adapter': self._derivatives_adapter is not None,
             'portfolio_adapter': self._portfolio_adapter is not None,
             'optimization_adapter': self._optimization_adapter is not None,
+            'voice_adapter': self._voice_adapter is not None,
             'use_portfolio_port': self.use_portfolio_port,
             'use_optimization_port': self.use_optimization_port,
+            'use_voice_port': self.use_voice_port,
         }
         
         if self._kraken_adapter is not None and hasattr(self._kraken_adapter, 'health_check'):

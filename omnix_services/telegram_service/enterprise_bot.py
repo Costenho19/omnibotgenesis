@@ -3349,49 +3349,24 @@ Usa: `/autotrading activar ACEPTO`"""
                     except Exception as save_error:
                         logger.warning(f"⚠️ Error guardando conversación (no crítico): {save_error}")
                 
-                # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA HAROLD
-                if user_id == settings.TELEGRAM_ADMIN_ID:  # Harold específicamente
+                # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA TODOS LOS USUARIOS
+                # FIX Dec 18, 2025: Usar servicio de voz centralizado para respuestas duales (texto + audio)
+                # Usar asyncio.to_thread para no bloquear el event loop (voz es I/O síncrono)
+                if VOICE_SERVICE_AVAILABLE and ai_response and len(ai_response) > 20:
                     try:
-                        # Limpiar texto para voz
-                        voice_text = ai_response
-                        # Remover markdown y emojis para mejor pronunciación
-                        import re
-                        voice_text = re.sub(r'[*_`#]', '', voice_text)
-                        voice_text = re.sub(r'🚀|🧠|⚡|💰|📊|🔴|🟢|🟡|🛡️|🕌|✅|❌|🤖|💡', '', voice_text)
-                        voice_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', voice_text)  # Remover bold
-                        voice_text = voice_text.strip()
-                        
-                        # Limitar longitud para voz (máximo 300 caracteres)
-                        if len(voice_text) > 300:
-                            voice_text = voice_text[:300] + "..."
-                        
-                        if len(voice_text) > 20:  # Solo si hay suficiente texto
-                            logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ PARA HAROLD: {len(voice_text)} chars")
-                            # Crear archivo de voz con gTTS
-                            import tempfile
-                            from gtts import gTTS
-                            
-                            tts = gTTS(text=voice_text, lang='es', slow=False)
-                            
-                            # Crear archivo temporal
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
-                                tts.save(tmp_file.name)
-                                
-                                # Enviar archivo de voz
-                                with open(tmp_file.name, 'rb') as voice_file:
-                                    await update.message.reply_voice(
-                                        voice=voice_file,
-                                        caption="🎤 OMNIX Voz - Harold"
-                                    )
-                                
-                                logger.info("🎤 VOZ AUTOMÁTICA ENVIADA A HAROLD")
-                                
-                                # Limpiar archivo temporal
-                                try:
-                                    os.unlink(tmp_file.name)
-                                except:
-                                    pass
-                        
+                        logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ DUAL para {user_name}: {len(ai_response)} chars")
+                        await asyncio.to_thread(
+                            send_telegram_response_with_voice,
+                            chat_id,
+                            ai_response,
+                            user_name,
+                            user_id,
+                            is_admin(user_id),
+                            self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
+                            None,
+                            is_admin
+                        )
+                        logger.info(f"🎤 VOZ AUTOMÁTICA ENVIADA a {user_name}")
                     except Exception as voice_error:
                         logger.warning(f"⚠️ Error voz automática (no crítico): {voice_error}")
                 
@@ -5256,6 +5231,75 @@ Harold pregunta: {text}"""
                         'text': text[:4000] if len(text) > 4000 else text
                     }
                     requests.post(fallback_url, json=fallback_data, timeout=10)
+            except:
+                pass
+            return False
+
+    async def _send_dual_response(self, update, context, response_text: str, user_id: str = None, 
+                                   parse_mode: str = 'Markdown', edit_message_id: int = None):
+        """
+        Envía respuesta DUAL: texto + audio automático.
+        
+        Este método unifica el patrón de respuesta para que TODAS las respuestas
+        del bot incluyan tanto el texto como una nota de voz explicativa.
+        
+        Args:
+            update: Telegram update object
+            context: Telegram context
+            response_text: Texto de la respuesta
+            user_id: ID del usuario (para determinar si es admin)
+            parse_mode: Modo de parseo ('Markdown', 'HTML', None)
+            edit_message_id: ID de mensaje a editar (opcional)
+        
+        Returns:
+            bool: True si se envió exitosamente, False en caso contrario
+        """
+        try:
+            chat_id = update.effective_chat.id
+            user_name = update.effective_user.first_name if update.effective_user else "Usuario"
+            
+            if not response_text or not response_text.strip():
+                logger.warning("⚠️ _send_dual_response: texto vacío, omitiendo")
+                return False
+            
+            text_sent = False
+            if edit_message_id:
+                self.send_telegram_text_safe(
+                    chat_id=chat_id,
+                    text=response_text,
+                    parse_mode=parse_mode,
+                    edit_message_id=edit_message_id
+                )
+                text_sent = True
+                logger.info(f"✅ Texto enviado (edit) a {chat_id}: {len(response_text)} chars")
+            else:
+                await update.message.reply_text(response_text, parse_mode=parse_mode)
+                text_sent = True
+                logger.info(f"✅ Texto enviado (reply) a {chat_id}: {len(response_text)} chars")
+            
+            if VOICE_SERVICE_AVAILABLE and text_sent:
+                try:
+                    effective_user_id = user_id or str(chat_id)
+                    send_telegram_response_with_voice(
+                        chat_id=chat_id,
+                        response_text=response_text,
+                        user_name=user_name,
+                        user_id=effective_user_id,
+                        is_admin_user=is_admin(effective_user_id),
+                        trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
+                        reference_message=edit_message_id,
+                        is_admin_func=is_admin
+                    )
+                    logger.info(f"🎤 Audio dual enviado a {chat_id}")
+                except Exception as voice_error:
+                    logger.warning(f"⚠️ Error generando voz dual: {voice_error}")
+            
+            return text_sent
+            
+        except Exception as e:
+            logger.error(f"❌ Error _send_dual_response: {e}")
+            try:
+                await update.message.reply_text(response_text[:4000] if len(response_text) > 4000 else response_text)
             except:
                 pass
             return False
