@@ -29,6 +29,24 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 >
 > **Razon**: Telegram solo permite UNA conexion activa por token. Si el bot corre en Replit y Railway al mismo tiempo, habra conflictos y errores de conexion.
 
+### Protocolo de Contexto (OBLIGATORIO)
+
+**Antes de ejecutar cualquier cambio**, revisar la documentación en `docs/` para enriquecer el contexto:
+
+| Prioridad | Archivos | Propósito |
+|-----------|----------|-----------|
+| **1. Crítico** | `docs/README.md` | Índice principal de documentación |
+| **2. Crítico** | `docs/MIGRATION_STATUS.md` | Estado consolidado V7.0 |
+| **3. Crítico** | `docs/REAL_SYSTEM_STATUS.md` | Estado real del sistema |
+| **4. Arquitectura** | `docs/current/` | ARCHITECTURE.md, HEXAGONAL_MIGRATION_STATUS.md, TECHNICAL_DEBT.md |
+| **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md |
+| **6. Historial** | `docs/history/` | Decisiones previas, migraciones, contexto histórico |
+| **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.md, ADRs |
+
+**Después de cambios significativos**, actualizar la documentación relevante.
+
+**Lección aprendida (Dec 18, 2025)**: Resolver problemas con el mínimo código necesario. La infraestructura adicional (ports, adapters, use cases) solo cuando sea estrictamente necesaria, no como anticipación.
+
 ## System Architecture
 
 ### Core Engines
