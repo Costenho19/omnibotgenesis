@@ -450,6 +450,38 @@ class TelegramBotAdapter:
         """Check if bot is currently running."""
         return self._is_running
     
+    async def run_polling(self) -> None:
+        """
+        Run the bot polling loop.
+        
+        Legacy compatibility method - delegates to the underlying
+        EnterpriseTelegramBot.start_polling() or Application.run_polling().
+        
+        This method blocks until the bot is stopped.
+        """
+        if not self._is_initialized or self._bot is None:
+            logger.error("TelegramBotAdapter: Cannot run_polling - bot not initialized")
+            return
+        
+        try:
+            if hasattr(self._bot, 'start_polling'):
+                logger.info("TelegramBotAdapter: Starting polling via legacy start_polling()")
+                await self._bot.start_polling()
+            elif hasattr(self._bot, 'application') and self._bot.application:
+                app = self._bot.application
+                logger.info("TelegramBotAdapter: Starting polling via Application.updater")
+                if hasattr(app, 'updater') and app.updater:
+                    await app.updater.start_polling()
+                    self._is_running = True
+                    while self._is_running:
+                        await asyncio.sleep(1)
+            else:
+                logger.error("TelegramBotAdapter: No polling method available")
+        except Exception as e:
+            logger.error(f"TelegramBotAdapter: run_polling error: {e}")
+            self._track_error()
+            raise
+    
     def health_check(self) -> Dict[str, Any]:
         """
         Get bot health status and telemetry.

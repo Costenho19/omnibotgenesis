@@ -50,6 +50,19 @@ class DatabaseAdapter:
         self._total_query_time_ms = 0.0
         self._last_request: Optional[datetime] = None
     
+    @property
+    def _pool(self) -> Optional[Any]:
+        """
+        Legacy compatibility property.
+        
+        Some legacy services access database_service._pool directly.
+        This property delegates to get_pool() for backward compatibility.
+        
+        Returns:
+            Connection pool if available, None otherwise
+        """
+        return self.get_pool()
+    
     def _get_database_gateway(self) -> Optional[Any]:
         """Lazy-load DatabaseGateway singleton."""
         if self._database_gateway is not None:
