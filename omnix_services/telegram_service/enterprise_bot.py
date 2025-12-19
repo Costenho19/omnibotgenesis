@@ -3532,7 +3532,15 @@ Usa: `/autotrading activar ACEPTO`"""
                             
                             if len(voice_text) > 20:
                                 from gtts import gTTS
-                                tts = gTTS(text=voice_text, lang='es', slow=False)
+                                # AI-First Multilingual: Detectar idioma de respuesta
+                                try:
+                                    from langdetect import detect
+                                    detected_lang = detect(voice_text)
+                                    # gTTS usa códigos ISO 639-1
+                                    tts_lang = detected_lang if detected_lang else 'es'
+                                except Exception:
+                                    tts_lang = 'es'  # Fallback a español
+                                tts = gTTS(text=voice_text, lang=tts_lang, slow=False)
                                 
                                 with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
                                     tts.save(tmp_file.name)
