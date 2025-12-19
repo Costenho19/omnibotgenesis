@@ -205,6 +205,19 @@ class PromptsContextManager:
             System prompt string
         """
         
+        # 🌍 LANGUAGE DETECTION - Detect user language and generate directive
+        detected_language = 'en'
+        language_directive = ""
+        if user_message:
+            try:
+                from .prompt_templates import LanguageContextManager
+                lang_manager = LanguageContextManager()
+                detected_language = lang_manager.detect_language(user_message)
+                language_directive = lang_manager.get_language_directive(detected_language)
+                logger.info(f"🌍 Language detected: {detected_language} - Directive injected")
+            except Exception as lang_error:
+                logger.warning(f"⚠️ Language detection error: {lang_error}")
+        
         # ⚛️ QUANTUM PHYSICS VALIDATOR - Inject verified scientific context
         quantum_physics_context = ""
         if user_message and QUANTUM_PHYSICS_VALIDATOR_AVAILABLE and get_quantum_physics_context is not None:
@@ -241,7 +254,7 @@ class PromptsContextManager:
 - If user writes in Arabic → respond entirely in Arabic
 - If user writes in any other language → respond in that language
 This is mandatory for ALL responses without exception.
-
+{language_directive}
 ## SYSTEM IDENTITY
 OMNIX is an institutional-grade algorithmic trading system designed for 
 quantitative analysis and risk management in cryptocurrency AND stock markets.
