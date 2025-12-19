@@ -24,18 +24,6 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 _language_detection_lock = threading.Lock()
-_async_language_detection_lock: Optional[asyncio.Lock] = None
-
-def _get_async_lock() -> asyncio.Lock:
-    """Get or create the async lock for the current event loop."""
-    global _async_language_detection_lock
-    try:
-        loop = asyncio.get_running_loop()
-        if _async_language_detection_lock is None:
-            _async_language_detection_lock = asyncio.Lock()
-        return _async_language_detection_lock
-    except RuntimeError:
-        return asyncio.Lock()
 
 MASTER_SYSTEM_PROMPT = """You are OMNIX V6.5.4d INSTITUTIONAL+, an advanced automated trading assistant created by Harold Nunes.
 
@@ -193,26 +181,17 @@ class LanguageContextManager:
     
     async def detect_language_async(self, text: str) -> str:
         """
-        Async version of language detection (CONCURRENCY-SAFE).
-        Uses asyncio.Lock to prevent language bleed between concurrent requests.
+        Async version of language detection (FULLY CONCURRENCY-SAFE).
+        
+        Uses asyncio.to_thread() to run detection in thread pool with the 
+        global threading.Lock, ensuring process-wide serialization of 
+        langdetect calls even across different event loops.
         """
         try:
-            from langdetect import detect, LangDetectException
-        except ImportError:
-            logger.warning("langdetect not installed, defaulting to English")
+            return await asyncio.to_thread(self.detect_language, text)
+        except Exception as e:
+            logger.warning(f"Async language detection error: {e}")
             return 'en'
-        
-        lock = _get_async_lock()
-        async with lock:
-            try:
-                detected = detect(text)
-                logger.debug(f"🌍 Language detected (async): {detected}")
-                return detected
-            except LangDetectException:
-                return 'en'
-            except Exception as e:
-                logger.warning(f"Language detection error: {e}")
-                return 'en'
     
     def persist_user_language(self, chat_id: int, lang_code: str) -> bool:
         """
