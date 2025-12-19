@@ -61,6 +61,12 @@ The system fully employs a hexagonal architecture, with all 17 ports and 19 adap
 ### AI Service Architecture
 Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). Features include a voice service for dual text+audio responses (when `VOICE_SERVICE_AVAILABLE=true`) and AI-first command detection where only messages starting with `/` are treated as commands, otherwise text is sent to AI. The system uses an AI-First Multilingual Prompt Architecture with all system prompts rewritten in English, a Prompt Specification Layer, dynamic language detection, and a Chain-of-Thought Framework.
 
+#### AI-First Multilingual Concurrency (Dec 19, 2025)
+- **Concurrency-Safe Language Detection**: Uses `threading.Lock` for sync paths and `asyncio.to_thread()` for async paths to prevent language bleed between concurrent users
+- **Redis Language Persistence**: Stores detected language per `chat_id` with 24h TTL for fallback scenarios (`omnix:user_language:{chat_id}`)
+- **English Universal Placeholders**: All fallback/error messages are minimal English only - AI generates localized responses
+- **NO Hardcoded Multilingual Dictionaries**: AI-first means Gemini generates all localized content based on system prompt directive
+
 ### Error Handling System
 An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff for retryable errors, and structured logging.
 
