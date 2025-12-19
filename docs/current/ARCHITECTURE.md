@@ -181,22 +181,47 @@ Ver [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) para detalles de ca
 
 ---
 
-## 9. AI-First Multilingual (Dec 19, 2025)
+## 9. AI-First Multilingual Prompt Architecture (Dec 19, 2025)
 
-El sistema responde automáticamente en el idioma del usuario usando AI auto-detection:
+### Prompt Specification Layer V6.5.4d
 
-| Componente | Cambio | Archivo |
-|------------|--------|---------|
-| System Prompt | `Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje` | ai_prompts.py |
-| Legacy Prompt | Igual instrucción AI-first | conversational_ai_adapter.py |
-| Prompt Builder | Instrucción multilingüe | omnix_prompt_builder.py |
-| User Settings | `language_code='auto'` como default | database_service.py |
+Modern prompt engineering architecture with language-neutral base prompts:
 
-**Principios:**
-- Sin diccionarios de idiomas hardcodeados para respuestas
-- AI auto-detection siempre activo
-- `language_code='auto'` guardado en DB como respaldo
-- Diccionarios de `trading_terms` solo para detección de intents (no restricción de idioma)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PROMPT SPECIFICATION LAYER                                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Master Template (prompt_templates.py)                           │
+│  ├── Role Definition (English-neutral)                          │
+│  ├── Mission Statement                                           │
+│  ├── Language Policy [CRITICAL]                                 │
+│  ├── Core Capabilities                                          │
+│  └── Output Format Guidelines                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  Language Context Manager                                        │
+│  ├── langdetect integration                                     │
+│  ├── Dynamic language directive injection                       │
+│  └── Fallback handling                                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Chain-of-Thought Framework                                      │
+│  └── Analysis steps for complex queries                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Component | Purpose | File |
+|-----------|---------|------|
+| Master Template | Language-neutral base prompt | prompt_templates.py |
+| LanguageContextManager | Detects user language, injects directives | prompt_templates.py |
+| PromptBuilder | Assembles complete prompts | prompt_templates.py |
+| CoT Framework | Chain-of-Thought for analytical queries | ai_models.py |
+
+**Key Principles:**
+- All system prompts written in English (language-neutral)
+- Language Policy section with explicit rules: "ALWAYS respond in the SAME language the user writes"
+- Dynamic language detection via `langdetect` library
+- `language_code='auto'` as DB default
+- `trading_terms` dictionaries for intent detection only (not language restriction)
+- TTS audio generated in detected response language
 
 ---
 

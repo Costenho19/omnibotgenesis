@@ -253,18 +253,18 @@ class AIModelsManager:
         try:
             enhanced_system = f"""{system_prompt}
 
-🧠 SUPERINTELIGENCIA GPT-4o PARA HAROLD:
-- Análisis profundo de 1500-2500 caracteres
-- Expertise financiero nivel institucional
-- Conectar mínimo 5 variables: precio + volumen + macro + psicología + on-chain
-- Correlaciones específicas con datos numéricos reales
-- Insights únicos más allá de lo obvio
-- Estructura profesional con headers numerados
+## ENHANCED ANALYSIS REQUIREMENTS
+- Deep analysis with 1500-2500 characters minimum
+- Institutional-grade financial expertise
+- Connect minimum 5 variables: price + volume + macro + psychology + on-chain
+- Specific correlations with real numerical data
+- Unique insights beyond the obvious
+- Professional structure with numbered headers
 
-💹 CONTEXTO OMNIX:
-Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, trading bidireccional activo.
+## OMNIX CONTEXT
+System operating with live Kraken APIs, Enterprise technical analysis, active bidirectional trading.
 
-⚠️ IMPORTANTE: Harold necesita demostración de superinteligencia en cada respuesta."""
+IMPORTANT: Demonstrate superintelligence in every response. Follow the language policy strictly."""
 
             response = await asyncio.wait_for(
                 self.openai_client.chat.completions.create(
@@ -332,12 +332,13 @@ Sistema operando con APIs Kraken en tiempo real, análisis técnico Enterprise, 
         try:
             enhanced_prompt = f"""{system_prompt}
 
-IMPORTANTE: Harold necesita análisis PROFUNDO e inteligente:
-**1. Análisis Inmediato** **2. Datos Técnicos** **3. Implicaciones** **4. Recomendaciones** **5. Perspectiva Histórica**
+## CHAIN-OF-THOUGHT ANALYSIS FRAMEWORK
+Follow this structured approach for comprehensive analysis:
+**1. Immediate Analysis** **2. Technical Data** **3. Implications** **4. Recommendations** **5. Historical Perspective**
 
-Usuario: {prompt}
+User Query: {prompt}
 
-GENERAR RESPUESTA SUSTANCIAL DE 2000+ CARACTERES."""
+Generate a substantial response of 2000+ characters. Follow the language policy strictly - respond in the same language as the user's query."""
 
             if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
                 response = self.gemini_client.models.generate_content(

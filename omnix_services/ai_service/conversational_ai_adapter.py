@@ -130,8 +130,8 @@ class ConversationalAI:
                 if result and 'response' in result:
                     response_text = result['response']
                     if result.get('web_search_used'):
-                        web_indicator = "\n\n🔍 *Información verificada en tiempo real*"
-                        if "Información verificada" not in response_text:
+                        web_indicator = "\n\n🔍 *Real-time verified information*"
+                        if "verified information" not in response_text.lower():
                             response_text = response_text + web_indicator
                         logger.info(f"🔍 Web search used")
                     return response_text
@@ -143,7 +143,7 @@ class ConversationalAI:
                 return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⚠️ Has alcanzado el límite de mensajes por minuto. Por favor espera un momento."
+            return "⚠️ You have reached the message limit per minute. Please wait a moment."
         except Exception as e:
             logger.error(f"❌ Error generating async response: {e}", exc_info=True)
             return self._fallback_response()
@@ -222,11 +222,9 @@ class ConversationalAI:
                 if result and 'response' in result:
                     response_text = result['response']
                     
-                    # V6.5.4 Premium: Agregar indicador visual si usó búsqueda web
                     if result.get('web_search_used'):
-                        web_indicator = "\n\n🔍 *Información verificada en tiempo real*"
-                        # Solo agregar si no está ya presente
-                        if "Información verificada" not in response_text:
+                        web_indicator = "\n\n🔍 *Real-time verified information*"
+                        if "verified information" not in response_text.lower():
                             response_text = response_text + web_indicator
                         logger.info(f"🔍 Web search used for this response (query: {result.get('web_search_query', 'N/A')[:50]})")
                     
@@ -242,7 +240,7 @@ class ConversationalAI:
                 
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⚠️ Has alcanzado el límite de mensajes por minuto. Por favor espera un momento."
+            return "⚠️ You have reached the message limit per minute. Please wait a moment."
         except Exception as e:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()
@@ -577,26 +575,22 @@ class ConversationalAI:
             logger.error(f"❌ Error crítico verificando Kraken: {e}")
             kraken_info = "\n\n⚠️ KRAKEN: Sistema temporalmente no disponible"
         
-        # System prompt compacto V5.2 CON INFO KRAKEN
-        system_prompt = f"""Eres OMNIX V5.2 QUANTUM ULTIMATE, asistente de trading automatizado creado por Harold Nunes.
-
-Capacidades Core:
-- Post-Quantum Cryptography (Kyber-768, Dilithium-3) para seguridad institucional
-- Monte Carlo Simulator (10K simulaciones), Black Swan Detector, Kelly Criterion
-- HMM Regime Detector, Dual Kalman Filter, OMNIX Quantum Momentum
-- **Adaptive Weight System ω(t)**: Pesos dinámicos Kalman/Monte Carlo basados en Hurst Exponent H(t) y α-stable tail index - Sistema REAL implementado en adaptive_weight_system.py
-- Real Trading con Kraken API (trades reales, NO simulados)
-- Sharia Compliance, Voice bidirectional, Multi-language
-- WebSocket real-time, Backtesting profesional, Smart Alerts 24/7{kraken_info}
-
-Personalidad:
-- Inteligente e independiente, menciona capacidades según contexto
-- Respuestas naturales pero profundas para impresionar inversores
-- Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje (AI auto-detection)
-
-Contexto previo: {context}
-
-Usuario {user_name}: {user_message}"""
+        # V6.5.4d: AI-First Multilingual System Prompt
+        from omnix_services.ai_service.prompt_templates import prompt_builder
+        
+        kraken_status = {
+            'connected': bool(kraken_info and 'Conectado' in kraken_info or 'Connected' in kraken_info),
+            'trading_enabled': bool(kraken_info and 'Trading' in kraken_info),
+            'balance': None
+        }
+        
+        system_prompt = prompt_builder.build_system_prompt(
+            user_message=user_message,
+            user_name=user_name,
+            context=context,
+            kraken_status=kraken_status if kraken_info else None,
+            intent='general'
+        )
         
         # PRIORIDAD 1: GEMINI (key válida en Railway)
         if hasattr(self, 'gemini_client') and self.gemini_client:
@@ -660,7 +654,7 @@ Usuario {user_name}: {user_message}"""
     
     def _fallback_response(self):
         """Ultimate fallback if all AI fails"""
-        return "🤖 Sistema temporalmente no disponible. Por favor intenta de nuevo en unos momentos."
+        return "🤖 System temporarily unavailable. Please try again in a few moments."
     
     # Compatibility methods - delegate to enterprise or provide simple fallbacks
     def apply_ultra_visual_style(self, response_text, intent='general'):

@@ -23,79 +23,79 @@ logger = get_logger(__name__)
 
 
 INTENT_INSTRUCTIONS = {
-    UserIntent.GREETING: """Responde de manera amigable y profesional.
-Menciona brevemente tu disponibilidad para análisis de mercado.
-Mantén la respuesta corta (2-3 oraciones).""",
+    UserIntent.GREETING: """Respond in a friendly and professional manner.
+Briefly mention your availability for market analysis.
+Keep the response short (2-3 sentences).""",
 
-    UserIntent.MARKET_ANALYSIS: """Eres un analista cuantitativo senior de OMNIX INSTITUTIONAL+.
+    UserIntent.MARKET_ANALYSIS: """You are a senior quantitative analyst at OMNIX INSTITUTIONAL+.
 
-MOTORES DE ANÁLISIS ACTIVOS:
-- Monte Carlo Simulation (10,000 iteraciones)
-- Black Swan Detection (riesgo de cola)
-- HMM Regime Analysis (estado del mercado)
-- Kalman Filter (reducción de ruido)
-- Non-Markovian Memory Kernel (patrones temporales)
+ACTIVE ANALYSIS ENGINES:
+- Monte Carlo Simulation (10,000 iterations)
+- Black Swan Detection (tail risk)
+- HMM Regime Analysis (market state)
+- Kalman Filter (noise reduction)
+- Non-Markovian Memory Kernel (temporal patterns)
 
-FORMATO DE RESPUESTA:
-1. Resumen Ejecutivo (2 líneas)
-2. Análisis Técnico con datos REALES del contexto
-3. Riesgos Identificados
-4. Recomendación Clara (LONG / SHORT / NEUTRAL)
+RESPONSE FORMAT:
+1. Executive Summary (2 lines)
+2. Technical Analysis with REAL data from context
+3. Identified Risks
+4. Clear Recommendation (LONG / SHORT / NEUTRAL)
 
-CRÍTICO: Usa SOLO datos reales del contexto proporcionado.
-NUNCA inventes precios, porcentajes o datos de mercado.""",
+CRITICAL: Use ONLY real data from the provided context.
+NEVER invent prices, percentages or market data.""",
 
-    UserIntent.TRADING_QUERY: """Eres un ejecutor de trades institucional.
+    UserIntent.TRADING_QUERY: """You are an institutional trade executor.
 
-ANTES DE CONFIRMAR CUALQUIER TRADE:
-1. Verifica el símbolo exacto (BTC, ETH, etc.)
-2. Confirma el monto en USD
-3. Muestra precio actual de mercado
-4. Muestra comisiones estimadas
+BEFORE CONFIRMING ANY TRADE:
+1. Verify the exact symbol (BTC, ETH, etc.)
+2. Confirm the amount in USD
+3. Show current market price
+4. Show estimated fees
 
-NUNCA ejecutes un trade sin confirmación explícita del usuario.""",
+NEVER execute a trade without explicit user confirmation.""",
 
-    UserIntent.PORTFOLIO: """Eres un gestor de portfolios institucional.
+    UserIntent.PORTFOLIO: """You are an institutional portfolio manager.
 
-MOSTRAR:
-- Balance actual por activo
-- P&L total y por posición
-- Métricas de exposición al riesgo
-- Sugerencias de rebalanceo (si aplica)
+DISPLAY:
+- Current balance by asset
+- Total and per-position P&L
+- Risk exposure metrics
+- Rebalancing suggestions (if applicable)
 
-Usa datos del contexto proporcionado.
-Formatea números claramente con símbolos de moneda.""",
+Use data from the provided context.
+Format numbers clearly with currency symbols.""",
 
-    UserIntent.HELP: """Eres una guía del sistema OMNIX.
+    UserIntent.HELP: """You are an OMNIX system guide.
 
-COMANDOS PRINCIPALES:
-/autotrading start|stop|status - Bot de trading automatizado
-/paper_buy BTC 100 - Compra simulada ($100 de BTC)
-/paper_sell ETH 50 - Venta simulada
-/balance - Ver balance actual
-/analysis BTC - Análisis técnico
+MAIN COMMANDS:
+/autotrading start|stop|status - Automated trading bot
+/paper_buy BTC 100 - Simulated purchase ($100 of BTC)
+/paper_sell ETH 50 - Simulated sale
+/balance - View current balance
+/analysis BTC - Technical analysis
 
-Responde concisamente con ejemplos claros.""",
+Respond concisely with clear examples.""",
 
-    UserIntent.GENERAL: """Eres un asistente conversacional.
-Mantén el contexto de trading pero permite conversación casual.
-Si detectas oportunidad de ofrecer análisis de mercado, sugiérelo sutilmente.
-Mantén respuestas amigables y profesionales.""",
+    UserIntent.GENERAL: """You are a conversational assistant.
+Maintain trading context but allow casual conversation.
+If you detect an opportunity to offer market analysis, suggest it subtly.
+Keep responses friendly and professional.""",
 
-    UserIntent.VIDEO_ANALYSIS: """Eres un analizador de videos/imágenes financieras.
-Examina el contenido visual proporcionado.
-Identifica gráficos, indicadores técnicos, niveles de precio.
-Proporciona análisis basado en lo que observas.""",
+    UserIntent.VIDEO_ANALYSIS: """You are a financial video/image analyzer.
+Examine the provided visual content.
+Identify charts, technical indicators, price levels.
+Provide analysis based on what you observe.""",
 
-    UserIntent.NEWS: """Eres un analista de noticias financieras.
-Sintetiza las noticias relevantes del mercado.
-Identifica impacto potencial en precios.
-Cita fuentes cuando sea posible.""",
+    UserIntent.NEWS: """You are a financial news analyst.
+Synthesize relevant market news.
+Identify potential impact on prices.
+Cite sources when possible.""",
 
-    UserIntent.TECHNICAL: """Eres un experto en análisis técnico.
-Explica conceptos técnicos de manera clara.
-Usa ejemplos prácticos cuando sea útil.
-Adapta la complejidad al nivel del usuario."""
+    UserIntent.TECHNICAL: """You are a technical analysis expert.
+Explain technical concepts clearly.
+Use practical examples when useful.
+Adapt complexity to the user's level."""
 }
 
 
@@ -189,30 +189,30 @@ class OmnixPromptBuilder:
         
         parts = []
         
-        parts.append(f"Eres OMNIX {VERSION_BANNER}, un asistente de trading institucional avanzado.")
-        parts.append(f"\nUsuario: {context.user_name}")
+        parts.append(f"You are OMNIX {VERSION_BANNER}, an advanced institutional trading assistant.")
+        parts.append(f"\nUser: {context.user_name}")
         
         intent_instructions = self.get_intent_specific_instructions(context.intent)
         if intent_instructions:
             parts.append(f"\n{intent_instructions}")
         
         if context.real_context_data:
-            parts.append("\n\nCONTEXTO REAL DEL SISTEMA:")
+            parts.append("\n\n## SYSTEM CONTEXT:")
             parts.append(self._format_context_data(context.real_context_data))
         
         if context.market_data:
-            parts.append("\n\nDATOS DE MERCADO EN TIEMPO REAL:")
+            parts.append("\n\n## REAL-TIME MARKET DATA:")
             parts.append(self._format_market_data(context.market_data))
         
         if context.trading_context:
-            parts.append("\n\nCONTEXTO DE TRADING:")
+            parts.append("\n\n## TRADING CONTEXT:")
             parts.append(self._format_trading_context(context.trading_context))
         
         if context.web_search_results:
-            parts.append("\n\nRESULTADOS DE BÚSQUEDA WEB:")
+            parts.append("\n\n## WEB SEARCH RESULTS:")
             parts.append(context.web_search_results)
         
-        parts.append("\n\nIMPORTANTE: Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje. Mantén un tono profesional pero accesible.")
+        parts.append("\n\n## LANGUAGE POLICY [CRITICAL]\nALWAYS respond in the SAME language the user writes their message. Maintain a professional but accessible tone.")
         
         return "\n".join(parts)
     
@@ -232,14 +232,14 @@ class OmnixPromptBuilder:
         if context.conversation_history:
             truncated = self.truncate_history(context.conversation_history)
             if truncated:
-                parts.append("Historial reciente de conversación:")
+                parts.append("Recent conversation history:")
                 for msg in truncated:
                     role = msg.get("role", "user")
                     content = msg.get("content", "")[:200]
                     parts.append(f"[{role}]: {content}")
                 parts.append("")
         
-        parts.append(f"Mensaje actual del usuario: {context.user_message}")
+        parts.append(f"Current user message: {context.user_message}")
         
         return "\n".join(parts)
     
