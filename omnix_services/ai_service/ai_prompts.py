@@ -53,7 +53,7 @@ class PromptsContextManager:
             '🔐 Enterprise Security': 'Advanced encryption and protection',
             '🎤 Voice Bidirectional': 'Speech-to-Text + Text-to-Speech real',
             '☪️ Sharia Compliant': 'Automated Islamic finance validation',
-            '🌍 10 Languages': 'Multilingual with cultural context',
+            '🌍 Multilingual AI-First': 'Responds in user language (auto-detection)',
             '📝 Paper Trading': 'Kraken API paper trading ($1M virtual)',
             '📈 Advanced Analytics': 'Mathematical optimization algorithms',
             '🧠 Emotional AI': 'Advanced sentiment & psychology',
@@ -62,7 +62,7 @@ class PromptsContextManager:
             '🔄 Real-time Learning': 'Continuous self-improvement'
         }
         
-        # 📋 COMANDOS DE TRADING
+        # 📋 COMANDOS DE TRADING (multilingual keywords for intent detection)
         self.trading_commands = {
             'buy': ['buy', 'comprar', 'compra', '/buy', '/comprar'],
             'sell': ['sell', 'vender', 'venta', '/sell', '/vender'],
@@ -70,11 +70,12 @@ class PromptsContextManager:
             'balance': ['balance', 'saldo', '/balance', '/saldo']
         }
         
-        # 🌍 TÉRMINOS MULTILINGÜES
-        self.spanish_trading_terms = [
+        # 🌍 TÉRMINOS DE TRADING (for intent detection, not language restriction)
+        self.trading_terms = [
             'trading', 'análisis', 'criptomonedas', 'bitcoin', 'precio', 'mercado',
             'comprar', 'vender', 'estrategia', 'riesgo', 'ganancia', 'pérdida',
-            'tendencia', 'volumen', 'liquidez', 'volatilidad', 'soporte', 'resistencia'
+            'tendencia', 'volumen', 'liquidez', 'volatilidad', 'soporte', 'resistencia',
+            'buy', 'sell', 'price', 'market', 'strategy', 'risk', 'profit', 'loss'
         ]
     
     def detect_emotional_tone(self, message: str) -> str:
@@ -231,8 +232,8 @@ class PromptsContextManager:
 
 CONFIGURACIÓN DE SESIÓN:
 - Usuario: {user_name}
-- Idioma: Español (obligatorio)
-- Nivel de comunicación: Institucional
+- Idioma: Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje (AI auto-detection)
+- Nivel de comunicación: Institucional y profesional
 
 IDENTIDAD DEL SISTEMA:
 OMNIX es un sistema de trading algorítmico de grado institucional diseñado 

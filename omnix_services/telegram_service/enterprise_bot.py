@@ -3788,7 +3788,7 @@ Usa: `/autotrading activar ACEPTO`"""
                         user_id=str(effective_user_id),
                         username=f"user_{effective_user_id}",
                         first_name="Telegram User",
-                        language_code='es'
+                        language_code='auto'
                     )
                     logger.info(f"✅ Usuario {effective_user_id} registrado/actualizado en handle_direct_message")
                 except Exception as user_reg_error:

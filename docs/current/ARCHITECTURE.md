@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Arquitectura
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 16 de Diciembre 2025  
+**Actualizado**: 19 de Diciembre 2025  
 **Estado**: Producción 24/7
 
 ---
@@ -178,6 +178,25 @@ El sistema se organiza en 11 dominios funcionales:
 | 11 | Legacy/Dormant | LEGACY | alerts, concurrency |
 
 Ver [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) para detalles de cada dominio.
+
+---
+
+## 9. AI-First Multilingual (Dec 19, 2025)
+
+El sistema responde automáticamente en el idioma del usuario usando AI auto-detection:
+
+| Componente | Cambio | Archivo |
+|------------|--------|---------|
+| System Prompt | `Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje` | ai_prompts.py |
+| Legacy Prompt | Igual instrucción AI-first | conversational_ai_adapter.py |
+| Prompt Builder | Instrucción multilingüe | omnix_prompt_builder.py |
+| User Settings | `language_code='auto'` como default | database_service.py |
+
+**Principios:**
+- Sin diccionarios de idiomas hardcodeados para respuestas
+- AI auto-detection siempre activo
+- `language_code='auto'` guardado en DB como respaldo
+- Diccionarios de `trading_terms` solo para detección de intents (no restricción de idioma)
 
 ---
 

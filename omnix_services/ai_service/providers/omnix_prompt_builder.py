@@ -212,7 +212,7 @@ class OmnixPromptBuilder:
             parts.append("\n\nRESULTADOS DE BÚSQUEDA WEB:")
             parts.append(context.web_search_results)
         
-        parts.append("\n\nIMPORTANTE: Responde en español de forma profesional pero accesible.")
+        parts.append("\n\nIMPORTANTE: Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje. Mantén un tono profesional pero accesible.")
         
         return "\n".join(parts)
     

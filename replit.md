@@ -81,6 +81,14 @@ Refactored with SOLID principles and dependency injection, integrating interface
 - IntentClassificationAdapter añadido al DI Container (Phase 6) con soporte para legacy NLP shim
 - Componentes creados: IntentClassificationPort, IntentResolutionService, ConfirmActionUseCase (pendientes de integración completa)
 
+**AI-First Multilingual (Dec 19, 2025):**
+- Sistema responde automáticamente en el idioma del usuario usando AI auto-detection
+- Instrucción en prompts: "Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje"
+- Default `language_code='auto'` guardado en DB como respaldo
+- Eliminado hardcodes de "Idioma: Español (obligatorio)" y "SIEMPRE en español"
+- Diccionarios `trading_terms` mantenidos solo para intent detection (no restricción de idioma)
+- Archivos modificados: ai_prompts.py, conversational_ai_adapter.py, omnix_prompt_builder.py, database_service.py
+
 **Error Handling System (Dec 16, 2025):**
 - `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)
 - SDK-specific error detection for Gemini, OpenAI, Anthropic exceptions

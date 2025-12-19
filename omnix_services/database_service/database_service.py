@@ -2766,7 +2766,7 @@ class DatabaseServiceEnterprise:
             return False
     
     def ensure_user_exists(self, user_id: str, username: str = None, 
-                           first_name: str = None, language_code: str = 'es') -> bool:
+                           first_name: str = None, language_code: str = 'auto') -> bool:
         """
         Garantizar que el usuario existe en la tabla users.
         Si no existe, lo crea (INSERT). Si existe, actualiza last_activity (idempotente).
@@ -2778,7 +2778,7 @@ class DatabaseServiceEnterprise:
             user_id: ID del usuario (Telegram user_id como string)
             username: Username de Telegram (opcional)
             first_name: Nombre del usuario (opcional)
-            language_code: Código de idioma (default: 'es')
+            language_code: Código de idioma (default: 'auto' = AI auto-detection)
             
         Returns:
             True si el usuario existe o fue creado exitosamente, False si error

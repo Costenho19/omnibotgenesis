@@ -85,11 +85,12 @@ class DatabaseManager:
         raise Exception("DATABASE_URL no configurado - Enterprise service no disponible")
     
     def ensure_user_exists(self, user_id: str, username: str = None, 
-                           first_name: str = None, language_code: str = 'es') -> bool:
+                           first_name: str = None, language_code: str = 'auto') -> bool:
         """
         Garantizar que el usuario existe en la tabla users.
         CRITICAL: Debe llamarse ANTES de cualquier write a tablas con FK a users.
         ADDED Nov 28, 2025: Fix para FK constraint violations
+        UPDATED Dec 19, 2025: Default 'auto' = AI auto-detection de idioma
         """
         if self.using_enterprise:
             return self.enterprise_service.ensure_user_exists(user_id, username, first_name, language_code)

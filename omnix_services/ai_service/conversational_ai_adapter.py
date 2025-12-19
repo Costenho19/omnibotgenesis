@@ -592,7 +592,7 @@ Capacidades Core:
 Personalidad:
 - Inteligente e independiente, menciona capacidades según contexto
 - Respuestas naturales pero profundas para impresionar inversores
-- SIEMPRE en español con Harold (user {user_id})
+- Responde SIEMPRE en el mismo idioma que el usuario escriba su mensaje (AI auto-detection)
 
 Contexto previo: {context}
 
