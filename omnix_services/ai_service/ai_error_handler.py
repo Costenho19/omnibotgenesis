@@ -46,17 +46,17 @@ class AIError:
         return f"❌ {self.provider.upper()} {code_str} {self.message}"
     
     def user_message(self) -> str:
-        """Generate user-friendly message"""
+        """Generate user-friendly message (AI-FIRST: minimal English placeholder)"""
         messages = {
-            ErrorCategory.AUTH_ERROR: f"🔑 {self.provider}: API key inválida o expirada",
-            ErrorCategory.RATE_LIMIT: f"⏳ {self.provider}: Límite de solicitudes excedido, reintentando...",
-            ErrorCategory.SERVER_ERROR: f"🔧 {self.provider}: Error temporal del servidor",
-            ErrorCategory.TIMEOUT: f"⏱️ {self.provider}: Tiempo de espera agotado",
-            ErrorCategory.VALIDATION: f"⚠️ {self.provider}: Solicitud inválida",
-            ErrorCategory.NOT_FOUND: f"❓ {self.provider}: Modelo no encontrado",
-            ErrorCategory.QUOTA_EXCEEDED: f"💰 {self.provider}: Cuota de API agotada",
-            ErrorCategory.CONTENT_FILTERED: f"🛡️ {self.provider}: Contenido bloqueado por filtros de seguridad",
-            ErrorCategory.UNKNOWN: f"❌ {self.provider}: Error desconocido",
+            ErrorCategory.AUTH_ERROR: f"🔑 {self.provider}: API key issue",
+            ErrorCategory.RATE_LIMIT: f"⏳ {self.provider}: Rate limit, retrying...",
+            ErrorCategory.SERVER_ERROR: f"🔧 {self.provider}: Server error",
+            ErrorCategory.TIMEOUT: f"⏱️ {self.provider}: Timeout",
+            ErrorCategory.VALIDATION: f"⚠️ {self.provider}: Validation error",
+            ErrorCategory.NOT_FOUND: f"❓ {self.provider}: Model not found",
+            ErrorCategory.QUOTA_EXCEEDED: f"💰 {self.provider}: API quota exceeded",
+            ErrorCategory.CONTENT_FILTERED: f"🛡️ {self.provider}: Content filtered",
+            ErrorCategory.UNKNOWN: f"❌ {self.provider}: Unknown error",
         }
         return messages.get(self.category, f"❌ {self.provider}: Error")
 

@@ -143,7 +143,7 @@ class ConversationalAI:
                 return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⚠️ You have reached the message limit per minute. Please wait a moment."
+            return "⏳ Rate limit reached. Please wait a moment..."
         except Exception as e:
             logger.error(f"❌ Error generating async response: {e}", exc_info=True)
             return self._fallback_response()
@@ -240,7 +240,7 @@ class ConversationalAI:
                 
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⚠️ You have reached the message limit per minute. Please wait a moment."
+            return "⏳ Rate limit reached. Please wait a moment..."
         except Exception as e:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()
@@ -406,8 +406,8 @@ class ConversationalAI:
             logger.info(f"✅ BTC PRICE OBTAINED: ${market_data['btc_price']:,.0f} via {market_data.get('data_source', 'Unknown')}")
         else:
             market_data['market_data_unavailable'] = True
-            market_data['market_data_warning'] = "Datos de mercado temporalmente no disponibles"
-            logger.error("❌ TODAS LAS FUENTES FALLARON - Sin precio BTC")
+            market_data['market_data_warning'] = "Market data temporarily unavailable"
+            logger.error("❌ ALL SOURCES FAILED - No BTC price")
         
         # 💰 PAPER TRADING BALANCE (si está disponible)
         try:
@@ -563,17 +563,16 @@ class ConversationalAI:
                                 
                             except Exception as balance_error:
                                 logger.error(f"❌ Error consultando Kraken: {balance_error}")
-                                kraken_info = "\n\n⚠️ KRAKEN: Error temporal consultando balance - Reintentando..."
+                                kraken_info = "\n\n⚠️ KRAKEN: Temporary error fetching balance - Retrying..."
                         else:
-                            # No preguntó por balance, solo indicar que está conectado
-                            kraken_info = "\n\n🔗 KRAKEN: Conectado y listo (consulta disponible cuando necesites)"
+                            kraken_info = "\n\n🔗 KRAKEN: Connected and ready"
                     else:
-                        kraken_info = "\n\n⚠️ KRAKEN: API conectada pero trading no activado aún"
+                        kraken_info = "\n\n⚠️ KRAKEN: API connected but trading not yet activated"
                 else:
-                    kraken_info = "\n\n⚠️ KRAKEN: No conectado - verificar credenciales API"
+                    kraken_info = "\n\n⚠️ KRAKEN: Not connected - verify API credentials"
         except Exception as e:
             logger.error(f"❌ Error crítico verificando Kraken: {e}")
-            kraken_info = "\n\n⚠️ KRAKEN: Sistema temporalmente no disponible"
+            kraken_info = "\n\n⚠️ KRAKEN: System temporarily unavailable"
         
         # V6.5.4d: AI-First Multilingual System Prompt
         from omnix_services.ai_service.prompt_templates import prompt_builder

@@ -303,24 +303,26 @@ class ConversationalAIService:
         """Add message to conversation history in Redis"""
         self.conversation_history.add_message(chat_id, message)
     
-    def _get_fallback_response(self, intent: str) -> str:
-        """Get fallback response when AI fails"""
-        fallback_responses = {
-            'trading_action': "⚠️ Sistema de trading temporalmente ocupado. Intenta de nuevo en unos segundos.",
-            'price_inquiry': "⚠️ Datos de precios temporalmente no disponibles. Reintentando...",
-            'market_analysis': "⚠️ Sistema de análisis temporalmente ocupado. Intenta de nuevo pronto.",
-            'general_conversation': "⚠️ Sistema temporalmente ocupado. Harold, intenta de nuevo en unos segundos."
-        }
-        return fallback_responses.get(intent, fallback_responses['general_conversation'])
+    def _get_fallback_response(self, intent: str, chat_id: Optional[int] = None) -> str:
+        """
+        Get fallback response when AI fails.
+        
+        AI-FIRST: Uses minimal English placeholder. The AI will generate
+        proper localized responses once capacity returns.
+        
+        NOTE: In future, this should queue an AI retry to generate
+        a proper response in the user's language.
+        """
+        return "⏳ System busy. Please wait a moment..."
     
-    def _get_error_response(self) -> str:
-        """Get error response"""
-        return """❌ Error en sistema de IA
-
-🔧 **Acciones recomendadas:**
-1. Verificar conexión a internet
-2. Intentar de nuevo en unos segundos
-3. Si persiste, contactar soporte técnico"""
+    def _get_error_response(self, chat_id: Optional[int] = None) -> str:
+        """
+        Get error response.
+        
+        AI-FIRST: Uses minimal English placeholder. For critical errors,
+        a simple universal message is appropriate.
+        """
+        return "⚠️ Connection issue. Please try again shortly."
     
     def clear_history(self, chat_id: int):
         """Clear conversation history for chat_id from Redis"""

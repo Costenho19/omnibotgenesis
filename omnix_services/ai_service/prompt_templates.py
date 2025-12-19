@@ -8,14 +8,34 @@ Architecture:
 - Dynamic language detection and adaptation
 - Chain-of-Thought triggers for analytical queries
 - Self-verification patterns
+- Thread-safe language detection with asyncio.Lock
+- Redis persistence for detected language per chat_id
 
 Created: Dec 19, 2025
+Updated: Dec 19, 2025 - Added concurrency-safe language detection
 """
 
 from typing import Optional, Dict, Any
 import logging
+import asyncio
+import threading
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+_language_detection_lock = threading.Lock()
+_async_language_detection_lock: Optional[asyncio.Lock] = None
+
+def _get_async_lock() -> asyncio.Lock:
+    """Get or create the async lock for the current event loop."""
+    global _async_language_detection_lock
+    try:
+        loop = asyncio.get_running_loop()
+        if _async_language_detection_lock is None:
+            _async_language_detection_lock = asyncio.Lock()
+        return _async_language_detection_lock
+    except RuntimeError:
+        return asyncio.Lock()
 
 MASTER_SYSTEM_PROMPT = """You are OMNIX V6.5.4d INSTITUTIONAL+, an advanced automated trading assistant created by Harold Nunes.
 
@@ -104,7 +124,16 @@ class LanguageContextManager:
     """
     Manages dynamic language detection and prompt adaptation.
     Detects user language and generates appropriate directives.
+    
+    CONCURRENCY-SAFE: Uses locks to prevent language bleed between
+    simultaneous requests from different users.
+    
+    REDIS PERSISTENCE: Stores detected language per chat_id for
+    fallback scenarios and conversation continuity.
     """
+    
+    REDIS_LANGUAGE_PREFIX = "omnix:user_language:"
+    REDIS_LANGUAGE_TTL = 86400  # 24 hours
     
     def __init__(self):
         self.supported_languages = {
@@ -119,12 +148,30 @@ class LanguageContextManager:
             'ja': 'Japanese',
             'ko': 'Korean',
             'ru': 'Russian',
-            'hi': 'Hindi'
+            'hi': 'Hindi',
+            'no': 'Norwegian',
+            'sv': 'Swedish',
+            'da': 'Danish',
+            'nl': 'Dutch',
+            'pl': 'Polish',
+            'tr': 'Turkish'
         }
+        self._redis_client = None
+        
+    def _get_redis(self):
+        """Lazy load Redis client."""
+        if self._redis_client is None:
+            try:
+                from omnix_services.redis_service.cache import cache
+                self._redis_client = cache.client
+            except Exception as e:
+                logger.warning(f"Redis not available for language persistence: {e}")
+        return self._redis_client
         
     def detect_language(self, text: str) -> str:
         """
-        Detect the language of user input.
+        Detect the language of user input (THREAD-SAFE).
+        Uses threading.Lock to prevent concurrent detection issues.
         Returns ISO 639-1 language code.
         """
         try:
@@ -133,16 +180,100 @@ class LanguageContextManager:
             logger.warning("langdetect not installed, defaulting to English")
             return 'en'
         
-        try:
-            detected = detect(text)
-            if detected in self.supported_languages:
+        with _language_detection_lock:
+            try:
+                detected = detect(text)
+                logger.debug(f"🌍 Language detected (sync): {detected}")
                 return detected
-            return detected
-        except LangDetectException:
+            except LangDetectException:
+                return 'en'
+            except Exception as e:
+                logger.warning(f"Language detection error: {e}")
+                return 'en'
+    
+    async def detect_language_async(self, text: str) -> str:
+        """
+        Async version of language detection (CONCURRENCY-SAFE).
+        Uses asyncio.Lock to prevent language bleed between concurrent requests.
+        """
+        try:
+            from langdetect import detect, LangDetectException
+        except ImportError:
+            logger.warning("langdetect not installed, defaulting to English")
             return 'en'
+        
+        lock = _get_async_lock()
+        async with lock:
+            try:
+                detected = detect(text)
+                logger.debug(f"🌍 Language detected (async): {detected}")
+                return detected
+            except LangDetectException:
+                return 'en'
+            except Exception as e:
+                logger.warning(f"Language detection error: {e}")
+                return 'en'
+    
+    def persist_user_language(self, chat_id: int, lang_code: str) -> bool:
+        """
+        Store detected language in Redis for a chat/user.
+        Allows fallback messages to use correct language even when AI fails.
+        """
+        redis = self._get_redis()
+        if redis is None:
+            return False
+        
+        try:
+            key = f"{self.REDIS_LANGUAGE_PREFIX}{chat_id}"
+            data = {
+                'lang': lang_code,
+                'updated': datetime.utcnow().isoformat()
+            }
+            import json
+            redis.setex(key, self.REDIS_LANGUAGE_TTL, json.dumps(data))
+            logger.debug(f"🌍 Persisted language {lang_code} for chat {chat_id}")
+            return True
         except Exception as e:
-            logger.warning(f"Language detection error: {e}")
+            logger.warning(f"Failed to persist language: {e}")
+            return False
+    
+    def get_user_language(self, chat_id: int) -> str:
+        """
+        Retrieve stored language for a chat/user from Redis.
+        Returns 'en' as default if not found.
+        """
+        redis = self._get_redis()
+        if redis is None:
             return 'en'
+        
+        try:
+            key = f"{self.REDIS_LANGUAGE_PREFIX}{chat_id}"
+            data = redis.get(key)
+            if data:
+                import json
+                parsed = json.loads(data)
+                return parsed.get('lang', 'en')
+        except Exception as e:
+            logger.warning(f"Failed to get stored language: {e}")
+        
+        return 'en'
+    
+    def detect_and_persist(self, text: str, chat_id: int) -> str:
+        """
+        Detect language and persist it to Redis in one call.
+        This is the recommended method for production use.
+        """
+        lang = self.detect_language(text)
+        self.persist_user_language(chat_id, lang)
+        return lang
+    
+    async def detect_and_persist_async(self, text: str, chat_id: int) -> str:
+        """
+        Async version: Detect language and persist it to Redis.
+        """
+        lang = await self.detect_language_async(text)
+        self.persist_user_language(chat_id, lang)
+        return lang
     
     def get_language_directive(self, detected_lang: str) -> str:
         """
