@@ -1,5 +1,19 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
+---
+## MANDATORY PROTOCOL - READ FIRST
+---
+
+> **BEFORE making ANY code changes, you MUST review the documentation in `docs/` to understand the current system state.**
+> 
+> **AFTER making significant changes, you MUST update the relevant documentation.**
+> 
+> **Failure to follow this protocol leads to inconsistencies, bugs, and wasted effort.**
+
+See [Protocolo de Contexto](#protocolo-de-contexto-obligatorio) below for the complete checklist.
+
+---
+
 ## Overview
 OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 

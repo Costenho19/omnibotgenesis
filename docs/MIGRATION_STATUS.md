@@ -1,14 +1,16 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 18 de Diciembre 2025  
+**Fecha**: 19 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 100% ✅
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% (Legacy en producción)
 
-> 🎉 **MIGRACIÓN COMPLETADA - 18 Dic 2025:**
-> - **15/15 ports activos** en Railway
-> - `USE_APP_LAYER=true` - Flujo V7 completo activado
-> - Sistema opera 100% en arquitectura hexagonal V7.0
-> - Legacy disponible como fallback automático si V7 falla
+> **NOTA**: Este documento describe la arquitectura V7.0 implementada.
+> Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para el estado real de producción.
+
+> **Sistema en producción**: 100% código legacy operando 24/7 en Railway
+> - **0/15 ports activados** - Todos los feature flags en `false`
+> - `USE_APP_LAYER=false` - Legacy en operación
+> - Arquitectura V7.0 lista pero no activada
 
 ### Último Update (17 Dic 2025 - Session 5)
 
@@ -72,8 +74,8 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 | Driven Ports definidos | **15 ✅** |
 | Driver Ports definidos | **2 ✅** |
 | Adapters implementados | **19 ✅** |
-| Ports activos en producción | **15/15 (100%) ✅** |
-| USE_APP_LAYER | **true ✅** |
+| Ports activos en producción | **0/15 (0%)** - Legacy en uso |
+| USE_APP_LAYER | **false** - No activado |
 | Tests nuevos ports | **120/120 ✅** |
 
 ---

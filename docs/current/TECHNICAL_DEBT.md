@@ -1,8 +1,32 @@
 # OMNIX V6.5.4d Technical Debt Registry
 
 **Created:** December 11, 2025  
+**Updated:** December 19, 2025  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Resolved Items (Dec 19, 2025)
+
+### Hardcoded Multilingual Messages (RESOLVED)
+**Status:** ✅ Resolved (Dec 19, 2025)
+
+**Issue:** Fallback/error messages were hardcoded in Spanish across multiple files, causing wrong-language responses.
+
+**Resolution:** 
+- Replaced with minimal English placeholders in `ai_service.py`, `conversational_ai_adapter.py`, `ai_error_handler.py`
+- AI-first approach: Gemini generates all localized content
+
+### Language Detection Concurrency (RESOLVED)
+**Status:** ✅ Resolved (Dec 19, 2025)
+
+**Issue:** `langdetect` uses non-thread-safe global state, causing language bleed between concurrent users.
+
+**Resolution:**
+- Added `threading.Lock` for sync paths
+- Added `asyncio.to_thread()` for async paths
+- Redis persistence per `chat_id` with 24h TTL
 
 ---
 

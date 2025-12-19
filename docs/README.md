@@ -1,8 +1,28 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 18 de Diciembre 2025  
+**Actualizado**: 19 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
+
+---
+
+## PROTOCOLO OBLIGATORIO
+
+> **ANTES de hacer cambios de código**: Revisar esta documentación para entender el estado actual del sistema.
+>
+> **DESPUÉS de cambios significativos**: Actualizar la documentación correspondiente.
+
+Ver `replit.md` para el checklist completo de prioridades de revisión.
+
+---
+
+## Cambios Recientes (Dec 19, 2025)
+
+### AI-First Multilingual Concurrency
+- **Detección de idioma segura para concurrencia**: `threading.Lock` + `asyncio.to_thread()` previenen mezcla de idiomas entre usuarios simultáneos
+- **Persistencia Redis por usuario**: `omnix:user_language:{chat_id}` con TTL 24h
+- **Placeholders universales en inglés**: Mensajes de fallback/error en inglés - AI genera respuestas localizadas
+- **NO diccionarios multilingües hardcodeados**: Gemini genera todo el contenido localizado
 
 ---
 
@@ -43,7 +63,8 @@
 ```
 docs/
 ├── README.md                 <- Este archivo (índice)
-├── MIGRATION_STATUS.md       <- Estado V7.0 consolidado (fuente de verdad)
+├── REAL_SYSTEM_STATUS.md     <- Estado REAL de producción (fuente de verdad)
+├── MIGRATION_STATUS.md       <- Estado V7.0 consolidado (arquitectura)
 │
 ├── current/                  <- Documentos "vivos" (estado actual)
 │   ├── HEXAGONAL_MIGRATION_STATUS.md  <- Ports/Adapters detallado

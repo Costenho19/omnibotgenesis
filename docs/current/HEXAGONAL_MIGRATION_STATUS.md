@@ -1,54 +1,62 @@
 # OMNIX V7.0 - Estado de Migración Hexagonal
 
-**Fecha**: 18 de Diciembre 2025  
+**Fecha**: 19 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 100% ✅
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
+
+---
+
+> ⚠️ **IMPORTANTE**: Este documento describe la arquitectura objetivo.
+> Para el estado REAL de producción, ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md).
 
 ---
 
 ## Resumen Ejecutivo
 
-🎉 **MIGRACIÓN COMPLETADA** - La arquitectura hexagonal V7.0 está **100% activa** en Railway. Todos los ports operan en V7 con fallback automático a legacy si fallan.
+📋 **ARQUITECTURA IMPLEMENTADA** - La arquitectura hexagonal V7.0 está **100% implementada** en `src/omnix/`. Sin embargo, el sistema opera 100% con código legacy en Railway. Todos los feature flags están desactivados.
 
 | Métrica | Valor |
 |---------|-------|
 | Driven Ports | **15** |
 | Driver Ports | **2** |
 | Adapters | **19** |
-| Ports activos en producción | **15/15 (100%) ✅** |
-| USE_APP_LAYER | **true ✅** |
+| Ports activos en producción | **0/15 (0%)** - Legacy en uso |
+| USE_APP_LAYER | **false** - No activado |
 | Tests pasando | **120/120** |
 
 ---
 
 ## Inventario de Ports
 
+> **Estado**: Todos los ports están IMPLEMENTADOS pero NO activos. 
+> Los flags listados son el objetivo; actualmente todos = `false`.
+
 ### Driven Ports (15 - Salida hacia infraestructura)
 
-| Port | Adapter | Feature Flag | Runbook |
-|------|---------|--------------|---------|
+| Port | Adapter | Feature Flag (objetivo) | Runbook |
+|------|---------|------------------------|---------|
 | ai_inference_port | gemini_adapter | (incluido en AI) | - |
-| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=true` ✅ | - |
-| ai_voice_port | voice_adapter | `USE_VOICE_PORT=true` ✅ | - |
-| cache_port | cache_adapter | `USE_CACHE_PORT=true` ✅ | - |
-| database_port | database_adapter | `USE_DATABASE_PORT=true` ✅ | - |
-| derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) |
-| execution_port | execution_adapter | `USE_EXECUTION_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_EXECUTION_PORT_ACTIVATION.md) |
-| market_data_port | kraken_adapter | (incluido en Trading) ✅ | - |
-| market_intel_port | market_intel_adapter | `USE_MARKET_INTEL_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) |
-| notification_port | notification_adapter | `USE_NOTIFICATION_PORT=true` ✅ | - |
-| onchain_data_port | onchain_adapter | `USE_ONCHAIN_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_ONCHAIN_PORT_ACTIVATION.md) |
-| optimization_port | optimization_adapter | `USE_OPTIMIZATION_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) |
-| portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) |
-| risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=true` ✅ | [Runbook](../operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) |
-| trading_port | trading_adapter | (incluido en App Layer) ✅ | - |
+| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` | - |
+| ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` | - |
+| cache_port | cache_adapter | `USE_CACHE_PORT=false` | - |
+| database_port | database_adapter | `USE_DATABASE_PORT=false` | - |
+| derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` | [Runbook](../operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) |
+| execution_port | execution_adapter | `USE_EXECUTION_PORT=false` | [Runbook](../operations/RUNBOOK_EXECUTION_PORT_ACTIVATION.md) |
+| market_data_port | kraken_adapter | (incluido en Trading) | - |
+| market_intel_port | market_intel_adapter | `USE_MARKET_INTEL_PORT=false` | [Runbook](../operations/RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) |
+| notification_port | notification_adapter | `USE_NOTIFICATION_PORT=false` | - |
+| onchain_data_port | onchain_adapter | `USE_ONCHAIN_PORT=false` | [Runbook](../operations/RUNBOOK_ONCHAIN_PORT_ACTIVATION.md) |
+| optimization_port | optimization_adapter | `USE_OPTIMIZATION_PORT=false` | [Runbook](../operations/RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) |
+| portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` | [Runbook](../operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) |
+| risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` | [Runbook](../operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) |
+| trading_port | trading_adapter | (incluido en App Layer) | - |
 
 ### Driver Ports (2 - Entrada desde interfaces)
 
-| Port | Adapter | Feature Flag |
-|------|---------|--------------|
-| telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=true` ✅ |
-| rest_api_port | Flask Blueprints | `USE_APP_LAYER=true` ✅ |
+| Port | Adapter | Feature Flag (objetivo) |
+|------|---------|------------------------|
+| telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=false` |
+| rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
 
 ---
 

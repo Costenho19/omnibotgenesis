@@ -1,7 +1,19 @@
 # OMNIX V7.0 - Estado REAL del Sistema
 
-**Fecha**: 18 de Diciembre 2025  
+**Fecha**: 19 de Diciembre 2025  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
+
+> **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
+
+---
+
+## Cambios Recientes (Dec 19, 2025)
+
+### AI-First Multilingual Concurrency
+- **Implementado**: Detección de idioma segura para concurrencia (`threading.Lock` + `asyncio.to_thread()`)
+- **Implementado**: Persistencia Redis por usuario (`omnix:user_language:{chat_id}`)
+- **Implementado**: Placeholders universales en inglés (AI genera respuestas localizadas)
+- **Eliminado**: Diccionarios multilingües hardcodeados en ai_service.py, conversational_ai_adapter.py, ai_error_handler.py
 
 ---
 
@@ -111,4 +123,4 @@ main.py
 
 ---
 
-*Última actualización: 18 de Diciembre 2025*
+*Última actualización: 19 de Diciembre 2025*

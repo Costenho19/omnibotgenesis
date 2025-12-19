@@ -1,8 +1,19 @@
 # OMNIX V6.5.4d - Mapa Completo de Funcionalidades
 
-**Fecha**: 15 de Diciembre 2025  
+**Fecha**: 19 de Diciembre 2025  
 **Propósito**: Documento de referencia para reescritura limpia V7.0  
 **Estado**: CONSOLIDADO
+
+---
+
+## Cambios Recientes (Dec 19, 2025)
+
+### AI-First Multilingual Concurrency - IMPLEMENTADO
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección de idioma con lock + Redis |
+| Fallback Messages | `ai_service.py`, `conversational_ai_adapter.py`, `ai_error_handler.py` | Placeholders EN universales |
+| Redis Language Cache | `omnix:user_language:{chat_id}` | 24h TTL por usuario |
 
 ---
 

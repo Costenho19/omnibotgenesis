@@ -38,6 +38,24 @@
 
 ---
 
+## AI-First Multilingual Concurrency (Dec 19, 2025)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección de idioma + Redis persistence |
+| threading.Lock | `prompt_templates.py` | Serialización sync para langdetect |
+| asyncio.to_thread() | `prompt_templates.py` | Serialización async para langdetect |
+| Redis Language Cache | `omnix:user_language:{chat_id}` | 24h TTL por usuario |
+
+**Flujo**:
+```
+Usuario → detect_language() [Lock] → Redis persist → System Prompt inject → Gemini → Response
+```
+
+**Política**: NO diccionarios multilingües hardcodeados. AI genera todo el contenido localizado.
+
+---
+
 ## 1. Core Trading Engines
 
 | Módulo | Ubicación | Propósito |
@@ -72,25 +90,28 @@
 
 ## 3. Hexagonal Ports
 
-### Driven Ports (Salida)
+> **NOTA**: Todos los ports V7.0 están implementados pero NO activos en producción.
+> El sistema opera 100% con código legacy. Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md).
+
+### Driven Ports (Salida) - 0/15 Activos
 
 | Port | Adapter | Estado |
 |------|---------|--------|
-| TradingPort | KrakenAdapter | ✅ Activo |
-| MarketDataPort | KrakenAdapter | ✅ Activo |
-| AIInferencePort | GeminiAdapter | ✅ Activo |
-| DatabasePort | DatabaseAdapter | ⬜ Diferido |
-| CachePort | CacheAdapter | ⬜ Diferido |
-| NotificationPort | NotificationAdapter | ⬜ Diferido |
+| TradingPort | KrakenAdapter | ⬜ No activo (legacy en uso) |
+| MarketDataPort | KrakenAdapter | ⬜ No activo (legacy en uso) |
+| AIInferencePort | GeminiAdapter | ⬜ No activo (legacy en uso) |
+| DatabasePort | DatabaseAdapter | ⬜ No activo |
+| CachePort | CacheAdapter | ⬜ No activo |
+| NotificationPort | NotificationAdapter | ⬜ No activo |
 
-### Driver Ports (Entrada)
+### Driver Ports (Entrada) - 0/2 Activos
 
 | Port | Adapter | Estado |
 |------|---------|--------|
-| TelegramPort | TelegramBotAdapter | ⬜ Diferido |
-| RestApiPort | Flask Blueprints | ⬜ Diferido |
+| TelegramPort | TelegramBotAdapter | ⬜ No activo (legacy en uso) |
+| RestApiPort | Flask Blueprints | ⬜ No activo |
 
-Ver [MIGRATION_STATUS.md](../MIGRATION_STATUS.md) para detalles de migración V7.0.
+Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de producción.
 
 ---
 
