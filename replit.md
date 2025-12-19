@@ -87,7 +87,8 @@ Refactored with SOLID principles and dependency injection, integrating interface
 - Default `language_code='auto'` guardado en DB como respaldo
 - Eliminado hardcodes de "Idioma: Español (obligatorio)" y "SIEMPRE en español"
 - Diccionarios `trading_terms` mantenidos solo para intent detection (no restricción de idioma)
-- Archivos modificados: ai_prompts.py, conversational_ai_adapter.py, omnix_prompt_builder.py, database_service.py
+- **TTS Multilingüe**: Audio generado en el idioma de la respuesta usando `langdetect` (fallback 'es')
+- Archivos modificados: ai_prompts.py, conversational_ai_adapter.py, omnix_prompt_builder.py, database_service.py, enterprise_bot.py
 
 **Error Handling System (Dec 16, 2025):**
 - `ai_error_handler.py`: ErrorClassifier with 8 categories (AUTH_ERROR, RATE_LIMIT, SERVER_ERROR, TIMEOUT, etc.)
