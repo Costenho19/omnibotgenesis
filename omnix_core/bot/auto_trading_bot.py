@@ -889,14 +889,87 @@ class AutoTradingBot:
     
     def _process_user_trading_cycle(self, user_id: str, session):
         """
-         Procesar un ciclo de trading para un usuario específico
+        V6.5.4d MULTI-USER: Procesar un ciclo de trading para un usuario específico
+        
+        Este método ejecuta la lógica de trading pasando el user_id para
+        aislamiento multi-usuario. Es llamado desde _trading_loop_multi_user.
+        
+        NOTA: Esta es una implementación BÁSICA para habilitar multi-usuario.
+        El loop legacy (_trading_loop) tiene protecciones adicionales:
+        - _check_emergency_stop (verificado en el loop padre)
+        - Algorithmic Rollback Protocol (verificado en el loop padre)
+        - Heartbeats (verificado en el loop padre)
         
         Args:
             user_id: ID del usuario
             session: UserTradingSession del usuario
         """
         try:
-            pass
+            logger.debug(f"📊 Procesando ciclo para user {user_id}")
+            
+            # 0. Verificar emergency_stop a nivel de sesión
+            if session.emergency_stop:
+                logger.warning(f"🚨 Emergency stop activo para user {user_id} - saltando ciclo")
+                return
+            
+            # 1. Verificar Take Profit / Stop Loss en posiciones abiertas
+            self._check_open_positions_tp_sl(user_id=user_id)
+            
+            # 2. Verificar límite de posiciones ANTES de análisis
+            position_limit_reached = self._check_position_limit_early(user_id=user_id)
+            
+            # 3. Obtener configuración de pares (usar sesión o config global como fallback)
+            trading_pairs = getattr(session, 'trading_pairs', None) or self.config.get('trading_pairs', ['BTC/USD'])
+            
+            # 4. Escanear pares configurados
+            session_updated = False
+            for current_pair in trading_pairs:
+                # NOTA: Temporalmente usamos config compartido, pero pasamos user_id
+                # para que las operaciones de DB sean aisladas
+                self.config['trading_pair'] = current_pair
+                
+                # Verificar si el símbolo está permitido
+                if is_symbol_allowed and not is_symbol_allowed(current_pair, self.trading_profile):
+                    continue
+                
+                # Análisis completo
+                analysis = self._analyze_market()
+                
+                if not analysis:
+                    continue
+                
+                should_trade = analysis.get('should_trade', False)
+                action = analysis.get('action', 'HOLD')
+                
+                # Bloquear BUY si límite de posiciones alcanzado
+                if position_limit_reached and action == 'BUY':
+                    logger.debug(f"⏸️ BUY bloqueado para {user_id} - límite de posiciones")
+                    continue
+                
+                # Ejecutar trade si aplica
+                if should_trade and action in ['BUY', 'SELL']:
+                    result = self._execute_smart_trade(analysis, user_id=user_id)
+                    
+                    if result and 'error' not in result:
+                        # Actualizar sesión del usuario
+                        session.total_trades += 1
+                        pnl = result.get('profit_loss', 0.0)
+                        if pnl > 0:
+                            session.winning_trades += 1
+                        session.total_profit_loss += pnl
+                        session.last_trade_time = datetime.now().isoformat()
+                        session_updated = True
+                        
+                        logger.info(f"✅ Trade ejecutado para user {user_id}: {action}")
+            
+            # 5. V6.5.4d: Persistir sesión si hubo cambios
+            if session_updated and USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
+                try:
+                    session_manager = get_session_manager()
+                    session_manager.save_session(session)
+                    logger.debug(f"💾 Sesión persistida para user {user_id}")
+                except Exception as save_err:
+                    logger.warning(f"⚠️ Error persistiendo sesión para {user_id}: {save_err}")
             
         except Exception as e:
             logger.error(f"❌ Error en ciclo de trading para user {user_id}: {e}")
@@ -1211,7 +1284,7 @@ class AutoTradingBot:
         except Exception as e:
             logger.warning(f"⚠️ V6.4: Error cargando estado persistente (usando valores iniciales): {e}")
     
-    def _check_open_positions_tp_sl(self) -> int:
+    def _check_open_positions_tp_sl(self, user_id: str = None) -> int:
         """
         PREMIUM: Gestión automática de posiciones con ATR-based TP/SL dinámico.
         
@@ -1221,13 +1294,18 @@ class AutoTradingBot:
         - Break-even automático para proteger capital
         - Validación con Coherence Engine y Risk Guardian
         
+        Args:
+            user_id: ID del usuario (V6.5.4d MULTI-USER). Si None, usa fallback legacy.
+        
         Returns:
             int: Número de posiciones cerradas
         """
         if not self.config['paper_mode'] or not self.paper_trading:
             return 0
         
-        user_id = str(self.config.get('harold_user_id', '7014748854'))
+        # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
+        if user_id is None:
+            user_id = str(self.config.get('harold_user_id', '7014748854'))
         
         # PREMIUM: Usar DynamicPositionManager si está disponible
         if self.position_manager:
@@ -2545,9 +2623,18 @@ class AutoTradingBot:
             None, None, None, None
         )
     
-    def _execute_smart_trade(self, analysis: Dict) -> Dict:
-        """Ejecutar trade con validaciones de seguridad (PAPER o REAL)"""
+    def _execute_smart_trade(self, analysis: Dict, user_id: str = None) -> Dict:
+        """
+        Ejecutar trade con validaciones de seguridad (PAPER o REAL)
+        
+        Args:
+            analysis: Diccionario con análisis del trade
+            user_id: ID del usuario (V6.5.4d MULTI-USER). Si None, usa fallback legacy.
+        """
         try:
+            # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
+            if user_id is None:
+                user_id = str(self.config.get('harold_user_id', '7014748854'))
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
             
@@ -3001,7 +3088,7 @@ class AutoTradingBot:
                     max_daily_trades = active_profile.extra_params.get('ares_max_daily_trades', 3)
                     
                     if self.paper_trading and hasattr(self.paper_trading, 'get_today_trades_count'):
-                        user_id = str(self.config.get('harold_user_id', '7014748854'))
+                        # V6.5.4d MULTI-USER: Usar user_id del parámetro (ya está definido arriba)
                         today_stats = self.paper_trading.get_today_trades_count(user_id)
                         
                         if 'error' in today_stats:
@@ -3044,7 +3131,7 @@ class AutoTradingBot:
             # APLICA A PAPER Y REAL TRADING - BUY no debe abrir si ya existe posición
             if action == 'BUY':
                 if self.paper_trading and hasattr(self.paper_trading, 'count_open_positions_for_symbol'):
-                    user_id = str(self.config.get('harold_user_id', '7014748854'))
+                    # V6.5.4d MULTI-USER: Usar user_id del parámetro (ya está definido arriba)
                     symbol = self.config['trading_pair']
                     
                     try:
@@ -3209,8 +3296,9 @@ class AutoTradingBot:
             if self.config['paper_mode']:
                 # PAPER TRADING V2 - Usa PostgreSQL institucional
                 if self.paper_trading:
+                    # V6.5.4d MULTI-USER: Usar user_id del parámetro
                     result = self.paper_trading.execute_paper_trade(
-                        user_id=str(self.config.get('harold_user_id', '7014748854')),
+                        user_id=user_id,
                         side=action.lower(),
                         symbol=self.config['trading_pair'],
                         amount_usd=amount_usd
@@ -4097,7 +4185,7 @@ class AutoTradingBot:
         except Exception as e:
             logger.error(f"Error procesando evaluaciones pendientes: {e}")
     
-    def _check_position_limit_early(self) -> bool:
+    def _check_position_limit_early(self, user_id: str = None) -> bool:
         """
         FIX INSTITUCIONAL V6.5.4c: Verificar límite de posiciones ANTES del análisis.
         
@@ -4107,6 +4195,9 @@ class AutoTradingBot:
         V6.5.4c: Usa paper_trading para obtener posiciones correctamente.
         Límite: máximo 10 posiciones totales (reducido de 20).
         
+        Args:
+            user_id: ID del usuario (V6.5.4d MULTI-USER). Si None, usa fallback legacy.
+        
         Returns:
             True si el límite está alcanzado (no abrir nuevas posiciones)
             False si hay espacio para nuevas posiciones
@@ -4114,9 +4205,12 @@ class AutoTradingBot:
         try:
             max_positions = self.config.get('max_open_positions', 10)  # V6.5.4c: Reducido a 10
             
+            # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
+            if user_id is None:
+                user_id = str(self.config.get('harold_user_id', '7014748854'))
+            
             # V6.5.4c: Usar paper_trading para obtener posiciones correctamente
             if self.paper_trading and self.config.get('paper_mode', False):
-                user_id = str(self.config.get('harold_user_id', '7014748854'))
                 open_positions = self.paper_trading.get_open_positions(user_id)
                 current_count = len(open_positions) if open_positions else 0
                 

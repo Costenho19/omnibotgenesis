@@ -971,6 +971,24 @@ USE_RLS = os.getenv('USE_RLS', 'false').lower() == 'true'
 > **NOTA (20 Dic 2025)**: El `UserSessionManager` ya existe y está probado.
 > La tarea 1.2 se reduce de 6h a 4h porque solo requiere **integración**, no desarrollo nuevo.
 
+### 7.4 Progreso de Implementación (20 Dic 2025)
+
+| Tarea | Estado | Detalle |
+|-------|--------|---------|
+| Parametrizar `_check_open_positions_tp_sl(user_id)` | ✅ COMPLETADO | Acepta user_id con fallback legacy |
+| Parametrizar `_execute_smart_trade(analysis, user_id)` | ✅ COMPLETADO | Acepta user_id con fallback legacy |
+| Parametrizar `_check_position_limit_early(user_id)` | ✅ COMPLETADO | Acepta user_id con fallback legacy |
+| Implementar `_process_user_trading_cycle(user_id, session)` | ✅ COMPLETADO | Lógica básica con persistencia de sesión |
+| Actualizar verificación límite diario | ✅ COMPLETADO | Usa user_id del parámetro |
+| Actualizar verificación posición duplicada | ✅ COMPLETADO | Usa user_id del parámetro |
+| Actualizar execute_paper_trade | ✅ COMPLETADO | Usa user_id del parámetro |
+
+**NOTA IMPORTANTE**: La implementación actual es **BÁSICA** y mantiene compatibilidad con el flujo legacy.
+Para producción completa, falta:
+- Desacoplar configuración por usuario (actualmente usa `self.config` compartido)
+- Migrar protecciones ARP y heartbeats al flujo multi-usuario
+- Tests de aislamiento con múltiples usuarios simultáneos
+
 ### 7.3 Diagrama de Dependencias
 
 ```
