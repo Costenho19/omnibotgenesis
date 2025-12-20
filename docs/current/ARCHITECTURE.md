@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Arquitectura
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 19 de Diciembre 2025  
+**Actualizado**: 20 de Diciembre 2025  
 **Estado**: Producción 24/7
 
 ---
@@ -163,7 +163,65 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 ### Problema Resuelto
 Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB pero NO notificaban al `AutoTradingBot`. Esto causaba que el trading no se reiniciara hasta el próximo redeploy de Railway.
 
-### Solución Implementada
+### Arquitectura de Integración Completa
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO COMPLETO DE TRADING V6.5.4d                      │
+└──────────────────────────────────────────────────────────────────────────┘
+
+         CAPA DE INTERFAZ                    CAPA DE CONTROL
+    ┌─────────────────────┐            ┌─────────────────────────┐
+    │   Telegram Bot      │───────────▶│   UserSettingsService   │
+    │  (enterprise_bot)   │            │   (user_settings_svc)   │
+    └─────────────────────┘            └───────────┬─────────────┘
+              │                                    │
+              │ /pausar, /reanudar                 │ PostgreSQL
+              │                                    │ is_paused = true/false
+              ▼                                    ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │              🔗 EVENT BRIDGE V6.5.4d                         │
+    │  enterprise_bot.py:                                          │
+    │  ├── Detecta comando /pausar o /reanudar                    │
+    │  ├── Llama UserSettingsService (persistencia DB)            │
+    │  └── Llama AutoTradingBot.start() o .stop() (ejecución)     │
+    └─────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │              CAPA DE EJECUCIÓN DE TRADING                    │
+    │  AutoTradingBot V6.5.4d:                                     │
+    │  ├── _start_stop_lock (threading.Lock)                      │
+    │  ├── _thread (referencia al Thread activo)                  │
+    │  ├── start() → Inicia _trading_loop en Thread               │
+    │  ├── stop() → Detiene loop, join(timeout=5s)                │
+    │  └── _write_heartbeat() → Redis cada 5 min                  │
+    └─────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │                 TRADING LOOP (_trading_loop)                 │
+    │  Ciclo cada 25 segundos:                                     │
+    │  1. Verificar emergency_stop                                 │
+    │  2. Heartbeat cada 12 ciclos (~5min) → Redis                │
+    │  3. Rotar par (BTC→ETH→SOL...)                              │
+    │  4. _analyze_market() → 10 estrategias                      │
+    │  5. _make_v52_decision() → scoring ponderado                │
+    │  6. Coherence Engine → 6-tier veto                          │
+    │  7. _execute_smart_trade() → Paper o Real                   │
+    └─────────────────────────────────────────────────────────────┘
+                                   │
+              ┌────────────────────┼────────────────────┐
+              ▼                    ▼                    ▼
+    ┌────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+    │   PostgreSQL   │  │      Redis         │  │    Kraken API      │
+    │ - user_settings│  │ - heartbeat        │  │ - precios          │
+    │ - paper_trades │  │ - cache            │  │ - órdenes          │
+    │ - balance_hist │  │ - user_language    │  │ - historial        │
+    └────────────────┘  └────────────────────┘  └────────────────────┘
+```
+
+### Flujo del Event Bridge
 
 ```
 Usuario: /reanudar
@@ -180,6 +238,27 @@ enterprise_bot.py (línea 3069-3084)
                     │
                     └── Thread: _trading_loop() activo inmediatamente
 ```
+
+### Thread Safety (V6.5.4d)
+
+Para prevenir race conditions cuando el usuario ejecuta `/pausar` y `/reanudar` rápidamente:
+
+| Componente | Ubicación | Propósito |
+|------------|-----------|-----------|
+| `_start_stop_lock` | `auto_trading_bot.py:490` | Lock exclusivo para start()/stop() |
+| `_thread` | `auto_trading_bot.py:491` | Referencia al Thread del trading loop |
+
+**Validaciones en start()**:
+1. Adquirir `_start_stop_lock` (context manager)
+2. Verificar `self.state['running'] == False`
+3. Verificar `self._thread is None or not self._thread.is_alive()`
+4. Si ambas pasan, crear nuevo Thread y ejecutar
+
+**Validaciones en stop()**:
+1. Adquirir `_start_stop_lock`
+2. Setear `self.state['running'] = False`
+3. `self._thread.join(timeout=5.0)` - esperar terminación
+4. Log warning si el thread no termina en 5 segundos
 
 ### Heartbeat Monitoring
 
@@ -199,6 +278,18 @@ enterprise_bot.py (línea 3069-3084)
 ```
 
 **Monitoreo**: Si la clave expira (TTL 10min), el loop está muerto.
+
+### Dependencias entre Componentes
+
+| Componente Origen | Depende De | Tipo de Dependencia |
+|-------------------|------------|---------------------|
+| enterprise_bot.py | UserSettingsService | Persistencia de estado |
+| enterprise_bot.py | AutoTradingBot | Ejecución de trading |
+| AutoTradingBot.start() | Redis (cache.py) | Heartbeat write |
+| AutoTradingBot._trading_loop() | 10 Estrategias | Señales de trading |
+| _trading_loop() | CoherenceEngine | Validación 6-tier |
+| _trading_loop() | PaperTradingManager | Ejecución paper trades |
+| UserSettingsService | PostgreSQL | Estado is_paused |
 
 ---
 

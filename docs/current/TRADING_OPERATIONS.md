@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d Trading Operations
 
 **Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 13, 2025  
+**Last Updated:** December 20, 2025  
 **Active Profile:** PRODUCTION_STABLE
 
 ---
@@ -279,6 +279,55 @@ GitHub (main) → Auto-deploy → Railway
 DO NOT run bot on Replit and Railway simultaneously.
 Telegram allows only ONE active connection per token.
 ```
+
+### 5.5 Control Commands (V6.5.4d)
+
+| Command | Acción | Efecto Inmediato |
+|---------|--------|------------------|
+| `/pausar` | Detener trading | Loop termina en <5s, DB is_paused=true |
+| `/reanudar` | Reanudar trading | Loop reinicia inmediatamente, DB is_paused=false |
+| `/status` | Ver estado | Muestra running, trades, win rate |
+
+**Comportamiento V6.5.4d (Event Bridge):**
+
+```
+/pausar ejecuta:
+1. UserSettingsService.pause_trading() → DB: is_paused = true
+2. AutoTradingBot.stop() → Thread.join(timeout=5s)
+3. Mensaje: "🛑 Trading pausado"
+
+/reanudar ejecuta:
+1. UserSettingsService.resume_trading() → DB: is_paused = false
+2. AutoTradingBot.start() → Nuevo Thread con _trading_loop()
+3. Mensaje: "🚀 Trading reanudado"
+```
+
+> **IMPORTANTE V6.5.4d:** Los comandos ahora reinician el trading loop SIN necesidad de redeploy de Railway.
+
+### 5.6 Thread Safety
+
+Para prevenir race conditions si el usuario ejecuta `/pausar` y `/reanudar` rápidamente:
+
+| Protección | Mecanismo | Resultado |
+|------------|-----------|-----------|
+| Lock exclusivo | `_start_stop_lock` | Solo un start/stop a la vez |
+| Verificación thread | `_thread.is_alive()` | No crear loops duplicados |
+| Join con timeout | `join(timeout=5s)` | Espera ordenada del loop anterior |
+
+### 5.7 Heartbeat Monitoring
+
+El trading loop escribe un heartbeat cada ~5 minutos:
+
+| Redis Key | TTL | Contenido |
+|-----------|-----|-----------|
+| `omnix:heartbeat:trading_loop` | 10 min | cycle, running, total_trades, paper_mode |
+
+**Cómo verificar liveness:**
+```bash
+redis-cli GET omnix:heartbeat:trading_loop
+```
+
+Si la clave no existe o expiró → el loop está muerto → reiniciar con `/reanudar`.
 
 ---
 
