@@ -65,18 +65,20 @@ The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Eng
 
 ### Multi-User and Dashboard Architecture
 
-> **ADVERTENCIA CRÍTICA (Dec 20, 2025):** La arquitectura multi-usuario documentada NO está implementada.
+> **ACTUALIZACIÓN (Dec 20, 2025):** Fase 1 de multi-usuario COMPLETADA.
 > 
-> **Estado Real:**
-> - `user_id` hardcodeado a `'7014748854'` (Harold) en 6 ubicaciones de AutoTradingBot
-> - `UserSessionManager` NO EXISTE (documentación aspiracional)
-> - Row-Level Security NO implementado en PostgreSQL
-> - 2 usuarios simultáneos compartirían posiciones y balances
+> **Progreso:**
+> - ✅ `UserSessionManager` EXISTE y funciona (562 líneas en `omnix_core/sessions/user_session_manager.py`)
+> - ✅ Funciones principales parametrizadas con `user_id` opcional (compatible hacia atrás)
+> - ✅ `_process_user_trading_cycle(user_id, session)` implementado con persistencia
+> - ✅ Flujo legacy 100% funcional (sin cambios)
+> - ⚠️ Row-Level Security PostgreSQL pendiente (Fase 2)
+> - ⚠️ Configuración por usuario pendiente (actualmente usa config compartido)
 >
-> **Documentación completa:** `docs/current/MULTI_USER_ARCHITECTURE.md`
+> **Documentación completa:** `docs/current/MULTI_USER_ARCHITECTURE.md` (ver sección 7.4)
 
 **Capacidad TEÓRICA:** 100,000+ usuarios simultáneos con sesiones aisladas.  
-**Capacidad REAL:** Single-tenant (todos los trades van a una cuenta).
+**Capacidad ACTUAL:** Single-tenant operando, infraestructura multi-user habilitada (Fase 2 pendiente).
 
 Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 
