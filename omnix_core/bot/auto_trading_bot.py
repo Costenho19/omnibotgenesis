@@ -220,6 +220,15 @@ except ImportError:
     MEMORY_ENHANCED_RMS_AVAILABLE = False
     logger.warning("⚠️ Memory-Enhanced RMS no disponible")
 
+# Import Redis Cache for heartbeat
+try:
+    from omnix_services.database_service.cache import cache as redis_cache
+    REDIS_CACHE_AVAILABLE = True
+except ImportError:
+    redis_cache = None
+    REDIS_CACHE_AVAILABLE = False
+    logger.warning("⚠️ Redis Cache no disponible - heartbeat desactivado")
+
 # Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
     from omnix_services.adaptive_engine import (
@@ -473,6 +482,10 @@ class AutoTradingBot:
             'paper_balance': 1_000_000.0 if self.config['paper_mode'] else 0.0,  # $1M virtual
             'paper_positions': {}  # {symbol: {amount, avg_price, value}}
         }
+        
+        # V6.5.4d: Lock para prevenir race conditions en start/stop
+        self._start_stop_lock = threading.Lock()
+        self._thread = None  # Reference to trading loop thread
         
         # V6.4: Cargar estado persistente de la DB
         self._load_persistent_state()
@@ -890,83 +903,98 @@ class AutoTradingBot:
     
     def start(self, user_id: str = None) -> Dict:
         """Iniciar trading automático 24/7"""
-        try:
-            if self.state['running']:
-                return {'error': 'Bot ya está corriendo'}
-            
-            # Obtener balance inicial
-            balance = self._get_balance()
-            if not balance or balance < self.config['min_trade_usd']:
-                return {
-                    'error': f'Balance insuficiente: ${balance:.2f}. Mínimo: ${self.config["min_trade_usd"]}'
-                }
-            
-            self.state['initial_balance'] = balance
-            self.state['running'] = True
-            self.state['emergency_stop'] = False
-            self.config['active'] = True
-            
-            # V6.5.4: Register deploy with Algorithmic Rollback Protocol
-            if ARP_AVAILABLE:
-                try:
-                    arp = get_arp_instance()
-                    # Create snapshot of current config before deploy
-                    current_config = {
-                        'trading_profile': self.trading_profile.name if self.trading_profile else 'UNKNOWN',
-                        'max_aggression': getattr(self, '_max_aggression', 3.0),
-                        'min_confidence': self.config.get('min_confidence', 0.6),
-                        'max_daily_loss_pct': self.config.get('max_daily_loss_pct', 0.08),
-                        'max_position_pct': self.config.get('max_position_pct', 0.12),
-                        'coherence_thresholds': self.config.get('coherence_thresholds', {})
+        # V6.5.4d: Thread-safe start with lock
+        with self._start_stop_lock:
+            try:
+                if self.state['running']:
+                    return {'error': 'Bot ya está corriendo'}
+                
+                # Verify no existing thread is running
+                if self._thread is not None and self._thread.is_alive():
+                    return {'error': 'Bot ya está corriendo (thread activo)'}
+                
+                # Obtener balance inicial
+                balance = self._get_balance()
+                if not balance or balance < self.config['min_trade_usd']:
+                    return {
+                        'error': f'Balance insuficiente: ${balance:.2f}. Mínimo: ${self.config["min_trade_usd"]}'
                     }
-                    snapshot_file = arp.create_pre_deploy_snapshot(current_config)
-                    arp.register_deploy(balance, snapshot_file)
-                    logger.info(f"🔄 ARP: Deploy registrado con balance inicial ${balance:.2f}")
-                except Exception as e:
-                    logger.warning(f"⚠️ ARP registration failed: {e}")
-            
-            # V6.5: Persistir estado en user_settings
-            self._persist_auto_trading_state(user_id, active=True)
-            
-            # Iniciar thread para loop 24/7
-            # CRÍTICO: daemon=False para que el thread SIGA CORRIENDO en Railway/webhooks
-            self._thread = threading.Thread(target=self._trading_loop, daemon=False)
-            self._thread.start()
-            
-            logger.info(f"🚀 AUTO-TRADING ACTIVADO - Balance inicial: ${balance:.2f}")
-            
-            return {
-                'success': True,
-                'message': '🤖 Auto-Trading ACTIVADO 24/7',
-                'balance': balance,
-                'initial_balance': balance,
-                'config': self.config
-            }
-            
-        except Exception as e:
-            logger.error(f"Error iniciando auto-trading: {e}")
-            return {'error': str(e)}
+                
+                self.state['initial_balance'] = balance
+                self.state['running'] = True
+                self.state['emergency_stop'] = False
+                self.config['active'] = True
+                
+                # V6.5.4: Register deploy with Algorithmic Rollback Protocol
+                if ARP_AVAILABLE:
+                    try:
+                        arp = get_arp_instance()
+                        # Create snapshot of current config before deploy
+                        current_config = {
+                            'trading_profile': self.trading_profile.name if self.trading_profile else 'UNKNOWN',
+                            'max_aggression': getattr(self, '_max_aggression', 3.0),
+                            'min_confidence': self.config.get('min_confidence', 0.6),
+                            'max_daily_loss_pct': self.config.get('max_daily_loss_pct', 0.08),
+                            'max_position_pct': self.config.get('max_position_pct', 0.12),
+                            'coherence_thresholds': self.config.get('coherence_thresholds', {})
+                        }
+                        snapshot_file = arp.create_pre_deploy_snapshot(current_config)
+                        arp.register_deploy(balance, snapshot_file)
+                        logger.info(f"🔄 ARP: Deploy registrado con balance inicial ${balance:.2f}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ ARP registration failed: {e}")
+                
+                # V6.5: Persistir estado en user_settings
+                self._persist_auto_trading_state(user_id, active=True)
+                
+                # Iniciar thread para loop 24/7
+                # CRÍTICO: daemon=False para que el thread SIGA CORRIENDO en Railway/webhooks
+                self._thread = threading.Thread(target=self._trading_loop, daemon=False)
+                self._thread.start()
+                
+                logger.info(f"🚀 AUTO-TRADING ACTIVADO - Balance inicial: ${balance:.2f}")
+                
+                return {
+                    'success': True,
+                    'message': '🤖 Auto-Trading ACTIVADO 24/7',
+                    'balance': balance,
+                    'initial_balance': balance,
+                    'config': self.config
+                }
+                
+            except Exception as e:
+                logger.error(f"Error iniciando auto-trading: {e}")
+                return {'error': str(e)}
     
     def stop(self, user_id: str = None) -> Dict:
         """Detener trading automático"""
-        try:
-            self.state['running'] = False
-            self.config['active'] = False
-            
-            # V6.5: Persistir estado en user_settings
-            self._persist_auto_trading_state(user_id, active=False)
-            
-            logger.info("🛑 AUTO-TRADING DETENIDO")
-            
-            return {
-                'success': True,
-                'message': '🛑 Auto-Trading detenido',
-                'stats': self._get_stats()
-            }
-            
-        except Exception as e:
-            logger.error(f"Error deteniendo auto-trading: {e}")
-            return {'error': str(e)}
+        # V6.5.4d: Thread-safe stop with lock
+        with self._start_stop_lock:
+            try:
+                self.state['running'] = False
+                self.config['active'] = False
+                
+                # V6.5: Persistir estado en user_settings
+                self._persist_auto_trading_state(user_id, active=False)
+                
+                # V6.5.4d: Wait for thread to finish (with timeout)
+                if self._thread is not None and self._thread.is_alive():
+                    logger.info("⏳ Esperando que el loop de trading termine...")
+                    self._thread.join(timeout=5.0)  # Wait max 5 seconds
+                    if self._thread.is_alive():
+                        logger.warning("⚠️ Loop de trading no terminó en 5s, continuando...")
+                
+                logger.info("🛑 AUTO-TRADING DETENIDO")
+                
+                return {
+                    'success': True,
+                    'message': '🛑 Auto-Trading detenido',
+                    'stats': self._get_stats()
+                }
+                
+            except Exception as e:
+                logger.error(f"Error deteniendo auto-trading: {e}")
+                return {'error': str(e)}
     
     def _persist_auto_trading_state(self, user_id: str = None, active: bool = True):
         """
@@ -1021,6 +1049,35 @@ class AutoTradingBot:
                     logger.info(f"💾 {VERSION_BANNER}: auto_trading=false persistido para todos los usuarios")
         except Exception as e:
             logger.warning(f"⚠️ {VERSION_BANNER}: Error persistiendo auto_trading: {e}")
+    
+    def _write_heartbeat(self, cycle_count: int = 0):
+        """
+        V6.5.4d: Write heartbeat to Redis for liveness monitoring.
+        Key: omnix:heartbeat:trading_loop
+        Updates every ~5 minutes (12 cycles at 25s interval)
+        """
+        if not REDIS_CACHE_AVAILABLE or not redis_cache:
+            return
+        
+        try:
+            redis_client = redis_cache.client if hasattr(redis_cache, 'client') else None
+            if redis_client:
+                heartbeat_data = {
+                    'timestamp': datetime.utcnow().isoformat() + 'Z',
+                    'cycle': cycle_count,
+                    'running': self.state.get('running', False),
+                    'total_trades': self.state.get('total_trades', 0),
+                    'paper_mode': self.config.get('paper_mode', True)
+                }
+                import json as json_heartbeat
+                redis_client.setex(
+                    'omnix:heartbeat:trading_loop',
+                    600,  # 10 min TTL
+                    json_heartbeat.dumps(heartbeat_data)
+                )
+                logger.info(f"💓 Heartbeat: Ciclo #{cycle_count} | Trades: {self.state.get('total_trades', 0)}")
+        except Exception as e:
+            logger.debug(f"Heartbeat write failed: {e}")
     
     def _load_persistent_state(self):
         """
@@ -1362,6 +1419,10 @@ class AutoTradingBot:
                 if cycle_counter % log_interval == 0:
                     win_rate = (self.state['winning_trades'] / self.state['total_trades'] * 100) if self.state['total_trades'] > 0 else 0
                     logger.info(f"📈 {VERSION_BANNER} STATUS: Ciclo #{cycle_counter} | Trades: {self.state['total_trades']} | Win Rate: {win_rate:.1f}% | P/L: ${self.state['total_profit_loss']:.2f}")
+                
+                # V6.5.4d: Heartbeat cada 12 ciclos (~5 minutos)
+                if cycle_counter % 12 == 0:
+                    self._write_heartbeat(cycle_counter)
                 
                 # Verificar parada de emergencia
                 if self._check_emergency_stop():

@@ -153,10 +153,56 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 | `market:` | 60s | Precios |
 | `user:` | 5min | Estado usuario |
 | `conv:` | 1hr | Conversaciones |
+| `omnix:heartbeat:trading_loop` | 10min | Liveness monitoring (V6.5.4d) |
+| `omnix:user_language:{chat_id}` | 24hr | User language detection |
 
 ---
 
-## 6. Cambios V6.5.4d
+## 6. Event Bridge: UserSettings → AutoTradingBot (V6.5.4d)
+
+### Problema Resuelto
+Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB pero NO notificaban al `AutoTradingBot`. Esto causaba que el trading no se reiniciara hasta el próximo redeploy de Railway.
+
+### Solución Implementada
+
+```
+Usuario: /reanudar
+    │
+    ▼
+enterprise_bot.py (línea 3069-3084)
+    │
+    ├── UserSettingsService.resume_trading()
+    │       └── PostgreSQL: is_paused = false ✓
+    │
+    └── 🔗 EVENT BRIDGE (nuevo V6.5.4d)
+            │
+            └── AutoTradingBot.start(user_id)  ← Reinicia loop en caliente
+                    │
+                    └── Thread: _trading_loop() activo inmediatamente
+```
+
+### Heartbeat Monitoring
+
+| Componente | Clave Redis | Intervalo | TTL |
+|------------|-------------|-----------|-----|
+| Trading Loop | `omnix:heartbeat:trading_loop` | 12 ciclos (~5min) | 10min |
+
+**Datos del heartbeat**:
+```json
+{
+  "timestamp": "2025-12-20T06:45:00Z",
+  "cycle": 120,
+  "running": true,
+  "total_trades": 45,
+  "paper_mode": true
+}
+```
+
+**Monitoreo**: Si la clave expira (TTL 10min), el loop está muerto.
+
+---
+
+## 7. Cambios V6.5.4d
 
 | Parámetro | Valor | Efecto |
 |-----------|-------|--------|
@@ -167,7 +213,7 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 
 ---
 
-## 7. APIs Externas
+## 8. APIs Externas
 
 | API | Servicio | Rate Limit |
 |-----|----------|------------|
@@ -180,7 +226,7 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 
 ---
 
-## 8. Dominios Funcionales
+## 9. Dominios Funcionales
 
 El sistema se organiza en 11 dominios funcionales:
 
@@ -202,7 +248,7 @@ Ver [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) para detalles de ca
 
 ---
 
-## 9. AI-First Multilingual Prompt Architecture (Dec 19, 2025)
+## 10. AI-First Multilingual Prompt Architecture (Dec 19, 2025)
 
 ### Prompt Specification Layer V6.5.4d
 

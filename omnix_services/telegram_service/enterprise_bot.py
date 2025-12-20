@@ -3054,11 +3054,29 @@ Usa `/perfil` para ver todas las opciones disponibles."""
                     
                     elif action == 'pause':
                         success, msg = self.user_settings_service.pause_trading(user_id, "Pausa solicitada por usuario", 60)
+                        if success and self.auto_trading:
+                            try:
+                                self.auto_trading.stop(user_id)
+                                logger.info(f"🔗 Event bridge: AutoTradingBot.stop() called for user {user_id}")
+                            except Exception as e:
+                                logger.warning(f"⚠️ Event bridge pause error: {e}")
                         await update.message.reply_text(msg, parse_mode='Markdown')
                         return
                     
                     elif action == 'resume':
                         success, msg = self.user_settings_service.resume_trading(user_id)
+                        if success and self.auto_trading:
+                            try:
+                                settings = self.user_settings_service.get_user_settings(user_id)
+                                if settings.auto_trading and settings.trading_enabled:
+                                    result = self.auto_trading.start(user_id)
+                                    if result.get('success'):
+                                        msg += "\n\n🔄 Auto-trading loop reiniciado automáticamente."
+                                        logger.info(f"🔗 Event bridge: AutoTradingBot.start() called for user {user_id}")
+                                    elif 'ya está corriendo' in result.get('error', ''):
+                                        logger.info(f"🔗 Event bridge: Bot already running for user {user_id}")
+                            except Exception as e:
+                                logger.warning(f"⚠️ Event bridge resume error: {e}")
                         await update.message.reply_text(msg, parse_mode='Markdown')
                         return
                     
