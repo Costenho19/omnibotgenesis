@@ -64,7 +64,21 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator.
 
 ### Multi-User and Dashboard Architecture
-Supports 100,000+ simultaneous users with isolated trading sessions. Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
+
+> **ADVERTENCIA CRÍTICA (Dec 20, 2025):** La arquitectura multi-usuario documentada NO está implementada.
+> 
+> **Estado Real:**
+> - `user_id` hardcodeado a `'7014748854'` (Harold) en 6 ubicaciones de AutoTradingBot
+> - `UserSessionManager` NO EXISTE (documentación aspiracional)
+> - Row-Level Security NO implementado en PostgreSQL
+> - 2 usuarios simultáneos compartirían posiciones y balances
+>
+> **Documentación completa:** `docs/current/MULTI_USER_ARCHITECTURE.md`
+
+**Capacidad TEÓRICA:** 100,000+ usuarios simultáneos con sesiones aisladas.  
+**Capacidad REAL:** Single-tenant (todos los trades van a una cuenta).
+
+Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.

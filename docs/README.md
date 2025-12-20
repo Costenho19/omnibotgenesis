@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 19 de Diciembre 2025  
+**Actualizado**: 20 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -16,9 +16,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ---
 
-## Cambios Recientes (Dec 19, 2025)
+## Cambios Recientes (Dec 20, 2025)
 
-### AI-First Multilingual Concurrency
+### Auditoría Multi-Usuario (CRÍTICO)
+- **Hallazgo**: user_id hardcodeado en AutoTradingBot (6 ubicaciones)
+- **Impacto**: Todos los trades van a una sola cuenta (Harold)
+- **Estado**: UserSessionManager NO EXISTE (documentación aspiracional)
+- **Plan**: 8 fases de implementación documentadas
+- **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md)
+
+### AI-First Multilingual Concurrency (Dec 19, 2025)
 - **Detección de idioma segura para concurrencia**: `threading.Lock` + `asyncio.to_thread()` previenen mezcla de idiomas entre usuarios simultáneos
 - **Persistencia Redis por usuario**: `omnix:user_language:{chat_id}` con TTL 24h
 - **Placeholders universales en inglés**: Mensajes de fallback/error en inglés - AI genera respuestas localizadas
@@ -34,6 +41,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [Migración V7.0](MIGRATION_STATUS.md) | Estado de arquitectura hexagonal (17 ports, 19 adapters, 0% activación) |
 | [Hexagonal Status](current/HEXAGONAL_MIGRATION_STATUS.md) | Detalle técnico de ports y adapters |
 | [Mapa Funcional](current/COMPLETE_FUNCTIONALITY_MAP.md) | Sistema legacy (11 dominios, 346 archivos) |
+| [Multi-Usuario](current/MULTI_USER_ARCHITECTURE.md) | **CRÍTICO** - Auditoría y plan multi-tenant |
 
 ### Operaciones
 | Documento | Descripción |
@@ -70,7 +78,8 @@ docs/
 │   ├── HEXAGONAL_MIGRATION_STATUS.md  <- Ports/Adapters detallado
 │   ├── COMPLETE_FUNCTIONALITY_MAP.md  <- Referencia sistema legacy
 │   ├── TECHNICAL_DEBT.md              <- Issues conocidos
-│   └── TRADING_OPERATIONS.md          <- Operaciones de trading
+│   ├── TRADING_OPERATIONS.md          <- Operaciones de trading
+│   └── MULTI_USER_ARCHITECTURE.md     <- **NUEVO** Auditoría multi-tenant
 │
 ├── operations/               <- Runbooks y guías operativas
 │   ├── DEPLOYMENT.md

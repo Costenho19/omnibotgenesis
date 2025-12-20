@@ -1,9 +1,59 @@
 # OMNIX V6.5.4d Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** December 19, 2025  
+**Updated:** December 20, 2025  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## CRITICAL: Multi-User Architecture (Dec 20, 2025)
+
+### Hardcoded user_id in AutoTradingBot (CRITICAL - BLOCKING B2C)
+
+**Status:** 🔴 CRITICAL - Requires Immediate Attention Before B2C Launch
+
+**Severity:** BLOQUEANTE para modelo SaaS multi-usuario
+
+| Issue | Description |
+|-------|-------------|
+| Problema | `user_id` hardcodeado en 6 ubicaciones de AutoTradingBot |
+| Valor Hardcodeado | `harold_user_id = '7014748854'` |
+| Impacto | TODOS los trades van a una sola cuenta |
+| UserSessionManager | NO EXISTE (documentación aspiracional) |
+| Row-Level Security | NO implementado en PostgreSQL |
+
+**Ubicaciones del código afectado:**
+
+| Archivo | Línea | Función |
+|---------|-------|---------|
+| `omnix_core/bot/auto_trading_bot.py` | 1230 | `_manage_positions()` |
+| `omnix_core/bot/auto_trading_bot.py` | 3004 | `_execute_trading_cycle()` |
+| `omnix_core/bot/auto_trading_bot.py` | 3047 | `_check_position_limits()` |
+| `omnix_core/bot/auto_trading_bot.py` | 3081 | `_has_open_position()` |
+| `omnix_core/bot/auto_trading_bot.py` | 3213 | `_execute_paper_trade()` |
+| `omnix_core/bot/auto_trading_bot.py` | 4119 | `get_open_positions()` |
+
+**Impacto en Usuarios:**
+- 2 usuarios simultáneos compartirían posiciones y balances
+- Un usuario puede pausar el trading de otro
+- El historial no distingue origen de trades
+- **Riesgo legal y financiero crítico**
+
+**Documentación Completa:** [MULTI_USER_ARCHITECTURE.md](MULTI_USER_ARCHITECTURE.md)
+
+**Plan de Resolución:** 8 fases (~52 horas de trabajo)
+
+| Fase | Descripción | Esfuerzo |
+|------|-------------|----------|
+| 1 | Eliminar hardcoded user_id | 4h |
+| 2 | Crear UserSessionManager | 6h |
+| 3 | Crear AuthorizationService | 8h |
+| 4 | Implementar RLS en PostgreSQL | 10h |
+| 5 | Refactorizar trading loop | 8h |
+| 6 | Tests de aislamiento | 4h |
+| 7 | PQC para auth (opcional) | 8h |
+| 8 | Documentación | 4h |
 
 ---
 
