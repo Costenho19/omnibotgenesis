@@ -114,6 +114,10 @@ from src.omnix.ports.driven.optimization_port import (
     ParameterSensitivity,
     LearningProgress,
 )
+from src.omnix.ports.driven.user_session_port import (
+    UserSessionPort,
+    UserSession,
+)
 
 __all__ = [
     "TradingPort",
@@ -205,4 +209,6 @@ __all__ = [
     "PerformanceForecast",
     "ParameterSensitivity",
     "LearningProgress",
+    "UserSessionPort",
+    "UserSession",
 ]

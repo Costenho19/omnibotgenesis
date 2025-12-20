@@ -989,6 +989,28 @@ Para producción completa, falta:
 - Migrar protecciones ARP y heartbeats al flujo multi-usuario
 - Tests de aislamiento con múltiples usuarios simultáneos
 
+### 7.5 Integración con Arquitectura Hexagonal V7.0 (20 Dic 2025)
+
+| Componente | Ubicación | Estado |
+|------------|-----------|--------|
+| `UserSessionPort` | `src/omnix/ports/driven/user_session_port.py` | ✅ CREADO |
+| `UserSession` value object | `src/omnix/ports/driven/user_session_port.py` | ✅ CREADO |
+| `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` | ✅ CREADO |
+| Export en `__init__.py` | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
+
+**Uso en Use Cases:**
+```python
+from src.omnix.ports.driven import UserSessionPort, UserSession
+from src.omnix.infrastructure.adapters.user_session_adapter import UserSessionAdapter
+
+# En bootstrap/dependency injection
+session_adapter = UserSessionAdapter()
+
+# En use cases
+session = session_adapter.get_session(user_id)
+session_adapter.save_session(session)
+```
+
 ### 7.3 Diagrama de Dependencias
 
 ```
