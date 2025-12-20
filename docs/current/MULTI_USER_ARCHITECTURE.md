@@ -27,9 +27,12 @@
 | Aspecto | Documentación Dice | Realidad del Código |
 |---------|-------------------|---------------------|
 | Arquitectura | "Multi-usuario con 100K+ usuarios" | **Single-tenant con user_id hardcodeado** |
-| UserSessionManager | "Sesiones aisladas por usuario" | **NO EXISTE** |
+| UserSessionManager | "Sesiones aisladas por usuario" | **EXISTE (562 líneas) pero NO INTEGRADO con AutoTradingBot** |
 | Aislamiento | "Estado persistente por usuario" | **Todos comparten la cuenta de Harold** |
 | PQC Authorization | "Firma post-quantum de trades" | **Solo firma, no autorización** |
+
+> **CORRECCIÓN (20 Dic 2025)**: El `UserSessionManager` **SÍ EXISTE** en `omnix_core/sessions/user_session_manager.py`.
+> El problema es que `AutoTradingBot` **NO LO USA** - sigue hardcodeando el `user_id` de Harold.
 
 ### 1.2 Problema Crítico
 
@@ -138,27 +141,74 @@ Usuario B (chat_id: 222) → /autotrading → user_id = '7014748854' (Harold)
 
 ### 2.2 Auditoría de UserSessionManager
 
-**Estado**: **NO EXISTE**
+**Estado**: ✅ **EXISTE** pero ❌ **NO INTEGRADO**
 
-El docstring de `auto_trading_bot.py` líneas 9-13 afirma:
+> **CORRECCIÓN (20 Dic 2025)**: El `UserSessionManager` SÍ existe como código funcional.
+
+**Archivo**: `omnix_core/sessions/user_session_manager.py`  
+**Líneas de código**: 562  
+**Estado**: Completamente implementado, NO integrado con AutoTradingBot
+
+#### Clases Implementadas
+
+| Clase | Propósito | Estado |
+|-------|-----------|--------|
+| `SessionStatus` | Enum: INACTIVE, ACTIVE, PAUSED, EMERGENCY_STOP | ✅ Completo |
+| `UserTradingSession` | Dataclass con estado completo por usuario | ✅ Completo |
+| `UserSessionManager` | Gestor de sesiones con Redis + PostgreSQL | ✅ Completo |
+
+#### Métodos del UserSessionManager
+
+| Método | Parámetros | Función | Estado |
+|--------|------------|---------|--------|
+| `get_session(user_id)` | user_id: str | Obtener/crear sesión (cache local → Redis → PostgreSQL → nueva) | ✅ Implementado |
+| `save_session(session)` | UserTradingSession | Guardar en Redis + PostgreSQL | ✅ Implementado |
+| `start_trading(user_id)` | user_id: str | Iniciar trading para usuario específico | ✅ Implementado |
+| `stop_trading(user_id)` | user_id: str | Detener trading para usuario específico | ✅ Implementado |
+| `pause_trading(user_id)` | user_id: str | Pausar trading temporal | ✅ Implementado |
+| `resume_trading(user_id)` | user_id: str | Reanudar trading pausado | ✅ Implementado |
+| `get_active_sessions()` | - | Listar sesiones activas (desde Redis) | ✅ Implementado |
+| `restore_all_sessions()` | - | Restaurar sesiones después de restart | ✅ Implementado |
+
+#### Capacidades del UserSessionManager
 
 ```python
-"""
-MULTI-USER ARCHITECTURE:
-- Soporte para 100,000+ usuarios simultáneos
-- Sesiones aisladas por usuario vía UserSessionManager
-- Estado persistente en Redis + PostgreSQL
-- Auto-restauración después de reinicios de Railway
-"""
+class UserSessionManager:
+    """
+    🚀 Gestor de sesiones multi-usuario PREMIUM
+    
+    Capacidad: 100,000+ usuarios simultáneos
+    Backend: Redis (estado) + PostgreSQL (persistencia)
+    
+    Características:
+    - Sesiones aisladas por user_id
+    - Estado en Redis para velocidad
+    - Persistencia en PostgreSQL para durabilidad
+    - Auto-restauración después de reinicios
+    - Limpieza automática de sesiones inactivas
+    """
+    
+    REDIS_PREFIX = "omnix:session:"
+    SESSION_TTL = 86400 * 7  # 7 días en segundos
+    ACTIVE_SESSIONS_KEY = "omnix:active_sessions"
 ```
 
-**Búsqueda en codebase**:
-```bash
-search_codebase("UserSessionManager") → NO RESULTS
-grep -r "UserSessionManager" → NO MATCHES
+#### ¿Por Qué No Funciona Multi-Usuario?
+
+El código del `UserSessionManager` está **100% funcional**, pero `AutoTradingBot` **NO LO USA**:
+
+```python
+# auto_trading_bot.py líneas 740-760
+if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
+    session_manager = get_session_manager()
+    # ... código que USARÍA el session manager
+else:
+    # ❌ FALLBACK LEGACY - Siempre cae aquí
+    logger.info(f"🔄 {VERSION_BANNER}: Fallback a restauración legacy...")
+    user_id = str(self.config.get('harold_user_id', '7014748854'))  # ❌ HARDCODED
 ```
 
-**Conclusión**: El `UserSessionManager` es **documentación aspiracional**, no código real.
+**El problema está en la condición `USER_SESSION_MANAGER_AVAILABLE`** que siempre es `False`, forzando el fallback a código legacy con user_id hardcodeado.
 
 ### 2.3 Auditoría de PaperTradingManager
 
@@ -827,11 +877,12 @@ USE_RLS = os.getenv('USE_RLS', 'false').lower() == 'true'
 │  │      Dependencias: Ninguna                                          │   │
 │  │      Riesgo: BAJO (cambio localizado)                               │   │
 │  │                                                                     │   │
-│  │  1.2 Crear UserSessionManager                                       │   │
-│  │      - Nuevo archivo: omnix_services/session/session_manager.py     │   │
-│  │      - Integrar con Redis                                           │   │
+│  │  1.2 INTEGRAR UserSessionManager existente                           │   │
+│  │      - Archivo YA EXISTE: omnix_core/sessions/user_session_manager.py│  │
+│  │      - Habilitar USER_SESSION_MANAGER_AVAILABLE = True              │   │
+│  │      - Conectar con AutoTradingBot                                  │   │
 │  │      Dependencias: 1.1                                              │   │
-│  │      Riesgo: BAJO (componente nuevo, no rompe nada)                 │   │
+│  │      Riesgo: BAJO (código ya probado, solo integrar)                │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │  FASE 2: Autorización (1-2 días)                                            │
@@ -905,7 +956,7 @@ USE_RLS = os.getenv('USE_RLS', 'false').lower() == 'true'
 | ID | Tarea | Esfuerzo | Prioridad | Dependencias | Riesgo |
 |----|-------|----------|-----------|--------------|--------|
 | 1.1 | Eliminar `harold_user_id` hardcodeado de AutoTradingBot | 4h | P0 | - | Bajo |
-| 1.2 | Crear `UserSessionManager` con Redis | 6h | P0 | 1.1 | Bajo |
+| 1.2 | **INTEGRAR** `UserSessionManager` existente (omnix_core/sessions/) | 4h | P0 | 1.1 | Bajo |
 | 2.1 | Crear `AuthorizationService` | 4h | P0 | 1.2 | Medio |
 | 2.2 | Integrar auth en enterprise_bot.py | 4h | P0 | 2.1 | Medio |
 | 3.1 | Implementar RLS en PostgreSQL | 6h | P1 | 1.1 | Alto |
@@ -915,7 +966,10 @@ USE_RLS = os.getenv('USE_RLS', 'false').lower() == 'true'
 | 5.1 | Integrar PQC con auth (opcional) | 8h | P2 | 2.1 | Bajo |
 | 6.1 | Actualizar documentación | 4h | P1 | Todas | Bajo |
 
-**Total estimado**: 52 horas (~6-7 días de trabajo)
+**Total estimado**: 50 horas (~6 días de trabajo)
+
+> **NOTA (20 Dic 2025)**: El `UserSessionManager` ya existe y está probado.
+> La tarea 1.2 se reduce de 6h a 4h porque solo requiere **integración**, no desarrollo nuevo.
 
 ### 7.3 Diagrama de Dependencias
 

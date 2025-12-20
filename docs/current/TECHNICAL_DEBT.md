@@ -20,7 +20,7 @@
 | Problema | `user_id` hardcodeado en 6 ubicaciones de AutoTradingBot |
 | Valor Hardcodeado | `harold_user_id = '7014748854'` |
 | Impacto | TODOS los trades van a una sola cuenta |
-| UserSessionManager | NO EXISTE (documentación aspiracional) |
+| UserSessionManager | **EXISTE** (562 líneas) pero NO INTEGRADO con AutoTradingBot |
 | Row-Level Security | NO implementado en PostgreSQL |
 
 **Ubicaciones del código afectado:**
@@ -42,12 +42,15 @@
 
 **Documentación Completa:** [MULTI_USER_ARCHITECTURE.md](MULTI_USER_ARCHITECTURE.md)
 
-**Plan de Resolución:** 8 fases (~52 horas de trabajo)
+**Plan de Resolución:** 8 fases (~50 horas de trabajo)
+
+> **CORRECCIÓN (20 Dic 2025):** El `UserSessionManager` **SÍ EXISTE** en `omnix_core/sessions/user_session_manager.py`.
+> El problema es que `AutoTradingBot` **NO LO USA** debido a que el flag `USER_SESSION_MANAGER_AVAILABLE` siempre es `False`.
 
 | Fase | Descripción | Esfuerzo |
 |------|-------------|----------|
 | 1 | Eliminar hardcoded user_id | 4h |
-| 2 | Crear UserSessionManager | 6h |
+| 2 | **INTEGRAR** UserSessionManager existente | 4h |
 | 3 | Crear AuthorizationService | 8h |
 | 4 | Implementar RLS en PostgreSQL | 10h |
 | 5 | Refactorizar trading loop | 8h |
