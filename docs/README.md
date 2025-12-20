@@ -18,18 +18,24 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes (Dec 20, 2025)
 
-### Auditoría Multi-Usuario (CRÍTICO)
-- **Hallazgo**: user_id hardcodeado en AutoTradingBot (6 ubicaciones)
-- **Impacto**: Todos los trades van a una sola cuenta (Harold)
-- **Estado**: UserSessionManager NO EXISTE (documentación aspiracional)
-- **Plan**: 8 fases de implementación documentadas
-- **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md)
+### Multi-Usuario Fase 1 COMPLETADA
+- **UserSessionManager EXISTE**: 562 líneas en `omnix_core/sessions/user_session_manager.py`
+- **Funciones parametrizadas con user_id**: 6 funciones core ahora aceptan user_id opcional
+- **Integración Hexagonal**: `UserSessionPort` y `UserSessionAdapter` creados
+- **Compatibilidad 100%**: Flujo legacy sigue funcionando sin cambios
+- **Pendiente Fase 2**: Desacoplar configuración por usuario, migrar protecciones ARP
+- **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md) (secciones 7.4 y 7.5)
+
+### Nuevos Componentes Hexagonales (Dec 20, 2025)
+| Componente | Ubicación |
+|------------|-----------|
+| `UserSessionPort` | `src/omnix/ports/driven/user_session_port.py` |
+| `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` |
 
 ### AI-First Multilingual Concurrency (Dec 19, 2025)
-- **Detección de idioma segura para concurrencia**: `threading.Lock` + `asyncio.to_thread()` previenen mezcla de idiomas entre usuarios simultáneos
+- **Detección de idioma segura para concurrencia**: `threading.Lock` + `asyncio.to_thread()`
 - **Persistencia Redis por usuario**: `omnix:user_language:{chat_id}` con TTL 24h
-- **Placeholders universales en inglés**: Mensajes de fallback/error en inglés - AI genera respuestas localizadas
-- **NO diccionarios multilingües hardcodeados**: Gemini genera todo el contenido localizado
+- **Placeholders universales en inglés**: AI genera respuestas localizadas
 
 ---
 
