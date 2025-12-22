@@ -12,6 +12,15 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+try:
+    from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
+    from src.omnix.ports.driven.authorization_port import Permission
+    AUTHORIZATION_AVAILABLE = True
+except ImportError:
+    AUTHORIZATION_AVAILABLE = False
+    get_authorization_adapter = None
+    Permission = None
+
 # Import dependencies
 try:
     from omnix_services.ai_service import ConversationalAIService
@@ -513,8 +522,18 @@ class ConversationalAI:
             if trading_system:
                 if hasattr(trading_system, 'kraken') and trading_system.kraken:
                     if hasattr(trading_system, 'real_trading_enabled') and trading_system.real_trading_enabled:
-                        # SI PREGUNTA POR BALANCE O ES HAROLD, CONSULTAR KRAKEN AHORA
-                        if pregunta_balance or str(user_id) == "7014748854":
+                        can_view_real_balance = False
+                        if AUTHORIZATION_AVAILABLE and get_authorization_adapter:
+                            auth = get_authorization_adapter()
+                            can_view_real_balance = auth.has_permission(str(user_id), Permission.VIEW_REAL_BALANCE)
+                        else:
+                            try:
+                                from omnix_config.settings import settings
+                                can_view_real_balance = str(user_id) == str(settings.TELEGRAM_ADMIN_ID)
+                            except ImportError:
+                                can_view_real_balance = str(user_id) == "7014748854"
+                        
+                        if pregunta_balance or can_view_real_balance:
                             try:
                                 logger.info(f"💰 CONSULTANDO KRAKEN EN TIEMPO REAL para: {user_message[:50]}")
                                 balance = trading_system.kraken.fetch_balance()

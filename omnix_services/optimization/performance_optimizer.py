@@ -12,6 +12,15 @@ from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
+try:
+    from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
+    from src.omnix.ports.driven.authorization_port import UserRole
+    AUTHORIZATION_AVAILABLE = True
+except ImportError:
+    AUTHORIZATION_AVAILABLE = False
+    get_authorization_adapter = None
+    UserRole = None
+
 # Check if psutil is available
 try:
     import psutil
@@ -67,7 +76,18 @@ class PerformanceOptimizer:
     
     def prioritize_request(self, user_id, request_type):
         """Sistema de priorización implementando sugerencia OMNIX"""
-        if str(user_id) == "7014748854":  # Harold tiene máxima prioridad
+        is_owner = False
+        if AUTHORIZATION_AVAILABLE and get_authorization_adapter:
+            auth = get_authorization_adapter()
+            is_owner = auth.is_owner(str(user_id))
+        else:
+            try:
+                from omnix_config.settings import settings
+                is_owner = str(user_id) == str(settings.TELEGRAM_ADMIN_ID)
+            except ImportError:
+                is_owner = str(user_id) == "7014748854"
+        
+        if is_owner:
             return 'critical'
         elif request_type in ['trading', 'buy', 'sell', 'autotrading']:
             return 'high'

@@ -23,6 +23,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+try:
+    from src.omnix.infrastructure.adapters.authorization_adapter import (
+        get_authorization_adapter,
+        AuthorizationAdapter,
+    )
+    from src.omnix.ports.driven.authorization_port import Permission
+    AUTHORIZATION_AVAILABLE = True
+except ImportError:
+    AUTHORIZATION_AVAILABLE = False
+    get_authorization_adapter = None
+    AuthorizationAdapter = None
+    Permission = None
+    logger.warning("⚠️ AuthorizationAdapter not available - using legacy checks")
+
 class DummyPerformanceTracker:
     """Placeholder for performance tracking when real tracker not available"""
     response_times = []
@@ -859,15 +873,24 @@ class TradingSystem:
             }
     
     def execute_real_trade(self, user_id, symbol, side, amount_usd):
-        """Ejecutar trade REAL en Kraken - SOLO PARA HAROLD"""
+        """Ejecutar trade REAL en Kraken - SOLO PARA OWNER"""
         try:
-            # Verificar que solo Harold puede hacer trades reales
-            if str(user_id) != "7014748854":  # ID de Harold
-                return {
-                    'success': False,
-                    'error': 'Trading real solo autorizado para Harold',
-                    'mode': 'unauthorized'
-                }
+            if AUTHORIZATION_AVAILABLE and get_authorization_adapter:
+                auth = get_authorization_adapter()
+                if not auth.has_permission(str(user_id), Permission.REAL_TRADING):
+                    return {
+                        'success': False,
+                        'error': 'Real trading requires OWNER permissions',
+                        'mode': 'unauthorized'
+                    }
+            else:
+                from omnix_config.settings import settings
+                if str(user_id) != str(settings.TELEGRAM_ADMIN_ID):
+                    return {
+                        'success': False,
+                        'error': 'Real trading requires admin permissions',
+                        'mode': 'unauthorized'
+                    }
             
             # Verificar que Kraken está configurado
             if not self.kraken or not self.real_trading_enabled:
@@ -1089,9 +1112,14 @@ class TradingSystem:
     def execute_auto_trade(self, user_id):
         """Ejecutar trade automático basado en análisis IA"""
         try:
-            # Solo Harold puede usar auto-trading
-            if str(user_id) != "7014748854":
-                return {'error': 'Auto-trading solo autorizado para Harold'}
+            if AUTHORIZATION_AVAILABLE and get_authorization_adapter:
+                auth = get_authorization_adapter()
+                if not auth.has_permission(str(user_id), Permission.REAL_AUTO_TRADING):
+                    return {'error': 'Auto-trading requires OWNER permissions'}
+            else:
+                from omnix_config.settings import settings
+                if str(user_id) != str(settings.TELEGRAM_ADMIN_ID):
+                    return {'error': 'Auto-trading requires admin permissions'}
             
             # Obtener análisis
             analysis = self.auto_trading_analysis()

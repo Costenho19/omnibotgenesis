@@ -65,20 +65,21 @@ The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Eng
 
 ### Multi-User and Dashboard Architecture
 
-> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 2 de multi-usuario COMPLETADA (9/11 issues).
+> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 3 de multi-usuario COMPLETADA - AuthorizationService implementado.
 > 
-> **Progreso Fase 2:**
-> - ✅ `AutoTradingBot` refactorizado con `_get_effective_user_id()`
-> - ✅ PostgreSQL RLS habilitado en 3 tablas críticas (Migration V004)
-> - ✅ `UserSessionManager` integrado con bot init/start/stop
-> - ✅ `PaperTradingRepository` + `DatabaseService` - user_id obligatorio
-> - ✅ 21 tests de aislamiento pasando (incluyendo persistencia Redis)
-> - ⚠️ **2 blockers restantes**: Entry points sin user_id, hard-checks de Harold
+> **Progreso Fase 3 (AuthorizationService):**
+> - ✅ `AuthorizationPort` creado en `src/omnix/ports/driven/authorization_port.py`
+> - ✅ `AuthorizationAdapter` con PostgreSQL + Redis cache (5 min TTL)
+> - ✅ `UserRole` enum: FREE < BASIC < PRO < PREMIUM < OWNER
+> - ✅ `Permission` enum con 15 permisos granulares
+> - ✅ 11 hardcoded checks reemplazados en 4 archivos
+> - ✅ Harold actualizado en BD: `is_admin=true, subscription_tier='owner'`
+> - ✅ 25/25 tests de autorización pasando
 >
-> **Documentación completa:** `docs/current/MULTIUSER_PHASE2_DATA_AUDIT.md`
+> **Documentación completa:** `docs/current/TECHNICAL_DEBT.md`
 
-**Modo Single-User (Harold):** ✅ SEGURO - fallback a LEGACY_USER_ID funciona  
-**Modo Multi-Usuario:** ❌ BLOQUEADO - requiere Fase 3 para activar
+**Modo Single-User (Harold):** ✅ SEGURO - OWNER role con permisos completos  
+**Modo Multi-Usuario:** 🟡 EN PROGRESO - requiere integración en AutoTradingBot
 
 Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 
@@ -86,7 +87,7 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 
 ### Hexagonal Architecture (V7.0 - Structure Complete, Activation Pending)
-The system has a complete hexagonal architecture with **19 ports** (16 driven + 3 driver) and **21 adapters** implemented in `src/omnix/`. **IMPORTANT**: All feature flags are currently `false` - the system operates 100% with legacy code in Railway. Activation is planned via Strangler Fig pattern.
+The system has a complete hexagonal architecture with **20 ports** (17 driven + 3 driver) and **22 adapters** implemented in `src/omnix/`. New: `AuthorizationPort` + `AuthorizationAdapter` added Dec 22, 2025. **IMPORTANT**: All feature flags are currently `false` - the system operates 100% with legacy code in Railway. Activation is planned via Strangler Fig pattern.
 
 ### AI Service Architecture
 Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). Features include a voice service for dual text+audio responses (when `VOICE_SERVICE_AVAILABLE=true`) and AI-first command detection where only messages starting with `/` are treated as commands, otherwise text is sent to AI. The system uses an AI-First Multilingual Prompt Architecture with all system prompts rewritten in English, a Prompt Specification Layer, dynamic language detection, and a Chain-of-Thought Framework.

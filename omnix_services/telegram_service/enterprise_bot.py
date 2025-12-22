@@ -21,6 +21,43 @@ from omnix_config import VERSION_BANNER
 
 logger = logging.getLogger(__name__)
 
+try:
+    from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
+    from src.omnix.ports.driven.authorization_port import Permission, UserRole
+    AUTHORIZATION_AVAILABLE = True
+except ImportError:
+    AUTHORIZATION_AVAILABLE = False
+    get_authorization_adapter = None
+    Permission = None
+    UserRole = None
+
+
+def _check_admin_permission(user_id: str, permission_type: str = 'admin') -> bool:
+    """
+    Check if user has admin/owner permissions.
+    
+    Uses AuthorizationAdapter if available, falls back to settings.TELEGRAM_ADMIN_ID.
+    
+    Args:
+        user_id: User ID to check
+        permission_type: Type of permission - 'admin', 'real_trading', 'auto_trading'
+    
+    Returns:
+        True if user has permission
+    """
+    user_id_str = str(user_id)
+    
+    if AUTHORIZATION_AVAILABLE and get_authorization_adapter:
+        auth = get_authorization_adapter()
+        if permission_type == 'real_trading':
+            return auth.has_permission(user_id_str, Permission.REAL_TRADING)
+        elif permission_type == 'auto_trading':
+            return auth.has_permission(user_id_str, Permission.REAL_AUTO_TRADING)
+        else:
+            return auth.is_owner(user_id_str)
+    else:
+        return user_id_str == str(settings.TELEGRAM_ADMIN_ID)
+
 # Import omnix services
 try:
     from omnix_services.ai_service import ConversationalAI
@@ -1439,9 +1476,8 @@ _Datos actualizados en tiempo real_
         try:
             user_id = str(update.message.from_user.id)
             
-            # Solo Harold puede ejecutar conversiones reales
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede convertir fondos a USD")
+            if not _check_admin_permission(user_id, 'real_trading'):
+                await update.message.reply_text("⚠️ Only OWNER can convert funds to USD")
                 return
             
             # Verificar que el sistema de trading esté disponible
@@ -1565,9 +1601,8 @@ _Datos actualizados en tiempo real_
         try:
             user_id = str(update.message.from_user.id)
             
-            # Solo Harold puede ejecutar conversiones reales
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede convertir fondos")
+            if not _check_admin_permission(user_id, 'real_trading'):
+                await update.message.reply_text("⚠️ Only OWNER can convert funds")
                 return
             
             # Verificar parámetros
@@ -2387,10 +2422,9 @@ ETH: {result['new_eth_balance']:.8f}
             user_id = str(update.effective_user.id)
             logger.info(f"🔐 Usuario autorizado: {user_id}")
             
-            # Solo Harold puede activar auto-trading
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                logger.warning(f"⚠️ Usuario no autorizado: {user_id}")
-                await update.message.reply_text("⚠️ Solo Harold puede activar auto-trading")
+            if not _check_admin_permission(user_id, 'auto_trading'):
+                logger.warning(f"⚠️ Unauthorized user for auto-trading: {user_id}")
+                await update.message.reply_text("⚠️ Only OWNER can activate auto-trading")
                 return
             
             logger.info("✅ Validaciones OK - Activando bot...")
@@ -2490,9 +2524,8 @@ Usa /auto_stop para detener
             
             user_id = str(update.effective_user.id)
             
-            # Solo Harold puede detener
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede detener auto-trading")
+            if not _check_admin_permission(user_id, 'auto_trading'):
+                await update.message.reply_text("⚠️ Only OWNER can stop auto-trading")
                 return
             
             await update.message.reply_text("🔄 Deteniendo trading automático...")
@@ -2596,9 +2629,8 @@ Usa /auto_stop para detener
             
             user_id = str(update.effective_user.id)
             
-            # Solo Harold puede activar auto-learning
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede activar auto-learning")
+            if not _check_admin_permission(user_id, 'admin'):
+                await update.message.reply_text("⚠️ Only OWNER can activate auto-learning")
                 return
             
             await update.message.reply_text("🔄 Activando auto-learning...")
@@ -2639,9 +2671,8 @@ Usa /auto_stop para detener
             
             user_id = str(update.effective_user.id)
             
-            # Solo Harold puede pausar auto-learning
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede pausar auto-learning")
+            if not _check_admin_permission(user_id, 'admin'):
+                await update.message.reply_text("⚠️ Only OWNER can pause auto-learning")
                 return
             
             await update.message.reply_text("⏸️ Pausando auto-learning...")
@@ -2731,9 +2762,8 @@ Total cambios realizados: {status.get('total_changes', 0)}
             
             user_id = str(update.effective_user.id)
             
-            # Solo Harold puede revertir cambios
-            if user_id != settings.TELEGRAM_ADMIN_ID:
-                await update.message.reply_text("⚠️ Solo Harold puede revertir cambios")
+            if not _check_admin_permission(user_id, 'admin'):
+                await update.message.reply_text("⚠️ Only OWNER can revert changes")
                 return
             
             await update.message.reply_text("↩️ Revirtiendo último cambio...")

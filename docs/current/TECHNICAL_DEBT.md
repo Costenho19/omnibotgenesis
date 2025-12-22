@@ -7,56 +7,58 @@
 
 ---
 
-## CRITICAL: Multi-User Architecture (Dec 20, 2025)
+## Multi-User Architecture Progress (Updated Dec 22, 2025)
 
-### Hardcoded user_id in AutoTradingBot (CRITICAL - BLOCKING B2C)
+### Phase 3: AuthorizationService (COMPLETED)
 
-**Status:** 🔴 CRITICAL - Requires Immediate Attention Before B2C Launch
+**Status:** ✅ COMPLETED (Dec 22, 2025)
 
-**Severity:** BLOQUEANTE para modelo SaaS multi-usuario
+**Implementation:**
+- Created `AuthorizationPort` (hexagonal port) at `src/omnix/ports/driven/authorization_port.py`
+- Created `AuthorizationAdapter` at `src/omnix/infrastructure/adapters/authorization_adapter.py`
+- Defined `UserRole` enum: FREE < BASIC < PRO < PREMIUM < OWNER
+- Defined `Permission` enum with 15 granular permissions
+- Implemented `ROLE_PERMISSIONS` mapping for B2C SaaS tiers
+- PostgreSQL integration reads from existing `users.is_admin` and `users.subscription_tier`
+- Redis cache with 5 min TTL for performance
+- Fallback to `settings.TELEGRAM_ADMIN_ID` when adapter not available
 
-| Issue | Description |
-|-------|-------------|
-| Problema | `user_id` hardcodeado en 6 ubicaciones de AutoTradingBot |
-| Valor Hardcodeado | `harold_user_id = '7014748854'` |
-| Impacto | TODOS los trades van a una sola cuenta |
-| UserSessionManager | **EXISTE** (562 líneas) pero NO INTEGRADO con AutoTradingBot |
-| Row-Level Security | NO implementado en PostgreSQL |
+**Hardcoded Checks Replaced (11 locations):**
 
-**Ubicaciones del código afectado:**
+| File | Guards Replaced |
+|------|-----------------|
+| `omnix_core/trading_system.py` | 2 (execute_real_trade, execute_auto_trade) |
+| `omnix_services/telegram_service/enterprise_bot.py` | 7 (convert, auto-trading, auto-learning) |
+| `omnix_services/optimization/performance_optimizer.py` | 1 (prioritize_request) |
+| `omnix_services/ai_service/conversational_ai_adapter.py` | 1 (view_real_balance) |
 
-| Archivo | Línea | Función |
-|---------|-------|---------|
-| `omnix_core/bot/auto_trading_bot.py` | 1230 | `_manage_positions()` |
-| `omnix_core/bot/auto_trading_bot.py` | 3004 | `_execute_trading_cycle()` |
-| `omnix_core/bot/auto_trading_bot.py` | 3047 | `_check_position_limits()` |
-| `omnix_core/bot/auto_trading_bot.py` | 3081 | `_has_open_position()` |
-| `omnix_core/bot/auto_trading_bot.py` | 3213 | `_execute_paper_trade()` |
-| `omnix_core/bot/auto_trading_bot.py` | 4119 | `get_open_positions()` |
+**Tests:** 25/25 passing in `tests/test_authorization.py`
 
-**Impacto en Usuarios:**
-- 2 usuarios simultáneos compartirían posiciones y balances
-- Un usuario puede pausar el trading de otro
-- El historial no distingue origen de trades
-- **Riesgo legal y financiero crítico**
+**Harold Updated in DB:**
+```sql
+UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7014748854';
+```
 
-**Documentación Completa:** [MULTI_USER_ARCHITECTURE.md](MULTI_USER_ARCHITECTURE.md)
+### Remaining Multi-User Work (Phases 4-8)
 
-**Plan de Resolución:** 8 fases (~50 horas de trabajo)
+**Status:** 🟡 IN PROGRESS - AutoTradingBot integration pending
 
-> **CORRECCIÓN (20 Dic 2025):** El `UserSessionManager` **SÍ EXISTE** en `omnix_core/sessions/user_session_manager.py`.
-> El problema es que `AutoTradingBot` **NO LO USA** debido a que el flag `USER_SESSION_MANAGER_AVAILABLE` siempre es `False`.
+| Phase | Description | Status | Esfuerzo |
+|-------|-------------|--------|----------|
+| 1 | Eliminar hardcoded user_id | ✅ Done (Phase 2) | 4h |
+| 2 | INTEGRAR UserSessionManager existente | ✅ Done (Phase 2) | 4h |
+| 3 | Crear AuthorizationService | ✅ DONE | 8h |
+| 4 | Implementar RLS en PostgreSQL | ✅ Done (V004 migration) | 10h |
+| 5 | Refactorizar trading loop | 🟡 Pending | 8h |
+| 6 | Tests de aislamiento | ✅ Partial (21 + 25 tests) | 4h |
+| 7 | PQC para auth (opcional) | ⏸️ Deferred | 8h |
+| 8 | Documentación | 🟡 In Progress | 4h |
 
-| Fase | Descripción | Esfuerzo |
-|------|-------------|----------|
-| 1 | Eliminar hardcoded user_id | 4h |
-| 2 | **INTEGRAR** UserSessionManager existente | 4h |
-| 3 | Crear AuthorizationService | 8h |
-| 4 | Implementar RLS en PostgreSQL | 10h |
-| 5 | Refactorizar trading loop | 8h |
-| 6 | Tests de aislamiento | 4h |
-| 7 | PQC para auth (opcional) | 8h |
-| 8 | Documentación | 4h |
+**Next Steps:**
+1. Integrate AuthorizationAdapter into AutoTradingBot (`omnix_core/bot/auto_trading_bot.py`)
+2. Replace remaining 6 hardcoded checks in AutoTradingBot with authorization checks
+3. Add integration tests with real database queries
+4. Enable `AUTHORIZATION_PORT_ENABLED` feature flag in production
 
 ---
 
