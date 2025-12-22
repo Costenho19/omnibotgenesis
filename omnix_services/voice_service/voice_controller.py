@@ -191,8 +191,39 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
         if global_voice_engine and global_voice_engine.active:
             logger.info("🎤 VoiceEngine disponible - generando audio")
             
-            # Generar audio con gTTS
-            audio_path = global_voice_engine.text_to_speech(voice_text, language='es')
+            GTTS_LANGUAGE_MAP = {
+                'en': 'en',
+                'es': 'es',
+                'fr': 'fr',
+                'de': 'de',
+                'pt': 'pt',
+                'it': 'it',
+                'nl': 'nl',
+                'ar': 'ar',
+                'zh': 'zh-CN',
+                'ja': 'ja',
+                'ko': 'ko',
+                'ru': 'ru',
+                'hi': 'hi',
+                'no': 'no',
+                'sv': 'sv',
+                'da': 'da',
+                'pl': 'pl',
+                'tr': 'tr',
+            }
+            
+            detected_language = 'en'
+            try:
+                from omnix_services.ai_service.prompt_templates import LanguageContextManager
+                lang_manager = LanguageContextManager()
+                raw_lang = lang_manager.detect_language(voice_text[:200])
+                detected_language = GTTS_LANGUAGE_MAP.get(raw_lang, 'en')
+                logger.info(f"🎤 TTS Language: {raw_lang} -> {detected_language}")
+            except Exception as lang_err:
+                logger.warning(f"🎤 Language detection failed, using English: {lang_err}")
+                detected_language = 'en'
+            
+            audio_path = global_voice_engine.text_to_speech(voice_text, language=detected_language)
             
             if audio_path and os.path.exists(audio_path):
                 logger.info("🎤 Audio generado exitosamente - enviando a Telegram")

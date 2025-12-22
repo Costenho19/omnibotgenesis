@@ -159,9 +159,22 @@ class LanguageContextManager:
     def detect_language(self, text: str) -> str:
         """
         Detect the language of user input (THREAD-SAFE).
-        Uses threading.Lock to prevent concurrent detection issues.
+        Uses heuristics for short texts + langdetect for longer texts.
         Returns ISO 639-1 language code.
+        
+        AI-FIRST FIX (Dec 22, 2025):
+        langdetect is unreliable for short texts (<15 chars), so we use
+        pattern matching for common greetings and short phrases first.
         """
+        text_lower = text.lower().strip()
+        text_clean = ''.join(c for c in text_lower if c.isalpha() or c.isspace())
+        
+        if len(text_clean) < 20:
+            heuristic_lang = self._detect_short_text_language(text_clean)
+            if heuristic_lang:
+                logger.info(f"🌍 Language detected (heuristic): {heuristic_lang} for '{text[:30]}'")
+                return heuristic_lang
+        
         try:
             from langdetect import detect, LangDetectException
         except ImportError:
@@ -171,13 +184,53 @@ class LanguageContextManager:
         with _language_detection_lock:
             try:
                 detected = detect(text)
-                logger.debug(f"🌍 Language detected (sync): {detected}")
-                return detected
+                if detected in self.supported_languages:
+                    logger.debug(f"🌍 Language detected (langdetect): {detected}")
+                    return detected
+                else:
+                    logger.debug(f"🌍 Unsupported language {detected}, defaulting to English")
+                    return 'en'
             except LangDetectException:
                 return 'en'
             except Exception as e:
                 logger.warning(f"Language detection error: {e}")
                 return 'en'
+    
+    def _detect_short_text_language(self, text: str) -> Optional[str]:
+        """
+        Heuristic detection for short texts using common greetings/phrases.
+        Returns language code or None if uncertain.
+        """
+        patterns = {
+            'en': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 
+                   'how are you', 'what', 'who', 'where', 'when', 'why', 'yes', 'no', 
+                   'thanks', 'thank you', 'please', 'help', 'ok', 'okay'],
+            'es': ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'como estas',
+                   'que', 'quien', 'donde', 'cuando', 'por que', 'si', 'no', 'gracias',
+                   'por favor', 'ayuda', 'bien', 'vale'],
+            'fr': ['bonjour', 'salut', 'bonsoir', 'comment allez', 'merci', 'oui', 'non',
+                   'sil vous plait', 'au revoir', 'bien'],
+            'de': ['guten tag', 'guten morgen', 'guten abend', 'wie geht', 'danke', 'ja', 
+                   'nein', 'bitte', 'hilfe'],
+            'pt': ['ola', 'bom dia', 'boa tarde', 'boa noite', 'como vai', 'obrigado',
+                   'sim', 'nao', 'por favor', 'ajuda'],
+            'it': ['ciao', 'buongiorno', 'buonasera', 'come stai', 'grazie', 'si', 'no',
+                   'per favore', 'aiuto'],
+            'nl': ['hallo', 'goedemorgen', 'goedemiddag', 'goedenavond', 'hoe gaat het',
+                   'dank je', 'ja', 'nee', 'alsjeblieft'],
+            'ar': ['مرحبا', 'السلام', 'صباح الخير', 'مساء الخير', 'شكرا', 'نعم', 'لا'],
+            'zh': ['你好', '早上好', '晚上好', '谢谢', '是', '不'],
+            'ja': ['こんにちは', 'おはよう', 'こんばんは', 'ありがとう', 'はい', 'いいえ'],
+            'ko': ['안녕', '감사', '네', '아니'],
+            'ru': ['привет', 'здравствуйте', 'доброе утро', 'спасибо', 'да', 'нет'],
+        }
+        
+        for lang, keywords in patterns.items():
+            for keyword in keywords:
+                if keyword in text:
+                    return lang
+        
+        return None
     
     async def detect_language_async(self, text: str) -> str:
         """

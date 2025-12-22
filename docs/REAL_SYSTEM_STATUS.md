@@ -23,6 +23,12 @@
 | `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` | ✅ CREADO |
 | Export actualizado | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
 
+### Language Detection Fix (Dec 22, 2025)
+- **FIX**: Añadida detección heurística para textos cortos (<20 chars) - langdetect fallaba con "hello" → finlandés
+- **FIX**: TTS ahora detecta idioma de la respuesta (antes hardcoded a español 'es')
+- **FIX**: Mapeo de códigos ISO a gTTS (ej: zh → zh-CN)
+- **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
+
 ### AI-First Multilingual Concurrency (Dec 19, 2025)
 - **Implementado**: Detección de idioma thread-safe + persistencia Redis por usuario
 
