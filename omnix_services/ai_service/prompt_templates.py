@@ -158,79 +158,131 @@ class LanguageContextManager:
         
     def detect_language(self, text: str) -> str:
         """
-        Detect the language of user input (THREAD-SAFE).
-        Uses heuristics for short texts + langdetect for longer texts.
+        AI-FIRST language detection (THREAD-SAFE).
+        
+        Architecture (Dec 22, 2025):
+        1. For long texts (50+ chars): Use fast-langdetect (FastText, very accurate)
+        2. For short texts (<50 chars): Use Gemini AI for detection (true AI-first)
+        3. Fallback: langdetect -> 'en'
+        
         Returns ISO 639-1 language code.
-        
-        AI-FIRST FIX (Dec 22, 2025):
-        langdetect is unreliable for short texts (<15 chars), so we use
-        pattern matching for common greetings and short phrases first.
         """
-        text_lower = text.lower().strip()
-        text_clean = ''.join(c for c in text_lower if c.isalpha() or c.isspace())
-        
-        if len(text_clean) < 20:
-            heuristic_lang = self._detect_short_text_language(text_clean)
-            if heuristic_lang:
-                logger.info(f"🌍 Language detected (heuristic): {heuristic_lang} for '{text[:30]}'")
-                return heuristic_lang
-        
-        try:
-            from langdetect import detect, LangDetectException
-        except ImportError:
-            logger.warning("langdetect not installed, defaulting to English")
+        if not text or len(text.strip()) < 2:
             return 'en'
         
+        clean_text = text.strip()
+        
         with _language_detection_lock:
-            try:
-                detected = detect(text)
-                if detected in self.supported_languages:
-                    logger.debug(f"🌍 Language detected (langdetect): {detected}")
+            if len(clean_text) >= 50:
+                detected = self._detect_with_fastlangdetect(clean_text)
+                if detected and detected in self.supported_languages:
+                    logger.info(f"🌍 Language detected (fast-langdetect): {detected} for '{text[:30]}'")
                     return detected
-                else:
-                    logger.debug(f"🌍 Unsupported language {detected}, defaulting to English")
-                    return 'en'
-            except LangDetectException:
-                return 'en'
-            except Exception as e:
-                logger.warning(f"Language detection error: {e}")
-                return 'en'
+            
+            detected = self._detect_with_gemini(clean_text)
+            if detected and detected in self.supported_languages:
+                logger.info(f"🌍 Language detected (Gemini AI): {detected} for '{text[:30]}'")
+                return detected
+            
+            detected = self._detect_with_fastlangdetect(clean_text)
+            if detected and detected in self.supported_languages:
+                logger.info(f"🌍 Language detected (fast-langdetect fallback): {detected} for '{text[:30]}'")
+                return detected
+            
+            detected = self._detect_with_langdetect(clean_text)
+            if detected and detected in self.supported_languages:
+                logger.info(f"🌍 Language detected (langdetect fallback): {detected} for '{text[:30]}'")
+                return detected
+            
+            logger.debug(f"🌍 Could not detect language, defaulting to English")
+            return 'en'
     
-    def _detect_short_text_language(self, text: str) -> Optional[str]:
+    def _detect_with_gemini(self, text: str) -> Optional[str]:
         """
-        Heuristic detection for short texts using common greetings/phrases.
-        Returns language code or None if uncertain.
+        AI-FIRST: Use Gemini to detect language for short texts.
+        This is the most accurate method for short inputs like "hello" or "hola".
+        
+        Returns ISO 639-1 code or None on failure.
         """
-        patterns = {
-            'en': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 
-                   'how are you', 'what', 'who', 'where', 'when', 'why', 'yes', 'no', 
-                   'thanks', 'thank you', 'please', 'help', 'ok', 'okay'],
-            'es': ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'como estas',
-                   'que', 'quien', 'donde', 'cuando', 'por que', 'si', 'no', 'gracias',
-                   'por favor', 'ayuda', 'bien', 'vale'],
-            'fr': ['bonjour', 'salut', 'bonsoir', 'comment allez', 'merci', 'oui', 'non',
-                   'sil vous plait', 'au revoir', 'bien'],
-            'de': ['guten tag', 'guten morgen', 'guten abend', 'wie geht', 'danke', 'ja', 
-                   'nein', 'bitte', 'hilfe'],
-            'pt': ['ola', 'bom dia', 'boa tarde', 'boa noite', 'como vai', 'obrigado',
-                   'sim', 'nao', 'por favor', 'ajuda'],
-            'it': ['ciao', 'buongiorno', 'buonasera', 'come stai', 'grazie', 'si', 'no',
-                   'per favore', 'aiuto'],
-            'nl': ['hallo', 'goedemorgen', 'goedemiddag', 'goedenavond', 'hoe gaat het',
-                   'dank je', 'ja', 'nee', 'alsjeblieft'],
-            'ar': ['مرحبا', 'السلام', 'صباح الخير', 'مساء الخير', 'شكرا', 'نعم', 'لا'],
-            'zh': ['你好', '早上好', '晚上好', '谢谢', '是', '不'],
-            'ja': ['こんにちは', 'おはよう', 'こんばんは', 'ありがとう', 'はい', 'いいえ'],
-            'ko': ['안녕', '감사', '네', '아니'],
-            'ru': ['привет', 'здравствуйте', 'доброе утро', 'спасибо', 'да', 'нет'],
-        }
+        try:
+            import os
+            api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                logger.debug("Gemini API key not available for language detection")
+                return None
+            
+            try:
+                from google import genai
+                from google.genai import types
+            except ImportError:
+                logger.debug("google-genai not installed")
+                return None
+            
+            client = genai.Client(api_key=api_key)
+            
+            prompt = f"""Detect the language of this text and return ONLY the ISO 639-1 two-letter code.
+            
+Text: "{text}"
+
+Return ONLY the code (en, es, fr, de, pt, it, nl, ar, zh, ja, ko, ru, hi, no, sv, da, pl, tr).
+No explanation, just the code."""
+            
+            response = client.models.generate_content(
+                model="gemini-2.0-flash-lite",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=5,
+                    temperature=0.0,
+                ),
+            )
+            
+            if response and response.text:
+                lang_code = response.text.strip().lower()[:2]
+                if len(lang_code) == 2 and lang_code.isalpha():
+                    return lang_code
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"Gemini language detection failed: {e}")
+            return None
+    
+    def _detect_with_fastlangdetect(self, text: str) -> Optional[str]:
+        """
+        Use fast-langdetect (FastText-based) for language detection.
+        FastText works best with 50+ character texts.
         
-        for lang, keywords in patterns.items():
-            for keyword in keywords:
-                if keyword in text:
-                    return lang
-        
-        return None
+        Returns ISO 639-1 code or None on failure.
+        """
+        try:
+            from fast_langdetect import detect
+            result = detect(text, low_memory=True)
+            if isinstance(result, dict):
+                return result.get('lang', None)
+            elif isinstance(result, str):
+                return result
+            return None
+        except ImportError:
+            logger.debug("fast-langdetect not installed")
+            return None
+        except Exception as e:
+            logger.debug(f"fast-langdetect failed: {e}")
+            return None
+    
+    def _detect_with_langdetect(self, text: str) -> Optional[str]:
+        """
+        Legacy fallback using langdetect library.
+        Less accurate for short texts but works as backup.
+        """
+        try:
+            from langdetect import detect as ld_detect, LangDetectException
+            return ld_detect(text)
+        except LangDetectException:
+            return None
+        except ImportError:
+            return None
+        except Exception:
+            return None
     
     async def detect_language_async(self, text: str) -> str:
         """

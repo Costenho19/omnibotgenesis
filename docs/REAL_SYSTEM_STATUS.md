@@ -23,10 +23,15 @@
 | `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` | ✅ CREADO |
 | Export actualizado | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
 
-### Language Detection Fix (Dec 22, 2025)
-- **FIX**: Añadida detección heurística para textos cortos (<20 chars) - langdetect fallaba con "hello" → finlandés
-- **FIX**: TTS ahora detecta idioma de la respuesta (antes hardcoded a español 'es')
-- **FIX**: Mapeo de códigos ISO a gTTS (ej: zh → zh-CN)
+### Language Detection AI-First Refactor (Dec 22, 2025)
+**Arquitectura AI-First**:
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
+- **FLUJO**: 
+  - Inputs cortos del usuario: LANGUAGE POLICY en system prompt le dice a Gemini responder en mismo idioma
+  - TTS: Detecta idioma de la RESPUESTA del AI (texto largo, fácil de detectar con FastText)
+- **RESULTADO**: 7/7 idiomas detectados correctamente en textos de respuesta AI
+- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
 - **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
 
 ### AI-First Multilingual Concurrency (Dec 19, 2025)

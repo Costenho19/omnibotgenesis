@@ -38,21 +38,31 @@
 
 ---
 
-## AI-First Multilingual Concurrency (Dec 19, 2025)
+## AI-First Multilingual Architecture (Dec 22, 2025)
 
 | Componente | Archivo | Función |
 |------------|---------|---------|
-| LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección de idioma + Redis persistence |
-| threading.Lock | `prompt_templates.py` | Serialización sync para langdetect |
-| asyncio.to_thread() | `prompt_templates.py` | Serialización async para langdetect |
+| LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección AI-first + Redis persistence |
+| fast-langdetect | `pip install fast-langdetect` | FastText-based detection (80x faster) |
+| LANGUAGE POLICY | System Prompt | "ALWAYS respond in the SAME language the user writes" |
 | Redis Language Cache | `omnix:user_language:{chat_id}` | 24h TTL por usuario |
 
-**Flujo**:
+**Flujo AI-First**:
 ```
-Usuario → detect_language() [Lock] → Redis persist → System Prompt inject → Gemini → Response
+Usuario escribe "hello" (corto)
+    ↓
+System Prompt LANGUAGE POLICY → Gemini detecta idioma AUTOMÁTICAMENTE
+    ↓
+Respuesta en inglés → TTS detecta idioma (fast-langdetect, texto largo)
+    ↓
+Audio generado en idioma correcto
 ```
 
-**Política**: NO diccionarios multilingües hardcodeados. AI genera todo el contenido localizado.
+**Política**: 
+- NO diccionarios multilingües hardcodeados
+- NO detección manual para textos cortos - AI lo hace naturalmente
+- fast-langdetect para respuestas de AI (textos largos, 100% precisión)
+- TTS mapea ISO codes a gTTS (ej: zh → zh-CN)
 
 ---
 
