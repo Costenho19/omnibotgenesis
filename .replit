@@ -84,5 +84,6 @@ expertMode = true
 PAPER_MODE = "TRUE"
 REDIS_URL = "redis://default:GOZQUHyOucycXwFuMlRXZBWIsblTiXnv@shinkansen.proxy.rlwy.net:32595"
 TRADING_PROFILE = "PAPER_OPTIMIZED"
+LEGACY_USER_ID = "7014748854"
 
 [userenv.development]

@@ -10,10 +10,10 @@
 
 | Área | Touchpoints | Críticos | Estado |
 |------|-------------|----------|--------|
-| Hardcoded user_id | 8 | 4 (AutoTradingBot líneas 1308, 2637, 3168, 4210) | 🔴 Requiere fix |
-| Database Services con user_id='harold' default | 3 | 3 (DatabaseService líneas 3042, 3098, 3148) | 🔴 Requiere fix |
-| PaperTradingRepository user_id=None | 4 | 4 | ⚠️ Pueden retornar todos los datos |
-| Tablas sin RLS | 11+ | 3 (paper_trading_*, trades) | 🔴 Requiere migración |
+| Hardcoded user_id | 8 | 4 (AutoTradingBot) | ✅ CORREGIDO (Paso 2 - Dec 22) |
+| Database Services con user_id='harold' default | 3 | 3 (DatabaseService líneas 3042, 3098, 3148) | 🔴 Requiere fix (Paso 7) |
+| PaperTradingRepository user_id=None | 4 | 4 | ⚠️ Pueden retornar todos los datos (Paso 6) |
+| Tablas sin RLS | 11+ | 3 (paper_trading_*, trades) | 🔴 Requiere migración (Paso 3) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
 | Redis keys | 6 callers | 0 (todos verificados OK) | ✅ Verificados |
 
@@ -23,14 +23,21 @@
 
 ### 1.1 AutoTradingBot - harold_user_id Hardcodes
 
-| Archivo | Línea | Función | Código |
-|---------|-------|---------|--------|
-| `omnix_core/bot/auto_trading_bot.py` | 1308 | `_manage_positions()` | `user_id = str(self.config.get('harold_user_id', '7014748854'))` |
-| `omnix_core/bot/auto_trading_bot.py` | 2637 | `_execute_trading_cycle()` | `user_id = str(self.config.get('harold_user_id', '7014748854'))` |
-| `omnix_core/bot/auto_trading_bot.py` | 3168 | `_check_position_limits()` | `user_id = str(self.config.get('harold_user_id', '7014748854'))` |
-| `omnix_core/bot/auto_trading_bot.py` | 4210 | `get_open_positions()` | `user_id = str(self.config.get('harold_user_id', '7014748854'))` |
+**ESTADO**: ✅ **CORREGIDO** (Paso 2 - Dec 22, 2025)
 
-**Total**: 4 ubicaciones (documentación decía 6, verificado son 4)
+| Archivo | Línea | Función | Estado |
+|---------|-------|---------|--------|
+| `omnix_core/bot/auto_trading_bot.py` | 1349 | `_check_open_positions_tp_sl()` | ✅ Usa `_get_effective_user_id()` |
+| `omnix_core/bot/auto_trading_bot.py` | 2677 | `_execute_smart_trade()` | ✅ Usa `_get_effective_user_id()` |
+| `omnix_core/bot/auto_trading_bot.py` | 3199 | position check para SELL | ✅ Usa user_id de `_execute_smart_trade` |
+| `omnix_core/bot/auto_trading_bot.py` | 4248 | `_check_position_limit_early()` | ✅ Usa `_get_effective_user_id()` |
+
+**Solución implementada:**
+- Nuevo método `_get_effective_user_id(passed_user_id, caller)` (línea 726)
+- Prioridad: explicit > config['user_id'] > LEGACY_USER_ID env var
+- NO hay hardcoded values en código - `LEGACY_USER_ID` desde env var
+- Warning logs cuando usa fallback (ayuda debugging de migración)
+- Raises ValueError si no hay user_id disponible
 
 ### 1.2 TradingSystem - user_id Check
 
