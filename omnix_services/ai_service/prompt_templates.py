@@ -24,6 +24,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 _language_detection_lock = threading.Lock()
+_gemini_lang_client = None
 
 MASTER_SYSTEM_PROMPT = """You are OMNIX V6.5.4d INSTITUTIONAL+, an advanced automated trading assistant created by Harold Nunes.
 
@@ -202,8 +203,12 @@ class LanguageContextManager:
         AI-FIRST: Use Gemini to detect language for short texts.
         This is the most accurate method for short inputs like "hello" or "hola".
         
+        Uses a singleton client to reduce latency on repeated calls.
+        
         Returns ISO 639-1 code or None on failure.
         """
+        global _gemini_lang_client
+        
         try:
             import os
             api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -218,7 +223,8 @@ class LanguageContextManager:
                 logger.debug("google-genai not installed")
                 return None
             
-            client = genai.Client(api_key=api_key)
+            if _gemini_lang_client is None:
+                _gemini_lang_client = genai.Client(api_key=api_key)
             
             prompt = f"""Detect the language of this text and return ONLY the ISO 639-1 two-letter code.
             
@@ -227,7 +233,7 @@ Text: "{text}"
 Return ONLY the code (en, es, fr, de, pt, it, nl, ar, zh, ja, ko, ru, hi, no, sv, da, pl, tr).
 No explanation, just the code."""
             
-            response = client.models.generate_content(
+            response = _gemini_lang_client.models.generate_content(
                 model="gemini-2.0-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
