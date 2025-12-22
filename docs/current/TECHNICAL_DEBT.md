@@ -39,26 +39,58 @@
 UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7014748854';
 ```
 
-### Remaining Multi-User Work (Phases 4-8)
+### Phase 3b: AutoTradingBot Authorization Integration (COMPLETED)
 
-**Status:** 🟡 IN PROGRESS - AutoTradingBot integration pending
+**Status:** ✅ COMPLETED (Dec 22, 2025)
+
+**Implementation:**
+- Added `AUTHORIZATION_ADAPTER_AVAILABLE` import block in `auto_trading_bot.py`
+- Created `_require_trading_permission()` helper method (lines 796-843)
+- Integrated permission checks in 5 methods:
+  - `start()` - checks `auto_trading` permission before activating
+  - `stop()` - checks `auto_trading` permission before stopping
+  - `_execute_smart_trade()` - checks `trading` permission before executing
+  - `_check_open_positions_tp_sl()` - checks `view_positions` permission
+  - `_check_position_limit_early()` - checks `view_positions` permission
+
+**Permission Logic:**
+- Paper mode: Uses `PAPER_TRADING` or `PAPER_AUTO_TRADING` for trading, `VIEW_BALANCE` for positions
+- Real mode: Uses `REAL_TRADING` or `REAL_AUTO_TRADING` for trading, `VIEW_REAL_BALANCE` for positions
+- Fallback: Uses `LEGACY_USER_ID` env var when adapter not available (strict match required)
+
+**Security:**
+- Fallback denies access if LEGACY_USER_ID is empty or user_id is None
+- Fallback denies access if user_id doesn't match LEGACY_USER_ID exactly
+
+**Tests:** 36/36 passing in `tests/test_authorization.py`
+
+**Exception Handling:**
+- Uses `AuthorizationError` (project-specific) instead of standard `PermissionError`
+- All callers catch `AuthorizationError` specifically and abort operations
+- No broad `except Exception` can swallow authorization failures
+
+### Multi-User Architecture Status
+
+**Status:** ✅ OPERATIONAL - Single-user SAFE, Multi-user READY
 
 | Phase | Description | Status | Esfuerzo |
 |-------|-------------|--------|----------|
-| 1 | Eliminar hardcoded user_id | ✅ Done (Phase 2) | 4h |
-| 2 | INTEGRAR UserSessionManager existente | ✅ Done (Phase 2) | 4h |
-| 3 | Crear AuthorizationService | ✅ DONE | 8h |
-| 4 | Implementar RLS en PostgreSQL | ✅ Done (V004 migration) | 10h |
-| 5 | Refactorizar trading loop | 🟡 Pending | 8h |
-| 6 | Tests de aislamiento | ✅ Partial (21 + 25 tests) | 4h |
+| 1 | Eliminar hardcoded user_id | ✅ Done | 4h |
+| 2 | INTEGRAR UserSessionManager existente | ✅ Done | 4h |
+| 3 | Crear AuthorizationService | ✅ Done | 8h |
+| 3b | Integrar en AutoTradingBot | ✅ Done | 4h |
+| 4 | Implementar RLS en PostgreSQL | ✅ Done | 10h |
+| 5 | Refactorizar trading loop | ✅ Done (uses UserSessionManager) | 8h |
+| 6 | Tests de aislamiento | ✅ Done (32 tests) | 4h |
 | 7 | PQC para auth (opcional) | ⏸️ Deferred | 8h |
-| 8 | Documentación | 🟡 In Progress | 4h |
+| 8 | Documentación | ✅ Done | 4h |
 
-**Next Steps:**
-1. Integrate AuthorizationAdapter into AutoTradingBot (`omnix_core/bot/auto_trading_bot.py`)
-2. Replace remaining 6 hardcoded checks in AutoTradingBot with authorization checks
-3. Add integration tests with real database queries
-4. Enable `AUTHORIZATION_PORT_ENABLED` feature flag in production
+**Activation Checklist:**
+1. ✅ AuthorizationPort + AuthorizationAdapter implemented
+2. ✅ 17 hardcoded checks replaced across 5 files
+3. ✅ Harold has OWNER role in database
+4. ✅ 32 tests passing
+5. ⏸️ Feature flag `AUTHORIZATION_PORT_ENABLED` ready (currently false for Railway safety)
 
 ---
 

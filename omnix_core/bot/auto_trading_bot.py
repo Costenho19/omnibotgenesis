@@ -265,6 +265,19 @@ except ImportError:
     USER_SESSION_MANAGER_AVAILABLE = False
     logger.warning("⚠️ User Session Manager no disponible")
 
+try:
+    from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
+    from src.omnix.ports.driven.authorization_port import Permission, UserRole, AuthorizationError
+    AUTHORIZATION_ADAPTER_AVAILABLE = True
+    logger.info(f"🔐 Authorization Adapter {VERSION_BANNER} disponible - RBAC multi-user")
+except ImportError:
+    get_authorization_adapter = None
+    Permission = None
+    UserRole = None
+    AuthorizationError = PermissionError  # Fallback to standard PermissionError
+    AUTHORIZATION_ADAPTER_AVAILABLE = False
+    logger.warning("⚠️ Authorization Adapter no disponible - fallback a legacy mode")
+
 # Import Dynamic Position Manager PREMIUM - ATR-BASED TP/SL
 try:
     from omnix_services.trading_service.position_manager import (
@@ -778,6 +791,73 @@ class AutoTradingBot:
             logger.warning(f"⚠️ {caller}: user_id not passed, using LEGACY_USER_ID env var (legacy mode)")
         return LEGACY_USER_ID
     
+    def _require_trading_permission(self, user_id: str, operation: str = 'trading') -> None:
+        """
+        V6.5.4d MULTI-USER: Verify user has required trading permission.
+        
+        Uses AuthorizationAdapter if available, falls back to LEGACY_USER_ID check.
+        Raises AuthorizationError if user doesn't have permission.
+        
+        Permission selection based on paper/real mode:
+        - Paper mode: PAPER_TRADING or PAPER_AUTO_TRADING, VIEW_BALANCE for positions
+        - Real mode: REAL_TRADING or REAL_AUTO_TRADING (OWNER only), VIEW_REAL_BALANCE for positions
+        
+        Args:
+            user_id: User ID to check permissions for
+            operation: Type of operation - 'trading', 'auto_trading', 'view_positions'
+            
+        Raises:
+            AuthorizationError: If user doesn't have required permission
+        """
+        if not AUTHORIZATION_ADAPTER_AVAILABLE or not get_authorization_adapter:
+            import os as os_env
+            LEGACY_USER_ID = os_env.getenv('LEGACY_USER_ID', '')
+            if not LEGACY_USER_ID or not user_id:
+                raise AuthorizationError(f"Authorization denied: adapter unavailable and no legacy credentials for user {user_id}")
+            if str(user_id) != LEGACY_USER_ID:
+                raise AuthorizationError(f"Authorization denied: user {user_id} is not the legacy user")
+            return
+        
+        try:
+            auth = get_authorization_adapter()
+            is_paper_mode = self.config.get('paper_mode', True)
+            has_perm = False
+            required_perm = None
+            
+            if operation == 'auto_trading':
+                if is_paper_mode:
+                    required_perm = Permission.PAPER_AUTO_TRADING
+                else:
+                    required_perm = Permission.REAL_AUTO_TRADING
+            elif operation == 'trading':
+                if is_paper_mode:
+                    required_perm = Permission.PAPER_TRADING
+                else:
+                    required_perm = Permission.REAL_TRADING
+            elif operation == 'view_positions':
+                if is_paper_mode:
+                    required_perm = Permission.VIEW_BALANCE
+                else:
+                    required_perm = Permission.VIEW_REAL_BALANCE
+            else:
+                required_perm = Permission.READ_MARKET_DATA
+            
+            has_perm = auth.has_permission(str(user_id), required_perm)
+            
+            if not has_perm:
+                raise AuthorizationError(f"User {user_id} lacks permission {required_perm.name} for operation '{operation}'")
+                
+        except AuthorizationError:
+            raise
+        except Exception as e:
+            logger.warning(f"⚠️ Authorization check failed for user {user_id}: {e}, falling back to legacy mode")
+            import os as os_env
+            LEGACY_USER_ID = os_env.getenv('LEGACY_USER_ID', '')
+            if not LEGACY_USER_ID or not user_id:
+                raise AuthorizationError(f"Authorization denied: fallback failed - no legacy credentials for user {user_id}")
+            if str(user_id) != LEGACY_USER_ID:
+                raise AuthorizationError(f"Authorization denied: user {user_id} is not the legacy user")
+    
     def check_and_restore_auto_trading(self):
         """
          Método público para restaurar auto-trading DESPUÉS de que la DB esté conectada.
@@ -1077,6 +1157,14 @@ class AutoTradingBot:
                 
                 # V6.5: Persistir estado en user_settings
                 effective_user_id = self._get_effective_user_id(user_id, "start")
+                
+                # V6.5.4d MULTI-USER: Verify user has auto-trading permission
+                try:
+                    self._require_trading_permission(effective_user_id, 'auto_trading')
+                except AuthorizationError as e:
+                    logger.warning(f"🚫 {e}")
+                    return {'error': 'Permission denied: auto-trading not allowed for this user tier'}
+                
                 self._persist_auto_trading_state(effective_user_id, active=True)
                 
                 # V6.5.4d MULTI-USER: Activar sesión del usuario en UserSessionManager
@@ -1128,6 +1216,14 @@ class AutoTradingBot:
                 
                 # V6.5: Persistir estado en user_settings
                 effective_user_id = self._get_effective_user_id(user_id, "stop")
+                
+                # V6.5.4d MULTI-USER: Verify user has auto-trading permission to stop
+                try:
+                    self._require_trading_permission(effective_user_id, 'auto_trading')
+                except AuthorizationError as e:
+                    logger.warning(f"🚫 {e}")
+                    return {'error': 'Permission denied: cannot stop auto-trading for this user tier'}
+                
                 self._persist_auto_trading_state(effective_user_id, active=False)
                 
                 # V6.5.4d MULTI-USER: Desactivar sesión del usuario en UserSessionManager
@@ -1396,6 +1492,13 @@ class AutoTradingBot:
         
         # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
         user_id = self._get_effective_user_id(user_id, caller='_check_open_positions_tp_sl')
+        
+        # V6.5.4d MULTI-USER: Verify user has permission to view/manage positions
+        try:
+            self._require_trading_permission(user_id, 'view_positions')
+        except AuthorizationError as e:
+            logger.warning(f"🚫 {e}")
+            return 0
         
         # PREMIUM: Usar DynamicPositionManager si está disponible
         if self.position_manager:
@@ -2724,6 +2827,14 @@ class AutoTradingBot:
         try:
             # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
             user_id = self._get_effective_user_id(user_id, caller='_execute_smart_trade')
+            
+            # V6.5.4d MULTI-USER: Verify user has trading permission
+            try:
+                self._require_trading_permission(user_id, 'trading')
+            except AuthorizationError as e:
+                logger.warning(f"🚫 {e}")
+                return {'error': 'Permission denied: trading not allowed for this user tier'}
+            
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
             
@@ -4296,6 +4407,13 @@ class AutoTradingBot:
             
             # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
             user_id = self._get_effective_user_id(user_id, caller='_check_position_limit_early')
+            
+            # V6.5.4d MULTI-USER: Verify user has permission to check positions
+            try:
+                self._require_trading_permission(user_id, 'view_positions')
+            except AuthorizationError as e:
+                logger.warning(f"🚫 {e}")
+                return True  # Block new positions for unauthorized users
             
             # V6.5.4c: Usar paper_trading para obtener posiciones correctamente
             if self.paper_trading and self.config.get('paper_mode', False):

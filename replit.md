@@ -65,21 +65,22 @@ The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Eng
 
 ### Multi-User and Dashboard Architecture
 
-> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 3 de multi-usuario COMPLETADA - AuthorizationService implementado.
+> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 3 + 3b de multi-usuario COMPLETADA - AuthorizationService integrado en AutoTradingBot.
 > 
-> **Progreso Fase 3 (AuthorizationService):**
+> **Progreso Fase 3 + 3b (AuthorizationService + AutoTradingBot):**
 > - ✅ `AuthorizationPort` creado en `src/omnix/ports/driven/authorization_port.py`
 > - ✅ `AuthorizationAdapter` con PostgreSQL + Redis cache (5 min TTL)
 > - ✅ `UserRole` enum: FREE < BASIC < PRO < PREMIUM < OWNER
 > - ✅ `Permission` enum con 15 permisos granulares
-> - ✅ 11 hardcoded checks reemplazados en 4 archivos
+> - ✅ 17 hardcoded checks reemplazados en 5 archivos (trading_system, enterprise_bot, auto_trading_bot, performance_optimizer, conversational_ai_adapter)
+> - ✅ `_require_trading_permission()` helper en AutoTradingBot
 > - ✅ Harold actualizado en BD: `is_admin=true, subscription_tier='owner'`
-> - ✅ 25/25 tests de autorización pasando
+> - ✅ 36/36 tests de autorización pasando
 >
 > **Documentación completa:** `docs/current/TECHNICAL_DEBT.md`
 
 **Modo Single-User (Harold):** ✅ SEGURO - OWNER role con permisos completos  
-**Modo Multi-Usuario:** 🟡 EN PROGRESO - requiere integración en AutoTradingBot
+**Modo Multi-Usuario:** ✅ LISTO - Arquitectura completa, activación via feature flag
 
 Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 

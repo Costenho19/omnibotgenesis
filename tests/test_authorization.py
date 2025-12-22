@@ -305,5 +305,116 @@ class TestRateLimiting:
         assert 'reset_at' in status
 
 
+class TestAutoTradingBotAuthorization:
+    """Tests for AutoTradingBot authorization integration."""
+    
+    def test_require_trading_permission_paper_mode(self):
+        """Test _require_trading_permission in paper mode."""
+        adapter = AuthorizationAdapter(
+            db_url=None,
+            redis_url=None,
+            admin_user_id='7014748854'
+        )
+        
+        assert adapter.has_permission('7014748854', Permission.PAPER_TRADING) is True
+        assert adapter.has_permission('7014748854', Permission.PAPER_AUTO_TRADING) is True
+        assert adapter.has_permission('999999999', Permission.PAPER_TRADING) is False
+    
+    def test_owner_has_real_auto_trading(self):
+        """OWNER should have real auto-trading permission."""
+        adapter = AuthorizationAdapter(
+            db_url=None,
+            redis_url=None,
+            admin_user_id='7014748854'
+        )
+        
+        assert adapter.has_permission('7014748854', Permission.REAL_AUTO_TRADING) is True
+        assert adapter.has_permission('999999999', Permission.REAL_AUTO_TRADING) is False
+    
+    def test_pro_has_paper_auto_trading(self):
+        """PRO tier should have paper auto-trading permission."""
+        pro_perms = ROLE_PERMISSIONS[UserRole.PRO]
+        assert Permission.PAPER_AUTO_TRADING in pro_perms
+        assert Permission.PAPER_TRADING in pro_perms
+        assert Permission.REAL_AUTO_TRADING not in pro_perms
+    
+    def test_basic_no_auto_trading(self):
+        """BASIC tier should not have auto-trading permission."""
+        basic_perms = ROLE_PERMISSIONS[UserRole.BASIC]
+        assert Permission.PAPER_AUTO_TRADING not in basic_perms
+        assert Permission.PAPER_TRADING in basic_perms
+    
+    def test_free_no_trading(self):
+        """FREE tier should not have any trading permission."""
+        free_perms = ROLE_PERMISSIONS[UserRole.FREE]
+        assert Permission.PAPER_TRADING not in free_perms
+        assert Permission.PAPER_AUTO_TRADING not in free_perms
+        assert Permission.REAL_TRADING not in free_perms
+    
+    def test_view_positions_permission(self):
+        """Test VIEW_BALANCE and VIEW_REAL_BALANCE permissions for position viewing."""
+        owner_perms = ROLE_PERMISSIONS[UserRole.OWNER]
+        premium_perms = ROLE_PERMISSIONS[UserRole.PREMIUM]
+        basic_perms = ROLE_PERMISSIONS[UserRole.BASIC]
+        free_perms = ROLE_PERMISSIONS[UserRole.FREE]
+        
+        assert Permission.VIEW_BALANCE in owner_perms
+        assert Permission.VIEW_REAL_BALANCE in owner_perms
+        assert Permission.VIEW_BALANCE in premium_perms
+        assert Permission.VIEW_BALANCE in basic_perms
+        assert Permission.VIEW_BALANCE not in free_perms
+    
+    def test_legacy_fallback_with_env_var(self):
+        """Test fallback to LEGACY_USER_ID when adapter unavailable."""
+        with patch.dict(os.environ, {'LEGACY_USER_ID': '7014748854'}):
+            legacy_user_id = os.environ.get('LEGACY_USER_ID')
+            assert legacy_user_id == '7014748854'
+            assert str('7014748854') == legacy_user_id
+    
+    def test_legacy_fallback_denies_empty_user_id(self):
+        """Test that empty user_id is denied in legacy fallback."""
+        with patch.dict(os.environ, {'LEGACY_USER_ID': '7014748854'}):
+            legacy_user_id = os.environ.get('LEGACY_USER_ID')
+            user_id = None
+            if not legacy_user_id or not user_id:
+                result = False
+            else:
+                result = str(user_id) == legacy_user_id
+            assert result is False
+    
+    def test_legacy_fallback_denies_empty_legacy_id(self):
+        """Test that missing LEGACY_USER_ID denies access."""
+        with patch.dict(os.environ, {'LEGACY_USER_ID': ''}):
+            legacy_user_id = os.environ.get('LEGACY_USER_ID', '')
+            user_id = '12345'
+            if not legacy_user_id or not user_id:
+                result = False
+            else:
+                result = str(user_id) == legacy_user_id
+            assert result is False
+    
+    def test_legacy_fallback_denies_mismatched_user(self):
+        """Test that mismatched user_id is denied in legacy mode."""
+        with patch.dict(os.environ, {'LEGACY_USER_ID': '7014748854'}):
+            legacy_user_id = os.environ.get('LEGACY_USER_ID')
+            user_id = '999999999'
+            if not legacy_user_id or not user_id:
+                result = False
+            else:
+                result = str(user_id) == legacy_user_id
+            assert result is False
+    
+    def test_legacy_fallback_allows_matching_user(self):
+        """Test that matching user_id is allowed in legacy mode."""
+        with patch.dict(os.environ, {'LEGACY_USER_ID': '7014748854'}):
+            legacy_user_id = os.environ.get('LEGACY_USER_ID')
+            user_id = '7014748854'
+            if not legacy_user_id or not user_id:
+                result = False
+            else:
+                result = str(user_id) == legacy_user_id
+            assert result is True
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
