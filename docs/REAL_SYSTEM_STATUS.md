@@ -75,13 +75,14 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 
 ## Inventario Actual
 
-### Driven Ports (16)
+### Driven Ports (17)
 
 | Port | Adapter | Feature Flag |
 |------|---------|--------------|
 | ai_inference_port | gemini_adapter | (en AI) |
 | ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` |
 | ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` |
+| **authorization_port** | **authorization_adapter** | **NUEVO (Dec 22)** - RBAC |
 | cache_port | cache_adapter | `USE_CACHE_PORT=false` |
 | database_port | database_adapter | `USE_DATABASE_PORT=false` |
 | derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` |
@@ -94,7 +95,7 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 | portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` |
 | risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` |
 | trading_port | trading_adapter | (incluido en App Layer) |
-| **user_session_port** | **user_session_adapter** | **NUEVO (Dec 20)** |
+| user_session_port | user_session_adapter | NUEVO (Dec 20) |
 
 ### Driver Ports (3)
 
@@ -104,16 +105,17 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 | rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
 | intent_classification_port | intent_classification_adapter | (en AI) |
 
-### Adapters (21)
+### Adapters (22)
 
 ```
-ai_gateway_shim          cache_adapter           coherence_adapter
-database_adapter         derivatives_adapter     execution_adapter
-gemini_adapter           intent_classification   kraken_adapter
-market_intel_adapter     notification_adapter    optimization_adapter
-portfolio_adapter        risk_adapter            risk_control_adapter
-telegram_adapter         trading_adapter         voice_adapter
-user_session_adapter     blockchain_info_provider onchain_adapter
+ai_gateway_shim          authorization_adapter    cache_adapter
+coherence_adapter        database_adapter         derivatives_adapter
+execution_adapter        gemini_adapter           intent_classification
+kraken_adapter           market_intel_adapter     notification_adapter
+optimization_adapter     portfolio_adapter        risk_adapter
+risk_control_adapter     telegram_adapter         trading_adapter
+voice_adapter            user_session_adapter     blockchain_info_provider
+onchain_adapter
 ```
 
 ---

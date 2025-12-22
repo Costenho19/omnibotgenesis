@@ -17,13 +17,13 @@
 
 | Métrica | Valor |
 |---------|-------|
-| Driven Ports | **16** |
+| Driven Ports | **17** (incluyendo AuthorizationPort, UserSessionPort) |
 | Driver Ports | **3** |
-| **Total Ports** | **19** |
-| Adapters | **21** |
-| Ports activos en producción | **0/16 (0%)** - Legacy en uso |
+| **Total Ports** | **20** |
+| Adapters | **22** (incluyendo AuthorizationAdapter) |
+| Ports activos en producción | **0/20 (0%)** - Legacy en uso |
 | USE_APP_LAYER | **false** - No activado |
-| Tests pasando | **120/120** |
+| Tests pasando | **156/156** (120 ports + 36 authorization) |
 
 ---
 
@@ -32,13 +32,14 @@
 > **Estado**: Todos los ports están IMPLEMENTADOS pero NO activos. 
 > Los flags listados son el objetivo; actualmente todos = `false`.
 
-### Driven Ports (16 - Salida hacia infraestructura)
+### Driven Ports (17 - Salida hacia infraestructura)
 
 | Port | Adapter | Feature Flag | Runbook |
 |------|---------|--------------|---------|
 | ai_inference_port | gemini_adapter | (incluido en AI) | - |
 | ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` | - |
 | ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` | - |
+| **authorization_port** | **authorization_adapter** | **NUEVO (Dec 22)** | - |
 | cache_port | cache_adapter | `USE_CACHE_PORT=false` | - |
 | database_port | database_adapter | `USE_DATABASE_PORT=false` | - |
 | derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` | [Runbook](../operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) |
@@ -51,7 +52,7 @@
 | portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` | [Runbook](../operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) |
 | risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` | [Runbook](../operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) |
 | trading_port | trading_adapter | (incluido en App Layer) | - |
-| **user_session_port** | **user_session_adapter** | **NUEVO (Dec 20)** | - |
+| user_session_port | user_session_adapter | NUEVO (Dec 20) | - |
 
 ### Driver Ports (3 - Entrada desde interfaces)
 
@@ -63,11 +64,12 @@
 
 ---
 
-## Inventario de Adapters (21)
+## Inventario de Adapters (22)
 
 | Adapter | Ubicación | Servicio Legacy Wrapped |
 |---------|-----------|------------------------|
 | ai_gateway_shim | `adapters/ai_gateway_shim.py` | AIModelsManager |
+| **authorization_adapter** | `adapters/authorization_adapter.py` | **RBAC + PostgreSQL + Redis** (Dec 22) |
 | cache_adapter | `adapters/cache_adapter.py` | RedisCache |
 | coherence_adapter | `adapters/coherence_adapter.py` | CoherenceEngine |
 | database_adapter | `adapters/database_adapter.py` | DatabaseGateway |
