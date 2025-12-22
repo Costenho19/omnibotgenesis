@@ -24,13 +24,15 @@
 | Export actualizado | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
 
 ### Language Detection AI-First Refactor (Dec 22, 2025)
-**Arquitectura AI-First**:
+**Arquitectura AI-First Verdadera**:
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
-- **FLUJO**: 
-  - Inputs cortos del usuario: LANGUAGE POLICY en system prompt le dice a Gemini responder en mismo idioma
-  - TTS: Detecta idioma de la RESPUESTA del AI (texto largo, fácil de detectar con FastText)
-- **RESULTADO**: 7/7 idiomas detectados correctamente en textos de respuesta AI
+- **FLUJO AI-First**:
+  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
+  - Fallback: fast-langdetect → langdetect → 'en'
+- **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
+- **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
 - **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
 

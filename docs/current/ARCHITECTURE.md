@@ -43,25 +43,49 @@
 | Componente | Archivo | Función |
 |------------|---------|---------|
 | LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección AI-first + Redis persistence |
-| fast-langdetect | `pip install fast-langdetect` | FastText-based detection (80x faster) |
-| LANGUAGE POLICY | System Prompt | "ALWAYS respond in the SAME language the user writes" |
+| Gemini AI Detection | `gemini-2.0-flash-lite` | Detección de textos cortos (<50 chars) |
+| fast-langdetect | FastText-based | Detección de textos largos (≥50 chars) |
 | Redis Language Cache | `omnix:user_language:{chat_id}` | 24h TTL por usuario |
 
 **Flujo AI-First**:
 ```
-Usuario escribe "hello" (corto)
+Usuario escribe texto
     ↓
-System Prompt LANGUAGE POLICY → Gemini detecta idioma AUTOMÁTICAMENTE
+¿Texto ≥50 chars?
+    SI → fast-langdetect (FastText, muy preciso)
+    NO → Gemini AI (gemini-2.0-flash-lite, temp=0)
     ↓
-Respuesta en inglés → TTS detecta idioma (fast-langdetect, texto largo)
+Fallback chain: fast-langdetect → langdetect → 'en'
     ↓
-Audio generado en idioma correcto
+Resultado persistido en Redis → Prompt injection
+    ↓
+TTS: gTTS con mapeo ISO→gTTS (zh → zh-CN)
+```
+
+**Arquitectura de Detección**:
+```python
+def detect_language(text):
+    # 1. Textos largos: FastText (rápido y preciso)
+    if len(text) >= 50:
+        result = fast_langdetect.detect(text)
+        if result: return result
+    
+    # 2. Textos cortos: Gemini AI (singleton client)
+    result = gemini.generate_content(
+        model="gemini-2.0-flash-lite",
+        prompt=f"Detect language, return ISO code only: {text}",
+        temperature=0.0, max_tokens=5
+    )
+    if result: return result
+    
+    # 3. Fallbacks
+    return fast_langdetect(text) or langdetect(text) or 'en'
 ```
 
 **Política**: 
 - NO diccionarios multilingües hardcodeados
-- NO detección manual para textos cortos - AI lo hace naturalmente
-- fast-langdetect para respuestas de AI (textos largos, 100% precisión)
+- Gemini AI para textos cortos (100% precisión)
+- FastText para textos largos (eficiencia)
 - TTS mapea ISO codes a gTTS (ej: zh → zh-CN)
 
 ---
