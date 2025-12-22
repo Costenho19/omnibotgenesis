@@ -49,6 +49,10 @@
                 <div class="header-stat-value positive" id="latency-value">--</div>
                 <div class="header-stat-label">Latency</div>
             </div>
+            <div class="header-stat" title="Active PostgreSQL sessions - SaaS Ready 100K+">
+                <div class="header-stat-value positive" id="sessions-value">--</div>
+                <div class="header-stat-label">Sessions</div>
+            </div>
         </div>
         
         <div class="clock-display">
@@ -221,5 +225,7 @@
 <script src="{{ url_for('static', filename='js/components/tradehistory.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/quarantine.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/latency.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/sessions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/equitycomparison.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

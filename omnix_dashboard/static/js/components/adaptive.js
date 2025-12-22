@@ -27,6 +27,60 @@ const AdaptiveEngine = (function() {
         `;
     }
 
+    function renderMainDriver(mainDriver) {
+        if (!mainDriver || !mainDriver.name) {
+            return '';
+        }
+
+        const isQuantum = mainDriver.is_quantum;
+        const icon = isQuantum ? '⚛️' : '🧠';
+        const color = isQuantum ? '#00d4aa' : '#ffc107';
+        const weightPct = Math.round(mainDriver.weight * 100);
+        
+        return `
+            <div class="main-driver-section" style="margin-bottom: 12px;">
+                <div class="main-driver-badge" style="
+                    background: linear-gradient(135deg, ${color}22 0%, ${color}11 100%);
+                    border: 1px solid ${color};
+                    border-radius: 8px;
+                    padding: 10px 14px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <span class="driver-icon" style="font-size: 24px;">${icon}</span>
+                    <div class="driver-info">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="driver-name" style="
+                                font-weight: 700;
+                                color: ${color};
+                                font-size: 13px;
+                            ">${mainDriver.name.replace(/_/g, ' ')}</span>
+                            <span class="driver-badge" style="
+                                background: ${color};
+                                color: #000;
+                                padding: 2px 8px;
+                                border-radius: 4px;
+                                font-size: 9px;
+                                font-weight: 700;
+                                letter-spacing: 0.5px;
+                            ">MAIN DRIVER</span>
+                            <span class="driver-weight" style="
+                                color: #fff;
+                                font-weight: 600;
+                            ">${weightPct}%</span>
+                        </div>
+                        <div class="driver-description" style="
+                            font-size: 10px;
+                            color: #888;
+                            margin-top: 4px;
+                        " title="${mainDriver.description}">${mainDriver.description}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     function renderStrategyMatrix(strategies) {
         if (!strategies || Object.keys(strategies).length === 0) {
             return '<div class="no-data">No strategy data</div>';
@@ -161,6 +215,7 @@ const AdaptiveEngine = (function() {
         const strategies = adaptive.strategy_weights || {};
         const kernelParams = adaptive.kernel_params || {};
         const metrics = adaptive.performance_metrics || {};
+        const mainDriver = adaptive.main_driver || null;
 
         container.innerHTML = `
             <div class="adaptive-widget">
@@ -169,6 +224,8 @@ const AdaptiveEngine = (function() {
                     <span class="widget-title">ADAPTIVE ENGINE ${adaptive.version || 'V6.5'}</span>
                     <span class="widget-status ${adaptive.status === 'ACTIVE' ? 'active' : 'inactive'}">${adaptive.status || 'UNKNOWN'}</span>
                 </div>
+                
+                ${renderMainDriver(mainDriver)}
                 
                 <div class="widget-section">
                     <div class="section-title">Market Regime</div>

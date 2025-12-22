@@ -61,7 +61,9 @@ const TerminalApp = (function() {
             { name: 'feargreed', fn: () => OmnixFearGreed.update() },
             { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } },
             { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } },
-            { name: 'tradehistory', fn: async () => { if (window.TradeHistoryWidget) await TradeHistoryWidget.refresh(); } }
+            { name: 'tradehistory', fn: async () => { if (window.TradeHistoryWidget) await TradeHistoryWidget.refresh(); } },
+            { name: 'sessions', fn: async () => { if (window.SessionsWidget) await SessionsWidget.refresh(); } },
+            { name: 'equitycomparison', fn: async () => { if (window.EquityComparison) await EquityComparison.refresh(); } }
         ];
     }
 
@@ -90,6 +92,14 @@ const TerminalApp = (function() {
         
         if (window.TradeHistoryWidget) {
             TradeHistoryWidget.init();
+        }
+        
+        if (window.SessionsWidget) {
+            SessionsWidget.init();
+        }
+        
+        if (window.EquityComparison) {
+            EquityComparison.init();
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
