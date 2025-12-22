@@ -568,6 +568,58 @@ def api_health_bootstrap():
     })
 
 
+@system_bp.route('/api/system/latency')
+def api_system_latency():
+    """
+    API endpoint for real system latency measurement.
+    Measures actual response times from database and cache.
+    """
+    import time
+    
+    measurements = {}
+    
+    start = time.perf_counter()
+    with get_db_connection() as conn:
+        if conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute('SELECT 1')
+                cursor.fetchone()
+                measurements['database_ms'] = round((time.perf_counter() - start) * 1000, 2)
+            except Exception:
+                measurements['database_ms'] = None
+        else:
+            measurements['database_ms'] = None
+    
+    try:
+        from omnix_core.cache.redis_cache import get_redis_client
+        redis = get_redis_client()
+        if redis:
+            start = time.perf_counter()
+            redis.ping()
+            measurements['cache_ms'] = round((time.perf_counter() - start) * 1000, 2)
+        else:
+            measurements['cache_ms'] = None
+    except Exception:
+        measurements['cache_ms'] = None
+    
+    avg_latency = None
+    valid_measurements = [v for v in measurements.values() if v is not None]
+    if valid_measurements:
+        avg_latency = round(sum(valid_measurements) / len(valid_measurements), 2)
+    
+    return jsonify({
+        'success': True,
+        'latency': {
+            'database_ms': measurements.get('database_ms'),
+            'cache_ms': measurements.get('cache_ms'),
+            'avg_ms': avg_latency,
+            'status': 'optimal' if avg_latency and avg_latency < 10 else 'normal'
+        },
+        'timestamp': datetime.now().isoformat()
+    })
+
+
 @system_bp.route('/api/system/quarantine')
 def api_asset_quarantine():
     """
@@ -603,30 +655,32 @@ def api_asset_quarantine():
                 })
                 total_avoided_loss += loss_amount
         
-        with get_db_connection() as conn:
-            if conn:
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute('''
-                        SELECT symbol, COUNT(*) as trade_count, SUM(pnl) as total_pnl
-                        FROM paper_trading_trades
-                        WHERE status = 'closed' AND pnl < 0
-                        AND symbol IN %s
-                        GROUP BY symbol
-                    ''', (tuple([a['symbol'] for a in quarantined_assets]) or ('NONE',),))
-                    
-                    db_losses = {row[0]: {'trades': row[1], 'pnl': float(row[2] or 0)} for row in cursor.fetchall()}
-                    
-                    for asset in quarantined_assets:
-                        if asset['symbol'] in db_losses:
-                            db_data = db_losses[asset['symbol']]
-                            asset['db_trades'] = db_data['trades']
-                            asset['db_loss'] = abs(db_data['pnl'])
-                            if asset['loss_avoided'] == 0:
-                                asset['loss_avoided'] = abs(db_data['pnl'])
-                                total_avoided_loss += abs(db_data['pnl'])
-                except Exception as e:
-                    logger.warning(f"Could not fetch DB losses: {e}")
+        symbols_list = [a['symbol'] for a in quarantined_assets]
+        if symbols_list:
+            with get_db_connection() as conn:
+                if conn:
+                    try:
+                        cursor = conn.cursor()
+                        cursor.execute('''
+                            SELECT symbol, COUNT(*) as trade_count, SUM(pnl) as total_pnl
+                            FROM paper_trading_trades
+                            WHERE status = 'closed' AND pnl < 0
+                            AND symbol = ANY(%s)
+                            GROUP BY symbol
+                        ''', (symbols_list,))
+                        
+                        db_losses = {row[0]: {'trades': row[1], 'pnl': float(row[2] or 0)} for row in cursor.fetchall()}
+                        
+                        for asset in quarantined_assets:
+                            if asset['symbol'] in db_losses:
+                                db_data = db_losses[asset['symbol']]
+                                asset['db_trades'] = db_data['trades']
+                                asset['db_loss'] = abs(db_data['pnl'])
+                                if asset['loss_avoided'] == 0:
+                                    asset['loss_avoided'] = abs(db_data['pnl'])
+                                    total_avoided_loss += abs(db_data['pnl'])
+                    except Exception as e:
+                        logger.warning(f"Could not fetch DB losses: {e}")
         
         return jsonify({
             'success': True,

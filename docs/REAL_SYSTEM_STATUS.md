@@ -9,14 +9,23 @@
 
 ## Cambios Recientes
 
+### Real-Time Latency Monitor (Dec 22, 2025)
+**Live System Performance Measurement**:
+- **NEW API**: `/api/system/latency` - Measures actual database and cache response times
+- **Dashboard Integration**: Header metric showing live latency (e.g., "128.1ms")
+- **Real Measurements**: Uses `time.perf_counter()` for PostgreSQL + Redis timing
+- **Status Indicator**: Green (<10ms), White (normal), Red (>50ms)
+- **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/latency.js`
+
 ### Asset Quarantine System (Dec 22, 2025)
 **Capital Protection for Investor Presentations**:
 - **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
-- **Dashboard Integration**: New "Asset Quarantine" page in Streamlit dashboard
+- **Dashboard Integration**: Header metric + Streamlit page showing blocked assets
 - **Capital Protected**: $6,213+ in avoided losses from blocking ADA, SOL, ETH, AVAX
 - **Real Data Source**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
+- **SQL Fix**: Changed `IN %s` to `ANY(%s)` for psycopg3 compatibility
 - **Investor-Ready**: Visual display of risk management with explanation for pitch presentations
-- **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/streamlit_app.py`
+- **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/quarantine.js`
 
 ### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
 **AuthorizationService Completamente Integrado**:

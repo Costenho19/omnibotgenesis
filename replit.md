@@ -86,10 +86,16 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 
 #### Asset Quarantine System (Dec 22, 2025)
 - **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
-- **Dashboard Integration**: New "Asset Quarantine" page in Streamlit dashboard
+- **Dashboard Integration**: New "Asset Quarantine" page in Streamlit dashboard + Flask header metric
 - **Capital Protection**: Shows $6,213+ in avoided losses from blocking ADA, SOL, ETH, AVAX
 - **Real Data**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
 - **Investor-Ready**: Visual display of risk management for pitch presentations
+
+#### Real-Time Latency Monitor (Dec 22, 2025)
+- **NEW API**: `/api/system/latency` - Measures actual database and cache response times
+- **Dashboard Integration**: Header metric showing live latency in milliseconds
+- **Real Measurements**: Uses `time.perf_counter()` for accurate timing of PostgreSQL and Redis
+- **Status Indicator**: Green (<10ms optimal), White (normal), Red (>50ms high latency)
 
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.

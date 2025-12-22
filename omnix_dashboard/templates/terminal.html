@@ -45,6 +45,10 @@
                 <div class="header-stat-value positive" id="quarantine-avoided">$0</div>
                 <div class="header-stat-label">Protected</div>
             </div>
+            <div class="header-stat">
+                <div class="header-stat-value positive" id="latency-value">--</div>
+                <div class="header-stat-label">Latency</div>
+            </div>
         </div>
         
         <div class="clock-display">
@@ -216,5 +220,6 @@
 <script src="{{ url_for('static', filename='js/components/snapshots.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/tradehistory.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/quarantine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/latency.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}
