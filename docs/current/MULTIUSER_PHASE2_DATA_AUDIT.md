@@ -12,7 +12,7 @@
 |------|-------------|----------|--------|
 | Hardcoded user_id | 8 | 4 (AutoTradingBot) | ✅ CORREGIDO (Paso 2 - Dec 22) |
 | Database Services con user_id='harold' default | 3 | 3 (DatabaseService líneas 3042, 3098, 3148) | 🔴 Requiere fix (Paso 7) |
-| PaperTradingRepository user_id=None | 4 | 4 | ⚠️ Pueden retornar todos los datos (Paso 6) |
+| PaperTradingRepository user_id=None | 4 | 0 | ✅ CORREGIDO - user_id obligatorio (Paso 6 - Dec 22) |
 | Tablas sin RLS | 11+ | 3 (paper_trading_*, user_settings) | ✅ RLS habilitado (Paso 3 - Dec 22) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
 | Redis keys | 6 callers | 0 (todos verificados OK) | ✅ Verificados |
@@ -161,12 +161,16 @@ Key = "{prefix}:{func_name}:{hash_de_args_y_kwargs}"
 
 ### 3b.1 PaperTradingRepository (omnix_services/database_service/)
 
-| Función | Línea | user_id Param | Riesgo si None |
-|---------|-------|---------------|----------------|
-| `get_trade_statistics(user_id=None)` | 37 | ⚠️ Opcional | Retorna stats de TODOS |
-| `get_recent_trades(user_id=None)` | 134 | ⚠️ Opcional | Retorna trades de TODOS |
-| `get_paper_balance(user_id=None)` | 230 | ⚠️ Opcional | Retorna balances de TODOS |
-| `get_full_performance_context(user_id=None)` | 344 | ⚠️ Opcional | Contexto de TODOS |
+**ESTADO**: ✅ **CORREGIDO** (Paso 6 - Dec 22, 2025)
+
+| Función | Línea | user_id Param | Estado |
+|---------|-------|---------------|--------|
+| `get_trade_statistics(user_id: str)` | 40 | ✅ Obligatorio | Filtrado por usuario |
+| `get_recent_trades(user_id: str, limit)` | 136 | ✅ Obligatorio | Filtrado por usuario |
+| `get_paper_balance(user_id: str)` | 231 | ✅ Obligatorio | Filtrado por usuario |
+| `get_full_performance_context(user_id: str)` | 342 | ✅ Obligatorio | Filtrado por usuario |
+
+**Cambio realizado**: Parámetro `user_id` ahora es `str` obligatorio en lugar de `Optional[str] = None`. Las queries SQL siempre incluyen `WHERE user_id = %s`.
 
 ### 3b.2 DatabaseManager (omnix_services/database_service/)
 

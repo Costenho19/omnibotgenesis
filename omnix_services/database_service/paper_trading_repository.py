@@ -34,9 +34,12 @@ class PaperTradingRepository:
                 logger.error(f"❌ PaperTradingRepository: Cannot import DatabaseGateway: {e}")
         return self._gateway
     
-    def get_trade_statistics(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_trade_statistics(self, user_id: str) -> Dict[str, Any]:
         """
         Obtener estadísticas de trading desde PostgreSQL.
+        
+        Args:
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
         
         Returns:
             Dict con:
@@ -73,13 +76,9 @@ class PaperTradingRepository:
                     COALESCE(AVG(profit_pct), 0) as avg_pnl_pct
                 FROM paper_trading_trades
                 WHERE status = 'CLOSED'
+                AND user_id = %s
             """
-            
-            if user_id:
-                query += " AND user_id = %s"
-                params = (str(user_id),)
-            else:
-                params = None
+            params = (str(user_id),)
             
             result = gateway.execute_query(query, params)
             
@@ -131,11 +130,13 @@ class PaperTradingRepository:
                 'error': str(e)
             }
     
-    def get_recent_trades(self, user_id: Optional[str] = None, limit: int = 10) -> Dict[str, Any]:
+    def get_recent_trades(self, user_id: str, limit: int = 10) -> Dict[str, Any]:
         """
         Obtener trades recientes desde PostgreSQL.
         
-        FIX Dec 10, 2025: Ahora respeta user_id para filtrar por usuario.
+        Args:
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
+            limit: Número máximo de trades a retornar
         
         Returns:
             Dict con:
@@ -155,7 +156,7 @@ class PaperTradingRepository:
             }
         
         try:
-            base_query = """
+            query = """
                 SELECT 
                     id,
                     symbol,
@@ -171,14 +172,11 @@ class PaperTradingRepository:
                     closed_at,
                     created_at
                 FROM paper_trading_trades
+                WHERE user_id = %s 
+                ORDER BY COALESCE(closed_at, opened_at, created_at) DESC 
+                LIMIT %s
             """
-            
-            if user_id:
-                query = base_query + " WHERE user_id = %s ORDER BY COALESCE(closed_at, opened_at, created_at) DESC LIMIT %s"
-                params = (str(user_id), limit)
-            else:
-                query = base_query + " ORDER BY COALESCE(closed_at, opened_at, created_at) DESC LIMIT %s"
-                params = (limit,)
+            params = (str(user_id), limit)
             
             result = gateway.execute_query(query, params)
             
@@ -227,12 +225,12 @@ class PaperTradingRepository:
                 'error': str(e)
             }
     
-    def get_paper_balance(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_paper_balance(self, user_id: str) -> Dict[str, Any]:
         """
         Obtener balance de paper trading desde PostgreSQL.
         
-        FIX Dec 10, 2025: Usar nombres correctos de columnas (btc_balance, eth_balance)
-        La tabla también tiene métricas de trading que usamos.
+        Args:
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
         
         Returns:
             Dict con:
@@ -264,7 +262,7 @@ class PaperTradingRepository:
             }
         
         try:
-            base_query = """
+            query = """
                 SELECT 
                     balance_usd,
                     btc_balance,
@@ -275,14 +273,11 @@ class PaperTradingRepository:
                     total_realized_pnl_usd,
                     updated_at
                 FROM paper_trading_balances
+                WHERE user_id = %s 
+                ORDER BY updated_at DESC 
+                LIMIT 1
             """
-            
-            if user_id:
-                query = base_query + " WHERE user_id = %s ORDER BY updated_at DESC LIMIT 1"
-                params = (str(user_id),)
-            else:
-                query = base_query + " ORDER BY updated_at DESC LIMIT 1"
-                params = None
+            params = (str(user_id),)
             
             result = gateway.execute_query(query, params)
             
@@ -341,13 +336,13 @@ class PaperTradingRepository:
                 'error': str(e)
             }
     
-    def get_full_performance_context(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_full_performance_context(self, user_id: str) -> Dict[str, Any]:
         """
         Obtener contexto completo de rendimiento para el AI.
         Combina estadísticas, trades recientes y balance.
         
-        FIX Dec 10, 2025: Priorizar datos de paper_trading_balances si tiene más trades.
-        La tabla paper_trading_balances tiene métricas agregadas más completas.
+        Args:
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
         
         Returns:
             Dict con toda la información de rendimiento o indicadores claros de "sin datos".
