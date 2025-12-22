@@ -2789,8 +2789,8 @@ def create_flask_app():
                             sub_cmd = parts[1] if len(parts) > 1 else 'status'
                         
                         if sub_cmd == 'start':
-                            # INICIAR AUTO-TRADING 24/7
-                            result = self.auto_trading.start()
+                            # INICIAR AUTO-TRADING 24/7 (pasar user_id del mensaje Telegram)
+                            result = self.auto_trading.start(user_id=user_id)
                             
                             if result.get('success'):
                                 mode = "PAPER ($1M virtual)" if self.auto_trading.config['paper_mode'] else "REAL (Kraken)"
@@ -2838,8 +2838,8 @@ def create_flask_app():
 • Contacta soporte si persiste"""
                         
                         elif sub_cmd == 'stop':
-                            # DETENER AUTO-TRADING
-                            result = self.auto_trading.stop()
+                            # DETENER AUTO-TRADING (pasar user_id del mensaje Telegram)
+                            result = self.auto_trading.stop(user_id=user_id)
                             
                             if result.get('success'):
                                 stats = result['stats']

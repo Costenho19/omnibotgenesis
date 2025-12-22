@@ -487,6 +487,20 @@ class AutoTradingBot:
         self._start_stop_lock = threading.Lock()
         self._thread = None  # Reference to trading loop thread
         
+        # V6.5.4d MULTI-USER: Inicializar UserSessionManager con dependencias
+        if USER_SESSION_MANAGER_AVAILABLE and initialize_session_manager:
+            try:
+                self.redis_cache = None
+                if REDIS_CACHE_AVAILABLE and redis_cache:
+                    self.redis_cache = redis_cache
+                initialize_session_manager(
+                    redis_cache=self.redis_cache,
+                    database_service=database_service
+                )
+                logger.info(f"🚀 {VERSION_BANNER} UserSessionManager inicializado (100K+ usuarios)")
+            except Exception as e:
+                logger.warning(f"⚠️ Error inicializando UserSessionManager: {e}")
+        
         # V6.4: Cargar estado persistente de la DB
         self._load_persistent_state()
         
@@ -1062,14 +1076,35 @@ class AutoTradingBot:
                         logger.warning(f"⚠️ ARP registration failed: {e}")
                 
                 # V6.5: Persistir estado en user_settings
-                self._persist_auto_trading_state(user_id, active=True)
+                effective_user_id = self._get_effective_user_id(user_id, "start")
+                self._persist_auto_trading_state(effective_user_id, active=True)
+                
+                # V6.5.4d MULTI-USER: Activar sesión del usuario en UserSessionManager
+                if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
+                    try:
+                        session_manager = get_session_manager()
+                        if self.database_service:
+                            session_manager.database_service = self.database_service
+                        if hasattr(self, 'redis_cache'):
+                            session_manager.redis_cache = self.redis_cache
+                        session = session_manager.get_session(effective_user_id)
+                        session.running = True
+                        session.paused = False
+                        session.emergency_stop = False
+                        session_manager.save_session(session)
+                        logger.info(f"🚀 Sesión multi-usuario activada para {effective_user_id}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Error activando sesión multi-usuario: {e}")
                 
                 # Iniciar thread para loop 24/7
-                # CRÍTICO: daemon=False para que el thread SIGA CORRIENDO en Railway/webhooks
-                self._thread = threading.Thread(target=self._trading_loop, daemon=False)
+                # V6.5.4d: Usar loop multi-usuario si UserSessionManager disponible
+                if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
+                    self._thread = threading.Thread(target=self._trading_loop_multi_user, daemon=False)
+                    logger.info(f"🚀 AUTO-TRADING MULTI-USER ACTIVADO - Balance: ${balance:.2f}")
+                else:
+                    self._thread = threading.Thread(target=self._trading_loop, daemon=False)
+                    logger.info(f"🚀 AUTO-TRADING LEGACY ACTIVADO - Balance: ${balance:.2f}")
                 self._thread.start()
-                
-                logger.info(f"🚀 AUTO-TRADING ACTIVADO - Balance inicial: ${balance:.2f}")
                 
                 return {
                     'success': True,
@@ -1092,7 +1127,19 @@ class AutoTradingBot:
                 self.config['active'] = False
                 
                 # V6.5: Persistir estado en user_settings
-                self._persist_auto_trading_state(user_id, active=False)
+                effective_user_id = self._get_effective_user_id(user_id, "stop")
+                self._persist_auto_trading_state(effective_user_id, active=False)
+                
+                # V6.5.4d MULTI-USER: Desactivar sesión del usuario en UserSessionManager
+                if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
+                    try:
+                        session_manager = get_session_manager()
+                        session = session_manager.get_session(effective_user_id)
+                        session.running = False
+                        session_manager.save_session(session)
+                        logger.info(f"🛑 Sesión multi-usuario detenida para {effective_user_id}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Error deteniendo sesión multi-usuario: {e}")
                 
                 # V6.5.4d: Wait for thread to finish (with timeout)
                 if self._thread is not None and self._thread.is_alive():

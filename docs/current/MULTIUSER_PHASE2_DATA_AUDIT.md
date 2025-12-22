@@ -393,9 +393,10 @@ Todas las queries a `information_schema.*` son para verificación de estructura,
 - [ ] enterprise_bot.py: Extraer user_id de `update.effective_user.id` en cada handler
 - [ ] Pasar user_id a todas las llamadas de AutoTradingBot
 
-### Paso 2 (Activar UserSessionManager)
-- [ ] Cambiar USER_SESSION_MANAGER_AVAILABLE a True condicionalmente
-- [ ] Integrar via UserSessionPort existente
+### Paso 2 (Activar UserSessionManager) - ✅ COMPLETADO (Dec 22)
+- [x] USER_SESSION_MANAGER_AVAILABLE ya es True cuando el import funciona
+- [x] start()/stop() integrados con UserSessionManager
+- [x] Callers en trading_system.py actualizados para pasar user_id
 
 ### Paso 3 (UserConfigPort)
 - [ ] Crear nuevo port y adapter para configuración por usuario

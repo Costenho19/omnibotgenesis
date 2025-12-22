@@ -193,22 +193,30 @@ class UserSessionManager:
     ACTIVE_SESSIONS_KEY = "omnix:active_sessions"
 ```
 
-#### ¿Por Qué No Funciona Multi-Usuario?
+#### Estado de Integración UserSessionManager (Actualizado Dec 22, 2025)
 
-El código del `UserSessionManager` está **100% funcional**, pero `AutoTradingBot` **NO LO USA**:
+**ESTADO**: ✅ **INTEGRADO** (Fase 2 Paso 5)
+
+Cambios implementados:
+1. `AutoTradingBot.__init__` inicializa `UserSessionManager` con Redis/database
+2. `start(user_id)` activa sesión en UserSessionManager y usa loop multi-usuario
+3. `stop(user_id)` desactiva sesión en UserSessionManager
+4. Callers en `trading_system.py` pasan `user_id` del mensaje Telegram
 
 ```python
-# auto_trading_bot.py líneas 740-760
+# auto_trading_bot.py - start() ahora integrado
 if USER_SESSION_MANAGER_AVAILABLE and get_session_manager:
     session_manager = get_session_manager()
-    # ... código que USARÍA el session manager
-else:
-    # ❌ FALLBACK LEGACY - Siempre cae aquí
-    logger.info(f"🔄 {VERSION_BANNER}: Fallback a restauración legacy...")
-    user_id = str(self.config.get('harold_user_id', '7014748854'))  # ❌ HARDCODED
+    session = session_manager.get_session(effective_user_id)
+    session.running = True
+    session_manager.save_session(session)
+    # Usa _trading_loop_multi_user para procesar todos los usuarios activos
 ```
 
-**El problema está en la condición `USER_SESSION_MANAGER_AVAILABLE`** que siempre es `False`, forzando el fallback a código legacy con user_id hardcodeado.
+**Limitaciones conocidas** (para futuras iteraciones):
+- Entry points como REST API y dashboard no pasan user_id aún
+- Fallback a LEGACY_USER_ID cuando user_id no disponible
+- Tests de integración multi-usuario pendientes
 
 ### 2.3 Auditoría de PaperTradingManager
 
