@@ -1,7 +1,7 @@
 # Multi-User Phase 2 - Data Access Audit
 
 **Fecha**: 22 de Diciembre 2025  
-**Estado**: ✅ APROBADO (Revisión 3 - Verificado por Architect Dec 22, 2025)  
+**Estado**: ⚠️ 9/11 ISSUES CORREGIDOS (Revisión Final - Architect Dec 22, 2025)  
 **Propósito**: Catalogar todos los touchpoints SQL/Redis que requieren user_id scoping
 
 ---
@@ -16,6 +16,29 @@
 | Tablas sin RLS | 11+ | 3 (paper_trading_*, user_settings) | ✅ RLS habilitado (Paso 3 - Dec 22) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
 | Redis keys | 6 callers | 0 (todos verificados OK) | ✅ Verificados |
+| **Entry points sin user_id** | 3+ | 2 | ⚠️ **PENDIENTE** - REST/Dashboard/Scheduler |
+| **Hard-checks "7014748854"** | 4 | 2 | ⚠️ **PENDIENTE** - TradingSystem guards |
+
+### Estado Operacional
+
+| Modo | Estado | Notas |
+|------|--------|-------|
+| Single-User (Harold) | ✅ **SEGURO** | Fallback a LEGACY_USER_ID funciona |
+| Multi-Usuario | ❌ **BLOQUEADO** | 2 issues restantes impiden activación |
+
+### Blockers Restantes (2)
+
+1. **Entry Points sin user_id**: Telegram command handlers, REST blueprints, dashboard routes invocan trading sin pasar user_id explícito → caen en fallback a LEGACY_USER_ID
+2. **Hard-checks de Harold en Guards**: `trading_system.py` (líneas ~865, ~1093), `performance_optimizer.py`, `conversational_ai_adapter.py` verifican `if str(user_id) == "7014748854"` y rechazan otros usuarios
+
+### Plan de Remediación (Fase 3)
+
+| Paso | Descripción | Prioridad |
+|------|-------------|-----------|
+| 3.1 | Modificar entry points para pasar user_id autenticado | ALTA |
+| 3.2 | Cambiar `_get_effective_user_id()` para raise en lugar de fallback | MEDIA |
+| 3.3 | Eliminar/feature-flag hard-checks de "7014748854" | ALTA |
+| 3.4 | Tests de integración end-to-end multi-usuario | ALTA |
 
 ---
 

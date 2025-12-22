@@ -65,20 +65,20 @@ The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Eng
 
 ### Multi-User and Dashboard Architecture
 
-> **ACTUALIZACIÓN (Dec 20, 2025):** Fase 1 de multi-usuario COMPLETADA.
+> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 2 de multi-usuario COMPLETADA (9/11 issues).
 > 
-> **Progreso:**
-> - ✅ `UserSessionManager` EXISTE y funciona (562 líneas en `omnix_core/sessions/user_session_manager.py`)
-> - ✅ Funciones principales parametrizadas con `user_id` opcional (compatible hacia atrás)
-> - ✅ `_process_user_trading_cycle(user_id, session)` implementado con persistencia
-> - ✅ Flujo legacy 100% funcional (sin cambios)
-> - ⚠️ Row-Level Security PostgreSQL pendiente (Fase 2)
-> - ⚠️ Configuración por usuario pendiente (actualmente usa config compartido)
+> **Progreso Fase 2:**
+> - ✅ `AutoTradingBot` refactorizado con `_get_effective_user_id()`
+> - ✅ PostgreSQL RLS habilitado en 3 tablas críticas (Migration V004)
+> - ✅ `UserSessionManager` integrado con bot init/start/stop
+> - ✅ `PaperTradingRepository` + `DatabaseService` - user_id obligatorio
+> - ✅ 21 tests de aislamiento pasando (incluyendo persistencia Redis)
+> - ⚠️ **2 blockers restantes**: Entry points sin user_id, hard-checks de Harold
 >
-> **Documentación completa:** `docs/current/MULTI_USER_ARCHITECTURE.md` (ver sección 7.4)
+> **Documentación completa:** `docs/current/MULTIUSER_PHASE2_DATA_AUDIT.md`
 
-**Capacidad TEÓRICA:** 100,000+ usuarios simultáneos con sesiones aisladas.  
-**Capacidad ACTUAL:** Single-tenant operando, infraestructura multi-user habilitada (Fase 2 pendiente).
+**Modo Single-User (Harold):** ✅ SEGURO - fallback a LEGACY_USER_ID funciona  
+**Modo Multi-Usuario:** ❌ BLOQUEADO - requiere Fase 3 para activar
 
 Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 

@@ -2,7 +2,7 @@
 
 **Fecha**: 22 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 1 COMPLETADA
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 2 (9/11 ISSUES)
 
 > **NOTA**: Este documento describe la arquitectura V7.0 implementada.
 > Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para el estado real de producción.
@@ -11,11 +11,20 @@
 > - **0/16 ports activados** - Todos los feature flags en `false`
 > - `USE_APP_LAYER=false` - Legacy en operación
 > - Arquitectura V7.0 lista pero no activada
-> - **Multi-Usuario Fase 1 COMPLETADA** - Funciones parametrizadas, integración hexagonal lista
+> - **Multi-Usuario Fase 2**: 9/11 issues corregidos, single-user seguro, multi-user bloqueado
 
 ---
 
 ## Cambios Recientes
+
+### Multi-User Phase 2 Complete (Dec 22, 2025)
+- **9/11 issues corregidos** - Auditoría profunda completada
+- **AutoTradingBot refactorizado** con `_get_effective_user_id()`
+- **PostgreSQL RLS habilitado** en 3 tablas críticas (Migration V004)
+- **UserSessionManager integrado** con bot init/start/stop
+- **PaperTradingRepository + DatabaseService** - user_id ahora obligatorio
+- **21 tests de aislamiento** pasando (incluyendo persistencia Redis)
+- **2 blockers restantes**: Entry points sin user_id, hard-checks de Harold
 
 ### Language Detection AI-First (Dec 22, 2025)
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma
@@ -23,7 +32,7 @@
 - **FLUJO**: Textos largos → FastText | Textos cortos → Gemini AI
 - **12/12 tests pasando**
 
-### Multi-User Integration (Dec 20, 2025)
+### Multi-User Phase 1 (Dec 20, 2025)
 - **UserSessionManager verificado**: 562 líneas funcionales
 - **Funciones parametrizadas con user_id**: Compatible hacia atrás
 - **Nuevo port**: `UserSessionPort` + `UserSessionAdapter`
