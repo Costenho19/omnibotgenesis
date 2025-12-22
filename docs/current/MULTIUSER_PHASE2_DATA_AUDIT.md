@@ -13,7 +13,7 @@
 | Hardcoded user_id | 8 | 4 (AutoTradingBot) | ✅ CORREGIDO (Paso 2 - Dec 22) |
 | Database Services con user_id='harold' default | 3 | 3 (DatabaseService líneas 3042, 3098, 3148) | 🔴 Requiere fix (Paso 7) |
 | PaperTradingRepository user_id=None | 4 | 4 | ⚠️ Pueden retornar todos los datos (Paso 6) |
-| Tablas sin RLS | 11+ | 3 (paper_trading_*, trades) | 🔴 Requiere migración (Paso 3) |
+| Tablas sin RLS | 11+ | 3 (paper_trading_*, user_settings) | ✅ RLS habilitado (Paso 3 - Dec 22) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
 | Redis keys | 6 callers | 0 (todos verificados OK) | ✅ Verificados |
 

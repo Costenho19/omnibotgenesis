@@ -170,6 +170,93 @@ def v003_ensure_symbol_column(cursor: Any) -> bool:
         return False
 
 
+def _check_policy_exists(cursor, table_name: str, policy_name: str) -> bool:
+    """Check if a RLS policy exists on a table"""
+    cursor.execute("""
+        SELECT EXISTS (
+            SELECT 1 FROM pg_policies 
+            WHERE tablename = %s AND policyname = %s
+        )
+    """, (table_name, policy_name))
+    result = cursor.fetchone()
+    return result[0] if result else False
+
+
+def v004_enable_row_level_security(cursor: Any) -> bool:
+    """
+    V004: Enable Row-Level Security (RLS) on multi-user tables
+    
+    Enables RLS on:
+    - paper_trading_trades: Trading history per user
+    - paper_trading_balances: Balance snapshots per user
+    - user_settings: User configuration
+    
+    Policy Logic:
+    - If app.current_user_id is NOT set (NULL or '') → see ALL rows (legacy mode)
+    - If app.current_user_id IS set → see ONLY rows for that user
+    
+    FORCE ROW LEVEL SECURITY is enabled so RLS applies even to table owners.
+    NOTE: Superusers (like 'postgres') ALWAYS bypass RLS - this is PostgreSQL design.
+    Production should use a non-superuser application role.
+    
+    NON-DESTRUCTIVE: Only enables RLS and creates policies if not exist.
+    BACKWARD COMPATIBLE: Legacy queries without app.current_user_id see all rows.
+    """
+    try:
+        tables_config = [
+            ('paper_trading_trades', 'user_id'),
+            ('paper_trading_balances', 'user_id'),
+            ('user_settings', 'user_id'),
+        ]
+        
+        for table_name, user_column in tables_config:
+            if not _check_table_exists(cursor, table_name):
+                logger.info(f"Table {table_name} does not exist - skipping RLS")
+                continue
+            
+            logger.info(f"Enabling RLS on {table_name}...")
+            cursor.execute(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY")
+            cursor.execute(f"ALTER TABLE {table_name} FORCE ROW LEVEL SECURITY")
+            
+            policy_name = f"{table_name}_user_isolation"
+            
+            if _check_policy_exists(cursor, table_name, policy_name):
+                cursor.execute(f"DROP POLICY {policy_name} ON {table_name}")
+                logger.info(f"Dropped existing policy {policy_name} for update")
+            
+            cursor.execute(f"""
+                CREATE POLICY {policy_name} ON {table_name}
+                FOR ALL
+                USING (
+                    NULLIF(current_setting('app.current_user_id', true), '') IS NULL 
+                    OR {user_column}::text = current_setting('app.current_user_id', true)
+                )
+                WITH CHECK (
+                    NULLIF(current_setting('app.current_user_id', true), '') IS NULL 
+                    OR {user_column}::text = current_setting('app.current_user_id', true)
+                )
+            """)
+            
+            logger.info(f"Created RLS policy {policy_name} on {table_name}")
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_paper_trading_trades_user_id 
+            ON paper_trading_trades(user_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_paper_trading_balances_user_id 
+            ON paper_trading_balances(user_id)
+        """)
+        
+        logger.info("Migration V004 applied successfully - RLS enabled on multi-user tables")
+        logger.info("NOTE: Superusers bypass RLS by design. Use non-superuser role in production.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Migration V004 failed: {e}")
+        return False
+
+
 MIGRATIONS = MigrationRegistry()
 
 MIGRATIONS.register(Migration(
@@ -188,4 +275,10 @@ MIGRATIONS.register(Migration(
     version="V003",
     description="Ensure paper_trading_trades has symbol column",
     apply_func=v003_ensure_symbol_column
+))
+
+MIGRATIONS.register(Migration(
+    version="V004",
+    description="Enable Row-Level Security on multi-user tables",
+    apply_func=v004_enable_row_level_security
 ))
