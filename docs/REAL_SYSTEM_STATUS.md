@@ -9,6 +9,25 @@
 
 ## Cambios Recientes
 
+### Price Stale Detection System (Dec 22, 2025)
+**Institutional-Grade Data Validation**:
+- **NEW MODULE**: `omnix_services/market_data/validators.py` - Validates price freshness before trading
+- **Thresholds**: 30s stale (blocks trading), 20s warning, configurable via `StaleCheckConfig`
+- **Trading Integration**: AutoTradingBot blocks trades on stale prices with `PRICE_STALE_VETO`
+- **Classes**: `MarketDataValidator`, `PriceDataState`, `PriceFreshness`, `StaleCheckConfig`
+- **Helper Functions**: `validate_price_freshness()`, `is_price_tradeable()`, `get_market_data_validator()`
+- **Tests**: 12/12 tests passing in `tests/test_price_stale_detection.py`
+- **Ubicación**: `omnix_services/market_data/validators.py`, `omnix_core/bot/auto_trading_bot.py`
+
+### Admin Alerts System (Dec 22, 2025)
+**OWNER-Only Critical System Alerts**:
+- **NEW METHODS**: `AlertDispatcher.add_admin_chat_id()` and `send_admin_alert()` for OWNER-only alerts
+- **Event Types**: price_stale, redis_down, api_failure, session_anomaly
+- **Cooldown**: 60s per event type to prevent spam
+- **Auto-Registration**: TELEGRAM_ADMIN_ID registered on bot startup in enterprise_bot.py
+- **Integration**: MarketDataValidator triggers admin alerts on stale price detection
+- **Ubicación**: `omnix_services/risk_management/alert_dispatcher.py`
+
 ### Real-Time Latency Monitor (Dec 22, 2025)
 **Live System Performance Measurement**:
 - **NEW API**: `/api/system/latency` - Measures actual database and cache response times

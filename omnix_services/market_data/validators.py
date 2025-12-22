@@ -13,10 +13,14 @@ Created: Dec 22, 2025
 
 import time
 import logging
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Callable
+from typing import Optional, Dict, Callable, TYPE_CHECKING
 from enum import Enum
+
+if TYPE_CHECKING:
+    from omnix_services.risk_management.alert_dispatcher import AlertDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +82,7 @@ class MarketDataValidator:
         
         self.config = config or StaleCheckConfig()
         self._admin_alert_callback = admin_alert_callback
+        self._alert_dispatcher: Optional["AlertDispatcher"] = None
         self._stale_event_count: Dict[str, int] = {}
         self._last_stale_alert: Dict[str, float] = {}
         self._alert_cooldown_seconds = 60
@@ -87,6 +92,11 @@ class MarketDataValidator:
         logger.info(f"   ⏱️ Stale threshold: {self.config.stale_threshold_seconds}s")
         logger.info(f"   ⚠️ Warning threshold: {self.config.warning_threshold_seconds}s")
         logger.info(f"   🚫 Block on stale: {self.config.block_trading_on_stale}")
+    
+    def set_alert_dispatcher(self, dispatcher: "AlertDispatcher") -> None:
+        """Connect AlertDispatcher for admin alerts on stale prices"""
+        self._alert_dispatcher = dispatcher
+        logger.info("🔔 MarketDataValidator: AlertDispatcher connected for admin alerts")
     
     def set_admin_alert_callback(self, callback: Callable) -> None:
         self._admin_alert_callback = callback
@@ -157,18 +167,38 @@ class MarketDataValidator:
         if current_time - last_alert >= self._alert_cooldown_seconds:
             self._last_stale_alert[symbol] = current_time
             
-            if self._admin_alert_callback:
+            alert_message = (
+                f"Price data for {symbol} is {age_seconds:.1f}s old.\n"
+                f"Last price: ${price:,.2f}\n"
+                f"Trading blocked: {self.config.block_trading_on_stale}\n"
+                f"Total stale events: {self._stale_event_count[symbol]}"
+            )
+            
+            if self._alert_dispatcher:
+                try:
+                    from omnix_services.risk_management.risk_models import RiskSeverity
+                    self._alert_dispatcher.send_admin_alert_sync(
+                        event_type="price_stale",
+                        severity=RiskSeverity.WARNING,
+                        title=f"Stale Price: {symbol}",
+                        message=alert_message,
+                        metadata={
+                            "symbol": symbol,
+                            "age_seconds": age_seconds,
+                            "price": price,
+                            "stale_count": self._stale_event_count[symbol]
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send stale price admin alert via dispatcher: {e}")
+            
+            elif self._admin_alert_callback:
                 try:
                     self._admin_alert_callback(
                         event_type="price_stale",
                         severity="warning",
                         title=f"🚨 Stale Price: {symbol}",
-                        message=(
-                            f"Price data for {symbol} is {age_seconds:.1f}s old.\n"
-                            f"Last price: ${price:,.2f}\n"
-                            f"Trading blocked: {self.config.block_trading_on_stale}\n"
-                            f"Total stale events: {self._stale_event_count[symbol]}"
-                        ),
+                        message=alert_message,
                         metadata={
                             "symbol": symbol,
                             "age_seconds": age_seconds,
