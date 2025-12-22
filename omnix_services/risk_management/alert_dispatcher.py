@@ -81,6 +81,10 @@ class AlertDispatcher:
         
         self._telegram_chat_ids: List[str] = []
         
+        self._admin_chat_ids: List[str] = []
+        self._admin_alert_cooldowns: Dict[str, datetime] = {}
+        self._admin_cooldown_seconds = 60
+        
         self._memory_adapter = memory_adapter
         self._enable_predictive_alerts = True
         self._last_predictive_check: Optional[datetime] = None
@@ -91,6 +95,7 @@ class AlertDispatcher:
         logger.info(f"   📱 Telegram: {'Activo' if telegram_bot else 'No disponible'}")
         logger.info(f"   ⏱️ Cooldown: {self._cooldown_seconds}s entre alertas")
         logger.info(f"   🧠 Alertas predictivas: {'Activo' if memory_adapter else 'No disponible'}")
+        logger.info(f"   🔒 Admin alerts: Enabled")
     
     def set_telegram_bot(self, telegram_bot) -> None:
         """
@@ -107,6 +112,121 @@ class AlertDispatcher:
         if chat_id not in self._telegram_chat_ids:
             self._telegram_chat_ids.append(chat_id)
             logger.info(f"📱 Chat ID {chat_id} agregado para alertas RMS")
+    
+    def add_admin_chat_id(self, chat_id: str) -> None:
+        """
+        Add admin chat ID for critical system alerts (OWNER only).
+        
+        Admin alerts are sent for:
+        - Price stale detection
+        - Redis/cache failures
+        - API connection failures
+        - Trading session anomalies
+        """
+        if chat_id not in self._admin_chat_ids:
+            self._admin_chat_ids.append(chat_id)
+            logger.info(f"🔒 Admin chat ID {chat_id} registered for system alerts")
+    
+    def _can_send_admin_alert(self, event_type: str) -> bool:
+        """Check cooldown for admin alerts by event type"""
+        if event_type not in self._admin_alert_cooldowns:
+            return True
+        
+        last_sent = self._admin_alert_cooldowns[event_type]
+        elapsed = (datetime.now() - last_sent).total_seconds()
+        return elapsed >= self._admin_cooldown_seconds
+    
+    async def send_admin_alert(
+        self,
+        event_type: str,
+        severity: RiskSeverity,
+        title: str,
+        message: str,
+        metadata: Optional[Dict] = None
+    ) -> bool:
+        """
+        Send alert exclusively to admin chat IDs (OWNER only).
+        
+        Used for critical system events that should not go to regular users:
+        - price_stale: Market data outdated
+        - redis_down: Cache unavailable
+        - api_failure: Exchange API errors
+        - session_anomaly: Trading session issues
+        
+        Args:
+            event_type: Category of system event
+            severity: Alert severity level
+            title: Alert title
+            message: Alert body
+            metadata: Optional additional data
+        """
+        if not self._admin_chat_ids:
+            logger.debug("No admin chat IDs registered - admin alert logged only")
+            self._send_log_alert(severity, f"[ADMIN] {title}", message)
+            return False
+        
+        if not self._can_send_admin_alert(event_type):
+            logger.debug(f"Admin alert suppressed by cooldown: {event_type}")
+            return False
+        
+        self._admin_alert_cooldowns[event_type] = datetime.now()
+        
+        emoji_map = {
+            RiskSeverity.INFO: 'ℹ️',
+            RiskSeverity.WARNING: '⚠️',
+            RiskSeverity.CRITICAL: '🚨',
+            RiskSeverity.HALT: '🛑'
+        }
+        emoji = emoji_map.get(severity, '🔔')
+        
+        formatted_message = (
+            f"{emoji} *ADMIN ALERT*\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"*{title}*\n\n"
+            f"{message}\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"Event: `{event_type}`\n"
+            f"Time: {datetime.now().strftime('%H:%M:%S')}"
+        )
+        
+        self._send_log_alert(severity, f"[ADMIN] {title}", message)
+        
+        if not self.telegram_bot:
+            logger.warning("Admin alert: Telegram bot not available")
+            return False
+        
+        success = False
+        for admin_chat_id in self._admin_chat_ids:
+            try:
+                await self.telegram_bot.send_message(
+                    chat_id=admin_chat_id,
+                    text=formatted_message,
+                    parse_mode='Markdown'
+                )
+                success = True
+                logger.info(f"🔒 Admin alert sent to {admin_chat_id}: {title}")
+            except Exception as e:
+                logger.error(f"Failed to send admin alert to {admin_chat_id}: {e}")
+        
+        return success
+    
+    def send_admin_alert_sync(
+        self,
+        event_type: str,
+        severity: RiskSeverity,
+        title: str,
+        message: str,
+        metadata: Optional[Dict] = None
+    ) -> bool:
+        """Synchronous version of send_admin_alert (logging only)"""
+        if not self._can_send_admin_alert(event_type):
+            return False
+        
+        self._admin_alert_cooldowns[event_type] = datetime.now()
+        self._send_log_alert(severity, f"[ADMIN] {title}", message)
+        
+        logger.info(f"🔒 Admin alert (sync): {event_type} - {title}")
+        return True
     
     async def send_alert(
         self,

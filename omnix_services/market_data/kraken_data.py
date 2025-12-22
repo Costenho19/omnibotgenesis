@@ -1,12 +1,21 @@
 """
 OMNIX Market Data - Kraken Data Provider V6.1
 Real-time market data from Kraken exchange with multi-crypto support
+
+Updated: Dec 22, 2025 - Added price freshness validation for institutional trading
 """
 
 import time
 import logging
 import requests
 from datetime import datetime
+from typing import Optional, Dict, Any
+
+from omnix_services.market_data.validators import (
+    validate_price_freshness,
+    PriceDataState,
+    PriceFreshness
+)
 
 logger = logging.getLogger(__name__)
 
@@ -166,14 +175,29 @@ def fetch_crypto_price(crypto_name: str) -> dict:
             'symbol': None
         }
     
-    # Check cache
+    # Check cache with freshness validation
     cache_key = symbol
     current_time = time.time()
     if cache_key in _symbol_cache:
         cached = _symbol_cache[cache_key]
-        if current_time - cached['timestamp'] < _symbol_cache_ttl:
-            logger.info(f"✅ {symbol} desde cache")
-            return cached['data']
+        cache_age = current_time - cached['timestamp']
+        
+        if cache_age < _symbol_cache_ttl:
+            cached_data = cached['data'].copy()
+            
+            if 'price' in cached_data and 'fetch_timestamp' in cached_data:
+                price_state = validate_price_freshness(
+                    symbol=symbol,
+                    price=cached_data['price'],
+                    fetch_timestamp=cached_data['fetch_timestamp'],
+                    source=cached_data.get('source', 'cache')
+                )
+                cached_data['freshness'] = price_state.freshness.value
+                cached_data['is_tradeable'] = price_state.is_tradeable
+                cached_data['age_seconds'] = price_state.age_seconds
+            
+            logger.info(f"✅ {symbol} desde cache (age: {cache_age:.1f}s)")
+            return cached_data
     
     result = {
         'symbol': symbol,
@@ -198,6 +222,15 @@ def fetch_crypto_price(crypto_name: str) -> dict:
                     price = float(ticker['c'][0])  # Current price
                     open_price = float(ticker['o'])  # Open price (24h)
                     
+                    fetch_time = time.time()
+                    
+                    price_state = validate_price_freshness(
+                        symbol=symbol,
+                        price=price,
+                        fetch_timestamp=fetch_time,
+                        source="Kraken"
+                    )
+                    
                     result.update({
                         'price': price,
                         'high_24h': float(ticker['h'][1]),  # 24h high
@@ -205,15 +238,19 @@ def fetch_crypto_price(crypto_name: str) -> dict:
                         'volume': float(ticker['v'][1]),    # 24h volume
                         'change_24h': round(((price - open_price) / open_price) * 100, 2) if open_price > 0 else 0,
                         'source': 'Kraken',
-                        'success': True
+                        'success': True,
+                        'fetch_timestamp': fetch_time,
+                        'freshness': price_state.freshness.value,
+                        'is_tradeable': price_state.is_tradeable,
+                        'age_seconds': price_state.age_seconds
                     })
                     
-                    logger.info(f"✅ {symbol} precio Kraken: ${price:,.4f}")
+                    logger.info(f"✅ {symbol} precio Kraken: ${price:,.4f} (fresh: {price_state.freshness.value})")
                     
-                    # Update cache
+                    # Update cache with timestamp
                     _symbol_cache[cache_key] = {
                         'data': result,
-                        'timestamp': current_time
+                        'timestamp': fetch_time
                     }
                     
                     return result

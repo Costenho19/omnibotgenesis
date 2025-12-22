@@ -229,6 +229,24 @@ except ImportError:
     REDIS_CACHE_AVAILABLE = False
     logger.warning("⚠️ Redis Cache no disponible - heartbeat desactivado")
 
+# Import Price Stale Detection V6.5.4d - INSTITUTIONAL GRADE DATA VALIDATION
+try:
+    from omnix_services.market_data.validators import (
+        validate_price_freshness,
+        is_price_tradeable,
+        get_market_data_validator,
+        PriceFreshness
+    )
+    PRICE_VALIDATOR_AVAILABLE = True
+    logger.info("📊 Price Stale Detection V6.5.4d disponible")
+except ImportError:
+    validate_price_freshness = None
+    is_price_tradeable = None
+    get_market_data_validator = None
+    PriceFreshness = None
+    PRICE_VALIDATOR_AVAILABLE = False
+    logger.warning("⚠️ Price Stale Detection no disponible")
+
 # Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
     from omnix_services.adaptive_engine import (
@@ -2837,6 +2855,31 @@ class AutoTradingBot:
             
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
+            
+            # ==========================================================================
+            # V6.5.4d INSTITUTIONAL: PRICE STALE CHECK - BLOCK TRADING ON STALE DATA
+            # ==========================================================================
+            if PRICE_VALIDATOR_AVAILABLE and action != 'HOLD':
+                price_data = analysis.get('price_data', {})
+                current_price = analysis.get('current_price', 0)
+                fetch_timestamp = price_data.get('fetch_timestamp', 0)
+                
+                if fetch_timestamp > 0 and current_price > 0:
+                    is_fresh = is_price_tradeable(
+                        symbol=analysis.get('symbol', self.config.get('trading_pair', 'BTC/USD')),
+                        price=current_price,
+                        fetch_timestamp=fetch_timestamp
+                    )
+                    
+                    if not is_fresh:
+                        logger.warning(f"🚨 PRICE STALE BLOCK: Trade blocked due to stale price data")
+                        return {
+                            'success': False,
+                            'blocked': True,
+                            'error': 'Trading blocked: price data is stale',
+                            'reason': 'PRICE_STALE_VETO',
+                            'price_age_seconds': time.time() - fetch_timestamp
+                        }
             
             # En paper mode, no rechazar inmediatamente - el floor se aplicará después
             if not self.config.get('paper_mode', False) and amount_usd < self.config['min_trade_usd']:

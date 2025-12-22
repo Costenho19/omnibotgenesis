@@ -702,7 +702,9 @@ class EnterpriseTelegramBot:
             # 🛡️ Conectar AlertDispatcher al bot de Telegram
             if self.alert_dispatcher:
                 self.alert_dispatcher.set_telegram_bot(self.application.bot)
+                self.alert_dispatcher.add_admin_chat_id(str(settings.TELEGRAM_ADMIN_ID))
                 logger.info("📢 AlertDispatcher conectado a Telegram Bot")
+                logger.info(f"🔒 Admin alerts configured for chat {settings.TELEGRAM_ADMIN_ID}")
             
             # 🛡️ Configurar RMS en TradingServiceEnterprise
             if self.trading_enterprise_enabled and self.trading_enterprise:
