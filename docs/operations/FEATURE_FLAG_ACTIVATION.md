@@ -1,13 +1,15 @@
 # OMNIX V7.0 - Activación de Feature Flags
 
-**Fecha**: 16 de Diciembre 2025  
+**Fecha**: 22 de Diciembre 2025  
 **Estado**: Listo para activación gradual
 
 ---
 
 ## Resumen
 
-Los adapters hexagonales están 100% implementados pero solo 37.5% activos en producción. Este documento describe el procedimiento para activar cada feature flag de forma segura.
+Los adapters hexagonales están 100% implementados pero **0% activos** en producción. El sistema opera 100% con código legacy en Railway. Este documento describe el procedimiento para activar cada feature flag de forma segura.
+
+**Actualización Dec 22, 2025**: Se agregaron 2 nuevos ports (AuthorizationPort, UserSessionPort). Total: 20 ports, 22 adapters.
 
 ---
 

@@ -1,8 +1,10 @@
 # Multi-User Phase 2 - Data Access Audit
 
 **Fecha**: 22 de Diciembre 2025  
-**Estado**: ⚠️ 9/11 ISSUES CORREGIDOS (Revisión Final - Architect Dec 22, 2025)  
+**Estado**: ✅ **PHASE 3b COMPLETADA** - RBAC Implementado  
 **Propósito**: Catalogar todos los touchpoints SQL/Redis que requieren user_id scoping
+
+> **ACTUALIZACIÓN (22 Dic 2025)**: Los blockers restantes de Phase 2 fueron resueltos en Phase 3b con la implementación del AuthorizationService.
 
 ---
 
@@ -16,29 +18,29 @@
 | Tablas sin RLS | 11+ | 3 (paper_trading_*, user_settings) | ✅ RLS habilitado (Paso 3 - Dec 22) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
 | Redis keys | 6 callers | 0 (todos verificados OK) | ✅ Verificados |
-| **Entry points sin user_id** | 3+ | 2 | ⚠️ **PENDIENTE** - REST/Dashboard/Scheduler |
-| **Hard-checks "7014748854"** | 4 | 2 | ⚠️ **PENDIENTE** - TradingSystem guards |
+| Entry points sin user_id | 3+ | 2 | ✅ **RESUELTO via AuthorizationAdapter** |
+| Hard-checks "7014748854" | 4 | 2 | ✅ **REEMPLAZADOS con RBAC** |
 
 ### Estado Operacional
 
 | Modo | Estado | Notas |
 |------|--------|-------|
-| Single-User (Harold) | ✅ **SEGURO** | Fallback a LEGACY_USER_ID funciona |
-| Multi-Usuario | ❌ **BLOQUEADO** | 2 issues restantes impiden activación |
+| Single-User (Harold) | ✅ **OPERACIONAL** | OWNER role con todos los permisos |
+| Multi-Usuario | ✅ **LISTO** | AuthorizationService integrado, 36/36 tests pasando |
 
-### Blockers Restantes (2)
+### Resolución Phase 3b (22 Dic 2025)
 
-1. **Entry Points sin user_id**: Telegram command handlers, REST blueprints, dashboard routes invocan trading sin pasar user_id explícito → caen en fallback a LEGACY_USER_ID
-2. **Hard-checks de Harold en Guards**: `trading_system.py` (líneas ~865, ~1093), `performance_optimizer.py`, `conversational_ai_adapter.py` verifican `if str(user_id) == "7014748854"` y rechazan otros usuarios
+| Issue | Solución |
+|-------|----------|
+| Entry Points sin user_id | AuthorizationAdapter valida permisos por chat_id/user_id en PostgreSQL |
+| Hard-checks "7014748854" | Reemplazados con `require_permission()` que consulta rol en BD |
+| Permisos por usuario | 5 roles (FREE/BASIC/PRO/PREMIUM/OWNER) con 15 permisos granulares |
+| Harold | Actualizado en BD: `is_admin=true, subscription_tier='owner'` |
 
-### Plan de Remediación (Fase 3)
+### Documentación Relacionada
 
-| Paso | Descripción | Prioridad |
-|------|-------------|-----------|
-| 3.1 | Modificar entry points para pasar user_id autenticado | ALTA |
-| 3.2 | Cambiar `_get_effective_user_id()` para raise en lugar de fallback | MEDIA |
-| 3.3 | Eliminar/feature-flag hard-checks de "7014748854" | ALTA |
-| 3.4 | Tests de integración end-to-end multi-usuario | ALTA |
+- **Guía de uso**: [MULTI_USER_ARCHITECTURE.md](MULTI_USER_ARCHITECTURE.md) sección 2
+- **Deuda técnica**: [TECHNICAL_DEBT.md](TECHNICAL_DEBT.md) sección Multi-User
 
 ---
 

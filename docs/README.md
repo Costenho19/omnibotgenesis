@@ -54,7 +54,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ### Estado Actual
 | Documento | Descripción |
 |-----------|-------------|
-| [Migración V7.0](MIGRATION_STATUS.md) | Estado de arquitectura hexagonal (19 ports, 21 adapters, 0% activación) |
+| [Migración V7.0](MIGRATION_STATUS.md) | Estado de arquitectura hexagonal (20 ports, 22 adapters, 0% activación) |
 | [Estado REAL](REAL_SYSTEM_STATUS.md) | **FUENTE DE VERDAD** - Estado de producción Railway |
 | [Hexagonal Status](current/HEXAGONAL_MIGRATION_STATUS.md) | Detalle técnico de ports y adapters |
 | [Mapa Funcional](current/COMPLETE_FUNCTIONALITY_MAP.md) | Sistema legacy (11 dominios, 346 archivos) |

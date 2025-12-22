@@ -61,15 +61,15 @@
 
 | Métrica | Valor |
 |---------|-------|
-| Driven Ports | **16** (incluyendo UserSessionPort) |
+| Driven Ports | **17** (incluyendo AuthorizationPort, UserSessionPort) |
 | Driver Ports | **3** (telegram, rest_api, intent_classification) |
-| **Total Ports** | **19** |
-| Adapters | **21** (incluyendo onchain/) |
+| **Total Ports** | **20** |
+| Adapters | **22** (incluyendo AuthorizationAdapter) |
 | Ports activos | **0 (0%)** |
-| Multi-User | **Fase 1 COMPLETADA** |
+| Multi-User | ✅ **Fase 3b COMPLETADA** |
 | Sistema en producción | **100% Legacy** |
 
-El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está completamente implementada pero **ningún port está activo**. Multi-usuario habilitado a nivel de código (Fase 2 pendiente para producción).
+El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está completamente implementada pero **ningún port está activo**. **Multi-usuario Fase 3b COMPLETADA** - RBAC operacional, Harold con rol OWNER.
 
 ---
 

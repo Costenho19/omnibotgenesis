@@ -59,14 +59,14 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Métrica | Estado |
 |---------|--------|
-| Driven Ports | **16 ✅** (incluyendo UserSessionPort) |
+| Driven Ports | **17 ✅** (incluyendo AuthorizationPort, UserSessionPort) |
 | Driver Ports | **3 ✅** (telegram, rest_api, intent_classification) |
-| **Total Ports** | **19** |
-| Adapters | **21 ✅** (incluyendo onchain/) |
-| Ports activos en producción | **0/16 (0%)** - Legacy en uso |
+| **Total Ports** | **20** |
+| Adapters | **22 ✅** (incluyendo AuthorizationAdapter) |
+| Ports activos en producción | **0/20 (0%)** - Legacy en uso |
 | USE_APP_LAYER | **false** - No activado |
-| Multi-User | **Fase 1 COMPLETADA** |
-| Tests nuevos ports | **120/120 ✅** |
+| Multi-User | ✅ **Fase 3b COMPLETADA** |
+| Tests nuevos ports | **156/156 ✅** (120 ports + 36 authorization) |
 
 ---
 
