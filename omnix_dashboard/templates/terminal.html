@@ -41,6 +41,10 @@
                 <div class="header-stat-value negative" id="max-dd">0%</div>
                 <div class="header-stat-label">Max DD</div>
             </div>
+            <div class="header-stat" id="quarantine-header">
+                <div class="header-stat-value positive" id="quarantine-avoided">$0</div>
+                <div class="header-stat-label">Protected</div>
+            </div>
         </div>
         
         <div class="clock-display">
@@ -135,6 +139,11 @@
         <div style="margin-top: 12px;" id="adaptive-engine-widget">
             <div style="color: var(--text-muted); font-size: 11px;">Loading Adaptive Engine...</div>
         </div>
+        
+    </div>
+    
+    <div class="panel" id="quarantine-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Asset Quarantine...</div>
     </div>
     
     <div class="panel">
@@ -206,5 +215,6 @@
 <script src="{{ url_for('static', filename='js/components/benchmarks.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/snapshots.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/tradehistory.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/quarantine.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}
