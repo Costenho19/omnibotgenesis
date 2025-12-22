@@ -3454,10 +3454,11 @@ class AutoTradingBot:
                 
                 if self.database_service and hasattr(self.database_service, 'schedule_trade_evaluation'):
                     try:
+                        effective_user_id = self._get_effective_user_id(None, "schedule_trade_evaluation")
                         self.database_service.schedule_trade_evaluation(
                             trade_id=trade_id,
                             reasoning_uuid=reasoning_uuid,
-                            user_id='harold',
+                            user_id=effective_user_id,
                             minutes_delay=30
                         )
                         logger.info(f"⏰ Auto-evaluación programada para {trade_id} en 30 minutos")

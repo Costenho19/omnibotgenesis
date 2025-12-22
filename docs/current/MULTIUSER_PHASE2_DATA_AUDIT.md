@@ -11,7 +11,7 @@
 | Área | Touchpoints | Críticos | Estado |
 |------|-------------|----------|--------|
 | Hardcoded user_id | 8 | 4 (AutoTradingBot) | ✅ CORREGIDO (Paso 2 - Dec 22) |
-| Database Services con user_id='harold' default | 3 | 3 (DatabaseService líneas 3042, 3098, 3148) | 🔴 Requiere fix (Paso 7) |
+| Database Services con user_id='harold' default | 3 | 0 | ✅ CORREGIDO - user_id obligatorio (Paso 7 - Dec 22) |
 | PaperTradingRepository user_id=None | 4 | 0 | ✅ CORREGIDO - user_id obligatorio (Paso 6 - Dec 22) |
 | Tablas sin RLS | 11+ | 3 (paper_trading_*, user_settings) | ✅ RLS habilitado (Paso 3 - Dec 22) |
 | Funciones YA con user_id obligatorio | 40+ | 0 | ✅ Listas |
@@ -273,12 +273,20 @@ get_trade_by_id() [database_gateway.py:282]
 | `get_paper_trading_balance(user_id)` | 4735 | ✅ Requerido |
 | `get_recent_trades(user_id, limit)` | 4813 | ✅ Requerido |
 
-#### Funciones CON user_id='harold' POR DEFECTO (⚠️ RIESGO)
-| Función | Línea | Default Value | Acción Requerida |
-|---------|-------|---------------|------------------|
-| `get_recent_reasonings(user_id='harold')` | 3042 | 'harold' | ⚠️ Hacer obligatorio |
-| `get_learning_summary(user_id='harold')` | 3098 | 'harold' | ⚠️ Hacer obligatorio |
-| `schedule_trade_evaluation(user_id='harold')` | 3148 | 'harold' | ⚠️ Hacer obligatorio |
+#### Funciones CON user_id='harold' POR DEFECTO - ✅ CORREGIDAS (Paso 7 - Dec 22)
+
+**ESTADO**: ✅ **CORREGIDO** - Todas las funciones ahora requieren user_id obligatorio
+
+| Función | Línea | Estado |
+|---------|-------|--------|
+| `get_recent_reasonings(user_id: str)` | 3045 | ✅ Obligatorio |
+| `get_learning_summary(user_id: str)` | 3101 | ✅ Obligatorio |
+| `schedule_trade_evaluation(..., user_id: str)` | 3151 | ✅ Obligatorio |
+
+**Callers actualizados:**
+- `trading_system.py:2940` - Ahora usa `user_id` del mensaje Telegram
+- `trading_system.py:2969` - Ahora usa `user_id` del mensaje Telegram  
+- `auto_trading_bot.py:3460` - Ahora usa `_get_effective_user_id()`
 
 #### Queries de Schema/Metadata (Sin filtro user_id - OK)
 Todas las queries a `information_schema.*` son para verificación de estructura, no datos de usuario.

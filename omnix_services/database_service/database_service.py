@@ -3039,12 +3039,12 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error guardando evaluación: {e}")
             return None
     
-    def get_recent_reasonings(self, user_id: str = 'harold', limit: int = 10) -> List[Dict]:
+    def get_recent_reasonings(self, user_id: str, limit: int = 10) -> List[Dict]:
         """
         Obtener razonamientos recientes
         
         Args:
-            user_id: ID del usuario
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
             limit: Número de razonamientos a obtener
             
         Returns:
@@ -3095,12 +3095,12 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error obteniendo razonamientos: {e}")
             return []
     
-    def get_learning_summary(self, user_id: str = 'harold') -> Dict:
+    def get_learning_summary(self, user_id: str) -> Dict:
         """
         Obtener resumen de aprendizajes del Cerebro Conversacional
         
         Args:
-            user_id: ID del usuario
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
             
         Returns:
             Dict con estadísticas de aprendizaje
@@ -3145,14 +3145,14 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error obteniendo learning summary: {e}")
             return {}
     
-    def schedule_trade_evaluation(self, trade_id: str, reasoning_uuid: Optional[str], user_id: str = 'harold', minutes_delay: int = 30) -> bool:
+    def schedule_trade_evaluation(self, trade_id: str, reasoning_uuid: Optional[str], user_id: str, minutes_delay: int = 30) -> bool:
         """
         Programar evaluación post-trade (sistema robusto sin threads)
         
         Args:
             trade_id: ID del trade a evaluar
             reasoning_uuid: UUID del razonamiento original
-            user_id: ID del usuario
+            user_id: ID del usuario (OBLIGATORIO para aislamiento multi-usuario)
             minutes_delay: Minutos para esperar antes de evaluar
             
         Returns:

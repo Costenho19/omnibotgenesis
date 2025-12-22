@@ -2933,8 +2933,8 @@ def create_flask_app():
                     if not self.db_service:
                         respuesta = "❌ Base de datos no disponible"
                     else:
-                        # Obtener último razonamiento
-                        reasonings = self.db_service.get_recent_reasonings(user_id='harold', limit=1)
+                        # Obtener último razonamiento (usar user_id del mensaje actual)
+                        reasonings = self.db_service.get_recent_reasonings(user_id=user_id, limit=1)
                         
                         if not reasonings:
                             respuesta = """🧠 CEREBRO CONVERSACIONAL
@@ -2962,8 +2962,8 @@ El bot generará explicaciones automáticamente cuando ejecute trades.
 
 💡 El bot piensa en voz alta y explica cada decisión automáticamente"""
                         
-                        # Obtener learning summary
-                        summary = self.db_service.get_learning_summary(user_id='harold')
+                        # Obtener learning summary (usar user_id del mensaje actual)
+                        summary = self.db_service.get_learning_summary(user_id=user_id)
                         if summary and summary.get('total_evaluations', 0) > 0:
                             respuesta += f"""
 
