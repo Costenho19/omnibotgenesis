@@ -36,6 +36,8 @@ from src.omnix.infrastructure.adapters.intent_classification_adapter import (
     IntentClassificationAdapter,
     NLPCommandShim,
 )
+from src.omnix.infrastructure.adapters.user_session_adapter import UserSessionAdapter
+from src.omnix.infrastructure.adapters.user_config_adapter import UserConfigAdapter
 
 __all__ = [
     "TradingServiceAdapter",
@@ -55,4 +57,6 @@ __all__ = [
     "OptimizationAdapter",
     "IntentClassificationAdapter",
     "NLPCommandShim",
+    "UserSessionAdapter",
+    "UserConfigAdapter",
 ]

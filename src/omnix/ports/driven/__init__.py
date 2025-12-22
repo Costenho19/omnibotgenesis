@@ -118,6 +118,10 @@ from src.omnix.ports.driven.user_session_port import (
     UserSessionPort,
     UserSession,
 )
+from src.omnix.ports.driven.user_config_port import (
+    UserConfigPort,
+    UserConfig,
+)
 
 __all__ = [
     "TradingPort",
@@ -211,4 +215,6 @@ __all__ = [
     "LearningProgress",
     "UserSessionPort",
     "UserSession",
+    "UserConfigPort",
+    "UserConfig",
 ]
