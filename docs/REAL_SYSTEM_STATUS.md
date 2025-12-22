@@ -1,15 +1,28 @@
 # OMNIX V7.0 - Estado REAL del Sistema
 
-**Fecha**: 20 de Diciembre 2025  
+**Fecha**: 22 de Diciembre 2025  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 1 COMPLETADA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
 ---
 
-## Cambios Recientes (Dec 20, 2025)
+## Cambios Recientes
 
-### Multi-Usuario Fase 1 COMPLETADA
+### Language Detection AI-First (Dec 22, 2025)
+**Arquitectura AI-First Verdadera**:
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
+- **FLUJO AI-First**:
+  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
+  - Fallback: fast-langdetect → langdetect → 'en'
+- **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
+- **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
+- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
+- **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
+
+### Multi-Usuario Fase 1 COMPLETADA (Dec 20, 2025)
 - **UserSessionManager EXISTE**: 562 líneas funcionales en `omnix_core/sessions/user_session_manager.py`
 - **Funciones parametrizadas**: `_check_open_positions_tp_sl`, `_execute_smart_trade`, `_check_position_limit_early` ahora aceptan `user_id` opcional con fallback legacy
 - **_process_user_trading_cycle**: Implementado con lógica real y persistencia de sesión
@@ -23,19 +36,6 @@
 | `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` | ✅ CREADO |
 | Export actualizado | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
 
-### Language Detection AI-First Refactor (Dec 22, 2025)
-**Arquitectura AI-First Verdadera**:
-- **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
-- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
-- **FLUJO AI-First**:
-  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
-  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
-  - Fallback: fast-langdetect → langdetect → 'en'
-- **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
-- **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
-- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
-- **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
-
 ### AI-First Multilingual Concurrency (Dec 19, 2025)
 - **Implementado**: Detección de idioma thread-safe + persistencia Redis por usuario
 
@@ -46,9 +46,9 @@
 | Métrica | Valor |
 |---------|-------|
 | Driven Ports | **16** (incluyendo UserSessionPort) |
-| Driver Ports | **2** |
-| **Total Ports** | **18** |
-| Adapters | **20** (incluyendo UserSessionAdapter) |
+| Driver Ports | **3** (telegram, rest_api, intent_classification) |
+| **Total Ports** | **19** |
+| Adapters | **21** (incluyendo onchain/) |
 | Ports activos | **0 (0%)** |
 | Multi-User | **Fase 1 COMPLETADA** |
 | Sistema en producción | **100% Legacy** |
@@ -80,23 +80,24 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 | trading_port | trading_adapter | `USE_TRADING_PORT=false` |
 | **user_session_port** | **user_session_adapter** | **NUEVO (Dec 20)** |
 
-### Driver Ports (2)
+### Driver Ports (3)
 
 | Port | Adapter | Feature Flag |
 |------|---------|--------------|
 | telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=false` |
 | rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
+| intent_classification_port | intent_classification_adapter | (en AI) |
 
-### Adapters (20)
+### Adapters (21)
 
 ```
-ai_gateway_shim      cache_adapter       coherence_adapter
-database_adapter     derivatives_adapter  execution_adapter
-gemini_adapter       kraken_adapter      market_intel_adapter
-notification_adapter onchain_adapter     optimization_adapter
-portfolio_adapter    risk_adapter        risk_control_adapter
-telegram_adapter     trading_adapter     voice_adapter
-blockchain_info_provider  user_session_adapter (NUEVO)
+ai_gateway_shim          cache_adapter           coherence_adapter
+database_adapter         derivatives_adapter     execution_adapter
+gemini_adapter           intent_classification   kraken_adapter
+market_intel_adapter     notification_adapter    optimization_adapter
+portfolio_adapter        risk_adapter            risk_control_adapter
+telegram_adapter         trading_adapter         voice_adapter
+user_session_adapter     blockchain_info_provider onchain_adapter
 ```
 
 ---
@@ -148,4 +149,4 @@ main.py
 
 ---
 
-*Última actualización: 19 de Diciembre 2025*
+*Última actualización: 22 de Diciembre 2025*

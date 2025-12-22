@@ -1,6 +1,6 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 20 de Diciembre 2025  
+**Fecha**: 22 de Diciembre 2025  
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 1 COMPLETADA
 
@@ -13,72 +13,21 @@
 > - Arquitectura V7.0 lista pero no activada
 > - **Multi-Usuario Fase 1 COMPLETADA** - Funciones parametrizadas, integración hexagonal lista
 
-### Último Update (20 Dic 2025 - Multi-User Integration)
+---
 
-**Implementación Multi-Usuario Fase 1:**
-- **UserSessionManager verificado**: 562 líneas funcionales (NO era aspiracional)
-- **Funciones parametrizadas con user_id**: `_check_open_positions_tp_sl`, `_execute_smart_trade`, `_check_position_limit_early`
-- **_process_user_trading_cycle**: Implementado con lógica real y persistencia
-- **Nuevo port**: `UserSessionPort` para abstracción de sesiones
-- **Nuevo adapter**: `UserSessionAdapter` envolviendo legacy UserSessionManager
+## Cambios Recientes
+
+### Language Detection AI-First (Dec 22, 2025)
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido)
+- **FLUJO**: Textos largos → FastText | Textos cortos → Gemini AI
+- **12/12 tests pasando**
+
+### Multi-User Integration (Dec 20, 2025)
+- **UserSessionManager verificado**: 562 líneas funcionales
+- **Funciones parametrizadas con user_id**: Compatible hacia atrás
+- **Nuevo port**: `UserSessionPort` + `UserSessionAdapter`
 - **Compatibilidad 100%**: Flujo legacy sin cambios
-
-**Ubicaciones:**
-- `src/omnix/ports/driven/user_session_port.py`
-- `src/omnix/infrastructure/adapters/user_session_adapter.py`
-
----
-
-### Update (17 Dic 2025 - Session 5)
-
-**Implementación de 6 Nuevos Driven Ports (Phase 5):**
-- **MarketIntelPort**: Sentiment analysis, technical indicators, news aggregation
-- **ExecutionPort**: Liquidity analysis, correlation, slippage prediction, order routing
-- **RiskControlPort**: Circuit breakers, limits engine, position monitoring, alerts
-- **DerivativesPort**: Futures contracts, hedging, margin management, funding analysis
-- **PortfolioPort**: Portfolio view, rebalancing, exposure management, allocation plans
-- **OptimizationPort**: Parameter optimization, adaptive weights, ML learning, forecasts
-
-**Tests:** 120/120 pasando para los 6 nuevos ports
-
-**Adapters Implementados:**
-- MarketIntelAdapter (wraps FearGreedService, AlphaVantageService, FinnhubService)
-- ExecutionAdapter (wraps ExecutionProtocol, LiquidityAnalyzer, CorrelationEngine)
-- RiskControlAdapter (wraps CircuitBreakerManager, LimitsEngine, PositionMonitor)
-- DerivativesAdapter (wraps DerivativesManager, KrakenFuturesClient, HedgingService)
-- PortfolioAdapter (wraps PortfolioEngine, PortfolioOptimizer, ExposureManager)
-- OptimizationAdapter (wraps AutoOptimizer, AdaptiveWeights, MLModule)
-
----
-
-### Update (16 Dic 2025 - Session 3)
-
-**Corrección Crítica de Integración V7 ↔ Legacy:**
-- `ai_gateway_shim.py`: Refactorizado como PUENTE PURO que delega a `AIModelsManager`
-- Ahora USE_AI_PORT=true usa el mismo failover que legacy: Gemini → OpenAI → Anthropic
-- `container.py`: Inyecta `AIModelsManager` al crear `AIGatewayShim`
-- `ai_error_handler.py`: Sistema de clasificación de errores con 8 categorías
-- `ai_models.py`: Timeouts adaptivos (Gemini 20s, OpenAI 15s, Anthropic 15s)
-- Skip inteligente para errores non-retryable (401, 403, 404)
-
-**Fallback con Cooldown (Production-Ready):**
-- `_is_v7_shim_in_cooldown()`: Previene hot-loops (5 min cooldown)
-- `_reset_v7_shim()`: Limpia shim + manager + marca timestamp de fallo
-- `fallback_to_legacy`: Flag que asegura fallback en mismo request
-- Sin lazy-loading: Container tiene control total del ciclo de vida
-
-**Antes (bug):**
-```
-USE_AI_PORT=true → AIGatewayShim → GeminiAdapter → Solo Gemini ❌
-```
-
-**Ahora (corregido):**
-```
-USE_AI_PORT=true → AIGatewayShim → AIModelsManager → Gemini/OpenAI/Anthropic ✅
-Manager falla → Cooldown 5min → RoutingAIGateway (legacy) ✅
-```
-
-**Tests:** 31/31 pasando (incluyendo degradation, cooldown, y voice scenarios)
 
 ---
 
@@ -88,9 +37,10 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Métrica | Estado |
 |---------|--------|
-| Driven Ports definidos | **16 ✅** (incluyendo UserSessionPort) |
-| Driver Ports definidos | **2 ✅** |
-| Adapters implementados | **20 ✅** (incluyendo UserSessionAdapter) |
+| Driven Ports | **16 ✅** (incluyendo UserSessionPort) |
+| Driver Ports | **3 ✅** (telegram, rest_api, intent_classification) |
+| **Total Ports** | **19** |
+| Adapters | **21 ✅** (incluyendo onchain/) |
 | Ports activos en producción | **0/16 (0%)** - Legacy en uso |
 | USE_APP_LAYER | **false** - No activado |
 | Multi-User | **Fase 1 COMPLETADA** |
@@ -104,20 +54,21 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 ┌─────────────────────────────────────────────────────────────────┐
 │                    src/omnix/ (V7.0 Hexagonal)                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  PORTS (17 protocols)                                            │
-│  ├── Driven (15): Trading, MarketData, AI, Database, Cache,     │
+│  PORTS (19 protocols)                                            │
+│  ├── Driven (16): Trading, MarketData, AI (3), Database, Cache,│
 │  │   Notify, OnChain, MarketIntel, Execution, RiskControl,      │
-│  │   Derivatives, Portfolio, Optimization, AIVoice, AIInference │
-│  └── Driver (2): Telegram, RestApi                               │
+│  │   Derivatives, Portfolio, Optimization, UserSession          │
+│  └── Driver (3): Telegram, RestApi, IntentClassification        │
 ├─────────────────────────────────────────────────────────────────┤
-│  ADAPTERS (19 implementaciones)                                  │
+│  ADAPTERS (21 implementaciones)                                  │
 │  ├── Core: KrakenAdapter, GeminiAdapter, TradingAdapter         │
 │  ├── Data: DatabaseAdapter, CacheAdapter, NotificationAdapter   │
-│  ├── AI: AIGatewayShim, VoiceAdapter                            │
+│  ├── AI: AIGatewayShim, VoiceAdapter, IntentClassificationAdapter│
 │  ├── Risk: RiskAdapter, RiskControlAdapter, CoherenceAdapter    │
 │  ├── Trading: ExecutionAdapter, DerivativesAdapter              │
 │  ├── Portfolio: PortfolioAdapter, OptimizationAdapter           │
-│  ├── Intel: MarketIntelAdapter, OnChainAdapter                  │
+│  ├── Intel: MarketIntelAdapter, OnChainAdapter, BlockchainInfo  │
+│  ├── Session: UserSessionAdapter                                │
 │  └── Interface: TelegramAdapter                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  DOMAIN (lógica de negocio pura)                                │
@@ -137,102 +88,62 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 ## Estado de Ports y Adapters
 
-### Driven Ports (Salida)
+### Driven Ports (16 - Salida)
 
 | Port | Adapter | Listo | Activo | Feature Flag |
 |------|---------|-------|--------|--------------|
-| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ✅ | (incluido en App Layer) |
-| MarketDataPort | KrakenAdapter | ✅ | ✅ | (incluido en TradingPort) |
-| AIInferencePort | GeminiAdapter | ✅ | ✅ | (incluido en AI Port) |
-| **AITextGatewayPort** | AIGatewayShim | ✅ | ✅ | `USE_AI_PORT=true` |
-| AIVoicePort | VoiceServiceAdapter | ✅ | ✅ | `USE_VOICE_PORT=true` |
-| DatabasePort | DatabaseAdapter | ✅ | ✅ | `USE_DATABASE_PORT=true` |
-| CachePort | CacheAdapter | ✅ | ✅ | `USE_CACHE_PORT=true` |
-| NotificationPort | NotificationAdapter | ✅ | ✅ | `USE_NOTIFICATION_PORT=true` |
-| OnChainDataPort | OnChainDataAdapter | ✅ | ✅ | `USE_ONCHAIN_PORT=true` |
-| MarketIntelPort | MarketIntelAdapter | ✅ | ✅ | `USE_MARKET_INTEL_PORT=true` |
-| ExecutionPort | ExecutionAdapter | ✅ | ✅ | `USE_EXECUTION_PORT=true` |
-| RiskControlPort | RiskControlAdapter | ✅ | ✅ | `USE_RISK_CONTROL_PORT=true` |
-| DerivativesPort | DerivativesAdapter | ✅ | ✅ | `USE_DERIVATIVES_PORT=true` |
-| PortfolioPort | PortfolioAdapter | ✅ | ✅ | `USE_PORTFOLIO_PORT=true` |
-| OptimizationPort | OptimizationAdapter | ✅ | ✅ | `USE_OPTIMIZATION_PORT=true` |
+| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ❌ | `USE_TRADING_PORT=false` |
+| MarketDataPort | KrakenAdapter | ✅ | ❌ | (incluido en TradingPort) |
+| AIInferencePort | GeminiAdapter | ✅ | ❌ | (incluido en AI Port) |
+| AITextGatewayPort | AIGatewayShim | ✅ | ❌ | `USE_AI_PORT=false` |
+| AIVoicePort | VoiceServiceAdapter | ✅ | ❌ | `USE_VOICE_PORT=false` |
+| DatabasePort | DatabaseAdapter | ✅ | ❌ | `USE_DATABASE_PORT=false` |
+| CachePort | CacheAdapter | ✅ | ❌ | `USE_CACHE_PORT=false` |
+| NotificationPort | NotificationAdapter | ✅ | ❌ | `USE_NOTIFICATION_PORT=false` |
+| OnChainDataPort | OnChainDataAdapter | ✅ | ❌ | `USE_ONCHAIN_PORT=false` |
+| MarketIntelPort | MarketIntelAdapter | ✅ | ❌ | `USE_MARKET_INTEL_PORT=false` |
+| ExecutionPort | ExecutionAdapter | ✅ | ❌ | `USE_EXECUTION_PORT=false` |
+| RiskControlPort | RiskControlAdapter | ✅ | ❌ | `USE_RISK_CONTROL_PORT=false` |
+| DerivativesPort | DerivativesAdapter | ✅ | ❌ | `USE_DERIVATIVES_PORT=false` |
+| PortfolioPort | PortfolioAdapter | ✅ | ❌ | `USE_PORTFOLIO_PORT=false` |
+| OptimizationPort | OptimizationAdapter | ✅ | ❌ | `USE_OPTIMIZATION_PORT=false` |
+| UserSessionPort | UserSessionAdapter | ✅ | ❌ | **NUEVO** (Dec 20) |
 
-### Driver Ports (Entrada)
+### Driver Ports (3 - Entrada)
 
 | Port | Adapter | Listo | Activo | Feature Flag |
 |------|---------|-------|--------|--------------|
-| TelegramPort | TelegramBotAdapter | ✅ | ✅ | `USE_TELEGRAM_PORT=true` |
-| RestApiPort | Flask Blueprints | ✅ | ✅ | `USE_APP_LAYER=true` |
+| TelegramPort | TelegramBotAdapter | ✅ | ❌ | `USE_TELEGRAM_PORT=false` |
+| RestApiPort | Flask Blueprints | ✅ | ❌ | `USE_APP_LAYER=false` |
+| IntentClassificationPort | IntentClassificationAdapter | ✅ | ❌ | (incluido en AI) |
 
 ---
 
-## Feature Flags - Lista Completa Variables Strangler Fig
+## Feature Flags - Estado Actual
 
-**Estado actual (18 Dic 2025)**
+**Estado en Railway (22 Dic 2025): TODOS EN FALSE (0% activación)**
 
-### 🟢 TODAS ACTIVAS EN RAILWAY (15/15):
+Los feature flags están implementados en `src/omnix/config/settings.py` con defaults en `false`. El sistema opera 100% con código legacy.
 
-**AI & Voice:**
+### Lista de Feature Flags (Todos = false)
 
-| Variable | Qué hace |
-|----------|----------|
-| `USE_AI_PORT=true` | Usa AIGatewayShim en lugar del legacy AI service. Tiene fallback automático con cooldown de 5 min si falla |
-| `USE_UNIFIED_GATEWAY=true` | Enruta todas las llamadas AI por un gateway único (Gemini → OpenAI → Anthropic) |
-| `USE_VOICE_PORT=true` | Usa VoiceServiceAdapter para transcripción de audio (Whisper) y síntesis (ElevenLabs) |
-
-### ✅ Infraestructura (activadas 18 Dic 2025):
-
-| Variable | Qué hace | Estado |
-|----------|----------|--------|
-| `USE_CACHE_PORT=true` | CacheAdapter (Redis) - TTL, invalidación, health checks | ✅ |
-| `USE_DATABASE_PORT=true` | DatabaseAdapter (PostgreSQL) - connection pooling, retry, transacciones | ✅ |
-| `USE_NOTIFICATION_PORT=true` | Notificaciones centralizadas con cola y rate limiting | ✅ |
-| `USE_TELEGRAM_PORT=true` | TelegramAdapter - envío/recepción con retry y formateo | ✅ |
-| `USE_ONCHAIN_PORT=true` | OnChainDataAdapter - whale alerts, liquidaciones, flujos | ✅ |
-
-### ✅ Trading Core (activadas 18 Dic 2025):
-
-| Variable | Qué hace | Estado |
-|----------|----------|--------|
-| `USE_MARKET_INTEL_PORT=true` | MarketIntelAdapter - datos unificados (Kraken, Alpaca, CoinGecko) | ✅ |
-| `USE_EXECUTION_PORT=true` | ExecutionAdapter - ejecución real de trades | ✅ |
-| `USE_RISK_CONTROL_PORT=true` | RiskControlAdapter - validación, límites, stop-loss | ✅ |
-| `USE_DERIVATIVES_PORT=true` | DerivativesAdapter - opciones/futuros, Greeks, hedging | ✅ |
-| `USE_PORTFOLIO_PORT=true` | PortfolioAdapter - cartera institucional, rebalanceo | ✅ |
-| `USE_OPTIMIZATION_PORT=true` | OptimizationAdapter - calibración CAES, pesos adaptativos | ✅ |
-
-### ✅ Capa de Aplicación:
-
-| Variable | Qué hace | Estado |
-|----------|----------|--------|
-| `USE_APP_LAYER=true` | 5 Use Cases V7 (AnalyzeMarket, ExecuteTrade, etc.) | ✅ |
-
-### 📋 Variables activas en Railway (18 Dic 2025):
-
-```bash
-# AI & Voice
-USE_AI_PORT=true
-USE_UNIFIED_GATEWAY=true
-USE_VOICE_PORT=true
-
-# Infraestructura
-USE_CACHE_PORT=true
-USE_DATABASE_PORT=true
-USE_NOTIFICATION_PORT=true
-USE_TELEGRAM_PORT=true
-USE_ONCHAIN_PORT=true
-
-# Trading Core
-USE_MARKET_INTEL_PORT=true
-USE_EXECUTION_PORT=true
-USE_RISK_CONTROL_PORT=true
-USE_DERIVATIVES_PORT=true
-USE_PORTFOLIO_PORT=true
-USE_OPTIMIZATION_PORT=true
-
-# Capa de Aplicación
-USE_APP_LAYER=true
-```
+| Variable | Qué hace | Default |
+|----------|----------|---------|
+| `USE_AI_PORT` | Usa AIGatewayShim en lugar del legacy AI service | `false` |
+| `USE_UNIFIED_GATEWAY` | Enruta todas las llamadas AI por gateway único | `false` |
+| `USE_VOICE_PORT` | Usa VoiceServiceAdapter para TTS/STT | `false` |
+| `USE_CACHE_PORT` | CacheAdapter (Redis) | `false` |
+| `USE_DATABASE_PORT` | DatabaseAdapter (PostgreSQL) | `false` |
+| `USE_NOTIFICATION_PORT` | Notificaciones centralizadas | `false` |
+| `USE_TELEGRAM_PORT` | TelegramAdapter | `false` |
+| `USE_ONCHAIN_PORT` | OnChainDataAdapter | `false` |
+| `USE_MARKET_INTEL_PORT` | MarketIntelAdapter | `false` |
+| `USE_EXECUTION_PORT` | ExecutionAdapter | `false` |
+| `USE_RISK_CONTROL_PORT` | RiskControlAdapter | `false` |
+| `USE_DERIVATIVES_PORT` | DerivativesAdapter | `false` |
+| `USE_PORTFOLIO_PORT` | PortfolioAdapter | `false` |
+| `USE_OPTIMIZATION_PORT` | OptimizationAdapter | `false` |
+| `USE_APP_LAYER` | 5 Use Cases V7 | `false` |
 
 ### Plan de Activación (Priorizado)
 
@@ -240,12 +151,12 @@ USE_APP_LAYER=true
 |------|------|--------|----------|---------|------------|
 | **1** | `USE_AI_PORT=true` | **BAJO** | ✅ 5min cooldown → legacy | N/A | 24h, Gemini→OpenAI failover |
 | 2 | `USE_VOICE_PORT=true` | BAJO | ✅ Legacy voice_controller | N/A | /voz después de AI estable |
-| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | ✅ Legacy services | [RUNBOOK](RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) | Sentiment health check |
-| 4 | `USE_EXECUTION_PORT=true` | MEDIO | ✅ ExecutionProtocol | [RUNBOOK](RUNBOOK_EXECUTION_PORT_ACTIVATION.md) | Order routing test |
-| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | ✅ AIRiskGuardian | [RUNBOOK](RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) | Circuit breaker test |
-| 6 | `USE_DERIVATIVES_PORT=true` | **ALTO** | ✅ DerivativesManager | [RUNBOOK](RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) | Paper position test |
-| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | ✅ PortfolioEngine | [RUNBOOK](RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) | Allocation health |
-| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | ✅ AutoOptimizer | [RUNBOOK](RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) | Weight update test |
+| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | ✅ Legacy services | [RUNBOOK](operations/RUNBOOK_MARKET_INTEL_PORT_ACTIVATION.md) | Sentiment health check |
+| 4 | `USE_EXECUTION_PORT=true` | MEDIO | ✅ ExecutionProtocol | [RUNBOOK](operations/RUNBOOK_EXECUTION_PORT_ACTIVATION.md) | Order routing test |
+| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | ✅ AIRiskGuardian | [RUNBOOK](operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) | Circuit breaker test |
+| 6 | `USE_DERIVATIVES_PORT=true` | **ALTO** | ✅ DerivativesManager | [RUNBOOK](operations/RUNBOOK_DERIVATIVES_PORT_ACTIVATION.md) | Paper position test |
+| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | ✅ PortfolioEngine | [RUNBOOK](operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) | Allocation health |
+| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | ✅ AutoOptimizer | [RUNBOOK](operations/RUNBOOK_OPTIMIZATION_PORT_ACTIVATION.md) | Weight update test |
 | 9 | `USE_CACHE_PORT=true` | BAJO | ✅ RedisCache directo | N/A | Health check Redis |
 | 10 | `USE_DATABASE_PORT=true` | MEDIO | ✅ DatabaseGateway | N/A | Query comparison |
 | 11 | `USE_TELEGRAM_PORT=true` | MEDIO | ✅ EnterpriseBot | N/A | Command testing |
@@ -272,18 +183,9 @@ USE_APP_LAYER=true
 | 4 | Cleanup & Organization | Dec 13, 2025 |
 | 5 | Cache/DB Port Integration | Dec 16, 2025 |
 | 6 | AI/Voice Port Integration | Dec 16, 2025 |
-
----
-
-## Estado Post-Activación (18 Dic 2025)
-
-**✅ Migración completada** - Todos los feature flags activos en Railway.
-
-**Monitoreo recomendado:**
-1. Revisar logs de Railway por 24-48h para detectar errores
-2. Verificar que trades se ejecutan correctamente
-3. Confirmar failovers automáticos funcionan si V7 falla
-4. Después de validación exitosa, considerar eliminar código legacy
+| 7 | 6 Trading Ports (Phase 5) | Dec 17, 2025 |
+| 8 | Multi-User Fase 1 | Dec 20, 2025 |
+| 9 | Language Detection AI-First | Dec 22, 2025 |
 
 ---
 
@@ -295,4 +197,4 @@ USE_APP_LAYER=true
 
 ---
 
-*Última actualización: 18 de Diciembre 2025*
+*Última actualización: 22 de Diciembre 2025*
