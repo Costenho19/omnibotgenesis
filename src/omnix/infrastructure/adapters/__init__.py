@@ -38,6 +38,11 @@ from src.omnix.infrastructure.adapters.intent_classification_adapter import (
 )
 from src.omnix.infrastructure.adapters.user_session_adapter import UserSessionAdapter
 from src.omnix.infrastructure.adapters.user_config_adapter import UserConfigAdapter
+from src.omnix.infrastructure.adapters.authorization_adapter import (
+    AuthorizationAdapter,
+    get_authorization_adapter,
+    reset_authorization_adapter,
+)
 
 __all__ = [
     "TradingServiceAdapter",
@@ -59,4 +64,7 @@ __all__ = [
     "NLPCommandShim",
     "UserSessionAdapter",
     "UserConfigAdapter",
+    "AuthorizationAdapter",
+    "get_authorization_adapter",
+    "reset_authorization_adapter",
 ]

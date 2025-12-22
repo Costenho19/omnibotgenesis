@@ -122,6 +122,14 @@ from src.omnix.ports.driven.user_config_port import (
     UserConfigPort,
     UserConfig,
 )
+from src.omnix.ports.driven.authorization_port import (
+    AuthorizationPort,
+    UserAuthorization,
+    UserRole,
+    Permission,
+    ROLE_PERMISSIONS,
+    AuthorizationError,
+)
 
 __all__ = [
     "TradingPort",
@@ -217,4 +225,10 @@ __all__ = [
     "UserSession",
     "UserConfigPort",
     "UserConfig",
+    "AuthorizationPort",
+    "UserAuthorization",
+    "UserRole",
+    "Permission",
+    "ROLE_PERMISSIONS",
+    "AuthorizationError",
 ]
