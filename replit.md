@@ -84,6 +84,13 @@ The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Eng
 
 Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
 
+#### Asset Quarantine System (Dec 22, 2025)
+- **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
+- **Dashboard Integration**: New "Asset Quarantine" page in Streamlit dashboard
+- **Capital Protection**: Shows $6,213+ in avoided losses from blocking ADA, SOL, ETH, AVAX
+- **Real Data**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
+- **Investor-Ready**: Visual display of risk management for pitch presentations
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 
