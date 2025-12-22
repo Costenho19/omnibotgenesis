@@ -720,6 +720,50 @@ class AutoTradingBot:
             except Exception as e:
                 logger.error(f"❌ {VERSION_BANNER}: Error restaurando auto-trading: {e}")
     
+    def _get_effective_user_id(self, passed_user_id: str = None, caller: str = None) -> str:
+        """
+        V6.5.4d MULTI-USER: Obtener user_id efectivo para operaciones de trading.
+        
+        REGLA ESTRICTA: En producción multi-usuario, user_id DEBE pasarse explícitamente.
+        Solo usa fallback para legacy single-user mode.
+        
+        Prioridad:
+        1. user_id pasado como parámetro (explícito - REQUERIDO en multi-user)
+        2. config['user_id'] (configuración del bot por sesión)
+        3. LEGACY_USER_ID env var (SOLO para legacy single-user mode)
+        
+        NOTA: _persistent_user_id NO se usa aquí. Es SOLO para auto-start en
+        _auto_start_if_persistent(), no para operaciones de runtime.
+        
+        Args:
+            passed_user_id: ID del usuario pasado explícitamente al método
+            caller: Nombre del método que llama (para debugging)
+            
+        Returns:
+            str: User ID efectivo a usar
+            
+        Raises:
+            ValueError: Cuando user_id no está disponible de ninguna fuente
+        """
+        import os as os_env
+        LEGACY_USER_ID = os_env.getenv('LEGACY_USER_ID')
+        
+        if passed_user_id:
+            return str(passed_user_id)
+        
+        config_user_id = self.config.get('user_id')
+        if config_user_id:
+            return str(config_user_id)
+        
+        if not LEGACY_USER_ID:
+            error_msg = f"user_id not provided by {caller or 'unknown'} and LEGACY_USER_ID env var not set"
+            logger.error(f"🚨 CRITICAL: {error_msg}")
+            raise ValueError(error_msg)
+        
+        if caller:
+            logger.warning(f"⚠️ {caller}: user_id not passed, using LEGACY_USER_ID env var (legacy mode)")
+        return LEGACY_USER_ID
+    
     def check_and_restore_auto_trading(self):
         """
          Método público para restaurar auto-trading DESPUÉS de que la DB esté conectada.
@@ -1303,9 +1347,8 @@ class AutoTradingBot:
         if not self.config['paper_mode'] or not self.paper_trading:
             return 0
         
-        # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
-        if user_id is None:
-            user_id = str(self.config.get('harold_user_id', '7014748854'))
+        # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
+        user_id = self._get_effective_user_id(user_id, caller='_check_open_positions_tp_sl')
         
         # PREMIUM: Usar DynamicPositionManager si está disponible
         if self.position_manager:
@@ -2632,9 +2675,8 @@ class AutoTradingBot:
             user_id: ID del usuario (V6.5.4d MULTI-USER). Si None, usa fallback legacy.
         """
         try:
-            # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
-            if user_id is None:
-                user_id = str(self.config.get('harold_user_id', '7014748854'))
+            # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
+            user_id = self._get_effective_user_id(user_id, caller='_execute_smart_trade')
             action = analysis['action']
             amount_usd = analysis.get('amount_usd', 0)
             
@@ -3165,7 +3207,6 @@ class AutoTradingBot:
             # Si no hay posición abierta, convertir a HOLD para evitar errores
             if self.config['paper_mode'] and action == 'SELL':
                 if self.paper_trading and hasattr(self.paper_trading, 'has_open_position_for_symbol'):
-                    user_id = str(self.config.get('harold_user_id', '7014748854'))
                     symbol = self.config['trading_pair']
                     
                     position_check = self.paper_trading.has_open_position_for_symbol(user_id, symbol)
@@ -4205,9 +4246,8 @@ class AutoTradingBot:
         try:
             max_positions = self.config.get('max_open_positions', 10)  # V6.5.4c: Reducido a 10
             
-            # V6.5.4d MULTI-USER: Usar user_id pasado o fallback a legacy
-            if user_id is None:
-                user_id = str(self.config.get('harold_user_id', '7014748854'))
+            # V6.5.4d MULTI-USER: Usar método centralizado para obtener user_id
+            user_id = self._get_effective_user_id(user_id, caller='_check_position_limit_early')
             
             # V6.5.4c: Usar paper_trading para obtener posiciones correctamente
             if self.paper_trading and self.config.get('paper_mode', False):
