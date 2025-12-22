@@ -1,13 +1,24 @@
 # OMNIX V7.0 - Estado REAL del Sistema
 
 **Fecha**: 22 de Diciembre 2025  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 1 COMPLETADA
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ MULTI-USER FASE 3b COMPLETADA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
 ---
 
 ## Cambios Recientes
+
+### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
+**AuthorizationService Completamente Integrado**:
+- **AuthorizationPort** creado en `src/omnix/ports/driven/authorization_port.py`
+- **AuthorizationAdapter** en `src/omnix/infrastructure/adapters/authorization_adapter.py`
+- **17 hardcoded checks reemplazados** con RBAC en 5 archivos
+- **5 roles B2C SaaS**: FREE < BASIC < PRO < PREMIUM < OWNER
+- **15 permisos granulares** (paper/real trading, auto-trading, alertas, etc.)
+- **Harold = OWNER** en BD (is_admin=true, subscription_tier='owner', paper_trading_mode=true)
+- **36/36 tests pasando**
+- **Ubicación**: `src/omnix/ports/driven/`, `src/omnix/infrastructure/adapters/`
 
 ### Language Detection AI-First (Dec 22, 2025)
 **Arquitectura AI-First Verdadera**:
@@ -21,6 +32,11 @@
 - **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
 - **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
+
+### Multi-Usuario Fase 2 COMPLETADA (Dec 22, 2025)
+- **UserSessionManager INTEGRADO**: Ahora usado por AutoTradingBot
+- **9/11 issues corregidos** de la auditoría original
+- **PostgreSQL RLS habilitado** en 3 tablas críticas
 
 ### Multi-Usuario Fase 1 COMPLETADA (Dec 20, 2025)
 - **UserSessionManager EXISTE**: 562 líneas funcionales en `omnix_core/sessions/user_session_manager.py`

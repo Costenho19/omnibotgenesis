@@ -2,20 +2,34 @@
 
 **Fecha**: 22 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | MULTI-USER FASE 2 (9/11 ISSUES)
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ MULTI-USER FASE 3b COMPLETADA
 
 > **NOTA**: Este documento describe la arquitectura V7.0 implementada.
 > Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para el estado real de producción.
 
 > **Sistema en producción**: 100% código legacy operando 24/7 en Railway
-> - **0/16 ports activados** - Todos los feature flags en `false`
+> - **0/20 ports activados** - Todos los feature flags en `false`
 > - `USE_APP_LAYER=false` - Legacy en operación
 > - Arquitectura V7.0 lista pero no activada
-> - **Multi-Usuario Fase 2**: 9/11 issues corregidos, single-user seguro, multi-user bloqueado
+> - **Multi-Usuario Fase 3b COMPLETADA**: RBAC implementado, 36/36 tests pasando
 
 ---
 
 ## Cambios Recientes
+
+### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
+- **AuthorizationPort + AuthorizationAdapter** implementados y funcionando
+- **17 hardcoded checks reemplazados** con RBAC en 5 archivos:
+  - `omnix_core/trading_system.py` (2 guards)
+  - `omnix_services/telegram_service/enterprise_bot.py` (7 guards)
+  - `omnix_core/bot/auto_trading_bot.py` (5 guards)
+  - `omnix_services/optimization/performance_optimizer.py` (1 guard)
+  - `omnix_services/ai_service/conversational_ai_adapter.py` (1 guard)
+- **5 roles definidos**: FREE < BASIC < PRO < PREMIUM < OWNER
+- **15 permisos granulares** implementados
+- **Harold = OWNER** en base de datos (is_admin=true, subscription_tier='owner')
+- **36/36 tests pasando** en `tests/test_authorization.py`
+- **Paper trading activo** para Harold
 
 ### Multi-User Phase 2 Complete (Dec 22, 2025)
 - **9/11 issues corregidos** - Auditoría profunda completada
@@ -24,7 +38,6 @@
 - **UserSessionManager integrado** con bot init/start/stop
 - **PaperTradingRepository + DatabaseService** - user_id ahora obligatorio
 - **21 tests de aislamiento** pasando (incluyendo persistencia Redis)
-- **2 blockers restantes**: Entry points sin user_id, hard-checks de Harold
 
 ### Language Detection AI-First (Dec 22, 2025)
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma

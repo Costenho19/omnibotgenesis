@@ -18,6 +18,15 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Multi-User Phase 3b COMPLETADA (Dec 22, 2025)
+- **AuthorizationService INTEGRADO** en 5 archivos con RBAC completo
+- **17 hardcoded checks reemplazados** con verificación de permisos
+- **5 roles B2C SaaS**: FREE < BASIC < PRO < PREMIUM < OWNER
+- **15 permisos granulares** para trading, análisis, alertas
+- **Harold = OWNER** en BD con paper trading activo
+- **36/36 tests pasando**
+- **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md) - Guía completa de uso
+
 ### Language Detection AI-First (Dec 22, 2025)
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido)
@@ -25,17 +34,11 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
 - **12/12 tests pasando**
 
-### Multi-Usuario Fase 1 COMPLETADA (Dec 20, 2025)
-- **UserSessionManager EXISTE**: 562 líneas en `omnix_core/sessions/user_session_manager.py`
-- **Funciones parametrizadas con user_id**: 6 funciones core ahora aceptan user_id opcional
-- **Integración Hexagonal**: `UserSessionPort` y `UserSessionAdapter` creados
-- **Compatibilidad 100%**: Flujo legacy sigue funcionando sin cambios
-- **Pendiente Fase 2**: Desacoplar configuración por usuario, migrar protecciones ARP
-- **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md) (secciones 7.4 y 7.5)
-
-### Nuevos Componentes Hexagonales (Dec 20, 2025)
+### Nuevos Componentes Hexagonales (Dec 22, 2025)
 | Componente | Ubicación |
 |------------|-----------|
+| `AuthorizationPort` | `src/omnix/ports/driven/authorization_port.py` |
+| `AuthorizationAdapter` | `src/omnix/infrastructure/adapters/authorization_adapter.py` |
 | `UserSessionPort` | `src/omnix/ports/driven/user_session_port.py` |
 | `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` |
 

@@ -2,7 +2,7 @@
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
 **Fecha de Auditoría**: 22 de Diciembre 2025  
-**Estado**: FASE 2 COMPLETADA (9/11 Issues) - Single-User SEGURO  
+**Estado**: ✅ FASE 3b COMPLETADA - Multi-Usuario OPERACIONAL  
 **Autor**: Auditoría de Arquitectura OMNIX
 
 ---
@@ -10,76 +10,130 @@
 ## Tabla de Contenidos
 
 1. [Resumen Ejecutivo](#1-resumen-ejecutivo)
-2. [Análisis Técnico Detallado](#2-análisis-técnico-detallado)
-3. [Esquema de Base de Datos](#3-esquema-de-base-de-datos)
-4. [Criptografía Post-Cuántica](#4-criptografía-post-cuántica)
-5. [Arquitectura Multi-Usuario Propuesta](#5-arquitectura-multi-usuario-propuesta)
-6. [Coherencia con Arquitectura Hexagonal V7.0](#6-coherencia-con-arquitectura-hexagonal-v70)
-7. [Plan de Implementación](#7-plan-de-implementación)
-8. [Riesgos y Mitigaciones](#8-riesgos-y-mitigaciones)
+2. [Guía de Uso Práctico](#2-guía-de-uso-práctico)
+3. [Análisis Técnico Detallado](#3-análisis-técnico-detallado)
+4. [Esquema de Base de Datos](#4-esquema-de-base-de-datos)
+5. [Criptografía Post-Cuántica](#5-criptografía-post-cuántica)
+6. [Arquitectura Multi-Usuario](#6-arquitectura-multi-usuario)
+7. [Coherencia con Arquitectura Hexagonal V7.0](#7-coherencia-con-arquitectura-hexagonal-v70)
+8. [Plan de Implementación (Completado)](#8-plan-de-implementación-completado)
+9. [Riesgos y Mitigaciones](#9-riesgos-y-mitigaciones)
 
 ---
 
 ## 1. Resumen Ejecutivo
 
-### 1.1 Estado Actual
+### 1.1 Estado Actual (Actualizado 22 Dic 2025)
 
-| Aspecto | Documentación Dice | Realidad del Código |
-|---------|-------------------|---------------------|
-| Arquitectura | "Multi-usuario con 100K+ usuarios" | **Single-tenant con user_id hardcodeado** |
-| UserSessionManager | "Sesiones aisladas por usuario" | **EXISTE (562 líneas) pero NO INTEGRADO con AutoTradingBot** |
-| Aislamiento | "Estado persistente por usuario" | **Todos comparten la cuenta de Harold** |
-| PQC Authorization | "Firma post-quantum de trades" | **Solo firma, no autorización** |
+| Aspecto | Estado Anterior | Estado Actual (Phase 3b) |
+|---------|-----------------|--------------------------|
+| Arquitectura | Single-tenant hardcodeado | ✅ **Multi-usuario con RBAC** |
+| AuthorizationService | No existía | ✅ **AuthorizationPort + Adapter integrados** |
+| UserSessionManager | Existía pero no integrado | ✅ **Integrado en AutoTradingBot** |
+| Permisos | Hardcoded checks | ✅ **15 permisos granulares por rol** |
+| Harold | user_id hardcodeado | ✅ **OWNER en BD con todos los permisos** |
 
-> **CORRECCIÓN (20 Dic 2025)**: El `UserSessionManager` **SÍ EXISTE** en `omnix_core/sessions/user_session_manager.py`.
-> El problema es que `AutoTradingBot` **NO LO USA** - sigue hardcodeando el `user_id` de Harold.
+> **COMPLETADO (22 Dic 2025)**: 
+> - `AuthorizationService` completamente integrado en 5 archivos
+> - 17 hardcoded checks reemplazados con RBAC
+> - 36/36 tests pasando
+> - Harold tiene rol OWNER con paper trading activo
 
-### 1.2 Problema Crítico
+### 1.2 Estado de Seguridad
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  PROBLEMA: user_id HARDCODEADO EN 6 UBICACIONES DEL CÓDIGO         │
+│  ✅ PROBLEMA RESUELTO: RBAC IMPLEMENTADO                            │
 │                                                                     │
-│  user_id = str(self.config.get('harold_user_id', '7014748854'))   │
+│  AuthorizationAdapter verifica permisos en PostgreSQL + Redis      │
+│  Cada usuario tiene su rol (FREE/BASIC/PRO/PREMIUM/OWNER)          │
 │                                                                     │
-│  Resultado: TODOS los trades van a la cuenta de Harold             │
-│  Impacto: Multi-usuario es IMPOSIBLE con el código actual          │
+│  Resultado: Trading aislado por usuario                             │
+│  Estado: Multi-usuario LISTO para activación                        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.3 Impacto en Usuarios
+### 1.3 Modelo de Roles y Permisos
 
-**Escenario: 2 usuarios hacen trading simultáneo**
+| Rol | Permisos Trading | Permisos Análisis | Límites |
+|-----|------------------|-------------------|---------|
+| **OWNER** | Real + Paper + Auto | Todos | Sin límites |
+| **PREMIUM** | Paper + Auto | Todos | 50 trades/día |
+| **PRO** | Paper + Alertas | Avanzados | 20 trades/día |
+| **BASIC** | Paper básico | Básicos | 10 trades/día |
+| **FREE** | Solo vista | 3 análisis/día | Solo lectura |
 
+### 1.4 Verificación en Base de Datos
+
+```sql
+-- Harold configurado como OWNER
+SELECT user_id, is_admin, subscription_tier FROM users WHERE user_id = '7014748854';
+-- Resultado: user_id=7014748854, is_admin=true, subscription_tier='owner'
+
+-- Paper trading activo
+SELECT paper_trading_mode, auto_trading, trading_enabled FROM user_settings WHERE user_id = '7014748854';
+-- Resultado: paper_trading_mode=true, auto_trading=true, trading_enabled=true
 ```
-Usuario A (chat_id: 111) → /autotrading → user_id = '7014748854' (Harold)
-Usuario B (chat_id: 222) → /autotrading → user_id = '7014748854' (Harold)
-                                              ↓
-                              MISMO balance compartido
-                              MISMAS posiciones abiertas
-                              MISMO historial de trades
-                              MISMO estado is_paused
-```
-
-**Consecuencias:**
-- Las posiciones de un usuario afectan al otro
-- Los balances son compartidos (pérdida de aislamiento)
-- Un usuario puede pausar el trading del otro
-- El historial de trades no distingue origen
-- **Riesgo legal y financiero crítico**
-
-### 1.4 Clasificación de Severidad
-
-| Categoría | Severidad | Justificación |
-|-----------|-----------|---------------|
-| Seguridad | **CRÍTICA** | Usuarios pueden afectar cuentas ajenas |
-| Funcional | **BLOQUEANTE** | Multi-usuario no funciona |
-| Compliance | **ALTA** | Violación de aislamiento de datos |
-| Negocio | **ALTA** | Bloquea modelo B2C SaaS |
 
 ---
 
-## 2. Análisis Técnico Detallado
+## 2. Guía de Uso Práctico
+
+### 2.1 Agregar un Nuevo Usuario
+
+```sql
+-- Paso 1: Crear usuario en tabla users
+INSERT INTO users (user_id, username, is_admin, subscription_tier, created_at)
+VALUES ('TELEGRAM_CHAT_ID', 'nombre_usuario', false, 'basic', NOW());
+
+-- Paso 2: Crear configuración inicial
+INSERT INTO user_settings (user_id, username, trading_enabled, auto_trading, paper_trading_mode)
+VALUES ('TELEGRAM_CHAT_ID', 'nombre_usuario', true, false, true);
+
+-- Paso 3 (opcional): Inicializar balance paper trading
+INSERT INTO paper_trading_balances (user_id, currency, balance, updated_at)
+VALUES ('TELEGRAM_CHAT_ID', 'USD', 100000.00, NOW());
+```
+
+### 2.2 Cambiar Tier de Usuario
+
+```sql
+-- Upgrade a PRO
+UPDATE users SET subscription_tier = 'pro' WHERE user_id = 'TELEGRAM_CHAT_ID';
+
+-- Upgrade a PREMIUM
+UPDATE users SET subscription_tier = 'premium' WHERE user_id = 'TELEGRAM_CHAT_ID';
+
+-- Nota: El cache de Redis se invalida automáticamente después de 5 minutos
+-- Para invalidación inmediata, reiniciar el bot o esperar TTL
+```
+
+### 2.3 Verificar Permisos de Usuario
+
+```sql
+-- Ver rol y permisos efectivos
+SELECT u.user_id, u.subscription_tier, u.is_admin,
+       us.trading_enabled, us.auto_trading, us.paper_trading_mode
+FROM users u
+JOIN user_settings us ON u.user_id = us.user_id
+WHERE u.user_id = 'TELEGRAM_CHAT_ID';
+```
+
+### 2.4 Permisos por Tier
+
+| Tier | Permisos Incluidos |
+|------|-------------------|
+| **FREE** | `VIEW_BALANCE`, `VIEW_POSITIONS` |
+| **BASIC** | FREE + `PAPER_TRADING`, `RECEIVE_ALERTS` |
+| **PRO** | BASIC + `PAPER_AUTO_TRADING`, `ADVANCED_ANALYSIS` |
+| **PREMIUM** | PRO + `PRIORITY_EXECUTION`, `CUSTOM_STRATEGIES` |
+| **OWNER** | TODOS (15 permisos) incluyendo `REAL_TRADING`, `REAL_AUTO_TRADING` |
+
+---
+
+## 3. Análisis Técnico Detallado (Histórico)
+
+> **Nota**: Esta sección documenta el problema original que fue **RESUELTO** en Phase 3b.
 
 ### 2.1 Auditoría de AutoTradingBot
 
