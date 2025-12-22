@@ -85,11 +85,18 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 
-### Hexagonal Architecture (V7.0 Migration Completed)
-The system fully employs a hexagonal architecture, with all 17 ports and 19 adapters implemented, including Bootstrap & Config, Domain & Application layers, and Infrastructure Adapters (KrakenAdapter, GeminiAdapter). A feature flag `USE_APP_LAYER=true` confirms the new application layer is active.
+### Hexagonal Architecture (V7.0 - Structure Complete, Activation Pending)
+The system has a complete hexagonal architecture with **19 ports** (16 driven + 3 driver) and **21 adapters** implemented in `src/omnix/`. **IMPORTANT**: All feature flags are currently `false` - the system operates 100% with legacy code in Railway. Activation is planned via Strangler Fig pattern.
 
 ### AI Service Architecture
 Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). Features include a voice service for dual text+audio responses (when `VOICE_SERVICE_AVAILABLE=true`) and AI-first command detection where only messages starting with `/` are treated as commands, otherwise text is sent to AI. The system uses an AI-First Multilingual Prompt Architecture with all system prompts rewritten in English, a Prompt Specification Layer, dynamic language detection, and a Chain-of-Thought Framework.
+
+#### Language Detection AI-First Refactor (Dec 22, 2025)
+- **ELIMINATED** hardcoded language detection dictionaries (low quality code)
+- **INSTALLED** `fast-langdetect` (FastText-based, 80x faster than langdetect)
+- **FLOW**: Long texts (≥50 chars) → FastText | Short texts (<50 chars) → Gemini AI (`gemini-2.0-flash-lite`)
+- **TTS MAPPING**: ISO codes to gTTS codes (e.g., zh → zh-CN)
+- **RESULT**: 12/12 tests passing
 
 #### AI-First Multilingual Concurrency (Dec 19, 2025)
 - **Concurrency-Safe Language Detection**: Uses `threading.Lock` for sync paths and `asyncio.to_thread()` for async paths to prevent language bleed between concurrent users

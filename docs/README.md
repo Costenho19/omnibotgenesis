@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 20 de Diciembre 2025  
+**Actualizado**: 22 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -16,9 +16,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ---
 
-## Cambios Recientes (Dec 20, 2025)
+## Cambios Recientes
 
-### Multi-Usuario Fase 1 COMPLETADA
+### Language Detection AI-First (Dec 22, 2025)
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido)
+- **FLUJO**: Textos largos (≥50 chars) → FastText | Textos cortos (<50 chars) → Gemini AI
+- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
+- **12/12 tests pasando**
+
+### Multi-Usuario Fase 1 COMPLETADA (Dec 20, 2025)
 - **UserSessionManager EXISTE**: 562 líneas en `omnix_core/sessions/user_session_manager.py`
 - **Funciones parametrizadas con user_id**: 6 funciones core ahora aceptan user_id opcional
 - **Integración Hexagonal**: `UserSessionPort` y `UserSessionAdapter` creados
@@ -44,7 +51,8 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ### Estado Actual
 | Documento | Descripción |
 |-----------|-------------|
-| [Migración V7.0](MIGRATION_STATUS.md) | Estado de arquitectura hexagonal (17 ports, 19 adapters, 0% activación) |
+| [Migración V7.0](MIGRATION_STATUS.md) | Estado de arquitectura hexagonal (19 ports, 21 adapters, 0% activación) |
+| [Estado REAL](REAL_SYSTEM_STATUS.md) | **FUENTE DE VERDAD** - Estado de producción Railway |
 | [Hexagonal Status](current/HEXAGONAL_MIGRATION_STATUS.md) | Detalle técnico de ports y adapters |
 | [Mapa Funcional](current/COMPLETE_FUNCTIONALITY_MAP.md) | Sistema legacy (11 dominios, 346 archivos) |
 | [Multi-Usuario](current/MULTI_USER_ARCHITECTURE.md) | **CRÍTICO** - Auditoría y plan multi-tenant |
@@ -85,7 +93,7 @@ docs/
 │   ├── COMPLETE_FUNCTIONALITY_MAP.md  <- Referencia sistema legacy
 │   ├── TECHNICAL_DEBT.md              <- Issues conocidos
 │   ├── TRADING_OPERATIONS.md          <- Operaciones de trading
-│   └── MULTI_USER_ARCHITECTURE.md     <- **NUEVO** Auditoría multi-tenant
+│   └── MULTI_USER_ARCHITECTURE.md     <- Auditoría multi-tenant
 │
 ├── operations/               <- Runbooks y guías operativas
 │   ├── DEPLOYMENT.md
@@ -121,8 +129,8 @@ docs/
 │  └── Feature flags: TODOS en false                              │
 ├─────────────────────────────────────────────────────────────────┤
 │  ARQUITECTURA V7.0 (Implementada, no activa)                    │
-│  ├── 15 Driven Ports + 2 Driver Ports = 17 ports                │
-│  ├── 19 Adapters implementados                                  │
+│  ├── 16 Driven Ports + 3 Driver Ports = 19 ports                │
+│  ├── 21 Adapters implementados                                  │
 │  ├── 120/120 tests pasando                                      │
 │  └── Patrón: Strangler Fig (activación gradual)                 │
 ├─────────────────────────────────────────────────────────────────┤
@@ -168,4 +176,4 @@ Ver [MIGRATION_STATUS.md](MIGRATION_STATUS.md) para plan completo de activación
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 18 Dic 2025*
+*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 22 Dic 2025*

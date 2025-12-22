@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** December 20, 2025  
+**Updated:** December 22, 2025  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
 
@@ -60,7 +60,24 @@
 
 ---
 
-## Resolved Items (Dec 19, 2025)
+## Resolved Items
+
+### Language Detection AI-First Refactor (RESOLVED)
+**Status:** ✅ Resolved (Dec 22, 2025)
+
+**Issue:** Language detection used hardcoded dictionaries (poor quality), was slow, and inconsistent.
+
+**Resolution:**
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
+- **FLUJO AI-First**:
+  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
+  - Fallback: fast-langdetect → langdetect → 'en'
+- **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
+- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
+- **RESULTADO**: 12/12 tests pasando
+- **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
 
 ### Hardcoded Multilingual Messages (RESOLVED)
 **Status:** ✅ Resolved (Dec 19, 2025)
@@ -91,16 +108,16 @@ This document registers known technical debt in OMNIX V6.5.4d. All items are **i
 
 ## 1. Architecture Debt
 
-### 1.1 Hexagonal Ports Not Integrated (PARTIALLY RESOLVED)
+### 1.1 Hexagonal Ports Not Integrated (SUBSTANTIALLY RESOLVED)
 
-**Status:** Partially resolved (Dec 12, 2025) - 3 of 8 ports integrated
+**Status:** Substantially resolved (Dec 22, 2025) - 19 ports, 21 adapters implemented
 
 | Issue | Description |
 |-------|-------------|
-| Ports Defined | 8 protocol interfaces in `src/omnix/ports/` |
-| Adapters Exist | KrakenClient, DatabaseGateway, RedisCache, etc. |
-| Problem | ~~Adapters don't implement ports~~ **3 adapters now implement ports** |
-| Impact | Remaining 5 ports still use direct imports |
+| Ports Defined | **19** protocol interfaces in `src/omnix/ports/` (16 driven + 3 driver) |
+| Adapters Exist | **21** adapters in `src/omnix/infrastructure/adapters/` |
+| Problem | **Todos los adapters implementados**, pero NO activos (feature flags = false) |
+| Impact | Sistema opera 100% legacy; arquitectura V7 lista para activación gradual |
 
 **Phase 3 Progress (Dec 12, 2025):**
 | Port | Adapter | Status |

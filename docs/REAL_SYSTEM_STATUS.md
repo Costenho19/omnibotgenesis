@@ -77,7 +77,7 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 | optimization_port | optimization_adapter | `USE_OPTIMIZATION_PORT=false` |
 | portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` |
 | risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` |
-| trading_port | trading_adapter | `USE_TRADING_PORT=false` |
+| trading_port | trading_adapter | (incluido en App Layer) |
 | **user_session_port** | **user_session_adapter** | **NUEVO (Dec 20)** |
 
 ### Driver Ports (3)

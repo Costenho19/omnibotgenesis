@@ -92,7 +92,7 @@ La arquitectura hexagonal V7.0 está **completamente implementada** en `src/omni
 
 | Port | Adapter | Listo | Activo | Feature Flag |
 |------|---------|-------|--------|--------------|
-| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ❌ | `USE_TRADING_PORT=false` |
+| TradingPort | TradingAdapter, KrakenAdapter | ✅ | ❌ | (incluido en App Layer) |
 | MarketDataPort | KrakenAdapter | ✅ | ❌ | (incluido en TradingPort) |
 | AIInferencePort | GeminiAdapter | ✅ | ❌ | (incluido en AI Port) |
 | AITextGatewayPort | AIGatewayShim | ✅ | ❌ | `USE_AI_PORT=false` |

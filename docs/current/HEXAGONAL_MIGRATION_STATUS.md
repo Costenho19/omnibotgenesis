@@ -1,26 +1,27 @@
 # OMNIX V7.0 - Estado de Migración Hexagonal
 
-**Fecha**: 19 de Diciembre 2025  
+**Fecha**: 22 de Diciembre 2025  
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0%
 
 ---
 
-> ⚠️ **IMPORTANTE**: Este documento describe la arquitectura objetivo.
+> **IMPORTANTE**: Este documento describe la arquitectura objetivo.
 > Para el estado REAL de producción, ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md).
 
 ---
 
 ## Resumen Ejecutivo
 
-📋 **ARQUITECTURA IMPLEMENTADA** - La arquitectura hexagonal V7.0 está **100% implementada** en `src/omnix/`. Sin embargo, el sistema opera 100% con código legacy en Railway. Todos los feature flags están desactivados.
+**ARQUITECTURA IMPLEMENTADA** - La arquitectura hexagonal V7.0 está **100% implementada** en `src/omnix/`. Sin embargo, el sistema opera 100% con código legacy en Railway. Todos los feature flags están desactivados.
 
 | Métrica | Valor |
 |---------|-------|
-| Driven Ports | **15** |
-| Driver Ports | **2** |
-| Adapters | **19** |
-| Ports activos en producción | **0/15 (0%)** - Legacy en uso |
+| Driven Ports | **16** |
+| Driver Ports | **3** |
+| **Total Ports** | **19** |
+| Adapters | **21** |
+| Ports activos en producción | **0/16 (0%)** - Legacy en uso |
 | USE_APP_LAYER | **false** - No activado |
 | Tests pasando | **120/120** |
 
@@ -31,10 +32,10 @@
 > **Estado**: Todos los ports están IMPLEMENTADOS pero NO activos. 
 > Los flags listados son el objetivo; actualmente todos = `false`.
 
-### Driven Ports (15 - Salida hacia infraestructura)
+### Driven Ports (16 - Salida hacia infraestructura)
 
-| Port | Adapter | Feature Flag (objetivo) | Runbook |
-|------|---------|------------------------|---------|
+| Port | Adapter | Feature Flag | Runbook |
+|------|---------|--------------|---------|
 | ai_inference_port | gemini_adapter | (incluido en AI) | - |
 | ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` | - |
 | ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` | - |
@@ -50,17 +51,19 @@
 | portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` | [Runbook](../operations/RUNBOOK_PORTFOLIO_PORT_ACTIVATION.md) |
 | risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` | [Runbook](../operations/RUNBOOK_RISK_CONTROL_PORT_ACTIVATION.md) |
 | trading_port | trading_adapter | (incluido en App Layer) | - |
+| **user_session_port** | **user_session_adapter** | **NUEVO (Dec 20)** | - |
 
-### Driver Ports (2 - Entrada desde interfaces)
+### Driver Ports (3 - Entrada desde interfaces)
 
-| Port | Adapter | Feature Flag (objetivo) |
-|------|---------|------------------------|
+| Port | Adapter | Feature Flag |
+|------|---------|--------------|
 | telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=false` |
 | rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
+| intent_classification_port | intent_classification_adapter | (incluido en AI) |
 
 ---
 
-## Inventario de Adapters (19)
+## Inventario de Adapters (21)
 
 | Adapter | Ubicación | Servicio Legacy Wrapped |
 |---------|-----------|------------------------|
@@ -71,164 +74,76 @@
 | derivatives_adapter | `adapters/derivatives_adapter.py` | DerivativesManager |
 | execution_adapter | `adapters/execution_adapter.py` | ExecutionProtocol |
 | gemini_adapter | `adapters/gemini_adapter.py` | GeminiAIGateway |
+| intent_classification_adapter | `adapters/intent_classification_adapter.py` | IntentDetector |
 | kraken_adapter | `adapters/kraken_adapter.py` | KrakenClient |
 | market_intel_adapter | `adapters/market_intel_adapter.py` | FearGreedService, AlphaVantage, Finnhub |
 | notification_adapter | `adapters/notification_adapter.py` | Telegram messaging |
-| onchain_adapter | `adapters/onchain/onchain_adapter.py` | Blockchain.info API |
+| onchain_adapter | `adapters/onchain/onchain_adapter.py` | BlockchainInfoProvider |
 | optimization_adapter | `adapters/optimization_adapter.py` | AutoOptimizer, AdaptiveWeights |
 | portfolio_adapter | `adapters/portfolio_adapter.py` | PortfolioEngine |
 | risk_adapter | `adapters/risk_adapter.py` | RiskGuardian |
 | risk_control_adapter | `adapters/risk_control_adapter.py` | CircuitBreakerManager |
 | telegram_adapter | `adapters/telegram_adapter.py` | EnterpriseBot |
 | trading_adapter | `adapters/trading_adapter.py` | TradingService |
+| user_session_adapter | `adapters/user_session_adapter.py` | UserSessionManager |
 | voice_adapter | `adapters/voice_adapter.py` | VoiceController |
 | blockchain_info_provider | `adapters/onchain/blockchain_info_provider.py` | Blockchain.info REST |
 
 ---
 
-## Feature Flags - Lista Completa Variables Strangler Fig
+## Feature Flags - Estado Actual
 
-**Estado actual en Railway (18 Dic 2025)**
+**Estado en Railway (22 Dic 2025): TODOS EN FALSE (0% activación)**
 
-### 🟢 TODAS ACTIVAS EN RAILWAY (15/15):
+Los feature flags están implementados en `src/omnix/config/settings.py` con defaults en `false`.
 
-**AI & Voice:**
-
-| Variable | Qué hace |
-|----------|----------|
-| `USE_AI_PORT=true` | Usa AIGatewayShim en lugar del legacy AI service. Tiene fallback automático con cooldown de 5 min si falla |
-| `USE_UNIFIED_GATEWAY=true` | Enruta todas las llamadas AI por un gateway único (Gemini → OpenAI → Anthropic) |
-| `USE_VOICE_PORT=true` | Usa VoiceServiceAdapter para transcripción de audio (Whisper) y síntesis (ElevenLabs) |
-
-### ✅ Infraestructura (activadas 18 Dic 2025):
+### Lista de Feature Flags
 
 | Variable | Qué hace | Estado |
 |----------|----------|--------|
-| `USE_CACHE_PORT=true` | CacheAdapter (Redis) - TTL, invalidación, health checks | ✅ |
-| `USE_DATABASE_PORT=true` | DatabaseAdapter (PostgreSQL) - connection pooling, retry, transacciones | ✅ |
-| `USE_NOTIFICATION_PORT=true` | Notificaciones centralizadas con cola y rate limiting | ✅ |
-| `USE_TELEGRAM_PORT=true` | TelegramAdapter - envío/recepción con retry y formateo | ✅ |
-| `USE_ONCHAIN_PORT=true` | OnChainDataAdapter - whale alerts, liquidaciones, flujos | ✅ |
-
-### ✅ Trading Core (activadas 18 Dic 2025):
-
-| Variable | Qué hace | Estado |
-|----------|----------|--------|
-| `USE_MARKET_INTEL_PORT=true` | MarketIntelAdapter - datos unificados (Kraken, Alpaca, CoinGecko) | ✅ |
-| `USE_EXECUTION_PORT=true` | ExecutionAdapter - ejecución real de trades | ✅ |
-| `USE_RISK_CONTROL_PORT=true` | RiskControlAdapter - validación, límites, stop-loss | ✅ |
-| `USE_DERIVATIVES_PORT=true` | DerivativesAdapter - opciones/futuros, Greeks, hedging | ✅ |
-| `USE_PORTFOLIO_PORT=true` | PortfolioAdapter - cartera institucional, rebalanceo | ✅ |
-| `USE_OPTIMIZATION_PORT=true` | OptimizationAdapter - calibración CAES, pesos adaptativos | ✅ |
-
-### ✅ Capa de Aplicación:
-
-| Variable | Qué hace | Estado |
-|----------|----------|--------|
-| `USE_APP_LAYER=true` | 5 Use Cases V7 (AnalyzeMarket, ExecuteTrade, etc.) | ✅ |
-
-### 📋 Variables activas en Railway (18 Dic 2025):
-
-```bash
-# AI & Voice
-USE_AI_PORT=true
-USE_UNIFIED_GATEWAY=true
-USE_VOICE_PORT=true
-
-# Infraestructura
-USE_CACHE_PORT=true
-USE_DATABASE_PORT=true
-USE_NOTIFICATION_PORT=true
-USE_TELEGRAM_PORT=true
-USE_ONCHAIN_PORT=true
-
-# Trading Core
-USE_MARKET_INTEL_PORT=true
-USE_EXECUTION_PORT=true
-USE_RISK_CONTROL_PORT=true
-USE_DERIVATIVES_PORT=true
-USE_PORTFOLIO_PORT=true
-USE_OPTIMIZATION_PORT=true
-
-# Capa de Aplicación
-USE_APP_LAYER=true
-```
+| `USE_AI_PORT` | Usa AIGatewayShim | `false` |
+| `USE_UNIFIED_GATEWAY` | Gateway único AI | `false` |
+| `USE_VOICE_PORT` | VoiceServiceAdapter | `false` |
+| `USE_CACHE_PORT` | CacheAdapter (Redis) | `false` |
+| `USE_DATABASE_PORT` | DatabaseAdapter | `false` |
+| `USE_NOTIFICATION_PORT` | Notificaciones | `false` |
+| `USE_TELEGRAM_PORT` | TelegramAdapter | `false` |
+| `USE_ONCHAIN_PORT` | OnChainDataAdapter | `false` |
+| `USE_MARKET_INTEL_PORT` | MarketIntelAdapter | `false` |
+| `USE_EXECUTION_PORT` | ExecutionAdapter | `false` |
+| `USE_RISK_CONTROL_PORT` | RiskControlAdapter | `false` |
+| `USE_DERIVATIVES_PORT` | DerivativesAdapter | `false` |
+| `USE_PORTFOLIO_PORT` | PortfolioAdapter | `false` |
+| `USE_OPTIMIZATION_PORT` | OptimizationAdapter | `false` |
+| `USE_APP_LAYER` | 5 Use Cases V7 | `false` |
 
 ---
 
-## Plan de Activación - COMPLETADO ✅
+## Plan de Activación (Priorizado)
 
-**Todos los pasos completados el 18 Dic 2025:**
-
-| Paso | Flag | Estado |
-|------|------|--------|
-| 1 | `USE_AI_PORT=true` | ✅ Completado |
-| 2 | `USE_VOICE_PORT=true` | ✅ Completado |
-| 3 | `USE_MARKET_INTEL_PORT=true` | ✅ Completado |
-| 4 | `USE_EXECUTION_PORT=true` | ✅ Completado |
-| 5 | `USE_RISK_CONTROL_PORT=true` | ✅ Completado |
-| 6 | `USE_DERIVATIVES_PORT=true` | ✅ Completado |
-| 7 | `USE_PORTFOLIO_PORT=true` | ✅ Completado |
-| 8 | `USE_OPTIMIZATION_PORT=true` | ✅ Completado |
-| 9 | `USE_CACHE_PORT=true` | ✅ Completado |
-| 10 | `USE_DATABASE_PORT=true` | ✅ Completado |
-| 11 | `USE_TELEGRAM_PORT=true` | ✅ Completado |
-| 12 | `USE_APP_LAYER=true` | ✅ Completado |
-
-**Monitoreo post-activación:**
-- Revisar logs Railway 24-48h
-- Confirmar failovers funcionan
-- Validar ejecución de trades
-
----
-
-## Estructura de Código V7.0
-
-```
-src/omnix/
-├── ports/                    # 17 protocols
-│   ├── driven/              # 15 ports de salida
-│   └── driver/              # 2 ports de entrada
-├── infrastructure/
-│   └── adapters/            # 19 adapters
-│       └── onchain/         # 2 adapters blockchain
-├── domain/                   # Lógica de negocio pura
-│   ├── trading/             # Entities, VOs, 10 strategies
-│   ├── risk/                # RiskGuardian, entities
-│   └── onchain/             # On-chain analytics
-├── application/             # 5 use cases
-│   ├── trading/
-│   └── risk/
-└── bootstrap/
-    └── container.py         # DI Container (535+ líneas)
-```
-
----
-
-## Timeline de Implementación
-
-| Fase | Descripción | Completado |
-|------|-------------|------------|
-| 0 | Foundation | 11 Dic 2025 |
-| 1 | Bootstrap & Config | 12 Dic 2025 |
-| 2 | Domain & Application | 12 Dic 2025 |
-| 3 | Infrastructure Adapters | 12 Dic 2025 |
-| 3b | Flask Factory & Telegram | 13 Dic 2025 |
-| 4 | Cleanup & Organization | 13 Dic 2025 |
-| 5A | AI/Voice Port Integration | 16 Dic 2025 |
-| 5B | Market Intel/Execution/Risk Control | 17 Dic 2025 |
-| 5C | Derivatives/Portfolio/Optimization | 17 Dic 2025 |
-| 6 | OnChain Data Port | 17 Dic 2025 |
+| Paso | Flag | Riesgo | Rollback |
+|------|------|--------|----------|
+| **1** | `USE_AI_PORT=true` | **BAJO** | 5min cooldown → legacy |
+| 2 | `USE_VOICE_PORT=true` | BAJO | Legacy voice_controller |
+| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | Legacy services |
+| 4 | `USE_EXECUTION_PORT=true` | MEDIO | ExecutionProtocol |
+| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | AIRiskGuardian |
+| 6 | `USE_DERIVATIVES_PORT=true` | **ALTO** | DerivativesManager |
+| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | PortfolioEngine |
+| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | AutoOptimizer |
+| 9 | `USE_CACHE_PORT=true` | BAJO | RedisCache directo |
+| 10 | `USE_DATABASE_PORT=true` | MEDIO | DatabaseGateway |
+| 11 | `USE_TELEGRAM_PORT=true` | MEDIO | EnterpriseBot |
+| 12 | `USE_APP_LAYER=true` | **ALTO** | Múltiples fallbacks |
 
 ---
 
 ## Documentos Relacionados
 
-- [MIGRATION_STATUS.md](../MIGRATION_STATUS.md) - Estado consolidado
-- [COMPLETE_FUNCTIONALITY_MAP.md](COMPLETE_FUNCTIONALITY_MAP.md) - Referencia sistema legacy
+- [MIGRATION_STATUS.md](../MIGRATION_STATUS.md) - Estado consolidado V7.0
+- [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) - **FUENTE DE VERDAD**
 - [TRACEABILITY_MATRIX.md](../reference/TRACEABILITY_MATRIX.md) - Mapeo de componentes
-- [ADR-001-hexagonal.md](../reference/adr/ADR-001-hexagonal.md) - Decisión arquitectónica
 
 ---
 
-*Última actualización: 18 de Diciembre 2025*
+*Última actualización: 22 de Diciembre 2025*

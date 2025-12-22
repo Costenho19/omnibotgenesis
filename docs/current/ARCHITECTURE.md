@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Arquitectura
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 20 de Diciembre 2025  
+**Actualizado**: 22 de Diciembre 2025  
 **Estado**: Producción 24/7
 
 ---
