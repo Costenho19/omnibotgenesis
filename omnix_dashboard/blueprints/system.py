@@ -566,3 +566,82 @@ def api_health_bootstrap():
         'version': 'V7.0 Phase 5',
         'timestamp': datetime.now().isoformat()
     })
+
+
+@system_bp.route('/api/system/quarantine')
+def api_asset_quarantine():
+    """
+    API endpoint for excluded/quarantined assets.
+    Returns assets blocked from trading and avoided losses calculated from real DB data.
+    """
+    try:
+        from omnix_core.config.trading_profiles import PAIR_CALIBRATIONS, CalibrationTier
+        
+        quarantined_assets = []
+        total_avoided_loss = 0.0
+        
+        for symbol, calibration in PAIR_CALIBRATIONS.items():
+            if calibration.tier == CalibrationTier.EXCLUDED:
+                loss_amount = 0.0
+                notes = calibration.notes or ""
+                
+                if "-$" in notes:
+                    try:
+                        import re
+                        match = re.search(r'-\$?([\d,]+)', notes)
+                        if match:
+                            loss_amount = float(match.group(1).replace(',', ''))
+                    except:
+                        pass
+                
+                quarantined_assets.append({
+                    'symbol': symbol,
+                    'reason': notes.split(':')[0] if ':' in notes else notes,
+                    'loss_avoided': loss_amount,
+                    'tier': 'EXCLUDED',
+                    'blocked_since': 'Dec 2025'
+                })
+                total_avoided_loss += loss_amount
+        
+        with get_db_connection() as conn:
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                        SELECT symbol, COUNT(*) as trade_count, SUM(pnl) as total_pnl
+                        FROM paper_trading_trades
+                        WHERE status = 'closed' AND pnl < 0
+                        AND symbol IN %s
+                        GROUP BY symbol
+                    ''', (tuple([a['symbol'] for a in quarantined_assets]) or ('NONE',),))
+                    
+                    db_losses = {row[0]: {'trades': row[1], 'pnl': float(row[2] or 0)} for row in cursor.fetchall()}
+                    
+                    for asset in quarantined_assets:
+                        if asset['symbol'] in db_losses:
+                            db_data = db_losses[asset['symbol']]
+                            asset['db_trades'] = db_data['trades']
+                            asset['db_loss'] = abs(db_data['pnl'])
+                            if asset['loss_avoided'] == 0:
+                                asset['loss_avoided'] = abs(db_data['pnl'])
+                                total_avoided_loss += abs(db_data['pnl'])
+                except Exception as e:
+                    logger.warning(f"Could not fetch DB losses: {e}")
+        
+        return jsonify({
+            'success': True,
+            'quarantine': {
+                'assets': quarantined_assets,
+                'total_blocked': len(quarantined_assets),
+                'total_loss_avoided': total_avoided_loss,
+                'protection_active': True
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in quarantine endpoint: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

@@ -114,6 +114,21 @@ def load_calibration():
         return {}
 
 
+def load_quarantine():
+    try:
+        client = get_api_client()
+        response = client.get_quarantine()
+        
+        if not response.get('success'):
+            return {}
+        
+        return response.get('quarantine', {})
+        
+    except Exception as e:
+        st.error(f"Error loading quarantine data: {e}")
+        return {}
+
+
 def main():
     st.markdown(f'<p class="header-title">OMNIX {VERSION_BANNER}</p>', unsafe_allow_html=True)
     st.markdown("### Investor-Grade Trading Analytics Dashboard")
@@ -132,25 +147,101 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")
-        page = st.radio("", ["Overview", "Risk Metrics", "Pair Analysis", "Calibration"])
+        page = st.radio("", ["Overview", "Risk Metrics", "Pair Analysis", "Asset Quarantine", "Calibration"])
         st.markdown("---")
         st.markdown("**Last Updated**")
         st.markdown(f"🕐 {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
     
     metrics = load_metrics()
     calibration = load_calibration()
+    quarantine = load_quarantine()
     
     if page == "Overview":
-        render_overview(metrics)
+        render_overview(metrics, quarantine)
     elif page == "Risk Metrics":
         render_risk_metrics(metrics)
     elif page == "Pair Analysis":
         render_pair_analysis(metrics)
+    elif page == "Asset Quarantine":
+        render_quarantine(quarantine)
     elif page == "Calibration":
         render_calibration(calibration)
 
 
-def render_overview(metrics):
+def render_quarantine(quarantine):
+    st.markdown("## Asset Quarantine")
+    st.markdown("*Assets blocked from trading due to poor performance - Capital Protection System*")
+    
+    if not quarantine:
+        st.warning("No quarantine data available")
+        return
+    
+    total_blocked = quarantine.get('total_blocked', 0)
+    total_avoided = quarantine.get('total_loss_avoided', 0)
+    assets = quarantine.get('assets', [])
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric(
+            "Assets Blocked",
+            f"{total_blocked}",
+            delta="PROTECTED",
+            delta_color="normal"
+        )
+    
+    with col2:
+        st.metric(
+            "Capital Protected",
+            f"${total_avoided:,.2f}",
+            delta="AVOIDED LOSS",
+            delta_color="normal"
+        )
+    
+    with col3:
+        st.metric(
+            "Protection Status",
+            "ACTIVE",
+            delta="24/7 MONITORING",
+            delta_color="normal"
+        )
+    
+    st.markdown("---")
+    st.markdown("### Blocked Assets Detail")
+    
+    if assets:
+        for asset in assets:
+            symbol = asset.get('symbol', 'Unknown')
+            reason = asset.get('reason', 'Performance issue')
+            loss = asset.get('loss_avoided', 0)
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #2a1a1a 0%, #3a1a1a 100%); 
+                        border: 1px solid #ff4b4b; border-radius: 10px; padding: 15px; margin: 10px 0;">
+                <span style="font-size: 18px; font-weight: bold; color: #ff6b6b;">🚫 {symbol}</span>
+                <br/>
+                <span style="color: #888;">{reason}</span>
+                <br/>
+                <span style="color: #00D4AA; font-weight: bold;">Loss Avoided: ${loss:,.2f}</span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("No assets currently in quarantine")
+    
+    st.markdown("---")
+    st.markdown("### Why This Matters for Investors")
+    st.markdown("""
+    The **Asset Quarantine System** automatically identifies and blocks underperforming assets based on:
+    - Historical win rate analysis
+    - Cumulative loss tracking
+    - Volatility assessment
+    
+    This institutional-grade risk management prevents the portfolio from taking positions in assets 
+    that have demonstrated poor performance, protecting investor capital.
+    """)
+
+
+def render_overview(metrics, quarantine=None):
     st.markdown("## Portfolio Overview")
     
     if not metrics:
@@ -206,6 +297,23 @@ def render_overview(metrics):
             delta="Good" if sharpe_ratio >= 1.5 else "Needs work" if sharpe_ratio < 1.0 else "Acceptable",
             delta_color=sharpe_color
         )
+    
+    if quarantine:
+        total_avoided = quarantine.get('total_loss_avoided', 0)
+        total_blocked = quarantine.get('total_blocked', 0)
+        if total_avoided > 0:
+            st.markdown("---")
+            st.markdown("### Capital Protection Active")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    "Capital Protected",
+                    f"${total_avoided:,.2f}",
+                    delta=f"{total_blocked} assets blocked",
+                    delta_color="normal"
+                )
+            with col2:
+                st.info("The Asset Quarantine System has blocked underperforming assets, preventing potential losses. See **Asset Quarantine** tab for details.")
     
     st.markdown("---")
     
