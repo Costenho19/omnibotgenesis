@@ -109,8 +109,8 @@
 
             container.innerHTML = `
                 <div class="rg-error">
-                    <span class="rg-icon">⚠️</span>
-                    <span>Risk Guardian data unavailable</span>
+                    <span class="rg-icon">🔄</span>
+                    <span>Updating...</span>
                 </div>
             `;
         },

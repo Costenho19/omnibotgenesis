@@ -30,7 +30,7 @@ const OmnixFearGreed = (function() {
         }
 
         if (labelEl) {
-            labelEl.textContent = data.classification || 'N/A';
+            labelEl.textContent = data.classification || 'Updating...';
         }
 
         if (markerEl) {

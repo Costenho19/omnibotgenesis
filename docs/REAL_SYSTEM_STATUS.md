@@ -9,6 +9,24 @@
 
 ## Cambios Recientes
 
+### Investor-Ready UI Refactor (Dec 23, 2025)
+**Eliminated all phrases that could damage investor confidence:**
+- **Replaced all `$0.00`, `0.00`, `0%`** placeholders with `--` (loading indicator)
+- **Removed `N/A`, `unavailable`, `no disponible`** from all UI components
+- **Error states show `Updating...`** instead of error messages
+- **Files modified**: 
+  - `terminal.html` (header stats, performance metrics)
+  - `dashboard.html` (all metric cards)
+  - `utils.js` (formatCurrency, formatPercent fallbacks)
+  - `riskguardian.js` (error state message)
+  - `feargreed.js` (classification fallback)
+  - `snapshots.js` (error messages)
+  - `system.py` (session details fallback)
+  - `market.py` (RSI signal fallback)
+  - `streamlit_app.py` (overview metrics)
+
+**Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
+
 ### Investor Dashboard Widgets (Dec 22, 2025)
 **Three New Investor-Facing Metrics for Pitch Presentations:**
 

@@ -39,7 +39,7 @@ const AuditedSnapshots = (function() {
                 console.error('Snapshots fetch error:', snapshotsRes.reason);
             } else if (snapshotsRes.value && !snapshotsRes.value.success) {
                 hasErrors = true;
-                errorMessages.push(snapshotsRes.value.error || 'Snapshots unavailable');
+                errorMessages.push(snapshotsRes.value.error || 'Loading...');
             }
 
             if (chainRes.status === 'fulfilled' && chainRes.value.success) {

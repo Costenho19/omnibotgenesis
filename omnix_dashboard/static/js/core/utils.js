@@ -14,7 +14,7 @@ const OmnixUtils = (function() {
         } = options;
 
         if (value === null || value === undefined || isNaN(value)) {
-            return `${prefix}0.00`;
+            return '--';
         }
 
         const absValue = Math.abs(value);
@@ -49,7 +49,7 @@ const OmnixUtils = (function() {
         const { decimals = 2, showSign = false } = options;
         
         if (value === null || value === undefined || isNaN(value)) {
-            return '0%';
+            return '--';
         }
 
         const sign = showSign && value >= 0 ? '+' : (value < 0 ? '-' : '');

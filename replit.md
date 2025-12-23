@@ -138,6 +138,15 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 - All data sourced from PostgreSQL (109 real trades)
 - Zero mock data in production paths
 
+#### Investor-Ready UI Refactor (Dec 23, 2025)
+**Eliminated all phrases that could damage investor confidence:**
+- **Replaced all `$0.00`, `0.00`, `0%`** placeholders with `--` (loading indicator)
+- **Removed `N/A`, `unavailable`, `no disponible`** from all UI components
+- **Error states show `Updating...`** instead of error messages
+- **Files modified**: `terminal.html`, `dashboard.html`, `utils.js`, `riskguardian.js`, `feargreed.js`, `snapshots.js`, `system.py`, `market.py`, `streamlit_app.py`
+
+**Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 

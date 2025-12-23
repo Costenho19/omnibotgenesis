@@ -248,13 +248,13 @@ def render_overview(metrics, quarantine=None):
         st.warning("No trade data available. Run some trades to see metrics.")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Total Trades", "0")
+            st.metric("Total Trades", "--")
         with col2:
-            st.metric("Win Rate", "0%")
+            st.metric("Win Rate", "--")
         with col3:
-            st.metric("Total P&L", "$0.00")
+            st.metric("Total P&L", "--")
         with col4:
-            st.metric("Sharpe Ratio", "0.00")
+            st.metric("Sharpe Ratio", "--")
         return
     
     total_trades = metrics.get('total_trades', 0)

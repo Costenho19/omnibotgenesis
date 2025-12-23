@@ -351,7 +351,7 @@ def api_market_technical_indicators(symbol):
         else:
             rsi_signal = 'NEUTRAL'
     else:
-        rsi_signal = 'N/A'
+        rsi_signal = '--'
     
     return jsonify({
         'success': True,

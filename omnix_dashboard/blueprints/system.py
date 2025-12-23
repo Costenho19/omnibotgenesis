@@ -826,7 +826,7 @@ def api_system_sessions():
             for session in sessions[:10]:
                 session_details.append({
                     'user_id': str(session.get('user_id', 'unknown'))[:8] + '...',
-                    'started': str(session.get('started_at', 'N/A')),
+                    'started': str(session.get('started_at', '--')),
                     'status': session.get('status', 'active')
                 })
     except Exception as e:
