@@ -26,7 +26,7 @@ Autor: OMNIX Development Team
 import os
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -412,6 +412,20 @@ class TradingProfile:
     
     regime_change_veto_enabled: bool = True
     
+    # FASE 2.1: Partial Position Sizing (Dec 23, 2025)
+    # Permite trades con tamaño reducido cuando confidence está en rango intermedio
+    partial_position_enabled: bool = False
+    partial_position_min_confidence: float = 0.50  # Confidence mínima para partial (50%)
+    partial_position_max_confidence: float = 0.65  # Confidence para full size (65%)
+    partial_position_min_size: float = 0.25  # Tamaño mínimo (25% del normal)
+    partial_position_max_size: float = 0.40  # Tamaño máximo en rango partial (40%)
+    
+    # FASE 2.2: Short Selling (Dec 23, 2025)
+    # Permite vender en corto en régimen bearish
+    short_selling_enabled: bool = False
+    short_selling_symbols: List[str] = field(default_factory=list)  # Solo estos símbolos
+    short_selling_min_bearish_confidence: float = 0.70  # HMM bearish confidence mínima
+    
     extra_params: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -758,6 +772,20 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     score_moderate=12,     # V6.5.4d: 4 -> 12 (IGUAL QUE STRONG = MODERATE deshabilitado)
     
     regime_change_veto_enabled=True,
+    
+    # FASE 2.1: Partial Position Sizing (Dec 23, 2025)
+    # Trades con 50-65% confidence usan 25-40% del tamaño normal
+    partial_position_enabled=True,
+    partial_position_min_confidence=0.50,
+    partial_position_max_confidence=0.65,
+    partial_position_min_size=0.25,
+    partial_position_max_size=0.40,
+    
+    # FASE 2.2: Short Selling (Dec 23, 2025)
+    # Solo BTC en bearish regime con HMM confidence > 70%
+    short_selling_enabled=True,
+    short_selling_symbols=['BTC/USD'],
+    short_selling_min_bearish_confidence=0.70,
     
     extra_params={
         # V6.5.4d: ADA/USD y LINK/USD removidos (0% win rate, pérdidas mayores)

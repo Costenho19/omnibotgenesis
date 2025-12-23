@@ -2519,11 +2519,36 @@ class AutoTradingBot:
                     logger.warning(f"📉 MACRO TREND VETO: HMM BEARISH ({hmm_confidence:.0%}) - Reduciendo score de {original_score} a {score}")
             # ==========================================================================
             
+            # ==========================================================================
+            # FASE 2.2: SHORT SELLING EN BEARISH REGIME (Dec 23, 2025)
+            # ==========================================================================
+            bearish_short_opportunity = False
+            short_selling_active = False
+            
+            p = self.trading_profile  # Shorthand
+            if p and getattr(p, 'short_selling_enabled', False) and hmm_regime:
+                short_symbols = getattr(p, 'short_selling_symbols', [])
+                min_bearish_conf = getattr(p, 'short_selling_min_bearish_confidence', 0.70)
+                
+                hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
+                hmm_confidence = hmm_regime.get('confidence', 0)
+                
+                # Normalizar símbolo para comparación
+                symbol_normalized = symbol.replace('/', '').upper()
+                short_symbols_normalized = [s.replace('/', '').upper() for s in short_symbols]
+                
+                if hmm_detected == 'BEARISH' and hmm_confidence >= min_bearish_conf:
+                    if symbol in short_symbols or symbol_normalized in short_symbols_normalized:
+                        bearish_short_opportunity = True
+                        short_selling_active = True
+                        logger.info(f"📉 FASE 2.2: SHORT opportunity detected for {symbol} - HMM BEARISH ({hmm_confidence:.0%})")
+                        decision['reason'].append(f"📉 FASE 2.2: SHORT mode enabled - HMM BEARISH ({hmm_confidence:.0%})")
+            # ==========================================================================
+            
             # PREMIUM: Decisión de trading con umbrales desde Trading Profile
             # Objetivo: trades/día configurables con win rate > 55%
             
             # Obtener score thresholds del perfil o usar defaults (INSTITUTIONAL)
-            p = self.trading_profile  # Shorthand
             score_very_strong = p.score_very_strong if p else 20
             score_strong = p.score_strong if p else 10
             score_moderate = p.score_moderate if p else 5
@@ -2535,6 +2560,9 @@ class AutoTradingBot:
                 nm_conf_for_caes = non_markovian.get('confidence', 50)
                 nm_metrics_for_caes = non_markovian.get('metrics', {})
             
+            # FASE 2.1: Confidence normalizada para partial position (0-1)
+            decision_conf_normalized = confidence / 100.0
+            
             if confidence >= (self.config['min_confidence'] * 100):
                 # Umbrales escalonados configurables por perfil + CAES
                 if score > score_very_strong:  # Señal COMPRA MUY FUERTE - Full position
@@ -2542,43 +2570,65 @@ class AutoTradingBot:
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     )
                 elif score > score_strong:  # Señal COMPRA FUERTE - 75% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     ) * 0.75
                 elif score > score_moderate:  # Señal COMPRA MODERADA - 50% position
                     decision['should_trade'] = True
                     decision['action'] = 'BUY'
                     decision['signal_strength'] = 'MODERATE'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     ) * 0.50
                 elif score < -score_very_strong:  # Señal VENTA MUY FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     )
                 elif score < -score_strong:  # Señal VENTA FUERTE
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     ) * 0.75
                 elif score < -score_moderate:  # Señal VENTA MODERADA
                     decision['should_trade'] = True
                     decision['action'] = 'SELL'
                     decision['signal_strength'] = 'MODERATE'
                     decision['amount_usd'] = self._calculate_position_size_v52(
-                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
                     ) * 0.50
+                
+                # ==========================================================================
+                # FASE 2.2: SHORT SELLING - Generar SHORT en bearish regime
+                # ==========================================================================
+                elif bearish_short_opportunity and not decision.get('should_trade'):
+                    # En régimen bearish, generar SHORT cuando no hay señal de compra fuerte
+                    decision['should_trade'] = True
+                    decision['action'] = 'SHORT'
+                    decision['signal_strength'] = 'BEARISH_REGIME'
+                    decision['amount_usd'] = self._calculate_position_size_v52(
+                        current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
+                        decision_confidence=decision_conf_normalized
+                    ) * 0.50  # 50% size for regime-based shorts
+                    decision['reason'].append(f"📉 FASE 2.2: SHORT ejecutado - Bearish regime, size 50%")
+                    logger.info(f"📉 FASE 2.2: SHORT trade generated for {symbol} - Amount: ${decision['amount_usd']:.2f}")
+                # ==========================================================================
             
             # 🧠 COHERENCE ENGINE V5.4 ULTRA - Validación Premium de Coherencia
             if self.coherence_engine and decision.get('should_trade'):
@@ -3789,12 +3839,14 @@ class AutoTradingBot:
         kelly: Optional[Dict],
         hmm_regime: Optional[Dict],
         kernel_confidence: Optional[float] = None,
-        kernel_metrics: Optional[Dict] = None
+        kernel_metrics: Optional[Dict] = None,
+        decision_confidence: Optional[float] = None
     ) -> float:
         """
         PREMIUM: Calcular tamaño óptimo de posición
         - CAES: Confidence-Adaptive Entry System (sigmoide + sub-regímenes)
         - Kelly Criterion + HMM Regime + Ramp-Up System
+        - FASE 2.1: Partial Position Sizing basado en confidence
         - Reduce drawdown inicial empezando conservador
         
         Args:
@@ -3803,6 +3855,7 @@ class AutoTradingBot:
             hmm_regime: Régimen detectado por HMM
             kernel_confidence: Confianza del Non-Markovian Kernel (0-100%)
             kernel_metrics: Métricas adicionales del kernel
+            decision_confidence: Confianza de la decisión (0-1) para partial position
         """
         balance = self._get_balance()
         
@@ -3910,10 +3963,36 @@ class AutoTradingBot:
         
         optimal_size = max(min_size, min(base_size, max_size))
         
+        # ========== FASE 2.1: PARTIAL POSITION SIZING ==========
+        # Reduce tamaño cuando confidence está en rango intermedio (50-65%)
+        partial_multiplier = 1.0
+        partial_info = ""
+        
+        if decision_confidence is not None and p and getattr(p, 'partial_position_enabled', False):
+            min_conf = getattr(p, 'partial_position_min_confidence', 0.50)
+            max_conf = getattr(p, 'partial_position_max_confidence', 0.65)
+            min_size_pct = getattr(p, 'partial_position_min_size', 0.25)
+            max_size_pct = getattr(p, 'partial_position_max_size', 0.40)
+            
+            if decision_confidence < min_conf:
+                # Debajo del mínimo - no debería llegar aquí pero por seguridad
+                partial_multiplier = 0.0
+                partial_info = f", PARTIAL=0% (conf={decision_confidence:.0%} < {min_conf:.0%})"
+            elif decision_confidence < max_conf:
+                # Rango intermedio - escala lineal entre min_size y max_size
+                conf_range = max_conf - min_conf
+                conf_position = (decision_confidence - min_conf) / conf_range
+                partial_multiplier = min_size_pct + (max_size_pct - min_size_pct) * conf_position
+                partial_info = f", PARTIAL={partial_multiplier:.0%} (conf={decision_confidence:.0%})"
+                logger.info(f"📉 FASE 2.1 Partial Position: Confidence {decision_confidence:.0%} → Size {partial_multiplier:.0%}")
+            # Si >= max_conf, multiplier = 1.0 (full size)
+            
+            optimal_size *= partial_multiplier
+        
         # Log para tracking
-        if total_trades < 20 or caes_multiplier != 1.0:
+        if total_trades < 20 or caes_multiplier != 1.0 or partial_multiplier != 1.0:
             caes_info = f", CAES={caes_multiplier:.2f}x" if caes_multiplier != 1.0 else ""
-            logger.info(f"📊 {VERSION_BANNER} Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}, Size=${optimal_size:.2f}")
+            logger.info(f"📊 {VERSION_BANNER} Ramp-Up: Trade #{total_trades+1}, Factor={ramp_up_factor:.0%}{caes_info}{partial_info}, Size=${optimal_size:.2f}")
         
         return optimal_size
     

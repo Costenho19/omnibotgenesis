@@ -61,6 +61,16 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
 - **Capital Protected**: $11,819+ in avoided losses
 - **Investor Narrative**: "Identified problem → Acted → Risk profile improved"
 
+#### FASE 2: Ofensiva Controlada (Dec 23, 2025)
+- **FASE 2.1 - Partial Position Sizing**: ✅ IMPLEMENTADO
+  - Trades con confidence 50-65% ejecutan con 25-40% del tamaño normal
+  - Convierte HOLDs en pequeñas oportunidades sin aumentar riesgo
+- **FASE 2.2 - BTC Short Selling**: ✅ IMPLEMENTADO
+  - Solo BTC en bearish regime (HMM confidence > 70%)
+  - Position size 50% (conservador para nueva estrategia)
+- **FASE 2.3 - Quarantine Re-evaluation**: ⏳ PENDIENTE
+  - Probar UN activo bloqueado con reglas nuevas, auto-revert tras 3 pérdidas
+
 #### Autotrading Command (Dec 23, 2025)
 - **BUG FIX**: `/autotrading activar ACEPTO` saves `risk_disclosure_accepted=True` before toggle
 - **LANGUAGE**: All disclaimers use institutional language (no "disclaimer de riesgo", no "podrías perder todo")

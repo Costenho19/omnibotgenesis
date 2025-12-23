@@ -9,6 +9,33 @@
 
 ## Cambios Recientes
 
+### FASE 2: Ofensiva Controlada (Dec 23, 2025)
+**Evolución del sistema para mejorar rendimiento manteniendo control de riesgo**
+
+#### FASE 2.1: Partial Position Sizing
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Trades con confidence 50-65% ejecutan con 25-40% del tamaño normal
+- **Beneficio**: Convierte HOLDs en pequeñas oportunidades sin aumentar riesgo
+- **Configuración** (en PRODUCTION_STABLE):
+  - `partial_position_min_confidence`: 0.50 (50%)
+  - `partial_position_max_confidence`: 0.65 (65%)
+  - `partial_position_min_size`: 0.25 (25%)
+  - `partial_position_max_size`: 0.40 (40%)
+
+#### FASE 2.2: BTC Short Selling
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Solo BTC en bearish regime (HMM confidence > 70%)
+- **Comportamiento**: Cuando HMM detecta régimen bearish con alta confianza, genera señal SHORT
+- **Position Size**: 50% del tamaño normal (conservador para nueva estrategia)
+- **Configuración** (en PRODUCTION_STABLE):
+  - `short_selling_enabled`: True
+  - `short_selling_symbols`: ['BTC/USD']
+  - `short_selling_min_bearish_confidence`: 0.70
+
+#### FASE 2.3: Quarantine Re-evaluation
+- **Estado**: ⏳ PENDIENTE
+- **Lógica**: Probar UN activo bloqueado con reglas nuevas, auto-revert tras 3 pérdidas
+
 ### Investor-Ready UI Refactor (Dec 23, 2025)
 **Eliminated all phrases that could damage investor confidence:**
 - **Replaced all `$0.00`, `0.00`, `0%`** placeholders with `--` (loading indicator)
