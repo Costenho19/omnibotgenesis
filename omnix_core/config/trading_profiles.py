@@ -150,16 +150,16 @@ PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     ),
     "LINK/USD": PairCalibration(
         symbol="LINK/USD",
-        tier=CalibrationTier.CALIBRATING,
-        stop_loss_pct=0.010,        # 1.0%
-        take_profit_pct=0.025,      # 2.5%
-        min_confidence=0.20,        # V6.5.4b: 0.28 -> 0.20
-        risk_reward_ratio=2.50,     # 2.5/1.0 = 2.50
-        max_position_pct=0.08,      # Posición reducida
-        max_position_usd=30000.0,   # $30K max position
-        portfolio_weight=0.15,      # 15% del portafolio
-        max_daily_drawdown_pct=0.01, # 1% circuit breaker (estricto)
-        notes="Solo 1 trade histórico. Volatilidad moderada."
+        tier=CalibrationTier.EXCLUDED,  # V6.5.4d: EXCLUIDO - 0% win rate, 16 trades, -$4,482 pérdida
+        stop_loss_pct=0.0,
+        take_profit_pct=0.0,
+        min_confidence=1.0,
+        risk_reward_ratio=0.0,
+        max_position_pct=0.0,
+        max_position_usd=0.0,
+        portfolio_weight=0.0,
+        max_daily_drawdown_pct=0.0,
+        notes="EXCLUIDO V6.5.4d: 0% win rate en 16 trades (Dec 2025), -$4,482 pérdida total. Avg -2.58% por trade."
     ),
     
     # TIER: EXCLUDED - No operar bajo ninguna circunstancia
@@ -533,7 +533,14 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
     score_strong=8,
     score_moderate=3,
     
-    regime_change_veto_enabled=False
+    regime_change_veto_enabled=False,
+    
+    extra_params={
+        # V6.5.4d: ADA/USD y LINK/USD removidos (0% win rate, pérdidas mayores)
+        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD', 'LINK/USD'],
+        'use_pair_calibration': True
+    }
 )
 
 
@@ -619,8 +626,9 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
     regime_change_veto_enabled=True,
     
     extra_params={
-        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'LINK/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD'],
+        # V6.5.4d: LINK/USD removido - 0% win rate, 16 trades, -$4,482 pérdida
+        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD', 'LINK/USD'],
         'use_pair_calibration': True,
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
@@ -695,8 +703,9 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     regime_change_veto_enabled=True,
     
     extra_params={
-        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'ADA/USD', 'LINK/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD'],
+        # V6.5.4d: ADA/USD y LINK/USD removidos (0% win rate, pérdidas mayores)
+        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD', 'LINK/USD'],
         'use_pair_calibration': True,
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
@@ -751,9 +760,9 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     regime_change_veto_enabled=True,
     
     extra_params={
-        # V6.5.4d: ADA/USD removido de allowed_symbols (0% win rate)
-        'allowed_symbols': ['BTC/USD', 'XRP/USD', 'LINK/USD'],
-        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD'],
+        # V6.5.4d: ADA/USD y LINK/USD removidos (0% win rate, pérdidas mayores)
+        'allowed_symbols': ['BTC/USD', 'XRP/USD'],
+        'excluded_symbols': ['SOL/USD', 'ETH/USD', 'DOT/USD', 'AVAX/USD', 'ATOM/USD', 'POL/USD', 'LTC/USD', 'ADA/USD', 'LINK/USD'],
         'use_pair_calibration': True,
         'risk_reward_min': 2.0,
         'force_sl_execution': True,

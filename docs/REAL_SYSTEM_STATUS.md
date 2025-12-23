@@ -53,8 +53,8 @@
 | Total Trades | 109 | PostgreSQL paper_trading_trades |
 | P&L | -$14,942.94 | PostgreSQL SUM(profit_loss) |
 | Win Rate | 22% (24/109) | PostgreSQL calculation |
-| Activos Excluidos | 4 (ADA, SOL, AVAX, ETH) | trading_profiles.py |
-| Pérdidas Evitadas | $7,337+ | PostgreSQL (sum of excluded assets) |
+| Activos Excluidos | 5 (ADA, SOL, AVAX, ETH, LINK) | trading_profiles.py |
+| Pérdidas Evitadas | $11,819+ | PostgreSQL (sum of excluded assets) |
 
 ### Investor Dashboard Widgets (Dec 22, 2025)
 **Three New Investor-Facing Metrics for Pitch Presentations:**
@@ -113,13 +113,15 @@
 - **Status Indicator**: Green (<10ms), White (normal), Red (>50ms)
 - **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/latency.js`
 
-### Asset Quarantine System (Dec 22, 2025)
+### Asset Quarantine System (Dec 23, 2025 - Updated)
 **Capital Protection for Investor Presentations**:
 - **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
 - **Dashboard Integration**: Header metric + Streamlit page showing blocked assets
-- **Capital Protected**: $6,213+ in avoided losses from blocking ADA, SOL, ETH, AVAX
+- **Capital Protected**: $11,819+ in avoided losses from blocking ADA, SOL, ETH, AVAX, LINK
+- **LINK/USD Added (Dec 23)**: Internal audit identified 16 losses, -$4,482, avg -2.58% per trade
+- **Quarantined Assets**: ADA/USD, SOL/USD, ETH/USD, AVAX/USD, LINK/USD (5 of 10 pairs)
+- **Active Trading Pairs**: BTC/USD, XRP/USD only (lowest loss averages: -1.49%, -0.48%)
 - **Real Data Source**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
-- **SQL Fix**: Changed `IN %s` to `ANY(%s)` for psycopg3 compatibility
 - **Investor-Ready**: Visual display of risk management with explanation for pitch presentations
 - **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/quarantine.js`
 

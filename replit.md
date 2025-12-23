@@ -54,6 +54,13 @@ The system supports both single-user (OWNER role) and multi-user modes, with a F
 
 Recent enhancements include an Asset Quarantine System for capital protection, a Real-Time Latency Monitor for system performance, a Price Stale Detection System to prevent trading on outdated prices, and an Admin Alerts System for critical events. The UI has been refactored for an "Investor-Ready" presentation, eliminating negative language and showing only verified data or loading states. Investor-Grade Automated Responses, triggered by context scoring or forced activation, provide institutional language for investor queries.
 
+#### Asset Quarantine Update (Dec 23, 2025)
+- **LINK/USD Added**: Internal audit identified 16 losses, -$4,482, avg -2.58% per trade
+- **Total Quarantined**: 5 assets (ADA, SOL, ETH, AVAX, LINK) - 50% of monitored pairs
+- **Active Pairs**: BTC/USD (-1.49% avg), XRP/USD (-0.48% avg) - lowest loss averages
+- **Capital Protected**: $11,819+ in avoided losses
+- **Investor Narrative**: "Identified problem → Acted → Risk profile improved"
+
 #### Autotrading Command (Dec 23, 2025)
 - **BUG FIX**: `/autotrading activar ACEPTO` saves `risk_disclosure_accepted=True` before toggle
 - **LANGUAGE**: All disclaimers use institutional language (no "disclaimer de riesgo", no "podrías perder todo")
