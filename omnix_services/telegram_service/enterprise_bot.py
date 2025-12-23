@@ -3115,7 +3115,7 @@ Usa `/perfil` para ver todas las opciones disponibles."""
                     elif action == 'auto_trading':
                         enable = params.get('enable', False)
                         if enable:
-                            response = """🤖 Para activar el trading automático, necesitas aceptar el disclaimer de riesgo.
+                            response = """🤖 Para activar el trading automático, confirma que entiendes el sistema.
 
 Usa: `/autotrading activar ACEPTO`"""
                         else:
@@ -7721,7 +7721,7 @@ Cuando está activo, OMNIX puede ejecutar trades automáticamente basándose en 
 `/autotrading activar` - Activar (requiere ACEPTO)
 `/autotrading desactivar` - Desactivar
 
-⚠️ Activar requiere aceptar disclaimer de riesgo
+ℹ️ Activar requiere confirmación del sistema
 """
                 await update.message.reply_text(autotrading_text, parse_mode='Markdown')
                 return
