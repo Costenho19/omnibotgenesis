@@ -4,6 +4,11 @@
 🧬 ARES PROTOCOL V1 - ESTRATEGIA INSTITUCIONAL SWING TRADING
 Win Rate Objetivo: 55%–65% (backtested - live results may vary)
 
+⚠️ STATUS: PLACEHOLDER / EXPERIMENTAL
+Esta estrategia está marcada como EXPERIMENTAL y NO se usa en el flujo de decisión real.
+Las señales generadas NO afectan trades reales. Ver ema_regime_signal.py para señales activas.
+Razón: Outputs pseudo-aleatorios sin edge verificable (Dec 2025).
+
 ARQUITECTURA DE 3 CAPAS INSTITUCIONALES:
 - Capa 1: Adaptive Noise Filter (ANF) - Filtro de ruido adaptativo
 - Capa 2: Institutional Signal Analysis (ISA) - 6 señales profesionales

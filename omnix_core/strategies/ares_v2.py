@@ -5,6 +5,11 @@
 Win Rate Objetivo: 60%-70% (backtested - live results may vary)
 Estrategia institucional exclusiva para OMNIX
 
+⚠️ STATUS: PLACEHOLDER / EXPERIMENTAL
+Esta estrategia está marcada como EXPERIMENTAL y NO se usa en el flujo de decisión real.
+Las señales generadas NO afectan trades reales. Ver ema_regime_signal.py para señales activas.
+Razón: Outputs pseudo-aleatorios sin edge verificable (Dec 2025).
+
 ARQUITECTURA:
 - Microestructura REAL del mercado (L2, absorción, gaps)
 - Análisis Adaptativo (Divergencia, Volatilidad, Monte Carlo)
