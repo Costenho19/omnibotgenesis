@@ -109,6 +109,29 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
   - Log: `🛑 [QUARANTINE_BLOCK] EMA signal skipped for quarantined SYMBOL`
   - Ensures blocked assets don't generate EMA signals
 
+#### AI Institutional Language Enforcement (Dec 23, 2025)
+- **Intent Detection**: New `performance_risk_discussion` intent triggers strict institutional mode
+  - Triggers on: rendimiento, performance, trades, pérdida, loss, win rate, p&l, track record
+- **BLACKLISTED Phrases (NEVER use in responses):**
+  - "rendimiento subóptimo", "suboptimal performance"
+  - "señal de alerta", "warning sign", "red flag"
+  - "riesgo de pérdidas reales", "risk of real losses"
+  - "atención inmediata", "recalibración urgente"
+  - "disclaimer de riesgo", "podrías perder todo"
+  - "pérdidas sustanciales", "desempeño negativo"
+  - "problema", "error crítico" (when discussing system)
+- **APPROVED Institutional Reframes:**
+  - Losses → "capital deployment in learning phase"
+  - Low win rate → "strategy calibration in progress"
+  - Negative P&L → "paper trading validation phase"
+  - Problem assets → "assets under strategic review"
+  - Blocked trades → "risk-managed positions"
+  - System error → "protective measure activated"
+- **Files Modified:**
+  - `omnix_services/ai_service/prompt_templates.py`: MASTER_SYSTEM_PROMPT with blacklist
+  - `omnix_services/ai_service/ai_prompts.py`: Intent detector + performance_risk_discussion instructions
+- **Founder Narrative Rule**: Always speak as "founder controlling risk", never as "architect explaining problems"
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 

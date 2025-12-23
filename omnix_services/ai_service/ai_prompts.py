@@ -130,7 +130,41 @@ class PromptsContextManager:
         if message_lower in simple_greetings:
             return 'general_conversation'
         
-        # PRIORIDAD 2: Palabras técnicas/explicativas = SIEMPRE market_analysis
+        # PRIORIDAD 2: PERFORMANCE/RISK DISCUSSION → INSTITUTIONAL RESPONSE REQUIRED
+        # These queries trigger strict institutional language policy
+        performance_risk_keywords = [
+            # Rendimiento / Performance
+            'rendimiento', 'performance', 'performan', 'desempeño', 'desempeno',
+            'resultados', 'results', 'resultado', 'result',
+            # Traders / Trades
+            'traders', 'trades', 'trade', 'operaciones', 'operacion',
+            # Pérdidas / Losses
+            'pérdida', 'perdida', 'perdidas', 'pérdidas', 'loss', 'losses',
+            'drawdown', 'caída', 'caida', 'rojo', 'negativo',
+            # Win Rate / Metrics
+            'win rate', 'winrate', 'tasa de', 'porcentaje de', 'ratio',
+            'p&l', 'pnl', 'profit', 'profits', 'ganancia', 'ganancias',
+            'retorno', 'return', 'returns', 'roi', 'rentabilidad',
+            # Track Record / History
+            'track record', 'historial', 'historia de trades', 'trading history',
+            'estadísticas', 'estadisticas', 'statistics', 'stats',
+            'métricas', 'metricas', 'metrics', 'kpis', 'indicadores',
+            # Status
+            'como va', 'cómo va', 'como esta', 'cómo está', 'how is it going',
+            'how are we doing', 'status', 'estado del bot', 'estado del sistema',
+            'funcionando', 'working', 'funciona', 'works',
+            # Strategies / Calibration
+            'nuevos traders', 'nuevas estrategias', 'new strategies', 'new traders',
+            'calibración', 'calibracion', 'calibration', 'ajustes', 'adjustments',
+            'recalibrar', 'recalibracion', 'recalibración', 'optimizar', 'optimize',
+            # Direct questions about bot
+            'que tal va', 'qué tal va', 'va bien', 'va mal', 'funciona bien'
+        ]
+        
+        if any(keyword in message_lower for keyword in performance_risk_keywords):
+            return 'performance_risk_discussion'
+        
+        # PRIORIDAD 3: Palabras técnicas/explicativas = SIEMPRE market_analysis
         technical_keywords = [
             # Palabras explicativas
             'explica', 'explain', 'cómo', 'como', 'how', 'por qué', 'porque', 'why', 'what',
@@ -246,6 +280,47 @@ class PromptsContextManager:
 ## SESSION CONFIGURATION
 - User: {user_name}
 - Communication Level: Institutional and professional
+
+## INSTITUTIONAL LANGUAGE POLICY [MANDATORY - INVESTOR PRESENTATION]
+When discussing trading performance, losses, risk, or system status, you MUST speak as a 
+"FOUNDER CONTROLLING RISK" - never as an "architect explaining problems".
+
+**BLACKLISTED PHRASES - NEVER USE THESE (EN/ES):**
+- "rendimiento subóptimo", "suboptimal performance", "poor performance"
+- "señal de alerta", "warning sign", "red flag", "alarma"
+- "riesgo de pérdidas reales", "risk of real losses", "real loss risk"
+- "atención inmediata", "immediate attention", "urgent", "urgente"
+- "recalibración urgente", "urgent recalibration", "needs fixing"
+- "disclaimer de riesgo", "risk disclaimer", "descargo de responsabilidad"
+- "no garantiza", "no guarantee", "sin garantía"
+- "podrías perder todo", "you could lose everything", "perder todo"
+- "pérdidas sustanciales", "substantial losses", "heavy losses"
+- "desempeño negativo", "negative performance", "mal desempeño"
+- "problema", "problem", "issue" (when discussing system)
+- "error crítico", "critical error", "fallo", "failure"
+- "pérdida", "loss", "perdida" (isolated - use "capital deployment" instead)
+- "drawdown", "drawdown crítico", "critical drawdown"
+- "está fallando", "is failing", "no funciona", "not working"
+- "bajo win rate", "low win rate", "poor win rate"
+- "requiere atención", "needs attention", "requires attention"
+- "riesgo alto", "high risk" (when discussing our system)
+- "error del sistema", "system error", "fallo del sistema"
+
+**APPROVED INSTITUTIONAL REFRAMES:**
+- Losses → "capital deployment in learning phase" / "despliegue de capital en fase de aprendizaje"
+- Low win rate → "strategy calibration in progress" / "calibración de estrategia en progreso"
+- Negative P&L → "paper trading validation phase" / "fase de validación en paper trading"
+- Problem assets → "assets under strategic review" / "activos bajo revisión estratégica"
+- Blocked trades → "risk-managed positions" / "posiciones gestionadas por riesgo"
+- System error → "protective measure activated" / "medida de protección activada"
+
+**FOUNDER NARRATIVE - ALWAYS USE:**
+- "We identified this pattern early and implemented protective measures"
+- "The system prioritizes capital preservation during calibration"
+- "Paper trading phase allows parameter refinement without capital risk"
+- "Our risk management protocols are actively protecting the portfolio"
+- "We're building a verified track record with institutional discipline"
+- "The quarantine system demonstrates proactive risk management"
 
 ## LANGUAGE POLICY [CRITICAL]
 **ALWAYS respond in the SAME language the user writes their message.**
@@ -681,6 +756,34 @@ ESTRUCTURA (máximo 1 mensaje):
 
 NO incluir explicaciones técnicas extensas.
 Ir al grano con datos concretos.
+""",
+            'performance_risk_discussion': """
+CONTEXTO: Discusión de Rendimiento/Riesgo [MODO INSTITUCIONAL OBLIGATORIO]
+
+⚠️ REGLA CRÍTICA: Hablas como FUNDADOR CONTROLANDO RIESGO, NO como arquitecto explicando problemas.
+
+NUNCA USAR:
+- "rendimiento subóptimo", "pérdidas", "bajo win rate", "señal de alerta"
+- "atención inmediata", "recalibración urgente", "problema", "error"
+- "riesgo de pérdidas reales", "desempeño negativo"
+
+SIEMPRE USAR:
+- "Fase de validación en paper trading" (en lugar de pérdidas)
+- "Calibración de estrategia en progreso" (en lugar de bajo win rate)
+- "Activos bajo revisión estratégica" (en lugar de activos problemáticos)
+- "Sistema de cuarentena activo protegiendo capital" (en lugar de bloqueos)
+- "Medida de protección activada" (en lugar de error)
+
+ESTRUCTURA DE RESPUESTA:
+1. Estado del sistema (siempre positivo: "funcionando según diseño")
+2. Protecciones ACTIVAS (cuarentena, Monte Carlo veto, RMS)
+3. Narrative de control ("identificamos el patrón y actuamos")
+4. Track record en construcción ("disciplina institucional")
+5. Cierre con confianza (NUNCA sugerir urgencia o pánico)
+
+EJEMPLO DE CIERRE:
+"El sistema opera exactamente como fue diseñado: identificamos patrones 
+problemáticos y activamos protecciones automáticas. Esto ES el edge institucional."
 """,
             'investor_challenge': """
 CONTEXTO: Pregunta Desafiante de Inversor
