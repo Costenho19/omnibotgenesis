@@ -97,6 +97,18 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
   - `decision['guards_passed']`: List of passed validations
   - `decision['decision_trace']`: Human-readable trace
 
+#### Defensive Hardening (Dec 23, 2025)
+- **Position Size Factor Clamp**: `max(0.0, min(raw_factor, 1.0))` prevents accidental magnification
+  - Log: `🛡️ MC factor clamped: raw X → Y` when clamping occurs
+  - Trace entry: `MC_SIZE_FACTOR_CLAMPED` added to decision_trace
+- **Veto Sentinel Logs**: Confirm early return actually cuts execution flow
+  - Log: `🚫 [VETO_ENFORCED] symbol | reason | decision_id → HOLD EARLY RETURN`
+  - Debug: `[EXEC_PATH] Proceeding to scoring...` should NEVER appear after veto
+  - Fields: `decision['vetoed']`, `decision['veto_reason']` added
+- **Quarantine Guard Before EMA**: Explicit check before signal generation
+  - Log: `🛑 [QUARANTINE_BLOCK] EMA signal skipped for quarantined SYMBOL`
+  - Ensures blocked assets don't generate EMA signals
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 

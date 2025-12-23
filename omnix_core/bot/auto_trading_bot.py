@@ -2069,8 +2069,18 @@ class AutoTradingBot:
                     logger.debug(f"Error en Non-Markovian Kernel (retry próximo ciclo): {e}")
             
             # 10.5 EMA REGIME SIGNAL V6.5.4d - REAL DETERMINISTIC SIGNAL
+            # QUARANTINE GUARD: Check if symbol is allowed BEFORE generating EMA signal
             ema_signal = None
-            if self.ema_signal_generator and prices:
+            symbol_allowed_for_ema = True  # Default: allow unless blocked
+            
+            if is_symbol_allowed and self.trading_profile:
+                symbol_allowed_for_ema = is_symbol_allowed(pair, self.trading_profile)
+                if not symbol_allowed_for_ema:
+                    # SENTINEL LOG: Quarantine blocks EMA signal generation
+                    logger.info(f"🛑 [QUARANTINE_BLOCK] EMA signal skipped for quarantined {pair}")
+                    # No need to generate signal for quarantined asset
+            
+            if self.ema_signal_generator and prices and symbol_allowed_for_ema:
                 try:
                     ohlc_data = self._get_ohlc_history(pair, days=100)
                     ema_signal = self.ema_signal_generator.generate_signal(
@@ -2238,7 +2248,13 @@ class AutoTradingBot:
                 
                 # SIZE REDUCTION: Win rate bajo pero no veto
                 if not mc_veto_applied and win_rate < mc_cfg['reduce_size_win_rate']:
-                    position_size_factor = mc_cfg['size_reduction_factor']
+                    raw_factor = mc_cfg['size_reduction_factor']
+                    # DEFENSIVE CLAMP: Ensure factor is in valid range [0.0, 1.0]
+                    position_size_factor = max(0.0, min(raw_factor, 1.0))
+                    # Log if clamping occurred
+                    if raw_factor != position_size_factor:
+                        decision['decision_trace'].append(f"MC_SIZE_FACTOR_CLAMPED: raw {raw_factor:.2f} → clamped {position_size_factor:.2f}")
+                        logger.warning(f"🛡️ MC factor clamped: raw {raw_factor:.2f} → {position_size_factor:.2f}")
                     decision['decision_trace'].append(f"MC_SIZE_REDUCE: Win rate {win_rate:.1%} → size {position_size_factor:.0%}")
                     logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_cfg['reduce_size_win_rate']:.0%} → position {position_size_factor:.0%}")
                 
@@ -2313,9 +2329,18 @@ class AutoTradingBot:
                 decision['action'] = 'HOLD'
                 decision['should_trade'] = False
                 decision['confidence'] = 0.0
+                decision['vetoed'] = True
+                veto_reason = ', '.join(decision['veto_chain']) if decision['veto_chain'] else 'UNKNOWN'
+                decision['veto_reason'] = veto_reason
                 decision['reason'].append("⛔ VETO ACTIVO - Trade bloqueado por gestión de riesgo")
-                logger.info(f"⛔ DECISION VETOED: {decision['veto_chain']} | Symbol: {symbol}")
+                decision['decision_trace'].append(f"VETO_EARLY_RETURN: {veto_reason}")
+                # SENTINEL LOG: Confirm veto cuts flow - this should appear when trade is blocked
+                logger.warning(f"🚫 [VETO_ENFORCED] {symbol} | reason={veto_reason} | decision_id={decision.get('decision_id')} → HOLD EARLY RETURN")
                 return decision
+            
+            # SENTINEL LOG: This should NEVER appear if vetoed above
+            # If this log appears after a veto, the early return failed
+            logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - No veto applied")
             
             score = 0  # Score de confianza (-100 a +100)
             max_score = 0  # Para normalizar
