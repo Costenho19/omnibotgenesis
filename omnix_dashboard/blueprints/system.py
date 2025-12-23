@@ -811,15 +811,34 @@ def api_system_sessions():
     API endpoint for live PostgreSQL sessions.
     Shows active user sessions for SaaS scalability demonstration.
     """
-    active_sessions = 1
+    active_sessions = 0
     session_details = []
     
     try:
-        from omnix_core.sessions.user_session_manager import UserSessionManager
-        session_manager = UserSessionManager()
+        from omnix_core.sessions.user_session_manager import initialize_session_manager
+        from omnix_core.cache.redis_cache import RedisCache
+        from omnix_services.database_service import DatabaseService
+        
+        redis_cache = None
+        database_service = None
+        
+        try:
+            redis_cache = RedisCache()
+        except Exception as e:
+            logger.debug(f"Redis not available for sessions: {e}")
+        
+        try:
+            database_service = DatabaseService()
+        except Exception as e:
+            logger.debug(f"DatabaseService not available for sessions: {e}")
+        
+        session_manager = initialize_session_manager(
+            redis_cache=redis_cache,
+            database_service=database_service
+        )
         
         if hasattr(session_manager, 'get_active_session_count'):
-            active_sessions = session_manager.get_active_session_count() or 1
+            active_sessions = session_manager.get_active_session_count() or 0
         
         if hasattr(session_manager, 'get_active_sessions'):
             sessions = session_manager.get_active_sessions() or []
@@ -831,7 +850,7 @@ def api_system_sessions():
                 })
     except Exception as e:
         logger.debug(f"UserSessionManager not available: {e}")
-        active_sessions = 1
+        active_sessions = 0
     
     return jsonify({
         'success': True,

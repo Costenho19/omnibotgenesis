@@ -403,40 +403,99 @@ class UserSessionManager:
             'session': session
         }
     
-    def get_active_sessions(self) -> List[str]:
+    def get_active_sessions(self) -> List[Dict]:
         """
-        Obtener lista de user_ids con sesiones activas
-        Usado para restauración después de reinicios
+        Obtener lista de sesiones activas con detalles
+        Usado para restauración después de reinicios y para el dashboard
+        
+        Returns:
+            List[Dict]: Lista de diccionarios con info de cada sesión
         """
-        active_users = []
+        active_sessions = []
         
         redis_client = self._get_redis_client()
         if redis_client:
             try:
                 members = redis_client.smembers(self.ACTIVE_SESSIONS_KEY)
                 if members:
-                    active_users = list(members)
-                    logger.info(f"📊 {len(active_users)} sesiones activas en Redis")
-                    return active_users
+                    for user_id in members:
+                        user_id_str = user_id.decode('utf-8') if isinstance(user_id, bytes) else str(user_id)
+                        session = self.get_session(user_id_str)
+                        active_sessions.append({
+                            'user_id': user_id_str,
+                            'started_at': session.last_activity or session.created_at,
+                            'status': session.status
+                        })
+                    logger.debug(f"📊 {len(active_sessions)} sesiones activas en Redis")
+                    return active_sessions
             except Exception as e:
                 logger.warning(f"⚠️ Error leyendo sesiones activas de Redis: {e}")
         
         if self.database_service:
             try:
                 result = self.database_service.execute_query('''
-                    SELECT user_id FROM user_settings
+                    SELECT user_id, updated_at, 
+                           CASE WHEN is_paused THEN 'paused' ELSE 'active' END as status
+                    FROM user_settings
                     WHERE auto_trading = true 
                     AND trading_enabled = true 
                     AND (is_paused = false OR is_paused IS NULL)
                 ''')
                 
                 if result:
-                    active_users = [str(row[0] if isinstance(row, tuple) else row.get('user_id')) for row in result]
-                    logger.info(f"📊 {len(active_users)} sesiones activas en PostgreSQL")
+                    for row in result:
+                        if isinstance(row, tuple):
+                            active_sessions.append({
+                                'user_id': str(row[0]),
+                                'started_at': str(row[1]) if row[1] else '--',
+                                'status': row[2] if len(row) > 2 else 'active'
+                            })
+                        else:
+                            active_sessions.append({
+                                'user_id': str(row.get('user_id')),
+                                'started_at': str(row.get('updated_at', '--')),
+                                'status': row.get('status', 'active')
+                            })
+                    logger.debug(f"📊 {len(active_sessions)} sesiones activas en PostgreSQL")
             except Exception as e:
                 logger.warning(f"⚠️ Error leyendo sesiones activas de PostgreSQL: {e}")
         
-        return active_users
+        return active_sessions
+    
+    def get_active_session_count(self) -> int:
+        """
+        Obtener número de sesiones activas
+        Método optimizado para el dashboard
+        
+        Returns:
+            int: Número de usuarios con sesiones activas
+        """
+        redis_client = self._get_redis_client()
+        if redis_client:
+            try:
+                count = redis_client.scard(self.ACTIVE_SESSIONS_KEY)
+                if count is not None:
+                    return int(count)
+            except Exception as e:
+                logger.debug(f"⚠️ Error contando sesiones en Redis: {e}")
+        
+        if self.database_service:
+            try:
+                result = self.database_service.execute_query('''
+                    SELECT COUNT(*) as count FROM user_settings
+                    WHERE auto_trading = true 
+                    AND trading_enabled = true 
+                    AND (is_paused = false OR is_paused IS NULL)
+                ''')
+                
+                if result:
+                    row = result[0]
+                    count = row[0] if isinstance(row, tuple) else row.get('count', 0)
+                    return int(count) if count else 0
+            except Exception as e:
+                logger.debug(f"⚠️ Error contando sesiones en PostgreSQL: {e}")
+        
+        return len(self._local_sessions)
     
     def restore_all_sessions(self) -> Dict:
         """
