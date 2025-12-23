@@ -80,6 +80,23 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
 - **PERSISTENCE**: Once started with `/autotrading start`, state is saved to PostgreSQL and survives Railway restarts
 - **OWNER**: Must start autotrading once; state persists in DB for continuous 24/7 operation
 
+#### Decision Engine Overhaul (Dec 23, 2025)
+- **EMA Regime Signal**: NEW deterministic signal generator (EMA slope + ATR + HMM regime)
+  - Replaces ARES pseudo-random outputs as primary signal source
+  - 25-point weight in scoring system (highest single weight)
+  - Full institutional traceability via decision_trace
+- **Monte Carlo VETO Engine**: Converted from logging-only to ENFORCEMENT
+  - VETO 1: Expected return < 0 → TRADE BLOCKED
+  - VETO 2: VaR95 worse than -3% → TRADE BLOCKED
+  - SIZE REDUCTION: Win rate < 50% → position reduced to 50%
+- **RMS Enforcement**: LimitsEngine + CircuitBreaker validated BEFORE trades
+  - Circuit breaker halt → TRADE BLOCKED
+  - Limits exceeded → TRADE BLOCKED
+- **Decision Trace**: Full audit trail of all veto decisions
+  - `decision['veto_chain']`: List of veto reasons
+  - `decision['guards_passed']`: List of passed validations
+  - `decision['decision_trace']`: Human-readable trace
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 

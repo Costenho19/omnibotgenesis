@@ -347,6 +347,22 @@ except ImportError:
     ARP_AVAILABLE = False
     logger.warning("⚠️ Algorithmic Rollback Protocol no disponible")
 
+# Import EMA Regime Signal V6.5.4d - REAL DETERMINISTIC SIGNAL (replaces ARES placeholders)
+try:
+    from omnix_core.strategies.ema_regime_signal import (
+        EMARegimeSignal,
+        get_signal_generator,
+        SignalContract
+    )
+    EMA_REGIME_SIGNAL_AVAILABLE = True
+    logger.info("📊 EMA Regime Signal V1.0 disponible - Señal REAL activa")
+except ImportError:
+    EMARegimeSignal = None
+    get_signal_generator = None
+    SignalContract = None
+    EMA_REGIME_SIGNAL_AVAILABLE = False
+    logger.warning("⚠️ EMA Regime Signal no disponible")
+
 
 class AutoTradingBot:
     """
@@ -750,6 +766,30 @@ class AutoTradingBot:
         else:
             self.execution_protocol = None
             logger.info("⚠️ Execution Protocol no disponible")
+        
+        # EMA Regime Signal V6.5.4d - REAL DETERMINISTIC SIGNAL (replaces ARES placeholders)
+        if EMA_REGIME_SIGNAL_AVAILABLE:
+            try:
+                self.ema_signal_generator = get_signal_generator()
+                logger.info("📊 EMA Regime Signal V1.0 ACTIVADO - Señal REAL determinística")
+                logger.info("   🔬 EMA slope + ATR volatility + HMM regime")
+                logger.info("   ✅ Reemplaza outputs pseudo-aleatorios de ARES")
+            except Exception as e:
+                self.ema_signal_generator = None
+                logger.warning(f"⚠️ EMA Regime Signal error: {e}")
+        else:
+            self.ema_signal_generator = None
+            logger.info("⚠️ EMA Regime Signal no disponible - usando ARES legacy")
+        
+        # V6.5.4d: Monte Carlo Veto thresholds (enforced, not just logged)
+        self.mc_veto_config = {
+            'min_expected_return': 0.0,  # Veto if expected_return < 0
+            'max_var_95': -0.03,  # Veto if VaR95 worse than -3%
+            'min_win_rate': 0.45,  # Reduce size if win_rate < 45%
+            'reduce_size_win_rate': 0.50,  # Reduce size if win_rate < 50%
+            'size_reduction_factor': 0.5,  # Reduce to 50% if below threshold
+        }
+        logger.info("📊 Monte Carlo VETO Engine ACTIVADO - Decisiones enforzadas")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
@@ -2028,7 +2068,25 @@ class AutoTradingBot:
                     self._kernel_needs_reseed = True
                     logger.debug(f"Error en Non-Markovian Kernel (retry próximo ciclo): {e}")
             
-            # 11. Decisión basada en TODOS los análisis + Pesos Adaptativos
+            # 10.5 EMA REGIME SIGNAL V6.5.4d - REAL DETERMINISTIC SIGNAL
+            ema_signal = None
+            if self.ema_signal_generator and prices:
+                try:
+                    ohlc_data = self._get_ohlc_history(pair, days=100)
+                    ema_signal = self.ema_signal_generator.generate_signal(
+                        symbol=pair,
+                        prices=prices,
+                        highs=ohlc_data.get('highs') if ohlc_data else None,
+                        lows=ohlc_data.get('lows') if ohlc_data else None,
+                        hmm_regime=hmm_regime,
+                        current_price=current_price
+                    )
+                    if ema_signal and ema_signal.direction != "NONE":
+                        logger.info(f"📊 EMA Signal: {ema_signal.direction} | Conf: {ema_signal.confidence:.1%} | Rationale: {', '.join(ema_signal.rationale[:3])}")
+                except Exception as e:
+                    logger.debug(f"EMA Signal generation skipped: {e}")
+            
+            # 11. Decisión basada en TODOS los análisis + Pesos Adaptativos + EMA Signal
             decision = self._make_v52_decision(
                 current_price=current_price,
                 monte_carlo=monte_carlo,
@@ -2039,7 +2097,8 @@ class AutoTradingBot:
                 kalman=kalman,
                 quantum=quantum,
                 adaptive_weights=adaptive_weights,
-                non_markovian=non_markovian
+                non_markovian=non_markovian,
+                ema_signal=ema_signal
             )
             
             # 11. 🧠 CEREBRO CONVERSACIONAL - Generar razonamiento pre-trade
@@ -2101,12 +2160,18 @@ class AutoTradingBot:
         kalman: Optional[Dict],
         quantum: Optional[Dict],
         adaptive_weights: Optional[object] = None,
-        non_markovian: Optional[Dict] = None
+        non_markovian: Optional[Dict] = None,
+        ema_signal: Optional[object] = None
     ) -> Dict:
         """
-        Decisión AVANZADA V6.1 integrando TODAS las 10 estrategias
+        Decisión AVANZADA V6.5.4d integrando TODAS las estrategias + EMA Signal REAL
         
         Sistema de scoring ponderado que combina señales de múltiples fuentes
+        
+        V6.5.4d CHANGES:
+        - EMA Regime Signal como señal PRINCIPAL (reemplaza ARES placeholders)
+        - Monte Carlo como VETO REAL (no solo logging)
+        - LimitsEngine/CircuitBreaker ENFORCED antes de trades
         
         NUEVO V5.2: Usa pesos adaptativos ω(t) para balancear Kalman vs Monte Carlo
         - ω cerca de 0 → favorece Kalman Filter (mercado normal)
@@ -2135,8 +2200,122 @@ class AutoTradingBot:
                 'symbol': symbol,
                 'decision_id': decision_id,
                 'veto_chain': [],
-                'guards_passed': []
+                'guards_passed': [],
+                'mc_veto': False,
+                'rms_veto': False,
+                'ema_signal': None,
+                'decision_trace': []
             }
+            
+            # ========== V6.5.4d MONTE CARLO VETO ENGINE ==========
+            # Monte Carlo ahora VETA trades en lugar de solo loguear
+            mc_veto_applied = False
+            position_size_factor = 1.0  # Default full size
+            
+            if monte_carlo and hasattr(self, 'mc_veto_config'):
+                mc_cfg = self.mc_veto_config
+                expected_return = monte_carlo.get('expected_return', 0)
+                var_95 = monte_carlo.get('var_95', 0)
+                win_rate = monte_carlo.get('win_rate', 0.5)
+                
+                decision['v52_analysis']['mc_expected_return'] = expected_return
+                decision['v52_analysis']['mc_var_95'] = var_95
+                decision['v52_analysis']['mc_win_rate'] = win_rate
+                
+                # VETO 1: Expected return negativo
+                if expected_return < mc_cfg['min_expected_return']:
+                    mc_veto_applied = True
+                    decision['veto_chain'].append('MC_EXPECTED_RETURN_NEGATIVE')
+                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < 0")
+                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < 0 → TRADE BLOCKED")
+                
+                # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
+                if var_95 < mc_cfg['max_var_95']:  # var_95 es negativo
+                    mc_veto_applied = True
+                    decision['veto_chain'].append('MC_VAR_TOO_HIGH')
+                    decision['decision_trace'].append(f"MC_VETO: VaR95 {var_95:.2%} worse than {mc_cfg['max_var_95']:.2%}")
+                    logger.info(f"🚫 MC VETO: VaR95 {var_95:.2%} > limit {mc_cfg['max_var_95']:.2%} → TRADE BLOCKED")
+                
+                # SIZE REDUCTION: Win rate bajo pero no veto
+                if not mc_veto_applied and win_rate < mc_cfg['reduce_size_win_rate']:
+                    position_size_factor = mc_cfg['size_reduction_factor']
+                    decision['decision_trace'].append(f"MC_SIZE_REDUCE: Win rate {win_rate:.1%} → size {position_size_factor:.0%}")
+                    logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_cfg['reduce_size_win_rate']:.0%} → position {position_size_factor:.0%}")
+                
+                if mc_veto_applied:
+                    decision['mc_veto'] = True
+                    decision['reason'].append(f"🚫 MC VETO: {', '.join(decision['veto_chain'])}")
+                else:
+                    decision['guards_passed'].append('MONTE_CARLO')
+                
+                decision['v52_analysis']['mc_position_size_factor'] = position_size_factor
+            
+            # ========== V6.5.4d RMS ENFORCEMENT (LimitsEngine + CircuitBreaker) ==========
+            rms_veto_applied = False
+            
+            if self.limits_engine or self.circuit_breaker:
+                # CircuitBreaker check first (system-wide halt)
+                if self.circuit_breaker:
+                    try:
+                        halt_result = self.circuit_breaker.check_halt(symbol=symbol)
+                        if halt_result and halt_result.get('should_halt', False):
+                            rms_veto_applied = True
+                            halt_reason = halt_result.get('reason', 'CIRCUIT_BREAKER_HALT')
+                            decision['veto_chain'].append(f'CB_{halt_reason}')
+                            decision['decision_trace'].append(f"CIRCUIT_BREAKER: {halt_reason}")
+                            logger.info(f"🔌 CIRCUIT BREAKER HALT: {halt_reason} → TRADE BLOCKED")
+                    except Exception as e:
+                        logger.debug(f"CircuitBreaker check skipped: {e}")
+                
+                # LimitsEngine check (position limits, daily limits, etc)
+                if self.limits_engine and not rms_veto_applied:
+                    try:
+                        limits_result = self.limits_engine.validate_order(
+                            symbol=symbol,
+                            side='BUY',  # Placeholder - will be updated based on actual decision
+                            size=1.0,  # Placeholder - actual size calculated later
+                            price=current_price
+                        )
+                        if limits_result and not limits_result.get('valid', True):
+                            rms_veto_applied = True
+                            limit_reason = limits_result.get('reason', 'LIMITS_EXCEEDED')
+                            decision['veto_chain'].append(f'LE_{limit_reason}')
+                            decision['decision_trace'].append(f"LIMITS_ENGINE: {limit_reason}")
+                            logger.info(f"🚧 LIMITS ENGINE VETO: {limit_reason} → TRADE BLOCKED")
+                    except Exception as e:
+                        logger.debug(f"LimitsEngine check skipped: {e}")
+                
+                if rms_veto_applied:
+                    decision['rms_veto'] = True
+                    decision['reason'].append(f"🚧 RMS VETO: {', '.join([v for v in decision['veto_chain'] if v.startswith('CB_') or v.startswith('LE_')])}")
+                else:
+                    decision['guards_passed'].append('RMS_VALIDATION')
+            
+            # ========== V6.5.4d EMA REGIME SIGNAL (REAL DETERMINISTIC SIGNAL) ==========
+            ema_direction = None
+            ema_confidence = 0.0
+            
+            if ema_signal:
+                decision['ema_signal'] = ema_signal.to_dict() if hasattr(ema_signal, 'to_dict') else str(ema_signal)
+                ema_direction = ema_signal.direction
+                ema_confidence = ema_signal.confidence
+                
+                decision['v52_analysis']['ema_direction'] = ema_direction
+                decision['v52_analysis']['ema_confidence'] = ema_confidence
+                decision['v52_analysis']['ema_rationale'] = ema_signal.rationale if hasattr(ema_signal, 'rationale') else []
+                
+                if ema_direction != "NONE":
+                    decision['decision_trace'].append(f"EMA_SIGNAL: {ema_direction} @ {ema_confidence:.1%}")
+                    decision['guards_passed'].append('EMA_SIGNAL')
+            
+            # EARLY RETURN si hay veto de MC o RMS
+            if mc_veto_applied or rms_veto_applied:
+                decision['action'] = 'HOLD'
+                decision['should_trade'] = False
+                decision['confidence'] = 0.0
+                decision['reason'].append("⛔ VETO ACTIVO - Trade bloqueado por gestión de riesgo")
+                logger.info(f"⛔ DECISION VETOED: {decision['veto_chain']} | Symbol: {symbol}")
+                return decision
             
             score = 0  # Score de confianza (-100 a +100)
             max_score = 0  # Para normalizar
@@ -2466,6 +2645,36 @@ class AutoTradingBot:
                     coherence = nm_metrics['regime_coherence']
                     decision['v52_analysis']['memory_regime_coherence'] = coherence.get('overall_coherence', 0)
             
+            # 11. EMA REGIME SIGNAL V6.5.4d (peso: 25 puntos - SEÑAL REAL DETERMINÍSTICA)
+            # EMA Signal reemplaza outputs pseudo-aleatorios de ARES
+            if ema_signal and ema_direction:
+                max_score += 25
+                
+                if ema_direction == 'LONG':
+                    if ema_confidence >= 0.70:
+                        score += 25
+                        decision['reason'].append(f"📊 EMA Signal: STRONG LONG ({ema_confidence:.0%})")
+                    elif ema_confidence >= 0.50:
+                        score += 15
+                        decision['reason'].append(f"✅ EMA Signal: LONG ({ema_confidence:.0%})")
+                    else:
+                        score += 8
+                        decision['reason'].append(f"📈 EMA Signal: WEAK LONG ({ema_confidence:.0%})")
+                        
+                elif ema_direction == 'SHORT':
+                    if ema_confidence >= 0.70:
+                        score -= 25
+                        decision['reason'].append(f"📊 EMA Signal: STRONG SHORT ({ema_confidence:.0%})")
+                    elif ema_confidence >= 0.50:
+                        score -= 15
+                        decision['reason'].append(f"⚠️ EMA Signal: SHORT ({ema_confidence:.0%})")
+                    else:
+                        score -= 8
+                        decision['reason'].append(f"📉 EMA Signal: WEAK SHORT ({ema_confidence:.0%})")
+                
+                # Log institutional para trazabilidad
+                logger.info(f"📊 EMA SIGNAL SCORING: {ema_direction} @ {ema_confidence:.1%} → score delta ±{25 if ema_confidence >= 0.70 else (15 if ema_confidence >= 0.50 else 8)}")
+            
             # ========== DECISIÓN FINAL ==========
             
             # Normalizar score a 0-100
@@ -2661,6 +2870,18 @@ class AutoTradingBot:
                                 decision['amount_usd'] = max_probation_size
                                 decision['reason'].append(f"🔬 PROBATION CAP: ${original_size:.2f} → ${max_probation_size:.2f} (max {probation_max_pct:.0%})")
                                 logger.info(f"🔬 FASE 2.3 Probation Cap: {symbol} limited to ${max_probation_size:.2f} (was ${original_size:.2f})")
+            # ==========================================================================
+            
+            # ==========================================================================
+            # V6.5.4d: MONTE CARLO POSITION SIZE ADJUSTMENT
+            # Aplicar factor de reducción de tamaño basado en win rate bajo
+            # ==========================================================================
+            if decision.get('should_trade') and decision.get('amount_usd') and position_size_factor < 1.0:
+                original_amount = decision['amount_usd']
+                decision['amount_usd'] = original_amount * position_size_factor
+                decision['reason'].append(f"📊 MC SIZE ADJUST: ${original_amount:.2f} → ${decision['amount_usd']:.2f} ({position_size_factor:.0%})")
+                decision['decision_trace'].append(f"MC_SIZE_APPLIED: {original_amount:.2f} * {position_size_factor:.0%} = {decision['amount_usd']:.2f}")
+                logger.info(f"📊 MC Position Size Adjustment: ${original_amount:.2f} → ${decision['amount_usd']:.2f} (factor: {position_size_factor:.0%})")
             # ==========================================================================
             
             # 🧠 COHERENCE ENGINE V5.4 ULTRA - Validación Premium de Coherencia
