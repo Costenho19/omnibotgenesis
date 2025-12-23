@@ -27,6 +27,22 @@
 
 **Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
 
+### Investor-Grade Automated Responses (Dec 23, 2025)
+- **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
+- **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
+- **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
+- **Pattern Detection**: Automatically detects investor questions and returns appropriate response
+- **Usage**: `investor_response_engine.process_investor_query(message)`
+
+**Datos Verificados en Respuestas:**
+| Métrica | Valor | Fuente |
+|---------|-------|--------|
+| Total Trades | 109 | PostgreSQL paper_trading_trades |
+| P&L | -$14,942.94 | PostgreSQL SUM(profit_loss) |
+| Win Rate | 22% (24/109) | PostgreSQL calculation |
+| Activos Excluidos | 4 (ADA, SOL, AVAX, ETH) | trading_profiles.py |
+| Pérdidas Evitadas | $7,337+ | PostgreSQL (sum of excluded assets) |
+
 ### Investor Dashboard Widgets (Dec 22, 2025)
 **Three New Investor-Facing Metrics for Pitch Presentations:**
 

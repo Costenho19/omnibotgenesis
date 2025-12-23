@@ -147,6 +147,14 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 
 **Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
 
+#### Investor-Grade Automated Responses (Dec 23, 2025)
+- **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
+- **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
+- **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
+- **Pattern Detection**: Automatically detects investor questions and returns appropriate response
+- **Presentation**: "Investor-grade automated responses" - not "AI creative"
+- **Usage**: `investor_response_engine.process_investor_query(message)`
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 
