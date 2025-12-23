@@ -675,9 +675,9 @@ def api_asset_quarantine():
                     try:
                         cursor = conn.cursor()
                         cursor.execute('''
-                            SELECT symbol, COUNT(*) as trade_count, SUM(pnl) as total_pnl
+                            SELECT symbol, COUNT(*) as trade_count, SUM(profit_loss) as total_pnl
                             FROM paper_trading_trades
-                            WHERE status = 'closed' AND pnl < 0
+                            WHERE status = 'closed' AND profit_loss < 0
                             AND symbol = ANY(%s)
                             GROUP BY symbol
                         ''', (symbols_list,))
