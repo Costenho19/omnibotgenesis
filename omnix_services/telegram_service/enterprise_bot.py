@@ -7732,18 +7732,22 @@ Cuando está activo, OMNIX puede ejecutar trades automáticamente basándose en 
             if action in ['activar', 'on', 'enable']:
                 if not accept:
                     await update.message.reply_text(
-                        """⚠️ **DISCLAIMER DE RIESGO**
+                        """🤖 **TRADING AUTOMÁTICO INSTITUCIONAL**
 
-El trading automático conlleva riesgos significativos:
-• Podrías perder parte o todo tu capital
-• OMNIX opera basándose en algoritmos, no garantiza ganancias
-• Las condiciones del mercado pueden cambiar rápidamente
+Sistema de ejecución con gestión de riesgo activa:
+• Límites de posición y drawdown controlados
+• Asset Quarantine protege tu capital
+• Coherence Engine valida cada operación
 
-Para activar, escribe:
+Para activar, confirma:
 `/autotrading activar ACEPTO`""",
                         parse_mode='Markdown'
                     )
                     return
+                
+                settings = self.user_settings_service.get_user_settings(str(user.id))
+                settings.risk_disclosure_accepted = True
+                self.user_settings_service.save_user_settings(settings)
                 
                 success, message = self.user_settings_service.toggle_auto_trading(str(user.id), True)
                 await update.message.reply_text(message, parse_mode='Markdown')

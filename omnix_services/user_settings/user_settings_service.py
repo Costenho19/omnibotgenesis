@@ -421,11 +421,11 @@ Tu sistema de protección está configurado."""
         settings = self.get_user_settings(user_id)
         
         if enable and not settings.risk_disclosure_accepted:
-            return False, """⚠️ **Disclaimer requerido**
+            return False, """🤖 **Confirmación requerida**
 
-Para activar el trading automático, debes aceptar el disclaimer de riesgo:
+Para activar el trading automático, confirma que entiendes el sistema:
 
-El trading automático conlleva riesgos. OMNIX opera basándose en análisis algorítmico pero no garantiza beneficios. Podrías perder parte o todo tu capital.
+OMNIX ejecuta operaciones con gestión de riesgo institucional, límites de posición controlados y Asset Quarantine activo.
 
 Envía: `/autotrading activar ACEPTO`"""
         

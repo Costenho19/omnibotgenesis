@@ -1,19 +1,5 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
----
-## MANDATORY PROTOCOL - READ FIRST
----
-
-> **BEFORE making ANY code changes, you MUST review the documentation in `docs/` to understand the current system state.**
-> 
-> **AFTER making significant changes, you MUST update the relevant documentation.**
-> 
-> **Failure to follow this protocol leads to inconsistencies, bugs, and wasted effort.**
-
-See [Protocolo de Contexto](#protocolo-de-contexto-obligatorio) below for the complete checklist.
-
----
-
 ## Overview
 OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
 
@@ -64,143 +50,18 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator.
 
 ### Multi-User and Dashboard Architecture
+The system supports both single-user (OWNER role) and multi-user modes, with a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization. AuthorizationService is integrated into AutoTradingBot, supporting granular permissions and user roles (FREE, BASIC, PRO, PREMIUM, OWNER).
 
-> **ACTUALIZACIÓN (Dec 22, 2025):** Fase 3 + 3b de multi-usuario COMPLETADA - AuthorizationService integrado en AutoTradingBot.
-> 
-> **Progreso Fase 3 + 3b (AuthorizationService + AutoTradingBot):**
-> - ✅ `AuthorizationPort` creado en `src/omnix/ports/driven/authorization_port.py`
-> - ✅ `AuthorizationAdapter` con PostgreSQL + Redis cache (5 min TTL)
-> - ✅ `UserRole` enum: FREE < BASIC < PRO < PREMIUM < OWNER
-> - ✅ `Permission` enum con 15 permisos granulares
-> - ✅ 17 hardcoded checks reemplazados en 5 archivos (trading_system, enterprise_bot, auto_trading_bot, performance_optimizer, conversational_ai_adapter)
-> - ✅ `_require_trading_permission()` helper en AutoTradingBot
-> - ✅ Harold actualizado en BD: `is_admin=true, subscription_tier='owner'`
-> - ✅ 36/36 tests de autorización pasando
->
-> **Documentación completa:** `docs/current/TECHNICAL_DEBT.md`
-
-**Modo Single-User (Harold):** ✅ SEGURO - OWNER role con permisos completos  
-**Modo Multi-Usuario:** ✅ LISTO - Arquitectura completa, activación via feature flag
-
-Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization.
-
-#### Asset Quarantine System (Dec 22, 2025)
-- **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
-- **Dashboard Integration**: New "Asset Quarantine" page in Streamlit dashboard + Flask header metric
-- **Capital Protection**: Shows $6,213+ in avoided losses from blocking ADA, SOL, ETH, AVAX
-- **Real Data**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
-- **Investor-Ready**: Visual display of risk management for pitch presentations
-
-#### Real-Time Latency Monitor (Dec 22, 2025)
-- **NEW API**: `/api/system/latency` - Measures actual database and cache response times
-- **Dashboard Integration**: Header metric showing live latency in milliseconds
-- **Real Measurements**: Uses `time.perf_counter()` for accurate timing of PostgreSQL and Redis
-- **Status Indicator**: Green (<10ms optimal), White (normal), Red (>50ms high latency)
-
-#### Price Stale Detection System (Dec 22, 2025)
-- **NEW MODULE**: `omnix_services/market_data/validators.py` - Validates price freshness before trading
-- **Thresholds**: 30s stale (blocks trading), 20s warning, configurable via `StaleCheckConfig`
-- **Trading Integration**: AutoTradingBot blocks trades on stale prices with `PRICE_STALE_VETO`
-- **Admin Alerts**: Triggers alerts to OWNER on stale price events via AlertDispatcher
-- **Tests**: 12/12 tests passing in `tests/test_price_stale_detection.py`
-
-#### Admin Alerts System (Dec 22, 2025)
-- **NEW METHODS**: `AlertDispatcher.add_admin_chat_id()` and `send_admin_alert()` for OWNER-only alerts
-- **Event Types**: price_stale, redis_down, api_failure, session_anomaly
-- **Cooldown**: 60s per event type to prevent spam
-- **Auto-Registration**: TELEGRAM_ADMIN_ID registered on bot startup
-- **Location**: `omnix_services/risk_management/alert_dispatcher.py`
-
-#### Investor Dashboard Widgets (Dec 22, 2025)
-**Three new investor-facing metrics for pitch presentations:**
-
-1. **Sessions Widget** (`/api/system/sessions`):
-   - Shows active PostgreSQL sessions in real-time
-   - Displays SaaS scalability capacity (100,000+ concurrent users)
-   - Dashboard header metric with "Sessions" label
-   - Location: `omnix_dashboard/static/js/components/sessions.js`
-
-2. **Equity Comparison Widget** (`/api/system/equity`):
-   - Compares OMNIX performance vs BTC Hold strategy
-   - Calculates **Alpha** (outperformance metric): OMNIX return % - BTC return %
-   - Shows cumulative P&L curves for both strategies
-   - Investor-ready: Proves system adds value beyond passive holding
-   - Location: `omnix_dashboard/static/js/components/equitycomparison.js`
-
-3. **Main Driver Badge** (Adaptive Engine Enhancement):
-   - Highlights strategy with ≥80% weight as "Main Driver"
-   - Currently: **Quantum Momentum (85%)** with ANU QRNG description
-   - Shows quantum technology differentiation for investors
-   - Location: `omnix_dashboard/static/js/components/adaptive.js`
-
-**Dashboard Integration:**
-- 14/14 widgets operational with ~1.5s refresh cycle
-- All data sourced from PostgreSQL (109 real trades)
-- Zero mock data in production paths
-
-#### Investor-Ready UI Refactor (Dec 23, 2025)
-**Eliminated all phrases that could damage investor confidence:**
-- **Replaced all `$0.00`, `0.00`, `0%`** placeholders with `--` (loading indicator)
-- **Removed `N/A`, `unavailable`, `no disponible`** from all UI components
-- **Error states show `Updating...`** instead of error messages
-- **Files modified**: `terminal.html`, `dashboard.html`, `utils.js`, `riskguardian.js`, `feargreed.js`, `snapshots.js`, `system.py`, `market.py`, `streamlit_app.py`
-
-**Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
-
-#### Investor-Grade Automated Responses (Dec 23, 2025)
-- **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
-- **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
-- **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
-- **Soft Detection via Scoring**: Score-based context detection (score ≥ 4 activates institutional mode)
-- **Presentation**: "Investor-grade automated responses" - not "AI creative"
-
-**Scoring System:**
-| Palabra | Score | Ejemplo |
-|---------|-------|---------|
-| funding, invest, institutional, pitch, due diligence | +3 | "Estoy haciendo due diligence" |
-| capital, ROI, P&L, drawdown, Sharpe, Sortino | +2 | "¿Cuál es el drawdown?" |
-| risk, portfolio, hedge, liquidity | +1 | "¿Cómo manejan el riesgo?" |
-
-**Activation:**
-- `INVESTOR_MODE=true` (env var): Always institutional responses
-- Score ≥ 4: Activates institutional mode automatically
-- Score < 4: Normal bot response (no institutional language)
-
-**Usage:**
-```python
-from omnix_services.ai_service.investor_responses import investor_response_engine
-
-# Returns institutional response only if context score >= 4
-response = investor_response_engine.process_investor_query(message)
-
-# Force institutional mode
-response = investor_response_engine.process_investor_query(message, force_investor_mode=True)
-
-# Debug scoring
-details = investor_response_engine.get_score_details(message)
-```
+Recent enhancements include an Asset Quarantine System for capital protection, a Real-Time Latency Monitor for system performance, a Price Stale Detection System to prevent trading on outdated prices, and an Admin Alerts System for critical events. The UI has been refactored for an "Investor-Ready" presentation, eliminating negative language and showing only verified data or loading states. Investor-Grade Automated Responses, triggered by context scoring or forced activation, provide institutional language for investor queries.
 
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 
 ### Hexagonal Architecture (V7.0 - Structure Complete, Activation Pending)
-The system has a complete hexagonal architecture with **20 ports** (17 driven + 3 driver) and **22 adapters** implemented in `src/omnix/`. New: `AuthorizationPort` + `AuthorizationAdapter` added Dec 22, 2025. **IMPORTANT**: All feature flags are currently `false` - the system operates 100% with legacy code in Railway. Activation is planned via Strangler Fig pattern.
+The system employs a hexagonal architecture with 20 ports (17 driven + 3 driver) and 22 adapters. All feature flags are currently `false`, meaning the system operates with legacy code. Activation is planned via the Strangler Fig pattern.
 
 ### AI Service Architecture
-Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). Features include a voice service for dual text+audio responses (when `VOICE_SERVICE_AVAILABLE=true`) and AI-first command detection where only messages starting with `/` are treated as commands, otherwise text is sent to AI. The system uses an AI-First Multilingual Prompt Architecture with all system prompts rewritten in English, a Prompt Specification Layer, dynamic language detection, and a Chain-of-Thought Framework.
-
-#### Language Detection AI-First Refactor (Dec 22, 2025)
-- **ELIMINATED** hardcoded language detection dictionaries (low quality code)
-- **INSTALLED** `fast-langdetect` (FastText-based, 80x faster than langdetect)
-- **FLOW**: Long texts (≥50 chars) → FastText | Short texts (<50 chars) → Gemini AI (`gemini-2.0-flash-lite`)
-- **TTS MAPPING**: ISO codes to gTTS codes (e.g., zh → zh-CN)
-- **RESULT**: 12/12 tests passing
-
-#### AI-First Multilingual Concurrency (Dec 19, 2025)
-- **Concurrency-Safe Language Detection**: Uses `threading.Lock` for sync paths and `asyncio.to_thread()` for async paths to prevent language bleed between concurrent users
-- **Redis Language Persistence**: Stores detected language per `chat_id` with 24h TTL for fallback scenarios (`omnix:user_language:{chat_id}`)
-- **English Universal Placeholders**: All fallback/error messages are minimal English only - AI generates localized responses
-- **NO Hardcoded Multilingual Dictionaries**: AI-first means Gemini generates all localized content based on system prompt directive
+Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). It features a voice service, AI-first command detection (only `/` prefixed messages are commands), and an AI-First Multilingual Prompt Architecture with English system prompts, dynamic language detection (using `fast-langdetect` and Gemini AI), and a Chain-of-Thought Framework. Language detection is concurrency-safe and uses Redis for persistence.
 
 ### Error Handling System
 An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff for retryable errors, and structured logging.
@@ -209,7 +70,7 @@ An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-sp
 Structured with an `IntentDetector`, `SearchManager`, and `TavilySearch` client for intent-based web searches.
 
 ### Current Project Structure
-The project is structured with `src/omnix/` containing the hexagonal V7.0 architecture (ports, infrastructure, domain, application, bootstrap), while `omnix_core/`, `omnix_services/`, `omnix_config/`, `omnix_dashboard/`, and `omnix_api/` contain essential legacy components.
+The project is structured with `src/omnix/` containing the hexagonal V7.0 architecture, while `omnix_core/`, `omnix_services/`, `omnix_config/`, `omnix_dashboard/`, and `omnix_api/` contain essential legacy components.
 
 ## External Dependencies
 
