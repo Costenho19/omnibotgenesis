@@ -815,41 +815,44 @@ def api_system_sessions():
     session_details = []
     
     try:
-        from omnix_core.sessions.user_session_manager import initialize_session_manager
-        from omnix_core.cache.redis_cache import RedisCache
-        from omnix_services.database_service import DatabaseService
+        from omnix_dashboard.utils.database import get_db_connection
         
-        redis_cache = None
-        database_service = None
-        
-        try:
-            redis_cache = RedisCache()
-        except Exception as e:
-            logger.debug(f"Redis not available for sessions: {e}")
-        
-        try:
-            database_service = DatabaseService()
-        except Exception as e:
-            logger.debug(f"DatabaseService not available for sessions: {e}")
-        
-        session_manager = initialize_session_manager(
-            redis_cache=redis_cache,
-            database_service=database_service
-        )
-        
-        if hasattr(session_manager, 'get_active_session_count'):
-            active_sessions = session_manager.get_active_session_count() or 0
-        
-        if hasattr(session_manager, 'get_active_sessions'):
-            sessions = session_manager.get_active_sessions() or []
-            for session in sessions[:10]:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT COUNT(*) FROM user_settings
+                WHERE auto_trading = true 
+                AND trading_enabled = true 
+                AND (is_paused = false OR is_paused IS NULL)
+            ''')
+            count_row = cursor.fetchone()
+            if count_row:
+                active_sessions = count_row[0] or 0
+            
+            cursor.execute('''
+                SELECT user_id, updated_at,
+                       CASE WHEN is_paused THEN 'paused' ELSE 'active' END as status
+                FROM user_settings
+                WHERE auto_trading = true 
+                AND trading_enabled = true 
+                AND (is_paused = false OR is_paused IS NULL)
+                ORDER BY updated_at DESC
+                LIMIT 10
+            ''')
+            rows = cursor.fetchall()
+            
+            for row in rows:
                 session_details.append({
-                    'user_id': str(session.get('user_id', 'unknown'))[:8] + '...',
-                    'started': str(session.get('started_at', '--')),
-                    'status': session.get('status', 'active')
+                    'user_id': str(row[0])[:8] + '...',
+                    'started': str(row[1]) if row[1] else '--',
+                    'status': row[2] if len(row) > 2 else 'active'
                 })
+            
+            cursor.close()
+                
     except Exception as e:
-        logger.debug(f"UserSessionManager not available: {e}")
+        logger.warning(f"Sessions query failed: {e}")
         active_sessions = 0
     
     return jsonify({
