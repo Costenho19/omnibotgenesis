@@ -16,12 +16,63 @@ Autor: OMNIX Development Team
 Fecha: December 23, 2025
 """
 
+import os
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from enum import Enum
 import logging
 
 logger = logging.getLogger(__name__)
+
+INVESTOR_MODE = os.getenv("INVESTOR_MODE", "false").lower() == "true"
+INVESTOR_SCORE_THRESHOLD = 4
+
+INVESTOR_CONTEXT_SCORES: Dict[str, int] = {
+    "funding": 3,
+    "inversión": 3,
+    "inversion": 3,
+    "invest": 3,
+    "investor": 3,
+    "inversor": 3,
+    "inversionista": 3,
+    "institutional": 3,
+    "institucional": 3,
+    "due diligence": 3,
+    "diligencia": 3,
+    "pitch": 3,
+    "presentación": 3,
+    "presentacion": 3,
+    "seed": 3,
+    "serie a": 3,
+    "series a": 3,
+    "capital": 2,
+    "valuation": 2,
+    "valuación": 2,
+    "valuacion": 2,
+    "roi": 2,
+    "retorno": 2,
+    "return": 2,
+    "pnl": 2,
+    "p&l": 2,
+    "drawdown": 2,
+    "sharpe": 2,
+    "sortino": 2,
+    "alpha": 2,
+    "beta": 2,
+    "volatility": 2,
+    "volatilidad": 2,
+    "risk": 1,
+    "riesgo": 1,
+    "portfolio": 1,
+    "portafolio": 1,
+    "hedge": 1,
+    "cobertura": 1,
+    "liquidity": 1,
+    "liquidez": 1,
+    "aum": 1,
+    "assets": 1,
+    "activos": 1,
+}
 
 
 class InvestorQueryType(Enum):
@@ -315,6 +366,46 @@ class InvestorResponseEngine:
     
     def __init__(self):
         self.responses = INVESTOR_RESPONSES
+        self.investor_mode = INVESTOR_MODE
+        self.score_threshold = INVESTOR_SCORE_THRESHOLD
+        
+    def calculate_investor_score(self, message: str) -> Tuple[int, list]:
+        """
+        Calcula el score de contexto de inversión basado en palabras clave.
+        
+        Returns:
+            Tuple[int, list]: (score total, lista de palabras detectadas)
+        """
+        message_lower = message.lower()
+        score = 0
+        detected_words = []
+        
+        for word, weight in INVESTOR_CONTEXT_SCORES.items():
+            if word in message_lower:
+                score += weight
+                detected_words.append(f"{word}(+{weight})")
+                
+        return score, detected_words
+    
+    def is_investor_context(self, message: str) -> bool:
+        """
+        Determina si el mensaje está en contexto de inversión.
+        
+        Retorna True si:
+        - INVESTOR_MODE está activado globalmente, O
+        - El score de contexto >= umbral (default 4)
+        """
+        if self.investor_mode:
+            logger.info("[InvestorResponse] INVESTOR_MODE enabled globally")
+            return True
+            
+        score, words = self.calculate_investor_score(message)
+        
+        if score >= self.score_threshold:
+            logger.info(f"[InvestorResponse] Investor context detected: score={score}, words={words}")
+            return True
+            
+        return False
         
     def detect_query_type(self, message: str) -> Optional[InvestorQueryType]:
         """Detecta el tipo de pregunta basado en patrones"""
@@ -333,16 +424,31 @@ class InvestorResponseEngine:
             return self.responses[query_type].format()
         return ""
     
-    def process_investor_query(self, message: str) -> Optional[str]:
+    def process_investor_query(self, message: str, force_investor_mode: bool = False) -> Optional[str]:
         """
-        Procesa una pregunta de inversor y retorna la respuesta apropiada.
+        Procesa una pregunta y retorna respuesta institucional si aplica.
         
+        La respuesta institucional se activa cuando:
+        1. force_investor_mode=True, O
+        2. INVESTOR_MODE env var está en true, O
+        3. El score de contexto de inversión >= umbral (4)
+        
+        Args:
+            message: El mensaje del usuario
+            force_investor_mode: Forzar modo inversor (override)
+            
         Returns:
-            str: Respuesta formateada, o None si no es una pregunta de inversor
+            str: Respuesta formateada institucional, o None si no aplica
         """
+        if not force_investor_mode and not self.is_investor_context(message):
+            score, _ = self.calculate_investor_score(message)
+            logger.debug(f"[InvestorResponse] Not investor context, score={score}")
+            return None
+            
         query_type = self.detect_query_type(message)
         
         if query_type:
+            logger.info(f"[InvestorResponse] Returning institutional response for: {query_type.value}")
             return self.get_response(query_type)
             
         return None
@@ -350,6 +456,22 @@ class InvestorResponseEngine:
     def is_investor_query(self, message: str) -> bool:
         """Determina si el mensaje es una pregunta típica de inversor"""
         return self.detect_query_type(message) is not None
+    
+    def get_score_details(self, message: str) -> Dict:
+        """
+        Retorna detalles del análisis de score para debugging.
+        
+        Returns:
+            Dict con score, palabras detectadas, umbral y si activa modo inversor
+        """
+        score, words = self.calculate_investor_score(message)
+        return {
+            "score": score,
+            "threshold": self.score_threshold,
+            "detected_words": words,
+            "investor_mode_global": self.investor_mode,
+            "activates_institutional": score >= self.score_threshold or self.investor_mode
+        }
 
 
 investor_response_engine = InvestorResponseEngine()

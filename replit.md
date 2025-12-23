@@ -151,9 +151,34 @@ Features a Flask Dashboard for API and web terminal, and a Streamlit Dashboard f
 - **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
 - **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
 - **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
-- **Pattern Detection**: Automatically detects investor questions and returns appropriate response
+- **Soft Detection via Scoring**: Score-based context detection (score ≥ 4 activates institutional mode)
 - **Presentation**: "Investor-grade automated responses" - not "AI creative"
-- **Usage**: `investor_response_engine.process_investor_query(message)`
+
+**Scoring System:**
+| Palabra | Score | Ejemplo |
+|---------|-------|---------|
+| funding, invest, institutional, pitch, due diligence | +3 | "Estoy haciendo due diligence" |
+| capital, ROI, P&L, drawdown, Sharpe, Sortino | +2 | "¿Cuál es el drawdown?" |
+| risk, portfolio, hedge, liquidity | +1 | "¿Cómo manejan el riesgo?" |
+
+**Activation:**
+- `INVESTOR_MODE=true` (env var): Always institutional responses
+- Score ≥ 4: Activates institutional mode automatically
+- Score < 4: Normal bot response (no institutional language)
+
+**Usage:**
+```python
+from omnix_services.ai_service.investor_responses import investor_response_engine
+
+# Returns institutional response only if context score >= 4
+response = investor_response_engine.process_investor_query(message)
+
+# Force institutional mode
+response = investor_response_engine.process_investor_query(message, force_investor_mode=True)
+
+# Debug scoring
+details = investor_response_engine.get_score_details(message)
+```
 
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.

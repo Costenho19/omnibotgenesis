@@ -31,8 +31,21 @@
 - **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
 - **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
 - **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
-- **Pattern Detection**: Automatically detects investor questions and returns appropriate response
-- **Usage**: `investor_response_engine.process_investor_query(message)`
+- **Soft Detection via Scoring**: Score-based context detection (score ≥ 4 activates institutional mode)
+
+**Scoring System:**
+| Palabra | Score |
+|---------|-------|
+| funding, invest, institutional, pitch, due diligence | +3 |
+| capital, ROI, P&L, drawdown, Sharpe, Sortino | +2 |
+| risk, portfolio, hedge, liquidity | +1 |
+
+**Activation:**
+- `INVESTOR_MODE=true` (env var): Always institutional responses
+- Score ≥ 4: Activates institutional mode automatically
+- Score < 4: Normal bot response
+
+**Usage:** `investor_response_engine.process_investor_query(message, force_investor_mode=False)`
 
 **Datos Verificados en Respuestas:**
 | Métrica | Valor | Fuente |
