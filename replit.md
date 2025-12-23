@@ -68,8 +68,11 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
 - **FASE 2.2 - BTC Short Selling**: ✅ IMPLEMENTADO
   - Solo BTC en bearish regime (HMM confidence > 70%)
   - Position size 50% (conservador para nueva estrategia)
-- **FASE 2.3 - Quarantine Re-evaluation**: ⏳ PENDIENTE
-  - Probar UN activo bloqueado con reglas nuevas, auto-revert tras 3 pérdidas
+- **FASE 2.3 - Quarantine Probation**: ✅ IMPLEMENTADO
+  - AVAX/USD en periodo de prueba con protecciones
+  - Partial sizing forzado (máximo 40%)
+  - Auto-revert a cuarentena tras 3 pérdidas consecutivas
+  - Tracking de wins/losses y P/L durante probation
 
 #### Autotrading Command (Dec 23, 2025)
 - **BUG FIX**: `/autotrading activar ACEPTO` saves `risk_disclosure_accepted=True` before toggle

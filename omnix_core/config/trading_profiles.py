@@ -268,6 +268,7 @@ def is_symbol_allowed(symbol: str, profile: Optional['TradingProfile'] = None) -
     Verificar si un símbolo está permitido para trading.
     
     V6.5.4 PREMIUM - Usa calibración por par si está disponible.
+    FASE 2.3 - Permite activo en probation aunque esté en cuarentena.
     
     Args:
         symbol: Par de trading
@@ -276,6 +277,22 @@ def is_symbol_allowed(symbol: str, profile: Optional['TradingProfile'] = None) -
     Returns:
         True si el símbolo está permitido
     """
+    if profile is None:
+        profile = get_active_profile()
+    
+    # Normalizar para comparaciones (sin slash)
+    symbol_normalized = symbol.upper().replace("/", "")
+    symbol_upper = symbol.upper()
+    
+    # FASE 2.3: Check if symbol is in probation (overrides quarantine)
+    if profile and getattr(profile, 'probation_enabled', False):
+        probation_asset = getattr(profile, 'probation_asset', "")
+        if probation_asset:
+            probation_normalized = probation_asset.upper().replace("/", "")
+            if symbol_normalized == probation_normalized or probation_asset.upper() == symbol_upper:
+                logger.info(f"🔬 PROBATION: {symbol} permitido (en periodo de prueba)")
+                return True
+    
     calibration = get_pair_calibration(symbol)
     if calibration:
         allowed = calibration.tier != CalibrationTier.EXCLUDED
@@ -283,17 +300,24 @@ def is_symbol_allowed(symbol: str, profile: Optional['TradingProfile'] = None) -
             logger.warning(f"🚫 {symbol} BLOQUEADO: {calibration.notes}")
         return allowed
     
-    if profile is None:
-        profile = get_active_profile()
-    
     allowed_symbols = profile.extra_params.get('allowed_symbols', [])
     excluded_symbols = profile.extra_params.get('excluded_symbols', [])
     
-    normalized = symbol.upper()
+    # Comparación con y sin slash para máxima compatibilidad
     if allowed_symbols:
-        return any(s.upper() in normalized or normalized in s.upper() for s in allowed_symbols)
+        for s in allowed_symbols:
+            s_upper = s.upper()
+            s_normalized = s.upper().replace("/", "")
+            if s_upper == symbol_upper or s_normalized == symbol_normalized:
+                return True
+        return False
     if excluded_symbols:
-        return not any(s.upper() in normalized or normalized in s.upper() for s in excluded_symbols)
+        for s in excluded_symbols:
+            s_upper = s.upper()
+            s_normalized = s.upper().replace("/", "")
+            if s_upper == symbol_upper or s_normalized == symbol_normalized:
+                return False
+        return True
     
     return True
 
@@ -425,6 +449,14 @@ class TradingProfile:
     short_selling_enabled: bool = False
     short_selling_symbols: List[str] = field(default_factory=list)  # Solo estos símbolos
     short_selling_min_bearish_confidence: float = 0.70  # HMM bearish confidence mínima
+    
+    # FASE 2.3: Quarantine Probation System (Dec 23, 2025)
+    # Permite probar UN activo bloqueado con auto-revert tras pérdidas consecutivas
+    probation_enabled: bool = False
+    probation_asset: str = ""  # El activo en probation (ej: "AVAX/USD")
+    probation_max_consecutive_losses: int = 3  # Pérdidas consecutivas antes de auto-revert
+    probation_force_partial: bool = True  # Forzar partial sizing (máximo 40%)
+    probation_max_size_pct: float = 0.40  # Tamaño máximo durante probation
     
     extra_params: Dict[str, Any] = field(default_factory=dict)
     
@@ -786,6 +818,14 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     short_selling_enabled=True,
     short_selling_symbols=['BTC/USD'],
     short_selling_min_bearish_confidence=0.70,
+    
+    # FASE 2.3: Quarantine Probation (Dec 23, 2025)
+    # AVAX/USD en probation - auto-revert tras 3 pérdidas consecutivas
+    probation_enabled=True,
+    probation_asset='AVAX/USD',
+    probation_max_consecutive_losses=3,
+    probation_force_partial=True,
+    probation_max_size_pct=0.40,
     
     extra_params={
         # V6.5.4d: ADA/USD y LINK/USD removidos (0% win rate, pérdidas mayores)

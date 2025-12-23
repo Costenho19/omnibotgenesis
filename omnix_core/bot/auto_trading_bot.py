@@ -514,6 +514,17 @@ class AutoTradingBot:
             'paper_positions': {}  # {symbol: {amount, avg_price, value}}
         }
         
+        # FASE 2.3: Estado de probation para tracking de pérdidas consecutivas
+        self.probation_state = {
+            'consecutive_losses': 0,
+            'total_trades': 0,
+            'wins': 0,
+            'losses': 0,
+            'start_date': None,
+            'auto_reverted': False,
+            'pnl': 0.0
+        }
+        
         # V6.5.4d: Lock para prevenir race conditions en start/stop
         self._start_stop_lock = threading.Lock()
         self._thread = None  # Reference to trading loop thread
@@ -2630,6 +2641,28 @@ class AutoTradingBot:
                     logger.info(f"📉 FASE 2.2: SHORT trade generated for {symbol} - Amount: ${decision['amount_usd']:.2f}")
                 # ==========================================================================
             
+            # ==========================================================================
+            # FASE 2.3: PROBATION CAP - Limitar tamaño para activo en probation
+            # ==========================================================================
+            if decision.get('should_trade') and decision.get('amount_usd'):
+                p = self.trading_profile
+                if p and getattr(p, 'probation_enabled', False) and getattr(p, 'probation_force_partial', True):
+                    probation_asset = getattr(p, 'probation_asset', "")
+                    if probation_asset:
+                        # Verificar si el símbolo actual es el de probation
+                        symbol_normalized = symbol.upper().replace("/", "")
+                        probation_normalized = probation_asset.upper().replace("/", "")
+                        if symbol_normalized == probation_normalized or symbol.upper() == probation_asset.upper():
+                            probation_max_pct = getattr(p, 'probation_max_size_pct', 0.40)
+                            balance = self._get_balance()
+                            max_probation_size = balance * p.max_position_pct * probation_max_pct
+                            if decision['amount_usd'] > max_probation_size:
+                                original_size = decision['amount_usd']
+                                decision['amount_usd'] = max_probation_size
+                                decision['reason'].append(f"🔬 PROBATION CAP: ${original_size:.2f} → ${max_probation_size:.2f} (max {probation_max_pct:.0%})")
+                                logger.info(f"🔬 FASE 2.3 Probation Cap: {symbol} limited to ${max_probation_size:.2f} (was ${original_size:.2f})")
+            # ==========================================================================
+            
             # 🧠 COHERENCE ENGINE V5.4 ULTRA - Validación Premium de Coherencia
             if self.coherence_engine and decision.get('should_trade'):
                 try:
@@ -3805,6 +3838,9 @@ class AutoTradingBot:
                 else:
                     self.state['losing_trades'] += 1
                 
+                # FASE 2.3: Tracking de probation para activo en prueba
+                self._update_probation_tracking(pair, outcome, profit_loss)
+                
                 if pos['amount'] < 0.00000001:  # Cerró posición
                     del self.state['paper_positions'][base_asset]
                 
@@ -3828,6 +3864,85 @@ class AutoTradingBot:
         except Exception as e:
             logger.error(f"Error en paper trade: {e}")
             return {'error': str(e)}
+    
+    def _update_probation_tracking(self, symbol: str, outcome: str, profit_loss: float) -> None:
+        """
+        FASE 2.3: Actualizar tracking de probation y verificar auto-revert.
+        
+        Args:
+            symbol: Par de trading
+            outcome: 'win' o 'loss'
+            profit_loss: Ganancia/pérdida del trade
+        """
+        from datetime import datetime, timezone
+        
+        p = self.trading_profile
+        if not p or not getattr(p, 'probation_enabled', False):
+            return
+        
+        probation_asset = getattr(p, 'probation_asset', "")
+        if not probation_asset:
+            return
+        
+        # Normalizar para comparación
+        symbol_normalized = symbol.upper().replace("/", "")
+        probation_normalized = probation_asset.upper().replace("/", "")
+        
+        if symbol_normalized != probation_normalized and symbol.upper() != probation_asset.upper():
+            return
+        
+        # Inicializar fecha de inicio si es primer trade
+        if self.probation_state['start_date'] is None:
+            self.probation_state['start_date'] = datetime.now(timezone.utc).isoformat()
+            logger.info(f"🔬 PROBATION: Iniciando periodo de prueba para {probation_asset}")
+        
+        # Actualizar estadísticas
+        self.probation_state['total_trades'] += 1
+        self.probation_state['pnl'] += profit_loss
+        
+        if outcome == 'win':
+            self.probation_state['wins'] += 1
+            self.probation_state['consecutive_losses'] = 0  # Reset contador
+            logger.info(f"🔬 PROBATION WIN: {probation_asset} +${profit_loss:.2f} | "
+                       f"Stats: {self.probation_state['wins']}W/{self.probation_state['losses']}L | "
+                       f"Total P/L: ${self.probation_state['pnl']:.2f}")
+        else:
+            self.probation_state['losses'] += 1
+            self.probation_state['consecutive_losses'] += 1
+            max_losses = getattr(p, 'probation_max_consecutive_losses', 3)
+            
+            logger.warning(f"🔬 PROBATION LOSS: {probation_asset} -${abs(profit_loss):.2f} | "
+                          f"Consecutive: {self.probation_state['consecutive_losses']}/{max_losses} | "
+                          f"Stats: {self.probation_state['wins']}W/{self.probation_state['losses']}L")
+            
+            # Verificar auto-revert
+            if self.probation_state['consecutive_losses'] >= max_losses:
+                self._execute_probation_auto_revert(probation_asset)
+    
+    def _execute_probation_auto_revert(self, asset: str) -> None:
+        """
+        FASE 2.3: Ejecutar auto-revert cuando se alcanzan pérdidas consecutivas máximas.
+        
+        Args:
+            asset: Activo a re-bloquear
+        """
+        logger.error(f"🚨 PROBATION AUTO-REVERT: {asset} alcanzó límite de pérdidas consecutivas")
+        logger.error(f"   Stats finales: {self.probation_state['wins']}W/{self.probation_state['losses']}L | "
+                    f"P/L: ${self.probation_state['pnl']:.2f}")
+        
+        self.probation_state['auto_reverted'] = True
+        
+        # Desactivar probation en el perfil (runtime only - no persiste)
+        if self.trading_profile:
+            # Marcar como reverted para que is_symbol_allowed lo bloquee
+            self.trading_profile.probation_enabled = False
+            logger.error(f"   {asset} BLOQUEADO nuevamente. Probation desactivada.")
+        
+        # Log para auditoría
+        logger.info(f"📊 PROBATION_AUTO_REVERT: asset={asset}, "
+                   f"consecutive_losses={self.probation_state['consecutive_losses']}, "
+                   f"total_trades={self.probation_state['total_trades']}, "
+                   f"pnl={self.probation_state['pnl']:.2f}")
     
     def _calculate_position_size(self, current_price: float) -> float:
         """LEGACY: Usar _calculate_position_size_v52"""
@@ -3988,6 +4103,13 @@ class AutoTradingBot:
             # Si >= max_conf, multiplier = 1.0 (full size)
             
             optimal_size *= partial_multiplier
+        
+        # ========== FASE 2.3: PROBATION FORCED PARTIAL SIZING ==========
+        # Activos en probation SIEMPRE usan partial sizing máximo
+        # NOTA: El cap se aplica solo si el activo actual es el de probation
+        # Verificado en execute_trade donde se conoce el símbolo
+        probation_cap_applied = False
+        # Cap movido a execute_trade donde hay contexto del símbolo
         
         # Log para tracking
         if total_trades < 20 or caes_multiplier != 1.0 or partial_multiplier != 1.0:

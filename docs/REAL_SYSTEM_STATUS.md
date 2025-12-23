@@ -32,9 +32,20 @@
   - `short_selling_symbols`: ['BTC/USD']
   - `short_selling_min_bearish_confidence`: 0.70
 
-#### FASE 2.3: Quarantine Re-evaluation
-- **Estado**: ⏳ PENDIENTE
-- **Lógica**: Probar UN activo bloqueado con reglas nuevas, auto-revert tras 3 pérdidas
+#### FASE 2.3: Quarantine Probation System
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Probar UN activo bloqueado con reglas estrictas
+- **Activo en Probation**: AVAX/USD (menor pérdida histórica después de XRP/BTC)
+- **Comportamiento**:
+  - Partial sizing forzado (máximo 40%)
+  - Contador de pérdidas consecutivas
+  - Auto-revert a cuarentena tras 3 pérdidas consecutivas
+- **Configuración** (en PRODUCTION_STABLE):
+  - `probation_enabled`: True
+  - `probation_asset`: 'AVAX/USD'
+  - `probation_max_consecutive_losses`: 3
+  - `probation_force_partial`: True
+  - `probation_max_size_pct`: 0.40
 
 ### Investor-Ready UI Refactor (Dec 23, 2025)
 **Eliminated all phrases that could damage investor confidence:**
