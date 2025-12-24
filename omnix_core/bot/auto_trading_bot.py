@@ -60,11 +60,11 @@ import threading
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# ARES HARD KILL SWITCH - Dec 24, 2025
-# ARES V1/V2 removed from voting permanently. EMA_REGIME_SIGNAL is primary driver.
-# This constant overrides ALL other ARES configuration. DO NOT set to False.
+# ARES CODE REMOVED - Dec 24, 2025
+# ARES V1/V2 scoring code has been completely eliminated from this file.
+# EMA_REGIME_SIGNAL (40 pts) is now the sole primary driver.
+# See git history for legacy ARES implementation if needed.
 # ============================================================================
-ARES_HARD_DISABLED = True
 
 from omnix_config import VERSION_BANNER
 
@@ -2560,97 +2560,13 @@ class AutoTradingBot:
                     score -= 10
                     decision['reason'].append(f"⚠️ Kelly: Posición óptima muy baja")
             
-            # ========== ESTRATEGIAS ARES QUANTUM (HARD DISABLED) ==========
-            # ARES_HARD_DISABLED = True at line 70 - this block is permanently skipped
-            if ARES_HARD_DISABLED:
-                # HARD KILL SWITCH - ARES never executes regardless of profile config
-                logger.debug("🛡️ [ARES_HARD_KILL] ARES V1/V2 permanently disabled - entire block skipped")
-                decision['v52_analysis']['ares_hard_disabled'] = True
-                decision['v52_analysis']['ares_disabled_reason'] = 'ARES_HARD_DISABLED=True at line 70 - Dec 24, 2025'
-                decision['decision_trace'].append('ARES_HARD_KILL: Block skipped')
-            else:
-                # Legacy ARES code - UNREACHABLE while ARES_HARD_DISABLED = True
-                ares_v1_enabled = False
-                ares_v2_enabled = False
-                if TRADING_PROFILES_AVAILABLE:
-                    try:
-                        active_profile = get_active_profile()
-                        ares_v1_enabled = active_profile.extra_params.get('ares_v1_enabled', False)
-                        ares_v2_enabled = active_profile.extra_params.get('ares_v2_enabled', False)
-                    except Exception:
-                        pass
-                
-                # 8. ARES V1 Swing Trading (UNREACHABLE)
-                try:
-                    if ares_v1_enabled and self.ares_v1 is not None and hasattr(self.ares_v1, 'analyze'):
-                        max_score += 20
-                        ares_result = self.ares_v1.analyze(analysis)
-                        
-                        if ares_result.get('approved', False):
-                            ares_signal = ares_result.get('signal', 'NONE')
-                            ares_strength = ares_result.get('strength', 'normal')
-                            signal_score = ares_result.get('signal_data', {}).get('score', 0)
-                            
-                            if ares_signal == 'LONG' and ares_strength in ['ares', 'strong']:
-                                score += 20
-                                decision['reason'].append(f"🧬 ARES V1: STRONG LONG ({signal_score}/6 signals)")
-                            elif ares_signal == 'LONG':
-                                score += 10
-                                decision['reason'].append(f"✅ ARES V1: LONG ({signal_score}/6 signals)")
-                            elif ares_signal == 'SHORT' and ares_strength in ['ares', 'strong']:
-                                score -= 20
-                                decision['reason'].append(f"🧬 ARES V1: STRONG SHORT ({signal_score}/6 signals)")
-                            elif ares_signal == 'SHORT':
-                                score -= 10
-                                decision['reason'].append(f"⚠️ ARES V1: SHORT ({signal_score}/6 signals)")
-                            
-                            decision['v52_analysis']['ares_v1_signal'] = ares_signal
-                            decision['v52_analysis']['ares_v1_strength'] = ares_strength
-                            decision['v52_analysis']['ares_v1_score'] = signal_score
-                        else:
-                            ares_reason = ares_result.get('reason', 'Sin señal')
-                            decision['reason'].append(f"⚠️ ARES V1: {ares_reason}")
-                            decision['v52_analysis']['ares_v1_filtered'] = ares_reason
-                except Exception as e:
-                    logger.debug(f"ARES V1 error: {e}")
-                    decision['v52_analysis']['ares_v1_error'] = str(e)
-                
-                # 9. ARES V2 Scalping M1 (UNREACHABLE)
-                try:
-                    if ares_v2_enabled and self.ares_v2 is not None and hasattr(self.ares_v2, 'analyze'):
-                        max_score += 15
-                        ares_v2_result = self.ares_v2.analyze(analysis)
-                        
-                        if ares_v2_result.get('approved', False):
-                            scalp_signal = ares_v2_result.get('signal', 'NONE')
-                            scalp_strength = ares_v2_result.get('strength', 'normal')
-                            scalp_score = ares_v2_result.get('score', 0)
-                            
-                            if scalp_signal == 'LONG' and scalp_strength in ['ultra', 'aggressive']:
-                                score += 15
-                                decision['reason'].append(f"🧨 ARES V2: STRONG LONG ({scalp_score}/5 signals)")
-                            elif scalp_signal == 'LONG':
-                                score += 8
-                                decision['reason'].append(f"✅ ARES V2: LONG ({scalp_score}/5 signals)")
-                            elif scalp_signal == 'SHORT' and scalp_strength in ['ultra', 'aggressive']:
-                                score -= 15
-                                decision['reason'].append(f"🧨 ARES V2: STRONG SHORT ({scalp_score}/5 signals)")
-                            elif scalp_signal == 'SHORT':
-                                score -= 8
-                                decision['reason'].append(f"⚠️ ARES V2: SHORT ({scalp_score}/5 signals)")
-                            
-                            decision['v52_analysis']['ares_v2_signal'] = scalp_signal
-                            decision['v52_analysis']['ares_v2_strength'] = scalp_strength
-                            decision['v52_analysis']['ares_v2_score'] = scalp_score
-                        else:
-                            scalp_reason = ares_v2_result.get('reason', 'Sin señal')
-                            decision['reason'].append(f"⚠️ ARES V2: {scalp_reason}")
-                            decision['v52_analysis']['ares_v2_filtered'] = scalp_reason
-                except Exception as e:
-                    logger.debug(f"ARES V2 error: {e}")
-                    decision['v52_analysis']['ares_v2_error'] = str(e)
+            # ========== ARES REMOVED (Dec 24, 2025) ==========
+            # ARES V1/V2 eliminated from scoring. EMA Regime Signal is now sole driver.
+            # Legacy code removed to reduce noise. See git history for reference.
+            decision['v52_analysis']['ares_status'] = 'REMOVED_V6.5.4d'
+            decision['decision_trace'].append('ARES_REMOVED: Code eliminated Dec 24, 2025')
             
-            # 10. NON-MARKOVIAN MEMORY KERNEL V6.1 (peso: 12 puntos - QUANTUM TEMPORAL MEMORY)
+            # 8. NON-MARKOVIAN MEMORY KERNEL V6.1 (peso: 12 puntos - QUANTUM TEMPORAL MEMORY)
             if non_markovian:
                 max_score += 12
                 nm_signal = non_markovian.get('signal', 'HOLD')
@@ -2678,35 +2594,37 @@ class AutoTradingBot:
                     coherence = nm_metrics['regime_coherence']
                     decision['v52_analysis']['memory_regime_coherence'] = coherence.get('overall_coherence', 0)
             
-            # 11. EMA REGIME SIGNAL V6.5.4d (peso: 25 puntos - SEÑAL REAL DETERMINÍSTICA)
-            # EMA Signal reemplaza outputs pseudo-aleatorios de ARES
+            # 9. EMA REGIME SIGNAL V6.5.4d (peso: 40 puntos - DRIVER PRINCIPAL)
+            # EMA Signal es ahora el driver principal tras eliminar ARES (Dec 24, 2025)
+            # Peso aumentado de 25 a 40 para compensar remoción de ARES (35 pts)
             if ema_signal and ema_direction:
-                max_score += 25
+                max_score += 40
                 
                 if ema_direction == 'LONG':
                     if ema_confidence >= 0.70:
-                        score += 25
+                        score += 40
                         decision['reason'].append(f"📊 EMA Signal: STRONG LONG ({ema_confidence:.0%})")
                     elif ema_confidence >= 0.50:
-                        score += 15
+                        score += 25
                         decision['reason'].append(f"✅ EMA Signal: LONG ({ema_confidence:.0%})")
                     else:
-                        score += 8
+                        score += 12
                         decision['reason'].append(f"📈 EMA Signal: WEAK LONG ({ema_confidence:.0%})")
                         
                 elif ema_direction == 'SHORT':
                     if ema_confidence >= 0.70:
-                        score -= 25
+                        score -= 40
                         decision['reason'].append(f"📊 EMA Signal: STRONG SHORT ({ema_confidence:.0%})")
                     elif ema_confidence >= 0.50:
-                        score -= 15
+                        score -= 25
                         decision['reason'].append(f"⚠️ EMA Signal: SHORT ({ema_confidence:.0%})")
                     else:
-                        score -= 8
+                        score -= 12
                         decision['reason'].append(f"📉 EMA Signal: WEAK SHORT ({ema_confidence:.0%})")
                 
                 # Log institutional para trazabilidad
-                logger.info(f"📊 EMA SIGNAL SCORING: {ema_direction} @ {ema_confidence:.1%} → score delta ±{25 if ema_confidence >= 0.70 else (15 if ema_confidence >= 0.50 else 8)}")
+                ema_delta = 40 if ema_confidence >= 0.70 else (25 if ema_confidence >= 0.50 else 12)
+                logger.info(f"📊 EMA SIGNAL [PRIMARY]: {ema_direction} @ {ema_confidence:.1%} → score delta ±{ema_delta}")
             
             # ========== DECISIÓN FINAL ==========
             
