@@ -106,25 +106,15 @@ except ImportError:
     generate_unique_nonce = lambda: int(time.time() * 1000)
     logger.warning("⚠️ MathematicalOptimizer not available")
 
-# ARES Quantum Protocols - Import and create instances at module level
-try:
-    from omnix_core.strategies.ares_v1 import AresProtocolV1
-    from omnix_core.strategies.ares_v2 import AresProtocolV2
-    ARES_STRATEGIES_AVAILABLE = True
-    # Create instances immediately at module level (trading_system=None initially)
-    # They will work without trading_system for signal generation
-    global_ares_v1 = AresProtocolV1(trading_system=None)
-    global_ares_v2 = AresProtocolV2(trading_system=None)
-    logger.info("✅ ARES Quantum Protocols LOADED:")
-    logger.info(f"   🧬 ARES V1: {global_ares_v1.name} (v{global_ares_v1.version})")
-    logger.info(f"   🧨 ARES V2: {global_ares_v2.name} (v{global_ares_v2.version})")
-except ImportError as e:
-    ARES_STRATEGIES_AVAILABLE = False
-    AresProtocolV1 = None
-    AresProtocolV2 = None
-    global_ares_v1 = None
-    global_ares_v2 = None
-    logger.warning(f"⚠️ ARES Quantum Protocols not available: {e}")
+# Scoring Architecture V6.5.4d - EMA Regime as Primary Driver
+# ARES V1/V2 removed per GPT Expert recommendation (Dec 24, 2025)
+# New scoring: EMA (40pts) + HMM (25pts) + Kalman (15pts) + Non-Markovian (15pts) + Kelly (10pts)
+logger.info("📊 Scoring Architecture V6.5.4d LOADED:")
+logger.info("   📈 EMA Regime Signal: PRIMARY DRIVER (40 pts)")
+logger.info("   🧠 HMM Regime: Market State (25 pts)")
+logger.info("   📊 Kalman Filter: Noise Reduction (15 pts)")
+logger.info("   🔗 Non-Markovian: Temporal Context (15 pts)")
+logger.info("   💰 Kelly Criterion: Position Sizing (10 pts)")
 
 TRADING_AVAILABLE = True
 
@@ -5285,7 +5275,7 @@ global_conversation_history = {}  # Historial de conversación por chat_id
 
 def main():
     """Función principal simplificada"""
-    global global_ai_system, global_trading_system, global_db_manager, global_voice_engine, global_advanced_features, global_video_learning_integration, global_pending_proposals, global_risk_guardian, global_ares_v1, global_ares_v2
+    global global_ai_system, global_trading_system, global_db_manager, global_voice_engine, global_advanced_features, global_video_learning_integration, global_pending_proposals, global_risk_guardian
     
     try:
         logger.info("🚀 INICIANDO OMNIX V5.4 ULTRA - Sistema Institucional")
@@ -5317,15 +5307,8 @@ def main():
         else:
             global_advanced_features = None
         
-        # Connect TradingSystem to existing ARES instances (created at module level)
-        if ARES_STRATEGIES_AVAILABLE and global_ares_v1 and global_ares_v2:
-            logger.info("Conectando ARES Quantum Protocols a TradingSystem...")
-            global_ares_v1.trading_system = global_trading_system
-            global_ares_v2.trading_system = global_trading_system
-            logger.info(f"🧬 ARES V1: {global_ares_v1.name} (v{global_ares_v1.version}) - CONECTADO")
-            logger.info(f"🧨 ARES V2: {global_ares_v2.name} (v{global_ares_v2.version}) - CONECTADO")
-        else:
-            logger.warning("⚠️ ARES Quantum Protocols no disponibles para conexión")
+        # Scoring Architecture V6.5.4d ready (EMA + HMM + Kalman + Non-Markovian + Kelly)
+        logger.info("📊 Scoring Architecture V6.5.4d: 5 inputs + veto layer READY")
         
         # Inicializar AI Risk Guardian V5.4
         global_risk_guardian = None  # Inicializar explícitamente como None
