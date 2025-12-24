@@ -132,6 +132,16 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
   - `omnix_services/ai_service/ai_prompts.py`: Intent detector + performance_risk_discussion instructions
 - **Founder Narrative Rule**: Always speak as "founder controlling risk", never as "architect explaining problems"
 
+#### AI Self-Knowledge System (Dec 24, 2025)
+- **System State Manifest**: `omnix_config/system_state_manifest.json`
+  - Contains verified system state: trading_mode, primary_signal, legacy_modules, quarantine, roadmap
+  - AI reads manifest before responding - no more improvisation
+  - Updated on significant system changes
+- **Prompt Integration**: `omnix_services/ai_service/prompt_templates.py`
+  - `get_system_state_prompt()` injects manifest data into AI context
+  - AI must use manifest values, not invent data
+- **Problem Solved**: AI no longer "hallucinates" about ARES being primary signal or system status
+
 #### Telegram Command Surface Sealed (Dec 24, 2025)
 - **AUDITORÍA COMPLETA**: 85 comandos registrados, 81 handlers únicos, 4 alias
 - **RMS ENFORCEMENT**: `/arbitrage_execute` ahora valida circuit_breaker + limits_engine

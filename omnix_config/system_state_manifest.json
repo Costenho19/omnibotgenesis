@@ -1,0 +1,112 @@
+{
+  "version": "V6.5.4d INSTITUTIONAL+",
+  "last_updated": "2025-12-24",
+  "trading_mode": "paper",
+  "paper_capital": 1000000,
+  
+  "signal_architecture": {
+    "primary_signal": "EMA_REGIME_SIGNAL",
+    "primary_weight": 25,
+    "description": "Deterministic signal based on EMA slope + ATR + HMM regime",
+    "legacy_modules": {
+      "ARES_V1": "Swing scoring (legacy, not primary decisor)",
+      "ARES_V2": "Scalping scoring (legacy, not primary decisor)"
+    }
+  },
+  
+  "veto_system": {
+    "monte_carlo": {
+      "status": "ENFORCEMENT",
+      "veto_1": "Expected return < 0 → TRADE BLOCKED",
+      "veto_2": "VaR95 worse than -3% → TRADE BLOCKED",
+      "size_reduction": "Win rate < 50% → position reduced to 50%"
+    },
+    "rms": {
+      "limits_engine": "Pre-trade validation active",
+      "circuit_breaker": "Halt protection active",
+      "per_trade_limit": "5%",
+      "max_drawdown": "15%"
+    },
+    "coherence_engine": "6-tier veto system active"
+  },
+  
+  "asset_status": {
+    "active_pairs": ["BTC/USD", "XRP/USD"],
+    "quarantined": {
+      "ADA/USD": "16 losses, -$3,847",
+      "SOL/USD": "12 losses, -$2,156", 
+      "ETH/USD": "8 losses, -$1,334",
+      "AVAX/USD": "Probation (max 40% size, 3 loss limit)",
+      "LINK/USD": "16 losses, -$4,482"
+    },
+    "quarantine_reason": "Capital protection - $11,819+ in avoided losses"
+  },
+  
+  "phase2_offensive": {
+    "partial_position_sizing": {
+      "status": "ACTIVE",
+      "logic": "Confidence 50-65% → 25-40% position size"
+    },
+    "btc_short_selling": {
+      "status": "ACTIVE",
+      "condition": "Bearish regime + HMM confidence > 70%",
+      "size": "50% of normal"
+    },
+    "quarantine_probation": {
+      "status": "ACTIVE",
+      "asset": "AVAX/USD",
+      "rules": "Max 40% size, auto-revert after 3 consecutive losses"
+    }
+  },
+  
+  "dashboard_status": {
+    "widgets": "14/14 operational",
+    "total_trades": 109,
+    "data_source": "PostgreSQL (real trades)"
+  },
+  
+  "command_surface": {
+    "audit_date": "2025-12-24",
+    "total_commands": 85,
+    "unique_handlers": 81,
+    "aliases": 4,
+    "status": "Audited and sealed"
+  },
+  
+  "roadmap_features": {
+    "v7_planned": [
+      "alerts_inline (inline buttons)",
+      "history_inline (inline buttons)", 
+      "settings_inline (inline buttons)",
+      "hexagonal_activation (strangler fig pattern)"
+    ],
+    "alternatives_available": {
+      "history": "/performance, /balance",
+      "alerts": "/rms (RMS handles risk alerts)",
+      "settings": "/miconfig, /perfil, /limites"
+    }
+  },
+  
+  "institutional_language": {
+    "blacklisted_phrases": [
+      "rendimiento subóptimo",
+      "señal de alerta",
+      "riesgo de pérdidas reales",
+      "disclaimer de riesgo",
+      "podrías perder todo",
+      "pérdidas sustanciales",
+      "desempeño negativo",
+      "problema",
+      "error crítico"
+    ],
+    "approved_reframes": {
+      "losses": "capital deployment in learning phase",
+      "low_win_rate": "strategy calibration in progress",
+      "negative_pnl": "paper trading validation phase",
+      "problem_assets": "assets under strategic review",
+      "blocked_trades": "risk-managed positions"
+    }
+  },
+  
+  "founder_narrative": "Always speak as founder controlling risk, never as architect explaining problems"
+}

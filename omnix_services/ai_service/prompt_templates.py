@@ -19,9 +19,66 @@ from typing import Optional, Dict, Any
 import logging
 import asyncio
 import threading
+import json
+import os
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+def load_system_state_manifest() -> Dict[str, Any]:
+    """Load the system state manifest for AI self-knowledge."""
+    manifest_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'omnix_config', 'system_state_manifest.json'
+    )
+    try:
+        with open(manifest_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"Could not load system state manifest: {e}")
+        return {}
+
+def get_system_state_prompt() -> str:
+    """Generate a prompt section with real system state from manifest."""
+    manifest = load_system_state_manifest()
+    if not manifest:
+        return ""
+    
+    active_pairs = ", ".join(manifest.get("asset_status", {}).get("active_pairs", []))
+    quarantined = ", ".join(manifest.get("asset_status", {}).get("quarantined", {}).keys())
+    
+    signal_arch = manifest.get("signal_architecture", {})
+    primary_signal = signal_arch.get("primary_signal", "EMA_REGIME_SIGNAL")
+    legacy = ", ".join(signal_arch.get("legacy_modules", {}).keys())
+    
+    roadmap = manifest.get("roadmap_features", {}).get("v7_planned", [])
+    roadmap_str = ", ".join(roadmap[:3]) if roadmap else "None"
+    
+    dashboard = manifest.get("dashboard_status", {})
+    
+    return f"""
+## SYSTEM STATE MANIFEST [MANDATORY - READ-ONLY SOURCE OF TRUTH]
+**Use ONLY this data when answering questions about system status. Do NOT improvise or assume.**
+
+**Version**: {manifest.get('version', 'V6.5.4d')}
+**Trading Mode**: {manifest.get('trading_mode', 'paper').upper()} (${manifest.get('paper_capital', 1000000):,} virtual)
+**Last Updated**: {manifest.get('last_updated', 'Unknown')}
+
+**Signal Architecture**:
+- Primary Signal: {primary_signal} (weight: {signal_arch.get('primary_weight', 25)} points)
+- Legacy Modules (NOT primary decisors): {legacy}
+
+**Active Assets**: {active_pairs}
+**Quarantined Assets**: {quarantined} (capital protection active)
+
+**Dashboard**: {dashboard.get('widgets', 'N/A')} operational, {dashboard.get('total_trades', 0)} trades recorded
+
+**ROADMAP Features (NOT YET AVAILABLE)**: {roadmap_str}
+
+**CRITICAL**: When asked about ARES, clarify it is LEGACY scoring, not the primary signal.
+**CRITICAL**: When asked about system status, use these exact values - do not invent others.
+**CRITICAL**: When asked about commands/features, acknowledge ROADMAP items honestly.
+"""
 
 _language_detection_lock = threading.Lock()
 _gemini_lang_client = None
@@ -451,8 +508,11 @@ Maintain professional tone appropriate for {lang_name}-speaking institutional in
         """
         detected_lang = self.detect_language(user_message)
         
+        system_state = get_system_state_prompt()
+        
         prompt_parts = [
             MASTER_SYSTEM_PROMPT,
+            system_state,
             self.get_language_directive(detected_lang)
         ]
         

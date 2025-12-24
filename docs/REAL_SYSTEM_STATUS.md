@@ -1,13 +1,41 @@
-# OMNIX V7.0 - Estado REAL del Sistema
+# OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 22 de Diciembre 2025  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ MULTI-USER FASE 3b COMPLETADA
+**Fecha**: 24 de Diciembre 2025  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 109 Trades Documentados
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
 ---
 
 ## Cambios Recientes
+
+### AI Self-Knowledge System (Dec 24, 2025)
+**Problema resuelto**: El AI no conocía su propio estado y daba información incorrecta.
+
+**Solución implementada**:
+- **System State Manifest** (`omnix_config/system_state_manifest.json`): Archivo JSON con estado real
+- **Inyección en Prompt**: El AI ahora lee el manifest antes de responder
+- **Datos incluidos**: trading_mode, primary_signal, legacy_modules, quarantine, roadmap, dashboard_status
+
+**Resultado**: El AI responde con datos verificados, no improvisa.
+
+### Telegram Command Surface Audit (Dec 24, 2025)
+**Auditoría exhaustiva de superficie de comandos Telegram:**
+
+| Métrica | Valor |
+|---------|-------|
+| Total Comandos | 85 |
+| Handlers Únicos | 81 |
+| Alias | 4 |
+| Estado | Sellado y documentado |
+
+**Correcciones aplicadas (9 stubs):**
+- Historial, Alertas, Configuración → Mensajes "🛣️ ROADMAP" honestos
+- Alternativas funcionales proporcionadas (`/performance`, `/balance`, `/miconfig`)
+
+**Documentación**: `docs/current/COMMAND_AUDIT_REPORT.md`
+
+---
 
 ### FASE 2: Ofensiva Controlada (Dec 23, 2025)
 **Evolución del sistema para mejorar rendimiento manteniendo control de riesgo**
