@@ -43,6 +43,7 @@ class TradingServiceEnterprise:
         
         # Initialize all sub-modules
         self.kraken = KrakenAPIClient()
+        self.kraken_client = self.kraken  # Alias for compatibility with legacy code
         self.monte_carlo = MonteCarloSimulator(num_simulations=10000)
         self.black_swan = BlackSwanDetector()
         self.pqc = PostQuantumSecurity()
@@ -313,6 +314,91 @@ class TradingServiceEnterprise:
         except Exception as e:
             logger.error(f"❌ Error getting ticker for {symbol}: {e}")
             return None
+    
+    def get_current_price(self, symbol: str) -> Optional[float]:
+        """
+        Get current price for a symbol.
+        
+        Wrapper around get_ticker for compatibility with legacy code.
+        
+        Args:
+            symbol: Trading pair (e.g., 'BTC/USD', 'BTC')
+            
+        Returns:
+            Current price as float, or None if unavailable
+        """
+        try:
+            # Clean symbol
+            clean_symbol = symbol.replace('/', '')
+            ticker = self.get_ticker(clean_symbol)
+            
+            if ticker and 'last' in ticker:
+                return float(ticker['last'])
+            return None
+        except Exception as e:
+            logger.error(f"Error getting current price for {symbol}: {e}")
+            return None
+    
+    def get_real_market_data(self, symbol: str = 'BTC/USD') -> Optional[Dict[str, Any]]:
+        """
+        Get real market data for a symbol.
+        
+        Args:
+            symbol: Trading pair (e.g., 'BTC/USD')
+            
+        Returns:
+            Dict with precio_actual, volumen, cambio_24h, etc.
+        """
+        try:
+            clean_symbol = symbol.replace('/', '')
+            ticker = self.get_ticker(clean_symbol)
+            
+            if not ticker:
+                return None
+            
+            return {
+                'precio_actual': ticker.get('last', 0),
+                'volumen': ticker.get('volume', 'N/A'),
+                'cambio_24h': 0,  # Kraken ticker doesn't include 24h change
+                'fuente': 'Kraken',
+                'timestamp': __import__('datetime').datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Error getting market data for {symbol}: {e}")
+            return None
+    
+    def generate_comprehensive_analysis(self, symbol: str = 'BTC/USD') -> str:
+        """
+        Generate comprehensive analysis for a symbol.
+        
+        Args:
+            symbol: Trading pair (e.g., 'BTC/USD')
+            
+        Returns:
+            Analysis text string
+        """
+        try:
+            market_data = self.get_real_market_data(symbol)
+            
+            if not market_data:
+                return f"No se pudo obtener datos de mercado para {symbol}"
+            
+            price = market_data.get('precio_actual', 0)
+            volume = market_data.get('volumen', 'N/A')
+            
+            analysis = f"""📊 **Análisis {symbol}**
+
+**Precio actual:** ${price:,.2f}
+**Volumen 24h:** {volume}
+**Fuente:** Kraken API
+
+*Análisis generado en tiempo real*
+"""
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Error generating analysis for {symbol}: {e}")
+            return f"Error generando análisis para {symbol}"
     
     def analyze_trading_opportunity(
         self,

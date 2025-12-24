@@ -219,6 +219,9 @@ except ImportError as e:
     global_advanced_features = None
     logger.warning(f"⚠️ Advanced Features Engine no disponible: {e}")
 
+# Global DB Manager - Set in EnterpriseTelegramBot.__init__
+global_db_manager = None
+
 # Admin verification function - ID from env_config
 ADMIN_IDS = {
     int(settings.TELEGRAM_ADMIN_ID),  # Harold Nunes - Creator (from TELEGRAM_ADMIN_USER_ID)
@@ -236,9 +239,12 @@ class EnterpriseTelegramBot:
     """Bot Telegram empresarial con todas las funcionalidades"""
     
     def __init__(self, db_manager=None):
+        global global_db_manager  # Set global reference for legacy code
+        
         self.application = None
         self.is_running = False
         self.db_manager = db_manager  # MEMORIA PERSISTENTE POSTGRESQL
+        global_db_manager = db_manager  # Set global for backwards compatibility
         self.ai = ConversationalAI()  # SUPERINTELIGENCIA PARA HAROLD (adapter correcto)
         
         self._message_buffers: Dict[str, List[Dict[str, Any]]] = {}
