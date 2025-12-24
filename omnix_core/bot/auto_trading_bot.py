@@ -2616,7 +2616,7 @@ class AutoTradingBot:
             # ========== ARES REMOVED (Dec 24, 2025) ==========
             # ARES V1/V2 eliminated from scoring. EMA Regime Signal is now sole driver.
             # Legacy code removed to reduce noise. See git history for reference.
-            decision['v52_analysis']['ares_status'] = 'REMOVED_V6.5.4d'
+            decision['v52_analysis']['ares_status'] = 'REMOVED'
             decision['decision_trace'].append('ARES_REMOVED: Code eliminated Dec 24, 2025')
             
             # 8. NON-MARKOVIAN MEMORY KERNEL V6.5.4d (peso: 15 puntos - GPT Expert Dec 24, 2025)
