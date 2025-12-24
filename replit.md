@@ -132,6 +132,23 @@ Recent enhancements include an Asset Quarantine System for capital protection, a
   - `omnix_services/ai_service/ai_prompts.py`: Intent detector + performance_risk_discussion instructions
 - **Founder Narrative Rule**: Always speak as "founder controlling risk", never as "architect explaining problems"
 
+#### Telegram Command Surface Sealed (Dec 24, 2025)
+- **AUDITORÍA COMPLETA**: 85 comandos registrados, 81 handlers únicos, 4 alias
+- **RMS ENFORCEMENT**: `/arbitrage_execute` ahora valida circuit_breaker + limits_engine
+  - Log: `🛡️ [RMS_BLOCK] arbitrage_execute blocked by circuit_breaker`
+  - Log: `🛡️ [RMS_BLOCK] arbitrage_execute blocked by limits_engine`
+- **LENGUAJE INSTITUCIONAL**: `/start` disclaimer reescrito sin frases alarmistas
+  - Antes: "Trading conlleva RIESGO de pérdida total"
+  - Ahora: "Sistema operando en fase de validación"
+- **DOCUMENTACIÓN**: Inventario completo en `docs/current/COMPLETE_FUNCTIONALITY_MAP.md` §10
+- **COMANDOS CON SIDE EFFECTS**: Todos protegidos por RMS
+  - `/paper_buy`, `/paper_sell` → PaperTradingManager (circuit_breaker + limits_engine)
+  - `/arbitrage_execute` → ArbitrageExecutor (circuit_breaker + limits_engine)
+  - `/emergency_halt`, `/resume_trading` → Admin only
+- **COMANDOS READ-ONLY**: 52 comandos informativos (sin side effects, sin protección necesaria)
+- **COMANDOS CONDICIONALES**: 26 comandos que solo se registran si su módulo está activo
+- **ESTADO**: Superficie sellada y lista para usuarios
+
 ### Trading Profiles System
 Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
 

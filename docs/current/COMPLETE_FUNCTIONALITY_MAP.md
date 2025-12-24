@@ -545,5 +545,86 @@ OMNIX/
 
 ---
 
+## 10. INVENTARIO DE COMANDOS TELEGRAM (Dic 24, 2025)
+
+### 10.1 Resumen de Superficie de Comandos
+
+| Categoría | Cantidad | Estado |
+|-----------|----------|--------|
+| Comandos Registrados | 85 | ✅ |
+| Handlers Únicos | 81 | ✅ |
+| Alias (apuntan a otro handler) | 4 | ✅ |
+| Comandos Comentados (TODO) | 2 | ❌ No expuestos |
+
+### 10.2 Comandos READ-ONLY (Información)
+
+| Comando | Handler | Backend | Protección |
+|---------|---------|---------|------------|
+| `/start` | `start_command` | Static + InlineKeyboards | N/A |
+| `/version` | `version_command` | VERSION_BANNER | N/A |
+| `/precio` | `precio_command` | Kraken API | N/A |
+| `/market` | `market_command` | market_data | N/A |
+| `/help`, `/ayuda` | `help_command` | Static | N/A |
+| `/balance` | `balance_command` | Kraken/Paper | N/A |
+| `/status` | `status_command` | System status | N/A |
+| `/analisis` | `analisis_command` | TradingService | N/A |
+| `/montecarlo`, `/quantum` | `montecarlo_command` | Monte Carlo 10K | N/A |
+| `/quantum_test` | `quantum_test_command` | QRNG ANU | N/A |
+| `/quantum_stats` | `quantum_stats_command` | QRNG stats | N/A |
+| `/quantum_demo` | `quantum_demo_command` | physics_validator | N/A |
+| `/blackswan` | `blackswan_command` | BlackSwanDetector | N/A |
+| `/sentiment` | `sentiment_command` | Fear&Greed API | N/A |
+| `/sharia` | `sharia_command` | Sharia validator | N/A |
+| `/orderbook` | `orderbook_command` | Kraken orderbook | N/A |
+| `/rms` | `rms_dashboard_command` | LimitsEngine | N/A |
+| `/rms_limits` | `rms_limits_command` | LimitsEngine | N/A |
+| `/arbitrage_scan` | `arbitrage_scan_command` | ArbitrageScanner | N/A |
+| `/trading` | `trading_menu_command` | Static menu | N/A |
+| `/arbitraje` | `arbitraje_command` | Alias arbitrage | N/A |
+
+### 10.3 Comandos con SIDE EFFECTS (Trading)
+
+| Comando | Handler | Backend | RMS Protected |
+|---------|---------|---------|---------------|
+| `/paper_buy` | `paper_buy_command` | PaperTradingManager | ✅ circuit_breaker + limits_engine |
+| `/paper_sell` | `paper_sell_command` | PaperTradingManager | ✅ circuit_breaker + limits_engine |
+| `/arbitrage_execute` | `arbitrage_execute_command` | ArbitrageExecutor | ✅ circuit_breaker + limits_engine (Dec 24) |
+| `/comprar_bolsa` | `buy_stock_command` | StockHandler | ✅ Condicional |
+| `/vender_bolsa` | `sell_stock_command` | StockHandler | ✅ Condicional |
+| `/emergency_halt` | `rms_emergency_halt_command` | CircuitBreaker | ✅ Admin only |
+| `/resume_trading` | `rms_resume_trading_command` | CircuitBreaker | ✅ Admin only |
+| `/autotrading` | `autotrading_command` | UserSettingsService | ✅ Owner only |
+
+### 10.4 Comandos CONDICIONALES (requieren módulo activo)
+
+Estos comandos solo se registran si su módulo está disponible:
+
+| Condición | Comandos |
+|-----------|----------|
+| `if self.stock_handler` | `/balance_bolsa`, `/mercado`, `/stock_status`, `/risk_dashboard`, `/comprar_bolsa`, `/vender_bolsa` |
+| `if self.arbitrage_scanner` | `/arbitrage`, `/arbitrage_scan`, `/arbitrage_execute`, `/arbitrage_stats` |
+| `if self.feedback_manager` | `/feedback`, `/community_stats`, `/top_strategies`, `/my_contributions`, `/vote_strategy`, `/leaderboard` |
+| `if self.signal_contribution` | `/share_signal`, `/community_signals`, `/my_signals`, `/alpha_leaderboard`, `/execute_signal` |
+| `if self.limits_engine` | `/rms`, `/rms_limits`, `/rms_set`, `/rms_history`, `/emergency_halt`, `/resume_trading` |
+| `if self.user_settings_service` | `/miconfig`, `/perfil`, `/limites`, `/proteccion`, `/estrategias`, `/cryptos`, `/autotrading`, `/pausar`, `/reanudar`, `/onboarding` |
+
+### 10.5 Lenguaje Institucional
+
+**Archivos de Enforcement:**
+- `omnix_services/ai_service/prompt_templates.py` → MASTER_SYSTEM_PROMPT
+- `omnix_services/ai_service/ai_prompts.py` → Intent detector
+
+**Blacklisted Phrases (21 EN/ES):**
+- pérdida/loss, drawdown, failure, problema, error crítico
+- warning sign, urgent, disclaimer, no garantiza
+- podrías perder todo, rendimiento subóptimo
+
+**Comandos Estáticos Revisados (Dic 24, 2025):**
+- `/start` → Lenguaje institucional aplicado
+- `/legal`, `/educacion` → Contenido legal obligatorio (sin modificar)
+
+---
+
 *Documento generado: 15 de Diciembre 2025*
+*Última actualización: 24 de Diciembre 2025 - Sellado de comandos*
 *Propósito: Base para reescritura limpia V7.0*

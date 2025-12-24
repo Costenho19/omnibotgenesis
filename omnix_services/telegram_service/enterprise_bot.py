@@ -784,13 +784,13 @@ class EnterpriseTelegramBot:
                 reply_markup=keyboard
             )
             
-            # Enviar disclaimer legal por separado
-            disclaimer = """⚠️ **DISCLAIMER LEGAL:**
-OMNIX es EDUCATIVO. NO es asesor financiero.
-Trading conlleva RIESGO de pérdida total.
-Opera bajo tu propio riesgo. /legal para detalles."""
+            # Enviar nota informativa (lenguaje institucional)
+            info_note = """📋 **NOTA INFORMATIVA:**
+OMNIX es una herramienta de análisis de mercado.
+Consulte /legal para términos completos de uso.
+Sistema operando en fase de validación."""
             
-            await update.message.reply_text(disclaimer, parse_mode='Markdown')
+            await update.message.reply_text(info_note, parse_mode='Markdown')
             
         except Exception as e:
             logger.error(f"❌ Error comando start: {e}")
@@ -6401,6 +6401,17 @@ diferencias de precio mayores al umbral configurado.
                 await update.message.reply_text("🔒 Solo administradores pueden ejecutar arbitraje")
                 return
             
+            # 🛡️ RMS VALIDATION - Circuit Breaker check
+            if self.circuit_breaker and self.circuit_breaker.is_trading_halted(str(user_id)):
+                halt_status = self.circuit_breaker.get_halt_status(str(user_id))
+                await update.message.reply_text(
+                    f"🛡️ Trading pausado por protección del sistema.\n"
+                    f"Razón: {halt_status.get('reason', 'Circuit breaker activo')}\n"
+                    f"Use /resume_trading para reanudar."
+                )
+                logger.warning(f"🛡️ [RMS_BLOCK] arbitrage_execute blocked by circuit_breaker for user {user_id}")
+                return
+            
             # Obtener amount (default: $1000)
             amount_usd = float(context.args[0]) if context.args else 1000.0
             
@@ -6410,6 +6421,23 @@ diferencias de precio mayores al umbral configurado.
                     f"❌ Amount ${amount_usd:,.2f} excede límite de ${self.arbitrage_executor.max_trade_size_usd:,.2f}"
                 )
                 return
+            
+            # 🛡️ RMS VALIDATION - Limits Engine check
+            if self.limits_engine:
+                validation = self.limits_engine.validate_order(
+                    user_id=str(user_id),
+                    symbol='BTC/USD',
+                    side='buy',
+                    amount_usd=amount_usd
+                )
+                if not validation.get('approved', True):
+                    await update.message.reply_text(
+                        f"🛡️ Trade bloqueado por límites de riesgo.\n"
+                        f"Razón: {validation.get('reason', 'Límite excedido')}\n"
+                        f"Use /rms_limits para ver límites actuales."
+                    )
+                    logger.warning(f"🛡️ [RMS_BLOCK] arbitrage_execute blocked by limits_engine: {validation.get('reason')}")
+                    return
             
             # Mensaje de carga
             loading_msg = await update.message.reply_text(f"🔍 Buscando mejor oportunidad para ${amount_usd:,.2f}...")
