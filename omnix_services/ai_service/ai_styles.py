@@ -68,30 +68,20 @@ class VisualStylesManager:
             'ethereum': '⟠🚀 Ethereum', 
             'eth': '⟠⚡ ETH',
             'trading': '💹 Trading',
-            'análisis': '📊 Análisis',
             'analysis': '📊 Analysis',
-            'precio': '💰 Precio',
             'price': '💰 Price',
-            'comprar': '🟢 COMPRAR',
             'buy': '🟢 BUY',
-            'vender': '🔴 VENDER',
             'sell': '🔴 SELL',
             'bullish': '🟢📈 BULLISH',
             'bearish': '🔴📉 BEARISH',
             'profit': '🟢💎 PROFIT',
             'loss': '🔴⚠️ LOSS',
             'market': '🏛️ Market',
-            'mercado': '🏛️ Mercado',
             'signal': '📡 Signal',
-            'señal': '📡 Señal',
             'strategy': '🧠 Strategy',
-            'estrategia': '🧠 Estrategia',
             'opportunity': '🎯 Opportunity',
-            'oportunidad': '🎯 Oportunidad',
             'risk': '⚠️ Risk',
-            'riesgo': '⚠️ Riesgo',
-            'volatility': '⚡ Volatility',
-            'volatilidad': '⚡ Volatilidad'
+            'volatility': '⚡ Volatility'
         }
         
         self.premium_separators = {
