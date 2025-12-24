@@ -9,30 +9,41 @@
 
 ## Cambios Recientes
 
-### ARES Removed from Voting (Dec 24, 2025)
+### ARES Hard Kill Switch (Dec 24, 2025)
 **Problema identificado por análisis GPT Expert + Senior Audit:**
 ARES V1/V2 seguía votando con 35 puntos (20+15) a pesar de que EMA_REGIME_SIGNAL es el driver principal documentado.
 
-**Cambios implementados:**
+**Protección implementada (Hard Kill Switch):**
 
-| Archivo | Cambio |
-|---------|--------|
-| `trading_profiles.py` | `ares_v1_enabled: False`, `ares_v2_enabled: False` |
-| `system_state_manifest.json` | ARES marcado como `status: DISABLED` |
-| `auto_trading_bot.py` | Log `🛡️ [ARES_DISABLED]` cuando excluido |
+| Capa | Mecanismo | Ubicación |
+|------|-----------|-----------|
+| **1. Constante Global** | `ARES_HARD_DISABLED = True` | Línea 70 de `auto_trading_bot.py` |
+| **2. Guard if/else** | `if ARES_HARD_DISABLED: skip block` | Líneas 2565-2654 |
+| **3. Profile Config** | `ares_v1_enabled: False` | `trading_profiles.py` |
+| **4. Manifest** | `status: DISABLED` | `system_state_manifest.json` |
+
+**Comportamiento actual:**
+
+```
+if ARES_HARD_DISABLED:
+    logger.debug("🛡️ [ARES_HARD_KILL] ARES V1/V2 permanently disabled")
+    decision['decision_trace'].append('ARES_HARD_KILL: Block skipped')
+else:
+    # UNREACHABLE - Legacy ARES code preserved for reference
+```
 
 **Nuevo estado del scoring:**
 
-| Componente | Peso Anterior | Peso Actual |
-|------------|---------------|-------------|
-| EMA Regime Signal | 25 puntos | 25 puntos (driver único) |
-| ARES V1 | 20 puntos | **0 puntos** |
-| ARES V2 | 15 puntos | **0 puntos** |
+| Componente | Peso Anterior | Peso Actual | Estado |
+|------------|---------------|-------------|--------|
+| EMA Regime Signal | 25 puntos | 25 puntos | **ÚNICO DRIVER** |
+| ARES V1 | 20 puntos | 0 puntos | HARD DISABLED |
+| ARES V2 | 15 puntos | 0 puntos | HARD DISABLED |
 
-**Impacto esperado:**
-- Decisiones más limpias sin conflicto de señales
-- ARES permanece como observador histórico
-- Win rate debería mejorar al eliminar outputs pseudo-aleatorios
+**Garantías:**
+- ARES NO puede reactivarse por accidente (merge, config, profile change)
+- Código legacy preservado como referencia pero marcado `UNREACHABLE`
+- Logs y traces confirman exclusión en cada decisión
 
 ### Traceability Matrix Full Validation (Dec 24, 2025)
 **Script creado:** `scripts/traceability/validate_traceability.py`

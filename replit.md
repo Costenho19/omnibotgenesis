@@ -52,6 +52,14 @@ The system integrates several core engines: AutoTradingBot, Non-Markovian Memory
 ### AI Architecture and Enforcement
 The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection and a Multilingual Prompt Architecture with dynamic language detection and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. ARES V1/V2 are explicitly disabled in the scoring system, acting as observers only, making EMA Regime Signal the sole primary driver.
 
+### ARES Hard Kill Switch (Dec 24, 2025)
+ARES V1/V2 has been **permanently disabled** from the trading decision scoring:
+- **Constant**: `ARES_HARD_DISABLED = True` at line 70 of `auto_trading_bot.py`
+- **Effect**: Entire ARES block is skipped regardless of profile configuration
+- **Log**: `🛡️ [ARES_HARD_KILL] ARES V1/V2 permanently disabled`
+- **Trace**: `ARES_HARD_KILL: Block skipped` added to decision_trace
+- **Reason**: ARES was adding 35 conflicting points; EMA_REGIME_SIGNAL is now sole driver (25 points)
+
 ### Trading Profiles
 The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 
