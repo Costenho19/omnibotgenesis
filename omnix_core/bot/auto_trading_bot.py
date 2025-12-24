@@ -2431,89 +2431,81 @@ class AutoTradingBot:
                 # Logging para inversores
                 logger.info(f"⚡ ADAPTIVE WEIGHTS: ω={omega:.3f}, Kalman={kalman_weight:.3f}, MC={monte_carlo_weight:.3f}, H={adaptive_weights.hurst:.3f}, α={adaptive_weights.alpha:.3f}, Regime={adaptive_weights.regime}")
             
-            # ========== ESTRATEGIAS CLÁSICAS (peso 40%) ==========
+            # ========== V6.5.4d: VETO/PENALTY ONLY (GPT Expert Dec 24, 2025) ==========
+            # Monte Carlo, Black Swan, Sentiment, Quantum Momentum: NO suman al max_score
+            # Solo aplican penalizaciones o pequeños boosts. El scoring principal es:
+            # EMA(40) + HMM(25) + Kalman(15) + Non-Markovian(15) + Kelly(10 modifier) = 105 pts
             
-            # 1. Monte Carlo (peso: 15 puntos * monte_carlo_weight)
-            monte_carlo_base_weight = 15
-            if monte_carlo:
-                adjusted_weight = monte_carlo_base_weight * monte_carlo_weight
-                max_score += adjusted_weight
-                win_rate = monte_carlo.get('win_rate', 0.5)  # V6.5.4: default as decimal
-                win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate  # Handle both formats
-                if win_rate_pct > 60:
-                    score += adjusted_weight
-                    decision['reason'].append(f"✅ Monte Carlo: {win_rate_pct:.1f}% win rate (peso: {monte_carlo_weight:.0%})")
-                elif win_rate_pct > 50:
-                    score += adjusted_weight * 0.53
-                elif win_rate_pct < 40:
-                    score -= adjusted_weight
-                    decision['reason'].append(f"⚠️ Monte Carlo: {win_rate_pct:.1f}% win rate BAJO (peso: {monte_carlo_weight:.0%})")
-            
-            # 2. Black Swan (peso: 15 puntos - CRÍTICO)
-            # Penalizaciones MUY reducidas en paper mode para generar trades
             is_paper_mode = self.config.get('paper_mode', False)
+            
+            # 1. Monte Carlo (VETO/PENALTY ONLY - no suma a max_score)
+            if monte_carlo:
+                win_rate = monte_carlo.get('win_rate', 0.5)
+                win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate
+                
+                if win_rate_pct < 40:
+                    mc_penalty = 10 if is_paper_mode else 20
+                    score -= mc_penalty
+                    decision['reason'].append(f"⚠️ Monte Carlo VETO: {win_rate_pct:.1f}% win rate → -{mc_penalty}")
+                    decision['decision_trace'].append(f'MC_VETO: WinRate {win_rate_pct:.1f}% < 40%')
+                elif win_rate_pct > 60:
+                    decision['reason'].append(f"✅ Monte Carlo: {win_rate_pct:.1f}% win rate OK")
+            
+            # 2. Black Swan (VETO/PENALTY ONLY - no suma a max_score)
             if black_swan:
-                max_score += 15
                 risk_level = black_swan.get('risk_level', 'MEDIUM')
                 crash_prob = black_swan.get('crash_probability', 50)
                 
                 if risk_level == 'HIGH' or crash_prob > 30:
-                    veto_penalty = 5 if is_paper_mode else 30  # -5 paper, -30 real
-                    score -= veto_penalty
-                    mode_label = "[PAPER -5]" if is_paper_mode else "[REAL -30]"
-                    decision['reason'].append(f"🚨 Black Swan: Riesgo {risk_level} {mode_label}")
+                    bs_penalty = 8 if is_paper_mode else 25
+                    score -= bs_penalty
+                    decision['reason'].append(f"🚨 Black Swan VETO: Riesgo {risk_level} → -{bs_penalty}")
+                    decision['decision_trace'].append(f'BLACK_SWAN_VETO: {risk_level}, CrashProb={crash_prob}%')
                 elif risk_level == 'LOW':
-                    score += 15
-                    decision['reason'].append(f"✅ Black Swan: Riesgo BAJO")
+                    decision['reason'].append(f"✅ Black Swan: Riesgo BAJO OK")
             
-            # 3. Sentiment + FEAR & GREED CONTRARIAN STRATEGY
-            # "Be fearful when others are greedy, be greedy when others are fearful" - Warren Buffett
-            # Aplica en ambos modos: agresivo en paper, conservador en real
+            # 3. Sentiment (VETO/PENALTY ONLY - no suma a max_score)
+            # Fear & Greed Contrarian mantiene pequeño boost como excepción táctica
             if sentiment:
-                max_score += 10
                 sent_score = sentiment.get('overall_score', 50)
                 fear_greed = sentiment.get('fear_greed_index', sent_score)
                 
-                if sent_score > 70:
-                    score += 10
-                    decision['reason'].append(f"✅ Sentiment: {sent_score:.0f}/100 STRONG")
-                elif sent_score > 55:
-                    score += 5
-                elif sent_score < 30:
-                    contrarian_boost = 8 if is_paper_mode else 4
+                if sent_score < 25:
+                    sent_penalty = 5 if is_paper_mode else 15
+                    score -= sent_penalty
+                    decision['reason'].append(f"⚠️ Sentiment VETO: {sent_score:.0f}/100 Extreme Negative → -{sent_penalty}")
+                elif sent_score < 35:
+                    contrarian_boost = 3 if is_paper_mode else 2
                     score += contrarian_boost
-                    mode_label = "PAPER" if is_paper_mode else "REAL"
-                    decision['reason'].append(f"🎯  Fear Contrarian +{contrarian_boost} [{mode_label}] (miedo = oportunidad)")
-                    logger.info(f"🎯 {VERSION_BANNER} FEAR CONTRARIAN [{mode_label}]: Sentiment {sent_score:.0f}/100 → BUY boost +{contrarian_boost}")
+                    decision['reason'].append(f"🎯 Fear Contrarian: +{contrarian_boost} (miedo = oportunidad)")
+                elif sent_score > 80:
+                    greed_penalty = 3 if is_paper_mode else 8
+                    score -= greed_penalty
+                    decision['reason'].append(f"⚠️ Greed Warning: -{greed_penalty} (euforia = riesgo)")
                 
-                if fear_greed < 25:
-                    extreme_fear_boost = 6 if is_paper_mode else 3
-                    score += extreme_fear_boost
-                    mode_label = "PAPER" if is_paper_mode else "REAL"
-                    decision['reason'].append(f"😱  Extreme Fear +{extreme_fear_boost} [{mode_label}] (F&G: {fear_greed})")
-                    logger.info(f"😱 {VERSION_BANNER} EXTREME FEAR [{mode_label}]: F&G={fear_greed} → +{extreme_fear_boost}")
+                if fear_greed < 20:
+                    decision['reason'].append(f"😱 Extreme Fear F&G={fear_greed} - observando")
             
-            # ========== ESTRATEGIAS V5.2 QUANTUM (peso 60%) ==========
+            # ========== CORE SCORING INPUTS (GPT Expert Dec 24, 2025) ==========
+            # 5 inputs principales: EMA(40), HMM(25), Kalman(15), Non-Markovian(15), Kelly(10)
             
-            # 4. Quantum Momentum (peso: 25 puntos - ESTRATEGIA PRINCIPAL)
+            # 4. Quantum Momentum (VETO/PENALTY ONLY - no suma a max_score)
             if quantum:
-                max_score += 25
                 signal = quantum.get('signal', 0)  # -10 a +10
                 confidence_level = quantum.get('confidence', 'LOW')
                 
                 if confidence_level in ['HIGH', 'VERY_HIGH']:
-                    if signal >= 7:  # STRONG BUY
-                        score += 25
-                        decision['reason'].append(f"🚀 Quantum: STRONG BUY (score {signal}/10)")
-                    elif signal >= 4:  # BUY
-                        score += 15
-                        decision['reason'].append(f"✅ Quantum: BUY (score {signal}/10)")
-                    elif signal <= -7:  # STRONG SELL
-                        score -= 25
-                        decision['reason'].append(f"📉 Quantum: STRONG SELL (score {signal}/10)")
-                    elif signal <= -4:  # SELL
-                        score -= 15
-                        decision['reason'].append(f"⚠️ Quantum: SELL (score {signal}/10)")
+                    if signal <= -7:
+                        qm_penalty = 10 if is_paper_mode else 20
+                        score -= qm_penalty
+                        decision['reason'].append(f"📉 Quantum VETO: STRONG SELL → -{qm_penalty}")
+                        decision['decision_trace'].append(f'QUANTUM_VETO: Signal={signal}')
+                    elif signal <= -4:
+                        qm_penalty = 5 if is_paper_mode else 10
+                        score -= qm_penalty
+                        decision['reason'].append(f"⚠️ Quantum Penalty: SELL → -{qm_penalty}")
+                    elif signal >= 7:
+                        decision['reason'].append(f"🚀 Quantum: STRONG BUY (signal {signal}/10) OK")
                 decision['v52_analysis']['quantum_signal'] = signal
             
             # 5. Kalman Filter (peso: 15 puntos * kalman_weight)
@@ -2536,16 +2528,18 @@ class AutoTradingBot:
                     score -= adjusted_weight * 0.53
                 decision['v52_analysis']['kalman_trend'] = trend
             
-            # 6. HMM Regime (peso: 15 puntos) + V6.4 QUALITY FILTER
+            # 6. HMM Regime (peso: 25 puntos) + V6.5.4d QUALITY FILTER (GPT Expert Dec 24, 2025)
+            # Peso aumentado de 15 a 25 para simplificar a 5 inputs principales
             if hmm_regime:
-                max_score += 15  # V6.4: Aumentado peso de 10 a 15
+                max_score += 25
                 regime = hmm_regime.get('regime', 'UNKNOWN')
                 params = hmm_regime.get('recommended_params', {})
                 regime_confidence = hmm_regime.get('confidence', 0.5)
                 
-                # V6.4: HMM QUALITY FILTER - Boost para trades alineados con régimen
+                # V6.5.4d: HMM QUALITY FILTER - Boost para trades alineados con régimen
+                # Peso aumentado de 15 a 25 (GPT Expert Dec 24, 2025)
                 if regime == 'TRENDING':
-                    score += 15
+                    score += 25
                     decision['reason'].append(f"✅ HMM: {regime} ({regime_confidence:.0%} conf)")
                     decision['v52_analysis']['hmm_quality_bonus'] = True
                 elif regime == 'RANGING':
@@ -2625,24 +2619,25 @@ class AutoTradingBot:
             decision['v52_analysis']['ares_status'] = 'REMOVED_V6.5.4d'
             decision['decision_trace'].append('ARES_REMOVED: Code eliminated Dec 24, 2025')
             
-            # 8. NON-MARKOVIAN MEMORY KERNEL V6.1 (peso: 12 puntos - QUANTUM TEMPORAL MEMORY)
+            # 8. NON-MARKOVIAN MEMORY KERNEL V6.5.4d (peso: 15 puntos - GPT Expert Dec 24, 2025)
+            # Peso aumentado de 12 a 15 para simplificar a 5 inputs principales
             if non_markovian:
-                max_score += 12
+                max_score += 15
                 nm_signal = non_markovian.get('signal', 'HOLD')
                 nm_confidence = non_markovian.get('confidence', 0)
                 nm_metrics = non_markovian.get('metrics', {})
                 
                 if nm_signal == 'BUY' and nm_confidence > 60:
-                    score += 12
+                    score += 15
                     decision['reason'].append(f"🧠 Non-Markovian: BUY ({nm_confidence:.0f}% conf)")
                 elif nm_signal == 'BUY' and nm_confidence > 40:
-                    score += 6
+                    score += 8
                     decision['reason'].append(f"✅ Non-Markovian: BUY ({nm_confidence:.0f}% conf)")
                 elif nm_signal == 'SELL' and nm_confidence > 60:
-                    score -= 12
+                    score -= 15
                     decision['reason'].append(f"🧠 Non-Markovian: SELL ({nm_confidence:.0f}% conf)")
                 elif nm_signal == 'SELL' and nm_confidence > 40:
-                    score -= 6
+                    score -= 8
                     decision['reason'].append(f"⚠️ Non-Markovian: SELL ({nm_confidence:.0f}% conf)")
                 
                 decision['v52_analysis']['non_markovian_signal'] = nm_signal
