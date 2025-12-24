@@ -78,7 +78,7 @@ class ConversationalBrain:
             qm = signals['quantum_momentum']
             score = qm.get('signal', 0)
             if abs(score) > 5:
-                direction = "muy alcista" if score > 0 else "muy bajista"
+                direction = "very bullish" if score > 0 else "very bearish"
                 emoji = "📈" if score > 0 else "📉"
                 reasons.append({
                     'strategy': 'Quantum Momentum',
@@ -97,8 +97,8 @@ class ConversationalBrain:
                     'strategy': 'Kalman Filter',
                     'emoji': '📡',
                     'value': trend_strength,
-                    'interpretation': 'trend fuerte detectado',
-                    'text': f"Kalman Filter detectó trend fuerte ({trend_strength:.2f})"
+                    'interpretation': 'strong trend detected',
+                    'text': f"Kalman Filter detected strong trend ({trend_strength:.2f})"
                 })
         
         # 3. Monte Carlo
@@ -110,8 +110,8 @@ class ConversationalBrain:
                     'strategy': 'Monte Carlo',
                     'emoji': '🎲',
                     'value': win_rate,
-                    'interpretation': f'{int(win_rate * 100)}% probabilidad ganancia',
-                    'text': f"Monte Carlo: {int(win_rate * 100)}% probabilidad de ganancia"
+                    'interpretation': f'{int(win_rate * 100)}% win probability',
+                    'text': f"Monte Carlo: {int(win_rate * 100)}% win probability"
                 })
         
         # 4. Black Swan Risk
@@ -123,8 +123,8 @@ class ConversationalBrain:
                     'strategy': 'Black Swan',
                     'emoji': '🦢',
                     'value': risk,
-                    'interpretation': 'riesgo bajo (seguro)',
-                    'text': f"Black Swan Risk: {risk} (condiciones seguras)"
+                    'interpretation': 'low risk (safe)',
+                    'text': f"Black Swan Risk: {risk} (safe conditions)"
                 })
         
         # 5. Kelly Criterion
@@ -136,8 +136,8 @@ class ConversationalBrain:
                     'strategy': 'Kelly Criterion',
                     'emoji': '💎',
                     'value': suggested,
-                    'interpretation': 'matemáticamente óptimo',
-                    'text': f"Kelly sugirió ${suggested:.0f} (tamaño óptimo matemático)"
+                    'interpretation': 'mathematically optimal',
+                    'text': f"Kelly suggested ${suggested:.0f} (optimal sizing)"
                 })
         
         # 6. HMM Regime
@@ -150,8 +150,8 @@ class ConversationalBrain:
                     'strategy': 'HMM Regime',
                     'emoji': emoji,
                     'value': regime,
-                    'interpretation': f'mercado {regime.lower()}',
-                    'text': f"Régimen de mercado: {regime}"
+                    'interpretation': f'{regime.lower()} market',
+                    'text': f"Market Regime: {regime}"
                 })
         
         # 7. Sentiment
@@ -163,8 +163,8 @@ class ConversationalBrain:
                     'strategy': 'Sentiment Analysis',
                     'emoji': '😊',
                     'value': score,
-                    'interpretation': 'sentimiento positivo',
-                    'text': f"Sentimiento del mercado: {int(score * 100)}% positivo"
+                    'interpretation': 'positive sentiment',
+                    'text': f"Market Sentiment: {int(score * 100)}% positive"
                 })
         
         reasoning['reasons'] = reasons
