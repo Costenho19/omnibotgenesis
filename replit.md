@@ -50,22 +50,15 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 The system integrates several core engines: AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator. It supports multi-user modes with granular role-based permissions (FREE, BASIC, PRO, PREMIUM, OWNER) and features Flask and Streamlit dashboards for API access, web terminal, and interactive visualization. Key features include an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection System, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation, and Investor-Grade Automated Responses use institutional language. The Decision Engine incorporates an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine for risk enforcement, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs.
 
 ### AI Architecture and Enforcement
-The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection and a Multilingual Prompt Architecture with dynamic language detection and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. ARES V1/V2 are explicitly disabled in the scoring system, acting as observers only, making EMA Regime Signal the sole primary driver.
+The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection and a Multilingual Prompt Architecture with dynamic language detection and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. EMA Regime Signal is the sole primary driver (40 points).
 
 ### Hierarchical Veto Flow (Dec 24, 2025)
 Implemented Coherence Pre-Gate BEFORE scoring. New execution order:
 1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** → 4. Scoring → 5. Decision
 - Coherence now blocks low-quality signals BEFORE scoring computation
-- Thresholds (SUBIDOS): veto_critical < **35%**, veto_normal < **50%**
+- Thresholds: veto_critical < **35%**, veto_normal < **50%**
 - New trace states: `COHERENCE_GATE_CRITICAL`, `COHERENCE_GATE_LOW`
 - **Result**: Reduces false positives and overtrading
-
-### ARES Code Removed & EMA Optimized (Dec 24, 2025)
-ARES V1/V2 code has been **completely removed** from auto_trading_bot.py:
-- **Code**: Legacy ARES block eliminated (~90 lines removed)
-- **EMA Weight**: Increased from 25 to **40 points** (absorbed ARES weight)
-- **Trace**: `ARES_REMOVED: Code eliminated Dec 24, 2025` in decision_trace
-- **Result**: Cleaner scoring system, EMA is sole primary driver
 
 ### Scoring Simplification (Dec 24, 2025)
 5 core inputs per GPT Expert recommendation:

@@ -168,10 +168,30 @@ class UserAuthorization:
 class AuthorizationError(Exception):
     """Raised when authorization check fails."""
     
-    def __init__(self, user_id: str, permission: Permission, message: str = None):
-        self.user_id = user_id
-        self.permission = permission
-        self.message = message or f"User {user_id} lacks permission: {permission.name}"
+    def __init__(self, user_id: str = None, permission: Permission = None, message: str = None):
+        """
+        Flexible constructor for authorization errors.
+        
+        Can be called as:
+        - AuthorizationError("simple message")  # Legacy fallback
+        - AuthorizationError(user_id, permission)  # Standard
+        - AuthorizationError(user_id, permission, message)  # Full
+        """
+        # Handle legacy single-string calls: AuthorizationError("message")
+        if user_id is not None and permission is None and message is None:
+            # Single argument - treat as message string
+            self.user_id = None
+            self.permission = None
+            self.message = str(user_id)
+        else:
+            self.user_id = user_id
+            self.permission = permission
+            if message:
+                self.message = message
+            elif user_id and permission:
+                self.message = f"User {user_id} lacks permission: {permission.name}"
+            else:
+                self.message = "Authorization denied"
         super().__init__(self.message)
 
 

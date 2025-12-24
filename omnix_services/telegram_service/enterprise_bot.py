@@ -134,16 +134,13 @@ except ImportError:
     WEB_SEARCH_AVAILABLE = False
     logger.warning("⚠️ Web Search Service no disponible")
 
-# ARES Quantum Protocols - Import module for dynamic access to global instances
+# Trading System Module - for shared resources
 try:
     import omnix_core.trading_system as trading_system_module
-    ARES_AVAILABLE = trading_system_module.ARES_STRATEGIES_AVAILABLE
-    if ARES_AVAILABLE:
-        logger.info("🧬 ARES V1/V2 module imported - instances created at runtime")
+    logger.info("📊 Trading System module imported")
 except ImportError:
     trading_system_module = None
-    ARES_AVAILABLE = False
-    logger.warning("⚠️ ARES Quantum Protocols no disponibles")
+    logger.warning("⚠️ Trading System module no disponible")
 
 try:
     from omnix_core.bot import PaperTradingManager
@@ -331,22 +328,18 @@ class EnterpriseTelegramBot:
         try:
             from omnix_core.bot.auto_trading_bot import AutoTradingBot
             trading_service = self.trading_enterprise if self.trading_enterprise_enabled else self.trading
-            ares_v1_instance = trading_system_module.global_ares_v1 if trading_system_module else None
-            ares_v2_instance = trading_system_module.global_ares_v2 if trading_system_module else None
             self.auto_trading = AutoTradingBot(
                 trading_service=trading_service,
                 database_service=self.db_manager,
                 advanced_features=global_advanced_features if 'global_advanced_features' in globals() else None,
                 paper_trading=self.paper_trading,
-                ai_service=self.ai,  # 🎓 AI para auto-learning de videos
-                ares_v1=ares_v1_instance,  # 🧬 ARES V1 Swing Trading - dynamic access
-                ares_v2=ares_v2_instance   # 🧨 ARES V2 Scalping M1 - dynamic access
+                ai_service=self.ai
             )
             logger.info("🤖 Auto-Trading Bot inicializado - Trading inteligente 24/7 disponible")
             logger.info(f"   📊 Paper Trading: {'✅ ACTIVADO ($1M virtual)' if self.paper_trading else '❌ Desactivado'}")
             logger.info(f"   🎓 Auto-Learning: {'✅ DISPONIBLE' if self.ai else '⚠️ Sin IA'}")
-            logger.info(f"   🧬 ARES V1 Swing: {'✅ CONECTADO (55-65% win rate)' if self.auto_trading.ares_v1 else '⚠️ No disponible'}")
-            logger.info(f"   🧨 ARES V2 Scalping: {'✅ CONECTADO (60-70% win rate)' if self.auto_trading.ares_v2 else '⚠️ No disponible'}")
+            logger.info(f"   📈 EMA Regime Signal: ✅ PRIMARY DRIVER (40 pts)")
+            logger.info(f"   🎯 Scoring: 5 inputs (EMA/HMM/Kalman/Non-Markovian/Kelly)")
         except Exception as e:
             logger.warning(f"⚠️ Auto-Trading Bot no disponible: {e}")
             self.auto_trading = None
@@ -6137,11 +6130,11 @@ Trades: {balance['total_trades']}"""
 {analisis.get('analisis_ia', 'Procesando...')}
 
 **Módulos Activos:**
-   🎲 Monte Carlo: ✅
-   📈 Kalman Filter: ✅
-   🧠 HMM Regime: ✅
-   🧬 ARES V1/V2: ✅
-   🔗 Non-Markovian: ✅
+   📈 EMA Regime Signal: ✅ (Primary 40pts)
+   🎲 Monte Carlo: ✅ (Veto/Penalty)
+   📊 Kalman Filter: ✅ (15pts)
+   🧠 HMM Regime: ✅ (25pts)
+   🔗 Non-Markovian: ✅ (15pts)
 
 ⚡ {datetime.now().strftime('%H:%M:%S')}
 🧬 *OMNIX Quantum Premium*
@@ -6587,8 +6580,9 @@ diferencias de precio mayores al umbral configurado.
 **Uso:** `/feedback [estrategia] [resultado]`
 
 **Estrategias disponibles:**
-• `ARES_V1` - Swing Trading
-• `ARES_V2` - Scalping M1
+• `EMA_REGIME` - Primary Signal Driver
+• `HMM_REGIME` - Market State Detection
+• `MONTE_CARLO` - Probability Validation
 • `ARBITRAGE` - Multi-exchange
 
 **Resultados:**
@@ -6597,8 +6591,8 @@ diferencias de precio mayores al umbral configurado.
 • `partial` - Resultado parcial ⚡
 
 **Ejemplos:**
-`/feedback ARES_V1 success`
-`/feedback ARES_V2 failure Falló en mercado lateral`
+`/feedback EMA_REGIME success`
+`/feedback HMM_REGIME failure Falló en mercado lateral`
 `/feedback ARBITRAGE partial Bajo profit`
 
 💡 **¿Por qué dar feedback?**
@@ -6785,15 +6779,16 @@ Usa `/my_contributions` para ver tus stats
 **Uso:** `/vote_strategy [estrategia] [1-5]`
 
 **Estrategias:**
-• `ARES_V1` - Swing Trading
-• `ARES_V2` - Scalping M1
+• `EMA_REGIME` - Primary Signal Driver
+• `HMM_REGIME` - Market State Detection
+• `MONTE_CARLO` - Probability Validation
 • `ARBITRAGE` - Multi-exchange
 
 **Puntuación:** 1 (malo) a 5 (excelente)
 
 **Ejemplos:**
-`/vote_strategy ARES_V1 5`
-`/vote_strategy ARES_V2 4`
+`/vote_strategy EMA_REGIME 5`
+`/vote_strategy HMM_REGIME 4`
 
 💡 Cada voto vale +5 puntos
 """
@@ -7835,7 +7830,7 @@ Las operaciones ahora se procesarán normalmente.
 
 **📝 GESTIONAR ESTRATEGIAS:**
 
-`/estrategias add ARES_V2` - Activar estrategia
+`/estrategias add EMA_REGIME` - Activar estrategia
 `/estrategias remove MONTE_CARLO` - Desactivar estrategia
 `/estrategias reset` - Restaurar por defecto
 
@@ -7847,13 +7842,13 @@ Las operaciones ahora se procesarán normalmente.
             action = args[0].lower()
             
             if action == 'reset':
-                settings.active_strategies = ['ARES_V1', 'ARES_V2', 'MONTE_CARLO', 'HMM_REGIME']
+                settings.active_strategies = ['EMA_REGIME', 'HMM_REGIME', 'MONTE_CARLO', 'KALMAN_FILTER']
                 self.user_settings_service.save_user_settings(settings)
                 await update.message.reply_text("✅ Estrategias restauradas a configuración por defecto")
                 return
             
             if len(args) < 2:
-                await update.message.reply_text("❌ Especifica la estrategia: `/estrategias add ARES_V2`", parse_mode='Markdown')
+                await update.message.reply_text("❌ Especifica la estrategia: `/estrategias add EMA_REGIME`", parse_mode='Markdown')
                 return
             
             strategy_id = args[1].upper()

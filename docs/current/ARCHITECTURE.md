@@ -21,8 +21,7 @@
 │  ├── AutoTradingBot V6.5.4d - Multi-crypto scanner              │
 │  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto                   │
 │  ├── Non-Markovian Kernel V6.5 - Memoria temporal               │
-│  ├── Risk Guardian V5.4 - Protección drawdown                   │
-│  └── ARES V1/V2 - Track record generation                       │
+│  └── Risk Guardian V5.4 - Protección drawdown                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  DATA LAYER                                                      │
 │  ├── PostgreSQL (42 tablas, 90% FK coverage)                    │
@@ -112,13 +111,6 @@ def detect_language(text):
 | Black Swan | `omnix_services/trading_service/black_swan.py` | Veto (riesgo extremo) |
 | HMM Regime | `omnix_services/trading_service/hmm_regime.py` | Contexto de mercado |
 | Kalman Filter | `omnix_services/trading_service/kalman_filter.py` | Reducción de ruido |
-
-### ARES Strategies
-
-| Estrategia | Min Confidence | Propósito |
-|------------|---------------|-----------|
-| ARES V1 (Swing) | 70% | Posiciones multi-día |
-| ARES V2 (Scalping) | 75% | Trades intraday |
 
 ---
 

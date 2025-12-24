@@ -444,14 +444,12 @@ class AutoTradingBot:
             return f"{kraken_pair[:-3]}/{kraken_pair[-3:]}"
         return kraken_pair
     
-    def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None, ares_v1=None, ares_v2=None):
+    def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None):
         self.trading_service = trading_service
         self.database_service = database_service
         self.advanced_features = advanced_features
         self.paper_trading = paper_trading
         self.ai_service = ai_service
-        self.ares_v1 = ares_v1  # ARES V1 Swing Trading Strategy
-        self.ares_v2 = ares_v2  # ARES V2 Scalping Strategy
         
         # Configuración de trading - PROFESIONAL INSTITUCIONAL
         # Optimizado para generar track record de calidad como si tuvieras clientes Enterprise

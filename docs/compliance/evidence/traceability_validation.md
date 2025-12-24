@@ -59,8 +59,8 @@
 | 1.9 | CoherenceEngine | `omnix_services/coherence_service/coherence_engine.py` | `src/omnix/domain/coherence/engine.py` | CORE |
 | 1.10 | Risk Guardian | `omnix_services/monitoring/risk_guardian.py` | `src/omnix/domain/risk/guardian.py` | CORE |
 | 1.11 | CAES Module | `omnix_core/strategies/caes_module.py` | `src/omnix/domain/sizing/caes.py` | CORE |
-| 1.12 | ARES V1 (Swing) | `omnix_core/strategies/ares_v1.py` | `src/omnix/domain/strategies/ares/v1.py` | CORE |
-| 1.13 | ARES V2 (Scalping) | `omnix_core/strategies/ares_v2.py` | `src/omnix/domain/strategies/ares/v2.py` | CORE |
+| ~~1.12~~ | ~~ARES V1 (Swing)~~ | ~~`omnix_core/strategies/ares_v1.py`~~ | N/A | **REMOVED Dec 24, 2025** |
+| ~~1.13~~ | ~~ARES V2 (Scalping)~~ | ~~`omnix_core/strategies/ares_v2.py`~~ | N/A | **REMOVED Dec 24, 2025** |
 | 1.14 | Adaptive Engine | `omnix_services/adaptive_engine/adaptive_engine.py` | `src/omnix/domain/adaptive/engine.py` | SUPPORT |
 | 1.15 | Optimization ML | `omnix_services/optimization/` | `src/omnix/domain/optimization/` | SUPPORT |
 | 2.1 | MarketDataPort | `omnix_services/market_data/` | `src/omnix/ports/driven/market_data.py` | CORE |

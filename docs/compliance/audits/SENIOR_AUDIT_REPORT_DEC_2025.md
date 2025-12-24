@@ -454,32 +454,34 @@ No high-severity issues identified.
 
 ---
 
-## Critical Update: ARES Removed from Voting (Dec 24, 2025)
+## Critical Update: ARES Code Completely Removed (Dec 24, 2025)
 
 ### Problem Identified
 
 External analysis (GPT Expert + Senior Audit) identified that **ARES V1/V2 was still contributing 35 points** to the trading decision score, despite documentation stating EMA_REGIME_SIGNAL is the primary driver.
 
+### Solution: Complete Code Elimination
+
 | Module | Previous Weight | Current Weight |
 |--------|-----------------|----------------|
-| ARES V1 | 20 points | **0 points** |
-| ARES V2 | 15 points | **0 points** |
-| EMA Regime | 25 points | 25 points (unchanged, now sole driver) |
+| ARES V1 | 20 points | **CODE REMOVED** |
+| ARES V2 | 15 points | **CODE REMOVED** |
+| EMA Regime | 25 points | **40 points** (absorbed ARES weight) |
 
 ### Changes Implemented
 
 | File | Change | Purpose |
 |------|--------|---------|
-| `trading_profiles.py` | `ares_v1_enabled: False`, `ares_v2_enabled: False` | Remove ARES from voting |
-| `system_state_manifest.json` | Updated `legacy_modules` to show `status: DISABLED` | Documentation sync |
-| `auto_trading_bot.py` | Log: `🛡️ [ARES_DISABLED]` when ARES excluded | Observability |
+| `auto_trading_bot.py` | ~90 lines of ARES code deleted | Complete elimination |
+| `auto_trading_bot.py` | EMA weight increased 25 → 40 | Primary driver |
+| Decision trace | `ARES_REMOVED: Code eliminated Dec 24, 2025` | Audit trail |
 
-### Expected Impact
+### Impact
 
-- **Fewer conflicting signals** → Cleaner decision process
-- **EMA Regime Signal** now sole primary driver (25 points)
-- **ARES remains** as observer/historical data (not deleted)
-- **Win rate should improve** as pseudo-random ARES outputs no longer influence trades
+- **Cleaner scoring system**: 5 inputs only (EMA, HMM, Kalman, Non-Markovian, Kelly)
+- **EMA Regime Signal** now sole primary driver (40 points)
+- **ARES code eliminated** - no observer mode, completely removed
+- **Better auditability** for investors with simplified decision contract
 
 ---
 
@@ -487,7 +489,7 @@ External analysis (GPT Expert + Senior Audit) identified that **ARES V1/V2 was s
 
 ### Immediate (Next 7 Days)
 
-1. **Monitor ARES-disabled performance**: Compare win rate before/after Dec 24
+1. **Monitor simplified scoring performance**: Compare win rate before/after Dec 24
 2. **Continue Track Record Building**: Reach 200-trade milestone for investor confidence
 3. **Monitor Quarantine System**: Track AVAX/USD probation performance
 

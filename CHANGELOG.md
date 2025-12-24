@@ -4,6 +4,50 @@ Registro de cambios, correcciones y mejoras del sistema.
 
 ---
 
+## [2025-12-24] - ARES Code Complete Removal & Scoring Simplification
+
+### GPT Expert 3-Step Optimization
+
+Per GPT Expert recommendations, the following changes were implemented:
+
+**1. Coherence Thresholds Raised:**
+| Threshold | Before | After |
+|-----------|--------|-------|
+| veto_critical | 25% | 35% |
+| veto_normal | 40% | 50% |
+| warning | 55% | 60% |
+| good | 75% | 78% |
+
+**2. Scoring Simplified to 5 Inputs:**
+| Input | Weight | Role |
+|-------|--------|------|
+| EMA Regime Signal | 40 pts | PRIMARY DRIVER |
+| HMM Regime | 25 pts | Core (up from 15) |
+| Kalman Filter | 15 pts | Core |
+| Non-Markovian Memory | 15 pts | Core (up from 12) |
+| Kelly Criterion | 10 pts | Modifier |
+
+Monte Carlo, Black Swan, Sentiment, Quantum Momentum converted to **veto/penalty layer** (no additive scoring).
+
+**3. ARES Code Completely Removed:**
+| Action | Detail |
+|--------|--------|
+| Code deleted | ~90 lines removed from auto_trading_bot.py |
+| EMA weight | Increased 25 → 40 points (absorbed ARES weight) |
+| Trace | `ARES_REMOVED: Code eliminated Dec 24, 2025` |
+
+### Documentation Cleaned
+All references to ARES removed from:
+- Pitch decks (EN/ES)
+- Architecture docs
+- Trading operations
+- Compliance/audit reports
+
+### New Documentation
+- `docs/current/DECISION_CONTRACT.md` - Formal decision rules for investor audits
+
+---
+
 ## [2025-12-04] - Documentation Consolidation & Database Optimization
 
 ### Documentation Cleanup

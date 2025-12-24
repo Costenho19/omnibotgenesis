@@ -50,8 +50,6 @@ Tier 6: Position limit check
 | Módulo | Ubicación | Función |
 |--------|-----------|---------|
 | CAES V6.5.4 | `omnix_core/strategies/caes_module.py` | Position sizing dinámico (0.5x-3x) |
-| ARES V1 (Swing) | `omnix_core/strategies/ares_v1.py` | Multi-day positions, 70% min confidence |
-| ARES V2 (Scalping) | `omnix_core/strategies/ares_v2.py` | Intraday trades, 75% min confidence |
 | Adaptive Engine | `omnix_services/adaptive_engine/adaptive_engine.py` | Auto-calibración por régimen |
 | Optimization | `omnix_services/optimization/` | ML-based weight optimization |
 
@@ -523,7 +521,7 @@ OMNIX/
 │   └── bootstrap/       <- DI container
 ├── omnix_core/          <- Core runtime
 │   ├── bot/             <- AutoTradingBot
-│   ├── strategies/      <- CAES, ARES, Non-Markovian
+│   ├── strategies/      <- CAES, Non-Markovian
 │   ├── cache/           <- Redis cache
 │   ├── config/          <- Trading profiles
 │   ├── quantum/         <- QRNG, physics
