@@ -25,9 +25,9 @@ El flujo de veto no estaba jerárquicamente claro. Coherence Engine evaluaba DES
 │         ↓                                                       │
 │  3. RMS VETO (CircuitBreaker + LimitsEngine)                   │
 │         ↓                                                       │
-│  4. COHERENCE GATE ← NUEVO: ANTES del scoring                   │
-│     • veto_critical < 30% → REJECTED                           │
-│     • veto_normal < 45% → REJECTED                             │
+│  4. COHERENCE GATE ← ANTES del scoring                          │
+│     • veto_critical < 35% → REJECTED (subido de 30%)           │
+│     • veto_normal < 50% → REJECTED (subido de 45%)             │
 │         ↓                                                       │
 │  5. Scoring Final (solo señales pre-validadas)                 │
 │         ↓                                                       │
@@ -35,9 +35,17 @@ El flujo de veto no estaba jerárquicamente claro. Coherence Engine evaluaba DES
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+**Umbrales de Coherence (V6.5.4d Dec 24, 2025):**
+| Umbral | Antes | Ahora | Efecto |
+|--------|-------|-------|--------|
+| `veto_critical` | 25% | **35%** | Bloquea señales muy débiles |
+| `veto_normal` | 40% | **50%** | Bloquea señales débiles |
+| `warning` | 55% | **60%** | Reducción de posición |
+| `good` | 75% | **78%** | Aprobación completa |
+
 **Nuevos estados en decision_trace:**
-- `COHERENCE_GATE_CRITICAL`: Señal bloqueada por coherencia < 30%
-- `COHERENCE_GATE_LOW`: Señal bloqueada por coherencia < 45%
+- `COHERENCE_GATE_CRITICAL`: Señal bloqueada por coherencia < 35%
+- `COHERENCE_GATE_LOW`: Señal bloqueada por coherencia < 50%
 - `COHERENCE_GATE: PASSED`: Señal aprobada para scoring
 
 **Beneficios:**

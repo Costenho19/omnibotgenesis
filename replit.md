@@ -56,7 +56,7 @@ The AI service is refactored with SOLID principles and dependency injection, sup
 Implemented Coherence Pre-Gate BEFORE scoring. New execution order:
 1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** → 4. Scoring → 5. Decision
 - Coherence now blocks low-quality signals BEFORE scoring computation
-- Thresholds: veto_critical < 30%, veto_normal < 45%
+- Thresholds (SUBIDOS): veto_critical < **35%**, veto_normal < **50%**
 - New trace states: `COHERENCE_GATE_CRITICAL`, `COHERENCE_GATE_LOW`
 - **Result**: Reduces false positives and overtrading
 

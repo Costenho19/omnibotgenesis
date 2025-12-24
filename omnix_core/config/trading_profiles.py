@@ -780,10 +780,13 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     check_interval_seconds=15,
     trades_per_day_target=15,
     
-    coherence_veto_critical=25.0,
-    coherence_veto_normal=40.0,
-    coherence_warning=55.0,
-    coherence_good=75.0,
+    # V6.5.4d: Umbrales SUBIDOS (Dec 24, 2025) - Coherence Gate más estricto
+    # Antes: critical=25%, normal=40%
+    # Ahora: critical=35%, normal=50% (reduce falsos positivos, menos overtrading)
+    coherence_veto_critical=35.0,
+    coherence_veto_normal=50.0,
+    coherence_warning=60.0,
+    coherence_good=78.0,
     
     ramp_up_phase1_factor=0.35,
     ramp_up_phase2_factor=0.55,
