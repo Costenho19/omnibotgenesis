@@ -208,6 +208,16 @@ try:
 except ImportError:
     TELEGRAM_AVAILABLE = False
 
+# Advanced Features Engine - Monte Carlo, Black Swan, Sharia, etc.
+try:
+    from omnix_services.trading_service.advanced_features import AdvancedFeaturesEngine
+    ADVANCED_FEATURES_AVAILABLE = True
+    global_advanced_features = AdvancedFeaturesEngine()
+    logger.info("🔬 Advanced Features Engine disponible")
+except ImportError as e:
+    ADVANCED_FEATURES_AVAILABLE = False
+    global_advanced_features = None
+    logger.warning(f"⚠️ Advanced Features Engine no disponible: {e}")
 
 # Admin verification function - ID from env_config
 ADMIN_IDS = {

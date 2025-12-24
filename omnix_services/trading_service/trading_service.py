@@ -215,6 +215,62 @@ class TradingServiceEnterprise:
             logger.error(f"Failed to get account status: {e}")
             return {}
     
+    def get_real_balance(self) -> Dict[str, Any]:
+        """
+        Get real balance from Kraken in format expected by Telegram commands.
+        
+        Returns:
+            Dict with currency balances and estimated_total_usd
+        """
+        try:
+            raw_balance = self.kraken.get_balance()
+            
+            if not raw_balance:
+                return {'error': 'No balance data received from Kraken'}
+            
+            # Convert Kraken format to expected format
+            result = {}
+            estimated_total = 0.0
+            
+            # Kraken uses prefixes like ZUSD, XXBT for currencies
+            currency_map = {
+                'ZUSD': 'USD', 'XXBT': 'BTC', 'XETH': 'ETH',
+                'XXRP': 'XRP', 'XLTC': 'LTC', 'XXLM': 'XLM',
+                'XDOT': 'DOT', 'XADA': 'ADA', 'SOL': 'SOL',
+                'AVAX': 'AVAX', 'LINK': 'LINK', 'USDT': 'USDT'
+            }
+            
+            for kraken_symbol, value in raw_balance.items():
+                if isinstance(value, (int, float)):
+                    amount = float(value)
+                elif isinstance(value, str):
+                    try:
+                        amount = float(value)
+                    except ValueError:
+                        continue
+                elif isinstance(value, dict):
+                    amount = float(value.get('free', 0) or 0)
+                else:
+                    continue
+                
+                if amount <= 0.00001:
+                    continue
+                
+                # Map to standard currency name
+                currency = currency_map.get(kraken_symbol, kraken_symbol)
+                result[currency] = {'free': amount, 'total': amount}
+                
+                # Estimate USD value (simplified)
+                if currency == 'USD':
+                    estimated_total += amount
+            
+            result['estimated_total_usd'] = estimated_total
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting real balance: {e}")
+            return {'error': str(e)}
+    
     def get_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
         """
         Get current ticker data for a trading pair.
