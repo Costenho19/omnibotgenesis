@@ -835,11 +835,13 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10,
-        # V6.5.4c: ARES V1+V2 activados para generar track record (Dec 10, 2025)
-        # NOTA: ARES sigue siendo EXPERIMENTAL - no incluido en strategies_active
-        'ares_enabled': True,
-        'ares_v1_enabled': True,
-        'ares_v2_enabled': True,
+        # V6.5.4d: ARES DESHABILITADO del voting (Dec 24, 2025)
+        # Razón: ARES sumaba 35 puntos pero EMA_REGIME_SIGNAL es el driver principal
+        # ARES permanece como observador histórico (strategies_experimental)
+        # Cambio recomendado por análisis senior + GPT expert
+        'ares_enabled': False,
+        'ares_v1_enabled': False,
+        'ares_v2_enabled': False,
         'ares_v1_min_confidence': 0.70,  # 70% confianza mínima para V1 (swing)
         'ares_v2_min_confidence': 0.75,  # 75% confianza mínima para V2 (scalping)
         'ares_max_daily_trades': 3,      # Máximo 3 trades/día (compartido V1+V2)

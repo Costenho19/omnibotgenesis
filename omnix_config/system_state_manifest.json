@@ -9,9 +9,22 @@
     "primary_weight": 25,
     "description": "Deterministic signal based on EMA slope + ATR + HMM regime",
     "legacy_modules": {
-      "ARES_V1": "Swing scoring (legacy, not primary decisor)",
-      "ARES_V2": "Scalping scoring (legacy, not primary decisor)"
-    }
+      "ARES_V1": {
+        "status": "DISABLED",
+        "reason": "Removed from voting (Dec 24, 2025)",
+        "previous_weight": 20,
+        "current_weight": 0,
+        "role": "Observer/historical only"
+      },
+      "ARES_V2": {
+        "status": "DISABLED", 
+        "reason": "Removed from voting (Dec 24, 2025)",
+        "previous_weight": 15,
+        "current_weight": 0,
+        "role": "Observer/historical only"
+      }
+    },
+    "ares_removal_rationale": "ARES was adding 35 points to scoring but conflicting with EMA primary signal. Now EMA is sole driver."
   },
   
   "veto_system": {
