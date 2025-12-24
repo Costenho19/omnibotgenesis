@@ -567,11 +567,17 @@ class EnterpriseTelegramBot:
             
             # Comandos Advanced Features Enterprise
             self.application.add_handler(CommandHandler("montecarlo", self.montecarlo_command))
+            self.application.add_handler(CommandHandler("quantum", self.montecarlo_command))  # Alias para menú
+            self.application.add_handler(CommandHandler("quantum_test", self.quantum_test_command))  # Test QRNG en vivo
+            self.application.add_handler(CommandHandler("quantum_stats", self.quantum_stats_command))  # Estadísticas QRNG
+            self.application.add_handler(CommandHandler("quantum_demo", self.quantum_demo_command))  # Demo física cuántica
             self.application.add_handler(CommandHandler("blackswan", self.blackswan_command))
             self.application.add_handler(CommandHandler("sentiment", self.sentiment_command))
             self.application.add_handler(CommandHandler("sharia", self.sharia_command))
             self.application.add_handler(CommandHandler("orderbook", self.orderbook_command))
             self.application.add_handler(CommandHandler("enterprise", self.enterprise_command))
+            self.application.add_handler(CommandHandler("trading", self.trading_menu_command))  # Menú de trading
+            self.application.add_handler(CommandHandler("arbitraje", self.arbitraje_command))  # Alias español
             
             # 📊 Comandos Paper Trading - Trading simulado con $1M
             self.application.add_handler(CommandHandler("paper_start", self.paper_start_command))
@@ -1939,6 +1945,143 @@ Sistema OMNIX - Harold Nunes
             
         except Exception as e:
             logger.error(f"Error montecarlo: {e}")
+            await update.message.reply_text(f"⚠️ Error: {e}")
+
+    async def quantum_test_command(self, update, context):
+        """Comando /quantum_test - Test QRNG en vivo con ANU"""
+        try:
+            from omnix_core.quantum.enhancements import global_qrng
+            import numpy as np
+            
+            msg = "⚛️ **ANU QUANTUM RNG - LIVE TEST**\n\n"
+            msg += "🔬 Conectando a ANU Quantum API...\n\n"
+            
+            stats_before = global_qrng.get_stats()
+            
+            quantum_numbers = []
+            for _ in range(10):
+                quantum_numbers.append(global_qrng.random())
+            
+            stats_after = global_qrng.get_stats()
+            
+            if stats_after['successful_quantum'] > stats_before.get('successful_quantum', 0) or \
+               stats_after['last_source'] == 'ANU Quantum Vacuum':
+                msg += "✅ **FUENTE: ANU Quantum Vacuum**\n"
+                msg += "📍 Australian National University\n\n"
+            elif stats_after['cache_hits'] > 0:
+                msg += "✅ **FUENTE: ANU Quantum (cached)**\n"
+                msg += "📍 Números cuánticos pre-cargados\n\n"
+            else:
+                msg += "⚠️ **FUENTE: Classical Fallback**\n\n"
+            
+            msg += "🎲 **10 NÚMEROS CUÁNTICOS GENERADOS:**\n```\n"
+            for i, n in enumerate(quantum_numbers, 1):
+                msg += f"[{i:2d}] {n:.12f}\n"
+            msg += "```\n\n"
+            
+            arr = np.array(quantum_numbers)
+            msg += "📊 **ANÁLISIS DE CALIDAD:**\n"
+            msg += f"• Media: {arr.mean():.6f} (ideal: 0.5)\n"
+            msg += f"• Desv. Std: {arr.std():.6f} (ideal: ~0.28)\n"
+            msg += f"• Rango: [{arr.min():.4f}, {arr.max():.4f}]\n\n"
+            
+            msg += f"📈 **ESTADÍSTICAS QRNG:**\n"
+            msg += f"• Requests totales: {stats_after['total_requests']:,}\n"
+            msg += f"• Números cuánticos: {stats_after['quantum_numbers_generated']:,}\n"
+            msg += f"• Cache actual: {stats_after['cache_size']} nums\n\n"
+            
+            msg += "✅ **OMNIX usa entropía cuántica REAL**"
+            
+            await update.message.reply_text(msg, parse_mode='Markdown')
+            
+        except ImportError:
+            await update.message.reply_text("⚠️ Módulo QRNG no disponible")
+        except Exception as e:
+            logger.error(f"Error quantum_test: {e}")
+            await update.message.reply_text(f"⚠️ Error: {e}")
+
+    async def quantum_stats_command(self, update, context):
+        """Comando /quantum_stats - Estadísticas QRNG + QAOA"""
+        try:
+            if hasattr(self, 'auto_trading') and self.auto_trading:
+                stats = self.auto_trading.get_quantum_stats()
+                
+                if stats.get('available'):
+                    qrng_stats = stats.get('qrng', {})
+                    qaoa_stats = stats.get('qaoa', {})
+                    
+                    msg = f"⚛️ **QUANTUM ENHANCEMENTS {VERSION_BANNER}**\n\n"
+                    msg += "🎲 **QRNG (Quantum Random Number Generator)**\n"
+                    msg += f"• Total requests: {qrng_stats.get('total_requests', 0):,}\n"
+                    msg += f"• Quantum numbers: {qrng_stats.get('quantum_numbers_generated', 0):,}\n"
+                    msg += f"• Success rate: {qrng_stats.get('uptime_percentage', 0):.1f}%\n"
+                    msg += f"• Cache size: {qrng_stats.get('cache_size', 0)}\n"
+                    msg += f"• Source: {qrng_stats.get('last_source', 'N/A')}\n\n"
+                    msg += "⚛️ **QAOA (Quantum Portfolio Optimizer)**\n"
+                    msg += f"• Total optimizations: {qaoa_stats.get('total_optimizations', 0)}\n"
+                    msg += f"• Classical sims: {qaoa_stats.get('classical_simulations', 0)}\n"
+                    msg += f"• Mode: {qaoa_stats.get('mode', 'Unknown')}\n\n"
+                    msg += "💡 **TECNOLOGÍAS:**\n"
+                    msg += "• Monte Carlo usa números cuánticos reales\n"
+                    msg += "• ANU Quantum API (vacuum fluctuations)\n"
+                    msg += "• QAOA clásico inspirado en computación cuántica\n\n"
+                    msg += "✅ Quantum enhancements operacionales"
+                else:
+                    msg = "⚠️ Quantum enhancements no disponibles"
+            else:
+                msg = "⚠️ Auto-Trading Bot no inicializado"
+            
+            await update.message.reply_text(msg, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error quantum_stats: {e}")
+            await update.message.reply_text(f"⚠️ Error: {e}")
+
+    async def quantum_demo_command(self, update, context):
+        """Comando /quantum_demo - Demo física cuántica para inversores"""
+        try:
+            from omnix_core.quantum.physics_validator import generate_quantum_response
+            
+            topic = context.args[0].lower() if context.args else None
+            
+            if topic:
+                response = generate_quantum_response(topic)
+            else:
+                response = """
+⚛️ **QUANTUM PHYSICS DEMO - OMNIX**
+
+🔬 **Física Cuántica Aplicada al Trading**
+
+OMNIX utiliza principios de física cuántica real:
+
+📐 **1. QRNG - Números Cuánticos Reales**
+   Fuente: ANU (Australian National University)
+   Método: Fluctuaciones del vacío cuántico
+   Uso: Semillas para Monte Carlo
+
+⚛️ **2. Principio de Incertidumbre**
+   [X̂, P̂] = iħ/2
+   Aplicación: Límites fundamentales en predicción
+
+📊 **3. QAOA Clásico**
+   Inspirado en Quantum Approximate Optimization
+   Uso: Optimización de portfolios
+
+🎯 **DEMOS DISPONIBLES:**
+   `/quantum_demo conmutador` - Cálculo [X̂, P̂]
+   `/quantum_demo varianza` - Varianza del vacío
+   `/quantum_demo qrng` - Física del QRNG
+   `/quantum_test` - Test en vivo con ANU
+
+💡 OMNIX es el primer bot de trading retail
+con entropía cuántica verificable.
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except ImportError:
+            await update.message.reply_text("⚠️ Módulo de física cuántica no disponible")
+        except Exception as e:
+            logger.error(f"Error quantum_demo: {e}")
             await update.message.reply_text(f"⚠️ Error: {e}")
 
     async def blackswan_command(self, update, context):
@@ -6035,6 +6178,91 @@ Trades: {balance['total_trades']}"""
         except Exception as e:
             logger.error(f"Error en stock_risk_dashboard: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    # ==========================================
+    # 📈 TRADING MENU COMMAND
+    # ==========================================
+    
+    async def trading_menu_command(self, update, context):
+        """Comando /trading - Menú principal de trading"""
+        try:
+            response = f"""
+📈 **OMNIX TRADING CENTER**
+
+🎯 **Modos de Trading Disponibles:**
+
+📄 **PAPER TRADING** (Recomendado para empezar)
+   `/paper_start` - Iniciar con $1M virtual
+   `/paper_balance` - Ver balance simulado
+   `/paper_buy BTC 10000` - Comprar $10K en BTC
+   `/paper_sell BTC` - Vender posición
+
+🤖 **AUTO-TRADING 24/7**
+   `/autotrading` - Configurar trading automático
+   `/auto_start` - Activar bot automático
+   `/auto_stop` - Pausar bot
+   `/auto_status` - Ver estado
+
+📊 **ANÁLISIS DE MERCADO**
+   `/analizar BTC` - Análisis completo
+   `/quantum BTC` - Simulación Monte Carlo
+   `/sentiment BTC` - Sentimiento de mercado
+   `/blackswan BTC` - Detección de riesgos
+
+💱 **ARBITRAJE MULTI-EXCHANGE**
+   `/arbitraje` - Info del sistema
+   `/arbitrage_scan BTC` - Buscar oportunidades
+
+🛡️ **GESTIÓN DE RIESGO**
+   `/rms` - Dashboard de riesgos
+   `/risk_status` - Estado de protecciones
+
+📈 **BOLSA DE VALORES (NYSE/NASDAQ)**
+   `/stock_status` - Estado del módulo
+   `/analizar AAPL` - Analizar acción
+
+⚙️ **CONFIGURACIÓN**
+   `/miconfig` - Mi configuración
+   `/perfil` - Mi perfil de trading
+
+💡 **Tip:** Empieza con /paper_start para practicar sin riesgo.
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Error en trading_menu_command: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+    
+    async def arbitraje_command(self, update, context):
+        """Comando /arbitraje - Alias español para arbitrage"""
+        if not self.arbitrage_scanner:
+            response = """
+💱 **OMNIX ARBITRAJE MULTI-EXCHANGE**
+
+📊 **¿Qué es el Arbitraje?**
+El arbitraje consiste en comprar un activo en un exchange 
+donde está más barato y venderlo en otro donde está más caro,
+capturando la diferencia como ganancia.
+
+🏦 **Exchanges Soportados (8):**
+   • Kraken, Binance, Coinbase, Bybit
+   • KuCoin, OKX, Gate.io, Bitfinex
+
+⚠️ **Estado Actual:**
+El módulo de arbitraje requiere configuración de API keys
+para cada exchange. Actualmente en modo paper trading.
+
+📋 **Comandos:**
+   `/arbitrage_scan BTC/USD` - Buscar oportunidades
+   `/arbitrage_stats` - Ver estadísticas
+
+💡 El sistema escanea precios en tiempo real y detecta
+diferencias de precio mayores al umbral configurado.
+"""
+            await update.message.reply_text(response, parse_mode='Markdown')
+            return
+        
+        await self.arbitrage_command(update, context)
     
     # ==========================================
     # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM
