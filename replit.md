@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system. Its primary purpose is paper trading to build a credible track record for investor presentations, targeting $1M seed funding at an $11.5M pre-money valuation. Key capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system aims for 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths.
+OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for paper trading to build a credible track record for investor presentations, aiming for $1M seed funding at an $11.5M pre-money valuation. Its core capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate, multi-crypto scanning, and tiered signal strengths, focusing on an "Investor-Ready" presentation.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -46,141 +46,28 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 
 ## System Architecture
 
-### Core Engines
-The system integrates AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator.
+### Core Components and Design Patterns
+The system integrates several core engines: AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator. It supports multi-user modes with granular role-based permissions (FREE, BASIC, PRO, PREMIUM, OWNER) and features Flask and Streamlit dashboards for API access, web terminal, and interactive visualization. Key features include an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection System, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation, and Investor-Grade Automated Responses use institutional language. The Decision Engine incorporates an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine for risk enforcement, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs.
 
-### Multi-User and Dashboard Architecture
-The system supports both single-user (OWNER role) and multi-user modes, with a Flask Dashboard for API and web terminal, and a Streamlit Dashboard for interactive visualization. AuthorizationService is integrated into AutoTradingBot, supporting granular permissions and user roles (FREE, BASIC, PRO, PREMIUM, OWNER).
+### AI Architecture and Enforcement
+The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection and a Multilingual Prompt Architecture with dynamic language detection and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. ARES V1/V2 are explicitly disabled in the scoring system, acting as observers only, making EMA Regime Signal the sole primary driver.
 
-Recent enhancements include an Asset Quarantine System for capital protection, a Real-Time Latency Monitor for system performance, a Price Stale Detection System to prevent trading on outdated prices, and an Admin Alerts System for critical events. The UI has been refactored for an "Investor-Ready" presentation, eliminating negative language and showing only verified data or loading states. Investor-Grade Automated Responses, triggered by context scoring or forced activation, provide institutional language for investor queries.
+### Trading Profiles
+The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 
-#### Asset Quarantine Update (Dec 23, 2025)
-- **LINK/USD Added**: Internal audit identified 16 losses, -$4,482, avg -2.58% per trade
-- **Total Quarantined**: 5 assets (ADA, SOL, ETH, AVAX, LINK) - 50% of monitored pairs
-- **Active Pairs**: BTC/USD (-1.49% avg), XRP/USD (-0.48% avg) - lowest loss averages
-- **Capital Protected**: $11,819+ in avoided losses
-- **Investor Narrative**: "Identified problem → Acted → Risk profile improved"
+### Hexagonal Architecture (V7.0)
+The system is structured around a hexagonal architecture with 20 ports and 22 adapters, currently operating with legacy code, with planned activation via the Strangler Fig pattern. The project structure includes `src/omnix/` for the hexagonal V7.0 and `omnix_core/`, `omnix_services/`, etc., for legacy components.
 
-#### FASE 2: Ofensiva Controlada (Dec 23, 2025)
-- **FASE 2.1 - Partial Position Sizing**: ✅ IMPLEMENTADO
-  - Trades con confidence 50-65% ejecutan con 25-40% del tamaño normal
-  - Convierte HOLDs en pequeñas oportunidades sin aumentar riesgo
-- **FASE 2.2 - BTC Short Selling**: ✅ IMPLEMENTADO
-  - Solo BTC en bearish regime (HMM confidence > 70%)
-  - Position size 50% (conservador para nueva estrategia)
-- **FASE 2.3 - Quarantine Probation**: ✅ IMPLEMENTADO
-  - AVAX/USD en periodo de prueba con protecciones
-  - Partial sizing forzado (máximo 40%)
-  - Auto-revert a cuarentena tras 3 pérdidas consecutivas
-  - Tracking de wins/losses y P/L durante probation
+### Error Handling
+An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff, and structured logging.
 
-#### Autotrading Command (Dec 23, 2025)
-- **BUG FIX**: `/autotrading activar ACEPTO` saves `risk_disclosure_accepted=True` before toggle
-- **LANGUAGE**: All disclaimers use institutional language (no "disclaimer de riesgo", no "podrías perder todo")
-- **PERSISTENCE**: Once started with `/autotrading start`, state is saved to PostgreSQL and survives Railway restarts
-- **OWNER**: Must start autotrading once; state persists in DB for continuous 24/7 operation
-
-#### Decision Engine Overhaul (Dec 23, 2025)
-- **EMA Regime Signal**: NEW deterministic signal generator (EMA slope + ATR + HMM regime)
-  - Replaces ARES pseudo-random outputs as primary signal source
-  - 25-point weight in scoring system (highest single weight)
-  - Full institutional traceability via decision_trace
-- **Monte Carlo VETO Engine**: Converted from logging-only to ENFORCEMENT
-  - VETO 1: Expected return < 0 → TRADE BLOCKED
-  - VETO 2: VaR95 worse than -3% → TRADE BLOCKED
-  - SIZE REDUCTION: Win rate < 50% → position reduced to 50%
-- **RMS Enforcement**: LimitsEngine + CircuitBreaker validated BEFORE trades
-  - Circuit breaker halt → TRADE BLOCKED
-  - Limits exceeded → TRADE BLOCKED
-- **Decision Trace**: Full audit trail of all veto decisions
-  - `decision['veto_chain']`: List of veto reasons
-  - `decision['guards_passed']`: List of passed validations
-  - `decision['decision_trace']`: Human-readable trace
-
-#### Defensive Hardening (Dec 23, 2025)
-- **Position Size Factor Clamp**: `max(0.0, min(raw_factor, 1.0))` prevents accidental magnification
-  - Log: `🛡️ MC factor clamped: raw X → Y` when clamping occurs
-  - Trace entry: `MC_SIZE_FACTOR_CLAMPED` added to decision_trace
-- **Veto Sentinel Logs**: Confirm early return actually cuts execution flow
-  - Log: `🚫 [VETO_ENFORCED] symbol | reason | decision_id → HOLD EARLY RETURN`
-  - Debug: `[EXEC_PATH] Proceeding to scoring...` should NEVER appear after veto
-  - Fields: `decision['vetoed']`, `decision['veto_reason']` added
-- **Quarantine Guard Before EMA**: Explicit check before signal generation
-  - Log: `🛑 [QUARANTINE_BLOCK] EMA signal skipped for quarantined SYMBOL`
-  - Ensures blocked assets don't generate EMA signals
-
-#### AI Institutional Language Enforcement (Dec 23, 2025)
-- **Intent Detection**: New `performance_risk_discussion` intent triggers strict institutional mode
-  - Triggers on: rendimiento, performance, trades, pérdida, loss, win rate, p&l, track record
-- **BLACKLISTED Phrases (NEVER use in responses):**
-  - "rendimiento subóptimo", "suboptimal performance"
-  - "señal de alerta", "warning sign", "red flag"
-  - "riesgo de pérdidas reales", "risk of real losses"
-  - "atención inmediata", "recalibración urgente"
-  - "disclaimer de riesgo", "podrías perder todo"
-  - "pérdidas sustanciales", "desempeño negativo"
-  - "problema", "error crítico" (when discussing system)
-- **APPROVED Institutional Reframes:**
-  - Losses → "capital deployment in learning phase"
-  - Low win rate → "strategy calibration in progress"
-  - Negative P&L → "paper trading validation phase"
-  - Problem assets → "assets under strategic review"
-  - Blocked trades → "risk-managed positions"
-  - System error → "protective measure activated"
-- **Files Modified:**
-  - `omnix_services/ai_service/prompt_templates.py`: MASTER_SYSTEM_PROMPT with blacklist
-  - `omnix_services/ai_service/ai_prompts.py`: Intent detector + performance_risk_discussion instructions
-- **Founder Narrative Rule**: Always speak as "founder controlling risk", never as "architect explaining problems"
-
-#### AI Self-Knowledge System (Dec 24, 2025)
-- **System State Manifest**: `omnix_config/system_state_manifest.json`
-  - Contains verified system state: trading_mode, primary_signal, legacy_modules, quarantine, roadmap
-  - AI reads manifest before responding - no more improvisation
-  - Updated on significant system changes
-- **Prompt Integration**: `omnix_services/ai_service/prompt_templates.py`
-  - `get_system_state_prompt()` injects manifest data into AI context
-  - AI must use manifest values, not invent data
-- **Problem Solved**: AI no longer "hallucinates" about ARES being primary signal or system status
-
-#### Telegram Command Surface Sealed (Dec 24, 2025)
-- **AUDITORÍA COMPLETA**: 85 comandos registrados, 81 handlers únicos, 4 alias
-- **RMS ENFORCEMENT**: `/arbitrage_execute` ahora valida circuit_breaker + limits_engine
-  - Log: `🛡️ [RMS_BLOCK] arbitrage_execute blocked by circuit_breaker`
-  - Log: `🛡️ [RMS_BLOCK] arbitrage_execute blocked by limits_engine`
-- **LENGUAJE INSTITUCIONAL**: `/start` disclaimer reescrito sin frases alarmistas
-  - Antes: "Trading conlleva RIESGO de pérdida total"
-  - Ahora: "Sistema operando en fase de validación"
-- **DOCUMENTACIÓN**: Inventario completo en `docs/current/COMPLETE_FUNCTIONALITY_MAP.md` §10
-- **COMANDOS CON SIDE EFFECTS**: Todos protegidos por RMS
-  - `/paper_buy`, `/paper_sell` → PaperTradingManager (circuit_breaker + limits_engine)
-  - `/arbitrage_execute` → ArbitrageExecutor (circuit_breaker + limits_engine)
-  - `/emergency_halt`, `/resume_trading` → Admin only
-- **COMANDOS READ-ONLY**: 52 comandos informativos (sin side effects, sin protección necesaria)
-- **COMANDOS CONDICIONALES**: 26 comandos que solo se registran si su módulo está activo
-- **ESTADO**: Superficie sellada y lista para usuarios
-
-### Trading Profiles System
-Configurable profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) adjust trading parameters. `PRODUCTION_STABLE V6.5.4c` is the active profile.
-
-### Hexagonal Architecture (V7.0 - Structure Complete, Activation Pending)
-The system employs a hexagonal architecture with 20 ports (17 driven + 3 driver) and 22 adapters. All feature flags are currently `false`, meaning the system operates with legacy code. Activation is planned via the Strangler Fig pattern.
-
-### AI Service Architecture
-Refactored with SOLID principles and dependency injection, integrating interfaces and providers (Gemini, OpenAI, Anthropic). It features a voice service, AI-first command detection (only `/` prefixed messages are commands), and an AI-First Multilingual Prompt Architecture with English system prompts, dynamic language detection (using `fast-langdetect` and Gemini AI), and a Chain-of-Thought Framework. Language detection is concurrency-safe and uses Redis for persistence.
-
-### Error Handling System
-An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff for retryable errors, and structured logging.
-
-### Web Search Service Architecture
-Structured with an `IntentDetector`, `SearchManager`, and `TavilySearch` client for intent-based web searches.
-
-### Current Project Structure
-The project is structured with `src/omnix/` containing the hexagonal V7.0 architecture, while `omnix_core/`, `omnix_services/`, `omnix_config/`, `omnix_dashboard/`, and `omnix_api/` contain essential legacy components.
+### Web Search Service
+Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for intent-based web searches.
 
 ## External Dependencies
 
 ### APIs and Services
--   **Kraken Exchange**: Primary crypto data and order execution.
+-   **Kraken Exchange**: Crypto data and order execution.
 -   **Alpaca**: Stock data and historical bars.
 -   **Google Gemini (2.0 Flash)**: Primary AI model.
 -   **OpenAI (GPT-4o, Whisper)**: AI services.
@@ -193,5 +80,5 @@ The project is structured with `src/omnix/` containing the hexagonal V7.0 archit
 -   **ANU QRNG**: Quantum random numbers.
 
 ### Databases
--   **PostgreSQL (Railway)**: Main persistence for trades, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
+-   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.

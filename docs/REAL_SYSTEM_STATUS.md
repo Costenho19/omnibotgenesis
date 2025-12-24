@@ -9,6 +9,46 @@
 
 ## Cambios Recientes
 
+### ARES Removed from Voting (Dec 24, 2025)
+**Problema identificado por análisis GPT Expert + Senior Audit:**
+ARES V1/V2 seguía votando con 35 puntos (20+15) a pesar de que EMA_REGIME_SIGNAL es el driver principal documentado.
+
+**Cambios implementados:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `trading_profiles.py` | `ares_v1_enabled: False`, `ares_v2_enabled: False` |
+| `system_state_manifest.json` | ARES marcado como `status: DISABLED` |
+| `auto_trading_bot.py` | Log `🛡️ [ARES_DISABLED]` cuando excluido |
+
+**Nuevo estado del scoring:**
+
+| Componente | Peso Anterior | Peso Actual |
+|------------|---------------|-------------|
+| EMA Regime Signal | 25 puntos | 25 puntos (driver único) |
+| ARES V1 | 20 puntos | **0 puntos** |
+| ARES V2 | 15 puntos | **0 puntos** |
+
+**Impacto esperado:**
+- Decisiones más limpias sin conflicto de señales
+- ARES permanece como observador histórico
+- Win rate debería mejorar al eliminar outputs pseudo-aleatorios
+
+### Traceability Matrix Full Validation (Dec 24, 2025)
+**Script creado:** `scripts/traceability/validate_traceability.py`
+
+**Resultados:**
+| Métrica | Valor |
+|---------|-------|
+| Componentes enumerados | 123/123 |
+| Legacy Coverage | 116/123 (94%) |
+| V7 Coverage | 1/123 (0.8%) |
+| MISSING | 0 |
+
+**Evidencia generada:**
+- `docs/compliance/evidence/traceability_components.json`
+- `docs/compliance/evidence/traceability_validation.md`
+
 ### AI Self-Knowledge System (Dec 24, 2025)
 **Problema resuelto**: El AI no conocía su propio estado y daba información incorrecta.
 

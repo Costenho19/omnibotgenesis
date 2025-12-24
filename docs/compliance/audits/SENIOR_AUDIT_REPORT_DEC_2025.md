@@ -454,13 +454,42 @@ No high-severity issues identified.
 
 ---
 
+## Critical Update: ARES Removed from Voting (Dec 24, 2025)
+
+### Problem Identified
+
+External analysis (GPT Expert + Senior Audit) identified that **ARES V1/V2 was still contributing 35 points** to the trading decision score, despite documentation stating EMA_REGIME_SIGNAL is the primary driver.
+
+| Module | Previous Weight | Current Weight |
+|--------|-----------------|----------------|
+| ARES V1 | 20 points | **0 points** |
+| ARES V2 | 15 points | **0 points** |
+| EMA Regime | 25 points | 25 points (unchanged, now sole driver) |
+
+### Changes Implemented
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `trading_profiles.py` | `ares_v1_enabled: False`, `ares_v2_enabled: False` | Remove ARES from voting |
+| `system_state_manifest.json` | Updated `legacy_modules` to show `status: DISABLED` | Documentation sync |
+| `auto_trading_bot.py` | Log: `🛡️ [ARES_DISABLED]` when ARES excluded | Observability |
+
+### Expected Impact
+
+- **Fewer conflicting signals** → Cleaner decision process
+- **EMA Regime Signal** now sole primary driver (25 points)
+- **ARES remains** as observer/historical data (not deleted)
+- **Win rate should improve** as pseudo-random ARES outputs no longer influence trades
+
+---
+
 ## Recommendations
 
 ### Immediate (Next 7 Days)
 
-1. **Continue Track Record Building**: Reach 200-trade milestone for investor confidence
-2. **Monitor Quarantine System**: Track AVAX/USD probation performance
-3. **V7 Migration Preparation**: Begin planning first V7 adapter activation (AI Port recommended)
+1. **Monitor ARES-disabled performance**: Compare win rate before/after Dec 24
+2. **Continue Track Record Building**: Reach 200-trade milestone for investor confidence
+3. **Monitor Quarantine System**: Track AVAX/USD probation performance
 
 ### Short-Term (Next 30 Days)
 

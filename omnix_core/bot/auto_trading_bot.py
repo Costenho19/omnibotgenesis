@@ -2554,17 +2554,19 @@ class AutoTradingBot:
                     decision['reason'].append(f"⚠️ Kelly: Posición óptima muy baja")
             
             # ========== ESTRATEGIAS ARES QUANTUM (peso 35%) ==========
-            # V6.5.4: ARES puede deshabilitarse via perfil PRODUCTION_STABLE
-            ares_v1_enabled = True
-            ares_v2_enabled = True
+            # V6.5.4d: ARES DESHABILITADO del voting (Dec 24, 2025)
+            # Razón: ARES sumaba 35 puntos conflictivos. EMA_REGIME_SIGNAL es el driver principal.
+            ares_v1_enabled = False  # Default: disabled
+            ares_v2_enabled = False  # Default: disabled
             if TRADING_PROFILES_AVAILABLE:
                 try:
                     active_profile = get_active_profile()
-                    ares_v1_enabled = active_profile.extra_params.get('ares_v1_enabled', True)
-                    ares_v2_enabled = active_profile.extra_params.get('ares_v2_enabled', True)
-                    if not ares_v1_enabled or not ares_v2_enabled:
-                        logger.info(f"📊 PRODUCTION_STABLE: ARES V1={ares_v1_enabled}, V2={ares_v2_enabled}")
+                    ares_v1_enabled = active_profile.extra_params.get('ares_v1_enabled', False)
+                    ares_v2_enabled = active_profile.extra_params.get('ares_v2_enabled', False)
+                    if not ares_v1_enabled and not ares_v2_enabled:
+                        logger.info("🛡️ [ARES_DISABLED] ARES V1/V2 excluidos del scoring - EMA_REGIME_SIGNAL es driver principal")
                         decision['v52_analysis']['ares_disabled_by_profile'] = True
+                        decision['v52_analysis']['ares_disabled_reason'] = 'Removed from voting Dec 24, 2025 - EMA is primary driver'
                 except Exception:
                     pass
             
