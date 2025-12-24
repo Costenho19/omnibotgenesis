@@ -60,6 +60,14 @@ Implemented Coherence Pre-Gate BEFORE scoring. New execution order:
 - New trace states: `COHERENCE_GATE_CRITICAL`, `COHERENCE_GATE_LOW`
 - **Result**: Reduces false positives and overtrading
 
+### ARES Deprecation (Dec 24, 2025)
+**ARES V1/V2 strategies have been completely removed** from the active codebase:
+- Archived to `archive/deprecated_ares/` (strategies, testing, stock modules, docs)
+- All runtime references eliminated from omnix_core/, omnix_services/, src/omnix/
+- Kill-switch code removed from auto_trading_bot.py (~100 lines)
+- Adaptive engine now uses QUANTUM_MOMENTUM/HMM_REGIME baselines
+- User settings updated to show V6.5.4d strategies
+
 ### Scoring Simplification (Dec 24, 2025)
 5 core inputs per GPT Expert recommendation:
 - **EMA Regime Signal**: 40 pts (PRIMARY DRIVER)
