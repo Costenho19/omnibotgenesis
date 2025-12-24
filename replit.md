@@ -52,6 +52,14 @@ The system integrates several core engines: AutoTradingBot, Non-Markovian Memory
 ### AI Architecture and Enforcement
 The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection and a Multilingual Prompt Architecture with dynamic language detection and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. ARES V1/V2 are explicitly disabled in the scoring system, acting as observers only, making EMA Regime Signal the sole primary driver.
 
+### Hierarchical Veto Flow (Dec 24, 2025)
+Implemented Coherence Pre-Gate BEFORE scoring. New execution order:
+1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** → 4. Scoring → 5. Decision
+- Coherence now blocks low-quality signals BEFORE scoring computation
+- Thresholds: veto_critical < 30%, veto_normal < 45%
+- New trace states: `COHERENCE_GATE_CRITICAL`, `COHERENCE_GATE_LOW`
+- **Result**: Reduces false positives and overtrading
+
 ### ARES Code Removed & EMA Optimized (Dec 24, 2025)
 ARES V1/V2 code has been **completely removed** from auto_trading_bot.py:
 - **Code**: Legacy ARES block eliminated (~90 lines removed)

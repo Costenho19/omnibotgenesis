@@ -9,6 +9,43 @@
 
 ## Cambios Recientes
 
+### Hierarchical Veto Flow & Coherence Pre-Gate (Dec 24, 2025)
+**Problema identificado por análisis GPT Expert:**
+El flujo de veto no estaba jerárquicamente claro. Coherence Engine evaluaba DESPUÉS del scoring.
+
+**Solución: Flujo Jerárquico con Coherence Pre-Gate**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    NUEVO FLUJO JERÁRQUICO                       │
+├─────────────────────────────────────────────────────────────────┤
+│  1. EMA Signal Generation                                       │
+│         ↓                                                       │
+│  2. MC VETO (expected_return < 0 || VaR95 > -3%)               │
+│         ↓                                                       │
+│  3. RMS VETO (CircuitBreaker + LimitsEngine)                   │
+│         ↓                                                       │
+│  4. COHERENCE GATE ← NUEVO: ANTES del scoring                   │
+│     • veto_critical < 30% → REJECTED                           │
+│     • veto_normal < 45% → REJECTED                             │
+│         ↓                                                       │
+│  5. Scoring Final (solo señales pre-validadas)                 │
+│         ↓                                                       │
+│  6. Decision + Execution                                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Nuevos estados en decision_trace:**
+- `COHERENCE_GATE_CRITICAL`: Señal bloqueada por coherencia < 30%
+- `COHERENCE_GATE_LOW`: Señal bloqueada por coherencia < 45%
+- `COHERENCE_GATE: PASSED`: Señal aprobada para scoring
+
+**Beneficios:**
+- Reduce falsos positivos
+- Elimina overtrading
+- Scoring solo procesa señales de calidad
+- Menor ruido estadístico
+
 ### ARES Code Removed & EMA Optimized (Dec 24, 2025)
 **Problema identificado por análisis GPT Expert + Senior Audit:**
 ARES V1/V2 seguía votando con 35 puntos (20+15) a pesar de que EMA_REGIME_SIGNAL es el driver principal documentado.
