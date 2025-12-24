@@ -651,16 +651,16 @@ Esto es una medida de seguridad que tú configuraste. Usa /proteccion para ajust
         return None
     
     def get_available_strategies(self) -> List[Dict]:
-        """Obtener lista de estrategias disponibles"""
+        """Obtener lista de estrategias disponibles (V6.5.4d)"""
         return [
-            {'id': 'ARES_V1', 'name': 'ARES V1 - Swing Trading', 'description': 'Swing trading optimizado para crypto', 'risk': 'medium'},
-            {'id': 'ARES_V2', 'name': 'ARES V2 - Scalping M1', 'description': 'Scalping de alta frecuencia', 'risk': 'high'},
-            {'id': 'MONTE_CARLO', 'name': 'Monte Carlo', 'description': 'Simulaciones probabilísticas', 'risk': 'medium'},
-            {'id': 'HMM_REGIME', 'name': 'HMM Regime Detection', 'description': 'Detección de regímenes de mercado', 'risk': 'low'},
-            {'id': 'KALMAN_FILTER', 'name': 'Kalman Filter', 'description': 'Filtrado adaptativo de señales', 'risk': 'low'},
-            {'id': 'MEMORY_KERNEL', 'name': 'Non-Markovian Memory', 'description': 'Memoria temporal avanzada', 'risk': 'medium'},
-            {'id': 'BLACK_SWAN', 'name': 'Black Swan Detection', 'description': 'Detección de eventos extremos', 'risk': 'low'},
-            {'id': 'COHERENCE_ENGINE', 'name': 'Coherence Engine', 'description': 'Validación de coherencia', 'risk': 'low'},
+            {'id': 'EMA_REGIME', 'name': 'EMA Regime Signal', 'description': 'Señal principal basada en EMA (40 pts)', 'risk': 'medium'},
+            {'id': 'HMM_REGIME', 'name': 'HMM Regime Detection', 'description': 'Detección de regímenes de mercado (25 pts)', 'risk': 'low'},
+            {'id': 'KALMAN_FILTER', 'name': 'Kalman Filter', 'description': 'Filtrado adaptativo de señales (15 pts)', 'risk': 'low'},
+            {'id': 'MEMORY_KERNEL', 'name': 'Non-Markovian Memory', 'description': 'Memoria temporal avanzada (15 pts)', 'risk': 'medium'},
+            {'id': 'KELLY_CRITERION', 'name': 'Kelly Criterion', 'description': 'Optimización de tamaño de posición (10 pts)', 'risk': 'low'},
+            {'id': 'MONTE_CARLO', 'name': 'Monte Carlo', 'description': 'Simulaciones probabilísticas (veto)', 'risk': 'medium'},
+            {'id': 'BLACK_SWAN', 'name': 'Black Swan Detection', 'description': 'Detección de eventos extremos (veto)', 'risk': 'low'},
+            {'id': 'COHERENCE_ENGINE', 'name': 'Coherence Engine', 'description': 'Validación de coherencia (veto)', 'risk': 'low'},
         ]
     
     def update_active_strategies(self, user_id: str, strategies: List[str]) -> Tuple[bool, str]:

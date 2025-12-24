@@ -3356,7 +3356,7 @@ class AutoTradingBot:
                 except Exception as e:
                     logger.error(f"Error en AI Risk Guardian (continuando): {e}")
             
-            # 🧬 ARES QUANTUM KILL-SWITCH - FAIL-SAFE CRÍTICO
+            # KRAKEN FAIL-SAFE - CRITICAL VALIDATION
             # Validar disponibilidad de Kraken ANTES de cualquier lógica de trading
             kraken_available = (
                 hasattr(self, 'trading_service') and 
@@ -3368,10 +3368,8 @@ class AutoTradingBot:
             is_real_trading = not self.config.get('paper_mode', True)
             
             # FAIL-SAFE ABSOLUTO: En REAL TRADING, Kraken DEBE estar disponible
-            # Este check se ejecuta PRIMERO, antes de evaluar la acción
             if is_real_trading and not kraken_available:
                 logger.error(f"🚨 CRITICAL FAIL-SAFE: REAL TRADING sin datos de Kraken disponibles")
-                logger.error(f"   ARES Kill-Switch requiere datos de mercado en vivo - BLOQUEANDO todas las operaciones")
                 logger.error(f"   Acción solicitada: {action}, Monto: ${amount_usd:.2f}")
                 logger.error(f"   Sistema en modo degradado - requiere reconexión de Kraken para trading real")
                 return {
@@ -3379,115 +3377,16 @@ class AutoTradingBot:
                     'blocked': True,
                     'fail_safe': True,
                     'critical': True,
-                    'reason': 'Real trading requiere datos de Kraken en vivo para protecciones de ARES kill-switch',
+                    'reason': 'Real trading requiere datos de Kraken en vivo',
                     'action': action,
                     'kraken_available': False,
                     'timestamp': int(time.time()),
                     'recommendation': 'Verificar conexión de Kraken o usar Paper Trading Mode'
                 }
             
-            # ARES Kill-Switch - solo se ejecuta si pasó el fail-safe
-            # (Real trading CON Kraken disponible)
-            # V6.5.4: Respeta configuración del perfil PRODUCTION_STABLE
-            ares_killswitch_enabled = True
-            if TRADING_PROFILES_AVAILABLE:
-                try:
-                    active_profile = get_active_profile()
-                    ares_killswitch_enabled = active_profile.extra_params.get('ares_enabled', True)
-                except Exception:
-                    pass
-            
-            if action != 'HOLD' and is_real_trading and ares_killswitch_enabled:
-                try:
-                    ares_blocked = False
-                    ares_block_reason = []
-                    
-                    # ARES V1 Kill-Switch
-                    if self.ares_v1 is not None and hasattr(self.ares_v1, 'evaluate_kill_switch'):
-                        try:
-                            # Obtener datos del análisis previo
-                            v52_analysis = analysis.get('v52_analysis', {})
-                            ares_v1_data = {
-                                'signal': v52_analysis.get('ares_v1_signal', 'NONE'),
-                                'confidence': v52_analysis.get('ares_v1_confidence', 0),
-                                'active_signals': v52_analysis.get('ares_v1_active_signals', [])
-                            }
-                            
-                            # Simular balance y trades para kill-switch
-                            current_balance = self._get_balance()
-                            recent_trades = []
-                            if self.database_service:
-                                try:
-                                    recent_trades = self.database_service.get_recent_trades(hours=24, limit=100)
-                                except:
-                                    recent_trades = []
-                            
-                            # Evaluar Kill-Switch
-                            kill_switch_result = self.ares_v1.evaluate_kill_switch(
-                                balance=current_balance,
-                                recent_trades=recent_trades,
-                                ares_data=ares_v1_data
-                            )
-                            
-                            if kill_switch_result['triggered']:
-                                ares_blocked = True
-                                reason = kill_switch_result.get('reason', 'ARES V1 Kill-Switch activado')
-                                ares_block_reason.append(f"🧬 ARES V1 KILL-SWITCH: {reason}")
-                                logger.error(f"🚨 ARES V1 KILL-SWITCH ACTIVADO: {reason}")
-                        except Exception as e:
-                            # Error no crítico - el kill-switch simplemente no se aplica
-                            logger.debug(f"Error en ARES V1 Kill-Switch (continuando): {e}")
-                    
-                    # ARES V2 Kill-Switch (más agresivo para scalping)
-                    if self.ares_v2 is not None and not ares_blocked and hasattr(self.ares_v2, 'evaluate_kill_switch_scalping'):
-                        try:
-                            v52_analysis = analysis.get('v52_analysis', {})
-                            ares_v2_data = {
-                                'signal': v52_analysis.get('ares_v2_signal', 'NONE'),
-                                'confidence': v52_analysis.get('ares_v2_confidence', 0),
-                                'active_signals': v52_analysis.get('ares_v2_active_signals', [])
-                            }
-                            
-                            current_balance = self._get_balance()
-                            recent_trades = []
-                            if self.database_service:
-                                try:
-                                    recent_trades = self.database_service.get_recent_trades(hours=1, limit=50)
-                                except:
-                                    recent_trades = []
-                            
-                            # Kill-Switch para scalping (más estricto)
-                            kill_switch_result = self.ares_v2.evaluate_kill_switch_scalping(
-                                balance=current_balance,
-                                recent_trades=recent_trades,
-                                ares_data=ares_v2_data
-                            )
-                            
-                            if kill_switch_result['triggered']:
-                                ares_blocked = True
-                                reason = kill_switch_result.get('reason', 'ARES V2 Scalping Kill-Switch activado')
-                                ares_block_reason.append(f"🧨 ARES V2 SCALP KILL-SWITCH: {reason}")
-                                logger.error(f"🚨 ARES V2 SCALPING KILL-SWITCH ACTIVADO: {reason}")
-                        except Exception as e:
-                            # Error no crítico - el kill-switch simplemente no se aplica
-                            logger.debug(f"Error en ARES V2 Kill-Switch (continuando): {e}")
-                    
-                    # Si ARES bloqueó el trade
-                    if ares_blocked:
-                        return {
-                            'error': 'BLOQUEADO POR ARES QUANTUM KILL-SWITCH',
-                            'blocked': True,
-                            'ares_kill_switch': True,
-                            'reasons': ares_block_reason,
-                            'action': action,
-                            'timestamp': int(time.time())
-                        }
-                    elif not ares_blocked:
-                        logger.debug(f"✅ ARES Quantum Kill-Switch: Trade permitido - Sin riesgos detectados")
-                    
-                except Exception as e:
-                    # Error general del kill-switch - no bloquear el trade
-                    logger.debug(f"Error en ARES Kill-Switch (continuando sin bloqueo): {e}")
+            # NOTE: ARES Kill-Switch code removed Dec 24, 2025
+            # Kill-switch logic was tied to ARES V1/V2 strategies which have been deprecated
+            # Risk protection is now handled by AI Risk Guardian and Coherence Engine
             
             # 🔴 VALIDACIÓN DE COHERENCE ENGINE - BLOQUEA TRADES PELIGROSOS
             if self.coherence_engine and action != 'HOLD':
@@ -4613,20 +4512,19 @@ class AutoTradingBot:
     
     def _apply_adaptive_parameters(self, strategy_name: str, profile) -> None:
         """
-        🎯 Aplicar parámetros calibrados a las estrategias ARES
+        Apply calibrated parameters to trading strategies.
         
-        Este método es llamado por el Adaptive Parameter Engine cuando
-        detecta un cambio de régimen y calibra nuevos parámetros.
+        Called by Adaptive Parameter Engine when regime change detected.
         
         SAFEGUARDS:
-        - Verifica que no hay posiciones abiertas antes de aplicar cambios
-        - Solo aplica a NUEVOS trades, no afecta trades en progreso
-        - Valida con Risk Guardian antes de aplicar
-        - Almacena parámetros para próximo trade, no modifica trades activos
+        - Verifies no open positions before applying changes
+        - Only applies to NEW trades, does not affect in-progress trades
+        - Validates with Risk Guardian before applying
+        - Stores parameters for next trade, does not modify active trades
         
         Args:
-            strategy_name: 'ARES_V1' o 'ARES_V2'
-            profile: AdaptiveParameterProfile con los nuevos parámetros
+            strategy_name: Strategy identifier (QUANTUM_MOMENTUM, HMM_REGIME, etc.)
+            profile: AdaptiveParameterProfile with new parameters
         """
         try:
             # SAFEGUARD 1: Verificar que no hay posiciones abiertas
@@ -4691,11 +4589,10 @@ class AutoTradingBot:
         """
         Obtener parámetros adaptativos para un nuevo trade.
         
-        Este método es llamado al abrir un nuevo trade para obtener
-        los parámetros calibrados por el Adaptive Engine.
+        Called when opening new trade to get calibrated parameters.
         
         Args:
-            strategy_name: 'ARES_V1' o 'ARES_V2'
+            strategy_name: Strategy identifier (QUANTUM_MOMENTUM, HMM_REGIME, etc.)
             
         Returns:
             Dict con parámetros o None si no hay calibración pendiente
@@ -4728,10 +4625,10 @@ class AutoTradingBot:
     
     def _process_kernel_for_adaptive_engine(self, kernel_output: Dict) -> None:
         """
-        🧠 Procesar salida del Non-Markovian Kernel para el Adaptive Engine
+        Process Non-Markovian Kernel output for Adaptive Engine.
         
-        Envía las señales de régimen al motor adaptativo para que
-        determine si es necesario recalibrar los parámetros de ARES.
+        Sends regime signals to the adaptive engine to determine
+        if strategy parameters need recalibration.
         
         Args:
             kernel_output: Diccionario con salida del kernel (regime, coherence, etc.)
@@ -4761,8 +4658,8 @@ class AutoTradingBot:
             if result.get('is_significant_change'):
                 logger.info(f"🎯 Adaptive Engine: Régimen cambiado a {result.get('regime')}")
                 
-                # Registrar trade en el cooldown manager
-                for strategy in ['ARES_V1', 'ARES_V2']:
+                # Record trade in cooldown manager for active strategies
+                for strategy in ['QUANTUM_MOMENTUM', 'HMM_REGIME']:
                     self.adaptive_engine.record_trade(strategy)
                     
         except Exception as e:

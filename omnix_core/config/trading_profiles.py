@@ -679,13 +679,6 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10,
-        'ares_enabled': True,
-        'ares_v1_enabled': True,
-        'ares_v2_enabled': True,
-        'ares_v1_min_confidence': 0.70,
-        'ares_v2_min_confidence': 0.75,
-        'ares_max_daily_trades': 3,
-        'ares_require_trend': False,
         'quantum_optimization_enabled': False,
         'strategies_active': [
             'QuantumMomentum',
@@ -698,10 +691,6 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
             'CoherenceEngine',
             'RiskGuardian',
             'SentimentAnalysis'
-        ],
-        'strategies_experimental': [
-            'ARES_V1',
-            'ARES_V2'
         ]
     }
 )
@@ -762,12 +751,10 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
 
 PRODUCTION_STABLE_PROFILE = TradingProfile(
     name="PRODUCTION_STABLE",
-    description="Perfil V6.5.4c PRODUCTION STABLE - Estrategias probadas + ARES experimental. "
-                "PRODUCCIÓN: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
+    description="Perfil V6.5.4d PRODUCTION STABLE - Estrategias institucionales probadas. "
+                "Activas: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
                 "Coherence Engine, Risk Guardian, Non-Markovian Kernel, SentimentAnalysis. "
-                "EXPERIMENTAL: ARES V1 (Swing 70%) + V2 (Scalping 75%) - Max 3 trades/día. "
-                "Métricas de producción separadas de experimentales. "
-                "V6.5.4c: ARES activado para track record (Dec 10, 2025).",
+                "V6.5.4d: Coherence Pre-Gate, umbrales SUBIDOS (Dec 24, 2025).",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,
@@ -838,17 +825,6 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
         'risk_reward_min': 2.0,
         'force_sl_execution': True,
         'sl_check_interval_seconds': 10,
-        # V6.5.4d: ARES DESHABILITADO del voting (Dec 24, 2025)
-        # Razón: ARES sumaba 35 puntos pero EMA_REGIME_SIGNAL es el driver principal
-        # ARES permanece como observador histórico (strategies_experimental)
-        # Cambio recomendado por análisis senior + GPT expert
-        'ares_enabled': False,
-        'ares_v1_enabled': False,
-        'ares_v2_enabled': False,
-        'ares_v1_min_confidence': 0.70,  # 70% confianza mínima para V1 (swing)
-        'ares_v2_min_confidence': 0.75,  # 75% confianza mínima para V2 (scalping)
-        'ares_max_daily_trades': 3,      # Máximo 3 trades/día (compartido V1+V2)
-        'ares_require_trend': False,     # Permitir mercados laterales (V2 especialidad)
         'quantum_optimization_enabled': False,
         'strategies_active': [
             'QuantumMomentum',
@@ -861,10 +837,6 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
             'CoherenceEngine',
             'RiskGuardian',
             'SentimentAnalysis'
-        ],
-        'strategies_experimental': [
-            'ARES_V1',
-            'ARES_V2'
         ]
     }
 )

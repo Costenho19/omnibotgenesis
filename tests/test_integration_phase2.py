@@ -346,10 +346,10 @@ class TestBackwardCompatibility:
     def test_strategy_re_exports_work(self):
         """Verify strategy re-exports don't break."""
         try:
-            from src.omnix.domain.trading.strategies import ARESProtocolV1
-            assert True
+            from src.omnix.domain.trading.strategies import QuantumMomentumAnalyzer
+            assert QuantumMomentumAnalyzer is not None
         except ImportError:
-            pytest.skip("ARES V1 not in legacy path")
+            pytest.skip("QuantumMomentum not in legacy path")
     
     def test_domain_entities_importable(self):
         """Verify all domain entities can be imported."""

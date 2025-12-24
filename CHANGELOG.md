@@ -96,54 +96,54 @@ All references to ARES removed from:
 
 ---
 
-## [2025-12-02] - ARES Strategies Import Fix
+## [2025-12-24] - ARES Strategies DEPRECATED & ARCHIVED
 
-### Bug Critico Resuelto
+### ARES Complete Removal
 
-**Problema**: El auto-trading estaba completamente detenido porque las estrategias ARES V1 y V2 no cargaban. El sistema mostraba `ARES_STRATEGIES_AVAILABLE = False`.
+**Decision**: ARES V1 and V2 strategies have been deprecated and archived. The system now uses only production-proven strategies.
 
-**Causa Raiz**: Los nombres de clase en los imports no coincidian con las clases reales definidas en los archivos de estrategia.
+**Reason**: ARES was experimental and underperforming. Simplifying the codebase for investor presentation.
 
-| Import Incorrecto | Clase Real |
-|-------------------|------------|
-| `AresQuantumProtocol` | `AresProtocolV1` |
-| `AresScalpingV2` | `AresProtocolV2` |
+### Files Archived (to `archive/deprecated_ares/`)
 
-### Archivos Corregidos (6)
+| Original Location | Archived To |
+|-------------------|-------------|
+| `omnix_core/strategies/ares_v1.py` | `archive/deprecated_ares/strategies/` |
+| `omnix_core/strategies/ares_v2.py` | `archive/deprecated_ares/strategies/` |
+| `src/omnix/domain/trading/strategies/ares_v1.py` | `archive/deprecated_ares/strategies/` |
+| `src/omnix/domain/trading/strategies/ares_v2.py` | `archive/deprecated_ares/strategies/` |
+| `omnix_testing/validate_ares_strategies.py` | `archive/deprecated_ares/testing/` |
+| `omnix_testing/run_premium_validation.py` | `archive/deprecated_ares/testing/` |
+| `omnix_services/stock_trading/premium/modules/ares_stock.py` | `archive/deprecated_ares/stock_trading/` |
+| `docs/operations/experimental/ares_development.md` | `docs/history/2025-12/` |
 
-| Archivo | Cambio |
-|---------|--------|
-| `main.py` | Import principal y fallback (lineas 256-274) |
-| `omnix_core/trading_system.py` | Instanciacion global (lineas 5194-5195) |
-| `omnix_core/strategies/ares_v1.py` | Bloque de test local (linea 644) |
-| `omnix_core/strategies/ares_v2.py` | Bloque de test local (linea 546) |
-| `omnix_testing/validate_ares_strategies.py` | Adaptadores de validacion (lineas 114-118, 165-169) |
-| `omnix_testing/backtesting/backtesting_engine.py` | Imports de backtesting (lineas 30-35, 76-81) |
+### Code Cleaned
 
-### Verificacion
+| File | Change |
+|------|--------|
+| `omnix_core/config/trading_profiles.py` | Removed all `ares_*` keys from all profiles |
+| `src/omnix/config/settings.py` | Removed `enable_ares_v1`, `enable_ares_v2` fields |
+| `tests/test_parity_harness.py` | Removed ARES import tests |
+| `tests/test_domain_entities.py` | Changed strategy to `quantum_momentum` |
+| `tests/integration/test_railway_startup.py` | Removed ARES validation checks |
+| `omnix_services/telegram_service/inline_keyboards.py` | Updated docstrings |
+| `omnix_services/telegram_service/callback_handler.py` | Updated docstrings |
 
-```
-✅ ARES QUANTUM PROTOCOLS LOADED:
-   🧬 ARES V1: AresProtocolV1 (v1.1.0) - Win Rate 55%-65%
-   🧨 ARES V2: AresProtocolV2 (v2.1.0) - Win Rate 60%-70%
-✅ Instancias creadas correctamente
-   V1 version: 1.1.0
-   V2 version: 2.1.0
-```
+### Active Strategies (V6.5.4d)
 
-### Impacto
+| Strategy | Points | Role |
+|----------|--------|------|
+| EMA Regime Signal | 40 | Primary Driver |
+| HMM Regime | 25 | Regime Detection |
+| Kalman Filter | 15 | Price Prediction |
+| Non-Markovian Memory | 15 | Temporal Memory |
+| Kelly Criterion | 10 | Position Sizing |
 
-- El bot ahora puede generar senales de trading usando ambas estrategias ARES
-- Requiere push a GitHub para deploy automatico en Railway
-- El sistema volvera a ejecutar trades con las estrategias institucionales activas
+---
 
-### Estado
+## [2025-12-02] - ARES Strategies Import Fix (OBSOLETE)
 
-- [x] Codigo corregido
-- [x] Verificacion de sintaxis pasada
-- [x] Test de imports exitoso
-- [ ] Push a GitHub pendiente
-- [ ] Deploy en Railway pendiente
+> **Note**: This entry is obsolete. ARES was deprecated on Dec 24, 2025. See above.
 
 ---
 

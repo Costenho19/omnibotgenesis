@@ -75,8 +75,6 @@ try:
         'cache_cleanup': False,
         'modules_loaded': False,
         'bot_initialized': False,
-        'ares_v1_active': False,
-        'ares_v2_active': False,
         'telegram_running': False,
         'services_ready': False
     }
@@ -106,10 +104,6 @@ try:
                     validation_checks['modules_loaded'] = True
                 if 'EnterpriseTelegramBot instanciado' in line:
                     validation_checks['bot_initialized'] = True
-                if 'ARES V1' in line and 'Swing Trading' in line:
-                    validation_checks['ares_v1_active'] = True
-                if 'ARES V2' in line and 'Scalping' in line:
-                    validation_checks['ares_v2_active'] = True
                 if 'BOT TELEGRAM OPERATIVO' in line or 'Bot Telegram iniciado' in line:
                     validation_checks['telegram_running'] = True
                 if ('Gemini' in line and 'configurad' in line) or 'GEMINI' in line:

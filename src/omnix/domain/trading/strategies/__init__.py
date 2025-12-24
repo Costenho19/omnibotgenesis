@@ -3,13 +3,7 @@ OMNIX V7.0 Trading Strategies
 ==============================
 Strategy implementations migrated from legacy locations.
 
-All strategies are re-exported from their original locations for
-backward compatibility during migration. Once migration is complete,
-implementations will be moved here.
-
-Available Strategies:
-- ARESProtocolV1 (Swing Trading)
-- ARESProtocolV2 (Scalping)
+Available Strategies (V6.5.4d):
 - NonMarkovianMemoryKernel (Temporal Memory)
 - CAESModule (Confidence-Adaptive Entry)
 - QuantumMomentumAnalyzer
@@ -19,20 +13,9 @@ Available Strategies:
 - HMMRegimeDetector
 - KalmanFilterPredictor
 
+Note: ARES V1/V2 deprecated Dec 24, 2025 (archived)
 Migration Status: RE-EXPORT (Phase 2 Wave 2)
 """
-
-try:
-    from src.omnix.domain.trading.strategies.ares_v1 import ARESProtocolV1, AresV1Strategy
-except ImportError:
-    ARESProtocolV1 = None
-    AresV1Strategy = None
-
-try:
-    from src.omnix.domain.trading.strategies.ares_v2 import ARESProtocolV2, AresV2Strategy
-except ImportError:
-    ARESProtocolV2 = None
-    AresV2Strategy = None
 
 try:
     from src.omnix.domain.trading.strategies.non_markovian import NonMarkovianMemoryKernel, NonMarkovianKernel
@@ -83,10 +66,6 @@ except ImportError:
     KalmanFilter = None
 
 __all__ = [
-    "ARESProtocolV1",
-    "AresV1Strategy",
-    "ARESProtocolV2",
-    "AresV2Strategy",
     "NonMarkovianMemoryKernel",
     "NonMarkovianKernel",
     "CAESModule",

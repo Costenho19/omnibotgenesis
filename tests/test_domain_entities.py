@@ -137,7 +137,7 @@ class TestTradeEntity:
             direction=TradeDirection.SELL,
             quantity=5.0,
             entry_price=2000.0,
-            strategy="ares_v1",
+            strategy="quantum_momentum",
         )
         
         data = trade.to_dict()

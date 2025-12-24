@@ -190,7 +190,7 @@ class TestMarketEntityParity:
     def test_strategy_vote_direction_parity(self):
         """Verify StrategyVote direction detection."""
         bullish_vote = StrategyVote(
-            strategy_name="ARES_V1",
+            strategy_name="QuantumMomentum",
             direction="buy",
             score=8.5,
             confidence=0.7,
@@ -199,7 +199,7 @@ class TestMarketEntityParity:
         assert bullish_vote.is_bearish is False
         
         bearish_vote = StrategyVote(
-            strategy_name="ARES_V2",
+            strategy_name="MonteCarlo",
             direction="sell",
             score=-5.0,
             confidence=0.6,
@@ -273,14 +273,6 @@ class TestContainerParity:
 
 class TestStrategyWrapperParity:
     """Test strategy wrappers correctly import from legacy."""
-    
-    def test_ares_v1_import(self):
-        """Verify ARES V1 wrapper imports correctly."""
-        try:
-            from src.omnix.domain.trading.strategies import ARESProtocolV1
-            assert ARESProtocolV1 is not None or ARESProtocolV1 is None
-        except ImportError as e:
-            pytest.skip(f"ARES V1 not available: {e}")
     
     def test_quantum_momentum_import(self):
         """Verify QuantumMomentum wrapper imports correctly."""

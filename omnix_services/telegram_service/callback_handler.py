@@ -613,7 +613,7 @@ Usa `/my_contributions` para ver tu perfil."""
     
     async def _handle_signal_feedback(self, query, callback_data: str, bot_instance):
         """
-        Procesar feedback de señales ARES
+        Procesar feedback de señales automáticas
         Format: sigfb|signal_id|strategy|symbol|signal_type|market_condition|result
         """
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup

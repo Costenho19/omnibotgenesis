@@ -526,9 +526,9 @@ class ParameterCalibrator:
         logger.info(f"⚙️ ParameterCalibrator initialized (smoothing={smoothing_factor})")
     
     def _init_baseline_profiles(self):
-        """Inicializa perfiles baseline para ARES V1 y V2"""
-        self.baseline_profiles['ARES_V1'] = AdaptiveParameterProfile(
-            strategy_name='ARES_V1',
+        """Inicializa perfiles baseline para estrategias activas (V6.5.4d)"""
+        self.baseline_profiles['QUANTUM_MOMENTUM'] = AdaptiveParameterProfile(
+            strategy_name='QUANTUM_MOMENTUM',
             stop_loss_pct=-0.35,
             take_profit_pct=1.20,
             position_size_factor=1.0,
@@ -536,8 +536,8 @@ class ParameterCalibrator:
             entry_threshold=0.65
         )
         
-        self.baseline_profiles['ARES_V2'] = AdaptiveParameterProfile(
-            strategy_name='ARES_V2',
+        self.baseline_profiles['HMM_REGIME'] = AdaptiveParameterProfile(
+            strategy_name='HMM_REGIME',
             stop_loss_pct=-0.28,
             take_profit_pct=0.85,
             position_size_factor=1.0,
@@ -560,7 +560,7 @@ class ParameterCalibrator:
         
         baseline = self.baseline_profiles.get(
             current_profile.strategy_name,
-            self.baseline_profiles['ARES_V2']
+            self.baseline_profiles['HMM_REGIME']
         )
         
         target_sl = baseline.stop_loss_pct * adjustments['stop_loss_multiplier']
@@ -801,8 +801,8 @@ class AdaptiveParameterEngine:
         )
         
         self.active_profiles: Dict[str, AdaptiveParameterProfile] = {
-            'ARES_V1': AdaptiveParameterProfile(strategy_name='ARES_V1'),
-            'ARES_V2': AdaptiveParameterProfile(strategy_name='ARES_V2')
+            'QUANTUM_MOMENTUM': AdaptiveParameterProfile(strategy_name='QUANTUM_MOMENTUM'),
+            'HMM_REGIME': AdaptiveParameterProfile(strategy_name='HMM_REGIME')
         }
         
         self.calibration_history: List[CalibrationEvent] = []
@@ -1164,7 +1164,7 @@ if __name__ == "__main__":
         print(f"\n📡 Signal {i+1}: {signal}")
         
         for j in range(6):
-            engine.record_trade('ARES_V2')
+            engine.record_trade('HMM_REGIME')
         
         result = engine.process_kernel_signal(
             signal,

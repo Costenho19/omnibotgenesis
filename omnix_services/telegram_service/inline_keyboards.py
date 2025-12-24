@@ -257,7 +257,7 @@ class InlineKeyboardsManager:
         
         Args:
             trade_id: ID único del trade para tracking
-            strategy: Nombre de la estrategia (ARES_V1, ARES_V2, PAPER, etc.)
+            strategy: Nombre de la estrategia (PAPER, QUANTUM_MOMENTUM, etc.)
             symbol: Símbolo del par (BTC, ETH, etc.)
             signal_type: Tipo de señal (BUY, SELL)
         
@@ -282,11 +282,11 @@ class InlineKeyboardsManager:
                                     symbol: str, signal_type: str,
                                     market_condition: str = "unknown") -> InlineKeyboardMarkup:
         """
-        Botones de feedback para señales ARES automáticas
+        Botones de feedback para señales automáticas
         
         Args:
             signal_id: ID único de la señal
-            strategy: ARES_V1, ARES_V2, etc.
+            strategy: Nombre de estrategia (QUANTUM_MOMENTUM, etc.)
             symbol: Par de trading
             signal_type: BUY/SELL
             market_condition: bullish/bearish/sideways

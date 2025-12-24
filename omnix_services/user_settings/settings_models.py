@@ -216,7 +216,7 @@ class UserSettings:
     ])
     
     active_strategies: List[str] = field(default_factory=lambda: [
-        'ARES_V1', 'ARES_V2', 'MONTE_CARLO', 'HMM_REGIME'
+        'EMA_REGIME', 'HMM_REGIME', 'KALMAN_FILTER', 'MEMORY_KERNEL'
     ])
     
     trading_enabled: bool = True             # Trading habilitado
@@ -332,7 +332,7 @@ class UserSettings:
                 'AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META'
             ]),
             active_strategies=data.get('active_strategies', [
-                'ARES_V1', 'ARES_V2', 'MONTE_CARLO', 'HMM_REGIME'
+                'EMA_REGIME', 'HMM_REGIME', 'KALMAN_FILTER', 'MEMORY_KERNEL'
             ]),
             trading_enabled=data.get('trading_enabled', True),
             auto_trading=data.get('auto_trading', False),

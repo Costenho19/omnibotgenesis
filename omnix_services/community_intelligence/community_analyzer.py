@@ -239,7 +239,7 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
         Generar reporte de salud de una estrategia basado en feedback comunitario
         
         Args:
-            strategy: Nombre de la estrategia (ARES_V1, ARES_V2, etc.)
+            strategy: Strategy name (EMA_REGIME, HMM_REGIME, KALMAN_FILTER, etc.)
         """
         if not self.connected:
             return {'success': False, 'error': 'Database not available'}

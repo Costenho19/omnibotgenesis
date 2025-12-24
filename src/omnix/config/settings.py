@@ -60,9 +60,6 @@ def _create_pydantic_settings_class():
         max_trade_usd: float = Field(default=20000.0, validation_alias="MAX_TRADE_USD")
         drawdown_limit: float = Field(default=0.15, validation_alias="DRAWDOWN_LIMIT")
         
-        enable_ares_v1: bool = Field(default=True, validation_alias="ENABLE_ARES_V1")
-        enable_ares_v2: bool = Field(default=True, validation_alias="ENABLE_ARES_V2")
-        
         db_pool_min: int = Field(default=2, validation_alias="DB_POOL_MIN")
         db_pool_max: int = Field(default=10, validation_alias="DB_POOL_MAX")
         use_unified_gateway: bool = Field(default=False, validation_alias="USE_UNIFIED_GATEWAY")
@@ -229,14 +226,6 @@ class Settings:
     @property
     def drawdown_limit(self) -> float:
         return self._get_float('DRAWDOWN_LIMIT', 0.15)
-    
-    @property
-    def enable_ares_v1(self) -> bool:
-        return self._get_bool('ENABLE_ARES_V1', True)
-    
-    @property
-    def enable_ares_v2(self) -> bool:
-        return self._get_bool('ENABLE_ARES_V2', True)
     
     @property
     def db_pool_min(self) -> int:

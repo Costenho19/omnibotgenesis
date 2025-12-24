@@ -2,8 +2,10 @@
 
 **Version:** 1.0  
 **Created:** December 10, 2025  
-**Status:** APPROVED - Pending Execution  
+**Status:** ROADMAP - NOT STARTED  
 **Target Product:** OMNIX Asesor Personal IA
+
+> **Note (Dec 24, 2025):** This plan is on the roadmap but NOT yet implemented. No Stripe, Auth0, or Clerk integration exists. Multi-tenant infrastructure is planned but not built.
 
 ---
 

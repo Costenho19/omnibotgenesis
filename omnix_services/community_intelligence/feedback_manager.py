@@ -64,7 +64,7 @@ class CommunityFeedbackManager:
             feedback_data: {
                 'feedback_type': 'signal' | 'strategy' | 'arbitrage',
                 'signal_type': 'BUY' | 'SELL' | None,
-                'strategy': 'ARES_V1' | 'ARES_V2' | etc,
+                'strategy': 'EMA_REGIME' | 'HMM_REGIME' | etc,
                 'symbol': 'BTC/USD' | etc,
                 'result': 'success' | 'failure' | 'partial',
                 'market_condition': 'bullish' | 'bearish' | 'sideways',
@@ -100,7 +100,7 @@ class CommunityFeedbackManager:
         
         Args:
             user_id: ID del usuario
-            strategy: Nombre de la estrategia (ARES_V1, ARES_V2, etc.)
+            strategy: Strategy name (EMA_REGIME, HMM_REGIME, KALMAN_FILTER, etc.)
             vote: Puntuación 1-5
             reason: Razón del voto (opcional)
             market_condition: Condición del mercado (opcional)

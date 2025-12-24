@@ -1,12 +1,13 @@
 """
-📦 Stock Trading Premium Modules
+Stock Trading Premium Modules
 Módulos avanzados para trading institucional de acciones
+
+Note: ARES-STOCK deprecated Dec 24, 2025 (archived to archive/deprecated_ares/)
 """
 
 from .monte_carlo import StockMonteCarlo, MonteCarloResult
 from .kalman_filter import StockKalmanFilter, AdaptiveKalmanFilter, KalmanState
 from .hmm_regime import StockHMMRegime, MarketRegime, RegimeState
-from .ares_stock import ARESStock, ARESSignal, StrategyMode
 from .non_markovian_memory import StockMemoryKernel, MemoryState, MemoryPattern
 
 __all__ = [
@@ -18,9 +19,6 @@ __all__ = [
     'StockHMMRegime',
     'MarketRegime',
     'RegimeState',
-    'ARESStock',
-    'ARESSignal',
-    'StrategyMode',
     'StockMemoryKernel',
     'MemoryState',
     'MemoryPattern'
