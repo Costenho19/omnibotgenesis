@@ -67,6 +67,18 @@ ARES V1/V2 code has been **completely removed** from auto_trading_bot.py:
 - **Trace**: `ARES_REMOVED: Code eliminated Dec 24, 2025` in decision_trace
 - **Result**: Cleaner scoring system, EMA is sole primary driver
 
+### Scoring Simplification (Dec 24, 2025)
+5 core inputs per GPT Expert recommendation:
+- **EMA Regime Signal**: 40 pts (PRIMARY DRIVER)
+- **HMM Regime**: 25 pts (up from 15)
+- **Kalman Filter**: 15 pts
+- **Non-Markovian Memory**: 15 pts (up from 12)
+- **Kelly Criterion**: 10 pts (modifier)
+
+Veto/Penalty layer (NO additive scoring):
+- Monte Carlo, Black Swan, Sentiment, Quantum Momentum → penalty only
+- Full documentation: `docs/current/DECISION_CONTRACT.md`
+
 ### Trading Profiles
 The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 

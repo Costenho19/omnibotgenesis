@@ -66,24 +66,36 @@ ARES V1/V2 seguía votando con 35 puntos (20+15) a pesar de que EMA_REGIME_SIGNA
 | EMA Weight | Aumentado de 25 → **40 puntos** |
 | Trace | `ARES_REMOVED: Code eliminated Dec 24, 2025` |
 
-**Nuevo estado del scoring (optimizado):**
+**Sistema de Scoring V6.5.4d (GPT Expert Dec 24, 2025):**
 
-| Componente | Peso | Estado |
-|------------|------|--------|
-| **EMA Regime Signal** | **40 puntos** | **DRIVER PRINCIPAL** |
-| HMM Regime | 25 puntos | Activo |
-| Monte Carlo | 15 puntos | Activo + VETO |
-| Black Swan | 15 puntos | Activo + Penalty |
-| Non-Markovian | 12 puntos | Activo |
-| Kelly Criterion | 10 puntos | Activo |
-| Sentiment | 10 puntos | Activo + Contrarian |
-| ARES V1/V2 | ~~35 puntos~~ | **CÓDIGO ELIMINADO** |
+Simplificado a **5 inputs principales** + veto/penalty layers:
+
+| Componente | Peso | Estado | Rol |
+|------------|------|--------|-----|
+| **EMA Regime Signal** | **40 pts** | DRIVER PRINCIPAL | Scoring Aditivo |
+| **HMM Regime** | **25 pts** | Activo | Scoring Aditivo |
+| **Kalman Filter** | **15 pts** | Activo | Scoring Aditivo |
+| **Non-Markovian** | **15 pts** | Activo | Scoring Aditivo |
+| **Kelly Criterion** | **10 pts** | Modifier | Sizing Aditivo |
+| **TOTAL MAX** | **105 pts** | - | - |
+
+**Veto/Penalty Layer (NO suma a max_score):**
+
+| Componente | Rol | Penalización |
+|------------|-----|--------------|
+| Monte Carlo | VETO | -10 (paper) / -20 (real) si WR < 40% |
+| Black Swan | VETO | -8 (paper) / -25 (real) si HIGH risk |
+| Sentiment | Penalty | -5/-15 si < 25%, boost +2/+3 contrarian |
+| Quantum Momentum | VETO | -10/-20 si STRONG SELL |
+| ARES V1/V2 | ~~35 pts~~ | **CÓDIGO ELIMINADO** |
 
 **Beneficios:**
+- 5 inputs claros y auditables
+- Veto/penalty NO infla max_score
 - Código más limpio y mantenible
-- Sin ruido legacy que confunda
-- EMA domina el scoring con peso apropiado
-- Ver git history para referencia del código ARES
+- Decisiones más predecibles para inversores
+
+**Documentación completa**: Ver `docs/current/DECISION_CONTRACT.md`
 
 ### Traceability Matrix Full Validation (Dec 24, 2025)
 **Script creado:** `scripts/traceability/validate_traceability.py`
