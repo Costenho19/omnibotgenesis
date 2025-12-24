@@ -2347,7 +2347,66 @@ class AutoTradingBot:
             
             # SENTINEL LOG: This should NEVER appear if vetoed above
             # If this log appears after a veto, the early return failed
-            logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - No veto applied")
+            logger.debug(f"[EXEC_PATH] Proceeding to Coherence Gate for {symbol} - No MC/RMS veto applied")
+            
+            # ========== V6.5.4d COHERENCE PRE-GATE (ANTES del scoring) ==========
+            # Coherence actúa como GATE: si no hay consenso mínimo, no hay scoring
+            # Esto elimina falsos positivos y reduce overtrading
+            coherence_gate_passed = True
+            coherence_pre_score = None
+            
+            if self.coherence_engine:
+                try:
+                    # Construir señales para Coherence Gate (evaluación temprana)
+                    strategy_signals = self._build_strategy_signals(
+                        monte_carlo, black_swan, sentiment, kelly, 
+                        hmm_regime, kalman, quantum, non_markovian
+                    )
+                    
+                    # Evaluar coherencia ANTES del scoring
+                    coherence_report = self.coherence_engine.analyze_coherence(strategy_signals)
+                    coherence_pre_score = coherence_report.coherence_score
+                    
+                    # Obtener umbrales del perfil
+                    p = self.trading_profile
+                    veto_critical = p.coherence_veto_critical if p else 30.0
+                    veto_normal = p.coherence_veto_normal if p else 45.0
+                    
+                    decision['v52_analysis']['coherence_pre_score'] = coherence_pre_score
+                    decision['v52_analysis']['coherence_pre_level'] = coherence_report.coherence_level.value
+                    
+                    # GATE: Bloquear si coherencia es crítica o normal-veto
+                    if coherence_pre_score < veto_critical or coherence_report.coherence_level.value == 'CRITICAL':
+                        coherence_gate_passed = False
+                        decision['veto_chain'].append('COHERENCE_GATE_CRITICAL')
+                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% < {veto_critical}% → REJECTED")
+                        logger.warning(f"🚫 [COHERENCE_GATE] CRITICAL: Score {coherence_pre_score:.1f}% < {veto_critical}% → NO SCORING")
+                    elif coherence_pre_score < veto_normal:
+                        coherence_gate_passed = False
+                        decision['veto_chain'].append('COHERENCE_GATE_LOW')
+                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% < {veto_normal}% → REJECTED")
+                        logger.warning(f"🚫 [COHERENCE_GATE] LOW: Score {coherence_pre_score:.1f}% < {veto_normal}% → NO SCORING")
+                    else:
+                        decision['guards_passed'].append('COHERENCE_GATE')
+                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% >= {veto_normal}% → PASSED")
+                        logger.info(f"✅ [COHERENCE_GATE] PASSED: Score {coherence_pre_score:.1f}% >= {veto_normal}%")
+                        
+                except Exception as e:
+                    logger.debug(f"Coherence Gate skipped: {e}")
+                    decision['decision_trace'].append(f"COHERENCE_GATE: Skipped due to error")
+            
+            # EARLY RETURN si Coherence Gate no pasa
+            if not coherence_gate_passed:
+                decision['action'] = 'HOLD'
+                decision['should_trade'] = False
+                decision['confidence'] = 0.0
+                decision['vetoed'] = True
+                decision['veto_reason'] = 'COHERENCE_GATE_REJECTED'
+                decision['reason'].append(f"🚫 COHERENCE GATE: Coherencia {coherence_pre_score:.1f}% insuficiente - Trade bloqueado antes de scoring")
+                logger.warning(f"🚫 [COHERENCE_GATE_ENFORCED] {symbol} | score={coherence_pre_score:.1f}% → HOLD EARLY RETURN")
+                return decision
+            
+            logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed")
             
             score = 0  # Score de confianza (-100 a +100)
             max_score = 0  # Para normalizar
