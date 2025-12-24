@@ -48,8 +48,8 @@ def get_system_state_prompt() -> str:
     quarantined = ", ".join(manifest.get("asset_status", {}).get("quarantined", {}).keys())
     
     signal_arch = manifest.get("signal_architecture", {})
-    primary_signal = signal_arch.get("primary_signal", "EMA_REGIME_SIGNAL")
-    legacy = ", ".join(signal_arch.get("legacy_modules", {}).keys())
+    components = signal_arch.get("components", {})
+    scoring_model = signal_arch.get("scoring_model", "5 Core Inputs (105 points max)")
     
     roadmap = manifest.get("roadmap_features", {}).get("v7_planned", [])
     roadmap_str = ", ".join(roadmap[:3]) if roadmap else "None"
@@ -64,9 +64,13 @@ def get_system_state_prompt() -> str:
 **Trading Mode**: {manifest.get('trading_mode', 'paper').upper()} (${manifest.get('paper_capital', 1000000):,} virtual)
 **Last Updated**: {manifest.get('last_updated', 'Unknown')}
 
-**Signal Architecture**:
-- Primary Signal: {primary_signal} (weight: {signal_arch.get('primary_weight', 25)} points)
-- Legacy Modules (NOT primary decisors): {legacy}
+**Scoring Architecture V6.5.4d** ({scoring_model}):
+- EMA Regime Signal: 40 pts (PRIMARY DRIVER)
+- HMM Regime: 25 pts
+- Kalman Filter: 15 pts
+- Non-Markovian Kernel: 15 pts
+- Kelly Criterion: 10 pts
+- Veto/Penalty Layer: Monte Carlo, Black Swan, Sentiment (no additive scoring)
 
 **Active Assets**: {active_pairs}
 **Quarantined Assets**: {quarantined} (capital protection active)
@@ -75,7 +79,6 @@ def get_system_state_prompt() -> str:
 
 **ROADMAP Features (NOT YET AVAILABLE)**: {roadmap_str}
 
-**CRITICAL**: When asked about ARES, clarify it is LEGACY scoring, not the primary signal.
 **CRITICAL**: When asked about system status, use these exact values - do not invent others.
 **CRITICAL**: When asked about commands/features, acknowledge ROADMAP items honestly.
 """

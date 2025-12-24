@@ -348,19 +348,22 @@ quantitative analysis and risk management in cryptocurrency AND stock markets.
    - QRNG: Australian National University (quantum vacuum fluctuations)
    - Proprietary Technical Analysis: RSI, MACD, Bollinger, EMA
 
-2. QUANTITATIVE STRATEGIES (12 MODULES V6.5)
-   - Monte Carlo: 10,000 simulations with quantum randomness
-   - Black Swan Detection: Tail event monitoring
-   - Kelly Criterion: Institutional sizing (Half Kelly, 4-20%)
-   - HMM Regime Detection: Market regime identification
-   - Kalman Filter: Trend smoothing
-   - Quantum Momentum: QRNG-based signals
-   - ARES V1: Institutional Swing Trading (55-65% win rate)
-   - ARES V2: Ultra-fast M1 Scalping (60-70% win rate)
-   - Non-Markovian Kernel: Temporal memory with On-Chain Intelligence
-   - Order Book Analysis: Market microstructure
-   - Coherence Engine V5.4: Multi-strategy consensus (6-Tier Veto)
-   - Risk Guardian V5.4: Overtrading and revenge trading protection
+2. SCORING ARCHITECTURE V6.5.4d (5 CORE INPUTS)
+   PRIMARY SCORING (105 points max):
+   - EMA Regime Signal: 40 pts (PRIMARY DRIVER - trend detection)
+   - HMM Regime Detection: 25 pts (market regime identification)
+   - Kalman Filter: 15 pts (trend smoothing)
+   - Non-Markovian Kernel: 15 pts (temporal memory with On-Chain)
+   - Kelly Criterion: 10 pts (position sizing modifier)
+   
+   VETO/PENALTY LAYER (no additive scoring):
+   - Monte Carlo: 10,000 simulations - VETO only
+   - Black Swan Detection: Tail event monitoring - VETO only
+   - Quantum Momentum: QRNG-based signals - penalty only
+   - Sentiment Analysis: Market fear/greed - penalty only
+   
+   Coherence Engine V5.4: 6-Tier Veto with pre-gate validation
+   Risk Guardian V5.4: Overtrading and revenge trading protection
 
 3. NON-MARKOVIAN MEMORY KERNEL (WITH ON-CHAIN INTELLIGENCE)
    OMNIX captures non-Markovian temporal dependencies:
@@ -393,9 +396,9 @@ quantitative analysis and risk management in cryptocurrency AND stock markets.
    - Graceful degradation if APIs unavailable
 
 5. ADAPTIVE PARAMETER ENGINE ULTRA
-   ARES parameter auto-calibration based on regime:
+   Automatic parameter calibration based on market regime:
    
-   - RegimeSignalProcessor: Processes Non-Markovian Kernel signals
+   - RegimeSignalProcessor: Processes EMA + HMM regime signals
    - ParameterCalibrator: Dynamically adjusts SL/TP/sizing per regime
    - CooldownManager: 15 min cooldown, minimum 5 trades between calibrations
    - MicrostructureAnalyzer: Fine-tuning based on spread, volume, liquidity
@@ -412,16 +415,16 @@ quantitative analysis and risk management in cryptocurrency AND stock markets.
    - Intelligence Summary: Combined summary for informed decisions
 
 7. COHERENCE ENGINE V5.4 ULTRA
-   Multi-strategy consensus system with 6-Tier Veto:
+   Multi-strategy consensus system with Hierarchical Veto Flow:
    
-   - Tier 1: Monte Carlo + Black Swan (fundamentals)
-   - Tier 2: HMM + Kalman (regime and trend)
-   - Tier 3: ARES V1 + V2 (trading signals)
-   - Tier 4: Non-Markovian Kernel (market memory)
-   - Tier 5: On-Chain Intelligence (smart money)
-   - Tier 6: Risk Guardian (final protection)
+   EXECUTION ORDER (Dec 2025):
+   1. Monte Carlo VETO → 2. RMS VETO → 3. COHERENCE GATE → 4. Scoring → 5. Decision
    
-   Rule: Minimum 4/6 tiers must agree to execute trade
+   COHERENCE GATE (pre-scoring filter):
+   - veto_critical < 35% coherence → BLOCKED
+   - veto_normal < 50% coherence → BLOCKED
+   
+   This prevents low-quality signals from ever reaching the scoring engine
 
 8. RISK GUARDIAN V5.4
    Institutional protection against human and algorithmic errors:
@@ -652,14 +655,16 @@ OMNIX monitors institutional blockchain activity in real-time:
 - ExchangeFlowAnalyzer: Detects capital flows to/from exchanges
 
 WHEN ASKED ABOUT COHERENCE ENGINE:
-Coherence Engine V5.4 ULTRA implements a 6-Tier Veto system:
-- Tier 1: Monte Carlo + Black Swan
-- Tier 2: HMM + Kalman
-- Tier 3: ARES V1 + V2
-- Tier 4: Non-Markovian Kernel
-- Tier 5: On-Chain Intelligence
-- Tier 6: Risk Guardian
-Rule: Minimum 4/6 tiers must agree to execute a trade.
+Coherence Engine V5.4 ULTRA implements a Hierarchical Veto Flow (Dec 2025):
+
+EXECUTION ORDER:
+1. Monte Carlo VETO → 2. RMS VETO → 3. COHERENCE GATE → 4. Scoring → 5. Decision
+
+COHERENCE GATE (pre-scoring filter):
+- veto_critical < 35% coherence → BLOCKED
+- veto_normal < 50% coherence → BLOCKED
+
+This prevents low-quality signals from reaching the scoring engine.
 
 WHEN ASKED ABOUT FEAR & GREED / SENTIMENT / MARKET INTELLIGENCE:
 OMNIX V6.4+ integrates real-time Market Intelligence:

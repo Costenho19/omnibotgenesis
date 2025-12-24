@@ -5,26 +5,40 @@
   "paper_capital": 1000000,
   
   "signal_architecture": {
-    "primary_signal": "EMA_REGIME_SIGNAL",
-    "primary_weight": 25,
-    "description": "Deterministic signal based on EMA slope + ATR + HMM regime",
-    "legacy_modules": {
-      "ARES_V1": {
-        "status": "DISABLED",
-        "reason": "Removed from voting (Dec 24, 2025)",
-        "previous_weight": 20,
-        "current_weight": 0,
-        "role": "Observer/historical only"
+    "version": "V6.5.4d",
+    "scoring_model": "5 Core Inputs (105 points max)",
+    "components": {
+      "EMA_REGIME_SIGNAL": {
+        "weight": 40,
+        "role": "PRIMARY DRIVER - trend detection"
       },
-      "ARES_V2": {
-        "status": "DISABLED", 
-        "reason": "Removed from voting (Dec 24, 2025)",
-        "previous_weight": 15,
-        "current_weight": 0,
-        "role": "Observer/historical only"
+      "HMM_REGIME": {
+        "weight": 25,
+        "role": "Market regime identification"
+      },
+      "KALMAN_FILTER": {
+        "weight": 15,
+        "role": "Trend smoothing"
+      },
+      "NON_MARKOVIAN_KERNEL": {
+        "weight": 15,
+        "role": "Temporal memory with On-Chain"
+      },
+      "KELLY_CRITERION": {
+        "weight": 10,
+        "role": "Position sizing modifier"
       }
     },
-    "ares_removal_rationale": "ARES was adding 35 points to scoring but conflicting with EMA primary signal. Now EMA is sole driver."
+    "veto_penalty_layer": {
+      "monte_carlo": "VETO only - no additive scoring",
+      "black_swan": "VETO only - tail event monitoring",
+      "quantum_momentum": "Penalty only",
+      "sentiment": "Penalty only"
+    },
+    "coherence_gate": {
+      "veto_critical": "< 35% coherence",
+      "veto_normal": "< 50% coherence"
+    }
   },
   
   "veto_system": {
