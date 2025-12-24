@@ -6300,9 +6300,9 @@ diferencias de precio mayores al umbral configurado.
    • Modo: {'📄 PAPER TRADING' if self.arbitrage_executor.paper_trading else '🔴 LIVE TRADING'}
 
 📊 **Comandos Disponibles:**
-   `/arbitrage_scan [SYMBOL]` - Escanear oportunidades
-   `/arbitrage_execute [AMOUNT]` - Ejecutar mejor oportunidad
-   `/arbitrage_stats` - Ver estadísticas
+   /arbitrage\_scan SYMBOL - Escanear oportunidades
+   /arbitrage\_execute AMOUNT - Ejecutar mejor oportunidad
+   /arbitrage\_stats - Ver estadísticas
 
 🎯 **Cómo Funciona:**
    1. Escanea precios en 8 exchanges simultáneamente

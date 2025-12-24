@@ -33,12 +33,12 @@ class InlineKeyboardsManager:
                 InlineKeyboardButton("💰 Balance Kraken", callback_data="balance"),
                 InlineKeyboardButton("📜 Historial", callback_data="history"),
             ],
-            # Fila 4: Trading y alertas
+            # Fila 4: Trading y alertas (ROADMAP - marcadas claramente)
             [
                 InlineKeyboardButton("⚡ Alertas Activas", callback_data="alerts_list"),
                 InlineKeyboardButton("🎯 Nueva Alerta", callback_data="alert_create"),
             ],
-            # Fila 5: Configuración y ayuda
+            # Fila 5: Estrategias y configuración
             [
                 InlineKeyboardButton("📚 Estrategias IA", callback_data="strategies"),
                 InlineKeyboardButton("⚙️ Configuración", callback_data="settings"),

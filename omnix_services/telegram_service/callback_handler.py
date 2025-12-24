@@ -125,12 +125,12 @@ class CallbackHandler:
                 await self._execute_strategy_vote(query, callback_data, bot_instance)
             
             else:
-                # FALLBACK CON MENÚ - SIEMPRE mantener navegación
                 from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
                 keyboard = InlineKeyboardsManager.get_main_menu()
                 await query.edit_message_text(
-                    f"⚠️ Función en desarrollo: {callback_data}\n\n"
-                    f"Usa el menú para navegar:",
+                    f"🛣️ **ROADMAP** - Esta función está planificada para V7.0\n\n"
+                    f"Usa el menú para ver funciones disponibles:",
+                    parse_mode='Markdown',
                     reply_markup=keyboard
                 )
                 logger.warning(f"⚠️ Callback no implementado: {callback_data}")
@@ -238,49 +238,56 @@ Selecciona el tipo de análisis que deseas:"""
             await query.edit_message_text(f"❌ Error: {str(e)[:100]}", reply_markup=keyboard)
     
     async def _show_history(self, query):
-        """Mostrar historial de trades"""
+        """Mostrar historial de trades - ROADMAP feature"""
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         
         text = """📜 **HISTORIAL DE OPERACIONES**
 
-📊 Función en desarrollo - Próximamente disponible
+🛣️ **ROADMAP** - Esta funcionalidad está planificada para futuras versiones.
 
-Mientras tanto usa:
-• /performance 30 - Evolución de balance
-• /balance - Balance actual"""
+**Alternativas disponibles ahora:**
+• /performance 30 - Evolución de balance (30 días)
+• /resumen - Resumen institucional del día
+• Dashboard web - Historial completo visual"""
         
         keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     
     async def _show_alerts(self, query):
-        """Mostrar alertas activas"""
+        """Mostrar alertas activas - ROADMAP feature"""
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         
         text = """⚡ **ALERTAS INTELIGENTES**
 
-📊 Sistema de alertas en desarrollo
+🛣️ **ROADMAP** - Sistema de alertas planificado para V7.0
 
-**Próximamente:**
-- Alertas de precio (subida/bajada %)
-- Alertas RSI (sobrecompra/sobreventa)
-- Alertas Black Swan
-- Alertas de volatilidad
+**El sistema actual incluye:**
+• Notificaciones automáticas de trades ejecutados
+• Alertas de circuit breaker y RMS
+• Reportes diarios automáticos
 
-Mantente atento a las actualizaciones! 🚀"""
+**Alternativa:** Usa /status para monitoreo en tiempo real."""
         
         keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     
     async def _create_alert_menu(self, query):
-        """Mostrar menú de creación de alertas"""
-        from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
+        """Mostrar menú de creación de alertas - ROADMAP feature"""
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         
         text = """🎯 **CREAR NUEVA ALERTA**
 
-Selecciona el tipo de alerta que deseas configurar:"""
+🛣️ **ROADMAP** - Alertas personalizadas planificadas para V7.0
+
+**El sistema actual incluye:**
+• Notificaciones automáticas de trades ejecutados
+• Alertas de circuit breaker y RMS
+• Reportes diarios programados
+
+**Alternativa:** Usa /status para monitoreo en tiempo real."""
         
-        keyboard = InlineKeyboardsManager.get_alert_types()
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=keyboard)
+        keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
+        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     
     async def _show_strategies_menu(self, query):
         """Mostrar menú de estrategias"""
@@ -338,7 +345,7 @@ Usa números cuánticos REALES para detectar momentum y generar señales.
 **Uso:** Timing de entradas/salidas de trade""",
         }
         
-        text = strategies.get(strategy_name, f"📚 Estrategia: {strategy_name}\n\nDetalles próximamente...")
+        text = strategies.get(strategy_name, f"📚 **Estrategia: {strategy_name}**\n\n🛣️ Documentación detallada planificada para V7.0\n\nUsa `/help` para ver comandos disponibles.")
         
         keyboard = [
             [InlineKeyboardButton("« Ver Estrategias", callback_data="strategies")],
@@ -347,15 +354,22 @@ Usa números cuánticos REALES para detectar momentum y generar señales.
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     
     async def _show_settings_menu(self, query):
-        """Mostrar menú de configuración"""
-        from omnix_services.telegram_service.inline_keyboards import InlineKeyboardsManager
+        """Mostrar menú de configuración - ROADMAP feature"""
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         
         text = """⚙️ **CONFIGURACIÓN DEL SISTEMA**
 
-Ajusta las preferencias de OMNIX:"""
+🛣️ **ROADMAP** - Configuración inline planificada para V7.0
+
+**Configuración disponible ahora via comandos:**
+• /miconfig - Ver configuración actual
+• /perfil - Perfil de trading
+• /limites - Límites de riesgo
+• /proteccion - Protecciones activas
+• Dashboard web - Configuración visual completa"""
         
-        keyboard = InlineKeyboardsManager.get_settings_menu()
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=keyboard)
+        keyboard = [[InlineKeyboardButton("« Volver", callback_data="back_main")]]
+        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     
     async def _show_system_status(self, query, bot_instance):
         """Mostrar estado del sistema"""
@@ -437,14 +451,13 @@ Sistema operativo desde inicio"""
         
         text = f"""📊 **{strategy_name} - {symbol}**
 
-⏳ Generando análisis...
+🛣️ **ROADMAP** - Análisis inline planificado para V7.0
 
-📊 Función premium en desarrollo
-Próximamente disponible con datos en tiempo real
-
-Mientras tanto usa:
-• /analisis {symbol} - Análisis por comando
-• /montecarlo {symbol} - Monte Carlo específico"""
+**Usa los comandos equivalentes (funcionan ahora):**
+• `/analisis {symbol}` - Análisis técnico completo
+• `/montecarlo {symbol}` - Simulación Monte Carlo
+• `/blackswan {symbol}` - Detector Black Swan
+• `/quantum_test` - Test cuántico QRNG"""
         
         keyboard = [
             [InlineKeyboardButton("« Ver Opciones", callback_data=f"analysis_{symbol.lower()}")],
@@ -471,14 +484,14 @@ Mientras tanto usa:
         
         text = f"""🎯 **{alert_name}**
 
-📊 Sistema de alertas en desarrollo
+🛣️ **ROADMAP** - Alertas personalizadas planificadas para V7.0
 
-**Próximos pasos:**
-1. Configurar parámetros
-2. Seleccionar criptomoneda
-3. Activar notificación push
+**El sistema actual incluye:**
+• Notificaciones automáticas de trades
+• Alertas de RMS y circuit breaker
+• Reportes diarios programados
 
-Mantente atento a las actualizaciones! 🚀"""
+**Alternativa:** /status para monitoreo en tiempo real."""
         
         keyboard = [
             [InlineKeyboardButton("« Ver Alertas", callback_data="alerts_list")],
@@ -503,14 +516,13 @@ Mantente atento a las actualizaciones! 🚀"""
         
         text = f"""⚙️ **{setting_name}**
 
-📊 Configuración en desarrollo
+🛣️ **ROADMAP** - Configuración inline planificada para V7.0
 
-**Opciones disponibles próximamente:**
-- Personalización avanzada
-- Ajustes en tiempo real
-- Guardado automático
-
-Mantente atento! 🚀"""
+**Configuración disponible ahora:**
+• `/miconfig` - Ver configuración actual
+• `/perfil` - Perfil de trading
+• `/limites` - Límites de riesgo
+• Dashboard web - Configuración visual completa"""
         
         keyboard = [
             [InlineKeyboardButton("« Ver Configuración", callback_data="settings")],
