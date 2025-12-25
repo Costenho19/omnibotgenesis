@@ -807,10 +807,36 @@ class AutoTradingBot:
          Auto-iniciar el trading si el estado persistente de la DB indica que debería estar activo.
         Esto garantiza que Railway reinicie con el mismo estado que antes del restart.
          Ahora pasa el user_id específico para soportar múltiples usuarios.
+        
+        FIX DEC25: Added direct permission check as fallback in case _load_persistent_state() fails.
         """
         logger.critical(f"🔥🔥 FIX DEC25: _auto_start_if_persistent() CALLED - _should_auto_start={getattr(self, '_should_auto_start', 'NOT SET')}")
+        
         if hasattr(self, '_should_auto_start') and self._should_auto_start:
             user_id = getattr(self, '_persistent_user_id', None)
+            logger.critical(f"🔥🔥 FIX DEC25: Checking permissions for user {user_id} BEFORE starting")
+            
+            # FIX DEC25: DIRECT permission check as fallback
+            # This ensures we NEVER start for unauthorized users, even if _load_persistent_state() failed
+            try:
+                self._require_trading_permission(user_id, 'persistent_auto_start_fallback')
+                logger.critical(f"✅✅ FIX DEC25: User {user_id} PASSED permission check - proceeding with start")
+            except AuthorizationError as auth_err:
+                logger.critical(f"🚫🚫 FIX DEC25: User {user_id} BLOCKED by fallback permission check - {auth_err}")
+                logger.critical(f"🔄🔄 FIX DEC25: Searching for authorized user in database...")
+                
+                # Try to find an authorized user from the database
+                authorized_user = self._find_authorized_auto_trading_user()
+                if authorized_user:
+                    user_id = authorized_user
+                    logger.critical(f"✅✅ FIX DEC25: Found authorized user {user_id} - using this instead")
+                else:
+                    logger.critical(f"❌❌ FIX DEC25: No authorized users found - auto-start ABORTED")
+                    return
+            except Exception as e:
+                logger.warning(f"⚠️ FIX DEC25: Permission check error: {e} - aborting auto-start")
+                return
+            
             logger.critical(f"🚀🚀 FIX DEC25: STARTING auto-trading for user {user_id}")
             try:
                 result = self.start(user_id=user_id)
@@ -823,6 +849,36 @@ class AutoTradingBot:
                 logger.error(f"❌ {VERSION_BANNER}: Error restaurando auto-trading: {e}")
         else:
             logger.critical(f"⏸️⏸️ FIX DEC25: Auto-start SKIPPED - _should_auto_start is False or not set")
+    
+    def _find_authorized_auto_trading_user(self) -> str:
+        """
+        FIX DEC25: Search database for a user with auto_trading=true AND PAPER_AUTO_TRADING permission.
+        This is a fallback method when the original user selection was wrong.
+        """
+        if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+            return None
+        
+        try:
+            result = self.database_service.execute_query('''
+                SELECT user_id FROM user_settings
+                WHERE auto_trading = true AND trading_enabled = true AND (is_paused = false OR is_paused IS NULL)
+            ''')
+            
+            if result:
+                for row in result:
+                    user_id = str(row[0]) if row[0] else None
+                    if user_id:
+                        try:
+                            self._require_trading_permission(user_id, 'find_authorized_user')
+                            logger.critical(f"✅ FIX DEC25: User {user_id} has PAPER_AUTO_TRADING permission")
+                            return user_id
+                        except AuthorizationError:
+                            logger.critical(f"❌ FIX DEC25: User {user_id} lacks PAPER_AUTO_TRADING - skipping")
+                            continue
+        except Exception as e:
+            logger.warning(f"⚠️ FIX DEC25: Error finding authorized user: {e}")
+        
+        return None
     
     def _get_effective_user_id(self, passed_user_id: str = None, caller: str = None) -> str:
         """
