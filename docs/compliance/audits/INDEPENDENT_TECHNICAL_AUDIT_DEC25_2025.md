@@ -10,7 +10,7 @@
 
 This audit verified 6 critical aspects of the OMNIX trading system to ensure investor presentations align with actual system capabilities.
 
-### Overall Assessment: PASSED WITH MINOR CORRECTIONS
+### Overall Assessment: CRITICAL BUG FIXED
 
 | Task | Status | Findings |
 |------|--------|----------|
@@ -19,7 +19,45 @@ This audit verified 6 critical aspects of the OMNIX trading system to ensure inv
 | C. Execution Flow | ✅ VERIFIED | Matches documented claims |
 | D. System Claims | ⚠️ CORRECTED | Test count updated 36→39 |
 | E. AI Prompt Honesty | ✅ VERIFIED | System State Manifest prevents hallucinations |
-| F. Auto-Trading | ✅ DOCUMENTED | Blocker identified and documented |
+| F. Auto-Trading | 🔴 **FIXED** | Critical bug - wrong user selected |
+
+---
+
+## 🔴 CRITICAL BUG FIXED (EC-A1)
+
+### Issue: Auto-Trading Started with Wrong User
+
+**Severity**: CRITICAL - Broke core trading functionality
+
+**Root Cause** (lines 975-995 in `auto_trading_bot.py`):
+```sql
+ORDER BY user_id  -- Ascending order
+```
+
+The query selected users by ascending `user_id`, causing the **lowest ID** to be selected first without checking permissions.
+
+**Impact**:
+- User `6429738143` was selected (no PAPER_AUTO_TRADING permission)
+- User `7014748854` (Harold/OWNER) was never reached
+- Auto-trading failed silently with permission error
+
+**Fix Applied** (lines 992-1017):
+```python
+for user_row in user_settings_result:
+    try:
+        self._require_trading_permission(user_id, 'auto_trading')
+        result = self.start(user_id=user_id)
+        if result.get('success'):
+            started_users.append(user_id)
+    except AuthorizationError as e:
+        skipped_users.append(f"{user_id} (no permission)")
+```
+
+**New Behavior**:
+1. Iterates over ALL users with `auto_trading=true`
+2. Checks `PAPER_AUTO_TRADING` permission for each
+3. Skips users without permission, continues to next
+4. Logs clearly which users started and which were skipped
 
 ---
 

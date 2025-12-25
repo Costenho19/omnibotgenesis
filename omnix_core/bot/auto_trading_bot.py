@@ -981,17 +981,37 @@ class AutoTradingBot:
                 
                 if user_settings_result and len(user_settings_result) > 0:
                     total_users = len(user_settings_result)
-                    logger.info(f"🔄 {VERSION_BANNER}: Encontrados {total_users} usuario(s) con auto_trading activo")
+                    logger.info(f"🔄 {VERSION_BANNER}: Encontrados {total_users} usuario(s) con auto_trading activo en DB")
                     
-                    first_user = user_settings_result[0]
-                    user_id = first_user.get('user_id', 'unknown')
+                    started_users = []
+                    skipped_users = []
                     
-                    result = self.start(user_id=user_id)
-                    if result.get('success'):
-                        logger.info(f"✅ {VERSION_BANNER}: Trading iniciado para user {user_id}")
-                        if total_users > 1:
-                            logger.info(f"📊 Nota: {total_users - 1} usuarios adicionales en cola")
+                    for user_row in user_settings_result:
+                        user_id = str(user_row.get('user_id', 'unknown'))
+                        
+                        try:
+                            self._require_trading_permission(user_id, 'auto_trading')
+                            
+                            result = self.start(user_id=user_id)
+                            if result.get('success'):
+                                started_users.append(user_id)
+                                logger.info(f"✅ {VERSION_BANNER}: Trading iniciado para user {user_id}")
+                            else:
+                                skipped_users.append(f"{user_id} (start failed)")
+                                
+                        except AuthorizationError as e:
+                            skipped_users.append(f"{user_id} (no permission)")
+                            logger.warning(f"⚠️ {VERSION_BANNER}: User {user_id} skipped - {e}")
+                        except Exception as e:
+                            skipped_users.append(f"{user_id} (error)")
+                            logger.error(f"❌ {VERSION_BANNER}: Error checking user {user_id}: {e}")
+                    
+                    if started_users:
+                        logger.info(f"✅ {VERSION_BANNER}: Auto-trading started for {len(started_users)} user(s): {started_users}")
                         return True
+                    else:
+                        logger.warning(f"⚠️ {VERSION_BANNER}: No users with valid permissions. Skipped: {skipped_users}")
+                        return False
                     
                 return False
                 
