@@ -751,10 +751,10 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
 
 PRODUCTION_STABLE_PROFILE = TradingProfile(
     name="PRODUCTION_STABLE",
-    description="Perfil V6.5.4d PRODUCTION STABLE - Estrategias institucionales probadas. "
+    description="Perfil PRODUCTION STABLE - Estrategias institucionales probadas. "
                 "Activas: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
                 "Coherence Engine, Risk Guardian, Non-Markovian Kernel, SentimentAnalysis. "
-                "V6.5.4d: Coherence Pre-Gate, umbrales SUBIDOS (Dec 24, 2025).",
+                "Coherence Pre-Gate, umbrales SUBIDOS (Dec 24, 2025).",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,

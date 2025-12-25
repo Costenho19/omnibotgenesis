@@ -651,7 +651,7 @@ Esto es una medida de seguridad que tú configuraste. Usa /proteccion para ajust
         return None
     
     def get_available_strategies(self) -> List[Dict]:
-        """Obtener lista de estrategias disponibles (V6.5.4d)"""
+        """Obtener lista de estrategias disponibles"""
         return [
             {'id': 'EMA_REGIME', 'name': 'EMA Regime Signal', 'description': 'Señal principal basada en EMA (40 pts)', 'risk': 'medium'},
             {'id': 'HMM_REGIME', 'name': 'HMM Regime Detection', 'description': 'Detección de regímenes de mercado (25 pts)', 'risk': 'low'},

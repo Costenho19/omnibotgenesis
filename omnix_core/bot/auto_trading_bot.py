@@ -830,6 +830,8 @@ class AutoTradingBot:
                 authorized_user = self._find_authorized_auto_trading_user()
                 if authorized_user:
                     user_id = authorized_user
+                    # FIX DEC25: Persist the corrected user_id so in-memory state mirrors DB
+                    self._persistent_user_id = authorized_user
                     logger.critical(f"✅✅ FIX DEC25: Found authorized user {user_id} - using this instead")
                 else:
                     logger.critical(f"❌❌ FIX DEC25: No authorized users found - auto-start ABORTED")
