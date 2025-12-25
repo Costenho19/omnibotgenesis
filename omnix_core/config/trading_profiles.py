@@ -55,6 +55,62 @@ class CalibrationTier(Enum):
     EXCLUDED = "EXCLUDED"       # Excluido por mal rendimiento
 
 
+class ModuleStatus(Enum):
+    """
+    Estado operativo de módulos del sistema.
+    Dec 25, 2025: Etiquetado de transparencia institucional.
+    
+    Esto NO cambia comportamiento - solo clarifica qué módulos son:
+    - CORE_ACTIVE: Decisionales, afectan trades reales
+    - CONDITIONAL_ACTIVE: Activos solo bajo ciertas condiciones
+    - OBSERVATIONAL_ONLY: Se ejecutan pero no afectan decisiones
+    - EXPERIMENTAL_ONLY: Desarrollo/investigación, no producción
+    - LIVE_MODE_ONLY: Solo para trading real (no paper)
+    - FROZEN_UNTIL_EDGE: Congelado hasta demostrar edge estadístico
+    """
+    CORE_ACTIVE = "CORE_ACTIVE"              # EMA Signal, MC Veto, RMS, Coherence Gate
+    CONDITIONAL_ACTIVE = "CONDITIONAL_ACTIVE" # Kelly Criterion (solo si mc_win_rate >= 52%)
+    OBSERVATIONAL_ONLY = "OBSERVATIONAL_ONLY" # Black Swan Detector
+    EXPERIMENTAL_ONLY = "EXPERIMENTAL_ONLY"   # Quantum QRNG, QAOA
+    LIVE_MODE_ONLY = "LIVE_MODE_ONLY"         # TWAP, VWAP, ICEBERG
+    FROZEN_UNTIL_EDGE = "FROZEN_UNTIL_EDGE"   # CAES (hasta demostrar edge)
+
+
+# ============================================================
+# MODULE STATUS REGISTRY - Transparencia institucional
+# ============================================================
+MODULE_STATUS_REGISTRY = {
+    # CORE ENGINE (decisional)
+    "EMA_REGIME_SIGNAL": ModuleStatus.CORE_ACTIVE,
+    "MONTE_CARLO_VETO": ModuleStatus.CORE_ACTIVE,
+    "RMS_VETO": ModuleStatus.CORE_ACTIVE,
+    "COHERENCE_GATE": ModuleStatus.CORE_ACTIVE,
+    "HMM_REGIME": ModuleStatus.CORE_ACTIVE,
+    "KALMAN_FILTER": ModuleStatus.CORE_ACTIVE,
+    "NON_MARKOVIAN_KERNEL": ModuleStatus.CORE_ACTIVE,
+    
+    # CONDITIONAL (require edge)
+    "KELLY_CRITERION": ModuleStatus.CONDITIONAL_ACTIVE,
+    
+    # OBSERVATIONAL (ejecuta pero no decide)
+    "BLACK_SWAN_DETECTOR": ModuleStatus.OBSERVATIONAL_ONLY,
+    "SENTIMENT_ANALYZER": ModuleStatus.OBSERVATIONAL_ONLY,
+    
+    # EXPERIMENTAL (desarrollo)
+    "QUANTUM_QRNG": ModuleStatus.EXPERIMENTAL_ONLY,
+    "QAOA_OPTIMIZER": ModuleStatus.EXPERIMENTAL_ONLY,
+    "POST_QUANTUM_CRYPTO": ModuleStatus.EXPERIMENTAL_ONLY,
+    
+    # LIVE MODE ONLY (trading real)
+    "TWAP_EXECUTOR": ModuleStatus.LIVE_MODE_ONLY,
+    "VWAP_EXECUTOR": ModuleStatus.LIVE_MODE_ONLY,
+    "ICEBERG_EXECUTOR": ModuleStatus.LIVE_MODE_ONLY,
+    
+    # FROZEN (esperando edge)
+    "CAES_SYSTEM": ModuleStatus.FROZEN_UNTIL_EDGE,
+}
+
+
 @dataclass
 class PairCalibration:
     """

@@ -2896,6 +2896,9 @@ class AutoTradingBot:
             # FASE 2.1: Confidence normalizada para partial position (0-1)
             decision_conf_normalized = confidence / 100.0
             
+            # FASE 2.2: Extract MC win_rate for Kelly conditional sizing
+            mc_win_rate_for_kelly = monte_carlo.get('win_rate', 0.0) if monte_carlo else None
+            
             if confidence >= (self.config['min_confidence'] * 100):
                 # Umbrales escalonados configurables por perfil + CAES
                 if score > score_very_strong:  # Señal COMPRA MUY FUERTE - Full position
@@ -2904,7 +2907,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     )
                 elif score > score_strong:  # Señal COMPRA FUERTE - 75% position
                     decision['should_trade'] = True
@@ -2912,7 +2915,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     ) * 0.75
                 elif score > score_moderate:  # Señal COMPRA MODERADA - 50% position
                     decision['should_trade'] = True
@@ -2920,7 +2923,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'MODERATE'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     ) * 0.50
                 elif score < -score_very_strong:  # Señal VENTA MUY FUERTE
                     decision['should_trade'] = True
@@ -2928,7 +2931,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'VERY_STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     )
                 elif score < -score_strong:  # Señal VENTA FUERTE
                     decision['should_trade'] = True
@@ -2936,7 +2939,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'STRONG'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     ) * 0.75
                 elif score < -score_moderate:  # Señal VENTA MODERADA
                     decision['should_trade'] = True
@@ -2944,7 +2947,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'MODERATE'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     ) * 0.50
                 
                 # ==========================================================================
@@ -2957,7 +2960,7 @@ class AutoTradingBot:
                     decision['signal_strength'] = 'BEARISH_REGIME'
                     decision['amount_usd'] = self._calculate_position_size_v52(
                         current_price, kelly, hmm_regime, nm_conf_for_caes, nm_metrics_for_caes,
-                        decision_confidence=decision_conf_normalized
+                        decision_confidence=decision_conf_normalized, mc_win_rate=mc_win_rate_for_kelly
                     ) * 0.50  # 50% size for regime-based shorts
                     decision['reason'].append(f"📉 FASE 2.2: SHORT ejecutado - Bearish regime, size 50%")
                     logger.info(f"📉 FASE 2.2: SHORT trade generated for {symbol} - Amount: ${decision['amount_usd']:.2f}")
@@ -4188,13 +4191,15 @@ class AutoTradingBot:
         hmm_regime: Optional[Dict],
         kernel_confidence: Optional[float] = None,
         kernel_metrics: Optional[Dict] = None,
-        decision_confidence: Optional[float] = None
+        decision_confidence: Optional[float] = None,
+        mc_win_rate: Optional[float] = None
     ) -> float:
         """
         PREMIUM: Calcular tamaño óptimo de posición
         - CAES: Confidence-Adaptive Entry System (sigmoide + sub-regímenes)
         - Kelly Criterion + HMM Regime + Ramp-Up System
         - FASE 2.1: Partial Position Sizing basado en confidence
+        - FASE 2.2: Kelly CONDICIONAL (solo si mc_win_rate >= 52%)
         - Reduce drawdown inicial empezando conservador
         
         Args:
@@ -4204,6 +4209,7 @@ class AutoTradingBot:
             kernel_confidence: Confianza del Non-Markovian Kernel (0-100%)
             kernel_metrics: Métricas adicionales del kernel
             decision_confidence: Confianza de la decisión (0-1) para partial position
+            mc_win_rate: Win rate de Monte Carlo (0-1) para Kelly condicional
         """
         balance = self._get_balance()
         
@@ -4282,11 +4288,28 @@ class AutoTradingBot:
         # ========== APLICAR CAES MULTIPLIER ==========
         base_size *= caes_multiplier
         
-        # Ajuste por Kelly Criterion
+        # ========== FASE 2.2: KELLY CONDICIONAL ==========
+        # Kelly solo se aplica cuando Monte Carlo demuestra edge (win_rate >= 52%)
+        # Sin edge demostrado: posición conservadora (0.5x base)
+        kelly_applied = False
         if kelly and 'recommended_position_usd' in kelly:
             kelly_size = kelly['recommended_position_usd']
-            kelly_weight = 0.5 if total_trades < 20 else 0.6
-            base_size = base_size * (1 - kelly_weight) + kelly_size * kelly_weight
+            
+            # Dec 25, 2025: Kelly CONDITIONAL on MC win_rate
+            if mc_win_rate is not None and mc_win_rate >= 0.52:
+                # Edge demostrado → usar Kelly sizing
+                kelly_weight = 0.5 if total_trades < 20 else 0.6
+                base_size = base_size * (1 - kelly_weight) + kelly_size * kelly_weight
+                kelly_applied = True
+                logger.info(f"🎯 KELLY CONDITIONAL: MC win_rate={mc_win_rate:.1%} >= 52% → Kelly ACTIVE (weight={kelly_weight})")
+            else:
+                # Sin edge → posición conservadora
+                base_size = base_size * 0.5
+                mc_wr_str = f"{mc_win_rate:.1%}" if mc_win_rate is not None else "N/A"
+                logger.info(f"📉 KELLY CONDITIONAL: MC win_rate={mc_wr_str} < 52% → Conservative sizing (0.5x)")
+        else:
+            # Sin Kelly disponible → sizing base sin modificación
+            logger.debug("🎯 KELLY: No Kelly data available, using base sizing")
         
         # Ajuste por régimen de mercado (HMM)
         if hmm_regime and 'recommended_params' in hmm_regime:

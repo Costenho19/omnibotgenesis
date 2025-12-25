@@ -113,6 +113,43 @@ Veto/Penalty layer (NO additive scoring):
 **Note**: This is a Seasonal Parameter Adjustment - review after market normalizes.
 **Files**: `omnix_core/strategies/ema_regime_signal.py` (lines 66-85, 247-262)
 
+### Correction Plan Implementation (Dec 25, 2025 - Evening)
+Implemented 5-phase correction plan to transition from ALPHA conceptual to ALPHA operativa:
+
+#### FASE 1: LOW_VOL_MODE
+- Added `LOW_VOL_MODE = True` flag for Christmas-January low-liquidity markets
+- `min_confidence`: 0.35 → 0.30 when LOW_VOL_MODE active
+- TODO marker added: revert when ATR(14) normalizes or post-January
+- **Files**: `omnix_core/strategies/ema_regime_signal.py` (lines 69-92)
+
+#### FASE 2: Kelly Conditional
+- Kelly Criterion now CONDITIONAL on Monte Carlo win_rate
+- Rule: `if mc_win_rate >= 0.52: use kelly_size else: base_size * 0.5`
+- Added `mc_win_rate` parameter to `_calculate_position_size_v52()`
+- Logs show "KELLY CONDITIONAL: MC win_rate=X% >= 52% → Kelly ACTIVE"
+- **Files**: `omnix_core/bot/auto_trading_bot.py` (lines 4187-4312)
+
+#### FASE 3: Module Status Registry
+- Created `ModuleStatus` enum with 6 states:
+  - CORE_ACTIVE (EMA, MC Veto, RMS, Coherence, HMM, Kalman, Non-Markovian)
+  - CONDITIONAL_ACTIVE (Kelly Criterion)
+  - OBSERVATIONAL_ONLY (Black Swan, Sentiment)
+  - EXPERIMENTAL_ONLY (Quantum QRNG, QAOA, Post-Quantum Crypto)
+  - LIVE_MODE_ONLY (TWAP, VWAP, ICEBERG)
+  - FROZEN_UNTIL_EDGE (CAES)
+- Added `MODULE_STATUS_REGISTRY` dict for transparency
+- **Files**: `omnix_core/config/trading_profiles.py` (lines 61-114)
+
+#### FASE 4: Track Record (Active)
+- 50-100 trades target with allowed pairs (BTC/USD, XRP/USD)
+- Minimum 10 days before parameter evaluation
+- Win rate target: ≥ 45%
+
+#### FASE 5: Narrative Separation
+- CORE ENGINE: EMA, MC, RMS, Coherence (decisional)
+- EXPERIMENTAL LAB: Quantum, Black Swan (observational)
+- ROADMAP: TWAP/VWAP, real trading (future)
+
 ### Trading Profiles
 The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 

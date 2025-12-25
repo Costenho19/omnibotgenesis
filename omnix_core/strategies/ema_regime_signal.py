@@ -60,8 +60,19 @@ class EMARegimeSignal:
     
     def __init__(self):
         self.name = "EMA_REGIME_SIGNAL"
-        self.version = "1.0.0"
+        self.version = "1.0.1"
         self.status = "ACTIVE"
+        
+        # ============================================================
+        # SEASONAL: LOW_VOL_MODE - Holiday/Low-Liquidity Markets
+        # Dec 25, 2025: Activated for Christmas-January period
+        # TODO: Revert LOW_VOL_MODE when ATR(14) normalizes or post-January
+        # ============================================================
+        self.LOW_VOL_MODE = True  # SEASONAL / TEMPORARY
+        
+        # Base configuration
+        base_min_confidence = 0.35  # Standard threshold
+        low_vol_min_confidence = 0.30  # Reduced for low-volatility regimes
         
         # Dec 25, 2025 - Low-volatility market adjustment
         # Reduced trend_strength threshold (0.30 → 0.15) and min_confidence (0.50 → 0.35)
@@ -75,16 +86,21 @@ class EMARegimeSignal:
             "trend_threshold": 0.001,
             "volatility_low": 0.01,
             "volatility_high": 0.03,
-            "min_confidence": 0.35,  # Dec 25: 0.50 → 0.35 (low-vol adjustment)
+            "min_confidence": low_vol_min_confidence if self.LOW_VOL_MODE else base_min_confidence,
             "min_trend_strength": 0.15,  # Dec 25: 0.30 → 0.15 (low-vol adjustment)
             "default_sl_pct": 0.02,
             "default_tp_pct": 0.04,
         }
         
         logger.info("=" * 70)
-        logger.info("📊 EMA REGIME SIGNAL V1.0 INICIALIZADO")
+        logger.info("📊 EMA REGIME SIGNAL V1.0.1 INICIALIZADO")
         logger.info("   🔬 Señal REAL: EMA slope + ATR + HMM regime")
         logger.info("   ✅ STATUS: ACTIVE (reemplaza ARES placeholders)")
+        if self.LOW_VOL_MODE:
+            logger.info("   ⚠️  LOW_VOL_MODE: ACTIVE (min_confidence=0.30)")
+            logger.info("   📅 SEASONAL: Christmas-January low-liquidity adjustment")
+        else:
+            logger.info("   📈 NORMAL_MODE: min_confidence=0.35")
         logger.info("=" * 70)
     
     def calculate_ema(self, prices: List[float], period: int) -> float:
