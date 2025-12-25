@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d Decision Contract
 
-> **Fecha**: December 24, 2025  
+> **Fecha**: December 25, 2025 (Updated)  
 > **Versión**: V6.5.4d PRODUCTION_STABLE  
 > **Propósito**: Documentación formal del sistema de decisiones para auditoría e inversores
 
@@ -14,7 +14,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 1: EMA Signal Generation                                  │
 │         ↓                                                       │
-│  STEP 2: MC VETO (expected_return < 0 || VaR95 > -3%)          │
+│  STEP 2: MC VETO (expected_return < -0.1% || VaR95 > -3%)      │
 │         ↓                                                       │
 │  STEP 3: RMS VETO (CircuitBreaker + LimitsEngine)              │
 │         ↓                                                       │
@@ -59,7 +59,7 @@
 
 | Veto | Condición | Penalización Paper | Penalización Real |
 |------|-----------|-------------------|-------------------|
-| **MC VETO** | expected_return < 0 OR VaR95 > -3% | Bloqueo total | Bloqueo total |
+| **MC VETO** | expected_return < -0.1% OR VaR95 > -3% | Bloqueo total | Bloqueo total |
 | **RMS VETO** | CircuitBreaker triggered | Bloqueo total | Bloqueo total |
 | **COHERENCE_GATE_CRITICAL** | coherence < 35% | Bloqueo total | Bloqueo total |
 | **COHERENCE_GATE_LOW** | coherence < 50% | Bloqueo total | Bloqueo total |
@@ -163,6 +163,9 @@ Cada decisión incluye:
 | Dec 24, 2025 | ARES code eliminado, EMA weight 25→40 | GPT Expert |
 | Dec 24, 2025 | HMM weight 15→25, Non-Markovian 12→15 | GPT Expert |
 | Dec 24, 2025 | Monte Carlo/Black Swan/Sentiment→Veto only | GPT Expert |
+| Dec 25, 2025 | MC Veto threshold: 0% → -0.1% (track record) | Replit Agent |
+| Dec 25, 2025 | Fix EC-A1: Auto-start authorization bug | Replit Agent |
+| Dec 25, 2025 | Fix: unhashable dict in multi-user loop | Replit Agent |
 
 ---
 

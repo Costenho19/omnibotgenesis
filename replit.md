@@ -80,6 +80,29 @@ Veto/Penalty layer (NO additive scoring):
 - Monte Carlo, Black Swan, Sentiment, Quantum Momentum → penalty only
 - Full documentation: `docs/current/DECISION_CONTRACT.md`
 
+### Bug Fixes (Dec 25, 2025)
+
+#### EC-A1: Auto-Start Authorization Fix
+**Problem**: Unauthorized user 6429738143 was incorrectly passing permission checks during auto-start.
+**Root Cause**: Permission check was using wrong operation name `'persistent_auto_start_fallback'` (resolves to `READ_MARKET_DATA`) instead of `'auto_trading'` (resolves to `PAPER_AUTO_TRADING`).
+**Fix**: 
+- Added fallback permission check in `_auto_start_if_persistent()` with correct `'auto_trading'` operation
+- Added `_find_authorized_auto_trading_user()` method to search for authorized users in DB
+- Persisted fallback user_id before calling `start()`
+**Files**: `omnix_core/bot/auto_trading_bot.py` (lines 805-888)
+
+#### Multi-User Trading Loop Fix
+**Problem**: Error "unhashable type: 'dict'" occurring every 30 seconds in trading loop.
+**Root Cause**: `get_active_sessions()` returns `List[Dict]` but code was iterating directly and using dicts as dictionary keys.
+**Fix**: Added type checking to extract `user_id` string from dict entries before using as keys.
+**Files**: `omnix_core/bot/auto_trading_bot.py` (lines 1127-1134)
+
+### Monte Carlo Threshold Relaxation (Dec 25, 2025)
+**Problem**: Bot was too conservative - Monte Carlo veto blocking all trades with expected return < 0%, resulting in no trades for 13+ days.
+**Change**: Relaxed `min_expected_return` threshold from **0.0** to **-0.001** (-0.1%).
+**Effect**: Trades with expected return between -0.1% and 0% are now allowed, enabling the system to build a track record for investor presentations.
+**Files**: `omnix_core/bot/auto_trading_bot.py` (lines 792-803, 2350-2358)
+
 ### Trading Profiles
 The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 
