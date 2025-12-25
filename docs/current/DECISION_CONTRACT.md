@@ -172,6 +172,10 @@ Cada decisión incluye:
 | Dec 25, 2025 | **FASE 2**: Kelly Conditional (mc_win_rate >= 52%) | Replit Agent |
 | Dec 25, 2025 | **FASE 3**: ModuleStatus enum + MODULE_STATUS_REGISTRY | Replit Agent |
 | Dec 25, 2025 | Telemetría estructurada en _make_v52_decision | Replit Agent |
+| Dec 25, 2025 | **Phase 1**: MC threshold -0.1% → -0.07% (LOW_VOL_MODE gate) | Replit Agent |
+| Dec 25, 2025 | Guardrails: rollback_daily_loss_limit=$5K, rollback_min_win_rate=35% | Replit Agent |
+| Dec 25, 2025 | **FASE 4**: consolidated_trade_metrics() para BTC/XRP | Replit Agent |
+| Dec 25, 2025 | Endpoint /api/paper_tracker para monitoreo FASE 4 | Replit Agent |
 
 ---
 

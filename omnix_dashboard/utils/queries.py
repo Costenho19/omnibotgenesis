@@ -317,3 +317,125 @@ def get_asset_breakdown(trades):
         breakdown[cat]['pnl'] = round(breakdown[cat]['pnl'], 2)
     
     return breakdown
+
+
+def consolidated_trade_metrics(days=10, symbols=None):
+    """
+    FASE 4 Tracker: Consolidated metrics for BTC/USD and XRP/USD paper trades.
+    
+    Args:
+        days: Number of days to analyze (default 10 for FASE 4 evaluation)
+        symbols: List of symbols to track (default ["BTC/USD", "XRP/USD"])
+    
+    Returns:
+        Dict with trade_count, gross_pnl, net_pnl, win_rate, avg_win, avg_loss,
+        max_drawdown, kelly_utilization, days_tracked, target_progress
+    """
+    if symbols is None:
+        symbols = ["BTC/USD", "XRP/USD"]
+    
+    with get_db_connection() as conn:
+        if not conn:
+            logger.warning("No database connection - cannot fetch FASE 4 metrics")
+            return {
+                'success': False,
+                'error': 'Database not connected',
+                'trade_count': 0,
+                'symbols': symbols
+            }
+        
+        try:
+            cursor = conn.cursor()
+            
+            placeholders = ','.join(['%s'] * len(symbols))
+            cursor.execute(f'''
+                SELECT 
+                    symbol, side, quantity, entry_price, exit_price,
+                    profit_loss, profit_pct, status, opened_at, closed_at
+                FROM paper_trading_trades
+                WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
+                  AND symbol IN ({placeholders})
+                  AND status = 'closed'
+                ORDER BY opened_at DESC
+            ''', (days, *symbols))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            trades = []
+            wins = []
+            losses = []
+            
+            for row in rows:
+                pnl = float(row[5]) if row[5] else 0
+                trades.append({
+                    'symbol': row[0],
+                    'side': row[1],
+                    'quantity': float(row[2]) if row[2] else 0,
+                    'entry_price': float(row[3]) if row[3] else 0,
+                    'exit_price': float(row[4]) if row[4] else 0,
+                    'pnl': pnl,
+                    'pnl_pct': float(row[6]) if row[6] else 0,
+                    'opened_at': row[8],
+                    'closed_at': row[9]
+                })
+                
+                if pnl > 0:
+                    wins.append(pnl)
+                elif pnl < 0:
+                    losses.append(pnl)
+            
+            trade_count = len(trades)
+            gross_pnl = sum(t['pnl'] for t in trades)
+            win_count = len(wins)
+            loss_count = len(losses)
+            win_rate = (win_count / trade_count * 100) if trade_count > 0 else 0
+            avg_win = sum(wins) / len(wins) if wins else 0
+            avg_loss = sum(losses) / len(losses) if losses else 0
+            
+            running_pnl = 0
+            peak = 0
+            max_drawdown = 0
+            for t in reversed(trades):
+                running_pnl += t['pnl']
+                if running_pnl > peak:
+                    peak = running_pnl
+                drawdown = peak - running_pnl
+                if drawdown > max_drawdown:
+                    max_drawdown = drawdown
+            
+            target_trades = 50
+            target_win_rate = 45.0
+            trade_progress = min(100, (trade_count / target_trades) * 100)
+            win_rate_progress = min(100, (win_rate / target_win_rate) * 100) if target_win_rate > 0 else 0
+            
+            logger.info(f"📊 FASE 4 Metrics: {trade_count} trades, {win_rate:.1f}% win rate, ${gross_pnl:.2f} P/L")
+            
+            return {
+                'success': True,
+                'symbols': symbols,
+                'days_tracked': days,
+                'trade_count': trade_count,
+                'win_count': win_count,
+                'loss_count': loss_count,
+                'gross_pnl': round(gross_pnl, 2),
+                'net_pnl': round(gross_pnl, 2),
+                'win_rate': round(win_rate, 1),
+                'avg_win': round(avg_win, 2),
+                'avg_loss': round(avg_loss, 2),
+                'max_drawdown': round(max_drawdown, 2),
+                'target_trades': target_trades,
+                'target_win_rate': target_win_rate,
+                'trade_progress_pct': round(trade_progress, 1),
+                'win_rate_progress_pct': round(win_rate_progress, 1),
+                'on_track': trade_count >= 5 and win_rate >= 35.0
+            }
+            
+        except Exception as e:
+            logger.error(f"Error fetching FASE 4 metrics: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'trade_count': 0,
+                'symbols': symbols
+            }

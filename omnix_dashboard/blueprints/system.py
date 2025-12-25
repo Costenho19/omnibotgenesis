@@ -13,7 +13,7 @@ from omnix_dashboard.utils.database import (
     get_pool_stats, DB_AVAILABLE, DB_ERROR_MESSAGE
 )
 from omnix_dashboard.utils.decorators import require_api_key
-from omnix_dashboard.utils.queries import get_paper_trades
+from omnix_dashboard.utils.queries import get_paper_trades, consolidated_trade_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -863,6 +863,38 @@ def api_system_sessions():
             'capacity': '100,000+',
             'database': 'PostgreSQL',
             'architecture': 'Multi-User SaaS Ready'
+        },
+        'timestamp': datetime.now().isoformat()
+    })
+
+
+@system_bp.route('/api/paper_tracker')
+@require_api_key
+def api_paper_tracker():
+    """
+    FASE 4 Tracker API: Consolidated metrics for BTC/USD and XRP/USD paper trades.
+    Returns trade count, P/L, win rate, and progress toward 50-100 trade target.
+    """
+    metrics = consolidated_trade_metrics(days=10, symbols=["BTC/USD", "XRP/USD"])
+    
+    return jsonify({
+        'success': metrics.get('success', False),
+        'fase4': {
+            'symbols': metrics.get('symbols', []),
+            'days_tracked': metrics.get('days_tracked', 10),
+            'trade_count': metrics.get('trade_count', 0),
+            'win_count': metrics.get('win_count', 0),
+            'loss_count': metrics.get('loss_count', 0),
+            'gross_pnl': metrics.get('gross_pnl', 0),
+            'win_rate': metrics.get('win_rate', 0),
+            'avg_win': metrics.get('avg_win', 0),
+            'avg_loss': metrics.get('avg_loss', 0),
+            'max_drawdown': metrics.get('max_drawdown', 0),
+            'target_trades': metrics.get('target_trades', 50),
+            'target_win_rate': metrics.get('target_win_rate', 45.0),
+            'trade_progress_pct': metrics.get('trade_progress_pct', 0),
+            'win_rate_progress_pct': metrics.get('win_rate_progress_pct', 0),
+            'on_track': metrics.get('on_track', False)
         },
         'timestamp': datetime.now().isoformat()
     })

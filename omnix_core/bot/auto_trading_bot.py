@@ -791,16 +791,32 @@ class AutoTradingBot:
         
         # V6.5.4d: Monte Carlo Veto thresholds (enforced, not just logged)
         # Dec 25, 2025: Relaxed min_expected_return from 0.0 to -0.001 (-0.1%)
-        # This allows trades with slightly negative expected return to proceed,
-        # enabling the system to generate trades and build a track record for investors.
+        # Dec 25 Evening: Gradual Phase 1 adjustment with LOW_VOL_MODE gate
+        # Phase 1: -0.001 → -0.0007 only when LOW_VOL_MODE active
+        # Guardrails: rollback_* keys are consumed by check_rollback_guardrails() method
+        
+        # Sync LOW_VOL_MODE from EMA signal generator (single source of truth)
+        low_vol_mode = True  # Default for holiday period (Dec 25 - Jan)
+        if self.ema_signal_generator and hasattr(self.ema_signal_generator, 'LOW_VOL_MODE'):
+            low_vol_mode = self.ema_signal_generator.LOW_VOL_MODE
+        self._low_vol_mode_active = low_vol_mode  # Store for other components
+        
+        phase1_threshold = -0.0007 if low_vol_mode else -0.001  # Relaxed only in LOW_VOL_MODE
+        
         self.mc_veto_config = {
-            'min_expected_return': -0.001,  # Veto if expected_return < -0.1% (was 0.0)
+            'min_expected_return': phase1_threshold,  # Phase 1: -0.07% in LOW_VOL, -0.1% normal
             'max_var_95': -0.03,  # Veto if VaR95 worse than -3%
             'min_win_rate': 0.45,  # Reduce size if win_rate < 45%
             'reduce_size_win_rate': 0.50,  # Reduce size if win_rate < 50%
             'size_reduction_factor': 0.5,  # Reduce to 50% if below threshold
+            'rollback_daily_loss_limit': 5000.0,  # Rollback if daily loss > $5K
+            'rollback_min_win_rate': 0.35,  # Rollback if win_rate < 35% over 20 trades
+            'rollback_trades_window': 20,  # Evaluate rollback over last 20 trades
         }
-        logger.info("📊 Monte Carlo VETO Engine ACTIVADO - min_expected_return=-0.1%")
+        logger.info(f"📊 Monte Carlo VETO Engine ACTIVADO - min_expected_return={phase1_threshold*100:.2f}%")
+        if low_vol_mode:
+            logger.info("   ⚠️ LOW_VOL_MODE: Phase 1 relaxation active (-0.07% threshold)")
+        logger.info(f"   🛡️ Guardrails: max_loss=${self.mc_veto_config['rollback_daily_loss_limit']}, min_wr={self.mc_veto_config['rollback_min_win_rate']*100}%")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
@@ -888,6 +904,58 @@ class AutoTradingBot:
             logger.warning(f"⚠️ FIX DEC25: Error finding authorized user: {e}")
         
         return None
+    
+    def check_rollback_guardrails(self, recent_trades: list = None) -> dict:
+        """
+        Dec 25: Check Phase 1 rollback guardrails based on mc_veto_config.
+        
+        Guardrails:
+        - rollback_daily_loss_limit: If daily loss exceeds $5K, recommend rollback
+        - rollback_min_win_rate: If win_rate < 35% over rollback_trades_window, recommend rollback
+        
+        Returns:
+            dict: {should_rollback: bool, reason: str, metrics: dict}
+        """
+        cfg = getattr(self, 'mc_veto_config', {})
+        daily_loss_limit = cfg.get('rollback_daily_loss_limit', 5000.0)
+        min_win_rate = cfg.get('rollback_min_win_rate', 0.35)
+        trades_window = cfg.get('rollback_trades_window', 20)
+        
+        result = {
+            'should_rollback': False,
+            'reason': None,
+            'metrics': {
+                'daily_loss_limit': daily_loss_limit,
+                'min_win_rate': min_win_rate,
+                'trades_window': trades_window
+            }
+        }
+        
+        if not recent_trades:
+            return result
+        
+        window_trades = recent_trades[:trades_window]
+        if len(window_trades) < 5:
+            return result
+        
+        total_pnl = sum(t.get('pnl', 0) or 0 for t in window_trades)
+        wins = sum(1 for t in window_trades if (t.get('pnl', 0) or 0) > 0)
+        win_rate = wins / len(window_trades) if window_trades else 0
+        
+        result['metrics']['trades_analyzed'] = len(window_trades)
+        result['metrics']['total_pnl'] = total_pnl
+        result['metrics']['win_rate'] = win_rate
+        
+        if total_pnl < -daily_loss_limit:
+            result['should_rollback'] = True
+            result['reason'] = f"Daily loss ${abs(total_pnl):.2f} exceeds limit ${daily_loss_limit}"
+            logger.warning(f"🚨 ROLLBACK GUARDRAIL: {result['reason']}")
+        elif win_rate < min_win_rate:
+            result['should_rollback'] = True
+            result['reason'] = f"Win rate {win_rate*100:.1f}% below minimum {min_win_rate*100}%"
+            logger.warning(f"🚨 ROLLBACK GUARDRAIL: {result['reason']}")
+        
+        return result
     
     def _get_effective_user_id(self, passed_user_id: str = None, caller: str = None) -> str:
         """
@@ -3320,6 +3388,19 @@ class AutoTradingBot:
                     
                     telemetry_data['modules_status'] = modules_used
                     logger.info(f"   📋 MODULES: {' | '.join(modules_used)}")
+                
+                try:
+                    recent_trades = getattr(self, '_recent_trades_cache', [])
+                    guardrail_check = self.check_rollback_guardrails(recent_trades)
+                    telemetry_data['rollback_guardrails'] = guardrail_check
+                    if guardrail_check.get('should_rollback'):
+                        logger.critical(f"   🚨 GUARDRAIL_ALERT: {guardrail_check['reason']}")
+                        decision['should_trade'] = False
+                        decision['action'] = 'HOLD'
+                        decision['decision_trace'].append(f"GUARDRAIL_BLOCK: {guardrail_check['reason']}")
+                        decision['reason'].append(f"🚨 Guardrail triggered: {guardrail_check['reason']}")
+                except Exception as grd_err:
+                    logger.debug(f"Guardrail check skipped: {grd_err}")
                     
                 decision['telemetry'] = telemetry_data
                 
