@@ -787,14 +787,17 @@ class AutoTradingBot:
             logger.info("⚠️ EMA Regime Signal no disponible - usando ARES legacy")
         
         # V6.5.4d: Monte Carlo Veto thresholds (enforced, not just logged)
+        # Dec 25, 2025: Relaxed min_expected_return from 0.0 to -0.001 (-0.1%)
+        # This allows trades with slightly negative expected return to proceed,
+        # enabling the system to generate trades and build a track record for investors.
         self.mc_veto_config = {
-            'min_expected_return': 0.0,  # Veto if expected_return < 0
+            'min_expected_return': -0.001,  # Veto if expected_return < -0.1% (was 0.0)
             'max_var_95': -0.03,  # Veto if VaR95 worse than -3%
             'min_win_rate': 0.45,  # Reduce size if win_rate < 45%
             'reduce_size_win_rate': 0.50,  # Reduce size if win_rate < 50%
             'size_reduction_factor': 0.5,  # Reduce to 50% if below threshold
         }
-        logger.info("📊 Monte Carlo VETO Engine ACTIVADO - Decisiones enforzadas")
+        logger.info("📊 Monte Carlo VETO Engine ACTIVADO - min_expected_return=-0.1%")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
@@ -2344,12 +2347,12 @@ class AutoTradingBot:
                 decision['v52_analysis']['mc_var_95'] = var_95
                 decision['v52_analysis']['mc_win_rate'] = win_rate
                 
-                # VETO 1: Expected return negativo
+                # VETO 1: Expected return below threshold (Dec 25: relaxed from 0% to -0.1%)
                 if expected_return < mc_cfg['min_expected_return']:
                     mc_veto_applied = True
                     decision['veto_chain'].append('MC_EXPECTED_RETURN_NEGATIVE')
-                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < 0")
-                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < 0 → TRADE BLOCKED")
+                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_cfg['min_expected_return']:.2%}")
+                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_cfg['min_expected_return']:.2%} → TRADE BLOCKED")
                 
                 # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
                 if var_95 < mc_cfg['max_var_95']:  # var_95 es negativo
