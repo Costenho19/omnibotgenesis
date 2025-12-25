@@ -818,9 +818,10 @@ class AutoTradingBot:
             
             # FIX DEC25: DIRECT permission check as fallback
             # This ensures we NEVER start for unauthorized users, even if _load_persistent_state() failed
+            # CRITICAL: Must use 'auto_trading' operation to check PAPER_AUTO_TRADING permission
             try:
-                self._require_trading_permission(user_id, 'persistent_auto_start_fallback')
-                logger.critical(f"✅✅ FIX DEC25: User {user_id} PASSED permission check - proceeding with start")
+                self._require_trading_permission(user_id, 'auto_trading')
+                logger.critical(f"✅✅ FIX DEC25: User {user_id} PASSED PAPER_AUTO_TRADING check - proceeding with start")
             except AuthorizationError as auth_err:
                 logger.critical(f"🚫🚫 FIX DEC25: User {user_id} BLOCKED by fallback permission check - {auth_err}")
                 logger.critical(f"🔄🔄 FIX DEC25: Searching for authorized user in database...")
@@ -869,7 +870,7 @@ class AutoTradingBot:
                     user_id = str(row[0]) if row[0] else None
                     if user_id:
                         try:
-                            self._require_trading_permission(user_id, 'find_authorized_user')
+                            self._require_trading_permission(user_id, 'auto_trading')
                             logger.critical(f"✅ FIX DEC25: User {user_id} has PAPER_AUTO_TRADING permission")
                             return user_id
                         except AuthorizationError:
