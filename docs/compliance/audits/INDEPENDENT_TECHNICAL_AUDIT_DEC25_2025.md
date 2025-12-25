@@ -76,6 +76,23 @@ for user_row in user_settings_result:
 
 **Verified**: Python simulation confirms Harold (7014748854) is now selected
 
+### Diagnostic Logs Added (Dec 25, 2025)
+
+To verify fix is deployed in Railway, added `CRITICAL` level logs:
+
+```
+🔥🔥 FIX DEC25 ACTIVE: Found X users with auto_trading=true
+🔥🔥 FIX DEC25: Evaluando usuario {user_id} para auto-trading persistente
+✅✅ FIX DEC25: User {user_id} AUTHORIZED - has PAPER_AUTO_TRADING
+❌❌ FIX DEC25: User {user_id} SKIPPED - lacks PAPER_AUTO_TRADING
+🚀🚀 FIX DEC25: Auto-trading WILL START for user {authorized_user}
+🚀🚀 FIX DEC25: STARTING auto-trading for user {user_id}
+✅✅ FIX DEC25: Auto-trading STARTED SUCCESSFULLY for user {user_id}
+```
+
+**If these logs do NOT appear in Railway** → Fix not deployed (rebuild required)
+**If they appear** → Fix is active, trace shows exact execution path
+
 ---
 
 ## Detailed Findings

@@ -808,18 +808,21 @@ class AutoTradingBot:
         Esto garantiza que Railway reinicie con el mismo estado que antes del restart.
          Ahora pasa el user_id específico para soportar múltiples usuarios.
         """
+        logger.critical(f"🔥🔥 FIX DEC25: _auto_start_if_persistent() CALLED - _should_auto_start={getattr(self, '_should_auto_start', 'NOT SET')}")
         if hasattr(self, '_should_auto_start') and self._should_auto_start:
             user_id = getattr(self, '_persistent_user_id', None)
-            logger.info(f"🔄 {VERSION_BANNER}: Iniciando auto-trading automáticamente para user {user_id}...")
+            logger.critical(f"🚀🚀 FIX DEC25: STARTING auto-trading for user {user_id}")
             try:
                 result = self.start(user_id=user_id)
                 if result.get('success'):
-                    logger.info(f"✅ {VERSION_BANNER}: Auto-trading restaurado exitosamente para user {user_id}")
+                    logger.critical(f"✅✅ FIX DEC25: Auto-trading STARTED SUCCESSFULLY for user {user_id}")
                 else:
                     error = result.get('error', 'Unknown error')
-                    logger.warning(f"⚠️ {VERSION_BANNER}: No se pudo restaurar auto-trading: {error}")
+                    logger.critical(f"❌❌ FIX DEC25: Auto-trading FAILED to start: {error}")
             except Exception as e:
                 logger.error(f"❌ {VERSION_BANNER}: Error restaurando auto-trading: {e}")
+        else:
+            logger.critical(f"⏸️⏸️ FIX DEC25: Auto-start SKIPPED - _should_auto_start is False or not set")
     
     def _get_effective_user_id(self, passed_user_id: str = None, caller: str = None) -> str:
         """
@@ -1461,18 +1464,20 @@ class AutoTradingBot:
                     
                     if user_settings_result and len(user_settings_result) > 0:
                         # V6.5.4d: Check ALL users for permissions, find first with valid permission
+                        logger.critical(f"🔥🔥 FIX DEC25 ACTIVE: Found {len(user_settings_result)} users with auto_trading=true")
                         authorized_user = None
                         for row in user_settings_result:
                             if row and len(row) >= 4:
                                 user_id = str(row[3]) if row[3] else 'unknown'
+                                logger.critical(f"🔥🔥 FIX DEC25: Evaluando usuario {user_id} para auto-trading persistente")
                                 # Check permission BEFORE selecting this user
                                 try:
                                     self._require_trading_permission(user_id, 'persistent_auto_start')
                                     authorized_user = user_id
-                                    logger.info(f"✅ {VERSION_BANNER}: User {user_id} has PAPER_AUTO_TRADING permission")
+                                    logger.critical(f"✅✅ FIX DEC25: User {user_id} AUTHORIZED - has PAPER_AUTO_TRADING")
                                     break  # Found authorized user
                                 except AuthorizationError:
-                                    logger.warning(f"⚠️ {VERSION_BANNER}: User {user_id} skipped - lacks PAPER_AUTO_TRADING permission")
+                                    logger.critical(f"❌❌ FIX DEC25: User {user_id} SKIPPED - lacks PAPER_AUTO_TRADING")
                                     continue
                                 except Exception as e:
                                     logger.warning(f"⚠️ {VERSION_BANNER}: Permission check failed for {user_id}: {e}")
@@ -1481,7 +1486,7 @@ class AutoTradingBot:
                         if authorized_user:
                             self._should_auto_start = True
                             self._persistent_user_id = authorized_user
-                            logger.info(f"🔄 {VERSION_BANNER}: Auto-trading PERSISTIDO detectado para user {authorized_user} - Se iniciará automáticamente")
+                            logger.critical(f"🚀🚀 FIX DEC25: Auto-trading WILL START for user {authorized_user}")
                         else:
                             logger.warning(f"⚠️ {VERSION_BANNER}: {len(user_settings_result)} usuario(s) con auto_trading=true, pero NINGUNO tiene PAPER_AUTO_TRADING permission")
                     else:
