@@ -1121,7 +1121,15 @@ class AutoTradingBot:
                         with ThreadPoolExecutor(max_workers=max_workers) as executor:
                             futures = {}
                             
-                            for user_id in active_users:
+                            for user_entry in active_users:
+                                if isinstance(user_entry, dict):
+                                    user_id = str(user_entry.get('user_id', ''))
+                                else:
+                                    user_id = str(user_entry)
+                                
+                                if not user_id:
+                                    continue
+                                
                                 if user_id not in user_locks:
                                     user_locks[user_id] = threading.Lock()
                                 
