@@ -1445,22 +1445,31 @@ class AutoTradingBot:
         FIX: También carga auto_trading de user_settings para persistir
         el estado entre reinicios de Railway.
         """
+        logger.critical(f"🔥🔥 FIX DEC25: _load_persistent_state() ENTRY - database_service={self.database_service is not None}")
+        
         if not self.database_service:
             logger.info(f"📊 {VERSION_BANNER}: Sin database_service - usando estado inicial")
             return
         
         try:
-            # Cargar configuración de auto-trading de user_settings
-            self._should_auto_start = False  # Flag para auto-iniciar después del __init__
-            self._persistent_user_id = None  # Guardar user_id para restauración
+            # CRITICAL FIX DEC25: Force reset BEFORE any state loading
+            # This ensures legacy values don't survive from previous runs
+            self._should_auto_start = False
+            self._persistent_user_id = None
+            logger.critical(f"🔥🔥 FIX DEC25: FORCED RESET - _should_auto_start=False, _persistent_user_id=None")
+            
             try:
-                if hasattr(self.database_service, 'execute_query'):
+                has_execute_query = hasattr(self.database_service, 'execute_query')
+                logger.critical(f"🔥🔥 FIX DEC25: database_service.execute_query available={has_execute_query}")
+                
+                if has_execute_query:
                     # V6.5.4d FIX: Get ALL users with auto_trading, not just first one
                     user_settings_result = self.database_service.execute_query('''
                         SELECT auto_trading, is_paused, trading_enabled, user_id
                         FROM user_settings
                         WHERE auto_trading = true AND trading_enabled = true AND (is_paused = false OR is_paused IS NULL)
                     ''')
+                    logger.critical(f"🔥🔥 FIX DEC25: Query returned {len(user_settings_result) if user_settings_result else 0} rows")
                     
                     if user_settings_result and len(user_settings_result) > 0:
                         # V6.5.4d: Check ALL users for permissions, find first with valid permission
