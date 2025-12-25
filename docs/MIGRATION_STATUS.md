@@ -11,7 +11,7 @@
 > - **0/20 ports activados** - Todos los feature flags en `false`
 > - `USE_APP_LAYER=false` - Legacy en operación
 > - Arquitectura V7.0 lista pero no activada
-> - **Multi-Usuario Fase 3b COMPLETADA**: RBAC implementado, 36/36 tests pasando
+> - **Multi-Usuario Fase 3b COMPLETADA**: RBAC implementado, 39/39 authorization tests passing
 
 ---
 
@@ -28,7 +28,7 @@
 - **5 roles definidos**: FREE < BASIC < PRO < PREMIUM < OWNER
 - **15 permisos granulares** implementados
 - **Harold = OWNER** en base de datos (is_admin=true, subscription_tier='owner')
-- **36/36 tests pasando** en `tests/test_authorization.py`
+- **39/39 authorization tests passing** en `tests/test_authorization.py`
 - **Paper trading activo** para Harold
 
 ### Multi-User Phase 2 Complete (Dec 22, 2025)

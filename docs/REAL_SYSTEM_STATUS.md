@@ -302,7 +302,7 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **5 roles B2C SaaS**: FREE < BASIC < PRO < PREMIUM < OWNER
 - **15 permisos granulares** (paper/real trading, auto-trading, alertas, etc.)
 - **Harold = OWNER** en BD (is_admin=true, subscription_tier='owner', paper_trading_mode=true)
-- **36/36 tests pasando**
+- **39/39 authorization tests passing**
 - **Ubicación**: `src/omnix/ports/driven/`, `src/omnix/infrastructure/adapters/`
 
 ### Language Detection AI-First (Dec 22, 2025)

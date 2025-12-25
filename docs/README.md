@@ -24,7 +24,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 - **5 roles B2C SaaS**: FREE < BASIC < PRO < PREMIUM < OWNER
 - **15 permisos granulares** para trading, análisis, alertas
 - **Harold = OWNER** en BD con paper trading activo
-- **36/36 tests pasando**
+- **39/39 authorization tests passing**
 - **Documento**: [MULTI_USER_ARCHITECTURE.md](current/MULTI_USER_ARCHITECTURE.md) - Guía completa de uso
 
 ### Language Detection AI-First (Dec 22, 2025)

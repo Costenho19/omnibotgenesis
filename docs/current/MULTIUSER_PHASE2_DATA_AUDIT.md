@@ -26,7 +26,7 @@
 | Modo | Estado | Notas |
 |------|--------|-------|
 | Single-User (Harold) | ✅ **OPERACIONAL** | OWNER role con todos los permisos |
-| Multi-Usuario | ✅ **LISTO** | AuthorizationService integrado, 36/36 tests pasando |
+| Multi-Usuario | ✅ **LISTO** | AuthorizationService integrado, 39/39 authorization tests passing |
 
 ### Resolución Phase 3b (22 Dic 2025)
 

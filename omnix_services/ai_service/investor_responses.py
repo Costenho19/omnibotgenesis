@@ -182,7 +182,7 @@ When any tier signals elevated risk, the system holds position rather than execu
 • Real-time price feeds from Kraken
 • Hexagonal architecture with 20 ports, 22 adapters
 • Multi-user authorization system (RBAC) implemented
-• 36/36 security tests passing""",
+• 39/39 authorization tests passing""",
         closing="The system is ready for institutional capital deployment following completion of the 500-trade validation milestone."
     ),
     

@@ -36,7 +36,7 @@
 > **COMPLETADO (22 Dic 2025)**: 
 > - `AuthorizationService` completamente integrado en 5 archivos
 > - 17 hardcoded checks reemplazados con RBAC
-> - 36/36 tests pasando
+> - 39/39 authorization tests passing
 > - Harold tiene rol OWNER con paper trading activo
 
 ### 1.2 Estado de Seguridad
