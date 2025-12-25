@@ -1452,32 +1452,38 @@ class AutoTradingBot:
             self._persistent_user_id = None  # Guardar user_id para restauración
             try:
                 if hasattr(self.database_service, 'execute_query'):
+                    # V6.5.4d FIX: Get ALL users with auto_trading, not just first one
                     user_settings_result = self.database_service.execute_query('''
                         SELECT auto_trading, is_paused, trading_enabled, user_id
                         FROM user_settings
-                        WHERE auto_trading = true
-                        LIMIT 1
+                        WHERE auto_trading = true AND trading_enabled = true AND (is_paused = false OR is_paused IS NULL)
                     ''')
-                    if user_settings_result and len(user_settings_result) > 0 and user_settings_result[0]:
-                        row = user_settings_result[0]
-                        # Tuple unpacking: SELECT auto_trading, is_paused, trading_enabled, user_id
-                        # Guard against empty/None rows
-                        if row and len(row) >= 4:
-                            auto_trading = bool(row[0]) if row[0] is not None else False
-                            is_paused = bool(row[1]) if row[1] is not None else False
-                            trading_enabled = bool(row[2]) if row[2] is not None else True
-                            user_id = str(row[3]) if row[3] else 'unknown'
-                        else:
-                            auto_trading, is_paused, trading_enabled, user_id = False, False, True, 'unknown'
+                    
+                    if user_settings_result and len(user_settings_result) > 0:
+                        # V6.5.4d: Check ALL users for permissions, find first with valid permission
+                        authorized_user = None
+                        for row in user_settings_result:
+                            if row and len(row) >= 4:
+                                user_id = str(row[3]) if row[3] else 'unknown'
+                                # Check permission BEFORE selecting this user
+                                try:
+                                    self._require_trading_permission(user_id, 'persistent_auto_start')
+                                    authorized_user = user_id
+                                    logger.info(f"✅ {VERSION_BANNER}: User {user_id} has PAPER_AUTO_TRADING permission")
+                                    break  # Found authorized user
+                                except AuthorizationError:
+                                    logger.warning(f"⚠️ {VERSION_BANNER}: User {user_id} skipped - lacks PAPER_AUTO_TRADING permission")
+                                    continue
+                                except Exception as e:
+                                    logger.warning(f"⚠️ {VERSION_BANNER}: Permission check failed for {user_id}: {e}")
+                                    continue
                         
-                        if auto_trading and not is_paused and trading_enabled:
+                        if authorized_user:
                             self._should_auto_start = True
-                            self._persistent_user_id = user_id  # Guardar para restauración
-                            logger.info(f"🔄 {VERSION_BANNER}: Auto-trading PERSISTIDO detectado para user {user_id} - Se iniciará automáticamente")
-                        elif auto_trading and is_paused:
-                            logger.info(f"⏸️ {VERSION_BANNER}: Auto-trading está PAUSADO para user {user_id}")
-                        elif auto_trading and not trading_enabled:
-                            logger.info(f"🔒 {VERSION_BANNER}: Trading DESHABILITADO para user {user_id}")
+                            self._persistent_user_id = authorized_user
+                            logger.info(f"🔄 {VERSION_BANNER}: Auto-trading PERSISTIDO detectado para user {authorized_user} - Se iniciará automáticamente")
+                        else:
+                            logger.warning(f"⚠️ {VERSION_BANNER}: {len(user_settings_result)} usuario(s) con auto_trading=true, pero NINGUNO tiene PAPER_AUTO_TRADING permission")
                     else:
                         logger.info(f"📊 {VERSION_BANNER}: No hay usuarios con auto_trading activo")
             except Exception as e:

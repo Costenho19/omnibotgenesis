@@ -29,19 +29,33 @@ This audit verified 6 critical aspects of the OMNIX trading system to ensure inv
 
 **Severity**: CRITICAL - Broke core trading functionality
 
-**Root Cause** (lines 975-995 in `auto_trading_bot.py`):
+**Root Cause** (lines 1455-1459 in `auto_trading_bot.py`):
 ```sql
-ORDER BY user_id  -- Ascending order
+SELECT ... FROM user_settings WHERE auto_trading = true LIMIT 1
 ```
 
-The query selected users by ascending `user_id`, causing the **lowest ID** to be selected first without checking permissions.
+The query used `LIMIT 1` without checking permissions, selecting user `6429738143` (first in DB order) who lacks `PAPER_AUTO_TRADING` permission.
 
 **Impact**:
 - User `6429738143` was selected (no PAPER_AUTO_TRADING permission)
 - User `7014748854` (Harold/OWNER) was never reached
 - Auto-trading failed silently with permission error
 
-**Fix Applied** (lines 992-1017):
+**Fixes Applied**:
+
+1. **`_load_persistent_state()`** (lines 1459-1489):
+```python
+for row in user_settings_result:
+    user_id = str(row[3])
+    try:
+        self._require_trading_permission(user_id, 'persistent_auto_start')
+        authorized_user = user_id
+        break  # Found authorized user
+    except AuthorizationError:
+        continue  # Skip, try next user
+```
+
+2. **`check_and_restore_auto_trading()`** (lines 989-1017):
 ```python
 for user_row in user_settings_result:
     try:
@@ -49,15 +63,18 @@ for user_row in user_settings_result:
         result = self.start(user_id=user_id)
         if result.get('success'):
             started_users.append(user_id)
-    except AuthorizationError as e:
+    except AuthorizationError:
         skipped_users.append(f"{user_id} (no permission)")
 ```
 
 **New Behavior**:
 1. Iterates over ALL users with `auto_trading=true`
-2. Checks `PAPER_AUTO_TRADING` permission for each
+2. Checks `PAPER_AUTO_TRADING` permission for EACH user
 3. Skips users without permission, continues to next
-4. Logs clearly which users started and which were skipped
+4. Only starts trading for users with valid permissions
+5. Logs clearly which users started and which were skipped
+
+**Verified**: Python simulation confirms Harold (7014748854) is now selected
 
 ---
 
