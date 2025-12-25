@@ -71,7 +71,8 @@ from omnix_config import VERSION_BANNER
 try:
     from omnix_core.config.trading_profiles import (
         get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass,
-        get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration
+        get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration,
+        ModuleStatus, MODULE_STATUS_REGISTRY
     )
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
@@ -82,6 +83,8 @@ except ImportError:
     VolatilityClass = None
     CalibrationTier = None
     PairCalibration = None
+    ModuleStatus = None
+    MODULE_STATUS_REGISTRY = {}
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 try:
@@ -2430,13 +2433,15 @@ class AutoTradingBot:
                 decision['ema_signal'] = ema_signal.to_dict() if hasattr(ema_signal, 'to_dict') else str(ema_signal)
                 ema_direction = ema_signal.direction
                 ema_confidence = ema_signal.confidence
+                ema_trend_strength = getattr(ema_signal, 'trend_strength', 0.0)
                 
                 decision['v52_analysis']['ema_direction'] = ema_direction
                 decision['v52_analysis']['ema_confidence'] = ema_confidence
+                decision['v52_analysis']['ema_trend_strength'] = ema_trend_strength
                 decision['v52_analysis']['ema_rationale'] = ema_signal.rationale if hasattr(ema_signal, 'rationale') else []
                 
                 if ema_direction != "NONE":
-                    decision['decision_trace'].append(f"EMA_SIGNAL: {ema_direction} @ {ema_confidence:.1%}")
+                    decision['decision_trace'].append(f"EMA_SIGNAL: {ema_direction} @ {ema_confidence:.1%} (trend={ema_trend_strength:.2f})")
                     decision['guards_passed'].append('EMA_SIGNAL')
             
             # EARLY RETURN si hay veto de MC o RMS
@@ -3236,6 +3241,91 @@ class AutoTradingBot:
                         decision['amount_usd'] = original_amount * 0.5
                         logger.warning(f"   ⚠️ Error en validación - Reduciendo posición por precaución: ${original_amount:.2f} → ${decision['amount_usd']:.2f}")
                         decision['reason'].append("⚠️ Coherence Engine error - posición reducida por precaución")
+            
+            # ==========================================================================
+            # TELEMETRÍA ESTRUCTURADA PARA RAILWAY (Dec 25, 2025)
+            # Log detallado que explica por qué se genera HOLD/BUY/SELL
+            # ==========================================================================
+            try:
+                v52 = decision.get('v52_analysis', {})
+                veto_chain = decision.get('veto_chain', [])
+                guards_passed = decision.get('guards_passed', [])
+                
+                telemetry_data = {
+                    'symbol': decision.get('symbol', 'UNKNOWN'),
+                    'action': decision.get('action', 'HOLD'),
+                    'should_trade': decision.get('should_trade', False),
+                    'confidence': decision.get('confidence', 0),
+                    'final_score': decision.get('final_score', 0),
+                    'score_thresholds': {
+                        'very_strong': p.score_very_strong if p else 20,
+                        'strong': p.score_strong if p else 10,
+                        'moderate': p.score_moderate if p else 5
+                    },
+                    'vetos': {
+                        'mc_veto': decision.get('mc_veto', False),
+                        'rms_veto': decision.get('rms_veto', False),
+                        'coherence_gate': 'COHERENCE_GATE_CRITICAL' in veto_chain or 'COHERENCE_GATE_LOW' in veto_chain,
+                        'veto_chain': veto_chain
+                    },
+                    'mc_metrics': {
+                        'win_rate': v52.get('mc_win_rate', 0),
+                        'expected_return': v52.get('mc_expected_return', 0),
+                        'var_95': v52.get('mc_var_95', 0)
+                    },
+                    'coherence': {
+                        'pre_score': v52.get('coherence_pre_score', 0),
+                        'level': v52.get('coherence_pre_level', 'UNKNOWN')
+                    },
+                    'ema_signal': {
+                        'direction': v52.get('ema_direction', 'NONE'),
+                        'confidence': v52.get('ema_confidence', 0),
+                        'trend_strength': v52.get('ema_trend_strength', 0)
+                    },
+                    'guards_passed': guards_passed,
+                    'amount_usd': decision.get('amount_usd', 0)
+                }
+                
+                is_hold = decision.get('action') == 'HOLD' or not decision.get('should_trade')
+                log_level = logger.warning if is_hold else logger.info
+                
+                log_level(
+                    f"📊 [DECISION_TELEMETRY] {telemetry_data['symbol']} | "
+                    f"Action={telemetry_data['action']} | "
+                    f"Score={telemetry_data['final_score']}/{telemetry_data['score_thresholds']['strong']} | "
+                    f"Conf={telemetry_data['confidence']:.1f}% | "
+                    f"MC_WR={telemetry_data['mc_metrics']['win_rate']:.1%} | "
+                    f"MC_ER={telemetry_data['mc_metrics']['expected_return']:.4f} | "
+                    f"Coh={telemetry_data['coherence']['pre_score']:.1f}% | "
+                    f"EMA={telemetry_data['ema_signal']['direction']} | "
+                    f"Vetos={len(veto_chain)} | "
+                    f"Guards={len(guards_passed)}"
+                )
+                
+                if veto_chain:
+                    logger.warning(f"   🚫 VETO_CHAIN: {', '.join(veto_chain)}")
+                if guards_passed:
+                    logger.info(f"   ✅ GUARDS_PASSED: {', '.join(guards_passed)}")
+                
+                if MODULE_STATUS_REGISTRY:
+                    modules_used = []
+                    if monte_carlo:
+                        modules_used.append(f"MC_VETO:{MODULE_STATUS_REGISTRY.get('MONTE_CARLO_VETO', ModuleStatus.CORE_ACTIVE).value}")
+                    if decision.get('ema_signal'):
+                        modules_used.append(f"EMA:{MODULE_STATUS_REGISTRY.get('EMA_REGIME_SIGNAL', ModuleStatus.CORE_ACTIVE).value}")
+                    if kelly:
+                        modules_used.append(f"KELLY:{MODULE_STATUS_REGISTRY.get('KELLY_CRITERION', ModuleStatus.CONDITIONAL_ACTIVE).value}")
+                    if black_swan:
+                        modules_used.append(f"BS:{MODULE_STATUS_REGISTRY.get('BLACK_SWAN_DETECTOR', ModuleStatus.OBSERVATIONAL_ONLY).value}")
+                    
+                    telemetry_data['modules_status'] = modules_used
+                    logger.info(f"   📋 MODULES: {' | '.join(modules_used)}")
+                    
+                decision['telemetry'] = telemetry_data
+                
+            except Exception as e:
+                logger.debug(f"Telemetry logging skipped: {e}")
+            # ==========================================================================
             
             return decision
             

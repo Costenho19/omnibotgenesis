@@ -168,6 +168,31 @@ Cada decisión incluye:
 | Dec 25, 2025 | Fix: unhashable dict in multi-user loop | Replit Agent |
 | Dec 25, 2025 | EMA Signal: min_trend_strength 0.30→0.15 (low-vol) | Replit Agent |
 | Dec 25, 2025 | EMA Signal: min_confidence 0.50→0.35 (low-vol) | Replit Agent |
+| Dec 25, 2025 | **FASE 1**: LOW_VOL_MODE flag (min_confidence 0.35→0.30) | Replit Agent |
+| Dec 25, 2025 | **FASE 2**: Kelly Conditional (mc_win_rate >= 52%) | Replit Agent |
+| Dec 25, 2025 | **FASE 3**: ModuleStatus enum + MODULE_STATUS_REGISTRY | Replit Agent |
+| Dec 25, 2025 | Telemetría estructurada en _make_v52_decision | Replit Agent |
+
+---
+
+## 9. Checklist Post-Deploy Railway
+
+Después de deploy, verificar estos logs en Railway:
+
+```
+📊 [DECISION_TELEMETRY] BTC/USD | Action=HOLD | Score=X/12 | Conf=X% | MC_WR=X% | Coh=X%
+🚫 VETO_CHAIN: [lista de vetos activos]
+✅ GUARDS_PASSED: [lista de gates aprobados]
+📋 MODULES: MC_VETO:CORE_ACTIVE | EMA:CORE_ACTIVE | KELLY:CONDITIONAL_ACTIVE
+```
+
+| Log Pattern | Significado |
+|-------------|-------------|
+| `DECISION_TELEMETRY` | Resumen de cada decisión con métricas clave |
+| `VETO_CHAIN` | Vetos que bloquearon el trade |
+| `GUARDS_PASSED` | Gates que aprobaron la señal |
+| `MODULES` | Estado de módulos según MODULE_STATUS_REGISTRY |
+| `KELLY CONDITIONAL` | Kelly sizing activo/inactivo según mc_win_rate |
 
 ---
 
