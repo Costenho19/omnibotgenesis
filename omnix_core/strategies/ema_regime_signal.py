@@ -63,6 +63,11 @@ class EMARegimeSignal:
         self.version = "1.0.0"
         self.status = "ACTIVE"
         
+        # Dec 25, 2025 - Low-volatility market adjustment
+        # Reduced trend_strength threshold (0.30 → 0.15) and min_confidence (0.50 → 0.35)
+        # to allow signal generation in low-liquidity/holiday market regimes.
+        # Risk remains controlled via Monte Carlo VETO and Coherence Gate.
+        # This is a Seasonal Parameter Adjustment - review after market normalizes.
         self.config = {
             "ema_fast": 12,
             "ema_slow": 26,
@@ -70,7 +75,8 @@ class EMARegimeSignal:
             "trend_threshold": 0.001,
             "volatility_low": 0.01,
             "volatility_high": 0.03,
-            "min_confidence": 0.50,
+            "min_confidence": 0.35,  # Dec 25: 0.50 → 0.35 (low-vol adjustment)
+            "min_trend_strength": 0.15,  # Dec 25: 0.30 → 0.15 (low-vol adjustment)
             "default_sl_pct": 0.02,
             "default_tp_pct": 0.04,
         }
@@ -238,7 +244,10 @@ class EMARegimeSignal:
         rationale.append(regime_type)
         confidence_factors.append(regime_conf)
         
-        if trend_dir == "BULLISH" and trend_strength > 0.3:
+        # Dec 25, 2025: Use configurable min_trend_strength (was hardcoded 0.3)
+        min_trend = self.config.get("min_trend_strength", 0.15)
+        
+        if trend_dir == "BULLISH" and trend_strength > min_trend:
             direction = "LONG"
             if regime_type == "BULLISH_REGIME":
                 rationale.append("TREND_REGIME_ALIGNED")
@@ -246,7 +255,7 @@ class EMARegimeSignal:
             elif regime_type == "BEARISH_REGIME":
                 rationale.append("TREND_REGIME_CONFLICT")
                 confidence_factors.append(0.4)
-        elif trend_dir == "BEARISH" and trend_strength > 0.3:
+        elif trend_dir == "BEARISH" and trend_strength > min_trend:
             direction = "SHORT"
             if regime_type == "BEARISH_REGIME":
                 rationale.append("TREND_REGIME_ALIGNED")

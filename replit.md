@@ -103,6 +103,16 @@ Veto/Penalty layer (NO additive scoring):
 **Effect**: Trades with expected return between -0.1% and 0% are now allowed, enabling the system to build a track record for investor presentations.
 **Files**: `omnix_core/bot/auto_trading_bot.py` (lines 792-803, 2350-2358)
 
+### EMA Signal Seasonal Adjustment (Dec 25, 2025)
+**Problem**: EMA Regime Signal was generating NONE direction for all assets due to low market volatility during Christmas holidays.
+**Root Cause**: Hardcoded `trend_strength > 0.3` and `min_confidence >= 0.50` thresholds too strict for low-liquidity regimes.
+**Changes**:
+- `min_trend_strength`: 0.30 → 0.15
+- `min_confidence`: 0.50 → 0.35
+**Risk Control**: Monte Carlo VETO and Coherence Gate remain active as downstream safeguards.
+**Note**: This is a Seasonal Parameter Adjustment - review after market normalizes.
+**Files**: `omnix_core/strategies/ema_regime_signal.py` (lines 66-85, 247-262)
+
 ### Trading Profiles
 The system uses configurable trading profiles (e.g., INSTITUTIONAL, PAPER_AGGRESSIVE, PRODUCTION_STABLE) to adjust parameters, with `PRODUCTION_STABLE V6.5.4d` being the active profile.
 

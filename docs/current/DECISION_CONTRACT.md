@@ -166,6 +166,8 @@ Cada decisión incluye:
 | Dec 25, 2025 | MC Veto threshold: 0% → -0.1% (track record) | Replit Agent |
 | Dec 25, 2025 | Fix EC-A1: Auto-start authorization bug | Replit Agent |
 | Dec 25, 2025 | Fix: unhashable dict in multi-user loop | Replit Agent |
+| Dec 25, 2025 | EMA Signal: min_trend_strength 0.30→0.15 (low-vol) | Replit Agent |
+| Dec 25, 2025 | EMA Signal: min_confidence 0.50→0.35 (low-vol) | Replit Agent |
 
 ---
 
