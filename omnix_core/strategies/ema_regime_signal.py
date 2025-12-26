@@ -21,6 +21,7 @@ CONTRATO DE SALIDA:
 
 Harold Nunes - Diciembre 2025
 V6.5.4d-fix2: Raw slope detection for WEAK_TREND (Dec 26 2025)
+V6.5.4d-fix3: Import LOW_VOL_MODE from trading_profiles.py (Dec 26 2025)
 """
 
 import logging
@@ -31,11 +32,12 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-# Import TRACK_RECORD_MODE flag
+# Import TRACK_RECORD_MODE and LOW_VOL_MODE flags from central config
 try:
-    from omnix_core.config.trading_profiles import TRACK_RECORD_MODE
+    from omnix_core.config.trading_profiles import TRACK_RECORD_MODE, LOW_VOL_MODE
 except ImportError:
     TRACK_RECORD_MODE = False
+    LOW_VOL_MODE = True  # Default to True for safety during low-liquidity periods
 
 @dataclass
 class SignalContract:
@@ -67,15 +69,14 @@ class EMARegimeSignal:
     
     def __init__(self):
         self.name = "EMA_REGIME_SIGNAL"
-        self.version = "1.0.1"
+        self.version = "1.0.2"
         self.status = "ACTIVE"
         
         # ============================================================
         # SEASONAL: LOW_VOL_MODE - Holiday/Low-Liquidity Markets
-        # Dec 25, 2025: Activated for Christmas-January period
-        # TODO: Revert LOW_VOL_MODE when ATR(14) normalizes or post-January
+        # Dec 26, 2025: Now imported from trading_profiles.py for sync
         # ============================================================
-        self.LOW_VOL_MODE = True  # SEASONAL / TEMPORARY
+        self.LOW_VOL_MODE = LOW_VOL_MODE  # Use central config value
         
         # Base configuration
         base_min_confidence = 0.35  # Standard threshold
@@ -100,14 +101,17 @@ class EMARegimeSignal:
         }
         
         logger.info("=" * 70)
-        logger.info("📊 EMA REGIME SIGNAL V1.0.1 INICIALIZADO")
+        logger.info("📊 EMA REGIME SIGNAL V1.0.2 INICIALIZADO")
         logger.info("   🔬 Señal REAL: EMA slope + ATR + HMM regime")
         logger.info("   ✅ STATUS: ACTIVE (reemplaza ARES placeholders)")
+        logger.info(f"   🧪 TRACK_RECORD_MODE: {TRACK_RECORD_MODE}")
+        logger.info(f"   ⚠️  LOW_VOL_MODE: {self.LOW_VOL_MODE}")
         if self.LOW_VOL_MODE:
-            logger.info("   ⚠️  LOW_VOL_MODE: ACTIVE (min_confidence=0.30)")
-            logger.info("   📅 SEASONAL: Christmas-January low-liquidity adjustment")
+            logger.info("   📅 SEASONAL: Christmas-January low-liquidity (min_confidence=0.30)")
         else:
             logger.info("   📈 NORMAL_MODE: min_confidence=0.35")
+        if TRACK_RECORD_MODE and self.LOW_VOL_MODE:
+            logger.info("   ✅ WEAK_TREND fallback ENABLED for low-conviction signals")
         logger.info("=" * 70)
     
     def calculate_ema(self, prices: List[float], period: int) -> float:
