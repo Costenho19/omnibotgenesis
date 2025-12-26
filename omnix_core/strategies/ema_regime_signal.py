@@ -306,23 +306,30 @@ class EMARegimeSignal:
             # Dec 26, 2025: Allows partial scoring without forcing direction
             # ============================================================
             if TRACK_RECORD_MODE and self.LOW_VOL_MODE and direction == "NONE":
-                # Use trend bias from EMA slope to suggest weak direction
-                if trend_dir == "BULLISH":
+                # ============================================================
+                # TRACK_RECORD_MODE: Use raw EMA slope for weak direction
+                # Dec 26, 2025: detect_trend returns NEUTRAL when market flat,
+                # but we can use the raw slope to determine a weak bias
+                # ============================================================
+                raw_slope = self.calculate_ema_slope(prices, self.config["ema_fast"])
+                
+                if trend_dir == "BULLISH" or raw_slope > 0.0001:
                     direction = "LONG"
                     confidence = 0.30  # Fixed low confidence for track record
                     rationale.append("WEAK_TREND_LONG")
                     rationale.append("TRACK_RECORD_MODE_ACTIVE")
-                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND LONG")
-                elif trend_dir == "BEARISH":
+                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND LONG (slope={raw_slope:.6f})")
+                elif trend_dir == "BEARISH" or raw_slope < -0.0001:
                     direction = "SHORT"
                     confidence = 0.30
                     rationale.append("WEAK_TREND_SHORT")
                     rationale.append("TRACK_RECORD_MODE_ACTIVE")
-                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND SHORT")
+                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND SHORT (slope={raw_slope:.6f})")
                 else:
-                    # No trend at all - stay NONE
+                    # Truly flat market (slope within ±0.0001) - stay NONE
                     direction = "NONE"
-                    rationale.append("BELOW_MIN_CONFIDENCE")
+                    rationale.append("FLAT_MARKET_NO_BIAS")
+                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE - FLAT MARKET (slope={raw_slope:.6f}) → HOLD")
             else:
                 direction = "NONE"
                 rationale.append("BELOW_MIN_CONFIDENCE")
