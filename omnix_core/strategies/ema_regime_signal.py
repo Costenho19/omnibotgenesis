@@ -23,6 +23,7 @@ Harold Nunes - Diciembre 2025
 V6.5.4d-fix2: Raw slope detection for WEAK_TREND (Dec 26 2025)
 V6.5.4d-fix3: Import LOW_VOL_MODE from trading_profiles.py (Dec 26 2025)
 V6.5.4d-fix4: Add diagnostic logging for WEAK_TREND condition (Dec 26 2025)
+V6.5.4d-fix5: Add method entry logging to trace generate_signal() calls (Dec 26 2025)
 """
 
 import logging
@@ -70,7 +71,7 @@ class EMARegimeSignal:
     
     def __init__(self):
         self.name = "EMA_REGIME_SIGNAL"
-        self.version = "1.0.3"
+        self.version = "1.0.4"
         self.status = "ACTIVE"
         
         # ============================================================
@@ -102,7 +103,7 @@ class EMARegimeSignal:
         }
         
         logger.info("=" * 70)
-        logger.info("📊 EMA REGIME SIGNAL V1.0.3 INICIALIZADO")
+        logger.info("📊 EMA REGIME SIGNAL V1.0.4 INICIALIZADO")
         logger.info("   🔬 Señal REAL: EMA slope + ATR + HMM regime")
         logger.info("   ✅ STATUS: ACTIVE (reemplaza ARES placeholders)")
         logger.info(f"   🧪 TRACK_RECORD_MODE: {TRACK_RECORD_MODE}")
@@ -240,8 +241,11 @@ class EMARegimeSignal:
         rationale = []
         confidence_factors = []
         
+        # V1.0.4 DEBUG: Log method entry
+        logger.info(f"📊 {symbol} generate_signal() CALLED with {len(prices) if prices else 0} prices")
+        
         if not prices or len(prices) < 30:
-            logger.warning(f"📊 {symbol}: Datos insuficientes ({len(prices) if prices else 0} precios)")
+            logger.warning(f"📊 {symbol}: INSUFFICIENT_DATA early return ({len(prices) if prices else 0} precios < 30 required)")
             return SignalContract(
                 direction="NONE",
                 confidence=0.0,

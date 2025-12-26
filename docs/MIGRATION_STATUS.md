@@ -17,6 +17,14 @@
 
 ## Cambios Recientes
 
+### EMA Regime Signal V1.0.4 Debug Logging (Dec 26, 2025)
+- **TRACK_RECORD_MODE WEAK_TREND debugging** - Added diagnostic logging
+- **V1.0.2**: Fixed hardcoded LOW_VOL_MODE import from trading_profiles.py
+- **V1.0.3**: Added WEAK_TREND_CHECK logging at condition evaluation
+- **V1.0.4**: Added method entry logging to trace generate_signal() calls
+- **Purpose**: Diagnose why WEAK_TREND fallback not executing despite TRACK_RECORD_MODE=True and LOW_VOL_MODE=True
+- **Files modified**: `omnix_core/strategies/ema_regime_signal.py`
+
 ### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
 - **AuthorizationPort + AuthorizationAdapter** implementados y funcionando
 - **17 hardcoded checks reemplazados** con RBAC en 5 archivos:
