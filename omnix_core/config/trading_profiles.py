@@ -77,6 +77,18 @@ class ModuleStatus(Enum):
 
 
 # ============================================================
+# TRACK_RECORD_MODE - Construcción controlada de histórico
+# Dec 26, 2025: Modo temporal para generar track record
+# ============================================================
+# TRACK_RECORD_MODE permite trades de baja convicción con:
+# - Sizing reducido (máx 0.35x)
+# - Score máximo limitado (6/12)
+# - WEAK_TREND en lugar de NONE cuando EMA no tiene dirección clara
+# - Todos los guardrails (RMS, MC Veto, Coherence) ACTIVOS
+# - Auto-off cuando: total_trades >= 100 AND win_rate >= 0.45
+TRACK_RECORD_MODE = True  # TEMPORAL - para construcción de track record
+
+# ============================================================
 # MODULE STATUS REGISTRY - Transparencia institucional
 # ============================================================
 MODULE_STATUS_REGISTRY = {

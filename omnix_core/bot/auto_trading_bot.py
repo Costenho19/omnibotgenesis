@@ -72,7 +72,7 @@ try:
     from omnix_core.config.trading_profiles import (
         get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass,
         get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration,
-        ModuleStatus, MODULE_STATUS_REGISTRY
+        ModuleStatus, MODULE_STATUS_REGISTRY, TRACK_RECORD_MODE
     )
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
@@ -85,6 +85,7 @@ except ImportError:
     PairCalibration = None
     ModuleStatus = None
     MODULE_STATUS_REGISTRY = {}
+    TRACK_RECORD_MODE = False
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 try:
@@ -2926,6 +2927,20 @@ class AutoTradingBot:
             # ==========================================================================
             
             # ==========================================================================
+            # TRACK_RECORD_MODE: Cap score to 6/12 (Dec 26, 2025)
+            # Prevents STRONG_SIGNAL generation, ensuring controlled track record
+            # ==========================================================================
+            if TRACK_RECORD_MODE:
+                original_score_for_cap = score
+                score = max(-6, min(score, 6))  # Cap between -6 and +6
+                if abs(original_score_for_cap) > 6:
+                    decision['decision_trace'].append(f'TRACK_RECORD_CAP: {original_score_for_cap:.1f} → {score:.1f}')
+                    logger.info(f"🧪 TRACK_RECORD_MODE: Score capped {original_score_for_cap:.1f} → {score:.1f}")
+                decision['v52_analysis']['track_record_mode'] = True
+                decision['v52_analysis']['score_before_cap'] = original_score_for_cap
+            # ==========================================================================
+            
+            # ==========================================================================
             # FASE 2.2: SHORT SELLING EN BEARISH REGIME (Dec 23, 2025)
             # ==========================================================================
             bearish_short_opportunity = False
@@ -2958,6 +2973,19 @@ class AutoTradingBot:
             score_very_strong = p.score_very_strong if p else 20
             score_strong = p.score_strong if p else 10
             score_moderate = p.score_moderate if p else 5
+            
+            # TRACK_RECORD_MODE: Reducir umbrales proporcionalmente al score cap (6/12)
+            # Permite trades de baja convicción para construir track record
+            if TRACK_RECORD_MODE and LOW_VOL_MODE:
+                # Score cap es 6, así que ajustamos umbrales:
+                # score_very_strong: 6 (máximo alcanzable)
+                # score_strong: 5 (para permitir trades con score 5-6)
+                # score_moderate: 3 (para permitir trades con score 3-5)
+                score_very_strong = 6
+                score_strong = 5
+                score_moderate = 3
+                decision['decision_trace'].append('TRACK_RECORD_THRESHOLDS_APPLIED')
+                logger.debug(f"🧪 TRACK_RECORD_MODE: Thresholds reduced (VS=6, S=5, M=3)")
             
             # CAES: Extraer confianza del kernel para position sizing adaptativo
             nm_conf_for_caes = None
@@ -3357,8 +3385,11 @@ class AutoTradingBot:
                 is_hold = decision.get('action') == 'HOLD' or not decision.get('should_trade')
                 log_level = logger.warning if is_hold else logger.info
                 
+                mode_label = "TRACK_RECORD" if TRACK_RECORD_MODE else "NORMAL"
+                telemetry_data['mode'] = mode_label
+                
                 log_level(
-                    f"📊 [DECISION_TELEMETRY] {telemetry_data['symbol']} | "
+                    f"📊 [DECISION_TELEMETRY] MODE={mode_label} | {telemetry_data['symbol']} | "
                     f"Action={telemetry_data['action']} | "
                     f"Score={telemetry_data['final_score']}/{telemetry_data['score_thresholds']['strong']} | "
                     f"Conf={telemetry_data['confidence']:.1f}% | "
@@ -3369,6 +3400,34 @@ class AutoTradingBot:
                     f"Vetos={len(veto_chain)} | "
                     f"Guards={len(guards_passed)}"
                 )
+                
+                if TRACK_RECORD_MODE:
+                    logger.info(f"   🧪 TRACK_RECORD_MODE ACTIVE: reduced size (0.35x) & capped score (6/12)")
+                    
+                    # TRACK_RECORD_MODE AUTO-OFF CHECK (Dec 26, 2025)
+                    # Criteria: total_trades >= 100 AND win_rate >= 0.45
+                    try:
+                        total_trades = self.state.get('total_trades', 0)
+                        winning_trades = self.state.get('winning_trades', 0)
+                        win_rate = (winning_trades / total_trades) if total_trades > 0 else 0
+                        
+                        telemetry_data['track_record_progress'] = {
+                            'total_trades': total_trades,
+                            'target_trades': 100,
+                            'win_rate': win_rate,
+                            'target_win_rate': 0.45,
+                            'trades_remaining': max(0, 100 - total_trades)
+                        }
+                        
+                        if total_trades >= 100 and win_rate >= 0.45:
+                            logger.critical(f"🛑 TRACK_RECORD_MODE AUTO-OFF CRITERIA MET: "
+                                          f"{total_trades} trades (>=100) AND {win_rate:.1%} win rate (>=45%)")
+                            logger.warning(f"   ⚠️ RECOMMENDATION: Disable TRACK_RECORD_MODE in trading_profiles.py")
+                            decision['decision_trace'].append('TRACK_RECORD_AUTO_OFF_CRITERIA_MET')
+                        elif total_trades >= 50:
+                            logger.info(f"   📊 TRACK_RECORD PROGRESS: {total_trades}/100 trades, {win_rate:.1%} win rate")
+                    except Exception as tr_err:
+                        logger.debug(f"Track record progress check skipped: {tr_err}")
                 
                 if veto_chain:
                     logger.warning(f"   🚫 VETO_CHAIN: {', '.join(veto_chain)}")
@@ -4504,6 +4563,18 @@ class AutoTradingBot:
         max_size = balance * max_pct
         
         optimal_size = max(min_size, min(base_size, max_size))
+        
+        # ==========================================================================
+        # TRACK_RECORD_MODE: Ultra-conservative sizing (max 0.35x) - Dec 26, 2025
+        # Protects capital while building track record
+        # ==========================================================================
+        if TRACK_RECORD_MODE:
+            base_reference = balance * self.config['max_position_pct']
+            max_track_record_size = base_reference * 0.35
+            if optimal_size > max_track_record_size:
+                logger.info(f"🧪 TRACK_RECORD_MODE: Size capped ${optimal_size:.2f} → ${max_track_record_size:.2f} (0.35x)")
+                optimal_size = max_track_record_size
+        # ==========================================================================
         
         # ========== FASE 2.1: PARTIAL POSITION SIZING ==========
         # Reduce tamaño cuando confidence está en rango intermedio (50-65%)

@@ -145,6 +145,33 @@ Implemented 5-phase correction plan to transition from ALPHA conceptual to ALPHA
 - Minimum 10 days before parameter evaluation
 - Win rate target: ≥ 45%
 
+### TRACK_RECORD_MODE (Dec 26, 2025)
+**Modo temporal para construcción de histórico bajo control de riesgo.**
+
+| Parámetro | Valor | Efecto |
+|-----------|-------|--------|
+| `TRACK_RECORD_MODE` | True | Activa modo de construcción de track record |
+| Score Cap | 6/12 | Nunca genera STRONG_SIGNAL |
+| Size Cap | 0.35x | Máximo 35% del sizing normal |
+| WEAK_TREND | Enabled | Permite scoring parcial cuando EMA=NONE |
+| Thresholds | VS=6, S=5, M=3 | Umbrales reducidos para permitir trades |
+
+**Cuándo se activa**:
+- Flag `TRACK_RECORD_MODE = True` en `trading_profiles.py`
+- Solo cuando `LOW_VOL_MODE = True` (mercados low-vol)
+
+**Cuándo se desactiva** (AUTO-OFF criteria - AND):
+- `total_trades >= 100` **Y** `win_rate >= 45%`
+- Log: `🛑 TRACK_RECORD_MODE AUTO-OFF CRITERIA MET`
+
+**Qué NO hace**:
+- ❌ NO elimina guardrails (RMS, MC Veto, Coherence activos)
+- ❌ NO fuerza direcciones falsas
+- ❌ NO genera STRONG_SIGNAL
+- ❌ NO desactiva protection layers
+
+**Files**: `omnix_core/config/trading_profiles.py`, `omnix_core/strategies/ema_regime_signal.py`, `omnix_core/bot/auto_trading_bot.py`
+
 #### FASE 5: Narrative Separation
 - CORE ENGINE: EMA, MC, RMS, Coherence (decisional)
 - EXPERIMENTAL LAB: Quantum, Black Swan (observational)

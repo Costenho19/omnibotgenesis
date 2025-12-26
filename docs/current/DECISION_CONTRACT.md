@@ -176,10 +176,63 @@ Cada decisión incluye:
 | Dec 25, 2025 | Guardrails: rollback_daily_loss_limit=$5K, rollback_min_win_rate=35% | Replit Agent |
 | Dec 25, 2025 | **FASE 4**: consolidated_trade_metrics() para BTC/XRP | Replit Agent |
 | Dec 25, 2025 | Endpoint /api/paper_tracker para monitoreo FASE 4 | Replit Agent |
+| Dec 26, 2025 | **TRACK_RECORD_MODE**: Score cap 6/12, Size cap 0.35x | Replit Agent |
+| Dec 26, 2025 | **TRACK_RECORD_MODE**: WEAK_TREND generation in low-vol | Replit Agent |
+| Dec 26, 2025 | **TRACK_RECORD_MODE**: Auto-off criteria (100 trades AND 45% WR) | Replit Agent |
+| Dec 26, 2025 | Telemetry: MODE=TRACK_RECORD label in logs | Replit Agent |
 
 ---
 
-## 9. Checklist Post-Deploy Railway
+## 9. TRACK_RECORD_MODE (Dec 26, 2025)
+
+### 9.1 Propósito
+Modo temporal para construcción de track record bajo control de riesgo.
+Permite trades de baja convicción sin comprometer credibilidad ni seguridad.
+
+### 9.2 Comportamiento
+
+| Componente | Efecto |
+|------------|--------|
+| **Score Cap** | max(score, 6) - Nunca genera STRONG_SIGNAL (>12) |
+| **Size Cap** | max(size, base * 0.35) - Máximo 35% del sizing normal |
+| **WEAK_TREND** | Cuando EMA=NONE + LOW_VOL_MODE, genera LONG/SHORT con conf=30% |
+| **Thresholds** | score_very_strong=6, score_strong=5, score_moderate=3 |
+| **Guardrails** | RMS, MC Veto, Coherence Gate **ACTIVOS** (no modificados) |
+
+### 9.3 Auto-OFF Criteria
+
+El modo se recomienda desactivar cuando:
+```
+total_trades >= 100 AND win_rate >= 0.45
+```
+
+Log generado:
+```
+🛑 TRACK_RECORD_MODE AUTO-OFF CRITERIA MET: 100 trades (>=100) AND 45.0% win rate (>=45%)
+⚠️ RECOMMENDATION: Disable TRACK_RECORD_MODE in trading_profiles.py
+```
+
+### 9.4 Telemetry
+
+```
+📊 [DECISION_TELEMETRY] MODE=TRACK_RECORD | BTC/USD | Action=BUY | Score=5/12 | ...
+   🧪 TRACK_RECORD_MODE ACTIVE: reduced size (0.35x) & capped score (6/12)
+   📊 TRACK_RECORD PROGRESS: 50/100 trades, 42.0% win rate
+```
+
+### 9.5 Estados de Decisión
+
+```
+TRACK_RECORD_CAP: X.X → Y.Y   → Score capped por modo track record
+WEAK_TREND_LONG              → EMA generó LONG por TRACK_RECORD_MODE
+WEAK_TREND_SHORT             → EMA generó SHORT por TRACK_RECORD_MODE
+TRACK_RECORD_MODE_ACTIVE     → Modo activo en rationale
+TRACK_RECORD_AUTO_OFF_CRITERIA_MET → Criterios de auto-off alcanzados
+```
+
+---
+
+## 10. Checklist Post-Deploy Railway
 
 Después de deploy, verificar estos logs en Railway:
 

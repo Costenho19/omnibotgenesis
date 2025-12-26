@@ -30,6 +30,12 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+# Import TRACK_RECORD_MODE flag
+try:
+    from omnix_core.config.trading_profiles import TRACK_RECORD_MODE
+except ImportError:
+    TRACK_RECORD_MODE = False
+
 @dataclass
 class SignalContract:
     direction: str
@@ -295,8 +301,31 @@ class EMARegimeSignal:
         confidence = max(0.0, min(1.0, confidence))
         
         if direction == "NONE" or confidence < self.config["min_confidence"]:
-            direction = "NONE"
-            rationale.append("BELOW_MIN_CONFIDENCE")
+            # ============================================================
+            # TRACK_RECORD_MODE: Convert NONE to WEAK_TREND for scoring
+            # Dec 26, 2025: Allows partial scoring without forcing direction
+            # ============================================================
+            if TRACK_RECORD_MODE and self.LOW_VOL_MODE and direction == "NONE":
+                # Use trend bias from EMA slope to suggest weak direction
+                if trend_dir == "BULLISH":
+                    direction = "LONG"
+                    confidence = 0.30  # Fixed low confidence for track record
+                    rationale.append("WEAK_TREND_LONG")
+                    rationale.append("TRACK_RECORD_MODE_ACTIVE")
+                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND LONG")
+                elif trend_dir == "BEARISH":
+                    direction = "SHORT"
+                    confidence = 0.30
+                    rationale.append("WEAK_TREND_SHORT")
+                    rationale.append("TRACK_RECORD_MODE_ACTIVE")
+                    logger.info(f"🧪 {symbol}: TRACK_RECORD_MODE activated - WEAK_TREND SHORT")
+                else:
+                    # No trend at all - stay NONE
+                    direction = "NONE"
+                    rationale.append("BELOW_MIN_CONFIDENCE")
+            else:
+                direction = "NONE"
+                rationale.append("BELOW_MIN_CONFIDENCE")
         
         atr_pct = atr / price if price > 0 else self.config["default_sl_pct"]
         sl_pct = max(atr_pct * 1.5, self.config["default_sl_pct"])
