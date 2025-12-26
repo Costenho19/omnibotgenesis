@@ -77,6 +77,12 @@ class ModuleStatus(Enum):
 
 
 # ============================================================
+# LOW_VOL_MODE - Ajuste para mercados de baja volatilidad
+# Dec 25, 2025: Navidad-Enero suelen tener baja liquidez
+# ============================================================
+LOW_VOL_MODE = True  # TEMPORAL - Revertir cuando ATR(14) normalice o post-Enero
+
+# ============================================================
 # TRACK_RECORD_MODE - Construcción controlada de histórico
 # Dec 26, 2025: Modo temporal para generar track record
 # ============================================================
