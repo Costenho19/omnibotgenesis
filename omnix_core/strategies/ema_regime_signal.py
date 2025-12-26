@@ -20,6 +20,7 @@ CONTRATO DE SALIDA:
 }
 
 Harold Nunes - Diciembre 2025
+V6.5.4d-fix2: Raw slope detection for WEAK_TREND (Dec 26 2025)
 """
 
 import logging
