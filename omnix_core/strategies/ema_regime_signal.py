@@ -22,6 +22,7 @@ CONTRATO DE SALIDA:
 Harold Nunes - Diciembre 2025
 V6.5.4d-fix2: Raw slope detection for WEAK_TREND (Dec 26 2025)
 V6.5.4d-fix3: Import LOW_VOL_MODE from trading_profiles.py (Dec 26 2025)
+V6.5.4d-fix4: Add diagnostic logging for WEAK_TREND condition (Dec 26 2025)
 """
 
 import logging
@@ -69,7 +70,7 @@ class EMARegimeSignal:
     
     def __init__(self):
         self.name = "EMA_REGIME_SIGNAL"
-        self.version = "1.0.2"
+        self.version = "1.0.3"
         self.status = "ACTIVE"
         
         # ============================================================
@@ -101,7 +102,7 @@ class EMARegimeSignal:
         }
         
         logger.info("=" * 70)
-        logger.info("📊 EMA REGIME SIGNAL V1.0.2 INICIALIZADO")
+        logger.info("📊 EMA REGIME SIGNAL V1.0.3 INICIALIZADO")
         logger.info("   🔬 Señal REAL: EMA slope + ATR + HMM regime")
         logger.info("   ✅ STATUS: ACTIVE (reemplaza ARES placeholders)")
         logger.info(f"   🧪 TRACK_RECORD_MODE: {TRACK_RECORD_MODE}")
@@ -310,6 +311,8 @@ class EMARegimeSignal:
             # TRACK_RECORD_MODE: Convert NONE to WEAK_TREND for scoring
             # Dec 26, 2025: Allows partial scoring without forcing direction
             # ============================================================
+            # DEBUG: Log condition values (INFO level for visibility)
+            logger.info(f"🔍 {symbol} WEAK_TREND_CHECK: dir={direction}, TRACK_RECORD={TRACK_RECORD_MODE}, LOW_VOL={self.LOW_VOL_MODE}")
             if TRACK_RECORD_MODE and self.LOW_VOL_MODE and direction == "NONE":
                 # ============================================================
                 # TRACK_RECORD_MODE: Use raw EMA slope for weak direction
