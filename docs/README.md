@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 22 de Diciembre 2025  
+**Actualizado**: 26 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,13 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### V1.0.5 - OHLC Data Fix (Dec 26, 2025)
+- **CRÍTICO**: `generate_signal()` nunca se ejecutaba porque `prices=0`
+- **Root Cause**: `TradingServiceEnterprise` faltaba método `get_ohlc()` delegado
+- **Fix**: Añadido método delegado que reenvía a `self.kraken.get_ohlc()`
+- **Resultado**: EMA Signal ahora puede generar señales reales
+- Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles completos
 
 ### Multi-User Phase 3b COMPLETADA (Dec 22, 2025)
 - **AuthorizationService INTEGRADO** en 5 archivos con RBAC completo

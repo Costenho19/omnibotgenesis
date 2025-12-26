@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 24 de Diciembre 2025  
+**Fecha**: 26 de Diciembre 2025  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 109 Trades Documentados
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,46 @@
 ---
 
 ## Cambios Recientes
+
+### V1.0.5 - OHLC Data Fix (Dec 26, 2025)
+
+**Problema identificado por diagnóstico V1.0.4b:**
+```
+🔍 EMA_CALL_CHECK: BTC/USD | generator=True | prices=0 | allowed=True
+```
+El método `generate_signal()` nunca se ejecutaba porque `prices=0` (lista vacía).
+
+**Root Cause Analysis:**
+| Componente | Estado | Problema |
+|------------|--------|----------|
+| `_get_price_history()` | ❌ | Retornaba `None` |
+| `hasattr(trading_service, 'get_ohlc')` | ❌ False | Método no existía |
+| `TradingServiceEnterprise.get_ohlc()` | ❌ Faltaba | No delegaba a Kraken |
+| `KrakenAPIClient.get_ohlc()` | ✅ | Funcionaba correctamente |
+
+**Solución V1.0.5:**
+```python
+# omnix_services/trading_service/trading_service.py
+def get_ohlc(self, pair: str, interval: int = 60, since: Optional[int] = None) -> List[List]:
+    """Delegate OHLC data retrieval to Kraken client."""
+    return self.kraken.get_ohlc(pair=pair, interval=interval, since=since)
+```
+
+**Resultado esperado:**
+- `prices` ahora contendrá 100+ velas de Kraken
+- `generate_signal()` será llamado
+- EMA Signal producirá señales reales (no `NONE`)
+- WEAK_TREND fallback funcionará en TRACK_RECORD_MODE
+
+**Archivos modificados:**
+- `omnix_services/trading_service/trading_service.py` - Añadido método delegado `get_ohlc()`
+- `docs/MIGRATION_STATUS.md` - Documentación actualizada
+
+**Logs de verificación post-deploy:**
+- Buscar: `🔍 EMA_CALL_CHECK: BTC/USD | generator=True | prices=100 | allowed=True`
+- Buscar: `📊 EMA Signal:` para confirmar señales generadas
+
+---
 
 ### Hierarchical Veto Flow & Coherence Pre-Gate (Dec 24, 2025)
 **Problema identificado por análisis GPT Expert:**
