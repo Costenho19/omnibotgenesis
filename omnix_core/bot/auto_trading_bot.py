@@ -2268,6 +2268,9 @@ class AutoTradingBot:
                     logger.info(f"🛑 [QUARANTINE_BLOCK] EMA signal skipped for quarantined {pair}")
                     # No need to generate signal for quarantined asset
             
+            # V1.0.4 DEBUG: Log EMA signal generation conditions
+            logger.info(f"🔍 EMA_CALL_CHECK: {pair} | generator={self.ema_signal_generator is not None} | prices={len(prices) if prices else 0} | allowed={symbol_allowed_for_ema}")
+            
             if self.ema_signal_generator and prices and symbol_allowed_for_ema:
                 try:
                     ohlc_data = self._get_ohlc_history(pair, days=100)
