@@ -72,7 +72,7 @@ try:
     from omnix_core.config.trading_profiles import (
         get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass,
         get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration,
-        ModuleStatus, MODULE_STATUS_REGISTRY, TRACK_RECORD_MODE
+        ModuleStatus, MODULE_STATUS_REGISTRY, TRACK_RECORD_MODE, LOW_VOL_MODE
     )
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
@@ -86,6 +86,7 @@ except ImportError:
     ModuleStatus = None
     MODULE_STATUS_REGISTRY = {}
     TRACK_RECORD_MODE = False
+    LOW_VOL_MODE = False
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 try:
