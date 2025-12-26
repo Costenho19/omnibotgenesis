@@ -72,6 +72,20 @@ class TradingServiceEnterprise:
         
         logger.info("✅ Trading Service Enterprise initialized successfully")
     
+    def get_ohlc(self, pair: str, interval: int = 60, since: Optional[int] = None) -> List[List]:
+        """
+        Delegate OHLC data retrieval to Kraken client.
+        
+        Args:
+            pair: Trading pair (e.g., 'BTC/USD', 'XBTUSD')
+            interval: Time frame in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
+            since: Return data since given timestamp
+            
+        Returns:
+            List of OHLC data: [time, open, high, low, close, vwap, volume, count]
+        """
+        return self.kraken.get_ohlc(pair=pair, interval=interval, since=since)
+    
     def configure_rms(self, limits_engine=None, circuit_breaker=None, alert_dispatcher=None) -> None:
         """
         Configure Risk Management System integration.

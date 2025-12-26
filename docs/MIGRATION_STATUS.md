@@ -17,14 +17,12 @@
 
 ## Cambios Recientes
 
-### EMA Regime Signal V1.0.4 Debug Logging (Dec 26, 2025)
-- **TRACK_RECORD_MODE WEAK_TREND debugging** - Added diagnostic logging
-- **V1.0.2**: Fixed hardcoded LOW_VOL_MODE import from trading_profiles.py
-- **V1.0.3**: Added WEAK_TREND_CHECK logging at condition evaluation
-- **V1.0.4**: Added method entry logging to trace generate_signal() calls
-- **V1.0.4b**: Added EMA_CALL_CHECK logging in auto_trading_bot.py to verify preconditions
-- **Purpose**: Diagnose why WEAK_TREND fallback not executing despite TRACK_RECORD_MODE=True and LOW_VOL_MODE=True
-- **Files modified**: `omnix_core/strategies/ema_regime_signal.py`, `omnix_core/bot/auto_trading_bot.py`
+### EMA Regime Signal V1.0.5 - OHLC Fix (Dec 26, 2025)
+- **ROOT CAUSE FOUND**: `_get_price_history()` returning `prices=0` because `TradingServiceEnterprise` lacked `get_ohlc()` method
+- **V1.0.5 FIX**: Added delegating `get_ohlc()` method to `TradingServiceEnterprise` that forwards to `self.kraken.get_ohlc()`
+- **Previous debug logging**: V1.0.2-V1.0.4b (retained for verification)
+- **Files modified**: `omnix_services/trading_service/trading_service.py`
+- **Expected outcome**: `prices` should now contain 100+ candles, enabling `generate_signal()` to be called
 
 ### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
 - **AuthorizationPort + AuthorizationAdapter** implementados y funcionando
