@@ -172,6 +172,14 @@ Implemented 5-phase correction plan to transition from ALPHA conceptual to ALPHA
 
 **Files**: `omnix_core/config/trading_profiles.py`, `omnix_core/strategies/ema_regime_signal.py`, `omnix_core/bot/auto_trading_bot.py`
 
+### Import Bug Fix (Dec 26, 2025)
+**Problem**: Railway logs mostraban `MODE=NORMAL` aunque `TRACK_RECORD_MODE = True` estaba configurado.
+**Root Cause**: `LOW_VOL_MODE` no existía en `trading_profiles.py` pero se importaba en `auto_trading_bot.py`, causando `ImportError` silencioso que activaba el fallback `TRACK_RECORD_MODE = False`.
+**Fix**: 
+- Añadido `LOW_VOL_MODE = True` en `trading_profiles.py` (línea 86)
+- El import ahora funciona correctamente y `TRACK_RECORD_MODE = True` se carga desde el módulo
+**Files**: `omnix_core/config/trading_profiles.py`
+
 #### FASE 5: Narrative Separation
 - CORE ENGINE: EMA, MC, RMS, Coherence (decisional)
 - EXPERIMENTAL LAB: Quantum, Black Swan (observational)
