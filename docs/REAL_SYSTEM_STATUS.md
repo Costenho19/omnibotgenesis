@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 26 de Diciembre 2025  
+**Fecha**: 27 de Diciembre 2025  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 109 Trades Documentados
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,40 @@
 ---
 
 ## Cambios Recientes
+
+### Railway-GitHub Synchronization Issue (Dec 27, 2025)
+
+**PROBLEMA CRÍTICO IDENTIFICADO:**
+Railway NO estaba desplegando desde GitHub. En su lugar, creaba "snapshots internos" con commits inexistentes en GitHub (ej: `397297e2`, `7b4b1079`, `30d18b54`).
+
+| Evidencia | Valor |
+|-----------|-------|
+| Commit en GitHub | `852a1e3` (HEAD de main) |
+| Commit en Railway | `397297e2` (snapshot interno) |
+| Modo de deploy | Snapshots, NO GitHub-connected |
+
+**IMPACTO:**
+- ❌ Fixes de código (get_ohlc, EMA_CALL_CHECK) no llegaban a producción
+- ❌ Imposible auditar qué código produjo qué trade
+- ❌ Invalidaba cualquier análisis para inversores
+- ❌ Sistema no reproducible
+
+**PLAN DE REPARACIÓN:**
+1. Documentar variables de entorno actuales de Railway
+2. Desconectar Railway del source actual (Settings → Source → Disconnect)
+3. Reconectar a GitHub `Costenho19/omnibotgenesis` branch `main`
+4. Configurar "Deploy on push" activado, deshabilitar snapshots manuales
+5. Verificar que commit hash en Railway coincide EXACTAMENTE con GitHub HEAD
+6. Verificar logs: `EMA_CALL_CHECK` con `prices=100+`
+
+**ESTADO:** ⏳ PENDIENTE DE EJECUCIÓN POR USUARIO
+
+**POLÍTICA POST-REPARACIÓN:**
+- Railway SOLO debe desplegar desde GitHub
+- Un commit en GitHub = Un deploy en Railway (mismo hash)
+- Cualquier discrepancia de hashes invalida el deploy
+
+---
 
 ### V1.0.5 - OHLC Data Fix (Dec 26, 2025)
 
@@ -492,4 +526,4 @@ main.py
 
 ---
 
-*Última actualización: 22 de Diciembre 2025*
+*Última actualización: 27 de Diciembre 2025*

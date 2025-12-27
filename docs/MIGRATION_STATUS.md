@@ -1,6 +1,6 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 22 de Diciembre 2025  
+**Fecha**: 27 de Diciembre 2025  
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ MULTI-USER FASE 3b COMPLETADA
 
@@ -16,6 +16,28 @@
 ---
 
 ## Cambios Recientes
+
+### Railway-GitHub Sync Policy (Dec 27, 2025)
+
+**PROBLEMA DETECTADO:** Railway operaba con "snapshots internos" desconectados de GitHub, creando commits que no existían en el repositorio (ej: `397297e2`). Esto impedía que los fixes (get_ohlc, EMA_CALL_CHECK) llegaran a producción.
+
+**POLÍTICA OBLIGATORIA POST-REPARACIÓN:**
+
+| Regla | Descripción |
+|-------|-------------|
+| **Source único** | Railway SOLO despliega desde GitHub `main` |
+| **Hash idéntico** | Commit hash en Railway = Commit hash en GitHub |
+| **Deploy on push** | Activado - cada push a main dispara deploy |
+| **Sin snapshots** | Deshabilitar deploys manuales/snapshots |
+| **Auditabilidad** | Todo trade debe ser trazable a un commit específico de GitHub |
+
+**VERIFICACIÓN:**
+- Panel Railway debe mostrar "Source: GitHub" con mismo hash que GitHub HEAD
+- Logs deben mostrar `EMA_CALL_CHECK` con `prices=100+` después de reconexión
+
+**ESTADO:** ⏳ Pendiente ejecución por usuario (Dec 27, 2025)
+
+---
 
 ### EMA Regime Signal V1.0.5 - OHLC Fix (Dec 26, 2025)
 - **ROOT CAUSE FOUND**: `_get_price_history()` returning `prices=0` because `TradingServiceEnterprise` lacked `get_ohlc()` method
@@ -226,4 +248,4 @@ Los feature flags están implementados en `src/omnix/config/settings.py` con def
 
 ---
 
-*Última actualización: 22 de Diciembre 2025*
+*Última actualización: 27 de Diciembre 2025*
