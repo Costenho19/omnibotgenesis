@@ -266,6 +266,82 @@ class DualKalmanTrendFilter:
             'trends': [r['trend'] for r in results],
             'crossovers': [r['crossover'] for r in results]
         }
+    
+    def filter_and_predict(self, prices: List[float]) -> dict:
+        """
+        Filtra serie de precios y genera predicción de tendencia.
+        
+        Este método es el punto de entrada canónico llamado por auto_trading_bot.py
+        para obtener señales de Kalman Filter en el análisis de trading.
+        
+        Args:
+            prices: Lista de precios históricos (últimas N velas)
+        
+        Returns:
+            Dict con:
+                - filtered_price: Precio filtrado actual
+                - predicted_price: Predicción del próximo precio
+                - trend: Dirección de tendencia (BULLISH/BEARISH/NEUTRAL)
+                - trend_strength: Fuerza de la tendencia (0-1)
+                - crossover: Señal de cruce (GOLDEN_CROSS/DEATH_CROSS/NONE)
+                - confidence: Nivel de confianza (0-1)
+                - fast: Valor del filtro rápido
+                - slow: Valor del filtro lento
+        """
+        if not prices or len(prices) < 2:
+            return {
+                'filtered_price': 0,
+                'predicted_price': 0,
+                'trend': 'NEUTRAL',
+                'trend_strength': 0,
+                'crossover': 'NONE',
+                'confidence': 0,
+                'fast': 0,
+                'slow': 0
+            }
+        
+        # Procesar serie completa
+        series_result = self.filter_series(prices)
+        
+        # Obtener valores finales
+        fast_final = series_result['fast_series'][-1] if series_result['fast_series'] else prices[-1]
+        slow_final = series_result['slow_series'][-1] if series_result['slow_series'] else prices[-1]
+        trend_final = series_result['trends'][-1] if series_result['trends'] else 'NEUTRAL'
+        crossover_final = series_result['crossovers'][-1] if series_result['crossovers'] else 'NONE'
+        
+        # Calcular predicción simple (extrapolación lineal del filtro rápido)
+        if len(series_result['fast_series']) >= 2:
+            fast_prev = series_result['fast_series'][-2]
+            momentum = fast_final - fast_prev
+            predicted_price = fast_final + momentum
+        else:
+            predicted_price = fast_final
+        
+        # Calcular fuerza de tendencia (distancia normalizada entre fast y slow)
+        if slow_final != 0:
+            distance_pct = abs(fast_final - slow_final) / slow_final
+            trend_strength = min(distance_pct * 10, 1.0)  # Normalizar a 0-1
+        else:
+            trend_strength = 0
+        
+        # Calcular confianza basada en consistencia de tendencia
+        if len(series_result['trends']) >= 5:
+            recent_trends = series_result['trends'][-5:]
+            trend_consistency = recent_trends.count(trend_final) / 5
+            confidence = trend_consistency * trend_strength
+        else:
+            confidence = trend_strength * 0.5
+        
+        return {
+            'filtered_price': fast_final,
+            'predicted_price': predicted_price,
+            'trend': trend_final,
+            'trend_strength': round(trend_strength, 3),
+            'crossover': crossover_final,
+            'confidence': round(min(confidence, 1.0), 3),
+            'fast': fast_final,
+            'slow': slow_final
+        }
 
 
 # Ejemplo de uso

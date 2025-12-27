@@ -29,7 +29,7 @@ El sistema OMNIX tiene código funcional y bien estructurado, pero sufre de un *
 | **Railway Deployment** | ❌ CRÍTICO | Commits diferentes GH vs Railway | Invalida toda auditoría |
 | **PostgreSQL** | ✅ FUNCIONAL | 42 tablas detectadas | Datos persistentes |
 | **HMM Regime** | ✅ FUNCIONAL | Integrado en scoring | Detección de régimen |
-| **Kalman Filter** | ✅ FUNCIONAL | Integrado en scoring | Filtrado de señales |
+| **Kalman Filter** | ✅ ARREGLADO | Método filter_and_predict() agregado (Dec 27) | Filtrado de señales |
 | **Non-Markovian Kernel** | ✅ FUNCIONAL | Líneas 2215-2257 | Memoria temporal |
 | **Black Swan Detector** | ✅ ARREGLADO | Método analyze() agregado (Dec 27) | Análisis funcional |
 | **Kelly Criterion** | ⚠️ CONDICIONAL | Solo si mc_win_rate >= 52% | Sizing cuando activo |

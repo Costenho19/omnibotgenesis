@@ -88,6 +88,13 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 
 ## Recent Changes (Dec 27, 2025)
 
+### DualKalmanTrendFilter Fix
+- **Problem**: `'DualKalmanTrendFilter' object has no attribute 'filter_and_predict'` error in production logs
+- **Root Cause**: `auto_trading_bot.py` line 2185 calls `.filter_and_predict(prices)` but class only had `update()` and `filter_series()`
+- **Solution**: Added `filter_and_predict()` method to `DualKalmanTrendFilter` in `omnix_services/trading_service/kalman_filter.py`
+- **Files Modified**: `omnix_services/trading_service/kalman_filter.py` (lines 273-347)
+- **Status**: FIXED - method returns filtered_price, predicted_price, trend, trend_strength, crossover, confidence, fast, slow
+
 ### BlackSwanDetector Fix
 - **Problem**: `'BlackSwanDetector' object has no attribute 'analyze'` error in production logs
 - **Root Cause**: `auto_trading_bot.py` calls `.analyze()` but local class only had `detect_extreme_events()`
