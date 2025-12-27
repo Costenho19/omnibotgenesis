@@ -85,3 +85,12 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## Recent Changes (Dec 27, 2025)
+
+### BlackSwanDetector Fix
+- **Problem**: `'BlackSwanDetector' object has no attribute 'analyze'` error in production logs
+- **Root Cause**: `auto_trading_bot.py` calls `.analyze()` but local class only had `detect_extreme_events()`
+- **Solution**: Added canonical `analyze()` method to `BlackSwanDetector` in `omnix_services/trading_service/advanced_features.py`
+- **Files Modified**: `omnix_services/trading_service/advanced_features.py` (lines 254-402)
+- **Status**: FIXED - method now returns full canonical payload (detected, severity, indicators, statistics, risk_metrics, recommendations)
