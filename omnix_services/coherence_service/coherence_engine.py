@@ -16,7 +16,7 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
-def safe_float(value: Union[str, int, float, None], default: float = 0.0, param_name: str = None) -> float:
+def safe_float(value: Union[str, int, float, None], default: float = 0.0, param_name: Optional[str] = None) -> float:
     """
     FIX Dec 28, 2025: Convierte cualquier valor a float de forma segura.
     Previene errores como '>=' not supported between instances of 'str' and 'int'
