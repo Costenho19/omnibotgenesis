@@ -33,6 +33,7 @@ El sistema OMNIX tiene código funcional y bien estructurado, pero sufre de un *
 | **Non-Markovian Kernel** | ✅ FUNCIONAL | Líneas 2215-2257 | Memoria temporal |
 | **Black Swan Detector** | ✅ ARREGLADO | Método analyze() agregado (Dec 27) | Análisis funcional |
 | **Kelly Criterion** | ⚠️ CONDICIONAL | Solo si mc_win_rate >= 52% | Sizing cuando activo |
+| **Type Safety (safe_float)** | ✅ ARREGLADO | safe_float() en 20+ paths (Dec 27-28) | Previene errores str vs int |
 
 ---
 
@@ -92,6 +93,49 @@ El sistema OMNIX tiene código funcional y bien estructurado, pero sufre de un *
 **Impacto**: BAJO - Sizing conservador cuando Kelly desactivado  
 **Evidencia**: ModuleStatus.CONDITIONAL_ACTIVE  
 **Estado**: Correcto para paper trading
+
+---
+
+## 🔧 Fixes Aplicados (Dec 27-28, 2025)
+
+### Fix 1: BlackSwanDetector.analyze()
+- **Problema**: `'BlackSwanDetector' object has no attribute 'analyze'`
+- **Causa**: auto_trading_bot.py línea 2186 llama `.analyze()` pero clase solo tenía `.detect_extreme_events()`
+- **Solución**: Método `analyze()` agregado en `omnix_services/trading_service/advanced_features.py` (líneas 254-402)
+- **Estado**: ✅ CORREGIDO
+
+### Fix 2: DualKalmanTrendFilter.filter_and_predict()
+- **Problema**: `'DualKalmanTrendFilter' object has no attribute 'filter_and_predict'`
+- **Causa**: auto_trading_bot.py línea 2185 llama `.filter_and_predict(prices)` pero clase solo tenía `update()` y `filter_series()`
+- **Solución**: Método `filter_and_predict()` agregado en `omnix_services/trading_service/kalman_filter.py` (líneas 273-347)
+- **Estado**: ✅ CORREGIDO
+
+### Fix 3: Comprehensive Type Safety (safe_float)
+- **Problema**: `'>=' not supported between str and int` causando score=0 y bloqueando trades válidos
+- **Causa**: Valores de config y métricas de señales externas llegan como strings en lugar de floats
+- **Solución**: Función `safe_float()` con logging, aplicada en 20+ paths del flujo de decisión
+- **Cobertura completa**:
+  - Config initialization (líneas 545-555): min_trade_usd, max_position_pct, stop_loss_pct, etc.
+  - Rollback guardrails (líneas 953-955): daily_loss_limit, min_win_rate, trades_window
+  - Monte Carlo metrics AND mc_veto_config thresholds (líneas 2450-2457)
+  - Black Swan crash_prob (línea 2679)
+  - Sentiment sent_score y fear_greed (líneas 2693-2694)
+  - Quantum signal (línea 2716)
+  - Kalman trend_strength (línea 2739)
+  - HMM regime_confidence (línea 2760)
+  - HMM veto threshold (línea 2780)
+  - Coherence Gate pre-score (líneas 2589, 2594-2595)
+  - Kelly scoring (líneas 2835-2836)
+  - Non-Markovian confidence (línea 2861) - con param_name para diagnósticos
+  - mc_win_rate_for_kelly (línea 3058)
+  - Short selling thresholds (líneas 3001, 3004)
+  - Score thresholds (líneas 3022-3024)
+  - Final coherence validation (líneas 3186-3190)
+  - Ramp-up trades/factors (líneas 4548-4555)
+  - Kelly sizing (línea 4593)
+  - HMM position_multiplier (línea 4615)
+  - CAES max_position_pct (línea 4638)
+- **Estado**: ✅ CORREGIDO - Revisado y aprobado por Arquitecto
 
 ---
 
