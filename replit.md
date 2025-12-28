@@ -101,3 +101,19 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 - **Solution**: Added canonical `analyze()` method to `BlackSwanDetector` in `omnix_services/trading_service/advanced_features.py`
 - **Files Modified**: `omnix_services/trading_service/advanced_features.py` (lines 254-402)
 - **Status**: FIXED - method now returns full canonical payload (detected, severity, indicators, statistics, risk_metrics, recommendations)
+
+### Comprehensive Type Safety Fix (Dec 27-28, 2025)
+- **Problem**: `'>=' not supported between str and int` errors causing score=0 and blocking valid trades
+- **Root Cause**: Config values and external signal metrics sometimes arrive as strings instead of floats
+- **Solution**: Added `safe_float()` helper function with logging, applied across 20+ decision flow paths:
+  - Config initialization (min_trade_usd, max_position_pct, stop_loss_pct, etc.)
+  - Rollback guardrails (daily_loss_limit, min_win_rate, trades_window)
+  - Monte Carlo metrics and mc_veto_config thresholds
+  - Black Swan crash_prob, Sentiment scores, Quantum signal
+  - Kalman trend_strength, HMM regime_confidence
+  - Coherence Gate pre-score thresholds
+  - Kelly scoring and sizing
+  - Non-Markovian confidence (with param_name for diagnostics)
+  - Ramp-up trades/factors, HMM position_multiplier, CAES max_position_pct
+- **Files Modified**: `omnix_core/bot/auto_trading_bot.py` (safe_float function + 20+ application sites)
+- **Status**: FIXED - All external numeric signals now normalized before comparison/arithmetic

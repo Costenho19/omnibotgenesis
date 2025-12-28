@@ -59,6 +59,31 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+
+def safe_float(value, default: float = 0.0, param_name: str = None) -> float:
+    """
+    Convierte un valor a float de forma segura.
+    
+    Previene errores de comparación de tipo cuando valores llegan como strings
+    desde JSON, APIs o configuración.
+    
+    Args:
+        value: Valor a convertir (puede ser str, int, float, None)
+        default: Valor por defecto si la conversión falla
+        param_name: Nombre del parámetro para logging (opcional)
+    
+    Returns:
+        float: Valor convertido o default
+    """
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        if param_name:
+            logger.warning(f"⚠️ safe_float fallback: {param_name}={value!r} → default={default}")
+        return default
+
 # ============================================================================
 # ARES CODE REMOVED - Dec 24, 2025
 # ARES V1/V2 scoring code has been completely eliminated from this file.
@@ -506,23 +531,25 @@ class AutoTradingBot:
         else:
             trading_pairs_list = default_pairs
         
+        # FIX Dec 27, 2025: Usar safe_float() para todos los valores numéricos de configuración
+        # Previene errores str vs int cuando valores vienen de JSON o configuración externa
         self.config = {
             'active': False,
             'paper_mode': paper_mode_env,  # TRUE = Simulado con $1M | FALSE = Real en Kraken
             'trading_profile': profile_name,  # Nombre del perfil activo
             'trading_pairs': trading_pairs_list,  # V6.5.4: Pares según perfil activo
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
-            'check_interval_seconds': p.check_interval_seconds if p else 25,
-            'min_trade_usd': p.min_trade_usd if p else 75.0,
-            'max_position_pct': p.max_position_pct if p else 0.12,
-            'stop_loss_pct': p.stop_loss_pct if p else 0.02,
-            'take_profit_pct': p.take_profit_pct if p else 0.03,
-            'max_daily_loss_pct': p.max_daily_loss_pct if p else 0.08,
-            'min_confidence': p.min_confidence if p else 0.14,
+            'check_interval_seconds': int(safe_float(p.check_interval_seconds if p else 25, 25)),
+            'min_trade_usd': safe_float(p.min_trade_usd if p else 75.0, 75.0),
+            'max_position_pct': safe_float(p.max_position_pct if p else 0.12, 0.12),
+            'stop_loss_pct': safe_float(p.stop_loss_pct if p else 0.02, 0.02),
+            'take_profit_pct': safe_float(p.take_profit_pct if p else 0.03, 0.03),
+            'max_daily_loss_pct': safe_float(p.max_daily_loss_pct if p else 0.08, 0.08),
+            'min_confidence': safe_float(p.min_confidence if p else 0.14, 0.14),
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
             'use_multi_crypto': True,  # V6.4: Activar escaneo multi-crypto
-            'trades_per_day_target': p.trades_per_day_target if p else 25,
+            'trades_per_day_target': int(safe_float(p.trades_per_day_target if p else 25, 25)),
         }
         
         # Estado del bot - V6.4: Cargado de la base de datos para persistencia
@@ -919,9 +946,10 @@ class AutoTradingBot:
             dict: {should_rollback: bool, reason: str, metrics: dict}
         """
         cfg = getattr(self, 'mc_veto_config', {})
-        daily_loss_limit = cfg.get('rollback_daily_loss_limit', 5000.0)
-        min_win_rate = cfg.get('rollback_min_win_rate', 0.35)
-        trades_window = cfg.get('rollback_trades_window', 20)
+        # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+        daily_loss_limit = safe_float(cfg.get('rollback_daily_loss_limit', 5000.0), 5000.0)
+        min_win_rate = safe_float(cfg.get('rollback_min_win_rate', 0.35), 0.35)
+        trades_window = int(safe_float(cfg.get('rollback_trades_window', 20), 20))
         
         result = {
             'should_rollback': False,
@@ -2415,31 +2443,37 @@ class AutoTradingBot:
             
             if monte_carlo and hasattr(self, 'mc_veto_config'):
                 mc_cfg = self.mc_veto_config
-                expected_return = monte_carlo.get('expected_return', 0)
-                var_95 = monte_carlo.get('var_95', 0)
-                win_rate = monte_carlo.get('win_rate', 0.5)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                expected_return = safe_float(monte_carlo.get('expected_return', 0), 0)
+                var_95 = safe_float(monte_carlo.get('var_95', 0), 0)
+                win_rate = safe_float(monte_carlo.get('win_rate', 0.5), 0.5)
+                # FIX Dec 27, 2025: Normalizar thresholds de mc_cfg también
+                mc_min_expected = safe_float(mc_cfg.get('min_expected_return', -0.001), -0.001)
+                mc_max_var = safe_float(mc_cfg.get('max_var_95', -0.03), -0.03)
+                mc_reduce_wr = safe_float(mc_cfg.get('reduce_size_win_rate', 0.45), 0.45)
+                mc_size_factor = safe_float(mc_cfg.get('size_reduction_factor', 0.5), 0.5)
                 
                 decision['v52_analysis']['mc_expected_return'] = expected_return
                 decision['v52_analysis']['mc_var_95'] = var_95
                 decision['v52_analysis']['mc_win_rate'] = win_rate
                 
                 # VETO 1: Expected return below threshold (Dec 25: relaxed from 0% to -0.1%)
-                if expected_return < mc_cfg['min_expected_return']:
+                if expected_return < mc_min_expected:
                     mc_veto_applied = True
                     decision['veto_chain'].append('MC_EXPECTED_RETURN_NEGATIVE')
-                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_cfg['min_expected_return']:.2%}")
-                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_cfg['min_expected_return']:.2%} → TRADE BLOCKED")
+                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%}")
+                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → TRADE BLOCKED")
                 
                 # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
-                if var_95 < mc_cfg['max_var_95']:  # var_95 es negativo
+                if var_95 < mc_max_var:  # var_95 es negativo
                     mc_veto_applied = True
                     decision['veto_chain'].append('MC_VAR_TOO_HIGH')
-                    decision['decision_trace'].append(f"MC_VETO: VaR95 {var_95:.2%} worse than {mc_cfg['max_var_95']:.2%}")
-                    logger.info(f"🚫 MC VETO: VaR95 {var_95:.2%} > limit {mc_cfg['max_var_95']:.2%} → TRADE BLOCKED")
+                    decision['decision_trace'].append(f"MC_VETO: VaR95 {var_95:.2%} worse than {mc_max_var:.2%}")
+                    logger.info(f"🚫 MC VETO: VaR95 {var_95:.2%} > limit {mc_max_var:.2%} → TRADE BLOCKED")
                 
                 # SIZE REDUCTION: Win rate bajo pero no veto
-                if not mc_veto_applied and win_rate < mc_cfg['reduce_size_win_rate']:
-                    raw_factor = mc_cfg['size_reduction_factor']
+                if not mc_veto_applied and win_rate < mc_reduce_wr:
+                    raw_factor = mc_size_factor
                     # DEFENSIVE CLAMP: Ensure factor is in valid range [0.0, 1.0]
                     position_size_factor = max(0.0, min(raw_factor, 1.0))
                     # Log if clamping occurred
@@ -2447,7 +2481,7 @@ class AutoTradingBot:
                         decision['decision_trace'].append(f"MC_SIZE_FACTOR_CLAMPED: raw {raw_factor:.2f} → clamped {position_size_factor:.2f}")
                         logger.warning(f"🛡️ MC factor clamped: raw {raw_factor:.2f} → {position_size_factor:.2f}")
                     decision['decision_trace'].append(f"MC_SIZE_REDUCE: Win rate {win_rate:.1%} → size {position_size_factor:.0%}")
-                    logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_cfg['reduce_size_win_rate']:.0%} → position {position_size_factor:.0%}")
+                    logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_reduce_wr:.0%} → position {position_size_factor:.0%}")
                 
                 if mc_veto_applied:
                     decision['mc_veto'] = True
@@ -2551,12 +2585,14 @@ class AutoTradingBot:
                     
                     # Evaluar coherencia ANTES del scoring
                     coherence_report = self.coherence_engine.analyze_coherence(strategy_signals)
-                    coherence_pre_score = coherence_report.coherence_score
+                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                    coherence_pre_score = safe_float(coherence_report.coherence_score, 0.0)
                     
                     # Obtener umbrales del perfil
                     p = self.trading_profile
-                    veto_critical = p.coherence_veto_critical if p else 30.0
-                    veto_normal = p.coherence_veto_normal if p else 45.0
+                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                    veto_critical = safe_float(p.coherence_veto_critical if p else 30.0, 30.0)
+                    veto_normal = safe_float(p.coherence_veto_normal if p else 45.0, 45.0)
                     
                     decision['v52_analysis']['coherence_pre_score'] = coherence_pre_score
                     decision['v52_analysis']['coherence_pre_level'] = coherence_report.coherence_level.value
@@ -2626,7 +2662,8 @@ class AutoTradingBot:
             
             # 1. Monte Carlo (VETO/PENALTY ONLY - no suma a max_score)
             if monte_carlo:
-                win_rate = monte_carlo.get('win_rate', 0.5)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                win_rate = safe_float(monte_carlo.get('win_rate', 0.5), 0.5)
                 win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate
                 
                 if win_rate_pct < 40:
@@ -2640,7 +2677,8 @@ class AutoTradingBot:
             # 2. Black Swan (VETO/PENALTY ONLY - no suma a max_score)
             if black_swan:
                 risk_level = black_swan.get('risk_level', 'MEDIUM')
-                crash_prob = black_swan.get('crash_probability', 50)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                crash_prob = safe_float(black_swan.get('crash_probability', 50), 50)
                 
                 if risk_level == 'HIGH' or crash_prob > 30:
                     bs_penalty = 8 if is_paper_mode else 25
@@ -2653,8 +2691,9 @@ class AutoTradingBot:
             # 3. Sentiment (VETO/PENALTY ONLY - no suma a max_score)
             # Fear & Greed Contrarian mantiene pequeño boost como excepción táctica
             if sentiment:
-                sent_score = sentiment.get('overall_score', 50)
-                fear_greed = sentiment.get('fear_greed_index', sent_score)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                sent_score = safe_float(sentiment.get('overall_score', 50), 50)
+                fear_greed = safe_float(sentiment.get('fear_greed_index', sent_score), sent_score)
                 
                 if sent_score < 25:
                     sent_penalty = 5 if is_paper_mode else 15
@@ -2677,7 +2716,8 @@ class AutoTradingBot:
             
             # 4. Quantum Momentum (VETO/PENALTY ONLY - no suma a max_score)
             if quantum:
-                signal = quantum.get('signal', 0)  # -10 a +10
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                signal = safe_float(quantum.get('signal', 0), 0)  # -10 a +10
                 confidence_level = quantum.get('confidence', 'LOW')
                 
                 if confidence_level in ['HIGH', 'VERY_HIGH']:
@@ -2700,7 +2740,8 @@ class AutoTradingBot:
                 adjusted_weight = kalman_base_weight * kalman_weight
                 max_score += adjusted_weight
                 trend = kalman.get('trend', 'NEUTRAL')
-                strength = kalman.get('trend_strength', 0)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                strength = safe_float(kalman.get('trend_strength', 0), 0)
                 
                 if trend == 'BULLISH' and strength > 0.6:
                     score += adjusted_weight
@@ -2720,7 +2761,8 @@ class AutoTradingBot:
                 max_score += 25
                 regime = hmm_regime.get('regime', 'UNKNOWN')
                 params = hmm_regime.get('recommended_params', {})
-                regime_confidence = hmm_regime.get('confidence', 0.5)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                regime_confidence = safe_float(hmm_regime.get('confidence', 0.5), 0.5)
                 
                 # V6.5.4d: HMM QUALITY FILTER - Boost para trades alineados con régimen
                 # Peso aumentado de 15 a 25 (GPT Expert Dec 24, 2025)
@@ -2739,7 +2781,8 @@ class AutoTradingBot:
                     # HMM VETO muy reducido en paper mode para generar trades
                     p = self.trading_profile  # Shorthand
                     hmm_veto_enabled = p.hmm_veto_enabled if p else True
-                    hmm_veto_threshold = p.hmm_veto_confidence_threshold if p else 0.85
+                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                    hmm_veto_threshold = safe_float(p.hmm_veto_confidence_threshold if p else 0.85, 0.85)
                     
                     if hmm_veto_enabled and regime_confidence > hmm_veto_threshold:
                         veto_penalty = 3 if is_paper_mode else 15  # -3 paper, -15 real
@@ -2788,8 +2831,9 @@ class AutoTradingBot:
             # 7. Kelly Criterion (peso: 10 puntos - para sizing, no señal)
             if kelly:
                 max_score += 10
-                optimal_size = kelly.get('optimal_fraction', 0)
-                recommended = kelly.get('recommended_position_usd', 0)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                optimal_size = safe_float(kelly.get('optimal_fraction', 0), 0)
+                recommended = safe_float(kelly.get('recommended_position_usd', 0), 0)
                 
                 if optimal_size > 0.05:  # Kelly sugiere posición >5%
                     score += 10
@@ -2810,7 +2854,8 @@ class AutoTradingBot:
             if non_markovian:
                 max_score += 15
                 nm_signal = non_markovian.get('signal', 'HOLD')
-                nm_confidence = non_markovian.get('confidence', 0)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                nm_confidence = safe_float(non_markovian.get('confidence', 0), 0, param_name='non_markovian_confidence')
                 nm_metrics = non_markovian.get('metrics', {})
                 
                 if nm_signal == 'BUY' and nm_confidence > 60:
@@ -2953,10 +2998,11 @@ class AutoTradingBot:
             p = self.trading_profile  # Shorthand
             if p and getattr(p, 'short_selling_enabled', False) and hmm_regime:
                 short_symbols = getattr(p, 'short_selling_symbols', [])
-                min_bearish_conf = getattr(p, 'short_selling_min_bearish_confidence', 0.70)
+                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                min_bearish_conf = safe_float(getattr(p, 'short_selling_min_bearish_confidence', 0.70), 0.70)
                 
                 hmm_detected = hmm_regime.get('regime', 'UNKNOWN')
-                hmm_confidence = hmm_regime.get('confidence', 0)
+                hmm_confidence = safe_float(hmm_regime.get('confidence', 0), 0)
                 
                 # Normalizar símbolo para comparación
                 symbol_normalized = symbol.replace('/', '').upper()
@@ -2974,9 +3020,10 @@ class AutoTradingBot:
             # Objetivo: trades/día configurables con win rate > 55%
             
             # Obtener score thresholds del perfil o usar defaults (INSTITUTIONAL)
-            score_very_strong = p.score_very_strong if p else 20
-            score_strong = p.score_strong if p else 10
-            score_moderate = p.score_moderate if p else 5
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            score_very_strong = safe_float(p.score_very_strong if p else 20, 20)
+            score_strong = safe_float(p.score_strong if p else 10, 10)
+            score_moderate = safe_float(p.score_moderate if p else 5, 5)
             
             # TRACK_RECORD_MODE: Reducir umbrales proporcionalmente al score cap (6/12)
             # Permite trades de baja convicción para construir track record
@@ -3002,7 +3049,8 @@ class AutoTradingBot:
             decision_conf_normalized = confidence / 100.0
             
             # FASE 2.2: Extract MC win_rate for Kelly conditional sizing
-            mc_win_rate_for_kelly = monte_carlo.get('win_rate', 0.0) if monte_carlo else None
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            mc_win_rate_for_kelly = safe_float(monte_carlo.get('win_rate', 0.0), 0.0) if monte_carlo else None
             
             if confidence >= (self.config['min_confidence'] * 100):
                 # Umbrales escalonados configurables por perfil + CAES
@@ -3137,10 +3185,14 @@ class AutoTradingBot:
                     p = self.trading_profile  # Shorthand para perfil activo
                     
                     # Obtener umbrales del perfil o usar defaults (INSTITUTIONAL)
-                    veto_critical = p.coherence_veto_critical if p else 30.0
-                    veto_normal = p.coherence_veto_normal if p else 45.0
-                    coherence_warning = p.coherence_warning if p else 60.0
-                    coherence_good = p.coherence_good if p else 80.0
+                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                    veto_critical = safe_float(p.coherence_veto_critical if p else 30.0, 30.0)
+                    veto_normal = safe_float(p.coherence_veto_normal if p else 45.0, 45.0)
+                    coherence_warning = safe_float(p.coherence_warning if p else 60.0, 60.0)
+                    coherence_good = safe_float(p.coherence_good if p else 80.0, 80.0)
+                    
+                    # FIX Dec 27, 2025: Asegurar que coherence_score sea float
+                    coherence_score_value = safe_float(getattr(coherence_report, 'coherence_score', 0), 0.0)
                     
                     profile_name = p.name if p else "HARDCODED"
                     logger.debug(f"📊 Profile {profile_name}: veto_critical={veto_critical}%, veto_normal={veto_normal}%")
@@ -3195,31 +3247,32 @@ class AutoTradingBot:
                     # Esto genera un track record REPLICABLE en trading real.
                     
                     # NIVEL 1: VETO CRÍTICO - Coherencia muy baja (SIEMPRE bloquea)
-                    if coherence_report.coherence_score < veto_critical:
-                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO: Score={coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                    # FIX Dec 27, 2025: Usar coherence_score_value (safe_float) para comparaciones
+                    if coherence_score_value < veto_critical:
+                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO: Score={coherence_score_value:.1f}% < {veto_critical}%")
                         # V6.5.4: Log institutional veto
                         if institutional_logger and decision.get('decision_id'):
                             institutional_logger.log_veto_coherence(
                                 symbol=decision.get('symbol', 'UNKNOWN'),
                                 decision_id=decision.get('decision_id'),
-                                score=coherence_report.coherence_score,
+                                score=coherence_score_value,
                                 threshold=veto_critical,
                                 direction=decision.get('action')
                             )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_critical}%")
+                        decision['reason'].append(f"🚨 VETO CRÍTICO: Coherencia {coherence_score_value:.1f}% < {veto_critical}%")
                         decision['veto_chain'].append('COHERENCE_CRITICAL')
                     
                     # NIVEL 1B: CRITICAL level también bloquea (sin bypass)
                     elif coherence_report.coherence_level.value == 'CRITICAL':
-                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_report.coherence_score:.1f}% - Nivel CRITICAL")
+                        logger.error(f"🚨 {VERSION_BANNER} COHERENCE VETO CRÍTICO (NIVEL): Score={coherence_score_value:.1f}% - Nivel CRITICAL")
                         # V6.5.4: Log institutional veto
                         if institutional_logger and decision.get('decision_id'):
                             institutional_logger.log_veto_coherence(
                                 symbol=decision.get('symbol', 'UNKNOWN'),
                                 decision_id=decision.get('decision_id'),
-                                score=coherence_report.coherence_score,
+                                score=coherence_score_value,
                                 threshold=veto_critical,
                                 direction=decision.get('action')
                             )
@@ -3229,20 +3282,20 @@ class AutoTradingBot:
                         decision['veto_chain'].append('COHERENCE_LEVEL_CRITICAL')
                     
                     # NIVEL 2: VETO POR BAJA COHERENCIA - Configurable por perfil (SIEMPRE bloquea)
-                    elif coherence_report.coherence_score < veto_normal:
-                        logger.warning(f"🛑 {VERSION_BANNER} COHERENCE VETO: Score={coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                    elif coherence_score_value < veto_normal:
+                        logger.warning(f"🛑 {VERSION_BANNER} COHERENCE VETO: Score={coherence_score_value:.1f}% < {veto_normal}%")
                         # V6.5.4: Log institutional veto
                         if institutional_logger and decision.get('decision_id'):
                             institutional_logger.log_veto_coherence(
                                 symbol=decision.get('symbol', 'UNKNOWN'),
                                 decision_id=decision.get('decision_id'),
-                                score=coherence_report.coherence_score,
+                                score=coherence_score_value,
                                 threshold=veto_normal,
                                 direction=decision.get('action')
                             )
                         decision['should_trade'] = False
                         decision['action'] = 'HOLD'
-                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_report.coherence_score:.1f}% < {veto_normal}%")
+                        decision['reason'].append(f"🛑 VETO: Coherencia {coherence_score_value:.1f}% < {veto_normal}%")
                         decision['veto_chain'].append('COHERENCE')
                     
                     # NIVEL 3: HOLD recomendado - solo señales VERY_STRONG pueden pasar
@@ -3261,7 +3314,8 @@ class AutoTradingBot:
                     # ========== FIN FIX INSTITUCIONAL =========
                     
                     # NIVEL 4: REDUCCIÓN MODERADA - Coherencia entre veto_normal y warning
-                    elif coherence_report.coherence_score < coherence_warning:
+                    # FIX Dec 27, 2025: Usar coherence_score_value (safe_float) para comparaciones
+                    elif coherence_score_value < coherence_warning:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
                             decision['amount_usd'] *= 0.60
@@ -3269,7 +3323,7 @@ class AutoTradingBot:
                             decision['reason'].append(f"📊 Posición reducida 40% por coherencia moderada")
                     
                     # NIVEL 5: REDUCCIÓN LEVE - Coherencia entre warning y good
-                    elif coherence_report.coherence_score < coherence_good:
+                    elif coherence_score_value < coherence_good:
                         if 'amount_usd' in decision:
                             original_amount = decision['amount_usd']
                             decision['amount_usd'] *= 0.85
@@ -3277,7 +3331,7 @@ class AutoTradingBot:
                     
                     # NIVEL 6: APROBACIÓN COMPLETA - Coherencia >= good
                     else:
-                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_report.coherence_score:.1f}% >= {coherence_good}%")
+                        logger.info(f"✅ COHERENCE ENGINE APROBADO - Score={coherence_score_value:.1f}% >= {coherence_good}%")
                         decision['reason'].append(f"✅ Coherencia excelente - Full position")
                     
                     # Log de contradicciones si existen (siempre, para transparencia)
@@ -4487,14 +4541,15 @@ class AutoTradingBot:
         win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 50
         
         p = self.trading_profile
-        phase1_trades = p.ramp_up_phase1_trades if p else 5
-        phase2_trades = p.ramp_up_phase2_trades if p else 10
-        phase3_trades = p.ramp_up_phase3_trades if p else 20
-        phase4_trades = p.ramp_up_phase4_trades if p else 50
-        phase1_factor = p.ramp_up_phase1_factor if p else 0.30
-        phase2_factor = p.ramp_up_phase2_factor if p else 0.50
-        phase3_factor = p.ramp_up_phase3_factor if p else 0.70
-        phase4_factor = p.ramp_up_phase4_factor if p else 0.85
+        # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+        phase1_trades = int(safe_float(p.ramp_up_phase1_trades if p else 5, 5))
+        phase2_trades = int(safe_float(p.ramp_up_phase2_trades if p else 10, 10))
+        phase3_trades = int(safe_float(p.ramp_up_phase3_trades if p else 20, 20))
+        phase4_trades = int(safe_float(p.ramp_up_phase4_trades if p else 50, 50))
+        phase1_factor = safe_float(p.ramp_up_phase1_factor if p else 0.30, 0.30)
+        phase2_factor = safe_float(p.ramp_up_phase2_factor if p else 0.50, 0.50)
+        phase3_factor = safe_float(p.ramp_up_phase3_factor if p else 0.70, 0.70)
+        phase4_factor = safe_float(p.ramp_up_phase4_factor if p else 0.85, 0.85)
         
         if total_trades < phase1_trades:
             ramp_up_factor = phase1_factor
@@ -4527,7 +4582,8 @@ class AutoTradingBot:
         # Sin edge demostrado: posición conservadora (0.5x base)
         kelly_applied = False
         if kelly and 'recommended_position_usd' in kelly:
-            kelly_size = kelly['recommended_position_usd']
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            kelly_size = safe_float(kelly['recommended_position_usd'], 0)
             
             # Dec 25, 2025: Kelly CONDITIONAL on MC win_rate
             if mc_win_rate is not None and mc_win_rate >= 0.52:
@@ -4548,7 +4604,8 @@ class AutoTradingBot:
         # Ajuste por régimen de mercado (HMM)
         if hmm_regime and 'recommended_params' in hmm_regime:
             params = hmm_regime['recommended_params']
-            position_multiplier = params.get('position_size_multiplier', 1.0)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            position_multiplier = safe_float(params.get('position_size_multiplier', 1.0), 1.0)
             base_size *= position_multiplier
         
         # V6.4: Protección contra drawdown
@@ -4563,7 +4620,9 @@ class AutoTradingBot:
         min_size = self.config['min_trade_usd']
         max_pct = 0.15
         if caes_result:
-            max_pct = min(0.15, caes_result.max_position_pct / 100)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            caes_max_pct = safe_float(caes_result.max_position_pct, 15.0)
+            max_pct = min(0.15, caes_max_pct / 100)
         max_size = balance * max_pct
         
         optimal_size = max(min_size, min(base_size, max_size))
