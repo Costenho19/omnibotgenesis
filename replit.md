@@ -125,3 +125,18 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 - **Files Modified**: `omnix_services/ai_service/conversational_brain.py` (safe_float + 11 application sites)
 - **Coverage**: generate_trade_reasoning(), _generate_decision_graph(), generate_post_trade_evaluation()
 - **Status**: FIXED - All signal values normalized before abs() and comparisons
+
+### Coherence Engine Type Safety Fix (Dec 28, 2025)
+- **Problem**: `'>=' not supported between instances of 'str' and 'int'` error in Coherence Engine V5.4
+- **Root Cause**: win_rate and confidence values arrive as strings from external data
+- **Solution**: Added `safe_float()` function to `omnix_services/coherence_service/coherence_engine.py`
+- **Files Modified**: `omnix_services/coherence_service/coherence_engine.py` (safe_float + 2 application sites)
+- **Coverage**: monte_carlo win_rate, validate_trade_coherence confidence
+- **Status**: FIXED - All external numeric inputs normalized before comparison
+
+### User Settings Schema Fix (Dec 28, 2025)
+- **Problem**: `column "total_trades" of relation "user_settings" does not exist`
+- **Root Cause**: Missing columns in database schema
+- **Solution**: ALTER TABLE to add missing columns
+- **Columns Added**: `total_trades INTEGER DEFAULT 0`, `winning_trades INTEGER DEFAULT 0`
+- **Status**: FIXED - Applied to development database

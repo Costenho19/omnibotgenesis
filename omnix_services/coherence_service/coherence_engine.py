@@ -8,12 +8,39 @@ Desarrollado por Harold Nunes - Noviembre 2025
 """
 
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+def safe_float(value: Union[str, int, float, None], default: float = 0.0, param_name: str = None) -> float:
+    """
+    FIX Dec 28, 2025: Convierte cualquier valor a float de forma segura.
+    Previene errores como '>=' not supported between instances of 'str' and 'int'
+    
+    Args:
+        value: Valor a convertir (puede ser str, int, float, None)
+        default: Valor por defecto si la conversión falla
+        param_name: Nombre del parámetro para logging (opcional)
+        
+    Returns:
+        float: Valor convertido o default
+    """
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            if param_name:
+                logger.warning(f"safe_float fallback: '{value}' -> {default} for {param_name}")
+            return default
+    return default
 
 
 class Signal(Enum):
@@ -436,6 +463,9 @@ class CoherenceEngine:
         """
         analysis_data = analysis_data or {}
         
+        # FIX Dec 28, 2025: Normalizar confidence a float para prevenir errores str vs int
+        confidence = safe_float(confidence, 0.0, 'validate_trade_confidence')
+        
         # FIX: Si no hay señales formales, usar fallback basado en la acción
         if not signals:
             logger.warning(f"⚠️ Sin señales formales - usando fallback para acción {action}")
@@ -496,7 +526,8 @@ class CoherenceEngine:
         # En paper mode, no bloquear por Monte Carlo bajo - usar throttle
         monte_carlo_data = analysis_data.get('monte_carlo', {})
         if monte_carlo_data:
-            win_rate = monte_carlo_data.get('win_rate', 0)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            win_rate = safe_float(monte_carlo_data.get('win_rate', 0), 0, 'monte_carlo_win_rate')
             if win_rate < 0.50:
                 if not paper_mode:
                     block_reasons.append(

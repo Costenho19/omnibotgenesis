@@ -158,6 +158,23 @@ El sistema OMNIX tiene código funcional y bien estructurado, pero sufre de un *
     - profit_loss (línea 479)
 - **Estado**: ✅ CORREGIDO - Revisado y aprobado por Arquitecto
 
+### Fix 5: Coherence Engine Type Safety (Dec 28, 2025)
+- **Problema**: `'>=' not supported between instances of 'str' and 'int'` en Coherence Engine V5.4
+- **Causa**: Valores de `win_rate` y `confidence` llegan como strings desde datos externos
+- **Solución**: Función `safe_float()` agregada a `omnix_services/coherence_service/coherence_engine.py`
+- **Cobertura**:
+  - monte_carlo_data.get('win_rate') (línea 530)
+  - confidence en validate_trade_coherence() (línea 470)
+- **Estado**: ✅ CORREGIDO - Revisado y aprobado por Arquitecto
+
+### Fix 6: User Settings Schema (Dec 28, 2025)
+- **Problema**: `column "total_trades" of relation "user_settings" does not exist`
+- **Causa**: Columnas faltantes en esquema de base de datos
+- **Solución**: ALTER TABLE para agregar columnas faltantes:
+  - `total_trades INTEGER DEFAULT 0`
+  - `winning_trades INTEGER DEFAULT 0`
+- **Estado**: ✅ CORREGIDO - Aplicado en entorno desarrollo
+
 ---
 
 ## 🔍 Análisis Detallado por Capa
