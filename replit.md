@@ -117,3 +117,11 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
   - Ramp-up trades/factors, HMM position_multiplier, CAES max_position_pct
 - **Files Modified**: `omnix_core/bot/auto_trading_bot.py` (safe_float function + 20+ application sites)
 - **Status**: FIXED - All external numeric signals now normalized before comparison/arithmetic
+
+### Conversational Brain Type Safety Fix (Dec 28, 2025)
+- **Problem**: `bad operand type for abs(): 'str'` error in trade reasoning generation
+- **Root Cause**: Signal values (quantum momentum, kalman, monte carlo, kelly) arrive as strings
+- **Solution**: Added `safe_float()` function to `omnix_services/ai_service/conversational_brain.py`
+- **Files Modified**: `omnix_services/ai_service/conversational_brain.py` (safe_float + 11 application sites)
+- **Coverage**: generate_trade_reasoning(), _generate_decision_graph(), generate_post_trade_evaluation()
+- **Status**: FIXED - All signal values normalized before abs() and comparisons

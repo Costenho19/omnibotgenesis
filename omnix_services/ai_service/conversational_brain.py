@@ -19,6 +19,28 @@ from typing import Dict, Optional, List
 logger = logging.getLogger(__name__)
 
 
+def safe_float(value, default: float = 0.0, param_name: str = None) -> float:
+    """
+    FIX Dec 27, 2025: Safely convert any value to float.
+    Prevents 'bad operand type for abs(): str' errors when values arrive as strings.
+    """
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            result = float(value)
+            if param_name:
+                logger.debug(f"safe_float converted string '{value}' to {result} for {param_name}")
+            return result
+        except (ValueError, TypeError):
+            if param_name:
+                logger.warning(f"safe_float fallback: '{value}' -> {default} for {param_name}")
+            return default
+    return default
+
+
 class ConversationalBrain:
     """
     Cerebro Conversacional - El bot que piensa en voz alta
@@ -76,7 +98,8 @@ class ConversationalBrain:
         # 1. Quantum Momentum
         if 'quantum_momentum' in signals:
             qm = signals['quantum_momentum']
-            score = qm.get('signal', 0)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            score = safe_float(qm.get('signal', 0), 0, param_name='quantum_momentum_signal')
             if abs(score) > 5:
                 direction = "very bullish" if score > 0 else "very bearish"
                 emoji = "📈" if score > 0 else "📉"
@@ -91,7 +114,8 @@ class ConversationalBrain:
         # 2. Kalman Filter
         if 'kalman_filter' in signals:
             kf = signals['kalman_filter']
-            trend_strength = kf.get('trend_strength', 0)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            trend_strength = safe_float(kf.get('trend_strength', 0), 0)
             if trend_strength > 0.6:
                 reasons.append({
                     'strategy': 'Kalman Filter',
@@ -104,7 +128,8 @@ class ConversationalBrain:
         # 3. Monte Carlo
         if 'monte_carlo' in signals:
             mc = signals['monte_carlo']
-            win_rate = mc.get('win_rate', 0)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            win_rate = safe_float(mc.get('win_rate', 0), 0)
             if win_rate > 0.6:
                 reasons.append({
                     'strategy': 'Monte Carlo',
@@ -130,7 +155,8 @@ class ConversationalBrain:
         # 5. Kelly Criterion
         if 'kelly_criterion' in signals:
             kelly = signals['kelly_criterion']
-            suggested = kelly.get('recommended_position_usd', 0)
+            # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+            suggested = safe_float(kelly.get('recommended_position_usd', 0), 0)
             if suggested > 0:
                 reasons.append({
                     'strategy': 'Kelly Criterion',
@@ -157,7 +183,8 @@ class ConversationalBrain:
         # 7. Sentiment
         if 'sentiment' in signals:
             sent = signals['sentiment']
-            score = sent.get('score', 0.5)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            score = safe_float(sent.get('score', 0.5), 0.5)
             if score > 0.6:
                 reasons.append({
                     'strategy': 'Sentiment Analysis',
@@ -208,7 +235,8 @@ class ConversationalBrain:
         # 1. Quantum Momentum
         if 'quantum_momentum' in signals:
             qm = signals['quantum_momentum']
-            score = qm.get('signal', 0)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            score = safe_float(qm.get('signal', 0), 0)
             if score > 3:
                 vote = "BUY"
             elif score < -3:
@@ -225,8 +253,9 @@ class ConversationalBrain:
         # 2. Kalman Filter
         if 'kalman_filter' in signals:
             kf = signals['kalman_filter']
-            trend = kf.get('trend_strength', 0)
-            prediction = kf.get('prediction', 0)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            trend = safe_float(kf.get('trend_strength', 0), 0)
+            prediction = safe_float(kf.get('prediction', 0), 0)
             if prediction > 0.02:
                 vote = "BUY"
             elif prediction < -0.02:
@@ -243,7 +272,8 @@ class ConversationalBrain:
         # 3. Monte Carlo
         if 'monte_carlo' in signals:
             mc = signals['monte_carlo']
-            win_rate = mc.get('win_rate', 0.5)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            win_rate = safe_float(mc.get('win_rate', 0.5), 0.5)
             if win_rate > 0.6:
                 vote = "BUY"
             elif win_rate < 0.4:
@@ -286,7 +316,8 @@ class ConversationalBrain:
         # 6. Kelly Criterion
         if 'kelly_criterion' in signals:
             kelly = signals['kelly_criterion']
-            suggested = kelly.get('recommended_position_usd', 0)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            suggested = safe_float(kelly.get('recommended_position_usd', 0), 0)
             if suggested > 0:
                 strategies.append({
                     'name': 'Kelly Criterion',
@@ -298,7 +329,8 @@ class ConversationalBrain:
         # 7. Sentiment
         if 'sentiment' in signals:
             sent = signals['sentiment']
-            score = sent.get('score', 0.5)
+            # FIX Dec 28, 2025: Usar safe_float() para prevenir errores str vs int
+            score = safe_float(sent.get('score', 0.5), 0.5)
             if score > 0.6:
                 vote = "BULLISH"
             elif score < 0.4:
@@ -443,7 +475,8 @@ class ConversationalBrain:
         }
         
         # Determinar si fue correcto
-        profit_loss = trade_result.get('profit_loss', 0)
+        # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+        profit_loss = safe_float(trade_result.get('profit_loss', 0), 0, param_name='profit_loss')
         evaluation['was_correct'] = profit_loss > 0
         
         # Analizar qué funcionó y qué no

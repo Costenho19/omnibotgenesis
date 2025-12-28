@@ -137,6 +137,27 @@ El sistema OMNIX tiene código funcional y bien estructurado, pero sufre de un *
   - CAES max_position_pct (línea 4638)
 - **Estado**: ✅ CORREGIDO - Revisado y aprobado por Arquitecto
 
+### Fix 4: Conversational Brain Type Safety (Dec 28, 2025)
+- **Problema**: `bad operand type for abs(): 'str'` en generación de razonamiento pre-trade
+- **Causa**: Valores de señales (quantum momentum, kalman, monte carlo, kelly) llegan como strings
+- **Solución**: Función `safe_float()` agregada a `omnix_services/ai_service/conversational_brain.py`
+- **Cobertura completa (11 ubicaciones)**:
+  - generate_trade_reasoning():
+    - Quantum Momentum signal (línea 105)
+    - Kalman trend_strength (línea 121)
+    - Monte Carlo win_rate (línea 135)
+    - Kelly recommended_position_usd (línea 162)
+    - Sentiment score (línea 190)
+  - _generate_decision_graph():
+    - Quantum Momentum score (línea 241)
+    - Kalman trend/prediction (líneas 259-260)
+    - Monte Carlo win_rate (línea 278)
+    - Kelly suggested (línea 322)
+    - Sentiment score (línea 335)
+  - generate_post_trade_evaluation():
+    - profit_loss (línea 479)
+- **Estado**: ✅ CORREGIDO - Revisado y aprobado por Arquitecto
+
 ---
 
 ## 🔍 Análisis Detallado por Capa
