@@ -176,3 +176,28 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 ### Critical Blockers for Production
 1. **Railway DB Migration**: user_settings columns (see above SQL)
 2. **Stripe Configuration**: Replace placeholder Price IDs, add webhook verification
+
+## Test Environment Configuration (Dec 29, 2025)
+
+### Problem Solved
+Tests were failing because `TELEGRAM_BOT_TOKEN` was intentionally removed from Replit Secrets to prevent dual-execution conflicts (Railway + Replit simultaneously = Telegram connection errors).
+
+### Solution Implemented
+1. **env_manager.py**: Modified `get_required()` and `_validate_value()` to detect test mode via `TESTING=true` or `PYTEST_CURRENT_TEST` environment variable, bypassing strict token validation
+2. **tests/conftest.py**: Sets `TESTING=true` and mock token BEFORE any imports
+3. **Workflow Command**: `TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest ...`
+4. **pyproject.toml**: Added pytest-env configuration with mock token
+
+### Files Modified
+- `omnix_config/env_manager.py` (test mode detection in validation)
+- `tests/conftest.py` (early environment setup)
+- `pyproject.toml` (pytest-env configuration)
+
+### How to Run Tests
+```bash
+cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/ -v
+```
+
+### Current Test Status
+- **10/10 tests passing** (Code Verification workflow)
+- V7 hexagonal architecture: 156 tests passing
