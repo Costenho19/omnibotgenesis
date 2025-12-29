@@ -23,7 +23,7 @@
 | Adapters | **22** (incluyendo AuthorizationAdapter) |
 | Ports activos en producción | **0/20 (0%)** - Legacy en uso |
 | USE_APP_LAYER | **false** - No activado |
-| Tests pasando | **156/156** (120 ports + 36 authorization) |
+| Tests totales | **164** (10 críticos en CI workflow) |
 
 ---
 

@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for paper trading to build a credible track record for investor presentations. Its core capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate and focuses on an "Investor-Ready" presentation to secure seed funding.
+OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for paper trading to build a credible track record for investor presentations. Its core capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate and focuses on an "Investor-Ready" presentation to secure seed funding. The project's ambition is to secure seed funding by presenting a credible track record.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -69,138 +69,21 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 
 ## External Dependencies
 
-### APIs and Services (15 integrations)
--   **Kraken Exchange**: Crypto data and order execution. [OPERATIONAL]
--   **Alpaca**: Stock data and historical bars. [DISABLED - no secrets]
--   **Google Gemini (2.0 Flash)**: Primary AI model. [OPERATIONAL]
--   **OpenAI (GPT-4o, Whisper)**: AI services. [OPERATIONAL]
--   **Anthropic Claude**: AI fallback. [DISABLED - no secrets]
--   **ElevenLabs**: Text-to-speech, voice generation. [OPERATIONAL]
--   **CoinGecko**: Backup crypto prices. [OPERATIONAL]
--   **Alternative.me**: Fear and Greed Index. [OPERATIONAL]
--   **Finnhub**: Market news and sentiment. [OPERATIONAL]
--   **Alpha Vantage**: Technical indicators. [OPERATIONAL]
--   **Tavily**: Real-time web search for AI responses. [OPERATIONAL]
--   **Stripe**: Payment processing. [UNCONFIGURED - placeholder Price IDs]
--   **ANU QRNG**: Quantum random numbers. [OPERATIONAL]
+### APIs and Services
+-   **Kraken Exchange**: Crypto data and order execution.
+-   **Alpaca**: Stock data and historical bars.
+-   **Google Gemini (2.0 Flash)**: Primary AI model.
+-   **OpenAI (GPT-4o, Whisper)**: AI services.
+-   **Anthropic Claude**: AI fallback.
+-   **ElevenLabs**: Text-to-speech, voice generation.
+-   **CoinGecko**: Backup crypto prices.
+-   **Alternative.me**: Fear and Greed Index.
+-   **Finnhub**: Market news and sentiment.
+-   **Alpha Vantage**: Technical indicators.
+-   **Tavily**: Real-time web search for AI responses.
+-   **Stripe**: Payment processing.
+-   **ANU QRNG**: Quantum random numbers.
 
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
-
-## Recent Changes (Dec 27, 2025)
-
-### DualKalmanTrendFilter Fix
-- **Problem**: `'DualKalmanTrendFilter' object has no attribute 'filter_and_predict'` error in production logs
-- **Root Cause**: `auto_trading_bot.py` line 2185 calls `.filter_and_predict(prices)` but class only had `update()` and `filter_series()`
-- **Solution**: Added `filter_and_predict()` method to `DualKalmanTrendFilter` in `omnix_services/trading_service/kalman_filter.py`
-- **Files Modified**: `omnix_services/trading_service/kalman_filter.py` (lines 273-347)
-- **Status**: FIXED - method returns filtered_price, predicted_price, trend, trend_strength, crossover, confidence, fast, slow
-
-### BlackSwanDetector Fix
-- **Problem**: `'BlackSwanDetector' object has no attribute 'analyze'` error in production logs
-- **Root Cause**: `auto_trading_bot.py` calls `.analyze()` but local class only had `detect_extreme_events()`
-- **Solution**: Added canonical `analyze()` method to `BlackSwanDetector` in `omnix_services/trading_service/advanced_features.py`
-- **Files Modified**: `omnix_services/trading_service/advanced_features.py` (lines 254-402)
-- **Status**: FIXED - method now returns full canonical payload (detected, severity, indicators, statistics, risk_metrics, recommendations)
-
-### Comprehensive Type Safety Fix (Dec 27-28, 2025)
-- **Problem**: `'>=' not supported between str and int` errors causing score=0 and blocking valid trades
-- **Root Cause**: Config values and external signal metrics sometimes arrive as strings instead of floats
-- **Solution**: Added `safe_float()` helper function with logging, applied across 20+ decision flow paths:
-  - Config initialization (min_trade_usd, max_position_pct, stop_loss_pct, etc.)
-  - Rollback guardrails (daily_loss_limit, min_win_rate, trades_window)
-  - Monte Carlo metrics and mc_veto_config thresholds
-  - Black Swan crash_prob, Sentiment scores, Quantum signal
-  - Kalman trend_strength, HMM regime_confidence
-  - Coherence Gate pre-score thresholds
-  - Kelly scoring and sizing
-  - Non-Markovian confidence (with param_name for diagnostics)
-  - Ramp-up trades/factors, HMM position_multiplier, CAES max_position_pct
-- **Files Modified**: `omnix_core/bot/auto_trading_bot.py` (safe_float function + 20+ application sites)
-- **Status**: FIXED - All external numeric signals now normalized before comparison/arithmetic
-
-### Conversational Brain Type Safety Fix (Dec 28, 2025)
-- **Problem**: `bad operand type for abs(): 'str'` error in trade reasoning generation
-- **Root Cause**: Signal values (quantum momentum, kalman, monte carlo, kelly) arrive as strings
-- **Solution**: Added `safe_float()` function to `omnix_services/ai_service/conversational_brain.py`
-- **Files Modified**: `omnix_services/ai_service/conversational_brain.py` (safe_float + 11 application sites)
-- **Coverage**: generate_trade_reasoning(), _generate_decision_graph(), generate_post_trade_evaluation()
-- **Status**: FIXED - All signal values normalized before abs() and comparisons
-
-### Coherence Engine Type Safety Fix (Dec 28, 2025)
-- **Problem**: `'>=' not supported between instances of 'str' and 'int'` error in Coherence Engine V5.4
-- **Root Cause**: win_rate and confidence values arrive as strings from external data
-- **Solution**: Added `safe_float()` function to `omnix_services/coherence_service/coherence_engine.py`
-- **Files Modified**: `omnix_services/coherence_service/coherence_engine.py` (safe_float + 2 application sites)
-- **Coverage**: monte_carlo win_rate, validate_trade_coherence confidence
-- **Status**: FIXED - All external numeric inputs normalized before comparison
-
-### User Settings Schema Fix (Dec 28, 2025)
-- **Problem**: `column "total_trades" of relation "user_settings" does not exist`
-- **Root Cause**: Missing columns in database schema
-- **Solution**: ALTER TABLE to add missing columns
-- **Columns Added**: `total_trades INTEGER DEFAULT 0`, `winning_trades INTEGER DEFAULT 0`
-- **Status**: FIXED - Applied to development database
-- **Railway Action Required**: `ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS total_trades INTEGER DEFAULT 0; ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS winning_trades INTEGER DEFAULT 0;`
-
-### Comprehensive Codebase Audit (Dec 29, 2025)
-- **Scope**: 10-phase audit covering 448+ files (378 Python + 70 Markdown)
-- **Code Audit**: omnix_core/ (29), omnix_services/ (189), src/omnix/ (99), omnix_dashboard/omnix_api/tests (61)
-- **Doc Audit**: All 70 docs across 7 directories verified for cross-references
-- **Key Findings**:
-  - ARES V1/V2: Confirmed REMOVED Dec 24, 2025 (updated TRACEABILITY_MATRIX.md)
-  - V7 Architecture: 20 Protocol ports, 22 adapters, 156 tests passing
-  - Integrations: 15 external APIs (12 operational, 2 disabled, 1 unconfigured)
-  - Stripe: Placeholder Price IDs need configuration before monetization
-- **Audit Reports**: See `docs/compliance/audits/` (10 reports with descriptive names)
-- **Status**: COMPLETE
-
-## Current System State (Dec 29, 2025)
-
-### Track Record
-| Metric | Current | Target |
-|--------|---------|--------|
-| Trades | 109 | 500+ |
-| Win Rate | 22% | 55%+ |
-| P&L | -$14,942.94 | Positive |
-
-### Architecture Metrics
-| Component | Count |
-|-----------|-------|
-| Protocol Ports | 20 |
-| Adapters | 22 |
-| Tests Passing | 156 |
-| External Integrations | 15 |
-
-### Critical Blockers for Production
-1. ~~**Railway DB Migration**: user_settings columns~~ ✅ COMPLETED Dec 29, 2025
-2. **Stripe Configuration**: Replace placeholder Price IDs, add webhook verification
-
-## Test Environment Configuration (Dec 29, 2025)
-
-### Problem Solved
-Tests were failing because `TELEGRAM_BOT_TOKEN` was intentionally removed from Replit Secrets to prevent dual-execution conflicts (Railway + Replit simultaneously = Telegram connection errors).
-
-### Solution Implemented (Security-Hardened)
-1. **env_manager.py**: Modified `get_required()` and `_validate_value()` with strict test mode detection:
-   - Primary check: `PYTEST_CURRENT_TEST` environment variable (set automatically by pytest)
-   - Fallback: `TESTING=true` AND `'pytest' in sys.modules` (requires pytest to be actually loaded)
-   - This prevents production bypass if someone accidentally sets `TESTING=true` without running pytest
-2. **tests/conftest.py**: Sets `TESTING=true` and mock token BEFORE any imports
-3. **Workflow Command**: `TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest ...`
-4. **pyproject.toml**: Added pytest-env configuration with mock token
-
-### Files Modified
-- `omnix_config/env_manager.py` (test mode detection in validation)
-- `tests/conftest.py` (early environment setup)
-- `pyproject.toml` (pytest-env configuration)
-
-### How to Run Tests
-```bash
-cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/ -v
-```
-
-### Current Test Status
-- **10/10 tests passing** (Code Verification workflow)
-- V7 hexagonal architecture: 156 tests passing

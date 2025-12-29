@@ -12,7 +12,7 @@ MULTI-USER ARCHITECTURE:
 - Estado persistente en Redis + PostgreSQL
 - Auto-restauración después de reinicios de Railway
 
-ESTRATEGIAS INSTITUTIONAL+ (10 MÓDULOS):
+ESTRATEGIAS INSTITUTIONAL+ (8 MÓDULOS ACTIVOS):
 1. Monte Carlo: Validar probabilidades con 10,000 simulaciones
 2. Black Swan: Evitar trades en condiciones extremas (Kurtosis/Skewness)
 3. Sentiment Analysis: Timing basado en sentimiento del mercado
@@ -20,9 +20,9 @@ ESTRATEGIAS INSTITUTIONAL+ (10 MÓDULOS):
 5. HMM Regime Detection: Detectar régimen de mercado (TRENDING/RANGING/VOLATILE)
 6. Kalman Filter: Filtrado adaptivo de señales con lag mínimo
 7. Quantum Momentum: Estrategia propietaria 6 componentes (EMA/RSI/MACD/Volume/HP/ATR)
-8. ARES V1: Swing Trading institucional (55-65% win rate)
-9. ARES V2: Scalping M1 ultra-rápido (60-70% win rate)
-10. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
+8. Non-Markovian Kernel: Memoria temporal cuántica K(t-s)=exp(-|t-s|/τ)[1+ε cos(Ω(t-s))]
+
+NOTA: ARES V1/V2 fueron REMOVIDOS el 24 Dic 2025. EMA Regime Signal (40 pts) es ahora el driver principal.
 
 MEMORY-ENHANCED RMS:
 - MemoryRiskAdapter: Puente entre kernel temporal y gestión de riesgo

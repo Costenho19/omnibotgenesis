@@ -141,7 +141,7 @@ docs/
 │  ARQUITECTURA V7.0 (Implementada, no activa)                    │
 │  ├── 17 Driven Ports + 3 Driver Ports = 20 ports                │
 │  ├── 22 Adapters implementados                                  │
-│  ├── 156/156 tests pasando                                      │
+│  ├── 164 tests totales (10 críticos en CI workflow)             │
 │  └── Patrón: Strangler Fig (activación gradual)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACES                                                      │
