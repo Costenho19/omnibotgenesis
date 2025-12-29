@@ -47,6 +47,10 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
 ]
+env = [
+    "TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz12345678",
+    "TESTING=true",
+]
 
 [tool.coverage.run]
 source = ["omnix_core", "omnix_services"]

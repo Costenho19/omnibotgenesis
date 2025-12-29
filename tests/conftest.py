@@ -2,8 +2,16 @@
 OMNIX V6.5.4d Test Configuration
 
 Phase 0 Foundation - Pytest baseline setup
+
+CRITICAL: Environment variables MUST be set BEFORE any imports
+that could trigger omnix_config loading.
 """
 import os
+
+os.environ["TESTING"] = "true"
+os.environ["TELEGRAM_BOT_TOKEN"] = "test-mode-token-for-pytest"
+os.environ.setdefault("TRADING_PROFILE", "PAPER_AGGRESSIVE")
+
 import sys
 from pathlib import Path
 
@@ -11,9 +19,6 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-
-os.environ.setdefault("TESTING", "true")
-os.environ.setdefault("TRADING_PROFILE", "PAPER_AGGRESSIVE")
 
 
 @pytest.fixture

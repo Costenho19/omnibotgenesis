@@ -91,3 +91,4 @@ pytest-asyncio
 import-linter
 langdetect
 fast-langdetect
+pytest-env
