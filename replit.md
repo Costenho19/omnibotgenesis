@@ -182,8 +182,11 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 ### Problem Solved
 Tests were failing because `TELEGRAM_BOT_TOKEN` was intentionally removed from Replit Secrets to prevent dual-execution conflicts (Railway + Replit simultaneously = Telegram connection errors).
 
-### Solution Implemented
-1. **env_manager.py**: Modified `get_required()` and `_validate_value()` to detect test mode via `TESTING=true` or `PYTEST_CURRENT_TEST` environment variable, bypassing strict token validation
+### Solution Implemented (Security-Hardened)
+1. **env_manager.py**: Modified `get_required()` and `_validate_value()` with strict test mode detection:
+   - Primary check: `PYTEST_CURRENT_TEST` environment variable (set automatically by pytest)
+   - Fallback: `TESTING=true` AND `'pytest' in sys.modules` (requires pytest to be actually loaded)
+   - This prevents production bypass if someone accidentally sets `TESTING=true` without running pytest
 2. **tests/conftest.py**: Sets `TESTING=true` and mock token BEFORE any imports
 3. **Workflow Command**: `TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest ...`
 4. **pyproject.toml**: Added pytest-env configuration with mock token
