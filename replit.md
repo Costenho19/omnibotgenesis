@@ -69,18 +69,20 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 
 ## External Dependencies
 
-### APIs and Services
--   **Kraken Exchange**: Crypto data and order execution.
--   **Alpaca**: Stock data and historical bars.
--   **Google Gemini (2.0 Flash)**: Primary AI model.
--   **OpenAI (GPT-4o, Whisper)**: AI services.
--   **Anthropic Claude**: AI fallback.
--   **CoinGecko**: Backup crypto prices.
--   **Alternative.me**: Fear and Greed Index.
--   **Finnhub**: Market news and sentiment.
--   **Alpha Vantage**: Technical indicators.
--   **Tavily**: Real-time web search for AI responses.
--   **ANU QRNG**: Quantum random numbers.
+### APIs and Services (15 integrations)
+-   **Kraken Exchange**: Crypto data and order execution. [OPERATIONAL]
+-   **Alpaca**: Stock data and historical bars. [DISABLED - no secrets]
+-   **Google Gemini (2.0 Flash)**: Primary AI model. [OPERATIONAL]
+-   **OpenAI (GPT-4o, Whisper)**: AI services. [OPERATIONAL]
+-   **Anthropic Claude**: AI fallback. [DISABLED - no secrets]
+-   **ElevenLabs**: Text-to-speech, voice generation. [OPERATIONAL]
+-   **CoinGecko**: Backup crypto prices. [OPERATIONAL]
+-   **Alternative.me**: Fear and Greed Index. [OPERATIONAL]
+-   **Finnhub**: Market news and sentiment. [OPERATIONAL]
+-   **Alpha Vantage**: Technical indicators. [OPERATIONAL]
+-   **Tavily**: Real-time web search for AI responses. [OPERATIONAL]
+-   **Stripe**: Payment processing. [UNCONFIGURED - placeholder Price IDs]
+-   **ANU QRNG**: Quantum random numbers. [OPERATIONAL]
 
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
@@ -140,3 +142,37 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
 - **Solution**: ALTER TABLE to add missing columns
 - **Columns Added**: `total_trades INTEGER DEFAULT 0`, `winning_trades INTEGER DEFAULT 0`
 - **Status**: FIXED - Applied to development database
+- **Railway Action Required**: `ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS total_trades INTEGER DEFAULT 0; ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS winning_trades INTEGER DEFAULT 0;`
+
+### Comprehensive Codebase Audit (Dec 29, 2025)
+- **Scope**: 10-phase audit covering 448+ files (378 Python + 70 Markdown)
+- **Code Audit**: omnix_core/ (29), omnix_services/ (189), src/omnix/ (99), omnix_dashboard/omnix_api/tests (61)
+- **Doc Audit**: All 70 docs across 7 directories verified for cross-references
+- **Key Findings**:
+  - ARES V1/V2: Confirmed REMOVED Dec 24, 2025 (updated TRACEABILITY_MATRIX.md)
+  - V7 Architecture: 20 Protocol ports, 22 adapters, 156 tests passing
+  - Integrations: 15 external APIs (12 operational, 2 disabled, 1 unconfigured)
+  - Stripe: Placeholder Price IDs need configuration before monetization
+- **Audit Reports**: See `docs/compliance/audits/*_DEC29_2025.md` (9 reports)
+- **Status**: COMPLETE
+
+## Current System State (Dec 29, 2025)
+
+### Track Record
+| Metric | Current | Target |
+|--------|---------|--------|
+| Trades | 109 | 500+ |
+| Win Rate | 22% | 55%+ |
+| P&L | -$14,942.94 | Positive |
+
+### Architecture Metrics
+| Component | Count |
+|-----------|-------|
+| Protocol Ports | 20 |
+| Adapters | 22 |
+| Tests Passing | 156 |
+| External Integrations | 15 |
+
+### Critical Blockers for Production
+1. **Railway DB Migration**: user_settings columns (see above SQL)
+2. **Stripe Configuration**: Replace placeholder Price IDs, add webhook verification
