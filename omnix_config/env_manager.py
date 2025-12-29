@@ -7,6 +7,7 @@ Desarrollado por Harold Nunes - Noviembre 2025
 """
 
 import os
+import sys
 import logging
 import re
 import threading
@@ -415,9 +416,10 @@ class EnvConfig:
         if var_name not in self.VARIABLE_CATALOG:
             return True
         
-        is_testing = os.environ.get('TESTING', '').lower() in ('true', '1', 'yes') or \
-                     os.environ.get('PYTEST_CURRENT_TEST') is not None
-        if is_testing and var_name == 'TELEGRAM_BOT_TOKEN':
+        is_pytest = os.environ.get('PYTEST_CURRENT_TEST') is not None or \
+                    (os.environ.get('TESTING', '').lower() in ('true', '1', 'yes') and 
+                     'pytest' in sys.modules)
+        if is_pytest and var_name == 'TELEGRAM_BOT_TOKEN':
             return True
         
         validator = self.VARIABLE_CATALOG[var_name].get('validator')
@@ -477,9 +479,10 @@ class EnvConfig:
         Raises:
             ValueError: If variable is not set or validation fails
         """
-        is_testing = os.environ.get('TESTING', '').lower() in ('true', '1', 'yes') or \
-                     os.environ.get('PYTEST_CURRENT_TEST') is not None
-        if is_testing and var_name == 'TELEGRAM_BOT_TOKEN':
+        is_pytest = os.environ.get('PYTEST_CURRENT_TEST') is not None or \
+                    (os.environ.get('TESTING', '').lower() in ('true', '1', 'yes') and 
+                     'pytest' in sys.modules)
+        if is_pytest and var_name == 'TELEGRAM_BOT_TOKEN':
             test_token = os.environ.get('TELEGRAM_BOT_TOKEN', 'test-mode-token')
             return test_token
         
