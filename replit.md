@@ -153,7 +153,7 @@ Includes an `IntentDetector`, `SearchManager`, and `TavilySearch` client for int
   - V7 Architecture: 20 Protocol ports, 22 adapters, 156 tests passing
   - Integrations: 15 external APIs (12 operational, 2 disabled, 1 unconfigured)
   - Stripe: Placeholder Price IDs need configuration before monetization
-- **Audit Reports**: See `docs/compliance/audits/*_DEC29_2025.md` (9 reports)
+- **Audit Reports**: See `docs/compliance/audits/` (10 reports with descriptive names)
 - **Status**: COMPLETE
 
 ## Current System State (Dec 29, 2025)
