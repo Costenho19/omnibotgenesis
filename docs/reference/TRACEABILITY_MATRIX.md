@@ -36,12 +36,12 @@
 | 1.9 | CoherenceEngine | `omnix_services/coherence_service/coherence_engine.py` | `src/omnix/domain/coherence/engine.py` | Todas las estrategias | 6-tier veto testing | ✅ CORE |
 | 1.10 | Risk Guardian | `omnix_services/monitoring/risk_guardian.py` | `src/omnix/domain/risk/guardian.py` | RiskService (F3) | Historical replay | ✅ CORE |
 | 1.11 | CAES Module | `omnix_core/strategies/caes_module.py` | `src/omnix/domain/sizing/caes.py` | CoherenceEngine | Position sizing tests | ✅ CORE |
-| 1.12 | ARES V1 (Swing) | `omnix_core/strategies/ares_v1.py` | `src/omnix/domain/strategies/ares/v1.py` | CoherenceEngine, CAES | Shadow trading comparison | ✅ CORE |
-| 1.13 | ARES V2 (Scalping) | `omnix_core/strategies/ares_v2.py` | `src/omnix/domain/strategies/ares/v2.py` | CoherenceEngine, CAES | Shadow trading comparison | ✅ CORE |
+| 1.12 | ~~ARES V1 (Swing)~~ | ~~`omnix_core/strategies/ares_v1.py`~~ | ~~`src/omnix/domain/strategies/ares/v1.py`~~ | - | **REMOVED Dec 24, 2025** | ❌ REMOVED |
+| 1.13 | ~~ARES V2 (Scalping)~~ | ~~`omnix_core/strategies/ares_v2.py`~~ | ~~`src/omnix/domain/strategies/ares/v2.py`~~ | - | **REMOVED Dec 24, 2025** | ❌ REMOVED |
 | 1.14 | Adaptive Engine | `omnix_services/adaptive_engine/adaptive_engine.py` | `src/omnix/domain/adaptive/engine.py` | HMM Regime | Regime switch tests | ✅ SUPPORT |
 | 1.15 | Optimization ML | `omnix_services/optimization/` | `src/omnix/domain/optimization/` | Analytics (F3) | Backtest comparison | ✅ SUPPORT |
 
-**Cobertura Dominio 1**: 15/15 componentes ✅
+**Cobertura Dominio 1**: 13/13 componentes ✅ (ARES V1/V2 removed Dec 24, 2025)
 
 ---
 

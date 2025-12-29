@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 26 de Diciembre 2025  
+**Actualizado**: 29 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -139,9 +139,9 @@ docs/
 │  └── Feature flags: TODOS en false                              │
 ├─────────────────────────────────────────────────────────────────┤
 │  ARQUITECTURA V7.0 (Implementada, no activa)                    │
-│  ├── 16 Driven Ports + 3 Driver Ports = 19 ports                │
-│  ├── 21 Adapters implementados                                  │
-│  ├── 120/120 tests pasando                                      │
+│  ├── 17 Driven Ports + 3 Driver Ports = 20 ports                │
+│  ├── 22 Adapters implementados                                  │
+│  ├── 156/156 tests pasando                                      │
 │  └── Patrón: Strangler Fig (activación gradual)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACES                                                      │
@@ -178,12 +178,13 @@ Ver [MIGRATION_STATUS.md](MIGRATION_STATUS.md) para plan completo de activación
 
 | Métrica | Actual | Objetivo |
 |---------|--------|----------|
-| Trades | ~30 | 500+ |
-| Win Rate | TBD | 55%+ |
+| Trades | 109 | 500+ |
+| Win Rate | 22% | 55%+ |
+| P&L | -$14,942.94 | Positive |
 | Timeline | - | 8-9 semanas |
 
 **Meta**: Track record para $1M seed @ $11.5M pre-money.
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 22 Dic 2025*
+*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 29 Dic 2025*
