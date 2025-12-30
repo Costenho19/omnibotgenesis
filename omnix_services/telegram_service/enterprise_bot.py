@@ -3125,7 +3125,14 @@ Ejemplo: /risk_events 48
             await self._process_message_content(update, context, combined_text, user, user_id, user_name, telegram_chat_id)
             
         except Exception as e:
+            import traceback
             logger.error(f"❌ Error procesando mensajes agregados: {e}")
+            logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
+            try:
+                if buffered_messages and buffered_messages[0].get('update'):
+                    await buffered_messages[0]['update'].message.reply_text(f"⚠️ Error procesando mensaje: {str(e)[:200]}")
+            except:
+                pass
 
     async def handle_message(self, update, context):
         """Manejar mensajes con SUPERINTELIGENCIA + VOZ AUTOMÁTICA + AGREGACIÓN"""
@@ -3161,9 +3168,11 @@ Ejemplo: /risk_events 48
             self._message_timers[user_id] = asyncio.create_task(delayed_process())
             
         except Exception as e:
+            import traceback
             logger.error(f"❌ Error en handle_message (agregación): {e}")
+            logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
             try:
-                await update.message.reply_text("🤖 OMNIX procesando... Sistema operativo.")
+                await update.message.reply_text(f"🤖 OMNIX procesando... Sistema operativo.\n\n⚠️ Debug: {str(e)[:200]}")
             except:
                 pass
 
@@ -3582,9 +3591,11 @@ Usa: `/autotrading activar ACEPTO`"""
                 await update.message.reply_text(fallback_response)
             
         except Exception as e:
+            import traceback
             logger.error(f"❌ Error crítico _process_message_content: {e}")
+            logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
             try:
-                await update.message.reply_text("🤖 OMNIX procesando... Sistema operativo.")
+                await update.message.reply_text(f"🤖 OMNIX procesando... Sistema operativo.\n\n⚠️ Debug: {str(e)[:200]}")
             except:
                 pass
     
