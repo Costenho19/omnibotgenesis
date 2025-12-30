@@ -57,12 +57,16 @@
 
 ### 3.1 Vetos Duros (Bloqueo Inmediato)
 
-| Veto | Condición | Penalización Paper | Penalización Real |
-|------|-----------|-------------------|-------------------|
-| **MC VETO** | expected_return < -0.1% OR VaR95 > -3% | Bloqueo total | Bloqueo total |
-| **RMS VETO** | CircuitBreaker triggered | Bloqueo total | Bloqueo total |
-| **COHERENCE_GATE_CRITICAL** | coherence < 35% | Bloqueo total | Bloqueo total |
-| **COHERENCE_GATE_LOW** | coherence < 50% | Bloqueo total | Bloqueo total |
+> **Updated Dec 30, 2025**: MC VETO thresholds corregidos por auditoría
+
+| Veto | Condición | Razón | Acción |
+|------|-----------|-------|--------|
+| **MC VETO (ER)** | expected_return < 0% | `MC_NEG_ER` | BLOCKED |
+| **MC VETO (VaR)** | VaR95 > -3% | `MC_VAR_TOO_HIGH` | BLOCKED |
+| **MC SIZE_REDUCE** | win_rate < 50% | `MC_WR_BELOW_50` | size_multiplier=0.5 |
+| **RMS VETO** | CircuitBreaker triggered | `CB_*` | BLOCKED |
+| **COHERENCE_GATE** | coherence < 45% | `COHERENCE_LOW` | BLOCKED |
+| **COHERENCE_EXCEPTION** | Exception en análisis | `COHERENCE_EXCEPTION` | BLOCKED (FAIL-CLOSED) |
 
 ### 3.2 Penalizaciones Suaves
 

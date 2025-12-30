@@ -1,13 +1,46 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 27 de Diciembre 2025  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 109 Trades Documentados
+**Fecha**: 30 de Diciembre 2025  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
 ---
 
 ## Cambios Recientes
+
+### Critical Audit Fixes + ENV Control (Dec 30, 2025)
+
+**AUDITORÍA CRÍTICA COMPLETADA** - 4 fixes de seguridad institucional:
+
+| Fix | Descripción | Impacto |
+|-----|-------------|---------|
+| **Coherence FAIL-CLOSED** | Excepciones en CoherenceEngine → BLOCKED (antes: skip) | Previene trades sin validación |
+| **MC Veto Semántica** | ER<0% → BLOCKED (MC_NEG_ER), WR<50% → SIZE_REDUCE | Claridad en logs de auditoría |
+| **DecisionPayload** | Nuevos campos: action, vetoed, size_multiplier, execution_path | Trazabilidad completa |
+| **track_record_mode logging** | Cada decisión incluye estado del modo | Auditoría histórica |
+
+**TRACK_RECORD_MODE + LOW_VOL_MODE controlados por ENV:**
+
+```python
+# omnix_core/config/trading_profiles.py
+TRACK_RECORD_MODE = os.getenv("TRACK_RECORD_MODE", "false").lower() == "true"
+LOW_VOL_MODE = os.getenv("LOW_VOL_MODE", "false").lower() == "true"
+```
+
+| Variable | Default | Rollback |
+|----------|---------|----------|
+| `TRACK_RECORD_MODE` | `false` | Railway Variables → `true` → Restart |
+| `LOW_VOL_MODE` | `false` | Railway Variables → `true` → Restart |
+
+**Tests:** 27/27 pasando (17 nuevos de auditoría crítica)
+
+**Archivos modificados:**
+- `omnix_core/config/trading_profiles.py` - ENV control + logging
+- `omnix_core/bot/auto_trading_bot.py` - Audit fields en decisiones
+- `tests/test_critical_audit.py` - 17 tests nuevos
+
+---
 
 ### Railway-GitHub Synchronization Issue (Dec 27, 2025)
 

@@ -58,8 +58,22 @@ The execution order is: 1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** →
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, which only apply penalties and no additive scoring.
 
-### TRACK_RECORD_MODE
-A temporary `TRACK_RECORD_MODE` is implemented to build historical data under controlled risk, active during low-volatility markets. It caps score and size, enables `WEAK_TREND` scoring, and uses reduced thresholds. It auto-deactivates when `total_trades >= 100` AND `win_rate >= 45%`, ensuring guardrails like RMS, MC Veto, and Coherence remain active.
+### TRACK_RECORD_MODE (Updated Dec 30, 2025)
+`TRACK_RECORD_MODE` and `LOW_VOL_MODE` are now **controlled by environment variables** with `false` as default.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TRACK_RECORD_MODE` | `false` | Reduces thresholds for trade generation |
+| `LOW_VOL_MODE` | `false` | Adjusts for low-volatility markets |
+
+**Rollback sin redeploy:**
+```bash
+# Railway: Settings → Variables → Add
+TRACK_RECORD_MODE=true
+# Then restart service
+```
+
+When active, TRACK_RECORD_MODE caps score (6/12), reduces sizing (0.35x max), enables `WEAK_TREND` scoring. All guardrails (RMS, MC Veto, Coherence) remain active. Auto-deactivates when `total_trades >= 100` AND `win_rate >= 45%`.
 
 ### Error Handling
 An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff, and structured logging.

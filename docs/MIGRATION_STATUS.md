@@ -1,8 +1,8 @@
 # OMNIX V7.0 - Estado de Migración
 
-**Fecha**: 27 de Diciembre 2025  
+**Fecha**: 30 de Diciembre 2025  
 **Patrón**: Strangler Fig  
-**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ MULTI-USER FASE 3b COMPLETADA
+**Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ AUDITORÍA CRÍTICA COMPLETADA
 
 > **NOTA**: Este documento describe la arquitectura V7.0 implementada.
 > Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para el estado real de producción.
@@ -11,11 +11,24 @@
 > - **0/20 ports activados** - Todos los feature flags en `false`
 > - `USE_APP_LAYER=false` - Legacy en operación
 > - Arquitectura V7.0 lista pero no activada
-> - **Multi-Usuario Fase 3b COMPLETADA**: RBAC implementado, 39/39 authorization tests passing
+> - **Auditoría Crítica COMPLETADA**: 27/27 tests pasando, Coherence FAIL-CLOSED
 
 ---
 
 ## Cambios Recientes
+
+### Critical Audit Fixes + ENV Control (Dec 30, 2025)
+- **Coherence Gate FAIL-CLOSED**: Excepciones → BLOCKED (antes: skip)
+- **MC Veto Semántica**: ER<0% → BLOCKED (MC_NEG_ER), WR<50% → SIZE_REDUCE
+- **DecisionPayload extendido**: action, vetoed, size_multiplier, execution_path
+- **TRACK_RECORD_MODE controlado por ENV** (default=false, rollback sin redeploy)
+- **27/27 tests pasando** incluyendo verificación de código fuente
+- **Archivos modificados**:
+  - `omnix_core/config/trading_profiles.py`
+  - `omnix_core/bot/auto_trading_bot.py`
+  - `tests/test_critical_audit.py`
+
+---
 
 ### Railway-GitHub Sync Policy (Dec 27, 2025)
 

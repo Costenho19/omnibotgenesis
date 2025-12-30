@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 29 de Diciembre 2025  
+**Actualizado**: 30 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,17 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### Critical Audit Fixes + ENV Control (Dec 30, 2025)
+- **AUDITORÍA CRÍTICA COMPLETADA**: 4 fixes de seguridad implementados
+  - Coherence Gate ahora FAIL-CLOSED (excepciones → BLOCKED)
+  - MC Veto semántica corregida: ER<0% → BLOCKED, WR<50% → SIZE_REDUCE
+  - DecisionPayload extendido con campos de auditoría
+- **TRACK_RECORD_MODE controlado por ENV** (default=false)
+  - Rollback sin redeploy: `TRACK_RECORD_MODE=true` en Railway Variables
+- **27/27 tests pasando** incluyendo verificación de código fuente
+- **Campos de auditoría** en cada decisión: `track_record_mode`, `low_vol_mode`
+- Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles completos
 
 ### V1.0.5 - OHLC Data Fix (Dec 26, 2025)
 - **CRÍTICO**: `generate_signal()` nunca se ejecutaba porque `prices=0`

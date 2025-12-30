@@ -1,9 +1,31 @@
 # OMNIX V6.5.4d Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** December 22, 2025  
+**Updated:** December 30, 2025  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Critical Audit Fixes (Dec 30, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Fixes Implementados:**
+
+| Issue | Fix | Test |
+|-------|-----|------|
+| Coherence Gate skip on exception | FAIL-CLOSED: exception → BLOCKED + return | `test_coherence_exception_returns_blocked_in_source` |
+| MC Veto ambiguo | ER<0% → BLOCKED (MC_NEG_ER), WR<50% → SIZE_REDUCE | `test_mc_neg_er_veto_reason_in_source` |
+| DecisionPayload incompleto | +action, +vetoed, +size_multiplier, +execution_path | `test_payload_has_audit_fields` |
+| TRACK_RECORD_MODE hardcoded | Controlado por ENV (default=false) | N/A (config change) |
+
+**Tests:** 27/27 pasando (17 nuevos de auditoría crítica)
+
+**Archivos Modificados:**
+- `omnix_core/config/trading_profiles.py` - ENV control
+- `omnix_core/bot/auto_trading_bot.py` - Audit fields + coherence FAIL-CLOSED
+- `tests/test_critical_audit.py` - 17 tests nuevos
 
 ---
 
