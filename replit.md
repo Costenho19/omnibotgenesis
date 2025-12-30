@@ -55,12 +55,19 @@ The AI service is refactored with SOLID principles and dependency injection, sup
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** → 4. Scoring → 5. Decision. Coherence now blocks low-quality signals BEFORE scoring computation, with critical thresholds reducing false positives.
 
-### Coherence Engine Type Safety (Dec 30, 2025)
-The Coherence Gate includes defensive type normalization to prevent `str vs int` comparison errors:
+### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
+Defensive type normalization to prevent `str vs int` comparison errors:
+
+**Fase 1: Coherence Engine**
 - `normalize_signal()` - Converts string "BUY"/"SELL" to Enum Signal
-- `normalize_strategy_signal()` - Normalizes signal, confidence (0-1), strength to correct types
-- `safe_float()` - Used in all `>=` comparisons, now strips '%' from numeric strings
-- **16 tests** in `tests/test_coherence_type_safety.py` | **Total Dec 30:** 43 tests (27 audit + 16 type safety)
+- `normalize_strategy_signal()` - Normalizes signal, confidence (0-1), strength
+
+**Fase 2: AutoTradingBot._build_strategy_signals()**
+- `safe_float()` - Applied to 7 strategies extracting numeric values from dictionaries
+- Strategies: quantum_momentum, kalman_filter, monte_carlo, kelly_criterion, black_swan, sentiment, non_markovian
+- safe_float now strips '%' from numeric strings and handles whitespace
+
+**Tests:** 16 coherence + 28 auto_trading_bot type safety | **Total Dec 30:** ~71 tests
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, which only apply penalties and no additive scoring.
