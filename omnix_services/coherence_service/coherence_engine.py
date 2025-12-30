@@ -394,6 +394,9 @@ class CoherenceEngine:
     ) -> str:
         """Genera recomendación final basada en coherencia"""
         
+        # FIX Dec 30, 2025: Asegurar que coherence es float para comparaciones
+        coherence = safe_float(coherence, 0.0, 'recommendation_coherence')
+        
         # Decisión base
         if consensus == Signal.STRONG_BUY:
             action = "EJECUTAR COMPRA FUERTE"
