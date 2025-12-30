@@ -33,7 +33,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/test_code_verification.py tests/test_version_consistency.py -v --tb=short"
+args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/test_code_verification.py tests/test_version_consistency.py tests/test_critical_audit.py -v --tb=short"
 
 [[workflows.workflow]]
 name = "Dashboard Preview"

@@ -2447,41 +2447,44 @@ class AutoTradingBot:
                 expected_return = safe_float(monte_carlo.get('expected_return', 0), 0)
                 var_95 = safe_float(monte_carlo.get('var_95', 0), 0)
                 win_rate = safe_float(monte_carlo.get('win_rate', 0.5), 0.5)
-                # FIX Dec 27, 2025: Normalizar thresholds de mc_cfg también
-                mc_min_expected = safe_float(mc_cfg.get('min_expected_return', -0.001), -0.001)
+                # FIX Dec 30, 2025: Strict thresholds per audit requirements
+                # ER < 0 → BLOCKED (was -0.001), WR < 50% → size_reduce (was 45%)
+                mc_min_expected = safe_float(mc_cfg.get('min_expected_return', 0.0), 0.0)  # FIX: 0 not -0.001
                 mc_max_var = safe_float(mc_cfg.get('max_var_95', -0.03), -0.03)
-                mc_reduce_wr = safe_float(mc_cfg.get('reduce_size_win_rate', 0.45), 0.45)
+                mc_reduce_wr = safe_float(mc_cfg.get('reduce_size_win_rate', 0.50), 0.50)  # FIX: 50% not 45%
                 mc_size_factor = safe_float(mc_cfg.get('size_reduction_factor', 0.5), 0.5)
                 
                 decision['v52_analysis']['mc_expected_return'] = expected_return
                 decision['v52_analysis']['mc_var_95'] = var_95
                 decision['v52_analysis']['mc_win_rate'] = win_rate
                 
-                # VETO 1: Expected return below threshold (Dec 25: relaxed from 0% to -0.1%)
+                # VETO 1: Expected return < 0 → BLOCKED (FIX Dec 30: strict veto_reason=MC_NEG_ER)
                 if expected_return < mc_min_expected:
                     mc_veto_applied = True
-                    decision['veto_chain'].append('MC_EXPECTED_RETURN_NEGATIVE')
-                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%}")
-                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → TRADE BLOCKED")
+                    decision['veto_chain'].append('MC_NEG_ER')  # FIX: Standardized name
+                    decision['veto_reason'] = 'MC_NEG_ER'  # FIX: Add explicit veto_reason
+                    decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → BLOCKED reason=MC_NEG_ER")
+                    logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → BLOCKED reason=MC_NEG_ER")
                 
                 # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
                 if var_95 < mc_max_var:  # var_95 es negativo
                     mc_veto_applied = True
                     decision['veto_chain'].append('MC_VAR_TOO_HIGH')
+                    decision['veto_reason'] = 'MC_VAR_TOO_HIGH'
                     decision['decision_trace'].append(f"MC_VETO: VaR95 {var_95:.2%} worse than {mc_max_var:.2%}")
                     logger.info(f"🚫 MC VETO: VaR95 {var_95:.2%} > limit {mc_max_var:.2%} → TRADE BLOCKED")
                 
-                # SIZE REDUCTION: Win rate bajo pero no veto
+                # SIZE REDUCTION: Win rate < 50% pero ER >= 0 (FIX Dec 30: reason=MC_WR_BELOW_50)
                 if not mc_veto_applied and win_rate < mc_reduce_wr:
                     raw_factor = mc_size_factor
-                    # DEFENSIVE CLAMP: Ensure factor is in valid range [0.0, 1.0]
                     position_size_factor = max(0.0, min(raw_factor, 1.0))
-                    # Log if clamping occurred
                     if raw_factor != position_size_factor:
                         decision['decision_trace'].append(f"MC_SIZE_FACTOR_CLAMPED: raw {raw_factor:.2f} → clamped {position_size_factor:.2f}")
                         logger.warning(f"🛡️ MC factor clamped: raw {raw_factor:.2f} → {position_size_factor:.2f}")
-                    decision['decision_trace'].append(f"MC_SIZE_REDUCE: Win rate {win_rate:.1%} → size {position_size_factor:.0%}")
-                    logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_reduce_wr:.0%} → position {position_size_factor:.0%}")
+                    decision['size_multiplier'] = position_size_factor  # FIX: Add size_multiplier field
+                    decision['size_multiplier_reason'] = 'MC_WR_BELOW_50'  # FIX: Add reason
+                    decision['decision_trace'].append(f"MC_SIZE_REDUCE: Win rate {win_rate:.1%} → size_multiplier={position_size_factor:.0%} reason=MC_WR_BELOW_50")
+                    logger.info(f"📉 MC SIZE REDUCE: Win rate {win_rate:.1%} < {mc_reduce_wr:.0%} → size_multiplier={position_size_factor:.0%} reason=MC_WR_BELOW_50")
                 
                 if mc_veto_applied:
                     decision['mc_veto'] = True
@@ -2614,18 +2617,27 @@ class AutoTradingBot:
                         logger.info(f"✅ [COHERENCE_GATE] PASSED: Score {coherence_pre_score:.1f}% >= {veto_normal}%")
                         
                 except Exception as e:
-                    logger.debug(f"Coherence Gate skipped: {e}")
-                    decision['decision_trace'].append(f"COHERENCE_GATE: Skipped due to error")
+                    # FIX Dec 30, 2025: FAIL-CLOSED - Exception blocks trade, no skip
+                    coherence_gate_passed = False
+                    decision['action'] = 'BLOCKED'
+                    decision['should_trade'] = False
+                    decision['confidence'] = 0.0
+                    decision['vetoed'] = True
+                    decision['veto_reason'] = 'COHERENCE_EXCEPTION'
+                    decision['veto_chain'].append('COHERENCE_EXCEPTION')
+                    decision['decision_trace'].append(f"COHERENCE_GATE: BLOCKED due to exception: {e}")
+                    logger.error(f"🚫 [COHERENCE_GATE] EXCEPTION BLOCKED: {e} → TRADE BLOCKED (fail-closed)")
+                    return decision
             
             # EARLY RETURN si Coherence Gate no pasa
             if not coherence_gate_passed:
-                decision['action'] = 'HOLD'
+                decision['action'] = 'BLOCKED'  # FIX Dec 30: BLOCKED not HOLD
                 decision['should_trade'] = False
                 decision['confidence'] = 0.0
                 decision['vetoed'] = True
                 decision['veto_reason'] = 'COHERENCE_GATE_REJECTED'
                 decision['reason'].append(f"🚫 COHERENCE GATE: Coherencia {coherence_pre_score:.1f}% insuficiente - Trade bloqueado antes de scoring")
-                logger.warning(f"🚫 [COHERENCE_GATE_ENFORCED] {symbol} | score={coherence_pre_score:.1f}% → HOLD EARLY RETURN")
+                logger.warning(f"🚫 [COHERENCE_GATE_ENFORCED] {symbol} | score={coherence_pre_score:.1f}% → BLOCKED EARLY RETURN")
                 return decision
             
             logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed")

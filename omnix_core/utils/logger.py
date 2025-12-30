@@ -36,11 +36,21 @@ class DecisionEvent(Enum):
 
 @dataclass
 class DecisionPayload:
-    """Structured payload for institutional decision logging"""
+    """Structured payload for institutional decision logging
+    
+    FIX Dec 30, 2025: Added mandatory audit fields:
+    - action: HOLD/BUY/SELL/BLOCKED
+    - vetoed: bool
+    - size_multiplier: float (1.0 = full size, 0.5 = reduced)
+    - size_multiplier_reason: e.g., MC_WR_BELOW_50
+    - execution_path: "legacy" or "v7"
+    """
     decision_id: str
     event_type: str
     timestamp: str
     symbol: str
+    action: Optional[str] = None  # FIX Dec 30: HOLD/BUY/SELL/BLOCKED
+    vetoed: Optional[bool] = None  # FIX Dec 30: True if any veto applied
     direction: Optional[str] = None
     position_size_usd: Optional[float] = None
     profile: Optional[str] = None
@@ -59,6 +69,9 @@ class DecisionPayload:
     veto_reason: Optional[str] = None
     veto_chain: Optional[List[str]] = None
     guards_passed: Optional[List[str]] = None
+    size_multiplier: Optional[float] = None  # FIX Dec 30: 1.0=full, 0.5=reduced
+    size_multiplier_reason: Optional[str] = None  # FIX Dec 30: e.g., MC_WR_BELOW_50
+    execution_path: Optional[str] = None  # FIX Dec 30: "legacy" or "v7"
     order_id: Optional[str] = None
     entry_price: Optional[float] = None
     current_price: Optional[float] = None
