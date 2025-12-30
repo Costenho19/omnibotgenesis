@@ -35,12 +35,66 @@ def safe_float(value: Union[str, int, float, None], default: float = 0.0, param_
         return float(value)
     if isinstance(value, str):
         try:
-            return float(value)
+            clean_value = value.strip().replace('%', '')
+            return float(clean_value)
         except (ValueError, TypeError):
             if param_name:
                 logger.warning(f"safe_float fallback: '{value}' -> {default} for {param_name}")
             return default
     return default
+
+
+def normalize_signal(value: Union[str, 'Signal', int, None]) -> 'Signal':
+    """
+    FIX Dec 30, 2025: Normaliza cualquier valor de señal a Enum Signal.
+    Previene errores de comparación str vs int en coherence gate.
+    
+    Args:
+        value: Valor de señal (puede ser str "BUY"/"SELL", Enum Signal, int, o None)
+        
+    Returns:
+        Signal: Enum Signal normalizado (HOLD como fallback seguro)
+    """
+    if value is None:
+        return Signal.HOLD
+    if isinstance(value, Signal):
+        return value
+    if isinstance(value, int):
+        try:
+            return Signal(value)
+        except ValueError:
+            return Signal.HOLD
+    if isinstance(value, str):
+        signal_map = {
+            'STRONG_BUY': Signal.STRONG_BUY,
+            'BUY': Signal.BUY,
+            'HOLD': Signal.HOLD,
+            'SELL': Signal.SELL,
+            'STRONG_SELL': Signal.STRONG_SELL,
+            'NONE': Signal.HOLD,
+            '': Signal.HOLD,
+        }
+        return signal_map.get(value.upper().strip(), Signal.HOLD)
+    return Signal.HOLD
+
+
+def normalize_strategy_signal(s: 'StrategySignal') -> 'StrategySignal':
+    """
+    FIX Dec 30, 2025: Normaliza todos los campos de StrategySignal a tipos seguros.
+    
+    Args:
+        s: StrategySignal potencialmente con tipos incorrectos
+        
+    Returns:
+        StrategySignal: Con signal como Enum, confidence y strength como float
+    """
+    return StrategySignal(
+        name=str(s.name) if s.name else 'unknown',
+        signal=normalize_signal(s.signal),
+        confidence=max(0.0, min(1.0, safe_float(s.confidence, 0.0, 'confidence'))),
+        strength=safe_float(s.strength, 0.0, 'strength'),
+        reasoning=str(s.reasoning) if s.reasoning else ''
+    )
 
 
 class Signal(Enum):
@@ -133,6 +187,10 @@ class CoherenceEngine:
         if not signals:
             logger.warning("⚠️ No hay señales para analizar")
             return self._create_empty_report()
+        
+        # FIX Dec 30, 2025: Normalizar todas las señales ANTES de cualquier procesamiento
+        # Previene '>=' not supported between instances of 'str' and 'int'
+        signals = [normalize_strategy_signal(s) for s in signals]
         
         # 1. Clasificar señales
         bullish = [s for s in signals if s.signal.value > 0]
@@ -314,6 +372,8 @@ class CoherenceEngine:
     
     def _classify_coherence_level(self, score: float) -> CoherenceLevel:
         """Clasifica el nivel de coherencia"""
+        # FIX Dec 30, 2025: Asegurar que score es float para comparaciones
+        score = safe_float(score, 0.0, 'coherence_score')
         if score >= 90:
             return CoherenceLevel.EXCELLENT
         elif score >= 70:
@@ -422,6 +482,8 @@ class CoherenceEngine:
     
     def get_coherence_emoji(self, score: float) -> str:
         """Retorna emoji basado en score de coherencia"""
+        # FIX Dec 30, 2025: Asegurar que score es float para comparaciones
+        score = safe_float(score, 0.0, 'emoji_score')
         if score >= 90:
             return "🟢"  # Verde - Excelente
         elif score >= 70:
@@ -481,6 +543,9 @@ class CoherenceEngine:
         
         block_reasons = []
         warnings = []
+        
+        # FIX Dec 30, 2025: Normalizar señales ANTES de clasificar
+        signals = [normalize_strategy_signal(s) for s in signals]
         
         # Clasificar señales
         bullish = [s for s in signals if s.signal.value > 0]
