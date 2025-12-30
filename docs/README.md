@@ -18,6 +18,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+- **ERROR CORREGIDO**: `">= not supported between instances of 'str' and 'int'"` en Coherence Gate
+- **NUEVAS FUNCIONES**:
+  - `normalize_signal()` - Convierte strings "BUY"/"SELL" a Enum Signal
+  - `normalize_strategy_signal()` - Normaliza StrategySignal completo (signal→Enum, confidence→float)
+- **BLINDAJE safe_float()** en todas las comparaciones >= de CoherenceEngine
+- **16 tests nuevos** en `tests/test_coherence_type_safety.py`
+- **Total tests Dec 30**: 43 (27 críticos + 16 type safety)
+- Ver [TYPE_SAFETY_HOTFIX_DEC30_2025.md](history/2025-12/TYPE_SAFETY_HOTFIX_DEC30_2025.md) para detalles
+
 ### Critical Audit Fixes + ENV Control (Dec 30, 2025)
 - **AUDITORÍA CRÍTICA COMPLETADA**: 4 fixes de seguridad implementados
   - Coherence Gate ahora FAIL-CLOSED (excepciones → BLOCKED)

@@ -9,6 +9,37 @@
 
 ## Cambios Recientes
 
+### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+
+**ERROR EN PRODUCCIÓN CORREGIDO:**
+```
+TypeError: '>=' not supported between instances of 'str' and 'int'
+```
+
+El error ocurría cuando `StrategySignal.signal` llegaba como string "BUY" en lugar del Enum `Signal.BUY`, causando que el Coherence Gate entrara en fail-closed y bloqueara todos los trades.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+| Función | Propósito |
+|---------|-----------|
+| `normalize_signal(value)` | Convierte strings "BUY"/"SELL"/"HOLD" a Enum Signal |
+| `normalize_strategy_signal(s)` | Normaliza StrategySignal: signal→Enum, confidence→float (0-1), strength→float |
+| `safe_float()` mejorado | Ahora remueve '%' de strings numéricos |
+
+**Puntos de normalización:**
+- `analyze_coherence()` - Al inicio, antes de clasificar señales
+- `validate_trade_coherence()` - Antes de clasificar bullish/bearish/neutral
+- `_classify_coherence_level()` - Blindaje con safe_float()
+- `get_coherence_emoji()` - Blindaje con safe_float()
+
+**Archivos modificados:**
+- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_* + safe_float mejorado
+- `tests/test_coherence_type_safety.py` - 16 tests nuevos
+
+**Tests:** 16/16 pasando | **Total Dec 30:** 43 tests (27 críticos + 16 type safety)
+
+---
+
 ### Critical Audit Fixes + ENV Control (Dec 30, 2025)
 
 **AUDITORÍA CRÍTICA COMPLETADA** - 4 fixes de seguridad institucional:

@@ -17,6 +17,16 @@
 
 ## Cambios Recientes
 
+### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+- **ERROR CORREGIDO**: TypeError `str vs int` en comparaciones >=
+- **Nuevas funciones**: `normalize_signal()`, `normalize_strategy_signal()`
+- **Blindaje**: `safe_float()` en todas las comparaciones de CoherenceEngine
+- **16 tests nuevos**: `tests/test_coherence_type_safety.py`
+- **Total tests**: 43 (27 críticos + 16 type safety)
+- **Archivo modificado**: `omnix_services/coherence_service/coherence_engine.py`
+
+---
+
 ### Critical Audit Fixes + ENV Control (Dec 30, 2025)
 - **Coherence Gate FAIL-CLOSED**: Excepciones → BLOCKED (antes: skip)
 - **MC Veto Semántica**: ER<0% → BLOCKED (MC_NEG_ER), WR<50% → SIZE_REDUCE

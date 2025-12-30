@@ -7,6 +7,28 @@
 
 ---
 
+## Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** TypeError `'>=' not supported between instances of 'str' and 'int'` en Coherence Gate cuando `StrategySignal.signal` llegaba como string en lugar de Enum.
+
+**Fixes Implementados:**
+
+| Issue | Fix | Test |
+|-------|-----|------|
+| Signal como string | `normalize_signal()` convierte "BUY"/"SELL" a Enum Signal | `test_normalize_string_buy` |
+| StrategySignal con tipos mixtos | `normalize_strategy_signal()` normaliza signal, confidence, strength | `test_normalize_with_string_signal` |
+| Comparaciones >= sin blindaje | `safe_float()` en _classify_coherence_level, get_coherence_emoji | `test_classify_coherence_level_with_string_score` |
+| safe_float no removía '%' | Ahora strip().replace('%', '') antes de parsear | `test_safe_float_removes_percent` |
+
+**Tests:** 16/16 pasando en `tests/test_coherence_type_safety.py`
+
+**Archivos Modificados:**
+- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_* + safe_float mejorado
+
+---
+
 ## Critical Audit Fixes (Dec 30, 2025)
 
 **Status:** ✅ COMPLETED

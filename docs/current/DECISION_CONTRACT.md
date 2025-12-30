@@ -57,7 +57,7 @@
 
 ### 3.1 Vetos Duros (Bloqueo Inmediato)
 
-> **Updated Dec 30, 2025**: MC VETO thresholds corregidos por auditoría
+> **Updated Dec 30, 2025**: MC VETO thresholds corregidos + Type Safety Hotfix
 
 | Veto | Condición | Razón | Acción |
 |------|-----------|-------|--------|
@@ -67,6 +67,22 @@
 | **RMS VETO** | CircuitBreaker triggered | `CB_*` | BLOCKED |
 | **COHERENCE_GATE** | coherence < 45% | `COHERENCE_LOW` | BLOCKED |
 | **COHERENCE_EXCEPTION** | Exception en análisis | `COHERENCE_EXCEPTION` | BLOCKED (FAIL-CLOSED) |
+| **COHERENCE_TYPE_ERROR** | Signal como string (no Enum) | Normalizado | AUTO-FIXED via `normalize_signal()` |
+
+### 3.1.1 Type Safety en Coherence Gate (Dec 30, 2025)
+
+El Coherence Gate ahora incluye normalización de tipos para prevenir errores `str vs int`:
+
+```python
+# Antes de cualquier procesamiento en analyze_coherence() y validate_trade_coherence()
+signals = [normalize_strategy_signal(s) for s in signals]
+```
+
+| Función | Propósito |
+|---------|-----------|
+| `normalize_signal(value)` | Convierte "BUY"/"SELL"/"HOLD" string → Enum Signal |
+| `normalize_strategy_signal(s)` | Normaliza signal, confidence (0-1), strength a tipos correctos |
+| `safe_float(value)` | Usado en `_classify_coherence_level()` y `get_coherence_emoji()` |
 
 ### 3.2 Penalizaciones Suaves
 
