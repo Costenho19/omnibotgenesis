@@ -69,20 +69,30 @@
 | **COHERENCE_EXCEPTION** | Exception en análisis | `COHERENCE_EXCEPTION` | BLOCKED (FAIL-CLOSED) |
 | **COHERENCE_TYPE_ERROR** | Signal como string (no Enum) | Normalizado | AUTO-FIXED via `normalize_signal()` |
 
-### 3.1.1 Type Safety en Coherence Gate (Dec 30, 2025)
+### 3.1.1 Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 
-El Coherence Gate ahora incluye normalización de tipos para prevenir errores `str vs int`:
-
+**Fase 1: Coherence Gate**
 ```python
 # Antes de cualquier procesamiento en analyze_coherence() y validate_trade_coherence()
 signals = [normalize_strategy_signal(s) for s in signals]
 ```
 
-| Función | Propósito |
-|---------|-----------|
-| `normalize_signal(value)` | Convierte "BUY"/"SELL"/"HOLD" string → Enum Signal |
-| `normalize_strategy_signal(s)` | Normaliza signal, confidence (0-1), strength a tipos correctos |
-| `safe_float(value)` | Usado en `_classify_coherence_level()` y `get_coherence_emoji()` |
+**Fase 2: AutoTradingBot._build_strategy_signals()**
+```python
+# Todas las extracciones de diccionarios ahora usan safe_float():
+signal_val = safe_float(quantum.get('signal', 0), default=0.0, param_name='quantum.signal')
+win_rate = safe_float(monte_carlo.get('win_rate', 0.5), default=0.5, param_name='monte_carlo.win_rate')
+# ... aplicado a las 9 estrategias
+```
+
+| Función | Ubicación | Propósito |
+|---------|-----------|-----------|
+| `normalize_signal(value)` | coherence_engine.py | Convierte "BUY"/"SELL"/"HOLD" string → Enum Signal |
+| `normalize_strategy_signal(s)` | coherence_engine.py | Normaliza signal, confidence (0-1), strength |
+| `safe_float(value)` | auto_trading_bot.py | Convierte str/int a float, remueve '%', previene TypeError |
+
+**Estrategias con safe_float:**
+quantum_momentum, kalman_filter, monte_carlo, kelly_criterion, black_swan, sentiment, non_markovian (7 de 9 estrategias con valores numéricos)
 
 ### 3.2 Penalizaciones Suaves
 

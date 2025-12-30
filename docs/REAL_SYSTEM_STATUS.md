@@ -9,34 +9,44 @@
 
 ## Cambios Recientes
 
-### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+### Type Safety Hotfix - SCOPE EXPANDIDO (Dec 30, 2025)
 
 **ERROR EN PRODUCCIÓN CORREGIDO:**
 ```
 TypeError: '>=' not supported between instances of 'str' and 'int'
 ```
 
-El error ocurría cuando `StrategySignal.signal` llegaba como string "BUY" en lugar del Enum `Signal.BUY`, causando que el Coherence Gate entrara en fail-closed y bloqueara todos los trades.
+El error persistía después del fix inicial porque `_build_strategy_signals()` en `auto_trading_bot.py` extraía valores de diccionarios con `.get()` y los comparaba directamente sin normalización.
 
-**SOLUCIÓN IMPLEMENTADA:**
+**SOLUCIÓN IMPLEMENTADA (2 FASES):**
 
-| Función | Propósito |
-|---------|-----------|
-| `normalize_signal(value)` | Convierte strings "BUY"/"SELL"/"HOLD" a Enum Signal |
-| `normalize_strategy_signal(s)` | Normaliza StrategySignal: signal→Enum, confidence→float (0-1), strength→float |
-| `safe_float()` mejorado | Ahora remueve '%' de strings numéricos |
+| Fase | Ubicación | Fix |
+|------|-----------|-----|
+| **Fase 1** | `coherence_engine.py` | `normalize_signal()`, `normalize_strategy_signal()`, `safe_float()` |
+| **Fase 2** | `auto_trading_bot.py` | `safe_float()` aplicado a 9 estrategias en `_build_strategy_signals()` |
 
-**Puntos de normalización:**
-- `analyze_coherence()` - Al inicio, antes de clasificar señales
-- `validate_trade_coherence()` - Antes de clasificar bullish/bearish/neutral
-- `_classify_coherence_level()` - Blindaje con safe_float()
-- `get_coherence_emoji()` - Blindaje con safe_float()
+**Estrategias corregidas en Fase 2:**
+- quantum_momentum: signal, confidence
+- kalman_filter: strength, confidence
+- monte_carlo: win_rate
+- kelly_criterion: optimal_fraction
+- black_swan: crash_probability
+- sentiment: overall_score
+- non_markovian: confidence, bullish_score, bearish_score
+
+**safe_float() mejorado:**
+```python
+if isinstance(value, str):
+    value = value.strip().replace('%', '')
+return float(value)
+```
 
 **Archivos modificados:**
-- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_* + safe_float mejorado
-- `tests/test_coherence_type_safety.py` - 16 tests nuevos
+- `omnix_core/bot/auto_trading_bot.py` - safe_float mejorado + aplicado en _build_strategy_signals
+- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_*
+- `tests/test_auto_trading_bot_type_safety.py` - 28 tests nuevos
 
-**Tests:** 16/16 pasando | **Total Dec 30:** 43 tests (27 críticos + 16 type safety)
+**Tests:** 12 directos + 28 en test file | **Total Dec 30:** ~71 tests
 
 ---
 

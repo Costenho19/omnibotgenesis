@@ -7,9 +7,11 @@
 
 ---
 
-## Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
+## Type Safety Hotfix - SCOPE EXPANDIDO (Dec 30, 2025)
 
-**Status:** ✅ COMPLETED
+**Status:** ✅ COMPLETED (Fase 1: Coherence Engine) | ✅ COMPLETED (Fase 2: AutoTradingBot)
+
+### Fase 1: Coherence Engine (completada anteriormente)
 
 **Problema:** TypeError `'>=' not supported between instances of 'str' and 'int'` en Coherence Gate cuando `StrategySignal.signal` llegaba como string en lugar de Enum.
 
@@ -24,8 +26,34 @@
 
 **Tests:** 16/16 pasando en `tests/test_coherence_type_safety.py`
 
+### Fase 2: AutoTradingBot _build_strategy_signals (Dec 30, 2025)
+
+**Root Cause:** El error persistía porque `_build_strategy_signals()` extraía valores de diccionarios con `.get()` y los comparaba directamente sin normalización.
+
+**Fixes Implementados:**
+
+| Estrategia | Campo(s) | Fix Aplicado |
+|------------|----------|--------------|
+| quantum_momentum | signal, confidence | `safe_float(quantum.get('signal', 0), ...)` |
+| kalman_filter | strength, confidence | `safe_float(kalman.get('strength', 0.5), ...)` |
+| monte_carlo | win_rate | `safe_float(monte_carlo.get('win_rate', 0.5), ...)` |
+| kelly_criterion | optimal_fraction | `safe_float(kelly.get('optimal_fraction', 0), ...)` |
+| black_swan | crash_probability | `safe_float(black_swan.get('crash_probability', 0), ...)` |
+| sentiment | overall_score | `safe_float(sentiment.get('overall_score', 50), ...)` |
+| non_markovian | confidence, bullish_score, bearish_score | `safe_float()` aplicado a los 3 campos |
+
+**Mejora a safe_float:**
+```python
+if isinstance(value, str):
+    value = value.strip().replace('%', '')
+```
+
+**Tests:** 12 tests directos + 28 tests en `tests/test_auto_trading_bot_type_safety.py`
+
 **Archivos Modificados:**
-- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_* + safe_float mejorado
+- `omnix_core/bot/auto_trading_bot.py` - safe_float mejorado + aplicado en _build_strategy_signals (9 estrategias) + 2 funciones adicionales
+- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_* (fase 1)
+- `tests/test_auto_trading_bot_type_safety.py` - 28 tests nuevos
 
 ---
 

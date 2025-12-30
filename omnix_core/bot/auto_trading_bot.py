@@ -78,6 +78,8 @@ def safe_float(value, default: float = 0.0, param_name: str = None) -> float:
     if value is None:
         return default
     try:
+        if isinstance(value, str):
+            value = value.strip().replace('%', '')
         return float(value)
     except (ValueError, TypeError):
         if param_name:
@@ -1126,7 +1128,7 @@ class AutoTradingBot:
                 
                 result = session_manager.restore_all_sessions()
                 
-                if result.get('restored', 0) > 0:
+                if safe_float(result.get('restored', 0), default=0.0) > 0:
                     if not self.state.get('running'):
                         self.state['running'] = True
                         self._start_trading_loop()
@@ -3874,7 +3876,7 @@ class AutoTradingBot:
                     # Sentiment
                     if 'sentiment' in analysis:
                         sent = analysis['sentiment']
-                        score = sent.get('score', 50)
+                        score = safe_float(sent.get('score', 50), default=50.0, param_name='sentiment.score')
                         signal = Signal.BUY if score > 60 else Signal.SELL if score < 40 else Signal.HOLD
                         strategy_signals.append(StrategySignal(
                             name='sentiment',
@@ -3888,11 +3890,12 @@ class AutoTradingBot:
                     # Si no hay señales de estrategias, usar la decisión primaria como fallback
                     if not strategy_signals:
                         primary_signal = Signal.BUY if action == 'BUY' else Signal.SELL if action == 'SELL' else Signal.HOLD
+                        primary_confidence = safe_float(analysis.get('confidence', 0.5), default=0.5, param_name='analysis.confidence')
                         strategy_signals.append(StrategySignal(
                             name='primary_decision',
                             signal=primary_signal,
-                            confidence=analysis.get('confidence', 0.5),
-                            strength=analysis.get('confidence', 0.5) * 100,
+                            confidence=primary_confidence,
+                            strength=primary_confidence * 100,
                             reasoning=f"Decisión primaria: {action}"
                         ))
                         logger.debug(f"🔄 Usando fallback primary_decision para Coherence Engine")
@@ -5636,7 +5639,7 @@ class AutoTradingBot:
         
         # 1. Quantum Momentum
         if quantum:
-            signal_val = quantum.get('signal', 0)
+            signal_val = safe_float(quantum.get('signal', 0), default=0.0, param_name='quantum.signal')
             if signal_val >= 7:
                 signal_enum = Signal.STRONG_BUY
             elif signal_val >= 3:
@@ -5651,7 +5654,7 @@ class AutoTradingBot:
             signals.append(StrategySignal(
                 name='quantum_momentum',
                 signal=signal_enum,
-                confidence=quantum.get('confidence', 0.5),
+                confidence=safe_float(quantum.get('confidence', 0.5), default=0.5, param_name='quantum.confidence'),
                 strength=signal_val,
                 reasoning=f"Quantum signal: {signal_val}/10"
             ))
@@ -5659,12 +5662,13 @@ class AutoTradingBot:
         # 2. Kalman Filter
         if kalman:
             trend = kalman.get('trend', 'NEUTRAL')
+            kalman_strength = safe_float(kalman.get('strength', 0.5), default=0.5, param_name='kalman.strength')
             if trend == 'BULLISH':
                 signal_enum = Signal.BUY
-                strength = kalman.get('strength', 0.5)
+                strength = kalman_strength
             elif trend == 'BEARISH':
                 signal_enum = Signal.SELL
-                strength = -kalman.get('strength', 0.5)
+                strength = -kalman_strength
             else:
                 signal_enum = Signal.HOLD
                 strength = 0
@@ -5672,15 +5676,15 @@ class AutoTradingBot:
             signals.append(StrategySignal(
                 name='kalman_filter',
                 signal=signal_enum,
-                confidence=kalman.get('confidence', 0.7),
+                confidence=safe_float(kalman.get('confidence', 0.7), default=0.7, param_name='kalman.confidence'),
                 strength=strength,
                 reasoning=f"Trend: {trend}"
             ))
         
         # 3. Monte Carlo
         if monte_carlo:
-            win_rate = monte_carlo.get('win_rate', 0.5)  # V6.5.4: default as decimal
-            win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate  # Handle both formats
+            win_rate = safe_float(monte_carlo.get('win_rate', 0.5), default=0.5, param_name='monte_carlo.win_rate')
+            win_rate_pct = win_rate * 100 if win_rate <= 1 else win_rate
             if win_rate_pct >= 70:
                 signal_enum = Signal.STRONG_BUY
             elif win_rate_pct >= 55:
@@ -5723,7 +5727,7 @@ class AutoTradingBot:
         
         # 5. Kelly Criterion
         if kelly:
-            optimal_size = kelly.get('optimal_fraction', 0)
+            optimal_size = safe_float(kelly.get('optimal_fraction', 0), default=0.0, param_name='kelly.optimal_fraction')
             if optimal_size > 0.10:
                 signal_enum = Signal.BUY
             elif optimal_size > 0.05:
@@ -5744,7 +5748,7 @@ class AutoTradingBot:
         # 6. Black Swan Detector
         if black_swan:
             risk_level = black_swan.get('risk_level', 'MEDIUM')
-            crash_prob = black_swan.get('crash_probability', 0)
+            crash_prob = safe_float(black_swan.get('crash_probability', 0), default=0.0, param_name='black_swan.crash_probability')
             
             if risk_level == 'HIGH':
                 signal_enum = Signal.STRONG_SELL
@@ -5766,7 +5770,7 @@ class AutoTradingBot:
         
         # 7. Sentiment Analysis
         if sentiment:
-            sent_score = sentiment.get('overall_score', 50)
+            sent_score = safe_float(sentiment.get('overall_score', 50), default=50.0, param_name='sentiment.overall_score')
             if sent_score >= 75:
                 signal_enum = Signal.STRONG_BUY
             elif sent_score >= 60:
@@ -5789,10 +5793,10 @@ class AutoTradingBot:
         # 8. Non-Markovian Memory Kernel V6.1 (12-point weight in decision flow)
         if non_markovian:
             nm_signal = non_markovian.get('signal', 'HOLD')
-            nm_confidence = non_markovian.get('confidence', 0) / 100.0
+            nm_confidence = safe_float(non_markovian.get('confidence', 0), default=0.0, param_name='non_markovian.confidence') / 100.0
             metrics = non_markovian.get('metrics', {})
-            bullish_score = metrics.get('bullish_score', 0)
-            bearish_score = metrics.get('bearish_score', 0)
+            bullish_score = safe_float(metrics.get('bullish_score', 0), default=0.0, param_name='non_markovian.bullish_score')
+            bearish_score = safe_float(metrics.get('bearish_score', 0), default=0.0, param_name='non_markovian.bearish_score')
             kernel_weight = 12.0
             
             if nm_signal == 'BUY':
