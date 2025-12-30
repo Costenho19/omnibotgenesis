@@ -2433,7 +2433,10 @@ class AutoTradingBot:
                 'mc_veto': False,
                 'rms_veto': False,
                 'ema_signal': None,
-                'decision_trace': []
+                'decision_trace': [],
+                # Dec 30, 2025: Audit fields for mode transparency
+                'track_record_mode': TRACK_RECORD_MODE,
+                'low_vol_mode': LOW_VOL_MODE
             }
             
             # ========== V6.5.4d MONTE CARLO VETO ENGINE ==========

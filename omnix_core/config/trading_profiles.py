@@ -80,11 +80,13 @@ class ModuleStatus(Enum):
 # LOW_VOL_MODE - Ajuste para mercados de baja volatilidad
 # Dec 25, 2025: Navidad-Enero suelen tener baja liquidez
 # ============================================================
-LOW_VOL_MODE = True  # TEMPORAL - Revertir cuando ATR(14) normalice o post-Enero
+# Controlado por ENV para rollback sin redeploy
+LOW_VOL_MODE = os.getenv("LOW_VOL_MODE", "false").lower() == "true"
 
 # ============================================================
 # TRACK_RECORD_MODE - Construcción controlada de histórico
 # Dec 26, 2025: Modo temporal para generar track record
+# Dec 30, 2025: Desactivado por defecto, controlado por ENV
 # ============================================================
 # TRACK_RECORD_MODE permite trades de baja convicción con:
 # - Sizing reducido (máx 0.35x)
@@ -92,7 +94,14 @@ LOW_VOL_MODE = True  # TEMPORAL - Revertir cuando ATR(14) normalice o post-Enero
 # - WEAK_TREND en lugar de NONE cuando EMA no tiene dirección clara
 # - Todos los guardrails (RMS, MC Veto, Coherence) ACTIVOS
 # - Auto-off cuando: total_trades >= 100 AND win_rate >= 0.45
-TRACK_RECORD_MODE = True  # TEMPORAL - para construcción de track record
+#
+# ROLLBACK INMEDIATO (sin redeploy):
+#   Railway: TRACK_RECORD_MODE=true → Reiniciar servicio
+#   Replit: TRACK_RECORD_MODE=true en Secrets → Reiniciar workflow
+TRACK_RECORD_MODE = os.getenv("TRACK_RECORD_MODE", "false").lower() == "true"
+
+# Log estado de modos operativos al importar
+logger.info(f"📊 TRADING MODES: TRACK_RECORD_MODE={TRACK_RECORD_MODE}, LOW_VOL_MODE={LOW_VOL_MODE}")
 
 # ============================================================
 # MODULE STATUS REGISTRY - Transparencia institucional
