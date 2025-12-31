@@ -3529,17 +3529,18 @@ Usa: `/autotrading activar ACEPTO`"""
                     
                     try:
                         if i == 0:
-                            await thinking_message.edit_text(clean_text)
-                            logger.info(f"✅ Parte {i+1}/{total_parts} editada OK ({len(clean_text)} chars)")
+                            edit_result = await thinking_message.edit_text(clean_text)
+                            logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={edit_result.message_id if edit_result else 'N/A'}")
                         else:
-                            await update.message.reply_text(clean_text)
-                            logger.info(f"✅ Parte {i+1}/{total_parts} enviada OK ({len(clean_text)} chars)")
+                            send_result = await update.message.reply_text(clean_text)
+                            logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={send_result.message_id if send_result else 'N/A'}")
                     except Exception as part_error:
-                        logger.warning(f"⚠️ Error parte {i+1}: {part_error}")
+                        logger.error(f"❌ ERROR ENVIANDO TEXTO parte {i+1}: {part_error}")
                         try:
-                            await update.message.reply_text(clean_text)
-                        except:
-                            pass
+                            fallback_result = await update.message.reply_text(clean_text)
+                            logger.info(f"✅ TEXTO ENVIADO (fallback) Parte {i+1}: {len(clean_text)} chars | msg_id={fallback_result.message_id if fallback_result else 'N/A'}")
+                        except Exception as fallback_error:
+                            logger.error(f"❌ ERROR CRÍTICO: No se pudo enviar texto parte {i+1}: {fallback_error}")
                     
                     if i < total_parts - 1:
                         await asyncio.sleep(0.3)
@@ -3553,7 +3554,7 @@ Usa: `/autotrading activar ACEPTO`"""
                         save_success = self.db_manager.save_conversation(
                             user_id=user_id,
                             user_message=user_message,
-                            ai_response=ai_response[:1000],  # Primeros 1000 chars
+                            ai_response=ai_response[:1000],
                             language='es'
                         )
                         if save_success:
@@ -3564,11 +3565,12 @@ Usa: `/autotrading activar ACEPTO`"""
                         logger.warning(f"⚠️ Error guardando conversación (no crítico): {save_error}")
                 
                 # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA TODOS LOS USUARIOS
-                # FIX Dec 18, 2025: Usar servicio de voz centralizado para respuestas duales (texto + audio)
-                # Usar asyncio.to_thread para no bloquear el event loop (voz es I/O síncrono)
+                # FIX Dec 31, 2025: Esperar 1 segundo después del texto para que el usuario lo vea primero
                 if VOICE_SERVICE_AVAILABLE and ai_response and len(ai_response) > 20:
                     try:
-                        logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ DUAL para {user_name}: {len(ai_response)} chars")
+                        logger.info(f"🎤 ⏳ ESPERANDO 1s ANTES DE VOZ para que el texto se vea primero...")
+                        await asyncio.sleep(1.0)
+                        logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ para {user_name}: {len(ai_response)} chars")
                         await asyncio.to_thread(
                             send_telegram_response_with_voice,
                             chat_id,
