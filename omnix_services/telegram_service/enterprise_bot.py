@@ -3542,7 +3542,6 @@ Usa: `/autotrading activar ACEPTO`"""
                             pass
                     
                     if i < total_parts - 1:
-                        import asyncio
                         await asyncio.sleep(0.3)
                 
                 logger.info(f"✅ RESPUESTA COMPLETA ENVIADA: {len(ai_response)} caracteres en {total_parts} parte(s)")
@@ -4833,7 +4832,6 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                     response_text = ""
                     try:
                         if hasattr(self.ai, 'generate_response'):
-                            import asyncio
                             effective_user_name = self._get_user_name_from_db(str(effective_user_id)) or "Usuario"
                             result = self.ai.generate_response(
                                 user_message=video_context,
@@ -6487,7 +6485,6 @@ diferencias de precio mayores al umbral configurado.
             )
             
             # Ejecutar arbitraje
-            import asyncio
             exec_result = await self.arbitrage_executor.execute_arbitrage_trade(
                 best_opportunity, 
                 amount_usd
