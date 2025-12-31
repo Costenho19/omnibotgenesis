@@ -113,6 +113,18 @@ Fixed multiple issues causing "Debug: Timed out" errors and missing audio respon
 - Centralizar timeout de Telegram en configuración
 - VoiceEngine singleton persistente entre llamadas
 
+### OMNIX Identity Prompt (Dec 31, 2025)
+Nuevo prompt de identidad core añadido a `prompt_templates.py` con 7 reglas comportamentales:
+1. **Interpreta intención** - técnica/estratégica/credibilidad/inversión antes de responder
+2. **Responde bien a la primera** - sin rodeos ni fragmentación
+3. **Coherencia narrativa** - mantener línea clara, no contradecir
+4. **Precisión > Defensa** - límites sin autodestruir narrativa
+5. **Diferencia resultados de arquitectura** - performance vs estructura
+6. **Tono** - seguro, técnico, sobrio
+7. **Datos no disponibles** - formato seco sin disculpas
+
+**Objetivo:** "No me está vendiendo humo, pero tampoco está perdido."
+
 ### Investor Response Rules Enhancement V2 (Dec 31, 2025)
 Sistema completo de respuestas institucionales con 8 reglas y formatos ultra-secos:
 
