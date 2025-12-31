@@ -233,6 +233,88 @@ def is_admin(user_id):
         return False
 
 
+async def send_message_with_retry(message_obj, text: str, max_retries: int = 3, parse_mode: str = None):
+    """
+    Enviar mensaje de Telegram con retry y backoff exponencial.
+    
+    FIX Dec 31, 2025: Resolver telegram.error.TimedOut que causa mensajes sin respuesta.
+    El timeout ocurre cuando la red de Railway tiene latencia alta.
+    
+    Args:
+        message_obj: El objeto message de Telegram (update.message o similar)
+        text: El texto a enviar
+        max_retries: Número máximo de reintentos (default 3)
+        parse_mode: Modo de parseo ('Markdown', 'HTML', None)
+    
+    Returns:
+        El mensaje enviado o None si falló
+    """
+    from telegram.error import TimedOut, NetworkError, RetryAfter
+    
+    for attempt in range(max_retries):
+        try:
+            if parse_mode:
+                result = await message_obj.reply_text(text, parse_mode=parse_mode)
+            else:
+                result = await message_obj.reply_text(text)
+            return result
+        except TimedOut as e:
+            wait_time = (attempt + 1) * 2
+            logger.warning(f"⚠️ Telegram TimedOut (intento {attempt+1}/{max_retries}), esperando {wait_time}s...")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(f"❌ Telegram TimedOut después de {max_retries} intentos")
+                raise
+        except RetryAfter as e:
+            logger.warning(f"⚠️ Telegram RetryAfter: {e.retry_after}s")
+            await asyncio.sleep(e.retry_after)
+        except NetworkError as e:
+            wait_time = (attempt + 1) * 2
+            logger.warning(f"⚠️ Telegram NetworkError (intento {attempt+1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(wait_time)
+            else:
+                raise
+    return None
+
+
+async def edit_message_with_retry(message_obj, text: str, max_retries: int = 3, parse_mode: str = None):
+    """
+    Editar mensaje de Telegram con retry y backoff exponencial.
+    
+    FIX Dec 31, 2025: Resolver telegram.error.TimedOut en edit_text.
+    """
+    from telegram.error import TimedOut, NetworkError, RetryAfter
+    
+    for attempt in range(max_retries):
+        try:
+            if parse_mode:
+                result = await message_obj.edit_text(text, parse_mode=parse_mode)
+            else:
+                result = await message_obj.edit_text(text)
+            return result
+        except TimedOut as e:
+            wait_time = (attempt + 1) * 2
+            logger.warning(f"⚠️ Telegram edit TimedOut (intento {attempt+1}/{max_retries}), esperando {wait_time}s...")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(f"❌ Telegram edit TimedOut después de {max_retries} intentos")
+                raise
+        except RetryAfter as e:
+            logger.warning(f"⚠️ Telegram edit RetryAfter: {e.retry_after}s")
+            await asyncio.sleep(e.retry_after)
+        except NetworkError as e:
+            wait_time = (attempt + 1) * 2
+            logger.warning(f"⚠️ Telegram edit NetworkError (intento {attempt+1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(wait_time)
+            else:
+                raise
+    return None
+
+
 class EnterpriseTelegramBot:
     """Bot Telegram empresarial con todas las funcionalidades"""
     
@@ -3504,9 +3586,11 @@ Usa: `/autotrading activar ACEPTO`"""
             
             # 🚀 GENERAR RESPUESTA CON SUPERINTELIGENCIA OMNIX
             # Mostrar indicador de pensamiento estilo ChatGPT/Gemini
-            thinking_message = await update.message.reply_text("🧠 OMNIX IA")
+            # FIX Dec 31, 2025: Usar send_message_with_retry para manejar timeouts
+            thinking_message = await send_message_with_retry(update.message, "🧠 OMNIX IA procesando...")
             
             try:
+                logger.info(f"🧠 AI_CALL_START: Llamando a generate_response_async para {user_name}")
                 # FIX Dec 13, 2025: Usar versión async para evitar deadlock en event loop
                 ai_response = await self.ai.generate_response_async(
                     user_message=user_message,
@@ -3515,6 +3599,8 @@ Usa: `/autotrading activar ACEPTO`"""
                     user_id=user_id,
                     trading_system=self.trading
                 )
+                
+                logger.info(f"🧠 AI_CALL_END: Respuesta generada para {user_name}: {len(ai_response) if ai_response else 0} chars")
                 
                 if not ai_response:
                     ai_response = f"🧠 OMNIX IA procesando tu consulta, {user_name}. Sistema operativo."
@@ -3536,16 +3622,17 @@ Usa: `/autotrading activar ACEPTO`"""
                     clean_text = self._sanitize_markdown(final_text)
                     
                     try:
-                        if i == 0:
-                            edit_result = await thinking_message.edit_text(clean_text)
+                        # FIX Dec 31, 2025: Usar helpers con retry para manejar timeouts
+                        if i == 0 and thinking_message:
+                            edit_result = await edit_message_with_retry(thinking_message, clean_text)
                             logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={edit_result.message_id if edit_result else 'N/A'}")
                         else:
-                            send_result = await update.message.reply_text(clean_text)
+                            send_result = await send_message_with_retry(update.message, clean_text)
                             logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={send_result.message_id if send_result else 'N/A'}")
                     except Exception as part_error:
                         logger.error(f"❌ ERROR ENVIANDO TEXTO parte {i+1}: {part_error}")
                         try:
-                            fallback_result = await update.message.reply_text(clean_text)
+                            fallback_result = await send_message_with_retry(update.message, clean_text)
                             logger.info(f"✅ TEXTO ENVIADO (fallback) Parte {i+1}: {len(clean_text)} chars | msg_id={fallback_result.message_id if fallback_result else 'N/A'}")
                         except Exception as fallback_error:
                             logger.error(f"❌ ERROR CRÍTICO: No se pudo enviar texto parte {i+1}: {fallback_error}")

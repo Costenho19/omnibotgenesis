@@ -82,22 +82,26 @@ Fixed multiple issues causing "Debug: Timed out" errors and missing audio respon
 
 **Problema 1: Timeout de Telegram muy corto (10s)**
 - Aumentado de 10s a 30s en todas las llamadas a `requests.post()` para envío de mensajes
-- Líneas afectadas: 5422, 5432, 5441, 5452, 5469 en `enterprise_bot.py`
+- HTTPXRequest configurado con 30s para todas las operaciones del SDK
 
 **Problema 2: VoiceEngine se perdía entre mensajes**
 - VoiceEngine se sobrescribía con `VoiceServiceEnterprise()` directo (sin atributo `.active`)
 - Fix: Siempre usar `VoiceEngine()` que envuelve el servicio enterprise correctamente
-- Archivo: `voice_controller.py` líneas 181-191
 
 **Problema 3: Mensajes de debug visibles al usuario**
 - Removido `⚠️ Debug: {error}` de mensajes de error
 - Ahora muestra: "🤖 OMNIX procesando tu mensaje. Por favor espera un momento..."
-- Líneas: 3178, 3603 en `enterprise_bot.py`
 
 **Problema 4: Trading loop no terminaba gracefully**
 - Detectar "interpreter shutdown" o "cannot schedule new futures" y hacer `break`
 - Previene loops infinitos de error durante redeploys de Railway
-- Líneas: 1267-1271, 2111-2115 en `auto_trading_bot.py`
+
+**FIX V2 (Dec 31, 2025): Retry con Backoff para Envío de Mensajes**
+- Nuevas funciones `send_message_with_retry()` y `edit_message_with_retry()`
+- 3 reintentos con backoff exponencial (2s, 4s, 6s)
+- Manejo específico de TimedOut, NetworkError, RetryAfter
+- Logging detallado: AI_CALL_START, AI_CALL_END para diagnóstico
+- Aplicado en `_process_message_content()` para envío de respuestas AI
 
 **Mejoras Futuras (Technical Debt):**
 - Centralizar timeout de Telegram en configuración
