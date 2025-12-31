@@ -88,6 +88,30 @@ Fixed multiple issues causing "Debug: Timed out" errors and missing audio respon
 - Centralizar timeout de Telegram en configuración
 - VoiceEngine singleton persistente entre llamadas
 
+### Investor Response Rules Enhancement (Dec 31, 2025)
+Mejorado el sistema de respuestas de IA para evitar errores comunes en pitch a inversores:
+
+**Nuevas Reglas en MASTER_SYSTEM_PROMPT:**
+1. **NO UNVERIFIABLE CLAIMS** - No afirmar "analizamos X años" sin datos verificables
+2. **NO PERCENTAGE WITHOUT SOURCE** - No dar % sin fuente auditable
+3. **NEVER SAY "REFINANDO"** - Suena a beta, usar "el mercado habilita"
+4. **CLOSE INACTIVITY RISK** - Frases letales para "sistema que nunca opera"
+5. **FOUNDER CONTROLS, MARKET ENABLES** - Narrativa correcta
+
+**Nuevos Tipos de Respuesta en InvestorResponseEngine:**
+- `SYSTEM_INACTIVITY`: "Pocas ventanas buenas > muchas mediocres"
+- `OVER_FILTERING`: "Type II errors > Type I errors"  
+- `WHY_NOT_BUY_BTC`: "Asymmetric optionality vs passive holding"
+
+**Fix en Detección de Patrones:**
+- `detect_query_type()` ahora ordena patrones por longitud (específicos primero)
+- Evita que "hold" bloquee "btc y holdear" → WHY_NOT_BUY_BTC
+
+**Archivos Modificados:**
+- `omnix_services/ai_service/prompt_templates.py`
+- `omnix_services/ai_service/investor_responses.py`
+- `tests/test_investor_responses.py` (nuevo)
+
 ### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 Defensive type normalization to prevent `str vs int` comparison errors:
 

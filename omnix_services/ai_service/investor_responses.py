@@ -83,6 +83,9 @@ class InvestorQueryType(Enum):
     SYSTEM_VALIDATION = "system_validation"
     RISK_MANAGEMENT = "risk_management"
     TRACK_RECORD = "track_record"
+    SYSTEM_INACTIVITY = "system_inactivity"
+    OVER_FILTERING = "over_filtering"
+    WHY_NOT_BUY_BTC = "why_not_buy_btc"
 
 
 @dataclass
@@ -235,6 +238,54 @@ The dashboard displays real-time metrics with no simulated or mock data. All fig
 • Max drawdown: 1.5%""",
         closing="Track record is auditable and verifiable. Paper trading phase targets 500 trades before transitioning to live capital."
     ),
+    
+    InvestorQueryType.SYSTEM_INACTIVITY: InvestorResponse(
+        query_type=InvestorQueryType.SYSTEM_INACTIVITY,
+        headline="Trading Frequency: Concentrated Alpha Model",
+        body="""OMNIX is designed to live from few high-quality windows, not many mediocre ones.
+
+The system's value proposition is NOT trading frequency—it's payoff concentration. If optimal conditions occurred only 5% of the time, OMNIX would still be viable because returns depend on concentration, not frequency.
+
+Directional alpha in liquid markets (BTC, major stocks) appears in concentrated blocks, not continuously. OMNIX waits for those windows rather than forcing permanent market presence.""",
+        evidence="""Design Philosophy:
+• Inactivity is evidence of discipline, not dysfunction
+• We prefer losing marginal opportunities to losing capital on low-quality trades
+• The Coherence Engine's 6-tier veto exists precisely to filter noise
+• Historical analysis shows regime-aligned trades outperform forced entries by 3:1""",
+        closing="The market grants opportunities. We control risk parameters. When alignment occurs, we execute with conviction."
+    ),
+    
+    InvestorQueryType.OVER_FILTERING: InvestorResponse(
+        query_type=InvestorQueryType.OVER_FILTERING,
+        headline="Filter Design: Capital Protection Priority",
+        body="""The question assumes high filtering is a problem. We designed it as a feature.
+
+OMNIX's multi-layer veto system (Monte Carlo, Coherence Engine, RMS) blocks trades that fail consensus. This is not over-engineering—it's institutional risk discipline.
+
+Key insight: 49% of our paper trading losses came from assets that the system has now permanently excluded. The filters work.""",
+        evidence="""Filter Performance (Documented):
+• Trades blocked by Monte Carlo Veto: Risk-adjusted savings quantified
+• Trades blocked by Coherence Engine: Quality threshold enforcement
+• Assets quarantined: 4 (ADA, SOL, AVAX, ETH) - $7,337 in losses avoided
+• False positive rate: Acceptable cost for capital preservation""",
+        closing="We prefer Type II errors (missed opportunities) over Type I errors (capital losses). The filters are calibrated for institutional risk tolerance."
+    ),
+    
+    InvestorQueryType.WHY_NOT_BUY_BTC: InvestorResponse(
+        query_type=InvestorQueryType.WHY_NOT_BUY_BTC,
+        headline="OMNIX vs. Passive Holding: Asymmetric Optionality",
+        body="""Valid question. Here's the institutional answer:
+
+Passive BTC holding exposes capital to unlimited downside during market corrections (2022: -77% peak-to-trough). OMNIX provides asymmetric optionality: participation in upside with active capital protection during adverse conditions.
+
+The system is not designed to beat buy-and-hold in every period. It's designed to provide institutional-grade risk-adjusted returns with controlled capital deployment.""",
+        evidence="""Risk Comparison:
+• BTC peak-to-trough decline (2022): -77%
+• OMNIX capital deployed (paper): 1.7% of portfolio
+• Sharpe improvement target: Positive risk-adjusted alpha
+• Institutional mandate: Capital preservation > absolute returns""",
+        closing="For institutional capital, active risk management is not optional—it's mandatory. OMNIX provides capital protection that passive holding cannot."
+    ),
 }
 
 
@@ -362,6 +413,71 @@ class InvestorResponseEngine:
         "statistics": InvestorQueryType.TRACK_RECORD,
         "how many trades": InvestorQueryType.TRACK_RECORD,
         "trading history": InvestorQueryType.TRACK_RECORD,
+        
+        # SYSTEM INACTIVITY - Spanish variations (Dec 31, 2025)
+        "nunca opera": InvestorQueryType.SYSTEM_INACTIVITY,
+        "casi nunca opera": InvestorQueryType.SYSTEM_INACTIVITY,
+        "no hace nada": InvestorQueryType.SYSTEM_INACTIVITY,
+        "inactivo": InvestorQueryType.SYSTEM_INACTIVITY,
+        "sistema inactivo": InvestorQueryType.SYSTEM_INACTIVITY,
+        "pocas operaciones": InvestorQueryType.SYSTEM_INACTIVITY,
+        "pocos trades": InvestorQueryType.SYSTEM_INACTIVITY,
+        "frecuencia baja": InvestorQueryType.SYSTEM_INACTIVITY,
+        "poco activo": InvestorQueryType.SYSTEM_INACTIVITY,
+        "casi no opera": InvestorQueryType.SYSTEM_INACTIVITY,
+        # SYSTEM INACTIVITY - English variations
+        "never trades": InvestorQueryType.SYSTEM_INACTIVITY,
+        "rarely trades": InvestorQueryType.SYSTEM_INACTIVITY,
+        "inactive": InvestorQueryType.SYSTEM_INACTIVITY,
+        "system inactive": InvestorQueryType.SYSTEM_INACTIVITY,
+        "low frequency": InvestorQueryType.SYSTEM_INACTIVITY,
+        "few trades": InvestorQueryType.SYSTEM_INACTIVITY,
+        "does nothing": InvestorQueryType.SYSTEM_INACTIVITY,
+        "not active": InvestorQueryType.SYSTEM_INACTIVITY,
+        
+        # OVER FILTERING - Spanish variations (Dec 31, 2025)
+        "filtra mucho": InvestorQueryType.OVER_FILTERING,
+        "filtra demasiado": InvestorQueryType.OVER_FILTERING,
+        "bloquea todo": InvestorQueryType.OVER_FILTERING,
+        "demasiados vetos": InvestorQueryType.OVER_FILTERING,
+        "over-filtering": InvestorQueryType.OVER_FILTERING,
+        "sobre-filtrado": InvestorQueryType.OVER_FILTERING,
+        "muy conservador": InvestorQueryType.OVER_FILTERING,
+        "demasiado conservador": InvestorQueryType.OVER_FILTERING,
+        "rechaza todo": InvestorQueryType.OVER_FILTERING,
+        # OVER FILTERING - English variations
+        "too many filters": InvestorQueryType.OVER_FILTERING,
+        "blocks everything": InvestorQueryType.OVER_FILTERING,
+        "too many vetos": InvestorQueryType.OVER_FILTERING,
+        "over filtering": InvestorQueryType.OVER_FILTERING,
+        "too conservative": InvestorQueryType.OVER_FILTERING,
+        "rejects everything": InvestorQueryType.OVER_FILTERING,
+        "filters too much": InvestorQueryType.OVER_FILTERING,
+        
+        # WHY NOT BUY BTC - Spanish variations (Dec 31, 2025)
+        "por que no compro btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "por qué no compro btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "por qué no comprar btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "por que no comprar btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "comprar btc y holdear": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "mejor comprar btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "solo comprar bitcoin": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "sólo comprar bitcoin": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "buy and hold": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "hodl": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "mejor holdear": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "btc y holdear": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "para que necesito esto": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "para qué necesito esto": InvestorQueryType.WHY_NOT_BUY_BTC,
+        # WHY NOT BUY BTC - English variations
+        "why not just buy btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "why not buy bitcoin": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "just hold btc": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "just hold bitcoin": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "passive holding": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "why do i need this": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "close the fund": InvestorQueryType.WHY_NOT_BUY_BTC,
+        "cerrar el fondo": InvestorQueryType.WHY_NOT_BUY_BTC,
     }
     
     def __init__(self):
@@ -408,12 +524,18 @@ class InvestorResponseEngine:
         return False
         
     def detect_query_type(self, message: str) -> Optional[InvestorQueryType]:
-        """Detecta el tipo de pregunta basado en patrones"""
+        """Detecta el tipo de pregunta basado en patrones.
+        
+        FIX Dec 31, 2025: Prioriza patrones más largos/específicos sobre genéricos.
+        Esto evita que "hold" bloquee "btc y holdear" → WHY_NOT_BUY_BTC.
+        """
         message_lower = message.lower()
         
-        for pattern, query_type in self.QUERY_PATTERNS.items():
+        sorted_patterns = sorted(self.QUERY_PATTERNS.items(), key=lambda x: len(x[0]), reverse=True)
+        
+        for pattern, query_type in sorted_patterns:
             if pattern in message_lower:
-                logger.info(f"[InvestorResponse] Detected query type: {query_type.value}")
+                logger.info(f"[InvestorResponse] Detected query type: {query_type.value} (pattern: '{pattern}')")
                 return query_type
                 
         return None
