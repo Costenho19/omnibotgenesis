@@ -86,6 +86,8 @@ class InvestorQueryType(Enum):
     SYSTEM_INACTIVITY = "system_inactivity"
     OVER_FILTERING = "over_filtering"
     WHY_NOT_BUY_BTC = "why_not_buy_btc"
+    DATA_NOT_AVAILABLE = "data_not_available"
+    FALSIFIABLE_REPORT = "falsifiable_report"
 
 
 @dataclass
@@ -286,6 +288,42 @@ The system is not designed to beat buy-and-hold in every period. It's designed t
 • Institutional mandate: Capital preservation > absolute returns""",
         closing="For institutional capital, active risk management is not optional—it's mandatory. OMNIX provides capital protection that passive holding cannot."
     ),
+    
+    InvestorQueryType.DATA_NOT_AVAILABLE: InvestorResponse(
+        query_type=InvestorQueryType.DATA_NOT_AVAILABLE,
+        headline="",
+        body="""Profit Factor: No disponible. Ledger sin agregación.
+Exposure Time: No disponible. Duración no calculada.
+BTC Benchmark: No disponible. Timestamps no alineados.
+Sharpe Ratio: No disponible. Ventana insuficiente.
+
+Correcto. Hoy no afirmamos edge, solo control de riesgo.""",
+        evidence="",
+        closing="La ausencia de este reporte no invalida el sistema; el edge aún no está cuantificado de forma falsable."
+    ),
+    
+    InvestorQueryType.FALSIFIABLE_REPORT: InvestorResponse(
+        query_type=InvestorQueryType.FALSIFIABLE_REPORT,
+        headline="Reporte Falsable: Estado de Disponibilidad",
+        body="""Correcto. Hoy OMNIX no puede producir un reporte falsable con:
+- Script reproducible
+- Query SQL verificable  
+- Hash de commit
+- Timestamps auditables
+
+Por lo tanto, hoy no afirmamos edge, solo control de riesgo.""",
+        evidence="""Lo que SÍ está disponible hoy:
+• Trade count: 119 trades registrados en DB
+• P&L agregado: -$14,942.94 (1.7% capital)
+• Win rate: 22% (métrica secundaria)
+• Activos excluidos: 4 (documentados)
+
+Lo que NO está disponible:
+• Profit Factor automatizado
+• Exposure Time real  
+• BTC benchmark alineado""",
+        closing="La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
+    ),
 }
 
 
@@ -478,6 +516,41 @@ class InvestorResponseEngine:
         "why do i need this": InvestorQueryType.WHY_NOT_BUY_BTC,
         "close the fund": InvestorQueryType.WHY_NOT_BUY_BTC,
         "cerrar el fondo": InvestorQueryType.WHY_NOT_BUY_BTC,
+        
+        # DATA NOT AVAILABLE - Spanish variations (Dec 31, 2025)
+        "datos no disponibles": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "no disponible": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "profit factor no disponible": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "exposure time": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "sharpe ratio": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "métricas faltantes": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "metricas faltantes": InvestorQueryType.DATA_NOT_AVAILABLE,
+        # DATA NOT AVAILABLE - English variations
+        "data not available": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "missing metrics": InvestorQueryType.DATA_NOT_AVAILABLE,
+        "incomplete data": InvestorQueryType.DATA_NOT_AVAILABLE,
+        
+        # FALSIFIABLE REPORT - Spanish variations (Dec 31, 2025)
+        "reporte falsable": InvestorQueryType.FALSIFIABLE_REPORT,
+        "script reproducible": InvestorQueryType.FALSIFIABLE_REPORT,
+        "query verificable": InvestorQueryType.FALSIFIABLE_REPORT,
+        "hash de commit": InvestorQueryType.FALSIFIABLE_REPORT,
+        "desde tu db": InvestorQueryType.FALSIFIABLE_REPORT,
+        "desde tu base de datos": InvestorQueryType.FALSIFIABLE_REPORT,
+        "sin narrativa": InvestorQueryType.FALSIFIABLE_REPORT,
+        "solo numeros": InvestorQueryType.FALSIFIABLE_REPORT,
+        "solo números": InvestorQueryType.FALSIFIABLE_REPORT,
+        "timestamps reales": InvestorQueryType.FALSIFIABLE_REPORT,
+        # FALSIFIABLE REPORT - English variations
+        "falsifiable report": InvestorQueryType.FALSIFIABLE_REPORT,
+        "reproducible script": InvestorQueryType.FALSIFIABLE_REPORT,
+        "verifiable query": InvestorQueryType.FALSIFIABLE_REPORT,
+        "commit hash": InvestorQueryType.FALSIFIABLE_REPORT,
+        "from your db": InvestorQueryType.FALSIFIABLE_REPORT,
+        "from your database": InvestorQueryType.FALSIFIABLE_REPORT,
+        "no narrative": InvestorQueryType.FALSIFIABLE_REPORT,
+        "just numbers": InvestorQueryType.FALSIFIABLE_REPORT,
+        "real timestamps": InvestorQueryType.FALSIFIABLE_REPORT,
     }
     
     def __init__(self):

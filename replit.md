@@ -103,29 +103,32 @@ Fixed multiple issues causing "Debug: Timed out" errors and missing audio respon
 - Centralizar timeout de Telegram en configuración
 - VoiceEngine singleton persistente entre llamadas
 
-### Investor Response Rules Enhancement (Dec 31, 2025)
-Mejorado el sistema de respuestas de IA para evitar errores comunes en pitch a inversores:
+### Investor Response Rules Enhancement V2 (Dec 31, 2025)
+Sistema completo de respuestas institucionales con 8 reglas y formatos ultra-secos:
 
-**Nuevas Reglas en MASTER_SYSTEM_PROMPT:**
-1. **NO UNVERIFIABLE CLAIMS** - No afirmar "analizamos X años" sin datos verificables
+**Reglas en MASTER_SYSTEM_PROMPT (8 total):**
+1. **NO UNVERIFIABLE CLAIMS** - No afirmar datos sin evidencia
 2. **NO PERCENTAGE WITHOUT SOURCE** - No dar % sin fuente auditable
-3. **NEVER SAY "REFINANDO"** - Suena a beta, usar "el mercado habilita"
-4. **CLOSE INACTIVITY RISK** - Frases letales para "sistema que nunca opera"
+3. **NEVER SAY "REFINANDO"** - Usar "el mercado habilita"
+4. **CLOSE INACTIVITY RISK** - Frases letales para objeciones
 5. **FOUNDER CONTROLS, MARKET ENABLES** - Narrativa correcta
+6. **ACCEPT LIMITATIONS WITHOUT JUSTIFICATION** - Sin spin defensivo
+7. **PROTECT EDGE WITHOUT CONCEDING DEFEAT** - Frase protectora obligatoria
+8. **DATA NOT AVAILABLE FORMAT** - Formato ultra-seco para métricas faltantes
 
-**Nuevos Tipos de Respuesta en InvestorResponseEngine:**
+**Frase Protectora Obligatoria:**
+> "La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
+
+**Nuevos Tipos de Respuesta:**
+- `DATA_NOT_AVAILABLE`: Formato seco para métricas pendientes
+- `FALSIFIABLE_REPORT`: Respuesta cuando piden script reproducible
 - `SYSTEM_INACTIVITY`: "Pocas ventanas buenas > muchas mediocres"
-- `OVER_FILTERING`: "Type II errors > Type I errors"  
+- `OVER_FILTERING`: "Type II errors > Type I errors"
 - `WHY_NOT_BUY_BTC`: "Asymmetric optionality vs passive holding"
 
-**Fix en Detección de Patrones:**
-- `detect_query_type()` ahora ordena patrones por longitud (específicos primero)
-- Evita que "hold" bloquee "btc y holdear" → WHY_NOT_BUY_BTC
-
 **Archivos Modificados:**
-- `omnix_services/ai_service/prompt_templates.py`
-- `omnix_services/ai_service/investor_responses.py`
-- `tests/test_investor_responses.py` (nuevo)
+- `omnix_services/ai_service/prompt_templates.py` (8 reglas)
+- `omnix_services/ai_service/investor_responses.py` (5 nuevos tipos)
 
 ### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 Defensive type normalization to prevent `str vs int` comparison errors:
