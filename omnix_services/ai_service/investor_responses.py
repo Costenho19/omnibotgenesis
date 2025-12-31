@@ -88,6 +88,7 @@ class InvestorQueryType(Enum):
     WHY_NOT_BUY_BTC = "why_not_buy_btc"
     DATA_NOT_AVAILABLE = "data_not_available"
     FALSIFIABLE_REPORT = "falsifiable_report"
+    RISK_OFF_BOT = "risk_off_bot"
 
 
 @dataclass
@@ -324,6 +325,21 @@ Lo que NO está disponible:
 • BTC benchmark alineado""",
         closing="La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
     ),
+    
+    InvestorQueryType.RISK_OFF_BOT: InvestorResponse(
+        query_type=InvestorQueryType.RISK_OFF_BOT,
+        headline="OMNIX vs Risk-Off Bot: Diferenciación",
+        body="""Un risk-off bot evita pérdidas sin medir expectativa.
+OMNIX aún no ha validado expectativa, pero sí ha validado control de riesgo bajo ejecución real.
+
+Hasta que el reporte sea reproducible, OMNIX debe considerarse un sistema con gobernanza de riesgo demostrada y edge pendiente de validación.""",
+        evidence="""Estado verificable hoy:
+• Control de riesgo: Demostrado bajo ejecución real
+• Peak-to-trough decline: ~1.7% del capital
+• Edge cuantificado: Pendiente de validación falsable
+• Vetos de riesgo: Ejecutándose consistentemente""",
+        closing="La ausencia de edge cuantificado hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
+    ),
 }
 
 
@@ -551,6 +567,28 @@ class InvestorResponseEngine:
         "no narrative": InvestorQueryType.FALSIFIABLE_REPORT,
         "just numbers": InvestorQueryType.FALSIFIABLE_REPORT,
         "real timestamps": InvestorQueryType.FALSIFIABLE_REPORT,
+        
+        # RISK OFF BOT - Spanish variations (Dec 31, 2025)
+        "risk off bot": InvestorQueryType.RISK_OFF_BOT,
+        "risk-off bot": InvestorQueryType.RISK_OFF_BOT,
+        "solo evitas perdidas": InvestorQueryType.RISK_OFF_BOT,
+        "solo evitas pérdidas": InvestorQueryType.RISK_OFF_BOT,
+        "no genera alfa": InvestorQueryType.RISK_OFF_BOT,
+        "no genera alpha": InvestorQueryType.RISK_OFF_BOT,
+        "solo protege": InvestorQueryType.RISK_OFF_BOT,
+        "donde esta el edge": InvestorQueryType.RISK_OFF_BOT,
+        "dónde está el edge": InvestorQueryType.RISK_OFF_BOT,
+        "cual es el edge": InvestorQueryType.RISK_OFF_BOT,
+        "cuál es el edge": InvestorQueryType.RISK_OFF_BOT,
+        "no hay edge": InvestorQueryType.RISK_OFF_BOT,
+        "sin edge": InvestorQueryType.RISK_OFF_BOT,
+        # RISK OFF BOT - English variations
+        "just avoids losses": InvestorQueryType.RISK_OFF_BOT,
+        "only protects": InvestorQueryType.RISK_OFF_BOT,
+        "where is the edge": InvestorQueryType.RISK_OFF_BOT,
+        "what is the edge": InvestorQueryType.RISK_OFF_BOT,
+        "no edge": InvestorQueryType.RISK_OFF_BOT,
+        "show me the edge": InvestorQueryType.RISK_OFF_BOT,
     }
     
     def __init__(self):

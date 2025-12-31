@@ -115,6 +115,9 @@ Sistema completo de respuestas institucionales con 8 reglas y formatos ultra-sec
 6. **ACCEPT LIMITATIONS WITHOUT JUSTIFICATION** - Sin spin defensivo
 7. **PROTECT EDGE WITHOUT CONCEDING DEFEAT** - Frase protectora obligatoria
 8. **DATA NOT AVAILABLE FORMAT** - Formato ultra-seco para métricas faltantes
+9. **NO SELF-FLAGELLATION** - Sin autoinculpación excesiva, una vez aceptado el fallo, pasar a "¿Qué sigue?"
+10. **NO FUTURE PROMISES** - No "me comprometo", solo estado factual presente
+11. **NO IRRELEVANT DATA BLOCKS** - Sin bloques de precios como relleno
 
 **Frase Protectora Obligatoria:**
 > "La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
@@ -125,10 +128,11 @@ Sistema completo de respuestas institucionales con 8 reglas y formatos ultra-sec
 - `SYSTEM_INACTIVITY`: "Pocas ventanas buenas > muchas mediocres"
 - `OVER_FILTERING`: "Type II errors > Type I errors"
 - `WHY_NOT_BUY_BTC`: "Asymmetric optionality vs passive holding"
+- `RISK_OFF_BOT`: "Control de riesgo demostrado + edge pendiente de validación"
 
 **Archivos Modificados:**
-- `omnix_services/ai_service/prompt_templates.py` (8 reglas)
-- `omnix_services/ai_service/investor_responses.py` (5 nuevos tipos)
+- `omnix_services/ai_service/prompt_templates.py` (11 reglas)
+- `omnix_services/ai_service/investor_responses.py` (6 nuevos tipos)
 
 ### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 Defensive type normalization to prevent `str vs int` comparison errors:
