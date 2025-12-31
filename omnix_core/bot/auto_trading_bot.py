@@ -1262,6 +1262,10 @@ class AutoTradingBot:
                 time.sleep(self.config.get('check_interval_seconds', 25))
                 
             except Exception as e:
+                error_msg = str(e).lower()
+                if 'interpreter shutdown' in error_msg or 'cannot schedule new futures' in error_msg:
+                    logger.warning(f"🛑 Shutdown detectado - terminando trading loop gracefully")
+                    break
                 logger.error(f"❌ Error en trading loop: {e}")
                 time.sleep(30)
         
@@ -2102,10 +2106,14 @@ class AutoTradingBot:
                 time.sleep(self.config['check_interval_seconds'])
                 
             except Exception as e:
+                error_msg = str(e).lower()
+                if 'interpreter shutdown' in error_msg or 'cannot schedule new futures' in error_msg:
+                    logger.warning(f"🛑 Shutdown detectado ciclo #{cycle_counter} - terminando trading loop gracefully")
+                    break
                 logger.error(f"❌ Error en trading loop ciclo #{cycle_counter}: {e}")
                 import traceback
                 logger.error(f"   Traceback: {traceback.format_exc()}")
-                time.sleep(30)  # V6.4: Esperar 30s (era 60s) antes de reintentar
+                time.sleep(30)
         
         logger.info(f"🔄 Trading loop {VERSION_BANNER} terminado después de {cycle_counter} ciclos")
     
