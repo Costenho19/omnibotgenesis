@@ -62,6 +62,32 @@ Fixed `UnboundLocalError: cannot access local variable 'asyncio'` caused by cond
 
 **Rule:** Never use conditional imports for modules used elsewhere in the same function.
 
+### Telegram Timeout & Voice Reliability Fix (Dec 31, 2025)
+Fixed multiple issues causing "Debug: Timed out" errors and missing audio responses:
+
+**Problema 1: Timeout de Telegram muy corto (10s)**
+- Aumentado de 10s a 30s en todas las llamadas a `requests.post()` para envío de mensajes
+- Líneas afectadas: 5422, 5432, 5441, 5452, 5469 en `enterprise_bot.py`
+
+**Problema 2: VoiceEngine se perdía entre mensajes**
+- VoiceEngine se sobrescribía con `VoiceServiceEnterprise()` directo (sin atributo `.active`)
+- Fix: Siempre usar `VoiceEngine()` que envuelve el servicio enterprise correctamente
+- Archivo: `voice_controller.py` líneas 181-191
+
+**Problema 3: Mensajes de debug visibles al usuario**
+- Removido `⚠️ Debug: {error}` de mensajes de error
+- Ahora muestra: "🤖 OMNIX procesando tu mensaje. Por favor espera un momento..."
+- Líneas: 3178, 3603 en `enterprise_bot.py`
+
+**Problema 4: Trading loop no terminaba gracefully**
+- Detectar "interpreter shutdown" o "cannot schedule new futures" y hacer `break`
+- Previene loops infinitos de error durante redeploys de Railway
+- Líneas: 1267-1271, 2111-2115 en `auto_trading_bot.py`
+
+**Mejoras Futuras (Technical Debt):**
+- Centralizar timeout de Telegram en configuración
+- VoiceEngine singleton persistente entre llamadas
+
 ### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 Defensive type normalization to prevent `str vs int` comparison errors:
 

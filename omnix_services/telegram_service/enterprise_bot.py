@@ -3172,7 +3172,8 @@ Ejemplo: /risk_events 48
             logger.error(f"❌ Error en handle_message (agregación): {e}")
             logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
             try:
-                await update.message.reply_text(f"🤖 OMNIX procesando... Sistema operativo.\n\n⚠️ Debug: {str(e)[:200]}")
+                # FIX Dec 31, 2025: No mostrar errores técnicos al usuario
+                await update.message.reply_text("🤖 OMNIX procesando tu mensaje. Por favor espera un momento...")
             except:
                 pass
 
@@ -3596,7 +3597,8 @@ Usa: `/autotrading activar ACEPTO`"""
             logger.error(f"❌ Error crítico _process_message_content: {e}")
             logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
             try:
-                await update.message.reply_text(f"🤖 OMNIX procesando... Sistema operativo.\n\n⚠️ Debug: {str(e)[:200]}")
+                # FIX Dec 31, 2025: No mostrar errores técnicos al usuario
+                await update.message.reply_text("🤖 OMNIX procesando tu mensaje. Por favor espera un momento...")
             except:
                 pass
     
@@ -5416,7 +5418,7 @@ ESTILO:
                     if parse_mode:
                         edit_data['parse_mode'] = parse_mode
                     
-                    response = requests.post(edit_url, json=edit_data, timeout=10)
+                    response = requests.post(edit_url, json=edit_data, timeout=30)
                     if response.status_code != 200:
                         logger.warning(f"⚠️ Edit fallido, enviando como nuevo mensaje: {response.status_code}")
                         send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -5426,7 +5428,7 @@ ESTILO:
                         }
                         if parse_mode:
                             send_data['parse_mode'] = parse_mode
-                        response = requests.post(send_url, json=send_data, timeout=10)
+                        response = requests.post(send_url, json=send_data, timeout=30)
                 else:
                     send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                     send_data = {
@@ -5435,7 +5437,7 @@ ESTILO:
                     }
                     if parse_mode:
                         send_data['parse_mode'] = parse_mode
-                    response = requests.post(send_url, json=send_data, timeout=10)
+                    response = requests.post(send_url, json=send_data, timeout=30)
                 
                 if response.status_code == 200:
                     logger.info(f"✅ Parte {i+1}/{total_parts} enviada OK ({len(clean_text)} chars)")
@@ -5446,7 +5448,7 @@ ESTILO:
                             'chat_id': chat_id,
                             'text': clean_text
                         }
-                        requests.post(send_url, json=send_data_plain, timeout=10)
+                        requests.post(send_url, json=send_data_plain, timeout=30)
                 
                 if i < total_parts - 1:
                     time.sleep(0.3)
@@ -5463,7 +5465,7 @@ ESTILO:
                         'chat_id': chat_id,
                         'text': text[:4000] if len(text) > 4000 else text
                     }
-                    requests.post(fallback_url, json=fallback_data, timeout=10)
+                    requests.post(fallback_url, json=fallback_data, timeout=30)
             except:
                 pass
             return False

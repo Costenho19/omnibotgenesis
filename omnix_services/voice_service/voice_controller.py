@@ -179,10 +179,9 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
         if not global_voice_engine or not hasattr(global_voice_engine, 'active'):
             logger.warning("🎤 ⚠️ VoiceEngine perdido - REINICIALIZANDO...")
             try:
-                if VOICE_ENTERPRISE_AVAILABLE:
-                    global_voice_engine = VoiceServiceEnterprise()
-                else:
-                    global_voice_engine = VoiceEngine()
+                # FIX Dec 31, 2025: Siempre usar VoiceEngine() que envuelve VoiceServiceEnterprise
+                # VoiceEngine tiene el atributo 'active', VoiceServiceEnterprise directo no
+                global_voice_engine = VoiceEngine()
                 logger.info("🎤 ✅ VoiceEngine reinicializado exitosamente")
             except Exception as reinit_error:
                 logger.error(f"🎤 ❌ Error reinicializando VoiceEngine: {reinit_error}")
