@@ -89,6 +89,7 @@ class InvestorQueryType(Enum):
     DATA_NOT_AVAILABLE = "data_not_available"
     FALSIFIABLE_REPORT = "falsifiable_report"
     RISK_OFF_BOT = "risk_off_bot"
+    HYPOTHETICAL_SCENARIO = "hypothetical_scenario"
 
 
 @dataclass
@@ -101,15 +102,22 @@ class InvestorResponse:
     closing: str
     
     def format(self) -> str:
-        """Formato completo de la respuesta"""
-        return f"""**{self.headline}**
-
-{self.body}
-
-**Evidence:**
-{self.evidence}
-
-{self.closing}"""
+        """Formato completo de la respuesta - omite secciones vacías"""
+        parts = []
+        
+        if self.headline:
+            parts.append(f"**{self.headline}**")
+        
+        if self.body:
+            parts.append(self.body)
+        
+        if self.evidence:
+            parts.append(f"**Evidence:**\n{self.evidence}")
+        
+        if self.closing:
+            parts.append(self.closing)
+        
+        return "\n\n".join(parts)
 
 
 INVESTOR_RESPONSES: Dict[InvestorQueryType, InvestorResponse] = {
@@ -339,6 +347,20 @@ Hasta que el reporte sea reproducible, OMNIX debe considerarse un sistema con go
 • Edge cuantificado: Pendiente de validación falsable
 • Vetos de riesgo: Ejecutándose consistentemente""",
         closing="La ausencia de edge cuantificado hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
+    ),
+    
+    InvestorQueryType.HYPOTHETICAL_SCENARIO: InvestorResponse(
+        query_type=InvestorQueryType.HYPOTHETICAL_SCENARIO,
+        headline="",
+        body="""El escenario descrito contiene condiciones no presentes hoy.
+
+Estado verificable actual: PQC operativo, oráculos sincronizados, filtros de riesgo activos.
+
+OMNIX opera en paper trading con capital virtual y controles institucionales.
+
+Para evaluar respuesta del sistema ante escenarios de estrés específicos, puedo mostrar resultados de simulaciones Monte Carlo verificables.""",
+        evidence="",
+        closing=""
     ),
 }
 
