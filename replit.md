@@ -101,7 +101,13 @@ Fixed multiple issues causing "Debug: Timed out" errors and missing audio respon
 - 3 reintentos con backoff exponencial (2s, 4s, 6s)
 - Manejo específico de TimedOut, NetworkError, RetryAfter
 - Logging detallado: AI_CALL_START, AI_CALL_END para diagnóstico
-- Aplicado en `_process_message_content()` para envío de respuestas AI
+
+**FIX FINAL (Dec 31, 2025): ACK Inmediato + Respuesta Nueva**
+- ACK inmediato: `"🧠 Procesando tu mensaje..."` sale en <100ms
+- IA procesa sin prisa (sin timeout pressure)
+- Respuesta llega como mensaje NUEVO (no edit_text que puede fallar)
+- Esto evita timeouts porque no hay edit operation que expire
+- UX mejorada: bot parece "rápido" aunque la IA tarde
 
 **Mejoras Futuras (Technical Debt):**
 - Centralizar timeout de Telegram en configuración

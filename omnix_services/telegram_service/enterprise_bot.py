@@ -3585,9 +3585,17 @@ Usa: `/autotrading activar ACEPTO`"""
                     return
             
             # 🚀 GENERAR RESPUESTA CON SUPERINTELIGENCIA OMNIX
-            # Mostrar indicador de pensamiento estilo ChatGPT/Gemini
-            # FIX Dec 31, 2025: Usar send_message_with_retry para manejar timeouts
-            thinking_message = await send_message_with_retry(update.message, "🧠 OMNIX IA procesando...")
+            # FIX FINAL Dec 31, 2025: ACK inmediato + respuesta nueva (sin edit_text)
+            # Esto evita timeouts porque:
+            # 1. ACK sale inmediatamente (bot parece rápido)
+            # 2. IA procesa sin prisa
+            # 3. Respuesta llega como mensaje nuevo (no edit que puede fallar)
+            
+            # ACK INMEDIATO - Sale en <100ms
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="🧠 Procesando tu mensaje..."
+            )
             
             try:
                 logger.info(f"🧠 AI_CALL_START: Llamando a generate_response_async para {user_name}")
@@ -3613,6 +3621,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 total_parts = len(parts)
                 logger.info(f"📨 handle_message: {len(ai_response)} chars → {total_parts} parte(s)")
                 
+                # FIX FINAL: Enviar respuestas como mensajes nuevos (no edit)
                 for i, part in enumerate(parts):
                     header = ""
                     if total_parts > 1:
@@ -3622,18 +3631,14 @@ Usa: `/autotrading activar ACEPTO`"""
                     clean_text = self._sanitize_markdown(final_text)
                     
                     try:
-                        # FIX Dec 31, 2025: Usar helpers con retry para manejar timeouts
-                        if i == 0 and thinking_message:
-                            edit_result = await edit_message_with_retry(thinking_message, clean_text)
-                            logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={edit_result.message_id if edit_result else 'N/A'}")
-                        else:
-                            send_result = await send_message_with_retry(update.message, clean_text)
-                            logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={send_result.message_id if send_result else 'N/A'}")
+                        send_result = await send_message_with_retry(update.message, clean_text)
+                        logger.info(f"✅ TEXTO ENVIADO Parte {i+1}/{total_parts}: {len(clean_text)} chars | msg_id={send_result.message_id if send_result else 'N/A'}")
                     except Exception as part_error:
                         logger.error(f"❌ ERROR ENVIANDO TEXTO parte {i+1}: {part_error}")
                         try:
-                            fallback_result = await send_message_with_retry(update.message, clean_text)
-                            logger.info(f"✅ TEXTO ENVIADO (fallback) Parte {i+1}: {len(clean_text)} chars | msg_id={fallback_result.message_id if fallback_result else 'N/A'}")
+                            # Fallback directo sin retry
+                            await context.bot.send_message(chat_id=chat_id, text=clean_text)
+                            logger.info(f"✅ TEXTO ENVIADO (fallback directo) Parte {i+1}")
                         except Exception as fallback_error:
                             logger.error(f"❌ ERROR CRÍTICO: No se pudo enviar texto parte {i+1}: {fallback_error}")
                     
