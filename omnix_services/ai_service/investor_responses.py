@@ -90,6 +90,7 @@ class InvestorQueryType(Enum):
     FALSIFIABLE_REPORT = "falsifiable_report"
     RISK_OFF_BOT = "risk_off_bot"
     HYPOTHETICAL_SCENARIO = "hypothetical_scenario"
+    ETHICAL_SCENARIO = "ethical_scenario"
 
 
 @dataclass
@@ -359,6 +360,20 @@ Estado verificable actual: PQC operativo, oráculos sincronizados, filtros de ri
 OMNIX opera en paper trading con capital virtual y controles institucionales.
 
 Para evaluar respuesta del sistema ante escenarios de estrés específicos, puedo mostrar resultados de simulaciones Monte Carlo verificables.""",
+        evidence="",
+        closing=""
+    ),
+    
+    InvestorQueryType.ETHICAL_SCENARIO: InvestorResponse(
+        query_type=InvestorQueryType.ETHICAL_SCENARIO,
+        headline="",
+        body="""El escenario describe capacidades predictivas no implementadas actualmente.
+
+Directriz real de OMNIX: no ejecutar operaciones con daño sistémico conocido. El capital sin ecosistema funcional tiene valor limitado.
+
+Capacidades actuales verificables: paper trading, filtros de riesgo, vetos Monte Carlo, control institucional.
+
+Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protocolos de riesgo implementados.""",
         evidence="",
         closing=""
     ),
