@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 30 de Diciembre 2025  
+**Fecha**: 31 de Diciembre 2025  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,30 @@
 ---
 
 ## Cambios Recientes
+
+### Telegram Voice Service Fix (Dec 31, 2025)
+
+**ERROR EN PRODUCCIÓN CORREGIDO:**
+```
+UnboundLocalError: cannot access local variable 'asyncio' where it is not associated with a value
+```
+
+**CAUSA RAÍZ:** Imports condicionales de `asyncio` dentro de bloques `if`/`try` causaban que Python marcara `asyncio` como variable local para todo el scope de la función. Cuando el bloque condicional no se ejecutaba, `asyncio.to_thread()` fallaba porque la "variable local" no existía - aunque había un import global.
+
+**IMPORTS REDUNDANTES ELIMINADOS:**
+
+| Línea | Ubicación | Contexto |
+|-------|-----------|----------|
+| 3545 | `_process_message_content()` | Dentro de `if i < total_parts - 1:` |
+| 4835 | `handle_youtube_video()` | Dentro de `if hasattr(self.ai, 'generate_response'):` |
+| 6489 | `_execute_arbitrage()` | Antes de `await` sin necesidad |
+
+**Archivos modificados:**
+- `omnix_services/telegram_service/enterprise_bot.py` - Eliminados 3 imports redundantes
+
+**Commit:** `6f77f8d`
+
+---
 
 ### Type Safety Hotfix - SCOPE EXPANDIDO (Dec 30, 2025)
 

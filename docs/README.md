@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 30 de Diciembre 2025  
+**Actualizado**: 31 de Diciembre 2025  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,13 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### Telegram Voice Service Fix (Dec 31, 2025)
+- **ERROR CORREGIDO**: `UnboundLocalError: cannot access local variable 'asyncio'`
+- **CAUSA RAÍZ**: Imports condicionales de `asyncio` dentro de `if`/`try` causaban conflictos de scope
+- **FIX**: Eliminados 3 imports redundantes (líneas 3545, 4835, 6489) de `enterprise_bot.py`
+- **REGLA**: Solo un `import asyncio` global (línea 10) - nunca imports condicionales
+- Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles
 
 ### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
 - **ERROR CORREGIDO**: `">= not supported between instances of 'str' and 'int'"` en Coherence Gate

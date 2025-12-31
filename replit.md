@@ -55,6 +55,13 @@ The AI service is refactored with SOLID principles and dependency injection, sup
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **COHERENCE GATE** → 4. Scoring → 5. Decision. Coherence now blocks low-quality signals BEFORE scoring computation, with critical thresholds reducing false positives.
 
+### Telegram Voice Service Fix (Dec 31, 2025)
+Fixed `UnboundLocalError: cannot access local variable 'asyncio'` caused by conditional imports inside `if`/`try` blocks. Python marked `asyncio` as local variable for entire function scope, failing when conditional block didn't execute.
+
+**Fix:** Removed 3 redundant `import asyncio` statements (lines 3545, 4835, 6489) from `enterprise_bot.py`. Only global import (line 10) remains.
+
+**Rule:** Never use conditional imports for modules used elsewhere in the same function.
+
 ### Type Safety - SCOPE EXPANDIDO (Dec 30, 2025)
 Defensive type normalization to prevent `str vs int` comparison errors:
 

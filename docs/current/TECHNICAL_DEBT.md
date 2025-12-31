@@ -1,9 +1,34 @@
 # OMNIX V6.5.4d Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** December 30, 2025  
+**Updated:** December 31, 2025  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Telegram Voice Service Fix (Dec 31, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** `UnboundLocalError: cannot access local variable 'asyncio'` al generar respuestas de voz.
+
+**Causa Raíz:** Python interpreta `import asyncio` dentro de bloques condicionales como declaración de variable local para todo el scope de la función. Cuando el bloque no se ejecuta, la "variable local" no existe y falla al usar `asyncio.to_thread()`.
+
+**Fix Implementado:**
+
+| Línea | Contexto | Acción |
+|-------|----------|--------|
+| 3545 | `if i < total_parts - 1:` | Eliminado `import asyncio` redundante |
+| 4835 | `if hasattr(self.ai, 'generate_response'):` | Eliminado `import asyncio` redundante |
+| 6489 | Antes de `await arbitrage` | Eliminado `import asyncio` redundante |
+
+**Regla:** Solo un `import asyncio` global (línea 10) - nunca imports condicionales.
+
+**Archivos Modificados:**
+- `omnix_services/telegram_service/enterprise_bot.py` - 3 imports eliminados
+
+**Commit:** `6f77f8d`
 
 ---
 
