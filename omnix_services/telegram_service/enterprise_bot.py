@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+from telegram.request import HTTPXRequest
 
 # Import centralized settings
 from omnix_config.settings import settings
@@ -556,7 +557,13 @@ class EnterpriseTelegramBot:
                 logger.error("❌ TELEGRAM_BOT_TOKEN no configurado")
                 return False
                 
-            self.application = Application.builder().token(token).build()
+            request = HTTPXRequest(
+                connect_timeout=30.0,
+                read_timeout=30.0,
+                write_timeout=30.0,
+                pool_timeout=30.0,
+            )
+            self.application = Application.builder().token(token).request(request).build()
             
             # Comandos principales
             self.application.add_handler(CommandHandler("start", self.start_command))

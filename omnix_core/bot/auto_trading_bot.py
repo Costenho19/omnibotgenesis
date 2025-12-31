@@ -2741,23 +2741,25 @@ class AutoTradingBot:
             
             # 4. Quantum Momentum (VETO/PENALTY ONLY - no suma a max_score)
             if quantum:
-                # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
-                signal = safe_float(quantum.get('signal', 0), 0)  # -10 a +10
+                # FIX Dec 31, 2025: Usar 'score' (0-10) y 'signal' (string BUY/SELL/HOLD)
+                qm_score = safe_float(quantum.get('score', 5), 5)
+                qm_signal = quantum.get('signal', 'HOLD')
                 confidence_level = quantum.get('confidence', 'LOW')
                 
                 if confidence_level in ['HIGH', 'VERY_HIGH']:
-                    if signal <= -7:
+                    if qm_signal == 'SELL' and qm_score <= 3:
                         qm_penalty = 10 if is_paper_mode else 20
                         score -= qm_penalty
                         decision['reason'].append(f"📉 Quantum VETO: STRONG SELL → -{qm_penalty}")
-                        decision['decision_trace'].append(f'QUANTUM_VETO: Signal={signal}')
-                    elif signal <= -4:
+                        decision['decision_trace'].append(f'QUANTUM_VETO: Signal={qm_signal}, Score={qm_score}')
+                    elif qm_signal == 'SELL':
                         qm_penalty = 5 if is_paper_mode else 10
                         score -= qm_penalty
                         decision['reason'].append(f"⚠️ Quantum Penalty: SELL → -{qm_penalty}")
-                    elif signal >= 7:
-                        decision['reason'].append(f"🚀 Quantum: STRONG BUY (signal {signal}/10) OK")
-                decision['v52_analysis']['quantum_signal'] = signal
+                    elif qm_signal == 'BUY' and qm_score >= 7:
+                        decision['reason'].append(f"🚀 Quantum: STRONG BUY (score {qm_score}/10) OK")
+                decision['v52_analysis']['quantum_signal'] = qm_score
+                decision['v52_analysis']['quantum_signal_label'] = qm_signal
             
             # 5. Kalman Filter (peso: 15 puntos * kalman_weight)
             kalman_base_weight = 15
@@ -5647,24 +5649,26 @@ class AutoTradingBot:
         
         # 1. Quantum Momentum
         if quantum:
-            signal_val = safe_float(quantum.get('signal', 0), default=0.0, param_name='quantum.signal')
-            if signal_val >= 7:
-                signal_enum = Signal.STRONG_BUY
-            elif signal_val >= 3:
-                signal_enum = Signal.BUY
-            elif signal_val <= -7:
-                signal_enum = Signal.STRONG_SELL
-            elif signal_val <= -3:
-                signal_enum = Signal.SELL
+            score_val = safe_float(quantum.get('score', 5), default=5.0, param_name='quantum.score')
+            signal_str = quantum.get('signal', 'HOLD')
+            
+            if signal_str == 'BUY':
+                signal_enum = Signal.STRONG_BUY if score_val >= 7 else Signal.BUY
+            elif signal_str == 'SELL':
+                signal_enum = Signal.STRONG_SELL if score_val <= 3 else Signal.SELL
             else:
                 signal_enum = Signal.HOLD
+            
+            conf_str = quantum.get('confidence', 'MEDIUM')
+            conf_map = {'VERY_HIGH': 0.95, 'HIGH': 0.8, 'MEDIUM': 0.6, 'LOW': 0.4}
+            conf_val = conf_map.get(conf_str, 0.5)
             
             signals.append(StrategySignal(
                 name='quantum_momentum',
                 signal=signal_enum,
-                confidence=safe_float(quantum.get('confidence', 0.5), default=0.5, param_name='quantum.confidence'),
-                strength=signal_val,
-                reasoning=f"Quantum signal: {signal_val}/10"
+                confidence=conf_val,
+                strength=score_val,
+                reasoning=f"Quantum: {signal_str} (score: {score_val:.1f}/10)"
             ))
         
         # 2. Kalman Filter

@@ -62,6 +62,21 @@ Fixed `UnboundLocalError: cannot access local variable 'asyncio'` caused by cond
 
 **Rule:** Never use conditional imports for modules used elsewhere in the same function.
 
+### SDK Telegram Timeout Fix (Dec 31, 2025)
+Configurado HTTPXRequest con 30s timeout para el SDK de python-telegram-bot:
+```python
+request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0, write_timeout=30.0, pool_timeout=30.0)
+Application.builder().token(token).request(request).build()
+```
+
+### Quantum Momentum Type Fix (Dec 31, 2025)
+Fixed `safe_float` warnings for quantum signals:
+- `quantum['signal']` es STRING ("BUY"/"SELL"/"HOLD"), no número
+- `quantum['score']` es NÚMERO (0-10)
+- `quantum['confidence']` es STRING ("HIGH"/"MEDIUM"/"LOW")
+
+Corregido `_build_strategy_signals()` y scoring para usar `score` y mapear `confidence` a números.
+
 ### Telegram Timeout & Voice Reliability Fix (Dec 31, 2025)
 Fixed multiple issues causing "Debug: Timed out" errors and missing audio responses:
 
