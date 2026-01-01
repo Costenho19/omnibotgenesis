@@ -16,7 +16,8 @@ from omnix_dashboard.utils.queries import (
     get_paper_trades,
     calculate_metrics,
     get_strategy_breakdown,
-    get_asset_breakdown
+    get_asset_breakdown,
+    get_segmented_expectancy
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,35 @@ def api_metrics():
         'db_connected': DB_AVAILABLE,
         'last_updated': datetime.now().isoformat()
     })
+
+
+@core_bp.route('/api/metrics/expectancy')
+@require_api_key
+def api_segmented_expectancy():
+    """
+    Operación Lucidez: Expectancy segmentada por HMM regime + coherence bucket
+    Responde la pregunta: "¿DÓNDE gana el sistema?"
+    """
+    from omnix_dashboard.utils.database import DB_AVAILABLE
+    
+    try:
+        days = 90
+        result = get_segmented_expectancy(days=days)
+        
+        result['db_connected'] = DB_AVAILABLE
+        result['last_updated'] = datetime.now().isoformat()
+        result['endpoint'] = 'operacion_lucidez_v1'
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error in segmented expectancy API: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'db_connected': DB_AVAILABLE,
+            'segments': []
+        })
 
 
 @core_bp.route('/api/trades')

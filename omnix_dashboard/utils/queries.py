@@ -439,3 +439,141 @@ def consolidated_trade_metrics(days=10, symbols=None):
                 'trade_count': 0,
                 'symbols': symbols
             }
+
+
+def get_segmented_expectancy(days=90):
+    """
+    Operación Lucidez: Calcular expectancy segmentada por (hmm_regime, coherence_bucket)
+    
+    Fórmula: E = (Win% × AvgWin) - (Loss% × |AvgLoss|)
+    
+    Args:
+        days: Días hacia atrás para analizar
+        
+    Returns:
+        Dict con segmentos y su expectancy
+    """
+    with get_db_connection() as conn:
+        if not conn:
+            return {
+                'success': False,
+                'error': 'Database not connected',
+                'segments': []
+            }
+        
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                WITH coherence_buckets AS (
+                    SELECT 
+                        id,
+                        hmm_regime,
+                        coherence_score,
+                        profit_loss,
+                        CASE 
+                            WHEN coherence_score IS NULL THEN 'NO_DATA'
+                            WHEN coherence_score < 40 THEN 'LOW (<40)'
+                            WHEN coherence_score < 70 THEN 'MED (40-70)'
+                            ELSE 'HIGH (70+)'
+                        END AS coherence_bucket
+                    FROM paper_trading_trades
+                    WHERE status = 'closed'
+                      AND opened_at >= NOW() - INTERVAL '1 day' * %s
+                      AND profit_loss IS NOT NULL
+                )
+                SELECT 
+                    COALESCE(hmm_regime, 'UNKNOWN') as regime,
+                    coherence_bucket,
+                    COUNT(*) as trade_count,
+                    COUNT(*) FILTER (WHERE profit_loss > 0) as wins,
+                    COUNT(*) FILTER (WHERE profit_loss <= 0) as losses,
+                    COALESCE(AVG(profit_loss) FILTER (WHERE profit_loss > 0), 0) as avg_win,
+                    COALESCE(AVG(ABS(profit_loss)) FILTER (WHERE profit_loss <= 0), 0) as avg_loss,
+                    SUM(profit_loss) as total_pnl
+                FROM coherence_buckets
+                GROUP BY hmm_regime, coherence_bucket
+                ORDER BY 
+                    CASE hmm_regime 
+                        WHEN 'BULLISH' THEN 1 
+                        WHEN 'BEARISH' THEN 2 
+                        WHEN 'RANGING' THEN 3 
+                        ELSE 4 
+                    END,
+                    coherence_bucket
+            ''', (days,))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            segments = []
+            best_expectancy = None
+            best_segment = None
+            
+            for row in rows:
+                regime = row[0]
+                coherence_bucket = row[1]
+                trade_count = row[2]
+                wins = row[3]
+                losses = row[4]
+                avg_win = float(row[5]) if row[5] else 0
+                avg_loss = float(row[6]) if row[6] else 0
+                total_pnl = float(row[7]) if row[7] else 0
+                
+                win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
+                loss_rate = 100 - win_rate
+                
+                expectancy = (win_rate/100 * avg_win) - (loss_rate/100 * avg_loss)
+                
+                segment_data = {
+                    'regime': regime,
+                    'coherence_bucket': coherence_bucket,
+                    'trade_count': trade_count,
+                    'wins': wins,
+                    'losses': losses,
+                    'win_rate': round(win_rate, 1),
+                    'avg_win': round(avg_win, 2),
+                    'avg_loss': round(avg_loss, 2),
+                    'expectancy': round(expectancy, 2),
+                    'total_pnl': round(total_pnl, 2),
+                    'is_profitable': expectancy > 0
+                }
+                
+                segments.append(segment_data)
+                
+                if trade_count >= 5:
+                    if best_expectancy is None or expectancy > best_expectancy:
+                        best_expectancy = expectancy
+                        best_segment = f"{regime} + {coherence_bucket}"
+            
+            overall_expectancy = sum(s['expectancy'] * s['trade_count'] for s in segments)
+            total_trades = sum(s['trade_count'] for s in segments)
+            if total_trades > 0:
+                overall_expectancy = overall_expectancy / total_trades
+            else:
+                overall_expectancy = 0
+            
+            profitable_segments = [s for s in segments if s['expectancy'] > 0 and s['trade_count'] >= 5]
+            
+            logger.info(f"📊 LUCIDEZ: {len(segments)} segmentos, best={best_segment}, E={best_expectancy}")
+            
+            return {
+                'success': True,
+                'days_analyzed': days,
+                'total_trades': total_trades,
+                'segment_count': len(segments),
+                'segments': segments,
+                'best_segment': best_segment,
+                'best_expectancy': round(best_expectancy, 2) if best_expectancy is not None else None,
+                'overall_expectancy': round(overall_expectancy, 2),
+                'profitable_segment_count': len(profitable_segments),
+                'recommendation': f"Focus on {best_segment}" if best_segment else "Insufficient data for recommendation"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating segmented expectancy: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'segments': []
+            }
