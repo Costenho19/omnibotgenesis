@@ -257,6 +257,63 @@ def v004_enable_row_level_security(cursor: Any) -> bool:
         return False
 
 
+def v005_add_telemetry_columns_operacion_lucidez(cursor: Any) -> bool:
+    """
+    V005: Operación Lucidez - Add telemetry columns for trade segmentation
+    
+    Adds columns to track market regime and coherence at trade execution time:
+    - hmm_regime: Market regime (BULLISH/BEARISH/RANGING)
+    - coherence_score: Coherence percentage (0-100)
+    - ema_regime_signal: EMA signal at trade time (BUY/SELL/HOLD)
+    - strategy_confidence: Overall strategy confidence (0-100)
+    
+    These enable "Expectancy by Segment" analysis to discover WHERE the system wins.
+    
+    NON-DESTRUCTIVE: Only adds columns if not exists.
+    """
+    try:
+        if not _check_table_exists(cursor, 'paper_trading_trades'):
+            logger.info("Table paper_trading_trades does not exist - will be created on bot startup")
+            return True
+        
+        columns_to_add = [
+            ('hmm_regime', 'VARCHAR(20)', "Market regime at trade time"),
+            ('coherence_score', 'NUMERIC(5,2)', "Coherence percentage 0-100"),
+            ('ema_regime_signal', 'VARCHAR(10)', "EMA signal BUY/SELL/HOLD"),
+            ('strategy_confidence', 'NUMERIC(5,2)', "Strategy confidence 0-100"),
+        ]
+        
+        for col_name, col_type, col_desc in columns_to_add:
+            if _check_column_exists(cursor, 'paper_trading_trades', col_name):
+                logger.info(f"Column '{col_name}' already exists - skipping")
+            else:
+                logger.info(f"Adding '{col_name}' ({col_desc}) to paper_trading_trades...")
+                cursor.execute(f"""
+                    ALTER TABLE paper_trading_trades 
+                    ADD COLUMN {col_name} {col_type}
+                """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_paper_trades_hmm_regime 
+            ON paper_trading_trades(hmm_regime)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_paper_trades_coherence_bucket 
+            ON paper_trading_trades((
+                CASE WHEN coherence_score >= 70 THEN 'HIGH'
+                     WHEN coherence_score >= 50 THEN 'MED'
+                     ELSE 'LOW' END
+            ))
+        """)
+        
+        logger.info("Migration V005 (Operación Lucidez) applied successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Migration V005 failed: {e}")
+        return False
+
+
 MIGRATIONS = MigrationRegistry()
 
 MIGRATIONS.register(Migration(
@@ -281,4 +338,10 @@ MIGRATIONS.register(Migration(
     version="V004",
     description="Enable Row-Level Security on multi-user tables",
     apply_func=v004_enable_row_level_security
+))
+
+MIGRATIONS.register(Migration(
+    version="V005",
+    description="Operación Lucidez - Add telemetry columns for trade segmentation",
+    apply_func=v005_add_telemetry_columns_operacion_lucidez
 ))
