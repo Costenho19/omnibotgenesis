@@ -18,7 +18,7 @@ Fecha: December 23, 2025
 
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from enum import Enum
 import logging
 
@@ -682,6 +682,29 @@ class InvestorResponseEngine:
         "just verifiable data": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
         "structural problem": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
         "execution problem": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        # TECHNICAL DIAGNOSTIC - Extended triggers (Jan 1, 2026)
+        "sin justificar": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "sin justificar el diseño": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "responde sin justificar": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "dato concreto falta": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "dato faltante": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "qué dato falta": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "que dato falta": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "hipótesis falsable": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "hipotesis falsable": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "query mínima": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "query minima": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "si no puedes decidir": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "si no puedes concluir": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "métrica engañosa": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "metrica engañosa": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "win rate engañoso": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "cerrar el debate": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "without justifying": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "don't justify": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "falsifiable hypothesis": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "if you can't decide": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "minimum query": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
     }
     
     def __init__(self):
@@ -800,4 +823,115 @@ class InvestorResponseEngine:
         }
 
 
+class DiagnosticResponseValidator:
+    """
+    Validador post-respuesta para TECHNICAL_DIAGNOSTIC mode.
+    
+    Detecta frases BLACKLISTED y rechaza respuestas que violen RULE 13.
+    Implementado: Jan 1, 2026
+    """
+    
+    BLACKLISTED_PHRASES = [
+        "según diseño",
+        "operando según diseño",
+        "protegiendo capital",
+        "protección del capital",
+        "edge institucional",
+        "disciplina institucional",
+        "fase de validación",
+        "validación estructural",
+        "en teoría",
+        "debería mejorar",
+        "activos bajo revisión estratégica",
+        "esto es el edge",
+        "esto ES el edge",
+        "prioriza la preservación",
+        "priorizando la preservación",
+        "track record verificado",
+        "madurez institucional",
+    ]
+    
+    REQUIRED_ELEMENTS = [
+        "modo diagnóstico",
+        "Datos:",
+        "Conclusión:",
+        "Métrica faltante:",
+        "Query:",
+    ]
+    
+    MAX_LINES = 15
+    
+    def __init__(self):
+        self.last_violations = []
+        
+    def validate(self, response: str) -> Tuple[bool, List[str]]:
+        """
+        Valida que la respuesta cumpla RULE 13.
+        
+        Args:
+            response: La respuesta generada por el AI
+            
+        Returns:
+            Tuple[bool, List[str]]: (is_valid, list of violations)
+        """
+        violations = []
+        response_lower = response.lower()
+        
+        for phrase in self.BLACKLISTED_PHRASES:
+            if phrase.lower() in response_lower:
+                violations.append(f"BLACKLISTED: '{phrase}'")
+        
+        for element in self.REQUIRED_ELEMENTS:
+            if element.lower() not in response_lower:
+                violations.append(f"MISSING: '{element}'")
+        
+        line_count = len(response.strip().split('\n'))
+        if line_count > self.MAX_LINES:
+            violations.append(f"TOO_LONG: {line_count} lines (max {self.MAX_LINES})")
+        
+        self.last_violations = violations
+        is_valid = len(violations) == 0
+        
+        if not is_valid:
+            logger.warning(f"[DiagnosticValidator] Response INVALID: {violations}")
+        else:
+            logger.info("[DiagnosticValidator] Response VALID")
+            
+        return is_valid, violations
+    
+    def get_rejection_prompt(self, violations: List[str]) -> str:
+        """
+        Genera un prompt de rechazo para forzar regeneración.
+        
+        Args:
+            violations: Lista de violaciones detectadas
+            
+        Returns:
+            str: Prompt estricto para regeneración
+        """
+        violations_str = "\n".join([f"- {v}" for v in violations])
+        return f"""
+[RESPUESTA RECHAZADA - VIOLACIONES DETECTADAS]
+{violations_str}
+
+REGENERA usando EXCLUSIVAMENTE este formato (NO MÁS DE 9 LÍNEAS):
+
+_Modo diagnóstico activado._
+
+**Datos:** Total trades: [N] | Win rate: [X%] | P&L: [$ USD]
+
+**Conclusión:** [1 línea - qué NO se puede determinar]
+
+**Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
+
+**Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
+
+Sin esta métrica, cualquier conclusión sería especulativa.
+
+PROHIBIDO: justificar, defender, "edge", "según diseño", "protegiendo capital".
+ACTITUD: Auditor frío.
+"""
+
+
 investor_response_engine = InvestorResponseEngine()
+diagnostic_validator = DiagnosticResponseValidator()

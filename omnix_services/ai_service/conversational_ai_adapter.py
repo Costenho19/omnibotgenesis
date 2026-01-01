@@ -100,16 +100,19 @@ class ConversationalAI:
             except Exception as e:
                 logger.error(f"Error initializing legacy AI clients: {e}")
     
-    async def generate_response_async(self, user_message, user_name="Usuario", chat_id="", user_id=None, trading_system=None):
+    async def generate_response_async(self, user_message, user_name="Usuario", chat_id="", user_id=None, trading_system=None, diagnostic_mode=False):
         """
         🚀 ASYNC ENTERPRISE-GRADE RESPONSE GENERATION
         
         FIX Dec 13, 2025: Versión async para evitar deadlock en telegram handlers.
         Usar esta versión desde handlers async de python-telegram-bot.
+        
+        Args:
+            diagnostic_mode: If True, uses DIAGNOSTIC_ONLY_PROMPT for RULE 13 compliance (Jan 1, 2026)
         """
         try:
             if self.using_enterprise:
-                logger.info(f"🚀 [ASYNC] Generando respuesta ENTERPRISE para {user_name}")
+                logger.info(f"🚀 [ASYNC] Generando respuesta ENTERPRISE para {user_name} (diagnostic_mode={diagnostic_mode})")
                 
                 chat_id_int = 0
                 if chat_id:
@@ -133,7 +136,8 @@ class ConversationalAI:
                     user_message=user_message,
                     user_name=user_name,
                     market_data=real_market_data,
-                    apply_visual_style=True
+                    apply_visual_style=True,
+                    diagnostic_mode=diagnostic_mode
                 )
                 
                 if result and 'response' in result:

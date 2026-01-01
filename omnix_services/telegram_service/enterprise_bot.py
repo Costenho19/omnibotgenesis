@@ -67,6 +67,22 @@ except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False
     logger.warning("⚠️ ConversationalAI no disponible")
 
+# Investor Response Engine with Diagnostic Validator (Jan 1, 2026)
+try:
+    from omnix_services.ai_service.investor_responses import (
+        investor_response_engine,
+        diagnostic_validator,
+        InvestorQueryType
+    )
+    INVESTOR_RESPONSES_AVAILABLE = True
+    logger.info("📊 Investor Response Engine + Diagnostic Validator disponible")
+except ImportError:
+    INVESTOR_RESPONSES_AVAILABLE = False
+    investor_response_engine = None
+    diagnostic_validator = None
+    InvestorQueryType = None
+    logger.warning("⚠️ Investor Response Engine no disponible")
+
 try:
     from omnix_services.trading_service import TradingServiceEnterprise
     TRADING_ENTERPRISE_AVAILABLE = True
@@ -3599,16 +3615,37 @@ Usa: `/autotrading activar ACEPTO`"""
             
             try:
                 logger.info(f"🧠 AI_CALL_START: Llamando a generate_response_async para {user_name}")
-                # FIX Dec 13, 2025: Usar versión async para evitar deadlock en event loop
+                
+                # RULE 13 ENFORCEMENT (Jan 1, 2026): Detect TECHNICAL_DIAGNOSTIC queries
+                is_diagnostic_query = False
+                if INVESTOR_RESPONSES_AVAILABLE and investor_response_engine:
+                    query_type = investor_response_engine.detect_query_type(user_message)
+                    if query_type == InvestorQueryType.TECHNICAL_DIAGNOSTIC:
+                        is_diagnostic_query = True
+                        logger.info(f"🔬 [DIAGNOSTIC_MODE] Detected TECHNICAL_DIAGNOSTIC query from {user_name}")
+                
+                # Generate response with diagnostic_mode flag
                 ai_response = await self.ai.generate_response_async(
                     user_message=user_message,
                     user_name=user_name,
                     chat_id=telegram_chat_id,
                     user_id=user_id,
-                    trading_system=self.trading
+                    trading_system=self.trading,
+                    diagnostic_mode=is_diagnostic_query
                 )
                 
-                logger.info(f"🧠 AI_CALL_END: Respuesta generada para {user_name}: {len(ai_response) if ai_response else 0} chars")
+                logger.info(f"🧠 AI_CALL_END: Respuesta generada para {user_name}: {len(ai_response) if ai_response else 0} chars (diagnostic={is_diagnostic_query})")
+                
+                # RULE 13 POST-VALIDATION (Jan 1, 2026): Validate diagnostic responses
+                if is_diagnostic_query and ai_response and diagnostic_validator:
+                    is_valid, violations = diagnostic_validator.validate(ai_response)
+                    if not is_valid:
+                        logger.warning(f"🚫 [DIAGNOSTIC_VALIDATOR] Response INVALID: {violations}")
+                        # Use template fallback for guaranteed compliance
+                        ai_response = investor_response_engine.get_response(InvestorQueryType.TECHNICAL_DIAGNOSTIC)
+                        logger.info(f"✅ [DIAGNOSTIC_FALLBACK] Using template response: {len(ai_response)} chars")
+                    else:
+                        logger.info(f"✅ [DIAGNOSTIC_VALIDATOR] Response VALID")
                 
                 if not ai_response:
                     ai_response = f"🧠 OMNIX IA procesando tu consulta, {user_name}. Sistema operativo."
