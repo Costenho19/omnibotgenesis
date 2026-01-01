@@ -131,3 +131,25 @@ Sistema completo de respuestas institucionales con 13 reglas:
 - `omnix_services/ai_service/prompt_templates.py` (MASTER_SYSTEM_PROMPT + 13 reglas)
 - `omnix_services/ai_service/investor_responses.py` (15 tipos de respuesta)
 - `omnix_config/system_state_manifest.json` (capacidades documentadas)
+
+## Operación Lucidez - Segmented Expectancy (Jan 1, 2026)
+
+Sistema de análisis de expectancy segmentada para identificar DÓNDE gana el sistema.
+
+**Concepto:** Segmentar trades por (HMM_REGIME × COHERENCE_BUCKET) para calcular expectancy por condición de mercado.
+
+**Fórmula:** `E = (Win% × AvgWin) - (Loss% × |AvgLoss|)`
+
+**Implementación:**
+- Migration V005: Añadió columnas `hmm_regime`, `coherence_score`, `ema_regime_signal`, `strategy_confidence` a `paper_trading_trades`
+- Telemetry capture: AutoTradingBot extrae métricas del análisis y las pasa a execute_paper_trade()
+- Query: `get_segmented_expectancy()` en `omnix_dashboard/utils/queries.py`
+- API: `/api/metrics/expectancy` en Flask dashboard
+- Widget: "Expectancy" en Streamlit dashboard con heatmap de segmentos
+
+**Valor para Inversores:**
+- Demuestra entendimiento cuantitativo de DÓNDE tiene edge el sistema
+- Métricas falsables con mínimo de 5 trades por segmento
+- Permite filtrado por régimen para concentrar trading en condiciones rentables
+
+**Documentación:** `docs/operations/OPERACION_LUCIDEZ.md`

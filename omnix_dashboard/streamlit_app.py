@@ -147,7 +147,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")
-        page = st.radio("", ["Overview", "Risk Metrics", "Pair Analysis", "Asset Quarantine", "Calibration"])
+        page = st.radio("", ["Overview", "Risk Metrics", "Expectancy", "Pair Analysis", "Asset Quarantine", "Calibration"])
         st.markdown("---")
         st.markdown("**Last Updated**")
         st.markdown(f"🕐 {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -160,6 +160,8 @@ def main():
         render_overview(metrics, quarantine)
     elif page == "Risk Metrics":
         render_risk_metrics(metrics)
+    elif page == "Expectancy":
+        render_expectancy()
     elif page == "Pair Analysis":
         render_pair_analysis(metrics)
     elif page == "Asset Quarantine":
@@ -239,6 +241,142 @@ def render_quarantine(quarantine):
     This institutional-grade risk management prevents the portfolio from taking positions in assets 
     that have demonstrated poor performance, protecting investor capital.
     """)
+
+
+def render_expectancy():
+    """Operación Lucidez: Segmented expectancy analysis"""
+    st.markdown("## Segmented Expectancy Analysis")
+    st.markdown("*Operación Lucidez - Know WHERE the system wins*")
+    
+    try:
+        client = get_api_client()
+        response = client.get_segmented_expectancy()
+        
+        if not response.get('success'):
+            st.warning(f"Unable to load expectancy data: {response.get('error', 'Unknown error')}")
+            return
+        
+        total_trades = response.get('total_trades', 0)
+        overall_exp = response.get('overall_expectancy', 0)
+        best_segment = response.get('best_segment')
+        best_exp = response.get('best_expectancy')
+        profitable_count = response.get('profitable_segment_count', 0)
+        segments = response.get('segments', [])
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Closed Trades Analyzed", f"{total_trades:,}")
+        
+        with col2:
+            exp_color = "normal" if overall_exp >= 0 else "inverse"
+            st.metric("Overall Expectancy", f"${overall_exp:.2f}", delta_color=exp_color)
+        
+        with col3:
+            st.metric("Profitable Segments", f"{profitable_count}", delta="Edge detected" if profitable_count > 0 else None)
+        
+        with col4:
+            if best_segment and best_exp is not None:
+                short_segment = best_segment[:20] if len(best_segment) > 20 else best_segment
+                st.metric("Best Segment", short_segment, delta=f"E=${best_exp:.2f}")
+            else:
+                st.metric("Best Segment", "Insufficient data")
+        
+        st.markdown("---")
+        st.markdown("### Expectancy by Segment")
+        st.markdown("*E = (Win% × AvgWin) - (Loss% × |AvgLoss|)*")
+        
+        if segments:
+            data = []
+            for seg in segments:
+                exp_val = seg.get('expectancy', 0)
+                is_profit = exp_val > 0
+                
+                data.append({
+                    'HMM Regime': seg.get('regime', 'UNKNOWN'),
+                    'Coherence': seg.get('coherence_bucket', 'N/A'),
+                    'Trades': seg.get('trade_count', 0),
+                    'Win Rate': f"{seg.get('win_rate', 0):.1f}%",
+                    'Avg Win': f"${seg.get('avg_win', 0):.2f}",
+                    'Avg Loss': f"${seg.get('avg_loss', 0):.2f}",
+                    'Expectancy': f"${exp_val:.2f}",
+                    'Status': 'PROFITABLE' if is_profit else 'LOSING'
+                })
+            
+            df = pd.DataFrame(data)
+            st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            st.markdown("---")
+            st.markdown("### Segment Heatmap")
+            
+            profitable = [s for s in segments if s.get('expectancy', 0) > 0 and s.get('trade_count', 0) >= 5]
+            losing = [s for s in segments if s.get('expectancy', 0) <= 0 and s.get('trade_count', 0) >= 5]
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### Edge Segments (E > 0)")
+                if profitable:
+                    for seg in sorted(profitable, key=lambda x: x.get('expectancy', 0), reverse=True):
+                        regime = seg.get('regime', 'UNKNOWN')
+                        coh = seg.get('coherence_bucket', 'N/A')
+                        exp = seg.get('expectancy', 0)
+                        trades = seg.get('trade_count', 0)
+                        
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%); 
+                                    border: 1px solid #00D4AA; border-radius: 8px; padding: 12px; margin: 8px 0;">
+                            <span style="font-weight: bold; color: #00D4AA;">{regime}</span>
+                            <span style="color: #888;"> + </span>
+                            <span style="color: #4DABF7;">{coh}</span>
+                            <br/>
+                            <span style="font-size: 24px; font-weight: bold; color: #00D4AA;">E = ${exp:.2f}</span>
+                            <span style="color: #888; margin-left: 10px;">({trades} trades)</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info("No profitable segments with 5+ trades yet")
+            
+            with col2:
+                st.markdown("#### Losing Segments (E <= 0)")
+                if losing:
+                    for seg in sorted(losing, key=lambda x: x.get('expectancy', 0)):
+                        regime = seg.get('regime', 'UNKNOWN')
+                        coh = seg.get('coherence_bucket', 'N/A')
+                        exp = seg.get('expectancy', 0)
+                        trades = seg.get('trade_count', 0)
+                        
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #4a1a1a 0%, #5a2d2d 100%); 
+                                    border: 1px solid #ff6b6b; border-radius: 8px; padding: 12px; margin: 8px 0;">
+                            <span style="font-weight: bold; color: #ff6b6b;">{regime}</span>
+                            <span style="color: #888;"> + </span>
+                            <span style="color: #888;">{coh}</span>
+                            <br/>
+                            <span style="font-size: 24px; font-weight: bold; color: #ff6b6b;">E = ${exp:.2f}</span>
+                            <span style="color: #888; margin-left: 10px;">({trades} trades)</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info("No losing segments with 5+ trades yet")
+        else:
+            st.info("No segment data available. Trades with telemetry will appear here after execution.")
+        
+        st.markdown("---")
+        st.markdown("### What This Means for Investors")
+        st.markdown("""
+        **Operación Lucidez** segments performance by market regime (BULLISH/BEARISH/RANGING) and 
+        signal coherence (LOW/MED/HIGH) to identify WHERE the system has a statistical edge.
+        
+        - **Positive Expectancy (E > 0)**: The system has proven edge in these conditions
+        - **Negative Expectancy (E < 0)**: These conditions should be avoided or filtered
+        - **5+ trades minimum**: Required for statistical significance
+        
+        This analysis enables regime-aware filtering to concentrate trading in profitable conditions.
+        """)
+        
+    except Exception as e:
+        st.error(f"Error loading expectancy data: {e}")
 
 
 def render_overview(metrics, quarantine=None):

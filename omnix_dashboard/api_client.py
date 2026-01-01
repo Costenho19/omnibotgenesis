@@ -85,6 +85,10 @@ class OmnixAPIClient:
     def get_quarantine(self) -> Dict[str, Any]:
         return self._request('/api/system/quarantine')
     
+    def get_segmented_expectancy(self) -> Dict[str, Any]:
+        """Operación Lucidez: Get expectancy segmented by HMM regime + coherence bucket"""
+        return self._request('/api/metrics/expectancy')
+    
     def download_pdf_report(self) -> Optional[bytes]:
         url = f"{self.base_url}/api/report/pdf"
         try:
