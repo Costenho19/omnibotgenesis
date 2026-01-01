@@ -382,7 +382,9 @@ Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protoc
     InvestorQueryType.TECHNICAL_DIAGNOSTIC: InvestorResponse(
         query_type=InvestorQueryType.TECHNICAL_DIAGNOSTIC,
         headline="",
-        body="""**Datos verificables:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD | Coherence Gate: activo 50% | Monte Carlo: sin veto | Kelly: 6.25% (no ejecutado)
+        body="""_Modo diagnóstico activado. Respuesta técnica:_
+
+**Datos verificables:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD | Coherence Gate: activo 50% | Monte Carlo: sin veto | Kelly: 6.25% (no ejecutado)
 
 **Conclusión:** Con datos actuales no es posible determinar si el problema es estratégico o de ejecución.
 
