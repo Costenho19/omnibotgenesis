@@ -110,7 +110,7 @@ Sistema completo de respuestas institucionales con 13 reglas:
 10. **NO FUTURE PROMISES** - Solo estado factual presente
 11. **NO IRRELEVANT DATA BLOCKS** - Sin bloques de precios como relleno
 12. **ESCENARIOS TRAMPA (TÉCNICOS Y ÉTICOS)** - Responder en 3-5 líneas, NO inventar capacidades
-13. **TECHNICAL DIAGNOSTIC MODE [OVERRIDE]** - Para diagnósticos: línea de contexto ("Modo diagnóstico activado") + SOLO datos + métrica faltante + query SQL. Máximo 15 líneas.
+13. **TECHNICAL DIAGNOSTIC MODE [HARD OVERRIDE]** - ANULA reglas narrativas. PROHIBIDO: justificar diseño, defender sistema, "edge", "según diseño", "protegiendo capital", "en teoría". OBLIGATORIO: métrica única (Expectancy por hmm_regime × coherence_state) + query SQL. Actitud: auditor frío. Máx 15 líneas.
 
 **Frase Protectora Obligatoria:**
 > "La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."

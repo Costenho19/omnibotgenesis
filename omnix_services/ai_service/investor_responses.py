@@ -382,15 +382,15 @@ Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protoc
     InvestorQueryType.TECHNICAL_DIAGNOSTIC: InvestorResponse(
         query_type=InvestorQueryType.TECHNICAL_DIAGNOSTIC,
         headline="",
-        body="""_Modo diagnóstico activado. Respuesta técnica:_
+        body="""_Modo diagnóstico activado._
 
-**Datos verificables:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD | Coherence Gate: activo 50% | Monte Carlo: sin veto | Kelly: 6.25% (no ejecutado)
+**Datos:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD
 
-**Conclusión:** Con datos actuales no es posible determinar si el problema es estratégico o de ejecución.
+**Conclusión:** No es posible determinar si el problema es señal, sizing, filtro o ejecución.
 
-**Métrica faltante:** Expectancy por trade segmentada por régimen HMM + estado Coherence Gate (PASS/BLOCKED)
+**Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
 
-**Query:** `SELECT hmm_regime, coherence_state, COUNT(*) as trades, AVG(pnl) as expectancy FROM trades GROUP BY hmm_regime, coherence_state;`
+**Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
 
 Sin esta métrica, cualquier conclusión sería especulativa.""",
         evidence="",
