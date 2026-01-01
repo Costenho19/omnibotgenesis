@@ -4174,11 +4174,43 @@ class AutoTradingBot:
                 # PAPER TRADING V2 - Usa PostgreSQL institucional
                 if self.paper_trading:
                     # V6.5.4d MULTI-USER: Usar user_id del parámetro
+                    # V005 Operación Lucidez: Extraer métricas de telemetría del análisis
+                    telemetry_hmm_regime = None
+                    telemetry_coherence_score = None
+                    telemetry_ema_signal = None
+                    telemetry_confidence = None
+                    
+                    # Extraer hmm_regime del análisis
+                    if analysis.get('hmm_regime'):
+                        hmm_data = analysis['hmm_regime']
+                        if isinstance(hmm_data, dict):
+                            telemetry_hmm_regime = hmm_data.get('regime', 'UNKNOWN')
+                            telemetry_confidence = hmm_data.get('confidence', 0) * 100 if hmm_data.get('confidence') else None
+                        elif isinstance(hmm_data, str):
+                            telemetry_hmm_regime = hmm_data
+                    
+                    # Extraer coherence_score del análisis
+                    if analysis.get('coherence_report'):
+                        coh_data = analysis['coherence_report']
+                        if isinstance(coh_data, dict):
+                            telemetry_coherence_score = coh_data.get('coherence_score', 0)
+                        elif hasattr(coh_data, 'coherence_score'):
+                            telemetry_coherence_score = coh_data.coherence_score
+                    
+                    # Extraer EMA signal
+                    telemetry_ema_signal = action  # BUY/SELL es la señal que generó el trade
+                    
+                    logger.info(f"📊 V005 TELEMETRÍA: hmm={telemetry_hmm_regime}, coherence={telemetry_coherence_score}, ema={telemetry_ema_signal}, conf={telemetry_confidence}")
+                    
                     result = self.paper_trading.execute_paper_trade(
                         user_id=user_id,
                         side=action.lower(),
                         symbol=self.config['trading_pair'],
-                        amount_usd=amount_usd
+                        amount_usd=amount_usd,
+                        hmm_regime=telemetry_hmm_regime,
+                        coherence_score=telemetry_coherence_score,
+                        ema_regime_signal=telemetry_ema_signal,
+                        strategy_confidence=telemetry_confidence
                     )
                 else:
                     # Fallback a método legacy si PaperTradingManager no disponible

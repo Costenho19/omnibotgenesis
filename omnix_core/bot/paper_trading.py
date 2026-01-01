@@ -99,17 +99,24 @@ class PaperTradingManager:
             logger.error(f"Error inicializando paper trading: {e}")
             return {'error': str(e)}
     
-    def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float) -> Dict:
+    def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float,
+                            hmm_regime: str = None, coherence_score: float = None,
+                            ema_regime_signal: str = None, strategy_confidence: float = None) -> Dict:
         """
         Ejecutar trade simulado con datos REALES de Kraken
         
         V2: Usa schema institucional con P&L tracking completo
+        V005 (Operación Lucidez): Captura métricas de telemetría para segmentación
         
         Args:
             user_id: ID del usuario
             side: 'buy' o 'sell'
             symbol: Par de trading (ej: 'BTC/USD')
             amount_usd: Cantidad en USD a tradear
+            hmm_regime: Régimen HMM al momento del trade (BULLISH/BEARISH/RANGING)
+            coherence_score: Score de coherencia 0-100
+            ema_regime_signal: Señal EMA al momento del trade (BUY/SELL/HOLD)
+            strategy_confidence: Confianza de la estrategia 0-100
             
         Returns:
             Dict con resultado del trade simulado
@@ -143,13 +150,17 @@ class PaperTradingManager:
                         'balance_usd': balance['balance_usd']
                     }
                 
-                # Abrir posición V2
+                # Abrir posición V2 + Telemetría Operación Lucidez
                 trade_uuid = self._open_position_v2(
                     user_id=user_id,
                     symbol=symbol,
                     base_quantity=crypto_amount,
                     entry_price=current_price,
-                    source_strategy='auto_trading_bot'
+                    source_strategy='auto_trading_bot',
+                    hmm_regime=hmm_regime,
+                    coherence_score=coherence_score,
+                    ema_regime_signal=ema_regime_signal,
+                    strategy_confidence=strategy_confidence
                 )
                 
                 if not trade_uuid:
@@ -417,13 +428,18 @@ class PaperTradingManager:
         return notional_usd * self.KRAKEN_FEE_RATE
     
     def _open_position_v2(self, user_id: str, symbol: str, base_quantity: float, 
-                         entry_price: float, source_strategy: str = 'auto_trading_bot') -> Optional[str]:
+                         entry_price: float, source_strategy: str = 'auto_trading_bot',
+                         hmm_regime: str = None, coherence_score: float = None,
+                         ema_regime_signal: str = None, strategy_confidence: float = None) -> Optional[str]:
         """
         Abrir nueva posición (BUY)
         
         Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
         id, user_id, symbol, side, quantity, entry_price, exit_price, 
         profit_loss, profit_pct, strategy, status, opened_at, closed_at
+        
+        V005 (Operación Lucidez): Añade columnas de telemetría:
+        hmm_regime, coherence_score, ema_regime_signal, strategy_confidence
         
         Returns:
             trade_id del trade creado, o None si falla
@@ -438,15 +454,17 @@ class PaperTradingManager:
             fee_usd = self._calculate_fee(quote_notional_usd)
             total_cost = quote_notional_usd + fee_usd
             
-            # Insertar trade en paper_trading_trades usando columnas reales
+            # Insertar trade con columnas de telemetría (Operación Lucidez)
             result = self.database_service.execute_query(
                 """
                 INSERT INTO paper_trading_trades 
-                (user_id, symbol, side, quantity, entry_price, strategy, status, opened_at)
-                VALUES (%s, %s, 'buy', %s, %s, %s, 'open', NOW())
+                (user_id, symbol, side, quantity, entry_price, strategy, status, opened_at,
+                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence)
+                VALUES (%s, %s, 'buy', %s, %s, %s, 'open', NOW(), %s, %s, %s, %s)
                 RETURNING id
                 """,
-                (user_id, symbol, base_quantity, entry_price, source_strategy),
+                (user_id, symbol, base_quantity, entry_price, source_strategy,
+                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence),
                 fetch=True
             )
             
