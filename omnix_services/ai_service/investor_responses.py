@@ -91,6 +91,7 @@ class InvestorQueryType(Enum):
     RISK_OFF_BOT = "risk_off_bot"
     HYPOTHETICAL_SCENARIO = "hypothetical_scenario"
     ETHICAL_SCENARIO = "ethical_scenario"
+    TECHNICAL_DIAGNOSTIC = "technical_diagnostic"
 
 
 @dataclass
@@ -377,6 +378,22 @@ Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protoc
         evidence="",
         closing=""
     ),
+    
+    InvestorQueryType.TECHNICAL_DIAGNOSTIC: InvestorResponse(
+        query_type=InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        headline="",
+        body="""**Datos verificables:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD | Coherence Gate: activo 50% | Monte Carlo: sin veto | Kelly: 6.25% (no ejecutado)
+
+**Conclusión:** Con datos actuales no es posible determinar si el problema es estratégico o de ejecución.
+
+**Métrica faltante:** Expectancy por trade segmentada por régimen HMM + estado Coherence Gate (PASS/BLOCKED)
+
+**Query:** `SELECT hmm_regime, coherence_state, COUNT(*) as trades, AVG(pnl) as expectancy FROM trades GROUP BY hmm_regime, coherence_state;`
+
+Sin esta métrica, cualquier conclusión sería especulativa.""",
+        evidence="",
+        closing=""
+    ),
 }
 
 
@@ -626,6 +643,43 @@ class InvestorResponseEngine:
         "what is the edge": InvestorQueryType.RISK_OFF_BOT,
         "no edge": InvestorQueryType.RISK_OFF_BOT,
         "show me the edge": InvestorQueryType.RISK_OFF_BOT,
+        
+        # TECHNICAL DIAGNOSTIC - Spanish variations (Jan 1, 2026)
+        "por qué pierde": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "por que pierde": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "por qué perdemos": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "por que perdemos": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "diagnóstico": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "diagnostico": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "root cause": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "causa raíz": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "causa raiz": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "qué métrica falta": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "que metrica falta": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "métrica faltante": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "metrica faltante": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "expectancy por trade": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "cuál es el problema real": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "cual es el problema real": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "no me des narrativa": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "solo datos verificables": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "qué está fallando": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "que esta fallando": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "problema estructural": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "problema de ejecución": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "problema de ejecucion": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        # TECHNICAL DIAGNOSTIC - English variations
+        "why losing": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "why is it losing": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "diagnostic": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "what's actually wrong": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "what is actually wrong": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "missing metric": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "what metric is missing": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "expectancy per trade": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "just verifiable data": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "structural problem": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
+        "execution problem": InvestorQueryType.TECHNICAL_DIAGNOSTIC,
     }
     
     def __init__(self):
