@@ -73,6 +73,21 @@ Defensive type normalization is implemented to prevent `str` vs `int` comparison
 ### Telegram Interaction
 Improvements include increased timeouts for HTTPXRequest and all `requests.post()` calls (30s), retry mechanisms with exponential backoff for message sending, immediate ACK for user messages ("🧠 Procesando tu mensaje..."), and sending AI responses as new messages to prevent timeout issues.
 
+### Operación Lucidez - Segmented Expectancy
+This system analyzes segmented expectancy by categorizing trades based on `HMM_REGIME` and `COHERENCE_BUCKET` to calculate profitability (`E = (Win% × AvgWin) - (Loss% × |AvgLoss|)`) per market condition. It leverages data from `paper_trading_trades` and provides an API endpoint and a Streamlit dashboard widget for visualization.
+
+### Modo Sniper - Precision Entry System
+This system focuses on precision trade entries. It includes:
+1.  **ATR-Based Sizing**: Stop loss set at `ATR × 2.5`, with position sized to risk a maximum of 0.5% of balance.
+2.  **Volume Veto**: Blocks trades if 5-minute volume is less than the 1-hour average to avoid manipulation.
+3.  **Strategy Mode Tracking**: Tags trades as 'SNIPER' or 'STANDARD' for performance comparison.
+
+### Voice TTS Natural Reading
+This feature improves the natural reading of formatted messages in voice responses by converting numbers (e.g., `*1.`) to spoken text ("Punto uno,") and preserving content while removing formatting symbols (e.g., `*Title*` becomes "Title").
+
+### Voice Response Async Optimization
+Optimizes latency for voice responses by sending text immediately to the user, then generating and delivering the voice message asynchronously in the background. This uses a thread-safe mechanism and ensures text delivery even if voice generation fails.
+
 ## External Dependencies
 
 ### APIs and Services
@@ -93,102 +108,3 @@ Improvements include increased timeouts for HTTPXRequest and all `requests.post(
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
-
-## Investor Response Rules Enhancement (Jan 1, 2026)
-Sistema completo de respuestas institucionales con 13 reglas:
-
-**Reglas en MASTER_SYSTEM_PROMPT (13 total):**
-1. **NO UNVERIFIABLE CLAIMS / NO INVENTED CAPABILITIES** - No afirmar datos sin evidencia, NO inventar integraciones (WhaleTracker, Arkham, etc.)
-2. **NO PERCENTAGE WITHOUT SOURCE** - No dar % sin fuente auditable
-3. **NEVER SAY "REFINANDO"** - Usar "el mercado habilita"
-4. **CLOSE INACTIVITY RISK** - Frases letales para objeciones
-5. **FOUNDER CONTROLS, MARKET ENABLES** - Narrativa correcta
-6. **ACCEPT LIMITATIONS WITHOUT JUSTIFICATION** - Sin spin defensivo
-7. **PROTECT EDGE WITHOUT CONCEDING DEFEAT** - Frase protectora
-8. **DATA NOT AVAILABLE FORMAT** - Formato ultra-seco para métricas faltantes
-9. **NO SELF-FLAGELLATION** - Sin autoinculpación excesiva
-10. **NO FUTURE PROMISES** - Solo estado factual presente
-11. **NO IRRELEVANT DATA BLOCKS** - Sin bloques de precios como relleno
-12. **ESCENARIOS TRAMPA (TÉCNICOS Y ÉTICOS)** - Responder en 3-5 líneas, NO inventar capacidades
-13. **TECHNICAL DIAGNOSTIC MODE [HARD OVERRIDE]** - ANULA reglas narrativas. PROHIBIDO: justificar diseño, defender sistema, "edge", "según diseño", "protegiendo capital", "en teoría". OBLIGATORIO: métrica única (Expectancy por hmm_regime × coherence_state) + query SQL. Actitud: auditor frío. Máx 20 líneas. **Mejoras (Jan 2, 2026):** (1) HYPOTHETICAL DETECTION - detecta "supón que", "assume", etiqueta escenarios como HIPOTÉTICO vs datos reales; (2) FORMAT ENFORCEMENT - fallback si excede formato; (3) BLACKLIST SELF-CHECK - auto-verificación de frases prohibidas ("mejora notable", "signo positivo", "el sistema está aprendiendo").
-
-**Frase Protectora Obligatoria:**
-> "La ausencia de este reporte hoy no invalida el sistema; significa que el edge aún no está cuantificado de forma falsable."
-
-**Tipos de Respuesta:**
-- `NEGATIVE_PNL`, `LOW_WIN_RATE`, `HOLD_STRATEGY`, `SYSTEM_VALIDATION`, `RISK_MANAGEMENT`, `TRACK_RECORD`
-- `SYSTEM_INACTIVITY`: "Pocas ventanas buenas > muchas mediocres"
-- `OVER_FILTERING`: "Type II errors > Type I errors"
-- `WHY_NOT_BUY_BTC`: "Asymmetric optionality vs passive holding"
-- `DATA_NOT_AVAILABLE`: Formato seco para métricas pendientes
-- `FALSIFIABLE_REPORT`: Respuesta cuando piden script reproducible
-- `RISK_OFF_BOT`: "Control de riesgo demostrado + edge pendiente"
-- `HYPOTHETICAL_SCENARIO`: Escenarios técnicos ficticios (3-5 líneas)
-- `ETHICAL_SCENARIO`: Escenarios éticos ficticios (3-5 líneas)
-- `TECHNICAL_DIAGNOSTIC`: Respuesta sin narrativa (máx 15 líneas + query SQL)
-
-**Archivos Clave:**
-- `omnix_services/ai_service/prompt_templates.py` (MASTER_SYSTEM_PROMPT + 13 reglas)
-- `omnix_services/ai_service/investor_responses.py` (15 tipos de respuesta)
-- `omnix_config/system_state_manifest.json` (capacidades documentadas)
-
-## Operación Lucidez - Segmented Expectancy (Jan 1, 2026)
-
-Sistema de análisis de expectancy segmentada para identificar DÓNDE gana el sistema.
-
-**Concepto:** Segmentar trades por (HMM_REGIME × COHERENCE_BUCKET) para calcular expectancy por condición de mercado.
-
-**Fórmula:** `E = (Win% × AvgWin) - (Loss% × |AvgLoss|)`
-
-**Implementación:**
-- Migration V005: Añadió columnas `hmm_regime`, `coherence_score`, `ema_regime_signal`, `strategy_confidence` a `paper_trading_trades`
-- Telemetry capture: AutoTradingBot extrae métricas del análisis y las pasa a execute_paper_trade()
-- Query: `get_segmented_expectancy()` en `omnix_dashboard/utils/queries.py`
-- API: `/api/metrics/expectancy` en Flask dashboard
-- Widget: "Expectancy" en Streamlit dashboard con heatmap de segmentos
-
-**Valor para Inversores:**
-- Demuestra entendimiento cuantitativo de DÓNDE tiene edge el sistema
-- Métricas falsables con mínimo de 5 trades por segmento
-- Permite filtrado por régimen para concentrar trading en condiciones rentables
-
-**Documentación:** `docs/operations/OPERACION_LUCIDEZ.md`
-
-## Modo Sniper - Precision Entry System (V006 - Jan 2, 2026)
-
-Sistema de entradas de precisión para mejorar calidad de trades.
-
-**Componentes:**
-1. **ATR-Based Sizing**: Stop loss = ATR × 2.5, position sized so max risk = 0.5% of balance
-2. **Volume Veto**: Block trades if 5min volume < 1h average (avoid manipulation)
-3. **Strategy Mode Tracking**: Trades tagged as 'SNIPER' or 'STANDARD' for comparison
-
-**Implementación:**
-- `omnix_core/strategies/sniper_mode.py`: SniperMode class with evaluate_entry() method
-- Auto-integration in auto_trading_bot.py for all BUY trades
-- Database column `strategy_mode` added via Migration V006
-- Query `compare_sniper_vs_standard()` for performance comparison
-
-**Valor para Inversores:**
-- Demuestra control de riesgo dinámico basado en volatilidad real (ATR)
-- Evita ejecuciones en condiciones de baja liquidez
-- Permite A/B testing entre modos para validar mejoras
-
-**Archivos Clave:**
-- `omnix_core/strategies/sniper_mode.py`
-- `omnix_dashboard/utils/queries.py` (compare_sniper_vs_standard)
-
-## Voice TTS Natural Reading (V006 - Jan 2, 2026)
-
-Mejora del sistema de voz para lectura natural de mensajes formateados.
-
-**Problema resuelto:** Los mensajes con formato markdown (`*1. Título:*`) no se leían correctamente - los títulos se saltaban o sonaban mal.
-
-**Solución implementada:**
-1. **Conversión de números**: `*1.` → "Punto uno," (hasta 15)
-2. **Preservación de contenido**: `*Título*` → "Título" (mantiene texto, solo remueve asteriscos)
-3. **Limpieza inteligente**: Remueve símbolos de formato sin perder información
-
-**Archivos modificados:**
-- `omnix_services/voice_service/voice_service.py` (`_clean_text_for_voice()`)
-- `omnix_services/voice_service/voice_controller.py` (`send_telegram_response_with_voice()`)
