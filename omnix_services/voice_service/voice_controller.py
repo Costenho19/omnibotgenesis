@@ -186,6 +186,14 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
         
         voice_text = re.sub(r':\*', ',', voice_text)
         
+        voice_text = voice_text.replace('→', ', ')
+        voice_text = voice_text.replace('←', ', ')
+        voice_text = voice_text.replace('↑', ', ')
+        voice_text = voice_text.replace('↓', ', ')
+        voice_text = voice_text.replace('⟶', ', ')
+        voice_text = voice_text.replace('➡', ', ')
+        voice_text = voice_text.replace('➔', ', ')
+        
         voice_text = re.sub(r'[🚀💰🤖📊📋💬📈⏰💲📰📅⚡🆓🎥🖥️📱🎭🏆🧠🎯🌍❓✅❌⚠️🔍💳📧🔄]', '', voice_text)
         voice_text = voice_text.replace('\n', '. ')
         voice_text = voice_text.strip()

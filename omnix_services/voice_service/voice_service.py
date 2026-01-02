@@ -176,6 +176,14 @@ class VoiceServiceEnterprise:
             clean_text = re.sub(r':\*', ',', clean_text)
             clean_text = re.sub(r':\s*$', ',', clean_text, flags=re.MULTILINE)
             
+            clean_text = clean_text.replace('→', ', ')
+            clean_text = clean_text.replace('←', ', ')
+            clean_text = clean_text.replace('↑', ', ')
+            clean_text = clean_text.replace('↓', ', ')
+            clean_text = clean_text.replace('⟶', ', ')
+            clean_text = clean_text.replace('➡', ', ')
+            clean_text = clean_text.replace('➔', ', ')
+            
             emoji_pattern = re.compile("["
                 u"\U0001F600-\U0001F64F"
                 u"\U0001F300-\U0001F5FF"
