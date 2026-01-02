@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 31 de Diciembre 2025  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados
+**Fecha**: 2 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -29,6 +29,42 @@
 - "el sistema está aprendiendo", "mejora notable", "signo positivo"
 
 **Archivo modificado:** `omnix_services/ai_service/prompt_templates.py` (líneas 281-306)
+
+---
+
+### Operación Lucidez - Segmented Expectancy (Jan 1, 2026)
+
+**OBJETIVO:** Identificar DÓNDE tiene edge el sistema mediante expectancy segmentada por (hmm_regime, coherence_state).
+
+**IMPLEMENTACIÓN COMPLETA:**
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **Migration V005** | `omnix_core/db/migrations/` | ✅ Columnas añadidas |
+| **Telemetría** | `omnix_core/bot/paper_trading.py` | ✅ Captura hmm_regime, coherence_score |
+| **API Endpoint** | `omnix_dashboard/blueprints/core.py` | ✅ `/api/metrics/expectancy` |
+| **Query** | `omnix_dashboard/utils/queries.py` | ✅ `get_segmented_expectancy()` |
+| **Widget** | `omnix_dashboard/streamlit_app.py` | ✅ `render_expectancy()` heatmap |
+
+**Columnas añadidas a paper_trading_trades:**
+- `hmm_regime` (VARCHAR) - Régimen de mercado: BULLISH, BEARISH, RANGING, UNKNOWN
+- `coherence_score` (FLOAT) - Score de coherencia 0-100%
+- `ema_regime_signal` (VARCHAR) - Señal EMA: BUY, SELL, NONE
+- `strategy_confidence` (FLOAT) - Confianza de la estrategia
+
+**Fórmula Expectancy:**
+```
+E = (Win% × AvgWin) - (Loss% × |AvgLoss|)
+```
+- E > 0 = Edge detectado en segmento
+- E < 0 = Filtrar segmento
+- Mínimo 5 trades para significancia estadística
+
+**Estado de datos:**
+- 119 trades históricos: Sin telemetría (ejecutados pre-implementación)
+- Trades nuevos: Capturarán telemetría automáticamente
+
+**Documentación detallada:** `docs/operations/OPERACION_LUCIDEZ.md`
 
 ---
 
