@@ -239,6 +239,18 @@ except ImportError:
     CAES_AVAILABLE = False
     logger.warning("⚠️ CAES no disponible - usando sizing estático")
 
+# Import Sniper Mode - Precision Trading System (Jan 2, 2026)
+try:
+    from omnix_core.strategies.sniper_mode import SniperMode, get_sniper_mode, enable_sniper_mode
+    SNIPER_MODE_AVAILABLE = True
+    logger.info("🎯 Sniper Mode disponible - ATR sizing + volume veto activos")
+except ImportError:
+    SniperMode = None
+    get_sniper_mode = None
+    enable_sniper_mode = None
+    SNIPER_MODE_AVAILABLE = False
+    logger.warning("⚠️ Sniper Mode no disponible")
+
 # Import Memory-Enhanced RMS V6.2 - PREDICTIVE RISK MANAGEMENT
 try:
     from omnix_services.risk_management import (
@@ -4169,18 +4181,74 @@ class AutoTradingBot:
                     'reason': 'FINAL_SYMBOL_FILTER_VETO'
                 }
             
+            # ==========================================================================
+            # V006 SNIPER MODE: Precision Entry System (Jan 2, 2026)
+            # - ATR-based adaptive sizing (max 0.5% risk per trade)
+            # - Volume veto (5min volume < 1h avg = block)
+            # ==========================================================================
+            strategy_mode = 'STANDARD'
+            sniper_info = {}
+            
+            if SNIPER_MODE_AVAILABLE and get_sniper_mode and action == 'BUY':
+                try:
+                    sniper = get_sniper_mode(trading_service=self.trading_service, max_risk_pct=0.005)
+                    balance = self._get_balance()
+                    
+                    current_price = analysis.get('current_price', 0)
+                    if not current_price or current_price <= 0:
+                        try:
+                            ticker = self.trading_service.get_ticker(self.config['trading_pair'])
+                            if ticker and 'last' in ticker:
+                                current_price = float(ticker['last'])
+                        except:
+                            pass
+                    
+                    if current_price and current_price > 0:
+                        sniper_eval = sniper.evaluate_entry(
+                            symbol=self.config['trading_pair'],
+                            current_price=current_price,
+                            balance=balance,
+                            base_size=amount_usd
+                        )
+                        
+                        sniper_info = sniper_eval
+                        strategy_mode = sniper_eval.get('strategy_mode', 'SNIPER')
+                        
+                        if not sniper_eval.get('allow_trade', True):
+                            veto_reasons = sniper_eval.get('veto_reasons', ['Unknown'])
+                            logger.warning(f"🎯 SNIPER VETO: {', '.join(veto_reasons)}")
+                            return {
+                                'success': False,
+                                'blocked': True,
+                                'error': f'Sniper Mode vetoed: {", ".join(veto_reasons)}',
+                                'reason': 'SNIPER_VETO',
+                                'sniper_info': sniper_info
+                            }
+                        
+                        if sniper_eval.get('adjusted_size') and sniper_eval['adjusted_size'] != amount_usd:
+                            original_amount = amount_usd
+                            amount_usd = sniper_eval['adjusted_size']
+                            logger.info(f"🎯 SNIPER SIZE: ${original_amount:.2f} → ${amount_usd:.2f} (ATR-based)")
+                            analysis['amount_usd'] = amount_usd
+                            if 'reason' in analysis:
+                                analysis['reason'].append(f"🎯 Sniper: Size ${original_amount:.2f}→${amount_usd:.2f}")
+                    else:
+                        logger.warning("🎯 SNIPER: Could not get current price, using STANDARD mode")
+                        strategy_mode = 'STANDARD'
+                            
+                except Exception as e:
+                    logger.warning(f"⚠️ Sniper Mode evaluation error (continuing): {e}")
+                    strategy_mode = 'STANDARD'
+            
             # Ejecutar según modo
             if self.config['paper_mode']:
                 # PAPER TRADING V2 - Usa PostgreSQL institucional
                 if self.paper_trading:
-                    # V6.5.4d MULTI-USER: Usar user_id del parámetro
-                    # V005 Operación Lucidez: Extraer métricas de telemetría del análisis
                     telemetry_hmm_regime = None
                     telemetry_coherence_score = None
                     telemetry_ema_signal = None
                     telemetry_confidence = None
                     
-                    # Extraer hmm_regime del análisis
                     if analysis.get('hmm_regime'):
                         hmm_data = analysis['hmm_regime']
                         if isinstance(hmm_data, dict):
@@ -4189,7 +4257,6 @@ class AutoTradingBot:
                         elif isinstance(hmm_data, str):
                             telemetry_hmm_regime = hmm_data
                     
-                    # Extraer coherence_score del análisis
                     if analysis.get('coherence_report'):
                         coh_data = analysis['coherence_report']
                         if isinstance(coh_data, dict):
@@ -4197,10 +4264,9 @@ class AutoTradingBot:
                         elif hasattr(coh_data, 'coherence_score'):
                             telemetry_coherence_score = coh_data.coherence_score
                     
-                    # Extraer EMA signal
-                    telemetry_ema_signal = action  # BUY/SELL es la señal que generó el trade
+                    telemetry_ema_signal = action
                     
-                    logger.info(f"📊 V005 TELEMETRÍA: hmm={telemetry_hmm_regime}, coherence={telemetry_coherence_score}, ema={telemetry_ema_signal}, conf={telemetry_confidence}")
+                    logger.info(f"📊 V006 TELEMETRÍA: hmm={telemetry_hmm_regime}, coherence={telemetry_coherence_score}, ema={telemetry_ema_signal}, mode={strategy_mode}")
                     
                     result = self.paper_trading.execute_paper_trade(
                         user_id=user_id,
@@ -4210,7 +4276,8 @@ class AutoTradingBot:
                         hmm_regime=telemetry_hmm_regime,
                         coherence_score=telemetry_coherence_score,
                         ema_regime_signal=telemetry_ema_signal,
-                        strategy_confidence=telemetry_confidence
+                        strategy_confidence=telemetry_confidence,
+                        strategy_mode=strategy_mode
                     )
                 else:
                     # Fallback a método legacy si PaperTradingManager no disponible

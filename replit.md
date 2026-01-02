@@ -153,3 +153,27 @@ Sistema de análisis de expectancy segmentada para identificar DÓNDE gana el si
 - Permite filtrado por régimen para concentrar trading en condiciones rentables
 
 **Documentación:** `docs/operations/OPERACION_LUCIDEZ.md`
+
+## Modo Sniper - Precision Entry System (V006 - Jan 2, 2026)
+
+Sistema de entradas de precisión para mejorar calidad de trades.
+
+**Componentes:**
+1. **ATR-Based Sizing**: Stop loss = ATR × 2.5, position sized so max risk = 0.5% of balance
+2. **Volume Veto**: Block trades if 5min volume < 1h average (avoid manipulation)
+3. **Strategy Mode Tracking**: Trades tagged as 'SNIPER' or 'STANDARD' for comparison
+
+**Implementación:**
+- `omnix_core/strategies/sniper_mode.py`: SniperMode class with evaluate_entry() method
+- Auto-integration in auto_trading_bot.py for all BUY trades
+- Database column `strategy_mode` added via Migration V006
+- Query `compare_sniper_vs_standard()` for performance comparison
+
+**Valor para Inversores:**
+- Demuestra control de riesgo dinámico basado en volatilidad real (ATR)
+- Evita ejecuciones en condiciones de baja liquidez
+- Permite A/B testing entre modos para validar mejoras
+
+**Archivos Clave:**
+- `omnix_core/strategies/sniper_mode.py`
+- `omnix_dashboard/utils/queries.py` (compare_sniper_vs_standard)

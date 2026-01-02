@@ -101,12 +101,14 @@ class PaperTradingManager:
     
     def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float,
                             hmm_regime: str = None, coherence_score: float = None,
-                            ema_regime_signal: str = None, strategy_confidence: float = None) -> Dict:
+                            ema_regime_signal: str = None, strategy_confidence: float = None,
+                            strategy_mode: str = 'STANDARD') -> Dict:
         """
         Ejecutar trade simulado con datos REALES de Kraken
         
         V2: Usa schema institucional con P&L tracking completo
         V005 (Operación Lucidez): Captura métricas de telemetría para segmentación
+        V006 (Modo Sniper - Jan 2, 2026): Añade strategy_mode para tracking
         
         Args:
             user_id: ID del usuario
@@ -117,6 +119,7 @@ class PaperTradingManager:
             coherence_score: Score de coherencia 0-100
             ema_regime_signal: Señal EMA al momento del trade (BUY/SELL/HOLD)
             strategy_confidence: Confianza de la estrategia 0-100
+            strategy_mode: 'SNIPER' o 'STANDARD' para comparación de modos
             
         Returns:
             Dict con resultado del trade simulado
@@ -150,7 +153,6 @@ class PaperTradingManager:
                         'balance_usd': balance['balance_usd']
                     }
                 
-                # Abrir posición V2 + Telemetría Operación Lucidez
                 trade_uuid = self._open_position_v2(
                     user_id=user_id,
                     symbol=symbol,
@@ -160,7 +162,8 @@ class PaperTradingManager:
                     hmm_regime=hmm_regime,
                     coherence_score=coherence_score,
                     ema_regime_signal=ema_regime_signal,
-                    strategy_confidence=strategy_confidence
+                    strategy_confidence=strategy_confidence,
+                    strategy_mode=strategy_mode
                 )
                 
                 if not trade_uuid:
@@ -430,7 +433,8 @@ class PaperTradingManager:
     def _open_position_v2(self, user_id: str, symbol: str, base_quantity: float, 
                          entry_price: float, source_strategy: str = 'auto_trading_bot',
                          hmm_regime: str = None, coherence_score: float = None,
-                         ema_regime_signal: str = None, strategy_confidence: float = None) -> Optional[str]:
+                         ema_regime_signal: str = None, strategy_confidence: float = None,
+                         strategy_mode: str = 'STANDARD') -> Optional[str]:
         """
         Abrir nueva posición (BUY)
         
@@ -441,6 +445,8 @@ class PaperTradingManager:
         V005 (Operación Lucidez): Añade columnas de telemetría:
         hmm_regime, coherence_score, ema_regime_signal, strategy_confidence
         
+        V006 (Modo Sniper - Jan 2, 2026): Añade strategy_mode para tracking
+        
         Returns:
             trade_id del trade creado, o None si falla
         """
@@ -449,22 +455,20 @@ class PaperTradingManager:
                 logger.error("Database service no disponible")
                 return None
             
-            # Calcular valores
             quote_notional_usd = base_quantity * entry_price
             fee_usd = self._calculate_fee(quote_notional_usd)
             total_cost = quote_notional_usd + fee_usd
             
-            # Insertar trade con columnas de telemetría (Operación Lucidez)
             result = self.database_service.execute_query(
                 """
                 INSERT INTO paper_trading_trades 
                 (user_id, symbol, side, quantity, entry_price, strategy, status, opened_at,
-                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence)
-                VALUES (%s, %s, 'buy', %s, %s, %s, 'open', NOW(), %s, %s, %s, %s)
+                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence, strategy_mode)
+                VALUES (%s, %s, 'buy', %s, %s, %s, 'open', NOW(), %s, %s, %s, %s, %s)
                 RETURNING id
                 """,
                 (user_id, symbol, base_quantity, entry_price, source_strategy,
-                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence),
+                 hmm_regime, coherence_score, ema_regime_signal, strategy_confidence, strategy_mode),
                 fetch=True
             )
             

@@ -577,3 +577,118 @@ def get_segmented_expectancy(days=90):
                 'error': str(e),
                 'segments': []
             }
+
+
+def compare_sniper_vs_standard(days=30, min_trades=10):
+    """
+    Compare Sniper Mode vs Standard Mode performance
+    
+    V006 (Jan 2, 2026): Modo Sniper comparison query
+    
+    Args:
+        days: Number of days to analyze
+        min_trades: Minimum trades per mode for valid comparison
+        
+    Returns:
+        Dict with comparison metrics for both modes
+    """
+    with get_db_connection() as conn:
+        if not conn:
+            return {'success': False, 'error': 'No database connection'}
+        
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                WITH mode_stats AS (
+                    SELECT 
+                        COALESCE(strategy_mode, 'STANDARD') as mode,
+                        COUNT(*) as total_trades,
+                        SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                        SUM(profit_loss) as total_pnl,
+                        AVG(profit_loss) as avg_pnl,
+                        SUM(CASE WHEN profit_loss > 0 THEN profit_loss ELSE 0 END) as gross_profit,
+                        ABS(SUM(CASE WHEN profit_loss < 0 THEN profit_loss ELSE 0 END)) as gross_loss,
+                        MIN(profit_loss) as worst_trade,
+                        MAX(profit_loss) as best_trade
+                    FROM paper_trading_trades
+                    WHERE status = 'closed'
+                      AND closed_at >= NOW() - INTERVAL '1 day' * %s
+                    GROUP BY COALESCE(strategy_mode, 'STANDARD')
+                )
+                SELECT 
+                    mode,
+                    total_trades,
+                    wins,
+                    losses,
+                    ROUND((wins::numeric / NULLIF(total_trades, 0) * 100), 1) as win_rate,
+                    total_pnl,
+                    avg_pnl,
+                    CASE WHEN gross_loss > 0 THEN ROUND(gross_profit / gross_loss, 2) ELSE NULL END as profit_factor,
+                    worst_trade,
+                    best_trade
+                FROM mode_stats
+                ORDER BY mode
+            ''', (days,))
+            
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            results = {
+                'SNIPER': None,
+                'STANDARD': None
+            }
+            
+            for row in rows:
+                mode = row[0]
+                results[mode] = {
+                    'total_trades': int(row[1]),
+                    'wins': int(row[2]),
+                    'losses': int(row[3]),
+                    'win_rate': float(row[4]) if row[4] else 0,
+                    'total_pnl': float(row[5]) if row[5] else 0,
+                    'avg_pnl': float(row[6]) if row[6] else 0,
+                    'profit_factor': float(row[7]) if row[7] else 0,
+                    'worst_trade': float(row[8]) if row[8] else 0,
+                    'best_trade': float(row[9]) if row[9] else 0
+                }
+            
+            sniper = results.get('SNIPER') or {}
+            standard = results.get('STANDARD') or {}
+            
+            sniper_trades = sniper.get('total_trades', 0)
+            standard_trades = standard.get('total_trades', 0)
+            
+            comparison_valid = sniper_trades >= min_trades and standard_trades >= min_trades
+            
+            winner = None
+            if comparison_valid:
+                sniper_pf = sniper.get('profit_factor', 0)
+                standard_pf = standard.get('profit_factor', 0)
+                if sniper_pf > standard_pf:
+                    winner = 'SNIPER'
+                elif standard_pf > sniper_pf:
+                    winner = 'STANDARD'
+                else:
+                    winner = 'TIE'
+            
+            logger.info(f"🎯 SNIPER COMPARISON: SNIPER={sniper_trades} trades, STANDARD={standard_trades} trades, winner={winner}")
+            
+            return {
+                'success': True,
+                'days_analyzed': days,
+                'comparison_valid': comparison_valid,
+                'min_trades_required': min_trades,
+                'sniper': results.get('SNIPER'),
+                'standard': results.get('STANDARD'),
+                'winner': winner,
+                'recommendation': f"{winner} mode outperforms" if winner and winner != 'TIE' else "Insufficient data or tie"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error comparing sniper vs standard: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
