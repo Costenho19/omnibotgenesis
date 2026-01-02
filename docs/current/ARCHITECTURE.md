@@ -89,6 +89,55 @@ def detect_language(text):
 
 ---
 
+## Voice Service Async Architecture (V006 - Jan 2, 2026)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| VoiceEngine | `omnix_services/voice_service/voice_controller.py` | Adapter para gTTS/ElevenLabs |
+| schedule_voice_response | `voice_controller.py` | Programa voz en hilo daemon |
+| _process_and_send_voice | `voice_controller.py` | Genera y envía audio (interno) |
+
+**Flujo V006 (Texto-primero, Voz-después)**:
+```
+Usuario envía mensaje
+    ↓
+Bot procesa y genera respuesta texto
+    ↓
+Texto enviado inmediatamente a Telegram ← Usuario ve respuesta rápido
+    ↓
+schedule_voice_response() lanza hilo daemon
+    ↓
+Hilo background: limpieza texto → detección idioma → gTTS → envío audio
+    ↓
+Audio llega segundos después como mensaje separado
+```
+
+**Beneficios**:
+- Latencia percibida: ~5-10s → ~0.5s
+- El handler no se bloquea esperando TTS
+- Si falla el audio, el texto ya llegó
+
+**Implementación Threading**:
+```python
+def schedule_voice_response(chat_id, response_text, ...):
+    voice_thread = threading.Thread(
+        target=_process_and_send_voice,
+        args=(chat_id, response_text, ...),
+        daemon=True,  # No bloquea shutdown del bot
+        name=f"VoiceThread-{chat_id}"
+    )
+    voice_thread.start()
+    return voice_thread  # Para debugging
+```
+
+**Limpieza de Texto para TTS (V006)**:
+- Números de lista: `*1.` → "Punto uno, "
+- Asteriscos: `*Título*` → "Título" (preserva contenido)
+- Flechas: `→` → ", " (pausa natural)
+- Emojis: Removidos completamente
+
+---
+
 ## 1. Core Trading Engines
 
 | Módulo | Ubicación | Propósito |

@@ -121,12 +121,14 @@ except ImportError:
     logger.warning("⚠️ Signal Contribution module no disponible")
 
 # Voice Service - TTS con Google gTTS
+# V006 (Jan 2, 2026): schedule_voice_response para envío asíncrono
 try:
-    from omnix_services.voice_service.voice_controller import send_telegram_response_with_voice
+    from omnix_services.voice_service.voice_controller import send_telegram_response_with_voice, schedule_voice_response
     VOICE_SERVICE_AVAILABLE = True
-    logger.info("🎤 Voice Service disponible")
+    logger.info("🎤 Voice Service disponible (async mode V006)")
 except ImportError:
     VOICE_SERVICE_AVAILABLE = False
+    schedule_voice_response = None
 
 # V7 DI Container - Hexagonal Architecture
 try:
@@ -3701,27 +3703,20 @@ Usa: `/autotrading activar ACEPTO`"""
                     except Exception as save_error:
                         logger.warning(f"⚠️ Error guardando conversación (no crítico): {save_error}")
                 
-                # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA PARA TODOS LOS USUARIOS
-                # FIX Dec 31, 2025: Esperar 1 segundo después del texto para que el usuario lo vea primero
-                if VOICE_SERVICE_AVAILABLE and ai_response and len(ai_response) > 20:
+                # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea - retorna inmediatamente)
+                if VOICE_SERVICE_AVAILABLE and schedule_voice_response and ai_response and len(ai_response) > 20:
                     try:
-                        logger.info(f"🎤 ⏳ ESPERANDO 1s ANTES DE VOZ para que el texto se vea primero...")
-                        await asyncio.sleep(1.0)
-                        logger.info(f"🎤 ✅ INICIANDO GENERACIÓN DE VOZ para {user_name}: {len(ai_response)} chars")
-                        await asyncio.to_thread(
-                            send_telegram_response_with_voice,
-                            chat_id,
-                            ai_response,
-                            user_name,
-                            user_id,
-                            is_admin(user_id),
-                            self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
-                            None,
-                            is_admin
+                        schedule_voice_response(
+                            chat_id=chat_id,
+                            response_text=ai_response,
+                            user_name=user_name,
+                            user_id=user_id,
+                            is_admin_user=is_admin(user_id),
+                            is_admin_func=is_admin
                         )
-                        logger.info(f"🎤 VOZ AUTOMÁTICA ENVIADA a {user_name}")
+                        logger.info(f"🎤 [ASYNC] Voz programada para {user_name}")
                     except Exception as voice_error:
-                        logger.warning(f"⚠️ Error voz automática (no crítico): {voice_error}")
+                        logger.warning(f"⚠️ Error programando voz: {voice_error}")
                 
             except Exception as ai_error:
                 logger.error(f"❌ Error IA superinteligencia: {ai_error}")
@@ -5363,22 +5358,20 @@ ESTILO:
                 else:
                     logger.warning(f"⚠️ No se guardó historial - respuesta vacía o inválida")
             
-            # 🎤 GENERAR Y ENVIAR VOZ AUTOMÁTICA CON gTTS
-            if VOICE_SERVICE_AVAILABLE and final_response_text:
+            # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea respuesta de texto)
+            if VOICE_SERVICE_AVAILABLE and schedule_voice_response and final_response_text:
                 try:
-                    send_telegram_response_with_voice(
+                    schedule_voice_response(
                         chat_id=chat_id,
                         response_text=final_response_text,
                         user_name=user_name if 'user_name' in locals() else "Usuario",
                         user_id=user_id,
                         is_admin_user=is_admin(user_id if user_id else chat_id),
-                        trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
-                        reference_message=thinking_message_id if 'thinking_message_id' in locals() else None,
                         is_admin_func=is_admin
                     )
-                    logger.info(f"🎤 Voz enviada a {chat_id}")
+                    logger.info(f"🎤 [ASYNC] Voz programada para {chat_id}")
                 except Exception as voice_error:
-                    logger.warning(f"⚠️ Error generando voz: {voice_error}")
+                    logger.warning(f"⚠️ Error programando voz: {voice_error}")
             
             logger.info(f"✅ Respuesta enviada exitosamente a {chat_id} - {len(final_response_text)} chars")
                 
@@ -5648,22 +5641,21 @@ ESTILO:
                 text_sent = True
                 logger.info(f"✅ Texto enviado (reply) a {chat_id}: {len(response_text)} chars")
             
-            if VOICE_SERVICE_AVAILABLE and text_sent:
+            # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea)
+            if VOICE_SERVICE_AVAILABLE and schedule_voice_response and text_sent:
                 try:
                     effective_user_id = user_id or str(chat_id)
-                    send_telegram_response_with_voice(
+                    schedule_voice_response(
                         chat_id=chat_id,
                         response_text=response_text,
                         user_name=user_name,
                         user_id=effective_user_id,
                         is_admin_user=is_admin(effective_user_id),
-                        trading_system=self.trading_enterprise if self.trading_enterprise_enabled else self.trading,
-                        reference_message=edit_message_id,
                         is_admin_func=is_admin
                     )
-                    logger.info(f"🎤 Audio dual enviado a {chat_id}")
+                    logger.info(f"🎤 [ASYNC] Voz dual programada para {chat_id}")
                 except Exception as voice_error:
-                    logger.warning(f"⚠️ Error generando voz dual: {voice_error}")
+                    logger.warning(f"⚠️ Error programando voz dual: {voice_error}")
             
             return text_sent
             
