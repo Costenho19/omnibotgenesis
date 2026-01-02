@@ -165,11 +165,29 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
             voice_text = re.sub(r'\$[\d,]+\.?\d*', '$X.XX', voice_text)
             voice_text = re.sub(r'[\d,]+\.?\d*\s*(BTC|ETH)', 'X.XX crypto', voice_text)
         
-        # Limpiar texto para voz
-        voice_text = re.sub(r'\*\*.*?\*\*', '', voice_text)  # Remover bold
-        voice_text = re.sub(r'\*.*?\*', '', voice_text)      # Remover italic
-        voice_text = re.sub(r'[🚀💰🤖📊📋💬📈⏰💲📰📅⚡🆓🎥🖥️📱🎭🏆🧠🎯🌍❓✅❌⚠️🔍💳📧🔄]', '', voice_text)  # Remover emojis
-        voice_text = voice_text.replace('\n', '. ')  # Convertir saltos en pausas
+        NUMBER_WORDS = {
+            '1': 'uno', '2': 'dos', '3': 'tres', '4': 'cuatro', '5': 'cinco',
+            '6': 'seis', '7': 'siete', '8': 'ocho', '9': 'nueve', '10': 'diez',
+            '11': 'once', '12': 'doce', '13': 'trece', '14': 'catorce', '15': 'quince'
+        }
+        
+        def convert_list_number(match):
+            num = match.group(1)
+            word = NUMBER_WORDS.get(num, num)
+            return f"Punto {word}, "
+        
+        voice_text = re.sub(r'\*(\d{1,2})\.\s*', convert_list_number, voice_text)
+        voice_text = re.sub(r'^(\d{1,2})\.\s+', convert_list_number, voice_text, flags=re.MULTILINE)
+        
+        voice_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', voice_text)
+        voice_text = re.sub(r'\*([^*]+)\*', r'\1', voice_text)
+        
+        voice_text = re.sub(r'\*+', '', voice_text)
+        
+        voice_text = re.sub(r':\*', ',', voice_text)
+        
+        voice_text = re.sub(r'[🚀💰🤖📊📋💬📈⏰💲📰📅⚡🆓🎥🖥️📱🎭🏆🧠🎯🌍❓✅❌⚠️🔍💳📧🔄]', '', voice_text)
+        voice_text = voice_text.replace('\n', '. ')
         voice_text = voice_text.strip()
         
         logger.info(f"🎤 Texto completo para voz preparado: {len(voice_text)} caracteres - SIN RESTRICCIONES")

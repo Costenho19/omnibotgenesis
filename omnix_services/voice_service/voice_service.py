@@ -141,11 +141,41 @@ class VoiceServiceEnterprise:
             return None
     
     def _clean_text_for_voice(self, text: str) -> str:
-        """Limpiar texto para síntesis de voz"""
+        """
+        Limpiar texto para síntesis de voz natural
+        
+        V006 (Jan 2, 2026): Mejora para leer títulos y números correctamente
+        - Convierte números de lista a texto hablado
+        - Mantiene contenido entre asteriscos (solo remueve los asteriscos)
+        - Limpia símbolos de formato sin perder información
+        """
         try:
             import re
             
-            # Remover emojis
+            clean_text = text
+            
+            NUMBER_WORDS = {
+                '1': 'uno', '2': 'dos', '3': 'tres', '4': 'cuatro', '5': 'cinco',
+                '6': 'seis', '7': 'siete', '8': 'ocho', '9': 'nueve', '10': 'diez',
+                '11': 'once', '12': 'doce', '13': 'trece', '14': 'catorce', '15': 'quince'
+            }
+            
+            def convert_list_number(match):
+                num = match.group(1)
+                word = NUMBER_WORDS.get(num, num)
+                return f"Punto {word}, "
+            
+            clean_text = re.sub(r'\*(\d{1,2})\.\s*', convert_list_number, clean_text)
+            clean_text = re.sub(r'^(\d{1,2})\.\s+', convert_list_number, clean_text, flags=re.MULTILINE)
+            
+            clean_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean_text)
+            clean_text = re.sub(r'\*([^*]+)\*', r'\1', clean_text)
+            
+            clean_text = re.sub(r'\*+', '', clean_text)
+            
+            clean_text = re.sub(r':\*', ',', clean_text)
+            clean_text = re.sub(r':\s*$', ',', clean_text, flags=re.MULTILINE)
+            
             emoji_pattern = re.compile("["
                 u"\U0001F600-\U0001F64F"
                 u"\U0001F300-\U0001F5FF"
@@ -166,10 +196,8 @@ class VoiceServiceEnterprise:
                 u"\u3030"
                 "]+", flags=re.UNICODE)
             
-            clean_text = emoji_pattern.sub('', text)
+            clean_text = emoji_pattern.sub('', clean_text)
             
-            # Remover markdown
-            clean_text = re.sub(r'\*+', '', clean_text)
             clean_text = re.sub(r'_+', '', clean_text)
             clean_text = re.sub(r'#+', '', clean_text)
             clean_text = re.sub(r'`+', '', clean_text)
@@ -181,7 +209,6 @@ class VoiceServiceEnterprise:
             clean_text = re.sub(r'╠+', '', clean_text)
             clean_text = re.sub(r'╣+', '', clean_text)
             
-            # Limpiar espacios
             clean_text = re.sub(r'\s+', ' ', clean_text)
             
             return clean_text.strip()

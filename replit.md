@@ -177,3 +177,18 @@ Sistema de entradas de precisión para mejorar calidad de trades.
 **Archivos Clave:**
 - `omnix_core/strategies/sniper_mode.py`
 - `omnix_dashboard/utils/queries.py` (compare_sniper_vs_standard)
+
+## Voice TTS Natural Reading (V006 - Jan 2, 2026)
+
+Mejora del sistema de voz para lectura natural de mensajes formateados.
+
+**Problema resuelto:** Los mensajes con formato markdown (`*1. Título:*`) no se leían correctamente - los títulos se saltaban o sonaban mal.
+
+**Solución implementada:**
+1. **Conversión de números**: `*1.` → "Punto uno," (hasta 15)
+2. **Preservación de contenido**: `*Título*` → "Título" (mantiene texto, solo remueve asteriscos)
+3. **Limpieza inteligente**: Remueve símbolos de formato sin perder información
+
+**Archivos modificados:**
+- `omnix_services/voice_service/voice_service.py` (`_clean_text_for_voice()`)
+- `omnix_services/voice_service/voice_controller.py` (`send_telegram_response_with_voice()`)
