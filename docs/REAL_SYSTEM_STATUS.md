@@ -9,6 +9,29 @@
 
 ## Cambios Recientes
 
+### RULE 13 Enhancement - Diagnostic Mode (Jan 2, 2026)
+
+**PROBLEMA DETECTADO:** El bot trataba escenarios HIPOTÉTICOS como datos reales y violaba el modo diagnóstico con recomendaciones y lenguaje institucional.
+
+**MEJORAS IMPLEMENTADAS (3 adiciones moderadas):**
+
+| Mejora | Descripción |
+|--------|-------------|
+| **HYPOTHETICAL DETECTION** | Detecta "supón que", "assume", "si ocurriera" → etiqueta como HIPOTÉTICO |
+| **FORMAT ENFORCEMENT** | Recordatorio de 20 líneas máx, fallback si se desvía del template |
+| **BLACKLIST SELF-CHECK** | Auto-verificación de frases prohibidas antes de enviar |
+
+**Triggers de escenario hipotético:**
+- "supón que", "supongamos", "assume", "si ocurriera", "imagina que", "hipotéticamente"
+
+**Blacklist extendida:**
+- "según diseño", "protegiendo capital", "edge institucional", "disciplina institucional"
+- "el sistema está aprendiendo", "mejora notable", "signo positivo"
+
+**Archivo modificado:** `omnix_services/ai_service/prompt_templates.py` (líneas 281-306)
+
+---
+
 ### Telegram Voice Service Fix (Dec 31, 2025)
 
 **ERROR EN PRODUCCIÓN CORREGIDO:**
