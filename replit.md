@@ -108,3 +108,24 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## Performance Honesty Guard (Jan 3, 2026)
+
+Sistema que fuerza respuestas honestas del AI cuando las métricas de trading son malas.
+
+**Problema resuelto:** Con Profit Factor 0.20 y Win Rate 20%, el AI seguía dando respuestas "institucionales" evasivas ("fase de calibración", "disciplina institucional") en lugar de admitir que no hay edge demostrado.
+
+**Solución implementada:**
+1. **Consulta métricas reales**: Profit Factor, Win Rate, P&L desde paper_trading_trades
+2. **Evalúa severity**: CRITICAL (<0.3 PF), SEVERE (<0.5 PF), WARNING (<0.8 PF), OK
+3. **Inyecta honestidad**: Si severity != OK, inyecta MANDATORY STATEMENTS en el prompt
+4. **Prohíbe evasivas**: Bloquea frases como "capital deployment in learning phase"
+
+**Umbrales:**
+- CRITICAL: PF < 0.3 o WR < 20% → "NO hay edge demostrado, pausar trading"
+- SEVERE: PF < 0.5 o WR < 30% → "Problemas serios, necesita cambios fundamentales"
+- WARNING: PF < 0.8 o WR < 40% → "Resultados mixtos, ser transparente"
+
+**Archivos clave:**
+- `omnix_services/ai_service/honesty_guard.py` (PerformanceHonestyGuard class)
+- `omnix_services/ai_service/prompt_templates.py` (integración en build_complete_prompt)

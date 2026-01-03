@@ -89,6 +89,47 @@ def detect_language(text):
 
 ---
 
+## Performance Honesty Guard (Jan 3, 2026)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| PerformanceHonestyGuard | `omnix_services/ai_service/honesty_guard.py` | Evalúa métricas y genera contexto honesto |
+| get_honesty_context() | `honesty_guard.py` | Retorna severity, mandatory statements, banned phrases |
+| generate_prompt_injection() | `honesty_guard.py` | Texto para inyectar en prompts AI |
+
+**Problema resuelto:** El AI daba respuestas "institucionales" evasivas incluso con Profit Factor 0.20 y Win Rate 20%. Usaba frases como "fase de calibración" en lugar de admitir que no hay edge.
+
+**Umbrales de Honestidad:**
+| Severity | Profit Factor | Win Rate | Acción |
+|----------|---------------|----------|--------|
+| CRITICAL | < 0.3 | < 20% | Admitir sin edge, recomendar pausar trading |
+| SEVERE | < 0.5 | < 30% | Admitir problemas serios, explicar causa |
+| WARNING | < 0.8 | < 40% | Reconocer resultados mixtos, ser transparente |
+| OK | >= 0.8 | >= 40% | Puede usar lenguaje institucional normal |
+
+**Frases Prohibidas en Modo Honestidad:**
+- "capital deployment in learning phase"
+- "strategy calibration in progress"
+- "disciplina institucional"
+- "building verified track record"
+
+**Flujo de Integración:**
+```
+Usuario pregunta sobre performance
+    ↓
+LanguageContextManager.build_complete_prompt()
+    ↓
+HonestyGuard consulta métricas de BD (paper_trading_trades)
+    ↓
+Si severity != 'ok': Inyecta MANDATORY STATEMENTS + BANNED PHRASES
+    ↓
+AI genera respuesta HONESTA, no evasiva
+```
+
+**Mínimo de Trades:** 50 trades antes de aplicar juicio (insufficient_data si < 50)
+
+---
+
 ## Voice Service Async Architecture (V006 - Jan 2, 2026)
 
 | Componente | Archivo | Función |

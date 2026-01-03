@@ -25,6 +25,16 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+try:
+    from omnix_services.ai_service.honesty_guard import get_honesty_prompt_injection, get_honesty_context
+    HONESTY_GUARD_AVAILABLE = True
+    logger.info("✅ HonestyGuard loaded successfully")
+except ImportError as e:
+    HONESTY_GUARD_AVAILABLE = False
+    logger.warning(f"⚠️ HonestyGuard not available: {e}")
+    def get_honesty_prompt_injection(language='es'): return ""
+    def get_honesty_context(language='es'): return {'honesty_mode_active': False}
+
 def load_system_state_manifest() -> Dict[str, Any]:
     """Load the system state manifest for AI self-knowledge."""
     manifest_path = os.path.join(
@@ -818,12 +828,24 @@ Maintain professional tone appropriate for {lang_name}-speaking institutional in
         
         system_state = get_system_state_prompt()
         
+        honesty_injection = ""
+        if HONESTY_GUARD_AVAILABLE:
+            try:
+                honesty_injection = get_honesty_prompt_injection(detected_lang)
+                if honesty_injection:
+                    logger.info(f"🔍 HonestyGuard: Injecting honesty context for language={detected_lang}")
+            except Exception as e:
+                logger.warning(f"⚠️ HonestyGuard injection failed: {e}")
+        
         prompt_parts = [
             MASTER_SYSTEM_PROMPT,
             OMNIX_IDENTITY_PROMPT,
             system_state,
             self.get_language_directive(detected_lang)
         ]
+        
+        if honesty_injection:
+            prompt_parts.append(honesty_injection)
         
         if kraken_info:
             prompt_parts.append(kraken_info)
