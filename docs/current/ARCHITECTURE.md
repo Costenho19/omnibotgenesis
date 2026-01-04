@@ -140,15 +140,23 @@ NO: Comportamiento normal del bot
 
 ---
 
-## Voice Service Async Architecture (V006 - Jan 2, 2026)
+## Voice Service Async Architecture (V007 - Jan 4, 2026)
 
 | Componente | Archivo | Función |
 |------------|---------|---------|
 | VoiceEngine | `omnix_services/voice_service/voice_controller.py` | Adapter para gTTS/ElevenLabs |
-| schedule_voice_response | `voice_controller.py` | Programa voz en hilo daemon |
+| schedule_voice_response | `voice_controller.py` | Programa voz con logging estructurado |
+| _process_and_send_voice_safe | `voice_controller.py` | Wrapper seguro que captura excepciones |
 | _process_and_send_voice | `voice_controller.py` | Genera y envía audio (interno) |
 
-**Flujo V006 (Texto-primero, Voz-después)**:
+**Mejoras V007 (Jan 4, 2026)**:
+- Voz habilitada para TODOS los usuarios (sin restricción por plan)
+- Logging estructurado con chat_id/user_id en cada paso
+- Retry con backoff para gTTS (3 intentos)
+- Captura completa de errores en hilos daemon
+- Wrapper `_process_and_send_voice_safe` para evitar errores silenciosos
+
+**Flujo V007 (Texto-primero, Voz-después)**:
 ```
 Usuario envía mensaje
     ↓
@@ -156,32 +164,38 @@ Bot procesa y genera respuesta texto
     ↓
 Texto enviado inmediatamente a Telegram ← Usuario ve respuesta rápido
     ↓
-schedule_voice_response() lanza hilo daemon
+schedule_voice_response() verifica condiciones
     ↓
-Hilo background: limpieza texto → detección idioma → gTTS → envío audio
+SI texto < 10 chars → LOG "SALTADO: Texto muy corto"
     ↓
-Audio llega segundos después como mensaje separado
+SI VoiceEngine no activo → LOG "SALTADO: VoiceEngine no activo"
+    ↓
+Lanza hilo daemon con wrapper seguro
+    ↓
+_process_and_send_voice_safe() → Captura TODAS las excepciones
+    ↓
+Hilo: limpieza texto → detección idioma → gTTS (con retry) → envío Telegram
+    ↓
+LOG: "✅ Voz enviada exitosamente" o "❌ Error detallado"
 ```
 
-**Beneficios**:
-- Latencia percibida: ~5-10s → ~0.5s
-- El handler no se bloquea esperando TTS
-- Si falla el audio, el texto ya llegó
-
-**Implementación Threading**:
+**Retry en gTTS (V007)**:
 ```python
-def schedule_voice_response(chat_id, response_text, ...):
-    voice_thread = threading.Thread(
-        target=_process_and_send_voice,
-        args=(chat_id, response_text, ...),
-        daemon=True,  # No bloquea shutdown del bot
-        name=f"VoiceThread-{chat_id}"
-    )
-    voice_thread.start()
-    return voice_thread  # Para debugging
+def text_to_speech(self, text, language='es', max_retries=3):
+    for attempt in range(1, max_retries + 1):
+        try:
+            tts = gTTS(text=text, lang=language, slow=False)
+            tts.save(temp_path)
+            return temp_path
+        except Exception as e:
+            if attempt < max_retries:
+                backoff = attempt * 2  # 2s, 4s
+                time.sleep(backoff)
+            else:
+                return None
 ```
 
-**Limpieza de Texto para TTS (V006)**:
+**Limpieza de Texto para TTS**:
 - Números de lista: `*1.` → "Punto uno, "
 - Asteriscos: `*Título*` → "Título" (preserva contenido)
 - Flechas: `→` → ", " (pausa natural)

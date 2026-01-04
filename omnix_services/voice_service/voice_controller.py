@@ -13,6 +13,12 @@ V006 Optimization (Jan 2, 2026):
 - Text-first, voice-later: El texto se envía inmediatamente, la voz se genera en background
 - Usa threading.Thread daemon para no bloquear el handler principal
 - Reduce latencia percibida de ~5-10s a ~0.5s para respuestas de texto
+
+V007 Reliability (Jan 4, 2026):
+- Logging estructurado con chat_id/user_id en cada paso
+- Retry con backoff para gTTS (3 intentos)
+- Captura completa de errores en hilos daemon
+- Voz habilitada para TODOS los usuarios (sin restricción por plan)
 """
 
 import logging
@@ -21,6 +27,8 @@ import tempfile
 import requests
 import re
 import threading
+import time
+import traceback
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -81,31 +89,48 @@ class VoiceEngine:
         global_voice_engine = self
         logger.info(f"🎤 VoiceEngine inicializado - Enterprise: {self.using_enterprise}, TTS: {self.active}")
     
-    def text_to_speech(self, text, language='es'):
+    def text_to_speech(self, text, language='es', max_retries=3):
+        """
+        V007: Genera audio TTS con retry y backoff.
+        
+        Args:
+            text: Texto a convertir
+            language: Idioma ISO (es, en, etc.)
+            max_retries: Número de intentos (default 3)
+        
+        Returns:
+            str: Path al archivo de audio, o None si falla
+        """
         if self.using_enterprise:
             return self.enterprise_service.text_to_speech(text, language)
         
-        # Legacy mode: usar Google TTS directamente
-        try:
-            from gtts import gTTS
-            import tempfile
-            import os
-            
-            # Crear archivo temporal
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-            temp_path = temp_file.name
-            temp_file.close()
-            
-            # Generar audio con Google TTS
-            tts = gTTS(text=text, lang=language, slow=False)
-            tts.save(temp_path)
-            
-            logger.info(f"🎤 Audio generado con Google TTS: {temp_path}")
-            return temp_path
-            
-        except Exception as e:
-            logger.error(f"🎤 Error generando TTS legacy: {e}")
-            return None
+        from gtts import gTTS
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+                temp_path = temp_file.name
+                temp_file.close()
+                
+                tts = gTTS(text=text, lang=language, slow=False)
+                tts.save(temp_path)
+                
+                logger.info(f"🎤 [TTS] ✅ Audio generado (intento {attempt}/{max_retries}): {temp_path}")
+                return temp_path
+                
+            except Exception as e:
+                error_type = type(e).__name__
+                logger.warning(f"🎤 [TTS] ⚠️ Intento {attempt}/{max_retries} falló ({error_type}): {e}")
+                
+                if attempt < max_retries:
+                    backoff = attempt * 2
+                    logger.info(f"🎤 [TTS] Esperando {backoff}s antes de reintentar...")
+                    time.sleep(backoff)
+                else:
+                    logger.error(f"🎤 [TTS] ❌ Todos los intentos fallaron para texto de {len(text)} chars")
+                    return None
+        
+        return None
     
     def speech_to_text(self, audio_file_path, language='es'):
         if self.using_enterprise:
@@ -322,17 +347,17 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
 def _process_and_send_voice(chat_id, response_text, user_name="Usuario", user_id=None, 
                             is_admin_user=False, is_admin_func=None):
     """
-    V006 (Jan 2, 2026): Función interna para procesar y enviar voz.
+    V007 (Jan 4, 2026): Función interna para procesar y enviar voz.
     Esta función se ejecuta en un hilo separado para no bloquear el handler principal.
     
-    Contiene toda la lógica de:
-    - Limpieza de texto para TTS
-    - Detección de idioma
-    - Generación de audio (gTTS/ElevenLabs)
-    - Envío a Telegram
+    V007 mejoras:
+    - Logging detallado con chat_id/user_id en cada paso
+    - Captura completa de errores
+    - Sin restricción por plan (todos reciben voz)
     """
+    effective_user = user_id or chat_id
     try:
-        logger.info(f"🎤 [ASYNC] Iniciando generación de voz para chat_id='{chat_id}'")
+        logger.info(f"🎤 [ASYNC] Iniciando generación de voz - chat_id={chat_id}, user={effective_user}")
         
         admin_id = user_id if user_id is not None else chat_id
         
@@ -436,26 +461,29 @@ def _process_and_send_voice(chat_id, response_text, user_name="Usuario", user_id
                 voice_response = requests.post(voice_url, files=files, data=data, timeout=30)
         
         if voice_response.status_code == 200 and voice_response.json().get('ok'):
-            logger.info(f"🎤 [ASYNC] ✅ Voz enviada exitosamente a {chat_id}")
+            logger.info(f"🎤 [ASYNC] ✅ Voz enviada exitosamente - chat_id={chat_id}, user={effective_user}")
         else:
-            logger.error(f"🎤 [ASYNC] Error enviando voz: {voice_response.text}")
+            error_detail = voice_response.text[:500] if voice_response.text else "Unknown"
+            logger.error(f"🎤 [ASYNC] ❌ Error enviando voz - chat_id={chat_id}, user={effective_user}, status={voice_response.status_code}, error={error_detail}")
         
         try:
             os.remove(audio_path)
-        except:
-            pass
+            logger.debug(f"🎤 [ASYNC] Archivo temporal limpiado: {audio_path}")
+        except Exception as cleanup_err:
+            logger.debug(f"🎤 [ASYNC] No se pudo limpiar archivo temporal: {cleanup_err}")
             
     except Exception as e:
-        logger.error(f"🎤 [ASYNC] Error crítico: {e}")
+        logger.error(f"🎤 [ASYNC] ❌ Error crítico para chat_id={chat_id}, user={effective_user}: {type(e).__name__}: {e}")
+        logger.error(f"🎤 [ASYNC] Traceback: {traceback.format_exc()}")
 
 
 def schedule_voice_response(chat_id, response_text, user_name="Usuario", user_id=None,
                            is_admin_user=False, is_admin_func=None):
     """
-    V006 (Jan 2, 2026): Programa la generación y envío de voz en un hilo separado.
+    V007 (Jan 4, 2026): Programa voz async con logging estructurado.
     
-    Esta función retorna inmediatamente, permitiendo que el handler de Telegram
-    envíe la respuesta de texto sin esperar a que se genere el audio.
+    IMPORTANTE: Voz está habilitada para TODOS los usuarios.
+    No hay restricción por plan en esta versión.
     
     Args:
         chat_id: ID del chat de Telegram
@@ -466,20 +494,58 @@ def schedule_voice_response(chat_id, response_text, user_name="Usuario", user_id
         is_admin_func: Función para verificar admin
     
     Returns:
-        Thread: El hilo creado (para testing/debugging)
+        Thread: El hilo creado (para testing/debugging), o None si saltado
     """
-    logger.info(f"🎤 [SCHEDULE] Programando voz async para chat_id={chat_id}")
+    effective_user = user_id or chat_id
+    text_len = len(response_text) if response_text else 0
+    
+    logger.info(f"🎤 [VOICE-V007] === INICIO schedule_voice_response ===")
+    logger.info(f"🎤 [VOICE-V007] chat_id={chat_id}, user_id={effective_user}, user_name={user_name}")
+    logger.info(f"🎤 [VOICE-V007] text_len={text_len} chars")
+    
+    if not response_text or text_len < 10:
+        logger.warning(f"🎤 [VOICE-V007] ⏭️ SALTADO: Texto muy corto ({text_len} chars < 10)")
+        return None
+    
+    global global_voice_engine
+    with _voice_engine_lock:
+        if not global_voice_engine:
+            logger.warning(f"🎤 [VOICE-V007] VoiceEngine no existe - inicializando...")
+            try:
+                global_voice_engine = VoiceEngine()
+            except Exception as init_err:
+                logger.error(f"🎤 [VOICE-V007] ❌ Error inicializando VoiceEngine: {init_err}")
+                return None
+        
+        if not global_voice_engine.active:
+            logger.error(f"🎤 [VOICE-V007] ❌ SALTADO: VoiceEngine no activo")
+            return None
     
     voice_thread = threading.Thread(
-        target=_process_and_send_voice,
+        target=_process_and_send_voice_safe,
         args=(chat_id, response_text, user_name, user_id, is_admin_user, is_admin_func),
         daemon=True,
-        name=f"VoiceThread-{chat_id}"
+        name=f"VoiceThread-{chat_id}-{int(time.time())}"
     )
     voice_thread.start()
     
-    logger.info(f"🎤 [SCHEDULE] Hilo de voz iniciado: {voice_thread.name}")
+    logger.info(f"🎤 [VOICE-V007] ✅ Hilo iniciado: {voice_thread.name}")
     return voice_thread
+
+
+def _process_and_send_voice_safe(chat_id, response_text, user_name="Usuario", user_id=None, 
+                                  is_admin_user=False, is_admin_func=None):
+    """
+    V007: Wrapper seguro que captura TODAS las excepciones en el hilo daemon.
+    """
+    effective_user = user_id or chat_id
+    try:
+        logger.info(f"🎤 [VOICE-V007] Hilo daemon iniciado para chat_id={chat_id}")
+        _process_and_send_voice(chat_id, response_text, user_name, user_id, is_admin_user, is_admin_func)
+        logger.info(f"🎤 [VOICE-V007] ✅ Hilo daemon completado exitosamente para chat_id={chat_id}")
+    except Exception as e:
+        logger.error(f"🎤 [VOICE-V007] ❌ ERROR CRÍTICO en hilo daemon para chat_id={chat_id}: {type(e).__name__}: {e}")
+        logger.error(f"🎤 [VOICE-V007] Traceback: {traceback.format_exc()}")
 
 
 def initialize_voice_engine():

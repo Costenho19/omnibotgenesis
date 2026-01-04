@@ -3703,20 +3703,29 @@ Usa: `/autotrading activar ACEPTO`"""
                     except Exception as save_error:
                         logger.warning(f"⚠️ Error guardando conversación (no crítico): {save_error}")
                 
-                # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea - retorna inmediatamente)
-                if VOICE_SERVICE_AVAILABLE and schedule_voice_response and ai_response and len(ai_response) > 20:
-                    try:
-                        schedule_voice_response(
-                            chat_id=chat_id,
-                            response_text=ai_response,
-                            user_name=user_name,
-                            user_id=user_id,
-                            is_admin_user=is_admin(user_id),
-                            is_admin_func=is_admin
-                        )
-                        logger.info(f"🎤 [ASYNC] Voz programada para {user_name}")
-                    except Exception as voice_error:
-                        logger.warning(f"⚠️ Error programando voz: {voice_error}")
+                # 🎤 V007: GENERAR VOZ EN BACKGROUND PARA TODOS LOS USUARIOS
+                if VOICE_SERVICE_AVAILABLE and schedule_voice_response:
+                    if ai_response and len(ai_response) > 20:
+                        try:
+                            voice_thread = schedule_voice_response(
+                                chat_id=chat_id,
+                                response_text=ai_response,
+                                user_name=user_name,
+                                user_id=user_id,
+                                is_admin_user=is_admin(user_id),
+                                is_admin_func=is_admin
+                            )
+                            if voice_thread:
+                                logger.info(f"🎤 [V007] ✅ Voz programada para {user_name} (chat_id={chat_id})")
+                            else:
+                                logger.warning(f"🎤 [V007] ⏭️ Voz saltada para {user_name} (thread=None)")
+                        except Exception as voice_error:
+                            logger.error(f"🎤 [V007] ❌ Error programando voz para {user_name}: {voice_error}")
+                    else:
+                        logger.info(f"🎤 [V007] ⏭️ Voz saltada - texto muy corto ({len(ai_response) if ai_response else 0} chars)")
+                else:
+                    if not VOICE_SERVICE_AVAILABLE:
+                        logger.debug(f"🎤 [V007] Voz no disponible - VOICE_SERVICE_AVAILABLE=False")
                 
             except Exception as ai_error:
                 logger.error(f"❌ Error IA superinteligencia: {ai_error}")
@@ -5358,20 +5367,27 @@ ESTILO:
                 else:
                     logger.warning(f"⚠️ No se guardó historial - respuesta vacía o inválida")
             
-            # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea respuesta de texto)
-            if VOICE_SERVICE_AVAILABLE and schedule_voice_response and final_response_text:
-                try:
-                    schedule_voice_response(
-                        chat_id=chat_id,
-                        response_text=final_response_text,
-                        user_name=user_name if 'user_name' in locals() else "Usuario",
-                        user_id=user_id,
-                        is_admin_user=is_admin(user_id if user_id else chat_id),
-                        is_admin_func=is_admin
-                    )
-                    logger.info(f"🎤 [ASYNC] Voz programada para {chat_id}")
-                except Exception as voice_error:
-                    logger.warning(f"⚠️ Error programando voz: {voice_error}")
+            # 🎤 V007: GENERAR VOZ EN BACKGROUND PARA TODOS LOS USUARIOS
+            if VOICE_SERVICE_AVAILABLE and schedule_voice_response:
+                if final_response_text and len(final_response_text) > 20:
+                    try:
+                        effective_user_name = user_name if 'user_name' in locals() else "Usuario"
+                        voice_thread = schedule_voice_response(
+                            chat_id=chat_id,
+                            response_text=final_response_text,
+                            user_name=effective_user_name,
+                            user_id=user_id,
+                            is_admin_user=is_admin(user_id if user_id else chat_id),
+                            is_admin_func=is_admin
+                        )
+                        if voice_thread:
+                            logger.info(f"🎤 [V007] ✅ Voz programada (direct_message) chat_id={chat_id}")
+                        else:
+                            logger.warning(f"🎤 [V007] ⏭️ Voz saltada (direct_message) thread=None")
+                    except Exception as voice_error:
+                        logger.error(f"🎤 [V007] ❌ Error programando voz: {voice_error}")
+                else:
+                    logger.info(f"🎤 [V007] ⏭️ Voz saltada - texto muy corto ({len(final_response_text) if final_response_text else 0} chars)")
             
             logger.info(f"✅ Respuesta enviada exitosamente a {chat_id} - {len(final_response_text)} chars")
                 
@@ -5641,21 +5657,25 @@ ESTILO:
                 text_sent = True
                 logger.info(f"✅ Texto enviado (reply) a {chat_id}: {len(response_text)} chars")
             
-            # 🎤 V006: GENERAR VOZ EN BACKGROUND (no bloquea)
+            # 🎤 V007: GENERAR VOZ EN BACKGROUND PARA TODOS LOS USUARIOS
             if VOICE_SERVICE_AVAILABLE and schedule_voice_response and text_sent:
-                try:
-                    effective_user_id = user_id or str(chat_id)
-                    schedule_voice_response(
-                        chat_id=chat_id,
-                        response_text=response_text,
-                        user_name=user_name,
-                        user_id=effective_user_id,
-                        is_admin_user=is_admin(effective_user_id),
-                        is_admin_func=is_admin
-                    )
-                    logger.info(f"🎤 [ASYNC] Voz dual programada para {chat_id}")
-                except Exception as voice_error:
-                    logger.warning(f"⚠️ Error programando voz dual: {voice_error}")
+                if response_text and len(response_text) > 20:
+                    try:
+                        effective_user_id = user_id or str(chat_id)
+                        voice_thread = schedule_voice_response(
+                            chat_id=chat_id,
+                            response_text=response_text,
+                            user_name=user_name,
+                            user_id=effective_user_id,
+                            is_admin_user=is_admin(effective_user_id),
+                            is_admin_func=is_admin
+                        )
+                        if voice_thread:
+                            logger.info(f"🎤 [V007] ✅ Voz dual programada para chat_id={chat_id}")
+                        else:
+                            logger.warning(f"🎤 [V007] ⏭️ Voz dual saltada thread=None")
+                    except Exception as voice_error:
+                        logger.warning(f"⚠️ Error programando voz dual: {voice_error}")
             
             return text_sent
             

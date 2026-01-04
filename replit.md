@@ -85,8 +85,15 @@ This system focuses on precision trade entries. It includes:
 ### Voice TTS Natural Reading
 This feature improves the natural reading of formatted messages in voice responses by converting numbers (e.g., `*1.`) to spoken text ("Punto uno,") and preserving content while removing formatting symbols (e.g., `*Title*` becomes "Title").
 
-### Voice Response Async Optimization
-Optimizes latency for voice responses by sending text immediately to the user, then generating and delivering the voice message asynchronously in the background. This uses a thread-safe mechanism and ensures text delivery even if voice generation fails.
+### Voice Response Async Optimization (V007 - Jan 4, 2026)
+Optimizes latency for voice responses by sending text immediately to the user, then generating and delivering the voice message asynchronously in the background.
+
+**V007 Improvements:**
+- Voice enabled for ALL users (no plan restriction)
+- Structured logging with chat_id/user_id tracking
+- Retry with backoff for gTTS (3 attempts, 2s/4s delays)
+- Safe wrapper `_process_and_send_voice_safe()` captures ALL thread exceptions
+- Skip voice for text < 20 chars (prevents noise)
 
 ## External Dependencies
 
