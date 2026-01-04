@@ -109,22 +109,33 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
 
-## Performance Honesty Guard (Jan 3, 2026)
+## Performance Honesty Guard (Jan 3-4, 2026)
 
-Sistema que fuerza respuestas honestas del AI cuando las métricas de trading son malas.
+Sistema contextual que da respuestas honestas sobre métricas SOLO cuando el usuario pregunta.
 
-**Problema resuelto:** Con Profit Factor 0.20 y Win Rate 20%, el AI seguía dando respuestas "institucionales" evasivas ("fase de calibración", "disciplina institucional") en lugar de admitir que no hay edge demostrado.
+**Estrategia de 2 Fases:**
+- **Fase 1 (Anti-Pérdida)**: Sistema aprende a NO perder. Pérdidas = datos de entrenamiento.
+- **Fase 2 (Optimización)**: Una vez que evita pérdidas, se optimiza para ganar.
 
-**Solución implementada:**
-1. **Consulta métricas reales**: Profit Factor, Win Rate, P&L desde paper_trading_trades
-2. **Evalúa severity**: CRITICAL (<0.3 PF), SEVERE (<0.5 PF), WARNING (<0.8 PF), OK
-3. **Inyecta honestidad**: Si severity != OK, inyecta MANDATORY STATEMENTS en el prompt
-4. **Prohíbe evasivas**: Bloquea frases como "capital deployment in learning phase"
+**Comportamiento:**
+- En conversación normal: Bot se comporta igual que antes
+- Cuando preguntas sobre métricas/rendimiento: Activa contexto honesto sin drama
 
-**Umbrales:**
-- CRITICAL: PF < 0.3 o WR < 20% → "NO hay edge demostrado, pausar trading"
-- SEVERE: PF < 0.5 o WR < 30% → "Problemas serios, necesita cambios fundamentales"
-- WARNING: PF < 0.8 o WR < 40% → "Resultados mixtos, ser transparente"
+**Detección de intención:** Patrones como "profit factor", "como vamos", "win rate", "funciona", "track record"
+
+**Fases del sistema:**
+- `phase1_early`: PF < 0.5, WR < 25% → "Identificando patrones de pérdida"
+- `phase1_progress`: PF 0.5-0.8, WR 25-35% → "Documentando y bloqueando pérdidas"
+- `phase1_ready`: PF > 0.8, WR > 35% → "Cerca de transición a Fase 2"
+- `phase2`: PF > 0.8, WR > 35%, >200 trades → "Optimización de ganancias"
+
+**Criterios de transición Fase 1 → Fase 2:**
+- Mínimo 200 trades
+- Profit Factor >= 0.8
+- Win Rate >= 35%
+
+**Ejemplo de respuesta en Fase 1:**
+> "Fase Actual: Aprendizaje Anti-Pérdida (Fase 1). Métricas: Profit Factor 0.20, Win Rate 20% en 119 trades. Contexto: El sistema está identificando patrones que causan pérdidas. Estos resultados son datos de entrenamiento, no rendimiento final."
 
 **Archivos clave:**
 - `omnix_services/ai_service/honesty_guard.py` (PerformanceHonestyGuard class)

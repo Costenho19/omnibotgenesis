@@ -32,8 +32,8 @@ try:
 except ImportError as e:
     HONESTY_GUARD_AVAILABLE = False
     logger.warning(f"⚠️ HonestyGuard not available: {e}")
-    def get_honesty_prompt_injection(language='es'): return ""
-    def get_honesty_context(language='es'): return {'honesty_mode_active': False}
+    def get_honesty_prompt_injection(language='es', user_message=''): return ""
+    def get_honesty_context(language='es', user_message=''): return {'context_active': False}
 
 def load_system_state_manifest() -> Dict[str, Any]:
     """Load the system state manifest for AI self-knowledge."""
@@ -831,9 +831,9 @@ Maintain professional tone appropriate for {lang_name}-speaking institutional in
         honesty_injection = ""
         if HONESTY_GUARD_AVAILABLE:
             try:
-                honesty_injection = get_honesty_prompt_injection(detected_lang)
+                honesty_injection = get_honesty_prompt_injection(detected_lang, user_message)
                 if honesty_injection:
-                    logger.info(f"🔍 HonestyGuard: Injecting honesty context for language={detected_lang}")
+                    logger.info(f"🔍 HonestyGuard: Detected performance query, injecting context for language={detected_lang}")
             except Exception as e:
                 logger.warning(f"⚠️ HonestyGuard injection failed: {e}")
         

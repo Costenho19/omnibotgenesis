@@ -89,41 +89,51 @@ def detect_language(text):
 
 ---
 
-## Performance Honesty Guard (Jan 3, 2026)
+## Performance Honesty Guard (Jan 3-4, 2026)
 
 | Componente | Archivo | Función |
 |------------|---------|---------|
-| PerformanceHonestyGuard | `omnix_services/ai_service/honesty_guard.py` | Evalúa métricas y genera contexto honesto |
-| get_honesty_context() | `honesty_guard.py` | Retorna severity, mandatory statements, banned phrases |
+| PerformanceHonestyGuard | `omnix_services/ai_service/honesty_guard.py` | Evalúa métricas y genera contexto por fases |
+| detect_performance_intent() | `honesty_guard.py` | Detecta si usuario pregunta sobre rendimiento |
+| determine_phase() | `honesty_guard.py` | Determina fase actual (phase1_early/progress/ready, phase2) |
 | generate_prompt_injection() | `honesty_guard.py` | Texto para inyectar en prompts AI |
 
-**Problema resuelto:** El AI daba respuestas "institucionales" evasivas incluso con Profit Factor 0.20 y Win Rate 20%. Usaba frases como "fase de calibración" en lugar de admitir que no hay edge.
+**Estrategia de 2 Fases:**
+- **Fase 1 (Anti-Pérdida)**: Sistema aprende a NO perder. Pérdidas = datos de entrenamiento.
+- **Fase 2 (Optimización)**: Una vez que evita pérdidas, se optimiza para ganar.
 
-**Umbrales de Honestidad:**
-| Severity | Profit Factor | Win Rate | Acción |
-|----------|---------------|----------|--------|
-| CRITICAL | < 0.3 | < 20% | Admitir sin edge, recomendar pausar trading |
-| SEVERE | < 0.5 | < 30% | Admitir problemas serios, explicar causa |
-| WARNING | < 0.8 | < 40% | Reconocer resultados mixtos, ser transparente |
-| OK | >= 0.8 | >= 40% | Puede usar lenguaje institucional normal |
+**Comportamiento:**
+- En conversación normal: Bot se comporta igual que antes
+- Cuando preguntan sobre métricas/rendimiento: Activa contexto honesto sin drama
 
-**Frases Prohibidas en Modo Honestidad:**
-- "capital deployment in learning phase"
-- "strategy calibration in progress"
-- "disciplina institucional"
-- "building verified track record"
+**Fases del Sistema:**
+| Fase | Profit Factor | Win Rate | Descripción |
+|------|---------------|----------|-------------|
+| phase1_early | < 0.5 | < 25% | Identificando patrones de pérdida |
+| phase1_progress | 0.5-0.8 | 25-35% | Documentando y bloqueando pérdidas |
+| phase1_ready | > 0.8 | > 35% | Cerca de transición a Fase 2 |
+| phase2 | > 0.8 | > 35% + 200 trades | Optimización de ganancias |
+
+**Criterios de Transición Fase 1 → Fase 2:**
+- Mínimo 200 trades
+- Profit Factor >= 0.8
+- Win Rate >= 35%
+
+**Detección de Intención:** Patrones regex como "profit factor", "como vamos", "win rate", "funciona", "track record"
 
 **Flujo de Integración:**
 ```
-Usuario pregunta sobre performance
+Usuario envía mensaje
     ↓
-LanguageContextManager.build_complete_prompt()
+detect_performance_intent(user_message) ← ¿Pregunta sobre rendimiento?
     ↓
-HonestyGuard consulta métricas de BD (paper_trading_trades)
+SI: HonestyGuard consulta métricas de BD (paper_trading_trades)
     ↓
-Si severity != 'ok': Inyecta MANDATORY STATEMENTS + BANNED PHRASES
+determine_phase() → phase1_early/progress/ready o phase2
     ↓
-AI genera respuesta HONESTA, no evasiva
+Inyecta CONTEXTUAL_STATEMENTS (datos + contexto de fase)
+    ↓
+NO: Comportamiento normal del bot
 ```
 
 **Mínimo de Trades:** 50 trades antes de aplicar juicio (insufficient_data si < 50)

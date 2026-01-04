@@ -1,24 +1,25 @@
 """
-OMNIX V6.5.4d - Performance Honesty Guard
+OMNIX V6.5.4d - Performance Honesty Guard (Context-Aware)
 Created: Jan 3, 2026
+Updated: Jan 4, 2026
 
-Módulo que fuerza respuestas honestas del AI cuando las métricas de trading son malas.
-Override del "Institutional Language Enforcement" cuando los números son muy negativos.
+Módulo que contextualiza las métricas de trading dentro de la estrategia de 2 fases.
+Se activa SOLO cuando el usuario pregunta sobre rendimiento/métricas.
+
+ESTRATEGIA DE 2 FASES:
+- FASE 1 (Anti-Pérdida): Sistema aprende a NO perder. Pérdidas = datos de entrenamiento.
+- FASE 2 (Optimización): Una vez que evita pérdidas, se optimiza para ganar.
 
 FILOSOFÍA:
-- Si Profit Factor < 0.5 después de 50+ trades: NO HAY EDGE DEMOSTRADO
-- Si Win Rate < 30% después de 50+ trades: LA ESTRATEGIA ESTÁ PERDIENDO
-- Honestidad brutal > Frases institucionales vacías
-
-UMBRALES DE HONESTIDAD:
-- CRITICAL: PF < 0.3 o WR < 20% → Admitir sin edge, recomendar pausar
-- SEVERE: PF < 0.5 o WR < 30% → Admitir problemas serios, explicar causa
-- WARNING: PF < 0.8 o WR < 40% → Reconocer resultados mixtos, ser transparente
-- OK: PF >= 0.8 y WR >= 40% → Puede usar lenguaje institucional normal
+- Honesto pero sin auto-destruirse
+- Contextualizar pérdidas como parte del plan, no como fracaso
+- Solo activar cuando preguntan específicamente sobre métricas
+- Dar datos reales sin evasivas ni drama
 """
 
 import logging
 import os
+import re
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,16 +28,22 @@ logger = logging.getLogger(__name__)
 
 MIN_TRADES_FOR_JUDGMENT = 50
 
+PHASE_TRANSITION_CRITERIA = {
+    'phase1_to_phase2': {
+        'min_trades': 200,
+        'min_profit_factor': 0.8,
+        'min_win_rate': 0.35,
+        'max_consecutive_losses': 5
+    }
+}
+
 @dataclass
 class HonestyThresholds:
-    profit_factor_critical: float = 0.3
-    profit_factor_severe: float = 0.5
-    profit_factor_warning: float = 0.8
-    win_rate_critical: float = 0.20
-    win_rate_severe: float = 0.30
-    win_rate_warning: float = 0.40
-    pnl_critical_usd: float = -10000
-    pnl_severe_usd: float = -5000
+    profit_factor_phase2_ready: float = 0.8
+    profit_factor_learning: float = 0.5
+    win_rate_phase2_ready: float = 0.35
+    win_rate_learning: float = 0.25
+    pnl_concern_usd: float = -20000
 
 
 @dataclass  
@@ -53,67 +60,93 @@ class PerformanceSnapshot:
     error: Optional[str] = None
 
 
-BANNED_PHRASES_HONESTY_MODE = [
-    "capital deployment in learning phase",
-    "strategy calibration in progress",
-    "paper trading validation phase",
-    "assets under strategic review",
-    "risk-managed positions",
-    "protective measure activated",
-    "building statistical baseline",
-    "fase de calibración",
-    "despliegue de capital en fase de aprendizaje",
-    "medida protectora activada",
-    "construyendo baseline estadístico",
-    "disciplina institucional",
-    "institutional discipline",
-    "founder controlling risk",
-    "fundador controlando riesgo",
-    "expected during system optimization",
-    "esperado durante optimización",
-    "refinando parámetros",
-    "refining parameters",
-    "building verified track record",
-    "construyendo track record verificado",
+PERFORMANCE_INTENT_PATTERNS = [
+    r'\b(profit\s*factor|pf)\b',
+    r'\b(win\s*rate|winrate|tasa\s*de\s*acierto)\b',
+    r'\b(c[oó]mo\s*(vamos|va|est[aá]|anda))\b',
+    r'\b(rendimiento|performance|resultados?)\b',
+    r'\b(ganando|perdiendo|winning|losing)\b',
+    r'\b(ganancias?|p[eé]rdidas?)\b',
+    r'\b(p\s*&\s*l|pnl|profit|loss)\b',
+    r'\b(m[eé]tricas?|metrics?|estad[ií]sticas?|stats?)\b',
+    r'\b(funciona|working|sirve)\b.*\b(estrategia|strategy|bot|sistema)\b',
+    r'\b(track\s*record)\b',
+    r'\b(edge|ventaja)\b',
+    r'\b(rentable|profitable|rentabilidad)\b',
+    r'\b(roi|return|retorno)\b',
+    r'\b(capital|inversi[oó]n)\b.*\b(resultado|retorno)\b',
+    r'\bqu[eé]\s*tal\s*(va|vamos|el\s*bot)\b',
+    r'\bc[oó]mo\s*(va|anda)\s*(el\s*)?(rendimiento|bot|trading)\b',
+    r'\btenemos\s*(ganancias?|p[eé]rdidas?)\b',
 ]
 
-HONESTY_STATEMENTS = {
-    'critical': {
+CONTEXTUAL_STATEMENTS = {
+    'phase1_early': {
         'en': [
-            "HONEST ASSESSMENT: With Profit Factor {pf:.2f} and Win Rate {wr:.1%} after {trades} trades, there is NO demonstrated trading edge.",
-            "The current approach is consistently losing money. These results indicate the system needs fundamental changes.",
-            "RECOMMENDATION: Pause all trading until a profitable approach is identified through backtesting.",
-            "Being transparent: A simple RSI approach would likely outperform current results."
+            "Current Phase: Pattern Recognition (Phase 1)",
+            "Metrics: Profit Factor {pf:.2f}, Win Rate {wr:.1%} across {trades} trades.",
+            "Context: The system is in capital deployment learning phase, identifying which market conditions to filter. These results inform the risk management calibration.",
+            "Progress: Once pattern recognition stabilizes, we transition to profit optimization (Phase 2)."
         ],
         'es': [
-            "EVALUACIÓN HONESTA: Con Profit Factor {pf:.2f} y Win Rate {wr:.1%} después de {trades} trades, NO hay edge de trading demostrado.",
-            "El enfoque actual está perdiendo dinero consistentemente. Estos resultados indican que el sistema necesita cambios fundamentales.",
-            "RECOMENDACIÓN: Pausar todo trading hasta identificar un enfoque rentable mediante backtesting.",
-            "Siendo transparente: Un enfoque RSI simple probablemente superaría estos resultados."
+            "Fase Actual: Reconocimiento de Patrones (Fase 1)",
+            "Métricas: Profit Factor {pf:.2f}, Win Rate {wr:.1%} en {trades} trades.",
+            "Contexto: El sistema está en fase de aprendizaje de capital deployment, identificando qué condiciones de mercado filtrar. Estos resultados informan la calibración de risk management.",
+            "Progreso: Una vez que el reconocimiento de patrones se estabilice, pasamos a optimización de ganancias (Fase 2)."
         ]
     },
-    'severe': {
+    'phase1_progress': {
         'en': [
-            "HONEST ASSESSMENT: With Profit Factor {pf:.2f} and Win Rate {wr:.1%}, the approach is underperforming significantly.",
-            "After {trades} trades, the data shows consistent losses. This requires fundamental changes to the trading logic.",
-            "RECOMMENDATION: Analyze which market conditions cause losses and either fix or remove those modules."
+            "Current Phase: Pattern Recognition (Phase 1) - Making Progress",
+            "Metrics: Profit Factor {pf:.2f}, Win Rate {wr:.1%} across {trades} trades, P&L: ${pnl:,.2f}",
+            "Context: The system is learning which conditions to filter. Unfavorable patterns are being documented and blocked by the veto system.",
+            "Next milestone: Achieve PF > 0.8 and WR > 35% before transitioning to Phase 2."
         ],
         'es': [
-            "EVALUACIÓN HONESTA: Con Profit Factor {pf:.2f} y Win Rate {wr:.1%}, el enfoque está rindiendo muy por debajo de lo esperado.",
-            "Después de {trades} trades, los datos muestran pérdidas consistentes. Esto requiere cambios fundamentales a la lógica de trading.",
-            "RECOMENDACIÓN: Analizar qué condiciones de mercado causan las pérdidas y corregir o eliminar esos módulos."
+            "Fase Actual: Reconocimiento de Patrones (Fase 1) - Progresando",
+            "Métricas: Profit Factor {pf:.2f}, Win Rate {wr:.1%} en {trades} trades, P&L: ${pnl:,.2f}",
+            "Contexto: El sistema está aprendiendo qué condiciones filtrar. Los patrones desfavorables se documentan y bloquean por el sistema de veto.",
+            "Siguiente hito: Lograr PF > 0.8 y WR > 35% antes de pasar a Fase 2."
         ]
     },
-    'warning': {
+    'phase1_ready': {
         'en': [
-            "TRANSPARENT UPDATE: Results are mixed. Profit Factor {pf:.2f} and Win Rate {wr:.1%} after {trades} trades.",
-            "The approach shows potential but needs optimization. Current results would not satisfy institutional investors.",
-            "Focus areas: Identify which pairs/conditions are profitable and double down on those."
+            "Current Phase: Pattern Recognition (Phase 1) - Near Transition",
+            "Metrics: Profit Factor {pf:.2f}, Win Rate {wr:.1%} across {trades} trades, P&L: ${pnl:,.2f}",
+            "Context: Pattern filtering is stabilizing. System approaching Phase 2 criteria.",
+            "Next step: Continue monitoring for consistent performance before enabling profit optimization."
         ],
         'es': [
-            "ACTUALIZACIÓN TRANSPARENTE: Los resultados son mixtos. Profit Factor {pf:.2f} y Win Rate {wr:.1%} después de {trades} trades.",
-            "El enfoque muestra potencial pero necesita optimización. Los resultados actuales no satisfarían inversores institucionales.",
-            "Áreas de enfoque: Identificar qué pares/condiciones son rentables y duplicar esfuerzos ahí."
+            "Fase Actual: Reconocimiento de Patrones (Fase 1) - Cerca de Transición",
+            "Métricas: Profit Factor {pf:.2f}, Win Rate {wr:.1%} en {trades} trades, P&L: ${pnl:,.2f}",
+            "Contexto: El filtrado de patrones se estabiliza. Sistema acercándose a criterios de Fase 2.",
+            "Siguiente paso: Continuar monitoreando rendimiento consistente antes de habilitar optimización de ganancias."
+        ]
+    },
+    'phase2': {
+        'en': [
+            "Current Phase: Profit Optimization (Phase 2)",
+            "Metrics: Profit Factor {pf:.2f}, Win Rate {wr:.1%} across {trades} trades, P&L: ${pnl:,.2f}",
+            "Context: System has demonstrated effective pattern filtering. Now optimizing for consistent profits.",
+            "Focus: Maximizing edge in favorable market conditions."
+        ],
+        'es': [
+            "Fase Actual: Optimización de Ganancias (Fase 2)",
+            "Métricas: Profit Factor {pf:.2f}, Win Rate {wr:.1%} en {trades} trades, P&L: ${pnl:,.2f}",
+            "Contexto: Sistema ha demostrado filtrado efectivo de patrones. Ahora optimizando para ganancias consistentes.",
+            "Enfoque: Maximizar edge en condiciones de mercado favorables."
+        ]
+    },
+    'insufficient_data': {
+        'en': [
+            "Current Phase: Data Collection",
+            "Trades so far: {trades} (minimum {min_trades} needed for analysis).",
+            "Context: Building baseline data before meaningful metrics can be calculated."
+        ],
+        'es': [
+            "Fase Actual: Recolección de Datos",
+            "Trades hasta ahora: {trades} (mínimo {min_trades} necesarios para análisis).",
+            "Contexto: Construyendo datos base antes de calcular métricas significativas."
         ]
     }
 }
@@ -121,15 +154,8 @@ HONESTY_STATEMENTS = {
 
 class PerformanceHonestyGuard:
     """
-    Guard que evalúa métricas de trading y genera contexto honesto para el AI.
-    
-    Uso:
-        guard = PerformanceHonestyGuard()
-        context = guard.get_honesty_context(language='es')
-        
-        if context['honesty_mode_active']:
-            # Inyectar context['mandatory_statements'] en el prompt
-            # Activar context['banned_phrases'] para filtrado
+    Guard que evalúa métricas de trading y genera contexto honesto.
+    Solo se activa cuando el usuario pregunta sobre rendimiento.
     """
     
     def __init__(self, thresholds: Optional[HonestyThresholds] = None):
@@ -214,54 +240,66 @@ class PerformanceHonestyGuard:
         self._cache_timestamp = now
         return self._cached_snapshot
     
-    def evaluate_severity(self, snapshot: PerformanceSnapshot) -> str:
-        """Evaluate severity level based on metrics."""
+    def detect_performance_intent(self, user_message: str) -> bool:
+        """Detect if user is asking about performance/metrics."""
+        if not user_message:
+            return False
+        
+        message_lower = user_message.lower()
+        
+        for pattern in PERFORMANCE_INTENT_PATTERNS:
+            if re.search(pattern, message_lower, re.IGNORECASE):
+                logger.info(f"🎯 HonestyGuard: Detected performance intent with pattern: {pattern}")
+                return True
+        
+        return False
+    
+    def determine_phase(self, snapshot: PerformanceSnapshot) -> str:
+        """Determine current phase based on metrics."""
         if not snapshot.data_available or snapshot.total_trades < MIN_TRADES_FOR_JUDGMENT:
             return 'insufficient_data'
         
         pf = snapshot.profit_factor
         wr = snapshot.win_rate
-        pnl = snapshot.total_pnl
+        trades = snapshot.total_trades
         
-        if (pf < self.thresholds.profit_factor_critical or 
-            wr < self.thresholds.win_rate_critical or
-            pnl < self.thresholds.pnl_critical_usd):
-            return 'critical'
+        criteria = PHASE_TRANSITION_CRITERIA['phase1_to_phase2']
         
-        if (pf < self.thresholds.profit_factor_severe or 
-            wr < self.thresholds.win_rate_severe or
-            pnl < self.thresholds.pnl_severe_usd):
-            return 'severe'
+        if (pf >= criteria['min_profit_factor'] and 
+            wr >= criteria['min_win_rate'] and
+            trades >= criteria['min_trades']):
+            return 'phase2'
         
-        if (pf < self.thresholds.profit_factor_warning or 
-            wr < self.thresholds.win_rate_warning):
-            return 'warning'
+        if pf >= self.thresholds.profit_factor_phase2_ready and wr >= self.thresholds.win_rate_phase2_ready:
+            return 'phase1_ready'
         
-        return 'ok'
+        if pf >= self.thresholds.profit_factor_learning or wr >= self.thresholds.win_rate_learning:
+            return 'phase1_progress'
+        
+        return 'phase1_early'
     
-    def get_honesty_context(self, language: str = 'es', force_refresh: bool = False) -> Dict[str, Any]:
+    def get_honesty_context(self, language: str = 'es', user_message: str = "", force_refresh: bool = False) -> Dict[str, Any]:
         """
-        Get honesty context to inject into AI prompts.
+        Get honesty context - ONLY activates if user asks about performance.
         
         Returns:
             Dict with:
-                - honesty_mode_active: bool
-                - severity: str ('critical', 'severe', 'warning', 'ok', 'insufficient_data')
-                - mandatory_statements: List[str] - MUST be included in response
-                - banned_phrases: List[str] - MUST be filtered out
-                - metrics_summary: str - Brief metrics for context
+                - context_active: bool - True if user asked about performance
+                - phase: str - Current phase
+                - contextual_statements: List[str] - Statements to include
+                - metrics_summary: str - Brief metrics
                 - raw_metrics: PerformanceSnapshot
         """
+        is_performance_query = self.detect_performance_intent(user_message)
         snapshot = self.get_performance_snapshot(force_refresh)
-        severity = self.evaluate_severity(snapshot)
+        phase = self.determine_phase(snapshot)
         
         lang_key = 'es' if language.lower().startswith('es') else 'en'
         
         result = {
-            'honesty_mode_active': severity in ('critical', 'severe', 'warning'),
-            'severity': severity,
-            'mandatory_statements': [],
-            'banned_phrases': [],
+            'context_active': is_performance_query,
+            'phase': phase,
+            'contextual_statements': [],
             'metrics_summary': '',
             'raw_metrics': snapshot
         }
@@ -277,79 +315,73 @@ class PerformanceHonestyGuard:
             f"P&L: ${snapshot.total_pnl:,.2f}"
         )
         
-        if severity in ('critical', 'severe', 'warning'):
-            result['banned_phrases'] = BANNED_PHRASES_HONESTY_MODE.copy()
-            
-            statements = HONESTY_STATEMENTS.get(severity, {}).get(lang_key, [])
-            result['mandatory_statements'] = [
+        if is_performance_query:
+            statements = CONTEXTUAL_STATEMENTS.get(phase, {}).get(lang_key, [])
+            result['contextual_statements'] = [
                 stmt.format(
                     pf=snapshot.profit_factor,
                     wr=snapshot.win_rate,
                     trades=snapshot.total_trades,
-                    pnl=snapshot.total_pnl
+                    pnl=snapshot.total_pnl,
+                    min_trades=MIN_TRADES_FOR_JUDGMENT
                 ) for stmt in statements
             ]
         
-        logger.info(f"🔍 HonestyGuard: severity={severity}, trades={snapshot.total_trades}, PF={snapshot.profit_factor:.2f}, WR={snapshot.win_rate:.1%}")
+        logger.info(f"🔍 HonestyGuard: phase={phase}, query_detected={is_performance_query}, trades={snapshot.total_trades}")
         
         return result
     
-    def generate_prompt_injection(self, language: str = 'es') -> str:
-        """Generate prompt text to inject for honesty mode."""
-        context = self.get_honesty_context(language)
+    def generate_prompt_injection(self, language: str = 'es', user_message: str = "") -> str:
+        """Generate prompt text - only when user asks about performance."""
+        context = self.get_honesty_context(language, user_message)
         
-        if not context['honesty_mode_active']:
+        if not context['context_active']:
             return ""
         
-        severity = context['severity']
+        phase = context['phase']
         lang = 'es' if language.lower().startswith('es') else 'en'
         
         if lang == 'es':
             header = f"""
-## MODO HONESTIDAD ACTIVADO [SEVERITY: {severity.upper()}]
-**OVERRIDE OBLIGATORIO del lenguaje institucional debido a métricas pobres.**
-**Métricas actuales**: {context['metrics_summary']}
+## CONTEXTO DE RENDIMIENTO (Usuario preguntó sobre métricas)
+**Fase actual**: {phase.replace('_', ' ').title()}
+**Métricas**: {context['metrics_summary']}
 
-**DECLARACIONES OBLIGATORIAS** - DEBES incluir estas en tu respuesta:
+**Responder con estos puntos (honesto pero sin drama):**
 """
         else:
             header = f"""
-## HONESTY MODE ACTIVE [SEVERITY: {severity.upper()}]
-**MANDATORY OVERRIDE of institutional language due to poor metrics.**
-**Current metrics**: {context['metrics_summary']}
+## PERFORMANCE CONTEXT (User asked about metrics)
+**Current phase**: {phase.replace('_', ' ').title()}
+**Metrics**: {context['metrics_summary']}
 
-**MANDATORY STATEMENTS** - You MUST include these in your response:
+**Respond with these points (honest but no drama):**
 """
         
-        statements = "\n".join([f"- {s}" for s in context['mandatory_statements']])
-        
-        if lang == 'es':
-            banned_header = "\n**FRASES PROHIBIDAS** - NO uses estas frases evasivas:"
-        else:
-            banned_header = "\n**BANNED PHRASES** - Do NOT use these evasive phrases:"
-        
-        banned = "\n".join([f"- \"{p}\"" for p in context['banned_phrases']])
+        statements = "\n".join([f"- {s}" for s in context['contextual_statements']])
         
         if lang == 'es':
             instruction = """
-**INSTRUCCIÓN CRÍTICA**: 
-- Sé DIRECTO y HONESTO sobre los resultados
-- NO uses eufemismos o frases institucionales vacías
-- Admite que no hay edge demostrado si los números lo indican
-- Recomienda acciones concretas, no promesas vagas
-- Mantén la respuesta CONCISA (máximo 4 párrafos)
+
+**INSTRUCCIONES**:
+- Presenta los datos de forma neutra
+- Contextualiza dentro de la estrategia de 2 fases
+- No seas dramático ni auto-destructivo
+- No uses eufemismos vacíos tampoco
+- Las pérdidas actuales son datos de entrenamiento, no fracaso
 """
         else:
             instruction = """
-**CRITICAL INSTRUCTION**:
-- Be DIRECT and HONEST about results
-- Do NOT use euphemisms or empty institutional phrases
-- Admit there is no demonstrated edge if numbers indicate so
-- Recommend concrete actions, not vague promises
-- Keep response CONCISE (maximum 4 paragraphs)
+
+**INSTRUCTIONS**:
+- Present data neutrally
+- Contextualize within the 2-phase strategy
+- Don't be dramatic or self-destructive
+- Don't use empty euphemisms either
+- Current losses are training data, not failure
 """
         
-        return f"{header}{statements}{banned_header}{banned}{instruction}"
+        return f"{header}{statements}{instruction}"
 
 
 _global_honesty_guard: Optional[PerformanceHonestyGuard] = None
@@ -362,11 +394,16 @@ def get_honesty_guard() -> PerformanceHonestyGuard:
     return _global_honesty_guard
 
 
-def get_honesty_context(language: str = 'es') -> Dict[str, Any]:
+def get_honesty_context(language: str = 'es', user_message: str = "") -> Dict[str, Any]:
     """Convenience function to get honesty context."""
-    return get_honesty_guard().get_honesty_context(language)
+    return get_honesty_guard().get_honesty_context(language, user_message)
 
 
-def get_honesty_prompt_injection(language: str = 'es') -> str:
+def get_honesty_prompt_injection(language: str = 'es', user_message: str = "") -> str:
     """Convenience function to get prompt injection text."""
-    return get_honesty_guard().generate_prompt_injection(language)
+    return get_honesty_guard().generate_prompt_injection(language, user_message)
+
+
+def is_performance_query(user_message: str) -> bool:
+    """Check if message is asking about performance."""
+    return get_honesty_guard().detect_performance_intent(user_message)
