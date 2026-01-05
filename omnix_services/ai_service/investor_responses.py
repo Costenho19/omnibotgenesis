@@ -221,12 +221,12 @@ Maximum 10% of capital per position, $50K absolute limit per trade.
 
 **Layer 5: Price Stale Detection**
 Blocks execution if market data is older than 30 seconds.""",
-        evidence="""Losses Avoided (Documented):
-• ADA exclusion: $4,655+ avoided
-• SOL exclusion: $1,952+ avoided
-• AVAX exclusion: $511+ avoided
-• ETH exclusion: $217+ avoided
-• Total protected capital: $7,337+""",
+        evidence="""Exposure Avoided (Documented):
+• ADA exclusion: $4,655+ exposure avoided
+• SOL exclusion: $1,952+ exposure avoided
+• AVAX exclusion: $511+ exposure avoided
+• ETH exclusion: $217+ exposure avoided
+• Total capital with avoided exposure: $7,337+""",
         closing="Capital preservation is the primary objective. Returns are optimized only after risk controls are validated."
     ),
     
@@ -279,7 +279,7 @@ Key insight: 49% of our paper trading losses came from assets that the system ha
         evidence="""Filter Performance (Documented):
 • Trades blocked by Monte Carlo Veto: Risk-adjusted savings quantified
 • Trades blocked by Coherence Engine: Quality threshold enforcement
-• Assets quarantined: 4 (ADA, SOL, AVAX, ETH) - $7,337 in losses avoided
+• Assets quarantined: 4 (ADA, SOL, AVAX, ETH) - $7,337 in exposure avoided
 • False positive rate: Acceptable cost for capital preservation""",
         closing="We prefer Type II errors (missed opportunities) over Type I errors (capital losses). The filters are calibrated for institutional risk tolerance."
     ),
