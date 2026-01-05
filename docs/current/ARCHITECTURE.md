@@ -166,7 +166,7 @@ Texto enviado inmediatamente a Telegram ← Usuario ve respuesta rápido
     ↓
 schedule_voice_response() verifica condiciones
     ↓
-SI texto < 10 chars → LOG "SALTADO: Texto muy corto"
+SI texto < 20 chars → LOG "SALTADO: Texto muy corto"
     ↓
 SI VoiceEngine no activo → LOG "SALTADO: VoiceEngine no activo"
     ↓

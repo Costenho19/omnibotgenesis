@@ -503,8 +503,8 @@ def schedule_voice_response(chat_id, response_text, user_name="Usuario", user_id
     logger.info(f"🎤 [VOICE-V007] chat_id={chat_id}, user_id={effective_user}, user_name={user_name}")
     logger.info(f"🎤 [VOICE-V007] text_len={text_len} chars")
     
-    if not response_text or text_len < 10:
-        logger.warning(f"🎤 [VOICE-V007] ⏭️ SALTADO: Texto muy corto ({text_len} chars < 10)")
+    if not response_text or text_len < 20:
+        logger.warning(f"🎤 [VOICE-V007] ⏭️ SALTADO: Texto muy corto ({text_len} chars < 20)")
         return None
     
     global global_voice_engine
