@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 31 de Diciembre 2025  
+**Actualizado**: 7 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,12 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### Veto Tracking System + psycopg v3 Fix (Jan 7, 2026)
+- **SISTEMA VETO TRACKING**: Persistencia real de capital protegido en PostgreSQL
+- **FIX psycopg v3**: VetoRepository ahora compatible con `psycopg[binary]` (v3) y fallback a psycopg2
+- **Dashboard Metrics Fix**: Panel superior ahora muestra ALL trades (119), no solo últimos 30 días
+- Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles completos
 
 ### Telegram Voice Service Fix (Dec 31, 2025)
 - **ERROR CORREGIDO**: `UnboundLocalError: cannot access local variable 'asyncio'`

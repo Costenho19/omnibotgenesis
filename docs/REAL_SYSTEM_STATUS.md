@@ -90,6 +90,27 @@ created_at (TIMESTAMP)
 
 ---
 
+### psycopg v3 Compatibility Fix (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** VetoRepository importaba `psycopg2` pero Railway usa `psycopg[binary]` (v3).
+
+```
+[ERROR] OMNIX.VetoRepository - Failed to log veto: No module named 'psycopg2'
+```
+
+**FIX IMPLEMENTADO:**
+- VetoRepository ahora usa `psycopg` (v3) primero con fallback a `psycopg2`
+- Serialización JSON compatible con ambas versiones (`json.dumps()` en lugar de `psycopg2.extras.Json`)
+
+**Archivo modificado:** `omnix_services/database_service/veto_repository.py`
+
+**Resultado esperado después de deploy:**
+```
+📝 [VETO_LOGGED] COHERENCE_GATE | XRP/USD | $xxx.xx | DB_INSERT_SUCCESS
+```
+
+---
+
 ### RULE 13 Enhancement - Diagnostic Mode (Jan 2, 2026)
 
 **PROBLEMA DETECTADO:** El bot trataba escenarios HIPOTÉTICOS como datos reales y violaba el modo diagnóstico con recomendaciones y lenguaje institucional.

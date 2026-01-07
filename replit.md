@@ -95,6 +95,26 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 - Safe wrapper `_process_and_send_voice_safe()` captures ALL thread exceptions
 - Skip voice for text < 20 chars (prevents noise)
 
+### Veto Tracking System (V008 - Jan 7, 2026)
+Real-time capital protection tracking with PostgreSQL persistence for accurate investor reporting.
+
+**Components:**
+- **VetoRepository** (`omnix_services/database_service/veto_repository.py`): Singleton with `log_veto()` and aggregations
+- **Migration V006**: Table `trading_veto_log` with 14 columns
+- **Bot Instrumentation**: `_log_veto()` calls at COHERENCE_GATE, MC, BLACK_SWAN, RMS veto points
+- **API Endpoint**: `/api/system/quarantine` returns capital protected (48h/7d breakdown)
+- **Dashboard Widget**: `quarantine.js` displays veto breakdown by type
+
+**Veto Types Tracked:**
+| Type | Trigger |
+|------|---------|
+| COHERENCE_GATE | coherence_score < 45% |
+| MC_NEG_ER | Monte Carlo ER < 0 |
+| BLACK_SWAN | crash_prob > 30% |
+| RMS | CircuitBreaker or LimitsEngine |
+
+**psycopg v3 Compatibility:** Uses `psycopg` (v3) with fallback to `psycopg2`, JSON serialization via `json.dumps()`.
+
 ## External Dependencies
 
 ### APIs and Services
