@@ -35,6 +35,61 @@
 
 ---
 
+### Veto Tracking System - Real-Time Capital Protection (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** OMNIX inventaba números de capital protegido ($34K, $18K) porque no existía persistencia de vetoes. Sin datos reales, el AI fabricaba métricas.
+
+**SOLUCIÓN IMPLEMENTADA:** Sistema completo de tracking de vetoes con persistencia en PostgreSQL.
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **Migration V006** | `versions.py` | ✅ Tabla `trading_veto_log` creada |
+| **VetoRepository** | `veto_repository.py` | ✅ Singleton con log_veto() y agregaciones |
+| **Bot Instrumentation** | `auto_trading_bot.py` | ✅ _log_veto() en COHERENCE, MC, BLACK_SWAN, RMS |
+| **API Endpoint** | `blueprints/system.py` | ✅ `/api/system/quarantine` con vetoes 48h/7d |
+| **Widget** | `quarantine.js` | ✅ Veto breakdown por tipo |
+
+**Tabla `trading_veto_log`:**
+```sql
+id (SERIAL PRIMARY KEY)
+veto_type (VARCHAR) -- COHERENCE_GATE, MC_NEG_ER, MC_VAR_TOO_HIGH, BLACK_SWAN, RMS
+symbol (VARCHAR)
+blocked_capital (FLOAT) -- USD estimado bloqueado
+reason (TEXT)
+user_id (INTEGER) -- Para multi-user
+metadata (JSONB) -- Contexto adicional
+created_at (TIMESTAMP)
+```
+
+**Tipos de Veto Trackeados:**
+| Tipo | Descripción | Trigger |
+|------|-------------|---------|
+| `COHERENCE_GATE` | Señales incoherentes | coherence_score < 45% |
+| `MC_NEG_ER` | Expected Return negativo | Monte Carlo ER < 0 |
+| `MC_VAR_TOO_HIGH` | VaR95 excede límite | VaR95 > max_var_pct |
+| `BLACK_SWAN` | Riesgo de crash alto | crash_prob > 30% |
+| `RMS` | Risk Management System | CircuitBreaker o LimitsEngine |
+
+**Endpoint Response Format:**
+```json
+{
+  "capital_protected": {
+    "permanent": 11423.60,  // Assets excluidos
+    "dynamic_48h": 0,       // Vetoes últimas 48h
+    "dynamic_7d": 0,        // Vetoes últimos 7d
+    "grand_total": 11423.60 // Suma total
+  },
+  "vetoes": {
+    "48h": {"by_type": {...}, "total_count": 0},
+    "7d": {"by_type": {...}, "total_count": 0}
+  }
+}
+```
+
+**NOTA:** `dynamic_*` comenzará a poblarse cuando el bot procese trades y genere vetoes. Actualmente la tabla está vacía porque la instrumentación es nueva.
+
+---
+
 ### RULE 13 Enhancement - Diagnostic Mode (Jan 2, 2026)
 
 **PROBLEMA DETECTADO:** El bot trataba escenarios HIPOTÉTICOS como datos reales y violaba el modo diagnóstico con recomendaciones y lenguaje institucional.
