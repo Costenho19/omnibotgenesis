@@ -295,8 +295,17 @@ except ImportError:
     is_price_tradeable = None
     get_market_data_validator = None
     PriceFreshness = None
-    PRICE_VALIDATOR_AVAILABLE = False
-    logger.warning("⚠️ Price Stale Detection no disponible")
+
+# Import Veto Repository - Real-time capital protection tracking (Jan 7, 2026)
+try:
+    from omnix_services.database_service.veto_repository import get_veto_repository, VetoType
+    VETO_REPOSITORY_AVAILABLE = True
+    logger.info("📊 Veto Repository disponible - tracking de capital protegido activo")
+except ImportError:
+    get_veto_repository = None
+    VetoType = None
+    VETO_REPOSITORY_AVAILABLE = False
+    logger.warning("⚠️ Veto Repository no disponible - tracking de vetoes desactivado")
 
 # Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
@@ -487,6 +496,36 @@ class AutoTradingBot:
         if len(kraken_pair) >= 6 and '/' not in kraken_pair:
             return f"{kraken_pair[:-3]}/{kraken_pair[-3:]}"
         return kraken_pair
+    
+    def _log_veto(self, veto_type: str, symbol: str, blocked_capital: float, reason: str, user_id: int = None, metadata: dict = None):
+        """Log veto event to database for dashboard tracking (Jan 7, 2026)"""
+        if not VETO_REPOSITORY_AVAILABLE:
+            return
+        try:
+            repo = get_veto_repository()
+            if repo:
+                repo.log_veto(
+                    veto_type=veto_type,
+                    symbol=symbol,
+                    blocked_capital=blocked_capital,
+                    reason=reason,
+                    user_id=user_id,
+                    metadata=metadata
+                )
+        except Exception as e:
+            logger.debug(f"Veto log failed (non-critical): {e}")
+    
+    def _get_estimated_blocked_capital(self) -> float:
+        """Estimate capital that would be blocked (2% of balance)"""
+        try:
+            if self.paper_trading and hasattr(self.paper_trading, 'get_balance'):
+                balance = self.paper_trading.get_balance()
+                return balance * 0.02
+            elif self.state.get('paper_balance', 0) > 0:
+                return self.state['paper_balance'] * 0.02
+        except Exception:
+            pass
+        return 0.0
     
     def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None):
         self.trading_service = trading_service
@@ -2490,6 +2529,13 @@ class AutoTradingBot:
                     decision['veto_reason'] = 'MC_NEG_ER'  # FIX: Add explicit veto_reason
                     decision['decision_trace'].append(f"MC_VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → BLOCKED reason=MC_NEG_ER")
                     logger.info(f"🚫 MC VETO: Expected return {expected_return:.2%} < {mc_min_expected:.2%} → BLOCKED reason=MC_NEG_ER")
+                    self._log_veto(
+                        veto_type='MONTE_CARLO',
+                        symbol=symbol,
+                        blocked_capital=self._get_estimated_blocked_capital(),
+                        reason=f"Expected return {expected_return:.2%} < {mc_min_expected:.2%}",
+                        metadata={'expected_return': expected_return, 'veto_reason': 'MC_NEG_ER'}
+                    )
                 
                 # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
                 if var_95 < mc_max_var:  # var_95 es negativo
@@ -2498,6 +2544,13 @@ class AutoTradingBot:
                     decision['veto_reason'] = 'MC_VAR_TOO_HIGH'
                     decision['decision_trace'].append(f"MC_VETO: VaR95 {var_95:.2%} worse than {mc_max_var:.2%}")
                     logger.info(f"🚫 MC VETO: VaR95 {var_95:.2%} > limit {mc_max_var:.2%} → TRADE BLOCKED")
+                    self._log_veto(
+                        veto_type='MONTE_CARLO',
+                        symbol=symbol,
+                        blocked_capital=self._get_estimated_blocked_capital(),
+                        reason=f"VaR95 {var_95:.2%} worse than limit {mc_max_var:.2%}",
+                        metadata={'var_95': var_95, 'veto_reason': 'MC_VAR_TOO_HIGH'}
+                    )
                 
                 # SIZE REDUCTION: Win rate < 50% pero ER >= 0 (FIX Dec 30: reason=MC_WR_BELOW_50)
                 if not mc_veto_applied and win_rate < mc_reduce_wr:
@@ -2556,7 +2609,15 @@ class AutoTradingBot:
                 
                 if rms_veto_applied:
                     decision['rms_veto'] = True
-                    decision['reason'].append(f"🚧 RMS VETO: {', '.join([v for v in decision['veto_chain'] if v.startswith('CB_') or v.startswith('LE_')])}")
+                    rms_reasons = [v for v in decision['veto_chain'] if v.startswith('CB_') or v.startswith('LE_')]
+                    decision['reason'].append(f"🚧 RMS VETO: {', '.join(rms_reasons)}")
+                    self._log_veto(
+                        veto_type='RMS',
+                        symbol=symbol,
+                        blocked_capital=self._get_estimated_blocked_capital(),
+                        reason=f"RMS veto: {', '.join(rms_reasons)}",
+                        metadata={'veto_chain': rms_reasons}
+                    )
                 else:
                     decision['guards_passed'].append('RMS_VALIDATION')
             
@@ -2663,6 +2724,13 @@ class AutoTradingBot:
                 decision['veto_reason'] = 'COHERENCE_GATE_REJECTED'
                 decision['reason'].append(f"🚫 COHERENCE GATE: Coherencia {coherence_pre_score:.1f}% insuficiente - Trade bloqueado antes de scoring")
                 logger.warning(f"🚫 [COHERENCE_GATE_ENFORCED] {symbol} | score={coherence_pre_score:.1f}% → BLOCKED EARLY RETURN")
+                self._log_veto(
+                    veto_type='COHERENCE_GATE',
+                    symbol=symbol,
+                    blocked_capital=self._get_estimated_blocked_capital(),
+                    reason=f"Coherence {coherence_pre_score:.1f}% < threshold",
+                    metadata={'coherence_score': coherence_pre_score}
+                )
                 return decision
             
             logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed")
@@ -2722,6 +2790,13 @@ class AutoTradingBot:
                     score -= bs_penalty
                     decision['reason'].append(f"🚨 Black Swan VETO: Riesgo {risk_level} → -{bs_penalty}")
                     decision['decision_trace'].append(f'BLACK_SWAN_VETO: {risk_level}, CrashProb={crash_prob}%')
+                    self._log_veto(
+                        veto_type='BLACK_SWAN',
+                        symbol=symbol,
+                        blocked_capital=self._get_estimated_blocked_capital(),
+                        reason=f"Risk level {risk_level}, crash prob {crash_prob}%",
+                        metadata={'risk_level': risk_level, 'crash_probability': crash_prob}
+                    )
                 elif risk_level == 'LOW':
                     decision['reason'].append(f"✅ Black Swan: Riesgo BAJO OK")
             
