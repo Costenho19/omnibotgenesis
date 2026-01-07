@@ -24,24 +24,33 @@ def _standalone_db_connection():
     """
     Standalone database connection using DATABASE_URL.
     Works in both bot (Railway) and dashboard contexts.
+    
+    Supports both psycopg v3 (preferred) and psycopg2 (fallback).
     """
     conn = None
     try:
-        import psycopg2
-        import psycopg2.extras
-        
         database_url = os.getenv('DATABASE_URL')
         if not database_url:
             logger.warning("DATABASE_URL not set - veto logging disabled")
             yield None
             return
         
-        conn = psycopg2.connect(database_url)
+        try:
+            import psycopg
+            conn = psycopg.connect(database_url)
+            logger.debug("VetoRepository using psycopg v3")
+        except ImportError:
+            try:
+                import psycopg2
+                conn = psycopg2.connect(database_url)
+                logger.debug("VetoRepository using psycopg2 fallback")
+            except ImportError:
+                logger.warning("No psycopg driver available - veto logging disabled")
+                yield None
+                return
+        
         yield conn
         
-    except ImportError:
-        logger.warning("psycopg2 not available - veto logging disabled")
-        yield None
     except Exception as e:
         logger.error(f"DB connection failed: {e}")
         yield None
@@ -115,12 +124,13 @@ class VetoRepository:
         """
         try:
             import json
-            from psycopg2.extras import Json
             
             with self._get_connection() as conn:
                 if not conn:
                     logger.warning("No DB connection - veto not logged (fail-open for logging)")
                     return False
+                
+                metadata_json = json.dumps(metadata or {})
                 
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -139,7 +149,7 @@ class VetoRepository:
                     market,
                     confidence,
                     severity,
-                    Json(metadata or {})
+                    metadata_json
                 ))
                 conn.commit()
                 cursor.close()
