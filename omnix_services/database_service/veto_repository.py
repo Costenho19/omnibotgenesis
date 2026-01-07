@@ -112,6 +112,8 @@ class VetoRepository:
         Check if this veto was logged recently (within DEDUPE_WINDOW_SECONDS).
         Thread-safe implementation using class-level cache.
         
+        NOTE: Does NOT update cache - caller must call _mark_logged() on success.
+        
         Returns:
             True if duplicate (should skip), False if new (should log)
         """
@@ -126,8 +128,13 @@ class VetoRepository:
                 if current_time - last_logged < DEDUPE_WINDOW_SECONDS:
                     return True
             
-            self._dedupe_cache[cache_key] = current_time
             return False
+    
+    def _mark_logged(self, veto_type: str, symbol: str):
+        """Mark a veto as logged in the cache (call AFTER successful DB insert)."""
+        cache_key = (veto_type, symbol)
+        with self._cache_lock:
+            self._dedupe_cache[cache_key] = time.time()
     
     def _cleanup_expired_cache(self, current_time: float):
         """Remove expired entries from cache (called inside lock)."""
@@ -209,6 +216,8 @@ class VetoRepository:
                 ))
                 conn.commit()
                 cursor.close()
+                
+                self._mark_logged(veto_type, symbol)
                 
                 logger.warning(f"📝 [VETO_LOGGED] {veto_type} | {symbol} | ${blocked_capital:,.2f} | DB_INSERT_SUCCESS")
                 return True
