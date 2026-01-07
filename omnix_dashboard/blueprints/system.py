@@ -636,8 +636,9 @@ def api_system_latency():
 @system_bp.route('/api/system/quarantine')
 def api_asset_quarantine():
     """
-    API endpoint for excluded/quarantined assets.
-    Returns assets blocked from trading and avoided losses calculated from real DB data.
+    API endpoint for excluded/quarantined assets and real-time veto tracking.
+    Returns permanently blocked assets + dynamic vetoes from trading decisions.
+    Jan 7, 2026: Enhanced with VetoRepository for real-time capital protection tracking.
     """
     try:
         from omnix_core.config.trading_profiles import PAIR_CALIBRATIONS, CalibrationTier
@@ -669,11 +670,14 @@ def api_asset_quarantine():
                 total_avoided_loss += loss_amount
         
         symbols_list = [a['symbol'] for a in quarantined_assets]
-        if symbols_list:
-            with get_db_connection() as conn:
-                if conn:
-                    try:
-                        cursor = conn.cursor()
+        veto_stats = {'48h': {}, '7d': {}, 'total': {}}
+        
+        with get_db_connection() as conn:
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    
+                    if symbols_list:
                         cursor.execute('''
                             SELECT symbol, COUNT(*) as trade_count, SUM(profit_loss) as total_pnl
                             FROM paper_trading_trades
@@ -692,8 +696,37 @@ def api_asset_quarantine():
                                 if asset['loss_avoided'] == 0:
                                     asset['loss_avoided'] = abs(db_data['pnl'])
                                     total_avoided_loss += abs(db_data['pnl'])
-                    except Exception as e:
-                        logger.warning(f"Could not fetch DB losses: {e}")
+                    
+                    cursor.execute('''
+                        SELECT veto_type, COUNT(*) as cnt, COALESCE(SUM(blocked_capital), 0) as capital
+                        FROM trading_veto_log
+                        WHERE created_at >= NOW() - INTERVAL '48 hours'
+                        GROUP BY veto_type
+                    ''')
+                    veto_stats['48h'] = {row[0]: {'count': row[1], 'blocked': float(row[2])} for row in cursor.fetchall()}
+                    
+                    cursor.execute('''
+                        SELECT veto_type, COUNT(*) as cnt, COALESCE(SUM(blocked_capital), 0) as capital
+                        FROM trading_veto_log
+                        WHERE created_at >= NOW() - INTERVAL '7 days'
+                        GROUP BY veto_type
+                    ''')
+                    veto_stats['7d'] = {row[0]: {'count': row[1], 'blocked': float(row[2])} for row in cursor.fetchall()}
+                    
+                    cursor.execute('''
+                        SELECT veto_type, COUNT(*) as cnt, COALESCE(SUM(blocked_capital), 0) as capital
+                        FROM trading_veto_log
+                        GROUP BY veto_type
+                    ''')
+                    veto_stats['total'] = {row[0]: {'count': row[1], 'blocked': float(row[2])} for row in cursor.fetchall()}
+                    
+                    cursor.close()
+                except Exception as e:
+                    logger.warning(f"Could not fetch veto stats: {e}")
+        
+        veto_48h_total = sum(v['blocked'] for v in veto_stats['48h'].values())
+        veto_7d_total = sum(v['blocked'] for v in veto_stats['7d'].values())
+        veto_all_total = sum(v['blocked'] for v in veto_stats['total'].values())
         
         return jsonify({
             'success': True,
@@ -702,6 +735,29 @@ def api_asset_quarantine():
                 'total_blocked': len(quarantined_assets),
                 'total_loss_avoided': total_avoided_loss,
                 'protection_active': True
+            },
+            'vetoes': {
+                '48h': {
+                    'by_type': veto_stats['48h'],
+                    'total_blocked': veto_48h_total,
+                    'total_count': sum(v['count'] for v in veto_stats['48h'].values())
+                },
+                '7d': {
+                    'by_type': veto_stats['7d'],
+                    'total_blocked': veto_7d_total,
+                    'total_count': sum(v['count'] for v in veto_stats['7d'].values())
+                },
+                'all_time': {
+                    'by_type': veto_stats['total'],
+                    'total_blocked': veto_all_total,
+                    'total_count': sum(v['count'] for v in veto_stats['total'].values())
+                }
+            },
+            'capital_protected': {
+                'permanent': total_avoided_loss,
+                'dynamic_48h': veto_48h_total,
+                'dynamic_7d': veto_7d_total,
+                'grand_total': total_avoided_loss + veto_all_total
             },
             'timestamp': datetime.now().isoformat()
         })
