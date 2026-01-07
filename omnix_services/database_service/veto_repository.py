@@ -5,15 +5,52 @@ Handles persistence and retrieval of trading veto events.
 Enables real-time capital protection tracking for dashboard.
 
 Created: Jan 7, 2026
+Updated: Jan 7, 2026 - Standalone DB connection (works without dashboard)
 Purpose: Sync dashboard with OMNIX bot veto reports
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from decimal import Decimal
+from contextlib import contextmanager
 
 logger = logging.getLogger("OMNIX.VetoRepository")
+
+
+@contextmanager
+def _standalone_db_connection():
+    """
+    Standalone database connection using DATABASE_URL.
+    Works in both bot (Railway) and dashboard contexts.
+    """
+    conn = None
+    try:
+        import psycopg2
+        import psycopg2.extras
+        
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            logger.warning("DATABASE_URL not set - veto logging disabled")
+            yield None
+            return
+        
+        conn = psycopg2.connect(database_url)
+        yield conn
+        
+    except ImportError:
+        logger.warning("psycopg2 not available - veto logging disabled")
+        yield None
+    except Exception as e:
+        logger.error(f"DB connection failed: {e}")
+        yield None
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 class VetoType:
@@ -48,14 +85,14 @@ class VetoRepository:
         veto_type: str,
         symbol: str,
         blocked_capital: float,
-        reason: str = None,
-        user_id: int = None,
-        trade_id: int = None,
-        engine_stage: str = None,
+        reason: Optional[str] = None,
+        user_id: Optional[int] = None,
+        trade_id: Optional[int] = None,
+        engine_stage: Optional[str] = None,
         market: str = "crypto",
-        confidence: float = None,
+        confidence: Optional[float] = None,
         severity: str = "MEDIUM",
-        metadata: dict = None
+        metadata: Optional[dict] = None
     ) -> bool:
         """
         Log a veto event to the database.
@@ -77,6 +114,9 @@ class VetoRepository:
             True if logged successfully, False otherwise
         """
         try:
+            import json
+            from psycopg2.extras import Json
+            
             with self._get_connection() as conn:
                 if not conn:
                     logger.warning("No DB connection - veto not logged (fail-open for logging)")
@@ -99,12 +139,12 @@ class VetoRepository:
                     market,
                     confidence,
                     severity,
-                    metadata or {}
+                    Json(metadata or {})
                 ))
                 conn.commit()
                 cursor.close()
                 
-                logger.info(f"Veto logged: {veto_type} | {symbol} | ${blocked_capital:,.2f}")
+                logger.warning(f"📝 [VETO_LOGGED] {veto_type} | {symbol} | ${blocked_capital:,.2f} | DB_INSERT_SUCCESS")
                 return True
                 
         except Exception as e:
@@ -170,9 +210,9 @@ class VetoRepository:
     def get_recent_vetoes(
         self,
         limit: int = 20,
-        veto_type: str = None,
-        symbol: str = None,
-        hours: int = None
+        veto_type: Optional[str] = None,
+        symbol: Optional[str] = None,
+        hours: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
         Get recent veto events with optional filters.
@@ -276,17 +316,22 @@ def get_veto_repository() -> Optional[VetoRepository]:
     """
     Get singleton VetoRepository instance.
     
+    Uses standalone DATABASE_URL connection - works in both:
+    - Bot context (Railway)
+    - Dashboard context (Replit)
+    
     Returns:
         VetoRepository instance or None if DB not available
     """
     global _veto_repository_instance
     
     if _veto_repository_instance is None:
-        try:
-            from omnix_dashboard.utils.database import get_db_connection
-            _veto_repository_instance = VetoRepository(get_db_connection)
-        except Exception as e:
-            logger.warning(f"Could not initialize VetoRepository: {e}")
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            logger.warning("DATABASE_URL not set - VetoRepository unavailable")
             return None
+        
+        _veto_repository_instance = VetoRepository(_standalone_db_connection)
+        logger.info("VetoRepository initialized with standalone DATABASE_URL connection")
     
     return _veto_repository_instance
