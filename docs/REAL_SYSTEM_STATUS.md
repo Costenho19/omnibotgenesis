@@ -90,6 +90,32 @@ created_at (TIMESTAMP)
 
 ---
 
+### Veto Deduplication Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El sistema registraba ~6 vetoes/minuto para los mismos assets bloqueados repetidamente, inflando los números de $1.8M a $105M+ en pocas horas.
+
+**CAUSA RAÍZ:** Cada ciclo de análisis (~30 seg) generaba nuevos registros de veto aunque fueran los mismos assets siendo bloqueados.
+
+**SOLUCIÓN IMPLEMENTADA:**
+- Cache de deduplicación en `VetoRepository` (15 min por symbol+veto_type)
+- Vetoes repetidos dentro de la ventana son saltados
+- Limpieza de 5,260 registros duplicados en la base de datos
+
+**Resultado:**
+| Antes | Después |
+|-------|---------|
+| 5,272 vetoes | 47 vetoes únicos |
+| $105M inflado | ~$940K realista |
+| 6 vetoes/min | 1 veto/15min por asset |
+
+**Logs esperados:**
+```
+📝 [VETO_LOGGED] COHERENCE_GATE | XRP/USD | $20,000.00 | DB_INSERT_SUCCESS
+⏭️ [VETO_SKIPPED] COHERENCE_GATE | XRP/USD | Duplicate within 900s window
+```
+
+---
+
 ### psycopg v3 Compatibility Fix (Jan 7, 2026)
 
 **PROBLEMA DETECTADO:** VetoRepository importaba `psycopg2` pero Railway usa `psycopg[binary]` (v3).
@@ -103,11 +129,6 @@ created_at (TIMESTAMP)
 - Serialización JSON compatible con ambas versiones (`json.dumps()` en lugar de `psycopg2.extras.Json`)
 
 **Archivo modificado:** `omnix_services/database_service/veto_repository.py`
-
-**Resultado esperado después de deploy:**
-```
-📝 [VETO_LOGGED] COHERENCE_GATE | XRP/USD | $xxx.xx | DB_INSERT_SUCCESS
-```
 
 ---
 

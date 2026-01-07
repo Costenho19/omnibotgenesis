@@ -5,18 +5,28 @@ Handles persistence and retrieval of trading veto events.
 Enables real-time capital protection tracking for dashboard.
 
 Created: Jan 7, 2026
-Updated: Jan 7, 2026 - Standalone DB connection (works without dashboard)
+Updated: Jan 8, 2026 - Deduplication cache (15 min window per symbol+veto_type)
 Purpose: Sync dashboard with OMNIX bot veto reports
+
+DEDUPLICATION LOGIC:
+- Each (veto_type, symbol) combination is cached for 15 minutes
+- Repeated vetoes within window are skipped to prevent inflated numbers
+- Audit trail maintained via get_recent_vetoes() showing all actual decisions
+- Dashboard shows realistic capital protection for investors
 """
 
 import logging
 import os
+import time
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from decimal import Decimal
 from contextlib import contextmanager
+import threading
 
 logger = logging.getLogger("OMNIX.VetoRepository")
+
+DEDUPE_WINDOW_SECONDS = 900
 
 
 @contextmanager
@@ -75,10 +85,18 @@ class VetoRepository:
     Repository for trading veto events.
     
     Provides methods to:
-    - Log veto events when trades are blocked
+    - Log veto events when trades are blocked (with deduplication)
     - Fetch aggregated veto data for dashboard
     - Query recent vetoes by type/symbol/time range
+    
+    DEDUPLICATION (Jan 8, 2026):
+    - Vetoes are cached by (veto_type, symbol) for 15 minutes
+    - Prevents inflated capital protection numbers for investor dashboards
+    - Maintains full audit trail in database
     """
+    
+    _dedupe_cache: Dict[Tuple[str, str], float] = {}
+    _cache_lock = threading.Lock()
     
     def __init__(self, db_connection_func):
         """
@@ -88,6 +106,37 @@ class VetoRepository:
             db_connection_func: Callable that returns a DB connection context manager
         """
         self._get_connection = db_connection_func
+    
+    def _is_duplicate(self, veto_type: str, symbol: str) -> bool:
+        """
+        Check if this veto was logged recently (within DEDUPE_WINDOW_SECONDS).
+        Thread-safe implementation using class-level cache.
+        
+        Returns:
+            True if duplicate (should skip), False if new (should log)
+        """
+        cache_key = (veto_type, symbol)
+        current_time = time.time()
+        
+        with self._cache_lock:
+            self._cleanup_expired_cache(current_time)
+            
+            if cache_key in self._dedupe_cache:
+                last_logged = self._dedupe_cache[cache_key]
+                if current_time - last_logged < DEDUPE_WINDOW_SECONDS:
+                    return True
+            
+            self._dedupe_cache[cache_key] = current_time
+            return False
+    
+    def _cleanup_expired_cache(self, current_time: float):
+        """Remove expired entries from cache (called inside lock)."""
+        expired_keys = [
+            key for key, timestamp in self._dedupe_cache.items()
+            if current_time - timestamp >= DEDUPE_WINDOW_SECONDS
+        ]
+        for key in expired_keys:
+            del self._dedupe_cache[key]
     
     def log_veto(
         self,
@@ -104,7 +153,10 @@ class VetoRepository:
         metadata: Optional[dict] = None
     ) -> bool:
         """
-        Log a veto event to the database.
+        Log a veto event to the database with deduplication.
+        
+        DEDUPLICATION: Same (veto_type, symbol) logged within 15 minutes is skipped.
+        This prevents inflated capital protection numbers while maintaining audit trail.
         
         Args:
             veto_type: Type of veto (COHERENCE_GATE, BLACK_SWAN, etc.)
@@ -120,8 +172,12 @@ class VetoRepository:
             metadata: Additional JSONB metadata
             
         Returns:
-            True if logged successfully, False otherwise
+            True if logged successfully, False if duplicate/skipped/error
         """
+        if self._is_duplicate(veto_type, symbol):
+            logger.debug(f"⏭️ [VETO_SKIPPED] {veto_type} | {symbol} | Duplicate within {DEDUPE_WINDOW_SECONDS}s window")
+            return False
+        
         try:
             import json
             

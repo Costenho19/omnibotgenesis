@@ -95,7 +95,7 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 - Safe wrapper `_process_and_send_voice_safe()` captures ALL thread exceptions
 - Skip voice for text < 20 chars (prevents noise)
 
-### Veto Tracking System (V008 - Jan 7, 2026)
+### Veto Tracking System (V008 - Jan 7-8, 2026)
 Real-time capital protection tracking with PostgreSQL persistence for accurate investor reporting.
 
 **Components:**
@@ -112,6 +112,11 @@ Real-time capital protection tracking with PostgreSQL persistence for accurate i
 | MC_NEG_ER | Monte Carlo ER < 0 |
 | BLACK_SWAN | crash_prob > 30% |
 | RMS | CircuitBreaker or LimitsEngine |
+
+**Deduplication (V008b - Jan 8, 2026):**
+- Cache de 15 minutos por (veto_type, symbol) evita registros duplicados
+- Previene inflación de números ($105M → $940K realista)
+- Logs: `⏭️ [VETO_SKIPPED]` cuando se detecta duplicado
 
 **psycopg v3 Compatibility:** Uses `psycopg` (v3) with fallback to `psycopg2`, JSON serialization via `json.dumps()`.
 
