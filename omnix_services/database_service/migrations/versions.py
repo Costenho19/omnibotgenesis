@@ -345,3 +345,80 @@ MIGRATIONS.register(Migration(
     description="Operación Lucidez - Add telemetry columns for trade segmentation",
     apply_func=v005_add_telemetry_columns_operacion_lucidez
 ))
+
+
+def v006_create_trading_veto_log(cursor: Any) -> bool:
+    """
+    V006: Create trading_veto_log table for real-time veto tracking
+    
+    Tracks all veto decisions (Coherence Gate, Black Swan, Monte Carlo, RMS)
+    with blocked capital amounts for accurate dashboard reporting.
+    
+    This enables:
+    - Real-time "capital protected" metrics matching OMNIX bot reports
+    - Audit trail of all blocked trades with reasons
+    - Dashboard widget showing vetoes by type (last 48h, 7d, total)
+    
+    NON-DESTRUCTIVE: Only creates table if not exists.
+    """
+    try:
+        if _check_table_exists(cursor, 'trading_veto_log'):
+            logger.info("Table trading_veto_log already exists - skipping creation")
+            return True
+        
+        logger.info("Creating trading_veto_log table...")
+        cursor.execute("""
+            CREATE TABLE trading_veto_log (
+                id BIGSERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                veto_type VARCHAR(30) NOT NULL,
+                engine_stage VARCHAR(50),
+                symbol VARCHAR(20) NOT NULL,
+                market VARCHAR(10) DEFAULT 'crypto',
+                user_id BIGINT,
+                trade_id BIGINT,
+                blocked_capital NUMERIC(18,2) NOT NULL DEFAULT 0,
+                currency VARCHAR(10) DEFAULT 'USD',
+                confidence NUMERIC(5,2),
+                severity VARCHAR(20) DEFAULT 'MEDIUM',
+                reason TEXT,
+                metadata JSONB DEFAULT '{}'::jsonb
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX idx_veto_log_created_at 
+            ON trading_veto_log(created_at DESC)
+        """)
+        cursor.execute("""
+            CREATE INDEX idx_veto_log_type_created 
+            ON trading_veto_log(veto_type, created_at DESC)
+        """)
+        cursor.execute("""
+            CREATE INDEX idx_veto_log_symbol_created 
+            ON trading_veto_log(symbol, created_at DESC)
+        """)
+        
+        cursor.execute("""
+            COMMENT ON TABLE trading_veto_log IS 'Real-time veto tracking for dashboard capital protection metrics'
+        """)
+        cursor.execute("""
+            COMMENT ON COLUMN trading_veto_log.veto_type IS 'COHERENCE_GATE, BLACK_SWAN, MONTE_CARLO, RMS, QUARANTINE'
+        """)
+        cursor.execute("""
+            COMMENT ON COLUMN trading_veto_log.blocked_capital IS 'USD amount that would have been deployed if trade executed'
+        """)
+        
+        logger.info("Migration V006 (trading_veto_log) applied successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Migration V006 failed: {e}")
+        return False
+
+
+MIGRATIONS.register(Migration(
+    version="V006",
+    description="Create trading_veto_log table for real-time veto tracking",
+    apply_func=v006_create_trading_veto_log
+))
