@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 2 de Enero 2026  
+**Fecha**: 7 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,32 @@
 ---
 
 ## Cambios Recientes
+
+### Dashboard Real-Time Metrics Fix (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** Discrepancia entre panel superior del dashboard y sección Trade History.
+
+| Fuente | Trades | P&L | Win Rate |
+|--------|--------|-----|----------|
+| Panel Superior (antes) | 92 | $-11,900 | 17.4% |
+| Trade History | 119 | $-15,198 | 20.17% |
+| OMNIX Bot | 119 | $-15,198 | 20.2% |
+
+**CAUSA RAÍZ:** `/api/metrics` usaba `get_paper_trades(30)` que solo traía trades de los últimos 30 días, mientras `/api/trades/history` mostraba todos los trades.
+
+**FIX IMPLEMENTADO:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `omnix_dashboard/utils/queries.py` | `get_paper_trades(days=None)` ahora default = ALL trades |
+| `omnix_dashboard/blueprints/core.py` | `/api/metrics` y `/api/trades` usan `get_paper_trades()` sin límite |
+
+**RESULTADO:** Dashboard ahora muestra datos en tiempo real idénticos a PostgreSQL:
+- **119 trades** ✅
+- **$-15,198.73 P&L** ✅  
+- **20.2% Win Rate** ✅
+
+---
 
 ### RULE 13 Enhancement - Diagnostic Mode (Jan 2, 2026)
 

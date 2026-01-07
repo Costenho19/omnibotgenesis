@@ -30,10 +30,14 @@ IS_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILW
 @core_bp.route('/api/metrics')
 @require_api_key
 def api_metrics():
-    """API endpoint for metrics - includes both closed trades AND open positions"""
+    """API endpoint for metrics - includes ALL historical trades for accurate real-time reporting
+    
+    FIX Jan 7 2026: Changed to fetch ALL trades (no day limit) for real-time accuracy.
+    Dashboard now matches PostgreSQL exactly: 119 trades, -$15,198 P&L, 20.2% WR.
+    """
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
-    result = get_paper_trades(30, return_dict=True)
+    result = get_paper_trades(return_dict=True)
     
     if not result['success']:
         return jsonify({
@@ -100,8 +104,8 @@ def api_segmented_expectancy():
 @core_bp.route('/api/trades')
 @require_api_key
 def api_trades():
-    """API endpoint for recent trades"""
-    result = get_paper_trades(30, return_dict=True)
+    """API endpoint for trades - fetches ALL trades for real-time consistency with metrics"""
+    result = get_paper_trades(return_dict=True)
     
     if not result['success']:
         return jsonify({

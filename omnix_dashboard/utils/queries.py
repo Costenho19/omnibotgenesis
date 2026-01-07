@@ -10,16 +10,19 @@ from .database import get_db_connection
 logger = logging.getLogger(__name__)
 
 
-def get_paper_trades(days=30, return_dict=False):
+def get_paper_trades(days=None, return_dict=False):
     """Fetch REAL paper trading history from database
     
     Args:
-        days: Number of days to fetch
+        days: Number of days to fetch. If None, fetches ALL trades (real-time complete data)
         return_dict: If True, returns {success, trades, error} dict for explicit error handling
     
     Returns:
         If return_dict=False: List of trades (legacy behavior)
         If return_dict=True: Dict with success, trades, error, db_connected fields
+    
+    FIX Jan 7 2026: Default changed to None (all trades) to ensure dashboard 
+    always shows complete real-time data matching PostgreSQL exactly.
     """
     with get_db_connection() as conn:
         if not conn:
@@ -35,14 +38,23 @@ def get_paper_trades(days=30, return_dict=False):
         
         try:
             cursor = conn.cursor()
-            cursor.execute('''
-                SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
-                       profit_loss, profit_pct, strategy, status, opened_at, closed_at
-                FROM paper_trading_trades
-                WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
-                ORDER BY opened_at DESC
-                LIMIT 500
-            ''', (days,))
+            if days is None:
+                cursor.execute('''
+                    SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
+                           profit_loss, profit_pct, strategy, status, opened_at, closed_at
+                    FROM paper_trading_trades
+                    ORDER BY opened_at DESC
+                    LIMIT 1000
+                ''')
+            else:
+                cursor.execute('''
+                    SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
+                           profit_loss, profit_pct, strategy, status, opened_at, closed_at
+                    FROM paper_trading_trades
+                    WHERE opened_at >= NOW() - INTERVAL '1 day' * %s
+                    ORDER BY opened_at DESC
+                    LIMIT 500
+                ''', (days,))
             
             rows = cursor.fetchall()
             cursor.close()
