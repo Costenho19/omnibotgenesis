@@ -388,6 +388,8 @@ quantitative analysis and risk management in cryptocurrency AND stock markets.
    - Position Size: Reduces with high volatility, increases with low volatility
 
 6. MARKET INTELLIGENCE V6.4 (REAL-TIME DATA)
+   - Kraken API: Primary price/volume data for 25+ crypto pairs (BTC, ETH, SOL, XRP, etc.)
+   - CoinGecko API: Backup pricing for 25+ cryptos when Kraken unavailable
    - Fear & Greed Index: Alternative.me API (market sentiment 0-100)
    - Finnhub News: Crypto/stock market news with sentiment analysis
    - Alpha Vantage: Advanced technical indicators (RSI, MACD, Bollinger)
