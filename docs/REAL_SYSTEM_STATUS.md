@@ -90,6 +90,25 @@ created_at (TIMESTAMP)
 
 ---
 
+### Bot P&L Case-Sensitivity Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot de Telegram mostraba $-19,848 pero el dashboard mostraba $-15,198.73.
+
+**CAUSA RAÍZ:** `PaperTradingRepository.get_trading_stats()` usaba `status = 'CLOSED'` (mayúscula), pero la base de datos almacena `closed` (minúscula). PostgreSQL es case-sensitive.
+
+| Query | Resultado |
+|-------|-----------|
+| `WHERE status = 'CLOSED'` | 0 trades (no match) |
+| `WHERE LOWER(status) = 'closed'` | 119 trades, $-15,198.73 |
+
+**FIX IMPLEMENTADO:**
+- Cambio en `omnix_services/database_service/paper_trading_repository.py` línea 81
+- Query ahora usa `LOWER(status) = 'closed'` para ser case-insensitive
+
+**RESULTADO:** Bot y Dashboard ahora mostrarán los mismos números.
+
+---
+
 ### Veto Deduplication Fix (Jan 8, 2026)
 
 **PROBLEMA DETECTADO:** El sistema registraba ~6 vetoes/minuto para los mismos assets bloqueados repetidamente, inflando los números de $1.8M a $105M+ en pocas horas.

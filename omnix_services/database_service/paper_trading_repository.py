@@ -75,7 +75,7 @@ class PaperTradingRepository:
                     COALESCE(SUM(profit_loss), 0) as total_pnl,
                     COALESCE(AVG(profit_pct), 0) as avg_pnl_pct
                 FROM paper_trading_trades
-                WHERE status = 'CLOSED'
+                WHERE LOWER(status) = 'closed'
                 AND user_id = %s
             """
             params = (str(user_id),)
