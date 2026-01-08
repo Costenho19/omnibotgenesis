@@ -374,6 +374,102 @@ class VetoRepository:
             logger.error(f"Failed to get all-time total: {e}")
             return 0.0
     
+    def get_vetoes_by_timerange(
+        self, 
+        start_date: str, 
+        end_date: str
+    ) -> Dict[str, Any]:
+        """
+        Get veto summary for a specific date range.
+        Used by AI to provide accurate audit reports without fabricating data.
+        
+        Args:
+            start_date: ISO format date string (e.g., "2026-01-05")
+            end_date: ISO format date string (e.g., "2026-01-06")
+            
+        Returns:
+            Dict with summary by veto type and total for the period
+        """
+        try:
+            with self._get_connection() as conn:
+                if not conn:
+                    return {
+                        'has_data': False,
+                        'error': 'Database not available',
+                        'period': {'start': start_date, 'end': end_date},
+                        'by_type': {},
+                        'total_blocked': 0,
+                        'total_count': 0
+                    }
+                
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT 
+                        veto_type,
+                        COUNT(*) as veto_count,
+                        COALESCE(SUM(blocked_capital), 0) as total_blocked,
+                        MIN(created_at) as first_veto,
+                        MAX(created_at) as last_veto
+                    FROM trading_veto_log
+                    WHERE DATE(created_at) >= %s AND DATE(created_at) <= %s
+                    GROUP BY veto_type
+                    ORDER BY total_blocked DESC
+                """, (start_date, end_date))
+                
+                rows = cursor.fetchall()
+                cursor.close()
+                
+                if not rows:
+                    return {
+                        'has_data': False,
+                        'error': None,
+                        'period': {'start': start_date, 'end': end_date},
+                        'by_type': {},
+                        'total_blocked': 0,
+                        'total_count': 0,
+                        'message': f'No veto records found for period {start_date} to {end_date}'
+                    }
+                
+                summary = {
+                    'has_data': True,
+                    'error': None,
+                    'period': {'start': start_date, 'end': end_date},
+                    'by_type': {},
+                    'total_blocked': 0,
+                    'total_count': 0
+                }
+                
+                for row in rows:
+                    veto_type = row[0]
+                    count = row[1]
+                    blocked = float(row[2])
+                    first = row[3].isoformat() if row[3] else None
+                    last = row[4].isoformat() if row[4] else None
+                    
+                    summary['by_type'][veto_type] = {
+                        'count': count,
+                        'blocked_capital': blocked,
+                        'first_veto': first,
+                        'last_veto': last
+                    }
+                    summary['total_blocked'] += blocked
+                    summary['total_count'] += count
+                
+                logger.info(f"📊 Veto timerange query: {start_date} to {end_date} = {summary['total_count']} vetoes, ${summary['total_blocked']:,.2f}")
+                return summary
+                
+        except Exception as e:
+            logger.error(f"Failed to get vetoes by timerange: {e}")
+            return {
+                'has_data': False,
+                'error': str(e),
+                'period': {'start': start_date, 'end': end_date},
+                'by_type': {},
+                'total_blocked': 0,
+                'total_count': 0
+            }
+    
     def _empty_summary(self) -> Dict[str, Any]:
         """Return empty summary structure."""
         return {
