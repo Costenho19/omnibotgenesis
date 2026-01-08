@@ -95,6 +95,21 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 - Safe wrapper `_process_and_send_voice_safe()` captures ALL thread exceptions
 - Skip voice for text < 20 chars (prevents noise)
 
+### Adaptive Coherence Gate (V009 - Jan 8, 2026)
+Dynamic coherence thresholds based on EMA score + Black Swan severity.
+
+**Threshold Matrix:**
+| EMA Score | Black Swan | Coherence Min |
+|-----------|------------|---------------|
+| ≥ 35 pts | LOW | 35% |
+| ≥ 35 pts | MEDIUM | 45% |
+| ≥ 35 pts | HIGH/EXTREME | 55-65% |
+| < 35 pts | any | 50% (default) |
+
+**Components:** `_calculate_adaptive_threshold()` in coherence_engine.py, EMA score passed via analysis_data from bot.
+
+**Investor Language:** "OMNIX dynamically calibrates coherence filters based on market regime severity, maximizing opportunity capture while maintaining institutional discipline."
+
 ### Veto Tracking System (V008 - Jan 7-8, 2026)
 Real-time capital protection tracking with PostgreSQL persistence for accurate investor reporting.
 

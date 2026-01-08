@@ -172,7 +172,18 @@ class CoherenceEngine:
         self._max_rejection_history = 100
         self._rejection_alert_threshold = 5  # Alert after 5 consecutive rejections
         
-        logger.info("🧠 Coherence Engine inicializado con 9 estrategias")
+        # Adaptive Coherence Gate V6.5.4d (Jan 8, 2026)
+        # Threshold matrix: EMA score >= 35 triggers adaptive thresholds
+        # HIGHER severity = HIGHER threshold (more strict)
+        self._adaptive_threshold_matrix = {
+            'LOW': 35,      # Black Swan LOW → coherence_min = 35%
+            'MEDIUM': 45,   # Black Swan MEDIUM → coherence_min = 45%
+            'HIGH': 55,     # Black Swan HIGH → coherence_min = 55%
+            'EXTREME': 65,  # Black Swan EXTREME → coherence_min = 65% (max strictness)
+        }
+        self._ema_trigger_score = 35  # EMA score threshold to activate adaptive gate
+        
+        logger.info("🧠 Coherence Engine inicializado con 9 estrategias + Adaptive Gate V6.5.4d")
     
     def analyze_coherence(self, signals: List[StrategySignal]) -> CoherenceReport:
         """
@@ -498,6 +509,86 @@ class CoherenceEngine:
         else:
             return "🔴"  # Rojo - Crítico
     
+    def _calculate_adaptive_threshold(
+        self,
+        analysis_data: Dict,
+        paper_mode: bool = False
+    ) -> Tuple[int, int, Dict]:
+        """
+        Adaptive Coherence Gate V6.5.4d (Jan 8, 2026)
+        
+        Calculates dynamic coherence thresholds based on:
+        - EMA Regime Score (primary driver)
+        - Black Swan Severity
+        
+        Logic:
+        - If EMA score >= 35 pts (strong signal):
+          - BLACK_SWAN = LOW → coherence_min = 35%
+          - BLACK_SWAN = MEDIUM → coherence_min = 45%
+          - BLACK_SWAN = HIGH → coherence_min = 55%
+        - Else: use default thresholds (10/30 paper, 30/50 real)
+        
+        Args:
+            analysis_data: Dict with 'scoring' and 'black_swan' data
+            paper_mode: If True, use paper trading thresholds
+            
+        Returns:
+            (block_threshold, warn_threshold, gate_info)
+        """
+        gate_info = {
+            'adaptive_gate_active': False,
+            'ema_score': None,
+            'black_swan_severity': None,
+            'reason': 'default'
+        }
+        
+        # Default thresholds
+        default_block = 10 if paper_mode else 30
+        default_warn = 30 if paper_mode else 50
+        
+        # Extract EMA score from analysis_data
+        scoring_data = analysis_data.get('scoring', {})
+        ema_data = scoring_data.get('ema_regime', {})
+        ema_score = safe_float(ema_data.get('score', 0), 0, 'ema_regime_score')
+        
+        # Also check direct ema_score key (alternative path)
+        if ema_score == 0:
+            ema_score = safe_float(analysis_data.get('ema_score', 0), 0, 'ema_score_direct')
+        
+        gate_info['ema_score'] = ema_score
+        
+        # Extract Black Swan severity
+        black_swan_data = analysis_data.get('black_swan', {})
+        severity = black_swan_data.get('severity', 'LOW')
+        if isinstance(severity, str):
+            severity = severity.upper()
+        else:
+            severity = 'LOW'
+        
+        gate_info['black_swan_severity'] = severity
+        
+        # Check if adaptive gate should activate
+        if ema_score >= self._ema_trigger_score:
+            gate_info['adaptive_gate_active'] = True
+            
+            # Get threshold from matrix (default to HIGH=55 for unknown severities - fail-safe)
+            adaptive_block = self._adaptive_threshold_matrix.get(severity, 55)
+            
+            # In paper mode, reduce by 10% to allow more learning
+            if paper_mode:
+                adaptive_block = max(adaptive_block - 10, 25)
+            
+            adaptive_warn = min(adaptive_block + 20, 70)
+            
+            gate_info['reason'] = f"EMA={ema_score:.0f}pts >= {self._ema_trigger_score}, BlackSwan={severity}"
+            
+            logger.info(f"🎯 [ADAPTIVE_GATE] ACTIVE: EMA={ema_score:.0f}pts, BlackSwan={severity} → threshold={adaptive_block}%")
+            
+            return adaptive_block, adaptive_warn, gate_info
+        
+        gate_info['reason'] = f"EMA={ema_score:.0f}pts < {self._ema_trigger_score} (using defaults)"
+        return default_block, default_warn, gate_info
+    
     def validate_trade_coherence(
         self,
         signals: List[StrategySignal],
@@ -630,11 +721,25 @@ class CoherenceEngine:
         # ========== VALIDACIÓN ADICIONAL: Coherencia general ==========
         report = self.analyze_coherence(signals)
         
-        # V6.5: Umbrales diferenciados para paper vs real trading
-        # Paper mode: umbral 10% (permite trades para calibración)
-        # Real mode: umbral 30% (protección estricta)
-        coherence_block_threshold = 10 if paper_mode else 30
-        coherence_warn_threshold = 30 if paper_mode else 50
+        # V6.5.4d: Adaptive Coherence Gate (Jan 8, 2026)
+        # Uses EMA score + Black Swan severity to dynamically adjust thresholds
+        # If EMA strong (>=35pts) + low risk → lower threshold to capture opportunities
+        # If EMA strong + high risk → higher threshold for protection
+        coherence_block_threshold, coherence_warn_threshold, gate_info = \
+            self._calculate_adaptive_threshold(analysis_data, paper_mode)
+        
+        # Log adaptive gate decision for audit trail
+        import json
+        logger.info(json.dumps({
+            "event": "ADAPTIVE_COHERENCE_GATE",
+            "gate_active": gate_info.get('adaptive_gate_active', False),
+            "ema_score": gate_info.get('ema_score'),
+            "black_swan_severity": gate_info.get('black_swan_severity'),
+            "block_threshold": coherence_block_threshold,
+            "warn_threshold": coherence_warn_threshold,
+            "reason": gate_info.get('reason'),
+            "paper_mode": paper_mode
+        }))
         
         if report.coherence_score < coherence_block_threshold:
             block_reasons.append(

@@ -3998,10 +3998,22 @@ class AutoTradingBot:
                         logger.debug(f"🔄 Usando fallback primary_decision para Coherence Engine")
                     
                     # Preparar analysis_data para validación
+                    # V6.5.4d: Include EMA score for Adaptive Coherence Gate
+                    ema_confidence_val = safe_float(v52_analysis.get('ema_confidence', 0), 0.0, 'ema_confidence')
+                    ema_score_pts = 40 if ema_confidence_val >= 0.70 else (25 if ema_confidence_val >= 0.50 else 12 if ema_confidence_val > 0 else 0)
+                    
                     analysis_data = {
                         'black_swan': analysis.get('black_swan', {}),
                         'monte_carlo': analysis.get('monte_carlo', {}),
-                        'hmm_regime': {'regime': v52_analysis.get('market_regime', 'UNKNOWN')}
+                        'hmm_regime': {'regime': v52_analysis.get('market_regime', 'UNKNOWN')},
+                        'ema_score': ema_score_pts,  # For Adaptive Coherence Gate
+                        'scoring': {
+                            'ema_regime': {
+                                'score': ema_score_pts,
+                                'confidence': ema_confidence_val,
+                                'direction': v52_analysis.get('ema_direction', 'NONE')
+                            }
+                        }
                     }
                     
                     # 🔴 VALIDAR COHERENCIA ANTES DE EJECUTAR

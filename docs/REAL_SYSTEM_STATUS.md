@@ -35,6 +35,51 @@
 
 ---
 
+### Adaptive Coherence Gate - Risk-Adjusted Thresholding (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El umbral de coherencia era estático (10% paper, 30% real), causando que el sistema bloqueara trades cuando EMA (primary driver, 40 pts) tenía señal fuerte pero otras estrategias estaban mixtas. El Coherence Engine no consideraba a EMA en su cálculo.
+
+**SOLUCIÓN IMPLEMENTADA:** Umbrales dinámicos basados en EMA score + Black Swan severity.
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **_calculate_adaptive_threshold()** | `coherence_engine.py` | ✅ Helper que calcula umbrales dinámicos |
+| **validate_trade_coherence()** | `coherence_engine.py` | ✅ Integra adaptive gate |
+| **analysis_data enhancement** | `auto_trading_bot.py` | ✅ Pasa EMA score al Coherence Engine |
+
+**Matriz de Umbrales (Adaptive Coherence Gate):**
+
+| EMA Score | Black Swan Severity | Umbral Coherencia |
+|-----------|---------------------|-------------------|
+| ≥ 35 pts | LOW | 35% |
+| ≥ 35 pts | MEDIUM | 45% |
+| ≥ 35 pts | HIGH | 55% |
+| ≥ 35 pts | EXTREME | 65% |
+| < 35 pts | cualquiera | 50% (default) |
+
+**Lógica:**
+- Si EMA (primary driver) tiene señal fuerte (≥35 pts) → ajusta umbral según riesgo
+- En Black Swan LOW → permite más oportunidades (35%)
+- En Black Swan HIGH/EXTREME → más estricto (55-65%)
+- Si EMA débil → usa umbral default (sin bypass)
+
+**Investor-Facing Language:**
+> "OMNIX calibra dinámicamente sus filtros de coherencia según la severidad del régimen de mercado, maximizando capturas en condiciones favorables mientras mantiene disciplina institucional."
+
+**Logging Estructurado:**
+```json
+{
+  "event": "ADAPTIVE_COHERENCE_GATE",
+  "gate_active": true,
+  "ema_score": 40,
+  "black_swan_severity": "LOW",
+  "block_threshold": 35,
+  "reason": "EMA=40pts >= 35, BlackSwan=LOW"
+}
+```
+
+---
+
 ### Veto Tracking System - Real-Time Capital Protection (Jan 7, 2026)
 
 **PROBLEMA DETECTADO:** OMNIX inventaba números de capital protegido ($34K, $18K) porque no existía persistencia de vetoes. Sin datos reales, el AI fabricaba métricas.

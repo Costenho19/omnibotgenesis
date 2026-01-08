@@ -209,11 +209,13 @@ def text_to_speech(self, text, language='es', max_retries=3):
 |--------|-----------|-----------|
 | AutoTradingBot V6.5.4d | `omnix_core/bot/auto_trading_bot.py` | Scanner multi-crypto, señales tiered, emergency SL |
 | TradingSystem V6.5 | `omnix_core/trading_system.py` | Orquestador de ejecución |
-| CoherenceEngine V6.5 | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe (Dec 30) |
+| CoherenceEngine V6.5.4d | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe + Adaptive Gate |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
 > **CoherenceEngine Type Safety (Dec 30, 2025)**: Incluye `normalize_signal()`, `normalize_strategy_signal()` y `safe_float()` para prevenir errores `str vs int`. Ver [TYPE_SAFETY_HOTFIX_DEC30_2025.md](../history/2025-12/TYPE_SAFETY_HOTFIX_DEC30_2025.md).
+
+> **Adaptive Coherence Gate V6.5.4d (Jan 8, 2026)**: Sistema de umbrales dinámicos que ajusta el coherence_block_threshold según EMA score + Black Swan severity. Ver sección "Adaptive Coherence Gate" más abajo.
 
 ---
 
