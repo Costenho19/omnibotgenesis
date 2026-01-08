@@ -91,7 +91,7 @@
 | 1 | **Risk Guardian V5.4** | Overtrading prevention, drawdown protection |
 | 2 | **Coherence Engine V6.5** | 6-tier threshold-based validation |
 | 3 | **Adaptive Parameter Engine** | Auto-calibration by market regime |
-| 4 | **On-Chain Intelligence** | Whale tracking, blockchain analytics |
+| 4 | **Market Intelligence** | Fear & Greed Index, Finnhub News, Alpha Vantage (NOT on-chain - roadmap) |
 | 5 | **Execution Protocol** | TWAP/VWAP/ICEBERG execution |
 | 6 | **Fear & Greed Contrarian** | Score adjustment on extreme sentiment |
 

@@ -90,6 +90,39 @@ created_at (TIMESTAMP)
 
 ---
 
+### On-Chain API Fabrication Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot inventaba APIs de on-chain que NO EXISTEN en el sistema:
+- WhaleTracker (ClankApp)
+- Arkham Intelligence
+- ExchangeFlowAnalyzer
+- NetworkMetricsCollector
+- SmartMoneySignal
+
+**CAUSA RAÍZ:** `ai_prompts.py` describía estas APIs como funcionalidades reales, contradiciendo `prompt_templates.py` que las banea explícitamente.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `ai_prompts.py` | Eliminada sección "ON-CHAIN DATA INTELLIGENCE" completa |
+| `ai_prompts.py` | "WHEN ASKED ABOUT ON-CHAIN" ahora dice honestamente: "en roadmap, NO implementado" |
+| `feature_catalog.md` | "On-Chain Intelligence" → "Market Intelligence (roadmap)" |
+
+**Capacidades REALES de Market Intelligence:**
+- Fear & Greed Index (Alternative.me API) ✅
+- Finnhub News (sentiment analysis) ✅
+- Alpha Vantage (RSI, MACD, Bollinger) ✅
+- Kraken Order Book analysis ✅
+
+**Capacidades en ROADMAP (NO implementadas):**
+- WhaleTracker / whale monitoring ❌
+- Arkham Intelligence ❌
+- Exchange flow analysis ❌
+- On-chain metrics ❌
+
+---
+
 ### Real-Time Veto Data for AI (Jan 8, 2026)
 
 **PROBLEMA DETECTADO:** El bot de Telegram inventaba datos de capital protegido cuando el usuario preguntaba por auditorías de períodos específicos (ej: "$3,752 Coherence Gate, $1,987 Black Swan").
