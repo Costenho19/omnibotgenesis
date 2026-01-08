@@ -559,6 +559,55 @@ DO NOT invent trade data, win rate, P&L or balance.
 Be honest: "Currently there are no closed trades recorded in the database."
 """
             
+            # 📊 FIX Jan 8, 2026: DATOS REALES DE VETOES/CAPITAL PROTEGIDO
+            if 'veto_data' in additional_context:
+                veto = additional_context['veto_data']
+                has_data = veto.get('has_data', False)
+                query_type = veto.get('query_type', 'unknown')
+                
+                base_prompt += "\n\n🛡️ **DATOS REALES DE CAPITAL PROTEGIDO (PostgreSQL):**\n"
+                
+                if has_data:
+                    if query_type == 'specific_period':
+                        tr = veto.get('timerange', {})
+                        period = tr.get('period', {})
+                        base_prompt += f"- **Período consultado:** {period.get('start', 'N/A')} a {period.get('end', 'N/A')}\n"
+                        base_prompt += f"- **Total Vetoes:** {tr.get('total_count', 0)}\n"
+                        base_prompt += f"- **Capital Protegido:** ${tr.get('total_blocked', 0):,.2f}\n"
+                        
+                        by_type = tr.get('by_type', {})
+                        if by_type:
+                            base_prompt += "\n**Desglose por tipo:**\n"
+                            for vtype, data in by_type.items():
+                                base_prompt += f"  - {vtype}: {data.get('count', 0)} bloqueos, ${data.get('blocked_capital', 0):,.2f}\n"
+                    else:
+                        s48 = veto.get('summary_48h', {})
+                        s7d = veto.get('summary_7d', {})
+                        all_time = veto.get('all_time_total', 0)
+                        
+                        base_prompt += f"- **Últimas 48h:** {s48.get('total_count', 0)} vetoes, ${s48.get('total_blocked', 0):,.2f}\n"
+                        base_prompt += f"- **Últimos 7 días:** {s7d.get('total_count', 0)} vetoes, ${s7d.get('total_blocked', 0):,.2f}\n"
+                        base_prompt += f"- **Total histórico:** ${all_time:,.2f}\n"
+                        
+                        by_type = s48.get('by_type', {})
+                        if by_type:
+                            base_prompt += "\n**Desglose 48h por tipo:**\n"
+                            for vtype, data in by_type.items():
+                                base_prompt += f"  - {vtype}: {data.get('count', 0)} bloqueos, ${data.get('blocked_capital', 0):,.2f}\n"
+                    
+                    base_prompt += f"\n**Source:** Live PostgreSQL (veto_repository)\n"
+                else:
+                    error_msg = veto.get('error') or veto.get('message', 'No veto data available')
+                    base_prompt += f"""
+**NO VETO DATA FOR REQUESTED PERIOD**
+- {error_msg}
+
+**CRITICAL INSTRUCTION:**
+You MUST inform the user that there is NO veto data for the requested period.
+DO NOT invent veto amounts, blocked capital, or audit numbers.
+Be honest: "No hay registros de bloqueos para el período solicitado en la base de datos."
+"""
+            
             if 'price' in additional_context:
                 base_prompt += f"- Bitcoin: ${additional_context['price']:,.2f} USD\n"
             if 'balance' in additional_context:

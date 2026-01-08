@@ -440,6 +440,13 @@ class ConversationalAI:
             market_data['trade_performance'] = trade_performance
             logger.info(f"📊 Trade performance data added: {trade_performance.get('statistics', {}).get('total_trades', 0)} trades")
         
+        # 📊 FIX Jan 8, 2026: Obtener datos REALES de vetoes desde PostgreSQL
+        # Esto evita que el AI invente datos de capital protegido para auditorías
+        veto_data = self._fetch_veto_data(user_message)
+        if veto_data:
+            market_data['veto_data'] = veto_data
+            logger.info(f"📊 Veto data added: has_data={veto_data.get('has_data', False)}, query_type={veto_data.get('query_type', 'unknown')}")
+        
         return market_data
     
     def _fetch_trade_performance(self, user_message: str, user_id: Optional[str] = None) -> dict:
@@ -504,6 +511,111 @@ class ConversationalAI:
                 'has_real_data': False,
                 'error': str(e),
                 'statistics': {'total_trades': 0, 'data_source': 'error'}
+            }
+    
+    def _fetch_veto_data(self, user_message: str) -> Optional[dict]:
+        """
+        📊 FIX Jan 8, 2026: Obtener datos REALES de vetoes desde PostgreSQL.
+        
+        PROBLEMA: El AI estaba inventando datos de capital protegido para períodos específicos.
+        SOLUCIÓN: Consultar VetoRepository con el método get_vetoes_by_timerange().
+        
+        Detecta si el usuario pregunta por:
+        - Auditoría, reporte de bloqueos
+        - Capital protegido, vetoes
+        - Períodos específicos (fechas)
+        """
+        import re
+        message_lower = user_message.lower()
+        
+        veto_keywords = [
+            'auditoría', 'auditoria', 'audit', 'bloqueos', 'bloqueo',
+            'capital protegido', 'protected capital', 'veto', 'vetoes',
+            'coherence gate', 'black swan', 'cuarentena', 'quarantine',
+            'reporte de bloqueos', 'protección', 'protection'
+        ]
+        
+        needs_veto_data = any(keyword in message_lower for keyword in veto_keywords)
+        
+        if not needs_veto_data:
+            return None
+        
+        logger.info("📊 Detected veto/audit query - fetching REAL data from PostgreSQL")
+        
+        from datetime import datetime
+        current_year = datetime.now().year
+        
+        range_pattern = r'(\d{1,2})[/](\d{1,2})(?:[/](\d{4}))?[^\d]*(?:al?|to|-)[\s]*(\d{1,2})[/](\d{1,2})(?:[/](\d{4}))?'
+        range_match = re.search(range_pattern, user_message)
+        
+        dates_found = []
+        if range_match:
+            d1, m1, y1, d2, m2, y2 = range_match.groups()
+            year1 = y1 if y1 else str(current_year)
+            year2 = y2 if y2 else str(current_year)
+            dates_found = [(d1, m1, year1), (d2, m2, year2)]
+            logger.info(f"📊 Date range detected: {d1}/{m1}/{year1} to {d2}/{m2}/{year2}")
+        else:
+            date_with_year = r'(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})'
+            dates_with_year = re.findall(date_with_year, user_message)
+            if len(dates_with_year) >= 2:
+                dates_found = dates_with_year[:2]
+        
+        try:
+            from omnix_services.database_service.veto_repository import get_veto_repository
+            
+            repo = get_veto_repository()
+            if not repo:
+                return {
+                    'has_data': False,
+                    'error': 'VetoRepository not available',
+                    'summary_48h': None,
+                    'summary_7d': None
+                }
+            
+            if len(dates_found) >= 2:
+                start_date = f"{dates_found[0][2]}-{dates_found[0][1]:0>2}-{dates_found[0][0]:0>2}"
+                end_date = f"{dates_found[1][2]}-{dates_found[1][1]:0>2}-{dates_found[1][0]:0>2}"
+                
+                timerange_data = repo.get_vetoes_by_timerange(start_date, end_date)
+                
+                logger.info(f"📊 Veto data for {start_date} to {end_date}: {timerange_data.get('total_count', 0)} vetoes")
+                
+                return {
+                    'has_data': timerange_data.get('has_data', False),
+                    'timerange': timerange_data,
+                    'query_type': 'specific_period',
+                    'source': 'postgresql'
+                }
+            else:
+                summary_48h = repo.get_veto_summary(hours=48)
+                summary_7d = repo.get_veto_summary(hours=168)
+                all_time = repo.get_all_time_total()
+                
+                logger.info(f"📊 Veto summary: 48h={summary_48h.get('total_count', 0)}, 7d={summary_7d.get('total_count', 0)}, all_time=${all_time:,.2f}")
+                
+                return {
+                    'has_data': summary_48h.get('total_count', 0) > 0 or summary_7d.get('total_count', 0) > 0,
+                    'summary_48h': summary_48h,
+                    'summary_7d': summary_7d,
+                    'all_time_total': all_time,
+                    'query_type': 'general',
+                    'source': 'postgresql'
+                }
+                
+        except ImportError as e:
+            logger.error(f"❌ Cannot import VetoRepository: {e}")
+            return {
+                'has_data': False,
+                'error': 'VetoRepository not available',
+                'source': 'unavailable'
+            }
+        except Exception as e:
+            logger.error(f"❌ Error fetching veto data: {e}")
+            return {
+                'has_data': False,
+                'error': str(e),
+                'source': 'error'
             }
     
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):

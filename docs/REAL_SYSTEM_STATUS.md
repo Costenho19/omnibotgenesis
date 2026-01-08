@@ -90,6 +90,36 @@ created_at (TIMESTAMP)
 
 ---
 
+### Real-Time Veto Data for AI (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot de Telegram inventaba datos de capital protegido cuando el usuario preguntaba por auditorías de períodos específicos (ej: "$3,752 Coherence Gate, $1,987 Black Swan").
+
+**CAUSA RAÍZ:** No existía un método para consultar vetoes por rango de fechas, y el AI no recibía datos reales de vetoes en su contexto.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+| Componente | Archivo | Cambio |
+|------------|---------|--------|
+| **get_vetoes_by_timerange()** | `veto_repository.py` | Nuevo método para consultar vetoes por período |
+| **_fetch_veto_data()** | `conversational_ai_adapter.py` | Detecta queries de auditoría y obtiene datos reales |
+| **Prompt Integration** | `ai_prompts.py` | Inyecta datos de vetoes reales al contexto del AI |
+
+**Detección de intención:**
+Keywords: `auditoría`, `bloqueos`, `capital protegido`, `veto`, `coherence gate`, `black swan`, `cuarentena`
+
+**Comportamiento esperado:**
+- Con datos: AI muestra números reales de PostgreSQL
+- Sin datos: AI dice honestamente "No hay registros para el período solicitado"
+- NUNCA fabrica números
+
+**Estado de limpieza de duplicados (Jan 8, 2026):**
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Vetoes | 141 | 66 |
+| Capital | $2.8M | $1.32M |
+
+---
+
 ### Bot P&L Case-Sensitivity Fix (Jan 8, 2026)
 
 **PROBLEMA DETECTADO:** El bot de Telegram mostraba $-19,848 pero el dashboard mostraba $-15,198.73.
