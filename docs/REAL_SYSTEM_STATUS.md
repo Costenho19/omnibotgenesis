@@ -17,8 +17,8 @@
 |------------|--------|-------------|
 | **Migración V007** | ✅ CREADA | 3 tablas: shadow_trade_events, shadow_trade_outcomes, filter_calibration_metrics |
 | **ShadowPortfolioRepository** | ✅ CREADO | Mismo patrón que VetoRepository |
-| **Bot Instrumentación** | ⏳ PARCIAL | _log_veto() extendido para shadow events (shadow_context opcional) |
-| **Counterfactual Runner** | 🔜 PENDIENTE | Job diario para calcular "qué habría pasado" |
+| **Bot Instrumentación** | ✅ COMPLETO | 5 veto call sites pasan shadow_context (MC x2, RMS, COHERENCE_GATE, BLACK_SWAN) |
+| **Counterfactual Runner** | ✅ COMPLETO | ShadowPortfolioRunner con CLI entrypoint |
 | **Dashboard Widget** | 🔜 PENDIENTE | Visualización de calibración de filtros |
 
 **Datos Capturados por Trade Bloqueado:**
@@ -47,7 +47,35 @@ Por cada trade bloqueado:
 **Archivos:**
 - `omnix_services/database_service/migrations/versions.py` (V007)
 - `omnix_services/database_service/shadow_portfolio_repository.py`
+- `omnix_services/database_service/shadow_portfolio_runner.py` (NEW)
 - `omnix_core/bot/auto_trading_bot.py` (_log_veto extended, _build_shadow_context)
+- `tests/test_shadow_portfolio_runner.py` (17 tests)
+
+**ShadowPortfolioRunner - CLI Entrypoint:**
+```bash
+python -m omnix_services.database_service.shadow_portfolio_runner --min-age 24 --max-events 100
+
+Options:
+  --min-age N      Minimum age of events to analyze (hours, default: 24)
+  --max-events N   Maximum events to process (default: 100)
+  --symbol SYM     Only analyze specific symbol (e.g., BTC)
+  --dry-run        Analyze but do not persist results
+  --verbose        Enable debug logging
+```
+
+**Counterfactual Logic:**
+| Scenario | Veto Correct? | Reason |
+|----------|---------------|--------|
+| 24h loss > 2% | ✅ Yes | Veto protected from loss |
+| Max drawdown > 5% | ✅ Yes | Would have hit stop loss |
+| 24h gain > 3% | ❌ No | Veto blocked highly profitable trade |
+| 24h gain 1.5-3% | ❌ No | Veto blocked profitable trade |
+| 24h P&L < 1% | ✅ Yes | Marginal trade, veto reasonable |
+| Unknown action | ✅ Yes | Conservative default |
+
+**Threshold Alignment:**
+- `would_have_won` = P&L > 1.0% (consistent with veto correctness boundary)
+- Marginal zone = |P&L| < 1.0% (veto considered correct)
 
 **Investor Language:**
 > "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed 30 days later to determine filter accuracy. This data-driven approach ensures our risk filters are neither too conservative (blocking profitable opportunities) nor too loose (allowing losing trades). The system learns from its own decisions."
