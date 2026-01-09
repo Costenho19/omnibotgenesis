@@ -31,13 +31,13 @@
 | Metric | Value | Context |
 |--------|-------|---------|
 | Total Trades | 119 | Paper trading calibration phase |
-| Winning Trades | 45 | Win rate: 37.8% |
-| Shadow Events | 279 | Vetoed trades tracked for learning |
+| Winning Trades | 24 | Win rate: 20.17% (learning phase) |
+| Shadow Events | 360 | Vetoed trades tracked for learning |
 | Current Balance | $880,918.28 | From $1M initial |
 | System Uptime | 99.9% | Production-ready |
 | Modules Active | 15+ | All core engines operational |
 
-**Current Phase:** System calibration with Shadow Portfolio learning. Every blocked trade is analyzed to determine if filters are too conservative or too loose.
+**Current Phase:** System calibration with Shadow Portfolio learning. Early-stage performance reflects aggressive filter tuning. Every blocked trade is analyzed to optimize filters.
 
 **Target:** 500+ trades with 55%+ win rate to establish verified track record.
 

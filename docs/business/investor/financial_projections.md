@@ -48,7 +48,7 @@ These projections are based on:
    - Daily loss limits enforced (4% max)
    - Volatility-based SL/TP classification
 
-**Important:** Current live trading data (119 trades, 37.8% win rate) is in calibration phase with Shadow Portfolio learning. These estimates will be revised after 500+ trades with optimized filters.
+**Important:** Current live trading data (119 trades, 20.17% win rate) is in early calibration phase with Shadow Portfolio learning. Win rate is expected to improve as filter thresholds are optimized based on counterfactual analysis. These estimates will be revised after 500+ trades with optimized filters.
 
 ---
 

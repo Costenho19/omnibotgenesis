@@ -13,11 +13,11 @@
 | Metric | Value | Notes |
 |--------|-------|-------|
 | **Total Trades** | 119 | Paper trading calibration phase |
-| **Winning Trades** | 45 | |
-| **Losing Trades** | 74 | |
-| **Win Rate** | 37.8% | Improving with filter calibration |
-| **Total P&L** | -$15,198.73 | Calibration losses - learning phase |
-| **Shadow Events** | 279 | Vetoed trades tracked for analysis |
+| **Winning Trades** | 24 | Based on profit_loss > 0 (USD) |
+| **Losing Trades** | 95 | |
+| **Win Rate** | 20.17% | Learning phase - filters being calibrated |
+| **Total P&L** | -$15,811.26 | Including fees (0.26% per transaction) |
+| **Shadow Events** | 360 | Vetoed trades tracked for analysis |
 | **Open Positions** | 0 | All positions closed |
 
 ### Account Status
@@ -26,8 +26,9 @@
 |--------|-------|
 | **Starting Balance** | $1,000,000 |
 | **Current Balance** | $880,918.28 |
-| **Total Drawdown** | 11.9% |
-| **Sharpe Ratio** | Calculating... |
+| **Expected Balance** | $984,188.74 |
+| **Balance Gap** | $103,270.45 (under investigation) |
+| **Sharpe Ratio** | -5.82 |
 
 ---
 
@@ -225,7 +226,7 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 
 | Metric | Description |
 |--------|-------------|
-| **Shadow Events Captured** | 279 trades blocked and tracked |
+| **Shadow Events Captured** | 360 trades blocked and tracked |
 | **Veto Types Tracked** | COHERENCE_GATE, MONTE_CARLO, BLACK_SWAN, RMS |
 | **Analysis Window** | 24-720 hours post-veto |
 | **Output** | Veto accuracy %, missed opportunities, filter recommendations |
