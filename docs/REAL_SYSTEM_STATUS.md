@@ -859,9 +859,9 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 **Datos Verificados en Respuestas:**
 | Métrica | Valor | Fuente |
 |---------|-------|--------|
-| Total Trades | 109 | PostgreSQL paper_trading_trades |
-| P&L | -$14,942.94 | PostgreSQL SUM(profit_loss) |
-| Win Rate | 22% (24/109) | PostgreSQL calculation |
+| Total Trades | 119 | PostgreSQL paper_trading_trades |
+| P&L | -$15,811.26 | PostgreSQL SUM(profit_loss) |
+| Win Rate | 20.17% (24/119) | PostgreSQL calculation |
 | Activos Excluidos | 5 (ADA, SOL, AVAX, ETH, LINK) | trading_profiles.py |
 | Pérdidas Evitadas | $11,819+ | PostgreSQL (sum of excluded assets) |
 

@@ -237,13 +237,13 @@ Ver [MIGRATION_STATUS.md](MIGRATION_STATUS.md) para plan completo de activación
 
 | Métrica | Actual | Objetivo |
 |---------|--------|----------|
-| Trades | 109 | 500+ |
-| Win Rate | 22% | 55%+ |
-| P&L | -$14,942.94 | Positive |
+| Trades | 119 | 500+ |
+| Win Rate | 20.17% | 55%+ |
+| P&L | -$15,811.26 | Positive |
 | Timeline | - | 8-9 semanas |
 
 **Meta**: Track record para $1M seed @ $11.5M pre-money.
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 29 Dic 2025*
+*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 9 Enero 2026*

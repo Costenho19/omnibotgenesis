@@ -60,9 +60,9 @@
 ### Track Record
 | Metric | Current | Target | Gap |
 |--------|---------|--------|-----|
-| Trades | 109 | 500+ | -391 |
-| Win Rate | 22% | 55%+ | -33% |
-| P&L | -$14,942.94 | Positive | Need reversal |
+| Trades | 119 | 500+ | -381 |
+| Win Rate | 20.17% | 55%+ | -34.83% |
+| P&L | -$15,811.26 | Positive | Need reversal |
 
 ---
 

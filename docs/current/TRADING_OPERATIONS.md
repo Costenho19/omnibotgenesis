@@ -339,7 +339,7 @@ El sistema captura todos los trades bloqueados y los analiza después de 24+ hor
 
 | Metric | Current | Target | Timeline |
 |--------|---------|--------|----------|
-| Trades | 109 | 500+ | 8-9 weeks |
+| Trades | 119 | 500+ | 8-9 weeks |
 | Win Rate | TBD | 55%+ | Ongoing |
 | Active Days | ~5 | 30-60 | Ongoing |
 
