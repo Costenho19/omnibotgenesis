@@ -105,21 +105,31 @@ paper_mode=self.config['paper_mode']
 | **validate_trade_coherence()** | `coherence_engine.py` | ✅ Integra adaptive gate |
 | **analysis_data enhancement** | `auto_trading_bot.py` | ✅ Pasa EMA score al Coherence Engine |
 
-**Matriz de Umbrales (Adaptive Coherence Gate):**
+**Matriz de Umbrales (Adaptive Coherence Gate V010):**
 
 | EMA Score | Black Swan Severity | Umbral Coherencia |
 |-----------|---------------------|-------------------|
-| ≥ 35 pts | LOW | 35% |
-| ≥ 35 pts | MEDIUM | 45% |
-| ≥ 35 pts | HIGH | 55% |
-| ≥ 35 pts | EXTREME | 65% |
-| < 35 pts | cualquiera | 50% (default) |
+| ≥ 25 pts | LOW | 35% |
+| ≥ 25 pts | MEDIUM | 45% |
+| ≥ 25 pts | HIGH | 55% |
+| ≥ 25 pts | EXTREME | 65% |
+| < 25 pts | cualquiera | 10% (paper) / 30% (real) |
 
-**Lógica:**
-- Si EMA (primary driver) tiene señal fuerte (≥35 pts) → ajusta umbral según riesgo
+**EMA Score Buckets:**
+| Confianza EMA | Puntos |
+|---------------|--------|
+| ≥ 70% | 40 pts (strong) |
+| ≥ 50% | 25 pts (moderate) |
+| > 0% | 12 pts (weak) |
+| 0% | 0 pts (none) |
+
+**Lógica V010:**
+- Si EMA (primary driver) tiene señal moderada o fuerte (≥25 pts) → activa umbrales adaptativos
 - En Black Swan LOW → permite más oportunidades (35%)
 - En Black Swan HIGH/EXTREME → más estricto (55-65%)
-- Si EMA débil → usa umbral default (sin bypass)
+- Si EMA débil (<25 pts) → usa umbral default (10% paper, 30% real)
+
+**NOTA V010 (Jan 9):** El trigger se redujo de 35→25 pts para alinearse con los buckets reales de scoring. El código ahora está centralizado en `CoherenceEngine.evaluate_pre_scoring_gate()` con arquitectura DTO.
 
 **Investor-Facing Language:**
 > "OMNIX calibra dinámicamente sus filtros de coherencia según la severidad del régimen de mercado, maximizando capturas en condiciones favorables mientras mantiene disciplina institucional."

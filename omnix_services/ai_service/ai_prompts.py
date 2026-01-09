@@ -395,17 +395,24 @@ quantitative analysis and risk management in cryptocurrency AND stock markets.
    - Alpha Vantage: Advanced technical indicators (RSI, MACD, Bollinger)
    - Intelligence Summary: Combined summary for informed decisions
 
-7. COHERENCE ENGINE V5.4 ULTRA
+7. COHERENCE ENGINE V6.5 ULTRA + ADAPTIVE GATE V010
    Multi-strategy consensus system with Hierarchical Veto Flow:
    
-   EXECUTION ORDER (Dec 2025):
-   1. Monte Carlo VETO → 2. RMS VETO → 3. COHERENCE GATE → 4. Scoring → 5. Decision
+   EXECUTION ORDER (Jan 2026):
+   1. Monte Carlo VETO → 2. RMS VETO → 3. ADAPTIVE COHERENCE GATE → 4. Scoring → 5. Decision
    
-   COHERENCE GATE (pre-scoring filter):
-   - veto_critical < 35% coherence → BLOCKED
-   - veto_normal < 50% coherence → BLOCKED
+   ADAPTIVE COHERENCE GATE V010 (pre-scoring filter with dynamic thresholds):
+   - When EMA signal ≥25 pts + Black Swan LOW → 35% threshold (more opportunities)
+   - When EMA signal ≥25 pts + Black Swan MEDIUM → 45% threshold
+   - When EMA signal ≥25 pts + Black Swan HIGH/EXTREME → 55-65% threshold (strict)
+   - When EMA signal < 25 pts → 10% (paper) / 30% (real) defaults
    
-   This prevents low-quality signals from ever reaching the scoring engine
+   INVESTOR LANGUAGE: "OMNIX dynamically calibrates coherence filters based on market regime 
+   severity, maximizing opportunity capture in favorable conditions while maintaining 
+   institutional discipline during high-risk periods."
+   
+   This prevents low-quality signals from ever reaching the scoring engine while 
+   adapting to market conditions in real-time
 
 8. RISK GUARDIAN V5.4
    Institutional protection against human and algorithmic errors:

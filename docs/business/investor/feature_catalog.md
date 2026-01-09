@@ -90,10 +90,11 @@
 |---|--------|---------|
 | 1 | **Risk Guardian V5.4** | Overtrading prevention, drawdown protection |
 | 2 | **Coherence Engine V6.5** | 6-tier threshold-based validation |
-| 3 | **Adaptive Parameter Engine** | Auto-calibration by market regime |
-| 4 | **Market Intelligence** | Fear & Greed Index, Finnhub News, Alpha Vantage (NOT on-chain - roadmap) |
-| 5 | **Execution Protocol** | TWAP/VWAP/ICEBERG execution |
-| 6 | **Fear & Greed Contrarian** | Score adjustment on extreme sentiment |
+| 3 | **Adaptive Coherence Gate V010** | Dynamic thresholds based on market severity |
+| 4 | **Adaptive Parameter Engine** | Auto-calibration by market regime |
+| 5 | **Market Intelligence** | Fear & Greed Index, Finnhub News, Alpha Vantage (NOT on-chain - roadmap) |
+| 6 | **Execution Protocol** | TWAP/VWAP/ICEBERG execution |
+| 7 | **Fear & Greed Contrarian** | Score adjustment on extreme sentiment |
 
 ### 2.3 Conversational AI
 
@@ -151,6 +152,24 @@
 | **Warning** | 0.5% drawdown in 1 hour | Log warning, prepare revert |
 | **Auto-Revert** | 1% drawdown in 24 hours | Automatic config rollback |
 | **Emergency Stop** | Critical breach | Halt all trading immediately |
+
+### 3.5 Adaptive Coherence Gate V010 (Jan 2026)
+
+| EMA Signal | Black Swan Severity | Coherence Threshold | Benefit |
+|------------|---------------------|---------------------|---------|
+| **Strong (≥25 pts)** | LOW | 35% | Maximum opportunity capture |
+| **Strong (≥25 pts)** | MEDIUM | 45% | Balanced filtering |
+| **Strong (≥25 pts)** | HIGH/EXTREME | 55-65% | Strict protection |
+| **Weak (<25 pts)** | Any | 10%/30% (paper/real) | Default protection |
+
+**Investor Value Proposition:**
+> "OMNIX dynamically calibrates coherence filters based on market regime severity, maximizing opportunity capture in favorable conditions while maintaining institutional discipline during high-risk periods."
+
+**Technical Implementation:**
+- Centralized architecture in CoherenceEngine (domain service pattern)
+- AdaptiveGateDecision DTO for transparent decision tracking
+- Real-time Railway logging: `ADAPTIVE_GATE_DECISION` events
+- Fail-closed safety: Any exception blocks trade (capital protection priority)
 
 ---
 
