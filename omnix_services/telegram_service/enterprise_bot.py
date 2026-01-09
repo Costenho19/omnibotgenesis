@@ -798,6 +798,11 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("resumen", self.resumen_command))
             logger.info(f"📊 Daily Summary {VERSION_BANNER} registrado: /resumen")
             
+            # 📊 Comando Reporte Diario - Brutal Honesty Monitoring
+            self.application.add_handler(CommandHandler("reporte_diario", self.reporte_diario_command))
+            self.application.add_handler(CommandHandler("daily_report", self.reporte_diario_command))  # Alias inglés
+            logger.info(f"📊 Daily Report {VERSION_BANNER} registrado: /reporte_diario, /daily_report")
+            
             # Handler para mensajes de texto
             self.application.add_handler(
                 MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
@@ -8324,6 +8329,47 @@ _OMNIX INSTITUTIONAL+_""", parse_mode='Markdown')
                 
         except Exception as e:
             logger.error(f"Error en resumen: {e}")
+            await update.message.reply_text(f"❌ Error: {str(e)}")
+
+    async def reporte_diario_command(self, update, context):
+        """Comando /reporte_diario - Reporte brutal honesty monitoring"""
+        try:
+            user = update.effective_user
+            chat_id = str(update.effective_chat.id)
+            
+            if not is_admin(user.id):
+                await update.message.reply_text("❌ Este comando es solo para administradores")
+                return
+            
+            await update.message.reply_text("📊 Generando reporte diario de recalibración...")
+            
+            try:
+                from omnix_services.monitoring.daily_report_service import get_daily_report_service
+                
+                service = get_daily_report_service()
+                metrics = service.fetch_real_metrics(user_id='harold_admin')
+                report = service.generate_report(metrics)
+                
+                service.save_report(metrics, report)
+                
+                if len(report) > 4000:
+                    parts = [report[i:i+4000] for i in range(0, len(report), 4000)]
+                    for i, part in enumerate(parts):
+                        await update.message.reply_text(f"```\n{part}\n```", parse_mode='Markdown')
+                else:
+                    await update.message.reply_text(f"```\n{report}\n```", parse_mode='Markdown')
+                
+                logger.info(f"📊 Daily report generated for user {user.id}")
+                
+            except ImportError as e:
+                logger.error(f"❌ DailyReportService not available: {e}")
+                await update.message.reply_text("❌ Servicio de reporte diario no disponible")
+            except Exception as e:
+                logger.error(f"❌ Error generating daily report: {e}")
+                await update.message.reply_text(f"❌ Error generando reporte: {str(e)}")
+                
+        except Exception as e:
+            logger.error(f"Error en reporte_diario: {e}")
             await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
