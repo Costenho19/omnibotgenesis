@@ -2699,7 +2699,7 @@ class AutoTradingBot:
                     gate_decision = self.coherence_engine.evaluate_pre_scoring_gate(
                         strategy_signals=strategy_signals,
                         analysis_data=adaptive_gate_data,
-                        paper_mode=self.paper_mode
+                        paper_mode=self.config['paper_mode']
                     )
                     
                     coherence_pre_score = gate_decision.coherence_score

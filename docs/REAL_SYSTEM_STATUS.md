@@ -43,6 +43,30 @@ Bot: if gate_decision.should_block → BLOCK
 
 ---
 
+### HOTFIX: AttributeError self.paper_mode (Jan 9, 2026)
+
+**ERROR EN RAILWAY:**
+```
+🚫 [COHERENCE_GATE] EXCEPTION BLOCKED: 'AutoTradingBot' object has no attribute 'paper_mode' → TRADE BLOCKED (fail-closed)
+```
+
+**CAUSA RAÍZ:** Al centralizar el Adaptive Gate, se usó `self.paper_mode` en lugar de `self.config['paper_mode']`.
+
+**FIX:**
+```python
+# Antes (ERROR)
+paper_mode=self.paper_mode
+
+# Después (CORRECTO)
+paper_mode=self.config['paper_mode']
+```
+
+**Archivo:** `omnix_core/bot/auto_trading_bot.py` línea 2702
+
+**Impacto:** El fail-closed funcionó correctamente bloqueando trades en lugar de permitirlos con datos corruptos. Este es el comportamiento deseado del sistema de seguridad.
+
+---
+
 ### Dashboard Real-Time Metrics Fix (Jan 7, 2026)
 
 **PROBLEMA DETECTADO:** Discrepancia entre panel superior del dashboard y sección Trade History.
