@@ -181,7 +181,7 @@ class CoherenceEngine:
             'HIGH': 55,     # Black Swan HIGH → coherence_min = 55%
             'EXTREME': 65,  # Black Swan EXTREME → coherence_min = 65% (max strictness)
         }
-        self._ema_trigger_score = 35  # EMA score threshold to activate adaptive gate
+        self._ema_trigger_score = 25  # EMA score threshold to activate adaptive gate (lowered from 35 for bucket alignment)
         
         logger.info("🧠 Coherence Engine inicializado con 9 estrategias + Adaptive Gate V6.5.4d")
     
@@ -522,7 +522,7 @@ class CoherenceEngine:
         - Black Swan Severity
         
         Logic:
-        - If EMA score >= 35 pts (strong signal):
+        - If EMA score >= 25 pts (moderate/strong signal):
           - BLACK_SWAN = LOW → coherence_min = 35%
           - BLACK_SWAN = MEDIUM → coherence_min = 45%
           - BLACK_SWAN = HIGH → coherence_min = 55%
@@ -587,6 +587,7 @@ class CoherenceEngine:
             return adaptive_block, adaptive_warn, gate_info
         
         gate_info['reason'] = f"EMA={ema_score:.0f}pts < {self._ema_trigger_score} (using defaults)"
+        logger.info(f"📊 [ADAPTIVE_GATE] INACTIVE: EMA={ema_score:.0f}pts < {self._ema_trigger_score} → using default threshold={default_block}%")
         return default_block, default_warn, gate_info
     
     def validate_trade_coherence(
