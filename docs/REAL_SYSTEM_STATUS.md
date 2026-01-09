@@ -9,6 +9,51 @@
 
 ## Cambios Recientes
 
+### Shadow Portfolio + Learning Engine V007 (Jan 9, 2026)
+
+**PROPÓSITO:** Sistema de aprendizaje que analiza trades bloqueados para calibrar filtros.
+
+| Componente | Estado | Descripción |
+|------------|--------|-------------|
+| **Migración V007** | ✅ CREADA | 3 tablas: shadow_trade_events, shadow_trade_outcomes, filter_calibration_metrics |
+| **ShadowPortfolioRepository** | ✅ CREADO | Mismo patrón que VetoRepository |
+| **Bot Instrumentación** | ⏳ PARCIAL | _log_veto() extendido para shadow events (shadow_context opcional) |
+| **Counterfactual Runner** | 🔜 PENDIENTE | Job diario para calcular "qué habría pasado" |
+| **Dashboard Widget** | 🔜 PENDIENTE | Visualización de calibración de filtros |
+
+**Datos Capturados por Trade Bloqueado:**
+- Contexto de trade: symbol, action, price, position size
+- Señales: EMA score, HMM regime, coherence, Monte Carlo ER, Black Swan prob
+- Mercado: bid/ask, ATR, volume, volatility
+- Decisión: veto_type, reason, decision_trace completo
+
+**Análisis Counterfactual (30 días después):**
+```
+Por cada trade bloqueado:
+├── ¿Qué precio tuvo después? (1h, 4h, 24h, 7d, 30d)
+├── ¿Habría ganado o perdido?
+├── ¿El veto fue correcto?
+└── Recomendación: KEEP / LOOSEN / REVIEW threshold
+```
+
+**Calibración por Tipo de Veto:**
+| Veto Type | Si accuracy < 50% + win_rate > 55% |
+|-----------|-------------------------------------|
+| COHERENCE_GATE | → LOOSEN threshold (bajar umbral) |
+| MONTE_CARLO | → Review ER threshold |
+| BLACK_SWAN | → Ajustar crash_prob limit |
+| RMS | → Review circuit breaker config |
+
+**Archivos:**
+- `omnix_services/database_service/migrations/versions.py` (V007)
+- `omnix_services/database_service/shadow_portfolio_repository.py`
+- `omnix_core/bot/auto_trading_bot.py` (_log_veto extended, _build_shadow_context)
+
+**Investor Language:**
+> "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed 30 days later to determine filter accuracy. This data-driven approach ensures our risk filters are neither too conservative (blocking profitable opportunities) nor too loose (allowing losing trades). The system learns from its own decisions."
+
+---
+
 ### Adaptive Coherence Gate - Centralized Architecture (Jan 9, 2026)
 
 **PROBLEMA DETECTADO:** El Adaptive Gate (Jan 8) no se activaba en producción porque:

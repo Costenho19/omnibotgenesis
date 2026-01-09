@@ -307,6 +307,19 @@ except ImportError:
     VETO_REPOSITORY_AVAILABLE = False
     logger.warning("⚠️ Veto Repository no disponible - tracking de vetoes desactivado")
 
+# Import Shadow Portfolio Repository - Learning Engine (Jan 9, 2026)
+try:
+    from omnix_services.database_service.shadow_portfolio_repository import (
+        get_shadow_portfolio_repository, ShadowTradeEvent
+    )
+    SHADOW_PORTFOLIO_AVAILABLE = True
+    logger.info("📊 Shadow Portfolio disponible - Learning Engine activo")
+except ImportError:
+    get_shadow_portfolio_repository = None
+    ShadowTradeEvent = None
+    SHADOW_PORTFOLIO_AVAILABLE = False
+    logger.warning("⚠️ Shadow Portfolio no disponible - Learning Engine desactivado")
+
 # Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
     from omnix_services.adaptive_engine import (
@@ -497,23 +510,77 @@ class AutoTradingBot:
             return f"{kraken_pair[:-3]}/{kraken_pair[-3:]}"
         return kraken_pair
     
-    def _log_veto(self, veto_type: str, symbol: str, blocked_capital: float, reason: str, user_id: int = None, metadata: dict = None):
-        """Log veto event to database for dashboard tracking (Jan 7, 2026)"""
-        if not VETO_REPOSITORY_AVAILABLE:
-            return
-        try:
-            repo = get_veto_repository()
-            if repo:
-                repo.log_veto(
-                    veto_type=veto_type,
-                    symbol=symbol,
-                    blocked_capital=blocked_capital,
-                    reason=reason,
-                    user_id=user_id,
-                    metadata=metadata
-                )
-        except Exception as e:
-            logger.debug(f"Veto log failed (non-critical): {e}")
+    def _log_veto(self, veto_type: str, symbol: str, blocked_capital: float, reason: str, user_id: int = None, metadata: dict = None, shadow_context: dict = None):
+        """
+        Log veto event to database for dashboard tracking (Jan 7, 2026)
+        Extended Jan 9, 2026: Also publishes to Shadow Portfolio for Learning Engine
+        
+        Args:
+            veto_type: Type of veto (COHERENCE_GATE, MONTE_CARLO, BLACK_SWAN, RMS)
+            symbol: Trading pair
+            blocked_capital: USD amount blocked
+            reason: Human-readable reason
+            user_id: User ID if applicable
+            metadata: Additional metadata for VetoRepository
+            shadow_context: Full market/strategy context for Shadow Portfolio Learning Engine
+                - intended_action: BUY/SELL
+                - current_price: Price at veto time
+                - ema_score, ema_signal, hmm_regime, coherence_score
+                - monte_carlo_er, black_swan_prob, kelly_fraction
+                - atr_14, volume_24h, decision_trace
+        """
+        if VETO_REPOSITORY_AVAILABLE:
+            try:
+                repo = get_veto_repository()
+                if repo:
+                    repo.log_veto(
+                        veto_type=veto_type,
+                        symbol=symbol,
+                        blocked_capital=blocked_capital,
+                        reason=reason,
+                        user_id=user_id,
+                        metadata=metadata
+                    )
+            except Exception as e:
+                logger.debug(f"Veto log failed (non-critical): {e}")
+        
+        if SHADOW_PORTFOLIO_AVAILABLE and shadow_context:
+            try:
+                shadow_repo = get_shadow_portfolio_repository()
+                if shadow_repo and ShadowTradeEvent:
+                    event = ShadowTradeEvent(
+                        symbol=symbol,
+                        intended_action=shadow_context.get('intended_action', 'UNKNOWN'),
+                        veto_type=veto_type,
+                        market=shadow_context.get('market', 'crypto'),
+                        intended_quantity=shadow_context.get('intended_quantity'),
+                        intended_entry_price=shadow_context.get('current_price'),
+                        intended_position_size_usd=blocked_capital,
+                        veto_reason=reason,
+                        blocked_capital=blocked_capital,
+                        ema_score=shadow_context.get('ema_score'),
+                        ema_signal=shadow_context.get('ema_signal'),
+                        hmm_regime=shadow_context.get('hmm_regime'),
+                        coherence_score=shadow_context.get('coherence_score'),
+                        monte_carlo_er=shadow_context.get('monte_carlo_er'),
+                        black_swan_prob=shadow_context.get('black_swan_prob'),
+                        kelly_fraction=shadow_context.get('kelly_fraction'),
+                        strategy_confidence=shadow_context.get('strategy_confidence'),
+                        bid_price=shadow_context.get('bid_price'),
+                        ask_price=shadow_context.get('ask_price'),
+                        spread_bps=shadow_context.get('spread_bps'),
+                        atr_14=shadow_context.get('atr_14'),
+                        volume_24h=shadow_context.get('volume_24h'),
+                        volatility_1h=shadow_context.get('volatility_1h'),
+                        intended_stop_loss=shadow_context.get('intended_stop_loss'),
+                        intended_take_profit=shadow_context.get('intended_take_profit'),
+                        intended_holding_period_hours=shadow_context.get('holding_period_hours', 24),
+                        decision_trace=shadow_context.get('decision_trace'),
+                        metadata=metadata
+                    )
+                    shadow_repo.log_shadow_event(event)
+            except Exception as e:
+                logger.debug(f"Shadow event log failed (non-critical): {e}")
     
     def _get_estimated_blocked_capital(self) -> float:
         """Estimate capital that would be blocked (2% of balance)"""
@@ -526,6 +593,85 @@ class AutoTradingBot:
         except Exception:
             pass
         return 0.0
+    
+    def _build_shadow_context(
+        self,
+        symbol: str,
+        intended_action: str = None,
+        current_price: float = None,
+        decision: dict = None,
+        ema_signal = None,
+        monte_carlo: dict = None,
+        black_swan: dict = None,
+        hmm_regime: str = None,
+        coherence_score: float = None,
+        kelly_fraction: float = None,
+        atr_14: float = None
+    ) -> dict:
+        """
+        Build shadow context for Learning Engine from available trading data.
+        
+        This context is captured at veto time to enable counterfactual analysis.
+        Returns dict compatible with _log_veto(shadow_context=...).
+        
+        Jan 9, 2026 - Learning Engine V007
+        
+        Note: intended_action is derived from EMA signal if not provided.
+        At veto time (before scoring), we don't know final action - use EMA direction.
+        """
+        derived_action = intended_action
+        ema_direction = None
+        ema_confidence = None
+        
+        if ema_signal:
+            ema_direction = getattr(ema_signal, 'direction', None)
+            ema_confidence = getattr(ema_signal, 'confidence', None)
+            if ema_confidence:
+                ema_confidence = ema_confidence * 100
+            if not derived_action and ema_direction:
+                if ema_direction == 'LONG':
+                    derived_action = 'BUY'
+                elif ema_direction == 'SHORT':
+                    derived_action = 'SELL'
+                else:
+                    derived_action = 'UNKNOWN'
+        
+        if not derived_action:
+            derived_action = 'UNKNOWN'
+        
+        context = {
+            'intended_action': derived_action,
+            'current_price': current_price,
+            'market': 'crypto',
+            'hmm_regime': hmm_regime,
+            'coherence_score': coherence_score,
+            'kelly_fraction': kelly_fraction,
+            'atr_14': atr_14,
+            'ema_score': ema_confidence,
+            'ema_signal': ema_direction,
+        }
+        
+        if monte_carlo:
+            context['monte_carlo_er'] = safe_float(monte_carlo.get('expected_return'), None)
+            context['monte_carlo_wr'] = safe_float(monte_carlo.get('win_rate'), None)
+            context['monte_carlo_var95'] = safe_float(monte_carlo.get('var_95'), None)
+        
+        if black_swan:
+            context['black_swan_prob'] = safe_float(black_swan.get('crash_probability'), None)
+            context['black_swan_level'] = black_swan.get('risk_level')
+        
+        if decision:
+            context['decision_trace'] = decision.get('decision_trace', [])
+            context['strategy_confidence'] = decision.get('confidence')
+            
+            v52 = decision.get('v52_analysis', {})
+            if v52:
+                context['ema_score'] = context.get('ema_score') or v52.get('ema_confidence')
+                context['hmm_regime'] = context.get('hmm_regime') or v52.get('hmm_regime')
+                context['coherence_score'] = context.get('coherence_score') or v52.get('coherence_score')
+                context['kelly_fraction'] = context.get('kelly_fraction') or v52.get('kelly_fraction')
+        
+        return context
     
     def __init__(self, trading_service, database_service=None, advanced_features=None, paper_trading=None, ai_service=None):
         self.trading_service = trading_service
@@ -2534,7 +2680,12 @@ class AutoTradingBot:
                         symbol=symbol,
                         blocked_capital=self._get_estimated_blocked_capital(),
                         reason=f"Expected return {expected_return:.2%} < {mc_min_expected:.2%}",
-                        metadata={'expected_return': expected_return, 'veto_reason': 'MC_NEG_ER'}
+                        metadata={'expected_return': expected_return, 'veto_reason': 'MC_NEG_ER'},
+                        shadow_context=self._build_shadow_context(
+                            symbol=symbol,
+                            current_price=current_price, decision=decision,
+                            ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan
+                        )
                     )
                 
                 # VETO 2: VaR95 demasiado alto (pérdida potencial > umbral)
@@ -2549,7 +2700,12 @@ class AutoTradingBot:
                         symbol=symbol,
                         blocked_capital=self._get_estimated_blocked_capital(),
                         reason=f"VaR95 {var_95:.2%} worse than limit {mc_max_var:.2%}",
-                        metadata={'var_95': var_95, 'veto_reason': 'MC_VAR_TOO_HIGH'}
+                        metadata={'var_95': var_95, 'veto_reason': 'MC_VAR_TOO_HIGH'},
+                        shadow_context=self._build_shadow_context(
+                            symbol=symbol,
+                            current_price=current_price, decision=decision,
+                            ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan
+                        )
                     )
                 
                 # SIZE REDUCTION: Win rate < 50% pero ER >= 0 (FIX Dec 30: reason=MC_WR_BELOW_50)
@@ -2616,7 +2772,12 @@ class AutoTradingBot:
                         symbol=symbol,
                         blocked_capital=self._get_estimated_blocked_capital(),
                         reason=f"RMS veto: {', '.join(rms_reasons)}",
-                        metadata={'veto_chain': rms_reasons}
+                        metadata={'veto_chain': rms_reasons},
+                        shadow_context=self._build_shadow_context(
+                            symbol=symbol,
+                            current_price=current_price, decision=decision,
+                            ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan
+                        )
                     )
                 else:
                     decision['guards_passed'].append('RMS_VALIDATION')
@@ -2747,7 +2908,13 @@ class AutoTradingBot:
                     symbol=symbol,
                     blocked_capital=self._get_estimated_blocked_capital(),
                     reason=f"Coherence {coherence_pre_score:.1f}% < threshold",
-                    metadata={'coherence_score': coherence_pre_score}
+                    metadata={'coherence_score': coherence_pre_score},
+                    shadow_context=self._build_shadow_context(
+                        symbol=symbol,
+                        current_price=current_price, decision=decision,
+                        ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan,
+                        coherence_score=coherence_pre_score
+                    )
                 )
                 return decision
             
@@ -2813,7 +2980,12 @@ class AutoTradingBot:
                         symbol=symbol,
                         blocked_capital=self._get_estimated_blocked_capital(),
                         reason=f"Risk level {risk_level}, crash prob {crash_prob}%",
-                        metadata={'risk_level': risk_level, 'crash_probability': crash_prob}
+                        metadata={'risk_level': risk_level, 'crash_probability': crash_prob},
+                        shadow_context=self._build_shadow_context(
+                            symbol=symbol,
+                            current_price=current_price, decision=decision,
+                            ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan
+                        )
                     )
                 elif risk_level == 'LOW':
                     decision['reason'].append(f"✅ Black Swan: Riesgo BAJO OK")
