@@ -653,11 +653,11 @@ class CoherenceEngine:
         veto_type = None
         reason = ""
         
-        if coherence_score < block_threshold or coherence_report.coherence_level.value == 'CRITICAL':
+        if coherence_score < block_threshold:
             should_block = True
             veto_type = 'COHERENCE_GATE_CRITICAL'
-            reason = f"Coherence {coherence_score:.1f}% < {block_threshold}% (CRITICAL threshold)"
-            logger.warning(f"🚫 [COHERENCE_GATE] CRITICAL: Score {coherence_score:.1f}% < {block_threshold}% → NO SCORING")
+            reason = f"Coherence {coherence_score:.1f}% < {block_threshold}% (adaptive block threshold)"
+            logger.warning(f"🚫 [COHERENCE_GATE] CRITICAL: Score {coherence_score:.1f}% < {block_threshold}% → BLOCKED")
         elif coherence_score < warn_threshold:
             should_block = True
             veto_type = 'COHERENCE_GATE_LOW'
