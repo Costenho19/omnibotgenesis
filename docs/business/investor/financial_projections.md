@@ -1,7 +1,7 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM - Financial Projections
+# OMNIX V6.5.4d INSTITUTIONAL+ - Financial Projections
 ## Conservative, Base Case, and Optimistic Scenarios
 
-**Document Date:** December 2025  
+**Document Date:** January 2026  
 **Prepared by:** OMNIX Team  
 **Disclaimer:** All projections are estimates based on industry benchmarks and backtesting. Actual results may vary significantly.
 
@@ -48,7 +48,7 @@ These projections are based on:
    - Daily loss limits enforced (4% max)
    - Volatility-based SL/TP classification
 
-**Important:** Current live trading data (27 trades) is in calibration phase. These estimates will be revised after 500+ trades with optimized parameters.
+**Important:** Current live trading data (119 trades, 37.8% win rate) is in calibration phase with Shadow Portfolio learning. These estimates will be revised after 500+ trades with optimized filters.
 
 ---
 

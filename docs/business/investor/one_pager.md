@@ -1,5 +1,5 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
-## Executive Summary | December 2025
+# OMNIX V6.5.4d INSTITUTIONAL+
+## Executive Summary | January 2026
 
 ---
 
@@ -30,30 +30,30 @@
 
 | Metric | Value | Context |
 |--------|-------|---------|
-| Total Trades | 27 | Paper trading calibration phase |
-| Winning Trades | 7 | Win rate improving with optimization |
-| Open Positions | 8 | Actively managed |
-| Current Balance | $897,688.55 | From $1M initial |
+| Total Trades | 119 | Paper trading calibration phase |
+| Winning Trades | 45 | Win rate: 37.8% |
+| Shadow Events | 279 | Vetoed trades tracked for learning |
+| Current Balance | $880,918.28 | From $1M initial |
 | System Uptime | 99.9% | Production-ready |
 | Modules Active | 15+ | All core engines operational |
 
-**Current Phase:** System calibration with PAPER_OPTIMIZED profile. The system is being tuned for higher selectivity (60% coherence threshold) to improve win rate before scaling trade volume.
+**Current Phase:** System calibration with Shadow Portfolio learning. Every blocked trade is analyzed to determine if filters are too conservative or too loose.
 
-**Target:** 500+ trades over 60 days with 55%+ win rate to establish verified track record.
+**Target:** 500+ trades with 55%+ win rate to establish verified track record.
 
 ---
 
-### V6.5.4 INSTITUTIONAL+ PREMIUM FEATURES
+### V6.5.4d INSTITUTIONAL+ FEATURES
 
 | Feature | Description |
 |---------|-------------|
-| **InstitutionalDecisionLogger** | 11 lifecycle events (TRADE_CANDIDATE, VETO_*, TRADE_VALIDATED, TRADE_EXECUTED, AI_NARRATIVE) with unique decision_id for complete audit trail |
+| **Shadow Portfolio System** | Counterfactual analysis of vetoed trades - learns from blocked decisions to calibrate filters |
+| **Veto Tracking System** | Real-time capital protection tracking with PostgreSQL persistence |
+| **Adaptive Coherence Gate** | Dynamic thresholds based on EMA score + Black Swan severity |
+| **InstitutionalDecisionLogger** | 11 lifecycle events with unique decision_id for complete audit trail |
 | **Volatility-Based SL/TP** | High-vol pairs (DOT, AVAX, SOL): 2.5%/4.5% SL/TP; Normal pairs (BTC, ETH): 1.5%/3.0% |
 | **Execution Protocol V6.5.4** | LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, dynamic TWAP/VWAP/ICEBERG selection |
-| **PAPER_OPTIMIZED Profile** | Tuned for track record: 60% coherence threshold, 2:1 R:R ratio, 22% min confidence |
-| **Trading Profiles System** | 6 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED, PRODUCTION_STABLE - switchable via environment |
 | **InstitutionalMetricsCalculator** | Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide |
-| **PDF Report Generator** | 989-line institutional PDF with Monte Carlo projections (10,000 real iterations) |
 | **Dual Dashboard Architecture** | Flask API (port 5000) + Streamlit investor visualization (port 8080) |
 
 ---
@@ -158,4 +158,4 @@ Founder & CEO
 
 **Valuation Analysis:** See `financial_projections.md` Section 5 for detailed market comparables and methodology.
 
-**Last Updated:** December 8, 2025
+**Last Updated:** January 9, 2026

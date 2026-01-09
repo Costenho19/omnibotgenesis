@@ -1,7 +1,7 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM - Current System Metrics
+# OMNIX V6.5.4d INSTITUTIONAL+ - Current System Metrics
 ## Real-Time Transparency Report
 
-**Last Updated:** December 8, 2025  
+**Last Updated:** January 9, 2026  
 **Data Source:** Production Database (Railway)
 
 ---
@@ -12,25 +12,21 @@
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| **Total Trades** | 27 | Paper trading calibration phase |
-| **Winning Trades** | 7 | |
-| **Losing Trades** | 20 | |
-| **Win Rate** | 25.9% | Below target - optimizing parameters |
-| **Total P&L** | -$3,077.84 | Calibration losses expected |
-| **Best Trade** | +$252.90 | |
-| **Worst Trade** | -$1,007.16 | Outlier during volatile period |
-| **Total Gains** | +$365.34 | |
-| **Total Losses** | -$2,477.83 | |
-| **Open Positions** | 8 | Actively managed |
+| **Total Trades** | 119 | Paper trading calibration phase |
+| **Winning Trades** | 45 | |
+| **Losing Trades** | 74 | |
+| **Win Rate** | 37.8% | Improving with filter calibration |
+| **Total P&L** | -$15,198.73 | Calibration losses - learning phase |
+| **Shadow Events** | 279 | Vetoed trades tracked for analysis |
+| **Open Positions** | 0 | All positions closed |
 
 ### Account Status
 
 | Metric | Value |
 |--------|-------|
 | **Starting Balance** | $1,000,000 |
-| **Current Balance** | $897,688.55 |
-| **Unrealized P&L** | In open positions |
-| **Max Drawdown** | 10.23% |
+| **Current Balance** | $880,918.28 |
+| **Total Drawdown** | 11.9% |
 | **Sharpe Ratio** | Calculating... |
 
 ---
@@ -91,7 +87,7 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | **Execution Protocol** | **Active** | **V6.5.4 PREMIUM** |
 | **Position Manager** | **Active** | **V6.5.4 PREMIUM** |
 
-### New V6.5.4 Features
+### New V6.5.4d Features
 
 | Feature | Description |
 |---------|-------------|
@@ -100,6 +96,9 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | **Execution Protocol PREMIUM** | Citadel-level TWAP/VWAP/ICEBERG execution |
 | **Trading Profiles System** | 5 profiles: INSTITUTIONAL, PAPER_AGGRESSIVE, BALANCED, PAPER_OPTIMIZED, WIN_RATE_OPTIMIZED |
 | **Audit Trail Events** | TRADE_CANDIDATE, VETO_COHERENCE, VETO_CONSENSUS, VETO_DRAWDOWN, VETO_RISK_GUARDIAN, VETO_HMM_REGIME, VETO_POSITION_LIMIT, TRADE_VALIDATED, TRADE_EXECUTED, TRADE_REJECTED, AI_NARRATIVE |
+| **Shadow Portfolio System** | Counterfactual analysis of vetoed trades for filter calibration |
+| **Veto Tracking System** | Real-time capital protection tracking with PostgreSQL persistence |
+| **Adaptive Coherence Gate** | Dynamic thresholds based on EMA score + Black Swan severity |
 
 ### V6.5.4 PREMIUM Panel Features (Dec 8, 2025)
 
@@ -216,5 +215,31 @@ All metrics are pulled directly from the production database with no manual adju
 
 *For historical data access or custom reports, contact the OMNIX team.*
 
-**Document Version:** V6.5.4.2  
-**Last Updated:** December 8, 2025
+---
+
+## SHADOW PORTFOLIO SYSTEM (January 2026)
+
+### What It Does
+
+Every blocked trade is tracked and analyzed 24-30 hours later to determine if the veto was correct:
+
+| Metric | Description |
+|--------|-------------|
+| **Shadow Events Captured** | 279 trades blocked and tracked |
+| **Veto Types Tracked** | COHERENCE_GATE, MONTE_CARLO, BLACK_SWAN, RMS |
+| **Analysis Window** | 24-720 hours post-veto |
+| **Output** | Veto accuracy %, missed opportunities, filter recommendations |
+
+### Investor Value
+
+> "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed to determine filter accuracy. This data-driven approach ensures our risk filters are neither too conservative (blocking profitable opportunities) nor too loose (allowing losing trades). The system learns from its own decisions."
+
+### Dashboard Access
+
+- **Streamlit Dashboard** → "Shadow Portfolio" tab
+- Shows: Accuracy by veto type, top missed opportunities, calibration recommendations
+
+---
+
+**Document Version:** V6.5.4d  
+**Last Updated:** January 9, 2026

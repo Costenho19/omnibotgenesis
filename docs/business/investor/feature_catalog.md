@@ -1,12 +1,12 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
+# OMNIX V6.5.4d INSTITUTIONAL+
 ## Complete Feature Catalog
 ### End-User Functionality Reference
 
 ---
 
 **Document Classification:** Feature Documentation  
-**Version:** 1.0  
-**Date:** December 2025  
+**Version:** 1.1  
+**Date:** January 2026  
 **Purpose:** Comprehensive catalog of all user-facing features for investor due diligence
 
 ---
@@ -170,6 +170,37 @@
 - AdaptiveGateDecision DTO for transparent decision tracking
 - Real-time Railway logging: `ADAPTIVE_GATE_DECISION` events
 - Fail-closed safety: Any exception blocks trade (capital protection priority)
+
+### 3.6 Shadow Portfolio System (Jan 2026)
+
+| Feature | Description | User Benefit |
+|---------|-------------|--------------|
+| **Counterfactual Analysis** | Tracks every blocked trade | Learn if vetos were correct |
+| **24-720h Analysis Window** | Analyzes price movement after veto | Data-driven filter calibration |
+| **Veto Accuracy Metrics** | Accuracy % by veto type | Identify overprotective filters |
+| **Missed Opportunity Detection** | Finds profitable blocked trades | Optimize filter thresholds |
+| **Calibration Recommendations** | Automatic threshold suggestions | Continuous improvement |
+
+**Investor Value Proposition:**
+> "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed 24-30 hours later to determine filter accuracy. This data-driven approach ensures our risk filters learn from their own decisions."
+
+**Technical Implementation:**
+- Tables: `shadow_trade_events`, `shadow_trade_outcomes`, `filter_calibration_metrics`
+- Daily cron job: 05:00 UTC via Railway
+- Dashboard: Streamlit "Shadow Portfolio" tab
+- Thresholds: >1% gain = incorrect veto, <1% marginal = correct veto
+
+### 3.7 Veto Tracking System (Jan 2026)
+
+| Feature | Description | User Benefit |
+|---------|-------------|--------------|
+| **Real-time Logging** | Every veto persisted to PostgreSQL | Complete audit trail |
+| **Capital Protection Metrics** | Tracks potential losses avoided | Investor reporting |
+| **Deduplication** | Prevents inflated reporting | Accurate metrics |
+| **Dashboard Integration** | Veto stats in main dashboard | Transparency |
+
+**Investor Value Proposition:**
+> "OMNIX tracks every blocked trade with the capital at risk, providing verifiable metrics on how much potential loss the system prevented."
 
 ---
 
@@ -408,6 +439,6 @@ SELECT COUNT(*) FROM user_settings;
 
 *This document is automatically updated with each major release.*
 
-**Document Version:** 1.0  
-**Last Updated:** December 8, 2025  
-**Next Review:** January 2026
+**Document Version:** 1.1  
+**Last Updated:** January 9, 2026  
+**Next Review:** February 2026
