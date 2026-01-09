@@ -129,6 +129,21 @@ def load_quarantine():
         return {}
 
 
+def load_shadow_portfolio():
+    try:
+        client = get_api_client()
+        response = client.get_shadow_portfolio()
+        
+        if not response.get('success'):
+            return {}
+        
+        return response.get('shadow_portfolio', {})
+        
+    except Exception as e:
+        st.error(f"Error loading shadow portfolio data: {e}")
+        return {}
+
+
 def main():
     st.markdown(f'<p class="header-title">OMNIX {VERSION_BANNER}</p>', unsafe_allow_html=True)
     st.markdown("### Investor-Grade Trading Analytics Dashboard")
@@ -147,7 +162,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")
-        page = st.radio("", ["Overview", "Risk Metrics", "Expectancy", "Pair Analysis", "Asset Quarantine", "Calibration"])
+        page = st.radio("", ["Overview", "Risk Metrics", "Expectancy", "Pair Analysis", "Shadow Portfolio", "Asset Quarantine", "Calibration"])
         st.markdown("---")
         st.markdown("**Last Updated**")
         st.markdown(f"🕐 {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -155,6 +170,7 @@ def main():
     metrics = load_metrics()
     calibration = load_calibration()
     quarantine = load_quarantine()
+    shadow_portfolio = load_shadow_portfolio()
     
     if page == "Overview":
         render_overview(metrics, quarantine)
@@ -164,10 +180,169 @@ def main():
         render_expectancy()
     elif page == "Pair Analysis":
         render_pair_analysis(metrics)
+    elif page == "Shadow Portfolio":
+        render_shadow_portfolio(shadow_portfolio)
     elif page == "Asset Quarantine":
         render_quarantine(quarantine)
     elif page == "Calibration":
         render_calibration(calibration)
+
+
+def render_shadow_portfolio(shadow_portfolio):
+    st.markdown("## Shadow Portfolio Analysis")
+    st.markdown("*Counterfactual analysis of vetoed trades - Filter Learning System*")
+    
+    if not shadow_portfolio:
+        st.info("No shadow portfolio data available yet. The system will populate this after analyzing vetoed trades.")
+        st.markdown("""
+        **How it works:**
+        1. When a trade is blocked by a veto (Monte Carlo, Coherence, Black Swan, etc.), the system logs the trade details
+        2. After 24+ hours, the Shadow Portfolio Runner analyzes what would have happened
+        3. This data helps calibrate filters to optimize the balance between protection and opportunity
+        """)
+        return
+    
+    summary = shadow_portfolio.get('summary', {})
+    veto_accuracy = shadow_portfolio.get('veto_accuracy', [])
+    missed_opportunities = shadow_portfolio.get('missed_opportunities', [])
+    calibration = shadow_portfolio.get('calibration_recommendations', [])
+    
+    total_analyzed = summary.get('total_analyzed', 0)
+    correct_vetos = summary.get('correct_vetos', 0)
+    incorrect_vetos = summary.get('incorrect_vetos', 0)
+    accuracy_pct = summary.get('accuracy_pct', 0)
+    potential_missed = summary.get('potential_profit_missed', 0)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Trades Analyzed",
+            f"{total_analyzed:,}",
+            delta="COUNTERFACTUAL",
+            delta_color="off"
+        )
+    
+    with col2:
+        color = "normal" if accuracy_pct >= 60 else "inverse"
+        st.metric(
+            "Veto Accuracy",
+            f"{accuracy_pct:.1f}%",
+            delta=f"{correct_vetos} correct / {incorrect_vetos} incorrect",
+            delta_color=color
+        )
+    
+    with col3:
+        st.metric(
+            "Correct Vetos",
+            f"{correct_vetos:,}",
+            delta="PROTECTED",
+            delta_color="normal"
+        )
+    
+    with col4:
+        st.metric(
+            "Potential Missed",
+            f"{potential_missed:.1f}%",
+            delta="OPPORTUNITY COST",
+            delta_color="inverse" if potential_missed > 10 else "normal"
+        )
+    
+    st.markdown("---")
+    
+    if veto_accuracy:
+        st.markdown("### Accuracy by Veto Type")
+        
+        veto_types = [v['veto_type'] for v in veto_accuracy]
+        accuracies = [v['accuracy_pct'] for v in veto_accuracy]
+        totals = [v['total'] for v in veto_accuracy]
+        
+        colors = [DARK_THEME['positive'] if a >= 60 else DARK_THEME['warning'] if a >= 40 else DARK_THEME['negative'] for a in accuracies]
+        
+        fig = go.Figure(data=[
+            go.Bar(
+                x=veto_types,
+                y=accuracies,
+                marker_color=colors,
+                text=[f"{a:.1f}%<br>({t} trades)" for a, t in zip(accuracies, totals)],
+                textposition='auto'
+            )
+        ])
+        fig.add_hline(y=60, line_dash="dash", line_color=DARK_THEME['positive'], annotation_text="Target 60%")
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=350,
+            yaxis_title="Accuracy %",
+            xaxis_title="Veto Type",
+            margin=dict(l=20, r=20, t=20, b=40)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        for v in veto_accuracy:
+            if v['accuracy_pct'] < 50:
+                st.warning(f"**{v['veto_type']}** has low accuracy ({v['accuracy_pct']:.1f}%) - consider loosening threshold")
+    
+    st.markdown("---")
+    
+    if missed_opportunities:
+        st.markdown("### Top Missed Opportunities")
+        st.markdown("*Trades that were blocked but would have been profitable*")
+        
+        for opp in missed_opportunities[:5]:
+            symbol = opp.get('symbol', 'Unknown')
+            action = opp.get('action', 'BUY')
+            gain = opp.get('would_have_gained_pct', 0)
+            blocked_by = opp.get('blocked_by', 'UNKNOWN')
+            
+            color = DARK_THEME['positive'] if gain > 3 else DARK_THEME['blue']
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 100%); 
+                        border: 1px solid {color}; border-radius: 10px; padding: 15px; margin: 10px 0;">
+                <span style="font-size: 18px; font-weight: bold; color: {color};">{symbol} {action}</span>
+                <span style="float: right; color: #888;">Blocked by {blocked_by}</span>
+                <br/>
+                <span style="color: {DARK_THEME['positive']}; font-weight: bold; font-size: 24px;">+{gain:.2f}%</span>
+                <span style="color: #888; margin-left: 10px;">would have gained</span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.success("No significant missed opportunities detected - filters are well calibrated!")
+    
+    st.markdown("---")
+    
+    if calibration:
+        st.markdown("### Filter Calibration Recommendations")
+        
+        data = []
+        for cal in calibration:
+            data.append({
+                'Filter': cal.get('filter', 'Unknown'),
+                'Current': f"{cal.get('current', 0):.2f}" if cal.get('current') else '--',
+                'Recommended': f"{cal.get('recommended', 0):.2f}" if cal.get('recommended') else '--',
+                'Action': cal.get('action', 'KEEP'),
+                'Accuracy': f"{cal.get('accuracy_pct', 0):.1f}%",
+                'Trades': cal.get('trades_analyzed', 0)
+            })
+        
+        df = pd.DataFrame(data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    st.markdown("---")
+    st.markdown("### Why This Matters for Investors")
+    st.markdown("""
+    The **Shadow Portfolio System** implements institutional-grade counterfactual analysis:
+    
+    - **Every blocked trade is tracked** and analyzed 24-30 days later
+    - **Veto accuracy** shows whether our risk filters are protecting capital effectively
+    - **Missed opportunities** identify if filters are too conservative
+    - **Calibration recommendations** use data to optimize filter thresholds
+    
+    This data-driven approach ensures our risk management evolves based on real market outcomes,
+    not just theoretical models. The system **learns from its own decisions**.
+    """)
 
 
 def render_quarantine(quarantine):

@@ -135,4 +135,41 @@ SELECT COUNT(*) FROM paper_trading_trades;
 
 ---
 
+## Cron Jobs
+
+### Shadow Portfolio Runner
+
+Analiza trades bloqueados (vetoed) para calibrar filtros de riesgo.
+
+**Configuración:**
+
+| Campo | Valor |
+|-------|-------|
+| Name | `shadow-portfolio-runner` |
+| Schedule | `0 5 * * *` (05:00 UTC diario) |
+| Command | `bash scripts/operations/run_shadow_portfolio.sh` |
+
+**Via CLI:**
+```bash
+railway cron create \
+  --schedule "0 5 * * *" \
+  --command "bash scripts/operations/run_shadow_portfolio.sh"
+```
+
+**Variables opcionales:**
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SHADOW_MIN_AGE_HOURS` | 24 | Edad mínima de vetos |
+| `SHADOW_MAX_EVENTS` | 250 | Máximo eventos por ejecución |
+
+**Verificar ejecución:**
+```bash
+railway cron run shadow-portfolio-runner
+```
+
+**Runbook completo:** [shadow_portfolio_runner.md](runbooks/shadow_portfolio_runner.md)
+
+---
+
 *OMNIX V6.5.4d INSTITUTIONAL+*

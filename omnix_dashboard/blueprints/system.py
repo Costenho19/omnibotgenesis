@@ -954,3 +954,142 @@ def api_paper_tracker():
         },
         'timestamp': datetime.now().isoformat()
     })
+
+
+@system_bp.route('/api/system/shadow-portfolio')
+@require_api_key
+def api_shadow_portfolio():
+    """
+    Shadow Portfolio API: Counterfactual analysis of vetoed trades.
+    Returns veto accuracy by type, missed opportunities, and calibration recommendations.
+    """
+    veto_accuracy = []
+    missed_opportunities = []
+    calibration_recommendations = []
+    summary = {
+        'total_analyzed': 0,
+        'correct_vetos': 0,
+        'incorrect_vetos': 0,
+        'accuracy_pct': 0.0,
+        'potential_profit_missed': 0.0
+    }
+    
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                return jsonify({
+                    'success': False,
+                    'error': 'Database connection unavailable'
+                }), 503
+            
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT 
+                    veto_type,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN veto_was_correct THEN 1 ELSE 0 END) as correct,
+                    ROUND(100.0 * SUM(CASE WHEN veto_was_correct THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 1) as accuracy
+                FROM shadow_trade_outcomes
+                GROUP BY veto_type
+                ORDER BY total DESC
+            ''')
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                veto_accuracy.append({
+                    'veto_type': row[0],
+                    'total': row[1],
+                    'correct': row[2],
+                    'accuracy_pct': float(row[3]) if row[3] else 0.0
+                })
+                summary['total_analyzed'] += row[1]
+                summary['correct_vetos'] += row[2]
+            
+            summary['incorrect_vetos'] = summary['total_analyzed'] - summary['correct_vetos']
+            if summary['total_analyzed'] > 0:
+                summary['accuracy_pct'] = round(100.0 * summary['correct_vetos'] / summary['total_analyzed'], 1)
+            
+            cursor.execute('''
+                SELECT 
+                    e.symbol,
+                    e.intended_action,
+                    e.entry_price,
+                    o.counterfactual_pnl_24h,
+                    o.max_favorable_pct,
+                    o.verdict_reason,
+                    e.veto_type,
+                    o.analyzed_at
+                FROM shadow_trade_outcomes o
+                JOIN shadow_trade_events e ON o.event_id = e.id
+                WHERE o.veto_was_correct = false
+                AND o.counterfactual_pnl_24h > 1.5
+                ORDER BY o.counterfactual_pnl_24h DESC
+                LIMIT 10
+            ''')
+            
+            missed_rows = cursor.fetchall()
+            for row in missed_rows:
+                missed_opportunities.append({
+                    'symbol': row[0],
+                    'action': row[1],
+                    'entry_price': float(row[2]) if row[2] else 0,
+                    'would_have_gained_pct': float(row[3]) if row[3] else 0,
+                    'max_favorable_pct': float(row[4]) if row[4] else 0,
+                    'reason': row[5],
+                    'blocked_by': row[6],
+                    'analyzed_at': row[7].isoformat() if row[7] else None
+                })
+                if row[3]:
+                    summary['potential_profit_missed'] += float(row[3])
+            
+            cursor.execute('''
+                SELECT 
+                    filter_name,
+                    current_threshold,
+                    recommended_threshold,
+                    recommended_action,
+                    trades_analyzed,
+                    accuracy_pct,
+                    would_have_won_pct,
+                    updated_at
+                FROM filter_calibration_metrics
+                ORDER BY updated_at DESC
+                LIMIT 10
+            ''')
+            
+            cal_rows = cursor.fetchall()
+            for row in cal_rows:
+                calibration_recommendations.append({
+                    'filter': row[0],
+                    'current': float(row[1]) if row[1] else None,
+                    'recommended': float(row[2]) if row[2] else None,
+                    'action': row[3],
+                    'trades_analyzed': row[4],
+                    'accuracy_pct': float(row[5]) if row[5] else 0,
+                    'would_have_won_pct': float(row[6]) if row[6] else 0,
+                    'updated_at': row[7].isoformat() if row[7] else None
+                })
+            
+            cursor.close()
+    
+    except Exception as e:
+        logger.error(f"Shadow portfolio query failed: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'note': 'Tables may not exist yet - run migration V007',
+            'shadow_portfolio': None,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return jsonify({
+        'success': True,
+        'shadow_portfolio': {
+            'summary': summary,
+            'veto_accuracy': veto_accuracy,
+            'missed_opportunities': missed_opportunities,
+            'calibration_recommendations': calibration_recommendations
+        },
+        'timestamp': datetime.now().isoformat()
+    })

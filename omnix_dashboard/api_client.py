@@ -89,6 +89,10 @@ class OmnixAPIClient:
         """Operación Lucidez: Get expectancy segmented by HMM regime + coherence bucket"""
         return self._request('/api/metrics/expectancy')
     
+    def get_shadow_portfolio(self) -> Dict[str, Any]:
+        """Shadow Portfolio: Get veto analysis and filter calibration metrics"""
+        return self._request('/api/system/shadow-portfolio')
+    
     def download_pdf_report(self) -> Optional[bytes]:
         url = f"{self.base_url}/api/report/pdf"
         try:

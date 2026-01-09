@@ -318,6 +318,21 @@ Si la clave no existe o expiró → el loop está muerto → reiniciar con `/rea
 | Risk events | `risk_guardian_events` table |
 | Dashboard | Flask console |
 
+### 5.5 Veto Calibration (Shadow Portfolio)
+
+El sistema captura todos los trades bloqueados y los analiza después de 24+ horas para determinar si el veto fue correcto.
+
+**Dashboard:** Streamlit → "Shadow Portfolio" tab
+
+**Cron Job:** Corre diariamente a las 05:00 UTC
+
+**Tablas involucradas:**
+- `shadow_trade_events` - Trades bloqueados con contexto
+- `shadow_trade_outcomes` - Análisis contrafactual
+- `filter_calibration_metrics` - Recomendaciones de calibración
+
+**Runbook:** [shadow_portfolio_runner.md](../operations/runbooks/shadow_portfolio_runner.md)
+
 ---
 
 ## Appendix: Track Record Progress

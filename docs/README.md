@@ -18,6 +18,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Shadow Portfolio + Cron Job + Dashboard Widget (Jan 9, 2026)
+- **SHADOW PORTFOLIO COMPLETE**: Sistema de análisis contrafactual de trades bloqueados
+- **CRON JOB**: `scripts/operations/run_shadow_portfolio.sh` para Railway (05:00 UTC diario)
+- **DASHBOARD WIDGET**: Nueva pestaña "Shadow Portfolio" en Streamlit con:
+  - Accuracy por tipo de veto (gráfico de barras)
+  - Top missed opportunities (trades rentables bloqueados)
+  - Recomendaciones de calibración de filtros
+- **RUNBOOK**: `docs/operations/runbooks/shadow_portfolio_runner.md`
+- Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles
+
 ### Veto Tracking System + psycopg v3 Fix (Jan 7, 2026)
 - **SISTEMA VETO TRACKING**: Persistencia real de capital protegido en PostgreSQL
 - **FIX psycopg v3**: VetoRepository ahora compatible con `psycopg[binary]` (v3) y fallback a psycopg2

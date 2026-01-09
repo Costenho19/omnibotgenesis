@@ -19,7 +19,9 @@
 | **ShadowPortfolioRepository** | ✅ CREADO | Mismo patrón que VetoRepository |
 | **Bot Instrumentación** | ✅ COMPLETO | 5 veto call sites pasan shadow_context (MC x2, RMS, COHERENCE_GATE, BLACK_SWAN) |
 | **Counterfactual Runner** | ✅ COMPLETO | ShadowPortfolioRunner con CLI entrypoint |
-| **Dashboard Widget** | 🔜 PENDIENTE | Visualización de calibración de filtros |
+| **Dashboard Widget** | ✅ COMPLETO | Streamlit "Shadow Portfolio" tab con accuracy, missed opportunities, recommendations |
+| **Cron Job Script** | ✅ COMPLETO | `scripts/operations/run_shadow_portfolio.sh` para Railway |
+| **Runbook** | ✅ COMPLETO | `docs/operations/runbooks/shadow_portfolio_runner.md` |
 
 **Datos Capturados por Trade Bloqueado:**
 - Contexto de trade: symbol, action, price, position size
@@ -76,6 +78,22 @@ Options:
 **Threshold Alignment:**
 - `would_have_won` = P&L > 1.0% (consistent with veto correctness boundary)
 - Marginal zone = |P&L| < 1.0% (veto considered correct)
+
+**Cron Job Schedule:**
+```
+Railway Cron: 0 5 * * * (05:00 UTC daily)
+Command: bash scripts/operations/run_shadow_portfolio.sh
+Environment Variables:
+  SHADOW_MIN_AGE_HOURS=24 (default)
+  SHADOW_MAX_EVENTS=250 (default)
+```
+
+**Dashboard Widget:**
+Streamlit → "Shadow Portfolio" tab muestra:
+- Veto Accuracy by type (gráfico de barras)
+- Top Missed Opportunities (trades que hubieran sido rentables)
+- Filter Calibration Recommendations (tabla)
+- Investor-grade explanation
 
 **Investor Language:**
 > "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed 30 days later to determine filter accuracy. This data-driven approach ensures our risk filters are neither too conservative (blocking profitable opportunities) nor too loose (allowing losing trades). The system learns from its own decisions."
