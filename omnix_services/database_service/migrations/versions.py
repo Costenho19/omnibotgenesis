@@ -422,3 +422,235 @@ MIGRATIONS.register(Migration(
     description="Create trading_veto_log table for real-time veto tracking",
     apply_func=v006_create_trading_veto_log
 ))
+
+
+def v007_create_shadow_portfolio_tables(cursor: Any) -> bool:
+    """
+    V007: Shadow Portfolio + Learning Engine tables
+    
+    Creates tables to track blocked trades for counterfactual analysis:
+    - shadow_trade_events: Records every vetoed trade with full market context
+    - shadow_trade_outcomes: 30-day counterfactual results (what would have happened)
+    - filter_calibration_metrics: Aggregated metrics per veto type for filter tuning
+    
+    This enables:
+    - Counterfactual backtesting: "What if we executed this blocked trade?"
+    - Filter calibration: "Which filters are blocking good opportunities?"
+    - Learning engine: Data-driven adjustment of veto thresholds
+    
+    NON-DESTRUCTIVE: Only creates tables if not exist.
+    """
+    try:
+        if not _check_table_exists(cursor, 'shadow_trade_events'):
+            logger.info("Creating shadow_trade_events table...")
+            cursor.execute("""
+                CREATE TABLE shadow_trade_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    
+                    -- Trade Context
+                    symbol VARCHAR(20) NOT NULL,
+                    market VARCHAR(10) DEFAULT 'crypto',
+                    intended_action VARCHAR(10) NOT NULL,
+                    intended_quantity NUMERIC(18,8),
+                    intended_entry_price NUMERIC(18,8),
+                    intended_position_size_usd NUMERIC(18,2),
+                    
+                    -- Veto Information
+                    veto_type VARCHAR(30) NOT NULL,
+                    veto_reason TEXT,
+                    blocked_capital NUMERIC(18,2) DEFAULT 0,
+                    
+                    -- Strategy Signals at Veto Time
+                    ema_score NUMERIC(5,2),
+                    ema_signal VARCHAR(10),
+                    hmm_regime VARCHAR(20),
+                    coherence_score NUMERIC(5,2),
+                    monte_carlo_er NUMERIC(8,4),
+                    black_swan_prob NUMERIC(5,2),
+                    kelly_fraction NUMERIC(5,4),
+                    strategy_confidence NUMERIC(5,2),
+                    
+                    -- Market Snapshot at Veto Time
+                    bid_price NUMERIC(18,8),
+                    ask_price NUMERIC(18,8),
+                    spread_bps NUMERIC(8,2),
+                    atr_14 NUMERIC(18,8),
+                    volume_24h NUMERIC(18,2),
+                    volatility_1h NUMERIC(8,4),
+                    
+                    -- Intended Exit Strategy
+                    intended_stop_loss NUMERIC(18,8),
+                    intended_take_profit NUMERIC(18,8),
+                    intended_holding_period_hours INTEGER DEFAULT 24,
+                    
+                    -- Counterfactual Tracking
+                    outcome_calculated BOOLEAN DEFAULT FALSE,
+                    outcome_calculated_at TIMESTAMPTZ,
+                    
+                    -- Full Decision Payload (JSONB for flexibility)
+                    decision_trace JSONB DEFAULT '{}'::jsonb,
+                    metadata JSONB DEFAULT '{}'::jsonb
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE INDEX idx_shadow_events_created 
+                ON shadow_trade_events(created_at DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX idx_shadow_events_veto_type 
+                ON shadow_trade_events(veto_type, created_at DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX idx_shadow_events_symbol 
+                ON shadow_trade_events(symbol, created_at DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX idx_shadow_events_outcome 
+                ON shadow_trade_events(outcome_calculated, created_at)
+            """)
+            
+            cursor.execute("""
+                COMMENT ON TABLE shadow_trade_events IS 
+                'Shadow Portfolio: Tracks all vetoed trades for counterfactual analysis and filter calibration'
+            """)
+            
+            logger.info("shadow_trade_events table created successfully")
+        else:
+            logger.info("Table shadow_trade_events already exists - skipping")
+        
+        if not _check_table_exists(cursor, 'shadow_trade_outcomes'):
+            logger.info("Creating shadow_trade_outcomes table...")
+            cursor.execute("""
+                CREATE TABLE shadow_trade_outcomes (
+                    id BIGSERIAL PRIMARY KEY,
+                    shadow_event_id BIGINT NOT NULL REFERENCES shadow_trade_events(id),
+                    calculated_at TIMESTAMPTZ DEFAULT NOW(),
+                    
+                    -- Price Movement After Veto
+                    price_at_veto NUMERIC(18,8),
+                    price_after_1h NUMERIC(18,8),
+                    price_after_4h NUMERIC(18,8),
+                    price_after_24h NUMERIC(18,8),
+                    price_after_7d NUMERIC(18,8),
+                    price_after_30d NUMERIC(18,8),
+                    
+                    -- Counterfactual P&L (if trade was executed)
+                    would_have_won BOOLEAN,
+                    counterfactual_pnl_1h NUMERIC(18,4),
+                    counterfactual_pnl_4h NUMERIC(18,4),
+                    counterfactual_pnl_24h NUMERIC(18,4),
+                    counterfactual_pnl_7d NUMERIC(18,4),
+                    counterfactual_pnl_30d NUMERIC(18,4),
+                    counterfactual_pnl_pct NUMERIC(8,4),
+                    
+                    -- Max Adverse/Favorable Movement
+                    max_drawdown_pct NUMERIC(8,4),
+                    max_favorable_pct NUMERIC(8,4),
+                    time_to_stop_loss_hours INTEGER,
+                    time_to_take_profit_hours INTEGER,
+                    
+                    -- Optimal Exit Analysis
+                    optimal_exit_price NUMERIC(18,8),
+                    optimal_exit_time TIMESTAMPTZ,
+                    optimal_pnl NUMERIC(18,4),
+                    
+                    -- Verdict
+                    veto_was_correct BOOLEAN,
+                    verdict_reason TEXT,
+                    
+                    UNIQUE(shadow_event_id)
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE INDEX idx_shadow_outcomes_event 
+                ON shadow_trade_outcomes(shadow_event_id)
+            """)
+            cursor.execute("""
+                CREATE INDEX idx_shadow_outcomes_verdict 
+                ON shadow_trade_outcomes(veto_was_correct, calculated_at)
+            """)
+            
+            cursor.execute("""
+                COMMENT ON TABLE shadow_trade_outcomes IS 
+                'Counterfactual outcomes: What would have happened if vetoed trades were executed'
+            """)
+            
+            logger.info("shadow_trade_outcomes table created successfully")
+        else:
+            logger.info("Table shadow_trade_outcomes already exists - skipping")
+        
+        if not _check_table_exists(cursor, 'filter_calibration_metrics'):
+            logger.info("Creating filter_calibration_metrics table...")
+            cursor.execute("""
+                CREATE TABLE filter_calibration_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    calculated_at TIMESTAMPTZ DEFAULT NOW(),
+                    period_start TIMESTAMPTZ NOT NULL,
+                    period_end TIMESTAMPTZ NOT NULL,
+                    
+                    -- Filter Identification
+                    veto_type VARCHAR(30) NOT NULL,
+                    symbol VARCHAR(20),
+                    market VARCHAR(10) DEFAULT 'crypto',
+                    
+                    -- Volume Metrics
+                    total_vetoes INTEGER DEFAULT 0,
+                    vetoes_with_outcomes INTEGER DEFAULT 0,
+                    
+                    -- Accuracy Metrics
+                    correct_vetoes INTEGER DEFAULT 0,
+                    incorrect_vetoes INTEGER DEFAULT 0,
+                    veto_accuracy_pct NUMERIC(5,2),
+                    
+                    -- P&L Metrics (if trades were executed)
+                    avg_counterfactual_pnl NUMERIC(18,4),
+                    total_counterfactual_pnl NUMERIC(18,4),
+                    win_rate_if_executed NUMERIC(5,2),
+                    
+                    -- Capital Protection
+                    capital_correctly_protected NUMERIC(18,2),
+                    capital_opportunity_missed NUMERIC(18,2),
+                    
+                    -- Recommendation
+                    recommended_threshold_adjustment NUMERIC(5,2),
+                    recommendation_confidence NUMERIC(5,2),
+                    recommendation_notes TEXT,
+                    
+                    UNIQUE(period_start, period_end, veto_type, symbol)
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE INDEX idx_calibration_period 
+                ON filter_calibration_metrics(period_end DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX idx_calibration_veto_type 
+                ON filter_calibration_metrics(veto_type, period_end DESC)
+            """)
+            
+            cursor.execute("""
+                COMMENT ON TABLE filter_calibration_metrics IS 
+                'Aggregated metrics per veto type for data-driven filter threshold calibration'
+            """)
+            
+            logger.info("filter_calibration_metrics table created successfully")
+        else:
+            logger.info("Table filter_calibration_metrics already exists - skipping")
+        
+        logger.info("Migration V007 (Shadow Portfolio tables) applied successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Migration V007 failed: {e}")
+        return False
+
+
+MIGRATIONS.register(Migration(
+    version="V007",
+    description="Shadow Portfolio + Learning Engine tables for counterfactual analysis",
+    apply_func=v007_create_shadow_portfolio_tables
+))
