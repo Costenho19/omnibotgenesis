@@ -2658,9 +2658,10 @@ class AutoTradingBot:
             # If this log appears after a veto, the early return failed
             logger.debug(f"[EXEC_PATH] Proceeding to Coherence Gate for {symbol} - No MC/RMS veto applied")
             
-            # ========== V6.5.4d COHERENCE PRE-GATE (ANTES del scoring) ==========
+            # ========== V6.5.4d ADAPTIVE COHERENCE PRE-GATE (Jan 9, 2026) ==========
             # Coherence actúa como GATE: si no hay consenso mínimo, no hay scoring
-            # Esto elimina falsos positivos y reduce overtrading
+            # V6.5.4d: Usa thresholds adaptativos basados en EMA score + Black Swan severity
+            # La lógica está centralizada en CoherenceEngine.evaluate_pre_scoring_gate()
             coherence_gate_passed = True
             coherence_pre_score = None
             
@@ -2672,35 +2673,52 @@ class AutoTradingBot:
                         hmm_regime, kalman, quantum, non_markovian
                     )
                     
-                    # Evaluar coherencia ANTES del scoring
-                    coherence_report = self.coherence_engine.analyze_coherence(strategy_signals)
-                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
-                    coherence_pre_score = safe_float(coherence_report.coherence_score, 0.0)
+                    # V6.5.4d: Calcular EMA score points para Adaptive Gate
+                    # Score buckets: 0 (none), 12 (weak), 25 (moderate), 40 (strong)
+                    ema_score_pts = 0
+                    if ema_confidence >= 0.70:
+                        ema_score_pts = 40  # Strong signal
+                    elif ema_confidence >= 0.50:
+                        ema_score_pts = 25  # Moderate signal
+                    elif ema_confidence > 0:
+                        ema_score_pts = 12  # Weak signal
                     
-                    # Obtener umbrales del perfil
-                    p = self.trading_profile
-                    # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
-                    veto_critical = safe_float(p.coherence_veto_critical if p else 30.0, 30.0)
-                    veto_normal = safe_float(p.coherence_veto_normal if p else 45.0, 45.0)
+                    # V6.5.4d: Construir analysis_data para Adaptive Gate
+                    # Incluye EMA score y Black Swan severity para thresholds dinámicos
+                    adaptive_gate_data = {
+                        'scoring': {
+                            'ema_regime': {
+                                'score': ema_score_pts
+                            }
+                        },
+                        'black_swan': black_swan if black_swan else {},
+                        'ema_score': ema_score_pts
+                    }
                     
+                    # V6.5.4d: Usar nuevo método centralizado con thresholds adaptativos
+                    gate_decision = self.coherence_engine.evaluate_pre_scoring_gate(
+                        strategy_signals=strategy_signals,
+                        analysis_data=adaptive_gate_data,
+                        paper_mode=self.paper_mode
+                    )
+                    
+                    coherence_pre_score = gate_decision.coherence_score
+                    coherence_gate_passed = not gate_decision.should_block
+                    
+                    # Guardar datos para análisis
                     decision['v52_analysis']['coherence_pre_score'] = coherence_pre_score
-                    decision['v52_analysis']['coherence_pre_level'] = coherence_report.coherence_level.value
+                    decision['v52_analysis']['coherence_block_threshold'] = gate_decision.block_threshold
+                    decision['v52_analysis']['coherence_warn_threshold'] = gate_decision.warn_threshold
+                    decision['v52_analysis']['adaptive_gate_active'] = gate_decision.adaptive_gate_active
+                    decision['v52_analysis']['adaptive_ema_score'] = gate_decision.ema_score
+                    decision['v52_analysis']['adaptive_black_swan'] = gate_decision.black_swan_severity
                     
-                    # GATE: Bloquear si coherencia es crítica o normal-veto
-                    if coherence_pre_score < veto_critical or coherence_report.coherence_level.value == 'CRITICAL':
-                        coherence_gate_passed = False
-                        decision['veto_chain'].append('COHERENCE_GATE_CRITICAL')
-                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% < {veto_critical}% → REJECTED")
-                        logger.warning(f"🚫 [COHERENCE_GATE] CRITICAL: Score {coherence_pre_score:.1f}% < {veto_critical}% → NO SCORING")
-                    elif coherence_pre_score < veto_normal:
-                        coherence_gate_passed = False
-                        decision['veto_chain'].append('COHERENCE_GATE_LOW')
-                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% < {veto_normal}% → REJECTED")
-                        logger.warning(f"🚫 [COHERENCE_GATE] LOW: Score {coherence_pre_score:.1f}% < {veto_normal}% → NO SCORING")
+                    if gate_decision.should_block:
+                        decision['veto_chain'].append(gate_decision.veto_type)
+                        decision['decision_trace'].append(f"COHERENCE_GATE: {gate_decision.reason}")
                     else:
                         decision['guards_passed'].append('COHERENCE_GATE')
-                        decision['decision_trace'].append(f"COHERENCE_GATE: {coherence_pre_score:.1f}% >= {veto_normal}% → PASSED")
-                        logger.info(f"✅ [COHERENCE_GATE] PASSED: Score {coherence_pre_score:.1f}% >= {veto_normal}%")
+                        decision['decision_trace'].append(f"COHERENCE_GATE: {gate_decision.reason}")
                         
                 except Exception as e:
                     # FIX Dec 30, 2025: FAIL-CLOSED - Exception blocks trade, no skip

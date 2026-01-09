@@ -203,6 +203,87 @@ def text_to_speech(self, text, language='es', max_retries=3):
 
 ---
 
+## Adaptive Coherence Gate V6.5.4d (Jan 9, 2026)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| AdaptiveGateDecision | `coherence_engine.py` | DTO con decisión de veto + thresholds |
+| evaluate_pre_scoring_gate() | `coherence_engine.py` | API pública para evaluar gate |
+| _calculate_adaptive_threshold() | `coherence_engine.py` | Helper interno para calcular umbrales |
+
+**Arquitectura Centralizada:**
+
+El Adaptive Gate centraliza toda la lógica de thresholds en CoherenceEngine (servicio de dominio), alineándose con la arquitectura hexagonal V7.0. El bot delega la decisión al CoherenceEngine en lugar de usar valores hardcodeados del perfil.
+
+**Flujo de Decisión:**
+```
+AutoTradingBot._make_v52_decision()
+    ↓
+Construye strategy_signals + adaptive_gate_data
+    ↓
+coherence_engine.evaluate_pre_scoring_gate(signals, data, paper_mode)
+    ↓
+_calculate_adaptive_threshold() calcula block/warn thresholds
+    ↓
+Retorna AdaptiveGateDecision DTO
+    ↓
+Bot usa should_block para decidir early return
+```
+
+**AdaptiveGateDecision DTO:**
+```python
+@dataclass
+class AdaptiveGateDecision:
+    should_block: bool              # True = block trade
+    veto_type: Optional[str]        # COHERENCE_GATE_CRITICAL o COHERENCE_GATE_LOW
+    coherence_score: float          # Score actual (0-100)
+    block_threshold: float          # Threshold usado para bloqueo
+    warn_threshold: float           # Threshold para warning
+    adaptive_gate_active: bool      # Si se usaron thresholds adaptativos
+    ema_score: Optional[float]      # EMA score que activó el gate
+    black_swan_severity: Optional[str]  # Nivel de Black Swan
+    reason: str                     # Explicación legible
+    gate_info: Dict                 # Info diagnóstica completa
+```
+
+**Matriz de Umbrales Adaptativos:**
+
+| EMA Score | Black Swan | Block Threshold | Lógica |
+|-----------|------------|-----------------|--------|
+| ≥ 25 pts | LOW | 35% | Señal fuerte + bajo riesgo → más permisivo |
+| ≥ 25 pts | MEDIUM | 45% | Señal fuerte + riesgo medio → moderado |
+| ≥ 25 pts | HIGH | 55% | Señal fuerte + alto riesgo → estricto |
+| ≥ 25 pts | EXTREME | 65% | Señal fuerte + riesgo extremo → muy estricto |
+| < 25 pts | cualquiera | 10%/30% | Default (paper/real) |
+
+**EMA Score Buckets:**
+| EMA Confidence | Score (pts) |
+|----------------|-------------|
+| ≥ 70% | 40 pts (strong) |
+| ≥ 50% | 25 pts (moderate) |
+| > 0% | 12 pts (weak) |
+| 0% | 0 pts (none) |
+
+**Logging Estructurado:**
+```json
+{
+  "event": "ADAPTIVE_GATE_DECISION",
+  "should_block": false,
+  "veto_type": null,
+  "coherence_score": 60.8,
+  "block_threshold": 35,
+  "adaptive_gate_active": true,
+  "ema_score": 25,
+  "black_swan_severity": "LOW",
+  "paper_mode": true
+}
+```
+
+**Investor-Facing Language:**
+> "OMNIX calibra dinámicamente sus filtros de coherencia según la severidad del régimen de mercado, maximizando capturas en condiciones favorables mientras mantiene disciplina institucional."
+
+---
+
 ## 1. Core Trading Engines
 
 | Módulo | Ubicación | Propósito |

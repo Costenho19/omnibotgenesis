@@ -95,18 +95,26 @@ Optimizes latency for voice responses by sending text immediately to the user, t
 - Safe wrapper `_process_and_send_voice_safe()` captures ALL thread exceptions
 - Skip voice for text < 20 chars (prevents noise)
 
-### Adaptive Coherence Gate (V009 - Jan 8, 2026)
-Dynamic coherence thresholds based on EMA score + Black Swan severity.
+### Adaptive Coherence Gate (V010 - Jan 9, 2026)
+Dynamic coherence thresholds based on EMA score + Black Swan severity. **Centralized architecture** with all logic in CoherenceEngine (domain service).
 
 **Threshold Matrix:**
 | EMA Score | Black Swan | Coherence Min |
 |-----------|------------|---------------|
-| ≥ 35 pts | LOW | 35% |
-| ≥ 35 pts | MEDIUM | 45% |
-| ≥ 35 pts | HIGH/EXTREME | 55-65% |
-| < 35 pts | any | 50% (default) |
+| ≥ 25 pts | LOW | 35% |
+| ≥ 25 pts | MEDIUM | 45% |
+| ≥ 25 pts | HIGH/EXTREME | 55-65% |
+| < 25 pts | any | 10%/30% (paper/real default) |
 
-**Components:** `_calculate_adaptive_threshold()` in coherence_engine.py, EMA score passed via analysis_data from bot.
+**Architecture (V010):**
+- **AdaptiveGateDecision**: DTO with decision + thresholds
+- **evaluate_pre_scoring_gate()**: Public API in CoherenceEngine
+- Bot delegates to CoherenceEngine instead of using hardcoded profile values
+
+**Verification in Railway Logs:**
+```json
+{"event": "ADAPTIVE_GATE_DECISION", "block_threshold": 35, "adaptive_gate_active": true}
+```
 
 **Investor Language:** "OMNIX dynamically calibrates coherence filters based on market regime severity, maximizing opportunity capture while maintaining institutional discipline."
 

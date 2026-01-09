@@ -148,4 +148,17 @@ Los feature flags están implementados en `src/omnix/config/settings.py` con def
 
 ---
 
-*Última actualización: 22 de Diciembre 2025*
+## Avances Hacia V7 en Código Legacy (Jan 9, 2026)
+
+Algunos componentes legacy están siendo refactorizados para alinearse con patrones hexagonales antes de la activación completa de ports:
+
+| Componente | Cambio | Patrón V7 Aplicado |
+|------------|--------|-------------------|
+| **Adaptive Coherence Gate** | Bot delega a `CoherenceEngine.evaluate_pre_scoring_gate()` | Domain service expone API pública |
+| **AdaptiveGateDecision DTO** | Respuesta estructurada en lugar de valores primitivos | DTO pattern para transferencia de datos |
+
+Estos cambios preparan el camino para activar `USE_COHERENCE_PORT=true` en el futuro, cuando el adapter esté listo.
+
+---
+
+*Última actualización: 9 de Enero 2026*

@@ -141,6 +141,26 @@ class CoherenceReport:
     decision_recommendation: str
 
 
+@dataclass
+class AdaptiveGateDecision:
+    """
+    V6.5.4d Adaptive Coherence Gate Decision (Jan 9, 2026)
+    
+    DTO returned by evaluate_pre_scoring_gate() for use by AutoTradingBot.
+    Centralizes all coherence gate logic in CoherenceEngine (domain service).
+    """
+    should_block: bool              # True = block trade, False = allow
+    veto_type: Optional[str]        # 'COHERENCE_GATE_CRITICAL', 'COHERENCE_GATE_LOW', or None
+    coherence_score: float          # Actual coherence score (0-100)
+    block_threshold: float          # Threshold used for blocking
+    warn_threshold: float           # Threshold used for warning
+    adaptive_gate_active: bool      # Whether adaptive thresholds were used
+    ema_score: Optional[float]      # EMA score that triggered adaptive gate
+    black_swan_severity: Optional[str]  # BLACK_SWAN severity level
+    reason: str                     # Human-readable explanation
+    gate_info: Dict                 # Full diagnostic info for logging
+
+
 class CoherenceEngine:
     """
     Motor de Coherencia para OMNIX V5.3 ULTRA
@@ -589,6 +609,94 @@ class CoherenceEngine:
         gate_info['reason'] = f"EMA={ema_score:.0f}pts < {self._ema_trigger_score} (using defaults)"
         logger.info(f"📊 [ADAPTIVE_GATE] INACTIVE: EMA={ema_score:.0f}pts < {self._ema_trigger_score} → using default threshold={default_block}%")
         return default_block, default_warn, gate_info
+    
+    def evaluate_pre_scoring_gate(
+        self,
+        strategy_signals: List[StrategySignal],
+        analysis_data: Dict,
+        paper_mode: bool = False
+    ) -> AdaptiveGateDecision:
+        """
+        V6.5.4d Adaptive Coherence Gate - Public API (Jan 9, 2026)
+        
+        Evaluates coherence BEFORE scoring to determine if trade should proceed.
+        Uses adaptive thresholds based on EMA score + Black Swan severity.
+        
+        This method centralizes coherence gate logic in CoherenceEngine (domain service)
+        and should be called by AutoTradingBot instead of using hardcoded profile values.
+        
+        Args:
+            strategy_signals: List of strategy signals for coherence analysis
+            analysis_data: Dict with 'scoring', 'black_swan', 'ema_score' data
+            paper_mode: If True, use relaxed thresholds for learning
+            
+        Returns:
+            AdaptiveGateDecision: Complete decision DTO with veto status and thresholds
+            
+        Example:
+            gate_decision = coherence_engine.evaluate_pre_scoring_gate(signals, analysis_data, paper_mode=True)
+            if gate_decision.should_block:
+                return blocked_decision  # Early return
+            # Continue with scoring...
+        """
+        # Step 1: Analyze coherence
+        coherence_report = self.analyze_coherence(strategy_signals)
+        coherence_score = safe_float(coherence_report.coherence_score, 0.0, 'pre_gate_score')
+        
+        # Step 2: Calculate adaptive thresholds
+        block_threshold, warn_threshold, gate_info = self._calculate_adaptive_threshold(
+            analysis_data, paper_mode
+        )
+        
+        # Step 3: Determine veto decision
+        should_block = False
+        veto_type = None
+        reason = ""
+        
+        if coherence_score < block_threshold or coherence_report.coherence_level.value == 'CRITICAL':
+            should_block = True
+            veto_type = 'COHERENCE_GATE_CRITICAL'
+            reason = f"Coherence {coherence_score:.1f}% < {block_threshold}% (CRITICAL threshold)"
+            logger.warning(f"🚫 [COHERENCE_GATE] CRITICAL: Score {coherence_score:.1f}% < {block_threshold}% → NO SCORING")
+        elif coherence_score < warn_threshold:
+            should_block = True
+            veto_type = 'COHERENCE_GATE_LOW'
+            reason = f"Coherence {coherence_score:.1f}% < {warn_threshold}% (WARN threshold)"
+            logger.warning(f"🚫 [COHERENCE_GATE] LOW: Score {coherence_score:.1f}% < {warn_threshold}% → NO SCORING")
+        else:
+            reason = f"Coherence {coherence_score:.1f}% >= {warn_threshold}% (PASSED)"
+            logger.info(f"✅ [COHERENCE_GATE] PASSED: Score {coherence_score:.1f}% >= {warn_threshold}%")
+        
+        # Step 4: Build decision DTO
+        decision = AdaptiveGateDecision(
+            should_block=should_block,
+            veto_type=veto_type,
+            coherence_score=coherence_score,
+            block_threshold=block_threshold,
+            warn_threshold=warn_threshold,
+            adaptive_gate_active=gate_info.get('adaptive_gate_active', False),
+            ema_score=gate_info.get('ema_score'),
+            black_swan_severity=gate_info.get('black_swan_severity'),
+            reason=reason,
+            gate_info=gate_info
+        )
+        
+        # Log JSON for audit trail
+        import json
+        logger.info(json.dumps({
+            "event": "ADAPTIVE_GATE_DECISION",
+            "should_block": should_block,
+            "veto_type": veto_type,
+            "coherence_score": round(coherence_score, 1),
+            "block_threshold": block_threshold,
+            "warn_threshold": warn_threshold,
+            "adaptive_gate_active": gate_info.get('adaptive_gate_active', False),
+            "ema_score": gate_info.get('ema_score'),
+            "black_swan_severity": gate_info.get('black_swan_severity'),
+            "paper_mode": paper_mode
+        }))
+        
+        return decision
     
     def validate_trade_coherence(
         self,

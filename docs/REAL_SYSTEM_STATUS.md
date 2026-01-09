@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 7 de Enero 2026  
+**Fecha**: 9 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,40 @@
 ---
 
 ## Cambios Recientes
+
+### Adaptive Coherence Gate - Centralized Architecture (Jan 9, 2026)
+
+**PROBLEMA DETECTADO:** El Adaptive Gate (Jan 8) no se activaba en producción porque:
+1. El bot tenía su propia verificación con thresholds hardcodeados del perfil (35%)
+2. Esta verificación se ejecutaba ANTES del nuevo código adaptativo en CoherenceEngine
+3. Railway mostraba logs con threshold fijo (35%) en lugar de adaptativo
+
+**SOLUCIÓN IMPLEMENTADA:** Arquitectura centralizada que delega toda la lógica al CoherenceEngine.
+
+| Componente | Archivo | Cambio |
+|------------|---------|--------|
+| **AdaptiveGateDecision** | `coherence_engine.py` | ✅ Nuevo DTO con decisión + thresholds |
+| **evaluate_pre_scoring_gate()** | `coherence_engine.py` | ✅ Nueva API pública para bot |
+| **_make_v52_decision()** | `auto_trading_bot.py` | ✅ Usa nuevo método en lugar de hardcoded |
+
+**Antes (Código duplicado):**
+```
+Bot: veto_critical = profile.coherence_veto_critical  # 35% fijo
+Bot: if coherence_score < veto_critical → BLOCK
+```
+
+**Después (Centralizado):**
+```
+Bot: gate_decision = coherence_engine.evaluate_pre_scoring_gate(...)
+Bot: if gate_decision.should_block → BLOCK
+```
+
+**Logging esperado en Railway:**
+```json
+{"event": "ADAPTIVE_GATE_DECISION", "block_threshold": 35, "adaptive_gate_active": true}
+```
+
+---
 
 ### Dashboard Real-Time Metrics Fix (Jan 7, 2026)
 
