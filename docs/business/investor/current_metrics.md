@@ -25,9 +25,9 @@
 | Metric | Value |
 |--------|-------|
 | **Starting Balance** | $1,000,000 |
-| **Current Balance** | $880,918.28 |
-| **Expected Balance** | $984,188.74 |
-| **Balance Gap** | $103,270.45 (under investigation) |
+| **Current Balance** | $984,188.74 |
+| **Total P&L** | -$15,811.26 |
+| **Total Return** | -1.58% |
 | **Sharpe Ratio** | -5.82 |
 
 ---

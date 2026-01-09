@@ -33,7 +33,7 @@
 | Total Trades | 119 | Paper trading calibration phase |
 | Winning Trades | 24 | Win rate: 20.17% (learning phase) |
 | Shadow Events | 360 | Vetoed trades tracked for learning |
-| Current Balance | $880,918.28 | From $1M initial |
+| Current Balance | $984,188.74 | From $1M initial (-1.58%) |
 | System Uptime | 99.9% | Production-ready |
 | Modules Active | 15+ | All core engines operational |
 
