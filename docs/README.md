@@ -18,6 +18,21 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Daily Report Service - Brutal Honesty Monitoring (Jan 9, 2026)
+- **NUEVO SERVICIO**: `DailyReportService` para monitoreo diario con honestidad brutal
+- **MÉTRICAS REALES**: Conectado a PostgreSQL para win rate, balance, P&L reales
+- **TABLA**: `paper_trading_daily_reports` para historial de auditoría
+- **TELEGRAM**: Comando `/reporte_diario` para generar reporte
+- **KELLY HONESTO**: Muestra "Modo Aprendizaje" cuando Kelly es negativo con tracking de costo
+- **ADR**: `docs/reference/adr/ADR-001-brutal-honesty-monitoring.md`
+- **RUNBOOK**: `docs/operations/runbooks/daily_monitor_report.md`
+
+### Data Integrity Audit Remediation (Jan 9, 2026)
+- **BALANCE CORREGIDO**: $880,918 → $984,188.74 (gap de $103K resuelto)
+- **WIN RATE CORREGIDO**: 37.8% → 20.17% (criterio: profit_loss > 0)
+- **COHERENCE GATE FIX**: Removida condición CRITICAL que bloqueaba trades válidos
+- **AUDIT REPORT**: `docs/compliance/audits/DATA_INTEGRITY_AUDIT_JAN2026.md`
+
 ### Shadow Portfolio + Cron Job + Dashboard Widget (Jan 9, 2026)
 - **SHADOW PORTFOLIO COMPLETE**: Sistema de análisis contrafactual de trades bloqueados
 - **CRON JOB**: `scripts/operations/run_shadow_portfolio.sh` para Railway (05:00 UTC diario)

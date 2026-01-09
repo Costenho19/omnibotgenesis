@@ -89,6 +89,37 @@ def detect_language(text):
 
 ---
 
+## Daily Report Service - Brutal Honesty Monitoring (Jan 9, 2026)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| DailyReportService | `omnix_services/monitoring/daily_report_service.py` | Genera reportes diarios con métricas reales |
+| DailyMetrics | `daily_report_service.py` | Dataclass con métricas del día |
+| paper_trading_daily_reports | PostgreSQL | Historial de reportes para auditoría |
+
+**Propósito:**
+Sistema de monitoreo diario con honestidad brutal durante el período de recalibración (30 días). Conecta con PostgreSQL para métricas REALES y trackea progreso hacia objetivos.
+
+**Métricas Monitoreadas:**
+| Métrica | Target | Fuente |
+|---------|--------|--------|
+| Win Rate | > 35% | `paper_trading_balances` |
+| ROI | > +2% | Calculado |
+| Sharpe Ratio | > 0.5 | Estimado |
+| Max Drawdown | < 3% | Calculado |
+| Learning Cost | < $20K | P&L negativo |
+
+**Kelly Criterion Honesto:**
+- Kelly > 0: Operación matemáticamente favorable
+- Kelly < 0: "Modo Aprendizaje" - pérdidas = inversión en I+D con presupuesto limitado
+
+**Integración:**
+- Telegram: `/reporte_diario`
+- Cron: `scripts/operations/run_daily_report.sh` (00:05 UTC)
+- ADR: `docs/reference/adr/ADR-001-brutal-honesty-monitoring.md`
+
+---
+
 ## Performance Honesty Guard (Jan 3-4, 2026)
 
 | Componente | Archivo | Función |
