@@ -839,7 +839,7 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 ### Investor-Grade Automated Responses (Dec 23, 2025)
 - **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
 - **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
-- **Real Data**: All responses based on verified PostgreSQL data (109 trades, $7,337 avoided losses)
+- **Real Data**: All responses based on verified PostgreSQL data (119 trades, $11,819+ avoided losses)
 - **Soft Detection via Scoring**: Score-based context detection (score ≥ 4 activates institutional mode)
 
 **Scoring System:**
