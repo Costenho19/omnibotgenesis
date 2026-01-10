@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 9 de Enero 2026  
+**Fecha**: 10 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,39 @@
 ---
 
 ## Cambios Recientes
+
+### Kalman Filter Log Optimization (Jan 10, 2026)
+
+**PROPÓSITO:** Eliminar 4 logs repetitivos por ciclo de análisis sin afectar funcionalidad.
+
+| Componente | Estado | Descripción |
+|------------|--------|-------------|
+| **DualKalmanTrendFilter** | ✅ OPTIMIZADO | Caching per-pair + log suppression |
+| **AdaptiveKalmanFilter** | ✅ OPTIMIZADO | Class-level `_init_logged_rates` set |
+| **KalmanFilter** | ✅ OPTIMIZADO | Class-level `_init_logged` flag |
+| **filter_series()** | ✅ OPTIMIZADO | `reset_state=True` + `suppress_log=True` |
+
+**Cambios Técnicos:**
+- `suppress_log` parameter en todos los filtros Kalman
+- `_pair_cache` dict para instancias cacheadas por par de trading
+- `get_cached_filter(pair)` classmethod para uso avanzado
+- `clear_cache(pair=None)` classmethod para limpieza
+
+**Resultado:**
+```
+Antes: 4 logs por ciclo ("Kalman Filter initialized", "Adaptive Kalman initialized" x2, "Dual Kalman initialized")
+Después: 0 logs repetitivos (solo en primer init del bot)
+```
+
+**Comportamiento Preservado:**
+- `reset_state=True` (default) resetea filtros en cada llamada
+- Resultados consistentes entre llamadas verificado en tests
+- Sin contaminación de estado
+
+**Archivos Modificados:**
+- `omnix_services/trading_service/kalman_filter.py` - Optimización completa
+
+---
 
 ### Shadow Portfolio + Learning Engine V007 (Jan 9, 2026)
 

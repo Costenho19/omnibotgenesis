@@ -58,6 +58,9 @@ The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE G
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, which only apply penalties and no additive scoring.
 
+### Kalman Filter Optimization (Jan 10, 2026)
+DualKalmanTrendFilter includes log suppression (`suppress_log=True`) in `filter_series()` to eliminate 4 initialization logs per analysis cycle. The `reset_state=True` default preserves correct behavior (state reset on each call), while `suppress_log` prevents log spam from AdaptiveKalmanFilter reinitializations. Class-level `_pair_cache` and `get_cached_filter(pair)` available for advanced use cases requiring incremental filtering.
+
 ### TRACK_RECORD_MODE
 `TRACK_RECORD_MODE` and `LOW_VOL_MODE` are controlled by environment variables with `false` as default. When active, `TRACK_RECORD_MODE` caps score, reduces sizing, and enables `WEAK_TREND` scoring, while maintaining all guardrails. It auto-deactivates under specific conditions (`total_trades >= 100` AND `win_rate >= 45%`).
 
