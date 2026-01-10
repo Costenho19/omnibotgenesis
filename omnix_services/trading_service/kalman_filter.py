@@ -19,12 +19,15 @@ class KalmanFilter:
     - Filtra ruido manteniendo señal real
     """
     
+    _init_logged: bool = False
+    
     def __init__(
         self,
         process_variance: float = 1e-5,
         measurement_variance: float = 1e-2,
         initial_value: float = 0.0,
-        initial_estimate_error: float = 1.0
+        initial_estimate_error: float = 1.0,
+        suppress_log: bool = False
     ):
         """
         Args:
@@ -32,6 +35,7 @@ class KalmanFilter:
             measurement_variance: R - Varianza de medición (ruido del sensor)
             initial_value: Valor inicial estimado
             initial_estimate_error: Error de estimación inicial
+            suppress_log: Si True, no loguea inicialización (para uso interno)
         """
         self.q = process_variance  # Process noise
         self.r = measurement_variance  # Measurement noise
@@ -40,9 +44,11 @@ class KalmanFilter:
         
         self.k = 0  # Kalman gain
         
-        logger.info(
-            f"📡 Kalman Filter initialized - Q: {process_variance}, R: {measurement_variance}"
-        )
+        if not suppress_log and not KalmanFilter._init_logged:
+            logger.info(
+                f"📡 Kalman Filter initialized - Q: {process_variance}, R: {measurement_variance}"
+            )
+            KalmanFilter._init_logged = True
     
     def update(self, measurement: float) -> float:
         """
@@ -103,26 +109,33 @@ class AdaptiveKalmanFilter(KalmanFilter):
     basado en volatilidad del mercado
     """
     
+    _init_logged_rates: set = set()
+    
     def __init__(
         self,
         initial_value: float = 0.0,
-        adaptation_rate: float = 0.1
+        adaptation_rate: float = 0.1,
+        suppress_log: bool = False
     ):
         """
         Args:
             initial_value: Valor inicial
             adaptation_rate: Qué tan rápido adapta a cambios (0-1)
+            suppress_log: Si True, no loguea inicialización
         """
         super().__init__(
             process_variance=1e-5,
             measurement_variance=1e-2,
-            initial_value=initial_value
+            initial_value=initial_value,
+            suppress_log=True
         )
         self.adaptation_rate = adaptation_rate
-        self.recent_innovations = []  # Errores de predicción recientes
+        self.recent_innovations = []
         self.window_size = 20
         
-        logger.info(f"📡 Adaptive Kalman Filter initialized - Adaptation: {adaptation_rate}")
+        if not suppress_log and adaptation_rate not in AdaptiveKalmanFilter._init_logged_rates:
+            logger.info(f"📡 Adaptive Kalman Filter initialized - Adaptation: {adaptation_rate}")
+            AdaptiveKalmanFilter._init_logged_rates.add(adaptation_rate)
     
     def update(self, measurement: float) -> float:
         """
@@ -158,19 +171,58 @@ class DualKalmanTrendFilter:
     - Filtro rápido: Sigue precio de cerca
     - Filtro lento: Suaviza más
     - Cruce indica cambio de tendencia
+    
+    V6.5.4d: Caching por par de trading para evitar reinicializaciones
     """
     
-    def __init__(self):
+    _pair_cache: dict = {}
+    _initialized_log_done: bool = False
+    
+    def __init__(self, pair: 'str | None' = None):
         """
         Inicializa filtros rápido y lento
+        
+        Args:
+            pair: Par de trading para caching (ej: 'BTC/USD')
         """
+        self.pair = pair
         self.fast_filter = AdaptiveKalmanFilter(adaptation_rate=0.3)
         self.slow_filter = AdaptiveKalmanFilter(adaptation_rate=0.05)
         
         self.fast_values = []
         self.slow_values = []
         
-        logger.info("📡 Dual Kalman Trend Filter initialized")
+        if not DualKalmanTrendFilter._initialized_log_done:
+            logger.info("📡 Dual Kalman Trend Filter initialized")
+            DualKalmanTrendFilter._initialized_log_done = True
+    
+    @classmethod
+    def get_cached_filter(cls, pair: str) -> 'DualKalmanTrendFilter':
+        """
+        Obtiene filtro cacheado por par o crea uno nuevo
+        
+        Args:
+            pair: Par de trading
+            
+        Returns:
+            Instancia de DualKalmanTrendFilter
+        """
+        if pair not in cls._pair_cache:
+            cls._pair_cache[pair] = cls(pair=pair)
+        return cls._pair_cache[pair]
+    
+    @classmethod
+    def clear_cache(cls, pair: 'str | None' = None):
+        """
+        Limpia cache de filtros
+        
+        Args:
+            pair: Par específico a limpiar, o None para limpiar todo
+        """
+        if pair:
+            cls._pair_cache.pop(pair, None)
+        else:
+            cls._pair_cache.clear()
     
     def update(self, price: float) -> dict:
         """
@@ -242,18 +294,25 @@ class DualKalmanTrendFilter:
         
         return "NONE"
     
-    def filter_series(self, prices: List[float]) -> dict:
+    def filter_series(self, prices: List[float], reset_state: bool = True) -> dict:
         """
         Filtra serie completa de precios
         
+        Args:
+            prices: Lista de precios
+            reset_state: Si True (default), resetea filtros antes de procesar.
+                         Si False, mantiene estado existente (uso avanzado).
+        
         Returns:
             Dict con fast_series, slow_series, trends, crossovers
+        
+        V6.5.4d: Logs suprimidos en resets para evitar spam (4 logs/ciclo → 0).
         """
-        # Reset
-        self.fast_filter = AdaptiveKalmanFilter(adaptation_rate=0.3)
-        self.slow_filter = AdaptiveKalmanFilter(adaptation_rate=0.05)
-        self.fast_values = []
-        self.slow_values = []
+        if reset_state:
+            self.fast_filter = AdaptiveKalmanFilter(adaptation_rate=0.3, suppress_log=True)
+            self.slow_filter = AdaptiveKalmanFilter(adaptation_rate=0.05, suppress_log=True)
+            self.fast_values = []
+            self.slow_values = []
         
         results = []
         for price in prices:
