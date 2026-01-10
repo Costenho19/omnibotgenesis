@@ -1,7 +1,71 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and stock trading system designed for paper trading to build a credible track record for investor presentations. Its core capabilities include AI integration, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, adaptive parameter calibration, institutional portfolio optimization, derivatives trading, and dual-market support for Kraken (crypto) and Alpaca (stocks). The system targets 3-5 trades/day with a 55%+ win rate and focuses on an "Investor-Ready" presentation to secure seed funding. The project's ambition is to secure seed funding by presenting a credible track record.
+OMNIX V6.5.4d INSTITUTIONAL+ is institutional-grade risk control infrastructure for cryptocurrency trading, designed to prevent capital loss through multi-layer veto architecture. Its core capabilities include post-quantum cryptography (Kyber-768, Dilithium-3), real-time market analysis, Non-Markovian Temporal Memory, Coherence Engine (6-tier veto system), Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume, with 695 high-risk operations automatically blocked. Current phase: extended validation with focus on building a credible track record for institutional investor presentations. Strategic targets (40%+ win rate, 3-5 trades/day) are secondary to preservation and system integrity.
+
+## Official Identity & Positioning (ADR-003)
+
+**Last Updated:** January 10, 2026
+
+### What OMNIX Is
+
+**Official Definition:**
+> OMNIX is **institutional-grade risk control infrastructure** for cryptocurrency trading, designed to prevent capital loss through multi-layer veto architecture.
+
+**NOT:**
+- "Trading bot" (implies profit focus, we focus on risk)
+- "AI trader" (too generic, misses our differentiation)
+- "Automated money-maker" (misleading overpromise)
+
+**IS:**
+- Risk control infrastructure
+- Capital preservation system
+- Multi-layer veto architecture
+- Institutional-grade decision framework
+
+### Primary KPIs (In Order)
+
+1. **Capital Preservation:** 98.5% of initial capital maintained
+2. **Risk Events Blocked:** 695 high-risk operations vetoed
+3. **System Integrity:** Zero data inconsistencies, complete audit trail
+4. **Win Rate:** 20.17% (diagnostic metric, not marketing metric)
+
+**Critical:** We lead with preservation and risk control, NOT with win rate.
+
+### Two Response Modes
+
+**MODE 1 - Positioning (Default):**
+- For general inquiries and presentations
+- Emphasizes architecture, safety, capital preservation
+- Example: "OMNIX is risk control infrastructure with 98.5% capital preservation..."
+
+**MODE 2 - Honest Metrics (On Request):**
+- When user explicitly asks for performance data
+- Shows everything: win rate, P&L, days inactive, etc.
+- Always with context: "20.17% win rate (target 40%+, system in protective mode)"
+
+Both modes are **100% truthful**, just different emphasis.
+
+### Approved Language
+
+**Always Use:**
+- "institutional-grade risk control infrastructure"
+- "multi-layer veto architecture"
+- "capital preservation system"
+- "X% preserved" / "Y operations blocked"
+- "prioritizes preservation over volume"
+
+**Never Use:**
+- "AI bot that makes money" (misleading)
+- "automated profit generation" (overpromise)
+- "beat the market" (unproven claim)
+- "guaranteed returns" (illegal in most jurisdictions)
+
+### Reference Documents
+
+- **Full Guide:** `docs/reference/omnix_official_language.md`
+- **Decision Record:** `docs/reference/adr/ADR-003-official-positioning.md`
+- **Honest Framing:** `docs/reference/adr/ADR-002-honest-framing-over-censorship.md`
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).

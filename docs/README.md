@@ -18,6 +18,15 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Official Positioning & Language Guide (Jan 10, 2026)
+- **ADR-003**: OMNIX officially positioned as "institutional-grade risk control infrastructure"
+- **NEW DOCUMENT**: `docs/reference/omnix_official_language.md` - Complete language guide
+- **TWO RESPONSE MODES**: 
+  - Mode 1 (Positioning): Lead with architecture/preservation for general inquiries
+  - Mode 2 (Honest Metrics): Show all data when specifically asked
+- **KPI HIERARCHY**: Capital Preservation > Risk Events Blocked > System Integrity > Win Rate
+- **Combined with ADR-002**: Honest Framing ensures transparency when metrics requested
+
 ### Daily Report Service - Brutal Honesty Monitoring (Jan 9, 2026)
 - **NUEVO SERVICIO**: `DailyReportService` para monitoreo diario con honestidad brutal
 - **MÉTRICAS REALES**: Conectado a PostgreSQL para win rate, balance, P&L reales
