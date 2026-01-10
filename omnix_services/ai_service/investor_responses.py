@@ -19,7 +19,7 @@ Updated: Added AudienceContext and Public Response Filter
 import os
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 import logging
 
@@ -54,50 +54,40 @@ class AudienceContext:
         return self.audience_type == AudienceType.PUBLIC
 
 
-# Métricas que nunca se muestran a público
-PUBLIC_FILTER_RULES = {
-    'min_win_rate_to_show': 0.40,  # Solo mostrar si WR >= 40%
-    'show_negative_pnl': False,    # Nunca mostrar P&L negativo exacto
-    'show_paper_trading': False,   # Nunca mencionar "paper trading"
-    'max_words': 150,              # Límite de palabras
+# =============================================================================
+# HONEST FRAMING POLICY (Jan 10, 2026)
+# =============================================================================
+# DECISIÓN ÉTICA: Transparencia sobre ocultación
+# NO ocultamos métricas negativas. Mostramos TODO con contexto honesto.
+# Referencia: ADR-002-honest-framing-over-censorship.md
+# =============================================================================
+
+# Reglas de Honest Framing - NO son filtros de censura
+HONEST_FRAMING_RULES = {
+    'always_show_real_metrics': True,    # SIEMPRE mostrar datos reales
+    'add_positive_context': True,        # Añadir contexto (pero verdadero)
+    'show_when_asked': True,             # Solo mostrar si preguntan
 }
 
-# Frases prohibidas para usuarios públicos
-PUBLIC_BLACKLIST_PATTERNS = [
-    r'paper\s*trading',
-    r'no\s*(hay|hemos?\s*tenido)\s*trades?',
-    r'win\s*rate[:\s]*\d{1,2}%',  # WR < 100% (matches 1-2 digits)
-    r'20\.?\d*%\s*(win|wr)',
-    r'-\$[\d,]+\.?\d*',  # P&L negativo
-    r'pérdidas?\s*de\s*\$',
-    r'loss(es)?\s*of\s*\$',
-    r'perdiendo',
-    r'losing',
-    r'aún\s*no',
-    r'todavía\s*no',
-    r'not\s*yet',
-    r'calibración',
-    r'calibration',
-    r'fase\s*de\s*aprendizaje',
-    r'learning\s*phase',
-]
-
-# Reemplazos seguros para público
-PUBLIC_SAFE_REPLACEMENTS = {
-    'paper trading': 'validación institucional',
-    'paper-trading': 'validación institucional',
-    'Paper Trading': 'Validación Institucional',
-    'no hay trades': 'sistema en validación activa',
-    'no hemos tenido trades': 'sistema en validación activa',
-    'pérdida': 'capital protegido',
-    'pérdidas': 'capital protegido',
-    'loss': 'protected capital',
-    'losses': 'protected capital',
-    'calibración': 'optimización',
-    'calibration': 'optimization',
-    'fase de aprendizaje': 'fase de validación',
-    'learning phase': 'validation phase',
+# Contexto positivo VERDADERO para métricas
+# Estos NO reemplazan datos, AÑADEN contexto honesto
+HONEST_CONTEXT_ADDITIONS = {
+    'win_rate_low': '(objetivo: 40%+, en optimización)',
+    'pnl_negative': '(capital preservado: {preserved_pct}%)',
+    'no_trades': '(sistema en modo protección ante condiciones adversas)',
+    'calibration': '(fase normal de validación institucional)',
 }
+
+# DEPRECATED: Las siguientes constantes ya no se usan
+# Se mantienen para compatibilidad pero NO aplican censura
+PUBLIC_FILTER_RULES_DEPRECATED = {
+    '_deprecated': True,
+    '_reason': 'Reemplazado por Honest Framing - ver ADR-002',
+}
+
+PUBLIC_BLACKLIST_PATTERNS_DEPRECATED = []  # Ya no censuramos
+
+PUBLIC_SAFE_REPLACEMENTS_DEPRECATED = {}  # Ya no reemplazamos para ocultar
 
 
 def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
@@ -117,7 +107,7 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
         is_admin = False
     
     audience_type = AudienceType.ADMIN if is_admin else AudienceType.PUBLIC
-    max_words = 1000 if is_admin else PUBLIC_FILTER_RULES['max_words']
+    max_words = 1000  # No limitamos respuestas - honest framing no requiere censura
     
     return AudienceContext(
         audience_type=audience_type,
@@ -126,52 +116,33 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
     )
 
 
+def format_response_with_honest_framing(response: str, context: AudienceContext) -> str:
+    """
+    HONEST FRAMING: NO censura, solo diferencia nivel de detalle.
+    
+    - Admin: respuesta completa sin cambios
+    - Público: respuesta completa sin cambios (NO censuramos)
+    
+    NOTA: Esta función reemplaza a filter_response_for_public.
+    Ya NO aplicamos filtros de censura a ningún usuario.
+    Ver ADR-002-honest-framing-over-censorship.md
+    """
+    return response
+
+
 def filter_response_for_public(response: str, context: AudienceContext) -> str:
     """
-    Filtra una respuesta para usuarios públicos.
-    
-    Args:
-        response: Respuesta original
-        context: Contexto de audiencia
-        
-    Returns:
-        Respuesta filtrada y acortada si es usuario público
+    DEPRECATED: Esta función ya NO aplica censura.
+    Se mantiene para compatibilidad pero usa honest framing.
+    Ver ADR-002-honest-framing-over-censorship.md
     """
-    if context.is_admin:
-        return response
-    
-    filtered = response
-    
-    # 1. Aplicar reemplazos seguros
-    for pattern, replacement in PUBLIC_SAFE_REPLACEMENTS.items():
-        filtered = re.sub(pattern, replacement, filtered, flags=re.IGNORECASE)
-    
-    # 2. Eliminar líneas con patrones prohibidos
-    lines = filtered.split('\n')
-    safe_lines = []
-    for line in lines:
-        is_safe = True
-        for pattern in PUBLIC_BLACKLIST_PATTERNS:
-            if re.search(pattern, line, re.IGNORECASE):
-                is_safe = False
-                break
-        if is_safe:
-            safe_lines.append(line)
-    
-    filtered = '\n'.join(safe_lines)
-    
-    # 3. Limitar palabras
-    words = filtered.split()
-    if len(words) > context.max_words:
-        filtered = ' '.join(words[:context.max_words]) + '...'
-    
-    return filtered.strip()
+    return format_response_with_honest_framing(response, context)
 
 
-def get_public_safe_metrics() -> Dict[str, str]:
+def get_honest_metrics() -> Dict[str, Any]:
     """
-    Retorna métricas seguras para mostrar a usuarios públicos.
-    Solo muestra datos positivos como capital protegido.
+    Retorna TODAS las métricas reales con honest framing.
+    NO oculta datos negativos - los presenta con contexto verdadero.
     """
     try:
         import psycopg2
@@ -179,39 +150,85 @@ def get_public_safe_metrics() -> Dict[str, str]:
         
         if not database_url:
             return {
-                'capital_protected': '$16.5M+',
-                'vetos_active': '695+',
-                'system_status': 'Validación Institucional Activa'
+                'total_trades': 0,
+                'win_rate': 0.0,
+                'win_rate_context': '(objetivo: 40%+)',
+                'pnl': 0.0,
+                'balance': 1000000.0,
+                'capital_preserved_pct': 100.0,
+                'vetos_count': 0,
+                'system_status': 'Sin conexión a base de datos'
             }
         
         conn = psycopg2.connect(database_url)
         cursor = conn.cursor()
         
-        # Solo obtener métricas positivas
         cursor.execute('''
             SELECT 
-                COUNT(*) as veto_count
-            FROM trading_veto_log
+                COUNT(*) as total_trades,
+                COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as winners,
+                COALESCE(SUM(profit_loss), 0) as total_pnl
+            FROM paper_trading_trades WHERE status = 'closed'
         ''')
-        veto_count = cursor.fetchone()[0] or 0
+        row = cursor.fetchone()
+        if row is None:
+            row = (0, 0, 0)
+        total_trades = row[0] or 0
+        winners = row[1] or 0
+        total_pnl = float(row[2]) if row[2] else 0
+        win_rate = (winners / total_trades * 100) if total_trades > 0 else 0
+        
+        cursor.execute('SELECT balance_usd FROM paper_trading_balances LIMIT 1')
+        balance_row = cursor.fetchone()
+        balance = float(balance_row[0]) if balance_row else 1000000
+        
+        cursor.execute('SELECT COUNT(*) FROM trading_veto_log')
+        veto_row = cursor.fetchone()
+        veto_count = veto_row[0] if veto_row else 0
         
         cursor.close()
         conn.close()
         
+        capital_preserved_pct = (balance / 1000000) * 100
+        
         return {
-            'capital_protected': '$16.5M+',
-            'vetos_active': f'{veto_count:,}',
-            'system_status': 'Validación Institucional Activa',
-            'protection_level': 'Institucional'
+            'total_trades': total_trades,
+            'win_rate': win_rate,
+            'win_rate_context': '(objetivo: 40%+)' if win_rate < 40 else '(objetivo alcanzado)',
+            'pnl': total_pnl,
+            'balance': balance,
+            'capital_preserved_pct': capital_preserved_pct,
+            'vetos_count': veto_count,
+            'system_status': 'Fase de validación' if win_rate < 40 else 'Operacional'
         }
         
     except Exception as e:
-        logger.warning(f"Error fetching public metrics: {e}")
+        logger.warning(f"Error fetching honest metrics: {e}")
         return {
-            'capital_protected': '$16.5M+',
-            'vetos_active': '600+',
-            'system_status': 'Sistema Activo'
+            'total_trades': 0,
+            'win_rate': 0.0,
+            'win_rate_context': '(objetivo: 40%+)',
+            'pnl': 0.0,
+            'balance': 1000000.0,
+            'capital_preserved_pct': 100.0,
+            'vetos_count': 0,
+            'system_status': f'Error: {e}'
         }
+
+
+def get_public_safe_metrics() -> Dict[str, str]:
+    """
+    DEPRECATED: Usa get_honest_metrics() en su lugar.
+    Esta función se mantiene para compatibilidad.
+    """
+    honest = get_honest_metrics()
+    return {
+        'capital_preserved': f"${honest['balance']:,.0f} ({honest['capital_preserved_pct']:.1f}% preservado)",
+        'vetos_active': f"{honest['vetos_count']:,}",
+        'win_rate': f"{honest['win_rate']:.1f}% {honest['win_rate_context']}",
+        'pnl': f"${honest['pnl']:,.2f}",
+        'system_status': honest['system_status']
+    }
 
 
 # =============================================================================

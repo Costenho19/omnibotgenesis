@@ -50,7 +50,24 @@ OMNIX V6.5.4d INSTITUTIONAL+ is an enterprise-grade automated cryptocurrency and
 The system integrates several core engines: AutoTradingBot, Non-Markovian Memory Kernel, Coherence Engine (6-Tier Veto System), AI Risk Guardian, Portfolio Management, CAES (Confidence-Adaptive Entry System), On-Chain Data Intelligence, Execution Protocol, InstitutionalDecisionLogger, and InstitutionalMetricsCalculator. It supports multi-user modes with granular role-based permissions and features Flask and Streamlit dashboards for API access, web terminal, and interactive visualization. Key features include an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection System, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation, and Investor-Grade Automated Responses use institutional language. The Decision Engine incorporates an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine for risk enforcement, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with planned activation via the Strangler Fig pattern, coexisting with legacy components.
 
 ### AI Architecture and Enforcement
-The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. A critical AI Institutional Language Enforcement system ensures responses use approved institutional phrasing, blocking blacklisted terms and enforcing a "founder controlling risk" narrative. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics only when queried, adapting its responses based on the system's current phase (learning vs. optimizing).
+The AI service is refactored with SOLID principles and dependency injection, supporting multiple AI providers. It features an AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations" about system status. OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics only when queried, adapting its responses based on the system's current phase (learning vs. optimizing).
+
+### Honest Framing Policy (Jan 10, 2026)
+**CRITICAL ETHICAL DECISION**: The system uses "Honest Framing" instead of data censorship for investor communications.
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Transparency** | NEVER hide negative metrics (WR, P&L) from potential investors |
+| **On-Request Only** | Detailed metrics shown ONLY when user specifically asks |
+| **Truthful Context** | Add positive context that is TRUE (e.g., "98.5% capital preserved") |
+| **No Euphemisms** | Don't use misleading terms ("capital deployment" to hide losses) |
+
+**Reference**: ADR-002-honest-framing-over-censorship.md
+
+**Example Honest Framing**:
+- "Win Rate: 20.17% (objetivo: 40%+)" - Shows real data with context
+- "P&L: -$15,198 (98.5% capital preservado)" - Negative shown with positive truth
+- "695 operaciones de alto riesgo bloqueadas" - Protection system IS the story
 
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate (V010) blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity.

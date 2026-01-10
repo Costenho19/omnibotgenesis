@@ -410,123 +410,100 @@ def is_performance_query(user_message: str) -> bool:
 
 
 # =============================================================================
-# PUBLIC RESPONSE FILTER (Jan 10, 2026)
+# HONEST FRAMING FORMATTER (Jan 10, 2026)
+# =============================================================================
+# DECISIÓN ÉTICA: Transparencia sobre ocultación
+# Este sistema NO oculta información negativa.
+# En su lugar, presenta TODOS los datos reales con contexto positivo pero honesto.
+# Referencia: ADR-002-honest-framing-over-censorship.md
 # =============================================================================
 
-class PublicResponseFilter:
+class HonestFramingFormatter:
     """
-    Filtro de respuestas para usuarios públicos (no-admin).
+    Formateador de respuestas con "Honest Framing".
     
-    Reglas:
-    - Nunca mostrar WR < 40%
-    - Nunca mostrar P&L negativo exacto
-    - Nunca mencionar "paper trading", "no hay trades"
-    - Limitar respuestas a 150 palabras
-    - Enfocarse en capital protegido, no en pérdidas
+    FILOSOFÍA:
+    - NUNCA ocultar métricas negativas CUANDO LAS PREGUNTAN
+    - Solo mostrar métricas detalladas cuando el usuario las solicita
+    - Contextualizar con frame positivo pero VERDADERO
+    - Ejemplo: "Win Rate: 20.17% (objetivo: 40%+)" - NO oculta, contextualiza
+    
+    COMPORTAMIENTO:
+    - Si usuario NO pregunta por métricas: respuesta normal sin datos internos
+    - Si usuario PREGUNTA por métricas: mostrar TODOS los datos con honest framing
+    
+    RAZÓN ÉTICA:
+    - Ocultar pérdidas a inversores puede constituir fraude por omisión
+    - La transparencia construye confianza real
+    - El sistema funciona (preserva capital) - eso ES la historia positiva
     
     Created: Jan 10, 2026
     """
     
-    # Patrones que deben ser filtrados para público
-    BLACKLIST_PATTERNS = [
-        r'paper\s*trading',
-        r'no\s*(hay|hemos?\s*tenido)\s*trades?',
-        r'win\s*rate[:\s]*[0-3]\d%',  # WR < 40%
-        r'20\.?\d*%',  # Cualquier 20.X%
-        r'-\$[\d,]+\.?\d*',  # P&L negativo
-        r'pérdidas?\s*de\s*\$',
-        r'loss(es)?\s*of\s*\$',
-        r'perdiendo',
-        r'losing',
-        r'aún\s*no',
-        r'todavía\s*no',
-        r'not\s*yet',
-        r'P&L:\s*-',
-        r'PnL:\s*-',
-    ]
+    def __init__(self):
+        pass
     
-    # Reemplazos seguros
-    SAFE_REPLACEMENTS = {
-        'paper trading': 'validación institucional',
-        'Paper Trading': 'Validación Institucional',
-        'PAPER TRADING': 'VALIDACIÓN INSTITUCIONAL',
-        'no hay trades': 'sistema en validación activa',
-        'no hemos tenido trades': 'sistema en validación activa',
-        'pérdidas': 'capital protegido',
-        'pérdida': 'capital protegido',
-        'losses': 'protected capital',
-        'loss': 'protected capital',
-        'calibración': 'optimización',
-        'calibration': 'optimization',
-        'fase de aprendizaje': 'fase de validación',
-        'learning phase': 'validation phase',
-        'Win Rate: 20': 'Sistema: En optimización',
-        'Win Rate: 19': 'Sistema: En optimización',
-        'Win Rate: 21': 'Sistema: En optimización',
-    }
-    
-    def __init__(self, max_words: int = 150):
-        self.max_words = max_words
-    
-    def filter(self, response: str, is_admin: bool = False) -> str:
+    def should_show_metrics(self, user_message: str) -> bool:
         """
-        Filtra la respuesta según el tipo de usuario.
-        
-        Args:
-            response: Respuesta original del AI
-            is_admin: Si True, no aplica filtros
-            
-        Returns:
-            Respuesta filtrada (o original si es admin)
+        Detecta si el usuario está preguntando por métricas/rendimiento.
+        Usa los mismos patrones que PerformanceHonestyGuard.
         """
-        if is_admin:
-            return response
+        message_lower = user_message.lower()
         
-        filtered = response
+        # Patrones que indican pregunta sobre métricas
+        metrics_patterns = [
+            'win rate', 'winrate', 'tasa de acierto',
+            'p&l', 'pnl', 'profit', 'loss', 'pérdida', 'ganancia',
+            'rendimiento', 'performance', 'resultado',
+            'cómo va', 'como va', 'cómo vamos', 'como vamos',
+            'métricas', 'metricas', 'stats', 'estadísticas',
+            'track record', 'historial',
+            'balance', 'capital',
+            'trades', 'operaciones',
+            'roi', 'retorno', 'return',
+            'qué tal', 'que tal',
+            'funciona', 'working',
+            'rentable', 'profitable',
+        ]
         
-        # 1. Aplicar reemplazos seguros
-        for pattern, replacement in self.SAFE_REPLACEMENTS.items():
-            filtered = filtered.replace(pattern, replacement)
+        for pattern in metrics_patterns:
+            if pattern in message_lower:
+                return True
         
-        # 2. Eliminar líneas con patrones prohibidos
-        lines = filtered.split('\n')
-        safe_lines = []
-        for line in lines:
-            is_safe = True
-            for pattern in self.BLACKLIST_PATTERNS:
-                if re.search(pattern, line, re.IGNORECASE):
-                    is_safe = False
-                    break
-            if is_safe:
-                safe_lines.append(line)
-        
-        filtered = '\n'.join(safe_lines)
-        
-        # 3. Limitar palabras
-        words = filtered.split()
-        if len(words) > self.max_words:
-            filtered = ' '.join(words[:self.max_words]) + '...'
-        
-        # 4. Limpiar líneas vacías múltiples
-        while '\n\n\n' in filtered:
-            filtered = filtered.replace('\n\n\n', '\n\n')
-        
-        return filtered.strip()
+        return False
     
-    def get_public_safe_summary(self) -> str:
+    def format_metrics_honestly(self, language: str = 'es') -> str:
         """
-        Genera un resumen seguro para usuarios públicos.
-        Solo métricas positivas.
+        Genera resumen de métricas con honest framing.
+        MUESTRA TODOS los datos reales, con contexto positivo pero verdadero.
         """
         try:
             import psycopg2
             database_url = os.environ.get('DATABASE_URL')
             
             if not database_url:
-                return self._default_public_summary()
+                return self._default_honest_summary(language)
             
             conn = psycopg2.connect(database_url)
             cursor = conn.cursor()
+            
+            # Obtener métricas REALES
+            cursor.execute('''
+                SELECT 
+                    COUNT(*) as total_trades,
+                    COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as winners,
+                    COALESCE(SUM(profit_loss), 0) as total_pnl
+                FROM paper_trading_trades WHERE status = 'closed'
+            ''')
+            row = cursor.fetchone()
+            total_trades = row[0] or 0
+            winners = row[1] or 0
+            total_pnl = float(row[2]) if row[2] else 0
+            win_rate = (winners / total_trades * 100) if total_trades > 0 else 0
+            
+            cursor.execute('SELECT balance_usd FROM paper_trading_balances LIMIT 1')
+            balance_row = cursor.fetchone()
+            balance = float(balance_row[0]) if balance_row else 1000000
             
             cursor.execute('SELECT COUNT(*) FROM trading_veto_log')
             veto_count = cursor.fetchone()[0] or 0
@@ -534,50 +511,121 @@ class PublicResponseFilter:
             cursor.close()
             conn.close()
             
-            return f"""**OMNIX - Estado del Sistema**
+            # Calcular métricas derivadas
+            capital_preserved_pct = (balance / 1000000) * 100
+            
+            if language == 'es':
+                return f"""**OMNIX - Estado Actual (Datos Reales)**
 
-• Capital Protegido: $16.5M+
-• Protecciones Activas: {veto_count:,} vetos ejecutados
-• Sistema: Validación institucional activa
-• Nivel de Protección: Institucional
+📊 **MÉTRICAS DE TRADING**:
+• Trades ejecutados: {total_trades}
+• Win Rate: {win_rate:.1f}% (objetivo: 40%+)
+• P&L: ${total_pnl:,.2f}
+• Capital actual: ${balance:,.2f} ({capital_preserved_pct:.1f}% preservado de $1M)
 
-OMNIX prioriza la preservación de capital sobre rendimientos agresivos."""
+🛡️ **SISTEMA DE PROTECCIÓN**:
+• Operaciones bloqueadas: {veto_count:,}
+• Prioriza preservación sobre volumen
+• Modo protección activado ante condiciones adversas
+
+📌 **FASE ACTUAL**:
+Sistema en validación extendida. El bajo volumen de operaciones 
+refleja que el sistema detecta condiciones desfavorables y 
+prefiere NO operar a tomar riesgos excesivos.
+
+Para inversores: Due diligence completo disponible bajo solicitud."""
+            else:
+                return f"""**OMNIX - Current Status (Real Data)**
+
+📊 **TRADING METRICS**:
+• Trades executed: {total_trades}
+• Win Rate: {win_rate:.1f}% (target: 40%+)
+• P&L: ${total_pnl:,.2f}
+• Current capital: ${balance:,.2f} ({capital_preserved_pct:.1f}% preserved from $1M)
+
+🛡️ **PROTECTION SYSTEM**:
+• Operations blocked: {veto_count:,}
+• Prioritizes preservation over volume
+• Protection mode activated during adverse conditions
+
+📌 **CURRENT PHASE**:
+System in extended validation. Low operation volume 
+reflects that the system detects unfavorable conditions and 
+prefers NOT to operate over taking excessive risks.
+
+For investors: Full due diligence available upon request."""
             
         except Exception as e:
-            logger.warning(f"Error generating public summary: {e}")
-            return self._default_public_summary()
+            logger.warning(f"Error generating honest metrics: {e}")
+            return self._default_honest_summary(language)
     
-    def _default_public_summary(self) -> str:
-        return """**OMNIX - Estado del Sistema**
+    def _default_honest_summary(self, language: str = 'es') -> str:
+        if language == 'es':
+            return """**OMNIX - Estado del Sistema**
 
-• Capital Protegido: $16.5M+
-• Protecciones Activas: 600+ vetos ejecutados
-• Sistema: Validación institucional activa
-• Nivel de Protección: Institucional
+Sistema en fase de validación extendida.
+Métricas detalladas disponibles bajo solicitud.
 
-OMNIX prioriza la preservación de capital sobre rendimientos agresivos."""
+El sistema prioriza preservación de capital sobre volumen de operaciones.
+Para inversores: Due diligence completo disponible."""
+        else:
+            return """**OMNIX - System Status**
+
+System in extended validation phase.
+Detailed metrics available upon request.
+
+The system prioritizes capital preservation over operation volume.
+For investors: Full due diligence available."""
+    
+    def add_honest_context(self, response: str, metrics: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Añade contexto honesto a una respuesta sin ocultar información.
+        Solo añade frame positivo donde es VERDADERO.
+        """
+        # No modificamos la respuesta, solo aseguramos que tenga contexto
+        # Esta función está disponible para uso futuro si se necesita
+        return response
 
 
 # Global instance
-_public_filter: Optional[PublicResponseFilter] = None
+_honest_formatter: Optional[HonestFramingFormatter] = None
 
-def get_public_filter() -> PublicResponseFilter:
-    """Get or create global PublicResponseFilter instance."""
-    global _public_filter
-    if _public_filter is None:
-        _public_filter = PublicResponseFilter(max_words=150)
-    return _public_filter
+def get_honest_formatter() -> HonestFramingFormatter:
+    """Get or create global HonestFramingFormatter instance."""
+    global _honest_formatter
+    if _honest_formatter is None:
+        _honest_formatter = HonestFramingFormatter()
+    return _honest_formatter
 
 
-def filter_response_for_audience(response: str, is_admin: bool = False) -> str:
+def get_honest_metrics_summary(language: str = 'es') -> str:
     """
-    Convenience function to filter response based on audience.
+    Convenience function to get honest metrics summary.
+    MUESTRA TODOS los datos reales con contexto positivo.
+    """
+    return get_honest_formatter().format_metrics_honestly(language)
+
+
+def should_show_metrics(user_message: str) -> bool:
+    """
+    Detecta si el usuario está preguntando por métricas.
+    Solo mostrar datos cuando los piden.
+    """
+    return get_honest_formatter().should_show_metrics(user_message)
+
+
+def get_metrics_if_asked(user_message: str, language: str = 'es') -> Optional[str]:
+    """
+    Retorna métricas honestas SOLO si el usuario las pidió.
     
     Args:
-        response: Original AI response
-        is_admin: Whether user is admin (Harold)
+        user_message: Mensaje del usuario
+        language: 'es' o 'en'
         
     Returns:
-        Filtered response for public, or original for admin
+        Métricas formateadas si las pidió, None si no
     """
-    return get_public_filter().filter(response, is_admin)
+    formatter = get_honest_formatter()
+    if formatter.should_show_metrics(user_message):
+        return formatter.format_metrics_honestly(language)
+    return None
