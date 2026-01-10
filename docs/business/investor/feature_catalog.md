@@ -78,7 +78,7 @@
 | 3 | **Sentiment Analysis** | Behavioral | Measures market mood (Fear & Greed) |
 | 4 | **Kelly Criterion** | Sizing | Calculates optimal bet size |
 | 5 | **HMM Regime Detection** | Machine Learning | Detects TRENDING/RANGING/VOLATILE |
-| 6 | **Kalman Filter** | Signal Processing | Filters noise from price signals |
+| 6 | **Kalman Filter** | Signal Processing | Filters noise from price signals (V6.5.4d: optimized with log suppression + per-pair caching) |
 | 7 | **Quantum Momentum** | Proprietary | 6-component technical score (EMA/RSI/MACD/Volume/HP/ATR) |
 | 8 | **Risk Guardian** | Protection | Overtrading prevention, drawdown protection |
 | 9 | **Coherence Engine** | Validation | 6-tier consensus threshold system |

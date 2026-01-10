@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Current System Metrics
 ## Real-Time Transparency Report
 
-**Last Updated:** January 9, 2026  
+**Last Updated:** January 10, 2026  
 **Data Source:** Production Database (Railway)
 
 ---
@@ -81,7 +81,7 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | Kelly Criterion | Active | V6.5.4 |
 | AI Risk Guardian | Active | V5.4 |
 | Monte Carlo | Active | Quantum-Enhanced |
-| Kalman Filter | Active | Standard |
+| Kalman Filter | Active | V6.5.4d Optimized |
 | HMM Regime Detector | Active | Standard |
 | Portfolio Manager | Active | V6.4 INSTITUTIONAL+ |
 | **InstitutionalDecisionLogger** | **Active** | **V6.5.4** |
@@ -100,6 +100,7 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | **Shadow Portfolio System** | Counterfactual analysis of vetoed trades for filter calibration |
 | **Veto Tracking System** | Real-time capital protection tracking with PostgreSQL persistence |
 | **Adaptive Coherence Gate** | Dynamic thresholds based on EMA score + Black Swan severity |
+| **Kalman Filter Optimization** | Log suppression + per-pair caching for reduced system overhead |
 
 ### V6.5.4 PREMIUM Panel Features (Dec 8, 2025)
 
@@ -243,4 +244,4 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 ---
 
 **Document Version:** V6.5.4d  
-**Last Updated:** January 9, 2026
+**Last Updated:** January 10, 2026
