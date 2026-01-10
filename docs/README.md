@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 7 de Enero 2026  
+**Actualizado**: 10 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -26,6 +26,13 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 - **KELLY HONESTO**: Muestra "Modo Aprendizaje" cuando Kelly es negativo con tracking de costo
 - **ADR**: `docs/reference/adr/ADR-001-brutal-honesty-monitoring.md`
 - **RUNBOOK**: `docs/operations/runbooks/daily_monitor_report.md`
+
+### Balance Precision Correction (Jan 10, 2026)
+- **BALANCE CORREGIDO**: $984,188.74 → $984,801.27 (+$612.53 precisión)
+- **P&L CORREGIDO**: -$19,848.65 → -$15,198.73 (suma real de 119 trades)
+- **ROI CORREGIDO**: -1.98% → -1.52%
+- **VERIFICADO**: Balance = $1M + P&L = $984,801.27 (diferencia $0.00)
+- **AUDIT LOG**: Registrado en `balance_history` y `DATA_INTEGRITY_AUDIT_JAN2026.md`
 
 ### Data Integrity Audit Remediation (Jan 9, 2026)
 - **BALANCE CORREGIDO**: $880,918 → $984,188.74 (gap de $103K resuelto)

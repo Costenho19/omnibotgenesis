@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
 **Fecha**: 10 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades Documentados | Operación Lucidez ACTIVA
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades | Balance $984,801.27 | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 

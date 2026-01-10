@@ -16,7 +16,7 @@
 | **Winning Trades** | 24 | Based on profit_loss > 0 (USD) |
 | **Losing Trades** | 95 | |
 | **Win Rate** | 20.17% | Learning phase - filters being calibrated |
-| **Total P&L** | -$15,811.26 | Including fees (0.26% per transaction) |
+| **Total P&L** | -$15,198.73 | Sum of all 119 trades |
 | **Shadow Events** | 360 | Vetoed trades tracked for analysis |
 | **Open Positions** | 0 | All positions closed |
 
@@ -25,9 +25,9 @@
 | Metric | Value |
 |--------|-------|
 | **Starting Balance** | $1,000,000 |
-| **Current Balance** | $984,188.74 |
-| **Total P&L** | -$15,811.26 |
-| **Total Return** | -1.58% |
+| **Current Balance** | $984,801.27 |
+| **Total P&L** | -$15,198.73 |
+| **Total Return** | -1.52% |
 | **Sharpe Ratio** | -5.82 |
 
 ---
