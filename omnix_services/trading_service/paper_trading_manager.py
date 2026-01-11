@@ -596,9 +596,24 @@ class PaperTradingManager:
         return notional_usd * self.KRAKEN_FEE_RATE
     
     def _open_position_v2(self, user_id: str, symbol: str, base_quantity: float, 
-                         entry_price: float, source_strategy: str = 'auto_trading_bot') -> Optional[str]:
+                         entry_price: float, source_strategy: str = 'auto_trading_bot',
+                         coherence_score: Optional[float] = None,
+                         hmm_regime: Optional[str] = None,
+                         ema_regime_signal: Optional[str] = None,
+                         strategy_confidence: Optional[float] = None,
+                         strategy_mode: Optional[str] = None) -> Optional[str]:
         """
         Abrir nueva posición (BUY) con schema institucional V2
+        
+        HOTFIX JAN 11, 2026: Added analysis fields for forensic investigation
+        See: docs/investigations/TRADE_INVESTIGATION_JAN2026.md
+        
+        Args:
+            coherence_score: Coherence gate score (0-100)
+            hmm_regime: HMM detected regime (TRENDING/RANGING/VOLATILE)
+            ema_regime_signal: EMA signal (LONG/SHORT/NONE)
+            strategy_confidence: Confidence % (0-100)
+            strategy_mode: SNIPER or STANDARD
         
         Returns:
             trade_uuid del trade creado, o None si falla
@@ -617,16 +632,19 @@ class PaperTradingManager:
             total_cost = quote_notional_usd + fee_usd
             
             logger.info(f"🔧 _open_position_v2: Ejecutando INSERT en paper_trading_trades...")
+            logger.info(f"🔧 _open_position_v2: Analysis fields: coherence={coherence_score}, hmm={hmm_regime}, ema={ema_regime_signal}, conf={strategy_confidence}")
             
             result = self.database_service.execute_query(
                 """
                 INSERT INTO paper_trading_trades 
                 (user_id, symbol, side, entry_price, quantity, 
-                 profit_loss, profit_pct, strategy, status, opened_at)
-                VALUES (%s, %s, 'buy', %s, %s, 0, 0, %s, 'open', NOW())
+                 profit_loss, profit_pct, strategy, status, opened_at,
+                 coherence_score, hmm_regime, ema_regime_signal, strategy_confidence, strategy_mode)
+                VALUES (%s, %s, 'buy', %s, %s, 0, 0, %s, 'open', NOW(), %s, %s, %s, %s, %s)
                 RETURNING id
                 """,
-                (user_id, symbol, entry_price, base_quantity, source_strategy)
+                (user_id, symbol, entry_price, base_quantity, source_strategy,
+                 coherence_score, hmm_regime, ema_regime_signal, strategy_confidence, strategy_mode)
             )
             
             logger.info(f"🔧 _open_position_v2: INSERT result = {result}")

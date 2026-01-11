@@ -5043,6 +5043,17 @@ class AutoTradingBot:
                 optimal_size = max_track_record_size
         # ==========================================================================
         
+        # ==========================================================================
+        # INVESTIGATION HOTFIX JAN 11, 2026: HARD CAP $1,000 USD MAX
+        # Root cause: Trades >$1K lose money consistently (55.56% WR micro vs 28% large)
+        # See: docs/investigations/TRADE_INVESTIGATION_JAN2026.md
+        # ==========================================================================
+        MICRO_TRADE_HARD_CAP = 1000.0  # Only micro trades are profitable
+        if optimal_size > MICRO_TRADE_HARD_CAP:
+            logger.warning(f"🛡️ INVESTIGATION HOTFIX: Position capped ${optimal_size:.2f} → ${MICRO_TRADE_HARD_CAP:.2f} (micro tier only)")
+            optimal_size = MICRO_TRADE_HARD_CAP
+        # ==========================================================================
+        
         # ========== FASE 2.1: PARTIAL POSITION SIZING ==========
         # Reduce tamaño cuando confidence está en rango intermedio (50-65%)
         partial_multiplier = 1.0
