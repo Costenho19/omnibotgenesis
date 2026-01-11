@@ -202,8 +202,55 @@ WHERE status = 'closed' AND profit_pct > 0 AND profit_loss < 0;
 
 ---
 
-**Siguiente Paso:** Implementar hotfixes de position sizing y data capture.
+## Estado de Implementación
+
+### Hotfixes Implementados (11 Enero 2026)
+
+| Hotfix | Status | Archivo Modificado |
+|--------|--------|-------------------|
+| $1,000 Hard Cap | ✅ COMPLETADO | `omnix_core/bot/auto_trading_bot.py` |
+| Guardar coherence_score | ✅ COMPLETADO | `omnix_services/trading_service/paper_trading_manager.py` |
+| Guardar hmm_regime | ✅ COMPLETADO | `omnix_services/trading_service/paper_trading_manager.py` |
+| Guardar ema_regime_signal | ✅ COMPLETADO | `omnix_services/trading_service/paper_trading_manager.py` |
+| Guardar strategy_confidence | ✅ COMPLETADO | `omnix_services/trading_service/paper_trading_manager.py` |
+| Guardar strategy_mode | ✅ COMPLETADO | `omnix_services/trading_service/paper_trading_manager.py` |
+
+### Cambios de Código
+
+**1. auto_trading_bot.py - Hard Cap:**
+```python
+# INVESTIGATION HOTFIX JAN 11, 2026: HARD CAP $1,000 USD MAX
+MICRO_TRADE_HARD_CAP = 1000.0
+if optimal_size > MICRO_TRADE_HARD_CAP:
+    logger.warning(f"🛡️ INVESTIGATION HOTFIX: Position capped ${optimal_size:.2f} → ${MICRO_TRADE_HARD_CAP:.2f}")
+    optimal_size = MICRO_TRADE_HARD_CAP
+```
+
+**2. paper_trading_manager.py - Telemetry Fields:**
+- `execute_paper_trade()` ahora acepta: hmm_regime, coherence_score, ema_regime_signal, strategy_confidence, strategy_mode
+- `_open_position_v2()` guarda estos campos en la tabla `paper_trading_trades`
+
+### Próximos Pasos
+
+| Prioridad | Tarea | Status |
+|-----------|-------|--------|
+| 🟡 P1 | Crear modelo expectancy ajustado por fees | PENDIENTE |
+| 🟡 P1 | Validar ADA/SOL/LINK siguen bloqueados | PENDIENTE |
+| 🟢 P2 | Revisar warn_threshold (después de datos) | PENDIENTE |
+
+### Verificación Requerida
+
+Después del deploy a Railway, verificar con:
+```sql
+SELECT coherence_score, hmm_regime, ema_regime_signal, strategy_confidence
+FROM paper_trading_trades 
+WHERE opened_at > '2026-01-11'
+ORDER BY opened_at DESC LIMIT 5;
+```
+
+---
 
 **Autor:** OMNIX Investigation System  
 **Revisado por:** Architect Agent  
-**Fecha:** 11 Enero 2026
+**Fecha:** 11 Enero 2026  
+**Última Actualización:** 11 Enero 2026 (Hotfixes implementados)
