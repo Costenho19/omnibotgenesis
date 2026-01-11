@@ -139,13 +139,19 @@ class PaperTradingManager:
             return {'error': str(e)}
     
     def execute_paper_trade(self, user_id: str, side: str, symbol: str, amount_usd: float, 
-                              source_strategy: str = 'manual') -> Dict:
+                              source_strategy: str = 'manual',
+                              hmm_regime: Optional[str] = None,
+                              coherence_score: Optional[float] = None,
+                              ema_regime_signal: Optional[str] = None,
+                              strategy_confidence: Optional[float] = None,
+                              strategy_mode: Optional[str] = None) -> Dict:
         """
         Ejecutar trade simulado con datos REALES de Kraken
         
         V2: Usa schema institucional con P&L tracking completo
         V3: Integrado con RMS (Risk Management System)
         V6.4: Respeta límites personalizados del usuario (UserSettingsService)
+        V7.0 HOTFIX Jan 11, 2026: Add telemetry fields for forensic analysis
         
         Args:
             user_id: ID del usuario
@@ -153,6 +159,11 @@ class PaperTradingManager:
             symbol: Par de trading (ej: 'BTC/USD')
             amount_usd: Cantidad en USD a tradear
             source_strategy: Estrategia que origina el trade
+            hmm_regime: HMM regime at trade time (TRENDING/RANGING/VOLATILE)
+            coherence_score: Coherence gate score (0-100)
+            ema_regime_signal: EMA signal (BUY/SELL/HOLD)
+            strategy_confidence: Confidence % (0-100)
+            strategy_mode: SNIPER or STANDARD
             
         Returns:
             Dict con resultado del trade simulado
@@ -239,13 +250,18 @@ class PaperTradingManager:
                         'balance_usd': balance['balance_usd']
                     }
                 
-                # Abrir posición V2
+                # Abrir posición V2 with telemetry (HOTFIX Jan 11, 2026)
                 trade_uuid = self._open_position_v2(
                     user_id=user_id,
                     symbol=symbol,
                     base_quantity=crypto_amount,
                     entry_price=current_price,
-                    source_strategy='auto_trading_bot'
+                    source_strategy=source_strategy,
+                    coherence_score=coherence_score,
+                    hmm_regime=hmm_regime,
+                    ema_regime_signal=ema_regime_signal,
+                    strategy_confidence=strategy_confidence,
+                    strategy_mode=strategy_mode
                 )
                 
                 if not trade_uuid:

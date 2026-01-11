@@ -4550,6 +4550,7 @@ class AutoTradingBot:
                         side=action.lower(),
                         symbol=self.config['trading_pair'],
                         amount_usd=amount_usd,
+                        source_strategy='auto_trading_bot',
                         hmm_regime=telemetry_hmm_regime,
                         coherence_score=telemetry_coherence_score,
                         ema_regime_signal=telemetry_ema_signal,
