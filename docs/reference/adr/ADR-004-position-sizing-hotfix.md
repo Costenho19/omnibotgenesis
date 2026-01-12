@@ -1,9 +1,11 @@
 # ADR-004: Position Sizing Hotfix
 
-**Status:** ACCEPTED  
+**Status:** ACCEPTED (Documentation Complete, Code Implementation Pending)  
 **Date:** 2026-01-12  
 **Deciders:** Core Team, AI Architect  
 **Related:** TRADE_INVESTIGATION_JAN2026.md, ADR-003 (Official Positioning)
+
+> **NOTA:** Este ADR documenta la decisión y el plan. Los cambios de código están PENDIENTES de implementación.
 
 ---
 

@@ -27,9 +27,21 @@
 
 | Fix | Descripción | Archivo |
 |-----|-------------|---------|
-| **$1,000 Hard Cap** | Máximo por posición | `auto_trading_bot.py` |
+| **$1,000 Hard Cap** | Máximo por posición (inicial) | `auto_trading_bot.py` |
 | **Telemetría** | Guardar coherence_score, hmm_regime, etc. | `paper_trading_manager.py` |
 | **Dashboard Dual WR** | Mostrar ambos win rates | `queries.py` |
+
+**ADR-004 Position Sizing Hotfix (12 Ene 2026):**
+
+| Hotfix | Antes | Después | Estado |
+|--------|-------|---------|--------|
+| Kelly max_position | 20% | **2%** | 📋 DOC READY, CODE PENDING |
+| Position Hard Cap | $62,500 | **$20,000** | 📋 DOC READY, CODE PENDING |
+| Spread mínimo | 5 bps | 25 bps | 📋 DOC READY, CODE PENDING |
+
+**Estado:** Decisión documentada y aprobada, implementación de código pendiente.
+**Justificación:** Trades <$1K tienen 55.56% WR vs trades >$10K tienen 31% WR.
+**Referencia:** `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
 
 **Dashboard Métricas Actualizadas:**
 - `win_rate_directional`: 37.82% (capacidad predictiva)

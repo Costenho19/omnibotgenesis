@@ -230,10 +230,29 @@ if optimal_size > MICRO_TRADE_HARD_CAP:
 - `execute_paper_trade()` ahora acepta: hmm_regime, coherence_score, ema_regime_signal, strategy_confidence, strategy_mode
 - `_open_position_v2()` guarda estos campos en la tabla `paper_trading_trades`
 
+### Hotfixes Propuestos (ADR-004)
+
+> **Estado:** Documentación aprobada, código pendiente de implementación.
+
+| Hotfix | Cambio | Estado |
+|--------|--------|--------|
+| **Kelly max_position** | 0.20 → 0.02 (20% → 2%) | 📋 DOC READY, CODE PENDING |
+| **Position Hard Cap** | $62,500 → $20,000 | 📋 DOC READY, CODE PENDING |
+| **Spread mínimo** | 5 bps → 25 bps | 📋 DOC READY, CODE PENDING |
+| **Metadata Trading** | Guardar kelly_raw, cap_applied | 📋 DOC READY, CODE PENDING |
+
+**Justificación Empírica:**
+- Trades <$1K: 55.56% WR → RENTABLES
+- Trades >$10K: 31% WR → PIERDEN
+- Nuevo target: Operar en rango $5K-$20K para capturar edge
+
+**Referencia:** `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
+
 ### Próximos Pasos
 
 | Prioridad | Tarea | Status |
 |-----------|-------|--------|
+| 🔴 P0 | Aplicar hotfixes de ADR-004 al código | PENDIENTE |
 | 🟡 P1 | Crear modelo expectancy ajustado por fees | PENDIENTE |
 | 🟡 P1 | Validar ADA/SOL/LINK siguen bloqueados | PENDIENTE |
 | 🟢 P2 | Revisar warn_threshold (después de datos) | PENDIENTE |
@@ -303,4 +322,4 @@ El dashboard ahora muestra:
 **Autor:** OMNIX Investigation System  
 **Revisado por:** Architect Agent  
 **Fecha:** 11 Enero 2026  
-**Última Actualización:** 12 Enero 2026 (Dual-metric framework documentado)
+**Última Actualización:** 12 Enero 2026 (ADR-004 Position Sizing Hotfix documentado)

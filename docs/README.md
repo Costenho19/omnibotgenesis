@@ -18,6 +18,18 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-004: Position Sizing Hotfix (Jan 12, 2026)
+- **ESTADO**: Documentación aprobada, código pendiente de implementación
+- **PROBLEMA DETECTADO**: Kelly operaba con max_position=20% ($62,500), cayendo en rango de trades que pierden
+- **EVIDENCIA EMPÍRICA**:
+  - Trades <$1K: **55.56% WR** → RENTABLES
+  - Trades >$10K: **31% WR** → PIERDEN
+- **HOTFIXES PROPUESTOS**:
+  - Kelly max_position: 20% → **2%** ($62,500 → $20,000)
+  - Position Hard Cap: **$20,000** máximo por trade
+  - Spread mínimo: 5 bps → 25 bps
+- **REFERENCIA**: `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
+
 ### Dual Win Rate Framework - Dashboard UI Update (Jan 12, 2026)
 - **INVESTIGACIÓN**: Descubierto que 21 trades ganaron en dirección pero perdieron por fees de Kraken (~0.26%)
 - **DOS MÉTRICAS**:
@@ -175,6 +187,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 |-----------|-------------|
 | [Trazabilidad](reference/TRACEABILITY_MATRIX.md) | 123 componentes mapeados |
 | [ADR-001](reference/adr/ADR-001-hexagonal.md) | Decisión hexagonal |
+| [ADR-004](reference/adr/ADR-004-position-sizing-hotfix.md) | Position sizing hotfix |
 | [Deuda Técnica](current/TECHNICAL_DEBT.md) | Issues conocidos |
 
 ---

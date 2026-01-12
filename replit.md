@@ -33,6 +33,10 @@ OMNIX V6.5.4d INSTITUTIONAL+ is institutional-grade risk control infrastructure 
    - Net: 20.17% (profitable after Kraken fees)
    - Fee-eroded: 21 trades won in direction but lost to fees
    - Mitigation: $1,000 hard cap implemented
+5. **Position Sizing (ADR-004 - Jan 12, 2026):**
+   - Kelly max_position: 20% → 2% ($62,500 → $20,000 max)
+   - Justification: Trades <$1K = 55% WR, trades >$10K = 31% WR
+   - Reference: `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
 
 **Critical:** We lead with preservation and risk control, NOT with win rate.
 
@@ -70,6 +74,7 @@ Both modes are **100% truthful**, just different emphasis.
 - **Full Guide:** `docs/reference/omnix_official_language.md`
 - **Decision Record:** `docs/reference/adr/ADR-003-official-positioning.md`
 - **Honest Framing:** `docs/reference/adr/ADR-002-honest-framing-over-censorship.md`
+- **Position Sizing:** `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
