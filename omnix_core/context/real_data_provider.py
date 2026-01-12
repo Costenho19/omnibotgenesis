@@ -69,6 +69,9 @@ class OMNIXRealContextProvider:
                     'winning_trades': status.get('winning_trades', 0),
                     'losing_trades': status.get('losing_trades', 0),
                     'win_rate': status.get('win_rate', 0),
+                    'win_rate_net': status.get('win_rate_net', status.get('win_rate', 0)),
+                    'win_rate_directional': status.get('win_rate_directional', 0),
+                    'fee_eroded_trades': status.get('fee_eroded_trades', 0),
                     'profit_loss': status.get('profit_loss', 0),
                     'roi': status.get('roi', 0),
                     'current_balance': status.get('current_balance', 0),
@@ -248,15 +251,20 @@ class OMNIXRealContextProvider:
         
         if at.get('available'):
             is_running = at.get('running', False)
+            wr_dir = at.get('win_rate_directional', 0)
+            wr_net = at.get('win_rate_net', at.get('win_rate', 0))
+            fee_eroded = at.get('fee_eroded_trades', 0)
             prompt += f"""🤖 AUTO-TRADING (Estado Real):
 • Estado: {'🟢 ACTIVO 24/7' if is_running else '🔴 DETENIDO'}
 • Modo: {'📝 PAPER TRADING ($1M virtual)' if at.get('paper_mode') else '💰 TRADING REAL'}
-• Par: {at.get('trading_pair', 'BTC/USD')}
+• Par: {at.get('trading_pair', 'BTC/USD') + ' (ejemplo actual)'}
 • Total Trades: {at.get('total_trades', 0)}
 • Ganadores: {at.get('winning_trades', 0)} | Perdedores: {at.get('losing_trades', 0)}
-• Win Rate: {at.get('win_rate', 0):.1f}%
-• P&L Total: ${at.get('profit_loss', 0):+,.2f}
-• ROI: {at.get('roi', 0):+.2f}%
+• Win Rate Precisión: {wr_dir:.1f}% (predicción de dirección correcta)
+• Win Rate Rentable: {wr_net:.1f}% (ganancia después de fees)
+• Trades Fee-Eroded: {fee_eroded} (acertaron dirección pero perdieron por fees)
+• P&L Total: ${at.get('profit_loss', 0):+,.2f} (fase de validación)
+• ROI: {at.get('roi', 0):+.2f}% (valor referencial en fase de pruebas)
 • Último Trade: {at.get('last_trade_time') or 'Ninguno aún'}
 • Parada Emergencia: {'🚨 ACTIVADA' if at.get('emergency_stop') else '✅ Normal'}
 

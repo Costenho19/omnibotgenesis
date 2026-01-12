@@ -5738,6 +5738,56 @@ class AutoTradingBot:
             'roi': 0.0  # TODO: Calcular ROI real
         }
     
+    def _get_dual_win_rates(self) -> Dict:
+        """
+        Obtener métricas duales de win rate desde la base de datos.
+        - win_rate_net: % trades con profit_loss > 0 (ganancia después de fees)
+        - win_rate_directional: % trades con profit_pct > 0 (dirección correcta)
+        - fee_eroded_trades: trades que acertaron dirección pero perdieron por fees
+        
+        ADR-004 / Dual Win Rate Framework (Jan 12, 2026)
+        """
+        default_result = {
+            'win_rate_net': 0,
+            'win_rate_directional': 0,
+            'fee_eroded_trades': 0
+        }
+        
+        try:
+            if not self.database_service or not hasattr(self.database_service, 'execute_query'):
+                return default_result
+            
+            result = self.database_service.execute_query('''
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as net_wins,
+                    SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as dir_wins,
+                    SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+            ''')
+            
+            if result and len(result) > 0 and result[0]:
+                row = result[0]
+                if row and len(row) >= 4:
+                    total = int(row[0] or 0)
+                    net_wins = int(row[1] or 0)
+                    dir_wins = int(row[2] or 0)
+                    fee_eroded = int(row[3] or 0)
+                    
+                    if total > 0:
+                        return {
+                            'win_rate_net': round(net_wins / total * 100, 2),
+                            'win_rate_directional': round(dir_wins / total * 100, 2),
+                            'fee_eroded_trades': fee_eroded
+                        }
+            
+            return default_result
+            
+        except Exception as e:
+            logger.debug(f"Error obteniendo dual win rates: {e}")
+            return default_result
+    
     def get_status(self) -> Dict:
         """Obtener estado actual del bot"""
         balance = self._get_balance()
@@ -5753,6 +5803,8 @@ class AutoTradingBot:
         initial_balance = self.state['initial_balance'] if self.state['initial_balance'] else balance
         roi = ((balance - initial_balance) / initial_balance * 100) if initial_balance > 0 else 0
         
+        dual_wr = self._get_dual_win_rates()
+        
         status = {
             'running': self.state['running'],
             'paper_mode': self.config['paper_mode'],
@@ -5766,6 +5818,9 @@ class AutoTradingBot:
             'winning_trades': winning_trades,
             'losing_trades': losing_trades,
             'win_rate': win_rate,
+            'win_rate_net': dual_wr.get('win_rate_net', win_rate),
+            'win_rate_directional': dual_wr.get('win_rate_directional', 0),
+            'fee_eroded_trades': dual_wr.get('fee_eroded_trades', 0),
             'last_trade_time': self.state.get('last_trade_time', None),
             'check_interval': self.config['check_interval_seconds'],
             'min_confidence': self.config['min_confidence'],
