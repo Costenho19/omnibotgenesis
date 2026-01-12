@@ -19,7 +19,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ## Cambios Recientes
 
 ### ADR-004: Position Sizing Hotfix (Jan 12, 2026)
-- **ESTADO**: Documentación aprobada, código pendiente de implementación
+- **ESTADO**: ✅ IMPLEMENTADO (27 tests pasados)
 - **PROBLEMA DETECTADO**: Kelly operaba con max_position=20% ($62,500), cayendo en rango de trades que pierden
 - **EVIDENCIA EMPÍRICA**:
   - Trades <$1K: **55.56% WR** → RENTABLES

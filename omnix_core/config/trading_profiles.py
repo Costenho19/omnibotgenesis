@@ -104,6 +104,20 @@ TRACK_RECORD_MODE = os.getenv("TRACK_RECORD_MODE", "false").lower() == "true"
 logger.info(f"📊 TRADING MODES: TRACK_RECORD_MODE={TRACK_RECORD_MODE}, LOW_VOL_MODE={LOW_VOL_MODE}")
 
 # ============================================================
+# ADR-004: POSITION SIZING HOTFIX - Jan 12, 2026
+# ============================================================
+# Basado en investigación empírica:
+# - Trades <$1K: 55.56% WR → RENTABLES
+# - Trades >$10K: 31% WR → PIERDEN
+# - Target: Operar en rango $5K-$20K
+# ============================================================
+POSITION_HARD_CAP_USD = 20_000.0  # $20K máximo absoluto por trade
+KELLY_MAX_POSITION = 0.02  # 2% máximo del capital (antes 20%)
+MIN_SPREAD_BPS = 25  # 25 basis points mínimo (antes 5 bps)
+
+logger.info(f"📊 ADR-004 HOTFIX: POSITION_HARD_CAP=${POSITION_HARD_CAP_USD:,.0f}, KELLY_MAX={KELLY_MAX_POSITION*100:.0f}%, MIN_SPREAD={MIN_SPREAD_BPS}bps")
+
+# ============================================================
 # MODULE STATUS REGISTRY - Transparencia institucional
 # ============================================================
 MODULE_STATUS_REGISTRY = {
@@ -586,10 +600,11 @@ INSTITUTIONAL_PROFILE = TradingProfile(
     name="INSTITUTIONAL",
     description="Perfil conservador original - Prioriza preservar capital. "
                 "Diseñado para trading real con fondos reales. "
-                "Múltiples capas de protección y vetos estrictos.",
+                "Múltiples capas de protección y vetos estrictos. "
+                "ADR-004: Kelly max 2%, hard cap $20K.",
     
     min_trade_usd=75.0,
-    max_position_pct=0.12,
+    max_position_pct=KELLY_MAX_POSITION,  # ADR-004: 0.12 → 0.02 (12% → 2%)
     stop_loss_pct=0.02,
     stop_loss_pct_high_vol=0.03,
     take_profit_pct=0.03,

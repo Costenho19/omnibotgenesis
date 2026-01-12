@@ -99,7 +99,8 @@ try:
     from omnix_core.config.trading_profiles import (
         get_active_profile, TradingProfile, get_sl_tp_for_symbol, VolatilityClass,
         get_pair_calibration, is_symbol_allowed, CalibrationTier, PairCalibration,
-        ModuleStatus, MODULE_STATUS_REGISTRY, TRACK_RECORD_MODE, LOW_VOL_MODE
+        ModuleStatus, MODULE_STATUS_REGISTRY, TRACK_RECORD_MODE, LOW_VOL_MODE,
+        POSITION_HARD_CAP_USD, KELLY_MAX_POSITION, MIN_SPREAD_BPS  # ADR-004
     )
     TRADING_PROFILES_AVAILABLE = True
 except ImportError:
@@ -114,6 +115,9 @@ except ImportError:
     MODULE_STATUS_REGISTRY = {}
     TRACK_RECORD_MODE = False
     LOW_VOL_MODE = False
+    POSITION_HARD_CAP_USD = 20_000.0  # ADR-004 fallback
+    KELLY_MAX_POSITION = 0.02  # ADR-004 fallback
+    MIN_SPREAD_BPS = 25  # ADR-004 fallback
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
 try:
@@ -2393,6 +2397,7 @@ class AutoTradingBot:
             # ========== ESTRATEGIAS V5.2 QUANTUM ==========
             
             # 5. Kelly Criterion - Position sizing óptimo
+            # ADR-004: max_position=0.02 (2%) basado en investigación empírica
             kelly = None
             if self.config['use_v52_strategies'] and self.advanced_features:
                 if hasattr(self.advanced_features, 'kelly_optimizer'):
@@ -2400,7 +2405,8 @@ class AutoTradingBot:
                         win_rate=0.55,  # Basado en histórico
                         avg_win=0.03,
                         avg_loss=0.02,
-                        total_capital=self._get_balance()
+                        total_capital=self._get_balance(),
+                        max_position=KELLY_MAX_POSITION  # ADR-004: 20% → 2%
                     )
             
             # 6. HMM Regime Detection - Detectar régimen de mercado
@@ -5045,14 +5051,14 @@ class AutoTradingBot:
         # ==========================================================================
         
         # ==========================================================================
-        # INVESTIGATION HOTFIX JAN 11, 2026: HARD CAP $1,000 USD MAX
-        # Root cause: Trades >$1K lose money consistently (55.56% WR micro vs 28% large)
-        # See: docs/investigations/TRADE_INVESTIGATION_JAN2026.md
+        # ADR-004: POSITION SIZING HOTFIX - Jan 12, 2026
+        # Evidence: Trades <$1K = 55% WR (profitable), Trades >$10K = 31% WR (lose)
+        # Target: Operate in $5K-$20K range to capture edge
+        # See: docs/reference/adr/ADR-004-position-sizing-hotfix.md
         # ==========================================================================
-        MICRO_TRADE_HARD_CAP = 1000.0  # Only micro trades are profitable
-        if optimal_size > MICRO_TRADE_HARD_CAP:
-            logger.warning(f"🛡️ INVESTIGATION HOTFIX: Position capped ${optimal_size:.2f} → ${MICRO_TRADE_HARD_CAP:.2f} (micro tier only)")
-            optimal_size = MICRO_TRADE_HARD_CAP
+        if optimal_size > POSITION_HARD_CAP_USD:
+            logger.warning(f"🛡️ ADR-004 HOTFIX: Position capped ${optimal_size:.2f} → ${POSITION_HARD_CAP_USD:.2f}")
+            optimal_size = POSITION_HARD_CAP_USD
         # ==========================================================================
         
         # ========== FASE 2.1: PARTIAL POSITION SIZING ==========

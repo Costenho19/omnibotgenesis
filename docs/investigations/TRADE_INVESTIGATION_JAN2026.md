@@ -230,16 +230,16 @@ if optimal_size > MICRO_TRADE_HARD_CAP:
 - `execute_paper_trade()` ahora acepta: hmm_regime, coherence_score, ema_regime_signal, strategy_confidence, strategy_mode
 - `_open_position_v2()` guarda estos campos en la tabla `paper_trading_trades`
 
-### Hotfixes Propuestos (ADR-004)
+### Hotfixes Implementados (ADR-004)
 
-> **Estado:** Documentación aprobada, código pendiente de implementación.
+> **Estado:** ✅ CÓDIGO IMPLEMENTADO (12 Ene 2026, 27 tests pasados)
 
 | Hotfix | Cambio | Estado |
 |--------|--------|--------|
-| **Kelly max_position** | 0.20 → 0.02 (20% → 2%) | 📋 DOC READY, CODE PENDING |
-| **Position Hard Cap** | $62,500 → $20,000 | 📋 DOC READY, CODE PENDING |
-| **Spread mínimo** | 5 bps → 25 bps | 📋 DOC READY, CODE PENDING |
-| **Metadata Trading** | Guardar kelly_raw, cap_applied | 📋 DOC READY, CODE PENDING |
+| **Kelly max_position** | 0.20 → 0.02 (20% → 2%) | ✅ IMPLEMENTADO |
+| **Position Hard Cap** | $62,500 → $20,000 | ✅ IMPLEMENTADO |
+| **Spread mínimo** | 5 bps → 25 bps | ✅ IMPLEMENTADO |
+| **Metadata Trading** | Guardar kelly_raw, cap_applied | 📋 PENDIENTE (fase 2) |
 
 **Justificación Empírica:**
 - Trades <$1K: 55.56% WR → RENTABLES
