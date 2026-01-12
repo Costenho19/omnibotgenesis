@@ -232,11 +232,26 @@ Capa 4: Ejecución (TWAP/VWAP/ICEBERG)
 | blueprints/intelligence.py | AI/intelligence routes |
 | api_client.py | OmnixAPIClient |
 
+#### Dual Win Rate Framework (Jan 12, 2026)
+
+El dashboard muestra dos métricas de win rate separadas:
+
+| Métrica | Campo API | Descripción |
+|---------|-----------|-------------|
+| WR Dir (Directional) | `win_rate_directional` | % trades donde el precio se movió en la dirección predicha |
+| WR Net | `win_rate_net` | % trades rentables después de fees de Kraken (~0.26%) |
+| Fee Eroded | `fee_eroded_trades` | Trades que acertaron dirección pero perdieron a fees |
+
+**Ubicación UI:**
+- Terminal Header: Columnas "WR Dir" y "WR Net"
+- Trade History Widget: Fila de estadísticas con ambos WR + contador fee-eroded
+- Streamlit Overview: 5 columnas con tooltips explicativos
+
 #### Endpoints Principales
 
 | Endpoint | Función |
 |----------|---------|
-| `/api/metrics` | Trading performance data |
+| `/api/metrics` | Trading performance data (incluye dual win rates) |
 | `/api/sharpe` | Sharpe/Sortino/Calmar ratios |
 | `/api/trades` | Recent trades |
 | `/api/balance-history` | Balance history |
@@ -251,7 +266,9 @@ Capa 4: Ejecución (TWAP/VWAP/ICEBERG)
 | Widget | Data Source | Update |
 |--------|-------------|--------|
 | Balance Chart | `/api/balance-history` | 30s |
-| Win Rate Gauge | `/api/metrics` | 60s |
+| WR Directional | `/api/metrics` → `win_rate_directional` | 60s |
+| WR Net | `/api/metrics` → `win_rate_net` | 60s |
+| Fee Eroded Count | `/api/metrics` → `fee_eroded_trades` | 60s |
 | Trade Table | `/api/trades` | 30s |
 | P&L Chart | `/api/metrics` | 60s |
 | Sharpe/Sortino | `/api/sharpe` | 60s |

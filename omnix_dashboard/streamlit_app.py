@@ -571,12 +571,14 @@ def render_overview(metrics, quarantine=None):
         return
     
     total_trades = metrics.get('total_trades', 0)
-    win_rate = metrics.get('win_rate', 0)
+    win_rate_net = metrics.get('win_rate_net', metrics.get('win_rate', 0))
+    win_rate_dir = metrics.get('win_rate_directional', 0)
+    fee_eroded = metrics.get('fee_eroded_trades', 0)
     total_pnl = metrics.get('total_pnl', 0)
     sharpe_ratio = metrics.get('sharpe_ratio', 0)
     pair_metrics = metrics.get('pair_metrics', {})
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         st.metric(
@@ -586,15 +588,26 @@ def render_overview(metrics, quarantine=None):
         )
     
     with col2:
-        color = "normal" if win_rate >= 55 else "inverse"
+        color = "normal" if win_rate_dir >= 40 else "inverse"
         st.metric(
-            "Win Rate",
-            f"{win_rate:.1f}%",
-            delta=f"{win_rate - 50:.1f}% vs 50%" if win_rate != 50 else None,
-            delta_color=color
+            "WR Directional",
+            f"{win_rate_dir:.1f}%",
+            delta="Price prediction",
+            delta_color=color,
+            help="Percentage of trades where price moved in the predicted direction"
         )
     
     with col3:
+        color = "normal" if win_rate_net >= 40 else "inverse"
+        st.metric(
+            "WR Net",
+            f"{win_rate_net:.1f}%",
+            delta=f"{fee_eroded} fee-eroded" if fee_eroded > 0 else None,
+            delta_color="inverse" if fee_eroded > 0 else "off",
+            help="Percentage of trades profitable after Kraken fees (~0.26%)"
+        )
+    
+    with col4:
         pnl_color = "normal" if total_pnl >= 0 else "inverse"
         st.metric(
             "Total P&L",
@@ -602,7 +615,7 @@ def render_overview(metrics, quarantine=None):
             delta_color=pnl_color
         )
     
-    with col4:
+    with col5:
         sharpe_color = "normal" if sharpe_ratio >= 1.0 else "inverse"
         st.metric(
             "Sharpe Ratio",

@@ -18,6 +18,20 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### Dual Win Rate Framework - Dashboard UI Update (Jan 12, 2026)
+- **INVESTIGACIÓN**: Descubierto que 21 trades ganaron en dirección pero perdieron por fees de Kraken (~0.26%)
+- **DOS MÉTRICAS**:
+  - **WR Directional (37.82%)**: Precisión de predicción de precio (pnl_percent > 0)
+  - **WR Net (20.17%)**: Rentabilidad después de fees (profit_loss > 0)
+- **UI ACTUALIZADA**:
+  - Terminal Header: Ahora muestra "WR Dir" y "WR Net" en lugar de un solo "Win Rate"
+  - Trade History Widget: Muestra ambos win rates + contador de "Fee Eroded" trades
+  - Streamlit Overview: 5 columnas con ambas métricas y tooltips explicativos
+- **FEE EROSION**: 21 trades identificados que acertaron dirección pero perdieron a fees
+- **MITIGACIÓN**: Cap de $1,000 implementado para reducir impacto de fees en trades pequeños
+- **ALINEACIÓN ADR-002**: Ambas métricas visibles con contexto claro (Honest Framing)
+- **DOCUMENTACIÓN**: Ver `docs/investigations/TRADE_INVESTIGATION_JAN2026.md` para análisis completo
+
 ### Official Positioning & Language Guide (Jan 10, 2026)
 - **ADR-003**: OMNIX officially positioned as "institutional-grade risk control infrastructure"
 - **NEW DOCUMENT**: `docs/reference/omnix_official_language.md` - Complete language guide

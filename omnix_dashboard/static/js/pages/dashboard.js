@@ -40,10 +40,26 @@ const DashboardApp = (function() {
         pnlEl.textContent = OmnixUtils.formatCurrency(pnl, { showSign: true });
         pnlEl.className = `text-2xl lg:text-3xl font-bold mono ${OmnixUtils.getStatClass(pnl)}`;
 
-        const winRate = metrics.win_rate || 0;
+        const winRateDir = metrics.win_rate_directional || 0;
+        const winRateDirEl = document.getElementById('win-rate-dir');
+        if (winRateDirEl) {
+            winRateDirEl.textContent = `${winRateDir.toFixed(1)}%`;
+            winRateDirEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateDir >= 40 ? 'stat-positive' : winRateDir > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+        }
+        
+        const winRateNet = metrics.win_rate_net || metrics.win_rate || 0;
+        const winRateNetEl = document.getElementById('win-rate-net');
+        if (winRateNetEl) {
+            winRateNetEl.textContent = `${winRateNet.toFixed(1)}%`;
+            winRateNetEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateNet >= 40 ? 'stat-positive' : winRateNet > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+        }
+        
         const winRateEl = document.getElementById('win-rate');
-        winRateEl.textContent = `${winRate.toFixed(1)}%`;
-        winRateEl.className = `text-2xl lg:text-3xl font-bold mono ${winRate >= 50 ? 'stat-positive' : winRate > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+        if (winRateEl) {
+            const winRate = metrics.win_rate || 0;
+            winRateEl.textContent = `${winRate.toFixed(1)}%`;
+            winRateEl.className = `text-2xl lg:text-3xl font-bold mono ${winRate >= 50 ? 'stat-positive' : winRate > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+        }
 
         OmnixUtils.setElement('wins-losses', `${metrics.winning_trades || 0}W / ${metrics.losing_trades || 0}L`);
         OmnixUtils.setElement('sharpe-ratio', (metrics.sharpe_ratio || 0).toFixed(2));

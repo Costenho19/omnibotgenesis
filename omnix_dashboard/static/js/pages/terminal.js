@@ -17,7 +17,13 @@ const TerminalApp = (function() {
             pnlEl.textContent = `${m.total_pnl >= 0 ? '+' : ''}$${m.total_pnl.toFixed(2)}`;
             pnlEl.className = `header-stat-value ${m.total_pnl >= 0 ? 'positive' : 'negative'}`;
 
-            OmnixUtils.setElement('win-rate', `${m.win_rate.toFixed(1)}%`);
+            const winRateDir = m.win_rate_directional || 0;
+            const winRateNet = m.win_rate_net || m.win_rate || 0;
+            OmnixUtils.setElement('win-rate-dir', `${winRateDir.toFixed(1)}%`);
+            OmnixUtils.setElement('win-rate-net', `${winRateNet.toFixed(1)}%`);
+            if (document.getElementById('win-rate')) {
+                OmnixUtils.setElement('win-rate', `${m.win_rate.toFixed(1)}%`);
+            }
             OmnixUtils.setElement('trades-count', m.total_trades);
             OmnixUtils.setElement('max-dd', `${m.max_drawdown.toFixed(1)}%`);
             OmnixUtils.setElement('sharpe', m.sharpe_ratio.toFixed(2));

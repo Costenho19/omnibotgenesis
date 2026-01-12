@@ -63,9 +63,17 @@ const TradeHistoryWidget = {
                         <span class="trade-stat-mini-label">Losses:</span>
                         <span class="trade-stat-mini-value negative">${statistics.losing_trades}</span>
                     </div>
-                    <div class="trade-stat-mini">
-                        <span class="trade-stat-mini-label">Win Rate:</span>
-                        <span class="trade-stat-mini-value ${statistics.win_rate >= 55 ? 'positive' : ''}">${statistics.win_rate}%</span>
+                    <div class="trade-stat-mini" title="Directional: Price moved as predicted">
+                        <span class="trade-stat-mini-label">WR Dir:</span>
+                        <span class="trade-stat-mini-value ${statistics.win_rate_directional >= 40 ? 'positive' : ''}">${(statistics.win_rate_directional || 0).toFixed(1)}%</span>
+                    </div>
+                    <div class="trade-stat-mini" title="Net: Profitable after fees">
+                        <span class="trade-stat-mini-label">WR Net:</span>
+                        <span class="trade-stat-mini-value ${statistics.win_rate >= 40 ? 'positive' : ''}">${statistics.win_rate}%</span>
+                    </div>
+                    <div class="trade-stat-mini" title="Trades that won in direction but lost to fees">
+                        <span class="trade-stat-mini-label">Fee Eroded:</span>
+                        <span class="trade-stat-mini-value negative">${statistics.fee_eroded_trades || 0}</span>
                     </div>
                     <div class="trade-stat-mini">
                         <span class="trade-stat-mini-label">Total P&L:</span>
