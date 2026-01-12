@@ -28,7 +28,11 @@ OMNIX V6.5.4d INSTITUTIONAL+ is institutional-grade risk control infrastructure 
 1. **Capital Preservation:** 98.5% of initial capital maintained
 2. **Risk Events Blocked:** 695 high-risk operations vetoed
 3. **System Integrity:** Zero data inconsistencies, complete audit trail
-4. **Win Rate:** 20.17% (diagnostic metric, not marketing metric)
+4. **Win Rate (Dual Metric Framework - Jan 12, 2026):**
+   - Directional: 37.82% (system correctly predicted price direction)
+   - Net: 20.17% (profitable after Kraken fees)
+   - Fee-eroded: 21 trades won in direction but lost to fees
+   - Mitigation: $1,000 hard cap implemented
 
 **Critical:** We lead with preservation and risk control, NOT with win rate.
 

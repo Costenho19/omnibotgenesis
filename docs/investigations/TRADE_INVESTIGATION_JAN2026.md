@@ -250,7 +250,57 @@ ORDER BY opened_at DESC LIMIT 5;
 
 ---
 
+## Apéndice: Definición de Win Rates (Dual-Metric Framework)
+
+### Contexto del Problema
+
+El sistema mostraba un win rate de 20.17% pero la investigación reveló que el win rate "real" podría interpretarse como 37.82%. Ambos números son correctos pero miden cosas diferentes.
+
+### Dos Métricas de Win Rate
+
+| Métrica | Cálculo | Valor | Significado |
+|---------|---------|-------|-------------|
+| **Win Rate Direccional** | `profit_pct > 0` | 37.82% | Sistema acertó la dirección del precio |
+| **Win Rate Neto** | `profit_loss > 0` | 20.17% | Trade generó ganancia después de fees |
+
+### ¿Por qué la diferencia?
+
+21 trades (17.6% del total) ganaron en dirección pero perdieron dinero:
+- Ganancia promedio: 0.20% en precio
+- Fee de Kraken: ~0.26% (0.16% entry + 0.10% exit)
+- Resultado: **Pérdida neta** a pesar de acertar dirección
+
+### Cuándo Usar Cada Métrica
+
+| Contexto | Métrica Recomendada | Razón |
+|----------|---------------------|-------|
+| **Evaluar capacidad predictiva** | Direccional (37.82%) | Muestra que el sistema acierta dirección |
+| **Reportar a inversores** | Neto (20.17%) | Es lo que realmente importa financieramente |
+| **Comunicación completa** | Ambos con contexto | Honest Framing (ADR-002) |
+
+### Formato de Comunicación Honest Framing
+
+```
+Win Rate: 37.82% direccional | 20.17% neto
+Contexto: 21 trades erosionados por fees en posiciones grandes
+Mitigación: Cap $1,000 implementado para eliminar problema de fees
+```
+
+### Métricas en Dashboard
+
+El dashboard ahora muestra:
+- `win_rate_directional`: 37.82% (basado en profit_pct > 0)
+- `win_rate_net`: 20.17% (basado en profit_loss > 0)
+- `fee_eroded_trades`: 21 (trades afectados por fees)
+
+### Referencia
+
+- **ADR-002:** Honest Framing Over Censorship
+- **Hotfix:** $1,000 cap elimina el problema de fees en posiciones grandes
+
+---
+
 **Autor:** OMNIX Investigation System  
 **Revisado por:** Architect Agent  
 **Fecha:** 11 Enero 2026  
-**Última Actualización:** 11 Enero 2026 (Hotfixes implementados)
+**Última Actualización:** 12 Enero 2026 (Dual-metric framework documentado)

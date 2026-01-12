@@ -167,6 +167,10 @@ def calculate_metrics(trades):
             'winning_trades': 0,
             'losing_trades': 0,
             'win_rate': 0,
+            'win_rate_net': 0,
+            'win_rate_directional': 0,
+            'directional_winners': 0,
+            'fee_eroded_trades': 0,
             'total_pnl': 0,
             'avg_win': 0,
             'avg_loss': 0,
@@ -191,6 +195,10 @@ def calculate_metrics(trades):
             'winning_trades': 0,
             'losing_trades': 0,
             'win_rate': 0,
+            'win_rate_net': 0,
+            'win_rate_directional': 0,
+            'directional_winners': 0,
+            'fee_eroded_trades': 0,
             'total_pnl': 0,
             'avg_win': 0,
             'avg_loss': 0,
@@ -213,6 +221,11 @@ def calculate_metrics(trades):
     winning_trades = len(winning)
     losing_trades = len(losing)
     win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+    
+    profit_pcts = [float(t.get('pnl_percent', 0) or 0) for t in closed_trades]
+    directional_winners = len([p for p in profit_pcts if p > 0])
+    directional_win_rate = (directional_winners / total_trades * 100) if total_trades > 0 else 0
+    fee_eroded_trades = len([i for i, pct in enumerate(profit_pcts) if pct > 0 and pnls[i] < 0])
     
     total_pnl = sum(pnls)
     avg_win = np.mean(winning) if winning else 0
@@ -265,6 +278,10 @@ def calculate_metrics(trades):
         'winning_trades': winning_trades,
         'losing_trades': losing_trades,
         'win_rate': round(win_rate, 2),
+        'win_rate_net': round(win_rate, 2),
+        'win_rate_directional': round(directional_win_rate, 2),
+        'directional_winners': directional_winners,
+        'fee_eroded_trades': fee_eroded_trades,
         'total_pnl': round(total_pnl, 2),
         'avg_win': round(avg_win, 2),
         'avg_loss': round(avg_loss, 2),

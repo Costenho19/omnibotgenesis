@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 10 de Enero 2026  
+**Fecha**: 12 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades | Balance $984,801.27 | Operación Lucidez ACTIVA
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,42 @@
 ---
 
 ## Cambios Recientes
+
+### Trade Investigation - Dual Win Rate Framework (Jan 11-12, 2026)
+
+**HALLAZGO CRÍTICO:** El win rate reportado (20.17%) era incompleto. Existen dos métricas válidas.
+
+| Métrica | Valor | Cálculo | Significado |
+|---------|-------|---------|-------------|
+| **Win Rate Direccional** | 37.82% | `profit_pct > 0` | Sistema acierta dirección |
+| **Win Rate Neto** | 20.17% | `profit_loss > 0` | Ganancia después de fees |
+
+**Root Cause de la Diferencia:**
+- 21 trades (17.6%) ganaron en dirección pero perdieron por fees
+- Trades grandes ($10K-$50K) con ganancias pequeñas (0.2%) no cubren fees de Kraken (0.26%)
+- Trades micro (<$1K) son rentables: 55.56% WR, +$101 P&L
+
+**Hotfixes Implementados:**
+
+| Fix | Descripción | Archivo |
+|-----|-------------|---------|
+| **$1,000 Hard Cap** | Máximo por posición | `auto_trading_bot.py` |
+| **Telemetría** | Guardar coherence_score, hmm_regime, etc. | `paper_trading_manager.py` |
+| **Dashboard Dual WR** | Mostrar ambos win rates | `queries.py` |
+
+**Dashboard Métricas Actualizadas:**
+- `win_rate_directional`: 37.82% (capacidad predictiva)
+- `win_rate_net`: 20.17% (resultado financiero)
+- `fee_eroded_trades`: 21 (trades afectados por fees)
+
+**Alineación con ADR-002 Honest Framing:**
+- Ambas métricas visibles con contexto
+- Sin ocultar datos negativos
+- Explicación clara de la diferencia
+
+**Documentación:** `docs/investigations/TRADE_INVESTIGATION_JAN2026.md`
+
+---
 
 ### Kalman Filter Log Optimization (Jan 10, 2026)
 
