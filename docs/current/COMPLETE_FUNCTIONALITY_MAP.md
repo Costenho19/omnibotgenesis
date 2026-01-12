@@ -236,14 +236,14 @@ Capa 4: Ejecución (TWAP/VWAP/ICEBERG)
 
 El dashboard muestra dos métricas de win rate separadas:
 
-| Métrica | Campo API | Descripción |
-|---------|-----------|-------------|
-| WR Dir (Directional) | `win_rate_directional` | % trades donde el precio se movió en la dirección predicha |
-| WR Net | `win_rate_net` | % trades rentables después de fees de Kraken (~0.26%) |
+| Métrica UI | Campo API | Descripción |
+|------------|-----------|-------------|
+| **Precisión** | `win_rate_directional` | % trades donde el precio se movió en la dirección predicha |
+| **Rentable** | `win_rate_net` | % trades rentables después de fees de Kraken (~0.26%) |
 | Fee Eroded | `fee_eroded_trades` | Trades que acertaron dirección pero perdieron a fees |
 
 **Ubicación UI:**
-- Terminal Header: Columnas "WR Dir" y "WR Net"
+- Terminal Header: Columnas "Precisión" y "Rentable" con tooltips en español
 - Trade History Widget: Fila de estadísticas con ambos WR + contador fee-eroded
 - Streamlit Overview: 5 columnas con tooltips explicativos
 
@@ -266,8 +266,8 @@ El dashboard muestra dos métricas de win rate separadas:
 | Widget | Data Source | Update |
 |--------|-------------|--------|
 | Balance Chart | `/api/balance-history` | 30s |
-| WR Directional | `/api/metrics` → `win_rate_directional` | 60s |
-| WR Net | `/api/metrics` → `win_rate_net` | 60s |
+| Precisión | `/api/metrics` → `win_rate_directional` | 60s |
+| Rentable | `/api/metrics` → `win_rate_net` | 60s |
 | Fee Eroded Count | `/api/metrics` → `fee_eroded_trades` | 60s |
 | Trade Table | `/api/trades` | 30s |
 | P&L Chart | `/api/metrics` | 60s |

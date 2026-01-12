@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d - Documentación
 
 **Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 10 de Enero 2026  
+**Actualizado**: 12 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -21,10 +21,10 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ### Dual Win Rate Framework - Dashboard UI Update (Jan 12, 2026)
 - **INVESTIGACIÓN**: Descubierto que 21 trades ganaron en dirección pero perdieron por fees de Kraken (~0.26%)
 - **DOS MÉTRICAS**:
-  - **WR Directional (37.82%)**: Precisión de predicción de precio (pnl_percent > 0)
-  - **WR Net (20.17%)**: Rentabilidad después de fees (profit_loss > 0)
+  - **Precisión (37.82%)**: % de trades donde el precio se movió en la dirección predicha (pnl_percent > 0)
+  - **Rentable (20.17%)**: % de trades rentables después de comisiones (profit_loss > 0)
 - **UI ACTUALIZADA**:
-  - Terminal Header: Ahora muestra "WR Dir" y "WR Net" en lugar de un solo "Win Rate"
+  - Terminal Header: Muestra "Precisión" y "Rentable" con tooltips explicativos en español
   - Trade History Widget: Muestra ambos win rates + contador de "Fee Eroded" trades
   - Streamlit Overview: 5 columnas con ambas métricas y tooltips explicativos
 - **FEE EROSION**: 21 trades identificados que acertaron dirección pero perdieron a fees
