@@ -252,10 +252,11 @@ if optimal_size > MICRO_TRADE_HARD_CAP:
 
 | Prioridad | Tarea | Status |
 |-----------|-------|--------|
-| 🔴 P0 | Aplicar hotfixes de ADR-004 al código | PENDIENTE |
+| 🔴 P0 | Aplicar hotfixes de ADR-004 al código | ✅ COMPLETADO |
 | 🟡 P1 | Crear modelo expectancy ajustado por fees | PENDIENTE |
 | 🟡 P1 | Validar ADA/SOL/LINK siguen bloqueados | PENDIENTE |
 | 🟢 P2 | Revisar warn_threshold (después de datos) | PENDIENTE |
+| 🟢 P2 | Metadata Trading (kelly_raw, cap_applied) | PENDIENTE (fase 2) |
 
 ### Verificación Requerida
 
