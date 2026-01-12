@@ -48,12 +48,31 @@
 - `win_rate_net`: 20.17% (resultado financiero)
 - `fee_eroded_trades`: 21 (trades afectados por fees)
 
+**Consistencia Multi-Canal (Jan 12, 2026):**
+
+| Canal | Implementación | Estado |
+|-------|----------------|--------|
+| **Dashboard** | `queries.py` → Header muestra 37.8% / 20.2% | ✅ ACTIVO |
+| **Telegram Bot** | `_get_dual_win_rates()` en `auto_trading_bot.py` | ✅ IMPLEMENTADO |
+| **AI Context** | `real_data_provider.py` incluye ambas métricas | ✅ IMPLEMENTADO |
+
+**Query SQL Unificada:**
+```sql
+SELECT 
+    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as net_wins,
+    SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as dir_wins,
+    SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+FROM paper_trading_trades WHERE status = 'closed'
+```
+
 **Alineación con ADR-002 Honest Framing:**
 - Ambas métricas visibles con contexto
 - Sin ocultar datos negativos
 - Explicación clara de la diferencia
 
-**Documentación:** `docs/investigations/TRADE_INVESTIGATION_JAN2026.md`
+**Documentación:**
+- `docs/investigations/TRADE_INVESTIGATION_JAN2026.md`
+- `docs/reference/adr/ADR-005-dual-win-rate-framework.md`
 
 ---
 
