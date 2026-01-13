@@ -86,7 +86,7 @@ This system provides real-time capital protection tracking with PostgreSQL persi
 A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations.
 
 ### Dashboard Features
-The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), and Calibration Progress.
+The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), Calibration Progress (4-phase tracker), and Recommended Actions (priority-based suggestions). All 5 P1 features completed as of Jan 13, 2026.
 
 ## External Dependencies
 

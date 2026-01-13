@@ -118,6 +118,21 @@
 ### FEAT-005: Recommended Actions
 
 **Description:** Suggested next steps for Harold  
+**Status:** [x] COMPLETED (Jan 13, 2026)
+
+**Implementation:**
+- API: `/api/system/recommended-actions` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/recommendedactions.js`
+- CSS: `omnix_dashboard/static/css/components/recommendedactions.css`
+
+**Features:**
+- Priority-based sorting (HIGH → MEDIUM → LOW)
+- Dynamic action generation based on trading metrics
+- 4 action types: progress, calibration, optimization, status
+- Color-coded priority badges
+- Auto-refresh every 10 seconds
+
+**Current Actions Shown:**  
 **Components:**
 - Urgent actions with reasoning
 - Review items with context

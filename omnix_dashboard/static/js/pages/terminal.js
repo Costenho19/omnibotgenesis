@@ -73,7 +73,8 @@ const TerminalApp = (function() {
             { name: 'healthscore', fn: async () => { if (window.HealthScoreWidget) await HealthScoreWidget.refresh(); } },
             { name: 'livestatus', fn: async () => { if (window.LiveStatusWidget) await LiveStatusWidget.refresh(); } },
             { name: 'quickinsights', fn: async () => { if (window.QuickInsightsWidget) await QuickInsightsWidget.refresh(); } },
-            { name: 'calibrationprogress', fn: async () => { if (window.CalibrationProgressWidget) await CalibrationProgressWidget.refresh(); } }
+            { name: 'calibrationprogress', fn: async () => { if (window.CalibrationProgressWidget) await CalibrationProgressWidget.refresh(); } },
+            { name: 'recommendedactions', fn: async () => { if (window.RecommendedActionsWidget) await RecommendedActionsWidget.refresh(); } }
         ];
     }
 
@@ -126,6 +127,10 @@ const TerminalApp = (function() {
         
         if (window.CalibrationProgressWidget) {
             CalibrationProgressWidget.init('calibration-progress-widget');
+        }
+        
+        if (window.RecommendedActionsWidget) {
+            RecommendedActionsWidget.init('recommended-actions-widget');
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
