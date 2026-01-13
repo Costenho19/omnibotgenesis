@@ -176,7 +176,9 @@ def api_trades_history():
                     AVG(CASE WHEN profit_loss > 0 THEN profit_loss ELSE NULL END) as avg_win,
                     AVG(CASE WHEN profit_loss < 0 THEN profit_loss ELSE NULL END) as avg_loss,
                     MAX(profit_loss) as best_trade,
-                    MIN(profit_loss) as worst_trade
+                    MIN(profit_loss) as worst_trade,
+                    SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as directional_wins,
+                    SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
                 FROM paper_trading_trades
                 WHERE status = 'closed'
             ''')
@@ -219,8 +221,11 @@ def api_trades_history():
             avg_loss = float(stats_row[5] or 0) if stats_row else 0
             best_trade = float(stats_row[6] or 0) if stats_row else 0
             worst_trade = float(stats_row[7] or 0) if stats_row else 0
+            directional_wins = int(stats_row[8] or 0) if stats_row else 0
+            fee_eroded_trades = int(stats_row[9] or 0) if stats_row else 0
             
             win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
+            win_rate_directional = (directional_wins / total_trades * 100) if total_trades > 0 else 0
             profit_factor = abs(avg_win * wins / (avg_loss * losses)) if losses > 0 and avg_loss != 0 else 0
             
             min_trades_for_significance = 30
@@ -234,6 +239,8 @@ def api_trades_history():
                     'winning_trades': wins,
                     'losing_trades': losses,
                     'win_rate': round(win_rate, 2),
+                    'win_rate_directional': round(win_rate_directional, 2),
+                    'fee_eroded_trades': fee_eroded_trades,
                     'total_pnl': round(total_pnl, 2),
                     'avg_win': round(avg_win, 2),
                     'avg_loss': round(avg_loss, 2),
