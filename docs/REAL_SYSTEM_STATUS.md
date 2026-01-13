@@ -76,6 +76,68 @@ FROM paper_trading_trades WHERE status = 'closed'
 
 ---
 
+### Contexto Enriquecido para IA (Jan 12, 2026)
+
+**PROPÓSITO:** Permitir que la IA responda preguntas específicas como "¿por qué perdemos en SOL?" usando datos reales en lugar de respuestas genéricas.
+
+**Implementación en `omnix_core/context/real_data_provider.py`:**
+
+| Método | Descripción | Cache TTL |
+|--------|-------------|-----------|
+| `get_symbol_breakdown()` | P&L y WR por símbolo (top 10 peores) | 120s |
+| `get_regime_breakdown()` | P&L y WR por régimen HMM | 120s |
+| `get_coherence_breakdown()` | P&L y WR por nivel de coherence | 120s |
+| `get_fee_impact()` | Análisis de trades fee-eroded (ADR-005) | 120s |
+| `get_timing_patterns()` | Patrones por hora UTC | 300s |
+| `get_analytics_context()` | Wrapper para todos los breakdowns | - |
+
+**Cambios en `format_for_prompt()`:**
+
+El prompt de la IA ahora incluye:
+```
+📊 BREAKDOWN POR SÍMBOLO (ordenado por P&L, peores primero):
+• XRP/USD: 23 trades, 13.0% WR, -$4,482 P&L
+• SOL/USD: 15 trades, 6.7% WR, -$3,952 P&L
+...
+
+🌊 BREAKDOWN POR RÉGIMEN HMM:
+• VOLATILE: 58 trades, 15.5% WR, -$180 avg
+• RANGING: 35 trades, 22.9% WR, -$95 avg
+...
+
+🎯 BREAKDOWN POR COHERENCE:
+• CRITICAL: 18 trades, 5.6% WR, -$245 avg
+• POOR: 32 trades, 12.5% WR, -$165 avg
+...
+
+💸 IMPACTO DE FEES:
+• Trades fee-eroded: 21
+• Erosión promedio: $100 por trade
+
+⏰ PATRONES TEMPORALES (peores horas UTC):
+• 14:00 UTC: 12 trades, 8.3% WR, -$210 avg
+...
+```
+
+**Nuevas Reglas de Transparencia:**
+```
+3. YA TIENES TODOS LOS DATOS - NO digas "necesito ejecutar queries"
+6. Propón acciones concretas basadas en datos (ej: "bloquear SOL/USD")
+```
+
+**Resultado Esperado:**
+
+Cuando el usuario pregunta "Analiza los últimos trades", la IA responderá:
+- Con breakdowns específicos por símbolo/régimen/coherence
+- Identificando patrones problemáticos
+- Proponiendo acciones concretas
+- SIN decir "necesito ejecutar queries" o "no tengo información"
+
+**Archivos Modificados:**
+- `omnix_core/context/real_data_provider.py` - 6 nuevos métodos + prompt actualizado
+
+---
+
 ### Kalman Filter Log Optimization (Jan 10, 2026)
 
 **PROPÓSITO:** Eliminar 4 logs repetitivos por ciclo de análisis sin afectar funcionalidad.

@@ -63,6 +63,25 @@ El sistema muestra dos métricas de win rate para transparencia completa:
 
 **Referencia:** `docs/reference/adr/ADR-005-dual-win-rate-framework.md`
 
+## Contexto Enriquecido para IA (Jan 12, 2026)
+
+El RealDataProvider ahora incluye breakdowns granulares para que la IA pueda responder preguntas específicas:
+
+| Método | Datos | Cache |
+|--------|-------|-------|
+| `get_symbol_breakdown()` | P&L y WR por símbolo | 120s |
+| `get_regime_breakdown()` | P&L y WR por régimen HMM | 120s |
+| `get_coherence_breakdown()` | P&L y WR por nivel coherence | 120s |
+| `get_fee_impact()` | Trades fee-eroded y erosión | 120s |
+| `get_timing_patterns()` | Patrones por hora UTC | 300s |
+
+**Prompt de IA actualizado:**
+- Incluye breakdowns por símbolo, régimen, coherence
+- Regla: "YA TIENES LOS DATOS - NO digas que necesitas queries"
+- La IA propone acciones concretas basadas en datos reales
+
+**Referencia:** `docs/REAL_SYSTEM_STATUS.md` sección "Contexto Enriquecido para IA"
+
 ## System Architecture
 
 ### Core Components and Design Patterns

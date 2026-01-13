@@ -37,13 +37,22 @@ class OMNIXRealContextProvider:
         self._cache = {}
         self._cache_timestamps = {}
         
+        self._cache_ttl_overrides = {
+            'symbol_breakdown': 120,
+            'regime_breakdown': 120,
+            'coherence_breakdown': 120,
+            'fee_impact': 120,
+            'timing_patterns': 300
+        }
+        
         logger.info("🔴 OMNIXRealContextProvider inicializado - Transparencia Institucional ACTIVA")
     
     def _is_cache_valid(self, key: str) -> bool:
-        """Verifica si el cache para una clave es válido"""
+        """Verifica si el cache para una clave es válido usando TTL específico por clave"""
         if key not in self._cache_timestamps:
             return False
-        return (time.time() - self._cache_timestamps[key]) < self.cache_ttl
+        ttl = self._cache_ttl_overrides.get(key, self.cache_ttl)
+        return (time.time() - self._cache_timestamps[key]) < ttl
     
     def _update_cache(self, key: str, value: Any):
         """Actualiza el cache con un nuevo valor"""
@@ -213,14 +222,272 @@ class OMNIXRealContextProvider:
             logger.warning(f"⚠️ Error obteniendo trades recientes: {e}")
             return []
     
+    def get_symbol_breakdown(self) -> list:
+        """Obtener breakdown detallado por símbolo - Cache 120s"""
+        cache_key = 'symbol_breakdown'
+        
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, [])
+        
+        try:
+            if not self.db_manager:
+                return []
+            
+            rows = self.db_manager.execute_query("""
+                SELECT 
+                    symbol,
+                    COUNT(*) as total_trades,
+                    COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as wins,
+                    ROUND(100.0 * COUNT(CASE WHEN profit_loss > 0 THEN 1 END) / NULLIF(COUNT(*), 0), 1) as win_rate,
+                    COALESCE(SUM(profit_loss), 0) as total_pnl,
+                    COALESCE(AVG(profit_loss), 0) as avg_pnl
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+                GROUP BY symbol
+                ORDER BY total_pnl ASC
+                LIMIT 10
+            """)
+            
+            result = []
+            if rows:
+                for row in rows:
+                    if isinstance(row, (tuple, list)) and len(row) >= 6:
+                        result.append({
+                            'symbol': row[0],
+                            'total_trades': int(row[1] or 0),
+                            'wins': int(row[2] or 0),
+                            'win_rate': float(row[3] or 0),
+                            'total_pnl': float(row[4] or 0),
+                            'avg_pnl': float(row[5] or 0)
+                        })
+                    elif isinstance(row, dict):
+                        result.append(row)
+            
+            self._update_cache(cache_key, result)
+            self._cache_timestamps[cache_key] = time.time()
+            return result
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo symbol breakdown: {e}")
+            return []
+    
+    def get_regime_breakdown(self) -> list:
+        """Obtener breakdown por régimen HMM - Cache 120s"""
+        cache_key = 'regime_breakdown'
+        
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, [])
+        
+        try:
+            if not self.db_manager:
+                return []
+            
+            rows = self.db_manager.execute_query("""
+                SELECT 
+                    COALESCE(hmm_regime, 'UNKNOWN') as hmm_regime,
+                    COUNT(*) as trades,
+                    COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as wins,
+                    ROUND(100.0 * COUNT(CASE WHEN profit_loss > 0 THEN 1 END) / NULLIF(COUNT(*), 0), 1) as win_rate,
+                    COALESCE(SUM(profit_loss), 0) as total_pnl,
+                    COALESCE(AVG(profit_loss), 0) as avg_pnl
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+                GROUP BY hmm_regime
+                ORDER BY avg_pnl ASC
+            """)
+            
+            result = []
+            if rows:
+                for row in rows:
+                    if isinstance(row, (tuple, list)) and len(row) >= 6:
+                        result.append({
+                            'hmm_regime': row[0] or 'UNKNOWN',
+                            'trades': int(row[1] or 0),
+                            'wins': int(row[2] or 0),
+                            'win_rate': float(row[3] or 0),
+                            'total_pnl': float(row[4] or 0),
+                            'avg_pnl': float(row[5] or 0)
+                        })
+                    elif isinstance(row, dict):
+                        result.append(row)
+            
+            self._update_cache(cache_key, result)
+            return result
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo regime breakdown: {e}")
+            return []
+    
+    def get_coherence_breakdown(self) -> list:
+        """Obtener breakdown por coherence state - Cache 120s"""
+        cache_key = 'coherence_breakdown'
+        
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, [])
+        
+        try:
+            if not self.db_manager:
+                return []
+            
+            rows = self.db_manager.execute_query("""
+                SELECT 
+                    CASE 
+                        WHEN coherence_score IS NULL THEN 'NO_DATA'
+                        WHEN coherence_score < 30 THEN 'CRITICAL'
+                        WHEN coherence_score < 40 THEN 'POOR'
+                        WHEN coherence_score < 60 THEN 'MODERATE'
+                        WHEN coherence_score < 75 THEN 'GOOD'
+                        ELSE 'EXCELLENT'
+                    END as coherence_level,
+                    COUNT(*) as trades,
+                    COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as wins,
+                    ROUND(100.0 * COUNT(CASE WHEN profit_loss > 0 THEN 1 END) / NULLIF(COUNT(*), 0), 1) as win_rate,
+                    COALESCE(SUM(profit_loss), 0) as total_pnl,
+                    COALESCE(AVG(profit_loss), 0) as avg_pnl
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+                GROUP BY coherence_level
+                ORDER BY 
+                    CASE coherence_level
+                        WHEN 'CRITICAL' THEN 1
+                        WHEN 'POOR' THEN 2
+                        WHEN 'MODERATE' THEN 3
+                        WHEN 'GOOD' THEN 4
+                        WHEN 'EXCELLENT' THEN 5
+                        ELSE 6
+                    END
+            """)
+            
+            result = []
+            if rows:
+                for row in rows:
+                    if isinstance(row, (tuple, list)) and len(row) >= 6:
+                        result.append({
+                            'coherence_level': row[0] or 'NO_DATA',
+                            'trades': int(row[1] or 0),
+                            'wins': int(row[2] or 0),
+                            'win_rate': float(row[3] or 0),
+                            'total_pnl': float(row[4] or 0),
+                            'avg_pnl': float(row[5] or 0)
+                        })
+                    elif isinstance(row, dict):
+                        result.append(row)
+            
+            self._update_cache(cache_key, result)
+            return result
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo coherence breakdown: {e}")
+            return []
+    
+    def get_fee_impact(self) -> Dict:
+        """Analizar impacto de fees (ADR-005: profit_loss < 0 para fee-eroded) - Cache 120s"""
+        cache_key = 'fee_impact'
+        
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, {})
+        
+        try:
+            if not self.db_manager:
+                return {}
+            
+            rows = self.db_manager.execute_query("""
+                SELECT 
+                    COUNT(*) as total_trades,
+                    COUNT(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 END) as fee_eroded,
+                    COALESCE(AVG(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN ABS(profit_loss) END), 0) as avg_fee_erosion,
+                    COALESCE(SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN ABS(profit_loss) END), 0) as total_fee_erosion
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+            """)
+            
+            result = {'total_trades': 0, 'fee_eroded': 0, 'avg_fee_erosion': 0, 'total_fee_erosion': 0}
+            if rows and len(rows) > 0:
+                row = rows[0]
+                if isinstance(row, (tuple, list)) and len(row) >= 4:
+                    result = {
+                        'total_trades': int(row[0] or 0),
+                        'fee_eroded': int(row[1] or 0),
+                        'avg_fee_erosion': float(row[2] or 0),
+                        'total_fee_erosion': float(row[3] or 0)
+                    }
+                elif isinstance(row, dict):
+                    result = row
+            
+            self._update_cache(cache_key, result)
+            return result
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo fee impact: {e}")
+            return {}
+    
+    def get_timing_patterns(self) -> list:
+        """Analizar patrones temporales (peores/mejores horas) - Cache 300s"""
+        cache_key = 'timing_patterns'
+        
+        if self._is_cache_valid(cache_key):
+            return self._cache.get(cache_key, [])
+        
+        try:
+            if not self.db_manager:
+                return []
+            
+            rows = self.db_manager.execute_query("""
+                SELECT 
+                    EXTRACT(HOUR FROM closed_at) as hour,
+                    COUNT(*) as trades,
+                    COUNT(CASE WHEN profit_loss > 0 THEN 1 END) as wins,
+                    ROUND(100.0 * COUNT(CASE WHEN profit_loss > 0 THEN 1 END) / NULLIF(COUNT(*), 0), 1) as win_rate,
+                    COALESCE(SUM(profit_loss), 0) as total_pnl,
+                    COALESCE(AVG(profit_loss), 0) as avg_pnl
+                FROM paper_trading_trades
+                WHERE status = 'closed' AND closed_at IS NOT NULL
+                GROUP BY hour
+                ORDER BY avg_pnl ASC
+                LIMIT 10
+            """)
+            
+            result = []
+            if rows:
+                for row in rows:
+                    if isinstance(row, (tuple, list)) and len(row) >= 6:
+                        result.append({
+                            'hour': int(row[0]) if row[0] is not None else 0,
+                            'trades': int(row[1] or 0),
+                            'wins': int(row[2] or 0),
+                            'win_rate': float(row[3] or 0),
+                            'total_pnl': float(row[4] or 0),
+                            'avg_pnl': float(row[5] or 0)
+                        })
+                    elif isinstance(row, dict):
+                        result.append(row)
+            
+            self._update_cache(cache_key, result)
+            return result
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error obteniendo timing patterns: {e}")
+            return []
+    
+    def get_analytics_context(self) -> Dict:
+        """Obtener todos los breakdowns analíticos en una sola llamada"""
+        return {
+            'symbol_breakdown': self.get_symbol_breakdown(),
+            'regime_breakdown': self.get_regime_breakdown(),
+            'coherence_breakdown': self.get_coherence_breakdown(),
+            'fee_impact': self.get_fee_impact(),
+            'timing_patterns': self.get_timing_patterns()
+        }
+    
     def get_full_context(self, user_id: str = None) -> Dict:
-        """Obtener contexto completo de OMNIX"""
+        """Obtener contexto completo de OMNIX incluyendo analytics"""
         return {
             'auto_trading': self.get_auto_trading_status(),
             'market': self.get_market_data(),
             'paper_balance': self.get_paper_balance(user_id) if user_id else {},
             'open_positions': self.get_open_positions(user_id) if user_id else [],
             'recent_trades': self.get_recent_trades(user_id) if user_id else [],
+            'analytics': self.get_analytics_context(),
             'timestamp': datetime.now().isoformat()
         }
     
@@ -298,12 +565,53 @@ class OMNIXRealContextProvider:
                 prompt += f"• {status} {trade.get('symbol', 'N/A')} {trade.get('side', 'N/A').upper()}: ${pnl:+,.2f}\n"
             prompt += "\n"
         
+        analytics = ctx.get('analytics', {})
+        
+        symbol_breakdown = analytics.get('symbol_breakdown', [])
+        if symbol_breakdown:
+            prompt += "📊 BREAKDOWN POR SÍMBOLO (ordenado por P&L, peores primero):\n"
+            for s in symbol_breakdown[:5]:
+                prompt += f"• {s.get('symbol', 'N/A')}: {s.get('total_trades', 0)} trades, {s.get('win_rate', 0):.1f}% WR, ${s.get('total_pnl', 0):+,.2f} P&L\n"
+            prompt += "\n"
+        
+        regime_breakdown = analytics.get('regime_breakdown', [])
+        if regime_breakdown:
+            prompt += "🌊 BREAKDOWN POR RÉGIMEN HMM:\n"
+            for r in regime_breakdown:
+                prompt += f"• {r.get('hmm_regime', 'N/A')}: {r.get('trades', 0)} trades, {r.get('win_rate', 0):.1f}% WR, ${r.get('avg_pnl', 0):+,.2f} avg\n"
+            prompt += "\n"
+        
+        coherence_breakdown = analytics.get('coherence_breakdown', [])
+        if coherence_breakdown:
+            prompt += "🎯 BREAKDOWN POR COHERENCE:\n"
+            for c in coherence_breakdown:
+                prompt += f"• {c.get('coherence_level', 'N/A')}: {c.get('trades', 0)} trades, {c.get('win_rate', 0):.1f}% WR, ${c.get('avg_pnl', 0):+,.2f} avg\n"
+            prompt += "\n"
+        
+        fee_impact = analytics.get('fee_impact', {})
+        if fee_impact.get('fee_eroded', 0) > 0:
+            prompt += f"""💸 IMPACTO DE FEES:
+• Trades fee-eroded: {fee_impact.get('fee_eroded', 0)} (ganaron dirección pero perdieron por fees)
+• Erosión promedio: ${fee_impact.get('avg_fee_erosion', 0):.2f} por trade
+• Erosión total: ${fee_impact.get('total_fee_erosion', 0):,.2f}
+
+"""
+        
+        timing_patterns = analytics.get('timing_patterns', [])
+        if timing_patterns:
+            prompt += "⏰ PATRONES TEMPORALES (peores horas UTC):\n"
+            for t in timing_patterns[:3]:
+                prompt += f"• {int(t.get('hour', 0)):02d}:00 UTC: {t.get('trades', 0)} trades, {t.get('win_rate', 0):.1f}% WR, ${t.get('avg_pnl', 0):+,.2f} avg\n"
+            prompt += "\n"
+        
         prompt += """⚠️ REGLAS DE TRANSPARENCIA INSTITUCIONAL:
 1. SIEMPRE usa los datos de arriba para responder - NUNCA inventes
-2. Si el usuario pregunta sobre auto-trading, usa el estado REAL mostrado arriba
-3. Si el usuario pregunta precios, usa los precios REALES de Kraken
-4. Si no tienes datos para algo, di "No tengo esa información en tiempo real"
-5. Esta transparencia es CRÍTICA para inversores institucionales
+2. Si el usuario pregunta "por qué perdemos", usa los BREAKDOWNS de arriba
+3. YA TIENES TODOS LOS DATOS - NO digas "necesito ejecutar queries" o "no tengo información"
+4. Para análisis detallado, usa los breakdowns por símbolo, régimen y coherence
+5. Identifica patrones específicos: qué símbolos, regímenes o niveles de coherence pierden más
+6. Propón acciones concretas basadas en los datos (ej: "bloquear SOL/USD" si pierde más)
+7. Esta transparencia es CRÍTICA para inversores institucionales
 
 """
         return prompt
