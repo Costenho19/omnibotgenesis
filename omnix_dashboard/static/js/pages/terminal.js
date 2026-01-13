@@ -69,7 +69,8 @@ const TerminalApp = (function() {
             { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } },
             { name: 'tradehistory', fn: async () => { if (window.TradeHistoryWidget) await TradeHistoryWidget.refresh(); } },
             { name: 'sessions', fn: async () => { if (window.SessionsWidget) await SessionsWidget.refresh(); } },
-            { name: 'equitycomparison', fn: async () => { if (window.EquityComparison) await EquityComparison.refresh(); } }
+            { name: 'equitycomparison', fn: async () => { if (window.EquityComparison) await EquityComparison.refresh(); } },
+            { name: 'healthscore', fn: async () => { if (window.HealthScoreWidget) await HealthScoreWidget.refresh(); } }
         ];
     }
 
@@ -106,6 +107,10 @@ const TerminalApp = (function() {
         
         if (window.EquityComparison) {
             EquityComparison.init();
+        }
+        
+        if (window.HealthScoreWidget) {
+            HealthScoreWidget.init('health-score-widget');
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);

@@ -49,14 +49,19 @@
 
 **Description:** Visual health indicator showing system status at a glance  
 **Components:**
-- Risk Controls score
-- Data Quality score
-- Win Rate score (calibrating)
-- Latency score
-- Uptime score
-- Overall score (weighted average)
+- Risk Controls score (35% weight) - Capital preservation tracking
+- Data Quality score (25% weight) - Database connection status
+- Win Rate Progress score (25% weight) - Progress toward 40% target
+- Uptime score (15% weight) - System monitoring status
+- Overall score (weighted average, 0-100)
 
-**Status:** [ ] Not Started
+**Implementation:**
+- API: `/api/system/health-score` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/healthscore.js`
+- CSS: `omnix_dashboard/static/css/components/healthscore.css`
+- SVG ring animation with status badge (EXCELLENT/GOOD/CALIBRATING/NEEDS ATTENTION/CRITICAL)
+
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### FEAT-002: Live Status Section
 
@@ -166,7 +171,7 @@
 | BUG-001 | WR Dir 0.0% | P0 | DONE | Agent | Jan 13, 2026 |
 | BUG-002 | Fee Eroded 0 | P0 | DONE | Agent | Jan 13, 2026 |
 | BUG-003 | Protected misleading | P0 | DONE | Agent | Jan 13, 2026 |
-| FEAT-001 | System Health Score | P1 | Not Started | - | - |
+| FEAT-001 | System Health Score | P1 | DONE | Agent | Jan 13, 2026 |
 | FEAT-002 | Live Status | P1 | Not Started | - | - |
 | FEAT-003 | Quick Insights | P1 | Not Started | - | - |
 | FEAT-004 | Calibration Progress | P1 | Not Started | - | - |

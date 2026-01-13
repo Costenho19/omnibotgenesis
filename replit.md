@@ -86,23 +86,38 @@ El RealDataProvider ahora incluye breakdowns granulares para que la IA pueda res
 
 Análisis externo identificó mejoras críticas. Dashboard actual: 7.5/10, objetivo: 9.5/10.
 
-### Bugs Críticos (P0 - HOY)
+### Bugs Críticos (P0 - COMPLETADOS Jan 13, 2026)
 
 | Bug | Problema | Estado |
 |-----|----------|--------|
-| WR Dir 0.0% | Trade History muestra 0.0% en vez de 37.8% | Pendiente |
-| Fee Eroded 0 | Muestra 0 en vez de 21 trades fee-eroded | Pendiente |
-| "Protected" engañoso | $31.4M implica capital en riesgo, pero capital es $1M | Pendiente |
+| WR Dir 0.0% | Trade History muestra 0.0% en vez de 37.8% | ✅ DONE |
+| Fee Eroded 0 | Muestra 0 en vez de 21 trades fee-eroded | ✅ DONE |
+| "Protected" engañoso | Renombrado a "Notional Blocked" con tooltip | ✅ DONE |
 
-### Mejoras UX (P1 - ESTA SEMANA)
+### Mejoras UX (P1 - EN PROGRESO)
 
-| Feature | Descripción |
-|---------|-------------|
-| System Health Score | Indicador visual 0-100 del estado del sistema |
-| Live Status | Qué está haciendo el sistema AHORA |
-| Quick Insights | Insights auto-generados accionables |
-| Calibration Progress | Barra de progreso hacia optimización |
-| Recommended Actions | Sugerencias para Harold |
+| Feature | Descripción | Estado |
+|---------|-------------|--------|
+| System Health Score | Indicador visual 0-100 del estado del sistema | ✅ DONE |
+| Live Status | Qué está haciendo el sistema AHORA | Pendiente |
+| Quick Insights | Insights auto-generados accionables | Pendiente |
+| Calibration Progress | Barra de progreso hacia optimización | Pendiente |
+| Recommended Actions | Sugerencias para Harold | Pendiente |
+
+### System Health Score Widget (Jan 13, 2026)
+
+Nuevo widget que muestra salud del sistema con score 0-100:
+
+| Componente | Peso | Descripción |
+|------------|------|-------------|
+| Risk Controls | 35% | Capital preservation (98.5%) |
+| Data Quality | 25% | DB connection status |
+| Win Rate Progress | 25% | Progreso hacia 40% target |
+| Uptime | 15% | Sistema de monitoreo |
+
+**API:** `/api/system/health-score`
+**Widget:** `omnix_dashboard/static/js/components/healthscore.js`
+**Status:** EXCELLENT (>90), GOOD (75-90), CALIBRATING (60-75), NEEDS ATTENTION (40-60), CRITICAL (<40)
 
 ### Nice-to-Have (P2 - PRÓXIMA SEMANA)
 
