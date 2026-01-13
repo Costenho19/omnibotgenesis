@@ -1,7 +1,7 @@
 # OMNIX V6.5.4d INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4d INSTITUTIONAL+ is institutional-grade risk control infrastructure for cryptocurrency trading, designed to prevent capital loss through multi-layer veto architecture. Its core capabilities include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume, having blocked 695 high-risk operations. The current phase focuses on extended validation to build a credible track record for institutional investor presentations. Strategic targets (40%+ win rate, 3-5 trades/day) are secondary to capital preservation and system integrity.
+OMNIX V6.5.4d INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation through a multi-layer veto architecture, incorporating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume and has successfully blocked numerous high-risk operations. The current focus is on extended validation to build a credible track record for institutional investor presentations.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -44,143 +44,19 @@ OMNIX V6.5.4d INSTITUTIONAL+ is institutional-grade risk control infrastructure 
 
 **Después de cambios significativos**, actualizar la documentación relevante.
 
-## Dual Win Rate Framework (ADR-005 - Jan 12, 2026)
-
-El sistema muestra dos métricas de win rate para transparencia completa:
-
-| Métrica | Valor | Cálculo | Dónde se muestra |
-|---------|-------|---------|------------------|
-| **Precisión (Direccional)** | 37.82% | `profit_pct > 0` | Dashboard, Telegram, AI Context |
-| **Rentable (Neto)** | 20.17% | `profit_loss > 0` | Dashboard, Telegram, AI Context |
-| **Fee-Eroded** | 21 trades | Ganaron dirección, perdieron por fees | Dashboard tooltip |
-
-**Implementación:**
-- `omnix_dashboard/utils/queries.py` - Query SQL para dashboard
-- `omnix_core/bot/auto_trading_bot.py` - Método `_get_dual_win_rates()` para Telegram
-- `omnix_core/context/real_data_provider.py` - Contexto para AI
-
-**Consistencia garantizada:** Todas las fuentes usan la misma lógica SQL (`profit_loss < 0` para fee-eroded).
-
-**Referencia:** `docs/reference/adr/ADR-005-dual-win-rate-framework.md`
-
-## Contexto Enriquecido para IA (Jan 12, 2026)
-
-El RealDataProvider ahora incluye breakdowns granulares para que la IA pueda responder preguntas específicas:
-
-| Método | Datos | Cache |
-|--------|-------|-------|
-| `get_symbol_breakdown()` | P&L y WR por símbolo | 120s |
-| `get_regime_breakdown()` | P&L y WR por régimen HMM | 120s |
-| `get_coherence_breakdown()` | P&L y WR por nivel coherence | 120s |
-| `get_fee_impact()` | Trades fee-eroded y erosión | 120s |
-| `get_timing_patterns()` | Patrones por hora UTC | 300s |
-
-**Prompt de IA actualizado:**
-- Incluye breakdowns por símbolo, régimen, coherence
-- Regla: "YA TIENES LOS DATOS - NO digas que necesitas queries"
-- La IA propone acciones concretas basadas en datos reales
-
-**Referencia:** `docs/REAL_SYSTEM_STATUS.md` sección "Contexto Enriquecido para IA"
-
-## Dashboard Improvement Roadmap (ADR-006 - Jan 13, 2026)
-
-Análisis externo identificó mejoras críticas. Dashboard actual: 7.5/10, objetivo: 9.5/10.
-
-### Bugs Críticos (P0 - COMPLETADOS Jan 13, 2026)
-
-| Bug | Problema | Estado |
-|-----|----------|--------|
-| WR Dir 0.0% | Trade History muestra 0.0% en vez de 37.8% | ✅ DONE |
-| Fee Eroded 0 | Muestra 0 en vez de 21 trades fee-eroded | ✅ DONE |
-| "Protected" engañoso | Renombrado a "Notional Blocked" con tooltip | ✅ DONE |
-
-### Mejoras UX (P1 - EN PROGRESO)
-
-| Feature | Descripción | Estado |
-|---------|-------------|--------|
-| System Health Score | Indicador visual 0-100 del estado del sistema | ✅ DONE |
-| Live Status | Estado en tiempo real (ANALYZING/EXECUTING/MONITORING) | ✅ DONE |
-| Quick Insights | Insights auto-generados accionables | ✅ DONE |
-| Calibration Progress | Barra de progreso hacia optimización | Pendiente |
-| Recommended Actions | Sugerencias para Harold | Pendiente |
-
-### System Health Score Widget (Jan 13, 2026)
-
-Nuevo widget que muestra salud del sistema con score 0-100:
-
-| Componente | Peso | Descripción |
-|------------|------|-------------|
-| Risk Controls | 35% | Capital preservation (98.5%) |
-| Data Quality | 25% | DB connection status |
-| Win Rate Progress | 25% | Progreso hacia 40% target |
-| Uptime | 15% | Sistema de monitoreo |
-
-**API:** `/api/system/health-score`
-**Widget:** `omnix_dashboard/static/js/components/healthscore.js`
-**Status:** EXCELLENT (>90), GOOD (75-90), CALIBRATING (60-75), NEEDS ATTENTION (40-60), CRITICAL (<40)
-
-### Live Status Widget (Jan 13, 2026)
-
-Muestra en tiempo real qué está haciendo el sistema:
-
-| Componente | Descripción |
-|------------|-------------|
-| Status Badge | ANALYZING/EXECUTING/MONITORING con animación pulse |
-| Detail Message | Descripción de la actividad actual |
-| Last Action | Último trade con símbolo, lado, resultado |
-| System State | Veto ON/OFF, Regime, Open Positions |
-| LIVE Indicator | Indicador animado de conexión activa |
-
-**API:** `/api/system/live-status`
-**Widget:** `omnix_dashboard/static/js/components/livestatus.js`
-**CSS:** `omnix_dashboard/static/css/components/livestatus.css`
-
-### Quick Insights Widget (Jan 13, 2026)
-
-Genera insights automáticos basados en datos reales de trading:
-
-| Tipo | Color | Ejemplo |
-|------|-------|---------|
-| SUCCESS | Verde | "98.5% capital preserved" |
-| PROGRESS | Cyan | "Win rate improving toward 40%" |
-| WARNING | Amarillo | "High fee erosion detected" |
-| CAUTION | Naranja | "Regime volatility high" |
-| INFO | Azul | "Best performance in BULL regime" |
-
-**API:** `/api/system/quick-insights`
-**Widget:** `omnix_dashboard/static/js/components/quickinsights.js`
-**CSS:** `omnix_dashboard/static/css/components/quickinsights.css`
-
-### Nice-to-Have (P2 - PRÓXIMA SEMANA)
-
-| Feature | Descripción |
-|---------|-------------|
-| Comparative Metrics | OMNIX vs BTC Hold vs Avg Bot |
-| P&L Breakdown | Desglose por símbolo y razón |
-| Risk Heatmap | Mapa visual de riesgo por símbolo |
-| Decision Log | Log en tiempo real de decisiones |
-
-**Documentación:**
-- `docs/reference/adr/ADR-006-dashboard-improvement-proposals.md`
-- `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
-- `docs/compliance/audits/DASHBOARD_UX_AUDIT_JAN13_2026.md`
-
 ## System Architecture
 
 ### Core Components and Design Patterns
-The system integrates an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It includes multi-user support with granular role-based permissions, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection System, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation, with Investor-Grade Automated Responses. The Decision Engine uses an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with planned activation via the Strangler Fig pattern.
+The system integrates an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, features Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with planned activation via the Strangler Fig pattern.
 
 ### AI Architecture and Enforcement
-The AI service follows SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics only when queried, adapting responses based on the system's current phase. The system employs "Honest Framing" instead of data censorship for investor communications, ensuring transparency of metrics with contextual truth.
+The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications.
 
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, applying only penalties.
-
-### Kalman Filter Optimization
-The DualKalmanTrendFilter includes log suppression to eliminate initialization logs per analysis cycle. A `reset_state=True` default preserves correct behavior, while `suppress_log` prevents log spam from reinitializations.
 
 ### TRACK_RECORD_MODE
 `TRACK_RECORD_MODE` and `LOW_VOL_MODE` are controlled by environment variables. When active, `TRACK_RECORD_MODE` caps score, reduces sizing, enables `WEAK_TREND` scoring, and maintains all guardrails. It auto-deactivates under specific conditions (`total_trades >= 100` AND `win_rate >= 45%`).
@@ -208,6 +84,9 @@ This system provides real-time capital protection tracking with PostgreSQL persi
 
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations.
+
+### Dashboard Features
+The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), and Calibration Progress.
 
 ## External Dependencies
 

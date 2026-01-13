@@ -1127,3 +1127,114 @@ def api_quick_insights():
             'error': str(e),
             'insights': []
         }), 500
+
+
+@core_bp.route('/api/system/calibration-progress')
+def calibration_progress():
+    """Return calibration progress across 4 phases based on real trading data"""
+    try:
+        result = get_paper_trades(return_dict=True)
+        trades = result.get('trades', []) if result.get('success') else []
+        metrics = calculate_metrics(trades)
+        
+        closed_trades = [t for t in trades if t.get('status') == 'closed']
+        total_trades = len(closed_trades)
+        win_rate = metrics.get('win_rate', 0)
+        win_rate_dir = metrics.get('win_rate_directional', win_rate)
+        
+        phase1_target = 100
+        phase1_progress = min(100, (total_trades / phase1_target) * 100)
+        phase1_complete = total_trades >= phase1_target
+        
+        patterns_identified = 0
+        if total_trades >= 50:
+            patterns_identified += 25
+        if total_trades >= 75:
+            patterns_identified += 25
+        if win_rate_dir > 30:
+            patterns_identified += 25
+        if win_rate_dir > 35:
+            patterns_identified += 25
+        phase2_progress = min(100, patterns_identified)
+        phase2_complete = patterns_identified >= 100
+        
+        optimization_score = 0
+        if win_rate_dir >= 35:
+            optimization_score += 30
+        if win_rate_dir >= 38:
+            optimization_score += 30
+        if win_rate_dir >= 40:
+            optimization_score += 40
+        phase3_progress = min(100, optimization_score)
+        phase3_complete = win_rate_dir >= 40
+        
+        deployment_ready = phase1_complete and phase2_complete and phase3_complete
+        phase4_progress = 100 if deployment_ready else 0
+        
+        overall_progress = (phase1_progress * 0.25 + phase2_progress * 0.25 + 
+                          phase3_progress * 0.35 + phase4_progress * 0.15)
+        
+        phases = [
+            {
+                'id': 1,
+                'name': 'Data Collection',
+                'description': f'{total_trades}/100 trades collected',
+                'progress': round(phase1_progress, 1),
+                'complete': phase1_complete,
+                'icon': 'database'
+            },
+            {
+                'id': 2,
+                'name': 'Pattern Analysis',
+                'description': 'Identifying profitable patterns',
+                'progress': round(phase2_progress, 1),
+                'complete': phase2_complete,
+                'icon': 'cpu'
+            },
+            {
+                'id': 3,
+                'name': 'Threshold Optimization',
+                'description': f'Win rate: {win_rate_dir:.1f}% → 40% target',
+                'progress': round(phase3_progress, 1),
+                'complete': phase3_complete,
+                'icon': 'sliders'
+            },
+            {
+                'id': 4,
+                'name': 'Live Deployment',
+                'description': 'Ready for production trading',
+                'progress': round(phase4_progress, 1),
+                'complete': deployment_ready,
+                'icon': 'rocket'
+            }
+        ]
+        
+        current_phase = 1
+        for p in phases:
+            if not p['complete']:
+                current_phase = p['id']
+                break
+        else:
+            current_phase = 4
+        
+        return jsonify({
+            'success': True,
+            'phases': phases,
+            'current_phase': current_phase,
+            'overall_progress': round(overall_progress, 1),
+            'status': 'CALIBRATING' if not deployment_ready else 'READY',
+            'metrics': {
+                'total_trades': total_trades,
+                'win_rate': round(win_rate_dir, 1),
+                'target_win_rate': 40
+            },
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Calibration progress error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'phases': []
+        }), 500
