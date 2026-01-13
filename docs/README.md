@@ -18,6 +18,23 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-006: Dashboard Improvement Proposals (Jan 13, 2026)
+- **ESTADO**: Documentado, pendiente implementación
+- **ANÁLISIS EXTERNO**: Dashboard evaluado en 7.5/10, objetivo 9.5/10
+- **BUGS CRÍTICOS IDENTIFICADOS**:
+  - WR Dir muestra 0.0% en Trade History (debería ser 37.8%)
+  - Fee Eroded muestra 0 (debería ser 21)
+  - "Protected" es métrica engañosa (renombrar a "Notional Blocked")
+- **MEJORAS UX PROPUESTAS**:
+  - System Health Score (indicador visual 0-100)
+  - Live Status (qué hace el sistema ahora)
+  - Quick Insights (insights auto-generados)
+  - Calibration Progress (barra de progreso)
+- **DOCUMENTACIÓN**:
+  - ADR: `docs/reference/adr/ADR-006-dashboard-improvement-proposals.md`
+  - Backlog: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
+  - Auditoría: `docs/compliance/audits/DASHBOARD_UX_AUDIT_JAN13_2026.md`
+
 ### ADR-004: Position Sizing Hotfix (Jan 12, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO (27 tests pasados)
 - **PROBLEMA DETECTADO**: Kelly operaba con max_position=20% ($62,500), cayendo en rango de trades que pierden

@@ -82,6 +82,42 @@ El RealDataProvider ahora incluye breakdowns granulares para que la IA pueda res
 
 **Referencia:** `docs/REAL_SYSTEM_STATUS.md` sección "Contexto Enriquecido para IA"
 
+## Dashboard Improvement Roadmap (ADR-006 - Jan 13, 2026)
+
+Análisis externo identificó mejoras críticas. Dashboard actual: 7.5/10, objetivo: 9.5/10.
+
+### Bugs Críticos (P0 - HOY)
+
+| Bug | Problema | Estado |
+|-----|----------|--------|
+| WR Dir 0.0% | Trade History muestra 0.0% en vez de 37.8% | Pendiente |
+| Fee Eroded 0 | Muestra 0 en vez de 21 trades fee-eroded | Pendiente |
+| "Protected" engañoso | $31.4M implica capital en riesgo, pero capital es $1M | Pendiente |
+
+### Mejoras UX (P1 - ESTA SEMANA)
+
+| Feature | Descripción |
+|---------|-------------|
+| System Health Score | Indicador visual 0-100 del estado del sistema |
+| Live Status | Qué está haciendo el sistema AHORA |
+| Quick Insights | Insights auto-generados accionables |
+| Calibration Progress | Barra de progreso hacia optimización |
+| Recommended Actions | Sugerencias para Harold |
+
+### Nice-to-Have (P2 - PRÓXIMA SEMANA)
+
+| Feature | Descripción |
+|---------|-------------|
+| Comparative Metrics | OMNIX vs BTC Hold vs Avg Bot |
+| P&L Breakdown | Desglose por símbolo y razón |
+| Risk Heatmap | Mapa visual de riesgo por símbolo |
+| Decision Log | Log en tiempo real de decisiones |
+
+**Documentación:**
+- `docs/reference/adr/ADR-006-dashboard-improvement-proposals.md`
+- `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
+- `docs/compliance/audits/DASHBOARD_UX_AUDIT_JAN13_2026.md`
+
 ## System Architecture
 
 ### Core Components and Design Patterns
