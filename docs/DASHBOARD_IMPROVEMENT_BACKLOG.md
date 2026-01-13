@@ -20,26 +20,26 @@
 ### BUG-001: WR Dir Shows 0.0% Instead of 37.8%
 
 **Location:** Trade History Widget  
-**File:** `omnix_dashboard/static/js/widgets/tradehistory.js`  
-**Problem:** Trade History calculates WR Dir locally, showing 0.0% while header shows 37.8%  
-**Fix:** Use consistent query logic (`profit_pct > 0` for directional)  
-**Status:** [ ] Not Started
+**File:** `omnix_dashboard/blueprints/core.py`  
+**Problem:** Trade History API didn't return `win_rate_directional`  
+**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END)` to API  
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### BUG-002: Fee Eroded Shows 0 Instead of 21
 
 **Location:** Trade History Widget  
-**File:** `omnix_dashboard/static/js/widgets/tradehistory.js`  
-**Problem:** Fee-eroded count not being calculated  
-**Fix:** Query for `profit_pct > 0 AND profit_loss < 0`  
-**Status:** [ ] Not Started
+**File:** `omnix_dashboard/blueprints/core.py`  
+**Problem:** Fee-eroded count not returned by API  
+**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END)` to API  
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### BUG-003: "Protected" Metric is Misleading
 
-**Location:** Header / Protection Widget  
-**Files:** `omnix_dashboard/templates/terminal.html`, `omnix_dashboard/utils/queries.py`  
+**Location:** Header  
+**Files:** `omnix_dashboard/templates/terminal.html`  
 **Problem:** "$31.4M Protected" implies $31.4M at risk when capital is $1M  
-**Fix:** Rename to "Notional Blocked" with context  
-**Status:** [ ] Not Started
+**Fix:** Renamed to "Notional Blocked" with explanatory tooltip  
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ---
 
@@ -163,9 +163,9 @@
 
 | ID | Description | Priority | Status | Assigned | Completed |
 |----|-------------|----------|--------|----------|-----------|
-| BUG-001 | WR Dir 0.0% | P0 | Not Started | - | - |
-| BUG-002 | Fee Eroded 0 | P0 | Not Started | - | - |
-| BUG-003 | Protected misleading | P0 | Not Started | - | - |
+| BUG-001 | WR Dir 0.0% | P0 | DONE | Agent | Jan 13, 2026 |
+| BUG-002 | Fee Eroded 0 | P0 | DONE | Agent | Jan 13, 2026 |
+| BUG-003 | Protected misleading | P0 | DONE | Agent | Jan 13, 2026 |
 | FEAT-001 | System Health Score | P1 | Not Started | - | - |
 | FEAT-002 | Live Status | P1 | Not Started | - | - |
 | FEAT-003 | Quick Insights | P1 | Not Started | - | - |
