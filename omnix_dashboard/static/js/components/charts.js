@@ -105,8 +105,8 @@ const OmnixCharts = (function() {
             low: candles.map(c => c.low),
             close: candles.map(c => c.close),
             type: 'candlestick',
-            increasing: { line: { color: colors.green }, fillcolor: colors.green },
-            decreasing: { line: { color: colors.red }, fillcolor: colors.red }
+            increasing: { line: { color: colors.green, width: 2 }, fillcolor: colors.green },
+            decreasing: { line: { color: colors.red, width: 2 }, fillcolor: colors.red }
         };
 
         const layout = getLayout(theme, 'candlestick');
