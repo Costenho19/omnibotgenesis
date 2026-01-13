@@ -67,23 +67,36 @@
 
 **Description:** Real-time view of what the system is doing NOW  
 **Components:**
-- Current action (HOLD/ANALYZING/EXECUTING)
-- Reason for action
-- Active vetos per pair
-- Time until next analysis
+- Current action (ANALYZING/EXECUTING/MONITORING)
+- Status detail message
+- Last action with result (WIN/LOSS)
+- System state (Veto ON/OFF, Regime, Open Positions)
+- LIVE indicator with pulse animation
 
-**Status:** [ ] Not Started
+**Implementation:**
+- API: `/api/system/live-status` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/livestatus.js`
+- CSS: `omnix_dashboard/static/css/components/livestatus.css`
+
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### FEAT-003: Quick Insights (Auto-Generated)
 
-**Description:** AI-generated actionable insights based on current data  
+**Description:** Auto-generated actionable insights based on real trading data  
 **Components:**
-- Toxic symbols identification
-- Best performing conditions
-- Current system mode
-- Alpha vs benchmark
+- Priority-ranked insights (1-5)
+- Type badges (SUCCESS/WARNING/INFO/PROGRESS/CAUTION)
+- Capital protection status (98.5%)
+- Win rate progress toward 40% target
+- Fee impact analysis (21 fee-eroded trades)
+- Regime-specific recommendations
 
-**Status:** [ ] Not Started
+**Implementation:**
+- API: `/api/system/quick-insights` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/quickinsights.js`
+- CSS: `omnix_dashboard/static/css/components/quickinsights.css`
+
+**Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### FEAT-004: Calibration Progress Bar
 

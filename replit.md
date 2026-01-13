@@ -99,8 +99,8 @@ Análisis externo identificó mejoras críticas. Dashboard actual: 7.5/10, objet
 | Feature | Descripción | Estado |
 |---------|-------------|--------|
 | System Health Score | Indicador visual 0-100 del estado del sistema | ✅ DONE |
-| Live Status | Qué está haciendo el sistema AHORA | Pendiente |
-| Quick Insights | Insights auto-generados accionables | Pendiente |
+| Live Status | Estado en tiempo real (ANALYZING/EXECUTING/MONITORING) | ✅ DONE |
+| Quick Insights | Insights auto-generados accionables | ✅ DONE |
 | Calibration Progress | Barra de progreso hacia optimización | Pendiente |
 | Recommended Actions | Sugerencias para Harold | Pendiente |
 
@@ -118,6 +118,38 @@ Nuevo widget que muestra salud del sistema con score 0-100:
 **API:** `/api/system/health-score`
 **Widget:** `omnix_dashboard/static/js/components/healthscore.js`
 **Status:** EXCELLENT (>90), GOOD (75-90), CALIBRATING (60-75), NEEDS ATTENTION (40-60), CRITICAL (<40)
+
+### Live Status Widget (Jan 13, 2026)
+
+Muestra en tiempo real qué está haciendo el sistema:
+
+| Componente | Descripción |
+|------------|-------------|
+| Status Badge | ANALYZING/EXECUTING/MONITORING con animación pulse |
+| Detail Message | Descripción de la actividad actual |
+| Last Action | Último trade con símbolo, lado, resultado |
+| System State | Veto ON/OFF, Regime, Open Positions |
+| LIVE Indicator | Indicador animado de conexión activa |
+
+**API:** `/api/system/live-status`
+**Widget:** `omnix_dashboard/static/js/components/livestatus.js`
+**CSS:** `omnix_dashboard/static/css/components/livestatus.css`
+
+### Quick Insights Widget (Jan 13, 2026)
+
+Genera insights automáticos basados en datos reales de trading:
+
+| Tipo | Color | Ejemplo |
+|------|-------|---------|
+| SUCCESS | Verde | "98.5% capital preserved" |
+| PROGRESS | Cyan | "Win rate improving toward 40%" |
+| WARNING | Amarillo | "High fee erosion detected" |
+| CAUTION | Naranja | "Regime volatility high" |
+| INFO | Azul | "Best performance in BULL regime" |
+
+**API:** `/api/system/quick-insights`
+**Widget:** `omnix_dashboard/static/js/components/quickinsights.js`
+**CSS:** `omnix_dashboard/static/css/components/quickinsights.css`
 
 ### Nice-to-Have (P2 - PRÓXIMA SEMANA)
 
