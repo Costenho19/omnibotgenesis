@@ -88,6 +88,15 @@ A counterfactual analysis system that tracks vetoed trades with full context to 
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), Calibration Progress (4-phase tracker), and Recommended Actions (priority-based suggestions). All 5 P1 features completed as of Jan 13, 2026.
 
+## Recent Changes (Jan 13, 2026)
+
+### ADR-003 Identity Alignment
+- **SYSTEM IDENTITY** in `ai_prompts.py` updated to "risk control infrastructure" (was "algorithmic trading system")
+- **BLACKLISTED PHRASES** added: "generar rendimientos", "rendimientos consistentes", "sistema de trading", "bot de trading"
+- **MASTER_SYSTEM_PROMPT** ROLE changed from "trading advisor" to "risk management advisor"
+- **Template response** for "¿Qué es OMNIX?" added in Spanish/English following Mode 1 Positioning
+- Reference: `docs/reference/adr/ADR-003-official-positioning.md`, `docs/reference/omnix_official_language.md`
+
 ## External Dependencies
 
 ### APIs and Services
