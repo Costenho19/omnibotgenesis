@@ -174,7 +174,7 @@ def api_market_ohlc(symbol):
     ohlc_key = list(result.keys())[0] if result else None
     
     if ohlc_key and ohlc_key != 'last':
-        ohlc_data = result[ohlc_key][-100:]
+        ohlc_data = result[ohlc_key][-200:]
         
         candles = []
         for candle in ohlc_data:

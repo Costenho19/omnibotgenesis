@@ -7,7 +7,7 @@
    ================================ */
 .chart-container {
     height: 100%;
-    min-height: 250px;
+    min-height: 180px;
 }
 
 .chart-container--dashboard {
