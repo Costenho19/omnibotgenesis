@@ -3482,6 +3482,8 @@ class AutoTradingBot:
                     decision['coherence_contradictions'] = coherence_report.contradictions
                     decision['coherence_consensus'] = coherence_report.consensus_signal.name
                     decision['coherence_consensus_confidence'] = coherence_report.consensus_confidence
+                    # V006 FIX: Include coherence_report object for telemetry persistence
+                    decision['coherence_report'] = coherence_report
                     
                     # Log detallado con emoji
                     emoji = self.coherence_engine.get_coherence_emoji(coherence_report.coherence_score)
@@ -3834,6 +3836,11 @@ class AutoTradingBot:
             except Exception as e:
                 logger.debug(f"Telemetry logging skipped: {e}")
             # ==========================================================================
+            
+            # V006 FIX: Include hmm_regime in decision for telemetry persistence
+            # This was causing NULL values in paper_trading_trades.hmm_regime column
+            if hmm_regime:
+                decision['hmm_regime'] = hmm_regime
             
             return decision
             
