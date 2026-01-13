@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/benchmarks.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/tradehistory.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/healthscore.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/livestatus.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/quickinsights.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -159,6 +161,14 @@
         <div style="color: var(--text-muted); font-size: 11px;">Loading System Health...</div>
     </div>
     
+    <div class="panel" id="live-status-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Live Status...</div>
+    </div>
+    
+    <div class="panel" id="quick-insights-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Insights...</div>
+    </div>
+    
     <div class="panel" id="quarantine-widget">
         <div style="color: var(--text-muted); font-size: 11px;">Loading Asset Quarantine...</div>
     </div>
@@ -237,5 +247,7 @@
 <script src="{{ url_for('static', filename='js/components/sessions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/equitycomparison.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/healthscore.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/livestatus.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/quickinsights.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

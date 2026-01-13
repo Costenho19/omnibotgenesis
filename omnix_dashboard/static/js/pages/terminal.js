@@ -70,7 +70,9 @@ const TerminalApp = (function() {
             { name: 'tradehistory', fn: async () => { if (window.TradeHistoryWidget) await TradeHistoryWidget.refresh(); } },
             { name: 'sessions', fn: async () => { if (window.SessionsWidget) await SessionsWidget.refresh(); } },
             { name: 'equitycomparison', fn: async () => { if (window.EquityComparison) await EquityComparison.refresh(); } },
-            { name: 'healthscore', fn: async () => { if (window.HealthScoreWidget) await HealthScoreWidget.refresh(); } }
+            { name: 'healthscore', fn: async () => { if (window.HealthScoreWidget) await HealthScoreWidget.refresh(); } },
+            { name: 'livestatus', fn: async () => { if (window.LiveStatusWidget) await LiveStatusWidget.refresh(); } },
+            { name: 'quickinsights', fn: async () => { if (window.QuickInsightsWidget) await QuickInsightsWidget.refresh(); } }
         ];
     }
 
@@ -111,6 +113,14 @@ const TerminalApp = (function() {
         
         if (window.HealthScoreWidget) {
             HealthScoreWidget.init('health-score-widget');
+        }
+        
+        if (window.LiveStatusWidget) {
+            LiveStatusWidget.init('live-status-widget');
+        }
+        
+        if (window.QuickInsightsWidget) {
+            QuickInsightsWidget.init('quick-insights-widget');
         }
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
