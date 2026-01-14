@@ -124,14 +124,16 @@ quantum_momentum, kalman_filter, monte_carlo, kelly_criterion, black_swan, senti
 | `score_moderate` | ≥ 12 | DISABLED (igual que strong) |
 | Score < 12 | - | NO TRADE |
 
-### 4.2 Coherence Thresholds
+### 4.2 Coherence Thresholds (V6.5.4e ADR-007 Phase 1)
 
-| Umbral | Valor | Efecto |
-|--------|-------|--------|
-| `veto_critical` | < 35% | BLOCK - señal muy débil |
-| `veto_normal` | < 50% | BLOCK - señal débil |
-| `warning` | < 60% | Position reduction |
-| `good` | ≥ 78% | Full position approval |
+| Umbral | V6.5.4d | V6.5.4e | Efecto |
+|--------|---------|---------|--------|
+| `veto_critical` | < 35% | < 30% | BLOCK - señal muy débil |
+| `veto_normal` | < 50% | < 45% | BLOCK - señal débil |
+| `warning` | < 60% | < 55% | Position reduction |
+| `good` | ≥ 78% | ≥ 78% | Full position approval |
+
+> **ADR-007 Phase 1 (Jan 14, 2026):** 5-point threshold reduction to improve trade throughput while maintaining capital protection.
 
 ---
 
@@ -140,8 +142,8 @@ quantum_momentum, kalman_filter, monte_carlo, kelly_criterion, black_swan, senti
 ### 5.1 Estados de Bloqueo
 
 ```
-COHERENCE_GATE_CRITICAL    → Bloqueado por coherence < 35%
-COHERENCE_GATE_LOW         → Bloqueado por coherence < 50%
+COHERENCE_GATE_CRITICAL    → Bloqueado por coherence < 30% (V6.5.4e)
+COHERENCE_GATE_LOW         → Bloqueado por coherence < 45% (V6.5.4e)
 MC_VETO                    → Bloqueado por Monte Carlo analysis
 RMS_VETO                   → Bloqueado por Risk Management System
 BLACK_SWAN_VETO            → Bloqueado por high crash probability
@@ -159,7 +161,7 @@ ARES_REMOVED               → Legacy code eliminado (Dec 24, 2025)
 
 ## 6. Configuración de Perfil Activo
 
-**Perfil**: `PRODUCTION_STABLE V6.5.4d`
+**Perfil**: `PRODUCTION_STABLE V6.5.4e`
 
 ```python
 min_trade_usd = 150.0

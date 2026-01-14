@@ -97,9 +97,10 @@ class MemoryRiskAdapter:
         
         self.kernel = kernel
         
-        self._coherence_threshold_critical = 35.0
-        self._coherence_threshold_high = 50.0
-        self._coherence_threshold_elevated = 65.0
+        # ADR-007 Phase 1 Calibration (Jan 14, 2026) - 5-point reduction
+        self._coherence_threshold_critical = 30.0   # was 35.0
+        self._coherence_threshold_high = 45.0       # was 50.0
+        self._coherence_threshold_elevated = 60.0   # was 65.0
         
         self._divergence_threshold_critical = 5.0
         self._divergence_threshold_high = 3.0

@@ -153,14 +153,17 @@
 | **Auto-Revert** | 1% drawdown in 24 hours | Automatic config rollback |
 | **Emergency Stop** | Critical breach | Halt all trading immediately |
 
-### 3.5 Adaptive Coherence Gate V010 (Jan 2026)
+### 3.5 Adaptive Coherence Gate V6.5.4e (Jan 2026) - ADR-007
 
 | EMA Signal | Black Swan Severity | Coherence Threshold | Benefit |
 |------------|---------------------|---------------------|---------|
-| **Strong (≥25 pts)** | LOW | 35% | Maximum opportunity capture |
-| **Strong (≥25 pts)** | MEDIUM | 45% | Balanced filtering |
-| **Strong (≥25 pts)** | HIGH/EXTREME | 55-65% | Strict protection |
-| **Weak (<25 pts)** | Any | 10%/30% (paper/real) | Default protection |
+| **Strong (≥20 pts)** | LOW | 30% | Maximum opportunity capture |
+| **Strong (≥20 pts)** | MEDIUM | 40% | Balanced filtering |
+| **Strong (≥20 pts)** | HIGH | 50% | Strict protection |
+| **Strong (≥20 pts)** | EXTREME | 60% | Maximum protection |
+| **Weak (<20 pts)** | Any | 10%/30% (paper/real) | Default protection |
+
+> **ADR-007 Phase 1 (Jan 14, 2026):** 5-point threshold reduction based on Shadow Portfolio analysis showing 48,937 vetos blocking $978.7M in 7 days.
 
 **Investor Value Proposition:**
 > "OMNIX dynamically calibrates coherence filters based on market regime severity, maximizing opportunity capture in favorable conditions while maintaining institutional discipline during high-risk periods."

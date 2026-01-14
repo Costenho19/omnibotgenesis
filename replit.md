@@ -1,7 +1,7 @@
-# OMNIX V6.5.4d INSTITUTIONAL+
+# OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4d INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation through a multi-layer veto architecture, incorporating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume and has successfully blocked numerous high-risk operations. The current focus is on extended validation to build a credible track record for institutional investor presentations.
+OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation through a multi-layer veto architecture, incorporating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume and has successfully blocked numerous high-risk operations. The current focus is on extended validation to build a credible track record for institutional investor presentations. V6.5.4e includes ADR-007 Phase 1 calibration for improved trade throughput while maintaining capital protection.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -89,6 +89,17 @@ A counterfactual analysis system that tracks vetoed trades with full context to 
 The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), Calibration Progress (4-phase tracker), and Recommended Actions (priority-based suggestions). All 5 P1 features completed as of Jan 13, 2026.
 
 ## Recent Changes
+
+### Jan 14, 2026: ADR-007 Coherence Threshold Calibration (V6.5.4e)
+- **DIAGNOSIS**: System over-protective, blocking 48,937 trades in 7 days ($978.7M blocked)
+- **ROOT CAUSE**: COHERENCE_GATE avg 26.3% coherence, BLACK_SWAN blocking 21,402 signals
+- **SOLUTION Phase 1**: 5-point threshold reduction across all levels
+  - Adaptive thresholds: LOW 30% (was 35%), MEDIUM 40% (was 45%), HIGH 50% (was 55%), EXTREME 60% (was 65%)
+  - EMA trigger: 20 (was 25)
+- **Files Modified**: `coherence_engine.py`, `memory_risk_adapter.py`
+- **Expected Impact**: Veto rate -15-20%, Win rate 37.8% → 42-45%, Profit factor 0.13 → 0.8-1.2
+- **Guardrails**: Rollback if drawdown > 3% in 48h
+- **Reference**: `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
 
 ### Jan 14, 2026: FEAT-006, FEAT-007, FEAT-008, FEAT-009, FEAT-010, FEAT-011 Dashboard Widgets
 - **FEAT-006 Comparative Metrics**: API `/api/metrics/comparative` with period-aligned BTC benchmarking

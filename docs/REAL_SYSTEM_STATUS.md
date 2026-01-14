@@ -1,13 +1,59 @@
-# OMNIX V6.5.4d INSTITUTIONAL+ - Estado REAL del Sistema
+# OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 12 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 14/14 | 119 Trades | Balance $984,801.27 | Operación Lucidez ACTIVA
+**Fecha**: 14 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | 119 Trades | Balance $984,801.27 | ADR-007 Phase 1 ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
 ---
 
 ## Cambios Recientes
+
+### ADR-007 Coherence Threshold Calibration (Jan 14, 2026)
+
+**DIAGNÓSTICO:** Sistema demasiado protector, bloqueando oportunidades legítimas.
+
+| Métrica | Valor | Análisis |
+|---------|-------|----------|
+| Vetos (7d) | 48,937 | Muy alto |
+| Capital Bloqueado | $978.7M | Desproporcionado |
+| Net Win Rate | 20.2% | Bajo por fee erosion |
+| Directional Accuracy | 37.8% | Señales correctas, pero bloqueadas |
+| OMNIX vs BTC | +4.81% alpha | Sistema supera mercado |
+
+**CAUSA RAÍZ:** COHERENCE_GATE y BLACK_SWAN demasiado estrictos.
+
+| Veto Type | Count (7d) | Avg Coherence | Capital Blocked |
+|-----------|------------|---------------|-----------------|
+| COHERENCE_GATE | 27,646 | 26.3% | $552.9M |
+| BLACK_SWAN | 21,402 | N/A | $428.0M |
+
+**SOLUCIÓN - Phase 1 (5-point reduction):**
+
+| Threshold | V6.5.4d | V6.5.4e | Cambio |
+|-----------|---------|---------|--------|
+| LOW | 35% | 30% | -5 |
+| MEDIUM | 45% | 40% | -5 |
+| HIGH | 55% | 50% | -5 |
+| EXTREME | 65% | 60% | -5 |
+| EMA Trigger | 25 | 20 | -5 |
+
+**Archivos Modificados:**
+- `omnix_services/coherence_service/coherence_engine.py`
+- `omnix_services/risk_management/memory_risk_adapter.py`
+
+**Impacto Esperado:**
+- Veto rate: -15-20%
+- Win rate: 37.8% → 42-45%
+- Profit factor: 0.13 → 0.8-1.2
+
+**Guardrails:**
+- Rollback si drawdown > 3% en 48h
+- Monitoreo via Dashboard Learning Engine
+
+**Referencia:** `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
+
+---
 
 ### Trade Investigation - Dual Win Rate Framework (Jan 11-12, 2026)
 

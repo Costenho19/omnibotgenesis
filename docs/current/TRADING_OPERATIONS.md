@@ -1,8 +1,9 @@
-# OMNIX V6.5.4d Trading Operations
+# OMNIX V6.5.4e Trading Operations
 
-**Version:** 6.5.4d INSTITUTIONAL+ PREMIUM  
-**Last Updated:** December 20, 2025  
-**Active Profile:** PRODUCTION_STABLE
+**Version:** 6.5.4e INSTITUTIONAL+ PREMIUM  
+**Last Updated:** January 14, 2026  
+**Active Profile:** PRODUCTION_STABLE  
+**Latest Change:** ADR-007 Coherence Threshold Calibration
 
 ---
 
@@ -40,10 +41,10 @@ Step 2: Strategy Analysis (10 Core Strategies)
 ├── Coherence Engine: Consensus gate
 └── Risk Guardian: Protection layer
 
-Step 3: Coherence Validation (6-Tier Veto System)
+Step 3: Coherence Validation (6-Tier Veto System) - V6.5.4e ADR-007
 ├── Tier 1: Contradiction check (5+ vs 3+)
 ├── Tier 2: Black Swan risk level
-├── Tier 3: Coherence score threshold
+├── Tier 3: Coherence score threshold (Adaptive Gate V6.5.4e)
 ├── Tier 4: Confidence threshold (60%+)
 ├── Tier 5: Monte Carlo win rate (50%+)
 └── Tier 6: Position limit check
@@ -91,7 +92,7 @@ Step 5: Execution
 | `base_trade_size` | $500 | Default trade size |
 | `max_daily_trades` | 10 | Daily trade limit |
 | `max_daily_loss_pct` | 15% | Drawdown halt trigger |
-| `coherence_threshold` | 55% | Minimum coherence score |
+| `coherence_threshold` | 30-60% | Adaptive threshold (ADR-007 Phase 1) |
 | `min_signal_strength` | 60% | Signal threshold |
 | `sl_pct_high_vol` | 2.5% | Stop loss (high volatility) |
 | `sl_pct_normal_vol` | 1.5% | Stop loss (normal volatility) |
@@ -290,7 +291,7 @@ Si la clave no existe o expiró → el loop está muerto → reiniciar con `/rea
 | Profile verification | `echo $TRADING_PROFILE` |
 | Drawdown status | Check if < 15% |
 | Market conditions | May be waiting for signals |
-| Coherence thresholds | May be too strict |
+| Coherence thresholds | ADR-007 calibration applied |
 
 ### 5.2 Win Rate Below 55%
 

@@ -192,18 +192,19 @@ class CoherenceEngine:
         self._max_rejection_history = 100
         self._rejection_alert_threshold = 5  # Alert after 5 consecutive rejections
         
-        # Adaptive Coherence Gate V6.5.4d (Jan 8, 2026)
-        # Threshold matrix: EMA score >= 35 triggers adaptive thresholds
+        # Adaptive Coherence Gate V6.5.4e (Jan 14, 2026) - ADR-007 Phase 1 Calibration
+        # Threshold matrix: EMA score >= 20 triggers adaptive thresholds
         # HIGHER severity = HIGHER threshold (more strict)
+        # Phase 1: 5-point reduction from V6.5.4d to improve trade throughput
         self._adaptive_threshold_matrix = {
-            'LOW': 35,      # Black Swan LOW → coherence_min = 35%
-            'MEDIUM': 45,   # Black Swan MEDIUM → coherence_min = 45%
-            'HIGH': 55,     # Black Swan HIGH → coherence_min = 55%
-            'EXTREME': 65,  # Black Swan EXTREME → coherence_min = 65% (max strictness)
+            'LOW': 30,      # Black Swan LOW → coherence_min = 30% (was 35%)
+            'MEDIUM': 40,   # Black Swan MEDIUM → coherence_min = 40% (was 45%)
+            'HIGH': 50,     # Black Swan HIGH → coherence_min = 50% (was 55%)
+            'EXTREME': 60,  # Black Swan EXTREME → coherence_min = 60% (was 65%)
         }
-        self._ema_trigger_score = 25  # EMA score threshold to activate adaptive gate (lowered from 35 for bucket alignment)
+        self._ema_trigger_score = 20  # EMA score threshold (was 25) - ADR-007 Phase 1
         
-        logger.info("🧠 Coherence Engine inicializado con 9 estrategias + Adaptive Gate V6.5.4d")
+        logger.info("🧠 Coherence Engine inicializado con 9 estrategias + Adaptive Gate V6.5.4e (ADR-007)")
     
     def analyze_coherence(self, signals: List[StrategySignal]) -> CoherenceReport:
         """
