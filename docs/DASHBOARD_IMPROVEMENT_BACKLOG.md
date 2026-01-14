@@ -241,10 +241,10 @@
 
 **Status:** [x] COMPLETED (Jan 14, 2026)
 
-### FEAT-011: Learning Engine Insights
+### FEAT-011: Opportunity Tracker (formerly Learning Engine Insights)
 
-**Description:** Shadow Portfolio analysis for veto effectiveness and calibration  
-**Components:** Veto effectiveness by type, threshold analysis, calibration recommendations
+**Description:** Shadow Portfolio analysis for missed opportunities vs losses avoided  
+**Components:** Two-sided accounting, Day 30 review framework, veto effectiveness
 
 **Implementation:**
 - API: `/api/learning/insights` in `omnix_dashboard/blueprints/core.py`
@@ -253,15 +253,25 @@
 
 **Features:**
 - Veto effectiveness by type (BLACK_SWAN, COHERENCE_GATE, MC, RMS)
+- **Missed Opportunities tracking** (trades blocked with good conditions)
+- **Losses Avoided tracking** (trades correctly blocked)
+- **Net Opportunity calculation** (missed - avoided)
+- Day 30 review summary and recommendation
 - Average EMA/coherence scores per veto type
 - Top vetoed symbols analysis
-- Calibration recommendations based on patterns
-- 7-day rolling window analysis
+- 7-day and 30-day rolling window analysis
 - Auto-refresh every 60 seconds
+
+**Day 30 Review Criteria (ADR-008):**
+- If missed > 20 AND estimated profit > $3K → Test lower thresholds
+- If missed < 10 OR avoided >> missed → Keep conservative
+- Review date: February 13, 2026
 
 **Data Source:** `shadow_trade_events` table (48K+ events)
 
-**Status:** [x] COMPLETED (Jan 14, 2026)
+**Reference:** `docs/reference/adr/ADR-008-opportunity-tracker.md`
+
+**Status:** [x] COMPLETED (Jan 14, 2026) - Enhanced with Opportunity Tracker
 
 ### FEAT-012: Collapsible Advanced Sections
 

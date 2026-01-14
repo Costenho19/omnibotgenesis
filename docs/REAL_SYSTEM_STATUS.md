@@ -9,6 +9,40 @@
 
 ## Cambios Recientes
 
+### ADR-008 Opportunity Tracker (Jan 14, 2026)
+
+**PROPÓSITO:** Framework de validación para decisión Day 30 sin cambiar thresholds ahora.
+
+| Concepto | Descripción |
+|----------|-------------|
+| **Missed Opportunities** | Trades bloqueados con Coh >50%, RANGING, EMA 30-40% |
+| **Losses Avoided** | Trades correctamente bloqueados (Coh <30%, VOLATILE) |
+| **Net Opportunity** | Balance diario: missed - avoided |
+
+**Ejemplo Observado (Jan 14, 23:07):**
+```
+BTC/USD - Near Optimal Conditions:
+✅ Coherence: 54% (MODERATE)
+✅ Regime: RANGING (28.7% vol)
+✅ Non-Markovian: 85% BUY
+✅ Black Swan: MEDIUM
+❌ EMA: NONE @ 31.7% (threshold ~40%)
+
+Decision: HOLD (EMA no signal)
+Classification: POTENTIAL_MISSED_OPPORTUNITY
+Follow-up: Track BTC price 24h later
+```
+
+**Day 30 Review (Feb 13, 2026):**
+- Si missed > 20 AND profit estimado > $3K → Test threshold 35% con $500
+- Si missed < 10 OR avoided >> missed → Mantener conservador
+- Dashboard FEAT-011 trackea datos automáticamente
+
+**Estado:** ✅ ADOPTADO - Tracking activo
+**Referencia:** `docs/reference/adr/ADR-008-opportunity-tracker.md`
+
+---
+
 ### ADR-007 Coherence Threshold Calibration (Jan 14, 2026)
 
 **DIAGNÓSTICO:** Sistema demasiado protector, bloqueando oportunidades legítimas.

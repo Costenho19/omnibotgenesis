@@ -18,6 +18,17 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-008: Opportunity Tracker (Jan 14, 2026)
+- **ESTADO**: ✅ ADOPTADO - Framework de validación Day 30
+- **PROPÓSITO**: Documentar oportunidades perdidas vs pérdidas evitadas sin cambiar thresholds
+- **MÉTRICAS**:
+  - Missed Opportunities: Trades bloqueados con buenas condiciones (Coh >50%, RANGING)
+  - Losses Avoided: Trades correctamente bloqueados (Coh <30%, VOLATILE)
+  - Net Opportunity: Balance diario para decisión data-driven
+- **CRITERIO DAY 30**: Si missed > 20 AND profit > $3K → Test threshold 35%
+- **FECHA REVISIÓN**: 13 de Febrero 2026
+- **REFERENCIA**: `docs/reference/adr/ADR-008-opportunity-tracker.md`
+
 ### ADR-007: Coherence Threshold Calibration (Jan 14, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - V6.5.4e
 - **DIAGNÓSTICO**: Sistema sobre-protector bloqueando 48,937 trades en 7 días ($978.7M bloqueados)
@@ -216,6 +227,8 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [Trazabilidad](reference/TRACEABILITY_MATRIX.md) | 123 componentes mapeados |
 | [ADR-001](reference/adr/ADR-001-hexagonal.md) | Decisión hexagonal |
 | [ADR-004](reference/adr/ADR-004-position-sizing-hotfix.md) | Position sizing hotfix |
+| [ADR-007](reference/adr/ADR-007-coherence-threshold-calibration.md) | Coherence threshold calibration |
+| [ADR-008](reference/adr/ADR-008-opportunity-tracker.md) | Opportunity Tracker (Day 30 Review) |
 | [Deuda Técnica](current/TECHNICAL_DEBT.md) | Issues conocidos |
 
 ---
