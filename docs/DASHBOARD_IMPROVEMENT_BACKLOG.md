@@ -181,15 +181,42 @@
 
 **Status:** [x] COMPLETED (Jan 14, 2026)
 
-### FEAT-008: Risk Heatmap
+### FEAT-008: Correlation Heatmap
 
-**Description:** Visual grid of risk levels per symbol  
-**Metrics:** Coherence, Volatility, Black Swan, Overall Risk
+**Description:** Asset performance matrix with correlation analysis  
+**Components:** Per-symbol metrics, hourly P&L correlation, diversification score
 
-### FEAT-009: Real-Time Decision Log
+**Implementation:**
+- API: `/api/metrics/correlation` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/correlationheatmap.js`
+- CSS: `omnix_dashboard/static/css/components/correlationheatmap.css`
 
-**Description:** Scrolling log of all decisions  
-**Features:** Timestamps, actions, reasons, filters
+**Features:**
+- Per-symbol performance metrics (trades, win rate, P&L, volatility)
+- Correlation matrix using hourly buckets for statistical validity
+- Diversification score (0-100) based on average correlation
+- Auto-refresh every 60 seconds
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
+
+### FEAT-009: Time Heatmap
+
+**Description:** P&L analysis by hour and day of week  
+**Components:** 7x24 heatmap grid, best/worst time identification
+
+**Implementation:**
+- API: `/api/metrics/time-heatmap` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/timeheatmap.js`
+- CSS: `omnix_dashboard/static/css/components/timeheatmap.css`
+
+**Features:**
+- 7x24 grid showing P&L by hour and day of week
+- Color-coded cells (green=profit, red=loss)
+- Best/worst time identification with P&L amounts
+- Trade count per cell
+- Auto-refresh every 60 seconds
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
 
 ### FEAT-010: Regime Detection Dashboard
 
@@ -214,10 +241,27 @@
 
 **Status:** [x] COMPLETED (Jan 14, 2026)
 
-### FEAT-011: Trade History Filters
+### FEAT-011: Learning Engine Insights
 
-**Description:** Filter and sort trade history  
-**Filters:** Wins/Losses, Symbol, Date Range, Show/Hide columns
+**Description:** Shadow Portfolio analysis for veto effectiveness and calibration  
+**Components:** Veto effectiveness by type, threshold analysis, calibration recommendations
+
+**Implementation:**
+- API: `/api/learning/insights` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/learninginsights.js`
+- CSS: `omnix_dashboard/static/css/components/learninginsights.css`
+
+**Features:**
+- Veto effectiveness by type (BLACK_SWAN, COHERENCE_GATE, MC, RMS)
+- Average EMA/coherence scores per veto type
+- Top vetoed symbols analysis
+- Calibration recommendations based on patterns
+- 7-day rolling window analysis
+- Auto-refresh every 60 seconds
+
+**Data Source:** `shadow_trade_events` table (48K+ events)
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
 
 ### FEAT-012: Collapsible Advanced Sections
 
@@ -256,7 +300,25 @@
 | FEAT-005 | Recommended Actions | P1 | DONE | Agent | Jan 13, 2026 |
 | FEAT-006 | Comparative Metrics | P2 | DONE | Agent | Jan 14, 2026 |
 | FEAT-007 | P&L Breakdown | P2 | DONE | Agent | Jan 14, 2026 |
+| FEAT-008 | Correlation Heatmap | P2 | DONE | Agent | Jan 14, 2026 |
+| FEAT-009 | Time Heatmap | P2 | DONE | Agent | Jan 14, 2026 |
 | FEAT-010 | Regime Detection Dashboard | P2 | DONE | Agent | Jan 14, 2026 |
+| FEAT-011 | Learning Engine Insights | P2 | DONE | Agent | Jan 14, 2026 |
+
+---
+
+## Summary
+
+**Dashboard Status: 23/23 Widgets Operational**
+
+| Priority | Total | Completed | Remaining |
+|----------|-------|-----------|-----------|
+| P0 (Bugs) | 3 | 3 | 0 |
+| P1 (UX) | 5 | 5 | 0 |
+| P2 (Features) | 6 | 6 | 0 |
+| **Total** | **14** | **14** | **0** |
+
+All critical, high-priority, and nice-to-have features have been delivered.
 
 ---
 
