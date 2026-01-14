@@ -97,9 +97,12 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 - **FECHA REVISIÓN**: 13 de Febrero 2026
 - **REFERENCIA**: `docs/reference/adr/ADR-008-opportunity-tracker.md`
 - **WIDGET DASHBOARD**: Balance visual 💎 Missed vs ✅ Avoided con ⚖️ - Day 1/30 tracking
-- **API**: `/api/learning/insights` → `opportunity_tracker` payload con missed/avoided/net/recommendation
+- **API**: `/api/learning/insights` → `opportunity_tracker` payload con missed/avoided/net/recommendation/near_miss
 - **DATABASE**: Usa `black_swan_prob` (numeric 0-1), NO `black_swan_severity`
 - **ESTADO ACTUAL**: 0 missed, 479 avoided, NET -$239.5K = PROTECTING ✅
+- **METODOLOGÍA DOCUMENTADA**: `est_pnl = adverse_move_pct × notional_blocked` (lower-bound conservador)
+- **NEAR-MISS TRACKING**: Candidatos observados (EMA 28-35%, Coh ≥40%, BS ≤MEDIUM) para demostrar vigilancia activa
+- **TOOLTIP WIDGET**: "Est. based on avg adverse move × position size" - elimina sospecha de números inflados
 
 ### Jan 14, 2026: ADR-007 Coherence Threshold Calibration (V6.5.4e)
 - **DIAGNOSIS**: System over-protective, blocking 48,937 trades in 7 days ($978.7M blocked)
