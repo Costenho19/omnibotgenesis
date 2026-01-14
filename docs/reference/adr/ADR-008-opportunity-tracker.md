@@ -129,16 +129,22 @@ The existing `/api/learning/insights` endpoint will be enhanced:
 
 ```sql
 -- Missed Opportunity Example (BTC with good conditions)
+-- NOTE: black_swan_prob is numeric 0-1 (0=LOW, 1=EXTREME)
 SELECT COUNT(*) as missed_count,
-       AVG(estimated_position) as avg_position,
-       AVG(CASE WHEN price_24h_later > entry_price THEN 1 ELSE 0 END) as would_have_won
+       AVG(blocked_capital) as avg_position,
+       ROUND(AVG(coherence_score)::numeric, 1) as avg_coherence
 FROM shadow_trade_events
-WHERE veto_type = 'COHERENCE_GATE'
-  AND coherence_score >= 50
-  AND regime = 'RANGING'
-  AND black_swan_severity IN ('LOW', 'MEDIUM')
-  AND ema_score >= 30 AND ema_score < 40
-  AND created_at > NOW() - INTERVAL '30 days';
+WHERE coherence_score >= 45
+  AND ema_score >= 25 AND ema_score < 40
+  AND (black_swan_prob IS NULL OR black_swan_prob <= 0.5)  -- LOW/MEDIUM
+  AND created_at >= '2026-01-14';  -- ADR-008 tracking start
+
+-- Losses Avoided Example (correctly blocked)
+SELECT COUNT(*) as avoided_count,
+       ROUND(SUM(blocked_capital * 0.025)::numeric, 2) as est_loss,  -- 2.5% potential loss
+       ROUND(AVG(coherence_score)::numeric, 1) as avg_coherence
+FROM shadow_trade_events
+WHERE coherence_score < 30 OR black_swan_prob > 0.5;  -- HIGH/EXTREME
 ```
 
 ### Dashboard Widget Update
