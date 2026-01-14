@@ -1,4 +1,4 @@
-# OMNIX V6.5.4 INSTITUTIONAL+
+# OMNIX V6.5.4e INSTITUTIONAL+
 ## Accelerator Application Document
 ### Y Combinator | Techstars | 500 Global | Antler
 
@@ -60,7 +60,9 @@ OMNIX is an AI-powered trading system that brings institutional-grade technology
 | Metric | Value | Notes |
 |--------|-------|-------|
 | Product status | Live | Running 24/7 on Railway |
-| Trades executed | 27 | Paper trading calibration phase |
+| Trades executed | 119 | Paper trading validation phase |
+| Capital preserved | 98.5% | $984K of $1M starting balance |
+| Directional accuracy | 37.8% | Validation in progress |
 | System uptime | 99.9% | Production-grade infrastructure |
 | AI strategies | 10 | Production-ready |
 | Exchanges integrated | 2 | Kraken (crypto), Alpaca (stocks) |
