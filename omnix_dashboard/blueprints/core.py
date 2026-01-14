@@ -1555,3 +1555,141 @@ def api_comparative_metrics():
             'error': str(e),
             'comparison': None
         }), 500
+
+
+@core_bp.route('/api/metrics/pnl-breakdown')
+@require_api_key
+def api_pnl_breakdown():
+    """
+    P&L Breakdown API - Shows where profits and losses come from
+    Breakdown by: symbol, fee impact, strategy mode
+    """
+    try:
+        result = get_paper_trades(return_dict=True)
+        trades = result.get('trades', []) if result.get('success') else []
+        
+        closed_trades = [t for t in trades if t.get('status') == 'closed']
+        
+        if not closed_trades:
+            return jsonify({
+                'success': True,
+                'message': 'No closed trades yet',
+                'breakdown': None,
+                'last_updated': datetime.now().isoformat()
+            })
+        
+        by_symbol = {}
+        for trade in closed_trades:
+            symbol = trade.get('symbol', 'UNKNOWN')
+            if symbol not in by_symbol:
+                by_symbol[symbol] = {
+                    'symbol': symbol,
+                    'trades': 0,
+                    'pnl': 0,
+                    'wins': 0,
+                    'losses': 0,
+                    'wins_pnl': 0,
+                    'losses_pnl': 0
+                }
+            
+            pnl = float(trade.get('pnl', 0) or 0)
+            by_symbol[symbol]['trades'] += 1
+            by_symbol[symbol]['pnl'] += pnl
+            
+            if pnl > 0:
+                by_symbol[symbol]['wins'] += 1
+                by_symbol[symbol]['wins_pnl'] += pnl
+            elif pnl < 0:
+                by_symbol[symbol]['losses'] += 1
+                by_symbol[symbol]['losses_pnl'] += pnl
+        
+        symbol_breakdown = sorted(by_symbol.values(), key=lambda x: x['pnl'], reverse=True)
+        
+        total_pnl = sum(t['pnl'] for t in symbol_breakdown)
+        for item in symbol_breakdown:
+            item['pnl_pct'] = (item['pnl'] / abs(total_pnl) * 100) if total_pnl != 0 else 0
+            item['win_rate'] = (item['wins'] / item['trades'] * 100) if item['trades'] > 0 else 0
+        
+        fee_eroded = 0
+        directional_wins = 0
+        pure_losses = 0
+        pure_wins = 0
+        
+        for trade in closed_trades:
+            pnl = float(trade.get('pnl', 0) or 0)
+            pnl_percent = float(trade.get('pnl_percent', 0) or 0)
+            
+            if pnl_percent > 0:
+                directional_wins += 1
+                if pnl > 0:
+                    pure_wins += 1
+                else:
+                    fee_eroded += 1
+            else:
+                pure_losses += 1
+        
+        cause_breakdown = [
+            {
+                'cause': 'Pure Wins',
+                'description': 'Profitable trades after fees',
+                'count': pure_wins,
+                'pct': (pure_wins / len(closed_trades) * 100) if closed_trades else 0,
+                'type': 'success'
+            },
+            {
+                'cause': 'Fee Eroded',
+                'description': 'Direction correct but fees exceeded profit',
+                'count': fee_eroded,
+                'pct': (fee_eroded / len(closed_trades) * 100) if closed_trades else 0,
+                'type': 'warning'
+            },
+            {
+                'cause': 'Pure Losses',
+                'description': 'Direction incorrect',
+                'count': pure_losses,
+                'pct': (pure_losses / len(closed_trades) * 100) if closed_trades else 0,
+                'type': 'danger'
+            }
+        ]
+        
+        by_mode = {}
+        for trade in closed_trades:
+            mode = trade.get('strategy_mode', 'STANDARD') or 'STANDARD'
+            if mode not in by_mode:
+                by_mode[mode] = {'mode': mode, 'trades': 0, 'pnl': 0, 'wins': 0}
+            
+            pnl = float(trade.get('pnl', 0) or 0)
+            by_mode[mode]['trades'] += 1
+            by_mode[mode]['pnl'] += pnl
+            if pnl > 0:
+                by_mode[mode]['wins'] += 1
+        
+        mode_breakdown = []
+        for mode_data in by_mode.values():
+            mode_data['win_rate'] = (mode_data['wins'] / mode_data['trades'] * 100) if mode_data['trades'] > 0 else 0
+            mode_breakdown.append(mode_data)
+        
+        return jsonify({
+            'success': True,
+            'breakdown': {
+                'by_symbol': symbol_breakdown,
+                'by_cause': cause_breakdown,
+                'by_mode': mode_breakdown,
+                'summary': {
+                    'total_trades': len(closed_trades),
+                    'total_pnl': round(total_pnl, 2),
+                    'best_symbol': symbol_breakdown[0]['symbol'] if symbol_breakdown else None,
+                    'worst_symbol': symbol_breakdown[-1]['symbol'] if symbol_breakdown else None,
+                    'directional_accuracy': round((directional_wins / len(closed_trades) * 100) if closed_trades else 0, 1)
+                }
+            },
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"PnL breakdown error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'breakdown': None
+        }), 500

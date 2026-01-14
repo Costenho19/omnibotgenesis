@@ -168,6 +168,19 @@
 **Description:** Detailed P&L by symbol and by reason  
 **Components:** Bar charts, percentages, trend indicators
 
+**Implementation:**
+- API: `/api/metrics/pnl-breakdown` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/pnlbreakdown.js`
+- CSS: `omnix_dashboard/static/css/components/pnlbreakdown.css`
+
+**Features:**
+- P&L by symbol with horizontal bar visualization
+- Trade outcomes: Pure Wins (20.2%), Fee Eroded (17.6%), Pure Losses (62.2%)
+- Directional accuracy tracking
+- Auto-refresh every 30 seconds
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
+
 ### FEAT-008: Risk Heatmap
 
 **Description:** Visual grid of risk levels per symbol  
@@ -224,6 +237,7 @@
 | FEAT-004 | Calibration Progress | P1 | DONE | Agent | Jan 13, 2026 |
 | FEAT-005 | Recommended Actions | P1 | DONE | Agent | Jan 13, 2026 |
 | FEAT-006 | Comparative Metrics | P2 | DONE | Agent | Jan 14, 2026 |
+| FEAT-007 | P&L Breakdown | P2 | DONE | Agent | Jan 14, 2026 |
 
 ---
 
