@@ -1,0 +1,122 @@
+.correlation-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.correlation-header .widget-icon {
+    font-size: 1.25rem;
+}
+
+.correlation-header .widget-title {
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    flex: 1;
+}
+
+.correlation-header .widget-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border-radius: 4px;
+}
+
+.correlation-body {
+    padding: 0.75rem;
+}
+
+.symbols-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.corr-symbol {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    gap: 0.15rem;
+}
+
+.symbol-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-primary, #fff);
+}
+
+.symbol-trades {
+    font-size: 0.65rem;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.symbol-wr {
+    font-size: 0.7rem;
+    color: #60a5fa;
+}
+
+.symbol-pnl {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.symbol-pnl.positive {
+    color: #10b981;
+}
+
+.symbol-pnl.negative {
+    color: #ef4444;
+}
+
+.corr-matrix {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.corr-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+}
+
+.corr-pair.strength-high {
+    border-left-color: #10b981;
+}
+
+.corr-pair.strength-medium {
+    border-left-color: #f59e0b;
+}
+
+.corr-pair.strength-low {
+    border-left-color: #6b7280;
+}
+
+.pair-names {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.pair-value {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    color: white;
+}
+
+.no-data {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.8rem;
+}

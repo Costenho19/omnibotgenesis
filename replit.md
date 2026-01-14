@@ -90,12 +90,19 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 
 ## Recent Changes
 
-### Jan 14, 2026: FEAT-006, FEAT-007, FEAT-010 Dashboard Widgets
+### Jan 14, 2026: FEAT-006, FEAT-007, FEAT-008, FEAT-009, FEAT-010, FEAT-011 Dashboard Widgets
 - **FEAT-006 Comparative Metrics**: API `/api/metrics/comparative` with period-aligned BTC benchmarking
 - **FEAT-007 P&L Breakdown**: API `/api/metrics/pnl-breakdown` with symbol/cause analysis
   - By Symbol: horizontal bars showing P&L per asset
   - Trade Outcomes: Pure Wins (20.2%), Fee Eroded (17.6%), Pure Losses (62.2%)
   - Directional Accuracy: 37.8% (matches header Precisión metric)
+- **FEAT-008 Correlation Heatmap**: API `/api/metrics/correlation` with hourly P&L correlation
+  - Per-symbol performance metrics (trades, win rate, P&L, volatility)
+  - Correlation matrix using hourly buckets for statistical validity
+  - Diversification score (0-100) based on average correlation
+- **FEAT-009 Time Heatmap**: API `/api/metrics/time-heatmap` with P&L by hour/day
+  - 7x24 heatmap grid showing optimal trading times
+  - Best/worst time identification with P&L
 - **FEAT-010 Regime Detection Dashboard**: API `/api/regime/dashboard` with regime analysis
   - Current Regime: BULLISH/BEARISH/RANGING inferred from EMA signals
   - Confidence & Coherence metrics
@@ -103,7 +110,13 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
   - Signal distribution visualization
   - System status message explaining behavior (DEFENSIVE/ANALYZING/PROTECTIVE/MONITORING)
   - Data source: 48K+ shadow_trade_events since Jan 9
+- **FEAT-011 Learning Engine Insights**: API `/api/learning/insights` with Shadow Portfolio analysis
+  - Veto effectiveness by type (BLACK_SWAN, COHERENCE_GATE, MC, RMS)
+  - Threshold analysis with avg EMA/coherence scores
+  - Top vetoed symbols
+  - Calibration recommendations
 - Reference: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
+- **Dashboard now has 23/23 widgets operational** (P0: 3/3, P1: 5/5, P2: 6/6)
 
 ### Jan 13, 2026: ADR-003 Identity Alignment
 - **SYSTEM IDENTITY** in `ai_prompts.py` updated to "risk control infrastructure" (was "algorithmic trading system")

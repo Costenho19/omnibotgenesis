@@ -16,6 +16,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/comparativemetrics.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/pnlbreakdown.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/regimedetection.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/timeheatmap.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/correlationheatmap.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/learninginsights.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -194,6 +197,18 @@
         <div style="color: var(--text-muted); font-size: 11px;">Loading Regime Detection...</div>
     </div>
     
+    <div class="panel" id="time-heatmap-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Time Heatmap...</div>
+    </div>
+    
+    <div class="panel" id="correlation-heatmap-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Correlation...</div>
+    </div>
+    
+    <div class="panel" id="learning-insights-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Learning Engine...</div>
+    </div>
+    
     <div class="panel" id="quarantine-widget">
         <div style="color: var(--text-muted); font-size: 11px;">Loading Asset Quarantine...</div>
     </div>
@@ -279,5 +294,8 @@
 <script src="{{ url_for('static', filename='js/components/comparativemetrics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/pnlbreakdown.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/regimedetection.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/timeheatmap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/correlationheatmap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/learninginsights.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

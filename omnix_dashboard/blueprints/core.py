@@ -1942,3 +1942,360 @@ def api_regime_dashboard():
             'error': str(e),
             'regime': None
         }), 500
+
+
+@core_bp.route('/api/metrics/time-heatmap')
+@require_api_key
+def api_time_heatmap():
+    """
+    FEAT-009: Time Heatmap
+    Analyzes P&L by hour of day and day of week to find optimal trading times.
+    """
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                return jsonify({'success': False, 'error': 'Database unavailable'}), 503
+            
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT 
+                    EXTRACT(DOW FROM opened_at) as day_of_week,
+                    EXTRACT(HOUR FROM opened_at) as hour,
+                    COUNT(*) as trades,
+                    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                    ROUND(SUM(profit_loss)::numeric, 2) as total_pnl,
+                    ROUND(AVG(profit_loss)::numeric, 2) as avg_pnl
+                FROM paper_trading_trades
+                WHERE opened_at IS NOT NULL AND status = 'closed'
+                GROUP BY EXTRACT(DOW FROM opened_at), EXTRACT(HOUR FROM opened_at)
+                ORDER BY day_of_week, hour
+            """)
+            rows = cur.fetchall()
+            
+            heatmap_data = []
+            best_time = {'day': 0, 'hour': 0, 'pnl': float('-inf')}
+            worst_time = {'day': 0, 'hour': 0, 'pnl': float('inf')}
+            
+            for row in rows:
+                day = int(row[0])
+                hour = int(row[1])
+                trades = row[2]
+                wins = row[3]
+                pnl = float(row[4] or 0)
+                avg_pnl = float(row[5] or 0)
+                win_rate = (wins / trades * 100) if trades > 0 else 0
+                
+                heatmap_data.append({
+                    'day': day,
+                    'hour': hour,
+                    'trades': trades,
+                    'wins': wins,
+                    'pnl': pnl,
+                    'avg_pnl': avg_pnl,
+                    'win_rate': round(win_rate, 1)
+                })
+                
+                if pnl > best_time['pnl']:
+                    best_time = {'day': day, 'hour': hour, 'pnl': pnl}
+                if pnl < worst_time['pnl']:
+                    worst_time = {'day': day, 'hour': hour, 'pnl': pnl}
+            
+            cur.close()
+        
+        day_names = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+        
+        return jsonify({
+            'success': True,
+            'heatmap': heatmap_data,
+            'best_time': {
+                'day': day_names[best_time['day']],
+                'hour': f"{best_time['hour']:02d}:00",
+                'pnl': best_time['pnl']
+            },
+            'worst_time': {
+                'day': day_names[worst_time['day']],
+                'hour': f"{worst_time['hour']:02d}:00",
+                'pnl': worst_time['pnl']
+            },
+            'day_names': day_names,
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Time heatmap error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@core_bp.route('/api/metrics/correlation')
+@require_api_key
+def api_correlation_matrix():
+    """
+    FEAT-008: Asset Performance Matrix
+    Shows diversification analysis and per-symbol performance metrics.
+    """
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                return jsonify({'success': False, 'error': 'Database unavailable'}), 503
+            
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT 
+                    symbol,
+                    COUNT(*) as trades,
+                    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                    ROUND(SUM(profit_loss)::numeric, 2) as total_pnl,
+                    ROUND(AVG(profit_loss)::numeric, 2) as avg_pnl,
+                    ROUND(STDDEV(profit_loss)::numeric, 2) as pnl_stddev,
+                    MIN(opened_at) as first_trade,
+                    MAX(opened_at) as last_trade
+                FROM paper_trading_trades
+                WHERE status = 'closed'
+                GROUP BY symbol
+                ORDER BY trades DESC
+            """)
+            symbol_stats = cur.fetchall()
+            
+            cur.execute("""
+                WITH hourly_pnl AS (
+                    SELECT 
+                        symbol,
+                        DATE_TRUNC('hour', opened_at) as hour_bucket,
+                        SUM(profit_loss) as hour_pnl
+                    FROM paper_trading_trades
+                    WHERE status = 'closed' AND opened_at IS NOT NULL
+                    GROUP BY symbol, DATE_TRUNC('hour', opened_at)
+                ),
+                symbol_pairs AS (
+                    SELECT DISTINCT 
+                        a.symbol as symbol_a,
+                        b.symbol as symbol_b
+                    FROM hourly_pnl a
+                    CROSS JOIN hourly_pnl b
+                    WHERE a.symbol < b.symbol
+                )
+                SELECT 
+                    sp.symbol_a,
+                    sp.symbol_b,
+                    COUNT(*) as common_hours,
+                    ROUND(COALESCE(CORR(a.hour_pnl, b.hour_pnl), 0)::numeric, 3) as correlation
+                FROM symbol_pairs sp
+                LEFT JOIN hourly_pnl a ON a.symbol = sp.symbol_a
+                LEFT JOIN hourly_pnl b ON b.symbol = sp.symbol_b AND a.hour_bucket = b.hour_bucket
+                WHERE a.hour_bucket IS NOT NULL AND b.hour_bucket IS NOT NULL
+                GROUP BY sp.symbol_a, sp.symbol_b
+                HAVING COUNT(*) >= 3
+                ORDER BY ABS(COALESCE(CORR(a.hour_pnl, b.hour_pnl), 0)) DESC NULLS LAST
+                LIMIT 15
+            """)
+            correlations = cur.fetchall()
+            
+            cur.close()
+        
+        symbols = []
+        total_pnl = sum(float(row[3] or 0) for row in symbol_stats)
+        for row in symbol_stats:
+            pnl = float(row[3] or 0)
+            win_rate = (row[2] / row[1] * 100) if row[1] > 0 else 0
+            contribution = (pnl / total_pnl * 100) if total_pnl != 0 else 0
+            symbols.append({
+                'symbol': row[0].replace('/USD', ''),
+                'trades': row[1],
+                'wins': row[2],
+                'pnl': pnl,
+                'avg_pnl': float(row[4] or 0),
+                'volatility': float(row[5] or 0),
+                'win_rate': round(win_rate, 1),
+                'contribution': round(contribution, 1)
+            })
+        
+        matrix = []
+        for row in correlations:
+            corr_val = float(row[3]) if row[3] is not None else 0
+            matrix.append({
+                'pair_a': row[0].replace('/USD', ''),
+                'pair_b': row[1].replace('/USD', ''),
+                'common_hours': row[2],
+                'correlation': corr_val,
+                'strength': 'HIGH' if abs(corr_val) > 0.7 else ('MEDIUM' if abs(corr_val) > 0.4 else 'LOW'),
+                'diversified': abs(corr_val) < 0.3
+            })
+        
+        diversification_score = 100
+        if matrix:
+            avg_corr = sum(abs(m['correlation']) for m in matrix) / len(matrix)
+            diversification_score = max(0, min(100, int((1 - avg_corr) * 100)))
+        
+        return jsonify({
+            'success': True,
+            'symbols': symbols,
+            'correlations': matrix,
+            'total_pairs': len(correlations),
+            'diversification_score': diversification_score,
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Correlation matrix error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@core_bp.route('/api/learning/insights')
+@require_api_key
+def api_learning_insights():
+    """
+    FEAT-011: Learning Engine Insights
+    Analyzes Shadow Portfolio to show veto effectiveness and calibration recommendations.
+    """
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                return jsonify({'success': False, 'error': 'Database unavailable'}), 503
+            
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT 
+                    veto_type,
+                    COUNT(*) as total_vetos,
+                    SUM(CASE WHEN outcome_calculated = true THEN 1 ELSE 0 END) as analyzed,
+                    ROUND(AVG(blocked_capital)::numeric, 2) as avg_blocked,
+                    ROUND(SUM(blocked_capital)::numeric, 2) as total_blocked
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY veto_type
+                ORDER BY total_vetos DESC
+            """)
+            veto_stats = cur.fetchall()
+            
+            cur.execute("""
+                SELECT 
+                    veto_type,
+                    COUNT(*) as events,
+                    ROUND(AVG(ema_score)::numeric, 2) as avg_ema,
+                    ROUND(AVG(coherence_score)::numeric, 2) as avg_coherence,
+                    ROUND(AVG(monte_carlo_er)::numeric, 4) as avg_mc_er,
+                    ROUND(AVG(black_swan_prob)::numeric, 2) as avg_bs_prob
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+                GROUP BY veto_type
+            """)
+            veto_thresholds = cur.fetchall()
+            
+            cur.execute("""
+                SELECT 
+                    symbol,
+                    COUNT(*) as veto_count,
+                    ROUND(AVG(ema_score)::numeric, 2) as avg_ema,
+                    ROUND(SUM(blocked_capital)::numeric, 2) as capital_blocked
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY symbol
+                ORDER BY veto_count DESC
+                LIMIT 5
+            """)
+            top_vetoed_symbols = cur.fetchall()
+            
+            cur.execute("""
+                SELECT 
+                    DATE(created_at) as day,
+                    COUNT(*) as vetos,
+                    ROUND(SUM(blocked_capital)::numeric, 2) as capital
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY DATE(created_at)
+                ORDER BY day DESC
+            """)
+            daily_trend = cur.fetchall()
+            
+            cur.close()
+        
+        veto_effectiveness = []
+        for row in veto_stats:
+            veto_effectiveness.append({
+                'type': row[0] or 'UNKNOWN',
+                'total': row[1],
+                'analyzed': row[2],
+                'avg_blocked': float(row[3] or 0),
+                'total_blocked': float(row[4] or 0)
+            })
+        
+        threshold_analysis = []
+        for row in veto_thresholds:
+            threshold_analysis.append({
+                'type': row[0] or 'UNKNOWN',
+                'events': row[1],
+                'avg_ema': float(row[2] or 0),
+                'avg_coherence': float(row[3] or 0),
+                'avg_mc_er': float(row[4] or 0),
+                'avg_bs_prob': float(row[5] or 0)
+            })
+        
+        symbols_analysis = []
+        for row in top_vetoed_symbols:
+            symbols_analysis.append({
+                'symbol': row[0].replace('/USD', '') if row[0] else 'UNKNOWN',
+                'veto_count': row[1],
+                'avg_ema': float(row[2] or 0),
+                'capital_blocked': float(row[3] or 0)
+            })
+        
+        trend = []
+        for row in daily_trend:
+            trend.append({
+                'date': row[0].isoformat() if row[0] else None,
+                'vetos': row[1],
+                'capital': float(row[2] or 0)
+            })
+        
+        recommendations = []
+        total_vetos = sum(v['total'] for v in veto_effectiveness)
+        
+        if total_vetos > 5000:
+            recommendations.append({
+                'type': 'CALIBRATION',
+                'priority': 'HIGH',
+                'title': 'Alto volumen de vetos',
+                'message': f'{total_vetos:,} vetos en 7 días. Considerar ajustar umbrales para reducir falsos positivos.',
+                'action': 'Revisar thresholds de COHERENCE_GATE y BLACK_SWAN'
+            })
+        
+        bs_vetos = next((v for v in veto_effectiveness if v['type'] == 'BLACK_SWAN'), None)
+        if bs_vetos and bs_vetos['total'] > total_vetos * 0.5:
+            recommendations.append({
+                'type': 'BLACK_SWAN',
+                'priority': 'MEDIUM',
+                'title': 'Black Swan dominante',
+                'message': f'{bs_vetos["total"]:,} ({bs_vetos["total"]/total_vetos*100:.0f}%) de vetos por Black Swan.',
+                'action': 'Sistema correctamente protegiendo contra volatilidad extrema'
+            })
+        
+        if not recommendations:
+            recommendations.append({
+                'type': 'OPTIMAL',
+                'priority': 'LOW',
+                'title': 'Sistema calibrado',
+                'message': 'Los filtros están funcionando dentro de parámetros normales.',
+                'action': 'Continuar monitoreando métricas'
+            })
+        
+        return jsonify({
+            'success': True,
+            'veto_effectiveness': veto_effectiveness,
+            'threshold_analysis': threshold_analysis,
+            'top_vetoed_symbols': symbols_analysis,
+            'daily_trend': trend,
+            'recommendations': recommendations,
+            'summary': {
+                'total_vetos_7d': total_vetos,
+                'total_capital_protected': sum(v['total_blocked'] for v in veto_effectiveness),
+                'veto_types_active': len(veto_effectiveness)
+            },
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Learning insights error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
