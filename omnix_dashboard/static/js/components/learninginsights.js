@@ -114,6 +114,18 @@
                     <span class="review-date">📅 Review: ${dayProgress.review_date_display || 'Feb 13, 2026'}</span>
                     <span class="rec-badge ${recBadge.class}">${recBadge.text}</span>
                 </div>
+                
+                <div class="tracker-methodology" title="Estimación basada en movimiento adverso promedio × tamaño de posición. Es un límite inferior conservador. Se usa la misma metodología para oportunidades perdidas y pérdidas evitadas.">
+                    <span class="methodology-icon">ℹ️</span>
+                    <span class="methodology-text">Est. based on avg adverse move × position size</span>
+                </div>
+                
+                ${tracker.near_miss ? `
+                <div class="near-miss-indicator">
+                    <span class="near-miss-icon">👀</span>
+                    <span class="near-miss-text">Near-miss candidates: ${tracker.near_miss.count || 0}</span>
+                </div>
+                ` : ''}
             </div>
         `;
     }

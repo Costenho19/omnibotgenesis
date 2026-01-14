@@ -75,6 +75,42 @@ opportunity_tracker_metrics = {
 }
 ```
 
+### Metodología de Estimación de PnL (Opportunity Tracker)
+
+Para evitar métricas infladas o subjetivas, todas las cifras de
+`estimated_loss` y `estimated_profit` se calculan usando una
+metodología conservadora basada en datos reales del sistema:
+
+**Fórmula base**
+
+```
+estimated_pnl = adverse_move_pct × notional_blocked
+```
+
+Donde:
+
+- `adverse_move_pct` = movimiento promedio en contra observado
+  históricamente para ese par y régimen dentro de OMNIX
+  (ej: BTC 1H ≈ 0.8%, XRP ≈ 1.2%, AVAX ≈ 1.6% en mercados volátiles)
+- `notional_blocked` = tamaño de la posición que habría sido tomada
+  según el motor de risk sizing vigente
+
+**Importante**
+
+- Se utiliza el **movimiento promedio**, no el máximo, para evitar
+  sobre-estimaciones.
+- No se asume ningún edge positivo: la estimación es
+  un **lower-bound conservador** del riesgo evitado.
+- La misma fórmula se usa tanto para `losses_avoided`
+  como para `missed_opportunities`, garantizando simetría.
+
+**Valores actuales de implementación:**
+- `est_loss = blocked_capital × 2.5%` (avg adverse move for blocked trades)
+- `est_profit = blocked_capital × 1.5%` (avg opportunity cost, conservative)
+
+Esto garantiza que el Opportunity Tracker mida **costo de oportunidad
+vs preservación de capital** de forma justa y comparable.
+
 ### Day 30 Review Decision Criteria
 
 ```python

@@ -353,3 +353,47 @@
     color: var(--text-secondary, #9ca3af);
     line-height: 1.4;
 }
+
+/* Methodology Tooltip */
+.tracker-methodology {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+    cursor: help;
+}
+
+.tracker-methodology .methodology-icon {
+    font-size: 0.7rem;
+}
+
+.tracker-methodology .methodology-text {
+    font-size: 0.55rem;
+    color: var(--text-tertiary, #6b7280);
+    font-style: italic;
+}
+
+/* Near-Miss Indicator */
+.near-miss-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 4px;
+}
+
+.near-miss-indicator .near-miss-icon {
+    font-size: 0.7rem;
+}
+
+.near-miss-indicator .near-miss-text {
+    font-size: 0.6rem;
+    color: #60a5fa;
+    font-weight: 500;
+}

@@ -2180,6 +2180,19 @@ def _calculate_opportunity_tracker(conn):
         """)
         avoided_row = cur.fetchone()
         
+        cur.execute("""
+            SELECT 
+                COUNT(*) as near_miss_count,
+                COALESCE(ROUND(AVG(ema_score)::numeric, 1), 0) as avg_ema,
+                COALESCE(ROUND(AVG(coherence_score)::numeric, 1), 0) as avg_coherence
+            FROM shadow_trade_events
+            WHERE created_at >= '2026-01-14'
+              AND ema_score >= 28 AND ema_score < 35
+              AND coherence_score >= 40
+              AND (black_swan_prob IS NULL OR black_swan_prob <= 0.6)
+        """)
+        near_miss_row = cur.fetchone()
+        
         cur.close()
         
         missed_count = int(missed_row[0] or 0) if missed_row else 0
@@ -2189,6 +2202,10 @@ def _calculate_opportunity_tracker(conn):
         avoided_count = int(avoided_row[0] or 0) if avoided_row else 0
         avoided_est_loss = float(avoided_row[1] or 0) if avoided_row else 0
         avoided_avg_coh = float(avoided_row[2] or 0) if avoided_row else 0
+        
+        near_miss_count = int(near_miss_row[0] or 0) if near_miss_row else 0
+        near_miss_avg_ema = float(near_miss_row[1] or 0) if near_miss_row else 0
+        near_miss_avg_coh = float(near_miss_row[2] or 0) if near_miss_row else 0
         
         net_value = missed_est_profit - avoided_est_loss
         
@@ -2233,7 +2250,13 @@ def _calculate_opportunity_tracker(conn):
                 'review_date': review_date.strftime('%Y-%m-%d'),
                 'review_date_display': 'Feb 13, 2026'
             },
-            'recommendation': recommendation
+            'recommendation': recommendation,
+            'near_miss': {
+                'count': near_miss_count,
+                'avg_ema': near_miss_avg_ema,
+                'avg_coherence': near_miss_avg_coh,
+                'conditions': 'EMA 28-35%, Coh >=40%, BS <=MEDIUM'
+            }
         }
         
     except Exception as e:
@@ -2243,7 +2266,8 @@ def _calculate_opportunity_tracker(conn):
             'avoided': {'count': 0, 'est_loss': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Error en cálculo'},
             'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-13', 'review_date_display': 'Feb 13, 2026'},
-            'recommendation': 'CONTINUE_MONITORING'
+            'recommendation': 'CONTINUE_MONITORING',
+            'near_miss': {'count': 0, 'avg_ema': 0, 'avg_coherence': 0, 'conditions': 'N/A'}
         }
 
 
