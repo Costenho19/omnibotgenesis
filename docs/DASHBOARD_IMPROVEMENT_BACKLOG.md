@@ -147,7 +147,21 @@
 ### FEAT-006: Comparative Metrics Table
 
 **Description:** OMNIX vs BTC Hold vs Average Bot comparison  
-**Metrics:** Return, Max DD, Win Rate, Sharpe, Alpha
+**Metrics:** Return, Max DD, Win Rate, Capital Preserved %, Risk Blocked
+
+**Implementation:**
+- API: `/api/metrics/comparative` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/comparativemetrics.js`
+- CSS: `omnix_dashboard/static/css/components/comparativemetrics.css`
+
+**Features:**
+- Period-aligned BTC comparison (uses OMNIX trading window, not arbitrary 30 days)
+- Honest investor messaging per ADR-003
+- `data_available` flags for transparency
+- Auto-refresh every 10 seconds
+- Responsive table with color-coded highlights
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
 
 ### FEAT-007: P&L Breakdown Visual
 
@@ -205,10 +219,11 @@
 | BUG-002 | Fee Eroded 0 | P0 | DONE | Agent | Jan 13, 2026 |
 | BUG-003 | Protected misleading | P0 | DONE | Agent | Jan 13, 2026 |
 | FEAT-001 | System Health Score | P1 | DONE | Agent | Jan 13, 2026 |
-| FEAT-002 | Live Status | P1 | Not Started | - | - |
-| FEAT-003 | Quick Insights | P1 | Not Started | - | - |
-| FEAT-004 | Calibration Progress | P1 | Not Started | - | - |
-| FEAT-005 | Recommended Actions | P1 | Not Started | - | - |
+| FEAT-002 | Live Status | P1 | DONE | Agent | Jan 13, 2026 |
+| FEAT-003 | Quick Insights | P1 | DONE | Agent | Jan 13, 2026 |
+| FEAT-004 | Calibration Progress | P1 | DONE | Agent | Jan 13, 2026 |
+| FEAT-005 | Recommended Actions | P1 | DONE | Agent | Jan 13, 2026 |
+| FEAT-006 | Comparative Metrics | P2 | DONE | Agent | Jan 14, 2026 |
 
 ---
 

@@ -88,9 +88,17 @@ A counterfactual analysis system that tracks vetoed trades with full context to 
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), Calibration Progress (4-phase tracker), and Recommended Actions (priority-based suggestions). All 5 P1 features completed as of Jan 13, 2026.
 
-## Recent Changes (Jan 13, 2026)
+## Recent Changes
 
-### ADR-003 Identity Alignment
+### Jan 14, 2026: FEAT-006 Comparative Metrics Table
+- **API endpoint** `/api/metrics/comparative` with period-aligned BTC benchmarking
+- **Period alignment**: Uses OMNIX trading window (first trade to last trade) for BTC price comparison
+- **Honest investor messaging**: No false claims when data doesn't support them
+- **Components**: Widget in `comparativemetrics.js` and `comparativemetrics.css`
+- **Metrics**: Capital preserved %, return %, max DD, win rate, risk blocked
+- Reference: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
+
+### Jan 13, 2026: ADR-003 Identity Alignment
 - **SYSTEM IDENTITY** in `ai_prompts.py` updated to "risk control infrastructure" (was "algorithmic trading system")
 - **BLACKLISTED PHRASES** added: "generar rendimientos", "rendimientos consistentes", "sistema de trading", "bot de trading"
 - **MASTER_SYSTEM_PROMPT** ROLE changed from "trading advisor" to "risk management advisor"
