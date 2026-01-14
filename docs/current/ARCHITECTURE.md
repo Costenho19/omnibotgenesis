@@ -235,7 +235,7 @@ def text_to_speech(self, text, language='es', max_retries=3):
 
 ---
 
-## Adaptive Coherence Gate V6.5.4d (Jan 9, 2026)
+## Adaptive Coherence Gate V6.5.4e (ADR-007 Calibrated)
 
 | Componente | Archivo | Función |
 |------------|---------|---------|
@@ -320,15 +320,15 @@ class AdaptiveGateDecision:
 
 | Módulo | Ubicación | Propósito |
 |--------|-----------|-----------|
-| AutoTradingBot V6.5.4d | `omnix_core/bot/auto_trading_bot.py` | Scanner multi-crypto, señales tiered, emergency SL |
+| AutoTradingBot V6.5.4e | `omnix_core/bot/auto_trading_bot.py` | Scanner multi-crypto, señales tiered, emergency SL |
 | TradingSystem V6.5 | `omnix_core/trading_system.py` | Orquestador de ejecución |
-| CoherenceEngine V6.5.4d | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe + Adaptive Gate |
+| CoherenceEngine V6.5.4e | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe + ADR-007 calibrated |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
 > **CoherenceEngine Type Safety (Dec 30, 2025)**: Incluye `normalize_signal()`, `normalize_strategy_signal()` y `safe_float()` para prevenir errores `str vs int`. Ver [TYPE_SAFETY_HOTFIX_DEC30_2025.md](../history/2025-12/TYPE_SAFETY_HOTFIX_DEC30_2025.md).
 
-> **Adaptive Coherence Gate V6.5.4d (Jan 8, 2026)**: Sistema de umbrales dinámicos que ajusta el coherence_block_threshold según EMA score + Black Swan severity. Ver sección "Adaptive Coherence Gate" más abajo.
+> **Adaptive Coherence Gate V6.5.4e (ADR-007)**: Sistema de umbrales dinámicos calibrados: LOW 30%, MEDIUM 40%, HIGH 50%, EXTREME 60%, EMA trigger 20 pts. Ver sección "Adaptive Coherence Gate" más arriba.
 
 ---
 
@@ -410,21 +410,21 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 | `market:` | 60s | Precios |
 | `user:` | 5min | Estado usuario |
 | `conv:` | 1hr | Conversaciones |
-| `omnix:heartbeat:trading_loop` | 10min | Liveness monitoring (V6.5.4d) |
+| `omnix:heartbeat:trading_loop` | 10min | Liveness monitoring |
 | `omnix:user_language:{chat_id}` | 24hr | User language detection |
 
 ---
 
-## 6. Event Bridge: UserSettings → AutoTradingBot (V6.5.4d)
+## 6. Event Bridge: UserSettings → AutoTradingBot
 
-### Problema Resuelto
+### Problema Resuelto (Historical: V6.5.4d Dec 2025)
 Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB pero NO notificaban al `AutoTradingBot`. Esto causaba que el trading no se reiniciara hasta el próximo redeploy de Railway.
 
 ### Arquitectura de Integración Completa
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                    FLUJO COMPLETO DE TRADING V6.5.4d                      │
+│                    FLUJO COMPLETO DE TRADING V6.5.4e                      │
 └──────────────────────────────────────────────────────────────────────────┘
 
          CAPA DE INTERFAZ                    CAPA DE CONTROL
@@ -437,7 +437,7 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
               │                                    │ is_paused = true/false
               ▼                                    ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │              🔗 EVENT BRIDGE V6.5.4d                         │
+    │              🔗 EVENT BRIDGE                                 │
     │  enterprise_bot.py:                                          │
     │  ├── Detecta comando /pausar o /reanudar                    │
     │  ├── Llama UserSettingsService (persistencia DB)            │
@@ -447,7 +447,7 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
                                    ▼
     ┌─────────────────────────────────────────────────────────────┐
     │              CAPA DE EJECUCIÓN DE TRADING                    │
-    │  AutoTradingBot V6.5.4d:                                     │
+    │  AutoTradingBot V6.5.4e:                                     │
     │  ├── _start_stop_lock (threading.Lock)                      │
     │  ├── _thread (referencia al Thread activo)                  │
     │  ├── start() → Inicia _trading_loop en Thread               │
@@ -489,14 +489,14 @@ enterprise_bot.py (línea 3069-3084)
     ├── UserSettingsService.resume_trading()
     │       └── PostgreSQL: is_paused = false ✓
     │
-    └── 🔗 EVENT BRIDGE (nuevo V6.5.4d)
+    └── 🔗 EVENT BRIDGE
             │
             └── AutoTradingBot.start(user_id)  ← Reinicia loop en caliente
                     │
                     └── Thread: _trading_loop() activo inmediatamente
 ```
 
-### Thread Safety (V6.5.4d)
+### Thread Safety
 
 Para prevenir race conditions cuando el usuario ejecuta `/pausar` y `/reanudar` rápidamente:
 
@@ -550,7 +550,7 @@ Para prevenir race conditions cuando el usuario ejecuta `/pausar` y `/reanudar` 
 
 ---
 
-## 7. Cambios V6.5.4d
+## 7. Cambios Históricos (V6.5.4d - Dec 2025)
 
 | Parámetro | Valor | Efecto |
 |-----------|-------|--------|
@@ -598,7 +598,7 @@ Ver [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) para detalles de ca
 
 ## 10. AI-First Multilingual Prompt Architecture (Dec 19, 2025)
 
-### Prompt Specification Layer V6.5.4d
+### Prompt Specification Layer V6.5.4e
 
 Modern prompt engineering architecture with language-neutral base prompts:
 
@@ -650,4 +650,4 @@ Modern prompt engineering architecture with language-neutral base prompts:
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+*
+*OMNIX V6.5.4e INSTITUTIONAL+*

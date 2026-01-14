@@ -1246,4 +1246,4 @@ SELECT * FROM pg_policies WHERE tablename LIKE '%trading%';
 ---
 
 *Documento generado: 20 de Diciembre 2025*  
-*OMNIX V6.5.4d INSTITUTIONAL+ - Auditoría de Arquitectura Multi-Usuario*
+*OMNIX V6.5.4e INSTITUTIONAL+ - Auditoría de Arquitectura Multi-Usuario*

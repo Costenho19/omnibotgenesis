@@ -58,13 +58,13 @@ Step 4: Risk Guardian Review
 
 Step 5: Execution
 ├── CAES position sizing
-├── **V6.5.4d: FINAL_SYMBOL_FILTER_VETO** (última línea de defensa)
+├── FINAL_SYMBOL_FILTER_VETO (última línea de defensa)
 ├── Order placement (market/limit)
 ├── TP/SL setting (volatility-based)
 └── Decision logging (audit trail)
 ```
 
-> **V6.5.4d Security:** Added `FINAL_SYMBOL_FILTER_VETO` as last line of defense before trade execution. This redundant check blocks BUY orders on excluded symbols (e.g., ADA/USD) even if earlier filters fail. Uses `analysis.get('symbol')` as primary source.
+> **Security (V6.5.4d+):** `FINAL_SYMBOL_FILTER_VETO` is the last line of defense before trade execution. This redundant check blocks BUY orders on excluded symbols (e.g., ADA/USD) even if earlier filters fail. Uses `analysis.get('symbol')` as primary source.
 
 ### 1.2 Trade Lifecycle
 
@@ -81,7 +81,7 @@ Step 5: Execution
 
 ## 2. Trading Profiles
 
-### 2.1 Active Profile: PRODUCTION_STABLE V6.5.4d
+### 2.1 Active Profile: PRODUCTION_STABLE V6.5.4e
 
 **Source of Truth:** `omnix_core/config/trading_profiles.py`
 
@@ -98,10 +98,10 @@ Step 5: Execution
 | `sl_pct_normal_vol` | 1.5% | Stop loss (normal volatility) |
 | `tp_pct_high_vol` | 4.5% | Take profit (high volatility) |
 | `tp_pct_normal_vol` | 3.0% | Take profit (normal volatility) |
-| `emergency_sl_pct` | 2.0% | **V6.5.4d:** Max absolute loss per position |
-| `score_moderate` | 12 | **V6.5.4d:** Same as score_strong (MODERATE disabled) |
+| `emergency_sl_pct` | 2.0% | Max absolute loss per position |
+| `score_moderate` | 12 | Same as score_strong (MODERATE disabled) |
 
-### 2.2 V6.5.4d Changes (December 11, 2025)
+### 2.2 Historical Changes (V6.5.4d - December 11, 2025)
 
 | Change | From | To | Reason |
 |--------|------|-----|--------|
@@ -132,7 +132,7 @@ TRADING_PROFILE=PRODUCTION_STABLE
 
 ### 2.5 PAPER_OPTIMIZED Hardening (December 13, 2025)
 
-**V6.5.4d Update:** PAPER_OPTIMIZED profile was hardened to match PRODUCTION_STABLE safety requirements:
+**Historical (V6.5.4d Dec 2025):** PAPER_OPTIMIZED profile was hardened to match PRODUCTION_STABLE safety requirements:
 
 | Parameter | Before | After | Reason |
 |-----------|--------|-------|--------|
@@ -231,7 +231,7 @@ DO NOT run bot on Replit and Railway simultaneously.
 Telegram allows only ONE active connection per token.
 ```
 
-### 4.5 Control Commands (V6.5.4d)
+### 4.5 Control Commands
 
 | Command | Acción | Efecto Inmediato |
 |---------|--------|------------------|
@@ -239,7 +239,7 @@ Telegram allows only ONE active connection per token.
 | `/reanudar` | Reanudar trading | Loop reinicia inmediatamente, DB is_paused=false |
 | `/status` | Ver estado | Muestra running, trades, win rate |
 
-**Comportamiento V6.5.4d (Event Bridge):**
+**Comportamiento (Event Bridge):**
 
 ```
 /pausar ejecuta:
@@ -253,7 +253,7 @@ Telegram allows only ONE active connection per token.
 3. Mensaje: "🚀 Trading reanudado"
 ```
 
-> **IMPORTANTE V6.5.4d:** Los comandos ahora reinician el trading loop SIN necesidad de redeploy de Railway.
+> **IMPORTANTE:** Los comandos reinician el trading loop SIN necesidad de redeploy de Railway.
 
 ### 4.6 Thread Safety
 

@@ -425,7 +425,7 @@ El dashboard muestra dos métricas de win rate separadas:
 | PAPER_OPTIMIZED | Investor demos | Selective |
 | WIN_RATE_OPTIMIZED | Maximum win rate | Very Selective |
 
-### 11.2 PRODUCTION_STABLE V6.5.4d Parameters
+### 11.2 PRODUCTION_STABLE V6.5.4e Parameters (ADR-007)
 
 | Parameter | Value |
 |-----------|-------|
@@ -434,10 +434,11 @@ El dashboard muestra dos métricas de win rate separadas:
 | base_trade_size | $500 |
 | max_daily_trades | 10 |
 | max_daily_loss_pct | 15% |
-| coherence_threshold | 55% |
+| coherence_threshold | 30-60% (Adaptive, ADR-007) |
 | min_signal_strength | 60% |
 | emergency_sl_pct | 2.0% |
 | score_moderate | 12 (=strong, MODERATE disabled) |
+| EMA trigger | 20 pts |
 
 ---
 

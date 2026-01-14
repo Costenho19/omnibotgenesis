@@ -233,7 +233,7 @@ UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7
 
 ## Executive Summary
 
-This document registers known technical debt in OMNIX V6.5.4d. All items are **intentionally deferred** to prioritize track record generation for investor presentations. Refactoring is planned for V7.0 after achieving the 500-trade milestone.
+This document registers known technical debt in OMNIX V6.5.4e. All items are **intentionally deferred** to prioritize track record generation for investor presentations. Refactoring is planned for V7.0 after achieving the 500-trade milestone.
 
 ---
 
@@ -425,7 +425,7 @@ Previously documented paths did not match actual code locations. Updated in:
 
 ### 3.2 Version References (RESOLVED)
 
-**Status:** Updated to V6.5.4d December 11, 2025
+**Status:** Updated to V6.5.4e January 14, 2026
 
 ---
 
@@ -439,7 +439,7 @@ Previously documented paths did not match actual code locations. Updated in:
 
 | Action | Files Modified |
 |--------|----------------|
-| Updated VERSION to 6.5.4d | `omnix_config/settings.py` |
+| Updated VERSION to 6.5.4e | `omnix_config/settings.py` |
 | Import VERSION_BANNER | `omnix_dashboard/streamlit_app.py` |
 | Import VERSION_BANNER | `omnix_services/ai_service/video/analyzer.py` |
 | Import VERSION_BANNER | `omnix_services/ai_service/video/integration.py` |
@@ -450,9 +450,9 @@ Previously documented paths did not match actual code locations. Updated in:
 **Central Version Location:**
 ```python
 # omnix_config/settings.py
-VERSION = "6.5.4d"
+VERSION = "6.5.4e"
 VERSION_NAME = "INSTITUTIONAL+"
-VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"  # "V6.5.4d INSTITUTIONAL+"
+VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"  # "V6.5.4e INSTITUTIONAL+"
 ```
 
 **Usage Pattern:**
@@ -462,7 +462,7 @@ logger.info(f"OMNIX {VERSION_BANNER} started")
 ```
 
 **Preserved Historical Comments:**
-- Calibration comments in `trading_profiles.py` (V6.5.4b, V6.5.4c, V6.5.4d) remain as historical audit trail
+- Calibration comments in `trading_profiles.py` (V6.5.4b, V6.5.4c, V6.5.4d, V6.5.4e) remain as historical audit trail
 - Docstrings in test files remain unchanged
 
 **Prevention:**

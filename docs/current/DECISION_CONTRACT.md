@@ -286,4 +286,4 @@ Después de deploy, verificar estos logs en Railway:
 
 ---
 
-*Este documento es parte del sistema de auditoría institucional de OMNIX V6.5.4d*
+*Este documento es parte del sistema de auditoría institucional de OMNIX V6.5.4e*
