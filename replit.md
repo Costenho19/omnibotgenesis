@@ -90,6 +90,13 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 
 ## Recent Changes
 
+### Jan 14, 2026: ADR-008 Opportunity Tracker
+- **FRAMEWORK**: Day 30 review sin cambiar thresholds ahora
+- **MÉTRICAS**: Missed Opportunities vs Losses Avoided vs Net Opportunity
+- **CRITERIO**: Si missed > 20 AND profit > $3K → Test threshold 35% con $500
+- **FECHA REVISIÓN**: 13 de Febrero 2026
+- **REFERENCIA**: `docs/reference/adr/ADR-008-opportunity-tracker.md`
+
 ### Jan 14, 2026: ADR-007 Coherence Threshold Calibration (V6.5.4e)
 - **DIAGNOSIS**: System over-protective, blocking 48,937 trades in 7 days ($978.7M blocked)
 - **ROOT CAUSE**: COHERENCE_GATE avg 26.3% coherence, BLACK_SWAN blocking 21,402 signals
