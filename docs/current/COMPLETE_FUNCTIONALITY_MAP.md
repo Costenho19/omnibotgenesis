@@ -1,8 +1,9 @@
-# OMNIX V6.5.4d - Mapa Completo de Funcionalidades
+# OMNIX V6.5.4e - Mapa Completo de Funcionalidades
 
-**Fecha**: 19 de Diciembre 2025  
+**Fecha**: 14 de Enero 2026  
 **Propósito**: Documento de referencia para reescritura limpia V7.0  
-**Estado**: CONSOLIDADO
+**Estado**: CONSOLIDADO  
+**Último Cambio**: ADR-007 Coherence Threshold Calibration
 
 ---
 

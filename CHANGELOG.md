@@ -1,6 +1,43 @@
-# OMNIX V6.5.4 INSTITUTIONAL+ - Changelog
+# OMNIX V6.5.4e INSTITUTIONAL+ - Changelog
 
 Registro de cambios, correcciones y mejoras del sistema.
+
+---
+
+## [2026-01-14] - ADR-007 Coherence Threshold Calibration (V6.5.4e)
+
+### Diagnóstico
+Sistema sobre-protector bloqueando demasiados trades:
+- 48,937 vetos en 7 días ($978.7M en capital notional bloqueado)
+- COHERENCE_GATE promedio 26.3% coherencia
+- BLACK_SWAN bloqueando 21,402 señales
+
+### Solución Phase 1: Reducción de 5 puntos
+
+| Umbral | Antes | Después |
+|--------|-------|---------|
+| LOW | 35% | 30% |
+| MEDIUM | 45% | 40% |
+| HIGH | 55% | 50% |
+| EXTREME | 65% | 60% |
+| EMA trigger | 25 pts | 20 pts |
+
+### Impacto Esperado
+- Tasa de veto: -15-20%
+- Win rate: 37.8% → 42-45%
+- Profit factor: 0.13 → 0.8-1.2
+
+### Guardrails
+- Rollback si drawdown > 3% en 48h
+- Monitoreo vía Learning Engine widget
+
+### Archivos Modificados
+- `omnix_services/coherence_service/coherence_engine.py`
+- `omnix_services/risk_management/memory_risk_adapter.py`
+
+### Documentación
+- `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
+- Actualizados: replit.md, TRADING_OPERATIONS.md, REAL_SYSTEM_STATUS.md, DECISION_CONTRACT.md, feature_catalog.md
 
 ---
 

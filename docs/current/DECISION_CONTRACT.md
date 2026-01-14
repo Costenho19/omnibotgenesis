@@ -1,8 +1,9 @@
-# OMNIX V6.5.4d Decision Contract
+# OMNIX V6.5.4e Decision Contract
 
-> **Fecha**: December 25, 2025 (Updated)  
-> **Versión**: V6.5.4d PRODUCTION_STABLE  
-> **Propósito**: Documentación formal del sistema de decisiones para auditoría e inversores
+> **Fecha**: January 14, 2026 (Updated)  
+> **Versión**: V6.5.4e PRODUCTION_STABLE  
+> **Propósito**: Documentación formal del sistema de decisiones para auditoría e inversores  
+> **Último Cambio**: ADR-007 Coherence Threshold Calibration
 
 ---
 
@@ -10,7 +11,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    DECISION FLOW V6.5.4d                        │
+│                    DECISION FLOW V6.5.4e                        │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 1: EMA Signal Generation                                  │
 │         ↓                                                       │
@@ -18,9 +19,9 @@
 │         ↓                                                       │
 │  STEP 3: RMS VETO (CircuitBreaker + LimitsEngine)              │
 │         ↓                                                       │
-│  STEP 4: COHERENCE GATE                                         │
-│     • veto_critical < 35% → REJECTED                           │
-│     • veto_normal < 50% → REJECTED                             │
+│  STEP 4: COHERENCE GATE (ADR-007 calibrated)                   │
+│     • veto_critical < 30% → REJECTED                           │
+│     • veto_normal < 45% → REJECTED                             │
 │         ↓                                                       │
 │  STEP 5: SCORING (5 inputs principales)                         │
 │         ↓                                                       │

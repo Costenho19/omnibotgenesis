@@ -1,7 +1,7 @@
-# OMNIX V6.5.4d - Documentación
+# OMNIX V6.5.4e - Documentación
 
-**Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 12 de Enero 2026  
+**Versión**: V6.5.4e INSTITUTIONAL+  
+**Actualizado**: 14 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,17 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### ADR-007: Coherence Threshold Calibration (Jan 14, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - V6.5.4e
+- **DIAGNÓSTICO**: Sistema sobre-protector bloqueando 48,937 trades en 7 días ($978.7M bloqueados)
+- **CAUSA RAÍZ**: COHERENCE_GATE promedio 26.3% coherencia, BLACK_SWAN bloqueando 21,402 señales
+- **SOLUCIÓN Phase 1**: Reducción de 5 puntos en umbrales adaptativos
+  - LOW: 35% → 30%, MEDIUM: 45% → 40%, HIGH: 55% → 50%, EXTREME: 65% → 60%
+  - EMA trigger: 25 → 20 puntos
+- **IMPACTO ESPERADO**: Tasa de veto -15-20%, Win rate 37.8% → 42-45%
+- **GUARDRAIL**: Rollback si drawdown > 3% en 48h
+- **REFERENCIA**: `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
 
 ### ADR-006: Dashboard Improvement Proposals (Jan 13, 2026)
 - **ESTADO**: Documentado, pendiente implementación

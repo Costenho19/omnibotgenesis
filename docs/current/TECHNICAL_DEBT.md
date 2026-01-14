@@ -1,7 +1,7 @@
-# OMNIX V6.5.4d Technical Debt Registry
+# OMNIX V6.5.4e Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** December 31, 2025  
+**Updated:** January 14, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
 

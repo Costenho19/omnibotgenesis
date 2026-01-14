@@ -1,8 +1,9 @@
-# OMNIX V6.5.4d - Arquitectura
+# OMNIX V6.5.4e - Arquitectura
 
-**Versión**: V6.5.4d INSTITUTIONAL+  
-**Actualizado**: 9 de Enero 2026  
-**Estado**: Producción 24/7
+**Versión**: V6.5.4e INSTITUTIONAL+  
+**Actualizado**: 14 de Enero 2026  
+**Estado**: Producción 24/7  
+**Último Cambio**: ADR-007 Coherence Threshold Calibration
 
 ---
 
@@ -10,7 +11,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX V6.5.4d INSTITUTIONAL+                  │
+│                    OMNIX V6.5.4e INSTITUTIONAL+                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACES                                                      │
 │  ├── Telegram Bot (enterprise_bot.py)                           │
@@ -18,7 +19,7 @@
 │  └── Streamlit Dashboard (puerto 8080)                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  CORE ENGINES                                                    │
-│  ├── AutoTradingBot V6.5.4d - Multi-crypto scanner              │
+│  ├── AutoTradingBot V6.5.4e - Multi-crypto scanner              │
 │  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto                   │
 │  ├── Non-Markovian Kernel V6.5 - Memoria temporal               │
 │  └── Risk Guardian V5.4 - Protección drawdown                   │

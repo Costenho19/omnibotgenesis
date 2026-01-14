@@ -1,8 +1,9 @@
-# OMNIX V6.5.4d INSTITUTIONAL+ - Current System Metrics
+# OMNIX V6.5.4e INSTITUTIONAL+ - Current System Metrics
 ## Real-Time Transparency Report
 
-**Last Updated:** January 10, 2026  
-**Data Source:** Production Database (Railway)
+**Last Updated:** January 14, 2026  
+**Data Source:** Production Database (Railway)  
+**Latest Change:** ADR-007 Coherence Threshold Calibration
 
 ---
 
@@ -69,29 +70,30 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 
 ## SYSTEM STATUS
 
-### Core Engines (V6.5.4 INSTITUTIONAL+ PREMIUM)
+### Core Engines (V6.5.4e INSTITUTIONAL+ PREMIUM)
 
 | Engine | Status | Version |
 |--------|--------|---------|
-| AutoTradingBot | Active | V6.5.4 INSTITUTIONAL+ |
+| AutoTradingBot | Active | V6.5.4e INSTITUTIONAL+ |
 | Non-Markovian Kernel | Active | V6.5 |
-| Coherence Engine | Active | V6.5 ULTRA |
+| Coherence Engine | Active | V6.5 ULTRA (ADR-007 calibrated) |
 | CAES (Adaptive Entry) | Active | V6.5.4 |
 | Quantum Momentum | Active | V6.5.4 |
 | Kelly Criterion | Active | V6.5.4 |
 | AI Risk Guardian | Active | V5.4 |
 | Monte Carlo | Active | Quantum-Enhanced |
-| Kalman Filter | Active | V6.5.4d Optimized |
+| Kalman Filter | Active | V6.5.4e Optimized |
 | HMM Regime Detector | Active | Standard |
 | Portfolio Manager | Active | V6.4 INSTITUTIONAL+ |
 | **InstitutionalDecisionLogger** | **Active** | **V6.5.4** |
 | **Execution Protocol** | **Active** | **V6.5.4 PREMIUM** |
 | **Position Manager** | **Active** | **V6.5.4 PREMIUM** |
 
-### New V6.5.4d Features
+### New V6.5.4e Features (Jan 2026)
 
 | Feature | Description |
 |---------|-------------|
+| **ADR-007 Coherence Calibration** | Phase 1: 5-point threshold reduction (LOW 30%, MEDIUM 40%, HIGH 50%, EXTREME 60%) |
 | **InstitutionalDecisionLogger** | 11 lifecycle events per trade decision with unique decision_id |
 | **Volatility-Based SL/TP** | Automatic classification of pairs by volatility |
 | **Execution Protocol PREMIUM** | Citadel-level TWAP/VWAP/ICEBERG execution |
@@ -243,5 +245,5 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 
 ---
 
-**Document Version:** V6.5.4d  
-**Last Updated:** January 10, 2026
+**Document Version:** V6.5.4e  
+**Last Updated:** January 14, 2026

@@ -1,4 +1,4 @@
-# OMNIX V6.5.4d INSTITUTIONAL+
+# OMNIX V6.5.4e INSTITUTIONAL+
 ## Executive Summary | January 2026
 
 ---
@@ -43,10 +43,11 @@
 
 ---
 
-### V6.5.4d INSTITUTIONAL+ FEATURES
+### V6.5.4e INSTITUTIONAL+ FEATURES
 
 | Feature | Description |
 |---------|-------------|
+| **ADR-007 Coherence Calibration** | Phase 1: 5-point threshold reduction for improved trade throughput |
 | **Shadow Portfolio System** | Counterfactual analysis of vetoed trades - learns from blocked decisions to calibrate filters |
 | **Veto Tracking System** | Real-time capital protection tracking with PostgreSQL persistence |
 | **Adaptive Coherence Gate** | Dynamic thresholds based on EMA score + Black Swan severity |
