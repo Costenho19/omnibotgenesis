@@ -46,12 +46,12 @@ opportunity_tracker_metrics = {
     "missed_opportunities": {
         "description": "Trades blocked when conditions were favorable",
         "criteria": {
-            "coherence": ">= 50%",
-            "regime": "RANGING",
-            "black_swan": "<= MEDIUM",
-            "ema_confidence": ">= 30% but < 40% (current threshold)"
+            "coherence": ">= 45%",
+            "black_swan": "<= MEDIUM (prob <= 0.5)",
+            "ema_confidence": ">= 25% but < 40%"
         },
-        "follow_up": "Track BTC price 24h after block"
+        "follow_up": "Track price movement after block",
+        "note": "Thresholds aligned with code implementation (core.py lines 2158-2169)"
     },
     "losses_avoided": {
         "description": "Trades correctly blocked",
