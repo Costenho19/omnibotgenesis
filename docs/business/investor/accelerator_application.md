@@ -126,19 +126,19 @@ Technical background with deep expertise in quantitative systems. Built OMNIX fr
 
 ## THE ASK
 
-**Raising:** $1,000,000 Seed  
-**Valuation:** $11.5M pre-money (8% dilution)  
+**Raising:** $500,000 Seed  
+**Valuation:** $4.5M pre-money (10% equity)  
 **Use of funds:**
 
 | Category | Allocation |
 |----------|------------|
-| Engineering (expand to 6 FTE) | 40% |
+| Engineering (3 FTE) | 40% |
 | Infrastructure & security audits | 20% |
-| Marketing & user acquisition | 20% |
+| Live Trading Capital | 20% |
 | Legal & compliance (DIFC/ADGM) | 10% |
 | Operations & reserve | 10% |
 
-**Runway:** 18-24 months to Series A
+**Runway:** 12-18 months to Series A
 
 ---
 

@@ -117,21 +117,21 @@ OMNIX is the only retail trading platform with:
 
 ### THE ASK
 
-**Raising:** $1,000,000 Seed Round  
-**Valuation:** $11.5M Pre-Money (8% dilution)  
-**Runway:** 18-24 months  
+**Raising:** $500,000 Seed Round  
+**Valuation:** $4.5M Pre-Money (10% equity)  
+**Runway:** 12-18 months  
 
-**Why $11.5M Valuation?**
-- MENA seed mean valuation: $18.9M (MAGNiTT 2024)
-- Global AI fintech seed median: $10-18M (Carta 2024)
+**Why $4.5M Valuation?**
+- Conservative valuation for validation-phase infrastructure
+- MENA seed mean valuation: $18.9M (MAGNiTT 2024) - significant upside
 - Unique IP: Non-Markovian Kernel, Post-Quantum Security, InstitutionalDecisionLogger
-- Competitor 3Commas valued at $180M with fewer features
-- Recent example: Zinit raised $8M seed at $48M valuation
+- Phase: Extended paper trading track record + live validation
+- Milestone-based approach: prove capital preservation before scaling
 
 **Use of Funds:**
-- 40% Engineering & Development (expand team to 6 FTE)
+- 40% Engineering & Development (3 FTE)
 - 20% Infrastructure & Security Audits
-- 20% Marketing & User Acquisition
+- 20% Live Trading Capital
 - 10% Legal & Compliance (DIFC/ADGM ready)
 - 10% Operations & Reserve
 

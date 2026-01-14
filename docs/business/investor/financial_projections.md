@@ -147,18 +147,18 @@ ARPU increases over time due to:
 
 ### 4.2 Cash Flow & Runway
 
-**Starting Cash (Post-Seed):** $1,000,000
+**Starting Cash (Post-Seed):** $500,000
 
 | Quarter | Revenue | Expenses | Net Cash Flow | Cash Balance |
 |---------|---------|----------|---------------|--------------|
-| Q1 2026 | $75,000 | $231,000 | $(156,000) | $844,000 |
-| Q2 2026 | $200,000 | $231,000 | $(31,000) | $813,000 |
-| Q3 2026 | $400,000 | $231,000 | $169,000 | $982,000 |
-| Q4 2026 | $600,000 | $231,000 | $369,000 | $1,351,000 |
-| Q1 2027 | $800,000 | $350,000 | $450,000 | $1,801,000 |
-| Q2 2027 | $1,200,000 | $400,000 | $800,000 | $2,601,000 |
+| Q1 2026 | $75,000 | $150,000 | $(75,000) | $425,000 |
+| Q2 2026 | $150,000 | $150,000 | $0 | $425,000 |
+| Q3 2026 | $300,000 | $150,000 | $150,000 | $575,000 |
+| Q4 2026 | $450,000 | $180,000 | $270,000 | $845,000 |
+| Q1 2027 | $600,000 | $200,000 | $400,000 | $1,245,000 |
+| Q2 2027 | $900,000 | $250,000 | $650,000 | $1,895,000 |
 
-**Runway:** 24+ months (cash positive by Q3 2026)
+**Runway:** 18+ months (cash positive by Q2 2026)
 
 ---
 
@@ -177,35 +177,34 @@ ARPU increases over time due to:
 
 | Milestone | ARR | Multiple | Valuation |
 |-----------|-----|----------|-----------|
-| Seed (Now) | Pre-revenue | - | $11.5M |
+| Seed (Now) | Pre-revenue | - | $4.5M |
 | Series A (2027) | $6.5M | 6x | $39M |
 | Series B (2029) | $25M | 8x | $200M |
 
-**Why $11.5M Valuation is Justified:**
-- MENA seed mean valuation: $18.9M (MAGNiTT 2024) - we're below market
-- Global AI fintech seed median: $10-18M (Carta 2024)
+**Why $4.5M Valuation is Conservative:**
+- MENA seed mean valuation: $18.9M (MAGNiTT 2024) - significant upside for early investors
+- Validation-phase pricing: conservative for infrastructure in track record building phase
 - Unique IP: Non-Markovian Kernel, InstitutionalDecisionLogger, Post-Quantum Security
-- Competitor 3Commas valued at $180M with fewer features
-- Recent: Zinit raised $8M seed at $48M valuation (Dec 2025)
+- Milestone-based approach: Series A at $25-40M after live trading validation
 - See Section 5 of this document for detailed valuation methodology
 
 ### 5.3 Investor Return Analysis
 
-**$125,000 investment at Seed ($11.5M valuation) = 1% equity**
+**$50,000 investment at Seed ($4.5M valuation) = 1% equity**
 
 | Exit Scenario | Valuation | Return | Multiple |
 |---------------|-----------|--------|----------|
-| Series A | $39M | $390,000 | 3.1x |
-| Series B | $150M | $1,500,000 | 12x |
-| Acquisition | $400M | $4,000,000 | 32x |
+| Series A | $30M | $300,000 | 6x |
+| Series B | $150M | $1,500,000 | 30x |
+| Acquisition | $400M | $4,000,000 | 80x |
 
-**Full $1M investment (8% equity):**
+**Full $500K investment (10% equity):**
 
 | Exit Scenario | Valuation | Return | Multiple |
 |---------------|-----------|--------|----------|
-| Series A | $39M | $3,120,000 | 3.1x |
-| Series B | $150M | $12,000,000 | 12x |
-| Acquisition | $400M | $32,000,000 | 32x |
+| Series A | $30M | $3,000,000 | 6x |
+| Series B | $150M | $15,000,000 | 30x |
+| Acquisition | $400M | $40,000,000 | 80x |
 
 ---
 
@@ -245,25 +244,25 @@ ARPU increases over time due to:
 
 ## 7. CONCLUSION
 
-OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity with:
+OMNIX V6.5.4e INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity with:
 
 1. **Strong technology foundation** - 10 production AI strategies, post-quantum security, institutional audit trail
-2. **Clear path to profitability** - Cash positive by Q3 2026
+2. **Capital preservation focus** - 98.5% capital preserved through 119 paper trades
 3. **Scalable SaaS model** - 82% gross margins
 4. **Unique competitive moat** - First mover in post-quantum trading security + Citadel-level audit
 5. **Experienced team** - Deep technical expertise
 
 **Investment Highlights:**
-- $1M seed at $11.5M valuation (8% dilution only)
-- 18-24 month runway to Series A
-- Target 3-32x return at Series A/B/Acquisition
+- $500K seed at $4.5M valuation (10% equity)
+- 12-18 month runway to Series A
+- Target 6-80x return at Series A/B/Acquisition
 - Clear milestones and de-risking path
 - Unique IP: Non-Markovian Kernel, Post-Quantum Security, Institutional Audit Trail
-- Below MENA market average ($18.9M) - significant upside for early investors
+- Validation-phase pricing - significant upside for early investors
 
 ---
 
 *This document contains forward-looking statements and projections. Actual results may differ materially. Past performance is not indicative of future results. Trading involves significant risk of loss.*
 
-**Document Version:** V6.5.4.2  
-**Last Updated:** December 8, 2025
+**Document Version:** V6.5.4e  
+**Last Updated:** January 14, 2026

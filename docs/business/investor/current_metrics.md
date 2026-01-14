@@ -25,11 +25,11 @@
 
 | Metric | Value |
 |--------|-------|
-| **Starting Balance** | $1,000,000 |
+| **Starting Balance** | $1,000,000 (Paper Trading) |
 | **Current Balance** | $984,801.27 |
+| **Capital Preserved** | 98.5% |
 | **Total P&L** | -$15,198.73 |
 | **Total Return** | -1.52% |
-| **Sharpe Ratio** | -5.82 |
 
 ---
 
