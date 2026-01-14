@@ -2142,12 +2142,118 @@ def api_correlation_matrix():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+def _calculate_opportunity_tracker(conn):
+    """
+    ADR-008: Opportunity Tracker - Two-sided accounting for Day 30 review.
+    Tracks missed opportunities vs losses avoided to inform threshold decisions.
+    """
+    try:
+        cur = conn.cursor()
+        
+        tracking_start = datetime(2026, 1, 14)
+        review_date = datetime(2026, 2, 13)
+        today = datetime.now()
+        current_day = min(30, max(1, (today - tracking_start).days + 1))
+        
+        cur.execute("""
+            SELECT 
+                COUNT(*) as missed_count,
+                COALESCE(ROUND(SUM(blocked_capital * 0.015)::numeric, 2), 0) as est_profit,
+                COALESCE(ROUND(AVG(coherence_score)::numeric, 1), 0) as avg_coherence
+            FROM shadow_trade_events
+            WHERE created_at >= '2026-01-14'
+              AND coherence_score >= 45
+              AND ema_score >= 25
+              AND ema_score < 40
+              AND (black_swan_prob IS NULL OR black_swan_prob <= 0.5)
+        """)
+        missed_row = cur.fetchone()
+        
+        cur.execute("""
+            SELECT 
+                COUNT(*) as avoided_count,
+                COALESCE(ROUND(SUM(blocked_capital * 0.025)::numeric, 2), 0) as est_loss,
+                COALESCE(ROUND(AVG(coherence_score)::numeric, 1), 0) as avg_coherence
+            FROM shadow_trade_events
+            WHERE created_at >= '2026-01-14'
+              AND (coherence_score < 30 OR black_swan_prob > 0.5)
+        """)
+        avoided_row = cur.fetchone()
+        
+        cur.close()
+        
+        missed_count = int(missed_row[0] or 0) if missed_row else 0
+        missed_est_profit = float(missed_row[1] or 0) if missed_row else 0
+        missed_avg_coh = float(missed_row[2] or 0) if missed_row else 0
+        
+        avoided_count = int(avoided_row[0] or 0) if avoided_row else 0
+        avoided_est_loss = float(avoided_row[1] or 0) if avoided_row else 0
+        avoided_avg_coh = float(avoided_row[2] or 0) if avoided_row else 0
+        
+        net_value = missed_est_profit - avoided_est_loss
+        
+        if net_value < -500:
+            interpretation = 'PROTECTING'
+            interpretation_text = 'Sistema protegiendo correctamente'
+        elif net_value > 1000:
+            interpretation = 'TOO_STRICT'
+            interpretation_text = 'Considerar ajustar umbrales'
+        else:
+            interpretation = 'BALANCED'
+            interpretation_text = 'Sistema balanceado'
+        
+        if missed_count < 10 or missed_est_profit < 1000:
+            recommendation = 'KEEP_CONSERVATIVE'
+        elif missed_count > 20 and missed_est_profit > 3000 and avoided_est_loss > 5000:
+            recommendation = 'TEST_LOWER'
+        else:
+            recommendation = 'CONTINUE_MONITORING'
+        
+        return {
+            'missed': {
+                'count': missed_count,
+                'est_profit': missed_est_profit,
+                'avg_coherence': missed_avg_coh,
+                'conditions': 'Coh >45%, EMA 25-40%, BS LOW/MEDIUM'
+            },
+            'avoided': {
+                'count': avoided_count,
+                'est_loss': avoided_est_loss,
+                'avg_coherence': avoided_avg_coh,
+                'conditions': 'Coh <30% OR BS HIGH/EXTREME'
+            },
+            'net': {
+                'value': net_value,
+                'interpretation': interpretation,
+                'interpretation_text': interpretation_text
+            },
+            'day_progress': {
+                'current_day': current_day,
+                'total_days': 30,
+                'review_date': review_date.strftime('%Y-%m-%d'),
+                'review_date_display': 'Feb 13, 2026'
+            },
+            'recommendation': recommendation
+        }
+        
+    except Exception as e:
+        logger.error(f"Opportunity tracker calculation error: {e}")
+        return {
+            'missed': {'count': 0, 'est_profit': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
+            'avoided': {'count': 0, 'est_loss': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
+            'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Error en cálculo'},
+            'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-13', 'review_date_display': 'Feb 13, 2026'},
+            'recommendation': 'CONTINUE_MONITORING'
+        }
+
+
 @core_bp.route('/api/learning/insights')
 @require_api_key
 def api_learning_insights():
     """
-    FEAT-011: Learning Engine Insights
-    Analyzes Shadow Portfolio to show veto effectiveness and calibration recommendations.
+    FEAT-011: Opportunity Tracker (formerly Learning Engine Insights)
+    Analyzes Shadow Portfolio for two-sided accounting: missed opportunities vs losses avoided.
+    Reference: ADR-008-opportunity-tracker.md
     """
     try:
         with get_db_connection() as conn:
@@ -2281,6 +2387,8 @@ def api_learning_insights():
                 'action': 'Continuar monitoreando métricas'
             })
         
+        opportunity_tracker = _calculate_opportunity_tracker(conn)
+        
         return jsonify({
             'success': True,
             'veto_effectiveness': veto_effectiveness,
@@ -2288,6 +2396,7 @@ def api_learning_insights():
             'top_vetoed_symbols': symbols_analysis,
             'daily_trend': trend,
             'recommendations': recommendations,
+            'opportunity_tracker': opportunity_tracker,
             'summary': {
                 'total_vetos_7d': total_vetos,
                 'total_capital_protected': sum(v['total_blocked'] for v in veto_effectiveness),

@@ -11,6 +11,11 @@
         return `$${value.toFixed(0)}`;
     }
 
+    function formatPnl(value) {
+        const prefix = value >= 0 ? '+' : '';
+        return `${prefix}${formatCapital(Math.abs(value))}`;
+    }
+
     function getPriorityClass(priority) {
         if (priority === 'HIGH') return 'priority-high';
         if (priority === 'MEDIUM') return 'priority-medium';
@@ -28,6 +33,21 @@
         return icons[type] || '⚠️';
     }
 
+    function getInterpretationClass(interpretation) {
+        if (interpretation === 'PROTECTING') return 'status-positive';
+        if (interpretation === 'TOO_STRICT') return 'status-warning';
+        return 'status-neutral';
+    }
+
+    function getRecommendationBadge(recommendation) {
+        const badges = {
+            'KEEP_CONSERVATIVE': { text: 'Mantener', class: 'rec-keep' },
+            'TEST_LOWER': { text: 'Evaluar ajuste', class: 'rec-test' },
+            'CONTINUE_MONITORING': { text: 'Monitoreando', class: 'rec-monitor' }
+        };
+        return badges[recommendation] || { text: recommendation, class: 'rec-monitor' };
+    }
+
     async function fetchLearningInsights() {
         try {
             const response = await fetch('/api/learning/insights', {
@@ -42,6 +62,62 @@
         }
     }
 
+    function renderOpportunityTracker(tracker) {
+        if (!tracker) return '';
+        
+        const missed = tracker.missed || {};
+        const avoided = tracker.avoided || {};
+        const net = tracker.net || {};
+        const dayProgress = tracker.day_progress || {};
+        const recommendation = tracker.recommendation || 'CONTINUE_MONITORING';
+        
+        const recBadge = getRecommendationBadge(recommendation);
+        const interpClass = getInterpretationClass(net.interpretation);
+        const netSign = net.value >= 0 ? '+' : '';
+        
+        return `
+            <div class="opportunity-tracker">
+                <div class="tracker-header">
+                    <span class="tracker-icon">🎯</span>
+                    <span class="tracker-title">Opportunity Tracker</span>
+                    <span class="tracker-day">Day ${dayProgress.current_day || 1}/30</span>
+                </div>
+                
+                <div class="tracker-balance">
+                    <div class="balance-card missed">
+                        <div class="card-icon">💎</div>
+                        <div class="card-label">MISSED</div>
+                        <div class="card-value">${formatPnl(missed.est_profit || 0)}</div>
+                        <div class="card-count">${missed.count || 0} trades</div>
+                    </div>
+                    
+                    <div class="balance-vs">
+                        <div class="vs-icon">⚖️</div>
+                        <div class="vs-text">VS</div>
+                    </div>
+                    
+                    <div class="balance-card avoided">
+                        <div class="card-icon">✅</div>
+                        <div class="card-label">AVOIDED</div>
+                        <div class="card-value">-${formatCapital(avoided.est_loss || 0)}</div>
+                        <div class="card-count">${avoided.count || 0} trades</div>
+                    </div>
+                </div>
+                
+                <div class="tracker-net ${interpClass}">
+                    <span class="net-label">NET:</span>
+                    <span class="net-value">${netSign}${formatCapital(Math.abs(net.value || 0))}</span>
+                    <span class="net-text">= ${net.interpretation_text || 'Calculando...'}</span>
+                </div>
+                
+                <div class="tracker-footer">
+                    <span class="review-date">📅 Review: ${dayProgress.review_date_display || 'Feb 13, 2026'}</span>
+                    <span class="rec-badge ${recBadge.class}">${recBadge.text}</span>
+                </div>
+            </div>
+        `;
+    }
+
     function renderLearningInsights(data) {
         const container = document.getElementById('learning-insights-widget');
         if (!container) return;
@@ -50,6 +126,9 @@
         const vetoEffectiveness = data.veto_effectiveness || [];
         const recommendations = data.recommendations || [];
         const topSymbols = data.top_vetoed_symbols || [];
+        const opportunityTracker = data.opportunity_tracker || null;
+
+        const trackerHtml = renderOpportunityTracker(opportunityTracker);
 
         let vetoHtml = '<div class="veto-list">';
         vetoEffectiveness.slice(0, 4).forEach(v => {
@@ -82,7 +161,7 @@
 
         let symbolsHtml = '';
         if (topSymbols.length > 0) {
-            symbolsHtml = '<div class="top-symbols"><span class="symbols-label">Más bloqueados:</span>';
+            symbolsHtml = '<div class="top-symbols"><span class="symbols-label">Blocked:</span>';
             topSymbols.slice(0, 3).forEach(s => {
                 symbolsHtml += `<span class="symbol-chip">${s.symbol} (${s.veto_count})</span>`;
             });
@@ -92,10 +171,11 @@
         container.innerHTML = `
             <div class="learning-header">
                 <span class="widget-icon">🧠</span>
-                <span class="widget-title">Learning Engine</span>
-                <span class="widget-badge">Shadow Portfolio</span>
+                <span class="widget-title">Opportunity Tracker</span>
+                <span class="widget-badge">ADR-008</span>
             </div>
             <div class="learning-body">
+                ${trackerHtml}
                 <div class="learning-summary">
                     <div class="summary-stat">
                         <span class="stat-value">${(summary.total_vetos_7d || 0).toLocaleString()}</span>
@@ -103,11 +183,11 @@
                     </div>
                     <div class="summary-stat">
                         <span class="stat-value">${formatCapital(summary.total_capital_protected || 0)}</span>
-                        <span class="stat-label">Protegido</span>
+                        <span class="stat-label">Protected</span>
                     </div>
                     <div class="summary-stat">
                         <span class="stat-value">${summary.veto_types_active || 0}</span>
-                        <span class="stat-label">Filtros</span>
+                        <span class="stat-label">Filters</span>
                     </div>
                 </div>
                 ${vetoHtml}
@@ -120,7 +200,7 @@
     function init() {
         fetchLearningInsights();
         setInterval(fetchLearningInsights, REFRESH_INTERVAL);
-        console.log('LearningInsightsWidget initialized');
+        console.log('OpportunityTrackerWidget initialized');
     }
 
     if (document.readyState === 'loading') {

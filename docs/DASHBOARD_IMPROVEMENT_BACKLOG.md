@@ -273,6 +273,19 @@
 
 **Status:** [x] COMPLETED (Jan 14, 2026) - Enhanced with Opportunity Tracker
 
+**Widget Visual (10-second investor view):**
+```
+🎯 OPPORTUNITY TRACKER | Day 1/30
+┌─────────────────────────────────────────────┐
+│  💎 MISSED      ⚖️ VS       ✅ AVOIDED      │
+│   +$0            ⚖️          -$239.5K       │
+│   0 trades                   479 trades     │
+├─────────────────────────────────────────────┤
+│  NET: -$239.5K = Sistema protegiendo ✅     │
+│  📅 Review: Feb 13, 2026 | Mantener        │
+└─────────────────────────────────────────────┘
+```
+
 ### FEAT-012: Collapsible Advanced Sections
 
 **Description:** Mobile-friendly collapsed sections  

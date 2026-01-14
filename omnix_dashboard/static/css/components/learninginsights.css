@@ -28,6 +28,194 @@
     padding: 0.75rem;
 }
 
+.opportunity-tracker {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tracker-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.tracker-icon {
+    font-size: 1.1rem;
+}
+
+.tracker-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    flex: 1;
+}
+
+.tracker-day {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.tracker-balance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.balance-card {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.balance-card.missed {
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.balance-card.avoided {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.balance-card .card-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.balance-card .card-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.balance-card.missed .card-label {
+    color: #fbbf24;
+}
+
+.balance-card.avoided .card-label {
+    color: #34d399;
+}
+
+.balance-card .card-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
+}
+
+.balance-card .card-count {
+    font-size: 0.6rem;
+    color: var(--text-secondary, #9ca3af);
+    margin-top: 0.15rem;
+}
+
+.balance-vs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0.25rem;
+}
+
+.balance-vs .vs-icon {
+    font-size: 1.25rem;
+}
+
+.balance-vs .vs-text {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.tracker-net {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.tracker-net.status-positive {
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.tracker-net.status-warning {
+    background: rgba(251, 191, 36, 0.15);
+}
+
+.tracker-net.status-neutral {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tracker-net .net-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.tracker-net .net-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
+}
+
+.tracker-net .net-text {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.tracker-net.status-positive .net-text {
+    color: #34d399;
+}
+
+.tracker-net.status-warning .net-text {
+    color: #fbbf24;
+}
+
+.tracker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.review-date {
+    font-size: 0.65rem;
+    color: var(--text-secondary, #9ca3af);
+}
+
+.rec-badge {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.rec-badge.rec-keep {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.rec-badge.rec-test {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.rec-badge.rec-monitor {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
 .learning-summary {
     display: flex;
     justify-content: space-around;
