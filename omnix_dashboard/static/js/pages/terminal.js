@@ -135,7 +135,7 @@ const TerminalApp = (function() {
 
         OmnixCommon.startAutoRefresh(refreshAll, 10000);
 
-        console.log('OMNIX Terminal V6.5.4d INSTITUTIONAL+ | Trading Terminal Active');
+        console.log('OMNIX Terminal V6.5.4e INSTITUTIONAL+ | Trading Terminal Active');
     }
 
     function destroy() {
