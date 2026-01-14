@@ -90,12 +90,12 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 
 ## Recent Changes
 
-### Jan 14, 2026: FEAT-006 Comparative Metrics Table
-- **API endpoint** `/api/metrics/comparative` with period-aligned BTC benchmarking
-- **Period alignment**: Uses OMNIX trading window (first trade to last trade) for BTC price comparison
-- **Honest investor messaging**: No false claims when data doesn't support them
-- **Components**: Widget in `comparativemetrics.js` and `comparativemetrics.css`
-- **Metrics**: Capital preserved %, return %, max DD, win rate, risk blocked
+### Jan 14, 2026: FEAT-006 & FEAT-007 Dashboard Widgets
+- **FEAT-006 Comparative Metrics**: API `/api/metrics/comparative` with period-aligned BTC benchmarking
+- **FEAT-007 P&L Breakdown**: API `/api/metrics/pnl-breakdown` with symbol/cause analysis
+  - By Symbol: horizontal bars showing P&L per asset
+  - Trade Outcomes: Pure Wins (20.2%), Fee Eroded (17.6%), Pure Losses (62.2%)
+  - Directional Accuracy: 37.8% (matches header Precisión metric)
 - Reference: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
 
 ### Jan 13, 2026: ADR-003 Identity Alignment
