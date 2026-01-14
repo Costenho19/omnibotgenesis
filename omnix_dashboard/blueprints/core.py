@@ -1693,3 +1693,252 @@ def api_pnl_breakdown():
             'error': str(e),
             'breakdown': None
         }), 500
+
+
+@core_bp.route('/api/regime/dashboard')
+@require_api_key
+def api_regime_dashboard():
+    """
+    FEAT-010: Regime Detection Dashboard
+    Shows current market regime, veto activity, and performance context for investors.
+    Uses shadow_trade_events to infer regime from ema_signal since paper_trading_trades.hmm_regime is empty.
+    """
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                return jsonify({
+                    'success': False,
+                    'error': 'Database connection unavailable',
+                    'regime': None
+                }), 503
+            
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT 
+                    ema_signal,
+                    ema_score,
+                    created_at,
+                    veto_type,
+                    veto_reason,
+                    coherence_score,
+                    symbol
+                FROM shadow_trade_events
+                ORDER BY created_at DESC
+                LIMIT 1
+            """)
+            latest_event = cur.fetchone()
+            
+            if latest_event:
+                ema_signal = latest_event[0] or 'NONE'
+                ema_score = float(latest_event[1] or 0)
+                last_activity = latest_event[2]
+                last_veto_type = latest_event[3]
+                last_veto_reason = latest_event[4]
+                coherence = float(latest_event[5] or 0)
+                last_symbol = latest_event[6]
+                
+                if ema_signal == 'LONG':
+                    regime_type = 'BULLISH'
+                    regime_label = 'Tendencia Alcista'
+                elif ema_signal == 'SHORT':
+                    regime_type = 'BEARISH'
+                    regime_label = 'Tendencia Bajista'
+                else:
+                    regime_type = 'RANGING'
+                    regime_label = 'Mercado Lateral'
+                
+                if ema_score >= 50:
+                    confidence = 'HIGH'
+                    confidence_pct = min(100, 50 + ema_score)
+                elif ema_score >= 35:
+                    confidence = 'MEDIUM'
+                    confidence_pct = ema_score + 25
+                else:
+                    confidence = 'LOW'
+                    confidence_pct = ema_score + 10
+                
+                duration_hours = 0
+                if last_activity:
+                    try:
+                        now = datetime.now(last_activity.tzinfo) if hasattr(last_activity, 'tzinfo') and last_activity.tzinfo else datetime.now()
+                        duration_hours = (now - last_activity).total_seconds() / 3600
+                    except Exception:
+                        pass
+            else:
+                regime_type = 'UNKNOWN'
+                regime_label = 'Sin Datos'
+                ema_score = 0
+                confidence = 'UNKNOWN'
+                confidence_pct = 0
+                last_activity = None
+                last_veto_type = None
+                last_veto_reason = None
+                coherence = 0
+                last_symbol = None
+                duration_hours = 0
+            
+            current_regime = {
+                'type': regime_type,
+                'label': regime_label,
+                'ema_score': round(ema_score, 1),
+                'confidence': confidence,
+                'confidence_pct': round(confidence_pct, 1),
+                'coherence_score': round(coherence, 1),
+                'last_activity': last_activity.isoformat() if last_activity else None,
+                'last_symbol': last_symbol,
+                'hours_since_activity': round(duration_hours, 1),
+                'current_veto': last_veto_type,
+                'veto_reason': last_veto_reason
+            }
+            
+            cur.execute("""
+                SELECT 
+                    veto_type,
+                    COUNT(*) as count,
+                    COALESCE(SUM(blocked_capital), 0) as capital_blocked
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+                GROUP BY veto_type
+                ORDER BY count DESC
+            """)
+            veto_24h = cur.fetchall()
+            
+            cur.execute("""
+                SELECT 
+                    veto_type,
+                    COUNT(*) as count,
+                    COALESCE(SUM(blocked_capital), 0) as capital_blocked
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY veto_type
+                ORDER BY count DESC
+            """)
+            veto_7d = cur.fetchall()
+            
+            veto_summary = {
+                '24h': [
+                    {
+                        'type': row[0] or 'UNKNOWN',
+                        'count': row[1],
+                        'capital_blocked': float(row[2] or 0)
+                    }
+                    for row in veto_24h
+                ],
+                '7d': [
+                    {
+                        'type': row[0] or 'UNKNOWN',
+                        'count': row[1],
+                        'capital_blocked': float(row[2] or 0)
+                    }
+                    for row in veto_7d
+                ]
+            }
+            
+            cur.execute("""
+                SELECT 
+                    ema_signal,
+                    COUNT(*) as events,
+                    ROUND(AVG(ema_score)::numeric, 2) as avg_ema_score,
+                    ROUND(AVG(coherence_score)::numeric, 2) as avg_coherence
+                FROM shadow_trade_events
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+                GROUP BY ema_signal
+                ORDER BY events DESC
+            """)
+            signal_distribution = cur.fetchall()
+            
+            regime_performance = []
+            for row in signal_distribution:
+                signal = row[0] or 'NONE'
+                if signal == 'LONG':
+                    regime_name = 'BULLISH'
+                elif signal == 'SHORT':
+                    regime_name = 'BEARISH'
+                else:
+                    regime_name = 'RANGING'
+                
+                regime_performance.append({
+                    'regime': regime_name,
+                    'signal': signal,
+                    'events_24h': row[1],
+                    'avg_ema_score': float(row[2] or 0),
+                    'avg_coherence': float(row[3] or 0)
+                })
+            
+            cur.execute("""
+                WITH signal_changes AS (
+                    SELECT 
+                        ema_signal,
+                        created_at,
+                        LAG(ema_signal) OVER (ORDER BY created_at) as prev_signal
+                    FROM shadow_trade_events
+                    WHERE created_at >= NOW() - INTERVAL '24 hours'
+                )
+                SELECT 
+                    prev_signal as from_signal,
+                    ema_signal as to_signal,
+                    created_at
+                FROM signal_changes
+                WHERE ema_signal != prev_signal OR prev_signal IS NULL
+                ORDER BY created_at DESC
+                LIMIT 10
+            """)
+            transitions_raw = cur.fetchall()
+            
+            transitions = []
+            for row in transitions_raw:
+                from_signal = row[0] or 'START'
+                to_signal = row[1] or 'UNKNOWN'
+                
+                from_regime = 'BULLISH' if from_signal == 'LONG' else ('BEARISH' if from_signal == 'SHORT' else 'RANGING')
+                to_regime = 'BULLISH' if to_signal == 'LONG' else ('BEARISH' if to_signal == 'SHORT' else 'RANGING')
+                
+                if from_regime != to_regime:
+                    transitions.append({
+                        'from': from_regime,
+                        'to': to_regime,
+                        'timestamp': row[2].isoformat() if row[2] else None
+                    })
+            
+            cur.close()
+        
+        total_vetos_24h = sum(v['count'] for v in veto_summary['24h'])
+        total_capital_blocked = sum(v['capital_blocked'] for v in veto_summary['24h'])
+        
+        if regime_type == 'RANGING' and total_vetos_24h > 100:
+            system_message = 'Sistema en espera: mercado lateral detectado. Esperando tendencia clara para operar.'
+            system_status = 'DEFENSIVE'
+        elif regime_type == 'BULLISH' and confidence == 'HIGH':
+            system_message = 'Tendencia alcista confirmada. Sistema analizando oportunidades de entrada.'
+            system_status = 'ANALYZING'
+        elif last_veto_type == 'BLACK_SWAN':
+            system_message = 'Riesgo elevado detectado. Sistema bloqueando operaciones por seguridad.'
+            system_status = 'PROTECTIVE'
+        else:
+            system_message = 'Sistema monitoreando condiciones de mercado. Filtros activos protegiendo capital.'
+            system_status = 'MONITORING'
+        
+        return jsonify({
+            'success': True,
+            'current_regime': current_regime,
+            'veto_summary': veto_summary,
+            'regime_performance': regime_performance,
+            'transitions': transitions[:5],
+            'system_status': {
+                'status': system_status,
+                'message': system_message,
+                'total_vetos_24h': total_vetos_24h,
+                'capital_protected_24h': round(total_capital_blocked, 2)
+            },
+            'data_source': 'shadow_trade_events',
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Regime dashboard error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'regime': None
+        }), 500

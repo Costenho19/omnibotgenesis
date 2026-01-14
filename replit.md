@@ -90,12 +90,19 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 
 ## Recent Changes
 
-### Jan 14, 2026: FEAT-006 & FEAT-007 Dashboard Widgets
+### Jan 14, 2026: FEAT-006, FEAT-007, FEAT-010 Dashboard Widgets
 - **FEAT-006 Comparative Metrics**: API `/api/metrics/comparative` with period-aligned BTC benchmarking
 - **FEAT-007 P&L Breakdown**: API `/api/metrics/pnl-breakdown` with symbol/cause analysis
   - By Symbol: horizontal bars showing P&L per asset
   - Trade Outcomes: Pure Wins (20.2%), Fee Eroded (17.6%), Pure Losses (62.2%)
   - Directional Accuracy: 37.8% (matches header Precisión metric)
+- **FEAT-010 Regime Detection Dashboard**: API `/api/regime/dashboard` with regime analysis
+  - Current Regime: BULLISH/BEARISH/RANGING inferred from EMA signals
+  - Confidence & Coherence metrics
+  - Veto activity summary (24h) with capital protected
+  - Signal distribution visualization
+  - System status message explaining behavior (DEFENSIVE/ANALYZING/PROTECTIVE/MONITORING)
+  - Data source: 48K+ shadow_trade_events since Jan 9
 - Reference: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
 
 ### Jan 13, 2026: ADR-003 Identity Alignment

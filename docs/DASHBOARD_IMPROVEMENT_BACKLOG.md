@@ -196,6 +196,24 @@
 **Description:** Current market regime with historical performance  
 **Components:** Regime indicator, confidence, duration, performance by regime
 
+**Implementation:**
+- API: `/api/regime/dashboard` in `omnix_dashboard/blueprints/core.py`
+- Widget: `omnix_dashboard/static/js/components/regimedetection.js`
+- CSS: `omnix_dashboard/static/css/components/regimedetection.css`
+
+**Features:**
+- Current regime detection (BULLISH/BEARISH/RANGING) inferred from EMA signals
+- Confidence and coherence metrics display
+- Veto activity summary (24h) with capital protected
+- Signal distribution visualization (24h)
+- Recent regime transitions timeline
+- System status message explaining current behavior
+- Investor-friendly messaging per ADR-003
+
+**Data Source:** `shadow_trade_events` table (48K+ events since Jan 9)
+
+**Status:** [x] COMPLETED (Jan 14, 2026)
+
 ### FEAT-011: Trade History Filters
 
 **Description:** Filter and sort trade history  
@@ -238,6 +256,7 @@
 | FEAT-005 | Recommended Actions | P1 | DONE | Agent | Jan 13, 2026 |
 | FEAT-006 | Comparative Metrics | P2 | DONE | Agent | Jan 14, 2026 |
 | FEAT-007 | P&L Breakdown | P2 | DONE | Agent | Jan 14, 2026 |
+| FEAT-010 | Regime Detection Dashboard | P2 | DONE | Agent | Jan 14, 2026 |
 
 ---
 

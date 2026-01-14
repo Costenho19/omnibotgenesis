@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/recommendedactions.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/comparativemetrics.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/pnlbreakdown.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/regimedetection.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -189,6 +190,10 @@
         <div style="color: var(--text-muted); font-size: 11px;">Loading P&L Breakdown...</div>
     </div>
     
+    <div class="panel" id="regime-detection-widget">
+        <div style="color: var(--text-muted); font-size: 11px;">Loading Regime Detection...</div>
+    </div>
+    
     <div class="panel" id="quarantine-widget">
         <div style="color: var(--text-muted); font-size: 11px;">Loading Asset Quarantine...</div>
     </div>
@@ -273,5 +278,6 @@
 <script src="{{ url_for('static', filename='js/components/recommendedactions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/comparativemetrics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/pnlbreakdown.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/regimedetection.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}
