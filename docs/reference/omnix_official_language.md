@@ -294,11 +294,44 @@ from recent analysis cycles?
 
 ---
 
+## Brevity First Policy [ADR-009]
+
+**Core Rule:** Answer the question directly in 1-2 sentences FIRST.
+
+### Word Limits by Question Type
+
+| Question Type | Max Words | Example |
+|--------------|-----------|---------|
+| Simple yes/no | 30 | "¿Funciona 24/7?" → "Sí, opera 24/7 en Railway." |
+| Operational | 50 | "¿Cómo calcula el riesgo?" → Brief answer + 1 key point |
+| Technical | 100 | Architecture questions with specific details |
+| Performance/Metrics | 150 | Full metrics with honest framing |
+| Due Diligence | 300 | Comprehensive investor response |
+
+### Prohibited Patterns
+
+**NEVER use:**
+- "Caballero [Name]" or similar flowery salutations
+- "Espero que esta respuesta sea de su agrado"
+- Multiple numbered sections for simple questions
+- Marketing language mixed with technical answers
+- Philosophical framing for simple questions
+
+**Correct Example:**
+```
+Q: "¿Las cuentas de fondeo se operan igual que el capital real?"
+A: "Sí. El motor aplica los mismos vetos, gates y protección de capital. 
+    La única diferencia es que el dinero no es real todavía."
+```
+
+---
+
 ## Reference Documents
 
 - **ADR-001:** Brutal Honesty Principle
 - **ADR-002:** Honest Framing over Censorship
 - **ADR-003:** Official Positioning Strategy (this document's rationale)
+- **ADR-009:** Brevity First Policy (response length limits)
 - **MASTER_SYSTEM_PROMPT:** AI behavior rules
 - **docs/REAL_SYSTEM_STATUS.md:** Current metrics source
 

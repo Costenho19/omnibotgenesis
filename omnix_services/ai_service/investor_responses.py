@@ -43,7 +43,7 @@ class AudienceContext:
     """Contexto de audiencia para filtrar respuestas AI"""
     audience_type: AudienceType
     user_id: Optional[str] = None
-    max_words: int = 150  # Límite para usuarios públicos
+    max_words: int = 100  # Default limit (ADR-009 Brevity First)
     
     @property
     def is_admin(self) -> bool:
@@ -107,7 +107,9 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
         is_admin = False
     
     audience_type = AudienceType.ADMIN if is_admin else AudienceType.PUBLIC
-    max_words = 1000  # No limitamos respuestas - honest framing no requiere censura
+    # ADR-009: Brevity First - limit word count based on audience
+    # Admins get more detailed responses, public gets concise answers
+    max_words = 300 if is_admin else 100
     
     return AudienceContext(
         audience_type=audience_type,

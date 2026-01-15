@@ -229,6 +229,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [ADR-004](reference/adr/ADR-004-position-sizing-hotfix.md) | Position sizing hotfix |
 | [ADR-007](reference/adr/ADR-007-coherence-threshold-calibration.md) | Coherence threshold calibration |
 | [ADR-008](reference/adr/ADR-008-opportunity-tracker.md) | Opportunity Tracker (Day 30 Review) |
+| [ADR-009](reference/adr/ADR-009-brevity-first-policy.md) | Brevity First - Respuestas directas |
 | [Deuda Técnica](current/TECHNICAL_DEBT.md) | Issues conocidos |
 
 ---
