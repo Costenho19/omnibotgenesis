@@ -118,27 +118,123 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
     )
 
 
-def format_response_with_honest_framing(response: str, context: AudienceContext) -> str:
+def get_response_word_limit(question: str) -> int:
     """
-    HONEST FRAMING: NO censura, solo diferencia nivel de detalle.
+    ADR-009: Determine max words based on question complexity.
     
-    - Admin: respuesta completa sin cambios
-    - Público: respuesta completa sin cambios (NO censuramos)
-    
-    NOTA: Esta función reemplaza a filter_response_for_public.
-    Ya NO aplicamos filtros de censura a ningún usuario.
-    Ver ADR-002-honest-framing-over-censorship.md
+    Args:
+        question: User's question text
+        
+    Returns:
+        Max word count for response
     """
-    return response
+    question_lower = question.lower().strip()
+    word_count = len(question.split())
+    
+    # Simple yes/no questions (short questions with binary indicators)
+    yes_no_indicators = ['funciona', 'opera', 'tiene', 'puede', 'es posible', 
+                         'soporta', 'works', 'does it', 'can it', 'is it']
+    if word_count < 10 and any(q in question_lower for q in yes_no_indicators):
+        return 30
+    
+    # Performance/metrics questions
+    metrics_indicators = ['win rate', 'rendimiento', 'balance', 'p&l', 'pnl',
+                         'métricas', 'metricas', 'metrics', 'performance',
+                         'ganancias', 'pérdidas', 'profit', 'loss', 'track record']
+    if any(q in question_lower for q in metrics_indicators):
+        return 150
+    
+    # Technical/architecture questions
+    technical_indicators = ['cómo funciona', 'como funciona', 'arquitectura', 
+                           'algoritmo', 'explica', 'explain', 'how does',
+                           'coherence', 'monte carlo', 'kalman', 'veto']
+    if any(q in question_lower for q in technical_indicators):
+        return 100
+    
+    # Due diligence (longer questions, investor context)
+    dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
+                    'audit', 'detalle completo', 'full details']
+    if any(q in question_lower for q in dd_indicators):
+        return 300
+    
+    # Default operational
+    return 50
 
 
-def filter_response_for_public(response: str, context: AudienceContext) -> str:
+def enforce_brevity(response: str, max_words: int, offer_more: bool = True) -> str:
+    """
+    ADR-009: Ensure response doesn't exceed word limit.
+    
+    Args:
+        response: Original AI response
+        max_words: Maximum word count
+        offer_more: Whether to add "¿Necesitas más detalles?" when truncating
+        
+    Returns:
+        Truncated response if needed
+    """
+    if not response:
+        return response
+    
+    words = response.split()
+    if len(words) <= max_words:
+        return response
+    
+    # Truncate to max_words
+    truncated = ' '.join(words[:max_words])
+    
+    # Find last complete sentence if possible
+    sentence_ends = ['.', '!', '?']
+    last_sentence_pos = -1
+    for i, char in enumerate(truncated):
+        if char in sentence_ends:
+            last_sentence_pos = i
+    
+    # If we found a sentence end in the last 30% of text, use it
+    if last_sentence_pos > len(truncated) * 0.7:
+        truncated = truncated[:last_sentence_pos + 1]
+    else:
+        # Otherwise add ellipsis
+        truncated = truncated.rstrip('.,!?:;') + '...'
+    
+    # Offer more details if requested
+    if offer_more and len(words) > max_words:
+        truncated += ' ¿Necesitas más detalles?'
+    
+    return truncated
+
+
+def format_response_with_honest_framing(response: str, context: AudienceContext, question: str = '') -> str:
+    """
+    HONEST FRAMING + BREVITY FIRST: Format response with word limits.
+    
+    - Admin: max 300 words (more detail allowed)
+    - Public: max 100 words (concise answers)
+    - Question-adaptive: simple questions get shorter limits
+    
+    NOTA: Esta función aplica ADR-002 (honest framing) + ADR-009 (brevity first).
+    NO censuramos contenido, pero SÍ limitamos longitud.
+    """
+    # Determine word limit
+    if question:
+        question_limit = get_response_word_limit(question)
+        # Use the more restrictive limit
+        max_words = min(question_limit, context.max_words)
+    else:
+        max_words = context.max_words
+    
+    # Enforce brevity
+    return enforce_brevity(response, max_words)
+
+
+def filter_response_for_public(response: str, context: AudienceContext, question: str = '') -> str:
     """
     DEPRECATED: Esta función ya NO aplica censura.
-    Se mantiene para compatibilidad pero usa honest framing.
+    Se mantiene para compatibilidad pero usa honest framing + brevity.
     Ver ADR-002-honest-framing-over-censorship.md
+    Ver ADR-009-brevity-first-policy.md
     """
-    return format_response_with_honest_framing(response, context)
+    return format_response_with_honest_framing(response, context, question)
 
 
 def get_honest_metrics() -> Dict[str, Any]:
