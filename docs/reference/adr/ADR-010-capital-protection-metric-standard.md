@@ -70,6 +70,7 @@ The system has two types of capital protection data:
 |-----------|------|--------|
 | Quarantine Widget | `omnix_dashboard/static/js/components/quarantine.js` | ✅ Updated |
 | Learning Insights | `omnix_dashboard/static/js/components/learninginsights.js` | ✅ Updated |
+| Regime Detection | `omnix_dashboard/static/js/components/regimedetection.js` | ✅ Updated |
 | Streamlit Dashboard | `omnix_dashboard/streamlit_app.py` | ✅ Updated (uses actual loss, not estimate) |
 | Risk Guardian Widget | `omnix_dashboard/static/js/components/riskguardian.js` | ✅ No changes needed |
 

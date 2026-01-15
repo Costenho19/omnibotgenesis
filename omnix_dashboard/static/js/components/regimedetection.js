@@ -58,15 +58,17 @@
         
         let vetosHtml = '';
         if (vetos.length > 0) {
+            // ADR-010: Est. Loss Avoided = Notional × 0.6%
+            const estLossAvoided = (status.capital_protected_24h || 0) * 0.006;
             vetosHtml = `
                 <div class="regime-veto-summary">
                     <div class="regime-veto-total">
                         <span class="regime-veto-total-value">${status.total_vetos_24h.toLocaleString()}</span>
                         <span class="regime-veto-total-label">Vetos Totales</span>
                     </div>
-                    <div class="regime-veto-capital">
-                        <span class="regime-veto-capital-value">$${formatNumber(status.capital_protected_24h)}</span>
-                        <span class="regime-veto-capital-label">Capital Protegido</span>
+                    <div class="regime-veto-capital" title="Pérdida estimada evitada (0.6% del notional bloqueado)">
+                        <span class="regime-veto-capital-value">$${formatNumber(estLossAvoided)}</span>
+                        <span class="regime-veto-capital-label">Est. Pérdida Evitada*</span>
                     </div>
                 </div>
                 <div class="regime-veto-list">
