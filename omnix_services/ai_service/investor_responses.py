@@ -118,63 +118,93 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
     )
 
 
-def get_response_word_limit(question: str) -> int:
+def get_response_word_limit(question: str) -> Optional[int]:
     """
     ADR-009: Determine max words based on question complexity.
+    
+    Priority order:
+    1. Explicit explanation requests → No limit (None)
+    2. Due diligence → 300 words
+    3. Metrics/performance → 150 words
+    4. Technical questions → 100 words
+    5. Simple yes/no → 30 words
+    6. Default operational → 50 words
     
     Args:
         question: User's question text
         
     Returns:
-        Max word count for response
+        Max word count for response, or None for unlimited
     """
     question_lower = question.lower().strip()
     word_count = len(question.split())
     
-    # Simple yes/no questions (short questions with binary indicators)
-    yes_no_indicators = ['funciona', 'opera', 'tiene', 'puede', 'es posible', 
-                         'soporta', 'works', 'does it', 'can it', 'is it']
-    if word_count < 10 and any(q in question_lower for q in yes_no_indicators):
-        return 30
+    # PRIORITY 1: Explicit explanation requests → NO LIMIT
+    # User explicitly asks for detailed explanation
+    explanation_indicators = [
+        # Spanish
+        'explícame', 'explicame', 'cuéntame más', 'cuentame mas', 
+        'dame detalles', 'en detalle', 'detalladamente', 'a fondo',
+        'quiero saber más', 'quiero saber mas', 'más información',
+        'mas informacion', 'explica en detalle', 'cuéntame todo',
+        'cuentame todo', 'todo sobre', 'completo', 'extenso',
+        # English
+        'tell me more', 'explain in detail', 'give me details',
+        'i want to know more', 'more information', 'elaborate',
+        'in depth', 'comprehensive', 'full explanation', 'detailed',
+        'walk me through', 'break it down', 'explain everything'
+    ]
+    if any(indicator in question_lower for indicator in explanation_indicators):
+        return None  # No limit - user wants full explanation
     
-    # Performance/metrics questions
+    # PRIORITY 2: Due diligence (investor context)
+    dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
+                    'audit', 'detalle completo', 'full details']
+    if any(q in question_lower for q in dd_indicators):
+        return 300
+    
+    # PRIORITY 3: Performance/metrics questions
     metrics_indicators = ['win rate', 'rendimiento', 'balance', 'p&l', 'pnl',
                          'métricas', 'metricas', 'metrics', 'performance',
                          'ganancias', 'pérdidas', 'profit', 'loss', 'track record']
     if any(q in question_lower for q in metrics_indicators):
         return 150
     
-    # Technical/architecture questions
+    # PRIORITY 4: Technical/architecture questions
     technical_indicators = ['cómo funciona', 'como funciona', 'arquitectura', 
                            'algoritmo', 'explica', 'explain', 'how does',
                            'coherence', 'monte carlo', 'kalman', 'veto']
     if any(q in question_lower for q in technical_indicators):
         return 100
     
-    # Due diligence (longer questions, investor context)
-    dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
-                    'audit', 'detalle completo', 'full details']
-    if any(q in question_lower for q in dd_indicators):
-        return 300
+    # PRIORITY 5: Simple yes/no questions (short questions with binary indicators)
+    yes_no_indicators = ['funciona', 'opera', 'tiene', 'puede', 'es posible', 
+                         'soporta', 'works', 'does it', 'can it', 'is it']
+    if word_count < 10 and any(q in question_lower for q in yes_no_indicators):
+        return 30
     
     # Default operational
     return 50
 
 
-def enforce_brevity(response: str, max_words: int, offer_more: bool = True, language: str = 'auto') -> str:
+def enforce_brevity(response: str, max_words: Optional[int], offer_more: bool = True, language: str = 'auto') -> str:
     """
     ADR-009: Ensure response doesn't exceed word limit.
     
     Args:
         response: Original AI response
-        max_words: Maximum word count
+        max_words: Maximum word count, or None for unlimited
         offer_more: Whether to add "Need more details?" when truncating
         language: 'es', 'en', or 'auto' (auto-detects from response)
         
     Returns:
-        Truncated response if needed
+        Truncated response if needed, or original if max_words is None
     """
     if not response:
+        return response
+    
+    # None means no limit - user explicitly asked for detailed explanation
+    if max_words is None:
         return response
     
     words = response.split()
@@ -222,19 +252,24 @@ def format_response_with_honest_framing(response: str, context: AudienceContext,
     - Admin: max 300 words (more detail allowed)
     - Public: max 100 words (concise answers)
     - Question-adaptive: simple questions get shorter limits
+    - Explanation requests: NO LIMIT (None) - user wants full details
     
     NOTA: Esta función aplica ADR-002 (honest framing) + ADR-009 (brevity first).
-    NO censuramos contenido, pero SÍ limitamos longitud.
+    NO censuramos contenido, pero SÍ limitamos longitud (excepto cuando piden explicación).
     """
     # Determine word limit
     if question:
         question_limit = get_response_word_limit(question)
-        # Use the more restrictive limit
-        max_words = min(question_limit, context.max_words)
+        # None means user explicitly asked for explanation - no limit
+        if question_limit is None:
+            max_words = None
+        else:
+            # Use the more restrictive limit
+            max_words = min(question_limit, context.max_words)
     else:
         max_words = context.max_words
     
-    # Enforce brevity
+    # Enforce brevity (or skip if None)
     return enforce_brevity(response, max_words)
 
 

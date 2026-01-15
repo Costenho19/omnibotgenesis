@@ -37,11 +37,29 @@ Implement **BREVITY FIRST** policy across all AI responses:
 
 | Question Type | Max Words | Example |
 |--------------|-----------|---------|
+| **Explanation Request** | **UNLIMITED** | "Explícame cómo funciona" → Full detailed response |
 | Simple yes/no | 30 | "¿Funciona 24/7?" → "Sí, opera 24/7 en Railway." |
 | Operational | 50 | "¿Cómo calcula el riesgo?" → Brief answer + 1 key point |
 | Technical | 100 | Architecture questions with specific details |
 | Performance/Metrics | 150 | Full metrics with honest framing |
 | Due Diligence | 300 | Comprehensive investor response |
+
+### Adaptive Behavior: User-Driven Detail Level
+
+When the user explicitly requests an explanation, the system removes word limits:
+
+**Explanation Triggers (Spanish):**
+- "explícame", "cuéntame más", "dame detalles", "en detalle"
+- "quiero saber más", "más información", "cuéntame todo"
+
+**Explanation Triggers (English):**
+- "tell me more", "explain in detail", "give me details"
+- "elaborate", "walk me through", "break it down"
+
+**Behavior:**
+- User asks simple question → Short response (30-50 words)
+- User says "explícame más" → Full response without limit
+- This ensures brevity by default but allows depth when requested
 
 ### Prohibited Patterns
 
@@ -101,22 +119,25 @@ A: "Caballero Harold, buenos días. Su pregunta sobre si las cuentas
 Add to intent analysis:
 
 ```python
-def get_response_word_limit(question: str) -> int:
-    """Determine max words based on question complexity."""
+def get_response_word_limit(question: str) -> Optional[int]:
+    """Determine max words based on question complexity.
+    Returns None for unlimited (explanation requests)."""
     question_lower = question.lower()
     
+    # PRIORITY 1: Explicit explanation requests → NO LIMIT
+    explanation_indicators = ['explícame', 'cuéntame más', 'dame detalles',
+                              'tell me more', 'explain in detail', 'elaborate']
+    if any(ind in question_lower for ind in explanation_indicators):
+        return None  # Unlimited
+    
     # Simple yes/no questions
-    if any(q in question_lower for q in ['funciona', 'opera', 'tiene', 'puede', 'es posible']):
+    if any(q in question_lower for q in ['funciona', 'opera', 'tiene', 'puede']):
         if len(question.split()) < 10:
             return 30
     
     # Performance/metrics
-    if any(q in question_lower for q in ['win rate', 'rendimiento', 'balance', 'p&l', 'métricas']):
+    if any(q in question_lower for q in ['win rate', 'rendimiento', 'balance']):
         return 150
-    
-    # Technical/architecture
-    if any(q in question_lower for q in ['cómo funciona', 'arquitectura', 'algoritmo', 'explica']):
-        return 100
     
     # Default operational
     return 50
@@ -189,4 +210,5 @@ def enforce_brevity(response: str, max_words: int) -> str:
 
 | Date | Change |
 |------|--------|
+| 2026-01-15 | Added adaptive behavior: explanation requests get unlimited words |
 | 2026-01-15 | Initial adoption after investor communication issue identified |
