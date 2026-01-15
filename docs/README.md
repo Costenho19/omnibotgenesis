@@ -246,6 +246,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ### Inversores
 | Documento | Descripción |
 |-----------|-------------|
+| [Executive Fact Sheet](business/EXECUTIVE_FACT_SHEET.md) | Day 1 oficial - documento institucional |
 | [One Pager](business/investor/one_pager.md) | Resumen ejecutivo |
 | [Proyecciones](business/investor/financial_projections.md) | Forecast financiero |
 | [Pitch Deck](business/investor/pitch_deck.html) | Presentación |
@@ -288,6 +289,7 @@ docs/
 │   └── adr/                           <- Architecture Decision Records
 │
 ├── business/                 <- Documentos de negocio
+│   ├── EXECUTIVE_FACT_SHEET.md        <- Day 1 oficial (institucional)
 │   └── investor/                      <- Pitch deck, proyecciones
 │
 ├── compliance/               <- Auditorías (solo actuales)
