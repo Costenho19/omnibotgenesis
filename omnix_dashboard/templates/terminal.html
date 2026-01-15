@@ -24,6 +24,50 @@
 {% block body_class %}antialiased{% endblock %}
 
 {% block content %}
+<!-- Day 1 Welcome Modal -->
+<div id="day1-modal" class="day1-modal" style="display: none;">
+    <div class="day1-modal-overlay"></div>
+    <div class="day1-modal-content">
+        <div class="day1-modal-header">
+            <div class="day1-modal-icon">O</div>
+            <div>
+                <h2>Welcome to OMNIX Day 1</h2>
+                <p class="day1-modal-subtitle">Official Track Record Begins</p>
+            </div>
+        </div>
+        <div class="day1-modal-body">
+            <div class="day1-fact-box">
+                <h3>TRANSPARENCY STATEMENT</h3>
+                <p>As of <strong>January 15, 2026</strong>, OMNIX has exited the Learning Baseline phase and entered Official Track Record mode.</p>
+                <ul>
+                    <li>Every trade uses real-time telemetry</li>
+                    <li>All risk decisions are fully auditable</li>
+                    <li>Performance metrics are institutionally valid</li>
+                </ul>
+            </div>
+            <div class="day1-timeline">
+                <div class="day1-timeline-item past">
+                    <span class="day1-timeline-date">Nov-Jan 14</span>
+                    <span class="day1-timeline-label">Calibration</span>
+                </div>
+                <div class="day1-timeline-item current">
+                    <span class="day1-timeline-date">Jan 15</span>
+                    <span class="day1-timeline-label">Day 1</span>
+                </div>
+                <div class="day1-timeline-item future">
+                    <span class="day1-timeline-date">Feb 13</span>
+                    <span class="day1-timeline-label">Day 30 Review</span>
+                </div>
+            </div>
+            <p class="day1-disclosure">Pre-Day 1 data is labeled as calibration and separated from the official track record.</p>
+        </div>
+        <div class="day1-modal-footer">
+            <a href="/static/docs/EXECUTIVE_FACT_SHEET.pdf" target="_blank" class="day1-btn-secondary">View Fact Sheet</a>
+            <button onclick="Day1Modal.accept()" class="day1-btn-primary">Continue to Dashboard</button>
+        </div>
+    </div>
+</div>
+
 <div class="terminal-wrapper">
 <div class="terminal-grid">
     <div class="header-bar">
@@ -70,6 +114,10 @@
             </div>
         </div>
         
+        <div class="day30-countdown" id="day30-countdown" title="Days until Day 30 Review (Feb 13, 2026)">
+            <span class="day30-icon">&#128197;</span>
+            <span class="day30-text">Day 30: <span id="days-remaining">--</span>d</span>
+        </div>
         <div class="clock-display">
             <div class="live-indicator">
                 <div class="live-dot"></div>
@@ -236,7 +284,10 @@
     <div class="panel trade-history-panel">
         <div class="panel-header">
             <span class="panel-title">📋 Trade History</span>
-            <span class="panel-badge">PREMIUM</span>
+            <div class="telemetry-toggle" id="telemetry-toggle">
+                <button class="telemetry-btn active" data-mode="official" onclick="TradeHistoryWidget.setMode('official')" title="Only Day 1+ trades with real telemetry">Official Record</button>
+                <button class="telemetry-btn" data-mode="full" onclick="TradeHistoryWidget.setMode('full')" title="Include calibration period (Nov 2025 - Jan 14)">Full History</button>
+            </div>
         </div>
         <div id="trade-history-container">
             <div style="color: var(--text-muted); font-size: 11px;">Loading trade history...</div>
@@ -297,5 +348,6 @@
 <script src="{{ url_for('static', filename='js/components/timeheatmap.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/correlationheatmap.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/learninginsights.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/day1modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/terminal.js') }}"></script>
 {% endblock %}

@@ -1,9 +1,13 @@
 const TradeHistoryWidget = {
     containerId: 'trade-history-container',
+    currentMode: 'official',
     
     async refresh() {
         try {
-            const response = await fetch('/api/trades/history');
+            const url = this.currentMode === 'official' 
+                ? '/api/trades/history?telemetry_source=REAL'
+                : '/api/trades/history';
+            const response = await fetch(url);
             const data = await response.json();
             
             if (!data.success) {
@@ -18,6 +22,20 @@ const TradeHistoryWidget = {
         }
     },
     
+    setMode(mode) {
+        this.currentMode = mode;
+        
+        const buttons = document.querySelectorAll('.telemetry-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            }
+        });
+        
+        this.refresh();
+    },
+    
     render(data) {
         const container = document.getElementById(this.containerId);
         if (!container) return;
@@ -25,6 +43,28 @@ const TradeHistoryWidget = {
         const { trades, statistics, sample_analysis } = data;
         
         let html = '';
+        
+        if (this.currentMode === 'official' && (!trades || trades.length === 0)) {
+            html += `
+                <div class="official-notice" style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 12px; text-align: center;">
+                    <div style="font-size: 14px; color: #00ff88; margin-bottom: 8px;">Official Track Record - Day 1</div>
+                    <div style="font-size: 12px; color: #888;">
+                        No official trades yet. The track record begins Jan 15, 2026.<br>
+                        <span style="color: #666; font-style: italic;">Switch to "Full History" to see calibration period trades.</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (this.currentMode === 'full') {
+            html += `
+                <div class="calibration-notice" style="background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                    <div style="font-size: 11px; color: #ff9800;">
+                        Includes calibration period (Nov 2025 - Jan 14, 2026). This data is marked as LEGACY_ESTIMATED and not part of the official track record.
+                    </div>
+                </div>
+            `;
+        }
         
         if (sample_analysis && !sample_analysis.is_significant) {
             html += `
@@ -48,6 +88,10 @@ const TradeHistoryWidget = {
             const significanceBadge = sample_analysis?.is_significant 
                 ? '<span class="badge-significant">SIGNIFICANT</span>'
                 : '<span class="badge-insufficient">BUILDING SAMPLE</span>';
+            
+            const modeBadge = this.currentMode === 'official'
+                ? '<span class="telemetry-indicator" style="background: rgba(0,255,136,0.1); color: #00ff88;">OFFICIAL</span>'
+                : '<span class="telemetry-indicator" style="background: rgba(255,152,0,0.1); color: #ff9800;">FULL</span>';
             
             html += `
                 <div class="trade-stats-row">
@@ -87,6 +131,7 @@ const TradeHistoryWidget = {
                         <span class="trade-stat-mini-label">Worst:</span>
                         <span class="trade-stat-mini-value negative">$${statistics.worst_trade.toFixed(2)}</span>
                     </div>
+                    ${modeBadge}
                     ${significanceBadge}
                 </div>
             `;
@@ -110,11 +155,14 @@ const TradeHistoryWidget = {
                     <tbody>
         `;
         
-        if (trades.length === 0) {
+        if (!trades || trades.length === 0) {
+            const message = this.currentMode === 'official' 
+                ? 'No official trades yet. Track record starts Jan 15, 2026.'
+                : 'No trades yet. Waiting for bot to execute trades...';
             html += `
                 <tr>
                     <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">
-                        No trades yet. Waiting for bot to execute trades...
+                        ${message}
                     </td>
                 </tr>
             `;
@@ -136,9 +184,13 @@ const TradeHistoryWidget = {
                     ? closeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                     : '';
                 
+                const legacyBadge = trade.telemetry_source === 'LEGACY_ESTIMATED' 
+                    ? '<span style="font-size: 8px; color: #ff9800; margin-left: 4px;">CAL</span>'
+                    : '';
+                
                 html += `
                     <tr>
-                        <td><span class="trade-id">#${trade.id}</span></td>
+                        <td><span class="trade-id">#${trade.id}</span>${legacyBadge}</td>
                         <td><span class="trade-symbol">${trade.symbol}</span></td>
                         <td><span class="${sideClass}">${trade.side}</span></td>
                         <td>$${trade.entry_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

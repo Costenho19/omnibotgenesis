@@ -145,6 +145,14 @@ def api_trades():
 @require_api_key
 def api_trades_history():
     """API endpoint for detailed trade history - PREMIUM with full transparency"""
+    from flask import request
+    
+    telemetry_filter = request.args.get('telemetry_source', None)
+    
+    VALID_TELEMETRY_SOURCES = {'REAL', 'LEGACY_ESTIMATED'}
+    if telemetry_filter and telemetry_filter not in VALID_TELEMETRY_SOURCES:
+        telemetry_filter = None
+    
     with get_db_connection() as conn:
         if not conn:
             return jsonify({
@@ -157,31 +165,60 @@ def api_trades_history():
         try:
             cursor = conn.cursor()
             
-            cursor.execute('''
-                SELECT id, symbol, side, quantity, entry_price, exit_price, 
-                       profit_loss, status, opened_at, closed_at, strategy
-                FROM paper_trading_trades
-                ORDER BY opened_at DESC
-                LIMIT 100
-            ''')
+            if telemetry_filter:
+                cursor.execute('''
+                    SELECT id, symbol, side, quantity, entry_price, exit_price, 
+                           profit_loss, status, opened_at, closed_at, strategy,
+                           COALESCE(telemetry_source, 'LEGACY_ESTIMATED') as telemetry_source
+                    FROM paper_trading_trades
+                    WHERE telemetry_source = %s
+                    ORDER BY opened_at DESC
+                    LIMIT 100
+                ''', (telemetry_filter,))
+            else:
+                cursor.execute('''
+                    SELECT id, symbol, side, quantity, entry_price, exit_price, 
+                           profit_loss, status, opened_at, closed_at, strategy,
+                           COALESCE(telemetry_source, 'LEGACY_ESTIMATED') as telemetry_source
+                    FROM paper_trading_trades
+                    ORDER BY opened_at DESC
+                    LIMIT 100
+                ''')
             
             rows = cursor.fetchall()
             
-            cursor.execute('''
-                SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
-                    SUM(profit_loss) as total_pnl,
-                    AVG(CASE WHEN profit_loss > 0 THEN profit_loss ELSE NULL END) as avg_win,
-                    AVG(CASE WHEN profit_loss < 0 THEN profit_loss ELSE NULL END) as avg_loss,
-                    MAX(profit_loss) as best_trade,
-                    MIN(profit_loss) as worst_trade,
-                    SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as directional_wins,
-                    SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
-                FROM paper_trading_trades
-                WHERE status = 'closed'
-            ''')
+            if telemetry_filter:
+                cursor.execute('''
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                        SUM(profit_loss) as total_pnl,
+                        AVG(CASE WHEN profit_loss > 0 THEN profit_loss ELSE NULL END) as avg_win,
+                        AVG(CASE WHEN profit_loss < 0 THEN profit_loss ELSE NULL END) as avg_loss,
+                        MAX(profit_loss) as best_trade,
+                        MIN(profit_loss) as worst_trade,
+                        SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as directional_wins,
+                        SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+                    FROM paper_trading_trades
+                    WHERE status = 'closed' AND telemetry_source = %s
+                ''', (telemetry_filter,))
+            else:
+                cursor.execute('''
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losses,
+                        SUM(profit_loss) as total_pnl,
+                        AVG(CASE WHEN profit_loss > 0 THEN profit_loss ELSE NULL END) as avg_win,
+                        AVG(CASE WHEN profit_loss < 0 THEN profit_loss ELSE NULL END) as avg_loss,
+                        MAX(profit_loss) as best_trade,
+                        MIN(profit_loss) as worst_trade,
+                        SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as directional_wins,
+                        SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+                    FROM paper_trading_trades
+                    WHERE status = 'closed'
+                ''')
             
             stats_row = cursor.fetchone()
             cursor.close()
@@ -210,7 +247,8 @@ def api_trades_history():
                     'opened_at': row[8].isoformat() if row[8] else None,
                     'closed_at': row[9].isoformat() if row[9] else None,
                     'strategy': row[10] or 'auto_trading_bot',
-                    'hold_time': str(row[9] - row[8]) if row[8] and row[9] else None
+                    'hold_time': str(row[9] - row[8]) if row[8] and row[9] else None,
+                    'telemetry_source': row[11] if len(row) > 11 else 'LEGACY_ESTIMATED'
                 })
             
             total_trades = int(stats_row[0] or 0) if stats_row else 0
