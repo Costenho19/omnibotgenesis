@@ -17,7 +17,7 @@ from .ai_models import AIModelsManager
 from .ai_styles import VisualStylesManager
 from .ai_prompts import PromptsContextManager
 from .investor_responses import (
-    get_audience_context, 
+    create_audience_context, 
     format_response_with_honest_framing,
     get_response_word_limit,
     enforce_brevity
@@ -293,7 +293,10 @@ class ConversationalAIService:
             
             # 7.5 ADR-009: Brevity First - Enforce word limits
             try:
-                audience_context = get_audience_context(chat_id)
+                # Get admin IDs from settings
+                from omnix_config.settings import settings
+                admin_ids = settings.telegram.admin_ids if hasattr(settings, 'telegram') and hasattr(settings.telegram, 'admin_ids') else set()
+                audience_context = create_audience_context(str(chat_id), admin_ids)
                 styled_response = format_response_with_honest_framing(
                     response=styled_response,
                     context=audience_context,
