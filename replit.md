@@ -108,3 +108,18 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
+
+## Recent Changes
+
+### Jan 15, 2026: ADR-010 Capital Protection Metric Standard
+- **PROBLEMA**: Múltiples widgets mostraban métricas inconsistentes ("$1.2B Protected" vs "$267K Avoided")
+- **SOLUCIÓN**: Sistema de dos métricas unificado en todos los widgets
+- **PRIMARIA**: "Est. Loss Avoided*" = Notional × 0.6% (estimación conservadora realista)
+- **SECUNDARIA**: "Notional Blocked" (valor bruto para transparencia)
+- **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, streamlit_app.py
+- **REFERENCIA**: `docs/reference/adr/ADR-010-capital-protection-metric-standard.md`
+
+### Jan 15, 2026: ADR-009 Brevity First Policy
+- **LÍMITES**: Simple 30, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300 palabras
+- **ADAPTIVE**: Si usuario pide "explícame" → SIN LÍMITE
+- **REFERENCIA**: `docs/reference/adr/ADR-009-brevity-first-policy.md`

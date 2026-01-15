@@ -647,6 +647,7 @@ Modern prompt engineering architecture with language-neutral base prompts:
 - [Deuda Técnica](TECHNICAL_DEBT.md) - Issues conocidos
 - [Trazabilidad](../reference/TRACEABILITY_MATRIX.md) - 123 componentes mapeados
 - [Auditoría de Código](CODEBASE_AUDIT_REPORT.md) - Verificación código vs docs
+- [ADR-010 Capital Protection Metrics](../reference/adr/ADR-010-capital-protection-metric-standard.md) - Standard para métricas de protección
 
 ---
 

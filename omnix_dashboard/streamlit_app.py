@@ -236,7 +236,7 @@ def render_shadow_portfolio(shadow_portfolio):
         st.metric(
             "Correct Vetos",
             f"{correct_vetos:,}",
-            delta="PROTECTED",
+            delta="CAPITAL SAVED",
             delta_color="normal"
         )
     
@@ -363,16 +363,17 @@ def render_quarantine(quarantine):
         st.metric(
             "Assets Blocked",
             f"{total_blocked}",
-            delta="PROTECTED",
+            delta="QUARANTINED",
             delta_color="normal"
         )
     
     with col2:
         st.metric(
-            "Capital Protected",
+            "Loss Avoided",
             f"${total_avoided:,.2f}",
-            delta="AVOIDED LOSS",
-            delta_color="normal"
+            delta="FROM QUARANTINED ASSETS",
+            delta_color="normal",
+            help="Actual losses from trades on quarantined assets before they were blocked."
         )
     
     with col3:
@@ -633,10 +634,11 @@ def render_overview(metrics, quarantine=None):
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(
-                    "Capital Protected",
+                    "Loss Avoided",
                     f"${total_avoided:,.2f}",
-                    delta=f"{total_blocked} assets blocked",
-                    delta_color="normal"
+                    delta=f"{total_blocked} assets quarantined",
+                    delta_color="normal",
+                    help="Actual losses from trades on quarantined assets before they were blocked."
                 )
             with col2:
                 st.info("The Asset Quarantine System has blocked underperforming assets, preventing potential losses. See **Asset Quarantine** tab for details.")

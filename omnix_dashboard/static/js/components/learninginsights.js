@@ -193,9 +193,13 @@
                         <span class="stat-value">${(summary.total_vetos_7d || 0).toLocaleString()}</span>
                         <span class="stat-label">Vetos 7d</span>
                     </div>
-                    <div class="summary-stat">
-                        <span class="stat-value">${formatCapital(summary.total_capital_protected || 0)}</span>
-                        <span class="stat-label">Protected</span>
+                    <div class="summary-stat" title="Est. based on ~0.6% avg adverse move × position size">
+                        <span class="stat-value" style="color: var(--accent-green);">${formatCapital((opportunityTracker?.avoided?.est_loss) || (summary.total_capital_protected || 0) * 0.006)}</span>
+                        <span class="stat-label">Est. Loss Avoided*</span>
+                    </div>
+                    <div class="summary-stat" title="Total position sizes of blocked trades (notional)">
+                        <span class="stat-value" style="color: #6b7280; font-size: 0.85em;">${formatCapital(summary.total_capital_protected || 0)}</span>
+                        <span class="stat-label">Notional Blocked</span>
                     </div>
                     <div class="summary-stat">
                         <span class="stat-value">${summary.veto_types_active || 0}</span>
