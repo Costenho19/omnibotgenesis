@@ -93,7 +93,8 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 ### Jan 15, 2026: ADR-009 Brevity First Policy
 - **PROBLEMA**: Respuestas AI verbosas (600+ palabras) para preguntas simples de sí/no
 - **SOLUCIÓN**: Word limits por tipo de pregunta + truncamiento en pipeline
-- **LÍMITES**: Simple 30 palabras, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300
+- **LÍMITES**: Simple 30, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300
+- **ADAPTIVE**: Si usuario pide "explícame"/"tell me more" → SIN LÍMITE (respuesta completa)
 - **PROHIBIDO**: "Caballero [Nombre]", saludos floridos, múltiples secciones numeradas
 - **ENFORCEMENT**: `get_response_word_limit()` + `enforce_brevity()` en ai_service.py
 - **SUFIJO**: Language-aware `[Más detalles disponibles]` / `[More details available]`
