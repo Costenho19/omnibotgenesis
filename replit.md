@@ -111,12 +111,19 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 15, 2026: ADR-011 Legacy Telemetry Backfill
+- **PROBLEMA**: Data Quality 25% - 119 trades sin coherence_score ni hmm_regime
+- **CAUSA**: Trades de Nov-Dic 2025 pre-telemetría (V005 implementado en enero 2026)
+- **SOLUCIÓN**: Backfill estimado + columna `telemetry_source` (LEGACY_ESTIMATED vs REAL)
+- **RESULTADO**: Data Quality 100% (con telemetría estimada marcada transparentemente)
+- **REFERENCIA**: `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
+
 ### Jan 15, 2026: ADR-010 Capital Protection Metric Standard
 - **PROBLEMA**: Múltiples widgets mostraban métricas inconsistentes ("$1.2B Protected" vs "$267K Avoided")
 - **SOLUCIÓN**: Sistema de dos métricas unificado en todos los widgets
 - **PRIMARIA**: "Est. Loss Avoided*" = Notional × 0.6% (estimación conservadora realista)
 - **SECUNDARIA**: "Notional Blocked" (valor bruto para transparencia)
-- **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, streamlit_app.py
+- **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, regimedetection.js, streamlit_app.py
 - **REFERENCIA**: `docs/reference/adr/ADR-010-capital-protection-metric-standard.md`
 
 ### Jan 15, 2026: ADR-009 Brevity First Policy

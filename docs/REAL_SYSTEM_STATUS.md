@@ -1,6 +1,6 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 14 de Enero 2026  
+**Fecha**: 15 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | 119 Trades | Balance $984,801.27 | ADR-007 Phase 1 ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -8,6 +8,36 @@
 ---
 
 ## Cambios Recientes
+
+### ADR-011 Legacy Telemetry Backfill (Jan 15, 2026)
+
+**PROBLEMA:** Data Quality al 25% - 119 trades sin coherence_score ni hmm_regime.
+
+**CAUSA RAÍZ:** Trades de Nov-Dic 2025 creados antes de implementar telemetría V005 (enero 2026).
+
+**SOLUCIÓN:**
+| Track | Descripción | Estado |
+|-------|-------------|--------|
+| A | Backfill estimado basado en profit_pct/profit_loss | ✅ 119 trades actualizados |
+| B | Columna `telemetry_source` para distinguir LEGACY_ESTIMATED vs REAL | ✅ Añadida |
+| C | Métrica segmentada en Health Score | ✅ Implementada |
+
+**Distribución Post-Backfill:**
+| HMM Regime | Trades | Avg Coherence | Avg Profit% |
+|------------|--------|---------------|-------------|
+| RANGING | 47 | 34.6 | -0.74% |
+| BEARISH | 31 | 25.0 | -3.60% |
+| UNKNOWN | 26 | 45.2 | +0.12% |
+| BULLISH | 15 | 75.0 | +3.22% |
+
+**Métrica Data Quality:**
+- Antes: 25% (campos NULL)
+- Después: 100% (con telemetría estimada marcada)
+- Real: 0% (hasta nuevos trades en enero 2026)
+
+**Referencia:** `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
+
+---
 
 ### ADR-008 Opportunity Tracker (Jan 14, 2026)
 

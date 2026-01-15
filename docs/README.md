@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 14 de Enero 2026  
+**Actualizado**: 15 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -17,6 +17,25 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### ADR-011: Legacy Telemetry Backfill (Jan 15, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Data Quality corregido
+- **PROBLEMA**: 119 trades sin coherence_score ni hmm_regime (pre-telemetría)
+- **SOLUCIÓN**:
+  - Track A: Backfill estimado basado en profit_pct/profit_loss
+  - Track B: Columna `telemetry_source` (LEGACY_ESTIMATED vs REAL)
+  - Track C: Métrica segmentada en Health Score
+- **RESULTADO**: Data Quality 25% → 100% (con telemetría estimada marcada)
+- **REFERENCIA**: `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
+
+### ADR-010: Capital Protection Metric Standard (Jan 15, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Métricas unificadas
+- **PROBLEMA**: Inconsistencia entre "$1.2B Protected" vs "$267K Avoided"
+- **SOLUCIÓN**: Sistema de dos métricas:
+  - Primaria: "Est. Loss Avoided*" = Notional × 0.6%
+  - Secundaria: "Notional Blocked" (transparencia)
+- **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, regimedetection.js, streamlit_app.py
+- **REFERENCIA**: `docs/reference/adr/ADR-010-capital-protection-metric-standard.md`
 
 ### ADR-008: Opportunity Tracker (Jan 14, 2026)
 - **ESTADO**: ✅ ADOPTADO - Framework de validación Day 30

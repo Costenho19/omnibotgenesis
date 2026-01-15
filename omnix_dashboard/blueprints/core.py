@@ -820,18 +820,46 @@ def api_health_score():
         risk_score = min(100, capital_preserved + (5 if veto_active else 0))
         
         data_score = 100
+        data_detail = 'DB connection active'
         try:
-            conn = get_db_connection()
-            if conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT 1")
-                cursor.close()
-                conn.close()
-                data_score = 100
-            else:
-                data_score = 50
-        except Exception:
+            with get_db_connection() as conn:
+                if conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT 
+                            COUNT(*) as total,
+                            COUNT(coherence_score) as with_coherence,
+                            COUNT(CASE WHEN hmm_regime IS NOT NULL AND hmm_regime != '' THEN 1 END) as with_hmm,
+                            COUNT(CASE WHEN telemetry_source = 'REAL' THEN 1 END) as real_telemetry
+                        FROM paper_trading_trades
+                        WHERE status = 'closed'
+                    """)
+                    row = cursor.fetchone()
+                    cursor.close()
+                    
+                    if row and row[0] > 0:
+                        total = row[0]
+                        with_coherence = row[1] or 0
+                        with_hmm = row[2] or 0
+                        real_telemetry = row[3] or 0
+                        
+                        completeness = ((with_coherence + with_hmm) / (total * 2)) * 100 if total > 0 else 0
+                        data_score = min(100, completeness)
+                        
+                        if real_telemetry > 0:
+                            data_detail = f'{real_telemetry}/{total} trades with real telemetry'
+                        else:
+                            data_detail = f'{with_coherence}/{total} trades with telemetry (estimated)'
+                    else:
+                        data_score = 50
+                        data_detail = 'No closed trades yet'
+                else:
+                    data_score = 25
+                    data_detail = 'DB connection issues'
+        except Exception as e:
+            logger.warning(f"Data quality check error: {e}")
             data_score = 25
+            data_detail = 'Unable to check data quality'
         
         target_wr = 40
         actual_wr = metrics.get('win_rate_directional', 0) or metrics.get('win_rate', 0)
@@ -885,7 +913,7 @@ def api_health_score():
                 'data_quality': {
                     'score': round(data_score, 1),
                     'label': 'Data Quality',
-                    'detail': 'DB connection active' if data_score == 100 else 'DB issues detected'
+                    'detail': data_detail
                 },
                 'win_rate': {
                     'score': round(wr_score, 1),
