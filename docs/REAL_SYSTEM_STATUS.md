@@ -7,7 +7,66 @@
 
 ---
 
+## OFFICIAL DAY 1: 15 de Enero 2026
+
+> **ADR-012 DECLARACIÓN**: A partir de hoy, OMNIX inicia su track record oficial con telemetría real, thresholds calibrados, y métricas estandarizadas.
+
+### Timeline Oficial
+
+```
+Nov-Dic 2025        │ 15 Ene 2026         │ 13 Feb 2026
+────────────────────┼─────────────────────┼──────────────────
+LEARNING BASELINE   │ OFFICIAL DAY 1      │ DAY 30 REVIEW
+119 trades          │ Track record        │ Meta: 100 trades
+Calibración         │ oficial inicia      │ WR target: >45%
+telemetry_source:   │ telemetry_source:   │ Decisión threshold
+LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
+```
+
+### Separación de Períodos
+
+| Período | Fechas | Trades | Telemetría | Propósito |
+|---------|--------|--------|------------|-----------|
+| Learning Baseline | Nov 2025 - Jan 14, 2026 | 119 | LEGACY_ESTIMATED | Calibración |
+| Official Track Record | Jan 15, 2026+ | 0 (crece) | REAL | Inversores |
+
+### Estado Actual Day 1
+
+| Métrica | Valor | Nota |
+|---------|-------|------|
+| Balance | $984,801.27 | Capital real |
+| Capital Preservation | 98.5% | Histórico verificable |
+| Trades Oficiales | 0 | Crece desde Day 1 |
+| Data Quality (REAL) | 0% → 100% | Con nuevos trades |
+| Veto System | Activo | 6-tier + MC + RMS |
+
+**Referencia:** `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
+---
+
 ## Cambios Recientes
+
+### ADR-012 Learning Baseline Freeze (Jan 15, 2026)
+
+**DECLARACIÓN:** Day 1 oficial del track record de OMNIX.
+
+| Aspecto | Decisión |
+|---------|----------|
+| Day 1 Oficial | 15 de Enero 2026 |
+| Learning Baseline | Nov 2025 - Jan 14, 2026 (119 trades) |
+| Métricas Reset | Trade count, win rate, profit factor (desde Day 1) |
+| Métricas Carry-over | Balance, capital preservation, config |
+| Disclosure | Pre-Day 1 = calibración, Post-Day 1 = oficial |
+
+**Criterios Day 1 cumplidos:**
+- ✅ ADR-007: Thresholds calibrados
+- ✅ ADR-010: Métricas estandarizadas
+- ✅ ADR-011: Telemetría completa y marcada
+- ✅ Dashboard: 19/19 widgets operativos
+
+**Referencia:** `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
+---
 
 ### ADR-011 Legacy Telemetry Backfill (Jan 15, 2026)
 

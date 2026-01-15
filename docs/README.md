@@ -18,6 +18,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-012: Learning Baseline Freeze & Official Day 1 (Jan 15, 2026)
+- **ESTADO**: ✅ ADOPTADO - Day 1 oficial declarado
+- **DECLARACIÓN**: 15 de Enero 2026 = Day 1 del track record oficial
+- **LEARNING BASELINE**: Nov 2025 - Jan 14, 2026 (119 trades, LEGACY_ESTIMATED)
+- **TRACK RECORD OFICIAL**: Jan 15, 2026+ (telemetría REAL)
+- **MÉTRICAS RESET**: Trade count, win rate, profit factor (desde Day 1)
+- **MÉTRICAS CARRY-OVER**: Balance ($984K), capital preservation (98.5%), config
+- **DAY 30 REVIEW**: 13 de Febrero 2026 (meta: 100 trades, WR >45%)
+- **REFERENCIA**: `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
 ### ADR-011: Legacy Telemetry Backfill (Jan 15, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Data Quality corregido
 - **PROBLEMA**: 119 trades sin coherence_score ni hmm_regime (pre-telemetría)

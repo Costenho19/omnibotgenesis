@@ -111,6 +111,14 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 15, 2026: ADR-012 Learning Baseline Freeze & Official Day 1
+- **DECLARACIÓN**: 15 de Enero 2026 = Day 1 oficial del track record
+- **LEARNING BASELINE**: Nov 2025 - Jan 14, 2026 (119 trades, LEGACY_ESTIMATED)
+- **TRACK RECORD OFICIAL**: Jan 15, 2026+ (telemetría REAL, thresholds calibrados)
+- **MÉTRICAS**: Reset trade count/WR desde Day 1, carry-over balance/config
+- **DAY 30 REVIEW**: 13 Feb 2026 (meta: 100 trades, WR >45%)
+- **REFERENCIA**: `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
 ### Jan 15, 2026: ADR-011 Legacy Telemetry Backfill
 - **PROBLEMA**: Data Quality 25% - 119 trades sin coherence_score ni hmm_regime
 - **CAUSA**: Trades de Nov-Dic 2025 pre-telemetría (V005 implementado en enero 2026)
