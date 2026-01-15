@@ -161,14 +161,15 @@ def get_response_word_limit(question: str) -> int:
     return 50
 
 
-def enforce_brevity(response: str, max_words: int, offer_more: bool = True) -> str:
+def enforce_brevity(response: str, max_words: int, offer_more: bool = True, language: str = 'auto') -> str:
     """
     ADR-009: Ensure response doesn't exceed word limit.
     
     Args:
         response: Original AI response
         max_words: Maximum word count
-        offer_more: Whether to add "¿Necesitas más detalles?" when truncating
+        offer_more: Whether to add "Need more details?" when truncating
+        language: 'es', 'en', or 'auto' (auto-detects from response)
         
     Returns:
         Truncated response if needed
@@ -197,9 +198,19 @@ def enforce_brevity(response: str, max_words: int, offer_more: bool = True) -> s
         # Otherwise add ellipsis
         truncated = truncated.rstrip('.,!?:;') + '...'
     
-    # Offer more details if requested
+    # Offer more details if requested (language-aware per language policy)
     if offer_more and len(words) > max_words:
-        truncated += ' ¿Necesitas más detalles?'
+        # Auto-detect language from response content
+        if language == 'auto':
+            spanish_indicators = ['el ', 'la ', 'los ', 'las ', 'de ', 'que ', 'en ']
+            response_lower = response.lower()
+            spanish_count = sum(1 for ind in spanish_indicators if ind in response_lower)
+            language = 'es' if spanish_count >= 2 else 'en'
+        
+        if language == 'es':
+            truncated += ' [Más detalles disponibles]'
+        else:
+            truncated += ' [More details available]'
     
     return truncated
 

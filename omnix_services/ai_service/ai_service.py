@@ -16,6 +16,12 @@ import logging
 from .ai_models import AIModelsManager
 from .ai_styles import VisualStylesManager
 from .ai_prompts import PromptsContextManager
+from .investor_responses import (
+    get_audience_context, 
+    format_response_with_honest_framing,
+    get_response_word_limit,
+    enforce_brevity
+)
 from omnix_core.cache.redis_cache import cache
 
 if TYPE_CHECKING:
@@ -284,6 +290,18 @@ class ConversationalAIService:
                 )
             else:
                 styled_response = ai_response
+            
+            # 7.5 ADR-009: Brevity First - Enforce word limits
+            try:
+                audience_context = get_audience_context(chat_id)
+                styled_response = format_response_with_honest_framing(
+                    response=styled_response,
+                    context=audience_context,
+                    question=user_message
+                )
+                logger.debug(f"📝 Brevity enforced: {len(styled_response.split())} words")
+            except Exception as brevity_error:
+                logger.warning(f"⚠️ Brevity enforcement skipped: {brevity_error}")
             
             # 8. Add AI response to history
             self._add_to_history(chat_id, {
