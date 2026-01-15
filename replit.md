@@ -90,6 +90,15 @@ The dashboard displays a Dual Win Rate Framework (directional precision vs. prof
 
 ## Recent Changes
 
+### Jan 15, 2026: ADR-009 Brevity First Policy
+- **PROBLEMA**: Respuestas AI verbosas (600+ palabras) para preguntas simples de sí/no
+- **SOLUCIÓN**: Word limits por tipo de pregunta + truncamiento en pipeline
+- **LÍMITES**: Simple 30 palabras, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300
+- **PROHIBIDO**: "Caballero [Nombre]", saludos floridos, múltiples secciones numeradas
+- **ENFORCEMENT**: `get_response_word_limit()` + `enforce_brevity()` en ai_service.py
+- **SUFIJO**: Language-aware `[Más detalles disponibles]` / `[More details available]`
+- **REFERENCIA**: `docs/reference/adr/ADR-009-brevity-first-policy.md`
+
 ### Jan 14, 2026: ADR-008 Opportunity Tracker (FEAT-011 Enhanced)
 - **FRAMEWORK**: Day 30 review sin cambiar thresholds ahora
 - **MÉTRICAS**: Missed Opportunities vs Losses Avoided vs Net Opportunity
