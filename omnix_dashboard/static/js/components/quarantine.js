@@ -1,6 +1,7 @@
 const QuarantineWidget = {
     container: null,
     headerEl: null,
+    opportunityData: null,
     
     init() {
         this.container = document.getElementById('quarantine-widget');
@@ -12,8 +13,17 @@ const QuarantineWidget = {
     
     async load() {
         try {
-            const response = await fetch('/api/system/quarantine');
-            const data = await response.json();
+            const [quarantineRes, opportunityRes] = await Promise.all([
+                fetch('/api/system/quarantine'),
+                fetch('/api/learning/insights').catch(() => null)
+            ]);
+            const data = await quarantineRes.json();
+            
+            if (opportunityRes && opportunityRes.ok) {
+                const oppData = await opportunityRes.json();
+                this.opportunityData = oppData.opportunity_tracker || null;
+            }
+            
             this.render(data);
         } catch (error) {
             console.error('QuarantineWidget error:', error);
@@ -43,8 +53,11 @@ const QuarantineWidget = {
         const dynamic48h = capitalProtected.dynamic_48h || 0;
         const dynamic7d = capitalProtected.dynamic_7d || 0;
         
+        const estLossAvoided = this.opportunityData?.avoided?.est_loss || 0;
+        const estLossAvoidedStr = this.formatNumber(estLossAvoided);
+        
         if (this.headerEl) {
-            this.headerEl.textContent = this.formatNumber(grandTotal);
+            this.headerEl.textContent = estLossAvoided > 0 ? estLossAvoidedStr : this.formatNumber(grandTotal);
         }
         
         if (this.container) {
@@ -83,6 +96,8 @@ const QuarantineWidget = {
                 </div>
             `).join('');
             
+            const notionalTooltip = 'Position sizes of blocked trades. Est. loss avoided calculated using avg adverse price movement (1.5-2.5%).';
+            
             this.container.innerHTML = `
                 <div class="panel-header" style="margin-top: 0;">
                     <span class="panel-title">Capital Protected</span>
@@ -91,18 +106,19 @@ const QuarantineWidget = {
                 <div style="padding: 8px 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);">${this.formatNumber(grandTotal)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Total Protected</div>
+                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="Est. loss avoided based on avg adverse moves">${estLossAvoided > 0 ? estLossAvoidedStr : this.formatNumber(grandTotal)}</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Est. Loss Avoided*</div>
                         </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 14px; font-weight: 600; color: #f59e0b;">${this.formatNumber(dynamic48h)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Vetoes 48h</div>
+                        <div style="text-align: center;" title="${notionalTooltip}">
+                            <div style="font-size: 14px; font-weight: 600; color: #6b7280;">${this.formatNumber(grandTotal)}</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Notional Blocked</div>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 14px; font-weight: 600;">${count}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Blocked</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Trades</div>
                         </div>
                     </div>
+                    <div style="font-size: 8px; color: var(--text-muted); margin-bottom: 6px; opacity: 0.7;">*Based on avg adverse price movement × position size</div>
                     ${vetoBreakdownHtml ? `
                     <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; margin-top: 4px;">
                         <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 4px;">VETO BREAKDOWN (48h)</div>
