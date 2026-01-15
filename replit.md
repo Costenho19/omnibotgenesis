@@ -50,10 +50,10 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 The system integrates an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, features Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with planned activation via the Strangler Fig pattern.
 
 ### AI Architecture and Enforcement
-The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications.
+The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications. AI responses are subject to brevity policies with word limits and adaptive detail based on user requests.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity.
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves a 5-point threshold reduction across all levels and an EMA trigger adjustment to improve trade throughput.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, applying only penalties.
@@ -83,82 +83,10 @@ This system focuses on precision trade entries with ATR-Based Sizing (stop loss 
 This system provides real-time capital protection tracking with PostgreSQL persistence for accurate investor reporting. It logs veto events from COHERENCE_GATE, MC, BLACK_SWAN, and RMS, with deduplication.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations.
+A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker (ADR-008) analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity, with a dashboard widget for visual balance.
 
 ### Dashboard Features
-The dashboard displays a Dual Win Rate Framework (directional precision vs. profitable net), enriched AI context with granular breakdowns (symbol, regime, coherence, fee impact, timing patterns), and critical UX improvements such as a System Health Score (0-100), Live Status widget, Quick Insights (auto-generated actionable insights), Calibration Progress (4-phase tracker), and Recommended Actions (priority-based suggestions). All 5 P1 features completed as of Jan 13, 2026.
-
-## Recent Changes
-
-### Jan 15, 2026: ADR-009 Brevity First Policy
-- **PROBLEMA**: Respuestas AI verbosas (600+ palabras) para preguntas simples de sí/no
-- **SOLUCIÓN**: Word limits por tipo de pregunta + truncamiento en pipeline
-- **LÍMITES**: Simple 30, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300
-- **ADAPTIVE**: Si usuario pide "explícame"/"tell me more" → SIN LÍMITE (respuesta completa)
-- **PROHIBIDO**: "Caballero [Nombre]", saludos floridos, múltiples secciones numeradas
-- **ENFORCEMENT**: `get_response_word_limit()` + `enforce_brevity()` en ai_service.py
-- **SUFIJO**: Language-aware `[Más detalles disponibles]` / `[More details available]`
-- **REFERENCIA**: `docs/reference/adr/ADR-009-brevity-first-policy.md`
-
-### Jan 14, 2026: ADR-008 Opportunity Tracker (FEAT-011 Enhanced)
-- **FRAMEWORK**: Day 30 review sin cambiar thresholds ahora
-- **MÉTRICAS**: Missed Opportunities vs Losses Avoided vs Net Opportunity
-- **CRITERIO**: Si missed > 20 AND profit > $3K → Test threshold 35% con $500
-- **FECHA REVISIÓN**: 13 de Febrero 2026
-- **REFERENCIA**: `docs/reference/adr/ADR-008-opportunity-tracker.md`
-- **WIDGET DASHBOARD**: Balance visual 💎 Missed vs ✅ Avoided con ⚖️ - Day 1/30 tracking
-- **API**: `/api/learning/insights` → `opportunity_tracker` payload con missed/avoided/net/recommendation/near_miss
-- **DATABASE**: Usa `black_swan_prob` (numeric 0-1), NO `black_swan_severity`
-- **ESTADO ACTUAL**: 0 missed, 479 avoided, NET -$239.5K = PROTECTING ✅
-- **METODOLOGÍA DOCUMENTADA**: `est_pnl = adverse_move_pct × notional_blocked` (lower-bound conservador)
-- **NEAR-MISS TRACKING**: Candidatos observados (EMA 28-35%, Coh ≥40%, BS ≤MEDIUM) para demostrar vigilancia activa
-- **TOOLTIP WIDGET**: "Est. based on avg adverse move × position size" - elimina sospecha de números inflados
-
-### Jan 14, 2026: ADR-007 Coherence Threshold Calibration (V6.5.4e)
-- **DIAGNOSIS**: System over-protective, blocking 48,937 trades in 7 days ($978.7M blocked)
-- **ROOT CAUSE**: COHERENCE_GATE avg 26.3% coherence, BLACK_SWAN blocking 21,402 signals
-- **SOLUTION Phase 1**: 5-point threshold reduction across all levels
-  - Adaptive thresholds: LOW 30% (was 35%), MEDIUM 40% (was 45%), HIGH 50% (was 55%), EXTREME 60% (was 65%)
-  - EMA trigger: 20 (was 25)
-- **Files Modified**: `coherence_engine.py`, `memory_risk_adapter.py`
-- **Expected Impact**: Veto rate -15-20%, Win rate 37.8% → 42-45%, Profit factor 0.13 → 0.8-1.2
-- **Guardrails**: Rollback if drawdown > 3% in 48h
-- **Reference**: `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
-
-### Jan 14, 2026: FEAT-006, FEAT-007, FEAT-008, FEAT-009, FEAT-010, FEAT-011 Dashboard Widgets
-- **FEAT-006 Comparative Metrics**: API `/api/metrics/comparative` with period-aligned BTC benchmarking
-- **FEAT-007 P&L Breakdown**: API `/api/metrics/pnl-breakdown` with symbol/cause analysis
-  - By Symbol: horizontal bars showing P&L per asset
-  - Trade Outcomes: Pure Wins (20.2%), Fee Eroded (17.6%), Pure Losses (62.2%)
-  - Directional Accuracy: 37.8% (matches header Precisión metric)
-- **FEAT-008 Correlation Heatmap**: API `/api/metrics/correlation` with hourly P&L correlation
-  - Per-symbol performance metrics (trades, win rate, P&L, volatility)
-  - Correlation matrix using hourly buckets for statistical validity
-  - Diversification score (0-100) based on average correlation
-- **FEAT-009 Time Heatmap**: API `/api/metrics/time-heatmap` with P&L by hour/day
-  - 7x24 heatmap grid showing optimal trading times
-  - Best/worst time identification with P&L
-- **FEAT-010 Regime Detection Dashboard**: API `/api/regime/dashboard` with regime analysis
-  - Current Regime: BULLISH/BEARISH/RANGING inferred from EMA signals
-  - Confidence & Coherence metrics
-  - Veto activity summary (24h) with capital protected
-  - Signal distribution visualization
-  - System status message explaining behavior (DEFENSIVE/ANALYZING/PROTECTIVE/MONITORING)
-  - Data source: 48K+ shadow_trade_events since Jan 9
-- **FEAT-011 Learning Engine Insights**: API `/api/learning/insights` with Shadow Portfolio analysis
-  - Veto effectiveness by type (BLACK_SWAN, COHERENCE_GATE, MC, RMS)
-  - Threshold analysis with avg EMA/coherence scores
-  - Top vetoed symbols
-  - Calibration recommendations
-- Reference: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
-- **Dashboard now has 23/23 widgets operational** (P0: 3/3, P1: 5/5, P2: 6/6)
-
-### Jan 13, 2026: ADR-003 Identity Alignment
-- **SYSTEM IDENTITY** in `ai_prompts.py` updated to "risk control infrastructure" (was "algorithmic trading system")
-- **BLACKLISTED PHRASES** added: "generar rendimientos", "rendimientos consistentes", "sistema de trading", "bot de trading"
-- **MASTER_SYSTEM_PROMPT** ROLE changed from "trading advisor" to "risk management advisor"
-- **Template response** for "¿Qué es OMNIX?" added in Spanish/English following Mode 1 Positioning
-- Reference: `docs/reference/adr/ADR-003-official-positioning.md`, `docs/reference/omnix_official_language.md`
+The dashboard displays a Dual Win Rate Framework, enriched AI context with granular breakdowns, a System Health Score (0-100), Live Status widget, Quick Insights, Calibration Progress (4-phase tracker), and Recommended Actions. Key dashboard credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked", distinguishing "Market Trend" from "Trading Regime", and providing a timeline for Calibration Progress. Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights.
 
 ## External Dependencies
 
