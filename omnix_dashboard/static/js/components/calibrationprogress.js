@@ -36,18 +36,25 @@ var CalibrationProgressWidget = (function() {
         var overallProgress = data.overall_progress || 0;
         var status = data.status || 'CALIBRATING';
         var currentPhase = data.current_phase || 1;
+        var timeline = data.timeline || {};
         
         var statusClass = status === 'READY' ? 'ready' : 'calibrating';
+        var currentDay = timeline.current_day || 0;
+        var nextMilestone = timeline.next_milestone || 'Day 30 Review';
+        var day30Review = timeline.day30_review || '2026-02-13';
         
         var phasesHtml = phases.map(function(phase) {
             var phaseClass = phase.complete ? 'complete' : (phase.id === currentPhase ? 'active' : 'pending');
             var icon = getIcon(phase.icon, phase.complete);
+            var etaHtml = phase.eta && !phase.complete 
+                ? '<span class="phase-eta" title="ETA: ' + (phase.target_date || '') + '">' + phase.eta + '</span>'
+                : '';
             
             return '<div class="calibration-phase ' + phaseClass + '">' +
                 '<div class="phase-header">' +
                     '<div class="phase-icon">' + icon + '</div>' +
                     '<div class="phase-info">' +
-                        '<div class="phase-name">' + phase.name + '</div>' +
+                        '<div class="phase-name">' + phase.name + ' ' + etaHtml + '</div>' +
                         '<div class="phase-desc">' + phase.description + '</div>' +
                     '</div>' +
                     '<div class="phase-pct">' + Math.round(phase.progress) + '%</div>' +
@@ -57,6 +64,11 @@ var CalibrationProgressWidget = (function() {
                 '</div>' +
             '</div>';
         }).join('');
+        
+        var timelineHtml = '<div class="calibration-timeline">' +
+            '<span class="timeline-day">📅 Day ' + currentDay + '</span>' +
+            '<span class="timeline-next" title="Next review: ' + day30Review + '">→ ' + nextMilestone + '</span>' +
+        '</div>';
         
         container.innerHTML = 
             '<div class="calibration-container">' +
@@ -70,6 +82,7 @@ var CalibrationProgressWidget = (function() {
                         '<span class="overall-label">Overall</span>' +
                     '</div>' +
                 '</div>' +
+                timelineHtml +
                 '<div class="calibration-phases">' + phasesHtml + '</div>' +
             '</div>';
     }

@@ -228,7 +228,7 @@ const AdaptiveEngine = (function() {
                 ${renderMainDriver(mainDriver)}
                 
                 <div class="widget-section">
-                    <div class="section-title">Market Regime</div>
+                    <div class="section-title">Trading Regime <span class="section-hint" title="Basado en win rate del sistema. Diferente de 'Tendencia de Mercado' que mide dirección del precio.">(Performance)</span></div>
                     ${renderRegimeBadge(regime.current, regime.confidence)}
                 </div>
                 

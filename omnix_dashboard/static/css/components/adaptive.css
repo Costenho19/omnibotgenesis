@@ -64,6 +64,16 @@
     margin-bottom: 8px;
 }
 
+.adaptive-widget .section-hint {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: #6b7a9a;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: help;
+    opacity: 0.8;
+}
+
 .adaptive-regime-badge {
     display: flex;
     align-items: center;

@@ -1174,6 +1174,11 @@ def calibration_progress():
         overall_progress = (phase1_progress * 0.25 + phase2_progress * 0.25 + 
                           phase3_progress * 0.35 + phase4_progress * 0.15)
         
+        from datetime import timedelta
+        start_date = datetime(2026, 1, 9)
+        now = datetime.now()
+        days_since_start = (now - start_date).days
+        
         phases = [
             {
                 'id': 1,
@@ -1181,7 +1186,9 @@ def calibration_progress():
                 'description': f'{total_trades}/100 trades collected',
                 'progress': round(phase1_progress, 1),
                 'complete': phase1_complete,
-                'icon': 'database'
+                'icon': 'database',
+                'eta': '~Day 30' if not phase1_complete else 'Complete',
+                'target_date': '2026-02-08' if not phase1_complete else None
             },
             {
                 'id': 2,
@@ -1189,7 +1196,9 @@ def calibration_progress():
                 'description': 'Identifying profitable patterns',
                 'progress': round(phase2_progress, 1),
                 'complete': phase2_complete,
-                'icon': 'cpu'
+                'icon': 'cpu',
+                'eta': '~Day 45' if not phase2_complete else 'Complete',
+                'target_date': '2026-02-23' if not phase2_complete else None
             },
             {
                 'id': 3,
@@ -1197,7 +1206,9 @@ def calibration_progress():
                 'description': f'Win rate: {win_rate_dir:.1f}% → 40% target',
                 'progress': round(phase3_progress, 1),
                 'complete': phase3_complete,
-                'icon': 'sliders'
+                'icon': 'sliders',
+                'eta': '~Day 60' if not phase3_complete else 'Complete',
+                'target_date': '2026-03-10' if not phase3_complete else None
             },
             {
                 'id': 4,
@@ -1205,7 +1216,9 @@ def calibration_progress():
                 'description': 'Ready for production trading',
                 'progress': round(phase4_progress, 1),
                 'complete': deployment_ready,
-                'icon': 'rocket'
+                'icon': 'rocket',
+                'eta': '~Day 90' if not deployment_ready else 'Complete',
+                'target_date': '2026-04-09' if not deployment_ready else None
             }
         ]
         
@@ -1227,6 +1240,13 @@ def calibration_progress():
                 'total_trades': total_trades,
                 'win_rate': round(win_rate_dir, 1),
                 'target_win_rate': 40
+            },
+            'timeline': {
+                'start_date': '2026-01-09',
+                'current_day': days_since_start,
+                'day30_review': '2026-02-13',
+                'day60_target': '2026-03-10',
+                'next_milestone': 'Day 30 Review' if days_since_start < 30 else 'Day 60 Optimization'
             },
             'last_updated': datetime.now().isoformat()
         })

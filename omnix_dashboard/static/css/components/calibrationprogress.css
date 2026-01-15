@@ -195,3 +195,37 @@
     font-size: 11px;
     color: var(--color-danger, #ff6b6b);
 }
+
+.calibration-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    background: rgba(0, 212, 170, 0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+.timeline-day {
+    font-size: 11px;
+    font-weight: 600;
+    color: #00d4aa;
+}
+
+.timeline-next {
+    font-size: 10px;
+    color: var(--text-muted, #64748b);
+    cursor: help;
+}
+
+.phase-eta {
+    font-size: 9px;
+    font-weight: 400;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    cursor: help;
+}

@@ -360,3 +360,11 @@
     font-size: 12px;
     color: var(--accent-red);
 }
+
+.regime-subtitle {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-muted);
+    cursor: help;
+    opacity: 0.7;
+}

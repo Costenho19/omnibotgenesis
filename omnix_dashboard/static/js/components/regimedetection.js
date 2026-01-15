@@ -134,7 +134,8 @@
                 <div class="regime-header">
                     <div class="regime-title">
                         <span class="regime-icon">🎯</span>
-                        <span>Detección de Régimen</span>
+                        <span>Tendencia de Mercado</span>
+                        <span class="regime-subtitle" title="Basado en señales EMA y flujo de capital. Diferente del 'Trading Regime' que mide nuestro performance.">(EMA Signals)</span>
                     </div>
                     <div class="regime-badge ${statusCfg.class}">${statusCfg.text}</div>
                 </div>
