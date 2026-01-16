@@ -111,12 +111,19 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 16, 2026: Dashboard Day Calculation Fix
+- **PROBLEMA**: Widget System Calibration mostraba "Day 7" en lugar del día correcto
+- **CAUSA**: start_date estaba configurado como 9 enero en lugar de 15 enero (Day 1 oficial)
+- **CORRECCIÓN**: start_date = 15 enero 2026, fórmula = `(now - start_date).days + 1`
+- **FECHAS ACTUALIZADAS**: Day 30 Review = 14 Feb 2026, Day 60 = 16 Mar 2026, Day 90 = 15 Abr 2026
+- **ARCHIVOS**: `omnix_dashboard/blueprints/core.py` (endpoint calibration-progress)
+
 ### Jan 15, 2026: ADR-012 Learning Baseline Freeze & Official Day 1
 - **DECLARACIÓN**: 15 de Enero 2026 = Day 1 oficial del track record
 - **LEARNING BASELINE**: Nov 2025 - Jan 14, 2026 (119 trades, LEGACY_ESTIMATED)
 - **TRACK RECORD OFICIAL**: Jan 15, 2026+ (telemetría REAL, thresholds calibrados)
 - **MÉTRICAS**: Reset trade count/WR desde Day 1, carry-over balance/config
-- **DAY 30 REVIEW**: 13 Feb 2026 (meta: 100 trades, WR >45%)
+- **DAY 30 REVIEW**: 14 Feb 2026 (meta: 100 trades, WR >45%)
 - **REFERENCIA**: `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
 
 ### Jan 15, 2026: ADR-011 Legacy Telemetry Backfill

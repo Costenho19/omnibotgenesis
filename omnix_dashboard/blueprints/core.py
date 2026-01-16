@@ -1241,9 +1241,9 @@ def calibration_progress():
                           phase3_progress * 0.35 + phase4_progress * 0.15)
         
         from datetime import timedelta
-        start_date = datetime(2026, 1, 9)
+        start_date = datetime(2026, 1, 15)
         now = datetime.now()
-        days_since_start = (now - start_date).days
+        days_since_start = max(1, (now - start_date).days + 1)
         
         phases = [
             {
@@ -1254,7 +1254,7 @@ def calibration_progress():
                 'complete': phase1_complete,
                 'icon': 'database',
                 'eta': '~Day 30' if not phase1_complete else 'Complete',
-                'target_date': '2026-02-08' if not phase1_complete else None
+                'target_date': '2026-02-14' if not phase1_complete else None
             },
             {
                 'id': 2,
@@ -1264,7 +1264,7 @@ def calibration_progress():
                 'complete': phase2_complete,
                 'icon': 'cpu',
                 'eta': '~Day 45' if not phase2_complete else 'Complete',
-                'target_date': '2026-02-23' if not phase2_complete else None
+                'target_date': '2026-03-01' if not phase2_complete else None
             },
             {
                 'id': 3,
@@ -1274,7 +1274,7 @@ def calibration_progress():
                 'complete': phase3_complete,
                 'icon': 'sliders',
                 'eta': '~Day 60' if not phase3_complete else 'Complete',
-                'target_date': '2026-03-10' if not phase3_complete else None
+                'target_date': '2026-03-16' if not phase3_complete else None
             },
             {
                 'id': 4,
@@ -1284,7 +1284,7 @@ def calibration_progress():
                 'complete': deployment_ready,
                 'icon': 'rocket',
                 'eta': '~Day 90' if not deployment_ready else 'Complete',
-                'target_date': '2026-04-09' if not deployment_ready else None
+                'target_date': '2026-04-15' if not deployment_ready else None
             }
         ]
         
@@ -1308,10 +1308,10 @@ def calibration_progress():
                 'target_win_rate': 40
             },
             'timeline': {
-                'start_date': '2026-01-09',
+                'start_date': '2026-01-15',
                 'current_day': days_since_start,
-                'day30_review': '2026-02-13',
-                'day60_target': '2026-03-10',
+                'day30_review': '2026-02-14',
+                'day60_target': '2026-03-16',
                 'next_milestone': 'Day 30 Review' if days_since_start < 30 else 'Day 60 Optimization'
             },
             'last_updated': datetime.now().isoformat()
