@@ -156,7 +156,13 @@ def get_response_word_limit(question: str) -> Optional[int]:
         'institutional investor', 'inversor institucional', 'hedge fund',
         # Compliance/serious inquiry
         'sharia compliant', 'sharia-compliant', 'sec compliance', 'regulatory compliance',
-        'jurisdicción para live', 'jurisdiction for live'
+        'jurisdicción para live', 'jurisdiction for live',
+        # Technical analysis queries (ADR-013 - triggers unlimited + SQL data)
+        'expectancy segmentada', 'segmented expectancy',
+        'expectancy por régimen', 'expectancy by regime',
+        'fee breakdown', 'breakdown de fees', 'desglose de fees',
+        'pre vs post hotfix', 'pre hotfix', 'post hotfix',
+        'validar el rendimiento', 'validate performance'
     ]
     if any(indicator in question_lower for indicator in investor_indicators):
         return None  # UNLIMITED - investor questions get full answers
@@ -277,19 +283,9 @@ def enforce_brevity(response: str, max_words: Optional[int], offer_more: bool = 
         # Otherwise add ellipsis
         truncated = truncated.rstrip('.,!?:;') + '...'
     
-    # Offer more details if requested (language-aware per language policy)
-    if offer_more and len(words) > max_words:
-        # Auto-detect language from response content
-        if language == 'auto':
-            spanish_indicators = ['el ', 'la ', 'los ', 'las ', 'de ', 'que ', 'en ']
-            response_lower = response.lower()
-            spanish_count = sum(1 for ind in spanish_indicators if ind in response_lower)
-            language = 'es' if spanish_count >= 2 else 'en'
-        
-        if language == 'es':
-            truncated += ' [Más detalles disponibles]'
-        else:
-            truncated += ' [More details available]'
+    # NOTE: "[Más detalles disponibles]" removed per user request (Jan 16, 2026)
+    # The truncation still happens but without the visible indicator
+    # Users can ask for more details naturally if needed
     
     return truncated
 
