@@ -43,7 +43,7 @@ class AudienceContext:
     """Contexto de audiencia para filtrar respuestas AI"""
     audience_type: AudienceType
     user_id: Optional[str] = None
-    max_words: int = 150  # Default limit (ADR-009 Brevity First - Updated Jan 16 for conversational tone)
+    max_words: int = 250  # Default limit (Updated Jan 16: más palabras per user request)
     
     @property
     def is_admin(self) -> bool:
@@ -216,30 +216,30 @@ def get_response_word_limit(question: str) -> Optional[int]:
     dd_indicators = ['inversor', 'investor', 'auditoría', 'audit', 
                     'detalle completo', 'full details']
     if any(q in question_lower for q in dd_indicators):
-        return 350  # High limit for investor context
+        return 500  # Updated Jan 16: más espacio para contexto inversor
     
     # PRIORITY 3: Performance/metrics questions
     metrics_indicators = ['win rate', 'rendimiento', 'balance', 'p&l', 'pnl',
                          'métricas', 'metricas', 'metrics', 'performance',
                          'ganancias', 'pérdidas', 'profit', 'loss', 'track record']
     if any(q in question_lower for q in metrics_indicators):
-        return 200  # Updated Jan 16: More space for metrics with context
+        return 350  # Updated Jan 16: más palabras per user request
     
     # PRIORITY 4: Technical/architecture questions
     technical_indicators = ['cómo funciona', 'como funciona', 'arquitectura', 
                            'algoritmo', 'explica', 'explain', 'how does',
                            'coherence', 'monte carlo', 'kalman', 'veto']
     if any(q in question_lower for q in technical_indicators):
-        return 180  # Updated Jan 16: Conversational technical depth
+        return 300  # Updated Jan 16: más profundidad técnica
     
     # PRIORITY 5: Simple yes/no questions (short questions with binary indicators)
     yes_no_indicators = ['funciona', 'opera', 'tiene', 'puede', 'es posible', 
                          'soporta', 'works', 'does it', 'can it', 'is it']
     if word_count < 10 and any(q in question_lower for q in yes_no_indicators):
-        return 80  # Updated Jan 16: Space for friendly response (was 30)
+        return 150  # Updated Jan 16: respuestas amigables más completas
     
     # Default operational - conversational tone
-    return 120  # Updated Jan 16: Space for friendly interaction (was 50)
+    return 200  # Updated Jan 16: más palabras per user request
 
 
 def enforce_brevity(response: str, max_words: Optional[int], offer_more: bool = True, language: str = 'auto') -> str:
