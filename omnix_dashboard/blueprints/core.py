@@ -2334,7 +2334,7 @@ def _calculate_opportunity_tracker(conn):
                 'current_day': current_day,
                 'total_days': 30,
                 'review_date': review_date.strftime('%Y-%m-%d'),
-                'review_date_display': 'Feb 13, 2026'
+                'review_date_display': 'Feb 14, 2026'
             },
             'recommendation': recommendation,
             'near_miss': {
@@ -2351,7 +2351,7 @@ def _calculate_opportunity_tracker(conn):
             'missed': {'count': 0, 'est_profit': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'avoided': {'count': 0, 'est_loss': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Error en cálculo'},
-            'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-13', 'review_date_display': 'Feb 13, 2026'},
+            'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-14', 'review_date_display': 'Feb 14, 2026'},
             'recommendation': 'CONTINUE_MONITORING',
             'near_miss': {'count': 0, 'avg_ema': 0, 'avg_coherence': 0, 'conditions': 'N/A'}
         }
