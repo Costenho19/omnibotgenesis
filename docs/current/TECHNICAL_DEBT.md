@@ -7,6 +7,32 @@
 
 ---
 
+## ADR-009 Conversational Tone Update (Jan 16, 2026)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** Respuestas del bot eran demasiado cortantes y frías. Límites de 30-50 palabras no permitían interacción amena.
+
+**Cambios Implementados:**
+
+| Tipo | Antes | Después | Razón |
+|------|-------|---------|-------|
+| Simple yes/no | 30 | 80 | Espacio para respuesta amigable |
+| Operacional | 50 | 120 | Conversación natural |
+| Técnico | 100 | 180 | Explicaciones con personalidad |
+| Métricas | 150 | 200 | Contexto honesto completo |
+| Due Diligence | 300 | 350 | Respuestas completas para inversores |
+| AudienceContext default | 100 | 150 | Nuevo baseline conversacional |
+
+**Archivos Modificados:**
+- `docs/reference/adr/ADR-009-brevity-first-policy.md` - Nuevos límites documentados
+- `omnix_services/ai_service/investor_responses.py` - `get_response_word_limit()` y `AudienceContext`
+- `omnix_services/ai_service/ai_prompts.py` - `MASTER_SYSTEM_PROMPT` con tono ameno
+
+**Principio Mantenido:** Respuesta directa primero, sin "Caballero Harold", sin rollos filosóficos.
+
+---
+
 ## AI Brevity Detection Fix (Jan 16, 2026)
 
 **Status:** ✅ COMPLETED

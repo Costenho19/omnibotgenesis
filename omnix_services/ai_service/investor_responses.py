@@ -43,7 +43,7 @@ class AudienceContext:
     """Contexto de audiencia para filtrar respuestas AI"""
     audience_type: AudienceType
     user_id: Optional[str] = None
-    max_words: int = 100  # Default limit (ADR-009 Brevity First)
+    max_words: int = 150  # Default limit (ADR-009 Brevity First - Updated Jan 16 for conversational tone)
     
     @property
     def is_admin(self) -> bool:
@@ -108,8 +108,9 @@ def create_audience_context(user_id: str, admin_ids: set) -> AudienceContext:
     
     audience_type = AudienceType.ADMIN if is_admin else AudienceType.PUBLIC
     # ADR-009: Brevity First - limit word count based on audience
-    # Admins get more detailed responses, public gets concise answers
-    max_words = 300 if is_admin else 100
+    # Updated Jan 16: More conversational limits for amene interaction
+    # Admins get more detailed responses, public gets conversational answers
+    max_words = 350 if is_admin else 150
     
     return AudienceContext(
         audience_type=audience_type,
@@ -122,13 +123,13 @@ def get_response_word_limit(question: str) -> Optional[int]:
     """
     ADR-009: Determine max words based on question complexity.
     
-    Priority order:
-    1. Explicit explanation requests → No limit (None)
-    2. Due diligence → 300 words
-    3. Metrics/performance → 150 words
-    4. Technical questions → 100 words
-    5. Simple yes/no → 30 words
-    6. Default operational → 50 words
+    Priority order (Updated Jan 16 for conversational tone):
+    1. Explicit explanation/list requests → No limit (None)
+    2. Due diligence → 350 words
+    3. Metrics/performance → 200 words
+    4. Technical questions → 180 words
+    5. Simple yes/no → 80 words
+    6. Default operational → 120 words
     
     Args:
         question: User's question text
@@ -175,30 +176,30 @@ def get_response_word_limit(question: str) -> Optional[int]:
     dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
                     'audit', 'detalle completo', 'full details']
     if any(q in question_lower for q in dd_indicators):
-        return 300
+        return 350  # Updated Jan 16: More space for comprehensive investor responses
     
     # PRIORITY 3: Performance/metrics questions
     metrics_indicators = ['win rate', 'rendimiento', 'balance', 'p&l', 'pnl',
                          'métricas', 'metricas', 'metrics', 'performance',
                          'ganancias', 'pérdidas', 'profit', 'loss', 'track record']
     if any(q in question_lower for q in metrics_indicators):
-        return 150
+        return 200  # Updated Jan 16: More space for metrics with context
     
     # PRIORITY 4: Technical/architecture questions
     technical_indicators = ['cómo funciona', 'como funciona', 'arquitectura', 
                            'algoritmo', 'explica', 'explain', 'how does',
                            'coherence', 'monte carlo', 'kalman', 'veto']
     if any(q in question_lower for q in technical_indicators):
-        return 100
+        return 180  # Updated Jan 16: Conversational technical depth
     
     # PRIORITY 5: Simple yes/no questions (short questions with binary indicators)
     yes_no_indicators = ['funciona', 'opera', 'tiene', 'puede', 'es posible', 
                          'soporta', 'works', 'does it', 'can it', 'is it']
     if word_count < 10 and any(q in question_lower for q in yes_no_indicators):
-        return 30
+        return 80  # Updated Jan 16: Space for friendly response (was 30)
     
-    # Default operational
-    return 50
+    # Default operational - conversational tone
+    return 120  # Updated Jan 16: Space for friendly interaction (was 50)
 
 
 def enforce_brevity(response: str, max_words: Optional[int], offer_more: bool = True, language: str = 'auto') -> str:

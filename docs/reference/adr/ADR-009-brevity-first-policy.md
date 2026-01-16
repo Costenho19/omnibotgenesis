@@ -37,12 +37,14 @@ Implement **BREVITY FIRST** policy across all AI responses:
 
 | Question Type | Max Words | Example |
 |--------------|-----------|---------|
-| **Explanation Request** | **UNLIMITED** | "Explícame cómo funciona" → Full detailed response |
-| Simple yes/no | 30 | "¿Funciona 24/7?" → "Sí, opera 24/7 en Railway." |
-| Operational | 50 | "¿Cómo calcula el riesgo?" → Brief answer + 1 key point |
-| Technical | 100 | Architecture questions with specific details |
-| Performance/Metrics | 150 | Full metrics with honest framing |
-| Due Diligence | 300 | Comprehensive investor response |
+| **Explanation/Lists** | **UNLIMITED** | "Explícame cómo funciona", "dime 10 cosas" → Full response |
+| Simple yes/no | 80 | "¿Funciona 24/7?" → "Sí, opera 24/7." + brief context |
+| Operational | 120 | "¿Cómo calcula el riesgo?" → Answer + friendly context |
+| Technical | 180 | Architecture questions with conversational depth |
+| Performance/Metrics | 200 | Full metrics with honest framing |
+| Due Diligence | 350 | Comprehensive investor response |
+
+> **UPDATE (Jan 16, 2026):** Limits raised to allow conversational, friendly responses while maintaining brevity. Original 30-50 word limits were too restrictive for pleasant interaction.
 
 ### Adaptive Behavior: User-Driven Detail Level
 
@@ -57,9 +59,10 @@ When the user explicitly requests an explanation, the system removes word limits
 - "elaborate", "walk me through", "break it down"
 
 **Behavior:**
-- User asks simple question → Short response (30-50 words)
-- User says "explícame más" → Full response without limit
+- User asks simple question → Conversational response (80-120 words)
+- User says "explícame más" or requests lists → Full response without limit
 - This ensures brevity by default but allows depth when requested
+- Responses should be friendly and pleasant, not cold or robotic
 
 ### Prohibited Patterns
 
@@ -88,13 +91,16 @@ Add BREVITY FIRST section:
 ```
 ## BREVITY FIRST POLICY [CRITICAL - ADR-009]
 
-**RULE:** Answer the question directly in 1-2 sentences FIRST.
+**RULE:** Answer the question directly in 1-2 sentences FIRST. Then add friendly context.
 
-WORD LIMITS:
-- Simple questions (yes/no): 30 words max
-- Operational questions: 50 words max
-- Technical questions: 100 words max
-- Performance/metrics: 150 words max
+WORD LIMITS (Updated Jan 16, 2026 - Conversational Focus):
+- Simple questions (yes/no): 80 words max
+- Operational questions: 120 words max
+- Technical questions: 180 words max
+- Performance/metrics: 200 words max
+- Explanation/list requests: UNLIMITED
+
+TONE: Be conversational and friendly. Not cold or robotic.
 
 PROHIBITED:
 - "Caballero", "Estimado", flowery salutations
@@ -104,8 +110,9 @@ PROHIBITED:
 
 EXAMPLE - CORRECT:
 Q: "¿Las cuentas de fondeo se operan igual?"
-A: "Sí. El motor aplica los mismos vetos, gates y protección de capital. 
-    La única diferencia es que el dinero no es real todavía."
+A: "Sí, exactamente igual. El motor aplica los mismos vetos, gates y protección 
+    de capital en ambos casos. La única diferencia es que el dinero no es real 
+    todavía, lo que nos permite validar sin riesgo. ¿Tienes alguna otra pregunta?"
 
 EXAMPLE - WRONG:
 Q: "¿Las cuentas de fondeo se operan igual?"
@@ -121,26 +128,32 @@ Add to intent analysis:
 ```python
 def get_response_word_limit(question: str) -> Optional[int]:
     """Determine max words based on question complexity.
-    Returns None for unlimited (explanation requests)."""
+    Returns None for unlimited (explanation/list requests).
+    Updated Jan 16: Conversational limits."""
     question_lower = question.lower()
     
-    # PRIORITY 1: Explicit explanation requests → NO LIMIT
+    # PRIORITY 1: Explicit explanation/list requests → NO LIMIT
     explanation_indicators = ['explícame', 'cuéntame más', 'dame detalles',
-                              'tell me more', 'explain in detail', 'elaborate']
+                              'enumera', 'cuales son', 'dime todas',
+                              'tell me more', 'explain in detail', 'list all']
     if any(ind in question_lower for ind in explanation_indicators):
+        return None  # Unlimited
+    
+    # Numbered list requests (e.g., "dime 10 cosas")
+    if re.search(r'(dime|dame|give me|tell me)\s+\d+\s+', question_lower):
         return None  # Unlimited
     
     # Simple yes/no questions
     if any(q in question_lower for q in ['funciona', 'opera', 'tiene', 'puede']):
         if len(question.split()) < 10:
-            return 30
+            return 80  # Updated from 30
     
     # Performance/metrics
     if any(q in question_lower for q in ['win rate', 'rendimiento', 'balance']):
-        return 150
+        return 200  # Updated from 150
     
     # Default operational
-    return 50
+    return 120  # Updated from 50
 ```
 
 ### 3. Response Post-Processing
@@ -210,5 +223,6 @@ def enforce_brevity(response: str, max_words: int) -> str:
 
 | Date | Change |
 |------|--------|
+| 2026-01-16 | **Conversational Tone Update:** Raised all word limits (30→80, 50→120, 100→180, 150→200, 300→350) to allow friendly, amene responses while maintaining brevity. Added list/enumeration detection. |
 | 2026-01-15 | Added adaptive behavior: explanation requests get unlimited words |
 | 2026-01-15 | Initial adoption after investor communication issue identified |

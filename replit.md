@@ -111,6 +111,15 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 16, 2026: ADR-009 Conversational Tone Update
+- **PROBLEMA**: Respuestas del bot muy cortantes y frías (límites 30-50 palabras insuficientes)
+- **SOLUCIÓN**: Nuevos límites más generosos para interacción amena
+- **LÍMITES ACTUALIZADOS**: Simple 80, Operacional 120, Técnico 180, Métricas 200, Due Diligence 350
+- **DETECCIÓN MEJORADA**: Ahora detecta "dime 10 cosas", "enumera", "cuales son" → ilimitado
+- **TONO**: Conversacional y amigable, sin ser frío ni robótico
+- **ARCHIVOS**: `investor_responses.py`, `ai_prompts.py`, `ADR-009-brevity-first-policy.md`
+- **REFERENCIA**: `docs/current/TECHNICAL_DEBT.md`
+
 ### Jan 16, 2026: Railway Production Hotfixes
 - **FIX 1**: CacheAdapter faltaba método `increment()` para rate limiter (V7.0 hexagonal)
 - **FIX 2**: KrakenAPIClient sin `.client.fetch_ticker()` - ahora usa `get_ticker('XBTUSD')` con parsing Kraken nativo
