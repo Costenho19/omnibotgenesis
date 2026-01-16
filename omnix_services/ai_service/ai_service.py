@@ -293,8 +293,7 @@ class ConversationalAIService:
             
             # 7.5 ADR-009: Brevity First - Enforce word limits
             try:
-                # Get admin IDs from settings
-                from omnix_config.settings import settings
+                # Get admin IDs from settings (using global import)
                 admin_ids = settings.telegram.admin_ids if hasattr(settings, 'telegram') and hasattr(settings.telegram, 'admin_ids') else set()
                 audience_context = create_audience_context(str(chat_id), admin_ids)
                 styled_response = format_response_with_honest_framing(
