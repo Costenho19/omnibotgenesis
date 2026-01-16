@@ -123,9 +123,12 @@ def get_response_word_limit(question: str) -> Optional[int]:
     """
     ADR-009: Determine max words based on question complexity.
     
-    Priority order (Updated Jan 16 for conversational tone):
-    1. Explicit explanation/list requests → No limit (None)
-    2. Due diligence → 350 words
+    Priority order (Updated Jan 16 - Investor questions get FULL responses):
+    0. INVESTOR/DUE DILIGENCE → UNLIMITED (family office, AUM, seed, pre-money, etc.)
+    0b. Multiple numbered questions (3+) → UNLIMITED
+    0c. Long questions (100+ words) → UNLIMITED
+    1. Explicit explanation/list requests → UNLIMITED
+    2. Short investor context → 350 words
     3. Metrics/performance → 200 words
     4. Technical questions → 180 words
     5. Simple yes/no → 80 words
@@ -139,6 +142,36 @@ def get_response_word_limit(question: str) -> Optional[int]:
     """
     question_lower = question.lower().strip()
     word_count = len(question.split())
+    
+    # PRIORITY 0: INVESTOR DUE DILIGENCE → ALWAYS NO LIMIT
+    # When investors ask serious questions, they deserve complete answers
+    # This detects institutional investor context requiring full responses
+    investor_indicators = [
+        # Institutional investor signals (specific terms)
+        'family office', 'aum', 'seed round', 'pre-money', 'post-money',
+        'due diligence', 'diligence examen', 'evaluando omnix', 'evaluating omnix',
+        'preguntas obligatorias', 'mandatory questions', 'sin respuestas vagas',
+        # Investment terms (specific, not generic)
+        'equity stake', 'valuation', 'valoración', 'valoracion', 'term sheet',
+        'institutional investor', 'inversor institucional', 'hedge fund',
+        # Compliance/serious inquiry
+        'sharia compliant', 'sharia-compliant', 'sec compliance', 'regulatory compliance',
+        'jurisdicción para live', 'jurisdiction for live'
+    ]
+    if any(indicator in question_lower for indicator in investor_indicators):
+        return None  # UNLIMITED - investor questions get full answers
+    
+    # PRIORITY 0b: Multiple numbered questions → NO LIMIT
+    # If user asks "1. xxx 2. yyy 3. zzz", they want complete answers
+    # Detect patterns like "1." "2." "3." or "1)" "2)" "3)" in the question
+    numbered_questions_pattern = r'(\d+[\.\)]\s*.*?){3,}'  # 3+ numbered items
+    if re.search(numbered_questions_pattern, question, re.DOTALL):
+        return None  # UNLIMITED - structured multi-part questions
+    
+    # PRIORITY 0c: Long detailed questions (100+ words) → NO LIMIT
+    # If someone writes a detailed question, they expect a detailed answer
+    if word_count >= 100:
+        return None  # UNLIMITED - extensive question gets extensive answer
     
     # PRIORITY 1: Explicit explanation requests → NO LIMIT
     # User explicitly asks for detailed explanation OR lists/enumerations
@@ -172,11 +205,12 @@ def get_response_word_limit(question: str) -> Optional[int]:
     if re.search(numbered_list_pattern, question_lower):
         return None  # No limit - user asks for specific number of items
     
-    # PRIORITY 2: Due diligence (investor context)
-    dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
-                    'audit', 'detalle completo', 'full details']
+    # PRIORITY 2: Due diligence context (shorter investor questions)
+    # These get high limit but not unlimited (for quick investor questions)
+    dd_indicators = ['inversor', 'investor', 'auditoría', 'audit', 
+                    'detalle completo', 'full details']
     if any(q in question_lower for q in dd_indicators):
-        return 350  # Updated Jan 16: More space for comprehensive investor responses
+        return 350  # High limit for investor context
     
     # PRIORITY 3: Performance/metrics questions
     metrics_indicators = ['win rate', 'rendimiento', 'balance', 'p&l', 'pnl',

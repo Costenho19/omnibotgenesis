@@ -7,6 +7,32 @@
 
 ---
 
+## ADR-009 Investor Due Diligence Fix (Jan 16, 2026)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** Respuestas del bot se truncaban para preguntas de due diligence de inversores. Un family office envió 5 preguntas técnicas detalladas y recibió una respuesta cortada.
+
+**Causa Raíz:** Los límites de 350 palabras para "due diligence" eran insuficientes para preguntas estructuradas con múltiples puntos.
+
+**Fix:** Nueva detección PRIORITY 0 en `get_response_word_limit()`:
+
+| Trigger | Acción |
+|---------|--------|
+| Investor keywords (family office, AUM, seed, pre-money, etc.) | UNLIMITED |
+| Compliance keywords (sharia, SEC, regulatory, jurisdiction) | UNLIMITED |
+| Multiple numbered questions (3+ items: 1. 2. 3.) | UNLIMITED |
+| Long questions (100+ words) | UNLIMITED |
+
+**Archivos Modificados:**
+- `omnix_services/ai_service/investor_responses.py` - Nueva detección Priority 0
+- `omnix_services/ai_service/ai_prompts.py` - MASTER_SYSTEM_PROMPT con sección investor
+- `docs/reference/adr/ADR-009-brevity-first-policy.md` - Nueva sección investor detection
+
+**Principio:** Inversores haciendo due diligence merecen respuestas COMPLETAS con datos, cálculos y justificaciones.
+
+---
+
 ## ADR-009 Conversational Tone Update (Jan 16, 2026)
 
 **Status:** ✅ COMPLETED

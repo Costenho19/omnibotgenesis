@@ -111,6 +111,13 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 16, 2026: ADR-009 Investor Due Diligence Fix
+- **PROBLEMA**: Respuestas truncadas para preguntas de due diligence de inversores (5+ preguntas técnicas)
+- **SOLUCIÓN**: Detección de contexto de inversor → respuesta SIN LÍMITE
+- **TRIGGERS ILIMITADOS**: family office, AUM, seed, pre-money, sharia, SEC, 3+ preguntas numeradas, 100+ palabras
+- **PRINCIPIO**: Inversores haciendo due diligence merecen respuestas COMPLETAS con datos y cálculos
+- **ARCHIVOS**: `investor_responses.py`, `ai_prompts.py`, `ADR-009-brevity-first-policy.md`
+
 ### Jan 16, 2026: ADR-009 Conversational Tone Update
 - **PROBLEMA**: Respuestas del bot muy cortantes y frías (límites 30-50 palabras insuficientes)
 - **SOLUCIÓN**: Nuevos límites más generosos para interacción amena
