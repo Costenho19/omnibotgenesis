@@ -270,6 +270,58 @@ class CacheAdapter:
         """
         return self.set(key, value, ttl_seconds)
     
+    def increment(self, key: str, amount: int = 1) -> Optional[int]:
+        """
+        Increment counter in cache.
+        
+        Required by RateLimiter for rate limiting operations.
+        Delegates to underlying RedisCache.increment().
+        
+        Args:
+            key: Cache key
+            amount: Amount to increment by (default 1)
+            
+        Returns:
+            New counter value, or None on error
+        """
+        self._request_count += 1
+        self._last_request = datetime.utcnow()
+        
+        cache = self._get_redis_cache()
+        if cache is None:
+            self._error_count += 1
+            return None
+        
+        try:
+            return cache.increment(key, amount)
+        except Exception as e:
+            logger.error(f"CacheAdapter: increment error for key '{key}': {e}")
+            self._error_count += 1
+            return None
+    
+    def get_ttl(self, key: str) -> int:
+        """
+        Get remaining TTL of key.
+        
+        Required by RateLimiter for rate limit reset time.
+        Delegates to underlying RedisCache.get_ttl().
+        
+        Args:
+            key: Cache key
+            
+        Returns:
+            Remaining TTL in seconds, or -1 on error
+        """
+        cache = self._get_redis_cache()
+        if cache is None:
+            return -1
+        
+        try:
+            return cache.get_ttl(key)
+        except Exception as e:
+            logger.error(f"CacheAdapter: get_ttl error for key '{key}': {e}")
+            return -1
+    
     def is_connected(self) -> bool:
         """Check if Redis is connected."""
         cache = self._get_redis_cache()

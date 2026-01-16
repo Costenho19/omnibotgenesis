@@ -111,17 +111,21 @@ class OMNIXRealContextProvider:
             if self.trading_service:
                 try:
                     if hasattr(self.trading_service, 'kraken_client') and self.trading_service.kraken_client:
-                        btc_ticker = self.trading_service.kraken_client.client.fetch_ticker('BTC/USD')
-                        result['btc_price'] = btc_ticker.get('last', 0)
-                        result['btc_24h_high'] = btc_ticker.get('high', 0)
-                        result['btc_24h_low'] = btc_ticker.get('low', 0)
-                        result['btc_volume'] = btc_ticker.get('baseVolume', 0)
-                        result['btc_change_24h'] = btc_ticker.get('percentage', 0)
+                        btc_ticker = self.trading_service.kraken_client.get_ticker('XBTUSD')
+                        if btc_ticker:
+                            result['btc_price'] = float(btc_ticker.get('c', [0])[0]) if btc_ticker.get('c') else 0
+                            result['btc_24h_high'] = float(btc_ticker.get('h', [0, 0])[1]) if btc_ticker.get('h') else 0
+                            result['btc_24h_low'] = float(btc_ticker.get('l', [0, 0])[1]) if btc_ticker.get('l') else 0
+                            result['btc_volume'] = float(btc_ticker.get('v', [0, 0])[1]) if btc_ticker.get('v') else 0
+                            last_price = float(btc_ticker.get('c', [0])[0]) if btc_ticker.get('c') else 0
+                            open_price = float(btc_ticker.get('o', 0)) if btc_ticker.get('o') else 0
+                            result['btc_change_24h'] = ((last_price - open_price) / open_price * 100) if open_price > 0 else 0
                         
-                        eth_ticker = self.trading_service.kraken_client.client.fetch_ticker('ETH/USD')
-                        result['eth_price'] = eth_ticker.get('last', 0)
-                        result['eth_24h_high'] = eth_ticker.get('high', 0)
-                        result['eth_24h_low'] = eth_ticker.get('low', 0)
+                        eth_ticker = self.trading_service.kraken_client.get_ticker('ETHUSD')
+                        if eth_ticker:
+                            result['eth_price'] = float(eth_ticker.get('c', [0])[0]) if eth_ticker.get('c') else 0
+                            result['eth_24h_high'] = float(eth_ticker.get('h', [0, 0])[1]) if eth_ticker.get('h') else 0
+                            result['eth_24h_low'] = float(eth_ticker.get('l', [0, 0])[1]) if eth_ticker.get('l') else 0
                         
                         result['source'] = 'kraken_auth'
                     elif hasattr(self.trading_service, 'get_ticker'):
@@ -346,16 +350,8 @@ class OMNIXRealContextProvider:
                     COALESCE(AVG(profit_loss), 0) as avg_pnl
                 FROM paper_trading_trades
                 WHERE status = 'closed'
-                GROUP BY coherence_level
-                ORDER BY 
-                    CASE coherence_level
-                        WHEN 'CRITICAL' THEN 1
-                        WHEN 'POOR' THEN 2
-                        WHEN 'MODERATE' THEN 3
-                        WHEN 'GOOD' THEN 4
-                        WHEN 'EXCELLENT' THEN 5
-                        ELSE 6
-                    END
+                GROUP BY 1
+                ORDER BY 1
             """)
             
             result = []

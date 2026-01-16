@@ -1,9 +1,51 @@
 # OMNIX V6.5.4e Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** January 14, 2026  
+**Updated:** January 16, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Railway Production Hotfixes (Jan 16, 2026)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** 3 errores en Railway production logs impidiendo operación correcta del bot.
+
+### Fix 1: CacheAdapter.increment() Missing
+
+**Error:** `'CacheAdapter' object has no attribute 'increment'`
+
+**Causa Raíz:** V7.0 hexagonal `CacheAdapter` (activado con `USE_CACHE_PORT=true`) no implementaba método `increment()` requerido por `RateLimiter`. Legacy `RedisCache` sí lo tiene.
+
+**Fix:** Agregar métodos `increment()` y `get_ttl()` a CacheAdapter que delegan a RedisCache.
+
+**Archivo:** `src/omnix/infrastructure/adapters/cache_adapter.py`
+
+### Fix 2: KrakenAPIClient.client.fetch_ticker() Missing
+
+**Error:** `'KrakenAPIClient' object has no attribute 'client'`
+
+**Causa Raíz:** `real_data_provider.py` llamaba `.client.fetch_ticker('BTC/USD')` asumiendo interfaz CCXT, pero `KrakenAPIClient` es implementación custom con `requests`.
+
+**Fix:** Modificar `real_data_provider.py` para usar `kraken_client.get_ticker('XBTUSD')` directamente con parsing de formato Kraken nativo:
+- `'c'[0]` = last price
+- `'h'[1]` = 24h high
+- `'l'[1]` = 24h low
+- `'v'[1]` = 24h volume
+
+**Archivo:** `omnix_core/context/real_data_provider.py` (líneas 114-131)
+
+### Fix 3: PostgreSQL GROUP BY Alias Error
+
+**Error:** `column "coherence_level" does not exist`
+
+**Causa Raíz:** Query SQL usaba `GROUP BY coherence_level` pero `coherence_level` es un alias CASE, no columna. PostgreSQL no permite alias en GROUP BY.
+
+**Fix:** Cambiar `GROUP BY coherence_level` → `GROUP BY 1` (referencia por posición). También corregido ORDER BY para usar CASE numérico.
+
+**Archivo:** `omnix_core/context/real_data_provider.py` (líneas 354-363)
 
 ---
 

@@ -1,6 +1,6 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 15 de Enero 2026  
+**Fecha**: 16 de Enero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | 119 Trades | Balance $984,801.27 | ADR-007 Phase 1 ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
@@ -45,6 +45,24 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 ---
 
 ## Cambios Recientes
+
+### Railway Production Hotfixes (Jan 16, 2026)
+
+**Fixes aplicados a 3 errores críticos de producción:**
+
+| Error | Causa | Fix |
+|-------|-------|-----|
+| `CacheAdapter.increment` missing | V7.0 hexagonal adapter sin método `increment()` | Agregar método que delega a RedisCache |
+| `KrakenAPIClient.client` missing | Código asumía interfaz CCXT | Usar `get_ticker('XBTUSD')` con parsing Kraken nativo |
+| `coherence_level` column missing | PostgreSQL no permite alias en GROUP BY | Cambiar a `GROUP BY 1` |
+
+**Archivos modificados:**
+- `src/omnix/infrastructure/adapters/cache_adapter.py`
+- `omnix_core/context/real_data_provider.py`
+
+**Referencia:** `docs/current/TECHNICAL_DEBT.md`
+
+---
 
 ### ADR-012 Learning Baseline Freeze (Jan 15, 2026)
 

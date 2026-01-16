@@ -111,6 +111,13 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 
 ## Recent Changes
 
+### Jan 16, 2026: Railway Production Hotfixes
+- **FIX 1**: CacheAdapter faltaba método `increment()` para rate limiter (V7.0 hexagonal)
+- **FIX 2**: KrakenAPIClient sin `.client.fetch_ticker()` - ahora usa `get_ticker('XBTUSD')` con parsing Kraken nativo
+- **FIX 3**: Query SQL con `GROUP BY coherence_level` fallaba - cambiado a `GROUP BY 1`
+- **ARCHIVOS**: `src/omnix/infrastructure/adapters/cache_adapter.py`, `omnix_core/context/real_data_provider.py`
+- **REFERENCIA**: `docs/current/TECHNICAL_DEBT.md`
+
 ### Jan 16, 2026: Dashboard Day Calculation Fix
 - **PROBLEMA**: Widget System Calibration mostraba "Day 7" en lugar del día correcto
 - **CAUSA**: start_date estaba configurado como 9 enero en lugar de 15 enero (Day 1 oficial)
