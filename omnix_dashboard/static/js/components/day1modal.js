@@ -5,7 +5,7 @@
 
 const Day1Modal = {
     STORAGE_KEY: 'omnix_day1_accepted',
-    DAY30_DATE: new Date('2026-02-13T00:00:00Z'),
+    DAY30_DATE: new Date('2026-02-14T00:00:00Z'),
     
     init() {
         if (!this.hasAccepted()) {
