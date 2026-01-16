@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation through a multi-layer veto architecture, incorporating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation (98.5% maintained) over trade volume and has successfully blocked numerous high-risk operations. The current focus is on extended validation to build a credible track record for institutional investor presentations. V6.5.4e includes ADR-007 Phase 1 calibration for improved trade throughput while maintaining capital protection.
+OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading focused on capital preservation (98.5% maintained). It employs a multi-layer veto architecture, incorporating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes capital preservation over trade volume and aims to build a credible track record for institutional investor presentations. V6.5.4e includes ADR-007 Phase 1 calibration for improved trade throughput while maintaining capital protection.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -50,16 +50,16 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 The system integrates an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, features Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal as the primary driver, a Monte Carlo VETO Engine, and robust RMS Enforcement. All decisions are fully auditable via a `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with planned activation via the Strangler Fig pattern.
 
 ### AI Architecture and Enforcement
-The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications. AI responses are subject to brevity policies with word limits and adaptive detail based on user requests.
+The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications. AI responses are subject to adaptive detail based on user requests. For due diligence, investor queries trigger comprehensive responses without brevity limits.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves a 5-point threshold reduction across all levels and an EMA trigger adjustment to improve trade throughput.
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves threshold reduction and EMA trigger adjustment to improve trade throughput.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, applying only penalties.
 
 ### TRACK_RECORD_MODE
-`TRACK_RECORD_MODE` and `LOW_VOL_MODE` are controlled by environment variables. When active, `TRACK_RECORD_MODE` caps score, reduces sizing, enables `WEAK_TREND` scoring, and maintains all guardrails. It auto-deactivates under specific conditions (`total_trades >= 100` AND `win_rate >= 45%`).
+When active, `TRACK_RECORD_MODE` caps score, reduces sizing, enables `WEAK_TREND` scoring, and maintains all guardrails. It auto-deactivates under specific conditions (`total_trades >= 100` AND `win_rate >= 45%`).
 
 ### Error Handling
 An `ai_error_handler.py` provides an `ErrorClassifier` with 8 categories, SDK-specific error detection, intelligent retry/failover with exponential backoff, and structured logging.
@@ -86,7 +86,7 @@ This system provides real-time capital protection tracking with PostgreSQL persi
 A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker (ADR-008) analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity, with a dashboard widget for visual balance.
 
 ### Dashboard Features
-The dashboard displays a Dual Win Rate Framework, enriched AI context with granular breakdowns, a System Health Score (0-100), Live Status widget, Quick Insights, Calibration Progress (4-phase tracker), and Recommended Actions. Key dashboard credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked", distinguishing "Market Trend" from "Trading Regime", and providing a timeline for Calibration Progress. Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights.
+The dashboard displays a Dual Win Rate Framework, enriched AI context with granular breakdowns, a System Health Score (0-100), Live Status widget, Quick Insights, Calibration Progress (4-phase tracker), and Recommended Actions. Key dashboard credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked", distinguishing "Market Trend" from "Trading Regime", and providing a timeline for Calibration Progress. Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. The `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics, fee breakdowns, and trade analysis to investors, triggered by specific keywords or complex questions. Capital protection metrics are standardized to "Est. Loss Avoided*" (Notional × 0.6%) as primary and "Notional Blocked" as secondary.
 
 ## External Dependencies
 
@@ -108,63 +108,3 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context with granu
 ### Databases
 -   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
-
-## Recent Changes
-
-### Jan 16, 2026: ADR-009 Investor Due Diligence Fix
-- **PROBLEMA**: Respuestas truncadas para preguntas de due diligence de inversores (5+ preguntas técnicas)
-- **SOLUCIÓN**: Detección de contexto de inversor → respuesta SIN LÍMITE
-- **TRIGGERS ILIMITADOS**: family office, AUM, seed, pre-money, sharia, SEC, 3+ preguntas numeradas, 100+ palabras
-- **PRINCIPIO**: Inversores haciendo due diligence merecen respuestas COMPLETAS con datos y cálculos
-- **ARCHIVOS**: `investor_responses.py`, `ai_prompts.py`, `ADR-009-brevity-first-policy.md`
-
-### Jan 16, 2026: ADR-009 Conversational Tone Update
-- **PROBLEMA**: Respuestas del bot muy cortantes y frías (límites 30-50 palabras insuficientes)
-- **SOLUCIÓN**: Nuevos límites más generosos para interacción amena
-- **LÍMITES ACTUALIZADOS**: Simple 80, Operacional 120, Técnico 180, Métricas 200, Due Diligence 350
-- **DETECCIÓN MEJORADA**: Ahora detecta "dime 10 cosas", "enumera", "cuales son" → ilimitado
-- **TONO**: Conversacional y amigable, sin ser frío ni robótico
-- **ARCHIVOS**: `investor_responses.py`, `ai_prompts.py`, `ADR-009-brevity-first-policy.md`
-- **REFERENCIA**: `docs/current/TECHNICAL_DEBT.md`
-
-### Jan 16, 2026: Railway Production Hotfixes
-- **FIX 1**: CacheAdapter faltaba método `increment()` para rate limiter (V7.0 hexagonal)
-- **FIX 2**: KrakenAPIClient sin `.client.fetch_ticker()` - ahora usa `get_ticker('XBTUSD')` con parsing Kraken nativo
-- **FIX 3**: Query SQL con `GROUP BY coherence_level` fallaba - cambiado a `GROUP BY 1`
-- **ARCHIVOS**: `src/omnix/infrastructure/adapters/cache_adapter.py`, `omnix_core/context/real_data_provider.py`
-- **REFERENCIA**: `docs/current/TECHNICAL_DEBT.md`
-
-### Jan 16, 2026: Dashboard Day Calculation Fix
-- **PROBLEMA**: Widget System Calibration mostraba "Day 7" en lugar del día correcto
-- **CAUSA**: start_date estaba configurado como 9 enero en lugar de 15 enero (Day 1 oficial)
-- **CORRECCIÓN**: start_date = 15 enero 2026, fórmula = `(now - start_date).days + 1`
-- **FECHAS ACTUALIZADAS**: Day 30 Review = 14 Feb 2026, Day 60 = 16 Mar 2026, Day 90 = 15 Abr 2026
-- **ARCHIVOS**: `omnix_dashboard/blueprints/core.py` (endpoint calibration-progress)
-
-### Jan 15, 2026: ADR-012 Learning Baseline Freeze & Official Day 1
-- **DECLARACIÓN**: 15 de Enero 2026 = Day 1 oficial del track record
-- **LEARNING BASELINE**: Nov 2025 - Jan 14, 2026 (119 trades, LEGACY_ESTIMATED)
-- **TRACK RECORD OFICIAL**: Jan 15, 2026+ (telemetría REAL, thresholds calibrados)
-- **MÉTRICAS**: Reset trade count/WR desde Day 1, carry-over balance/config
-- **DAY 30 REVIEW**: 14 Feb 2026 (meta: 100 trades, WR >45%)
-- **REFERENCIA**: `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
-
-### Jan 15, 2026: ADR-011 Legacy Telemetry Backfill
-- **PROBLEMA**: Data Quality 25% - 119 trades sin coherence_score ni hmm_regime
-- **CAUSA**: Trades de Nov-Dic 2025 pre-telemetría (V005 implementado en enero 2026)
-- **SOLUCIÓN**: Backfill estimado + columna `telemetry_source` (LEGACY_ESTIMATED vs REAL)
-- **RESULTADO**: Data Quality 100% (con telemetría estimada marcada transparentemente)
-- **REFERENCIA**: `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
-
-### Jan 15, 2026: ADR-010 Capital Protection Metric Standard
-- **PROBLEMA**: Múltiples widgets mostraban métricas inconsistentes ("$1.2B Protected" vs "$267K Avoided")
-- **SOLUCIÓN**: Sistema de dos métricas unificado en todos los widgets
-- **PRIMARIA**: "Est. Loss Avoided*" = Notional × 0.6% (estimación conservadora realista)
-- **SECUNDARIA**: "Notional Blocked" (valor bruto para transparencia)
-- **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, regimedetection.js, streamlit_app.py
-- **REFERENCIA**: `docs/reference/adr/ADR-010-capital-protection-metric-standard.md`
-
-### Jan 15, 2026: ADR-009 Brevity First Policy
-- **LÍMITES**: Simple 30, Operacional 50, Técnico 100, Métricas 150, Due Diligence 300 palabras
-- **ADAPTIVE**: Si usuario pide "explícame" → SIN LÍMITE
-- **REFERENCIA**: `docs/reference/adr/ADR-009-brevity-first-policy.md`

@@ -90,6 +90,37 @@ def detect_language(text):
 
 ---
 
+## Investor Data Provider - ADR-013 (Jan 16, 2026)
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| InvestorDataProvider | `omnix_services/ai_service/providers/investor_data_provider.py` | Queries SQL reales para due diligence |
+| _fetch_investor_data() | `conversational_ai_adapter.py` | Integración con flujo AI |
+
+**Propósito:**
+Proporcionar datos SQL reales verificables cuando inversores hacen preguntas de due diligence. Se activa automáticamente para preguntas con keywords de inversor, múltiples preguntas numeradas (3+), o preguntas largas (80+ palabras).
+
+**Métricas Disponibles:**
+| Métrica | Query | Propósito |
+|---------|-------|-----------|
+| Segmented Expectancy | BY hmm_regime, coherence_bucket | ¿DÓNDE gana el sistema? |
+| Fee Breakdown | Kraken 0.26%, break-even | Impacto de comisiones |
+| Pre/Post Hotfix | BY opened_at <> ADR-007 date | Efecto de calibración |
+| Trade Size Analysis | BY size bucket | ADR-004 insights |
+| Data Quality | BY telemetry_source | Transparencia REAL vs LEGACY |
+
+**Triggers:**
+- Keywords: "family office", "AUM", "seed", "due diligence", "expectancy", "fee breakdown"
+- Estructura: 3+ preguntas numeradas
+- Longitud: 80+ palabras
+
+**Output:**
+Texto Markdown formateado listo para inyección en prompt AI, incluyendo tablas y cálculos verificables.
+
+**ADR:** `docs/reference/adr/ADR-013-investor-data-provider.md`
+
+---
+
 ## Daily Report Service - Brutal Honesty Monitoring (Jan 9, 2026)
 
 | Componente | Archivo | Función |

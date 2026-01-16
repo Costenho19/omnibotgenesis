@@ -447,6 +447,13 @@ class ConversationalAI:
             market_data['veto_data'] = veto_data
             logger.info(f"📊 Veto data added: has_data={veto_data.get('has_data', False)}, query_type={veto_data.get('query_type', 'unknown')}")
         
+        # 📊 ADR-013 Jan 16, 2026: Obtener datos SQL reales para inversores
+        # Cuando detecta preguntas de due diligence, incluye métricas segmentadas
+        investor_data = self._fetch_investor_data(user_message)
+        if investor_data:
+            market_data['investor_data'] = investor_data
+            logger.info(f"📊 Investor data added: segmented expectancy, fee breakdown, pre/post hotfix stats")
+        
         return market_data
     
     def _fetch_trade_performance(self, user_message: str, user_id: Optional[str] = None) -> dict:
@@ -616,6 +623,82 @@ class ConversationalAI:
                 'has_data': False,
                 'error': str(e),
                 'source': 'error'
+            }
+    
+    def _fetch_investor_data(self, user_message: str) -> Optional[dict]:
+        """
+        📊 ADR-013 Jan 16, 2026: Obtener datos SQL reales para respuestas a inversores.
+        
+        PROBLEMA: El AI no podía dar datos segmentados cuando inversores hacían due diligence.
+        SOLUCIÓN: InvestorDataProvider con queries SQL reales.
+        
+        Se activa cuando detecta:
+        - Preguntas de due diligence (family office, AUM, seed, etc.)
+        - Preguntas sobre expectancy, fees, hotfix, segmentación
+        - Múltiples preguntas numeradas (3+)
+        
+        Returns:
+            Dict con datos formateados o None si no aplica
+        """
+        message_lower = user_message.lower()
+        
+        investor_indicators = [
+            'family office', 'aum', 'seed', 'pre-money', 'post-money',
+            'due diligence', 'inversor institucional', 'institutional investor',
+            'valuación', 'valuation', 'equity', 'term sheet', 'hedge fund',
+            'sharia', 'regulatory', 'compliance', 'jurisdicción',
+            'expectancy', 'segmented', 'segmentada', 'por régimen', 'by regime',
+            'coherence bucket', 'hmm regime', 'fee breakdown', 'fees analysis',
+            'pre hotfix', 'post hotfix', 'calibration', 'adr-007',
+            'walk-forward', 'backtest', 'statistical significance',
+            'query sql', 'datos reales', 'real data', 'show me the data'
+        ]
+        
+        import re
+        numbered_pattern = r'(\d+[\.\)]\s*.*?){3,}'
+        has_numbered_questions = bool(re.search(numbered_pattern, user_message, re.DOTALL))
+        
+        word_count = len(user_message.split())
+        is_long_question = word_count >= 80
+        
+        needs_investor_data = (
+            any(ind in message_lower for ind in investor_indicators) or
+            has_numbered_questions or
+            is_long_question
+        )
+        
+        if not needs_investor_data:
+            return None
+        
+        logger.info("📊 Detected investor/due diligence query - fetching REAL segmented data from PostgreSQL")
+        
+        try:
+            from omnix_services.ai_service.providers.investor_data_provider import get_investor_data_for_ai, get_formatted_investor_data
+            
+            data = get_investor_data_for_ai()
+            
+            if data.get('success'):
+                formatted = get_formatted_investor_data()
+                data['formatted_for_prompt'] = formatted
+                logger.info("✅ Investor data obtained from PostgreSQL (segmented expectancy, fees, hotfix stats)")
+            else:
+                logger.warning(f"⚠️ Investor data fetch failed: {data.get('error')}")
+            
+            return data
+            
+        except ImportError as e:
+            logger.error(f"❌ Cannot import InvestorDataProvider: {e}")
+            return {
+                'success': False,
+                'error': 'InvestorDataProvider not available',
+                'formatted_for_prompt': '[Investor metrics temporarily unavailable]'
+            }
+        except Exception as e:
+            logger.error(f"❌ Error fetching investor data: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'formatted_for_prompt': f'[Error loading investor data: {str(e)}]'
             }
     
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
