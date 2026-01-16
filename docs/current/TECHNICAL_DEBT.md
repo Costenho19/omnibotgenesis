@@ -7,6 +7,22 @@
 
 ---
 
+## AI Brevity Detection Fix (Jan 16, 2026)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** Bot truncaba respuestas cuando usuario pedía listas o enumeraciones (ej: "dime 10 cosas", "cuales son las capas", "enumeralas todas"). Mostraba "[Más detalles disponibles]" en lugar de dar la lista completa.
+
+**Causa Raíz:** ADR-009 Brevity Policy solo detectaba frases como "explícame" pero no peticiones de listas/enumeraciones.
+
+**Fix:** Expandir `explanation_indicators` en `get_response_word_limit()`:
+- Agregado: enumera, enumeralas, cuales son, cuantas son, dime todas, lista todas, etc.
+- Agregado: regex para detectar "dime N cosas", "give me N reasons" (peticiones numéricas)
+
+**Archivo:** `omnix_services/ai_service/investor_responses.py` (líneas 145-175)
+
+---
+
 ## Railway Production Hotfixes (Jan 16, 2026)
 
 **Status:** ✅ COMPLETED

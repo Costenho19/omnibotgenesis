@@ -140,22 +140,36 @@ def get_response_word_limit(question: str) -> Optional[int]:
     word_count = len(question.split())
     
     # PRIORITY 1: Explicit explanation requests → NO LIMIT
-    # User explicitly asks for detailed explanation
+    # User explicitly asks for detailed explanation OR lists/enumerations
     explanation_indicators = [
-        # Spanish
+        # Spanish - explanations
         'explícame', 'explicame', 'cuéntame más', 'cuentame mas', 
         'dame detalles', 'en detalle', 'detalladamente', 'a fondo',
         'quiero saber más', 'quiero saber mas', 'más información',
         'mas informacion', 'explica en detalle', 'cuéntame todo',
         'cuentame todo', 'todo sobre', 'completo', 'extenso',
+        # Spanish - lists/enumerations (user asks for specific count)
+        'enumera', 'enumeralas', 'enumeralos', 'cuales son',
+        'cuáles son', 'cuantas son', 'cuántas son', 'cuantos son',
+        'cuántos son', 'dime todas', 'dime todos', 'dame todas',
+        'dame todos', 'lista todas', 'lista todos', 'menciona todas',
+        'menciona todos', 'nombra todas', 'nombra todos',
         # English
         'tell me more', 'explain in detail', 'give me details',
         'i want to know more', 'more information', 'elaborate',
         'in depth', 'comprehensive', 'full explanation', 'detailed',
-        'walk me through', 'break it down', 'explain everything'
+        'walk me through', 'break it down', 'explain everything',
+        # English - lists/enumerations
+        'list all', 'name all', 'enumerate', 'what are all',
+        'give me all', 'tell me all', 'mention all'
     ]
     if any(indicator in question_lower for indicator in explanation_indicators):
         return None  # No limit - user wants full explanation
+    
+    # PRIORITY 1b: Numbered list requests (e.g., "dime 10 cosas", "give me 5 reasons")
+    numbered_list_pattern = r'(dime|dame|menciona|lista|enumera|give me|tell me|list|name)\s+\d+\s+'
+    if re.search(numbered_list_pattern, question_lower):
+        return None  # No limit - user asks for specific number of items
     
     # PRIORITY 2: Due diligence (investor context)
     dd_indicators = ['inversor', 'investor', 'due diligence', 'auditoría', 
