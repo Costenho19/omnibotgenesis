@@ -818,14 +818,17 @@ class LanguageContextManager:
         self._redis_client = None
         
     def _get_redis(self):
-        """Lazy load Redis client."""
+        """Lazy load Redis client (consistent with database_service.py pattern)."""
         if self._redis_client is None:
             try:
                 import redis
                 import os
                 redis_url = os.getenv('REDIS_URL')
                 if redis_url:
-                    self._redis_client = redis.from_url(redis_url)
+                    self._redis_client = redis.from_url(redis_url, decode_responses=True)
+                    logger.debug("✅ Redis client initialized for language persistence")
+                else:
+                    logger.debug("REDIS_URL not set - language persistence disabled")
             except Exception as e:
                 logger.warning(f"Redis not available for language persistence: {e}")
         return self._redis_client
