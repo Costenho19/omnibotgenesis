@@ -1,8 +1,16 @@
 {
-  "version": "V6.5.4d INSTITUTIONAL+",
-  "last_updated": "2025-12-24",
+  "version": "V6.5.4e INSTITUTIONAL+",
+  "last_updated": "2026-01-18",
+  "track_record_start": "2026-01-15",
+  "track_record_day": 4,
   "trading_mode": "paper",
   "paper_capital": 1000000,
+  
+  "critical_dates": {
+    "track_record_start": "2026-01-15",
+    "target_duration_days": 30,
+    "DO_NOT_MENTION": ["2024", "2023", "years of data", "años de datos"]
+  },
   
   "signal_architecture": {
     "version": "V6.5.4d",

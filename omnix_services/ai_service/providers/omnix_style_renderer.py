@@ -33,7 +33,7 @@ SIGNATURE_BY_STYLE = {
 
 
 PLATFORM_LIMITS = {
-    Platform.TELEGRAM: 4096,
+    Platform.TELEGRAM: 4000,  # Telegram hard limit is 4096, keep buffer for emoji/formatting
     Platform.WEB: 10000,
     Platform.API: 50000,
 }

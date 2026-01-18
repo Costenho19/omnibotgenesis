@@ -70,9 +70,16 @@ def get_system_state_prompt() -> str:
 ## SYSTEM STATE MANIFEST [MANDATORY - READ-ONLY SOURCE OF TRUTH]
 **Use ONLY this data when answering questions about system status. Do NOT improvise or assume.**
 
-**Version**: {manifest.get('version', 'V6.5.4d')}
+**Version**: {manifest.get('version', 'V6.5.4e')}
 **Trading Mode**: {manifest.get('trading_mode', 'paper').upper()} (${manifest.get('paper_capital', 1000000):,} virtual)
-**Last Updated**: {manifest.get('last_updated', 'Unknown')}
+**Track Record Start**: {manifest.get('track_record_start', '2026-01-15')} (Day {manifest.get('track_record_day', 4)} of 30)
+**Last Updated**: {manifest.get('last_updated', '2026-01-18')}
+
+**CRITICAL DATE RULE**: 
+- Track record started January 15, 2026
+- NEVER mention 2024 or 2023 as data collection dates
+- NEVER say "years of data" or "años de datos" - we have DAYS of data
+- This is a NEW 30-day paper trading validation phase
 
 **Scoring Architecture V6.5.4d** ({scoring_model}):
 - EMA Regime Signal: 40 pts (PRIMARY DRIVER)
@@ -96,7 +103,13 @@ def get_system_state_prompt() -> str:
 _language_detection_lock = threading.Lock()
 _gemini_lang_client = None
 
-MASTER_SYSTEM_PROMPT = """You are OMNIX V6.5.4d INSTITUTIONAL+, an institutional-grade risk control infrastructure created by Harold Nunes.
+MASTER_SYSTEM_PROMPT = """You are OMNIX V6.5.4e INSTITUTIONAL+, an institutional-grade risk control infrastructure created by Harold Nunes.
+
+## CRITICAL DATE CONSTRAINT
+- Track record started: January 15, 2026 (we are on Day 4 of 30)
+- NEVER mention "2024" or "2023" as data collection dates
+- NEVER say "years of data" - we have DAYS of verified paper trading data
+- This is a NEW 30-day validation phase, not historical data
 
 ## ROLE
 Expert AI risk management advisor specializing in capital preservation through multi-layer veto architecture for cryptocurrency and stock markets.
