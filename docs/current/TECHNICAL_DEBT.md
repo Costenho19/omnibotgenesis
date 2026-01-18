@@ -1,9 +1,31 @@
 # OMNIX V6.5.4e Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** January 16, 2026  
+**Updated:** January 18, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## AI Prompt Templates LSP Fixes (Jan 18, 2026)
+
+**Status:** ✅ COMPLETED
+
+**Problema:** 4 errores LSP en `omnix_services/ai_service/prompt_templates.py` afectando type checking.
+
+**Fixes Aplicados:**
+
+| Línea | Error | Solución |
+|-------|-------|----------|
+| 29 | Tipo de retorno incorrecto en fallback functions | Añadidas anotaciones de tipo explícitas `-> str` y `-> dict` |
+| 824 | Import `omnix_services.redis_service.cache` no existía | Cambiado a import directo de `redis` con `redis.from_url(REDIS_URL)` |
+| 935 | Parámetro `low_memory=True` no existe en fast-langdetect v1.0.0 | Removido parámetro inexistente, actualizada lógica para manejar retorno tipo `List[Dict]` |
+| 956 | `LangDetectException` posiblemente no enlazado | Separado import de exception en bloque try propio antes del uso |
+
+**Archivos Modificados:**
+- `omnix_services/ai_service/prompt_templates.py` - 4 fixes de tipo y compatibilidad
+
+**Verificación:** LSP diagnostics = 0 errores después de fixes.
 
 ---
 

@@ -32,8 +32,8 @@ try:
 except ImportError as e:
     HONESTY_GUARD_AVAILABLE = False
     logger.warning(f"⚠️ HonestyGuard not available: {e}")
-    def get_honesty_prompt_injection(language='es', user_message=''): return ""
-    def get_honesty_context(language='es', user_message=''): return {'context_active': False}
+    def get_honesty_prompt_injection(language: str = 'es', user_message: str = '') -> str: return ""
+    def get_honesty_context(language: str = 'es', user_message: str = '') -> dict: return {'context_active': False}
 
 def load_system_state_manifest() -> Dict[str, Any]:
     """Load the system state manifest for AI self-knowledge."""
@@ -821,8 +821,11 @@ class LanguageContextManager:
         """Lazy load Redis client."""
         if self._redis_client is None:
             try:
-                from omnix_services.redis_service.cache import cache
-                self._redis_client = cache.client
+                import redis
+                import os
+                redis_url = os.getenv('REDIS_URL')
+                if redis_url:
+                    self._redis_client = redis.from_url(redis_url)
             except Exception as e:
                 logger.warning(f"Redis not available for language persistence: {e}")
         return self._redis_client
@@ -932,9 +935,13 @@ No explanation, just the code."""
         """
         try:
             from fast_langdetect import detect
-            result = detect(text, low_memory=True)
-            if isinstance(result, dict):
-                return result.get('lang', None)
+            result = detect(text)
+            if isinstance(result, list) and len(result) > 0:
+                lang = result[0].get('lang')
+                return str(lang) if lang else None
+            elif isinstance(result, dict):
+                lang = result.get('lang')
+                return str(lang) if lang else None
             elif isinstance(result, str):
                 return result
             return None
@@ -951,11 +958,14 @@ No explanation, just the code."""
         Less accurate for short texts but works as backup.
         """
         try:
-            from langdetect import detect as ld_detect, LangDetectException
+            from langdetect import detect as ld_detect
+            from langdetect import LangDetectException
+        except ImportError:
+            return None
+        
+        try:
             return ld_detect(text)
         except LangDetectException:
-            return None
-        except ImportError:
             return None
         except Exception:
             return None
