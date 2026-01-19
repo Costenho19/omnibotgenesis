@@ -154,6 +154,7 @@ def get_response_word_limit(question: str) -> Optional[int]:
         # Investment terms (specific, not generic)
         'equity stake', 'valuation', 'valoración', 'valoracion', 'term sheet',
         'institutional investor', 'inversor institucional', 'hedge fund',
+        'clientes institucionales', 'cliente institucional',  # NEW
         # Compliance/serious inquiry
         'sharia compliant', 'sharia-compliant', 'sec compliance', 'regulatory compliance',
         'jurisdicción para live', 'jurisdiction for live',
@@ -162,7 +163,16 @@ def get_response_word_limit(question: str) -> Optional[int]:
         'expectancy por régimen', 'expectancy by regime',
         'fee breakdown', 'breakdown de fees', 'desglose de fees',
         'pre vs post hotfix', 'pre hotfix', 'post hotfix',
-        'validar el rendimiento', 'validate performance'
+        'validar el rendimiento', 'validate performance',
+        # Systemic risk / sophisticated investor questions (NEW)
+        'riesgo sistémico', 'riesgo sistemico', 'systemic risk',
+        'amplificador de riesgo', 'risk amplifier',
+        'externalidades adversas', 'adverse externalities',
+        'fail-closed', 'fail closed', 'modo fail',
+        'estrés sistémico', 'estres sistemico', 'systemic stress',
+        'efectos de segunda ronda', 'second-order effects',
+        'retroalimentación negativa', 'negative feedback',
+        'preservación de capital', 'capital preservation',
     ]
     if any(indicator in question_lower for indicator in investor_indicators):
         return None  # UNLIMITED - investor questions get full answers
