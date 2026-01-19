@@ -21,20 +21,30 @@ logger = logging.getLogger(__name__)
 BLACKLISTED_PHRASES = [
     # ===========================================================================
     # COMPLETE SENTENCE REMOVALS (phrases that form entire throwaway sentences)
-    # Pattern: Remove the phrase + everything until the period, then continue
+    # NO ^ anchor - match anywhere in text for flexibility
     # ===========================================================================
     
     # Preamble sentences that add no value (remove entire sentence)
-    r'^Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
-    r'^Agradezco tu pregunta[^.]*\.\s*',
-    r'^Agradezco su pregunta[^.]*\.\s*',
-    r'^Entiendo la importancia de este tema[^.]*\.\s*',
-    r'^Entiendo la seriedad[^.]*\.\s*',
-    r'^Esta pregunta es importante[^.]*\.\s*',
-    r'^Esta pregunta es fundamental[^.]*\.\s*',
-    r'^Esta pregunta es crucial[^.]*\.\s*',
-    r'^Tu planteamiento es fundamental[^.]*\.\s*',
-    r'^Tu pregunta es fundamental[^.]*\.\s*',
+    r'Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
+    r'Agradezco tu pregunta[^.]*\.\s*',
+    r'Agradezco su pregunta[^.]*\.\s*',
+    r'Entiendo la importancia de este tema[^.]*\.\s*',
+    r'Entiendo la seriedad[^.]*\.\s*',
+    r'Esta pregunta es importante[^.]*\.\s*',
+    r'Esta pregunta es fundamental[^.]*\.\s*',
+    r'Esta pregunta es crucial[^.]*\.\s*',
+    r'Tu planteamiento es fundamental[^.]*\.\s*',
+    r'Tu pregunta es fundamental[^.]*\.\s*',
+    r'Tu planteamiento es cr[ií]tico[^.]*\.\s*',
+    
+    # Closing servile phrases (end of response)
+    r'Me confirma que estamos en la misma sinton[ií]a[^.]*\.\s*',
+    r'Espero que esta respuesta sea de su agrado[^.]*\.\s*',
+    r'Espero haber respondido[^.]*\.\s*',
+    r'Quedo a tu disposici[oó]n[^.]*\.\s*',
+    r'Quedo a su disposici[oó]n[^.]*\.\s*',
+    r'Estamos comprometidos a[^.]*\.\s*',
+    r'Nuestro objetivo es construir[^.]*\.\s*',
     
     # "y me comprometo..." mid-sentence appendages (remove just the appendage)
     r',?\s*y me comprometo a ofrecer[^.]*',
@@ -44,7 +54,7 @@ BLACKLISTED_PHRASES = [
     # INLINE PHRASE REMOVALS (short phrases that can appear anywhere)
     # ===========================================================================
     
-    # Preamble starters (Spanish)
+    # Preamble starters (Spanish) - keep ^ for these since they're line starters
     r'^Absolutamente[,.\s]+(\w+[,.\s]+)?',
     r'^Por supuesto[,.\s]+(\w+[,.\s]+)?',
     r'^Con mucho gusto[,.\s]+',
@@ -54,6 +64,7 @@ BLACKLISTED_PHRASES = [
     r'Asumo la responsabilidad[^.]*\.\s*',
     r'Me disculpo por[^.]*\.\s*',
     r'Lamento que[^.]*\.\s*',
+    r'Reconozco que esta posibilidad[^.]*\.\s*',
     
     # Meta-comments (Spanish)
     r'Vale la pena señalar que\s*',
@@ -85,20 +96,12 @@ BLACKLISTED_PHRASES = [
     r'I understand the importance[^.]*\.\s*',
     
     # ===========================================================================
-    # NUMBERED SECTION HEADERS (remove the header text only, keep content)
+    # NUMBERED SECTION HEADERS - GENERIC PATTERN
+    # Matches *N. Any Text:* or **N. Any Text:** where N is 1-9
     # ===========================================================================
-    r'\*1\.\s*An[aá]lisis\s+Inmediato:?\*\s*',
-    r'\*2\.\s*Datos\s+T[eé]cnicos:?\*\s*',
-    r'\*3\.\s*Conclusi[oó]n:?\*\s*',
-    r'\*\*1\.\s*An[aá]lisis\s+Inmediato:?\*\*\s*',
-    r'\*\*2\.\s*Datos\s+T[eé]cnicos:?\*\*\s*',
-    r'\*\*3\.\s*Conclusi[oó]n:?\*\*\s*',
-    r'^\s*1\.\s*An[aá]lisis\s+Inmediato:?\s*',
-    r'^\s*2\.\s*Datos\s+T[eé]cnicos:?\s*',
-    r'^\s*3\.\s*Conclusi[oó]n:?\s*',
-    r'\*1\.\s*Immediate\s+Analysis:?\*\s*',
-    r'\*2\.\s*Technical\s+Data:?\*\s*',
-    r'\*3\.\s*Conclusion:?\*\s*',
+    r'\*[1-9]\.\s+[^*:]+:?\*\s*',
+    r'\*\*[1-9]\.\s+[^*:]+:?\*\*\s*',
+    r'^\s*[1-9]\.\s+[A-Z][^:]+:\s*$',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
