@@ -20,24 +20,40 @@ logger = logging.getLogger(__name__)
 
 BLACKLISTED_PHRASES = [
     # ===========================================================================
-    # PREAMBLE SENTENCES - Must be at START of text or line (anchored with ^)
-    # These are throwaway openers that add no value
+    # PREAMBLE SENTENCES - At START of text, after "Name. " prefix
+    # These patterns preserve "Name. " and only remove the servile phrase
+    # Uses lookbehind to keep the name prefix when present
     # ===========================================================================
     
+    r'(?<=\.\s)Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
     r'^Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
+    r'(?<=\.\s)Agradezco tu pregunta[^.]*\.\s*',
     r'^Agradezco tu pregunta[^.]*\.\s*',
+    r'(?<=\.\s)Agradezco su pregunta[^.]*\.\s*',
     r'^Agradezco su pregunta[^.]*\.\s*',
-    r'^Entiendo la importancia de este tema[^.]*\.\s*',
+    r'(?<=\.\s)Entiendo la importancia de (?:este tema|abordar)[^.]*\.\s*',
+    r'^Entiendo la importancia de (?:este tema|abordar)[^.]*\.\s*',
+    r'(?<=\.\s)Entiendo la seriedad[^.]*\.\s*',
     r'^Entiendo la seriedad[^.]*\.\s*',
+    r'(?<=\.\s)Esta pregunta es importante[^.]*\.\s*',
     r'^Esta pregunta es importante[^.]*\.\s*',
+    r'(?<=\.\s)Esta pregunta es fundamental[^.]*\.\s*',
     r'^Esta pregunta es fundamental[^.]*\.\s*',
+    r'(?<=\.\s)Esta pregunta es crucial[^.]*\.\s*',
     r'^Esta pregunta es crucial[^.]*\.\s*',
+    r'(?<=\.\s)Tu planteamiento es fundamental[^.]*\.\s*',
     r'^Tu planteamiento es fundamental[^.]*\.\s*',
+    r'(?<=\.\s)Tu pregunta es fundamental[^.]*\.\s*',
     r'^Tu pregunta es fundamental[^.]*\.\s*',
+    r'(?<=\.\s)Tu planteamiento es cr[ií]tico:\s*',
     r'^Tu planteamiento es cr[ií]tico:\s*',
+    r'(?<=\.\s)Absolutamente[,.\s]+',
     r'^Absolutamente[,.\s]+',
+    r'(?<=\.\s)Por supuesto[,.\s]+',
     r'^Por supuesto[,.\s]+',
+    r'(?<=\.\s)Con mucho gusto[,.\s]+',
     r'^Con mucho gusto[,.\s]+',
+    r'(?<=\.\s)Encantado de\s+',
     r'^Encantado de\s+',
     
     # ===========================================================================
@@ -59,12 +75,12 @@ BLACKLISTED_PHRASES = [
     r',?\s*mi objetivo es proporcionar claridad[^.]*',
     
     # ===========================================================================
-    # NUMBERED SECTION HEADERS - Full line only (anchored both sides)
-    # Matches standalone header lines like "*3. Implicaciones:*"
+    # NUMBERED SECTION HEADERS - At line start or after sentence boundary
+    # Matches "*1. Análisis Inmediato:*" at beginning of line/text or after ". "
     # ===========================================================================
     
-    r'^\s*\*[1-9]\.\s+[^*\n]+:?\*\s*$',
-    r'^\s*\*\*[1-9]\.\s+[^*\n]+:?\*\*\s*$',
+    r'(?:^|(?<=\.\s))\*[1-9]\.\s+[^*\n]+:?\*\s*',
+    r'(?:^|(?<=\.\s))\*\*[1-9]\.\s+[^*\n]+:?\*\*\s*',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
