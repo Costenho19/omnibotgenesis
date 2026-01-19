@@ -173,6 +173,18 @@ def get_response_word_limit(question: str) -> Optional[int]:
         'efectos de segunda ronda', 'second-order effects',
         'retroalimentación negativa', 'negative feedback',
         'preservación de capital', 'capital preservation',
+        # Macroprudential / infrastructure questions (Jan 19, 2026)
+        'actor sistémico', 'actor sistemico', 'systemic actor',
+        'macroprudencial', 'macroprudential',
+        'penetración sistémica', 'penetracion sistemica', 'systemic penetration',
+        'infraestructura dominante', 'dominant infrastructure',
+        'concentración de decisiones', 'decision concentration',
+        'efecto manada', 'herd effect', 'herding behavior',
+        'coordinación de mercado', 'market coordination',
+        'liquidez agregada', 'aggregate liquidity',
+        'desacoplamiento', 'decoupling', 'aislamiento de clientes',
+        'gobernanza de escala', 'scale governance',
+        'límites de adopción', 'adoption limits',
     ]
     if any(indicator in question_lower for indicator in investor_indicators):
         return None  # UNLIMITED - investor questions get full answers
