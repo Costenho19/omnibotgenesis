@@ -6,11 +6,88 @@ pero usa ConversationalAIService enterprise internamente
 
 import logging
 import os
+import re
 import asyncio
 from datetime import datetime
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+# ==============================================================================
+# POST-PROCESSING FILTER - Removes servile/prohibited phrases from AI responses
+# This is a safety net in case the AI ignores prompt instructions
+# ==============================================================================
+
+BLACKLISTED_PHRASES = [
+    # Servile phrases (Spanish)
+    r'^Absolutamente[,.\s]',
+    r'^Con mucho gusto[,.\s]',
+    r'^Encantado de\s',
+    r'^Por supuesto[,.\s]',
+    r'Asumo la responsabilidad',
+    r'Me disculpo por',
+    r'Lamento que',
+    # Meta-comments (Spanish)
+    r'^Esta pregunta es importante',
+    r'^Esta pregunta es fundamental',
+    r'^Esta pregunta es crucial',
+    r'Vale la pena señalar',
+    r'Es crucial destacar',
+    r'Entiendo la seriedad',
+    r'Entiendo tu pregunta',
+    r'Entiendo su pregunta',
+    # Servile phrases (English)
+    r'^Absolutely[,.\s]',
+    r'^With pleasure[,.\s]',
+    r'^Delighted to\s',
+    r'^Of course[,.\s]',
+    r'I take responsibility',
+    r'I apologize for',
+    r'I regret that',
+    # Meta-comments (English)
+    r'^This question is important',
+    r'^This question is fundamental',
+    r'^This question is crucial',
+    r"It's worth noting",
+    r"It's crucial to highlight",
+    r'I understand the seriousness',
+    r'I understand your question',
+]
+
+BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in BLACKLISTED_PHRASES]
+
+def post_process_response(response: str) -> str:
+    """
+    Remove blacklisted phrases from AI response.
+    This is a safety net that runs AFTER AI generation.
+    
+    Args:
+        response: Raw AI response text
+        
+    Returns:
+        Cleaned response with servile/prohibited phrases removed
+    """
+    if not response:
+        return response
+    
+    cleaned = response
+    
+    # Remove blacklisted patterns
+    for pattern in BLACKLISTED_PATTERNS:
+        cleaned = pattern.sub('', cleaned)
+    
+    # Clean up leading whitespace/punctuation after removal
+    cleaned = re.sub(r'^[\s,.\-]+', '', cleaned)
+    
+    # Ensure first character is uppercase if we removed something
+    if cleaned and cleaned[0].islower() and response[0].isupper():
+        cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
+    
+    # Log if we made changes (for debugging)
+    if cleaned != response:
+        logger.info(f"🛡️ Post-process filter: Removed servile phrases from response")
+    
+    return cleaned.strip()
 
 try:
     from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
@@ -147,13 +224,14 @@ class ConversationalAI:
                         if "verified information" not in response_text.lower():
                             response_text = response_text + web_indicator
                         logger.info(f"🔍 Web search used")
-                    return response_text
+                    # Apply post-processing filter to remove servile phrases
+                    return post_process_response(response_text)
                 else:
                     logger.error("❌ No response from enterprise service")
                     return self._fallback_response()
             else:
                 logger.warning("⚠️ Using legacy AI generation")
-                return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
+                return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
             return "⏳ Rate limit reached. Please wait a moment..."
@@ -241,7 +319,8 @@ class ConversationalAI:
                             response_text = response_text + web_indicator
                         logger.info(f"🔍 Web search used for this response (query: {result.get('web_search_query', 'N/A')[:50]})")
                     
-                    return response_text
+                    # Apply post-processing filter to remove servile phrases
+                    return post_process_response(response_text)
                 else:
                     logger.error("❌ No response from enterprise service")
                     return self._fallback_response()
@@ -249,7 +328,7 @@ class ConversationalAI:
             else:
                 # Legacy fallback
                 logger.warning("⚠️ Using legacy AI generation")
-                return self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
+                return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
                 
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
