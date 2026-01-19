@@ -19,39 +19,41 @@ logger = logging.getLogger(__name__)
 # ==============================================================================
 
 BLACKLISTED_PHRASES = [
-    # Servile phrases (Spanish)
-    r'^Absolutamente[,.\s]',
-    r'^Con mucho gusto[,.\s]',
-    r'^Encantado de\s',
-    r'^Por supuesto[,.\s]',
-    r'Asumo la responsabilidad',
-    r'Me disculpo por',
-    r'Lamento que',
+    # Full preamble patterns (Spanish) - with or without name
+    r'^Absolutamente[,.\s]+(\w+[,.\s]+)?',   # "Absolutamente." or "Absolutamente, Harold."
+    r'^Por supuesto[,.\s]+(\w+[,.\s]+)?',    # "Por supuesto." or "Por supuesto, Harold."
+    r'^Con mucho gusto[,.\s]+',
+    r'^Encantado de\s+',
+    # Servile phrases (Spanish) - anywhere, with or without period
+    r'Asumo la responsabilidad[^.]*\.?\s*',
+    r'Me disculpo por[^.]*\.?\s*',
+    r'Lamento que[^.]*\.?\s*',
     # Meta-comments (Spanish)
-    r'^Esta pregunta es importante',
-    r'^Esta pregunta es fundamental',
-    r'^Esta pregunta es crucial',
-    r'Vale la pena señalar',
-    r'Es crucial destacar',
-    r'Entiendo la seriedad',
-    r'Entiendo tu pregunta',
-    r'Entiendo su pregunta',
-    # Servile phrases (English)
-    r'^Absolutely[,.\s]',
-    r'^With pleasure[,.\s]',
-    r'^Delighted to\s',
-    r'^Of course[,.\s]',
-    r'I take responsibility',
-    r'I apologize for',
-    r'I regret that',
+    r'^Esta pregunta es importante[^.]*\.?\s*',
+    r'^Esta pregunta es fundamental[^.]*\.?\s*',
+    r'^Esta pregunta es crucial[^.]*\.?\s*',
+    r'Vale la pena señalar que\s*',
+    r'Es crucial destacar que\s*',
+    r'Entiendo la seriedad[^.]*\.?\s*',
+    r'Entiendo tu pregunta[^.]*\.?\s*',
+    r'Entiendo su pregunta[^.]*\.?\s*',
+    # Full preamble patterns (English) - with or without name
+    r'^Absolutely[,.\s]+(\w+[,.\s]+)?',
+    r'^Of course[,.\s]+(\w+[,.\s]+)?',
+    r'^With pleasure[,.\s]+',
+    r'^Delighted to\s+',
+    # Servile phrases (English) - with or without period
+    r'I take responsibility[^.]*\.?\s*',
+    r'I apologize for[^.]*\.?\s*',
+    r'I regret that[^.]*\.?\s*',
     # Meta-comments (English)
-    r'^This question is important',
-    r'^This question is fundamental',
-    r'^This question is crucial',
-    r"It's worth noting",
-    r"It's crucial to highlight",
-    r'I understand the seriousness',
-    r'I understand your question',
+    r'^This question is important[^.]*\.?\s*',
+    r'^This question is fundamental[^.]*\.?\s*',
+    r'^This question is crucial[^.]*\.?\s*',
+    r"It's worth noting that\s*",
+    r"It's crucial to highlight that\s*",
+    r'I understand the seriousness[^.]*\.?\s*',
+    r'I understand your question[^.]*\.?\s*',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in BLACKLISTED_PHRASES]
