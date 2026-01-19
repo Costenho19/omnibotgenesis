@@ -35,7 +35,7 @@ BLACKLISTED_PHRASES = [
     r'Esta pregunta es crucial[^.]*\.\s*',
     r'Tu planteamiento es fundamental[^.]*\.\s*',
     r'Tu pregunta es fundamental[^.]*\.\s*',
-    r'Tu planteamiento es cr[ií]tico[^.]*\.\s*',
+    r'Tu planteamiento es cr[ií]tico:\s*',
     
     # Closing servile phrases (end of response)
     r'Me confirma que estamos en la misma sinton[ií]a[^.]*\.\s*',
@@ -126,8 +126,14 @@ def post_process_response(response: str) -> str:
     for pattern in BLACKLISTED_PATTERNS:
         cleaned = pattern.sub('', cleaned)
     
+    # Clean up stray Telegram formatting artifacts (lone asterisks)
+    cleaned = re.sub(r'^\s*\*\s*$', '', cleaned, flags=re.MULTILINE)
+    
+    # Clean up multiple consecutive newlines (max 2)
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+    
     # Clean up leading whitespace/punctuation after removal
-    cleaned = re.sub(r'^[\s,.\-]+', '', cleaned)
+    cleaned = re.sub(r'^[\s,.\-*]+', '', cleaned)
     
     # Ensure first character is uppercase if we removed something
     if cleaned and cleaned[0].islower() and response[0].isupper():
