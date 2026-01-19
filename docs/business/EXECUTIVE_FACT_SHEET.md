@@ -124,6 +124,37 @@ This is what institutional readiness looks like.
 
 ---
 
+## Day 1-4 Update (Jan 19, 2026)
+
+During the first 4 days of the official track record:
+
+| Metric | Value | Type |
+|--------|-------|------|
+| Signals Analyzed | 47,507 | Real (PostgreSQL) |
+| Notional Blocked | $950.14M | Real (PostgreSQL) |
+| Est. Loss Avoided* | $5.70M | Calculated estimate |
+| Trades Executed | 0 | Real (100% preservation) |
+| Capital Status | $984,801.27 | Real (unchanged) |
+
+*Est. Loss Avoided = Notional Blocked × 0.6% (per ADR-010 methodology). This is a calculated estimate, not realized loss.
+
+**Market Conditions**: BLACK_SWAN detector identified 50%+ crash probability across all assets, triggering fail-closed protection.
+
+**Clarification**: The "no estimated data" policy applies to trade execution data (win rate, P&L). Risk mitigation metrics use the documented ADR-010 methodology and are clearly labeled as estimates.
+
+---
+
+## Appendix: Detailed Reports
+
+| Document | Description |
+|----------|-------------|
+| [Risk Mitigation Log](investor/risk_mitigation_log.md) | Daily capital protection events |
+| [OMNIX vs Market](investor/omnix_vs_market.md) | Alpha vs Beta comparison |
+| [Shadow Performance](investor/shadow_performance_report.md) | Counterfactual trade analysis |
+| [4-Layer Architecture](investor/architecture_4_layers.md) | Technical security deep-dive |
+
+---
+
 ## References
 
 - ADR-012: Learning Baseline Freeze & Official Day 1

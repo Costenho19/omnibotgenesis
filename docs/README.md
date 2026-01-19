@@ -247,9 +247,13 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | Documento | Descripción |
 |-----------|-------------|
 | [Executive Fact Sheet](business/EXECUTIVE_FACT_SHEET.md) | Day 1 oficial - documento institucional |
+| [Risk Mitigation Log](business/investor/risk_mitigation_log.md) | Eventos de protección de capital (Day 1-4) |
+| [OMNIX vs Market](business/investor/omnix_vs_market.md) | Comparativa Alpha vs Beta |
+| [Shadow Performance](business/investor/shadow_performance_report.md) | Análisis contrafactual de trades vetados |
+| [4-Layer Architecture](business/investor/architecture_4_layers.md) | Arquitectura de seguridad para Hub71 |
 | [One Pager](business/investor/one_pager.md) | Resumen ejecutivo |
 | [Proyecciones](business/investor/financial_projections.md) | Forecast financiero |
-| [Pitch Deck](business/investor/pitch_deck.html) | Presentación |
+| [Pitch Deck Hub71](business/PITCH_DECK_HUB71.md) | Presentación para Hub71 |
 
 ### Referencia Técnica
 | Documento | Descripción |
