@@ -54,6 +54,13 @@ BLACKLISTED_PHRASES = [
     r"It's crucial to highlight that\s*",
     r'I understand the seriousness[^.]*\.?\s*',
     r'I understand your question[^.]*\.?\s*',
+    # Numbered section headers (remove preamble structure)
+    r'^\*?\*?1\.\s*An[aá]lisis\s+Inmediato:?\*?\*?\s*',  # "1. Análisis Inmediato:"
+    r'^\*?\*?2\.\s*Datos\s+T[eé]cnicos:?\*?\*?\s*',      # "2. Datos Técnicos:"
+    r'^\*?\*?3\.\s*Conclusi[oó]n:?\*?\*?\s*',            # "3. Conclusión:"
+    r'^\*?\*?1\.\s*Immediate\s+Analysis:?\*?\*?\s*',     # "1. Immediate Analysis:"
+    r'^\*?\*?2\.\s*Technical\s+Data:?\*?\*?\s*',         # "2. Technical Data:"
+    r'^\*?\*?3\.\s*Conclusion:?\*?\*?\s*',               # "3. Conclusion:"
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in BLACKLISTED_PHRASES]
