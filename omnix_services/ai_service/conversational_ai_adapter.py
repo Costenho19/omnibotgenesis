@@ -19,51 +19,89 @@ logger = logging.getLogger(__name__)
 # ==============================================================================
 
 BLACKLISTED_PHRASES = [
-    # Full preamble patterns (Spanish) - with or without name
-    r'^Absolutamente[,.\s]+(\w+[,.\s]+)?',   # "Absolutamente." or "Absolutamente, Harold."
-    r'^Por supuesto[,.\s]+(\w+[,.\s]+)?',    # "Por supuesto." or "Por supuesto, Harold."
+    # ===========================================================================
+    # COMPLETE SENTENCE REMOVALS (phrases that form entire throwaway sentences)
+    # Pattern: Remove the phrase + everything until the period, then continue
+    # ===========================================================================
+    
+    # Preamble sentences that add no value (remove entire sentence)
+    r'^Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
+    r'^Agradezco tu pregunta[^.]*\.\s*',
+    r'^Agradezco su pregunta[^.]*\.\s*',
+    r'^Entiendo la importancia de este tema[^.]*\.\s*',
+    r'^Entiendo la seriedad[^.]*\.\s*',
+    r'^Esta pregunta es importante[^.]*\.\s*',
+    r'^Esta pregunta es fundamental[^.]*\.\s*',
+    r'^Esta pregunta es crucial[^.]*\.\s*',
+    r'^Tu planteamiento es fundamental[^.]*\.\s*',
+    r'^Tu pregunta es fundamental[^.]*\.\s*',
+    
+    # "y me comprometo..." mid-sentence appendages (remove just the appendage)
+    r',?\s*y me comprometo a ofrecer[^.]*',
+    r',?\s*mi objetivo es proporcionar claridad[^.]*',
+    
+    # ===========================================================================
+    # INLINE PHRASE REMOVALS (short phrases that can appear anywhere)
+    # ===========================================================================
+    
+    # Preamble starters (Spanish)
+    r'^Absolutamente[,.\s]+(\w+[,.\s]+)?',
+    r'^Por supuesto[,.\s]+(\w+[,.\s]+)?',
     r'^Con mucho gusto[,.\s]+',
     r'^Encantado de\s+',
-    # Servile phrases (Spanish) - anywhere, with or without period
-    r'Asumo la responsabilidad[^.]*\.?\s*',
-    r'Me disculpo por[^.]*\.?\s*',
-    r'Lamento que[^.]*\.?\s*',
+    
+    # Apologies (Spanish)
+    r'Asumo la responsabilidad[^.]*\.\s*',
+    r'Me disculpo por[^.]*\.\s*',
+    r'Lamento que[^.]*\.\s*',
+    
     # Meta-comments (Spanish)
-    r'^Esta pregunta es importante[^.]*\.?\s*',
-    r'^Esta pregunta es fundamental[^.]*\.?\s*',
-    r'^Esta pregunta es crucial[^.]*\.?\s*',
     r'Vale la pena señalar que\s*',
     r'Es crucial destacar que\s*',
-    r'Entiendo la seriedad[^.]*\.?\s*',
-    r'Entiendo tu pregunta[^.]*\.?\s*',
-    r'Entiendo su pregunta[^.]*\.?\s*',
-    # Full preamble patterns (English) - with or without name
+    r'Entiendo tu pregunta[^.]*\.\s*',
+    r'Entiendo su pregunta[^.]*\.\s*',
+    
+    # Preamble starters (English)
     r'^Absolutely[,.\s]+(\w+[,.\s]+)?',
     r'^Of course[,.\s]+(\w+[,.\s]+)?',
     r'^With pleasure[,.\s]+',
     r'^Delighted to\s+',
-    # Servile phrases (English) - with or without period
-    r'I take responsibility[^.]*\.?\s*',
-    r'I apologize for[^.]*\.?\s*',
-    r'I regret that[^.]*\.?\s*',
+    r'I appreciate the insight[^.]*\.\s*',
+    r'I appreciate your question[^.]*\.\s*',
+    
+    # Apologies (English)
+    r'I take responsibility[^.]*\.\s*',
+    r'I apologize for[^.]*\.\s*',
+    r'I regret that[^.]*\.\s*',
+    
     # Meta-comments (English)
-    r'^This question is important[^.]*\.?\s*',
-    r'^This question is fundamental[^.]*\.?\s*',
-    r'^This question is crucial[^.]*\.?\s*',
+    r'^This question is important[^.]*\.\s*',
+    r'^This question is fundamental[^.]*\.\s*',
+    r'^This question is crucial[^.]*\.\s*',
     r"It's worth noting that\s*",
     r"It's crucial to highlight that\s*",
-    r'I understand the seriousness[^.]*\.?\s*',
-    r'I understand your question[^.]*\.?\s*',
-    # Numbered section headers (remove preamble structure)
-    r'^\*?\*?1\.\s*An[aá]lisis\s+Inmediato:?\*?\*?\s*',  # "1. Análisis Inmediato:"
-    r'^\*?\*?2\.\s*Datos\s+T[eé]cnicos:?\*?\*?\s*',      # "2. Datos Técnicos:"
-    r'^\*?\*?3\.\s*Conclusi[oó]n:?\*?\*?\s*',            # "3. Conclusión:"
-    r'^\*?\*?1\.\s*Immediate\s+Analysis:?\*?\*?\s*',     # "1. Immediate Analysis:"
-    r'^\*?\*?2\.\s*Technical\s+Data:?\*?\*?\s*',         # "2. Technical Data:"
-    r'^\*?\*?3\.\s*Conclusion:?\*?\*?\s*',               # "3. Conclusion:"
+    r'I understand the seriousness[^.]*\.\s*',
+    r'I understand your question[^.]*\.\s*',
+    r'I understand the importance[^.]*\.\s*',
+    
+    # ===========================================================================
+    # NUMBERED SECTION HEADERS (remove the header text only, keep content)
+    # ===========================================================================
+    r'\*1\.\s*An[aá]lisis\s+Inmediato:?\*\s*',
+    r'\*2\.\s*Datos\s+T[eé]cnicos:?\*\s*',
+    r'\*3\.\s*Conclusi[oó]n:?\*\s*',
+    r'\*\*1\.\s*An[aá]lisis\s+Inmediato:?\*\*\s*',
+    r'\*\*2\.\s*Datos\s+T[eé]cnicos:?\*\*\s*',
+    r'\*\*3\.\s*Conclusi[oó]n:?\*\*\s*',
+    r'^\s*1\.\s*An[aá]lisis\s+Inmediato:?\s*',
+    r'^\s*2\.\s*Datos\s+T[eé]cnicos:?\s*',
+    r'^\s*3\.\s*Conclusi[oó]n:?\s*',
+    r'\*1\.\s*Immediate\s+Analysis:?\*\s*',
+    r'\*2\.\s*Technical\s+Data:?\*\s*',
+    r'\*3\.\s*Conclusion:?\*\s*',
 ]
 
-BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in BLACKLISTED_PHRASES]
+BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
 
 def post_process_response(response: str) -> str:
     """
