@@ -20,88 +20,51 @@ logger = logging.getLogger(__name__)
 
 BLACKLISTED_PHRASES = [
     # ===========================================================================
-    # COMPLETE SENTENCE REMOVALS (phrases that form entire throwaway sentences)
-    # NO ^ anchor - match anywhere in text for flexibility
+    # PREAMBLE SENTENCES - Must be at START of text or line (anchored with ^)
+    # These are throwaway openers that add no value
     # ===========================================================================
     
-    # Preamble sentences that add no value (remove entire sentence)
-    r'Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
-    r'Agradezco tu pregunta[^.]*\.\s*',
-    r'Agradezco su pregunta[^.]*\.\s*',
-    r'Entiendo la importancia de este tema[^.]*\.\s*',
-    r'Entiendo la seriedad[^.]*\.\s*',
-    r'Esta pregunta es importante[^.]*\.\s*',
-    r'Esta pregunta es fundamental[^.]*\.\s*',
-    r'Esta pregunta es crucial[^.]*\.\s*',
-    r'Tu planteamiento es fundamental[^.]*\.\s*',
-    r'Tu pregunta es fundamental[^.]*\.\s*',
-    r'Tu planteamiento es cr[ií]tico:\s*',
+    r'^Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
+    r'^Agradezco tu pregunta[^.]*\.\s*',
+    r'^Agradezco su pregunta[^.]*\.\s*',
+    r'^Entiendo la importancia de este tema[^.]*\.\s*',
+    r'^Entiendo la seriedad[^.]*\.\s*',
+    r'^Esta pregunta es importante[^.]*\.\s*',
+    r'^Esta pregunta es fundamental[^.]*\.\s*',
+    r'^Esta pregunta es crucial[^.]*\.\s*',
+    r'^Tu planteamiento es fundamental[^.]*\.\s*',
+    r'^Tu pregunta es fundamental[^.]*\.\s*',
+    r'^Tu planteamiento es cr[ií]tico:\s*',
+    r'^Absolutamente[,.\s]+',
+    r'^Por supuesto[,.\s]+',
+    r'^Con mucho gusto[,.\s]+',
+    r'^Encantado de\s+',
     
-    # Closing servile phrases (end of response)
-    r'Me confirma que estamos en la misma sinton[ií]a[^.]*\.\s*',
-    r'Espero que esta respuesta sea de su agrado[^.]*\.\s*',
-    r'Espero haber respondido[^.]*\.\s*',
-    r'Quedo a tu disposici[oó]n[^.]*\.\s*',
-    r'Quedo a su disposici[oó]n[^.]*\.\s*',
-    r'Estamos comprometidos a[^.]*\.\s*',
-    r'Nuestro objetivo es construir[^.]*\.\s*',
+    # ===========================================================================
+    # CLOSING SERVILE PHRASES - Must END a sentence (followed by period + end/newline)
+    # Anchored to prevent matching mid-paragraph content
+    # ===========================================================================
     
-    # "y me comprometo..." mid-sentence appendages (remove just the appendage)
+    r'Me confirma que estamos en la misma sinton[ií]a[^.]*\.\s*$',
+    r'Espero que esta respuesta sea de su agrado[^.]*\.\s*$',
+    r'Espero haber respondido[^.]*\.\s*$',
+    r'Quedo a tu disposici[oó]n[^.]*\.\s*$',
+    r'Quedo a su disposici[oó]n[^.]*\.\s*$',
+    
+    # ===========================================================================
+    # MID-SENTENCE APPENDAGES (careful removal of fluff clauses)
+    # ===========================================================================
+    
     r',?\s*y me comprometo a ofrecer[^.]*',
     r',?\s*mi objetivo es proporcionar claridad[^.]*',
     
     # ===========================================================================
-    # INLINE PHRASE REMOVALS (short phrases that can appear anywhere)
+    # NUMBERED SECTION HEADERS - Full line only (anchored both sides)
+    # Matches standalone header lines like "*3. Implicaciones:*"
     # ===========================================================================
     
-    # Preamble starters (Spanish) - keep ^ for these since they're line starters
-    r'^Absolutamente[,.\s]+(\w+[,.\s]+)?',
-    r'^Por supuesto[,.\s]+(\w+[,.\s]+)?',
-    r'^Con mucho gusto[,.\s]+',
-    r'^Encantado de\s+',
-    
-    # Apologies (Spanish)
-    r'Asumo la responsabilidad[^.]*\.\s*',
-    r'Me disculpo por[^.]*\.\s*',
-    r'Lamento que[^.]*\.\s*',
-    r'Reconozco que esta posibilidad[^.]*\.\s*',
-    
-    # Meta-comments (Spanish)
-    r'Vale la pena señalar que\s*',
-    r'Es crucial destacar que\s*',
-    r'Entiendo tu pregunta[^.]*\.\s*',
-    r'Entiendo su pregunta[^.]*\.\s*',
-    
-    # Preamble starters (English)
-    r'^Absolutely[,.\s]+(\w+[,.\s]+)?',
-    r'^Of course[,.\s]+(\w+[,.\s]+)?',
-    r'^With pleasure[,.\s]+',
-    r'^Delighted to\s+',
-    r'I appreciate the insight[^.]*\.\s*',
-    r'I appreciate your question[^.]*\.\s*',
-    
-    # Apologies (English)
-    r'I take responsibility[^.]*\.\s*',
-    r'I apologize for[^.]*\.\s*',
-    r'I regret that[^.]*\.\s*',
-    
-    # Meta-comments (English)
-    r'^This question is important[^.]*\.\s*',
-    r'^This question is fundamental[^.]*\.\s*',
-    r'^This question is crucial[^.]*\.\s*',
-    r"It's worth noting that\s*",
-    r"It's crucial to highlight that\s*",
-    r'I understand the seriousness[^.]*\.\s*',
-    r'I understand your question[^.]*\.\s*',
-    r'I understand the importance[^.]*\.\s*',
-    
-    # ===========================================================================
-    # NUMBERED SECTION HEADERS - GENERIC PATTERN
-    # Matches *N. Any Text:* or **N. Any Text:** where N is 1-9
-    # ===========================================================================
-    r'\*[1-9]\.\s+[^*:]+:?\*\s*',
-    r'\*\*[1-9]\.\s+[^*:]+:?\*\*\s*',
-    r'^\s*[1-9]\.\s+[A-Z][^:]+:\s*$',
+    r'^\s*\*[1-9]\.\s+[^*\n]+:?\*\s*$',
+    r'^\s*\*\*[1-9]\.\s+[^*\n]+:?\*\*\s*$',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
@@ -132,11 +95,11 @@ def post_process_response(response: str) -> str:
     # Clean up multiple consecutive newlines (max 2)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
     
-    # Clean up leading whitespace/punctuation after removal
-    cleaned = re.sub(r'^[\s,.\-*]+', '', cleaned)
+    # Clean up leading whitespace/punctuation after removal (but preserve asterisks for bullet lists)
+    cleaned = re.sub(r'^[\s,.]+', '', cleaned)
     
     # Ensure first character is uppercase if we removed something
-    if cleaned and cleaned[0].islower() and response[0].isupper():
+    if cleaned and cleaned[0].islower():
         cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
     
     # Log if we made changes (for debugging)
