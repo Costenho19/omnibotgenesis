@@ -75,9 +75,19 @@ When ANY of these signals are detected, the response has NO WORD LIMIT:
 - "equity", "valuation", "term sheet", "institutional"
 - "due diligence", "diligence examen", "evaluating", "evaluando"
 - "mandatory questions", "preguntas obligatorias"
+- "clientes institucionales", "cliente institucional"
 
 **Compliance Signals:**
 - "sharia", "compliance", "regulatory", "SEC", "legal", "jurisdiction"
+
+**Systemic Risk / Sophisticated Investor Signals (Jan 19, 2026):**
+- "riesgo sistémico", "systemic risk", "amplificador de riesgo", "risk amplifier"
+- "externalidades adversas", "adverse externalities"
+- "fail-closed", "fail closed", "modo fail"
+- "estrés sistémico", "systemic stress"
+- "efectos de segunda ronda", "second-order effects"
+- "retroalimentación negativa", "negative feedback"
+- "preservación de capital", "capital preservation"
 
 **Structure Signals:**
 - Multiple numbered questions (1. 2. 3. etc. - 3 or more)
@@ -103,8 +113,30 @@ When ANY of these signals are detected, the response has NO WORD LIMIT:
 **ALWAYS:**
 - Start with direct answer
 - Use simple, everyday language
-- One idea per sentence
-- Technical terms only when necessary (with brief explanation)
+
+### Post-Processing Anti-Servile Filter (Jan 19, 2026)
+
+A safety-net filter in `conversational_ai_adapter.py` removes servile/prohibited phrases AFTER AI generation. This catches phrases even when the AI ignores prompt instructions.
+
+**Location:** `omnix_services/ai_service/conversational_ai_adapter.py` → `BLACKLISTED_PHRASES` + `post_process_response()`
+
+**Filtered Patterns (Spanish):**
+- "Agradezco la perspicacia de tu pregunta..."
+- "me comprometo a ofrecer una respuesta exhaustiva..."
+- "mi objetivo es proporcionar claridad..."
+- "Entiendo la importancia de este tema..."
+- Numbered section headers: "*1. Análisis Inmediato*", "**2. Datos Técnicos**", "3. Conclusión:"
+
+**Filtered Patterns (English):**
+- "I appreciate the insight of your question..."
+- "I appreciate your question..."
+- "I understand the importance..."
+
+**Behavior:**
+- Complete servile sentences are removed, preserving valuable content
+- Numbered headers are stripped, keeping the content that follows
+- Mid-sentence appendages like ", y me comprometo a ofrecer..." are cleaned
+- Response is capitalized properly after removal
 
 ---
 
@@ -252,6 +284,8 @@ def enforce_brevity(response: str, max_words: int) -> str:
 
 | Date | Change |
 |------|--------|
+| 2026-01-19 | **Sophisticated Investor Detection:** Added systemic risk indicators (riesgo sistémico, amplificador de riesgo, externalidades adversas, fail-closed, estrés sistémico, efectos de segunda ronda, retroalimentación negativa, preservación de capital). Added "clientes institucionales" to investor signals. |
+| 2026-01-19 | **Anti-Servile Filter Enhancement:** Added patterns for "Agradezco la perspicacia", "me comprometo a ofrecer", numbered section headers (*1. Análisis Inmediato*, etc.). Filter now removes complete servile sentences while preserving valuable content. |
 | 2026-01-16 | **Investor Due Diligence Fix:** Added UNLIMITED response for investor questions (family office, AUM, seed, pre-money, multiple numbered questions, 100+ word questions). Investors deserve complete answers. |
 | 2026-01-16 | **Conversational Tone Update:** Raised all word limits (30→80, 50→120, 100→180, 150→200, 300→350) to allow friendly, amene responses while maintaining brevity. Added list/enumeration detection. |
 | 2026-01-15 | Added adaptive behavior: explanation requests get unlimited words |

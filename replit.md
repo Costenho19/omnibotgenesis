@@ -52,6 +52,12 @@ The system integrates an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Vet
 ### AI Architecture and Enforcement
 The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture with dynamic language detection, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents AI "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior and communication. The Performance Honesty Guard provides honest metrics and contextual truth for investor communications. AI responses are subject to adaptive detail based on user requests. For due diligence, investor queries trigger comprehensive responses without brevity limits.
 
+### Anti-Servile Post-Processing Filter (Jan 19, 2026)
+A safety-net filter in `conversational_ai_adapter.py` removes servile/prohibited phrases AFTER AI generation. Filtered patterns include: "Agradezco la perspicacia", "me comprometo a ofrecer", numbered section headers (*1. Análisis Inmediato*, etc.). The filter removes complete servile sentences while preserving valuable content. See ADR-009 for full documentation.
+
+### Async Market Data Fetching (Jan 19, 2026)
+`_fetch_real_market_data_async()` runs 7 data sources in parallel via `asyncio.gather()`: Kraken auth, Kraken public, CoinGecko, specific crypto, trade performance, veto data, investor data. Reduces latency from ~20s (sequential) to ~3-5s (parallel). HTTP timeouts reduced from 10s to 5s for faster failure recovery.
+
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves threshold reduction and EMA trigger adjustment to improve trade throughput.
 
