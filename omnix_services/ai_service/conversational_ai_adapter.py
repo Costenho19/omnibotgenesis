@@ -215,7 +215,7 @@ class ConversationalAI:
                 
                 logger.info(f"🧠 MEMORIA: chat_id={chat_id_int}")
                 
-                real_market_data = self._fetch_real_market_data(trading_system, user_message, user_id=user_id)
+                real_market_data = await self._fetch_real_market_data_async(trading_system, user_message, user_id=user_id)
                 
                 result = await self.enterprise_service.generate_response(
                     chat_id=chat_id_int,
@@ -345,6 +345,208 @@ class ConversationalAI:
         except Exception as e:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()
+    
+    async def _fetch_real_market_data_async(self, trading_system, user_message: str, user_id: Optional[str] = None) -> dict:
+        """
+        📊 ASYNC VERSION - Obtener datos de mercado en PARALELO para reducir latencia.
+        
+        FIX Jan 19, 2026: Versión async que ejecuta todas las llamadas HTTP/DB en paralelo
+        usando asyncio.gather(). Reduce latencia de ~20s a ~3-5s.
+        
+        FEATURE PARITY: Mantiene toda la funcionalidad del método sync:
+        - Detección de criptos específicas (Solana, Cardano, etc.)
+        - Kraken autenticado cuando disponible
+        - Trading mode REAL/PAPER detection
+        """
+        import aiohttp
+        import re
+        from omnix_services.market_data.kraken_data import fetch_crypto_price, CRYPTO_MAPPING
+        
+        market_data = {}
+        message_lower = user_message.lower()
+        
+        logger.info("🔍 [ASYNC] MARKET DATA: Iniciando obtención paralela de datos...")
+        start_time = asyncio.get_event_loop().time()
+        
+        detected_crypto = None
+        for crypto_name in CRYPTO_MAPPING.keys():
+            if crypto_name in message_lower:
+                detected_crypto = crypto_name
+                break
+        
+        async def fetch_specific_crypto():
+            """Fetch specific crypto price if detected in message"""
+            if not detected_crypto or detected_crypto in ['btc', 'bitcoin']:
+                return None
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, fetch_crypto_price, detected_crypto)
+        
+        async def fetch_kraken_auth():
+            """Try authenticated Kraken API first (faster, more reliable)"""
+            if not trading_system or not hasattr(trading_system, 'kraken_client'):
+                return None
+            try:
+                loop = asyncio.get_event_loop()
+                def _fetch():
+                    btc_ticker = trading_system.kraken_client.client.fetch_ticker('BTC/USD')
+                    if btc_ticker and 'last' in btc_ticker and btc_ticker['last']:
+                        return {
+                            'btc_price': float(btc_ticker['last']),
+                            'btc_24h_high': float(btc_ticker.get('high', 0) or 0),
+                            'btc_24h_low': float(btc_ticker.get('low', 0) or 0),
+                            'btc_volume': float(btc_ticker.get('baseVolume', 0) or 0),
+                            'data_source': 'Kraken'
+                        }
+                    return None
+                return await asyncio.wait_for(loop.run_in_executor(None, _fetch), timeout=5.0)
+            except Exception as e:
+                logger.warning(f"⚠️ [ASYNC] Kraken AUTH failed: {e}")
+            return None
+        
+        async def fetch_kraken_public():
+            """Fetch BTC price from Kraken public API"""
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
+                        timeout=aiohttp.ClientTimeout(total=5),
+                        headers={'User-Agent': 'OMNIX/6.0'}
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            if not data.get('error') and 'result' in data:
+                                result = data['result']
+                                ticker_key = 'XXBTZUSD' if 'XXBTZUSD' in result else list(result.keys())[0] if result else None
+                                if ticker_key and 'c' in result[ticker_key]:
+                                    ticker = result[ticker_key]
+                                    return {
+                                        'btc_price': float(ticker['c'][0]),
+                                        'btc_24h_high': float(ticker['h'][0]) if ticker.get('h') else 0,
+                                        'btc_24h_low': float(ticker['l'][0]) if ticker.get('l') else 0,
+                                        'btc_volume': float(ticker['v'][1]) if ticker.get('v') and len(ticker['v']) > 1 else 0,
+                                        'data_source': 'Kraken'
+                                    }
+            except Exception as e:
+                logger.warning(f"⚠️ [ASYNC] Kraken PUBLIC failed: {e}")
+            return None
+        
+        async def fetch_coingecko_backup():
+            """Fetch BTC price from CoinGecko as backup"""
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_high=true&include_24hr_low=true',
+                        timeout=aiohttp.ClientTimeout(total=5),
+                        headers={'User-Agent': 'OMNIX/6.0'}
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            if 'bitcoin' in data and 'usd' in data['bitcoin']:
+                                return {
+                                    'btc_price': float(data['bitcoin']['usd']),
+                                    'btc_24h_high': float(data['bitcoin'].get('usd_24h_high', 0) or 0),
+                                    'btc_24h_low': float(data['bitcoin'].get('usd_24h_low', 0) or 0),
+                                    'data_source': 'CoinGecko'
+                                }
+            except Exception as e:
+                logger.warning(f"⚠️ [ASYNC] CoinGecko failed: {e}")
+            return None
+        
+        async def fetch_trade_performance():
+            """Fetch trade performance data from PostgreSQL (runs in thread pool)"""
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._fetch_trade_performance, user_message, user_id)
+        
+        async def fetch_veto_data():
+            """Fetch veto data from PostgreSQL (runs in thread pool)"""
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._fetch_veto_data, user_message)
+        
+        async def fetch_investor_data():
+            """Fetch investor data from PostgreSQL (runs in thread pool)"""
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._fetch_investor_data, user_message)
+        
+        results = await asyncio.gather(
+            fetch_specific_crypto(),
+            fetch_kraken_auth(),
+            fetch_kraken_public(),
+            fetch_coingecko_backup(),
+            fetch_trade_performance(),
+            fetch_veto_data(),
+            fetch_investor_data(),
+            return_exceptions=True
+        )
+        
+        crypto_result, kraken_auth_result, kraken_public_result, coingecko_result, trade_result, veto_result, investor_result = results
+        
+        if detected_crypto and detected_crypto not in ['btc', 'bitcoin']:
+            if crypto_result and not isinstance(crypto_result, Exception) and crypto_result.get('success'):
+                market_data['requested_crypto'] = {
+                    'symbol': crypto_result['symbol'],
+                    'name': detected_crypto.title(),
+                    'price': crypto_result['price'],
+                    'change_24h': crypto_result.get('change_24h', 0),
+                    'high_24h': crypto_result.get('high_24h'),
+                    'low_24h': crypto_result.get('low_24h'),
+                    'volume': crypto_result.get('volume'),
+                    'source': crypto_result.get('source', 'Kraken')
+                }
+                logger.info(f"✅ [ASYNC] {crypto_result['symbol']}: ${crypto_result['price']:,.4f}")
+            else:
+                error_msg = crypto_result.get('error', 'Precio no disponible') if isinstance(crypto_result, dict) else 'Precio no disponible'
+                market_data['crypto_error'] = error_msg
+                logger.warning(f"⚠️ [ASYNC] Crypto {detected_crypto} fetch failed: {error_msg}")
+        
+        btc_obtained = False
+        if kraken_auth_result and not isinstance(kraken_auth_result, Exception) and isinstance(kraken_auth_result, dict):
+            market_data.update(kraken_auth_result)
+            btc_obtained = True
+            logger.info(f"✅ [ASYNC] Kraken AUTH: ${market_data['btc_price']:,.2f}")
+        elif kraken_public_result and not isinstance(kraken_public_result, Exception) and isinstance(kraken_public_result, dict):
+            market_data.update(kraken_public_result)
+            btc_obtained = True
+            logger.info(f"✅ [ASYNC] Kraken PUBLIC: ${market_data['btc_price']:,.2f}")
+        elif coingecko_result and not isinstance(coingecko_result, Exception) and isinstance(coingecko_result, dict):
+            market_data.update(coingecko_result)
+            btc_obtained = True
+            logger.info(f"✅ [ASYNC] CoinGecko fallback: ${market_data['btc_price']:,.2f}")
+        
+        if not btc_obtained:
+            market_data['market_data_unavailable'] = True
+            market_data['market_data_warning'] = "Market data temporarily unavailable"
+            logger.error("❌ [ASYNC] All price sources failed")
+        
+        if trade_result and not isinstance(trade_result, Exception):
+            market_data['trade_performance'] = trade_result
+        
+        if veto_result and not isinstance(veto_result, Exception):
+            market_data['veto_data'] = veto_result
+        
+        if investor_result and not isinstance(investor_result, Exception):
+            market_data['investor_data'] = investor_result
+        
+        try:
+            if trading_system and hasattr(trading_system, 'paper_balance'):
+                market_data['paper_balance_usd'] = trading_system.paper_balance
+                market_data['trading_mode'] = 'PAPER'
+            elif trading_system and hasattr(trading_system, 'real_trading_enabled'):
+                market_data['trading_mode'] = 'REAL' if trading_system.real_trading_enabled else 'PAPER'
+        except:
+            pass
+        
+        leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', message_lower)
+        if leverage_match:
+            leverage_value = int(leverage_match.group(1) or leverage_match.group(2) or leverage_match.group(3))
+            market_data['requested_leverage'] = leverage_value
+            if leverage_value > 5:
+                market_data['leverage_warning'] = f"⛔ APALANCAMIENTO {leverage_value}x RECHAZADO - Máximo permitido: 5x (política de riesgo institucional)"
+                logger.warning(f"⚠️ [ASYNC] Leverage {leverage_value}x solicitado - EXCEDE LÍMITE 5x")
+        
+        elapsed = asyncio.get_event_loop().time() - start_time
+        logger.info(f"✅ [ASYNC] Market data fetched in {elapsed:.2f}s (parallel execution)")
+        
+        return market_data
     
     def _fetch_real_market_data(self, trading_system, user_message: str, user_id: Optional[str] = None) -> dict:
         """
