@@ -185,6 +185,15 @@ def get_response_word_limit(question: str) -> Optional[int]:
         'desacoplamiento', 'decoupling', 'aislamiento de clientes',
         'gobernanza de escala', 'scale governance',
         'límites de adopción', 'adoption limits',
+        # Mass adoption / coordinated signal scenarios (Jan 19, 2026)
+        'venta simultánea', 'venta simultanea', 'simultaneous sale',
+        'señal simultánea', 'senal simultanea', 'simultaneous signal',
+        'todos reciben', 'all receive',
+        '10,000 usuarios', '10000 usuarios', '10k usuarios',
+        'escala a', 'scales to', 'escalamiento masivo',
+        'usuarios vendiendo', 'users selling',
+        'señal de venta', 'senal de venta', 'sell signal',
+        'impacto en el mercado', 'market impact',
     ]
     if any(indicator in question_lower for indicator in investor_indicators):
         return None  # UNLIMITED - investor questions get full answers

@@ -25,14 +25,19 @@ BLACKLISTED_PHRASES = [
     # Uses lookbehind to keep the name prefix when present
     # ===========================================================================
     
-    r'(?<=\.\s)Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
-    r'^Agradezco la perspicacia de tu pregunta[^.]*\.\s*',
+    # GENERIC "Agradezco...perspicacia" pattern - catches all variations
+    r'(?<=\.\s)Agradezco[^.]*perspicacia[^.]*\.\s*',
+    r'^Agradezco[^.]*perspicacia[^.]*\.\s*',
+    
+    # Specific "Agradezco" patterns without perspicacia
     r'(?<=\.\s)Agradezco tu pregunta[^.]*\.\s*',
     r'^Agradezco tu pregunta[^.]*\.\s*',
     r'(?<=\.\s)Agradezco su pregunta[^.]*\.\s*',
     r'^Agradezco su pregunta[^.]*\.\s*',
-    r'(?<=\.\s)Entiendo la importancia de (?:este tema|abordar)[^.]*\.\s*',
-    r'^Entiendo la importancia de (?:este tema|abordar)[^.]*\.\s*',
+    
+    # "Entiendo la importancia" patterns - expanded
+    r'(?<=\.\s)Entiendo la importancia de[^.]*\.\s*',
+    r'^Entiendo la importancia de[^.]*\.\s*',
     r'(?<=\.\s)Entiendo la seriedad[^.]*\.\s*',
     r'^Entiendo la seriedad[^.]*\.\s*',
     r'(?<=\.\s)Esta pregunta es importante[^.]*\.\s*',
