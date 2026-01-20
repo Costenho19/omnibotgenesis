@@ -129,6 +129,112 @@ def post_process_response(response: str) -> str:
     
     return cleaned.strip()
 
+# ==============================================================================
+# SYSTEMIC/MACROPRUDENTIAL QUESTION DETECTOR
+# Detects questions about mass adoption, coordinated signals, market impact
+# Injects a strong override prompt to force infrastructure framing
+# ==============================================================================
+
+SYSTEMIC_QUESTION_KEYWORDS = [
+    # Mass adoption scenarios
+    '10,000 usuarios', '10000 usuarios', '10k usuarios',
+    'miles de usuarios', 'muchos usuarios', 'millones de usuarios',
+    'escala a', 'escalamiento masivo', 'adopción masiva',
+    # Coordinated signal scenarios
+    'venta simultánea', 'venta simultanea', 'ventas simultáneas',
+    'señal simultánea', 'senal simultanea', 'señales simultáneas',
+    'todos reciben', 'todos vendiendo', 'all receive',
+    'señal de venta', 'senal de venta', 'sell signal',
+    'misma señal', 'same signal',
+    # Market impact / systemic risk
+    'impacto en el mercado', 'market impact',
+    'riesgo sistémico', 'riesgo sistemico', 'systemic risk',
+    'actor sistémico', 'actor sistemico', 'systemic actor',
+    'efecto manada', 'herd effect', 'herding',
+    'coordinación de mercado', 'market coordination',
+    'concentración de decisiones', 'decision concentration',
+    'macroprudencial', 'macroprudential',
+    'penetración sistémica', 'penetracion sistemica',
+    # Infrastructure dominance
+    'infraestructura dominante', 'dominant infrastructure',
+    'múltiples instituciones', 'multiple institutions',
+]
+
+SYSTEMIC_OVERRIDE_PROMPT = """
+## CRITICAL OVERRIDE - MACROPRUDENTIAL RESPONSE FRAME [HIGHEST PRIORITY]
+
+YOU ARE ANSWERING A QUESTION ABOUT SYSTEMIC RISK / MASS ADOPTION.
+
+**MANDATORY FRAME: INFRASTRUCTURE ARCHITECT** (NOT trading operator)
+
+**YOUR CORE MESSAGE MUST BE:**
+OMNIX does NOT coordinate signals between clients. Each instance operates in COMPLETE ISOLATION.
+There is NO mechanism for synchronized selling because the system does NOT observe aggregate positions.
+
+**CORRECT RESPONSE STRUCTURE:**
+1. State that OMNIX cannot generate synchronized signals (architectural fact)
+2. Explain that each instance is isolated (no cross-client signaling)
+3. Mention adoption limits exist by design
+4. The fail-closed mode = INACTION, not market pressure
+
+**MODEL PHRASES YOU MUST USE:**
+- "OMNIX no genera señales sincronizadas a todos los usuarios."
+- "Cada instancia opera de forma completamente aislada."
+- "No existe mecanismo de coordinación entre clientes."
+- "El sistema no observa posiciones agregadas."
+
+**ABSOLUTELY FORBIDDEN IN THIS RESPONSE:**
+❌ Kelly Criterion / Kelly sizing / "criterio de Kelly"
+❌ Position sizing / "tamaño de posición" / "sizing adaptativo"
+❌ Leverage limits / "leverage máximo"
+❌ Monte Carlo simulations for market impact
+❌ Win rate / ROI / trade statistics
+❌ "12 estrategias cuantitativas"
+❌ "Desfase temporal de señales" (implies coordination exists)
+❌ "Circuit breakers" for mass selling (implies scenario is possible)
+❌ Percentages of market impact (2%, 5%, 20%)
+
+**WHY THESE ARE FORBIDDEN:**
+These concepts ASSUME the scenario is possible and explain HOW you would MITIGATE it.
+The correct response explains WHY the scenario CANNOT happen by design.
+
+**EXAMPLE OF WRONG RESPONSE:**
+"Si 10,000 usuarios vendieran simultáneamente, el sizing adaptativo reduciría el impacto..."
+(This assumes coordination is possible - WRONG)
+
+**EXAMPLE OF CORRECT RESPONSE:**
+"OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera aislada, sin observar posiciones de otros clientes. El escenario que describes requeriría un mecanismo de coordinación que intencionalmente no hemos construido."
+
+NOW RESPOND TO THE USER'S QUESTION USING THIS FRAME:
+"""
+
+def detect_systemic_question(message: str) -> bool:
+    """
+    Detect if user is asking about systemic risk / mass adoption scenarios.
+    
+    Args:
+        message: User's message text
+        
+    Returns:
+        True if systemic question detected, False otherwise
+    """
+    message_lower = message.lower()
+    for keyword in SYSTEMIC_QUESTION_KEYWORDS:
+        if keyword.lower() in message_lower:
+            logger.info(f"🔍 SYSTEMIC QUESTION DETECTED: keyword '{keyword}' found")
+            return True
+    return False
+
+def get_systemic_override_prompt() -> str:
+    """
+    Get the override prompt for systemic/macroprudential questions.
+    This prompt is injected BEFORE the user message to force correct framing.
+    
+    Returns:
+        Override prompt string
+    """
+    return SYSTEMIC_OVERRIDE_PROMPT
+
 try:
     from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
     from src.omnix.ports.driven.authorization_port import Permission
@@ -248,9 +354,17 @@ class ConversationalAI:
                 
                 real_market_data = await self._fetch_real_market_data_async(trading_system, user_message, user_id=user_id)
                 
+                # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+                effective_user_message = user_message
+                if detect_systemic_question(user_message):
+                    logger.info("🔍 [ASYNC] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
+                    systemic_override = get_systemic_override_prompt()
+                    # Prepend override BEFORE user message for maximum influence
+                    effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
+                
                 result = await self.enterprise_service.generate_response(
                     chat_id=chat_id_int,
-                    user_message=user_message,
+                    user_message=effective_user_message,
                     user_name=user_name,
                     market_data=real_market_data,
                     apply_visual_style=True,
@@ -313,6 +427,14 @@ class ConversationalAI:
                 # FIX Dec 10, 2025: Pasar user_id para obtener datos de trading específicos del usuario
                 real_market_data = self._fetch_real_market_data(trading_system, user_message, user_id=user_id)
                 
+                # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+                effective_user_message = user_message
+                if detect_systemic_question(user_message):
+                    logger.info("🔍 [SYNC] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
+                    systemic_override = get_systemic_override_prompt()
+                    # Prepend override BEFORE user message for maximum influence
+                    effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
+                
                 # RAILWAY FIX: Usar asyncio de forma segura
                 try:
                     # Intentar obtener loop existente (Railway webhook thread)
@@ -322,7 +444,7 @@ class ConversationalAI:
                     future = asyncio.run_coroutine_threadsafe(
                         self.enterprise_service.generate_response(
                             chat_id=chat_id_int,
-                            user_message=user_message,
+                            user_message=effective_user_message,
                             user_name=user_name,
                             market_data=real_market_data,
                             apply_visual_style=True
@@ -342,7 +464,7 @@ class ConversationalAI:
                     result = loop.run_until_complete(
                         self.enterprise_service.generate_response(
                             chat_id=chat_id_int,
-                            user_message=user_message,
+                            user_message=effective_user_message,
                             user_name=user_name,
                             market_data=real_market_data,
                             apply_visual_style=True
@@ -1122,8 +1244,17 @@ class ConversationalAI:
             'balance': None
         }
         
+        # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+        # Must be BEFORE build_system_prompt to prepend to user_message
+        effective_user_message = user_message
+        if detect_systemic_question(user_message):
+            logger.info("🔍 [LEGACY] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
+            systemic_override = get_systemic_override_prompt()
+            # Prepend override BEFORE user message for maximum influence
+            effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
+        
         system_prompt = prompt_builder.build_system_prompt(
-            user_message=user_message,
+            user_message=effective_user_message,
             user_name=user_name,
             context=context,
             kraken_status=kraken_status if kraken_info else None,
