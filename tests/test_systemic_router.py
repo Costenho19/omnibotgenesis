@@ -64,7 +64,7 @@ class TestSystemicClassification:
             "¿Cómo gestionan dependencia de proveedores externos?",
             "¿Qué pasa con un fallo silencioso de API?",
             "Si Kraken tiene datos inconsistentes...",
-            "¿Cómo manejan la latencia del exchange?",
+            "¿Qué hacen si hay fallo de Kraken?",  # Specific provider failure context
         ]
         for q in questions:
             result = classify_systemic_question(q)
@@ -93,6 +93,23 @@ class TestSystemicClassification:
         for q in questions:
             result = classify_systemic_question(q)
             assert result is None, f"Expected None for: {q}, got {result}"
+    
+    def test_generic_words_do_not_trigger_override(self):
+        """Generic words like 'exchange', 'kraken', 'latencia' should NOT trigger systemic override.
+        
+        These words appear in normal trading conversations and should not cause
+        the systemic framing to kick in. Only specific failure/resilience context should trigger.
+        """
+        questions = [
+            "¿Cómo manejan la latencia del exchange?",  # Generic latency question
+            "¿Kraken tiene BTC disponible?",  # Normal exchange query
+            "¿Cuál es el precio en el exchange?",  # Generic exchange mention
+            "Dame los datos de cloud",  # Generic cloud mention
+            "¿Hay mucha latencia ahora?",  # Generic latency question
+        ]
+        for q in questions:
+            result = classify_systemic_question(q)
+            assert result is None, f"Expected None (not systemic) for generic question: {q}, got {result}"
 
 
 class TestPriorityOrder:

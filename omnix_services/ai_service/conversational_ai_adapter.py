@@ -174,15 +174,19 @@ SYSTEMIC_TYPE_B_KEYWORDS = [
 ]
 
 SYSTEMIC_TYPE_C_KEYWORDS = [
-    'proveedores externos', 'external providers', 'third-party',
+    'proveedores externos', 'external providers', 'third-party providers',
     'api degradation', 'degradación de api', 'degradacion de api',
     'datos inconsistentes', 'inconsistent data',
     'fallo silencioso', 'silent failure', 'silent fail',
-    'comportamiento incorrecto', 'incorrect behavior',
+    'comportamiento incorrecto del proveedor', 'incorrect provider behavior',
     'hard failure', 'soft failure',
-    'cloud', 'exchange', 'kraken', 'latencia', 'latency',
+    'fallo de kraken', 'kraken down', 'kraken failure',
+    'fallo del exchange', 'exchange failure', 'exchange down',
     'dependencia de proveedores', 'provider dependency',
-    'infraestructura cloud', 'cloud infrastructure',
+    'infraestructura cloud falla', 'cloud infrastructure failure',
+    'proveedor reporta incorrectamente', 'provider reports incorrectly',
+    'fuente de datos corrupta', 'corrupted data source',
+    'sin hard failure', 'without hard failure',
 ]
 
 SYSTEMIC_TYPE_D_KEYWORDS = [
