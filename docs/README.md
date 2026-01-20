@@ -18,6 +18,18 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-013: Systemic Framing Router (Jan 19, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Routing determinístico de preguntas sistémicas
+- **PROBLEMA**: Bot usaba misma apertura ("no genera señales sincronizadas") para TODAS las preguntas sistémicas
+- **SOLUCIÓN**: Clasificador determinístico con 4 tipos de riesgo sistémico:
+  - **TYPE_A (Coordination)**: Señales sincronizadas, venta masiva → "OMNIX no genera señales sincronizadas..."
+  - **TYPE_B (Software)**: Defectos de código, bugs, despliegue → "OMNIX implementa múltiples capas de defensa..."
+  - **TYPE_C (Dependencies)**: Proveedores, APIs, datos → "OMNIX valida cada fuente de datos..."
+  - **TYPE_D (Governance)**: Reguladores, compliance, auditorías → "Desde perspectiva de gobernanza..."
+- **PRIORIDAD**: A > D > C > B (para preguntas que coinciden con múltiples tipos)
+- **TESTS**: 23 tests en `tests/test_systemic_router.py`
+- **REFERENCIA**: `docs/reference/adr/ADR-013-systemic-framing-router.md`
+
 ### ADR-012: Learning Baseline Freeze & Official Day 1 (Jan 15, 2026)
 - **ESTADO**: ✅ ADOPTADO - Day 1 oficial declarado
 - **DECLARACIÓN**: 15 de Enero 2026 = Day 1 del track record oficial

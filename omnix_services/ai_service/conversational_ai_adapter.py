@@ -130,104 +130,242 @@ def post_process_response(response: str) -> str:
     return cleaned.strip()
 
 # ==============================================================================
-# SYSTEMIC/MACROPRUDENTIAL QUESTION DETECTOR
-# Detects questions about mass adoption, coordinated signals, market impact
-# Injects a strong override prompt to force infrastructure framing
+# SYSTEMIC FRAMING ROUTER (ADR-013)
+# Deterministic classification of systemic questions into 4 types:
+# TYPE_A: Coordination / Synchronization (signal coordination, mass selling)
+# TYPE_B: Software / Deployment (code defects, bugs, versioning)
+# TYPE_C: Dependencies (API failures, provider issues, data inconsistency)
+# TYPE_D: Governance (regulatory, compliance, audits)
 # ==============================================================================
 
-SYSTEMIC_QUESTION_KEYWORDS = [
-    # Mass adoption scenarios
+SYSTEMIC_TYPE_A_KEYWORDS = [
     '10,000 usuarios', '10000 usuarios', '10k usuarios',
-    'miles de usuarios', 'muchos usuarios', 'millones de usuarios',
-    'escala a', 'escalamiento masivo', 'adopción masiva',
-    # Coordinated signal scenarios
+    'miles de usuarios', 'millones de usuarios',
     'venta simultánea', 'venta simultanea', 'ventas simultáneas',
+    'venta masiva', 'ventas masivas',
+    'vendieran simultáneamente', 'vendieran simultaneamente',
+    'vendiendo simultáneamente', 'vendiendo simultaneamente',
     'señal simultánea', 'senal simultanea', 'señales simultáneas',
     'todos reciben', 'todos vendiendo', 'all receive',
+    'todos los usuarios', 'all users',
     'señal de venta', 'senal de venta', 'sell signal',
     'misma señal', 'same signal',
-    # Market impact / systemic risk
+    'coordinación', 'coordinacion', 'coordination',
+    'efecto manada', 'herd effect', 'herding',
     'impacto en el mercado', 'market impact',
     'riesgo sistémico', 'riesgo sistemico', 'systemic risk',
     'actor sistémico', 'actor sistemico', 'systemic actor',
-    'efecto manada', 'herd effect', 'herding',
-    'coordinación de mercado', 'market coordination',
-    'concentración de decisiones', 'decision concentration',
     'macroprudencial', 'macroprudential',
     'penetración sistémica', 'penetracion sistemica',
-    # Infrastructure dominance
     'infraestructura dominante', 'dominant infrastructure',
     'múltiples instituciones', 'multiple institutions',
 ]
 
-SYSTEMIC_OVERRIDE_PROMPT = """
-## CRITICAL OVERRIDE - INSTITUTIONAL INFRASTRUCTURE RESPONSE [HIGHEST PRIORITY]
+SYSTEMIC_TYPE_B_KEYWORDS = [
+    'defecto lógico', 'defecto logico', 'logic defect',
+    'bug', 'error en el código', 'error en el codigo',
+    'código base', 'codigo base', 'code base', 'codebase',
+    'versión del modelo', 'version del modelo', 'model version',
+    'despliegue', 'deployment', 'deploy',
+    'patch', 'parche',
+    'actualización de software', 'actualizacion de software',
+    'miles de instancias', 'thousands of instances',
+    'mismo código', 'mismo codigo', 'same code',
+]
 
-**MANDATORY FRAME: INFRASTRUCTURE ARCHITECT** (NOT trading operator)
+SYSTEMIC_TYPE_C_KEYWORDS = [
+    'proveedores externos', 'external providers', 'third-party',
+    'api degradation', 'degradación de api', 'degradacion de api',
+    'datos inconsistentes', 'inconsistent data',
+    'fallo silencioso', 'silent failure', 'silent fail',
+    'comportamiento incorrecto', 'incorrect behavior',
+    'hard failure', 'soft failure',
+    'cloud', 'exchange', 'kraken', 'latencia', 'latency',
+    'dependencia de proveedores', 'provider dependency',
+    'infraestructura cloud', 'cloud infrastructure',
+]
 
-**CHOOSE YOUR OPENING BASED ON QUESTION TYPE:**
+SYSTEMIC_TYPE_D_KEYWORDS = [
+    'regulador', 'regulator', 'regulatory',
+    'compliance', 'cumplimiento',
+    'auditoría', 'auditoria', 'audit',
+    'responsabilidad fiduciaria', 'fiduciary',
+    'sec', 'mifid', 'sharia',
+    'legal', 'jurisdicción', 'jurisdiccion', 'jurisdiction',
+    'gobernanza', 'governance',
+]
 
-IF the question is about COORDINATED SIGNALS / MASS SELLING / USERS ACTING TOGETHER:
-→ Open with: "OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera de forma completamente aislada."
+SYSTEMIC_OVERRIDE_COORDINATION = """
+## SYSTEMIC OVERRIDE - TYPE A: COORDINATION/SYNCHRONIZATION [MANDATORY]
 
-IF the question is about CODE DEFECTS / PROVIDER FAILURES / INFRASTRUCTURE RISKS:
-→ Open with: "OMNIX implementa múltiples capas de defensa contra fallos de infraestructura."
-→ Then explain: canary releases, kill switches, versionado de modelos, fail-closed
+**QUESTION_TYPE: COORDINATION**
 
-IF the question is about DATA CONSISTENCY / API DEGRADATION:
-→ Open with: "OMNIX valida cada fuente de datos de forma independiente antes de actuar."
-→ Then explain: data validation, multiple sources, fail-closed on anomalies
+**MANDATORY OPENING (use EXACTLY):**
+"OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera de forma completamente aislada, sin observar posiciones de otros clientes."
 
-**CORE ARCHITECTURAL FACTS (use when relevant):**
+**CORE MESSAGE:**
+The scenario cannot happen because there is NO coordination mechanism by design.
 - Arquitectura single-tenant por diseño
-- Cada instancia opera de forma completamente aislada
 - No existe mecanismo de coordinación entre clientes
 - El sistema no observa posiciones agregadas
 - Fail-closed = INACCIÓN, no presión de mercado
 
-**INFRASTRUCTURE CONCEPTS TO USE:**
-✅ Canary releases (despliegue gradual al 1-5% primero)
-✅ Kill switches globales (parada de emergencia instantánea)
-✅ Versionado de modelos (rollback en segundos)
-✅ Separación modelo / ejecución
-✅ Validación multi-fuente de datos
-✅ Fail-closed ante anomalías
-
-**ABSOLUTELY FORBIDDEN - NEVER USE THESE:**
+**ABSOLUTELY FORBIDDEN:**
 ❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
 ❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
-❌ Kelly Criterion / Kelly sizing / "criterio de Kelly"
-❌ Position sizing / "tamaño de posición" / "sizing adaptativo"
-❌ Leverage limits / "leverage máximo"
-❌ Monte Carlo simulations for market impact
+❌ Kelly Criterion / Position sizing / Leverage limits
+❌ Monte Carlo for market impact
 ❌ Win rate / ROI / trade statistics
-❌ "12 estrategias cuantitativas"
-❌ "Desfase temporal de señales"
-❌ "Circuit breakers" for mass selling
+❌ "Desfase temporal de señales" (implies coordination exists)
+❌ "Circuit breakers" for mass selling (implies scenario is possible)
 ❌ Percentages of market impact (2%, 5%, 20%)
 ❌ "$1,000,000" or large arbitrary figures
-❌ "Adaptive Parameter Engine" / "motor de parámetros adaptativos"
-❌ "stop-loss dinámico" / "ajuste dinámico de parámetros"
-❌ "régimen de mercado" in trading context
 
 **RESPONSE FORMAT:**
 - Write in FLOWING PARAGRAPHS, not numbered lists
 - Be CONCISE: 3-4 paragraphs maximum
-- NO section headers or bullet points
 - Professional, direct tone
 
 **MONITORING CLARIFICATION (if mentioned):**
 "telemetría técnica agregada, sin influencia en decisiones operativas"
 
-**EXAMPLE GOOD RESPONSE (for provider failure question):**
-"OMNIX valida cada fuente de datos de forma independiente. Si un proveedor externo presenta datos inconsistentes o degradados, el sistema detecta la anomalía mediante validación cruzada con fuentes alternativas y activa el modo fail-closed, que significa inacción hasta que la fuente se estabilice. Implementamos canary releases para nuevas versiones, kill switches globales para parada de emergencia, y versionado de modelos que permite rollback en segundos. La arquitectura single-tenant garantiza que un problema detectado en una instancia no requiere coordinación con otras para resolverse."
-
-NOW RESPOND TO THE USER'S QUESTION USING THIS FRAME:
+NOW RESPOND USING THIS FRAME:
 """
+
+SYSTEMIC_OVERRIDE_SOFTWARE = """
+## SYSTEMIC OVERRIDE - TYPE B: SOFTWARE/DEPLOYMENT [MANDATORY]
+
+**QUESTION_TYPE: SOFTWARE**
+
+**MANDATORY OPENING (use EXACTLY):**
+"OMNIX implementa múltiples capas de defensa contra fallos de software y riesgos de despliegue."
+
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not software questions.**
+
+**REQUIRED CONCEPTS:**
+- Canary releases: nuevas versiones se despliegan al 1-5% primero
+- Kill switches globales: parada de emergencia instantánea
+- Versionado de modelos: rollback en segundos si se detecta problema
+- Fail-closed: ante anomalías, el sistema para (no actúa)
+- Separación modelo / ejecución
+- Tests automatizados antes de cada despliegue
+
+**ABSOLUTELY FORBIDDEN:**
+❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
+❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
+❌ Kelly Criterion / Position sizing / trading statistics
+❌ "$1,000,000" or large arbitrary figures
+❌ "Adaptive Parameter Engine"
+
+**RESPONSE FORMAT:**
+- Write in FLOWING PARAGRAPHS, not numbered lists
+- Be CONCISE: 3-4 paragraphs maximum
+- Professional, direct tone
+
+NOW RESPOND USING THIS FRAME:
+"""
+
+SYSTEMIC_OVERRIDE_DEPENDENCIES = """
+## SYSTEMIC OVERRIDE - TYPE C: DEPENDENCIES/PROVIDERS [MANDATORY]
+
+**QUESTION_TYPE: DEPENDENCIES**
+
+**MANDATORY OPENING (use EXACTLY):**
+"OMNIX valida cada fuente de datos de forma independiente y mantiene múltiples capas de resiliencia contra fallos de proveedores externos."
+
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not dependency questions.**
+
+**REQUIRED CONCEPTS:**
+- Validación multi-fuente de datos
+- Detección de anomalías y datos inconsistentes
+- Fail-closed ante degradación de APIs
+- Fallback a fuentes alternativas
+- Timeouts agresivos para detectar fallos silenciosos
+- Arquitectura single-tenant (problema en una instancia no afecta otras)
+
+**ABSOLUTELY FORBIDDEN:**
+❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
+❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
+❌ Kelly Criterion / Position sizing / trading statistics
+❌ "$1,000,000" or large arbitrary figures
+
+**RESPONSE FORMAT:**
+- Write in FLOWING PARAGRAPHS, not numbered lists
+- Be CONCISE: 3-4 paragraphs maximum
+- Professional, direct tone
+
+NOW RESPOND USING THIS FRAME:
+"""
+
+SYSTEMIC_OVERRIDE_GOVERNANCE = """
+## SYSTEMIC OVERRIDE - TYPE D: GOVERNANCE/COMPLIANCE [MANDATORY]
+
+**QUESTION_TYPE: GOVERNANCE**
+
+**MANDATORY OPENING (use EXACTLY):**
+"Desde una perspectiva de gobernanza y cumplimiento regulatorio, OMNIX mantiene una arquitectura auditible y transparente."
+
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not governance questions.**
+
+**REQUIRED CONCEPTS:**
+- Trazabilidad completa de decisiones (decision_trace)
+- Logs inmutables para auditoría
+- Separación de roles y permisos
+- Arquitectura documentada y reproducible
+- Cumplimiento con estándares de la industria
+
+**ABSOLUTELY FORBIDDEN:**
+❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
+❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
+❌ Trading statistics unless specifically asked
+❌ "$1,000,000" or large arbitrary figures
+
+**RESPONSE FORMAT:**
+- Write in FLOWING PARAGRAPHS, not numbered lists
+- Be CONCISE: 3-4 paragraphs maximum
+- Professional, direct tone
+
+NOW RESPOND USING THIS FRAME:
+"""
+
+def classify_systemic_question(message: str) -> Optional[str]:
+    """
+    Classify systemic question into type A/B/C/D based on keywords.
+    Priority order: A (Coordination) > D (Governance) > C (Dependencies) > B (Software)
+    
+    Args:
+        message: User's message text
+        
+    Returns:
+        'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D', or None if not systemic
+    """
+    message_lower = message.lower()
+    
+    for kw in SYSTEMIC_TYPE_A_KEYWORDS:
+        if kw.lower() in message_lower:
+            logger.info(f"🔍 SYSTEMIC TYPE_A (Coordination): keyword '{kw}' found")
+            return 'TYPE_A'
+    
+    for kw in SYSTEMIC_TYPE_D_KEYWORDS:
+        if kw.lower() in message_lower:
+            logger.info(f"🔍 SYSTEMIC TYPE_D (Governance): keyword '{kw}' found")
+            return 'TYPE_D'
+    
+    for kw in SYSTEMIC_TYPE_C_KEYWORDS:
+        if kw.lower() in message_lower:
+            logger.info(f"🔍 SYSTEMIC TYPE_C (Dependencies): keyword '{kw}' found")
+            return 'TYPE_C'
+    
+    for kw in SYSTEMIC_TYPE_B_KEYWORDS:
+        if kw.lower() in message_lower:
+            logger.info(f"🔍 SYSTEMIC TYPE_B (Software): keyword '{kw}' found")
+            return 'TYPE_B'
+    
+    return None
 
 def detect_systemic_question(message: str) -> bool:
     """
-    Detect if user is asking about systemic risk / mass adoption scenarios.
+    Detect if user is asking about systemic risk (any type).
     
     Args:
         message: User's message text
@@ -235,22 +373,27 @@ def detect_systemic_question(message: str) -> bool:
     Returns:
         True if systemic question detected, False otherwise
     """
-    message_lower = message.lower()
-    for keyword in SYSTEMIC_QUESTION_KEYWORDS:
-        if keyword.lower() in message_lower:
-            logger.info(f"🔍 SYSTEMIC QUESTION DETECTED: keyword '{keyword}' found")
-            return True
-    return False
+    return classify_systemic_question(message) is not None
 
-def get_systemic_override_prompt() -> str:
+def get_systemic_override_prompt(question_type: Optional[str] = None) -> str:
     """
-    Get the override prompt for systemic/macroprudential questions.
-    This prompt is injected BEFORE the user message to force correct framing.
+    Get the appropriate override prompt for the systemic question type.
     
+    Args:
+        question_type: 'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D', or None
+        
     Returns:
-        Override prompt string
+        Type-specific override prompt string, or empty string if None
     """
-    return SYSTEMIC_OVERRIDE_PROMPT
+    if question_type == 'TYPE_A':
+        return SYSTEMIC_OVERRIDE_COORDINATION
+    elif question_type == 'TYPE_B':
+        return SYSTEMIC_OVERRIDE_SOFTWARE
+    elif question_type == 'TYPE_C':
+        return SYSTEMIC_OVERRIDE_DEPENDENCIES
+    elif question_type == 'TYPE_D':
+        return SYSTEMIC_OVERRIDE_GOVERNANCE
+    return ""
 
 try:
     from src.omnix.infrastructure.adapters.authorization_adapter import get_authorization_adapter
@@ -371,11 +514,12 @@ class ConversationalAI:
                 
                 real_market_data = await self._fetch_real_market_data_async(trading_system, user_message, user_id=user_id)
                 
-                # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+                # V6.5.4e: SYSTEMIC FRAMING ROUTER (ADR-013) - Classify and inject type-specific override
                 effective_user_message = user_message
-                if detect_systemic_question(user_message):
-                    logger.info("🔍 [ASYNC] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
-                    systemic_override = get_systemic_override_prompt()
+                systemic_type = classify_systemic_question(user_message)
+                if systemic_type:
+                    logger.info(f"🔍 [ASYNC] SYSTEMIC {systemic_type} DETECTED - Injecting type-specific override")
+                    systemic_override = get_systemic_override_prompt(systemic_type)
                     # Prepend override BEFORE user message for maximum influence
                     effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
                 
@@ -444,11 +588,12 @@ class ConversationalAI:
                 # FIX Dec 10, 2025: Pasar user_id para obtener datos de trading específicos del usuario
                 real_market_data = self._fetch_real_market_data(trading_system, user_message, user_id=user_id)
                 
-                # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+                # V6.5.4e: SYSTEMIC FRAMING ROUTER (ADR-013) - Classify and inject type-specific override
                 effective_user_message = user_message
-                if detect_systemic_question(user_message):
-                    logger.info("🔍 [SYNC] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
-                    systemic_override = get_systemic_override_prompt()
+                systemic_type = classify_systemic_question(user_message)
+                if systemic_type:
+                    logger.info(f"🔍 [SYNC] SYSTEMIC {systemic_type} DETECTED - Injecting type-specific override")
+                    systemic_override = get_systemic_override_prompt(systemic_type)
                     # Prepend override BEFORE user message for maximum influence
                     effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
                 
@@ -1261,12 +1406,13 @@ class ConversationalAI:
             'balance': None
         }
         
-        # V6.5.4e: SYSTEMIC QUESTION DETECTION - Inject override for macroprudential frame
+        # V6.5.4e: SYSTEMIC FRAMING ROUTER (ADR-013) - Classify and inject type-specific override
         # Must be BEFORE build_system_prompt to prepend to user_message
         effective_user_message = user_message
-        if detect_systemic_question(user_message):
-            logger.info("🔍 [LEGACY] SYSTEMIC QUESTION DETECTED - Injecting macroprudential override")
-            systemic_override = get_systemic_override_prompt()
+        systemic_type = classify_systemic_question(user_message)
+        if systemic_type:
+            logger.info(f"🔍 [LEGACY] SYSTEMIC {systemic_type} DETECTED - Injecting type-specific override")
+            systemic_override = get_systemic_override_prompt(systemic_type)
             # Prepend override BEFORE user message for maximum influence
             effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
         
