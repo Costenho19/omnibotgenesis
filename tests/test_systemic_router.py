@@ -115,6 +115,22 @@ class TestPriorityOrder:
         q = "¿Cómo auditan los proveedores externos?"
         result = classify_systemic_question(q)
         assert result == 'TYPE_D', f"Expected TYPE_D (priority), got {result}"
+    
+    def test_type_c_overrides_type_a_when_provider_context(self):
+        """TYPE_C should override TYPE_A when both keywords present with provider focus.
+        
+        ADR-014: Provider resilience questions should use TYPE_C override even if 
+        they mention 'thousands of instances' (TYPE_A keyword). The context is about
+        provider failures affecting instances, not coordination between users.
+        """
+        questions = [
+            "¿Cómo gestiona OMNIX el riesgo de dependencia de proveedores externos que podría afectar las decisiones de miles de instancias?",
+            "¿Qué ocurre si un fallo silencioso de Kraken afecta a miles de instancias sin hard failure detectable?",
+            "Si hay datos inconsistentes del exchange, ¿cómo evita que afecte a miles de instancias?",
+        ]
+        for q in questions:
+            result = classify_systemic_question(q)
+            assert result == 'TYPE_C', f"Expected TYPE_C (provider context override) for: {q}, got {result}"
 
 
 class TestDetectSystemicQuestion:

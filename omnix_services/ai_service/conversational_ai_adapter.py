@@ -359,6 +359,11 @@ def classify_systemic_question(message: str) -> Optional[str]:
     Classify systemic question into type A/B/C/D based on keywords.
     Priority order: A (Coordination) > D (Governance) > C (Dependencies) > B (Software)
     
+    SPECIAL RULE: If TYPE_C keywords (providers/dependencies) are present alongside
+    TYPE_A keywords, TYPE_C takes precedence. This handles questions like:
+    "What if a provider failure affects thousands of instances?" which is about
+    provider resilience (TYPE_C), not coordination (TYPE_A).
+    
     Args:
         message: User's message text
         
@@ -366,6 +371,15 @@ def classify_systemic_question(message: str) -> Optional[str]:
         'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D', or None if not systemic
     """
     message_lower = message.lower()
+    
+    has_type_a = any(kw.lower() in message_lower for kw in SYSTEMIC_TYPE_A_KEYWORDS)
+    has_type_c = any(kw.lower() in message_lower for kw in SYSTEMIC_TYPE_C_KEYWORDS)
+    
+    if has_type_c and has_type_a:
+        for kw in SYSTEMIC_TYPE_C_KEYWORDS:
+            if kw.lower() in message_lower:
+                logger.info(f"🔍 SYSTEMIC TYPE_C (Dependencies) OVERRIDE: keyword '{kw}' found (TYPE_A also present but C takes precedence for provider questions)")
+                return 'TYPE_C'
     
     for kw in SYSTEMIC_TYPE_A_KEYWORDS:
         if kw.lower() in message_lower:
