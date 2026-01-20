@@ -215,6 +215,7 @@ Test suite must verify:
 
 - ADR-009: Brevity First Policy
 - ADR-003: Official Positioning Strategy
+- ADR-014: Provider Resilience Enhancement (TYPE_C improvements)
 - docs/reference/omnix_official_language.md
 
 ---

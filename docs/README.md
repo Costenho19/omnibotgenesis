@@ -18,6 +18,24 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-014: Provider Resilience Enhancement (Jan 20, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Mejoras TYPE_C basadas en feedback de inversores
+- **PROBLEMA**: Respuestas sobre proveedores calificadas 7/10 por inversores sofisticados
+- **GAPS IDENTIFICADOS**:
+  - Fallos silenciosos no cubiertos (timeouts ≠ datos corruptos)
+  - Cross-validation sin umbrales concretos
+  - Single-tenant no resuelve fuentes compartidas corruptas
+  - Falta transparencia sobre limitaciones residuales
+- **SOLUCIÓN**: TYPE_C override mejorado con:
+  - Validación de timestamps (>60s = stale data)
+  - Cross-validation con umbrales (>3% discrepancia = pausa)
+  - Sanity checks de volumen (10x promedio = anomalía)
+  - Honestidad sobre limitación single-tenant
+  - Riesgo residual + fail-closed + intervención humana
+  - Roadmap: oráculos blockchain (Chainlink, Band Protocol)
+- **SCORE ESPERADO**: 7/10 → 9/10
+- **REFERENCIA**: `docs/reference/adr/ADR-014-provider-resilience-enhancement.md`
+
 ### ADR-013: Systemic Framing Router (Jan 19, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Routing determinístico de preguntas sistémicas
 - **PROBLEMA**: Bot usaba misma apertura ("no genera señales sincronizadas") para TODAS las preguntas sistémicas

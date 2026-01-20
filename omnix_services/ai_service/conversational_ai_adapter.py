@@ -275,24 +275,50 @@ SYSTEMIC_OVERRIDE_DEPENDENCIES = """
 
 **DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not dependency questions.**
 
-**REQUIRED CONCEPTS:**
-- Validación multi-fuente de datos
-- Detección de anomalías y datos inconsistentes
-- Fail-closed ante degradación de APIs
-- Fallback a fuentes alternativas
-- Timeouts agresivos para detectar fallos silenciosos
-- Arquitectura single-tenant (problema en una instancia no afecta otras)
+**REQUIRED CONCEPTS (include ALL relevant ones):**
+
+1. TIMESTAMP VALIDATION (Silent Failure Detection):
+   - Validamos timestamps de cada dato recibido
+   - Precios con timestamp >60 segundos = stale data, descartados
+   - Detecta APIs que devuelven último precio conocido en caché
+
+2. CROSS-VALIDATION WITH CONCRETE THRESHOLDS:
+   - Comparamos precios de múltiples fuentes en tiempo real
+   - Discrepancia >3% entre Kraken y CoinGecko = pausa operativa
+   - Tercera fuente (Binance) resuelve empates si necesario
+
+3. VOLUME SANITY CHECKS:
+   - Volúmenes comparados con promedios históricos
+   - Volumen 10x superior al promedio sin evento conocido = anomalía
+   - Sistema suspende hasta confirmación
+
+4. SINGLE-TENANT LIMITATION (HONESTY):
+   - Single-tenant aísla fallos de configuración entre clientes
+   - PERO: Fallo en fuente compartida (ej: Kraken API) afecta múltiples instancias
+   - Mitigamos con diversificación de proveedores y circuit breakers
+
+5. RESIDUAL RISK (TRANSPARENCY):
+   - Si TODOS los proveedores reportan incorrectamente (evento sistémico)...
+   - OMNIX NO tiene fuente externa de verdad para validar
+   - Postura: Fail-closed + intervención humana requerida
+
+6. FUTURE ROADMAP:
+   - Integración futura: Oráculos blockchain descentralizados
+   - Chainlink, Band Protocol como validación adicional
 
 **ABSOLUTELY FORBIDDEN:**
 ❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
 ❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
 ❌ Kelly Criterion / Position sizing / trading statistics
 ❌ "$1,000,000" or large arbitrary figures
+❌ Claiming 100% protection (acknowledge residual risk)
 
 **RESPONSE FORMAT:**
 - Write in FLOWING PARAGRAPHS, not numbered lists
 - Be CONCISE: 3-4 paragraphs maximum
 - Professional, direct tone
+- Include concrete thresholds when mentioning detection
+- Acknowledge limitations honestly
 
 NOW RESPOND USING THIS FRAME:
 """
