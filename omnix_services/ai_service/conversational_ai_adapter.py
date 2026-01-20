@@ -176,12 +176,21 @@ There is NO mechanism for synchronized selling because the system does NOT obser
 2. Explain that each instance is isolated (no cross-client signaling)
 3. Mention adoption limits exist by design
 4. The fail-closed mode = INACTION, not market pressure
+5. If discussing monitoring, clarify it's NON-OPERATIONAL telemetry
 
 **MODEL PHRASES YOU MUST USE:**
 - "OMNIX no genera señales sincronizadas a todos los usuarios."
 - "Cada instancia opera de forma completamente aislada."
 - "No existe mecanismo de coordinación entre clientes."
 - "El sistema no observa posiciones agregadas."
+- "Arquitectura single-tenant por diseño."
+
+**INFRASTRUCTURE CONCEPTS TO INCLUDE (when relevant):**
+✅ Versionado de modelos (model versioning)
+✅ Canary releases (despliegue gradual)
+✅ Kill switches globales (parada de emergencia)
+✅ Separación modelo / ejecución
+✅ Telemetría agregada NO operativa (sin influencia en decisiones individuales)
 
 **ABSOLUTELY FORBIDDEN IN THIS RESPONSE:**
 ❌ Kelly Criterion / Kelly sizing / "criterio de Kelly"
@@ -193,6 +202,17 @@ There is NO mechanism for synchronized selling because the system does NOT obser
 ❌ "Desfase temporal de señales" (implies coordination exists)
 ❌ "Circuit breakers" for mass selling (implies scenario is possible)
 ❌ Percentages of market impact (2%, 5%, 20%)
+❌ "$1,000,000" or any large arbitrary paper trading figures (sounds like marketing)
+❌ "Adaptive Parameter Engine" / "motor de parámetros adaptativos"
+❌ "stop-loss dinámico" / "ajuste dinámico de parámetros"
+❌ "régimen de mercado" in context of trading performance
+
+**CRITICAL CLARIFICATION ON MONITORING:**
+If you mention "monitoring" or "monitoreo", you MUST clarify:
+- It is NON-OPERATIONAL telemetry (technical health metrics only)
+- It does NOT influence individual trading decisions
+- Example: "telemetría técnica agregada, sin influencia en decisiones operativas"
+NEVER say "monitoreo global de patrones" without this clarification (it contradicts isolation).
 
 **WHY THESE ARE FORBIDDEN:**
 These concepts ASSUME the scenario is possible and explain HOW you would MITIGATE it.
@@ -203,7 +223,7 @@ The correct response explains WHY the scenario CANNOT happen by design.
 (This assumes coordination is possible - WRONG)
 
 **EXAMPLE OF CORRECT RESPONSE:**
-"OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera aislada, sin observar posiciones de otros clientes. El escenario que describes requeriría un mecanismo de coordinación que intencionalmente no hemos construido."
+"OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera aislada, sin observar posiciones de otros clientes. El escenario que describes requeriría un mecanismo de coordinación que intencionalmente no hemos construido. La arquitectura single-tenant garantiza aislamiento completo."
 
 NOW RESPOND TO THE USER'S QUESTION USING THIS FRAME:
 """
