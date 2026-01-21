@@ -3910,8 +3910,11 @@ class AutoTradingBot:
                 try:
                     # 1. Local Signal Strength (0-40 pts)
                     # Average of Non-Markovian confidence and EMA confidence
+                    # Note: nm_confidence stored as 0-100, ema_confidence stored as 0-1 decimal
                     nm_conf = safe_float(v52.get('non_markovian_confidence', 0), 0)
-                    ema_conf = safe_float(v52.get('ema_confidence', 0), 0)
+                    ema_conf_raw = safe_float(v52.get('ema_confidence', 0), 0)
+                    # Normalize ema_conf to 0-100 scale (stored as decimal 0-1)
+                    ema_conf = ema_conf_raw * 100 if ema_conf_raw <= 1 else ema_conf_raw
                     local_strength = ((nm_conf + ema_conf) / 2) * 0.4
                     
                     # 2. Global Edge Penalty (0-30 pts)
@@ -3997,7 +4000,7 @@ class AutoTradingBot:
                         logger.info(f"      → {dci_interpretation}")
                     
                 except Exception as dci_err:
-                    logger.debug(f"DCI computation skipped: {dci_err}")
+                    logger.warning(f"⚠️ DCI computation error: {dci_err}")
                 # ==========================================================================
                 
                 if MODULE_STATUS_REGISTRY:
