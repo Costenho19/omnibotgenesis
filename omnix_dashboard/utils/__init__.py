@@ -16,6 +16,7 @@ from .database import (
 )
 
 from .decorators import require_api_key
+from .auth import init_security
 
 from .external_apis import (
     fetch_with_timeout,
@@ -42,6 +43,7 @@ __all__ = [
     'DB_ERROR_MESSAGE',
     'DB_POOL',
     'require_api_key',
+    'init_security',
     'fetch_with_timeout',
     'http_get_with_timeout',
     'API_EXECUTOR',

@@ -63,6 +63,9 @@ def create_app():
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
     
+    from omnix_dashboard.utils.auth import init_security
+    init_security(app)
+    
     return app
 
 

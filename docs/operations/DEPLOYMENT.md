@@ -59,6 +59,12 @@ ALPHA_VANTAGE_API_KEY=<alpha_vantage_key>
 # Trading
 TRADING_MODE=paper
 SESSION_SECRET=<session_secret>
+
+# Dashboard Security (ADR-015)
+DASHBOARD_USER=<dashboard_username>          # Usuario para Basic Auth
+DASHBOARD_PASSWORD=<dashboard_password>      # Contraseña para Basic Auth
+DASHBOARD_RATE_LIMIT=60                      # Requests/min por IP (default: 60)
+DASHBOARD_IP_ALLOWLIST=<ip1>,<ip2>          # IPs permitidas (opcional, comma-separated)
 ```
 
 ---

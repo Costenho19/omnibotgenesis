@@ -18,6 +18,18 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-015: Dashboard Security Enhancement (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Basic Auth + Rate Limiting + Security Headers
+- **PROBLEMA**: Dashboard sin autenticación (calificación C+ en auditoría de seguridad)
+- **SOLUCIÓN**: Middleware de seguridad centralizado:
+  - Basic HTTP Authentication con env vars (DASHBOARD_USER, DASHBOARD_PASSWORD)
+  - Rate limiting por IP (60 req/min configurable via DASHBOARD_RATE_LIMIT)
+  - IP allowlist opcional (DASHBOARD_IP_ALLOWLIST)
+  - Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+  - Endpoints exentos: /api/health, /static/*, /favicon.ico
+- **ARCHIVOS**: `omnix_dashboard/utils/auth.py`, `omnix_dashboard/app.py`
+- **REFERENCIA**: `docs/reference/adr/ADR-015-dashboard-security.md`
+
 ### ADR-014: Provider Resilience Enhancement (Jan 20, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Mejoras TYPE_C basadas en feedback de inversores
 - **PROBLEMA**: Respuestas sobre proveedores calificadas 7/10 por inversores sofisticados
