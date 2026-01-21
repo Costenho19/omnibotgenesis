@@ -88,9 +88,9 @@ SELECT
   coherence_score,
   local_strength + global_edge_penalty + regime_penalty + risk_penalty as dci_score,
   CASE 
-    WHEN (local_strength + global_edge_penalty + regime_penalty + risk_penalty) < 35 THEN 'LOW'
-    WHEN (local_strength + global_edge_penalty + regime_penalty + risk_penalty) < 70 THEN 'MEDIUM'
-    ELSE 'HIGH'
+    WHEN (local_strength + global_edge_penalty + regime_penalty + risk_penalty) < 35 THEN 'ALIGNED'
+    WHEN (local_strength + global_edge_penalty + regime_penalty + risk_penalty) < 70 THEN 'TENSIONED'
+    ELSE 'CONTRADICTORY'
   END as dci_level,
   telemetry_source,
   created_at
@@ -143,9 +143,9 @@ dci_scores AS (
 )
 SELECT 
   CASE 
-    WHEN dci_score < 35 THEN 'LOW (0-34)'
-    WHEN dci_score < 70 THEN 'MEDIUM (35-69)'
-    ELSE 'HIGH (70-100)'
+    WHEN dci_score < 35 THEN 'ALIGNED (0-34)'
+    WHEN dci_score < 70 THEN 'TENSIONED (35-69)'
+    ELSE 'CONTRADICTORY (70-100)'
   END as dci_level,
   COUNT(*) as trades,
   ROUND(AVG(CASE WHEN is_win = 1 THEN 100.0 ELSE 0 END), 1) as win_rate_pct,
@@ -230,12 +230,12 @@ corr_win = stats.spearmanr(df['dci_score'], df['is_win'])
 print(f"DCI vs P&L Correlation: r={corr_pnl[0]:.3f}, p={corr_pnl[1]:.4f}")
 print(f"DCI vs Win Rate Correlation: rho={corr_win[0]:.3f}, p={corr_win[1]:.4f}")
 
-# Cohort comparison
-low_dci = df[df['dci_score'] < 35]
-high_dci = df[df['dci_score'] >= 70]
+# Cohort comparison (investor-friendly naming)
+aligned_dci = df[df['dci_score'] < 35]
+contradictory_dci = df[df['dci_score'] >= 70]
 
-print(f"\nLow DCI (<35): {len(low_dci)} trades, WR={low_dci['is_win'].mean()*100:.1f}%")
-print(f"High DCI (>=70): {len(high_dci)} trades, WR={high_dci['is_win'].mean()*100:.1f}%")
+print(f"\nALIGNED (<35): {len(aligned_dci)} trades, WR={aligned_dci['is_win'].mean()*100:.1f}%")
+print(f"CONTRADICTORY (>=70): {len(contradictory_dci)} trades, WR={contradictory_dci['is_win'].mean()*100:.1f}%")
 ```
 
 ## Validation Criteria (Day 9)
@@ -249,8 +249,16 @@ print(f"High DCI (>=70): {len(high_dci)} trades, WR={high_dci['is_win'].mean()*1
 ## Expected Results
 
 If DCI works correctly:
-- HIGH DCI trades should have **lower** win rates
-- LOW DCI trades should have **higher** win rates
+- CONTRADICTORY DCI trades should have **lower** win rates
+- ALIGNED DCI trades should have **higher** win rates
 - Negative correlation between DCI and profit_loss
 
 This validates that DCI captures internal contradiction and justifies HOLD decisions.
+
+## Level Naming (Investor-Friendly)
+
+| Technical | Investor-Friendly | Interpretation |
+|-----------|-------------------|----------------|
+| LOW (0-34) | ALIGNED | All signals converging, high-confidence decision |
+| MEDIUM (35-69) | TENSIONED | Mixed signals detected, exercising caution |
+| HIGH (70-100) | CONTRADICTORY | Significant internal conflict - capital preservation mode |

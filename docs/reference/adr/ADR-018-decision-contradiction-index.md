@@ -28,7 +28,7 @@ Implement **DECISION_CONTRADICTION_INDEX (DCI)** - a shadow observational metric
 |----------|-------|
 | **Mode** | Shadow / Observational only |
 | **Affects Trading** | NO - purely diagnostic |
-| **Output** | Score 0-100, Level: LOW / MEDIUM / HIGH |
+| **Output** | Score 0-100, Level: ALIGNED / TENSIONED / CONTRADICTORY |
 | **Purpose** | Explain HOLDs with high local signals |
 
 ## Formula (v0.1)
@@ -48,13 +48,13 @@ DCI = local_strength + global_edge_penalty + regime_penalty + risk_penalty
 | **Regime Misalignment** | 15 | VOLATILE/RANGING with high vol = 15, BULLISH/low vol = 0 |
 | **Risk Overlay** | 15 | Black Swan severity: LOW=3, MEDIUM=7, HIGH=12, EXTREME=15 |
 
-### Interpretation
+### Interpretation (Investor-Friendly Naming)
 
 | DCI Score | Level | Meaning |
 |-----------|-------|---------|
-| 0-34 | LOW | Signals aligned, decision clear |
-| 35-69 | MEDIUM | Mixed signals, moderate uncertainty |
-| 70-100 | HIGH | Strong contradiction - HOLD justified by conflict |
+| 0-34 | ALIGNED | All signals converging, high-confidence decision |
+| 35-69 | TENSIONED | Mixed signals detected, exercising caution |
+| 70-100 | CONTRADICTORY | Significant internal conflict - capital preservation mode |
 
 ### Example Calculation
 
@@ -75,10 +75,10 @@ Calculation:
   regime_penalty = 12 (VOLATILE)
   risk_penalty = 7 (MEDIUM)
 
-  DCI = 14.2 + 30 + 12 + 7 = 63.2 → MEDIUM
+  DCI = 14.2 + 30 + 12 + 7 = 63.2 → TENSIONED
 
-Interpretation: Moderate contradiction. Local signals mixed (one strong, one absent), 
-global edge insufficient, regime unfavorable. HOLD is correct.
+Interpretation: Mixed signals detected. Local indicators conflicting (one strong, one absent), 
+global edge insufficient, regime unfavorable. System exercising caution - HOLD is correct.
 ```
 
 ## Implementation
@@ -92,12 +92,12 @@ global edge insufficient, regime unfavorable. HOLD is correct.
 ```
 📊 DECISION_CONTRADICTION_INDEX:
    - Score: 63
-   - Level: MEDIUM
+   - Level: TENSIONED
    - Local strength: 14.2 (NM=71%, EMA=0%)
    - Edge penalty: 30.0 (MC_ER=0.0001, WR=43%)
    - Regime penalty: 12 (VOLATILE)
    - Risk penalty: 7 (MEDIUM)
-   → High internal contradiction between local signal and global edge
+   → Mixed signals detected, exercising caution
 ```
 
 ### Decision Payload
@@ -105,14 +105,14 @@ global edge insufficient, regime unfavorable. HOLD is correct.
 ```python
 decision['decision_contradiction_index'] = {
     'score': 63.2,
-    'level': 'MEDIUM',
+    'level': 'TENSIONED',
     'components': {
         'local_strength': 14.2,
         'global_edge_penalty': 30.0,
         'regime_penalty': 12,
         'risk_penalty': 7
     },
-    'interpretation': 'High internal contradiction between local signal and global edge'
+    'interpretation': 'Mixed signals detected, exercising caution'
 }
 ```
 

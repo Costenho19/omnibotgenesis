@@ -57,9 +57,9 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Regime Penalty | 0-15 | VOLATILE=15, RANGING=10, BEARISH=5 |
 | Risk Overlay | 0-15 | Black Swan severity |
 
-**Output:** Score 0-100, Nivel: LOW (<35) / MEDIUM (35-69) / HIGH (≥70)
+**Output:** Score 0-100, Nivel: ALIGNED (<35) / TENSIONED (35-69) / CONTRADICTORY (≥70)
 
-**Ejemplo:** NM BUY 71% + EMA NONE + MC_ER=0 + VOLATILE → DCI ≈ 63 (MEDIUM) → HOLD justificado
+**Ejemplo:** NM BUY 71% + EMA NONE + MC_ER=0 + VOLATILE → DCI ≈ 63 (TENSIONED) → HOLD justificado
 
 **Modo:** Shadow only - NO afecta decisiones de trading
 

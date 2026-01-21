@@ -3950,16 +3950,16 @@ class AutoTradingBot:
                     dci_score = local_strength + global_edge_penalty + regime_penalty + risk_penalty
                     dci_score = max(0, min(100, dci_score))
                     
-                    # Determine level
+                    # Determine level (investor-friendly naming)
                     if dci_score < 35:
-                        dci_level = 'LOW'
-                        dci_interpretation = 'Signals aligned, decision clear'
+                        dci_level = 'ALIGNED'
+                        dci_interpretation = 'All signals converging, high-confidence decision'
                     elif dci_score < 70:
-                        dci_level = 'MEDIUM'
-                        dci_interpretation = 'Mixed signals, moderate uncertainty'
+                        dci_level = 'TENSIONED'
+                        dci_interpretation = 'Mixed signals detected, exercising caution'
                     else:
-                        dci_level = 'HIGH'
-                        dci_interpretation = 'Strong contradiction - HOLD justified by conflict'
+                        dci_level = 'CONTRADICTORY'
+                        dci_interpretation = 'Significant internal conflict - capital preservation mode'
                     
                     # Build DCI data structure
                     dci_data = {
@@ -3987,8 +3987,8 @@ class AutoTradingBot:
                     decision['decision_contradiction_index'] = dci_data
                     telemetry_data['decision_contradiction_index'] = dci_data
                     
-                    # Log DCI summary (only for MEDIUM or HIGH to reduce noise)
-                    if dci_level in ('MEDIUM', 'HIGH'):
+                    # Log DCI summary (only for TENSIONED or CONTRADICTORY to reduce noise)
+                    if dci_level in ('TENSIONED', 'CONTRADICTORY'):
                         logger.info(f"   📊 DECISION_CONTRADICTION_INDEX:")
                         logger.info(f"      - Score: {dci_data['score']} ({dci_level})")
                         logger.info(f"      - Local strength: {local_strength:.1f} (NM={nm_conf:.0f}%, EMA={ema_conf:.0f}%)")

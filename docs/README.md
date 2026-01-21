@@ -26,7 +26,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
   - Global Edge Penalty (0-30 pts): inverso de calidad MC_ER/WR
   - Regime Penalty (0-15 pts): VOLATILE/RANGING penalizado
   - Risk Overlay (0-15 pts): severidad Black Swan
-- **OUTPUT**: Score 0-100, Niveles: LOW (<35) / MEDIUM (35-69) / HIGH (≥70)
+- **OUTPUT**: Score 0-100, Niveles: ALIGNED (<35) / TENSIONED (35-69) / CONTRADICTORY (≥70)
 - **MODO**: Shadow only - NO afecta decisiones de trading
 - **VALIDACIÓN**: Day 9 análisis de correlación con win rate
 - **ARCHIVOS**: `omnix_core/bot/auto_trading_bot.py`
