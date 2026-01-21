@@ -75,6 +75,28 @@ MC VETO → RMS VETO → COHERENCE GATE → [ECW GATE] → Scoring → Decision
 
 **Storage:** Redis counter per symbol con TTL 1 hora
 
+**ECW_PROGRESS Tracking (decision_trace):**
+- `ecw_progress_current`: Contador actual (0, 1, 2, 3)
+- `ecw_progress_required`: Siempre 3
+- `ecw_progress_previous`: Valor previo antes de esta evaluación
+
+**ECW_RESET_REASON Enum:**
+| Razón | Trigger |
+|-------|---------|
+| `BLACK_SWAN_HIGH` | Black Swan EXTREME o HIGH |
+| `BLACK_SWAN_ELEVATED` | Black Swan ELEVATED |
+| `MC_EDGE_DEGRADED` | Win Rate cayó debajo de 52% |
+| `MC_ER_NEGATIVE` | Expected Return se volvió negativo |
+| `SIGNAL_FLIP` | Señal EMA cambió de BUY a SELL/HOLD |
+| `CONDITIONS_FAILED` | Múltiples condiciones fallaron |
+
+**Signal Normalization (para detección SIGNAL_FLIP):**
+```
+LONG/BUY/BULLISH/STRONG_BUY/UPTREND → BUY
+SHORT/SELL/BEARISH/STRONG_SELL/DOWNTREND → SELL
+Otros → HOLD
+```
+
 **Archivos:** 
 - `omnix_core/bot/auto_trading_bot.py` - Implementación ECW gate
 - `omnix_config/system_state_manifest.json` - Configuración

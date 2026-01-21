@@ -71,6 +71,26 @@ Gate that requires edge persistence before allowing trades. Transforms "capital 
 - Any condition fails → Counter resets to 0
 - Counter ≥ 3 → Trade window OPEN
 
+**ECW_PROGRESS Tracking (decision_trace):**
+- `ecw_progress_current`: Current cycle count (0, 1, 2, 3)
+- `ecw_progress_required`: Always 3
+- `ecw_progress_previous`: Previous cycle count before this evaluation
+
+**ECW_RESET_REASON Enum:**
+| Reason | Trigger |
+|--------|---------|
+| `BLACK_SWAN_HIGH` | Black Swan severity EXTREME or HIGH |
+| `BLACK_SWAN_ELEVATED` | Black Swan severity ELEVATED |
+| `MC_EDGE_DEGRADED` | Win Rate dropped below 52% |
+| `MC_ER_NEGATIVE` | Expected Return became negative |
+| `SIGNAL_FLIP` | EMA signal changed from BUY to SELL/HOLD |
+| `CONDITIONS_FAILED` | Multiple conditions failed simultaneously |
+
+**Signal Normalization (for SIGNAL_FLIP detection):**
+- LONG/BUY/BULLISH/STRONG_BUY/UPTREND → BUY
+- SHORT/SELL/BEARISH/STRONG_SELL/DOWNTREND → SELL
+- All others → HOLD
+
 **Logging:** `⏳ [ECW_GATE] BTC/USD | 2/3 cycles → Waiting` or `✅ [ECW_GATE] BTC/USD | 3/3 cycles → OPEN`
 
 **Files:** `omnix_core/bot/auto_trading_bot.py`, `docs/reference/adr/ADR-019-edge-confirmation-window.md`
