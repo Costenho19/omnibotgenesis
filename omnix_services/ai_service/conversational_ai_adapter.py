@@ -86,6 +86,16 @@ BLACKLISTED_PHRASES = [
     
     r'(?:^|(?<=\.\s))\*[1-9]\.\s+[^*\n]+:?\*\s*',
     r'(?:^|(?<=\.\s))\*\*[1-9]\.\s+[^*\n]+:?\*\*\s*',
+    
+    # ===========================================================================
+    # PROMPT LEAKING PROTECTION (ADR-013)
+    # Removes MANDATORY OPENING text that AI may copy literally from prompts
+    # ===========================================================================
+    
+    r'^OMNIX valida cada fuente de datos de forma independiente y mantiene múltiples capas de resiliencia contra fallos de proveedores externos\.\s*',
+    r'^OMNIX no genera señales sincronizadas a todos los usuarios\. Cada instancia opera de forma completamente aislada, sin observar posiciones de otros clientes\.\s*',
+    r'^OMNIX implementa múltiples capas de defensa contra fallos de software y riesgos de despliegue\.\s*',
+    r'^Desde una perspectiva de gobernanza y cumplimiento regulatorio, OMNIX mantiene una arquitectura auditible y transparente\.\s*',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
@@ -204,8 +214,9 @@ SYSTEMIC_OVERRIDE_COORDINATION = """
 
 **QUESTION_TYPE: COORDINATION**
 
-**MANDATORY OPENING (use EXACTLY):**
-"OMNIX no genera señales sincronizadas a todos los usuarios. Cada instancia opera de forma completamente aislada, sin observar posiciones de otros clientes."
+**RESPONSE FOCUS:** Explain that the coordination scenario cannot happen because OMNIX uses single-tenant architecture - each instance operates independently without observing other clients' positions.
+
+**DO NOT copy instructions literally - write naturally using these concepts.**
 
 **CORE MESSAGE:**
 The scenario cannot happen because there is NO coordination mechanism by design.
@@ -241,10 +252,10 @@ SYSTEMIC_OVERRIDE_SOFTWARE = """
 
 **QUESTION_TYPE: SOFTWARE**
 
-**MANDATORY OPENING (use EXACTLY):**
-"OMNIX implementa múltiples capas de defensa contra fallos de software y riesgos de despliegue."
+**RESPONSE FOCUS:** Explain how OMNIX implements multiple defense layers against software failures and deployment risks.
 
-**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not software questions.**
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not software questions.
+DO NOT copy instructions literally - write naturally using these concepts.**
 
 **REQUIRED CONCEPTS:**
 - Canary releases: nuevas versiones se despliegan al 1-5% primero
@@ -274,10 +285,10 @@ SYSTEMIC_OVERRIDE_DEPENDENCIES = """
 
 **QUESTION_TYPE: DEPENDENCIES**
 
-**MANDATORY OPENING (use EXACTLY):**
-"OMNIX valida cada fuente de datos de forma independiente y mantiene múltiples capas de resiliencia contra fallos de proveedores externos."
+**RESPONSE FOCUS:** Data validation and provider resilience. Open by explaining how OMNIX validates data sources independently.
 
-**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not dependency questions.**
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not dependency questions.
+DO NOT copy instructions literally - write naturally using these concepts.**
 
 **REQUIRED CONCEPTS (include ALL relevant ones):**
 
@@ -332,10 +343,10 @@ SYSTEMIC_OVERRIDE_GOVERNANCE = """
 
 **QUESTION_TYPE: GOVERNANCE**
 
-**MANDATORY OPENING (use EXACTLY):**
-"Desde una perspectiva de gobernanza y cumplimiento regulatorio, OMNIX mantiene una arquitectura auditible y transparente."
+**RESPONSE FOCUS:** From a governance and regulatory compliance perspective, explain how OMNIX maintains an auditable and transparent architecture.
 
-**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not governance questions.**
+**DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not governance questions.
+DO NOT copy instructions literally - write naturally using these concepts.**
 
 **REQUIRED CONCEPTS:**
 - Trazabilidad completa de decisiones (decision_trace)
