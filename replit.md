@@ -91,6 +91,23 @@ This system provides real-time capital protection tracking with PostgreSQL persi
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system that tracks vetoed trades with full context to learn which filters need calibration. It analyzes price movement, calculates "would-have-won" scenarios, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker (ADR-008) analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity, with a dashboard widget for visual balance.
 
+### Decision Contradiction Index (DCI) - ADR-018 (Jan 21, 2026)
+Shadow observational metric measuring internal signal divergence to explain HOLDs. **CRITICAL RULE: DCI ALTO = NO OPERAR.** A high DCI indicates high internal contradiction between signals. NEVER use high DCI as entry condition.
+
+**Components (0-100 total):**
+- Local Signal Strength (0-40): avg(NM%, EMA%) × 0.4
+- Global Edge Penalty (0-30): Inverse of MC_ER/WR
+- Regime Penalty (0-15): VOLATILE=15, RANGING=10, BEARISH=5
+- Risk Overlay (0-15): Black Swan severity
+
+**Levels:** ALIGNED (<35) = can trade | TENSIONED (35-69) = caution | CONTRADICTORY (≥70) = HOLD mandatory
+
+**Realistic Thresholds for Execution:** MC WR > 50%, MC ER > 0%, Coherence > 50%, DCI < 70. NEVER claim "WR > 60%" or "ER > 5%" (fantasy).
+
+**Loss Avoidance Formula:** `Position_Size × max(VaR95, Historical_Avg_Loss)`. NEVER say "difficult to quantify".
+
+**Files:** `omnix_core/bot/auto_trading_bot.py`, `omnix_config/system_state_manifest.json`
+
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework, enriched AI context with granular breakdowns, a System Health Score (0-100), Live Status widget, Quick Insights, Calibration Progress (4-phase tracker), and Recommended Actions. Key dashboard credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked", distinguishing "Market Trend" from "Trading Regime", and providing a timeline for Calibration Progress. Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. The `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics, fee breakdowns, and trade analysis to investors, triggered by specific keywords or complex questions. Capital protection metrics are standardized to "Est. Loss Avoided*" (Notional × 0.6%) as primary and "Notional Blocked" as secondary.
 

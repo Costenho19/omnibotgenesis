@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 16 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | 119 Trades | Balance $984,801.27 | ADR-007 Phase 1 ACTIVO
+**Fecha**: 21 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 7 | ADR-018 DCI ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -59,13 +59,30 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 **Output:** Score 0-100, Nivel: ALIGNED (<35) / TENSIONED (35-69) / CONTRADICTORY (≥70)
 
-**Ejemplo:** NM BUY 71% + EMA NONE + MC_ER=0 + VOLATILE → DCI ≈ 63 (TENSIONED) → HOLD justificado
+**REGLA CRÍTICA:** 
+> **DCI ALTO = NO OPERAR.** Un DCI alto indica alta contradicción interna.
+> NUNCA usar DCI alto como condición de entrada.
+
+**Ejemplo Production (Jan 21):** 
+```
+BTC/USD: NM BUY 70%, EMA NONE 29%, MC_WR 49.7%, RANGING, Black Swan MEDIUM
+→ DCI = 71.8 (CONTRADICTORY) → HOLD justificado
+```
+
+**Bugfix aplicado:** `ema_confidence` se normalizó de decimal (0-1) a porcentaje (0-100).
+
+**Cuantificación de Pérdida Evitada:**
+- Fórmula: `Position_Size × max(VaR95, Historical_Avg_Loss)`
+- NUNCA decir "difícil de cuantificar"
 
 **Modo:** Shadow only - NO afecta decisiones de trading
 
 **Validación Day 9:** Correlación DCI vs win rate (r ≥ 0.6 = predictor válido)
 
-**Archivos:** `omnix_core/bot/auto_trading_bot.py`, `docs/reference/adr/ADR-018-decision-contradiction-index.md`
+**Archivos:** 
+- `omnix_core/bot/auto_trading_bot.py` - Cálculo y logging
+- `omnix_config/system_state_manifest.json` - Definición para AI
+- `docs/reference/adr/ADR-018-decision-contradiction-index.md`
 
 ---
 

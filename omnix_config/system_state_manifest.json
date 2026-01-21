@@ -1,8 +1,8 @@
 {
   "version": "V6.5.4e INSTITUTIONAL+",
-  "last_updated": "2026-01-18",
+  "last_updated": "2026-01-21",
   "track_record_start": "2026-01-15",
-  "track_record_day": 4,
+  "track_record_day": 7,
   "trading_mode": "paper",
   "paper_capital": 1000000,
   
@@ -63,6 +63,74 @@
       "max_drawdown": "15%"
     },
     "coherence_engine": "6-tier veto system active"
+  },
+  
+  "decision_contradiction_index": {
+    "purpose": "Shadow metric measuring internal signal divergence to explain HOLD decisions",
+    "adr": "ADR-018",
+    "CRITICAL_RULE": "DCI ALTO = NO OPERAR. Un DCI alto indica alta contradicción interna. NUNCA usar DCI alto como condición de entrada.",
+    "levels": {
+      "ALIGNED": {
+        "range": "0-34",
+        "meaning": "Señales convergentes, alta confianza en la decisión",
+        "action": "Sistema puede operar si otros criterios pasan"
+      },
+      "TENSIONED": {
+        "range": "35-69", 
+        "meaning": "Señales mixtas detectadas, ejerciendo cautela",
+        "action": "Preferir HOLD, requiere edge adicional para operar"
+      },
+      "CONTRADICTORY": {
+        "range": "70-100",
+        "meaning": "Conflicto interno significativo entre señales locales y edge global",
+        "action": "HOLD obligatorio - modo preservación de capital"
+      }
+    },
+    "components": {
+      "local_strength": "0-40 pts - Promedio de NM confidence + EMA confidence",
+      "global_edge_penalty": "0-30 pts - Penalización si MC WR < 50% o ER ≤ 0",
+      "regime_penalty": "0-15 pts - VOLATILE=15, RANGING=10, BEARISH=5",
+      "risk_penalty": "0-15 pts - Black Swan severity (MEDIUM=7, HIGH=12)"
+    },
+    "investor_explanation": "El DCI cuantifica por qué el sistema decidió HOLD cuando una señal local (ej: NM BUY 70%) sugería operar. Un DCI de 72 significa que aunque NM dice comprar, el edge global (MC sin edge), el régimen (volátil) y el riesgo (Black Swan) contradicen esa señal. El sistema prioriza preservación de capital sobre señales individuales."
+  },
+  
+  "loss_avoidance_calculation": {
+    "purpose": "Cuantificar pérdida esperada evitada en decisiones HOLD",
+    "method": "Position size × VaR95 × Historical loss rate for similar conditions",
+    "formula": "Pérdida Evitada Est. = Position_Size × max(VaR95, Avg_Loss_Breakdown)",
+    "data_sources": [
+      "VaR95 del Monte Carlo actual",
+      "Breakdown histórico por símbolo (paper_trading_trades)",
+      "Breakdown histórico por régimen HMM",
+      "Breakdown histórico por coherence bucket"
+    ],
+    "example": {
+      "scenario": "HOLD en ADA/USD, régimen BEARISH, coherence MODERATE",
+      "position_size": 20000,
+      "var_95": "-0.46%",
+      "historical_avg_loss_ada": "-2.58% per trade",
+      "estimated_loss_avoided": "$92 (using VaR) to $516 (using historical avg)",
+      "presentation": "Rango estimado: $92 - $516 basado en VaR95 y datos históricos"
+    },
+    "NEVER_SAY": "Es difícil cuantificar la pérdida evitada"
+  },
+  
+  "realistic_thresholds": {
+    "purpose": "Umbrales realistas para ejecución - NO curve-fitting ni fantasías",
+    "for_trade_execution": {
+      "mc_win_rate": "> 50% (edge estadístico mínimo)",
+      "mc_expected_return": "> 0% (cualquier edge positivo)",
+      "coherence": "> 50% (moderate o superior)",
+      "dci": "< 70 (ALIGNED o TENSIONED, nunca CONTRADICTORY)",
+      "black_swan": "LOW o NONE (MEDIUM requiere edge extra)"
+    },
+    "NEVER_CLAIM": [
+      "WR > 60% para operar",
+      "ER > 5% para operar", 
+      "DCI > 90 para operar (INVERTIDO - esto es INCORRECTO)"
+    ],
+    "investor_honesty": "Operamos con edge modesto pero consistente. No buscamos home runs, buscamos acumulación de pequeñas ganancias mientras evitamos pérdidas grandes."
   },
   
   "asset_status": {
@@ -132,7 +200,14 @@
       "pérdidas sustanciales",
       "desempeño negativo",
       "problema",
-      "error crítico"
+      "error crítico",
+      "DCI por encima de 90",
+      "DCI alto para ejecutar",
+      "DCI > 90 para operar",
+      "win rate > 60%",
+      "expected return > 5%",
+      "es difícil cuantificar",
+      "difícil de cuantificar"
     ],
     "approved_reframes": {
       "losses": "capital deployment in learning phase",

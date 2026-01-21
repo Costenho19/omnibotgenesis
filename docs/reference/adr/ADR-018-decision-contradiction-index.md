@@ -167,6 +167,56 @@ GROUP BY symbol
 ORDER BY avg_pnl;
 ```
 
+## Critical Rule (MUST REMEMBER)
+
+> **DCI ALTO = NO OPERAR**
+> 
+> Un DCI alto indica alta contradicción interna entre señales. 
+> **NUNCA** usar DCI alto como condición de entrada.
+> 
+> - DCI BAJO (ALIGNED) = Señales convergentes → Puede operar
+> - DCI ALTO (CONTRADICTORY) = Contradicción → HOLD obligatorio
+
+### Umbrales Realistas para Ejecución
+
+| Métrica | Umbral Mínimo | Nota |
+|---------|---------------|------|
+| MC Win Rate | > 50% | Edge estadístico mínimo |
+| MC Expected Return | > 0% | Cualquier edge positivo |
+| Coherence | > 50% | MODERATE o superior |
+| DCI | < 70 | ALIGNED o TENSIONED |
+| Black Swan | LOW/NONE | MEDIUM requiere edge extra |
+
+**NUNCA DECIR:**
+- "WR > 60% para operar" (fantasía)
+- "ER > 5% para operar" (curve-fitting)
+- "DCI > 90 para operar" (LÓGICA INVERTIDA - INCORRECTO)
+
+### Cuantificación de Pérdida Evitada
+
+**Fórmula:** `Pérdida Evitada Est. = Position_Size × max(VaR95, Avg_Loss_Breakdown)`
+
+**Ejemplo:**
+- Position size: $20,000
+- VaR95: -0.46%
+- Historical avg loss ADA: -2.58%
+- Pérdida evitada: $92 (VaR) a $516 (histórico)
+- Presentación: "Rango estimado: $92 - $516 basado en VaR95 y datos históricos"
+
+**NUNCA DECIR:** "Es difícil cuantificar la pérdida evitada"
+
+---
+
+## Bugfix: EMA Confidence Normalization (Jan 21, 2026)
+
+**Problema:** `ema_confidence` se almacena como decimal (0-1) pero el DCI esperaba porcentaje (0-100). Esto causaba que `local_strength` fuera ~0.2 puntos en lugar de ~20.
+
+**Fix:** Normalizar `ema_conf = ema_conf_raw * 100 if ema_conf_raw <= 1 else ema_conf_raw`
+
+**Resultado:** DCI ahora calcula correctamente y aparece en logs de Railway.
+
+---
+
 ## Benefits
 
 ### For Investors / Risk Committee
