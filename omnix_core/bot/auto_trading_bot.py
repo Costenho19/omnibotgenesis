@@ -3848,12 +3848,20 @@ class AutoTradingBot:
                     edge_status = "sufficient" if mc_er > 0.001 and mc_wr > 0.45 else "insufficient"
                     reason_components.append(f"Global edge: {edge_status} (MC_ER={mc_er:.4f}, WR={mc_wr:.1%})")
                     
-                    # 3. Regime status
-                    regime = hmm_regime if hmm_regime else 'UNKNOWN'
-                    volatility = decision.get('market_state', {}).get('volatility', 'UNKNOWN')
-                    if isinstance(volatility, (int, float)):
-                        volatility = 'HIGH' if volatility > 0.03 else 'NORMAL'
-                    reason_components.append(f"Regime: {regime} | Volatility: {volatility}")
+                    # 3. Regime status - extract regime name from dict or string
+                    if isinstance(hmm_regime, dict):
+                        regime_name = hmm_regime.get('regime', 'UNKNOWN')
+                        vol_value = hmm_regime.get('volatility', 0)
+                        volatility = 'HIGH' if vol_value > 0.25 else 'NORMAL'
+                    elif isinstance(hmm_regime, str):
+                        regime_name = hmm_regime
+                        volatility = decision.get('market_state', {}).get('volatility', 'UNKNOWN')
+                        if isinstance(volatility, (int, float)):
+                            volatility = 'HIGH' if volatility > 0.25 else 'NORMAL'
+                    else:
+                        regime_name = 'UNKNOWN'
+                        volatility = 'UNKNOWN'
+                    reason_components.append(f"Regime: {regime_name} | Volatility: {volatility}")
                     
                     # 4. Risk level (Black Swan)
                     bs_level = v52.get('adaptive_black_swan', 'NONE')
