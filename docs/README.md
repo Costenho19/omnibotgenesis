@@ -18,6 +18,32 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-018: Decision Contradiction Index (DCI) (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Shadow metric observacional
+- **PROBLEMA**: Inversores preguntaban "si había señal BUY fuerte, ¿por qué no entró?"
+- **SOLUCIÓN**: DCI mide contradicción interna entre señales locales y edge global:
+  - Local Signal Strength (0-40 pts): promedio Non-Markovian + EMA
+  - Global Edge Penalty (0-30 pts): inverso de calidad MC_ER/WR
+  - Regime Penalty (0-15 pts): VOLATILE/RANGING penalizado
+  - Risk Overlay (0-15 pts): severidad Black Swan
+- **OUTPUT**: Score 0-100, Niveles: LOW (<35) / MEDIUM (35-69) / HIGH (≥70)
+- **MODO**: Shadow only - NO afecta decisiones de trading
+- **VALIDACIÓN**: Day 9 análisis de correlación con win rate
+- **ARCHIVOS**: `omnix_core/bot/auto_trading_bot.py`
+- **REFERENCIA**: `docs/reference/adr/ADR-018-decision-contradiction-index.md`
+- **ANÁLISIS**: `docs/investigations/DCI_ANALYSIS.md`
+
+### ADR-017: FINAL_DECISION_REASON Summary (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Bloque consolidado de razón de decisión
+- **PROBLEMA**: Rationale de decisiones disperso en múltiples líneas de log
+- **SOLUCIÓN**: Bloque estructurado consolidando signals, edge, regime, risk, coherence, action
+- **REFERENCIA**: `docs/reference/adr/ADR-017-final-decision-reason-summary.md`
+
+### ADR-016: Log Semantics & Decision Clarity (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Etiquetas semánticas mejoradas
+- **CAMBIOS**: Kelly skip label, DecisionConf/CoherenceScore rename, BYPASSED gate text
+- **REFERENCIA**: `docs/reference/adr/ADR-016-log-semantics-decision-clarity.md`
+
 ### ADR-015: Dashboard Security Enhancement (Jan 21, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Basic Auth + Rate Limiting + Security Headers
 - **PROBLEMA**: Dashboard sin autenticación (calificación C+ en auditoría de seguridad)

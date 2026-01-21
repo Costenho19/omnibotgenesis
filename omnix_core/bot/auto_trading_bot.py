@@ -3902,6 +3902,102 @@ class AutoTradingBot:
                     
                 except Exception as fdr_err:
                     logger.debug(f"FINAL_DECISION_REASON generation skipped: {fdr_err}")
+                
+                # ==========================================================================
+                # DECISION_CONTRADICTION_INDEX (DCI) - Shadow metric for investor audits (ADR-018)
+                # Measures divergence between local signals and global edge to explain HOLDs
+                # ==========================================================================
+                try:
+                    # 1. Local Signal Strength (0-40 pts)
+                    # Average of Non-Markovian confidence and EMA confidence
+                    nm_conf = safe_float(v52.get('non_markovian_confidence', 0), 0)
+                    ema_conf = safe_float(v52.get('ema_confidence', 0), 0)
+                    local_strength = ((nm_conf + ema_conf) / 2) * 0.4
+                    
+                    # 2. Global Edge Penalty (0-30 pts)
+                    # Low edge = high contradiction contribution
+                    dci_mc_wr = safe_float(v52.get('mc_win_rate', 0.5), 0.5)
+                    dci_mc_er = safe_float(v52.get('mc_expected_return', 0), 0)
+                    edge_score = max(0, min(30, (dci_mc_wr - 0.5) * 60 + dci_mc_er * 1000))
+                    global_edge_penalty = 30 - edge_score
+                    
+                    # 3. Regime Misalignment Penalty (0-15 pts)
+                    if isinstance(hmm_regime, dict):
+                        dci_regime = hmm_regime.get('regime', 'UNKNOWN')
+                        dci_vol = safe_float(hmm_regime.get('volatility', 0), 0)
+                    elif isinstance(hmm_regime, str):
+                        dci_regime = hmm_regime
+                        dci_vol = safe_float(decision.get('market_state', {}).get('volatility', 0), 0)
+                    else:
+                        dci_regime = 'UNKNOWN'
+                        dci_vol = 0
+                    
+                    if dci_regime == 'VOLATILE' or dci_vol > 0.25:
+                        regime_penalty = 15
+                    elif dci_regime == 'RANGING':
+                        regime_penalty = 10
+                    elif dci_regime in ('BEARISH', 'UNKNOWN'):
+                        regime_penalty = 5
+                    else:
+                        regime_penalty = 0
+                    
+                    # 4. Risk Overlay (0-15 pts)
+                    bs_severity = v52.get('adaptive_black_swan', 'NONE')
+                    risk_penalty_map = {'NONE': 0, 'LOW': 3, 'MEDIUM': 7, 'HIGH': 12, 'EXTREME': 15}
+                    risk_penalty = risk_penalty_map.get(str(bs_severity).upper(), 5)
+                    
+                    # Calculate total DCI score
+                    dci_score = local_strength + global_edge_penalty + regime_penalty + risk_penalty
+                    dci_score = max(0, min(100, dci_score))
+                    
+                    # Determine level
+                    if dci_score < 35:
+                        dci_level = 'LOW'
+                        dci_interpretation = 'Signals aligned, decision clear'
+                    elif dci_score < 70:
+                        dci_level = 'MEDIUM'
+                        dci_interpretation = 'Mixed signals, moderate uncertainty'
+                    else:
+                        dci_level = 'HIGH'
+                        dci_interpretation = 'Strong contradiction - HOLD justified by conflict'
+                    
+                    # Build DCI data structure
+                    dci_data = {
+                        'score': round(dci_score, 1),
+                        'level': dci_level,
+                        'components': {
+                            'local_strength': round(local_strength, 1),
+                            'global_edge_penalty': round(global_edge_penalty, 1),
+                            'regime_penalty': regime_penalty,
+                            'risk_penalty': risk_penalty
+                        },
+                        'inputs': {
+                            'nm_confidence': round(nm_conf, 1),
+                            'ema_confidence': round(ema_conf, 1),
+                            'mc_wr': round(dci_mc_wr, 3),
+                            'mc_er': round(dci_mc_er, 4),
+                            'regime': dci_regime,
+                            'volatility': round(dci_vol, 3),
+                            'black_swan': bs_severity
+                        },
+                        'interpretation': dci_interpretation
+                    }
+                    
+                    # Add to decision and telemetry
+                    decision['decision_contradiction_index'] = dci_data
+                    telemetry_data['decision_contradiction_index'] = dci_data
+                    
+                    # Log DCI summary (only for MEDIUM or HIGH to reduce noise)
+                    if dci_level in ('MEDIUM', 'HIGH'):
+                        logger.info(f"   📊 DECISION_CONTRADICTION_INDEX:")
+                        logger.info(f"      - Score: {dci_data['score']} ({dci_level})")
+                        logger.info(f"      - Local strength: {local_strength:.1f} (NM={nm_conf:.0f}%, EMA={ema_conf:.0f}%)")
+                        logger.info(f"      - Edge penalty: {global_edge_penalty:.1f} (WR={dci_mc_wr:.1%}, ER={dci_mc_er:.4f})")
+                        logger.info(f"      - Regime: {dci_regime} ({regime_penalty}pts) | Risk: {bs_severity} ({risk_penalty}pts)")
+                        logger.info(f"      → {dci_interpretation}")
+                    
+                except Exception as dci_err:
+                    logger.debug(f"DCI computation skipped: {dci_err}")
                 # ==========================================================================
                 
                 if MODULE_STATUS_REGISTRY:

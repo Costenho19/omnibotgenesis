@@ -46,6 +46,42 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### ADR-018: Decision Contradiction Index (DCI) (Jan 21, 2026)
+
+**PROPÓSITO:** Métrica shadow observacional para explicar HOLDs cuando señales locales fuertes contradicen edge global débil.
+
+| Componente | Puntos | Descripción |
+|------------|--------|-------------|
+| Local Signal Strength | 0-40 | avg(Non-Markovian%, EMA%) × 0.4 |
+| Global Edge Penalty | 0-30 | Inverso de MC_ER/WR |
+| Regime Penalty | 0-15 | VOLATILE=15, RANGING=10, BEARISH=5 |
+| Risk Overlay | 0-15 | Black Swan severity |
+
+**Output:** Score 0-100, Nivel: LOW (<35) / MEDIUM (35-69) / HIGH (≥70)
+
+**Ejemplo:** NM BUY 71% + EMA NONE + MC_ER=0 + VOLATILE → DCI ≈ 63 (MEDIUM) → HOLD justificado
+
+**Modo:** Shadow only - NO afecta decisiones de trading
+
+**Validación Day 9:** Correlación DCI vs win rate (r ≥ 0.6 = predictor válido)
+
+**Archivos:** `omnix_core/bot/auto_trading_bot.py`, `docs/reference/adr/ADR-018-decision-contradiction-index.md`
+
+---
+
+### ADR-017: FINAL_DECISION_REASON + ADR-016: Log Semantics (Jan 21, 2026)
+
+**ADR-017:** Bloque consolidado de razón de decisión para auditorías de inversores
+- Señales locales, edge global, régimen, Black Swan, coherence, acción final
+- Formato estructurado en decision payload
+
+**ADR-016:** Mejoras semánticas en logs
+- Kelly skip on HOLD, DecisionConf/CoherenceScore rename, BYPASSED gate text
+
+**Estado:** ✅ IMPLEMENTADO - 27/27 tests passing
+
+---
+
 ### Railway Production Hotfixes (Jan 16, 2026)
 
 **Fixes aplicados a 3 errores críticos de producción:**
