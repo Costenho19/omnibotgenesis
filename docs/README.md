@@ -18,6 +18,26 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-020: Institutional Response Quality Standards (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Filtros de calidad para respuestas de inversores
+- **PROBLEMA**: Respuesta de bot incluía cifras infladas ($82M), umbrales irreales (WR 60%), lenguaje arbitrario ("ignorar módulos")
+- **SOLUCIÓN**: Sistema multi-capa de calidad de respuestas:
+  - **Layer 1 - Post-Processing**: Blacklist de cifras infladas, reemplazos de lenguaje institucional
+  - **Layer 2 - Prompt Rules**: RULE 15 con umbrales realistas (ADR-018) y criterio ECW (ADR-019)
+  - **Layer 3 - Prohibiciones**: "Es difícil cuantificar" bloqueado, fórmula explícita requerida
+- **UMBRALES REALISTAS**: WR ≥52%, ER >0%, DCI <70, Black Swan ≤MEDIUM, 3 ciclos consecutivos
+- **FÓRMULA**: `Pérdida Evitada = Position_Size × max(VaR95, Historical_Avg_Loss)`
+- **ARCHIVOS**: `omnix_services/ai_service/conversational_ai_adapter.py`, `prompt_templates.py`
+- **REFERENCIA**: `docs/reference/adr/ADR-020-institutional-response-quality.md`
+
+### ADR-019: Edge Confirmation Window (ECW) (Jan 21, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - Gate de confirmación de edge persistente
+- **PROBLEMA**: Sistema ejecutaba en edge momentáneo sin confirmar persistencia
+- **SOLUCIÓN**: Requiere 3 ciclos consecutivos con WR≥52%, ER>0%, BS≤MEDIUM antes de ejecutar
+- **FLUJO**: MC VETO → RMS VETO → COHERENCE GATE → [ECW GATE] → Scoring → Decision
+- **ARCHIVOS**: `omnix_core/bot/auto_trading_bot.py`, `omnix_config/system_state_manifest.json`
+- **REFERENCIA**: `docs/reference/adr/ADR-019-edge-confirmation-window.md`
+
 ### ADR-018: Decision Contradiction Index (DCI) (Jan 21, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Shadow metric observacional
 - **PROBLEMA**: Inversores preguntaban "si había señal BUY fuerte, ¿por qué no entró?"
