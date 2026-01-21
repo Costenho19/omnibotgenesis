@@ -110,29 +110,85 @@ BLACKLISTED_PHRASES = [
     r'^OMNIX no genera señales sincronizadas a todos los usuarios\. Cada instancia opera de forma completamente aislada, sin observar posiciones de otros clientes\.\s*',
     r'^OMNIX implementa múltiples capas de defensa contra fallos de software y riesgos de despliegue\.\s*',
     r'^Desde una perspectiva de gobernanza y cumplimiento regulatorio, OMNIX mantiene una arquitectura auditible y transparente\.\s*',
+    
+    # ===========================================================================
+    # INFLATED/UNAUDITABLE CAPITAL FIGURES (ADR-020 - Jan 21, 2026)
+    # Removes large capital protection claims that cannot be verified on Day 7
+    # ===========================================================================
+    
+    # Billions/millions in "capital protegido" - unauditable in early track record
+    r'\$\d{1,3}(?:,\d{3})*(?:\.\d+)?\s*(?:mil\s*millones|billones?|MM?)\s*(?:en\s+)?(?:capital\s+)?protegido[^.]*\.',
+    r'\$\d{2,3}(?:,\d{3}){2,}(?:\.\d+)?\s*(?:en\s+)?(?:capital\s+)?protegido[^.]*\.',  # $82,940,000+
+    r'\$\d+(?:,\d{3})*\s*(?:en\s+)?(?:las\s+últimas|últimas|en)\s*(?:\d+)?\s*(?:horas?|días?)[^.]*protegido[^.]*\.',
+    
+    # "Es difícil cuantificar" - ADR-018 says NEVER say this
+    r'[Ee]s\s+dif[ií]cil\s+cuantificar[^.]*\.',
+    r'[Dd]if[ií]cil\s+de\s+cuantificar[^.]*\.',
+    
+    # Unrealistic thresholds - WR > 60%, ER > 1% (ADR-018 says realistic is WR > 50%, ER > 0%)
+    r'win\s*rate[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)6[05]%[^.]*\.',
+    r'expected\s*return[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)[1-9]%[^.]*\.',
 ]
 
 BLACKLISTED_PATTERNS = [re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in BLACKLISTED_PHRASES]
 
+# ==============================================================================
+# INSTITUTIONAL LANGUAGE REPLACEMENTS (ADR-020 - Jan 21, 2026)
+# Transforms arbitrary language into institutional governance terminology
+# ==============================================================================
+
+LANGUAGE_REPLACEMENTS = [
+    # "ignorar módulos" → "ponderar adaptativamente" (governance, not arbitrariness)
+    (re.compile(r'[Mm]ódulos?\s+(?:fueron?\s+)?ignorados?\s+conscientemente', re.IGNORECASE),
+     'Las señales fueron ponderadas adaptativamente según el marco de gestión de riesgo'),
+    (re.compile(r'[Ii]gnor[aó]\s+(?:los?\s+)?(?:módulos?|señales?)', re.IGNORECASE),
+     'ponderó adaptativamente'),
+    (re.compile(r'[Ss]e\s+ignor[aó]\s+conscientemente', re.IGNORECASE),
+     'se redujo el peso relativo'),
+    
+    # "Es difícil cuantificar" → concrete range formula
+    (re.compile(r'[Ee]s\s+dif[ií]cil\s+(?:de\s+)?cuantificar\s+(?:con\s+)?precisi[oó]n', re.IGNORECASE),
+     'Bajo supuestos conservadores (Position_Size × max(VaR95, Avg_Loss)), el rango estimado es'),
+    
+    # Overly optimistic thresholds → realistic (ADR-018)
+    (re.compile(r'win\s*rate\s*(?:debería|debe)\s*superar\s*el?\s*60%', re.IGNORECASE),
+     'win rate debe superar el 52%'),
+    (re.compile(r'expected\s*return\s*(?:debería|debe)\s*(?:ser\s*)?positivo?\s*\(?\s*>?\s*1%', re.IGNORECASE),
+     'expected return debe ser positivo (>0%)'),
+]
+
 def post_process_response(response: str) -> str:
     """
-    Remove blacklisted phrases from AI response.
+    Remove blacklisted phrases and apply institutional language transforms.
     This is a safety net that runs AFTER AI generation.
+    
+    ADR-020: Includes inflated capital figure removal, unrealistic threshold correction,
+    and "ignorar" → "ponderar adaptativamente" transformations.
     
     Args:
         response: Raw AI response text
         
     Returns:
-        Cleaned response with servile/prohibited phrases removed
+        Cleaned response with servile/prohibited phrases removed and 
+        institutional language applied
     """
     if not response:
         return response
     
     cleaned = response
+    changes_made = []
     
-    # Remove blacklisted patterns
+    # Phase 1: Remove blacklisted patterns (servile phrases, inflated figures)
     for pattern in BLACKLISTED_PATTERNS:
-        cleaned = pattern.sub('', cleaned)
+        if pattern.search(cleaned):
+            cleaned = pattern.sub('', cleaned)
+            changes_made.append('blacklist_removal')
+    
+    # Phase 2: Apply institutional language replacements (ADR-020)
+    for pattern, replacement in LANGUAGE_REPLACEMENTS:
+        if pattern.search(cleaned):
+            cleaned = pattern.sub(replacement, cleaned)
+            changes_made.append('language_transform')
     
     # Clean up stray Telegram formatting artifacts (lone asterisks)
     cleaned = re.sub(r'^\s*\*\s*$', '', cleaned, flags=re.MULTILINE)
@@ -148,8 +204,9 @@ def post_process_response(response: str) -> str:
         cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
     
     # Log if we made changes (for debugging)
-    if cleaned != response:
-        logger.info(f"🛡️ Post-process filter: Removed servile phrases from response")
+    if changes_made:
+        unique_changes = list(set(changes_made))
+        logger.info(f"🛡️ Post-process filter applied: {', '.join(unique_changes)}")
     
     return cleaned.strip()
 
