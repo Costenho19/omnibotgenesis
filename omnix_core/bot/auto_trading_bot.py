@@ -3815,6 +3815,87 @@ class AutoTradingBot:
                 if guards_passed:
                     logger.info(f"   ✅ GUARDS_PASSED: {', '.join(guards_passed)}")
                 
+                # ==========================================================================
+                # FINAL_DECISION_REASON - Explicit cause summary for investor audits (ADR-017)
+                # ==========================================================================
+                try:
+                    action = decision.get('action', 'HOLD')
+                    should_trade = decision.get('should_trade', False)
+                    
+                    # Build structured reason components
+                    reason_components = []
+                    
+                    # 1. Local signals
+                    local_signals = []
+                    ema_dir = v52.get('ema_direction', 'NONE')
+                    if ema_dir != 'NONE':
+                        local_signals.append(f"EMA={ema_dir}")
+                    
+                    # Non-Markovian signal from decision trace
+                    d_trace = decision.get('decision_trace', [])
+                    nm_signals = [t for t in d_trace if 'NON_MARKOVIAN' in str(t) or 'NonMarkovian' in str(t)]
+                    if nm_signals:
+                        local_signals.append(f"NonMarkovian")
+                    
+                    if local_signals:
+                        reason_components.append(f"Local signals: {', '.join(local_signals)}")
+                    else:
+                        reason_components.append("Local signals: NONE")
+                    
+                    # 2. Global edge (MC metrics)
+                    mc_er = v52.get('mc_expected_return', 0)
+                    mc_wr = v52.get('mc_win_rate', 0)
+                    edge_status = "sufficient" if mc_er > 0.001 and mc_wr > 0.45 else "insufficient"
+                    reason_components.append(f"Global edge: {edge_status} (MC_ER={mc_er:.4f}, WR={mc_wr:.1%})")
+                    
+                    # 3. Regime status
+                    regime = hmm_regime if hmm_regime else 'UNKNOWN'
+                    volatility = decision.get('market_state', {}).get('volatility', 'UNKNOWN')
+                    if isinstance(volatility, (int, float)):
+                        volatility = 'HIGH' if volatility > 0.03 else 'NORMAL'
+                    reason_components.append(f"Regime: {regime} | Volatility: {volatility}")
+                    
+                    # 4. Risk level (Black Swan)
+                    bs_level = v52.get('adaptive_black_swan', 'NONE')
+                    if bs_level and bs_level != 'NONE':
+                        reason_components.append(f"Black Swan: {bs_level}")
+                    
+                    # 5. Coherence gate status
+                    coh_score = v52.get('coherence_pre_score', 0)
+                    coh_threshold = v52.get('coherence_block_threshold', 30)
+                    coh_status = "PASSED" if coh_score >= coh_threshold else "BLOCKED"
+                    reason_components.append(f"Coherence: {coh_status} ({coh_score:.0f}% vs {coh_threshold}% threshold)")
+                    
+                    # 6. Final determination
+                    if veto_chain:
+                        final_reason = f"BLOCKED by {veto_chain[0]}"
+                    elif not should_trade:
+                        final_reason = "Insufficient signal quality"
+                    else:
+                        final_reason = "All gates passed"
+                    
+                    # Build complete summary
+                    decision_reason = {
+                        'action': action,
+                        'final_reason': final_reason,
+                        'components': reason_components,
+                        'capital_preservation': action == 'HOLD'
+                    }
+                    
+                    # Add to decision and telemetry
+                    decision['final_decision_reason'] = decision_reason
+                    telemetry_data['final_decision_reason'] = decision_reason
+                    
+                    # Log structured summary
+                    logger.info(f"   📋 FINAL_DECISION_REASON:")
+                    for comp in reason_components:
+                        logger.info(f"      - {comp}")
+                    logger.info(f"      → Action: {action} ({final_reason})")
+                    
+                except Exception as fdr_err:
+                    logger.debug(f"FINAL_DECISION_REASON generation skipped: {fdr_err}")
+                # ==========================================================================
+                
                 if MODULE_STATUS_REGISTRY:
                     modules_used = []
                     if monte_carlo:
