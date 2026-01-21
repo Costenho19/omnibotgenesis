@@ -24,6 +24,10 @@ args = "Dashboard Preview"
 task = "workflow.run"
 args = "Streamlit Dashboard"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Systemic Router Tests"
+
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -58,6 +62,17 @@ outputType = "console"
 task = "shell.exec"
 args = "cd omnix_dashboard && streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
 waitForPort = 8080
+
+[[workflows.workflow]]
+name = "Systemic Router Tests"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567890 python -m pytest tests/test_systemic_router.py -v --tb=short"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 5000

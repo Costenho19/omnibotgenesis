@@ -174,28 +174,28 @@ class TestGetSystemicOverridePrompt:
         prompt = get_systemic_override_prompt('TYPE_A')
         assert prompt == SYSTEMIC_OVERRIDE_COORDINATION
         assert 'COORDINATION' in prompt
-        assert 'no genera señales sincronizadas' in prompt
+        assert 'single-tenant' in prompt.lower()
     
     def test_type_b_returns_software_prompt(self):
         """TYPE_B should return software override."""
         prompt = get_systemic_override_prompt('TYPE_B')
         assert prompt == SYSTEMIC_OVERRIDE_SOFTWARE
         assert 'SOFTWARE' in prompt
-        assert 'múltiples capas de defensa' in prompt
+        assert 'defense layers' in prompt.lower() or 'software failures' in prompt.lower()
     
     def test_type_c_returns_dependencies_prompt(self):
         """TYPE_C should return dependencies override."""
         prompt = get_systemic_override_prompt('TYPE_C')
         assert prompt == SYSTEMIC_OVERRIDE_DEPENDENCIES
         assert 'DEPENDENCIES' in prompt
-        assert 'resiliencia' in prompt
+        assert 'provider' in prompt.lower() or 'data validation' in prompt.lower()
     
     def test_type_d_returns_governance_prompt(self):
         """TYPE_D should return governance override."""
         prompt = get_systemic_override_prompt('TYPE_D')
         assert prompt == SYSTEMIC_OVERRIDE_GOVERNANCE
         assert 'GOVERNANCE' in prompt
-        assert 'gobernanza' in prompt.lower()
+        assert 'auditable' in prompt.lower() or 'compliance' in prompt.lower()
     
     def test_none_returns_empty(self):
         """None should return empty string."""
@@ -218,25 +218,29 @@ class TestOverrideContent:
             assert '*1.' in override or 'Numbered sections' in override
             assert 'FORBIDDEN' in override.upper()
     
-    def test_coordination_override_has_mandatory_opening(self):
-        """Coordination override must have specific opening phrase."""
-        assert 'OMNIX no genera señales sincronizadas' in SYSTEMIC_OVERRIDE_COORDINATION
-        assert 'MANDATORY OPENING' in SYSTEMIC_OVERRIDE_COORDINATION
+    def test_coordination_override_has_response_focus(self):
+        """Coordination override must have response focus guidance."""
+        assert 'RESPONSE FOCUS' in SYSTEMIC_OVERRIDE_COORDINATION
+        assert 'single-tenant' in SYSTEMIC_OVERRIDE_COORDINATION.lower()
+        assert 'DO NOT copy instructions literally' in SYSTEMIC_OVERRIDE_COORDINATION
     
-    def test_software_override_has_different_opening(self):
-        """Software override should NOT have coordination opening."""
-        assert 'implementa múltiples capas de defensa' in SYSTEMIC_OVERRIDE_SOFTWARE
+    def test_software_override_has_different_focus(self):
+        """Software override should have its own response focus."""
+        assert 'RESPONSE FOCUS' in SYSTEMIC_OVERRIDE_SOFTWARE
         assert 'DO NOT open with' in SYSTEMIC_OVERRIDE_SOFTWARE
+        assert 'DO NOT copy instructions literally' in SYSTEMIC_OVERRIDE_SOFTWARE
     
-    def test_dependencies_override_has_different_opening(self):
-        """Dependencies override should NOT have coordination opening."""
-        assert 'valida cada fuente de datos' in SYSTEMIC_OVERRIDE_DEPENDENCIES
+    def test_dependencies_override_has_different_focus(self):
+        """Dependencies override should have its own response focus."""
+        assert 'RESPONSE FOCUS' in SYSTEMIC_OVERRIDE_DEPENDENCIES
         assert 'DO NOT open with' in SYSTEMIC_OVERRIDE_DEPENDENCIES
+        assert 'DO NOT copy instructions literally' in SYSTEMIC_OVERRIDE_DEPENDENCIES
     
-    def test_governance_override_has_different_opening(self):
-        """Governance override should NOT have coordination opening."""
-        assert 'perspectiva de gobernanza' in SYSTEMIC_OVERRIDE_GOVERNANCE
+    def test_governance_override_has_different_focus(self):
+        """Governance override should have its own response focus."""
+        assert 'RESPONSE FOCUS' in SYSTEMIC_OVERRIDE_GOVERNANCE
         assert 'DO NOT open with' in SYSTEMIC_OVERRIDE_GOVERNANCE
+        assert 'DO NOT copy instructions literally' in SYSTEMIC_OVERRIDE_GOVERNANCE
 
 
 class TestRealWorldQuestions:
