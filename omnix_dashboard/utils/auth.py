@@ -104,7 +104,7 @@ def _is_exempt_path(path: str) -> bool:
 def init_security(app: Flask) -> None:
     dashboard_user = os.environ.get('DASHBOARD_USER', '')
     dashboard_password = os.environ.get('DASHBOARD_PASSWORD', '')
-    rate_limit = int(os.environ.get('DASHBOARD_RATE_LIMIT', '60'))
+    rate_limit = int(os.environ.get('DASHBOARD_RATE_LIMIT', '300'))
     is_railway = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PROJECT_ID'))
     auth_optional = os.environ.get('DASHBOARD_AUTH_OPTIONAL', '').lower() == 'true'
     

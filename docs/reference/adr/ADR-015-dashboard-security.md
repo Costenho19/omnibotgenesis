@@ -49,7 +49,7 @@ init_security(app)
 |----------|-----------|---------|-------------|
 | `DASHBOARD_USER` | Sí (prod) | - | Usuario para Basic Auth |
 | `DASHBOARD_PASSWORD` | Sí (prod) | - | Contraseña para Basic Auth |
-| `DASHBOARD_RATE_LIMIT` | No | 60 | Requests por minuto por IP |
+| `DASHBOARD_RATE_LIMIT` | No | 300 | Requests por minuto por IP |
 | `DASHBOARD_IP_ALLOWLIST` | No | - | IPs permitidas (comma-separated) |
 | `DASHBOARD_AUTH_OPTIONAL` | No | false | Si 'true', permite dashboard público en Railway |
 
