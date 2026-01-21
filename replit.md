@@ -59,7 +59,21 @@ A safety-net filter in `conversational_ai_adapter.py` removes servile/prohibited
 `_fetch_real_market_data_async()` runs 7 data sources in parallel via `asyncio.gather()`: Kraken auth, Kraken public, CoinGecko, specific crypto, trade performance, veto data, investor data. Reduces latency from ~20s (sequential) to ~3-5s (parallel). HTTP timeouts reduced from 10s to 5s for faster failure recovery.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. Scoring → 5. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves threshold reduction and EMA trigger adjustment to improve trade throughput.
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate blocks low-quality signals BEFORE scoring computation with dynamic thresholds based on EMA score + Black Swan severity. Calibration for Coherence Thresholds (ADR-007 Phase 1) involves threshold reduction and EMA trigger adjustment to improve trade throughput.
+
+### Edge Confirmation Window (ECW) - ADR-019 (Jan 21, 2026)
+Gate that requires edge persistence before allowing trades. Transforms "capital preservation" into "capital patience".
+
+**Thresholds:** MC_WR ≥ 52%, MC_ER > 0%, Black Swan ≤ MEDIUM, for 3 consecutive cycles.
+
+**Behavior:**
+- Conditions met → Counter increments in Redis
+- Any condition fails → Counter resets to 0
+- Counter ≥ 3 → Trade window OPEN
+
+**Logging:** `⏳ [ECW_GATE] BTC/USD | 2/3 cycles → Waiting` or `✅ [ECW_GATE] BTC/USD | 3/3 cycles → OPEN`
+
+**Files:** `omnix_core/bot/auto_trading_bot.py`, `docs/reference/adr/ADR-019-edge-confirmation-window.md`
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts, PRIMARY DRIVER), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts, modifier). A separate Veto/Penalty layer includes Monte Carlo, Black Swan, Sentiment, and Quantum Momentum, applying only penalties.

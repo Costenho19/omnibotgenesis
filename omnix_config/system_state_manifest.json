@@ -62,7 +62,24 @@
       "per_trade_limit": "5%",
       "max_drawdown": "15%"
     },
-    "coherence_engine": "6-tier veto system active"
+    "coherence_engine": "6-tier veto system active",
+    "edge_confirmation_window": {
+      "status": "ENFORCEMENT",
+      "description": "Requiere persistencia del edge antes de permitir trades",
+      "thresholds": {
+        "mc_wr_min": 52,
+        "mc_er_min": 0,
+        "consecutive_cycles_required": 3,
+        "black_swan_max": "MEDIUM"
+      },
+      "behavior": {
+        "counter_increments": "When MC_WR >= 52%, MC_ER > 0, Black Swan <= MEDIUM",
+        "counter_resets": "When any condition fails",
+        "trade_allowed": "When counter >= consecutive_cycles_required"
+      },
+      "adr": "ADR-019",
+      "investor_explanation": "No operamos en el primer ciclo positivo. Esperamos confirmación de 3 ciclos consecutivos con edge estadístico (WR >= 52%, ER > 0%) y sin riesgo severo. Esto transforma 'preservación de capital' en 'paciencia de capital'."
+    }
   },
   
   "decision_contradiction_index": {

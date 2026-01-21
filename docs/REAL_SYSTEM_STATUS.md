@@ -46,6 +46,42 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### ADR-019: Edge Confirmation Window (ECW) (Jan 21, 2026)
+
+**PROPÓSITO:** Gate de confirmación de edge que requiere persistencia del edge estadístico antes de permitir trades. Transforma "capital preservation" en "capital patience".
+
+| Parámetro | Valor | Descripción |
+|-----------|-------|-------------|
+| MC Win Rate Min | ≥52% | 2% sobre break-even |
+| MC Expected Return Min | >0% | Cualquier edge positivo |
+| Ciclos Consecutivos | 3 | Confirmar persistencia |
+| Black Swan Max | MEDIUM | No operar en riesgo severo |
+
+**Flujo de Decisión:**
+```
+MC VETO → RMS VETO → COHERENCE GATE → [ECW GATE] → Scoring → Decision
+```
+
+**Comportamiento:**
+- Condiciones cumplidas → Contador incrementa
+- Cualquier condición falla → Contador reset a 0
+- Contador ≥ 3 → Trade window OPEN
+
+**Logging Format:**
+```
+⏳ [ECW_GATE] BTC/USD | ECW: 2/3 cycles (WR=53.2%✓, ER=0.15%✓, BS=LOW✓) → Waiting
+✅ [ECW_GATE] BTC/USD | ECW: 3/3 cycles → Trade window OPEN
+```
+
+**Storage:** Redis counter per symbol con TTL 1 hora
+
+**Archivos:** 
+- `omnix_core/bot/auto_trading_bot.py` - Implementación ECW gate
+- `omnix_config/system_state_manifest.json` - Configuración
+- `docs/reference/adr/ADR-019-edge-confirmation-window.md`
+
+---
+
 ### ADR-018: Decision Contradiction Index (DCI) (Jan 21, 2026)
 
 **PROPÓSITO:** Métrica shadow observacional para explicar HOLDs cuando señales locales fuertes contradicen edge global débil.

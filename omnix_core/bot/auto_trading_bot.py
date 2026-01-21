@@ -2935,7 +2935,102 @@ class AutoTradingBot:
                 )
                 return decision
             
-            logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed")
+            # ========== ADR-019: EDGE CONFIRMATION WINDOW (ECW) GATE (Jan 21, 2026) ==========
+            # No basta con edge una vez. Requiere persistencia del edge N ciclos consecutivos.
+            # Esto transforma "capital preservation" en "capital patience mode".
+            # Condiciones: MC_WR >= 52%, MC_ER > 0, Black Swan <= MEDIUM, durante 3+ ciclos
+            ecw_passed = False
+            ecw_counter = 0
+            ecw_required = 3  # Ciclos consecutivos requeridos
+            ecw_reason = ""
+            
+            try:
+                # Configuración ECW - defaults que coinciden con system_state_manifest.json
+                ecw_cfg = {
+                    'mc_wr_min': 52,      # MC win rate min % (data comes as 0-1, scaled to 0-100)
+                    'mc_er_min': 0,       # MC expected return min % (data comes as 0-1, scaled to 0-100)
+                    'consecutive_required': 3,
+                    'black_swan_max': ['NONE', 'LOW', 'MEDIUM']  # Permitidos
+                }
+                
+                # Obtener métricas actuales - scale from 0-1 to 0-100 for comparison
+                mc_wr_raw = safe_float(monte_carlo.get('win_rate', 0), 0) if monte_carlo else 0
+                mc_er_raw = safe_float(monte_carlo.get('expected_return', 0), 0) if monte_carlo else 0
+                # If data comes as 0-1 (decimal), scale to 0-100%; if already 0-100, use as-is
+                mc_wr = mc_wr_raw * 100 if mc_wr_raw <= 1 else mc_wr_raw
+                mc_er = mc_er_raw * 100 if abs(mc_er_raw) <= 1 else mc_er_raw
+                
+                bs_level = 'MEDIUM'
+                if black_swan:
+                    bs_level = black_swan.get('level', black_swan.get('severity', 'MEDIUM'))
+                    if isinstance(bs_level, (int, float)):
+                        bs_level = 'HIGH' if bs_level >= 0.7 else ('MEDIUM' if bs_level >= 0.3 else 'LOW')
+                
+                # Verificar condiciones ECW
+                wr_ok = mc_wr >= ecw_cfg['mc_wr_min']
+                er_ok = mc_er > ecw_cfg['mc_er_min']
+                bs_ok = bs_level.upper() in ecw_cfg['black_swan_max']
+                all_conditions_met = wr_ok and er_ok and bs_ok
+                
+                # Obtener/actualizar contador en Redis (o memoria si Redis no disponible)
+                ecw_key = f"ecw:{symbol}"
+                redis_available = False
+                if REDIS_CACHE_AVAILABLE and redis_cache:
+                    try:
+                        redis_client = redis_cache.client if hasattr(redis_cache, 'client') else None
+                        if redis_client:
+                            redis_available = True
+                            if all_conditions_met:
+                                # Incrementar contador
+                                ecw_counter = redis_client.incr(ecw_key)
+                                redis_client.expire(ecw_key, 3600)  # TTL 1 hora
+                            else:
+                                # Reset contador
+                                redis_client.delete(ecw_key)
+                                ecw_counter = 0
+                    except Exception as redis_err:
+                        logger.warning(f"⚠️ ECW Redis error: {redis_err} - using single-cycle fallback")
+                        redis_available = False
+                
+                # Fallback sin Redis: single-cycle check (less strict, but allows trades when conditions met)
+                if not redis_available:
+                    ecw_counter = ecw_cfg['consecutive_required'] if all_conditions_met else 0
+                
+                ecw_passed = ecw_counter >= ecw_cfg['consecutive_required']
+                
+                # Construir razón detallada
+                condition_details = f"WR={mc_wr:.1f}%{'✓' if wr_ok else '✗'}, ER={mc_er:.2f}%{'✓' if er_ok else '✗'}, BS={bs_level}{'✓' if bs_ok else '✗'}"
+                ecw_reason = f"ECW: {ecw_counter}/{ecw_cfg['consecutive_required']} cycles ({condition_details})"
+                
+                # Guardar estado ECW en decision
+                decision['v52_analysis']['ecw_counter'] = ecw_counter
+                decision['v52_analysis']['ecw_required'] = ecw_cfg['consecutive_required']
+                decision['v52_analysis']['ecw_passed'] = ecw_passed
+                decision['v52_analysis']['ecw_conditions'] = {
+                    'mc_wr': mc_wr, 'mc_wr_ok': wr_ok,
+                    'mc_er': mc_er, 'mc_er_ok': er_ok,
+                    'black_swan': bs_level, 'bs_ok': bs_ok
+                }
+                
+                if ecw_passed:
+                    decision['guards_passed'].append('ECW_GATE')
+                    decision['decision_trace'].append(f"ECW_GATE: PASSED - {ecw_reason}")
+                    logger.info(f"✅ [ECW_GATE] {symbol} | {ecw_reason} → Trade window OPEN")
+                else:
+                    decision['decision_trace'].append(f"ECW_GATE: WAITING - {ecw_reason}")
+                    logger.info(f"⏳ [ECW_GATE] {symbol} | {ecw_reason} → Waiting for edge confirmation")
+                    
+            except Exception as e:
+                # FAIL-CLOSED: Exception means no trade
+                ecw_passed = False
+                ecw_reason = f"ECW_EXCEPTION: {e}"
+                decision['decision_trace'].append(ecw_reason)
+                logger.error(f"🚫 [ECW_GATE] Exception: {e} → Defaulting to HOLD")
+            
+            # ECW no bloquea (no early return), pero influye en should_trade final
+            # Si ECW no pasa, el sistema mantiene HOLD pero permite scoring para métricas
+            
+            logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed, ECW: {ecw_passed}")
             
             score = 0  # Score de confianza (-100 a +100)
             max_score = 0  # Para normalizar
@@ -3460,6 +3555,37 @@ class AutoTradingBot:
                                 decision['amount_usd'] = max_probation_size
                                 decision['reason'].append(f"🔬 PROBATION CAP: ${original_size:.2f} → ${max_probation_size:.2f} (max {probation_max_pct:.0%})")
                                 logger.info(f"🔬 FASE 2.3 Probation Cap: {symbol} limited to ${max_probation_size:.2f} (was ${original_size:.2f})")
+            # ==========================================================================
+            
+            # ==========================================================================
+            # ADR-019: EDGE CONFIRMATION WINDOW (ECW) ENFORCEMENT
+            # Si ECW no pasó, bloquear trade con razón ECW_WAITING
+            # Esto da una "puerta de salida dinámica" al HOLD permanente
+            # ==========================================================================
+            if decision.get('should_trade') and not ecw_passed:
+                # Trade señalado pero ECW no confirmado aún - waiting mode
+                decision['should_trade'] = False
+                decision['action'] = 'HOLD'
+                decision['ecw_blocked'] = True
+                decision['veto_chain'].append('ECW_WAITING')
+                decision['reason'].append(f"⏳ ECW: Waiting for edge confirmation ({ecw_counter}/{ecw_required} cycles)")
+                decision['decision_trace'].append(f"ECW_ENFORCEMENT: Trade blocked - {ecw_reason}")
+                logger.info(f"⏳ [ECW_ENFORCEMENT] {symbol} | Trade signal blocked - waiting for {ecw_required - ecw_counter} more confirmations")
+                
+                # Log veto para Shadow Portfolio Learning Engine
+                self._log_veto(
+                    veto_type='ECW_WAITING',
+                    symbol=symbol,
+                    blocked_capital=decision.get('amount_usd', self._get_estimated_blocked_capital()),
+                    reason=f"ECW not confirmed: {ecw_counter}/{ecw_required} cycles",
+                    metadata={'ecw_counter': ecw_counter, 'ecw_required': ecw_required},
+                    shadow_context=self._build_shadow_context(
+                        symbol=symbol,
+                        current_price=current_price, decision=decision,
+                        ema_signal=ema_signal, monte_carlo=monte_carlo, black_swan=black_swan,
+                        coherence_score=coherence_pre_score
+                    )
+                )
             # ==========================================================================
             
             # ==========================================================================
