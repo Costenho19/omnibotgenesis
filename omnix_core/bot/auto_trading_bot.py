@@ -2943,6 +2943,8 @@ class AutoTradingBot:
             ecw_counter = 0
             ecw_required = 3  # Ciclos consecutivos requeridos
             ecw_reason = ""
+            ecw_reset_reason = None  # ADR-019 enhancement: track why ECW counter was reset
+            ecw_previous_counter = 0  # Track previous counter for reset detection
             
             try:
                 # Configuración ECW - defaults que coinciden con system_state_manifest.json
@@ -2974,20 +2976,75 @@ class AutoTradingBot:
                 
                 # Obtener/actualizar contador en Redis (o memoria si Redis no disponible)
                 ecw_key = f"ecw:{symbol}"
+                ecw_signal_key = f"ecw_signal:{symbol}"  # Track previous signal for SIGNAL_FLIP detection
                 redis_available = False
+                
+                # Get current EMA signal direction for SIGNAL_FLIP detection
+                # Normalize: LONG/BULLISH → BUY, SHORT/BEARISH → SELL, others → HOLD
+                current_signal_direction = 'HOLD'
+                if ema_signal:
+                    ema_direction = ema_signal.get('direction', ema_signal.get('signal', 'NEUTRAL'))
+                    if isinstance(ema_direction, str):
+                        ema_upper = ema_direction.upper()
+                        if ema_upper in ('LONG', 'BUY', 'BULLISH', 'STRONG_BUY', 'UPTREND'):
+                            current_signal_direction = 'BUY'
+                        elif ema_upper in ('SHORT', 'SELL', 'BEARISH', 'STRONG_SELL', 'DOWNTREND'):
+                            current_signal_direction = 'SELL'
+                        else:
+                            current_signal_direction = 'HOLD'
+                
                 if REDIS_CACHE_AVAILABLE and redis_cache:
                     try:
                         redis_client = redis_cache.client if hasattr(redis_cache, 'client') else None
                         if redis_client:
                             redis_available = True
+                            # Get previous counter for reset detection
+                            prev_val = redis_client.get(ecw_key)
+                            ecw_previous_counter = int(prev_val) if prev_val else 0
+                            
+                            # Get previous signal for SIGNAL_FLIP detection
+                            prev_signal = redis_client.get(ecw_signal_key)
+                            prev_signal_direction = prev_signal.decode('utf-8') if prev_signal else None
+                            
                             if all_conditions_met:
-                                # Incrementar contador
-                                ecw_counter = redis_client.incr(ecw_key)
-                                redis_client.expire(ecw_key, 3600)  # TTL 1 hora
+                                # Check for SIGNAL_FLIP before incrementing
+                                if ecw_previous_counter > 0 and prev_signal_direction:
+                                    # Signal changed from BUY to something else while counter was active
+                                    if prev_signal_direction == 'BUY' and current_signal_direction != 'BUY':
+                                        ecw_reset_reason = 'SIGNAL_FLIP'
+                                        redis_client.delete(ecw_key)
+                                        redis_client.delete(ecw_signal_key)
+                                        ecw_counter = 0
+                                    else:
+                                        # Incrementar contador
+                                        ecw_counter = redis_client.incr(ecw_key)
+                                        redis_client.expire(ecw_key, 3600)  # TTL 1 hora
+                                        # Store current signal
+                                        redis_client.set(ecw_signal_key, current_signal_direction, ex=3600)
+                                else:
+                                    # Incrementar contador
+                                    ecw_counter = redis_client.incr(ecw_key)
+                                    redis_client.expire(ecw_key, 3600)  # TTL 1 hora
+                                    # Store current signal
+                                    redis_client.set(ecw_signal_key, current_signal_direction, ex=3600)
                             else:
-                                # Reset contador
+                                # Reset contador - determine specific reason
                                 redis_client.delete(ecw_key)
+                                redis_client.delete(ecw_signal_key)
                                 ecw_counter = 0
+                                
+                                # ADR-019 Enhancement: Determine reset reason
+                                if ecw_previous_counter > 0:
+                                    if bs_level.upper() == 'HIGH':
+                                        ecw_reset_reason = 'BLACK_SWAN_HIGH'
+                                    elif bs_level.upper() not in ecw_cfg['black_swan_max']:
+                                        ecw_reset_reason = 'BLACK_SWAN_ELEVATED'
+                                    elif not wr_ok:
+                                        ecw_reset_reason = 'MC_EDGE_DEGRADED'
+                                    elif not er_ok:
+                                        ecw_reset_reason = 'MC_ER_NEGATIVE'
+                                    else:
+                                        ecw_reset_reason = 'CONDITIONS_FAILED'
                     except Exception as redis_err:
                         logger.warning(f"⚠️ ECW Redis error: {redis_err} - using single-cycle fallback")
                         redis_available = False
@@ -3002,7 +3059,7 @@ class AutoTradingBot:
                 condition_details = f"WR={mc_wr:.1f}%{'✓' if wr_ok else '✗'}, ER={mc_er:.2f}%{'✓' if er_ok else '✗'}, BS={bs_level}{'✓' if bs_ok else '✗'}"
                 ecw_reason = f"ECW: {ecw_counter}/{ecw_cfg['consecutive_required']} cycles ({condition_details})"
                 
-                # Guardar estado ECW en decision
+                # Guardar estado ECW en decision - ADR-019 Enhanced with ecw_progress
                 decision['v52_analysis']['ecw_counter'] = ecw_counter
                 decision['v52_analysis']['ecw_required'] = ecw_cfg['consecutive_required']
                 decision['v52_analysis']['ecw_passed'] = ecw_passed
@@ -3012,13 +3069,23 @@ class AutoTradingBot:
                     'black_swan': bs_level, 'bs_ok': bs_ok
                 }
                 
+                # ADR-019 Enhancement: ECW_PROGRESS and ECW_RESET_REASON for auditing
+                decision['v52_analysis']['ecw_progress'] = {
+                    'current': ecw_counter,
+                    'required': ecw_cfg['consecutive_required'],
+                    'previous': ecw_previous_counter
+                }
+                if ecw_reset_reason:
+                    decision['v52_analysis']['ecw_reset_reason'] = ecw_reset_reason
+                    logger.warning(f"🔄 [ECW_RESET] {symbol} | {ecw_previous_counter}/3 → 0/3 | Reason: {ecw_reset_reason}")
+                
                 if ecw_passed:
                     decision['guards_passed'].append('ECW_GATE')
                     decision['decision_trace'].append(f"ECW_GATE: PASSED - {ecw_reason}")
                     logger.info(f"✅ [ECW_GATE] {symbol} | {ecw_reason} → Trade window OPEN")
                 else:
                     decision['decision_trace'].append(f"ECW_GATE: WAITING - {ecw_reason}")
-                    logger.info(f"⏳ [ECW_GATE] {symbol} | {ecw_reason} → Waiting for edge confirmation")
+                    logger.info(f"⏳ [ECW_GATE] {symbol} | {ecw_counter}/{ecw_cfg['consecutive_required']} cycles → Waiting for edge confirmation")
                     
             except Exception as e:
                 # FAIL-CLOSED: Exception means no trade

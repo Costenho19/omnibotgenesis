@@ -129,6 +129,84 @@ This narrative transforms "capital preservation" into **"capital patience"** - a
 - `omnix_config/system_state_manifest.json` - ECW configuration
 - `docs/REAL_SYSTEM_STATUS.md` - ECW documentation
 - `replit.md` - System overview update
+- `scripts/casi_trade_demo.py` - Demo script for investor presentations
+
+## ECW_PROGRESS & ECW_RESET_REASON (Enhancement Jan 21, 2026)
+
+### ECW_PROGRESS Structure
+
+Added to `decision['v52_analysis']`:
+
+```json
+{
+  "ecw_progress": {
+    "current": 2,
+    "required": 3,
+    "previous": 1
+  }
+}
+```
+
+### ECW_RESET_REASON Enum
+
+When ECW counter resets (was > 0, now = 0), reason is logged:
+
+| Reason | Trigger |
+|--------|---------|
+| `BLACK_SWAN_HIGH` | Black Swan level = HIGH |
+| `BLACK_SWAN_ELEVATED` | Black Swan not in allowed list |
+| `MC_EDGE_DEGRADED` | MC Win Rate < 52% |
+| `MC_ER_NEGATIVE` | MC Expected Return <= 0% |
+| `SIGNAL_FLIP` | Signal changed from BUY to SELL/HOLD |
+| `CONDITIONS_FAILED` | Generic fallback |
+
+### Log Format
+
+```
+⏳ [ECW_GATE] BTC/USD | 2/3 cycles → Waiting for edge confirmation
+🔄 [ECW_RESET] BTC/USD | 2/3 → 0/3 | Reason: BLACK_SWAN_HIGH
+✅ [ECW_GATE] BTC/USD | 3/3 cycles → Trade window OPEN
+```
+
+### SQL Query for Auditing
+
+```sql
+SELECT 
+    timestamp,
+    symbol,
+    (v52_analysis->'ecw_progress'->>'current')::int as ecw_current,
+    v52_analysis->>'ecw_reset_reason' as reset_reason
+FROM paper_trading_decisions
+WHERE v52_analysis->>'ecw_reset_reason' IS NOT NULL
+ORDER BY timestamp DESC;
+```
+
+## Casi-Trade Demo Script
+
+Located at `scripts/casi_trade_demo.py`:
+
+```bash
+python scripts/casi_trade_demo.py          # ASCII timeline output
+python scripts/casi_trade_demo.py --json   # JSON for video tools
+python scripts/casi_trade_demo.py -o demo.json  # Save to file
+```
+
+### Sample Output
+
+```
+    TIME       SIGNAL    ECW      CONDITIONS            RESULT
+    ────       ──────    ───      ──────────            ──────
+    14:00       BUY      █░░ 1/3   WR✓ ER✓ BS:LOW✓       ⏳ Waiting...
+      │
+      ▼
+    14:05       BUY      ██░ 2/3   WR✓ ER✓ BS:LOW✓       ⏳ Waiting...
+      │
+      ▼
+    14:10       BUY      ✖ RESET   WR✓ ER✓ BS:HIGH✗     🔄 BLACK_SWAN_HIGH
+      │
+      ▼
+    14:15      HOLD      ░░░ 0/3   WR✗ ER✗ BS:HIGH✗     📉 -2.7% avoided
+```
 
 ## Future Work
 
