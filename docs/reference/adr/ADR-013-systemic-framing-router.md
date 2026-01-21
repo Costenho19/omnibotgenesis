@@ -224,4 +224,6 @@ Test suite must verify:
 
 | Date | Change |
 |------|--------|
+| 2026-01-21 | Added prompt leaking protection: BLACKLISTED_PATTERNS filter + reformatted prompts with "RESPONSE FOCUS" instead of "MANDATORY OPENING (use EXACTLY)" |
+| 2026-01-21 | Keywords refined: TYPE_C now requires failure context (e.g., "fallo de kraken" not just "kraken") |
 | 2026-01-19 | Initial adoption after investor testing revealed wrong framing |
