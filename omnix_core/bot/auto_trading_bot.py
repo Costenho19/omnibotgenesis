@@ -2406,7 +2406,8 @@ class AutoTradingBot:
                         avg_win=0.03,
                         avg_loss=0.02,
                         total_capital=self._get_balance(),
-                        max_position=KELLY_MAX_POSITION  # ADR-004: 20% → 2%
+                        max_position=KELLY_MAX_POSITION,  # ADR-004: 20% → 2%
+                        log=False  # ADR-016: Log only if action != HOLD
                     )
             
             # 6. HMM Regime Detection - Detectar régimen de mercado
@@ -2583,7 +2584,17 @@ class AutoTradingBot:
                     logger.warning(f"Error generando razonamiento (no crítico): {e}")
                     decision['reasoning'] = None
             
-            logger.info(f"📊 Análisis V5.2 completado: {decision.get('action', 'HOLD')} - Confianza: {decision.get('confidence', 0):.1%}")
+            # ADR-016: Log Kelly only if action != HOLD (avoid misleading "HIGH confidence" on HOLD)
+            action = decision.get('action', 'HOLD')
+            if kelly and action in ('BUY', 'SELL'):
+                logger.info(
+                    f"💎 Kelly Criterion: {kelly.get('position_size', 0):.2%} of capital "
+                    f"(${kelly.get('position_usd', 0):.2f}) - Confidence: {kelly.get('confidence', 'N/A')}"
+                )
+            elif kelly and action == 'HOLD':
+                logger.debug(f"💎 KELLY_SKIPPED: action=HOLD (size would be {kelly.get('position_size', 0):.2%})")
+            
+            logger.info(f"📊 Análisis V5.2 completado: {action} - Confianza: {decision.get('confidence', 0):.1%}")
             
             return decision
             
@@ -3762,10 +3773,10 @@ class AutoTradingBot:
                     f"📊 [DECISION_TELEMETRY] MODE={mode_label} | {telemetry_data['symbol']} | "
                     f"Action={telemetry_data['action']} | "
                     f"Score={telemetry_data['final_score']}/{telemetry_data['score_thresholds']['strong']} | "
-                    f"Conf={telemetry_data['confidence']:.1f}% | "
+                    f"DecisionConf={telemetry_data['confidence']:.1f}% | "
                     f"MC_WR={telemetry_data['mc_metrics']['win_rate']:.1%} | "
                     f"MC_ER={telemetry_data['mc_metrics']['expected_return']:.4f} | "
-                    f"Coh={telemetry_data['coherence']['pre_score']:.1f}% | "
+                    f"CoherenceScore={telemetry_data['coherence']['pre_score']:.1f}% | "
                     f"EMA={telemetry_data['ema_signal']['direction']} | "
                     f"Vetos={len(veto_chain)} | "
                     f"Guards={len(guards_passed)}"

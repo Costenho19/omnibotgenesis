@@ -37,7 +37,8 @@ class KellyCriterionOptimizer:
         avg_loss: float,
         total_capital: float,
         min_position: float = 0.04,
-        max_position: float = 0.20
+        max_position: float = 0.20,
+        log: bool = True
     ) -> Dict:
         """
         Calcula el tamaño óptimo de posición usando Kelly Criterion
@@ -99,10 +100,11 @@ class KellyCriterionOptimizer:
             'recommendation': self._get_recommendation(kelly_clamped, confidence)
         }
         
-        logger.info(
-            f"💎 Kelly Criterion: {kelly_clamped:.2%} of capital "
-            f"(${position_usd:.2f}) - Confidence: {confidence}"
-        )
+        if log:
+            logger.info(
+                f"💎 Kelly Criterion: {kelly_clamped:.2%} of capital "
+                f"(${position_usd:.2f}) - Confidence: {confidence}"
+            )
         
         return result
     

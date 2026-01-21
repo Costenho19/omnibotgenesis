@@ -608,7 +608,7 @@ class CoherenceEngine:
             return adaptive_block, adaptive_warn, gate_info
         
         gate_info['reason'] = f"EMA={ema_score:.0f}pts < {self._ema_trigger_score} (using defaults)"
-        logger.info(f"📊 [ADAPTIVE_GATE] INACTIVE: EMA={ema_score:.0f}pts < {self._ema_trigger_score} → using default threshold={default_block}%")
+        logger.info(f"📊 [ADAPTIVE_GATE] BYPASSED: EMA={ema_score:.0f}pts < {self._ema_trigger_score} → using base COHERENCE_GATE (threshold={default_warn}%)")
         return default_block, default_warn, gate_info
     
     def evaluate_pre_scoring_gate(
