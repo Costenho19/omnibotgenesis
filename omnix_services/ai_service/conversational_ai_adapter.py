@@ -61,6 +61,20 @@ BLACKLISTED_PHRASES = [
     r'(?<=\.\s)Encantado de\s+',
     r'^Encantado de\s+',
     
+    # "Disculpa por el error anterior" patterns - servile and repetitive (Jan 21, 2026)
+    r'(?<=\.\s)Disc[uú]lpame por el error anterior[^.]*\.\s*',
+    r'^Disc[uú]lpame por el error anterior[^.]*\.\s*',
+    r'(?<=\.\s)Disculpa por el error anterior[^.]*\.\s*',
+    r'^Disculpa por el error anterior[^.]*\.\s*',
+    r'(?<=\.\s)Perd[oó]n por el error anterior[^.]*\.\s*',
+    r'^Perd[oó]n por el error anterior[^.]*\.\s*',
+    r'(?<=\.\s)Lamento el error anterior[^.]*\.\s*',
+    r'^Lamento el error anterior[^.]*\.\s*',
+    r'(?<=\.\s)Me disculpo por el error[^.]*\.\s*',
+    r'^Me disculpo por el error[^.]*\.\s*',
+    r'(?<=\.\s)Aqu[ií] est[aá] la respuesta[^,.\n]*,?\s*siguiendo[^:]*:\s*',
+    r'^Aqu[ií] est[aá] la respuesta[^,.\n]*,?\s*siguiendo[^:]*:\s*',
+    
     # ===========================================================================
     # CLOSING SERVILE PHRASES - Must END a sentence (followed by period + end/newline)
     # Anchored to prevent matching mid-paragraph content

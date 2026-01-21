@@ -207,7 +207,12 @@
       "win rate > 60%",
       "expected return > 5%",
       "es difícil cuantificar",
-      "difícil de cuantificar"
+      "difícil de cuantificar",
+      "Discúlpame por el error anterior",
+      "Disculpa por el error anterior",
+      "Perdón por el error anterior",
+      "Lamento el error anterior",
+      "Me disculpo por el error"
     ],
     "approved_reframes": {
       "losses": "capital deployment in learning phase",
