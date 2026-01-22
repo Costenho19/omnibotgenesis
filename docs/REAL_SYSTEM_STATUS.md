@@ -69,6 +69,18 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 **Regex Design:**
 > "Regex are intentionally permissive to preserve forward compatibility of decision_trace semantics."
 
+**Dashboard Shadow Analytics (Streamlit):**
+
+| Bloque | Contenido |
+|--------|-----------|
+| A - System Overview | 4 KPIs: Total Events, Avg WR, Avg Coherence, % ECW Blocked |
+| B - Decision Quality | Win Rate histogram, Coherence by Symbol bar, Coherence vs DCI scatter |
+| C - Governance/Risk | ECW waiting table, Low coherence table, Top vetos table |
+| Footer | Disclaimer institucional + timestamp de datos |
+
+**Framing:**
+> El dashboard responde a: "¿Cómo decide OMNIX y por qué NO opera?" (no "¿cuánto gana?")
+
 **Uso Demo (Investor):**
 ```sql
 -- Capital protegido por ECW
@@ -81,7 +93,7 @@ SELECT
 FROM v_shadow_trade_metrics GROUP BY 1;
 ```
 
-**Archivos:** `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`
+**Archivos:** `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`, `omnix_dashboard/streamlit_app.py`
 
 ---
 

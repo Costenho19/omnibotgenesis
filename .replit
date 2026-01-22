@@ -60,7 +60,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd omnix_dashboard && streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
+args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=test-token-not-used streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
 waitForPort = 8080
 
 [[workflows.workflow]]
@@ -81,10 +81,6 @@ externalPort = 80
 [[ports]]
 localPort = 8080
 externalPort = 8080
-
-[[ports]]
-localPort = 9000
-externalPort = 9000
 
 [deployment]
 deploymentTarget = "vm"
