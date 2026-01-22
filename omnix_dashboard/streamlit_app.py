@@ -162,7 +162,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")
-        page = st.radio("", ["Overview", "Risk Metrics", "Expectancy", "Pair Analysis", "Shadow Portfolio", "Asset Quarantine", "Calibration"])
+        page = st.radio("", ["Overview", "Risk Metrics", "Expectancy", "Pair Analysis", "Shadow Analytics", "Shadow Portfolio", "Asset Quarantine", "Calibration"])
         st.markdown("---")
         st.markdown("**Last Updated**")
         st.markdown(f"🕐 {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -180,12 +180,396 @@ def main():
         render_expectancy()
     elif page == "Pair Analysis":
         render_pair_analysis(metrics)
+    elif page == "Shadow Analytics":
+        render_shadow_analytics()
     elif page == "Shadow Portfolio":
         render_shadow_portfolio(shadow_portfolio)
     elif page == "Asset Quarantine":
         render_quarantine(quarantine)
     elif page == "Calibration":
         render_calibration(calibration)
+
+
+@st.cache_data(ttl=300)
+def load_shadow_analytics_data():
+    """Load shadow analytics data from v_shadow_trade_metrics VIEW (ADR-021).
+    
+    Single data source for all shadow analytics:
+    - decision_trace is treated as semi-structured historical text
+    - regex parsing is intentionally permissive (see ADR-021)
+    """
+    from omnix_dashboard.utils.database import get_db_connection
+    
+    data = {
+        'overview': {},
+        'wr_histogram': [],
+        'coherence_by_symbol': [],
+        'coherence_vs_dci': [],
+        'ecw_waiting_events': [],
+        'low_coherence_events': [],
+        'top_vetos': [],
+        'data_timestamp': None,
+        'error': None
+    }
+    
+    try:
+        with get_db_connection() as conn:
+            if not conn:
+                data['error'] = "Database connection unavailable"
+                return data
+            
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_events,
+                    ROUND(AVG(mc_win_rate), 2) as avg_wr,
+                    ROUND(AVG(coherence_score), 2) as avg_coherence,
+                    ROUND(100.0 * COUNT(CASE WHEN ecw_status = 'WAITING' THEN 1 END) / NULLIF(COUNT(*), 0), 2) as pct_ecw_blocked,
+                    MAX(created_at) as last_event
+                FROM v_shadow_trade_metrics
+            """)
+            row = cursor.fetchone()
+            if row:
+                data['overview'] = {
+                    'total_events': row[0] or 0,
+                    'avg_wr': float(row[1]) if row[1] else 50.0,
+                    'avg_coherence': float(row[2]) if row[2] else 0.0,
+                    'pct_ecw_blocked': float(row[3]) if row[3] else 0.0
+                }
+                data['data_timestamp'] = row[4]
+            
+            cursor.execute("""
+                SELECT 
+                    FLOOR(mc_win_rate / 5) * 5 as wr_bucket,
+                    COUNT(*) as event_count
+                FROM v_shadow_trade_metrics
+                WHERE mc_win_rate IS NOT NULL
+                GROUP BY FLOOR(mc_win_rate / 5) * 5
+                ORDER BY wr_bucket
+            """)
+            data['wr_histogram'] = [{'bucket': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            
+            cursor.execute("""
+                SELECT 
+                    symbol,
+                    ROUND(AVG(coherence_score), 1) as avg_coherence,
+                    COUNT(*) as events
+                FROM v_shadow_trade_metrics
+                GROUP BY symbol
+                ORDER BY avg_coherence DESC
+            """)
+            data['coherence_by_symbol'] = [
+                {'symbol': row[0], 'avg_coherence': float(row[1]) if row[1] else 0, 'events': row[2]}
+                for row in cursor.fetchall()
+            ]
+            
+            cursor.execute("""
+                SELECT coherence_score, approx_dci, symbol
+                FROM v_shadow_trade_metrics
+                WHERE coherence_score IS NOT NULL AND approx_dci IS NOT NULL
+                ORDER BY RANDOM()
+                LIMIT 500
+            """)
+            data['coherence_vs_dci'] = [
+                {'coherence': float(row[0]), 'dci': float(row[1]), 'symbol': row[2]}
+                for row in cursor.fetchall()
+            ]
+            
+            cursor.execute("""
+                SELECT symbol, created_at, mc_win_rate, mc_expected_return, ecw_cycles, blocked_capital
+                FROM v_shadow_trade_metrics
+                WHERE ecw_status = 'WAITING'
+                ORDER BY created_at DESC
+                LIMIT 20
+            """)
+            data['ecw_waiting_events'] = [
+                {
+                    'symbol': row[0],
+                    'created_at': row[1],
+                    'mc_win_rate': float(row[2]) if row[2] else 50.0,
+                    'mc_expected_return': float(row[3]) if row[3] else 0.0,
+                    'ecw_cycles': row[4] or 0,
+                    'blocked_capital': float(row[5]) if row[5] else 0.0
+                }
+                for row in cursor.fetchall()
+            ]
+            
+            cursor.execute("""
+                SELECT symbol, created_at, coherence_score, approx_dci, mc_win_rate, veto_type
+                FROM v_shadow_trade_metrics
+                WHERE coherence_score < 40
+                ORDER BY created_at DESC
+                LIMIT 20
+            """)
+            data['low_coherence_events'] = [
+                {
+                    'symbol': row[0],
+                    'created_at': row[1],
+                    'coherence': float(row[2]) if row[2] else 0,
+                    'dci': float(row[3]) if row[3] else 0,
+                    'wr': float(row[4]) if row[4] else 50.0,
+                    'veto_type': row[5]
+                }
+                for row in cursor.fetchall()
+            ]
+            
+            cursor.execute("""
+                SELECT 
+                    veto_type,
+                    COUNT(*) as count,
+                    ROUND(SUM(blocked_capital), 2) as total_blocked
+                FROM v_shadow_trade_metrics
+                WHERE veto_type IS NOT NULL AND veto_type != ''
+                GROUP BY veto_type
+                ORDER BY count DESC
+                LIMIT 10
+            """)
+            data['top_vetos'] = [
+                {'veto_type': row[0], 'count': row[1], 'blocked': float(row[2]) if row[2] else 0}
+                for row in cursor.fetchall()
+            ]
+            
+    except Exception as e:
+        data['error'] = str(e)
+    
+    return data
+
+
+def render_shadow_analytics():
+    """Shadow Analytics Dashboard - ADR-021
+    
+    Answers: "How does OMNIX decide and why does it NOT trade?"
+    Data source: v_shadow_trade_metrics VIEW (read-only, non-operational)
+    """
+    st.markdown("## Shadow Analytics")
+    st.markdown("*Non-operational decision analysis - How OMNIX decides and why it does NOT trade*")
+    
+    data = load_shadow_analytics_data()
+    
+    if data.get('error'):
+        st.error(f"Unable to load shadow analytics: {data['error']}")
+        return
+    
+    overview = data.get('overview', {})
+    
+    st.markdown("### System Overview")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Total Shadow Events",
+            f"{overview.get('total_events', 0):,}",
+            delta="ANALYTICAL",
+            delta_color="off"
+        )
+    
+    with col2:
+        wr = overview.get('avg_wr', 50.0)
+        color = "normal" if wr >= 50 else "inverse"
+        st.metric(
+            "Avg Win Rate (Parsed)",
+            f"{wr:.1f}%",
+            delta="From decision_trace",
+            delta_color=color
+        )
+    
+    with col3:
+        coh = overview.get('avg_coherence', 0)
+        color = "normal" if coh >= 40 else "inverse"
+        st.metric(
+            "Avg Coherence Score",
+            f"{coh:.1f}%",
+            delta="Signal quality",
+            delta_color=color
+        )
+    
+    with col4:
+        blocked = overview.get('pct_ecw_blocked', 0)
+        st.metric(
+            "% ECW Blocked",
+            f"{blocked:.1f}%",
+            delta="Capital preservation",
+            delta_color="normal"
+        )
+    
+    if data.get('data_timestamp'):
+        ts = data['data_timestamp']
+        if hasattr(ts, 'strftime'):
+            ts_str = ts.strftime('%Y-%m-%d %H:%M UTC')
+        else:
+            ts_str = str(ts)
+        st.caption(f"Data as of: {ts_str}")
+    
+    st.markdown("---")
+    
+    st.markdown("### Decision Quality Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Win Rate Distribution")
+        wr_data = data.get('wr_histogram', [])
+        if wr_data:
+            buckets = [f"{int(d['bucket'])}-{int(d['bucket']+5)}%" for d in wr_data]
+            counts = [d['count'] for d in wr_data]
+            
+            fig = go.Figure(data=[
+                go.Bar(x=buckets, y=counts, marker_color=DARK_THEME['blue'])
+            ])
+            fig.add_vline(x="50-55%", line_dash="dash", line_color=DARK_THEME['positive'], 
+                         annotation_text="50% threshold")
+            fig.update_layout(
+                template='plotly_dark',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                height=300,
+                xaxis_title="Win Rate Bucket",
+                yaxis_title="Event Count",
+                margin=dict(l=20, r=20, t=20, b=40)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No win rate data available")
+    
+    with col2:
+        st.markdown("#### Coherence by Symbol")
+        coh_data = data.get('coherence_by_symbol', [])
+        if coh_data:
+            symbols = [d['symbol'] for d in coh_data]
+            coherences = [d['avg_coherence'] for d in coh_data]
+            colors = [DARK_THEME['positive'] if c >= 50 else DARK_THEME['warning'] if c >= 40 else DARK_THEME['negative'] for c in coherences]
+            
+            fig = go.Figure(data=[
+                go.Bar(x=symbols, y=coherences, marker_color=colors)
+            ])
+            fig.add_hline(y=40, line_dash="dash", line_color=DARK_THEME['warning'], 
+                         annotation_text="Min threshold 40%")
+            fig.update_layout(
+                template='plotly_dark',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                height=300,
+                xaxis_title="Symbol",
+                yaxis_title="Avg Coherence %",
+                margin=dict(l=20, r=20, t=20, b=40)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No coherence data available")
+    
+    st.markdown("#### Coherence vs DCI (Decision Contradiction Index)")
+    scatter_data = data.get('coherence_vs_dci', [])
+    if scatter_data:
+        coherences = [d['coherence'] for d in scatter_data]
+        dcis = [d['dci'] for d in scatter_data]
+        symbols = [d['symbol'] for d in scatter_data]
+        
+        symbol_colors = {s: c for s, c in zip(set(symbols), [DARK_THEME['positive'], DARK_THEME['blue'], '#9B59B6', DARK_THEME['warning']])}
+        colors = [symbol_colors.get(s, DARK_THEME['blue']) for s in symbols]
+        
+        fig = go.Figure(data=[
+            go.Scatter(
+                x=coherences, y=dcis, mode='markers',
+                marker=dict(color=colors, size=6, opacity=0.6),
+                text=symbols, hovertemplate='%{text}<br>Coherence: %{x:.1f}%<br>DCI: %{y:.1f}<extra></extra>'
+            )
+        ])
+        fig.add_hline(y=70, line_dash="dash", line_color=DARK_THEME['negative'], 
+                     annotation_text="DCI ≥70 = CONTRADICTORY")
+        fig.add_hline(y=35, line_dash="dash", line_color=DARK_THEME['warning'], 
+                     annotation_text="DCI 35-69 = TENSIONED")
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=400,
+            xaxis_title="Coherence Score %",
+            yaxis_title="DCI (Decision Contradiction Index)",
+            margin=dict(l=20, r=20, t=20, b=40)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("""
+        **Reading the scatter:**
+        - **Bottom-left**: Low coherence + Low DCI → Weak but aligned signals
+        - **Top-left**: Low coherence + High DCI → CONTRADICTORY (system should HOLD)
+        - **Bottom-right**: High coherence + Low DCI → ALIGNED (best conditions)
+        - **Top-right**: High coherence + High DCI → Rare, signals conflict despite strength
+        """)
+    else:
+        st.info("No coherence vs DCI data available")
+    
+    st.markdown("---")
+    
+    st.markdown("### Governance & Risk Tables")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### ECW Waiting Events (Blocked)")
+        ecw_events = data.get('ecw_waiting_events', [])
+        if ecw_events:
+            df_ecw = pd.DataFrame(ecw_events)
+            df_ecw['created_at'] = pd.to_datetime(df_ecw['created_at']).dt.strftime('%m-%d %H:%M')
+            df_ecw = df_ecw.rename(columns={
+                'created_at': 'Time',
+                'symbol': 'Symbol',
+                'mc_win_rate': 'WR%',
+                'mc_expected_return': 'ER%',
+                'ecw_cycles': 'Cycles',
+                'blocked_capital': 'Blocked$'
+            })
+            st.dataframe(df_ecw[['Time', 'Symbol', 'WR%', 'ER%', 'Cycles', 'Blocked$']], 
+                        use_container_width=True, hide_index=True, height=300)
+        else:
+            st.success("No ECW waiting events - edge confirmation active")
+    
+    with col2:
+        st.markdown("#### Low Coherence Events (<40%)")
+        low_coh = data.get('low_coherence_events', [])
+        if low_coh:
+            df_low = pd.DataFrame(low_coh)
+            df_low['created_at'] = pd.to_datetime(df_low['created_at']).dt.strftime('%m-%d %H:%M')
+            df_low = df_low.rename(columns={
+                'created_at': 'Time',
+                'symbol': 'Symbol',
+                'coherence': 'Coh%',
+                'dci': 'DCI',
+                'wr': 'WR%',
+                'veto_type': 'Veto'
+            })
+            st.dataframe(df_low[['Time', 'Symbol', 'Coh%', 'DCI', 'WR%', 'Veto']], 
+                        use_container_width=True, hide_index=True, height=300)
+        else:
+            st.success("No low coherence events - signal quality maintained")
+    
+    st.markdown("#### Top Veto Signals")
+    top_vetos = data.get('top_vetos', [])
+    if top_vetos:
+        df_vetos = pd.DataFrame(top_vetos)
+        df_vetos = df_vetos.rename(columns={
+            'veto_type': 'Veto Type',
+            'count': 'Events',
+            'blocked': 'Capital Blocked ($)'
+        })
+        st.dataframe(df_vetos, use_container_width=True, hide_index=True)
+    else:
+        st.info("No veto signal data available")
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); 
+                border: 1px solid #3D4460; border-radius: 8px; padding: 15px; margin-top: 20px;">
+        <p style="color: #8B92A5; font-size: 12px; margin: 0;">
+            <strong>DATA SOURCE DISCLAIMER:</strong> This dashboard reflects non-operational shadow analytics 
+            derived from historical decision traces (<code>v_shadow_trade_metrics</code> VIEW, ADR-021). 
+            No live trading or execution logic is connected to this view. 
+            Regex parsing is intentionally permissive to preserve forward compatibility of decision_trace semantics.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def render_shadow_portfolio(shadow_portfolio):
