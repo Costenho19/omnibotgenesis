@@ -2983,7 +2983,13 @@ class AutoTradingBot:
                 # Normalize: LONG/BULLISH → BUY, SHORT/BEARISH → SELL, others → HOLD
                 current_signal_direction = 'HOLD'
                 if ema_signal:
-                    ema_direction = ema_signal.get('direction', ema_signal.get('signal', 'NEUTRAL'))
+                    # Handle both SignalContract (object) and dict formats
+                    if hasattr(ema_signal, 'direction'):
+                        ema_direction = ema_signal.direction
+                    elif isinstance(ema_signal, dict):
+                        ema_direction = ema_signal.get('direction', ema_signal.get('signal', 'NEUTRAL'))
+                    else:
+                        ema_direction = 'NEUTRAL'
                     if isinstance(ema_direction, str):
                         ema_upper = ema_direction.upper()
                         if ema_upper in ('LONG', 'BUY', 'BULLISH', 'STRONG_BUY', 'UPTREND'):
