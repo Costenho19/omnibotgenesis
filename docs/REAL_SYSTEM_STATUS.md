@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 21 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 7 | ADR-018 DCI ACTIVO
+**Fecha**: 22 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 8 | ADR-021 VIEW ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -45,6 +45,45 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 ---
 
 ## Cambios Recientes
+
+### ADR-021: Shadow Trade Metrics View (Jan 22, 2026)
+
+**PROPÓSITO:** VIEW SQL analítica para parsing de `decision_trace` y análisis retroactivo de DCI.
+
+| Característica | Valor |
+|----------------|-------|
+| Tipo | VIEW (no tabla física) |
+| Riesgo | Zero - reversible con DROP VIEW |
+| Datos | 76,910+ eventos desde Jan 15 |
+| Performance | ~2-3 segundos por query |
+
+**Métricas Extraídas:**
+- `mc_win_rate`: Monte Carlo Win Rate %
+- `mc_expected_return`: Monte Carlo Expected Return %
+- `coherence_score`: Coherence Engine Score %
+- `ecw_cycles`: ECW cycles (0-3)
+- `ecw_status`: WAITING / OPEN
+- `black_swan_severity`: LOW / MEDIUM / HIGH / EXTREME
+- `approx_dci`: DCI aproximado (0-100)
+
+**Regex Design:**
+> "Regex are intentionally permissive to preserve forward compatibility of decision_trace semantics."
+
+**Uso Demo (Investor):**
+```sql
+-- Capital protegido por ECW
+SELECT SUM(blocked_capital) FROM v_shadow_trade_metrics WHERE ecw_status = 'WAITING';
+
+-- DCI distribution
+SELECT 
+  CASE WHEN approx_dci >= 70 THEN 'CONTRADICTORY' ELSE 'ALIGNED' END,
+  COUNT(*)
+FROM v_shadow_trade_metrics GROUP BY 1;
+```
+
+**Archivos:** `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`
+
+---
 
 ### ADR-019: Edge Confirmation Window (ECW) (Jan 21, 2026)
 

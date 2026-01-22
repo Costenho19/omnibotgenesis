@@ -145,6 +145,23 @@ Shadow observational metric measuring internal signal divergence to explain HOLD
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework, enriched AI context with granular breakdowns, a System Health Score (0-100), Live Status widget, Quick Insights, Calibration Progress (4-phase tracker), and Recommended Actions. Key dashboard credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked", distinguishing "Market Trend" from "Trading Regime", and providing a timeline for Calibration Progress. Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. The `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics, fee breakdowns, and trade analysis to investors, triggered by specific keywords or complex questions. Capital protection metrics are standardized to "Est. Loss Avoided*" (Notional × 0.6%) as primary and "Notional Blocked" as secondary.
 
+### Analytical VIEW: v_shadow_trade_metrics (ADR-021, Jan 22, 2026)
+PostgreSQL VIEW for parsing `decision_trace` JSONB from `shadow_trade_events` table. Enables retroactive DCI analysis and investor demos.
+
+**Extracted Metrics:** `mc_win_rate`, `mc_expected_return`, `coherence_score`, `ecw_cycles`, `ecw_status`, `black_swan_severity`, `approx_dci`
+
+**Design:** VIEW (not physical table) - zero risk, 100% reversible with `DROP VIEW`. Regex are intentionally permissive for forward compatibility.
+
+**Usage:**
+```sql
+-- Capital protected by ECW
+SELECT SUM(blocked_capital) FROM v_shadow_trade_metrics WHERE ecw_status = 'WAITING';
+-- DCI distribution
+SELECT CASE WHEN approx_dci >= 70 THEN 'CONTRADICTORY' ELSE 'ALIGNED' END, COUNT(*) FROM v_shadow_trade_metrics GROUP BY 1;
+```
+
+**Reference:** `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`
+
 ## External Dependencies
 
 ### APIs and Services

@@ -18,6 +18,21 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-021: Shadow Trade Metrics View (Jan 22, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - VIEW SQL para parsing de decision_trace
+- **PROBLEMA**: Análisis retroactivo de DCI requería extraer métricas de decision_trace JSONB
+- **SOLUCIÓN**: VIEW `v_shadow_trade_metrics` con regex parsing:
+  - `mc_win_rate`: Monte Carlo Win Rate %
+  - `mc_expected_return`: Monte Carlo Expected Return %
+  - `coherence_score`: Coherence Engine Score %
+  - `ecw_cycles`: ECW cycles (0-3)
+  - `ecw_status`: WAITING / OPEN
+  - `black_swan_severity`: LOW / MEDIUM / HIGH / EXTREME
+  - `approx_dci`: DCI aproximado (0-100)
+- **DISEÑO**: VIEW (no tabla física) - zero risk, 100% reversible
+- **DATOS**: 76,910 eventos parseados desde Jan 15, 2026
+- **REFERENCIA**: `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`
+
 ### ADR-020: Institutional Response Quality Standards (Jan 21, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Filtros de calidad para respuestas de inversores
 - **PROBLEMA**: Respuesta de bot incluía cifras infladas ($82M), umbrales irreales (WR 60%), lenguaje arbitrario ("ignorar módulos")
