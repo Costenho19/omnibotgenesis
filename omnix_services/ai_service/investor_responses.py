@@ -185,6 +185,12 @@ def get_response_word_limit(question: str) -> Optional[int]:
         'desacoplamiento', 'decoupling', 'aislamiento de clientes',
         'gobernanza de escala', 'scale governance',
         'límites de adopción', 'adoption limits',
+        # Business model / pricing questions (Jan 23, 2026)
+        'modelo de negocio', 'business model', 'modelos de negocio',
+        'cuanto cobrar', 'cuánto cobrar', 'how much to charge',
+        'cuanto pagarian', 'cuánto pagarían', 'how much would they pay',
+        'pricing model', 'revenue model', 'monetización', 'monetizacion',
+        'fee structure', 'estructura de fees', 'comisiones',
         # Mass adoption / coordinated signal scenarios (Jan 19, 2026)
         'venta simultánea', 'venta simultanea', 'simultaneous sale',
         'señal simultánea', 'senal simultanea', 'simultaneous signal',
