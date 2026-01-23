@@ -41,9 +41,9 @@
 
     function getRecommendationBadge(recommendation) {
         const badges = {
-            'KEEP_CONSERVATIVE': { text: 'Mantener', class: 'rec-keep' },
-            'TEST_LOWER': { text: 'Evaluar ajuste', class: 'rec-test' },
-            'CONTINUE_MONITORING': { text: 'Monitoreando', class: 'rec-monitor' }
+            'KEEP_CONSERVATIVE': { text: 'Keep', class: 'rec-keep' },
+            'TEST_LOWER': { text: 'Evaluate Adjustment', class: 'rec-test' },
+            'CONTINUE_MONITORING': { text: 'Monitoring', class: 'rec-monitor' }
         };
         return badges[recommendation] || { text: recommendation, class: 'rec-monitor' };
     }
@@ -115,7 +115,7 @@
                     <span class="rec-badge ${recBadge.class}">${recBadge.text}</span>
                 </div>
                 
-                <div class="tracker-methodology" title="Estimación basada en movimiento adverso promedio × tamaño de posición. Es un límite inferior conservador. Se usa la misma metodología para oportunidades perdidas y pérdidas evitadas.">
+                <div class="tracker-methodology" title="Estimate based on average adverse move × position size. Conservative lower bound. Same methodology for missed opportunities and avoided losses.">
                     <span class="methodology-icon">ℹ️</span>
                     <span class="methodology-text">Est. based on avg adverse move × position size</span>
                 </div>
@@ -191,7 +191,7 @@
                 <div class="learning-summary">
                     <div class="summary-stat">
                         <span class="stat-value">${(summary.total_vetos_7d || 0).toLocaleString()}</span>
-                        <span class="stat-label">Vetos 7d</span>
+                        <span class="stat-label">Vetoes 7d</span>
                     </div>
                     <div class="summary-stat" title="Est. based on ~0.6% avg adverse move × position size">
                         <span class="stat-value" style="color: var(--accent-green);">${formatCapital((opportunityTracker?.avoided?.est_loss) || (summary.total_capital_protected || 0) * 0.006)}</span>

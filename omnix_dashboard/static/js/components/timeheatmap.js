@@ -4,7 +4,7 @@
     const REFRESH_INTERVAL = 60000;
     const API_KEY = 'omnix-dashboard-2024';
 
-    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     function getColor(pnl, maxPnl, minPnl) {
         if (pnl === 0) return 'rgba(100, 100, 100, 0.3)';
@@ -80,19 +80,19 @@
         container.innerHTML = `
             <div class="time-heatmap-header">
                 <span class="widget-icon">🕐</span>
-                <span class="widget-title">Mapa Temporal</span>
-                <span class="widget-badge">P&L por Hora</span>
+                <span class="widget-title">Time Heatmap</span>
+                <span class="widget-badge">P&L by Hour</span>
             </div>
             <div class="time-heatmap-body">
                 ${gridHtml}
                 <div class="heatmap-insights">
                     <div class="insight best">
-                        <span class="insight-label">Mejor</span>
+                        <span class="insight-label">Best</span>
                         <span class="insight-value">${best.day || '-'} ${best.hour || '-'}</span>
                         <span class="insight-pnl positive">${formatPnl(best.pnl || 0)}</span>
                     </div>
                     <div class="insight worst">
-                        <span class="insight-label">Peor</span>
+                        <span class="insight-label">Worst</span>
                         <span class="insight-value">${worst.day || '-'} ${worst.hour || '-'}</span>
                         <span class="insight-pnl negative">${formatPnl(worst.pnl || 0)}</span>
                     </div>

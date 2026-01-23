@@ -76,8 +76,8 @@ def api_metrics():
 @require_api_key
 def api_segmented_expectancy():
     """
-    Operación Lucidez: Expectancy segmentada por HMM regime + coherence bucket
-    Responde la pregunta: "¿DÓNDE gana el sistema?"
+    Operation Lucidity: Segmented expectancy by HMM regime + coherence bucket
+    Answers the question: "WHERE does the system win?"
     """
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
@@ -87,7 +87,7 @@ def api_segmented_expectancy():
         
         result['db_connected'] = DB_AVAILABLE
         result['last_updated'] = datetime.now().isoformat()
-        result['endpoint'] = 'operacion_lucidez_v1'
+        result['endpoint'] = 'operation_lucidity_v1'
         
         return jsonify(result)
         
@@ -636,8 +636,8 @@ def api_health():
 def api_institutional_metrics():
     """
     V6.5.4 INSTITUTIONAL+ PREMIUM
-    Métricas institucionales: Sharpe, Sortino, Calmar por par
-    Para presentaciones a inversores y fondos
+    Institutional metrics: Sharpe, Sortino, Calmar by pair
+    For investor and fund presentations
     """
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
@@ -1826,13 +1826,13 @@ def api_regime_dashboard():
                 
                 if ema_signal == 'LONG':
                     regime_type = 'BULLISH'
-                    regime_label = 'Tendencia Alcista'
+                    regime_label = 'Bullish Trend'
                 elif ema_signal == 'SHORT':
                     regime_type = 'BEARISH'
-                    regime_label = 'Tendencia Bajista'
+                    regime_label = 'Bearish Trend'
                 else:
                     regime_type = 'RANGING'
-                    regime_label = 'Mercado Lateral'
+                    regime_label = 'Sideways Market'
                 
                 if ema_score >= 50:
                     confidence = 'HIGH'
@@ -1853,7 +1853,7 @@ def api_regime_dashboard():
                         pass
             else:
                 regime_type = 'UNKNOWN'
-                regime_label = 'Sin Datos'
+                regime_label = 'No Data'
                 ema_score = 0
                 confidence = 'UNKNOWN'
                 confidence_pct = 0
@@ -1993,16 +1993,16 @@ def api_regime_dashboard():
         total_capital_blocked = sum(v['capital_blocked'] for v in veto_summary['24h'])
         
         if regime_type == 'RANGING' and total_vetos_24h > 100:
-            system_message = 'Sistema en espera: mercado lateral detectado. Esperando tendencia clara para operar.'
+            system_message = 'System on standby: sideways market detected. Waiting for clear trend to operate.'
             system_status = 'DEFENSIVE'
         elif regime_type == 'BULLISH' and confidence == 'HIGH':
-            system_message = 'Tendencia alcista confirmada. Sistema analizando oportunidades de entrada.'
+            system_message = 'Bullish trend confirmed. System analyzing entry opportunities.'
             system_status = 'ANALYZING'
         elif last_veto_type == 'BLACK_SWAN':
-            system_message = 'Riesgo elevado detectado. Sistema bloqueando operaciones por seguridad.'
+            system_message = 'Elevated risk detected. System blocking trades for safety.'
             system_status = 'PROTECTIVE'
         else:
-            system_message = 'Sistema monitoreando condiciones de mercado. Filtros activos protegiendo capital.'
+            system_message = 'System monitoring market conditions. Active filters protecting capital.'
             system_status = 'MONITORING'
         
         return jsonify({
@@ -2089,7 +2089,7 @@ def api_time_heatmap():
             
             cur.close()
         
-        day_names = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+        day_names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         
         return jsonify({
             'success': True,
@@ -2297,13 +2297,13 @@ def _calculate_opportunity_tracker(conn):
         
         if net_value < -500:
             interpretation = 'PROTECTING'
-            interpretation_text = 'Sistema protegiendo correctamente'
+            interpretation_text = 'System protecting correctly'
         elif net_value > 1000:
             interpretation = 'TOO_STRICT'
-            interpretation_text = 'Considerar ajustar umbrales'
+            interpretation_text = 'Consider adjusting thresholds'
         else:
             interpretation = 'BALANCED'
-            interpretation_text = 'Sistema balanceado'
+            interpretation_text = 'System balanced'
         
         if missed_count < 10 or missed_est_profit < 1000:
             recommendation = 'KEEP_CONSERVATIVE'
@@ -2350,7 +2350,7 @@ def _calculate_opportunity_tracker(conn):
         return {
             'missed': {'count': 0, 'est_profit': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'avoided': {'count': 0, 'est_loss': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
-            'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Error en cálculo'},
+            'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Calculation error'},
             'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-14', 'review_date_display': 'Feb 14, 2026'},
             'recommendation': 'CONTINUE_MONITORING',
             'near_miss': {'count': 0, 'avg_ema': 0, 'avg_coherence': 0, 'conditions': 'N/A'}
@@ -2473,9 +2473,9 @@ def api_learning_insights():
             recommendations.append({
                 'type': 'CALIBRATION',
                 'priority': 'HIGH',
-                'title': 'Alto volumen de vetos',
-                'message': f'{total_vetos:,} vetos en 7 días. Considerar ajustar umbrales para reducir falsos positivos.',
-                'action': 'Revisar thresholds de COHERENCE_GATE y BLACK_SWAN'
+                'title': 'High veto volume',
+                'message': f'{total_vetos:,} vetos in 7 days. Consider adjusting thresholds to reduce false positives.',
+                'action': 'Review COHERENCE_GATE and BLACK_SWAN thresholds'
             })
         
         bs_vetos = next((v for v in veto_effectiveness if v['type'] == 'BLACK_SWAN'), None)
@@ -2483,18 +2483,18 @@ def api_learning_insights():
             recommendations.append({
                 'type': 'BLACK_SWAN',
                 'priority': 'MEDIUM',
-                'title': 'Black Swan dominante',
-                'message': f'{bs_vetos["total"]:,} ({bs_vetos["total"]/total_vetos*100:.0f}%) de vetos por Black Swan.',
-                'action': 'Sistema correctamente protegiendo contra volatilidad extrema'
+                'title': 'Black Swan dominant',
+                'message': f'{bs_vetos["total"]:,} ({bs_vetos["total"]/total_vetos*100:.0f}%) of vetos by Black Swan.',
+                'action': 'System correctly protecting against extreme volatility'
             })
         
         if not recommendations:
             recommendations.append({
                 'type': 'OPTIMAL',
                 'priority': 'LOW',
-                'title': 'Sistema calibrado',
-                'message': 'Los filtros están funcionando dentro de parámetros normales.',
-                'action': 'Continuar monitoreando métricas'
+                'title': 'System calibrated',
+                'message': 'Filters are operating within normal parameters.',
+                'action': 'Continue monitoring metrics'
             })
         
         opportunity_tracker = _calculate_opportunity_tracker(conn)

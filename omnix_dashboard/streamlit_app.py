@@ -2,8 +2,8 @@
 OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
 Streamlit Dashboard - Investor-Grade Visualization
 
-Para presentaciones a inversores UAE/GCC.
-Métricas Sharpe, Sortino, Calmar con visualización profesional.
+For investor presentations in UAE/GCC.
+Sharpe, Sortino, Calmar metrics with professional visualization.
 
 DEPLOYMENT:
 - Development: streamlit run omnix_dashboard/streamlit_app.py --server.port 8501
@@ -804,9 +804,9 @@ def render_quarantine(quarantine):
 
 
 def render_expectancy():
-    """Operación Lucidez: Segmented expectancy analysis"""
+    """Operation Lucidity: Segmented expectancy analysis"""
     st.markdown("## Segmented Expectancy Analysis")
-    st.markdown("*Operación Lucidez - Know WHERE the system wins*")
+    st.markdown("*Operation Lucidity - Know WHERE the system wins*")
     
     try:
         client = get_api_client()
@@ -925,7 +925,7 @@ def render_expectancy():
         st.markdown("---")
         st.markdown("### What This Means for Investors")
         st.markdown("""
-        **Operación Lucidez** segments performance by market regime (BULLISH/BEARISH/RANGING) and 
+        **Operation Lucidity** segments performance by market regime (BULLISH/BEARISH/RANGING) and 
         signal coherence (LOW/MED/HIGH) to identify WHERE the system has a statistical edge.
         
         - **Positive Expectancy (E > 0)**: The system has proven edge in these conditions

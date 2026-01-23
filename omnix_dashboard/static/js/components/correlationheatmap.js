@@ -71,14 +71,14 @@
             });
             matrixHtml += '</div>';
         } else {
-            matrixHtml = '<div class="no-data">Datos insuficientes para correlación</div>';
+            matrixHtml = '<div class="no-data">Insufficient data for correlation</div>';
         }
 
         container.innerHTML = `
             <div class="correlation-header">
                 <span class="widget-icon">🔗</span>
-                <span class="widget-title">Correlación de Activos</span>
-                <span class="widget-badge">${data.total_pairs || 0} pares</span>
+                <span class="widget-title">Asset Correlation</span>
+                <span class="widget-badge">${data.total_pairs || 0} pairs</span>
             </div>
             <div class="correlation-body">
                 <div class="symbols-list">${symbolsHtml}</div>

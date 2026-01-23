@@ -2,8 +2,8 @@
 OMNIX INSTITUTIONAL+ PREMIUM - API Client
 API Client for Streamlit Dashboard
 
-Cliente para consumir métricas desde el API Flask principal.
-Usado por el dashboard Streamlit para mantener separación de servicios.
+Client to consume metrics from the main Flask API.
+Used by the Streamlit dashboard to maintain service separation.
 """
 
 import os
@@ -20,8 +20,8 @@ API_KEY = os.environ.get('DASHBOARD_API_KEY', '')
 
 class OmnixAPIClient:
     """
-    Cliente API para el Dashboard Streamlit.
-    Consume métricas desde el servicio Flask principal.
+    API Client for the Streamlit Dashboard.
+    Consumes metrics from the main Flask service.
     """
     
     def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
@@ -31,7 +31,7 @@ class OmnixAPIClient:
         self.headers: Dict[str, str] = {}
         if self.api_key:
             self.headers['X-API-Key'] = self.api_key
-        logger.info(f"📡 OmnixAPIClient inicializado - Base URL: {self.base_url}")
+        logger.info(f"📡 OmnixAPIClient initialized - Base URL: {self.base_url}")
     
     def _request(self, endpoint: str, method: str = 'GET', params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.base_url}{endpoint}"
@@ -86,7 +86,7 @@ class OmnixAPIClient:
         return self._request('/api/system/quarantine')
     
     def get_segmented_expectancy(self) -> Dict[str, Any]:
-        """Operación Lucidez: Get expectancy segmented by HMM regime + coherence bucket"""
+        """Operation Lucidity: Get expectancy segmented by HMM regime + coherence bucket"""
         return self._request('/api/metrics/expectancy')
     
     def get_shadow_portfolio(self) -> Dict[str, Any]:

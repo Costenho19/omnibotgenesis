@@ -472,15 +472,15 @@ def consolidated_trade_metrics(days=10, symbols=None):
 
 def get_segmented_expectancy(days=90):
     """
-    Operación Lucidez: Calcular expectancy segmentada por (hmm_regime, coherence_bucket)
+    Operation Lucidity: Calculate expectancy segmented by (hmm_regime, coherence_bucket)
     
-    Fórmula: E = (Win% × AvgWin) - (Loss% × |AvgLoss|)
+    Formula: E = (Win% × AvgWin) - (Loss% × |AvgLoss|)
     
     Args:
-        days: Días hacia atrás para analizar
+        days: Days back to analyze
         
     Returns:
-        Dict con segmentos y su expectancy
+        Dict with segments and their expectancy
     """
     with get_db_connection() as conn:
         if not conn:

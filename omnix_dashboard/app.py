@@ -86,7 +86,7 @@ if __name__ == '__main__':
             logger.info("Database connected successfully - REAL DATA MODE")
         else:
             logger.error(f"Database connection FAILED: {DB_ERROR_MESSAGE}")
-            logger.info("Dashboard will show 'Esperando traders' until connection is fixed")
+            logger.info("Dashboard will show 'Awaiting traders' until connection is fixed")
     else:
         logger.warning("No DATABASE_URL found - Dashboard will show empty state")
         logger.info("Set DATABASE_URL, POSTGRES_URL, or DATABASE_PUBLIC_URL in environment")
