@@ -1,7 +1,8 @@
 # OMNIX: AI Capital & Risk Orchestration Engine
 
-**Version**: V6.5.4e INSTITUTIONAL+  
+**Version**: V6.5.4e Advanced Tier  
 **Document Type**: Product Overview  
+**Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
 **Last Updated**: January 23, 2026
 
@@ -35,7 +36,7 @@ It is infrastructure designed to **protect capital first** while systematically 
 | **Primary Objective** | Capital preservation (target: 98%+ maintained) |
 | **Secondary Objective** | Systematic exposure to validated statistical edge |
 | **Architecture** | Multi-layer veto system with AI governance |
-| **Security Standard** | Post-Quantum Cryptography (NIST Level 3) |
+| **Security Standard** | Experimenting with NIST-aligned PQC (Kyber-768, Dilithium-3) |
 
 ### Positioning Statement
 
@@ -95,7 +96,7 @@ OMNIX does not act on the first positive signal. It requires:
 
 ### 4. Post-Quantum Security
 
-All trading orders are signed with **Dilithium-3** (NIST FIPS 204) before execution—quantum-resistant cryptographic protection for institutional-grade security.
+OMNIX is one of the first advanced trading platforms experimenting with **NIST-aligned post-quantum cryptography standards**. Trading orders are signed with Dilithium-3 (NIST FIPS 204) before execution, providing quantum-resistant cryptographic protection.
 
 ---
 
@@ -120,7 +121,7 @@ All trading orders are signed with **Dilithium-3** (NIST FIPS 204) before execut
 | Monte Carlo Validation | Operational | 10,000 simulation paths per decision |
 | Edge Confirmation Window | Operational | 3-cycle confirmation requirement |
 | Black Swan Detection | Operational | Real-time severity monitoring |
-| Post-Quantum Cryptography | Implemented | Kyber-768, Dilithium-3 (Nov 2025) |
+| Post-Quantum Cryptography | Experimenting (Nov 2025) | NIST-aligned Kyber-768, Dilithium-3 |
 | Decision Audit Trail | Operational | Full decision_trace logging |
 | Investor Dashboard | Operational | 23 widgets, real-time metrics |
 

@@ -25,8 +25,11 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [PRODUCT_OVERVIEW.md](business/investor/PRODUCT_OVERVIEW.md) | Qué es OMNIX, qué problema resuelve, qué NO hace | Inversores, Family Offices |
 | [RISK_GUARDIAN_PRODUCT.md](business/investor/RISK_GUARDIAN_PRODUCT.md) | Sistema de riesgo empaquetado como producto | Risk Officers, Due Diligence |
 | [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
+| [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
 
 **Posicionamiento**: OMNIX = **AI Capital & Risk Orchestration Engine** (no "bot de trading")
+
+**Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Cambios de posicionamiento documentados
 
 ---
 

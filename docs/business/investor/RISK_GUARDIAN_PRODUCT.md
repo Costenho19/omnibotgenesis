@@ -1,7 +1,8 @@
 # OMNIX Risk Guardian™
 
-**Version**: V6.5.4e INSTITUTIONAL+  
+**Version**: V6.5.4e Advanced Tier  
 **Document Type**: Product Feature Sheet  
+**Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Risk Officers, Compliance Teams  
 **Last Updated**: January 23, 2026
 
@@ -207,7 +208,7 @@ The dashboard displays:
 | False positive trades | Coherence Engine filters signal noise |
 | Overtrading | ECW requires 3-cycle confirmation |
 | Catastrophic loss | Drawdown Governor enforces limits |
-| Unauthorized execution | PQC signs every order |
+| Unauthorized execution | Cryptographic order signing (experimenting with PQC) |
 | Emotional decisions | AI governance, no manual override |
 
 ---
@@ -230,6 +231,24 @@ When enabled:
 
 ---
 
+## Auditability as Competitive Moat
+
+> "Every decision is logged, traceable, and reviewable."
+
+Few trading systems can make this claim. OMNIX provides:
+
+| Audit Feature | Description |
+|---------------|-------------|
+| **Full decision trace** | Every trade (executed or blocked) logged with complete rationale |
+| **Veto attribution** | Which layer blocked, why, with all input metrics |
+| **Temporal query** | Historical decisions queryable by date range |
+| **Export capability** | Decision logs exportable for external audit |
+| **No hidden logic** | All rules documented in ADR format |
+
+This level of auditability is rare in algorithmic trading—and essential for institutional capital.
+
+---
+
 ## Governance & Compliance
 
 ### Audit Capabilities
@@ -248,7 +267,7 @@ When enabled:
 | Read-only investor view | Dashboard access without control |
 | Decision transparency | Full rationale for every action |
 | No hidden overrides | All decisions follow same rules |
-| PQC security | Quantum-resistant order signing |
+| PQC security | Experimenting with NIST-aligned quantum-resistant signing |
 
 ---
 

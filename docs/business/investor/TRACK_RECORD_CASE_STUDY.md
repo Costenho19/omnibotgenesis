@@ -1,7 +1,8 @@
 # Case Study: How OMNIX Protects Capital in Volatile Markets
 
-**Version**: V6.5.4e INSTITUTIONAL+  
+**Version**: V6.5.4e Advanced Tier  
 **Document Type**: Case Study  
+**Classification**: Investor Confidential  
 **Audience**: Prospective Investors, Due Diligence Teams  
 **Last Updated**: January 23, 2026
 
@@ -185,6 +186,17 @@ When market stress elevates, OMNIX automatically reduces exposure. This isn't a 
 ### 4. Paper Trading is a Feature, Not a Limitation
 
 The 30-day validation period demonstrates commitment to methodology before accepting capital. Investors can observe decision-making in real market conditions without capital at risk.
+
+### 5. Strategic Discipline: Delayed Deployment is Intentional
+
+> "We intentionally delayed live capital deployment to validate risk behavior in real market conditions."
+
+This is not hesitation—it is discipline. OMNIX prioritizes:
+- **Methodology validation** over speed to market
+- **Risk calibration** over early returns
+- **Investor confidence** over aggressive timelines
+
+Many projects rush to deploy capital before understanding their own risk profile. OMNIX takes the opposite approach: prove the system first, then deploy.
 
 ---
 
