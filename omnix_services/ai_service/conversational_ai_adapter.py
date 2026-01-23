@@ -440,6 +440,64 @@ DO NOT copy instructions literally - write naturally using these concepts.**
 NOW RESPOND USING THIS FRAME:
 """
 
+PURE_FOLLOWUP_PATTERNS = [
+    'que mas', 'qué más', 'que más', 'qué mas',
+    'por que', 'por qué', 'porque', 'porqué',
+    'y que', 'y qué', 'y entonces', 'y luego',
+    'continua', 'continúa', 'sigue', 'adelante',
+    'entiendo', 'gracias', 'thanks', 'thank you',
+    'what else', 'tell me more', 'go on', 'continue',
+    'and then', 'what next', 'next', 'why',
+]
+
+CONFIRMATION_PATTERNS = [
+    'ok', 'okay', 'vale', 'bien', 'claro', 'perfecto',
+    'de acuerdo', 'entendido', 'got it', 'understood',
+]
+
+ALL_SYSTEMIC_KEYWORDS = (
+    SYSTEMIC_TYPE_A_KEYWORDS + 
+    SYSTEMIC_TYPE_B_KEYWORDS + 
+    SYSTEMIC_TYPE_C_KEYWORDS + 
+    SYSTEMIC_TYPE_D_KEYWORDS
+)
+
+def is_short_followup_question(message: str) -> bool:
+    """
+    Detect if message is a short follow-up question that should NOT trigger systemic overrides.
+    These are contextual continuations, not new questions requiring classification.
+    
+    IMPORTANT: Short messages that contain systemic keywords still get classified normally.
+    Only pure follow-ups without domain keywords are excluded.
+    
+    Args:
+        message: User's message text
+        
+    Returns:
+        True if this is a short follow-up without systemic keywords, False otherwise
+    """
+    message_lower = message.lower().strip()
+    
+    if len(message_lower) > 25:
+        return False
+    
+    for kw in ALL_SYSTEMIC_KEYWORDS:
+        if kw.lower() in message_lower:
+            logger.debug(f"🔍 Short message contains systemic keyword '{kw}' - Will classify normally")
+            return False
+    
+    for pattern in PURE_FOLLOWUP_PATTERNS:
+        if pattern in message_lower or message_lower == pattern:
+            logger.info(f"🔄 FOLLOW-UP DETECTED: '{message_lower}' matches pattern '{pattern}' - Skipping systemic classification")
+            return True
+    
+    for pattern in CONFIRMATION_PATTERNS:
+        if message_lower == pattern or message_lower == pattern + '?':
+            logger.info(f"🔄 CONFIRMATION DETECTED: '{message_lower}' - Skipping systemic classification")
+            return True
+    
+    return False
+
 def classify_systemic_question(message: str) -> Optional[str]:
     """
     Classify systemic question into type A/B/C/D based on keywords.
@@ -450,12 +508,18 @@ def classify_systemic_question(message: str) -> Optional[str]:
     "What if a provider failure affects thousands of instances?" which is about
     provider resilience (TYPE_C), not coordination (TYPE_A).
     
+    FOLLOW-UP PROTECTION: Short follow-up questions like "que mas" or "por que"
+    are excluded from classification to prevent repeating the same override.
+    
     Args:
         message: User's message text
         
     Returns:
         'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D', or None if not systemic
     """
+    if is_short_followup_question(message):
+        return None
+    
     message_lower = message.lower()
     
     has_type_a = any(kw.lower() in message_lower for kw in SYSTEMIC_TYPE_A_KEYWORDS)
