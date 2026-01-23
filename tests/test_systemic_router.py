@@ -181,7 +181,7 @@ class TestGetSystemicOverridePrompt:
         prompt = get_systemic_override_prompt('TYPE_B')
         assert prompt == SYSTEMIC_OVERRIDE_SOFTWARE
         assert 'SOFTWARE' in prompt
-        assert 'defense layers' in prompt.lower() or 'software failures' in prompt.lower()
+        assert 'defense layers' in prompt.lower() or 'software failures' in prompt.lower() or 'capas de defensa' in prompt.lower() or 'fallos de software' in prompt.lower()
     
     def test_type_c_returns_dependencies_prompt(self):
         """TYPE_C should return dependencies override."""
