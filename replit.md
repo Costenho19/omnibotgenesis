@@ -41,8 +41,11 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 | **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md |
 | **6. Historial** | `docs/history/` | Decisiones previas, migraciones, contexto histórico |
 | **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.md, ADRs |
+| **8. Seguridad** | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | PQC implementado Nov 2025 (Kyber-768/Dilithium-3) |
 
 **Después de cambios significativos**, actualizar la documentación relevante.
+
+> **CRÍTICO PQC (Jan 23, 2026)**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
 
 ## System Architecture
 
