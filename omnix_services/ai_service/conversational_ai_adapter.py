@@ -157,6 +157,14 @@ LANGUAGE_REPLACEMENTS = [
      'expected return debe ser positivo (>0%)'),
 ]
 
+from omnix_services.ai_service.response_validator import (
+    is_response_incomplete,
+    validate_and_log_response,
+    create_retry_prompt,
+    should_retry_response,
+    sanitize_incomplete_response,
+)
+
 def post_process_response(response: str) -> str:
     """
     Remove blacklisted phrases and apply institutional language transforms.
@@ -744,27 +752,51 @@ class ConversationalAI:
                     # Prepend override BEFORE user message for maximum influence
                     effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
                 
-                result = await self.enterprise_service.generate_response(
-                    chat_id=chat_id_int,
-                    user_message=effective_user_message,
-                    user_name=user_name,
-                    market_data=real_market_data,
-                    apply_visual_style=True,
-                    diagnostic_mode=diagnostic_mode
-                )
+                max_retries = 2
+                retry_count = 0
+                current_message = effective_user_message
                 
-                if result and 'response' in result:
-                    response_text = result['response']
-                    if result.get('web_search_used'):
-                        web_indicator = "\n\n🔍 *Real-time verified information*"
-                        if "verified information" not in response_text.lower():
-                            response_text = response_text + web_indicator
-                        logger.info(f"🔍 Web search used")
-                    # Apply post-processing filter to remove servile phrases
-                    return post_process_response(response_text)
-                else:
-                    logger.error("❌ No response from enterprise service")
-                    return self._fallback_response()
+                while retry_count <= max_retries:
+                    result = await self.enterprise_service.generate_response(
+                        chat_id=chat_id_int,
+                        user_message=current_message,
+                        user_name=user_name,
+                        market_data=real_market_data,
+                        apply_visual_style=True,
+                        diagnostic_mode=diagnostic_mode
+                    )
+                    
+                    if result and 'response' in result:
+                        response_text = result['response']
+                        
+                        is_valid, reason, _ = validate_and_log_response(
+                            response_text, 
+                            user_message, 
+                            provider="enterprise"
+                        )
+                        
+                        if not is_valid and retry_count < max_retries:
+                            retry_count += 1
+                            logger.warning(f"🔄 [RETRY {retry_count}/{max_retries}] Response incomplete: {reason}")
+                            current_message = create_retry_prompt(user_message, reason)
+                            continue
+                        
+                        if not is_valid:
+                            logger.warning(f"⚠️ Accepting incomplete response after {retry_count} retries")
+                            response_text = sanitize_incomplete_response(response_text)
+                        
+                        if result.get('web_search_used'):
+                            web_indicator = "\n\n🔍 *Real-time verified information*"
+                            if "verified information" not in response_text.lower():
+                                response_text = response_text + web_indicator
+                            logger.info(f"🔍 Web search used")
+                        
+                        return post_process_response(response_text)
+                    else:
+                        logger.error("❌ No response from enterprise service")
+                        return self._fallback_response()
+                
+                return self._fallback_response()
             else:
                 logger.warning("⚠️ Using legacy AI generation")
                 return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
@@ -857,6 +889,17 @@ class ConversationalAI:
                 # Extraer respuesta del resultado (V6.5.4 Premium: con indicador de búsqueda)
                 if result and 'response' in result:
                     response_text = result['response']
+                    
+                    # V6.5.4e: Validate response completeness
+                    is_valid, reason, _ = validate_and_log_response(
+                        response_text, 
+                        user_message, 
+                        provider="enterprise-sync"
+                    )
+                    
+                    if not is_valid:
+                        logger.warning(f"⚠️ [SYNC] Response incomplete: {reason} - sanitizing")
+                        response_text = sanitize_incomplete_response(response_text)
                     
                     if result.get('web_search_used'):
                         web_indicator = "\n\n🔍 *Real-time verified information*"
