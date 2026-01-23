@@ -263,6 +263,26 @@ class TestRealWorldQuestions:
         q = "Si 10,000 usuarios recibieran simultáneamente una señal de venta, ¿cómo evitan el impacto en el mercado?"
         result = classify_systemic_question(q)
         assert result == 'TYPE_A', f"Expected TYPE_A for mass selling question, got {result}"
+    
+    def test_pqc_security_question_is_type_d(self):
+        """PQC/security questions should be TYPE_D (governance/security)."""
+        questions = [
+            "¿Cómo protegen las órdenes con criptografía post-cuántica?",
+            "¿Qué seguridad post-quantum tienen implementada?",
+            "¿Usan Kyber o Dilithium para firmas?",
+            "How does OMNIX handle post-quantum cryptography?",
+            "¿Está implementada la encriptación PQC?",
+        ]
+        for q in questions:
+            result = classify_systemic_question(q)
+            assert result == 'TYPE_D', f"Expected TYPE_D for PQC question: {q}, got {result}"
+    
+    def test_governance_override_has_pqc_facts(self):
+        """Governance override must contain PQC implementation facts."""
+        assert 'PQC YA ESTÁ IMPLEMENTADO' in SYSTEMIC_OVERRIDE_GOVERNANCE
+        assert 'Kyber-768' in SYSTEMIC_OVERRIDE_GOVERNANCE
+        assert 'Dilithium-3' in SYSTEMIC_OVERRIDE_GOVERNANCE
+        assert 'NEVER SAY' in SYSTEMIC_OVERRIDE_GOVERNANCE
 
 
 if __name__ == '__main__':
