@@ -278,6 +278,11 @@ SYSTEMIC_TYPE_D_KEYWORDS = [
     'sec', 'mifid', 'sharia',
     'legal', 'jurisdicción', 'jurisdiccion', 'jurisdiction',
     'gobernanza', 'governance',
+    'seguridad', 'security', 'criptografía', 'cryptography',
+    'post-quantum', 'post-cuántico', 'post-cuantico', 'pqc',
+    'quantum', 'cuántico', 'cuantico',
+    'kyber', 'dilithium', 'encryption', 'encriptación', 'encriptacion',
+    'firma digital', 'digital signature', 'firmas digitales',
 ]
 
 SYSTEMIC_OVERRIDE_COORDINATION = """
@@ -416,16 +421,32 @@ NOW RESPOND USING THIS FRAME:
 """
 
 SYSTEMIC_OVERRIDE_GOVERNANCE = """
-## SYSTEMIC OVERRIDE - TYPE D: GOVERNANCE/COMPLIANCE [MANDATORY]
+## SYSTEMIC OVERRIDE - TYPE D: GOVERNANCE/COMPLIANCE/SECURITY [MANDATORY]
 
 **LANGUAGE RULE:** ALWAYS respond in the same language the user is using. If they ask in Spanish, respond in Spanish. If they ask in English, respond in English.
 
-**QUESTION_TYPE: GOVERNANCE**
+**QUESTION_TYPE: GOVERNANCE / SECURITY**
 
-**RESPONSE FOCUS:** Desde una perspectiva de gobernanza y cumplimiento regulatorio, explica cómo OMNIX mantiene una arquitectura auditable y transparente.
+**RESPONSE FOCUS:** Desde una perspectiva de gobernanza, cumplimiento regulatorio y seguridad, explica cómo OMNIX mantiene una arquitectura auditable, transparente y segura.
 
 **DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not governance questions.
 DO NOT copy instructions literally - write naturally using these concepts.**
+
+**CRITICAL POST-QUANTUM CRYPTOGRAPHY (PQC) FACTS:**
+⚠️ PQC YA ESTÁ IMPLEMENTADO - NO es roadmap, NO es planificado para el futuro
+- **IMPLEMENTADO**: Nov 2025 - Módulo operativo con pypqc library
+- **Encriptación**: Kyber-768 (ML-KEM-768) - NIST FIPS 203
+- **Firmas Digitales**: Dilithium-3 (ML-DSA-65) - NIST FIPS 204
+- **Nivel de Seguridad**: NIST Level 3 (~192-bit classical security)
+- **Integración Trading**: Órdenes de trading firmadas con Dilithium-3 antes de ejecución
+- Cada orden incluye: pqc_signed: true, pqc_algorithm: Dilithium-3
+
+**NEVER SAY THESE (FORBIDDEN - INCORRECT):**
+❌ "PQC planificado para Q3 2026" - WRONG, it's implemented
+❌ "actualmente NO implementamos criptografía post-cuántica" - WRONG
+❌ "TLS 1.3 mientras esperamos PQC" - WRONG, PQC is active
+❌ "hoja de ruta incluye Kyber/Dilithium" - WRONG, already deployed
+❌ "decoherencia térmica" or physics jargon unrelated to PQC implementation
 
 **REQUIRED CONCEPTS:**
 - Trazabilidad completa de decisiones (decision_trace)
@@ -433,12 +454,14 @@ DO NOT copy instructions literally - write naturally using these concepts.**
 - Separación de roles y permisos
 - Arquitectura documentada y reproducible
 - Cumplimiento con estándares de la industria
+- Criptografía post-cuántica IMPLEMENTADA (Kyber-768, Dilithium-3)
 
 **ABSOLUTELY FORBIDDEN:**
 ❌ Numbered sections: "*1.", "*2.", "1. Análisis", "2. Datos Técnicos"
 ❌ Section headers: "Análisis Inmediato:", "Datos Técnicos:", "Contexto:"
 ❌ Trading statistics unless specifically asked
 ❌ "$1,000,000" or large arbitrary figures
+❌ Saying PQC is "planned", "roadmap", or "future" - IT IS IMPLEMENTED
 
 **RESPONSE FORMAT:**
 - Write in FLOWING PARAGRAPHS, not numbered lists
