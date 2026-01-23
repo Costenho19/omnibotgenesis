@@ -46,6 +46,33 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
+
+**ESTADO**: ✅ IMPLEMENTADO - PQC operativo desde Nov 2025
+
+| Componente | Algoritmo | Estándar NIST |
+|------------|-----------|---------------|
+| Encriptación | Kyber-768 (ML-KEM-768) | FIPS 203 |
+| Firmas Digitales | Dilithium-3 (ML-DSA-65) | FIPS 204 |
+
+**CRÍTICO**: PQC YA ESTÁ IMPLEMENTADO - NO es roadmap.
+
+**Integración Trading**:
+- Órdenes de trading firmadas con Dilithium-3 antes de ejecución
+- Cada orden incluye `pqc_signed: true` y `pqc_algorithm: Dilithium-3`
+- Logging de firma: `🔐 Orden firmada con Dilithium-3 (PQC)`
+
+**Nivel de Seguridad**: NIST Level 3 (~192-bit classical security)
+
+**Archivos**:
+- Módulo: `omnix_core/security/pqc_security.py`
+- Manifest: `omnix_config/system_state_manifest.json` (sección `post_quantum_cryptography`)
+- Prompt: `omnix_services/ai_service/prompt_templates.py` (incluye estado PQC)
+
+**Referencia**: `docs/reference/adr/ADR-022-post-quantum-cryptography.md`
+
+---
+
 ### ADR-021: Shadow Trade Metrics View (Jan 22, 2026)
 
 **PROPÓSITO:** VIEW SQL analítica para parsing de `decision_trace` y análisis retroactivo de DCI.

@@ -18,6 +18,17 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ## Cambios Recientes
 
+### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
+- **ESTADO**: ✅ IMPLEMENTADO - PQC operativo desde Nov 2025
+- **CRÍTICO**: PQC YA ESTÁ IMPLEMENTADO - NO es roadmap. La IA no debe decir "PQC planificado para Q3 2026"
+- **ALGORITMOS**:
+  - Kyber-768 (ML-KEM-768) - NIST FIPS 203 - Encriptación
+  - Dilithium-3 (ML-DSA-65) - NIST FIPS 204 - Firmas digitales
+- **INTEGRACIÓN**: Órdenes de trading firmadas con Dilithium-3 antes de ejecución
+- **NIVEL SEGURIDAD**: NIST Level 3 (~192-bit classical security)
+- **ARCHIVOS**: `omnix_core/security/pqc_security.py`, `omnix_config/system_state_manifest.json`
+- **REFERENCIA**: `docs/reference/adr/ADR-022-post-quantum-cryptography.md`
+
 ### ADR-021: Shadow Trade Metrics View (Jan 22, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - VIEW SQL para parsing de decision_trace + Dashboard
 - **PROBLEMA**: Análisis retroactivo de DCI requería extraer métricas de decision_trace JSONB

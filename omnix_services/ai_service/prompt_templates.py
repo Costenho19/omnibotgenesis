@@ -66,6 +66,10 @@ def get_system_state_prompt() -> str:
     
     dashboard = manifest.get("dashboard_status", {})
     
+    pqc = manifest.get("post_quantum_cryptography", {})
+    pqc_status = pqc.get("status", "UNKNOWN")
+    pqc_standards = pqc.get("standards", {})
+    
     return f"""
 ## SYSTEM STATE MANIFEST [MANDATORY - READ-ONLY SOURCE OF TRUTH]
 **Use ONLY this data when answering questions about system status. Do NOT improvise or assume.**
@@ -80,6 +84,13 @@ def get_system_state_prompt() -> str:
 - NEVER mention 2024 or 2023 as data collection dates
 - NEVER say "years of data" or "años de datos" - we have DAYS of data
 - This is a NEW 30-day paper trading validation phase
+
+**POST-QUANTUM CRYPTOGRAPHY STATUS**: {pqc_status}
+- **Encryption**: {pqc_standards.get('encryption', 'Kyber-768 (ML-KEM-768) - NIST FIPS 203')}
+- **Signatures**: {pqc_standards.get('signatures', 'Dilithium-3 (ML-DSA-65) - NIST FIPS 204')}
+- **Security Level**: NIST Level 3 (~192-bit classical security)
+- **CRITICAL**: PQC YA ESTÁ IMPLEMENTADO, NO está en roadmap. Módulo operativo desde Nov 2025.
+- **NEVER SAY**: "PQC en roadmap Q3 2026", "seguridad cuántica planificada", "TLS 1.3 mientras esperamos PQC"
 
 **Scoring Architecture V6.5.4d** ({scoring_model}):
 - EMA Regime Signal: 40 pts (PRIMARY DRIVER)

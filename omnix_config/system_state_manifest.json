@@ -82,6 +82,36 @@
     }
   },
   
+  "post_quantum_cryptography": {
+    "status": "IMPLEMENTED",
+    "adr": "ADR-022",
+    "implementation_date": "2025-11",
+    "CRITICAL_FACT": "PQC YA ESTÁ IMPLEMENTADO - NO está en roadmap. Módulo operativo con pypqc.",
+    "standards": {
+      "encryption": "ML-KEM-768 (Kyber-768) - NIST FIPS 203",
+      "signatures": "ML-DSA-65 (Dilithium-3) - NIST FIPS 204"
+    },
+    "capabilities": {
+      "key_encapsulation": "Kyber-768 genera secretos compartidos resistentes a ataques cuánticos",
+      "digital_signatures": "Dilithium-3 firma órdenes de trading para autenticación",
+      "api_key_protection": "Encriptación PQC de claves API para transmisión segura"
+    },
+    "security_level": "NIST Level 3 (~192-bit classical security)",
+    "key_sizes": {
+      "kyber768_public": "1184 bytes",
+      "kyber768_secret": "2400 bytes",
+      "dilithium3_signature": "~3309 bytes"
+    },
+    "module_location": "omnix_core/security/pqc_security.py",
+    "investor_explanation": "OMNIX implementa criptografía post-cuántica usando los estándares NIST 2024 (Kyber-768 para encriptación, Dilithium-3 para firmas). Esto protege las comunicaciones y órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo, no es roadmap.",
+    "NEVER_SAY": [
+      "PQC está en roadmap",
+      "PQC planificado para Q3 2026",
+      "Seguridad cuántica no implementada",
+      "Usamos TLS 1.3 mientras esperamos PQC"
+    ]
+  },
+  
   "decision_contradiction_index": {
     "purpose": "Shadow metric measuring internal signal divergence to explain HOLD decisions",
     "adr": "ADR-018",

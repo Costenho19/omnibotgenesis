@@ -9,6 +9,8 @@ import os
 import time
 import ccxt
 import requests
+import hashlib
+import json
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
@@ -927,6 +929,20 @@ class TradingSystem:
             # Ejecutar orden REAL en Kraken con par dinámico
             logger.info(f"💰 EJECUTANDO ORDEN REAL: {side.upper()} ${amount_usd} de {current_pair}")
             
+            # 🔐 PQC: Crear orden firmada con criptografía post-cuántica
+            order_data_for_signature = {
+                'symbol': current_pair,
+                'type': side.lower(),
+                'amount': crypto_amount,
+                'amount_usd': amount_usd,
+                'price': current_price,
+                'timestamp': datetime.now().isoformat(),
+                'user_id': str(user_id)
+            }
+            pqc_signature = self.sign_trading_order_pqc(order_data_for_signature)
+            if pqc_signature:
+                logger.info(f"🔐 Orden firmada con Dilithium-3 (PQC): {pqc_signature[:50]}...")
+            
             try:
                 if side.lower() == 'buy':
                     order = self.kraken.create_market_buy_order(current_pair, crypto_amount)
@@ -971,7 +987,13 @@ class TradingSystem:
                     'price': round(current_price, 2),
                     'status': order_status,
                     'timestamp': datetime.now().isoformat(),
-                    'fees': order_fees
+                    'fees': order_fees,
+                    'pqc_security': {
+                        'signed': pqc_signature is not None,
+                        'algorithm': 'Dilithium-3 (ML-DSA-65)' if pqc_signature else None,
+                        'signature_preview': pqc_signature[:64] + '...' if pqc_signature else None,
+                        'signed_payload_hash': hashlib.sha256(json.dumps(order_data_for_signature, sort_keys=True).encode()).hexdigest()[:16] if pqc_signature else None
+                    }
                 }
                 
             except Exception as result_error:
