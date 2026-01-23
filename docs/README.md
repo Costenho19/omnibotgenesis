@@ -16,6 +16,20 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 
 ---
 
+## Documentación para Inversores
+
+> **NEW**: Documentos de producto institucional disponibles en `docs/business/investor/`
+
+| Documento | Propósito | Audiencia |
+|-----------|-----------|-----------|
+| [PRODUCT_OVERVIEW.md](business/investor/PRODUCT_OVERVIEW.md) | Qué es OMNIX, qué problema resuelve, qué NO hace | Inversores, Family Offices |
+| [RISK_GUARDIAN_PRODUCT.md](business/investor/RISK_GUARDIAN_PRODUCT.md) | Sistema de riesgo empaquetado como producto | Risk Officers, Due Diligence |
+| [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
+
+**Posicionamiento**: OMNIX = **AI Capital & Risk Orchestration Engine** (no "bot de trading")
+
+---
+
 ## Cambios Recientes
 
 ### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
