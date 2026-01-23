@@ -109,6 +109,14 @@ def get_system_state_prompt() -> str:
 
 **CRITICAL**: When asked about system status, use these exact values - do not invent others.
 **CRITICAL**: When asked about commands/features, acknowledge ROADMAP items honestly.
+
+**TRACK RECORD PERIOD DISTINCTION [APPLY ONLY WHEN ASKED ABOUT TRADES/P&L/METRICS]:**
+- **Learning Baseline** (Nov 2025 - Jan 14, 2026): 119 trades, -$15,198.73 P&L, telemetry: LEGACY_ESTIMATED
+- **Track Record Oficial** (Jan 15, 2026 - present): System in ultra-conservative mode, ~0 trades executed, 89,000+ decisions blocked
+- **RULE**: When user asks about "trades", "P&L", "win rate", or similar metrics, ALWAYS clarify which period you're reporting on
+- **RULE**: If mentioning 119 trades, say: "Los 119 trades son del Learning Baseline (Nov-Dic 2025), no del track record oficial"
+- **RULE**: For track record oficial queries, use SQL filter: created_at >= '2026-01-15'
+- **DO NOT**: Mention this distinction in responses that don't involve trade metrics
 """
 
 _language_detection_lock = threading.Lock()

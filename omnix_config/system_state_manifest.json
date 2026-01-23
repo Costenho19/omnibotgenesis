@@ -6,6 +6,45 @@
   "trading_mode": "paper",
   "paper_capital": 1000000,
   
+  "track_record_periods": {
+    "CRITICAL_DISTINCTION": "SIEMPRE distinguir entre Learning Baseline y Track Record Oficial al reportar trades",
+    "learning_baseline": {
+      "name": "Learning Baseline (Calibración)",
+      "purpose": "Período de calibración y ajuste de parámetros",
+      "start_date": "2025-11-01",
+      "end_date": "2026-01-14",
+      "sql_filter": "created_at < '2026-01-15'",
+      "trades": 119,
+      "pnl": -15198.73,
+      "capital_initial": 1000000,
+      "telemetry_source": "LEGACY_ESTIMATED",
+      "investor_note": "Datos de calibración - NO son parte del track record oficial"
+    },
+    "official_track_record": {
+      "name": "Track Record Oficial (30 días)",
+      "purpose": "Período de validación oficial para inversores",
+      "start_date": "2026-01-15",
+      "end_date": "2026-02-13",
+      "sql_filter": "created_at >= '2026-01-15'",
+      "trades_executed": 0,
+      "decisions_evaluated": 89623,
+      "vetos_by_type": {
+        "BLACK_SWAN": 89153,
+        "COHERENCE_GATE": 447,
+        "ECW_WAITING": 24
+      },
+      "telemetry_source": "REAL",
+      "investor_note": "Track record oficial - sistema en modo ultra-conservador por Black Swan activo"
+    },
+    "response_rules": {
+      "when_asked_about_trades": "SIEMPRE preguntar/aclarar si se refiere a Learning Baseline o Track Record Oficial",
+      "default_context": "Track Record Oficial (desde 15 Ene 2026)",
+      "if_119_trades_mentioned": "Aclarar que son del Learning Baseline (Nov-Dic 2025), no del track record oficial",
+      "if_2_trades_mentioned": "Verificar si hay trades nuevos en track record oficial antes de confirmar",
+      "never_mix": "NUNCA mezclar datos de baseline con track record oficial sin aclarar contexto temporal"
+    }
+  },
+  
   "critical_dates": {
     "track_record_start": "2026-01-15",
     "target_duration_days": 30,
