@@ -283,9 +283,11 @@ SYSTEMIC_TYPE_D_KEYWORDS = [
 SYSTEMIC_OVERRIDE_COORDINATION = """
 ## SYSTEMIC OVERRIDE - TYPE A: COORDINATION/SYNCHRONIZATION [MANDATORY]
 
+**LANGUAGE RULE:** ALWAYS respond in the same language the user is using. If they ask in Spanish, respond in Spanish. If they ask in English, respond in English.
+
 **QUESTION_TYPE: COORDINATION**
 
-**RESPONSE FOCUS:** Explain that the coordination scenario cannot happen because OMNIX uses single-tenant architecture - each instance operates independently without observing other clients' positions.
+**RESPONSE FOCUS:** Explica que el escenario de coordinación NO puede ocurrir porque OMNIX usa arquitectura single-tenant - cada instancia opera independientemente sin observar posiciones de otros clientes.
 
 **DO NOT copy instructions literally - write naturally using these concepts.**
 
@@ -321,9 +323,11 @@ NOW RESPOND USING THIS FRAME:
 SYSTEMIC_OVERRIDE_SOFTWARE = """
 ## SYSTEMIC OVERRIDE - TYPE B: SOFTWARE/DEPLOYMENT [MANDATORY]
 
+**LANGUAGE RULE:** ALWAYS respond in the same language the user is using. If they ask in Spanish, respond in Spanish. If they ask in English, respond in English.
+
 **QUESTION_TYPE: SOFTWARE**
 
-**RESPONSE FOCUS:** Explain how OMNIX implements multiple defense layers against software failures and deployment risks.
+**RESPONSE FOCUS:** Explica cómo OMNIX implementa múltiples capas de defensa contra fallos de software y riesgos de despliegue.
 
 **DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not software questions.
 DO NOT copy instructions literally - write naturally using these concepts.**
@@ -354,9 +358,11 @@ NOW RESPOND USING THIS FRAME:
 SYSTEMIC_OVERRIDE_DEPENDENCIES = """
 ## SYSTEMIC OVERRIDE - TYPE C: DEPENDENCIES/PROVIDERS [MANDATORY]
 
+**LANGUAGE RULE:** ALWAYS respond in the same language the user is using. If they ask in Spanish, respond in Spanish. If they ask in English, respond in English.
+
 **QUESTION_TYPE: DEPENDENCIES**
 
-**RESPONSE FOCUS:** Data validation and provider resilience. Open by explaining how OMNIX validates data sources independently.
+**RESPONSE FOCUS:** Validación de datos y resiliencia de proveedores. Comienza explicando cómo OMNIX valida fuentes de datos de forma independiente.
 
 **DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not dependency questions.
 DO NOT copy instructions literally - write naturally using these concepts.**
@@ -412,9 +418,11 @@ NOW RESPOND USING THIS FRAME:
 SYSTEMIC_OVERRIDE_GOVERNANCE = """
 ## SYSTEMIC OVERRIDE - TYPE D: GOVERNANCE/COMPLIANCE [MANDATORY]
 
+**LANGUAGE RULE:** ALWAYS respond in the same language the user is using. If they ask in Spanish, respond in Spanish. If they ask in English, respond in English.
+
 **QUESTION_TYPE: GOVERNANCE**
 
-**RESPONSE FOCUS:** From a governance and regulatory compliance perspective, explain how OMNIX maintains an auditable and transparent architecture.
+**RESPONSE FOCUS:** Desde una perspectiva de gobernanza y cumplimiento regulatorio, explica cómo OMNIX mantiene una arquitectura auditable y transparente.
 
 **DO NOT open with "OMNIX no genera señales sincronizadas..." - that is for coordination questions, not governance questions.
 DO NOT copy instructions literally - write naturally using these concepts.**
