@@ -23,7 +23,7 @@
 | **Decision Contradiction Index (DCI)** | Measures internal signal divergence to explain HOLDs |
 | **InstitutionalDecisionLogger V6.5.4** | Audit trail with 11 lifecycle events per trade |
 | **Execution Protocol** | Liquidity-aware execution (TWAP/VWAP/ICEBERG) inspired by institutional techniques |
-| **Post-Quantum Security** | Experimenting with NIST-aligned PQC (Kyber-768/Dilithium-3) |
+| **Post-Quantum Security** | Implemented (Kyber-768/Dilithium-3) - NIST FIPS 203/204 |
 | **Dual-Market Coverage** | 11 cryptocurrencies via Kraken + US stocks via Alpaca |
 | **24/7 Operation** | Deployed on Railway with automatic failover |
 
@@ -108,7 +108,7 @@ OMNIX differentiates through:
 2. **Edge Confirmation Window** — Requires persistent edge before capital deployment
 3. **Non-Markovian Memory** — Context beyond recent data (unique to OMNIX)
 4. **Full Decision Auditability** — Every decision logged, traceable, reviewable
-5. **Post-Quantum Security** — Experimenting with NIST-aligned PQC standards
+5. **Post-Quantum Security** — Operational since Nov 2025 (Kyber-768/Dilithium-3)
 
 **Philosophy:**
 > "Knowing when NOT to trade is a stronger edge than forcing returns."

@@ -14,7 +14,7 @@ OMNIX nació como una idea muy clara: crear una infraestructura de control de ri
 Desde el principio, mi objetivo fue construir algo real, funcional y escalable, que uniera tres pilares fundamentales:
 
 1. **Autonomía** — un sistema que se autoajusta, aprende y actúa 24/7
-2. **Seguridad** — experimentando con criptografía post-cuántica alineada con estándares NIST
+2. **Seguridad** — criptografía post-cuántica operativa (Kyber-768, Dilithium-3) desde Nov 2025
 3. **Ética y transparencia** — auditorías verificables y principios Sharia-compliant
 
 **OMNIX no es un bot de trading; es una infraestructura de preservación de capital** donde cada módulo tiene un propósito claro: mantener coherencia, precisión y seguridad en cada decisión.
@@ -72,8 +72,8 @@ OMNIX está organizado en capas modulares con arquitectura hexagonal (V7.0 en pr
 - **PostgreSQL (Railway)**: 45+ tablas con integridad referencial >91%
 - **Redis (Railway)**: Caching, rate limiting, estado de sesiones
 - **Post-Quantum Cryptography**: 
-  - Experimentando con estándares NIST-aligned PQC
-  - Explorando Kyber-768 y Dilithium-3
+  - Implementado desde Nov 2025 (NIST FIPS 203/204)
+  - Kyber-768 (key exchange) + Dilithium-3 (firmas digitales)
 - **Deployment**: Railway (producción 24/7), Replit (desarrollo)
 
 ### 2.5 Capa Ética (Sharia & Auditoría)
@@ -177,11 +177,18 @@ Persistencia en PostgreSQL de todos los eventos de veto:
 
 ### 3.11 Post-Quantum Cryptography - ADR-022
 
-**Experimentando con estándares NIST-aligned desde Noviembre 2025**:
-- Explorando Kyber-768 para intercambio de claves
-- Explorando Dilithium-3 para firmas digitales
+**IMPLEMENTADO desde Noviembre 2025** usando estándares NIST 2024:
 
-> El sistema está experimentando con la integración de estándares de criptografía post-cuántica alineados con NIST como parte de nuestra estrategia de seguridad a largo plazo.
+| Componente | Algoritmo | Estándar NIST | Propósito |
+|------------|-----------|---------------|-----------|
+| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Intercambio seguro de claves |
+| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Autenticación de órdenes |
+
+- **Todas las órdenes de trading reales se firman con Dilithium-3** antes de ejecución
+- Nivel de seguridad NIST Level 3 (~192-bit equivalente clásico)
+- Módulo: `omnix_core/security/pqc_security.py`
+
+> **CRÍTICO**: PQC NO es un ítem de roadmap — está operativo y firmando órdenes hoy.
 
 ### 3.12 Sharia Compliance System
 

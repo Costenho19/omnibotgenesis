@@ -102,12 +102,20 @@ The Risk Guardian V5.4 monitors these limits in real-time and activates circuit 
 
 ### Q9: What is OMNIX's position on Post-Quantum Cryptography?
 
-**A:** OMNIX is **experimenting with NIST-aligned post-quantum cryptography** as part of our long-term security strategy:
+**A:** OMNIX has **fully implemented post-quantum cryptography** since November 2025 using NIST 2024 standardized algorithms:
 
-- Exploring Kyber-768 for key exchange
-- Exploring Dilithium-3 for digital signatures
+| Component | Algorithm | NIST Standard | Purpose |
+|-----------|-----------|---------------|---------|
+| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Secure key exchange |
+| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Trading order authentication |
 
-This positions us for quantum-resistant security as standards mature, but we describe this as experimental, not production-deployed. We are aligned with NIST FIPS-203/204 standards currently in finalization.
+**Key facts:**
+- All real trading orders are signed with Dilithium-3 before execution
+- Module located at `omnix_core/security/pqc_security.py`
+- Both algorithms provide NIST Level 3 security (~192-bit classical equivalent)
+- Protects against future quantum computer attacks (Shor's algorithm, Grover's algorithm)
+
+This is **not a roadmap item** — PQC is operational and signing orders today.
 
 ### Q10: How auditable is the system?
 

@@ -111,7 +111,7 @@ Defensible Advantages
 │  6-Tier Coherence Engine     Unique multi-layer veto      │
 │  Non-Markovian Memory        Context beyond recent data   │
 │  Edge Confirmation Window    3-cycle validation required  │
-│  Post-Quantum Security       Experimenting with NIST PQC  │
+│  Post-Quantum Security       Implemented (NIST FIPS 203/204) │
 │  Full Decision Auditability  Every decision logged        │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
