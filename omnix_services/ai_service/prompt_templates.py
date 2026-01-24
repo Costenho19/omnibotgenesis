@@ -110,13 +110,31 @@ def get_system_state_prompt() -> str:
 **CRITICAL**: When asked about system status, use these exact values - do not invent others.
 **CRITICAL**: When asked about commands/features, acknowledge ROADMAP items honestly.
 
-**TRACK RECORD PERIOD DISTINCTION [APPLY ONLY WHEN ASKED ABOUT TRADES/P&L/METRICS]:**
-- **Learning Baseline** (Nov 2025 - Jan 14, 2026): 119 trades, -$15,198.73 P&L, telemetry: LEGACY_ESTIMATED
-- **Track Record Oficial** (Jan 15, 2026 - present): System in ultra-conservative mode, ~0 trades executed, 89,000+ decisions blocked
-- **RULE**: When user asks about "trades", "P&L", "win rate", or similar metrics, ALWAYS clarify which period you're reporting on
-- **RULE**: If mentioning 119 trades, say: "Los 119 trades son del Learning Baseline (Nov-Dic 2025), no del track record oficial"
-- **RULE**: For track record oficial queries, use SQL filter: created_at >= '2026-01-15'
-- **DO NOT**: Mention this distinction in responses that don't involve trade metrics
+**TRACK RECORD PERIOD DISTINCTION [MANDATORY WHEN REPORTING ANY METRICS]:**
+
+**Two Periods - NEVER Mix Without Clarifying:**
+1. **Learning Baseline** (Nov 2025 - 14 Ene 2026): 119 trades, -$15,198.73 P&L, 20.2% WR - Fase de CALIBRACIÓN
+2. **Track Record Oficial** (15 Ene 2026 - presente): Sistema recalibrado, ~0 trades, 89,000+ decisiones bloqueadas
+
+**MANDATORY DISCLOSURE RULE:**
+Whenever you mention ANY of these metrics in your response:
+- P&L amounts (ej: -$15,198, $-3,847)
+- Win rate percentages (ej: 20.2%, 0%)
+- Trade counts (ej: 119 trades, 16 losses)
+- Symbol performance (ej: ADA/USD losses)
+
+You MUST include this disclosure at the END of your analysis:
+> **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
+
+**FORBIDDEN without disclosure:**
+- Mencionar "119 trades" sin aclarar que son del baseline
+- Reportar P&L -$15,198 sin indicar el período
+- Analizar win rate 20.2% sin contexto temporal
+- Discutir "símbolos problemáticos" sin indicar que fue durante calibración
+
+**DO NOT mention this distinction for:**
+- Saludos, comandos, preguntas técnicas sin métricas
+- Explicaciones de arquitectura o funcionamiento
 """
 
 _language_detection_lock = threading.Lock()
