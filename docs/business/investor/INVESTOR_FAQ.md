@@ -43,7 +43,7 @@ The loss represents 1.5% of the $1M paper trading capital, demonstrating that ev
 - **Veto system working**: Multiple layers rejecting low-quality setups
 - **Capital preservation**: Each block is a potential loss avoided
 
-It does NOT mean 89,000 profitable trades were missed—most blocked decisions would have resulted in losses based on Shadow Portfolio analysis.
+**Important clarification:** This metric represents evaluation cycles, not trade opportunities or missed profits. It does NOT mean 89,000 profitable trades were missed—most blocked decisions would have resulted in losses based on Shadow Portfolio analysis.
 
 ---
 
@@ -88,13 +88,14 @@ This explains why the system doesn't trade during uncertain conditions—it's no
 
 **A:**
 
-| Limit | Value | Action |
-|-------|-------|--------|
-| Max Drawdown | 15% | System pause, review required |
-| Per-Trade Risk | 0.5-5% | Based on risk profile |
-| Daily Trade Limit | 20 | Prevents overtrading |
+| Limit | Value | Type | Description |
+|-------|-------|------|-------------|
+| **Hard System Cap** | 15% | Absolute maximum | Circuit breaker triggers, system pauses |
+| **Observed in Baseline** | 1.5% | Actual performance | What occurred during Learning Baseline |
+| Per-Trade Risk | 0.5-5% | Configurable | Based on risk profile |
+| Daily Trade Limit | 20 | Operational | Prevents overtrading |
 
-The Risk Guardian V5.4 monitors these limits in real-time and activates circuit breakers automatically.
+**Clarification:** The 15% is the hard system cap (absolute maximum before circuit breaker). The 1.5% is what was actually observed during the Learning Baseline period. The Risk Guardian V5.4 monitors these limits in real-time and activates circuit breakers automatically.
 
 ---
 
@@ -102,7 +103,7 @@ The Risk Guardian V5.4 monitors these limits in real-time and activates circuit 
 
 ### Q9: What is OMNIX's position on Post-Quantum Cryptography?
 
-**A:** OMNIX has **fully implemented post-quantum cryptography** since November 2025 using NIST 2024 standardized algorithms:
+**A:** OMNIX has **production-integrated post-quantum cryptography modules** for order signing and key exchange, aligned with NIST 2024 standards:
 
 | Component | Algorithm | NIST Standard | Purpose |
 |-----------|-----------|---------------|---------|
@@ -110,12 +111,12 @@ The Risk Guardian V5.4 monitors these limits in real-time and activates circuit 
 | Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Trading order authentication |
 
 **Key facts:**
-- All real trading orders are signed with Dilithium-3 before execution
+- Trading orders are signed with Dilithium-3 before execution
 - Module located at `omnix_core/security/pqc_security.py`
 - Both algorithms provide NIST Level 3 security (~192-bit classical equivalent)
-- Protects against future quantum computer attacks (Shor's algorithm, Grover's algorithm)
+- Protects against future quantum computer attacks
 
-This is **not a roadmap item** — PQC is operational and signing orders today.
+**Important disclaimer:** Currently applied to order authentication and internal security layers. This is not marketed as a compliance guarantee or external security certification.
 
 ### Q10: How auditable is the system?
 

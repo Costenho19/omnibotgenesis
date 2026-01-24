@@ -14,7 +14,7 @@ OMNIX nació como una idea muy clara: crear una infraestructura de control de ri
 Desde el principio, mi objetivo fue construir algo real, funcional y escalable, que uniera tres pilares fundamentales:
 
 1. **Autonomía** — un sistema que se autoajusta, aprende y actúa 24/7
-2. **Seguridad** — criptografía post-cuántica operativa (Kyber-768, Dilithium-3) desde Nov 2025
+2. **Seguridad** — módulos PQC integrados en producción (Kyber-768, Dilithium-3) para firma de órdenes
 3. **Ética y transparencia** — auditorías verificables y principios Sharia-compliant
 
 **OMNIX no es un bot de trading; es una infraestructura de preservación de capital** donde cada módulo tiene un propósito claro: mantener coherencia, precisión y seguridad en cada decisión.
@@ -72,8 +72,8 @@ OMNIX está organizado en capas modulares con arquitectura hexagonal (V7.0 en pr
 - **PostgreSQL (Railway)**: 45+ tablas con integridad referencial >91%
 - **Redis (Railway)**: Caching, rate limiting, estado de sesiones
 - **Post-Quantum Cryptography**: 
-  - Implementado desde Nov 2025 (NIST FIPS 203/204)
-  - Kyber-768 (key exchange) + Dilithium-3 (firmas digitales)
+  - Módulos integrados en producción (NIST 2024)
+  - Kyber-768 (key exchange) + Dilithium-3 (firmas de órdenes)
 - **Deployment**: Railway (producción 24/7), Replit (desarrollo)
 
 ### 2.5 Capa Ética (Sharia & Auditoría)
@@ -112,7 +112,7 @@ Sistema de autocalibración que incluye:
 ### 3.3 Risk Guardian V5.4
 
 El "guardián" del sistema:
-- Supervisa drawdowns (máximo 1.5%)
+- Supervisa drawdowns (hard cap 15%, observado en baseline 1.5%)
 - Detecta overtrading (límite 20 trades/día)
 - Activa circuit breaker automático
 - Bloquea órdenes si hay incoherencia
@@ -171,24 +171,24 @@ Modo de precisión con:
 ### 3.10 Veto Tracking System
 
 Persistencia en PostgreSQL de todos los eventos de veto:
-- **89,000+ decisiones bloqueadas** rastreadas
+- **89,000+ ciclos de evaluación bloqueados** (no oportunidades de trading perdidas)
 - Deduplicación automática
 - Reporting para inversores
 
 ### 3.11 Post-Quantum Cryptography - ADR-022
 
-**IMPLEMENTADO desde Noviembre 2025** usando estándares NIST 2024:
+**Módulos PQC integrados en producción** alineados con estándares NIST 2024:
 
 | Componente | Algoritmo | Estándar NIST | Propósito |
 |------------|-----------|---------------|-----------|
 | Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Intercambio seguro de claves |
 | Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Autenticación de órdenes |
 
-- **Todas las órdenes de trading reales se firman con Dilithium-3** antes de ejecución
+- Las órdenes de trading se firman con Dilithium-3 antes de ejecución
 - Nivel de seguridad NIST Level 3 (~192-bit equivalente clásico)
 - Módulo: `omnix_core/security/pqc_security.py`
 
-> **CRÍTICO**: PQC NO es un ítem de roadmap — está operativo y firmando órdenes hoy.
+> **Nota**: Aplicado actualmente a autenticación de órdenes y capas de seguridad internas. No se comercializa como garantía de compliance ni certificación de seguridad externa.
 
 ### 3.12 Sharia Compliance System
 
@@ -216,15 +216,16 @@ Persistencia en PostgreSQL de todos los eventos de veto:
 | Métrica | Valor |
 |---------|-------|
 | Capital Preservado | **98.5%** |
-| Decisiones Bloqueadas | **89,000+** |
+| Ciclos de Evaluación Bloqueados | **89,000+** |
 | Win Rate (Baseline) | 20.2% |
-| Max Drawdown | 1.5% |
+| Max Drawdown (observed) | 1.5% |
+| Max Drawdown (hard cap) | 15% |
 | Días en Track Record | 10/30 |
 
 ### 4.3 KPIs Primarios (Orden de Importancia)
 
 1. **Capital Preservation**: 98.5% del capital inicial preservado
-2. **Risk Events Blocked**: 89,000+ operaciones de alto riesgo vetadas
+2. **Evaluation Cycles Blocked**: 89,000+ ciclos de evaluación bloqueados (no oportunidades de trading)
 3. **System Integrity**: Integridad referencial >91%, trail de auditoría completo
 4. **Win Rate**: 20.17% (métrica diagnóstica del Learning Baseline, no de marketing)
 

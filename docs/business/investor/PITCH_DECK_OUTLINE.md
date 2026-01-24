@@ -111,7 +111,7 @@ Defensible Advantages
 │  6-Tier Coherence Engine     Unique multi-layer veto      │
 │  Non-Markovian Memory        Context beyond recent data   │
 │  Edge Confirmation Window    3-cycle validation required  │
-│  Post-Quantum Security       Implemented (NIST FIPS 203/204) │
+│  Post-Quantum Security       Production-integrated (NIST 2024)  │
 │  Full Decision Auditability  Every decision logged        │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
@@ -137,7 +137,8 @@ Operational Controls
 
 Risk Limits:
 • Max per-trade: 5%
-• Max drawdown: 15%
+• Hard cap drawdown: 15% (circuit breaker)
+• Observed in baseline: 1.5%
 • Kill-switch: Active
 ```
 
@@ -150,8 +151,8 @@ This slide makes us CREDIBLE.
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  89,000+ blocked decisions  Risk veto system active     │
-│  -1.58% drawdown            Capital preservation focus  │
+│  89,000+ evaluation cycles  Risk veto system active     │
+│  1.5% max drawdown          Capital preservation focus  │
 │  98.5% capital preserved    Historical through baseline │
 │  119 baseline trades        Learning phase complete     │
 │  Day 10 of 30               Official track record       │
