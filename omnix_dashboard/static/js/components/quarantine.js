@@ -53,11 +53,11 @@ const QuarantineWidget = {
         const dynamic48h = capitalProtected.dynamic_48h || 0;
         const dynamic7d = capitalProtected.dynamic_7d || 0;
         
-        const estLossAvoided = this.opportunityData?.avoided?.est_loss || 0;
-        const estLossAvoidedStr = this.formatNumber(estLossAvoided);
+        const notional7d = veto7d.notional_blocked || 0;
+        const notionalTotal = notional7d > 0 ? notional7d : grandTotal;
         
         if (this.headerEl) {
-            this.headerEl.textContent = estLossAvoided > 0 ? estLossAvoidedStr : this.formatNumber(grandTotal);
+            this.headerEl.textContent = this.formatNumber(notionalTotal);
         }
         
         if (this.container) {
@@ -106,19 +106,18 @@ const QuarantineWidget = {
                 <div style="padding: 8px 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="Est. loss avoided based on avg adverse moves">${estLossAvoided > 0 ? estLossAvoidedStr : this.formatNumber(grandTotal)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Est. Loss Avoided*</div>
+                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="Total notional value of blocked trades (7 days)">${this.formatNumber(notionalTotal)}</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Notional Blocked (7d)</div>
                         </div>
                         <div style="text-align: center;" title="${notionalTooltip}">
                             <div style="font-size: 14px; font-weight: 600; color: #6b7280;">${this.formatNumber(grandTotal)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Notional Blocked</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Total (All Time)</div>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 14px; font-weight: 600;">${count}</div>
                             <div style="font-size: 9px; color: var(--text-muted);">Trades</div>
                         </div>
                     </div>
-                    <div style="font-size: 8px; color: var(--text-muted); margin-bottom: 6px; opacity: 0.7;">*Based on avg adverse price movement × position size</div>
                     ${vetoBreakdownHtml ? `
                     <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; margin-top: 4px;">
                         <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 4px;">VETO BREAKDOWN (48h)</div>

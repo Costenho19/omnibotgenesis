@@ -819,7 +819,7 @@ def api_generate_pdf_report():
             mimetype='application/pdf',
             headers={
                 'Content-Disposition': f'attachment; filename={filename}',
-                'Content-Length': len(pdf_bytes)
+                'Content-Length': str(len(pdf_bytes))
             }
         )
         
@@ -1541,13 +1541,12 @@ def api_comparative_metrics():
         
         veto_count = 695
         try:
-            conn = get_db_connection()
-            if conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT COUNT(*) FROM capital_protected_events")
-                veto_count = cursor.fetchone()[0] or 695
-                cursor.close()
-                conn.close()
+            with get_db_connection() as conn:
+                if conn:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT COUNT(*) FROM capital_protected_events")
+                    veto_count = cursor.fetchone()[0] or 695
+                    cursor.close()
         except Exception:
             pass
         
