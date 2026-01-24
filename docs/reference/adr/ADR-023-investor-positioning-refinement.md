@@ -68,6 +68,31 @@ All investor documents should include:
 
 This signals controlled distribution without legal implications.
 
+### 7. Track Record Period Disclosure (Added Jan 24, 2026)
+
+**Mandatory disclosure when reporting any trading metrics.**
+
+| Period | Dates | Trades | P&L | Purpose |
+|--------|-------|--------|-----|---------|
+| **Learning Baseline** | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibration phase |
+| **Track Record Oficial** | 15 Ene 2026 - present | ~0 | $0 | Validation with recalibrated parameters |
+
+**Disclosure Rule**: Whenever AI reports P&L, win rate, trade counts, or symbol performance, it MUST include:
+
+> **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
+
+**Triggers requiring disclosure**:
+- P&L amounts (e.g., -$15,198, -$3,847)
+- Win rate percentages (e.g., 20.2%, 0%)
+- Trade counts (e.g., 119 trades, 16 losses)
+- Symbol performance analysis (e.g., "ADA/USD losses")
+
+**Exceptions** (no disclosure needed):
+- Greetings, commands, technical questions without metrics
+- Architecture explanations
+
+**Rationale**: Prevents investor confusion between calibration data and official track record. The Learning Baseline was intentionally aggressive to stress-test risk systems; the Official Track Record applies recalibrated, conservative parameters.
+
 ---
 
 ## Documents Updated
@@ -130,6 +155,8 @@ Not: "trading bot", "algo system", "DeFi platform"
 - [x] Add "Investor Confidential" classification to all investor docs
 - [x] Update docs/README.md with links to investor documentation
 - [x] Create this ADR for traceability
+- [x] Add Track Record Period Disclosure rules to system_state_manifest.json (Jan 24, 2026)
+- [x] Update prompt_templates.py with mandatory disclosure rule (Jan 24, 2026)
 
 ---
 

@@ -47,6 +47,19 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 
 > **CRÍTICO PQC (Jan 23, 2026)**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
 
+### Track Record Period Disclosure (OBLIGATORIO - Jan 24, 2026)
+
+| Período | Fechas | Trades | P&L | Propósito |
+|---------|--------|--------|-----|-----------|
+| **Learning Baseline** | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración |
+| **Track Record Oficial** | 15 Ene 2026 - presente | ~0 | $0 | Validación recalibrada |
+
+> **REGLA**: Cuando la IA reporte métricas (P&L, win rate, trades, losses), DEBE agregar al final:
+> 
+> **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
+
+**NO aplica para**: saludos, comandos, preguntas técnicas sin métricas. Ver ADR-023.
+
 ## System Architecture
 
 ### Core Components and Design Patterns
