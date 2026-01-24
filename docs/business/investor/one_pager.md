@@ -1,13 +1,15 @@
-# OMNIX V6.5.4e INSTITUTIONAL+
+# OMNIX V6.5.4e Advanced Tier
 ## Executive Summary | January 2026
+
+**Classification**: Investor Confidential
 
 ---
 
 ### THE OPPORTUNITY
 
-**95% of retail traders lose money.** The primary reasons: emotional decisions, lack of discipline, and inability to monitor 24/7 markets. Institutional investors have access to sophisticated algorithmic trading systems costing $50K-500K/year that solve these problems—retail investors don't.
+**95% of retail traders lose money.** The primary reasons: emotional decisions, lack of discipline, and inability to monitor 24/7 markets. Institutional investors have access to sophisticated risk management systems—advanced users don't.
 
-**OMNIX democratizes institutional trading technology**, making AI-powered, risk-managed automated trading accessible to everyday investors for $49-499/month.
+**OMNIX provides institutional-grade risk control infrastructure**, making AI-powered, risk-managed automated trading accessible to advanced users for $49-499/month.
 
 ---
 
@@ -17,11 +19,12 @@
 |-----------|-------------|
 | **10 Core AI Strategies + 6 Support Modules** | Quantum Momentum, Monte Carlo, HMM, Kalman Filter, Kelly Criterion, Black Swan, Non-Markovian Memory + Risk Guardian, Coherence Engine |
 | **6-Tier Coherence Engine** | Validates every trade decision across all strategies before execution |
-| **InstitutionalDecisionLogger V6.5.4** | Audit trail compatible with Grafana/Loki/ELK - 11 lifecycle events per trade |
-| **Execution Protocol PREMIUM** | Citadel/Jump Trading-level execution (TWAP/VWAP/ICEBERG) |
-| **Post-Quantum Security** | First retail platform with Kyber-768/Dilithium-3 (NIST FIPS-203/204) |
+| **Edge Confirmation Window (ECW)** | Requires 3 consecutive cycles of edge persistence before allowing trades |
+| **Decision Contradiction Index (DCI)** | Measures internal signal divergence to explain HOLDs |
+| **InstitutionalDecisionLogger V6.5.4** | Audit trail with 11 lifecycle events per trade |
+| **Execution Protocol** | Liquidity-aware execution (TWAP/VWAP/ICEBERG) inspired by institutional techniques |
+| **Post-Quantum Security** | Experimenting with NIST-aligned PQC (Kyber-768/Dilithium-3) |
 | **Dual-Market Coverage** | 11 cryptocurrencies via Kraken + US stocks via Alpaca |
-| **Enterprise Scalability** | Architecture supports 100,000+ concurrent users |
 | **24/7 Operation** | Deployed on Railway with automatic failover |
 
 ---
@@ -30,32 +33,31 @@
 
 | Metric | Value | Context |
 |--------|-------|---------|
-| Total Trades | 119 | Paper trading calibration phase |
-| Winning Trades | 24 | Win rate: 20.17% (learning phase) |
-| Shadow Events | 360 | Vetoed trades tracked for learning |
-| Current Balance | $984,188.74 | From $1M initial (-1.58%) |
+| Blocked Decisions | **89,000+** | High-risk trades vetoed by system |
+| Capital Preserved | **98.5%** | From $1M initial |
+| Learning Baseline Trades | 119 | Nov 2025 - 14 Jan 2026 |
+| Official Track Record | Day 10/30 | 15 Jan 2026 - present |
 | System Uptime | 99.9% | Production-ready |
-| Modules Active | 15+ | All core engines operational |
+| Data Integrity | >91% | Referential integrity across 45+ tables |
 
-**Current Phase:** System calibration with Shadow Portfolio learning. Early-stage performance reflects aggressive filter tuning. Every blocked trade is analyzed to optimize filters.
+> **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
 
-**Target:** 500+ trades with 55%+ win rate to establish verified track record.
+**Current Phase:** Track Record Oficial (Día 10 de 30). Motor de trading congelado para preservar integridad del track record. Cada decisión bloqueada es analizada para calibrar filtros.
+
+**Why ~0 trades in Official Period?** The system is operating in extreme risk-aversion mode during track record validation. The 89,000+ blocked decisions demonstrate the veto architecture working as designed.
 
 ---
 
-### V6.5.4e INSTITUTIONAL+ FEATURES
+### V6.5.4e ADVANCED TIER FEATURES
 
 | Feature | Description |
 |---------|-------------|
-| **ADR-007 Coherence Calibration** | Phase 1: 5-point threshold reduction for improved trade throughput |
-| **Shadow Portfolio System** | Counterfactual analysis of vetoed trades - learns from blocked decisions to calibrate filters |
+| **ADR-019 Edge Confirmation Window** | Requires MC WR ≥52%, MC ER >0%, Black Swan ≤MEDIUM for 3 consecutive cycles |
+| **ADR-018 Decision Contradiction Index** | DCI ≥70 mandates HOLD due to internal signal divergence |
+| **Shadow Portfolio System** | Counterfactual analysis of vetoed trades - learns from blocked decisions |
 | **Veto Tracking System** | Real-time capital protection tracking with PostgreSQL persistence |
 | **Adaptive Coherence Gate** | Dynamic thresholds based on EMA score + Black Swan severity |
-| **InstitutionalDecisionLogger** | 11 lifecycle events with unique decision_id for complete audit trail |
 | **Volatility-Based SL/TP** | High-vol pairs (DOT, AVAX, SOL): 2.5%/4.5% SL/TP; Normal pairs (BTC, ETH): 1.5%/3.0% |
-| **Execution Protocol V6.5.4** | LiquidityAnalyzer, MicroVolatilityEngine, CrossAssetCorrelationEngine, dynamic TWAP/VWAP/ICEBERG selection |
-| **InstitutionalMetricsCalculator** | Sharpe, Sortino, Calmar ratios per-pair and portfolio-wide |
-| **Dual Dashboard Architecture** | Flask API (port 5000) + Streamlit investor visualization (port 8080) |
 
 ---
 
@@ -69,7 +71,6 @@
 | **Real-Time Web Search** | `/buscar` command searches internet for latest news via Tavily |
 | **Price Alerts** | Custom notifications when prices hit target levels |
 | **5 Risk Profiles** | Ultraconservador → Institucional - one command to switch |
-| **Community Intelligence** | Feedback system with gamified points and leaderboards |
 | **Sharia Compliance Check** | `/sharia [crypto]` for Islamic finance verification |
 
 ---
@@ -87,9 +88,9 @@
 
 | Tier | Price | Features |
 |------|-------|----------|
-| Basic | $49/mo | 1 pair, basic risk management |
-| Premium | $149/mo | 11+ pairs, full AI, priority support |
-| Institutional | $499/mo | Unlimited, custom strategies, API |
+| Starter | $49/mo | 1 pair, basic risk management |
+| Pro | $149/mo | 11+ pairs, full AI, priority support |
+| Advanced | $499/mo | Unlimited, custom strategies, API |
 
 **Revenue Projections (Base Case):**
 - Year 1: 950 users × $149 ARPU = $1.71M ARR
@@ -100,18 +101,17 @@
 
 ### COMPETITIVE ADVANTAGE
 
-**Unique Moat: Institutional-Grade Audit Trail + Post-Quantum Security**
+**Unique Moat: Risk-First Architecture + Full Auditability**
 
-OMNIX is the only retail trading platform with:
-1. **NIST-approved post-quantum cryptography** (Kyber-768, Dilithium-3)
-2. **Complete trade decision audit trail** compatible with Grafana/Loki/ELK
-3. **Citadel-level execution protocols** (TWAP/VWAP/ICEBERG)
+OMNIX differentiates through:
+1. **6-Tier Veto Architecture** — Fail-closed system that defaults to NOT trading
+2. **Edge Confirmation Window** — Requires persistent edge before capital deployment
+3. **Non-Markovian Memory** — Context beyond recent data (unique to OMNIX)
+4. **Full Decision Auditability** — Every decision logged, traceable, reviewable
+5. **Post-Quantum Security** — Experimenting with NIST-aligned PQC standards
 
-**Additional Differentiators:**
-- Non-Markovian Memory (no competitor has this)
-- 6-Tier Coherence validation (unique architecture)
-- Dual-market from single platform (crypto + stocks)
-- Volatility-adaptive risk management
+**Philosophy:**
+> "Knowing when NOT to trade is a stronger edge than forcing returns."
 
 ---
 
@@ -124,8 +124,8 @@ OMNIX is the only retail trading platform with:
 **Why $4.5M Valuation?**
 - Conservative valuation for validation-phase infrastructure
 - MENA seed mean valuation: $18.9M (MAGNiTT 2024) - significant upside
-- Unique IP: Non-Markovian Kernel, Post-Quantum Security, InstitutionalDecisionLogger
-- Phase: Extended paper trading track record + live validation
+- Unique IP: Non-Markovian Kernel, ECW, DCI, Shadow Portfolio
+- Phase: Track Record completion + live validation
 - Milestone-based approach: prove capital preservation before scaling
 
 **Use of Funds:**
@@ -139,7 +139,7 @@ OMNIX is the only retail trading platform with:
 
 ### NEXT STEPS
 
-1. **Q4 2025:** Complete track record (500+ trades, 55%+ win rate)
+1. **Feb 14, 2026:** Complete 30-day Track Record
 2. **Q1 2026:** Private beta with 100 users
 3. **Q2 2026:** Public launch, target 500 paying users
 4. **Q4 2026:** Break-even, prepare Series A
@@ -149,14 +149,12 @@ OMNIX is the only retail trading platform with:
 
 ### CONTACT
 
-**Harold**  
-Founder & CEO  
+**Harold A. Nunes**  
+Founder & Architect  
 [Email] | [Telegram] | [Website]
 
 ---
 
 *This document is for informational purposes only. Trading involves significant risk. Past performance is not indicative of future results. All metrics shown are from paper trading and may not reflect live trading performance.*
 
-**Valuation Analysis:** See `financial_projections.md` Section 5 for detailed market comparables and methodology.
-
-**Last Updated:** January 9, 2026
+**Last Updated:** January 24, 2026

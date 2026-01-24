@@ -4,7 +4,7 @@
 **Source**: Content from OMNIX investor documentation  
 **Format**: Convert to Google Slides / Keynote / PDF  
 **Classification**: Investor Confidential  
-**Last Updated**: January 23, 2026
+**Last Updated**: January 24, 2026
 
 ---
 
@@ -150,16 +150,19 @@ This slide makes us CREDIBLE.
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  119 paper trades           Learning baseline           │
+│  89,000+ blocked decisions  Risk veto system active     │
 │  -1.58% drawdown            Capital preservation focus  │
 │  98.5% capital preserved    Historical through baseline │
-│  360+ shadow events         Veto analysis complete      │
-│  Day 9 of 30                Official track record       │
+│  119 baseline trades        Learning phase complete     │
+│  Day 10 of 30               Official track record       │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
 We delayed live capital to validate risk behavior.
 This is discipline, not hesitation.
+
+Note: Metrics from Learning Baseline (Nov-Dec 2025).
+Official Track Record began Jan 15, 2026.
 ```
 
 ---
