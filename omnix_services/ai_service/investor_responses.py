@@ -1218,7 +1218,14 @@ class InvestorResponseEngine:
             # Additional high-risk overlaps (Jan 25, 2026)
             'ruido', 'sustancia', 'qué dimensión', 'que dimension',
             'otra dimensión', 'otra dimension', 'justify', 'justificar',
-            'trade-off', 'tradeoff', 'compensación'
+            'trade-off', 'tradeoff', 'compensación',
+            # Convexity / Entry timing (Jan 25, 2026)
+            'convexity', 'convexidad', 'late entry', 'delayed entry', 'early entry',
+            'entrada tardía', 'entrada tardia', 'entrada temprana',
+            'convexity premium', 'convexity decay', 'breakout', 'short squeeze',
+            # Empirical evidence
+            'evidencia empírica', 'evidencia empirica', 'empirical evidence',
+            'evidence empirica', 'prueba empírica', 'prueba empirica'
         ]
         
         # Si contiene keyword de ADR-024, NO usar respuesta enlatada de TECHNICAL_DIAGNOSTIC

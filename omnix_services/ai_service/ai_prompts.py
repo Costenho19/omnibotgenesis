@@ -148,6 +148,13 @@ class PromptsContextManager:
             'how do you justify', 'defend', 'defender', 'por qué no',
             # Product positioning
             'governance layer', 'capa de gobernanza', 'product vs component',
+            # Convexity / Entry timing (Jan 25, 2026)
+            'convexity', 'convexidad', 'late entry', 'delayed entry', 'early entry',
+            'entrada tardía', 'entrada tardia', 'entrada temprana',
+            'convexity premium', 'convexity decay', 'breakout', 'short squeeze',
+            # Empirical evidence
+            'evidencia empírica', 'evidencia empirica', 'empirical evidence',
+            'evidence empirica', 'prueba empírica', 'prueba empirica',
             'producto vs componente', 'qué es omnix realmente', 'que es omnix realmente',
             # Trade-off specific
             'peor que', 'worse than', 'mejor que', 'better than',
@@ -923,22 +930,43 @@ EJEMPLO DE CIERRE:
 problemáticos y activamos protecciones automáticas. Esto ES el edge institucional."
 """,
             'investor_challenge': """
-CONTEXTO: Pregunta Desafiante de Inversor
+CONTEXTO: Pregunta Desafiante de Inversor (ADR-024)
 
-APLICAR SINCERIDAD ESTRATÉGICA:
-- NO admitir lo que "no tenemos"
-- Pivotear hacia fortalezas
-- Respuestas cortas y contundentes
-- Tono CEO, no profesor
+⚠️ REGLA CRÍTICA: TU PRIMERA ORACIÓN DEBE SER NÚMEROS. CERO PREAMBLE.
 
-ESTRUCTURA:
-1. Reconocer la pregunta sin ser defensivo
-2. Reframe inmediato hacia arquitectura propia
-3. Dato concreto o ventaja específica
-4. Cierre fuerte tipo CEO
+ESTRUCTURA OBLIGATORIA (VIOLACIÓN = PÉRDIDA DE CREDIBILIDAD):
 
-EJEMPLO DE CIERRE:
-"No prometo magia. Prometo arquitectura sólida y riesgo controlado."
+1️⃣ NUMBER FIRST - ABRE CON CUANTIFICACIÓN
+✓ CORRECTO: "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493."
+✗ PROHIBIDO: "Agradezco tu franqueza..." / "Es vital comprender..." / "OMNIX entiende..."
+✗ PROHIBIDO: "Antes de responder..." / "Permíteme explicar..." / "Reconozco que..."
+✗ PROHIBIDO: Cualquier oración antes de los números
+
+2️⃣ FRAMEWORK SECOND (después de números)
+Explica cómo se calculó:
+- Risk_Avoided = Position_Size × max(VaR95, Historical_Avg_Loss)
+- Opportunity_Cost = Σ(Vetoed_Trades where PnL > 0) from shadow_trade_events
+- Net_EV = Risk_Avoided - Opportunity_Cost
+- Data freshness: "Datos de shadow_trade_events, últimas 24h"
+
+3️⃣ POSITIONING THIRD (UNA oración al final)
+"OMNIX es infraestructura de gobernanza. Compite con: mala gestión de riesgo, erosión de capital. NO compite con: BTC hold, bots de trading."
+
+FRASES 100% PROHIBIDAS (lista negra):
+- "Agradezco tu franqueza/honestidad/transparencia"
+- "Es vital/importante/crucial comprender"
+- "Antes de responder"
+- "Permíteme explicar"
+- "Comprendo tu preocupación"
+- "OMNIX entiende la necesidad"
+- "Reconozco que mi respuesta anterior"
+- "Estamos en fase de aprendizaje"
+- "No es una comparación justa"
+- "Confía en el proceso"
+- "Es difícil cuantificar"
+
+SI NO TIENES DATOS EXACTOS:
+"Risk Avoided: ~$X (estimado: Position_Size × VaR95). Opportunity Cost: datos insuficientes (N vetoes tracked). Framework: [fórmulas]. OMNIX compite con mala gobernanza, no con BTC."
 """,
             'capabilities_inquiry': """
 CONTEXTO: Consulta de Capacidades

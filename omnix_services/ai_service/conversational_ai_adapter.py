@@ -176,6 +176,14 @@ BLACKLISTED_PHRASES = [
     r'(?<=\.\s)Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
     r'^Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
     
+    # "OMNIX entiende la necesidad" - evasive preamble (Jan 25, 2026)
+    r'^OMNIX entiende[^.]*\.\s*',
+    r'(?<=\.\s)OMNIX entiende[^.]*\.\s*',
+    
+    # "Reconozco que mi respuesta anterior" - evasive (Jan 25, 2026)
+    r'^Reconozco que[^.]*\.\s*',
+    r'(?<=\.\s)Reconozco que[^.]*\.\s*',
+    
     # Unrealistic thresholds - WR > 60%, ER > 1% (ADR-018 says realistic is WR > 50%, ER > 0%)
     r'win\s*rate[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)6[05]%[^.]*\.',
     r'expected\s*return[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)[1-9]%[^.]*\.',
