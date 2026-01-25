@@ -130,7 +130,34 @@ class PromptsContextManager:
         if message_lower in simple_greetings:
             return 'general_conversation'
         
-        # PRIORIDAD 2: PERFORMANCE/RISK DISCUSSION → INSTITUTIONAL RESPONSE REQUIRED
+        # PRIORIDAD 2: INVESTOR CHALLENGE → QUANTIFIED TRADE-OFF RESPONSE (ADR-024)
+        # Comparative questions requiring NUMBER → FRAMEWORK → POSITIONING structure
+        investor_challenge_keywords = [
+            # Trade-off / Opportunity Cost
+            'opportunity cost', 'costo de oportunidad', 'cost of inaction',
+            'costo de no actuar', 'costo de inacción', 'costo de inaccion',
+            # Risk vs Reward
+            'risk avoided', 'riesgo evitado', 'risk vs reward',
+            'expected value', 'valor esperado', 'ev calculation',
+            # Comparative / Benchmark
+            'buy & hold', 'buy and hold', 'benchmark vs', 'comparar con',
+            'bitcoin hold', 'btc hold', 'vs holding', 'versus holding',
+            'compite con', 'competidor de', 'alternativa a',
+            # Justification / Defense
+            'justify', 'justificar', 'justifica', 'cómo justificas', 'como justificas',
+            'how do you justify', 'defend', 'defender', 'por qué no',
+            # Product positioning
+            'governance layer', 'capa de gobernanza', 'product vs component',
+            'producto vs componente', 'qué es omnix realmente', 'que es omnix realmente',
+            # Trade-off specific
+            'peor que', 'worse than', 'mejor que', 'better than',
+            'trade-off', 'tradeoff', 'compensación'
+        ]
+        
+        if any(keyword in message_lower for keyword in investor_challenge_keywords):
+            return 'investor_challenge'
+        
+        # PRIORIDAD 3: PERFORMANCE/RISK DISCUSSION → INSTITUTIONAL RESPONSE REQUIRED
         # These queries trigger strict institutional language policy
         performance_risk_keywords = [
             # Rendimiento / Performance

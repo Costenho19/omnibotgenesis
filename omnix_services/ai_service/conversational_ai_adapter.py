@@ -125,6 +125,27 @@ BLACKLISTED_PHRASES = [
     r'[Ee]s\s+dif[ií]cil\s+cuantificar[^.]*\.',
     r'[Dd]if[ií]cil\s+de\s+cuantificar[^.]*\.',
     
+    # ===========================================================================
+    # INVESTOR CHALLENGE EVASION PHRASES (ADR-024 - Jan 25, 2026)
+    # Blocks phrases that evade quantified trade-off questions
+    # ===========================================================================
+    
+    # "Estamos en fase de aprendizaje" - sounds like "trust us without data"
+    r'[Ee]stamos\s+en\s+(?:una\s+)?fase\s+de\s+(?:aprendizaje|calibraci[oó]n|validaci[oó]n)[^.]*\.',
+    r'[Ww]e\s*(?:\'re|are)\s+in\s+a?\s*learning\s+phase[^.]*\.',
+    
+    # "No es una comparación justa" - evasive
+    r'[Nn]o\s+es\s+una\s+comparaci[oó]n\s+justa[^.]*\.',
+    r'[Ii]t\s*(?:\'s|is)\s+not\s+a\s+fair\s+comparison[^.]*\.',
+    
+    # "Confía en el proceso" - zero substance
+    r'[Cc]onf[ií]a\s+en\s+el\s+proceso[^.]*\.',
+    r'[Tt]rust\s+the\s+process[^.]*\.',
+    
+    # "El mercado es impredecible" - obvious, doesn't answer
+    r'[Ee]l\s+mercado\s+es\s+impredecible[^.]*\.',
+    r'[Tt]he\s+market\s+is\s+unpredictable[^.]*\.',
+    
     # Unrealistic thresholds - WR > 60%, ER > 1% (ADR-018 says realistic is WR > 50%, ER > 0%)
     r'win\s*rate[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)6[05]%[^.]*\.',
     r'expected\s*return[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)[1-9]%[^.]*\.',
@@ -157,6 +178,29 @@ LANGUAGE_REPLACEMENTS = [
      'expected return debe ser positivo (>0%)'),
 ]
 
+# ==============================================================================
+# EVASION REPLACEMENTS (ADR-024 - Jan 25, 2026)
+# Transforms evasive investor-challenge responses into framework references
+# ==============================================================================
+
+EVASION_REPLACEMENTS = [
+    # "No es una comparación justa" → explain why with framework
+    (re.compile(r'[Nn]o\s+es\s+una\s+comparaci[oó]n\s+justa(?:\s+porque)?', re.IGNORECASE),
+     'La comparación requiere contexto: OMNIX es infraestructura de gobernanza, no competidor de BTC hold. Cuantificación:'),
+    
+    # "Confía en el proceso" → inject framework requirement
+    (re.compile(r'[Cc]onf[ií]a\s+en\s+el\s+proceso', re.IGNORECASE),
+     'El framework cuantifica: Position_Size × max(VaR95, Avg_Loss)'),
+    
+    # "El mercado es impredecible" → acknowledge but provide framework
+    (re.compile(r'[Ee]l\s+mercado\s+es\s+impredecible(?:\s+pero)?', re.IGNORECASE),
+     'Reconocemos la incertidumbre. Por eso usamos: Risk Avoided = Position_Size × max(VaR95, Avg_Loss).'),
+    
+    # "Estamos en fase de aprendizaje/calibración" → replace with track record context
+    (re.compile(r'[Ee]stamos\s+en\s+(?:una\s+)?fase\s+de\s+(?:aprendizaje|calibraci[oó]n)', re.IGNORECASE),
+     'Track Record Oficial (15 Ene 2026 - presente) usa parámetros recalibrados. Métricas:'),
+]
+
 from omnix_services.ai_service.response_validator import (
     is_response_incomplete,
     validate_and_log_response,
@@ -172,6 +216,9 @@ def post_process_response(response: str) -> str:
     
     ADR-020: Includes inflated capital figure removal, unrealistic threshold correction,
     and "ignorar" → "ponderar adaptativamente" transformations.
+    
+    ADR-024: Includes investor challenge evasion phrase replacements that transform
+    evasive responses into framework-referenced quantifications.
     
     Args:
         response: Raw AI response text
@@ -197,6 +244,12 @@ def post_process_response(response: str) -> str:
         if pattern.search(cleaned):
             cleaned = pattern.sub(replacement, cleaned)
             changes_made.append('language_transform')
+    
+    # Phase 3: Apply evasion replacements for investor challenge responses (ADR-024)
+    for pattern, replacement in EVASION_REPLACEMENTS:
+        if pattern.search(cleaned):
+            cleaned = pattern.sub(replacement, cleaned)
+            changes_made.append('evasion_replacement')
     
     # Clean up stray Telegram formatting artifacts (lone asterisks)
     cleaned = re.sub(r'^\s*\*\s*$', '', cleaned, flags=re.MULTILINE)

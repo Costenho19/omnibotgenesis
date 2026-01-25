@@ -47,6 +47,21 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 
 > **CRÍTICO PQC (Jan 23, 2026)**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
 
+### Investor Challenge Response Framework (ADR-024 - Jan 25, 2026)
+
+Cuando un inversor pregunte sobre trade-offs comparativos (opportunity cost, risk avoided, buy & hold vs, justify), el bot DEBE responder con estructura:
+
+1. **NUMBER FIRST**: Abrir con cuantificación (ej: "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493")
+2. **FRAMEWORK SECOND**: Explicar cómo se calculó (fórmulas ADR-020, data freshness)
+3. **POSITIONING THIRD**: Clarificar qué es OMNIX ("governance infrastructure, not BTC hold competitor")
+
+**PROHIBIDO en investor_challenge:**
+- "Estamos en fase de aprendizaje" (suena a "confía sin datos")
+- "Es difícil cuantificar" sin dar fórmula
+- "No es una comparación justa" sin explicar por qué
+
+Ver ADR-024 para keywords de detección y ejemplos.
+
 ### Track Record Period Disclosure (OBLIGATORIO - Jan 24, 2026)
 
 | Período | Fechas | Trades | P&L | Propósito |
