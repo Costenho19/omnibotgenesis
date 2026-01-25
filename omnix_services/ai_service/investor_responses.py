@@ -1199,8 +1199,33 @@ class InvestorResponseEngine:
         
         FIX Dec 31, 2025: Prioriza patrones más largos/específicos sobre genéricos.
         Esto evita que "hold" bloquee "btc y holdear" → WHY_NOT_BUY_BTC.
+        
+        FIX Jan 25, 2026 (ADR-024): Si mensaje contiene keywords de investor_challenge,
+        NO detectar TECHNICAL_DIAGNOSTIC para que ai_prompts.py maneje con NUMBER→FRAMEWORK→POSITIONING.
         """
         message_lower = message.lower()
+        
+        # ADR-024: Keywords que fuerzan investor_challenge en lugar de TECHNICAL_DIAGNOSTIC
+        # MUST stay aligned with ai_prompts.py investor_challenge_keywords
+        investor_challenge_override_keywords = [
+            'brutal', 'sin anestesia', 'diagnóstico brutal', 'diagnostico brutal',
+            'cuantifica', 'no cuantifica', 'fallo grave', 'evade', 'evasivo',
+            'comité', 'committee', 'inversor senior', 'senior investor',
+            'opportunity cost', 'costo de oportunidad', 'risk avoided', 'riesgo evitado',
+            'net ev', 'ev neto', 'valor esperado', 'expected value',
+            'dame un diagnostico', 'dame un diagnóstico', 'quiero diagnóstico',
+            'buy & hold', 'buy and hold', 'btc hold', 'bitcoin hold',
+            # Additional high-risk overlaps (Jan 25, 2026)
+            'ruido', 'sustancia', 'qué dimensión', 'que dimension',
+            'otra dimensión', 'otra dimension', 'justify', 'justificar',
+            'trade-off', 'tradeoff', 'compensación'
+        ]
+        
+        # Si contiene keyword de ADR-024, NO usar respuesta enlatada de TECHNICAL_DIAGNOSTIC
+        for keyword in investor_challenge_override_keywords:
+            if keyword in message_lower:
+                logger.info(f"[InvestorResponse] ADR-024 override: '{keyword}' detected → investor_challenge priority")
+                return None  # Deja que ai_prompts.py maneje con NUMBER→FRAMEWORK→POSITIONING
         
         sorted_patterns = sorted(self.QUERY_PATTERNS.items(), key=lambda x: len(x[0]), reverse=True)
         

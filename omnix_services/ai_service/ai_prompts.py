@@ -153,12 +153,15 @@ class PromptsContextManager:
             'peor que', 'worse than', 'mejor que', 'better than',
             'trade-off', 'tradeoff', 'compensación',
             # Critical investor phrases (ADR-024 hardening Jan 25, 2026)
-            'brutal', 'sin anestesia', 'diagn[oó]stico brutal',
+            'brutal', 'sin anestesia', 'diagnóstico brutal', 'diagnostico brutal',
             'evade', 'evasivo', 'ruido', 'sustancia',
             'cuantifica', 'no cuantifica', 'fallo grave',
             'comité', 'committee', 'inversor senior', 'senior investor',
             'qué dimensión', 'que dimension', 'otra dimensión', 'otra dimension',
-            'net ev', 'ev neto', 'valor esperado neto'
+            'net ev', 'ev neto', 'valor esperado neto',
+            # Anti-TECHNICAL_DIAGNOSTIC priority (must detect before diagnostic handler)
+            'dame un diagnostico', 'dame un diagnóstico', 'quiero diagnóstico',
+            'quiero diagnostico', 'necesito diagnostico', 'necesito diagnóstico'
         ]
         
         if any(keyword in message_lower for keyword in investor_challenge_keywords):
