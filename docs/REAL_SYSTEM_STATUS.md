@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 23 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 9 | ADR-021 VIEW ACTIVO
+**Fecha**: 25 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 11 | ADR-021 VIEW ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -45,6 +45,31 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 ---
 
 ## Cambios Recientes
+
+### Dashboard Investor Credibility Fixes (Jan 25, 2026)
+
+**PROPÓSITO:** Corregir métricas confusas para presentaciones de inversores.
+
+| Fix | Antes | Después |
+|-----|-------|---------|
+| Max Drawdown | +1.5% (positivo incorrecto) | 0% (normalizado) |
+| Win Rate | 20.2% (de Learning Baseline) | N/A (0 trades en Track Record) |
+| Header P&L | Sin contexto | Etiquetado "(Baseline)" |
+| Est. Loss Avoided | Sin explicación | Footnote con metodología |
+
+**Archivos Modificados:**
+- `omnix_dashboard/blueprints/core.py` (api_comparative_metrics)
+- `omnix_dashboard/templates/terminal.html` (header labels)
+- `omnix_dashboard/static/js/components/comparativemetrics.js`
+- `omnix_dashboard/static/js/components/regimedetection.js`
+
+**Fórmula Est. Loss Avoided:**
+```
+Est. Loss = Evaluation Cycles × Avg Position Size ($20K) × Expected Loss Rate (2.5%)
+Cap: $100K (10% de $1M capital virtual)
+```
+
+---
 
 ### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
 

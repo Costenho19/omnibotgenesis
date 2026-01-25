@@ -67,7 +67,21 @@ Ver ADR-024 para keywords de detección y ejemplos.
 | Período | Fechas | Trades | P&L | Propósito |
 |---------|--------|--------|-----|-----------|
 | **Learning Baseline** | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración |
-| **Track Record Oficial** | 15 Ene 2026 - presente | ~0 | $0 | Validación recalibrada |
+| **Track Record Oficial** | 15 Ene 2026 - presente | 0 | $0 | Validación recalibrada |
+
+### Dashboard Investor Credibility (Jan 25, 2026)
+
+| Métrica | Comportamiento |
+|---------|----------------|
+| **Max DD** | Siempre ≤ 0% (normalizado) |
+| **Win Rate** | N/A cuando 0 trades en Track Record |
+| **Header P&L** | Etiquetado "(Baseline)" para evitar confusión |
+| **Est. Loss Avoided** | Capped a $100K con footnote explicativo |
+
+**Fórmula Est. Loss Avoided:**
+```
+Est. Loss = Cycles × $20K × 2.5% = capped at $100K
+```
 
 > **REGLA**: Cuando la IA reporte métricas (P&L, win rate, trades, losses), DEBE agregar al final:
 > 
