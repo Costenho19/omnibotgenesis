@@ -1550,15 +1550,34 @@ def api_comparative_metrics():
         except Exception:
             pass
         
+        # FIX Jan 25 2026: Normalize max drawdown to always be <= 0
+        # Drawdown represents loss, so positive values make no sense
+        raw_dd = metrics.get('max_drawdown', 0)
+        normalized_dd = min(0, raw_dd) if raw_dd else 0  # Ensure 0 or negative
+        
+        # FIX Jan 25 2026: Check if these trades are from Track Record (Jan 15+)
+        # If showing Learning Baseline data, add context
+        track_record_start = datetime(2026, 1, 15)
+        official_trades = [t for t in closed_trades if t.get('opened_at') and t.get('opened_at') >= track_record_start]
+        baseline_trades = [t for t in closed_trades if t.get('opened_at') and t.get('opened_at') < track_record_start]
+        
+        # Win rate should be None if no official trades (avoid mixing periods)
+        official_win_rate = None
+        if official_trades:
+            winners = [t for t in official_trades if (t.get('pnl') or 0) > 0]
+            official_win_rate = round((len(winners) / len(official_trades)) * 100, 1) if official_trades else None
+        
         comparison = {
             'omnix': {
                 'name': 'OMNIX',
                 'return_pct': round(omnix_return, 2),
                 'capital_preserved_pct': round(omnix_preserved, 2),
-                'max_drawdown_pct': round(metrics.get('max_drawdown', -1.5), 2),
-                'win_rate': round(metrics.get('win_rate', 20.2), 1),
+                'max_drawdown_pct': round(normalized_dd, 2),
+                'win_rate': official_win_rate,  # None if no official trades
                 'risk_blocked': veto_count,
                 'trades': len(closed_trades),
+                'official_trades': len(official_trades),
+                'baseline_trades': len(baseline_trades),
                 'highlight': 'capital_preserved'
             },
             'btc_hold': {

@@ -68,11 +68,12 @@
                         <span class="regime-veto-total-value">${status.total_vetos_24h.toLocaleString()}</span>
                         <span class="regime-veto-total-label">Eval. Cycles</span>
                     </div>
-                    <div class="regime-veto-capital" title="Est. loss avoided (capped at 10% of $1M virtual capital)">
+                    <div class="regime-veto-capital" title="Calculation: Evaluation cycles × avg position size ($20K) × expected adverse move (2.5%). Capped at $100K (10% of $1M virtual capital).">
                         <span class="regime-veto-capital-value">$${formatNumber(estLossAvoided)}</span>
                         <span class="regime-veto-capital-label">Est. Loss Avoided*</span>
                     </div>
                 </div>
+                <div style="font-size: 8px; color: #6b7280; padding: 4px 0; text-align: center;">*Conservative estimate: cycles × position size × expected loss rate (capped at $100K)</div>
                 <div class="regime-veto-list">
                     ${vetos.map(v => `
                         <div class="regime-veto-item">

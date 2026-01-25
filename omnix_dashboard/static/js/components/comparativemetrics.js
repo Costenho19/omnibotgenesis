@@ -55,6 +55,7 @@
         };
         
         const preservedBest = getBestClass(omnix.capital_preserved_pct, btc.capital_preserved_pct, avg.capital_preserved_pct, true);
+        // FIX: For Max DD, higher (closer to 0) is better - less negative = better
         const ddBest = getBestClass(omnix.max_drawdown_pct, btc.max_drawdown_pct, avg.max_drawdown_pct, true);
         
         let insightsHtml = '';
@@ -134,7 +135,10 @@
                 
                 ${insightsHtml}
                 
-                <div class="comparative-period">Period: ${period || 'Last 30 days'}</div>
+                <div class="comparative-period">
+                    Period: ${period || 'Last 30 days'}
+                    ${omnix.official_trades === 0 ? '<br><span style="font-size: 9px; color: #9ca3af;">Note: Win Rate shows N/A - Official Track Record has 0 trades yet</span>' : ''}
+                </div>
             </div>
         `;
     }
