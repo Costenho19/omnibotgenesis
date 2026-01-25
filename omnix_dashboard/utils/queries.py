@@ -10,12 +10,13 @@ from .database import get_db_connection
 logger = logging.getLogger(__name__)
 
 
-def get_paper_trades(days=None, return_dict=False):
+def get_paper_trades(days=None, return_dict=False, track_record_only=False):
     """Fetch REAL paper trading history from database
     
     Args:
         days: Number of days to fetch. If None, fetches ALL trades (real-time complete data)
         return_dict: If True, returns {success, trades, error} dict for explicit error handling
+        track_record_only: If True, only fetches trades from Official Track Record (Jan 15, 2026+)
     
     Returns:
         If return_dict=False: List of trades (legacy behavior)
@@ -23,6 +24,9 @@ def get_paper_trades(days=None, return_dict=False):
     
     FIX Jan 7 2026: Default changed to None (all trades) to ensure dashboard 
     always shows complete real-time data matching PostgreSQL exactly.
+    
+    FIX Jan 25 2026: Added track_record_only flag to separate Learning Baseline 
+    from Official Track Record for investor-facing metrics.
     """
     with get_db_connection() as conn:
         if not conn:
@@ -38,7 +42,16 @@ def get_paper_trades(days=None, return_dict=False):
         
         try:
             cursor = conn.cursor()
-            if days is None:
+            if track_record_only:
+                cursor.execute('''
+                    SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
+                           profit_loss, profit_pct, strategy, status, opened_at, closed_at
+                    FROM paper_trading_trades
+                    WHERE opened_at >= '2026-01-15'
+                    ORDER BY opened_at DESC
+                    LIMIT 1000
+                ''')
+            elif days is None:
                 cursor.execute('''
                     SELECT id, user_id, symbol, side, quantity, entry_price, exit_price, 
                            profit_loss, profit_pct, strategy, status, opened_at, closed_at

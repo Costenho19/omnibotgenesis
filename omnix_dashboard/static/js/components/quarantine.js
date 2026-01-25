@@ -87,7 +87,7 @@ const QuarantineWidget = {
                 vetoBreakdownHtml = Object.entries(vetoTypes).slice(0, 4).map(([type, stats]) => `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
                         <span style="font-size: 10px; color: ${vetoColors[type] || '#9ca3af'};">${vetoLabels[type] || type}</span>
-                        <span style="font-size: 10px; color: var(--text-muted);">${stats.count}x / ${this.formatNumber(stats.blocked)}</span>
+                        <span style="font-size: 10px; color: var(--text-muted);">${stats.count.toLocaleString()} cycles</span>
                     </div>
                 `).join('');
             }

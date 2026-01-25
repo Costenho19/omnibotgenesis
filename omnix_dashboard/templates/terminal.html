@@ -68,6 +68,14 @@
     </div>
 </div>
 
+<div class="paper-trading-banner" style="background: linear-gradient(90deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 87, 34, 0.1) 100%); border-bottom: 1px solid rgba(255, 152, 0, 0.3); padding: 6px 16px; display: flex; justify-content: center; align-items: center; gap: 12px;">
+    <span style="color: #ff9800; font-weight: 600; font-size: 11px;">PAPER TRADING MODE</span>
+    <span style="color: #888; font-size: 10px;">|</span>
+    <span style="color: #aaa; font-size: 10px;">No real capital at risk. Virtual $1M portfolio for track record validation.</span>
+    <span style="color: #888; font-size: 10px;">|</span>
+    <span style="color: #aaa; font-size: 10px;">Track Record: Jan 15 - Feb 14, 2026</span>
+</div>
+
 <div class="terminal-wrapper">
 <div class="terminal-grid">
     <div class="header-bar">
@@ -75,7 +83,7 @@
             <img src="{{ url_for('static', filename='images/omnix_logo.png') }}" alt="OMNIX" class="logo-image">
             <div>
                 <div class="logo-text">OMNIX TERMINAL</div>
-                <div class="logo-version">V6.5.4e INSTITUTIONAL+ | PAPER TRADING</div>
+                <div class="logo-version">V6.5.4e INSTITUTIONAL+</div>
             </div>
         </div>
         
@@ -114,9 +122,9 @@
             </div>
         </div>
         
-        <div class="day30-countdown" id="day30-countdown" title="Days until Day 30 Review (Feb 14, 2026)">
+        <div class="day30-countdown" id="day30-countdown" title="Track Record Progress: Day X of 30 (Jan 15 - Feb 14, 2026)">
             <span class="day30-icon">&#128197;</span>
-            <span class="day30-text">Day 30: <span id="days-remaining">--</span>d</span>
+            <span class="day30-text">Day <span id="current-day">--</span>/30</span>
         </div>
         <div class="clock-display">
             <div class="live-indicator">

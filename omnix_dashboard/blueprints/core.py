@@ -30,10 +30,10 @@ IS_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILW
 @core_bp.route('/api/metrics')
 @require_api_key
 def api_metrics():
-    """API endpoint for metrics - includes ALL historical trades for accurate real-time reporting
+    """API endpoint for metrics - includes ALL historical trades
     
-    FIX Jan 7 2026: Changed to fetch ALL trades (no day limit) for real-time accuracy.
-    Dashboard now matches PostgreSQL exactly: 119 trades, -$15,198 P&L, 20.2% WR.
+    Returns both Learning Baseline and Track Record data.
+    Dashboard handles separation/labeling in the UI.
     """
     from omnix_dashboard.utils.database import DB_AVAILABLE
     

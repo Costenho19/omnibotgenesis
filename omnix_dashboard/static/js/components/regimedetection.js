@@ -79,9 +79,8 @@
                             <div class="regime-veto-icon">${vetoIcons[v.type] || '🛡️'}</div>
                             <div class="regime-veto-info">
                                 <div class="regime-veto-type">${(v.type || 'UNKNOWN').replace(/_/g, ' ')}</div>
-                                <div class="regime-veto-count">${v.count.toLocaleString()} blocks</div>
+                                <div class="regime-veto-count">${v.count.toLocaleString()} eval cycles</div>
                             </div>
-                            <div class="regime-veto-capital">$${formatNumber(v.capital_blocked)}</div>
                         </div>
                     `).join('')}
                 </div>

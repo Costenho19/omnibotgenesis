@@ -45,12 +45,17 @@ const TradeHistoryWidget = {
         let html = '';
         
         if (this.currentMode === 'official' && (!trades || trades.length === 0)) {
+            const trackRecordStart = new Date('2026-01-15T00:00:00Z');
+            const now = new Date();
+            const daysSinceStart = Math.ceil((now - trackRecordStart) / (1000 * 60 * 60 * 24));
+            const currentDay = Math.max(1, Math.min(30, daysSinceStart));
+            
             html += `
                 <div class="official-notice" style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 12px; text-align: center;">
-                    <div style="font-size: 14px; color: #00ff88; margin-bottom: 8px;">Official Track Record - Day 1</div>
+                    <div style="font-size: 14px; color: #00ff88; margin-bottom: 8px;">Official Track Record - Day ${currentDay}/30</div>
                     <div style="font-size: 12px; color: #888;">
-                        No official trades yet. The track record begins Jan 15, 2026.<br>
-                        <span style="color: #666; font-style: italic;">Switch to "Full History" to see calibration period trades.</span>
+                        No trades executed. System evaluating market conditions.<br>
+                        <span style="color: #666; font-style: italic;">Switch to "Full History" to see Learning Baseline trades.</span>
                     </div>
                 </div>
             `;
@@ -60,7 +65,8 @@ const TradeHistoryWidget = {
             html += `
                 <div class="calibration-notice" style="background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
                     <div style="font-size: 11px; color: #ff9800;">
-                        Includes calibration period (Nov 2025 - Jan 14, 2026). This data is marked as LEGACY_ESTIMATED and not part of the official track record.
+                        <strong>LEARNING BASELINE</strong> (Nov 2025 - Jan 14, 2026): 119 trades, -$15,198.73 P&L.<br>
+                        This data is separated from the Official Track Record and used for system calibration only.
                     </div>
                 </div>
             `;
