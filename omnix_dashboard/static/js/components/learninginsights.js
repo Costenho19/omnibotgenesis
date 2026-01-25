@@ -191,17 +191,13 @@
                 <div class="learning-summary">
                     <div class="summary-stat">
                         <span class="stat-value">${(summary.total_vetos_7d || 0).toLocaleString()}</span>
-                        <span class="stat-label">Vetoes 7d</span>
+                        <span class="stat-label">Vetoes 7D</span>
                     </div>
-                    <div class="summary-stat" title="Est. based on ~0.6% avg adverse move × position size">
-                        <span class="stat-value" style="color: var(--accent-green);">${formatCapital((opportunityTracker?.avoided?.est_loss) || (summary.total_capital_protected || 0) * 0.006)}</span>
+                    <div class="summary-stat" title="Est. based on ~2.5% avg adverse move × position size, capped at 10% of virtual capital ($100K max)">
+                        <span class="stat-value" style="color: var(--accent-green);">${formatCapital((opportunityTracker?.avoided?.est_loss) || 0)}</span>
                         <span class="stat-label">Est. Loss Avoided*</span>
                     </div>
-                    <div class="summary-stat" title="Total position sizes of blocked trades (notional)">
-                        <span class="stat-value" style="color: #6b7280; font-size: 0.85em;">${formatCapital(summary.total_capital_protected || 0)}</span>
-                        <span class="stat-label">Notional Blocked</span>
-                    </div>
-                    <div class="summary-stat">
+                    <div class="summary-stat" title="Number of active risk governance filters (veto types)">
                         <span class="stat-value">${summary.veto_types_active || 0}</span>
                         <span class="stat-label">Filters</span>
                     </div>

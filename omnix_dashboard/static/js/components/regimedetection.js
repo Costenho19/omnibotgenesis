@@ -58,15 +58,17 @@
         
         let vetosHtml = '';
         if (vetos.length > 0) {
-            // ADR-010: Est. Loss Avoided = Notional × 0.6%
-            const estLossAvoided = (status.capital_protected_24h || 0) * 0.006;
+            // ADR-018: Realistic metrics - cap to available capital (max $100K)
+            const MAX_REALISTIC_LOSS = 100000;
+            const rawEstLoss = (status.capital_protected_24h || 0) * 0.006;
+            const estLossAvoided = Math.min(rawEstLoss, MAX_REALISTIC_LOSS);
             vetosHtml = `
                 <div class="regime-veto-summary">
                     <div class="regime-veto-total">
                         <span class="regime-veto-total-value">${status.total_vetos_24h.toLocaleString()}</span>
-                        <span class="regime-veto-total-label">Total Vetoes</span>
+                        <span class="regime-veto-total-label">Eval. Cycles</span>
                     </div>
-                    <div class="regime-veto-capital" title="Estimated loss avoided (0.6% of blocked notional)">
+                    <div class="regime-veto-capital" title="Est. loss avoided (capped at 10% of $1M virtual capital)">
                         <span class="regime-veto-capital-value">$${formatNumber(estLossAvoided)}</span>
                         <span class="regime-veto-capital-label">Est. Loss Avoided*</span>
                     </div>

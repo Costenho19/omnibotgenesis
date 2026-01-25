@@ -2240,10 +2240,13 @@ def _calculate_opportunity_tracker(conn):
         today = datetime.now()
         current_day = min(30, max(1, (today - tracking_start).days + 1))
         
+        # ADR-018: Realistic metrics - cap estimates to available capital
+        # Max capital: $1M virtual, Max opportunity cost: 5% of capital = $50K
+        MAX_REALISTIC_MISSED = 50000  # $50K max realistic value
         cur.execute("""
             SELECT 
                 COUNT(*) as missed_count,
-                COALESCE(ROUND(SUM(blocked_capital * 0.015)::numeric, 2), 0) as est_profit,
+                COALESCE(ROUND(LEAST(SUM(blocked_capital * 0.015), %s)::numeric, 2), 0) as est_profit,
                 COALESCE(ROUND(AVG(coherence_score)::numeric, 1), 0) as avg_coherence
             FROM shadow_trade_events
             WHERE created_at >= '2026-01-14'
@@ -2251,18 +2254,22 @@ def _calculate_opportunity_tracker(conn):
               AND ema_score >= 25
               AND ema_score < 40
               AND (black_swan_prob IS NULL OR black_swan_prob <= 0.5)
-        """)
+        """, (MAX_REALISTIC_MISSED,))
         missed_row = cur.fetchone()
         
+        # ADR-018: Realistic metrics - cap Est. Loss Avoided to available capital
+        # Formula: min(count × avg_position × avg_adverse_move, max_capital × max_exposure)
+        # Max capital: $1M virtual, Max single exposure: 2% ($20K), Max total exposure: 10% ($100K)
+        MAX_REALISTIC_LOSS_AVOIDED = 100000  # $100K max realistic value
         cur.execute("""
             SELECT 
                 COUNT(*) as avoided_count,
-                COALESCE(ROUND(SUM(blocked_capital * 0.025)::numeric, 2), 0) as est_loss,
+                COALESCE(ROUND(LEAST(SUM(blocked_capital * 0.025), %s)::numeric, 2), 0) as est_loss,
                 COALESCE(ROUND(AVG(coherence_score)::numeric, 1), 0) as avg_coherence
             FROM shadow_trade_events
             WHERE created_at >= '2026-01-14'
               AND (coherence_score < 30 OR black_swan_prob > 0.5)
-        """)
+        """, (MAX_REALISTIC_LOSS_AVOIDED,))
         avoided_row = cur.fetchone()
         
         cur.execute("""

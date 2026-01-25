@@ -56,8 +56,11 @@ const QuarantineWidget = {
         const notional7d = veto7d.notional_blocked || 0;
         const notionalTotal = notional7d > 0 ? notional7d : grandTotal;
         
+        // ADR-018: Show realistic metrics - use count instead of inflated notional
+        const totalVetoCount = (veto7d.total_count || 0);
         if (this.headerEl) {
-            this.headerEl.textContent = this.formatNumber(notionalTotal);
+            // Display evaluation cycles count, not inflated dollar amount
+            this.headerEl.textContent = totalVetoCount.toLocaleString();
         }
         
         if (this.container) {
@@ -96,26 +99,29 @@ const QuarantineWidget = {
                 </div>
             `).join('');
             
-            const notionalTooltip = 'Position sizes of blocked trades. Est. loss avoided calculated using avg adverse price movement (1.5-2.5%).';
+            const vetoTooltip = 'Evaluation cycles where the system blocked potential trades due to risk governance rules.';
+            
+            // ADR-018: Realistic metrics - show counts, not inflated dollar values
+            const allTimeVetoCount = Object.values(data.vetoes?.all_time?.by_type || {}).reduce((sum, v) => sum + (v.count || 0), 0);
             
             this.container.innerHTML = `
                 <div class="panel-header" style="margin-top: 0;">
-                    <span class="panel-title">Capital Protected</span>
+                    <span class="panel-title">Risk Governance</span>
                     <span class="panel-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">ACTIVE</span>
                 </div>
                 <div style="padding: 8px 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="Total notional value of blocked trades (7 days)">${this.formatNumber(notionalTotal)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Notional Blocked (7d)</div>
+                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="${vetoTooltip}">${totalVetoCount.toLocaleString()}</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Eval. Cycles Blocked (7d)</div>
                         </div>
-                        <div style="text-align: center;" title="${notionalTooltip}">
-                            <div style="font-size: 14px; font-weight: 600; color: #6b7280;">${this.formatNumber(grandTotal)}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Total (All Time)</div>
+                        <div style="text-align: center;" title="Total evaluation cycles blocked since system inception">
+                            <div style="font-size: 14px; font-weight: 600; color: #6b7280;">${allTimeVetoCount.toLocaleString()}</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">All Time</div>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 14px; font-weight: 600;">${count}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Trades</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Quarantined</div>
                         </div>
                     </div>
                     ${vetoBreakdownHtml ? `
