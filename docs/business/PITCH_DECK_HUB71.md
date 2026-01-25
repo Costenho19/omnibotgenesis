@@ -90,7 +90,8 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 |--------|-------|
 | Trades Executed | 119 |
 | Capital Preservation | 98.5% |
-| Max Drawdown | 1.5% |
+| Max Drawdown (observed) | 1.5% |
+| Max Drawdown (hard cap) | 15% |
 | Net Win Rate | 20.2% (learning phase) |
 | Directional Win Rate | 37.8% |
 | Telemetry Coverage | 100% |
@@ -139,6 +140,7 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 | Risk-First Architecture | No | Partial | Yes |
 | Fail-Closed System | No | No | Yes |
 | Real-Time Regime Detection | No | Yes | Yes |
+| Post-Quantum Security (PQC) | No | No | Yes |
 | Auditable Telemetry | No | Internal | Yes |
 | Capital Preservation Focus | No | Partial | Yes |
 | Accessible to External Capital | Yes | No | Yes |
@@ -148,6 +150,7 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 - Transparent, auditable track record
 - Built for regulated environments
 - Capital preservation over profit maximization
+- Post-quantum cryptography for order signing (NIST 2024 aligned)
 
 ---
 
@@ -306,7 +309,9 @@ Founder & Product Architect
 |--------|-------|
 | Trades Executed | 119 |
 | Capital Preservation | 98.5% |
-| Max Drawdown | 1.5% |
+| Max Drawdown (observed) | 1.5% |
+| Max Drawdown (hard cap) | 15% |
+| Evaluation Cycles Blocked | 89,000+ |
 | Telemetry Coverage | 100% |
 | Track Record Start | Jan 15, 2026 |
 | Target Win Rate | >45% |
