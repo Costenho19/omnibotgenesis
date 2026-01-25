@@ -7,7 +7,7 @@
 
 ### THE OPPORTUNITY
 
-**95% of retail traders lose money.** The primary reasons: emotional decisions, lack of discipline, and inability to monitor 24/7 markets. Institutional investors have access to sophisticated risk management systems—advanced users don't.
+**Most trading systems fail not because of lack of signals, but because of inadequate risk governance.** Retail and semi-institutional platforms continue trading during adverse regimes, leading to capital erosion and misleading performance narratives.
 
 **OMNIX provides institutional-grade risk control infrastructure**, making AI-powered, risk-managed automated trading accessible to advanced users for $49-499/month.
 
@@ -79,7 +79,7 @@
 
 - **Global crypto market cap:** $2.1 trillion
 - **Algorithmic trading market:** $18.8B (2024), growing 12.2% CAGR
-- **Target segment:** 21M sophisticated crypto investors (top 5% of 420M holders)
+- **Target segment:** 21M sophisticated crypto investors (top 5% of 420M holders, estimate based on active wallet behavior and exchange volume data)
 - **Capture goal:** 0.05% = 10,500 paying users
 
 ---
@@ -97,6 +97,8 @@
 - Year 2: 3,450 users × $159 ARPU = $6.58M ARR
 - Year 3: 12,000 users × $169 ARPU = $24.3M ARR
 
+*Assumes conversion from private beta to paid users with conservative churn (<3% monthly).*
+
 ---
 
 ### COMPETITIVE ADVANTAGE
@@ -112,6 +114,8 @@ OMNIX differentiates through:
 
 **Philosophy:**
 > "Knowing when NOT to trade is a stronger edge than forcing returns."
+
+**The difference:** Most competitors optimize for entries. OMNIX optimizes for restraint.
 
 ---
 
