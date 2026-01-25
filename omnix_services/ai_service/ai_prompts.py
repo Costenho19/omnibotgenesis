@@ -151,7 +151,14 @@ class PromptsContextManager:
             'producto vs componente', 'qué es omnix realmente', 'que es omnix realmente',
             # Trade-off specific
             'peor que', 'worse than', 'mejor que', 'better than',
-            'trade-off', 'tradeoff', 'compensación'
+            'trade-off', 'tradeoff', 'compensación',
+            # Critical investor phrases (ADR-024 hardening Jan 25, 2026)
+            'brutal', 'sin anestesia', 'diagn[oó]stico brutal',
+            'evade', 'evasivo', 'ruido', 'sustancia',
+            'cuantifica', 'no cuantifica', 'fallo grave',
+            'comité', 'committee', 'inversor senior', 'senior investor',
+            'qué dimensión', 'que dimension', 'otra dimensión', 'otra dimension',
+            'net ev', 'ev neto', 'valor esperado neto'
         ]
         
         if any(keyword in message_lower for keyword in investor_challenge_keywords):

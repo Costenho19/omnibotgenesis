@@ -128,6 +128,7 @@ BLACKLISTED_PHRASES = [
     # ===========================================================================
     # INVESTOR CHALLENGE EVASION PHRASES (ADR-024 - Jan 25, 2026)
     # Blocks phrases that evade quantified trade-off questions
+    # HARDENED Jan 25, 2026 - Added preamble phrases that are "ruido"
     # ===========================================================================
     
     # "Estamos en fase de aprendizaje" - sounds like "trust us without data"
@@ -145,6 +146,35 @@ BLACKLISTED_PHRASES = [
     # "El mercado es impredecible" - obvious, doesn't answer
     r'[Ee]l\s+mercado\s+es\s+impredecible[^.]*\.',
     r'[Tt]he\s+market\s+is\s+unpredictable[^.]*\.',
+    
+    # ===========================================================================
+    # PREAMBLE NOISE PHRASES (ADR-024 hardening - Jan 25, 2026)
+    # These phrases are "ruido" - they don't answer the question
+    # ===========================================================================
+    
+    # "Agradezco tu franqueza/honestidad" - servile preamble
+    r'(?<=\.\s)Agradezco tu (?:franqueza|honestidad|transparencia)[^.]*\.\s*',
+    r'^Agradezco tu (?:franqueza|honestidad|transparencia)[^.]*\.\s*',
+    r'(?<=\.\s)Aprecio tu (?:franqueza|honestidad|transparencia)[^.]*\.\s*',
+    r'^Aprecio tu (?:franqueza|honestidad|transparencia)[^.]*\.\s*',
+    
+    # "Es vital/importante/crucial comprender" - preamble without substance
+    r'(?<=\.\s)Es (?:vital|importante|crucial|fundamental) (?:comprender|entender)[^.]*\.\s*',
+    r'^Es (?:vital|importante|crucial|fundamental) (?:comprender|entender)[^.]*\.\s*',
+    
+    # "Permíteme explicar" - delays the answer
+    r'(?<=\.\s)Perm[ií]teme explicar[^.]*\.\s*',
+    r'^Perm[ií]teme explicar[^.]*\.\s*',
+    r'(?<=\.\s)Deja(?:me)? que explique[^.]*\.\s*',
+    r'^Deja(?:me)? que explique[^.]*\.\s*',
+    
+    # "Antes de responder" - preamble
+    r'(?<=\.\s)Antes de responder[^.]*\.\s*',
+    r'^Antes de responder[^.]*\.\s*',
+    
+    # "Comprendo tu preocupación" - empathy without substance
+    r'(?<=\.\s)Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
+    r'^Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
     
     # Unrealistic thresholds - WR > 60%, ER > 1% (ADR-018 says realistic is WR > 50%, ER > 0%)
     r'win\s*rate[^.]*(?:superar|mayor|>\s*|superior\s*a\s*)6[05]%[^.]*\.',
