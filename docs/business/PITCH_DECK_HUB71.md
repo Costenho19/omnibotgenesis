@@ -22,7 +22,9 @@ contacto@omnixquantum.net
 
 **The Problem**
 
-Most algorithmic trading systems focus on signal generation, but fail to answer the most critical institutional question:
+**Most trading systems fail not because of lack of signals, but because of inadequate risk governance.**
+
+They focus on signal generation, but fail to answer the most critical institutional question:
 
 **"When should capital NOT be deployed?"**
 
@@ -99,7 +101,7 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 | Execution Latency | ~120ms |
 
 **Current Phase:**
-30-day official track record validation (Day 1: Jan 15, 2026)
+30-day official track record validation (Day 10/30, started Jan 15, 2026)
 - Target: 100+ trades, >45% win rate
 - Full institutional-grade validation for investor onboarding
 
@@ -123,6 +125,8 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 2. Hedge funds seeking risk infrastructure
 3. Regulated funds (ADGM, Dubai)
 4. High-net-worth individuals
+
+*Estimate based on active wallet behavior and exchange volume data.*
 
 **Why MENA:**
 - ADGM: World-class regulatory framework
@@ -150,7 +154,9 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 - Transparent, auditable track record
 - Built for regulated environments
 - Capital preservation over profit maximization
-- Post-quantum cryptography for order signing (NIST 2024 aligned)
+- Post-quantum cryptography for order signing (NIST 2024 aligned, not a compliance guarantee)
+
+**The difference:** Most competitors optimize for entries. OMNIX optimizes for restraint.
 
 ---
 
@@ -175,6 +181,8 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 | Year 1 | Managed Capital | $200K-400K |
 | Year 2 | Managed + SaaS | $800K-1.2M |
 | Year 3 | Scale | $2M+ |
+
+*Assumes institutional pilot conversions with conservative churn (<3% monthly).*
 
 ---
 
