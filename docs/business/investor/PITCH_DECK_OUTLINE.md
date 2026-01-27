@@ -176,6 +176,8 @@ TWO REVENUE STREAMS
 ┌─────────────────────────────────────────────────────────┐
 │  STREAM 1: B2C SaaS (Direct Users)                      │
 │                                                         │
+│  Buyer: Retail / semi-pro traders                       │
+│                                                         │
 │  Starter     $49/month      Basic risk monitoring       │
 │  Pro         $149/month     Full Risk Guardian access   │
 │  Advanced    $499/month     API access, custom config   │
@@ -184,6 +186,8 @@ TWO REVENUE STREAMS
 ┌─────────────────────────────────────────────────────────┐
 │  STREAM 2: B2B Enterprise Licensing                     │
 │                                                         │
+│  Buyer: CTO, Head of Risk, Compliance, CIO              │
+│                                                         │
 │  Risk Guardian API    $10K-50K/month   Per-platform     │
 │  White-Label Engine   $100K+ setup + $20K/mo  Full integration │
 │  Per-Validation       $0.01-0.05       Pay-per-use      │
@@ -191,6 +195,8 @@ TWO REVENUE STREAMS
 │  Target: 3Commas, NinjaTrader, smaller trading bots     │
 │  Value: They get institutional-grade risk protection    │
 └─────────────────────────────────────────────────────────┘
+
+"Institutions pay for what blocks bad trades, not for alpha."
 
 License-based revenue. No tokens.
 ```

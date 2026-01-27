@@ -88,6 +88,8 @@
 
 **Stream 1: B2C SaaS (Direct Users)**
 
+*Buyer: Retail / semi-pro traders*
+
 | Tier | Price | Features |
 |------|-------|----------|
 | Starter | $49/mo | 1 pair, basic risk management |
@@ -96,11 +98,15 @@
 
 **Stream 2: B2B Enterprise Licensing (NEW)**
 
+*Buyer: CTO, Head of Risk, Compliance, CIO*
+
 | Product | Price | Target |
 |---------|-------|--------|
 | Risk Guardian API | $10K-50K/mo | Trading platforms (3Commas, NinjaTrader) |
 | White-Label Engine | $100K+ setup + $20K/mo | Brokers, exchanges |
 | Per-Validation | $0.01-0.05/call | Smaller trading bots |
+
+> **"Institutions pay for what blocks bad trades, not for alpha."**
 
 **Value proposition B2B**: Platforms integrate OMNIX's 6-tier veto system to offer institutional-grade risk protection to their users.
 

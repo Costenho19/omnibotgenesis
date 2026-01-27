@@ -38,6 +38,12 @@ It is infrastructure designed to **protect capital first** while systematically 
 | **Architecture** | Multi-layer veto system with AI governance |
 | **Security Standard** | Experimenting with NIST-aligned PQC (Kyber-768, Dilithium-3) |
 
+### Critical Distinction
+
+> **OMNIX is a risk-gating and capital-preservation layer, not a trading signal provider.**
+
+We do not sell alpha. We sell protection from bad trades.
+
 ### Positioning Statement
 
 > OMNIX doesn't try to beat the market every day. It waits for confirmed statistical edge, validates through multiple independent systems, and only acts when risk parameters are satisfied across all layers.
