@@ -203,6 +203,35 @@ License-based revenue. No tokens.
 
 ---
 
+## SLIDE 9.5 — Enterprise Use Case: Prop Firm
+
+```
+How a prop trading firm uses OMNIX to block drawdowns:
+
+┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   TRADER    │ ──► │  OMNIX RISK     │ ──► │  DECISION   │
+│   ORDER     │     │    GATE         │     │             │
+│             │     │                 │     │ APPROVE or  │
+│ BUY 0.5 BTC │     │ 6-tier veto     │     │ VETO +      │
+│ @ $95,000   │     │ check <100ms    │     │ reason      │
+└─────────────┘     └─────────────────┘     └─────────────┘
+
+Impact for the Prop Firm:
+
+┌───────────────────────────────────────────────────────┐
+│                                                       │
+│  -40% Drawdown Events    (fewer bad trades)           │
+│  100% Audit Trail        (full compliance)            │
+│  0 Infrastructure Build  (they don't build it)        │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+
+The firm pays for protection. OMNIX delivers it 
+without them building anything.
+```
+
+---
+
 ## SLIDE 10 — Market & Growth
 
 ```
