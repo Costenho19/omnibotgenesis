@@ -3,6 +3,24 @@
 ## Overview
 OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation (98.5% maintained) through a multi-layer veto architecture, incorporating advanced technologies like post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes safeguarding capital over trade volume, aiming to build a credible track record for institutional investors.
 
+## Business Model (Dual Revenue - Jan 27, 2026)
+
+### Stream 1: B2C SaaS (Direct Users)
+| Tier | Price | Features |
+|------|-------|----------|
+| Starter | $49/mo | 1 pair, basic risk management |
+| Pro | $149/mo | 11+ pairs, full AI, priority support |
+| Advanced | $499/mo | Unlimited, custom strategies, API |
+
+### Stream 2: B2B Enterprise Licensing
+| Product | Price | Target |
+|---------|-------|--------|
+| Risk Guardian API | $10K-50K/mo | Trading platforms (3Commas, NinjaTrader) |
+| White-Label Engine | $100K+ setup + $20K/mo | Brokers, exchanges |
+| Per-Validation | $0.01-0.05/call | Smaller trading bots |
+
+**B2B Value Proposition**: Platforms integrate OMNIX's 6-tier veto system via API to offer institutional-grade risk protection to their users without building it themselves.
+
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
 

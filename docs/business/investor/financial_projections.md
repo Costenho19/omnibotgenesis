@@ -52,9 +52,18 @@ These projections are based on:
 
 ---
 
-## 2. BUSINESS REVENUE PROJECTIONS
+## 2. BUSINESS REVENUE PROJECTIONS (DUAL STREAMS)
 
-### 2.1 User Growth (Conservative Model)
+### 2.0 Revenue Model Overview
+
+OMNIX operates with two complementary revenue streams:
+
+| Stream | Model | Target Market |
+|--------|-------|---------------|
+| **B2C SaaS** | Subscription ($49-499/mo) | Advanced traders, family offices |
+| **B2B Enterprise** | API licensing ($10K-50K/mo) | Trading platforms, bots, brokers |
+
+### 2.1 User Growth (Conservative Model) - B2C
 
 | Period | New Users | Monthly Churn | Net New Users | Cumulative Users |
 |--------|-----------|---------------|---------------|------------------|
@@ -78,7 +87,7 @@ These projections are based on:
 
 **Year 1 ARR (End of 2026):** $1,707,000
 
-### 2.3 Revenue Projections (3-Year)
+### 2.3 Revenue Projections (3-Year) - B2C
 
 | Year | Users (EOY) | ARPU | MRR (EOY) | ARR |
 |------|-------------|------|-----------|-----|
@@ -86,7 +95,31 @@ These projections are based on:
 | 2027 (Y2) | 3,450 | $159 | $548,550 | $6,582,600 |
 | 2028 (Y3) | 12,000 | $169 | $2,028,000 | $24,336,000 |
 
-### 2.4 ARPU Assumptions
+### 2.4 Revenue Projections - B2B Enterprise Licensing
+
+| Year | Platform Clients | Avg Monthly Fee | B2B ARR |
+|------|------------------|-----------------|---------|
+| 2026 (Y1) | 0 | - | $0 (focus on B2C) |
+| 2027 (Y2) | 2 | $10,000 | $240,000 |
+| 2028 (Y3) | 5 | $20,000 | $1,200,000 |
+
+**B2B Products:**
+
+| Product | Price Model | Target |
+|---------|-------------|--------|
+| Risk Guardian API | $10K-50K/month | 3Commas, NinjaTrader, TradingView |
+| White-Label Engine | $100K+ setup + $20K/mo | Brokers, smaller exchanges |
+| Per-Validation | $0.01-0.05/call | Small trading bots |
+
+### 2.5 Combined Revenue (B2C + B2B)
+
+| Year | B2C ARR | B2B ARR | **Total ARR** |
+|------|---------|---------|---------------|
+| 2026 | $1,707,000 | $0 | **$1,707,000** |
+| 2027 | $6,582,600 | $240,000 | **$6,822,600** |
+| 2028 | $24,336,000 | $1,200,000 | **$25,536,000** |
+
+### 2.6 ARPU Assumptions
 
 ARPU increases over time due to:
 - Upselling from Basic to Premium (feature adoption)

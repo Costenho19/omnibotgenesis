@@ -84,7 +84,9 @@
 
 ---
 
-### BUSINESS MODEL
+### BUSINESS MODEL (DUAL REVENUE)
+
+**Stream 1: B2C SaaS (Direct Users)**
 
 | Tier | Price | Features |
 |------|-------|----------|
@@ -92,12 +94,22 @@
 | Pro | $149/mo | 11+ pairs, full AI, priority support |
 | Advanced | $499/mo | Unlimited, custom strategies, API |
 
-**Revenue Projections (Base Case):**
-- Year 1: 950 users × $149 ARPU = $1.71M ARR
-- Year 2: 3,450 users × $159 ARPU = $6.58M ARR
-- Year 3: 12,000 users × $169 ARPU = $24.3M ARR
+**Stream 2: B2B Enterprise Licensing (NEW)**
 
-*Assumes conversion from private beta to paid users with conservative churn (<3% monthly).*
+| Product | Price | Target |
+|---------|-------|--------|
+| Risk Guardian API | $10K-50K/mo | Trading platforms (3Commas, NinjaTrader) |
+| White-Label Engine | $100K+ setup + $20K/mo | Brokers, exchanges |
+| Per-Validation | $0.01-0.05/call | Smaller trading bots |
+
+**Value proposition B2B**: Platforms integrate OMNIX's 6-tier veto system to offer institutional-grade risk protection to their users.
+
+**Revenue Projections (Base Case):**
+- Year 1: 950 users × $149 ARPU = $1.71M ARR (B2C)
+- Year 2: 3,450 users + 2 B2B clients = $6.58M + $240K = $6.82M ARR
+- Year 3: 12,000 users + 5 B2B clients = $24.3M + $1.2M = $25.5M ARR
+
+*B2B pricing assumes $10K/month average in Year 2, scaling to $20K/month in Year 3 as contracts mature.*
 
 ---
 

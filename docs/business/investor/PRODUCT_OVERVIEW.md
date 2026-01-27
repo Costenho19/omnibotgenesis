@@ -46,7 +46,7 @@ It is infrastructure designed to **protect capital first** while systematically 
 
 ## Who OMNIX Is For
 
-### Ideal Users
+### Ideal Users (B2C)
 
 | Audience | Why OMNIX Fits |
 |----------|---------------|
@@ -54,6 +54,16 @@ It is infrastructure designed to **protect capital first** while systematically 
 | **Institutional Funds** | Governance and audit trail requirements |
 | **Risk-Conscious Investors** | Priority on drawdown control over alpha |
 | **Regulated Entities** | Need for transparent decision-making process |
+
+### Enterprise Clients (B2B)
+
+| Audience | Integration Model |
+|----------|-------------------|
+| **Trading Platforms** (3Commas, NinjaTrader) | Risk Guardian API - validate trades before execution |
+| **Smaller Trading Bots** | SDK/Library integration for veto system |
+| **Brokers & Exchanges** | White-label risk infrastructure |
+
+**B2B Value**: Platforms can offer institutional-grade risk protection to their users without building it themselves.
 
 ### Not For
 
