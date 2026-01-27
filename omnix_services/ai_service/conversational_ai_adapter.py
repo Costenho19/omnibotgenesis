@@ -247,6 +247,48 @@ from omnix_services.ai_service.response_validator import (
     sanitize_incomplete_response,
 )
 
+TRACK_RECORD_DISCLOSURE_NOTE = """
+
+---
+**Nota de Período**: Los datos de trades/P&L corresponden al Learning Baseline (Nov 2025 - 14 Ene 2026), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial."""
+
+METRICS_PATTERNS = [
+    r'\$[\-]?\d+[,\.]?\d*',
+    r'\d+\.?\d*\s*%',
+    r'\d+\s*trades?',
+    r'P&L',
+    r'win\s*rate',
+    r'pérdida',
+    r'ganancia',
+    r'ADA/USD|SOL/USD|LINK/USD|BTC/USD|ETH/USD',
+    r'-\$\d+',
+    r'119\s*trades',
+    r'20\.?\d*%\s*win',
+]
+
+def _contains_trading_metrics(text: str) -> bool:
+    """Check if response contains trading metrics that require disclosure."""
+    text_lower = text.lower()
+    for pattern in METRICS_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True
+    return False
+
+def _has_disclosure_note(text: str) -> bool:
+    """Check if response already contains the disclosure note."""
+    disclosure_indicators = [
+        'nota de período',
+        'nota de periodo',
+        'learning baseline',
+        'track record oficial',
+        '15 de enero 2026',
+        '15 enero 2026',
+        'fase de calibración',
+        'fase de calibracion',
+    ]
+    text_lower = text.lower()
+    return any(indicator in text_lower for indicator in disclosure_indicators)
+
 def post_process_response(response: str) -> str:
     """
     Remove blacklisted phrases and apply institutional language transforms.
@@ -254,6 +296,8 @@ def post_process_response(response: str) -> str:
     
     ADR-020: Includes inflated capital figure removal, unrealistic threshold correction,
     and "ignorar" → "ponderar adaptativamente" transformations.
+    
+    ADR-023: Adds mandatory Track Record Disclosure when metrics are mentioned.
     
     ADR-024: Includes investor challenge evasion phrase replacements that transform
     evasive responses into framework-referenced quantifications.
@@ -288,6 +332,12 @@ def post_process_response(response: str) -> str:
         if pattern.search(cleaned):
             cleaned = pattern.sub(replacement, cleaned)
             changes_made.append('evasion_replacement')
+    
+    # Phase 4: Add Track Record Disclosure if metrics present but no disclosure (ADR-023)
+    if _contains_trading_metrics(cleaned) and not _has_disclosure_note(cleaned):
+        cleaned = cleaned.rstrip() + TRACK_RECORD_DISCLOSURE_NOTE
+        changes_made.append('track_record_disclosure_added')
+        logger.info("📋 ADR-023: Track Record Disclosure note added to response with metrics")
     
     # Clean up stray Telegram formatting artifacts (lone asterisks)
     cleaned = re.sub(r'^\s*\*\s*$', '', cleaned, flags=re.MULTILINE)
