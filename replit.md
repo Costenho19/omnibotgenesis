@@ -118,6 +118,13 @@ Provides real-time capital protection tracking with PostgreSQL persistence for i
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system that tracks vetoed trades to learn filter calibration. It analyzes price movement, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity.
 
+**Status (Jan 27, 2026):** ACTIVADO
+- `shadow_trade_events`: 192,000+ eventos capturados
+- `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
+- Runner: `python -m omnix_services.database_service.shadow_portfolio_runner`
+- Runbook: `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md`
+- Railway cron: Pendiente configuración (diario recomendado)
+
 ### Decision Contradiction Index (DCI)
 A shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates high internal contradiction between signals, mandating a HOLD. Realistic execution thresholds require MC WR > 50%, MC ER > 0%, Coherence > 50%, and DCI < 70.
 

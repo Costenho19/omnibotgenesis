@@ -46,6 +46,33 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### Shadow Portfolio Activado (Jan 27, 2026)
+
+**PROPÓSITO:** Activar análisis contrafactual para validar que los vetos fueron correctos.
+
+| Componente | Estado |
+|------------|--------|
+| `shadow_trade_events` | 192,000+ eventos capturados |
+| `shadow_trade_outcomes` | 50 procesados (100% accuracy) |
+| Runner | Fix timezone aplicado, funcional |
+| Runbook | `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md` |
+
+**Bug Corregido:** `datetime.utcnow()` → `datetime.now(timezone.utc)` para comparación timezone-aware.
+
+**Ejecución:**
+```bash
+python -m omnix_services.database_service.shadow_portfolio_runner --max-events 100
+```
+
+**Resultados Iniciales (50 eventos):**
+- Vetos correctos: 50 (100%)
+- BLACK_SWAN vetos: 100% accuracy
+- COHERENCE_GATE vetos: 100% accuracy
+
+**Próximo Paso:** Configurar cron job en Railway para ejecución diaria.
+
+---
+
 ### Dashboard Investor Credibility Fixes (Jan 25, 2026)
 
 **PROPÓSITO:** Corregir métricas confusas para presentaciones de inversores.

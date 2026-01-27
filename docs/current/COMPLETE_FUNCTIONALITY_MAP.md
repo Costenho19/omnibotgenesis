@@ -1,9 +1,30 @@
 # OMNIX V6.5.4e - Mapa Completo de Funcionalidades
 
-**Fecha**: 14 de Enero 2026  
+**Fecha**: 27 de Enero 2026  
 **Propósito**: Documento de referencia para reescritura limpia V7.0  
 **Estado**: CONSOLIDADO  
-**Último Cambio**: ADR-007 Coherence Threshold Calibration
+**Último Cambio**: Shadow Portfolio Runner Activado
+
+---
+
+## Cambios Recientes (Jan 27, 2026)
+
+### Shadow Portfolio - Análisis Contrafactual ACTIVADO
+
+| Componente | Archivo | Función |
+|------------|---------|---------|
+| ShadowPortfolioRepository | `omnix_services/database_service/shadow_portfolio_repository.py` | Persistencia de eventos y outcomes |
+| ShadowPortfolioRunner | `omnix_services/database_service/shadow_portfolio_runner.py` | Job de análisis contrafactual |
+| HistoricalPriceFetcher | (dentro de runner) | Obtiene precios históricos de Kraken |
+
+**Pipeline:**
+```
+shadow_trade_events (192K+) → Runner → shadow_trade_outcomes (50+)
+                                ↓
+                    Kraken API (precios históricos)
+```
+
+**Runbook:** `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md`
 
 ---
 

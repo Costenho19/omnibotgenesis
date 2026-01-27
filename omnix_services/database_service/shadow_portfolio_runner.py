@@ -24,7 +24,7 @@ import logging
 import os
 import sys
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List, Tuple
 from decimal import Decimal
 import requests
@@ -137,7 +137,7 @@ class HistoricalPriceFetcher:
         for key, delta in horizons:
             target_time = veto_time + delta
             
-            if target_time > datetime.utcnow():
+            if target_time > datetime.now(timezone.utc):
                 continue
             
             price = self.get_price_at_time(symbol, target_time, tolerance_minutes=60)
