@@ -1,8 +1,11 @@
-# Runbook: Shadow Portfolio Runner
+# Runbook: Shadow Portfolio Runner (LEGACY)
+
+> **ACTUALIZADO**: Ver [RUNBOOK_SHADOW_PORTFOLIO.md](../RUNBOOK_SHADOW_PORTFOLIO.md) para la versión actual (Jan 27, 2026).
 
 **Fecha**: 9 de Enero 2026  
 **Riesgo**: BAJO  
-**Frecuencia**: Diaria (05:00 UTC)
+**Frecuencia**: Diaria (05:00 UTC)  
+**Estado**: LEGACY - Reemplazado por `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md`
 
 ---
 

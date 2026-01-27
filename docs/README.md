@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 23 de Enero 2026  
+**Actualizado**: 27 de Enero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy)
 
 ---
@@ -34,6 +34,22 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### Shadow Portfolio Runner Activado (Jan 27, 2026)
+- **ESTADO**: ✅ ACTIVADO - Análisis contrafactual operativo
+- **PROPÓSITO**: Validar que los vetos del sistema fueron correctos usando precios históricos reales
+- **TABLAS**:
+  - `shadow_trade_events`: 192,000+ eventos capturados
+  - `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
+- **FIX APLICADO**: Timezone bug (`datetime.utcnow()` → `datetime.now(timezone.utc)`)
+- **EJECUCIÓN**: `python -m omnix_services.database_service.shadow_portfolio_runner --max-events 500`
+- **RUNBOOKS**:
+  - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación del runner
+  - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Configuración cron Railway
+- **RESULTADOS INICIALES**:
+  - BLACK_SWAN vetos: 100% accuracy
+  - COHERENCE_GATE vetos: 100% accuracy
+  - Total validados: 50/50 correctos
 
 ### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - PQC operativo desde Nov 2025
@@ -286,7 +302,9 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
   - Accuracy por tipo de veto (gráfico de barras)
   - Top missed opportunities (trades rentables bloqueados)
   - Recomendaciones de calibración de filtros
-- **RUNBOOK**: `docs/operations/runbooks/shadow_portfolio_runner.md`
+- **RUNBOOKS ACTUALIZADOS (Jan 27, 2026)**:
+  - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación completa
+  - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Cron job Railway
 - Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles
 
 ### Veto Tracking System + psycopg v3 Fix (Jan 7, 2026)

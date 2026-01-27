@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 25 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 11 | ADR-021 VIEW ACTIVO
+**Fecha**: 27 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 12 | Shadow Portfolio ACTIVO
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -61,7 +61,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 **Ejecución:**
 ```bash
-python -m omnix_services.database_service.shadow_portfolio_runner --max-events 100
+python -m omnix_services.database_service.shadow_portfolio_runner --max-events 500
 ```
 
 **Resultados Iniciales (50 eventos):**
