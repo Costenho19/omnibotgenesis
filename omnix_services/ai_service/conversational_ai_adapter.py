@@ -252,26 +252,55 @@ TRACK_RECORD_DISCLOSURE_NOTE = """
 ---
 **Nota de Período**: Los datos de trades/P&L corresponden al Learning Baseline (Nov 2025 - 14 Ene 2026), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial."""
 
-METRICS_PATTERNS = [
-    r'\$[\-]?\d+[,\.]?\d*',
-    r'\d+\.?\d*\s*%',
-    r'\d+\s*trades?',
-    r'P&L',
-    r'win\s*rate',
-    r'pérdida',
-    r'ganancia',
-    r'ADA/USD|SOL/USD|LINK/USD|BTC/USD|ETH/USD',
-    r'-\$\d+',
-    r'119\s*trades',
-    r'20\.?\d*%\s*win',
+TRADING_CONTEXT_KEYWORDS = [
+    'trade', 'trades', 'trading', 'p&l', 'pnl', 'profit', 'loss',
+    'win rate', 'winrate', 'pérdida', 'ganancia', 'operacion', 'operaciones',
+    'balance', 'equity', 'drawdown', 'dd', 'retorno', 'return',
+    'ada/usd', 'sol/usd', 'link/usd', 'btc/usd', 'eth/usd', 'xrp/usd',
+    'rentabilidad', 'capital', 'inversión', 'inversion',
+    '119 trades', 'baseline', 'track record',
+]
+
+TRADING_METRICS_PATTERNS = [
+    r'(?:p&l|pnl|profit|loss|pérdida|ganancia)[:\s]*[-]?\$?\d+',
+    r'(?:win\s*rate|winrate)[:\s]*\d+\.?\d*\s*%',
+    r'\d+\s*trades?\b',
+    r'(?:balance|equity|capital)[:\s]*\$?\d+',
+    r'(?:drawdown|dd)[:\s]*[-]?\d+\.?\d*\s*%',
+    r'(?:retorno|return)[:\s]*[-]?\d+\.?\d*\s*%',
+    r'(?:ada|sol|link|btc|eth|xrp)/usd[:\s]*[-]?\$?\d+',
+    r'-\$\d+[,\.]?\d*\s*(?:usd|pérdida|loss)',
 ]
 
 def _contains_trading_metrics(text: str) -> bool:
-    """Check if response contains trading metrics that require disclosure."""
+    """
+    Check if response contains trading-specific metrics that require disclosure.
+    Only triggers for trading context, not generic percentages or dollar amounts.
+    """
     text_lower = text.lower()
-    for pattern in METRICS_PATTERNS:
-        if re.search(pattern, text, re.IGNORECASE):
+    
+    has_trading_context = any(keyword in text_lower for keyword in TRADING_CONTEXT_KEYWORDS)
+    if not has_trading_context:
+        return False
+    
+    for pattern in TRADING_METRICS_PATTERNS:
+        if re.search(pattern, text_lower, re.IGNORECASE):
             return True
+    
+    if re.search(r'\d+\s*trades?\b', text_lower):
+        return True
+    if re.search(r'(?:win\s*rate|winrate)', text_lower):
+        return True
+    if 'p&l' in text_lower or 'pnl' in text_lower:
+        return True
+    
+    if any(kw in text_lower for kw in ['pérdida', 'ganancia', 'loss', 'profit']) and re.search(r'\$\d+', text_lower):
+        return True
+    if any(kw in text_lower for kw in ['retorno', 'return', 'track record', 'baseline']) and re.search(r'-?\d+\.?\d*\s*%', text_lower):
+        return True
+    if any(pair in text_lower for pair in ['ada/usd', 'sol/usd', 'link/usd', 'btc/usd', 'eth/usd', 'xrp/usd']) and re.search(r'\$\d+', text_lower):
+        return True
+    
     return False
 
 def _has_disclosure_note(text: str) -> bool:
