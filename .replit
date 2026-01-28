@@ -28,6 +28,14 @@ args = "Response Validator Tests"
 task = "workflow.run"
 args = "OMNIX Web"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask Dashboard"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Streamlit Dashboard"
+
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -73,6 +81,30 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "Flask Dashboard"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=8000"
+waitForPort = 8000
+
+[[workflows.workflow]]
+name = "Streamlit Dashboard"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=test-token-not-used streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
+waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -84,6 +116,14 @@ externalPort = 3000
 [[ports]]
 localPort = 9000
 externalPort = 9000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [deployment]
 deploymentTarget = "vm"
