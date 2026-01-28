@@ -97,13 +97,13 @@ waitForPort = 8000
 name = "Streamlit Dashboard"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=test-token-not-used streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
-waitForPort = 8080
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567890 streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
+waitForPort = 8080
 
 [[ports]]
 localPort = 5000
@@ -120,10 +120,6 @@ externalPort = 8000
 [[ports]]
 localPort = 8080
 externalPort = 8080
-
-[[ports]]
-localPort = 9000
-externalPort = 9000
 
 [deployment]
 deploymentTarget = "static"
