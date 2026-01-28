@@ -64,11 +64,11 @@
             const estLossAvoided = Math.min(rawEstLoss, MAX_REALISTIC_LOSS);
             vetosHtml = `
                 <div class="regime-veto-summary">
-                    <div class="regime-veto-total">
+                    <div class="regime-veto-total" title="Total market analysis cycles in the last 24 hours (from shadow_trade_events)">
                         <span class="regime-veto-total-value">${status.total_vetos_24h.toLocaleString()}</span>
-                        <span class="regime-veto-total-label">Eval. Cycles</span>
+                        <span class="regime-veto-total-label">Analysis Cycles</span>
                     </div>
-                    <div class="regime-veto-capital" title="Calculation: Evaluation cycles × avg position size ($20K) × expected adverse move (2.5%). Capped at $100K (10% of $1M virtual capital).">
+                    <div class="regime-veto-capital" title="Calculation: Analysis cycles × avg position size ($20K) × expected adverse move (2.5%). Capped at $100K (10% of $1M virtual capital).">
                         <span class="regime-veto-capital-value">$${formatNumber(estLossAvoided)}</span>
                         <span class="regime-veto-capital-label">Est. Loss Avoided*</span>
                     </div>
@@ -80,7 +80,7 @@
                             <div class="regime-veto-icon">${vetoIcons[v.type] || '🛡️'}</div>
                             <div class="regime-veto-info">
                                 <div class="regime-veto-type">${(v.type || 'UNKNOWN').replace(/_/g, ' ')}</div>
-                                <div class="regime-veto-count">${v.count.toLocaleString()} eval cycles</div>
+                                <div class="regime-veto-count">${v.count.toLocaleString()} signals</div>
                             </div>
                         </div>
                     `).join('')}
@@ -174,7 +174,7 @@
                 </div>
 
                 <div class="regime-section">
-                    <div class="regime-section-title">Veto Activity (24h)</div>
+                    <div class="regime-section-title" title="Market analysis cycles from shadow_trade_events - separate from actual trade vetos">Analysis Activity (24h)</div>
                     <div class="regime-vetos">${vetosHtml}</div>
                 </div>
 

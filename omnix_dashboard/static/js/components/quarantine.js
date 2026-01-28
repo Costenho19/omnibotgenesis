@@ -57,9 +57,10 @@ const QuarantineWidget = {
         const notionalTotal = notional7d > 0 ? notional7d : grandTotal;
         
         // ADR-018: Show realistic metrics - use count instead of inflated notional
+        // This is actual VETO count from trading_veto_log (trades blocked)
         const totalVetoCount = (veto7d.total_count || 0);
         if (this.headerEl) {
-            // Display evaluation cycles count, not inflated dollar amount
+            // Display veto count (actual trades blocked by risk system)
             this.headerEl.textContent = totalVetoCount.toLocaleString();
         }
         
@@ -87,7 +88,7 @@ const QuarantineWidget = {
                 vetoBreakdownHtml = Object.entries(vetoTypes).slice(0, 4).map(([type, stats]) => `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
                         <span style="font-size: 10px; color: ${vetoColors[type] || '#9ca3af'};">${vetoLabels[type] || type}</span>
-                        <span style="font-size: 10px; color: var(--text-muted);">${stats.count.toLocaleString()} cycles</span>
+                        <span style="font-size: 10px; color: var(--text-muted);">${stats.count.toLocaleString()} vetos</span>
                     </div>
                 `).join('');
             }
@@ -99,7 +100,7 @@ const QuarantineWidget = {
                 </div>
             `).join('');
             
-            const vetoTooltip = 'Evaluation cycles where the system blocked potential trades due to risk governance rules.';
+            const vetoTooltip = 'Actual trades blocked by the 6-tier veto system (MC, RMS, Coherence, Black Swan). Each veto = 1 trade prevented.';
             
             // ADR-018: Realistic metrics - show counts, not inflated dollar values
             const allTimeVetoCount = Object.values(data.vetoes?.all_time?.by_type || {}).reduce((sum, v) => sum + (v.count || 0), 0);
@@ -113,9 +114,9 @@ const QuarantineWidget = {
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <div>
                             <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);" title="${vetoTooltip}">${totalVetoCount.toLocaleString()}</div>
-                            <div style="font-size: 9px; color: var(--text-muted);">Eval. Cycles Blocked (7d)</div>
+                            <div style="font-size: 9px; color: var(--text-muted);">Trades Blocked (7d)</div>
                         </div>
-                        <div style="text-align: center;" title="Total evaluation cycles blocked since system inception">
+                        <div style="text-align: center;" title="Total high-risk trades blocked since system inception">
                             <div style="font-size: 14px; font-weight: 600; color: #6b7280;">${allTimeVetoCount.toLocaleString()}</div>
                             <div style="font-size: 9px; color: var(--text-muted);">All Time</div>
                         </div>
