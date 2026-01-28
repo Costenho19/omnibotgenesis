@@ -202,7 +202,7 @@ export default function InstitutionalPage() {
             <button onClick={() => setActiveTab('home')} className={`nav-link text-sm ${activeTab === 'home' ? 'active' : ''}`}>Dashboard</button>
             <button onClick={() => setActiveTab('news')} className={`nav-link text-sm ${activeTab === 'news' ? 'active' : ''}`}>Market Intel</button>
             <button onClick={() => setActiveTab('tools')} className={`nav-link text-sm ${activeTab === 'tools' ? 'active' : ''}`}>Risk Tools</button>
-            <a href="mailto:contacto@omnixquantum.net" className="btn-primary text-sm px-5 py-2">Request Access</a>
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-primary text-sm px-5 py-2">Request Access</a>
           </div>
         </div>
       </nav>
@@ -663,7 +663,7 @@ export default function InstitutionalPage() {
                 </div>
                 <p className="text-muted text-sm mt-6">No credit card required. 14-day free trial for Pro plans.</p>
                 <div className="flex justify-center items-center gap-8 mt-6 text-sm">
-                  <a href="mailto:contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors flex items-center gap-2">
+                  <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                     contacto@omnixquantum.net
                   </a>

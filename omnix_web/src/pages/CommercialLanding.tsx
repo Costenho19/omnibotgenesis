@@ -14,7 +14,7 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="mailto:contacto@omnixquantum.net" className="btn-primary">Talk to Us</a>
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-primary">Talk to Us</a>
           </div>
         </div>
       </nav>
@@ -29,7 +29,7 @@ export default function CommercialLanding() {
             OMNIX helps prevent catastrophic trading losses by blocking high-risk executions before they happen.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <a href="mailto:contacto@omnixquantum.net" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
               Request Access
               <ArrowRight className="w-5 h-5" />
             </a>
@@ -124,7 +124,7 @@ export default function CommercialLanding() {
             Let's talk about how OMNIX can help protect your trading portfolio.
           </p>
           <div className="flex justify-center gap-4 flex-wrap mb-8">
-            <a href="mailto:contacto@omnixquantum.net" className="btn-primary flex items-center gap-2">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-primary flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Request Access
             </a>
@@ -134,7 +134,7 @@ export default function CommercialLanding() {
             </a>
           </div>
           <div className="flex justify-center items-center gap-8 text-sm">
-            <a href="mailto:contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors">
               contacto@omnixquantum.net
             </a>
             <a href="tel:+16505078293" className="text-[#C9A227] hover:text-white transition-colors">
@@ -161,7 +161,7 @@ export default function CommercialLanding() {
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details
             </Link>
-            <a href="mailto:contacto@omnixquantum.net" className="text-muted hover:text-white text-sm transition-colors">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="text-muted hover:text-white text-sm transition-colors">
               Contact
             </a>
           </div>
