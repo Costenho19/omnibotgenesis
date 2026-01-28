@@ -117,9 +117,15 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context, a System 
 
 ### Web Infrastructure
 The project utilizes a multi-port architecture:
--   **OMNIX Web (Port 5000)**: React + Vite public institutional landing page with an institutional color palette (Gold, Navy, Platinum). Features include animated statistics, 4-Layer Validation Architecture visualization, Track Record Transparency, certification display (NIST FIPS 203/204 Implemented), live market data, risk calculator, and multi-tier pricing.
--   **Flask Dashboard (Port 8000)**: Flask + Jinja2 internal dashboard for demos.
+-   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/) and Institutional Page (/institutional) with animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
+-   **Flask Dashboard (Port 5000)**: Flask + Jinja2 internal dashboard for demos and investor metrics. Main webview port.
 -   **Streamlit Analytics (Port 8080)**: Streamlit application for shadow analytics and investor metrics.
+
+### Recent Changes (Jan 28, 2026)
+- Added automatic redirect from `/terminal` to `/` in OMNIX Web to prevent navigation issues
+- Added comparison table "OMNIX vs Traditional Trading" to Institutional Page
+- Added FAQ section with 5 investor-focused questions
+- Full session log: `docs/history/2026-01/2026-01-28-landing-improvements.md`
 
 ## External Dependencies
 

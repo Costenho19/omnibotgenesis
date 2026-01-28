@@ -646,6 +646,94 @@ export default function InstitutionalPage() {
               </div>
             </section>
 
+            <div className="divider-gold" />
+
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">Comparison</p>
+                <h2 className="text-3xl font-bold text-white">OMNIX vs Traditional Algorithmic Trading</h2>
+              </div>
+              <div className="glass-card overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#C9A227]/20 bg-[#0A1628]/80">
+                      <th className="text-left py-4 px-6 text-[#C9A227] font-semibold">Feature</th>
+                      <th className="text-left py-4 px-6 text-muted font-medium">Traditional Algo Trading</th>
+                      <th className="text-left py-4 px-6 text-emerald-400 font-semibold">OMNIX Infrastructure</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#C9A227]/10">
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Execution Model</td>
+                      <td className="py-4 px-6 text-muted">Signal → Immediate Execution</td>
+                      <td className="py-4 px-6 text-emerald-400">Signal → Validation → Conditional Execution</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Default State</td>
+                      <td className="py-4 px-6 text-muted">Execute unless stopped</td>
+                      <td className="py-4 px-6 text-emerald-400">Block unless approved</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Regime Awareness</td>
+                      <td className="py-4 px-6 text-muted">Static parameters</td>
+                      <td className="py-4 px-6 text-emerald-400">Real-time regime detection (HMM)</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Risk Validation</td>
+                      <td className="py-4 px-6 text-muted">Post-execution analysis</td>
+                      <td className="py-4 px-6 text-emerald-400">Pre-execution Monte Carlo simulation</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Auditability</td>
+                      <td className="py-4 px-6 text-muted">Limited or none</td>
+                      <td className="py-4 px-6 text-emerald-400">Full decision lineage</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Capital Preservation</td>
+                      <td className="py-4 px-6 text-muted">Reactive (stop-loss)</td>
+                      <td className="py-4 px-6 text-emerald-400">Proactive (pre-execution block)</td>
+                    </tr>
+                    <tr className="hover:bg-[#C9A227]/5 transition-colors">
+                      <td className="py-4 px-6 text-white font-medium">Black Swan Protection</td>
+                      <td className="py-4 px-6 text-muted">None</td>
+                      <td className="py-4 px-6 text-emerald-400">Real-time tail risk detection</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">FAQ</p>
+                <h2 className="text-3xl font-bold text-white">Frequently Asked Questions</h2>
+              </div>
+              <div className="max-w-4xl mx-auto space-y-4">
+                <div className="glass-card p-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">Is OMNIX a trading bot?</h4>
+                  <p className="text-muted leading-relaxed">No. OMNIX does not generate trading signals or alpha. It is a governance and validation infrastructure that sits between your signal generation and execution. It decides when NOT to trade, preserving capital during unfavorable conditions.</p>
+                </div>
+                <div className="glass-card p-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">How does OMNIX integrate with existing systems?</h4>
+                  <p className="text-muted leading-relaxed">OMNIX is designed as a modular validation layer. It integrates via REST API or WebSocket and can work with any signal generation system. Your strategies remain unchanged—OMNIX simply validates execution decisions in real-time (&lt;50ms latency).</p>
+                </div>
+                <div className="glass-card p-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">What makes OMNIX institutional-grade?</h4>
+                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST FIPS 203/204), and real-time risk validation. OMNIX is built for fiduciary standards, not retail trading.</p>
+                </div>
+                <div className="glass-card p-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">How is performance measured?</h4>
+                  <p className="text-muted leading-relaxed">OMNIX tracks counterfactual outcomes of blocked trades using a Shadow Portfolio system. Every rejected trade is simulated to measure what would have happened if it had executed. This creates a measurable, auditable track record of capital preservation.</p>
+                </div>
+                <div className="glass-card p-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">Who controls the risk parameters?</h4>
+                  <p className="text-muted leading-relaxed">Your institutional team maintains full control over validation thresholds, risk parameters, and approval criteria. OMNIX provides the infrastructure—you define the rules. All parameters are configurable via dashboard or API.</p>
+                </div>
+              </div>
+            </section>
+
             <section className="text-center">
               <div className="glass-card p-12 gold-glow">
                 <h2 className="text-3xl font-bold text-white mb-4">Ready to Protect Your Capital?</h2>
