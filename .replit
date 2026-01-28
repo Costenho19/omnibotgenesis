@@ -18,19 +18,15 @@ args = "Code Verification"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Dashboard Preview"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Streamlit Dashboard"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Systemic Router Tests"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Response Validator Tests"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OMNIX Web"
 
 [[workflows.workflow]]
 name = "Code Verification"
@@ -42,30 +38,6 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/test_code_verification.py tests/test_version_consistency.py tests/test_critical_audit.py -v --tb=short"
-
-[[workflows.workflow]]
-name = "Dashboard Preview"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=5000"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow]]
-name = "Streamlit Dashboard"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=test-token-not-used streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
-waitForPort = 8080
 
 [[workflows.workflow]]
 name = "Systemic Router Tests"
@@ -89,13 +61,25 @@ args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token 
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "OMNIX Web"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd omnix_web && npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 8080
-externalPort = 8080
+localPort = 5001
+externalPort = 3000
 
 [[ports]]
 localPort = 9000
