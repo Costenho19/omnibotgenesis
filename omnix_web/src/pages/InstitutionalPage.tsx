@@ -184,17 +184,17 @@ export default function InstitutionalPage() {
   return (
     <div className="min-h-screen bg-institutional">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-6 pt-4 pb-3">
+          <div className="flex items-center justify-center gap-4 mb-3">
             <Link to="/">
-              <img src="/logo.png" alt="OMNIX QUANTUM" className="w-16 h-16 object-contain" />
+              <img src="/logo.png" alt="OMNIX QUANTUM" className="w-14 h-14 object-contain" />
             </Link>
             <div>
               <span className="text-lg font-bold text-white tracking-tight">OMNIX QUANTUM</span>
               <span className="ml-3 px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 rounded uppercase tracking-wider">Live</span>
             </div>
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center justify-center gap-8">
             <Link to="/" className="nav-link flex items-center gap-1">
               <ArrowRight className="w-4 h-4 rotate-180" />
               Home
@@ -207,7 +207,7 @@ export default function InstitutionalPage() {
         </div>
       </nav>
 
-      <main className="pt-28 px-6 pb-20 max-w-7xl mx-auto">
+      <main className="pt-36 px-6 pb-20 max-w-7xl mx-auto">
         {activeTab === 'home' && (
           <>
             <section className="text-center mb-20 animate-fade-in-up">
