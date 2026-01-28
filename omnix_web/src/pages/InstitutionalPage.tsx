@@ -195,6 +195,10 @@ export default function InstitutionalPage() {
             </div>
           </div>
           <div className="flex items-center gap-8">
+            <Link to="/" className="nav-link flex items-center gap-1">
+              <ArrowRight className="w-4 h-4 rotate-180" />
+              Home
+            </Link>
             <button onClick={() => setActiveTab('home')} className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}>Dashboard</button>
             <button onClick={() => setActiveTab('news')} className={`nav-link ${activeTab === 'news' ? 'active' : ''}`}>Market Intel</button>
             <button onClick={() => setActiveTab('tools')} className={`nav-link ${activeTab === 'tools' ? 'active' : ''}`}>Risk Tools</button>
