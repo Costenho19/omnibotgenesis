@@ -186,7 +186,7 @@ function App() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="OMNIX QUANTUM" className="w-12 h-12 object-contain" />
+            <img src="/logo.png" alt="OMNIX QUANTUM" className="w-16 h-16 object-contain" />
             <div>
               <span className="text-lg font-bold text-white tracking-tight">OMNIX QUANTUM</span>
               <span className="ml-3 px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 rounded uppercase tracking-wider">Live</span>
@@ -828,7 +828,7 @@ function App() {
           <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.png" alt="OMNIX QUANTUM" className="w-10 h-10 object-contain" />
+                <img src="/logo.png" alt="OMNIX QUANTUM" className="w-14 h-14 object-contain" />
                 <span className="font-bold text-white">OMNIX QUANTUM</span>
               </div>
               <p className="text-sm text-muted">Institutional-grade risk control infrastructure for algorithmic trading.</p>
