@@ -106,16 +106,16 @@ args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTU
 waitForPort = 8080
 
 [[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
 localPort = 8080
 externalPort = 8080
-
-[[ports]]
-localPort = 3000
-externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"
