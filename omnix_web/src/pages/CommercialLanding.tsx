@@ -33,7 +33,7 @@ export default function CommercialLanding() {
               Request Access
               <ArrowRight className="w-5 h-5" />
             </a>
-            <a href="tel:+16505078293" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               <Phone className="w-5 h-5" />
               Talk to Us
             </a>
@@ -128,7 +128,7 @@ export default function CommercialLanding() {
               <Mail className="w-4 h-4" />
               Request Access
             </a>
-            <a href="tel:+16505078293" className="btn-secondary flex items-center gap-2">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="btn-secondary flex items-center gap-2">
               <Phone className="w-4 h-4" />
               Call Us
             </a>
@@ -137,7 +137,7 @@ export default function CommercialLanding() {
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors">
               contacto@omnixquantum.net
             </a>
-            <a href="tel:+16505078293" className="text-[#C9A227] hover:text-white transition-colors">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors">
               +1 (650) 507-8293
             </a>
           </div>
