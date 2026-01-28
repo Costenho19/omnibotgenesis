@@ -84,7 +84,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+@st.cache_data(ttl=60)
 def load_metrics():
+    """Load institutional metrics with 60s cache for faster loading"""
     try:
         client = get_api_client()
         response = client.get_institutional_metrics()
@@ -99,6 +101,7 @@ def load_metrics():
         return None
 
 
+@st.cache_data(ttl=60)
 def load_calibration():
     try:
         client = get_api_client()
@@ -114,7 +117,9 @@ def load_calibration():
         return {}
 
 
+@st.cache_data(ttl=60)
 def load_quarantine():
+    """Load quarantine data with 60s cache"""
     try:
         client = get_api_client()
         response = client.get_quarantine()
@@ -129,7 +134,9 @@ def load_quarantine():
         return {}
 
 
+@st.cache_data(ttl=60)
 def load_shadow_portfolio():
+    """Load shadow portfolio with 60s cache"""
     try:
         client = get_api_client()
         response = client.get_shadow_portfolio()

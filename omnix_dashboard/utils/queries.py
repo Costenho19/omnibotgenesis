@@ -4,10 +4,36 @@ Reusable query functions for trades, balances, and metrics
 """
 
 import logging
+import time
 from datetime import datetime
 from .database import get_db_connection
 
 logger = logging.getLogger(__name__)
+
+# Simple in-memory cache for faster dashboard loading
+_cache = {}
+_cache_ttl = 60  # Cache TTL in seconds (1 minute)
+
+
+def _get_cached(key):
+    """Get value from cache if not expired"""
+    if key in _cache:
+        cached_time, value = _cache[key]
+        if time.time() - cached_time < _cache_ttl:
+            return value
+    return None
+
+
+def _set_cached(key, value):
+    """Store value in cache with current timestamp"""
+    _cache[key] = (time.time(), value)
+
+
+def clear_cache():
+    """Clear all cached data - useful after new trades"""
+    global _cache
+    _cache = {}
+    logger.info("Query cache cleared")
 
 
 def get_paper_trades(days=None, return_dict=False, track_record_only=False):
@@ -27,7 +53,15 @@ def get_paper_trades(days=None, return_dict=False, track_record_only=False):
     
     FIX Jan 25 2026: Added track_record_only flag to separate Learning Baseline 
     from Official Track Record for investor-facing metrics.
+    
+    FIX Jan 28 2026: Added caching for faster dashboard loading.
     """
+    cache_key = f"trades_{days}_{return_dict}_{track_record_only}"
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        logger.debug(f"Using cached trades for {cache_key}")
+        return cached
+    
     with get_db_connection() as conn:
         if not conn:
             logger.warning("No database connection - cannot fetch trades")
@@ -93,12 +127,15 @@ def get_paper_trades(days=None, return_dict=False, track_record_only=False):
             logger.info(f"Fetched {len(trades)} REAL trades from database")
             
             if return_dict:
-                return {
+                result = {
                     'success': True,
                     'trades': trades,
                     'error': None,
                     'db_connected': True
                 }
+                _set_cached(cache_key, result)
+                return result
+            _set_cached(cache_key, trades)
             return trades
             
         except Exception as e:
