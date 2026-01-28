@@ -1,8 +1,8 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 27 de Enero 2026  
-**Estado**: Producción 24/7 en Railway (100% Legacy)
+**Actualizado**: 28 de Enero 2026  
+**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 12
 
 ---
 
@@ -34,6 +34,21 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### Sitio Web Institucional Lanzado (Jan 28, 2026)
+- **ESTADO**: ✅ OPERATIVO - Landing page institucional en Puerto 5000
+- **STACK**: React 18 + TypeScript + Vite + Tailwind CSS
+- **CARACTERÍSTICAS**:
+  - Hero con estadísticas animadas (Cycles, Vetos, Capital Preserved)
+  - Visualización 4-Layer Validation Architecture
+  - Track Record Transparency (Learning Baseline vs Official)
+  - Live Market Data (CoinGecko, Alternative.me)
+  - Risk Calculator tool
+  - Pricing: B2C SaaS ($49-$499/mo) + B2B Enterprise ($10K-$100K+)
+  - Certifications: NIST FIPS 203/204 (Implemented), ADGM (Target), Sharia (In Development)
+- **DOCUMENTACIÓN**:
+  - [WEB_INFRASTRUCTURE.md](current/WEB_INFRASTRUCTURE.md) - Arquitectura multi-puerto
+  - [omnix_web/README.md](../omnix_web/README.md) - Documentación técnica
 
 ### Shadow Portfolio Runner Activado (Jan 27, 2026)
 - **ESTADO**: ✅ ACTIVADO - Análisis contrafactual operativo
@@ -390,6 +405,14 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [Mapa Funcional](current/COMPLETE_FUNCTIONALITY_MAP.md) | Sistema legacy (11 dominios, 346 archivos) |
 | [Multi-Usuario](current/MULTI_USER_ARCHITECTURE.md) | **CRÍTICO** - Auditoría y plan multi-tenant |
 
+### Sitio Web Público (Jan 28, 2026)
+| Documento | Descripción |
+|-----------|-------------|
+| [Web Infrastructure](current/WEB_INFRASTRUCTURE.md) | **NUEVO** - Arquitectura multi-puerto (5000, 8000, 8080) |
+| [OMNIX Web README](../omnix_web/README.md) | Landing page institucional (React + Vite) |
+
+**Sitio Web Institucional**: Landing page para inversores con estadísticas en tiempo real, arquitectura de 4 capas, track record transparente, y precios B2C/B2B.
+
 ### Operaciones
 | Documento | Descripción |
 |-----------|-------------|
@@ -435,7 +458,8 @@ docs/
 │   ├── COMPLETE_FUNCTIONALITY_MAP.md  <- Referencia sistema legacy
 │   ├── TECHNICAL_DEBT.md              <- Issues conocidos
 │   ├── TRADING_OPERATIONS.md          <- Operaciones de trading
-│   └── MULTI_USER_ARCHITECTURE.md     <- Auditoría multi-tenant
+│   ├── MULTI_USER_ARCHITECTURE.md     <- Auditoría multi-tenant
+│   └── WEB_INFRASTRUCTURE.md          <- Arquitectura multi-puerto (Jan 28)
 │
 ├── operations/               <- Runbooks y guías operativas
 │   ├── DEPLOYMENT.md

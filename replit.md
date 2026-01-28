@@ -1,25 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its primary purpose is capital preservation (98.5% maintained) through a multi-layer veto architecture, incorporating advanced technologies like post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes safeguarding capital over trade volume, aiming to build a credible track record for institutional investors.
-
-## Business Model (Dual Revenue - Jan 27, 2026)
-
-### Stream 1: B2C SaaS (Direct Users)
-| Tier | Price | Features |
-|------|-------|----------|
-| Starter | $49/mo | 1 pair, basic risk management |
-| Pro | $149/mo | 11+ pairs, full AI, priority support |
-| Advanced | $499/mo | Unlimited, custom strategies, API |
-
-### Stream 2: B2B Enterprise Licensing
-| Product | Price | Target |
-|---------|-------|--------|
-| Risk Guardian API | $10K-50K/mo | Trading platforms (3Commas, NinjaTrader) |
-| White-Label Engine | $100K+ setup + $20K/mo | Brokers, exchanges |
-| Per-Validation | $0.01-0.05/call | Smaller trading bots |
-
-**B2B Value Proposition**: Platforms integrate OMNIX's 6-tier veto system via API to offer institutional-grade risk protection to their users without building it themselves.
+OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its core purpose is capital preservation through a multi-layer veto architecture, integrating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes safeguarding capital to build a credible track record for institutional investors. It offers a dual revenue model: B2C SaaS for direct users and B2B Enterprise Licensing for platforms, brokers, and exchanges.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -63,9 +45,9 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructu
 
 **Después de cambios significativos**, actualizar la documentación relevante.
 
-> **CRÍTICO PQC (Jan 23, 2026)**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
+> **CRÍTICO PQC**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
 
-### Investor Challenge Response Framework (ADR-024 - Jan 25, 2026)
+### Investor Challenge Response Framework (ADR-024)
 
 Cuando un inversor pregunte sobre trade-offs comparativos (opportunity cost, risk avoided, buy & hold vs, justify), el bot DEBE responder con estructura:
 
@@ -80,14 +62,14 @@ Cuando un inversor pregunte sobre trade-offs comparativos (opportunity cost, ris
 
 Ver ADR-024 para keywords de detección y ejemplos.
 
-### Track Record Period Disclosure (OBLIGATORIO - Jan 24, 2026)
+### Track Record Period Disclosure (OBLIGATORIO)
 
 | Período | Fechas | Trades | P&L | Propósito |
 |---------|--------|--------|-----|-----------|
 | **Learning Baseline** | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración |
 | **Track Record Oficial** | 15 Ene 2026 - presente | 0 | $0 | Validación recalibrada |
 
-### Dashboard Investor Credibility (Jan 25, 2026)
+### Dashboard Investor Credibility
 
 | Métrica | Comportamiento |
 |---------|----------------|
@@ -110,13 +92,13 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-The system features an AutoTradingBot, Non-Markovian Memory Kernel, 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement, with all decisions auditable via `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with activation via the Strangler Fig pattern.
+OMNIX incorporates an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement, with all decisions auditable via `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with activation via the Strangler Fig pattern.
 
 ### AI Architecture and Enforcement
 The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It includes AI-first command detection, a Multilingual Prompt Architecture, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior. A Performance Honesty Guard provides honest metrics. AI responses are adaptively detailed based on user requests, with comprehensive responses for investor queries. An Anti-Servile Post-Processing Filter removes servile phrases after AI generation.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate blocks low-quality signals dynamically. The Edge Confirmation Window (ECW) requires edge persistence (MC_WR ≥ 52%, MC_ER > 0%, Black Swan ≤ MEDIUM for 3 consecutive cycles) before allowing trades, effectively transforming "capital preservation" into "capital patience".
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals. The Edge Confirmation Window (ECW) requires edge persistence (MC_WR ≥ 52%, MC_ER > 0%, Black Swan ≤ MEDIUM for 3 consecutive cycles) before allowing trades, ensuring "capital patience."
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
@@ -124,24 +106,8 @@ Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pt
 ### TRACK_RECORD_MODE
 This mode caps scores, reduces sizing, enables `WEAK_TREND` scoring, and maintains guardrails. It auto-deactivates when `total_trades >= 100` AND `win_rate >= 45%`.
 
-### Operación Lucidez - Segmented Expectancy
-Analyzes segmented expectancy by categorizing trades based on `HMM_REGIME` and `COHERENCE_BUCKET` to calculate profitability per market condition, leveraging `paper_trading_trades` data.
-
-### Modo Sniper - Precision Entry System
-Focuses on precision trade entries with ATR-Based Sizing (risk max 0.5% balance), Volume Veto (blocks trades if 5-min volume < 1-hour average), and Strategy Mode Tracking ('SNIPER' or 'STANDARD').
-
-### Veto Tracking System
-Provides real-time capital protection tracking with PostgreSQL persistence for investor reporting, logging and deduplicating veto events.
-
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system that tracks vetoed trades to learn filter calibration. It analyzes price movement, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity.
-
-**Status (Jan 27, 2026):** ACTIVADO
-- `shadow_trade_events`: 192,000+ eventos capturados
-- `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
-- Runner: `python -m omnix_services.database_service.shadow_portfolio_runner`
-- Runbook: `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md`
-- Railway cron: Pendiente configuración (diario recomendado)
+A counterfactual analysis system tracks vetoed trades to learn filter calibration. It analyzes price movement, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity. The system is currently active with over 192,000 shadow trade events captured.
 
 ### Decision Contradiction Index (DCI)
 A shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates high internal contradiction between signals, mandating a HOLD. Realistic execution thresholds require MC WR > 50%, MC ER > 0%, Coherence > 50%, and DCI < 70.
@@ -149,8 +115,11 @@ A shadow observational metric measuring internal signal divergence to explain HO
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked" and distinguishing "Market Trend" from "Trading Regime." Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
 
-### Analytical VIEW: v_shadow_trade_metrics
-A PostgreSQL VIEW parses `decision_trace` JSONB from `shadow_trade_events` to enable retroactive DCI analysis and investor demos. It extracts metrics like `mc_win_rate`, `mc_expected_return`, `coherence_score`, `ecw_cycles`, `ecw_status`, `black_swan_severity`, and `approx_dci`. The Streamlit Shadow Analytics Page answers "How does OMNIX decide and why does it NOT trade?" by displaying system overview, decision quality, and governance/risk metrics.
+### Web Infrastructure
+The project utilizes a multi-port architecture:
+-   **OMNIX Web (Port 5000)**: React + Vite public institutional landing page with an institutional color palette (Gold, Navy, Platinum). Features include animated statistics, 4-Layer Validation Architecture visualization, Track Record Transparency, certification display (NIST FIPS 203/204 Implemented), live market data, risk calculator, and multi-tier pricing.
+-   **Flask Dashboard (Port 8000)**: Flask + Jinja2 internal dashboard for demos.
+-   **Streamlit Analytics (Port 8080)**: Streamlit application for shadow analytics and investor metrics.
 
 ## External Dependencies
 

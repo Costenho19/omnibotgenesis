@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 27 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 12 | Shadow Portfolio ACTIVO
+**Fecha**: 28 de Enero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 12 | Shadow Portfolio ACTIVO | Website LIVE
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -45,6 +45,29 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 ---
 
 ## Cambios Recientes
+
+### Sitio Web Institucional Lanzado (Jan 28, 2026)
+
+**PROPÓSITO:** Landing page pública para inversores y prospectos B2B.
+
+| Componente | Estado |
+|------------|--------|
+| Puerto | 5000 (React + Vite) |
+| Stack | React 18 + TypeScript + Tailwind CSS |
+| Features | 8 secciones completas |
+| APIs | CoinGecko, Alternative.me, Finnhub |
+| Certifications | NIST (Implemented), ADGM (Target), Sharia (In Development) |
+
+**Arquitectura Multi-Puerto:**
+| Puerto | Servicio | Propósito |
+|--------|----------|-----------|
+| 5000 | OMNIX Web | Landing page institucional |
+| 8000 | Flask Dashboard | Demos internos |
+| 8080 | Streamlit | Shadow analytics |
+
+**Documentación:** `docs/current/WEB_INFRASTRUCTURE.md`, `omnix_web/README.md`
+
+---
 
 ### Shadow Portfolio Activado (Jan 27, 2026)
 
