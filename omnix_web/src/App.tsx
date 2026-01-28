@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Shield, Activity, TrendingUp, AlertTriangle, Zap, BarChart3, Calculator, Newspaper, ExternalLink } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play } from 'lucide-react'
 import './index.css'
 
 interface SystemMetrics {
@@ -24,6 +24,33 @@ interface MarketData {
   ethPrice: number
   fearGreedIndex: number
   fearGreedLabel: string
+}
+
+function useCountUp(end: number, duration: number = 2000, startOnMount: boolean = true) {
+  const [count, setCount] = useState(0)
+  const countRef = useRef(0)
+  
+  useEffect(() => {
+    if (!startOnMount) return
+    const startTime = Date.now()
+    const startValue = 0
+    
+    const animate = () => {
+      const now = Date.now()
+      const progress = Math.min((now - startTime) / duration, 1)
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      countRef.current = startValue + (end - startValue) * easeOut
+      setCount(Math.floor(countRef.current))
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    requestAnimationFrame(animate)
+  }, [end, duration, startOnMount])
+  
+  return count
 }
 
 function App() {
@@ -51,6 +78,9 @@ function App() {
   })
 
   const [activeTab, setActiveTab] = useState<'home' | 'news' | 'tools'>('home')
+  
+  const evalCycles = useCountUp(metrics.evaluationCycles, 2500)
+  const vetosCount = useCountUp(metrics.vetosExecuted, 2000)
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -133,164 +163,214 @@ function App() {
   }
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
     return num.toLocaleString()
   }
 
   const getFearGreedColor = (value: number) => {
     if (value <= 25) return 'text-red-500'
-    if (value <= 45) return 'text-orange-500'
-    if (value <= 55) return 'text-yellow-500'
-    if (value <= 75) return 'text-lime-500'
-    return 'text-green-500'
+    if (value <= 45) return 'text-orange-400'
+    if (value <= 55) return 'text-yellow-400'
+    if (value <= 75) return 'text-lime-400'
+    return 'text-green-400'
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-sky-500" />
-            <span className="text-xl font-bold gradient-text">OMNIX QUANTUM</span>
-            <span className="px-2 py-0.5 text-xs bg-sky-500/20 text-sky-400 rounded-full">LIVE</span>
+    <div className="min-h-screen bg-institutional">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center">
+              <Shield className="w-6 h-6 text-[#0A1628]" />
+            </div>
+            <div>
+              <span className="text-lg font-bold text-white tracking-tight">OMNIX QUANTUM</span>
+              <span className="ml-3 px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 rounded uppercase tracking-wider">Live</span>
+            </div>
           </div>
-          <div className="flex gap-6">
-            <button 
-              onClick={() => setActiveTab('home')}
-              className={`text-sm font-medium transition ${activeTab === 'home' ? 'text-sky-400' : 'text-slate-400 hover:text-white'}`}
-            >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => setActiveTab('news')}
-              className={`text-sm font-medium transition ${activeTab === 'news' ? 'text-sky-400' : 'text-slate-400 hover:text-white'}`}
-            >
-              News
-            </button>
-            <button 
-              onClick={() => setActiveTab('tools')}
-              className={`text-sm font-medium transition ${activeTab === 'tools' ? 'text-sky-400' : 'text-slate-400 hover:text-white'}`}
-            >
-              Tools
-            </button>
+          <div className="flex items-center gap-8">
+            <button onClick={() => setActiveTab('home')} className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}>Dashboard</button>
+            <button onClick={() => setActiveTab('news')} className={`nav-link ${activeTab === 'news' ? 'active' : ''}`}>Market Intel</button>
+            <button onClick={() => setActiveTab('tools')} className={`nav-link ${activeTab === 'tools' ? 'active' : ''}`}>Risk Tools</button>
+            <button className="btn-primary">Request Access</button>
           </div>
         </div>
       </nav>
 
-      <main className="pt-24 px-4 pb-12 max-w-7xl mx-auto">
+      <main className="pt-28 px-6 pb-20 max-w-7xl mx-auto">
         {activeTab === 'home' && (
           <>
-            <section className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Institutional <span className="gradient-text">Risk Control</span> Infrastructure
+            <section className="text-center mb-20 animate-fade-in-up">
+              <p className="section-title">Institutional Risk Control Infrastructure</p>
+              <h1 className="heading-xl text-white mb-6">
+                The Governance Layer That<br />
+                <span className="gold-gradient">Protects Institutional Capital</span>
               </h1>
-              <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                OMNIX decides when NOT to trade. Preserving capital is a stronger edge than forcing returns.
+              <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
+                OMNIX validates every trade before execution. Our 4-layer fail-closed architecture 
+                ensures capital preservation is never compromised by aggressive execution.
               </p>
-            </section>
-
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-              <div className="glass-card p-6 pulse-glow">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-5 h-5 text-sky-500" />
-                  <span className="text-sm text-slate-400">Evaluation Cycles</span>
-                  <div className="live-indicator ml-auto" />
-                </div>
-                <div className="text-3xl font-bold">{formatNumber(metrics.evaluationCycles)}+</div>
-              </div>
-              
-              <div className="glass-card p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm text-slate-400">Vetos Executed</span>
-                </div>
-                <div className="text-3xl font-bold text-amber-500">{formatNumber(metrics.vetosExecuted)}</div>
-              </div>
-              
-              <div className="glass-card p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-slate-400">Capital Preserved</span>
-                </div>
-                <div className="text-3xl font-bold text-green-500">{metrics.capitalPreserved}%</div>
-              </div>
-              
-              <div className="glass-card p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-purple-500" />
-                  <span className="text-sm text-slate-400">System Uptime</span>
-                </div>
-                <div className="text-3xl font-bold text-purple-500">{metrics.systemUptime}</div>
+              <div className="flex justify-center gap-4">
+                <button className="btn-primary flex items-center gap-2">
+                  <Play className="w-4 h-4" />
+                  Schedule Demo
+                </button>
+                <button className="btn-secondary flex items-center gap-2">
+                  Download Technical Brief
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
             </section>
 
-            <section className="grid md:grid-cols-2 gap-6 mb-12">
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-sky-500" />
-                  Market Overview
-                </h3>
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+              <div className="stat-card animate-fade-in-up animate-delay-1">
+                <div className="flex items-center justify-between mb-4">
+                  <Activity className="w-6 h-6 gold-text" />
+                  <div className="live-dot" />
+                </div>
+                <div className="metric-value text-white">{formatNumber(evalCycles)}+</div>
+                <p className="text-muted mt-2 text-sm">Evaluation Cycles</p>
+              </div>
+              
+              <div className="stat-card animate-fade-in-up animate-delay-2">
+                <div className="flex items-center justify-between mb-4">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                </div>
+                <div className="metric-value text-amber-500">{formatNumber(vetosCount)}</div>
+                <p className="text-muted mt-2 text-sm">High-Risk Trades Blocked</p>
+              </div>
+              
+              <div className="stat-card animate-fade-in-up animate-delay-3">
+                <div className="flex items-center justify-between mb-4">
+                  <Shield className="w-6 h-6 text-emerald-500" />
+                </div>
+                <div className="metric-value text-emerald-500">{metrics.capitalPreserved}%</div>
+                <p className="text-muted mt-2 text-sm">Capital Preserved</p>
+              </div>
+              
+              <div className="stat-card animate-fade-in-up animate-delay-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Zap className="w-6 h-6 gold-text" />
+                </div>
+                <div className="metric-value gold-text">{metrics.systemUptime}</div>
+                <p className="text-muted mt-2 text-sm">System Uptime</p>
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            <section className="grid md:grid-cols-2 gap-8 mb-20">
+              <div className="glass-card p-8">
+                <p className="section-title">Live Market Data</p>
+                <h3 className="text-2xl font-semibold text-white mb-6">Market Overview</h3>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span className="text-slate-400">BTC/USD</span>
-                    <span className="text-xl font-bold">${market.btcPrice.toLocaleString()}</span>
+                  <div className="flex justify-between items-center p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                        <span className="text-orange-500 font-bold text-sm">BTC</span>
+                      </div>
+                      <span className="text-white font-medium">Bitcoin</span>
+                    </div>
+                    <span className="text-2xl font-bold text-white">${market.btcPrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span className="text-slate-400">ETH/USD</span>
-                    <span className="text-xl font-bold">${market.ethPrice.toLocaleString()}</span>
+                  <div className="flex justify-between items-center p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <span className="text-blue-500 font-bold text-sm">ETH</span>
+                      </div>
+                      <span className="text-white font-medium">Ethereum</span>
+                    </div>
+                    <span className="text-2xl font-bold text-white">${market.ethPrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                    <span className="text-slate-400">Fear & Greed Index</span>
-                    <span className={`text-xl font-bold ${getFearGreedColor(market.fearGreedIndex)}`}>
+                  <div className="flex justify-between items-center p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <span className="text-muted">Fear & Greed Index</span>
+                    <span className={`text-2xl font-bold ${getFearGreedColor(market.fearGreedIndex)}`}>
                       {market.fearGreedIndex} - {market.fearGreedLabel}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-sky-500" />
-                  Validation Pipeline
-                </h3>
-                <div className="space-y-3">
-                  {['Regime Detection', 'Coherence Check', 'Monte Carlo Simulation', 'Consensus Gate'].map((layer, i) => (
-                    <div key={layer} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 text-sm font-bold">
+              <div className="glass-card p-8">
+                <p className="section-title">Fail-Closed Architecture</p>
+                <h3 className="text-2xl font-semibold text-white mb-6">4-Layer Validation Pipeline</h3>
+                <div className="space-y-4">
+                  {[
+                    { name: 'Regime Detection', desc: 'Market state analysis' },
+                    { name: 'Coherence Check', desc: 'Signal validation' },
+                    { name: 'Monte Carlo Simulation', desc: 'Risk projection' },
+                    { name: 'Consensus Gate', desc: 'Final approval' }
+                  ].map((layer, i) => (
+                    <div key={layer.name} className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                      <div className="w-10 h-10 rounded-full bg-[#C9A227]/20 flex items-center justify-center gold-text font-bold">
                         {i + 1}
                       </div>
-                      <span className="text-slate-300">{layer}</span>
-                      <div className="ml-auto w-3 h-3 rounded-full bg-green-500" />
+                      <div className="flex-1">
+                        <span className="text-white font-medium">{layer.name}</span>
+                        <p className="text-xs text-muted">{layer.desc}</p>
+                      </div>
+                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
                     </div>
                   ))}
                 </div>
               </div>
             </section>
 
-            <section className="glass-card p-6">
-              <h3 className="text-lg font-semibold mb-4">What Makes OMNIX Different</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/20 flex items-center justify-center mb-3">
-                    <Shield className="w-6 h-6 text-sky-500" />
+            <div className="divider-gold" />
+
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">Why Institutions Choose OMNIX</p>
+                <h2 className="text-3xl font-bold text-white">Built for Institutional Requirements</h2>
+              </div>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="glass-card p-8">
+                  <div className="feature-icon mb-6">
+                    <Lock className="w-6 h-6 gold-text" />
                   </div>
-                  <h4 className="font-semibold mb-2">Fail-Closed Architecture</h4>
-                  <p className="text-sm text-slate-400">Default: NO. Trades only execute if ALL validation layers approve.</p>
+                  <h4 className="text-xl font-semibold text-white mb-3">Fail-Closed by Default</h4>
+                  <p className="text-muted leading-relaxed">Every trade is blocked unless ALL validation layers explicitly approve. Safety is the default state, not an afterthought.</p>
                 </div>
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3">
-                    <Activity className="w-6 h-6 text-purple-500" />
+                <div className="glass-card p-8">
+                  <div className="feature-icon mb-6">
+                    <BarChart3 className="w-6 h-6 gold-text" />
                   </div>
-                  <h4 className="font-semibold mb-2">Multi-Layer Validation</h4>
-                  <p className="text-sm text-slate-400">4 independent gates must agree before any trade execution.</p>
+                  <h4 className="text-xl font-semibold text-white mb-3">Complete Audit Trail</h4>
+                  <p className="text-muted leading-relaxed">Every decision is logged with timestamps, risk metrics, and validation results. ADGM and SEC compliance ready.</p>
                 </div>
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-3">
-                    <BarChart3 className="w-6 h-6 text-green-500" />
+                <div className="glass-card p-8">
+                  <div className="feature-icon mb-6">
+                    <Shield className="w-6 h-6 gold-text" />
                   </div>
-                  <h4 className="font-semibold mb-2">Full Auditability</h4>
-                  <p className="text-sm text-slate-400">Complete decision lineage for regulatory compliance.</p>
+                  <h4 className="text-xl font-semibold text-white mb-3">Post-Quantum Security</h4>
+                  <p className="text-muted leading-relaxed">Kyber-768 encryption and Dilithium-3 signatures. NIST FIPS 203/204 compliant cryptography.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="glass-card p-10 text-center gold-glow">
+              <p className="section-title">Trusted Infrastructure</p>
+              <h3 className="text-2xl font-bold text-white mb-8">Regulatory Compliance & Certifications</h3>
+              <div className="flex justify-center items-center gap-12 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <Globe className="w-8 h-8 gold-text" />
+                  <div className="text-left">
+                    <p className="text-white font-semibold">ADGM</p>
+                    <p className="text-xs text-muted">Abu Dhabi Global Market</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Award className="w-8 h-8 gold-text" />
+                  <div className="text-left">
+                    <p className="text-white font-semibold">NIST FIPS 203/204</p>
+                    <p className="text-xs text-muted">Post-Quantum Certified</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Shield className="w-8 h-8 gold-text" />
+                  <div className="text-left">
+                    <p className="text-white font-semibold">Sharia Compliant</p>
+                    <p className="text-xs text-muted">Islamic Finance Ready</p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -298,49 +378,47 @@ function App() {
         )}
 
         {activeTab === 'news' && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Newspaper className="w-6 h-6 text-sky-500" />
-              Crypto Market News
-            </h2>
-            <div className="space-y-4">
-              {news.map(item => (
-                <div key={item.id} className="glass-card p-4 flex items-center gap-4 hover:border-sky-500/50 transition cursor-pointer">
-                  <div className={`w-2 h-12 rounded-full ${
-                    item.sentiment === 'positive' ? 'bg-green-500' : 
-                    item.sentiment === 'negative' ? 'bg-red-500' : 'bg-slate-500'
-                  }`} />
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.headline}</h4>
-                    <p className="text-sm text-slate-400">{item.source} • {new Date(item.datetime).toLocaleTimeString()}</p>
-                  </div>
-                  <ExternalLink className="w-5 h-5 text-slate-400" />
-                </div>
-              ))}
+          <section className="animate-fade-in-up">
+            <div className="mb-8">
+              <p className="section-title">Market Intelligence</p>
+              <h2 className="text-3xl font-bold text-white">Crypto Market News</h2>
             </div>
-            <div className="mt-6 glass-card p-6">
-              <h3 className="text-lg font-semibold mb-4">Market Sentiment</h3>
-              <div className="flex items-center gap-4">
-                <div className={`text-5xl font-bold ${getFearGreedColor(market.fearGreedIndex)}`}>
-                  {market.fearGreedIndex}
-                </div>
-                <div>
-                  <div className={`text-xl font-semibold ${getFearGreedColor(market.fearGreedIndex)}`}>
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="md:col-span-2 space-y-4">
+                {news.map(item => (
+                  <div key={item.id} className="glass-card p-5 flex items-center gap-4 cursor-pointer">
+                    <div className={`w-1.5 h-14 rounded-full ${
+                      item.sentiment === 'positive' ? 'bg-emerald-500' : 
+                      item.sentiment === 'negative' ? 'bg-red-500' : 'bg-slate-500'
+                    }`} />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-white">{item.headline}</h4>
+                      <p className="text-sm text-muted mt-1">{item.source} • {new Date(item.datetime).toLocaleTimeString()}</p>
+                    </div>
+                    <ExternalLink className="w-5 h-5 text-muted" />
+                  </div>
+                ))}
+              </div>
+              <div className="glass-card p-6">
+                <p className="section-title">Sentiment</p>
+                <h3 className="text-xl font-semibold text-white mb-6">Fear & Greed Index</h3>
+                <div className="text-center mb-6">
+                  <div className={`text-6xl font-bold ${getFearGreedColor(market.fearGreedIndex)}`}>
+                    {market.fearGreedIndex}
+                  </div>
+                  <p className={`text-lg font-medium mt-2 ${getFearGreedColor(market.fearGreedIndex)}`}>
                     {market.fearGreedLabel}
-                  </div>
-                  <p className="text-sm text-slate-400">Fear & Greed Index</p>
+                  </p>
                 </div>
-                <div className="ml-auto flex-1 max-w-xs">
-                  <div className="h-4 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 relative">
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-slate-800"
-                      style={{ left: `${market.fearGreedIndex}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
-                    <span>Extreme Fear</span>
-                    <span>Extreme Greed</span>
-                  </div>
+                <div className="h-3 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 relative">
+                  <div 
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-[#0A1628]"
+                    style={{ left: `${market.fearGreedIndex}%`, transform: 'translate(-50%, -50%)' }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted mt-2">
+                  <span>Extreme Fear</span>
+                  <span>Extreme Greed</span>
                 </div>
               </div>
             </div>
@@ -348,46 +426,53 @@ function App() {
         )}
 
         {activeTab === 'tools' && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Calculator className="w-6 h-6 text-sky-500" />
-              Risk Management Tools
-            </h2>
+          <section className="animate-fade-in-up">
+            <div className="mb-8">
+              <p className="section-title">Risk Management</p>
+              <h2 className="text-3xl font-bold text-white">Professional Trading Tools</h2>
+            </div>
             
-            <div className="glass-card p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-4">Position Size Calculator</h3>
-              <p className="text-sm text-slate-400 mb-6">Calculate optimal position size based on your risk tolerance.</p>
+            <div className="glass-card p-8 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="feature-icon">
+                  <Calculator className="w-6 h-6 gold-text" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Position Size Calculator</h3>
+                  <p className="text-sm text-muted">Calculate optimal position size based on your risk parameters</p>
+                </div>
+              </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">Account Capital ($)</label>
+                    <label className="block text-sm text-muted mb-2 font-medium">Account Capital (USD)</label>
                     <input 
                       type="number"
                       value={riskCalc.capital}
                       onChange={e => setRiskCalc(prev => ({ ...prev, capital: parseFloat(e.target.value) || 0 }))}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:border-sky-500 focus:outline-none"
+                      className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-4 text-white text-lg focus:border-[#C9A227] focus:outline-none transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">Risk Per Trade (%)</label>
+                    <label className="block text-sm text-muted mb-2 font-medium">Risk Per Trade (%)</label>
                     <input 
                       type="number"
                       value={riskCalc.riskPercent}
                       onChange={e => setRiskCalc(prev => ({ ...prev, riskPercent: parseFloat(e.target.value) || 0 }))}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:border-sky-500 focus:outline-none"
+                      className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-4 text-white text-lg focus:border-[#C9A227] focus:outline-none transition"
                       step="0.5"
                       min="0.1"
                       max="10"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">Stop Loss Distance (%)</label>
+                    <label className="block text-sm text-muted mb-2 font-medium">Stop Loss Distance (%)</label>
                     <input 
                       type="number"
                       value={riskCalc.stopLoss}
                       onChange={e => setRiskCalc(prev => ({ ...prev, stopLoss: parseFloat(e.target.value) || 0 }))}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:border-sky-500 focus:outline-none"
+                      className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-4 text-white text-lg focus:border-[#C9A227] focus:outline-none transition"
                       step="0.5"
                       min="0.5"
                       max="50"
@@ -395,49 +480,106 @@ function App() {
                   </div>
                 </div>
                 
-                <div className="bg-slate-800/50 rounded-xl p-6 flex flex-col justify-center">
-                  <div className="text-center">
-                    <p className="text-slate-400 mb-2">Recommended Position Size</p>
-                    <p className="text-4xl font-bold text-sky-400">
-                      ${riskCalc.positionSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-sm text-slate-500 mt-2">
-                      Risk Amount: ${(riskCalc.capital * riskCalc.riskPercent / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </p>
+                <div className="bg-[#0A1628]/80 rounded-2xl p-8 flex flex-col justify-center border border-[#C9A227]/20">
+                  <p className="text-muted text-center mb-2">Recommended Position Size</p>
+                  <p className="text-5xl font-bold gold-gradient text-center">
+                    ${riskCalc.positionSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </p>
+                  <div className="mt-6 pt-6 border-t border-[#C9A227]/10">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted">Risk Amount</span>
+                      <span className="text-white font-medium">${(riskCalc.capital * riskCalc.riskPercent / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-2">
+                      <span className="text-muted">Max Loss</span>
+                      <span className="text-red-400 font-medium">-${(riskCalc.capital * riskCalc.riskPercent / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold mb-4">Kelly Criterion Calculator</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                The Kelly Criterion determines optimal bet sizing to maximize long-term growth.
+            <div className="glass-card p-8">
+              <h3 className="text-xl font-semibold text-white mb-4">Kelly Criterion</h3>
+              <p className="text-muted mb-6">
+                The Kelly Criterion determines optimal position sizing to maximize long-term capital growth while managing risk.
               </p>
-              <div className="bg-slate-800/50 rounded-lg p-4">
-                <p className="text-sm text-slate-400">
-                  <strong className="text-white">Formula:</strong> f* = (bp - q) / b
-                </p>
-                <p className="text-sm text-slate-400 mt-2">
-                  Where: b = odds received, p = probability of winning, q = probability of losing (1 - p)
-                </p>
+              <div className="bg-[#0A1628]/60 rounded-xl p-6 border border-[#C9A227]/10">
+                <p className="text-white font-mono text-lg mb-3">f* = (bp - q) / b</p>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="gold-text font-semibold">b</span>
+                    <span className="text-muted"> = odds received</span>
+                  </div>
+                  <div>
+                    <span className="gold-text font-semibold">p</span>
+                    <span className="text-muted"> = win probability</span>
+                  </div>
+                  <div>
+                    <span className="gold-text font-semibold">q</span>
+                    <span className="text-muted"> = loss probability</span>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-slate-500 mt-4">
-                Note: OMNIX uses a fractional Kelly (typically 25-50%) to reduce volatility while maintaining edge optimization.
+              <p className="text-xs text-muted mt-4">
+                OMNIX uses fractional Kelly (25-50%) to reduce volatility while maintaining edge optimization.
               </p>
             </div>
           </section>
         )}
       </main>
 
-      <footer className="border-t border-white/10 py-8 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-sky-500" />
-            <span className="text-sm text-slate-400">OMNIX QUANTUM - Abu Dhabi (ADGM)</span>
+      <footer className="border-t border-[#C9A227]/10 bg-[#050D18]">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-10">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-[#0A1628]" />
+                </div>
+                <span className="font-bold text-white">OMNIX QUANTUM</span>
+              </div>
+              <p className="text-sm text-muted">Institutional-grade risk control infrastructure for algorithmic trading.</p>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-muted">
+                <li>About Us</li>
+                <li>Careers</li>
+                <li>Press</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-muted">
+                <li>Documentation</li>
+                <li>API Reference</li>
+                <li>Technical Brief</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-sm text-muted">
+                <li>contacto@omnixquantum.net</li>
+                <li>+1 (650) 507-8293</li>
+                <li>Abu Dhabi (ADGM)</li>
+              </ul>
+            </div>
           </div>
-          <div className="text-sm text-slate-500">
-            contacto@omnixquantum.net | +1 (650) 507-8293
+          <div className="border-t border-[#C9A227]/10 pt-8">
+            <p className="footer-disclaimer mb-4">
+              DISCLAIMER: OMNIX QUANTUM provides risk validation infrastructure for algorithmic trading. Past performance does not guarantee future results. 
+              Trading involves substantial risk of loss. This platform is designed for institutional investors and qualified professional clients only. 
+              Not available in all jurisdictions. Please consult your legal and financial advisors before use.
+            </p>
+            <div className="flex justify-between items-center">
+              <p className="text-xs text-muted">&copy; 2026 OMNIX QUANTUM. All rights reserved. Abu Dhabi Global Market (ADGM).</p>
+              <div className="flex gap-6 text-xs text-muted">
+                <span>Privacy Policy</span>
+                <span>Terms of Service</span>
+                <span>Cookie Policy</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
