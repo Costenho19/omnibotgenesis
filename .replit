@@ -126,8 +126,10 @@ localPort = 9000
 externalPort = 9000
 
 [deployment]
-deploymentTarget = "vm"
+deploymentTarget = "static"
 run = ["python", "-u", "main.py"]
+build = ["npm", "run", "build", "--prefix", "omnix_web"]
+publicDir = "omnix_web/dist"
 
 [agent]
 expertMode = true
