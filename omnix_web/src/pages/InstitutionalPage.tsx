@@ -551,7 +551,7 @@ export default function InstitutionalPage() {
                       </div>
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">Current Day</span>
-                        <span className="text-emerald-400 font-medium">Day 12 of 30</span>
+                        <span className="text-emerald-400 font-medium">Day 14 of 30</span>
                       </div>
                     </div>
                   </div>
