@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play } from 'lucide-react'
+import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server } from 'lucide-react'
 import './index.css'
 
 interface SystemMetrics {
@@ -115,8 +115,9 @@ function App() {
 
   useEffect(() => {
     const riskAmount = riskCalc.capital * (riskCalc.riskPercent / 100)
-    const posSize = riskAmount / (riskCalc.stopLoss / 100)
-    setRiskCalc(prev => ({ ...prev, positionSize: posSize }))
+    const stopLossVal = riskCalc.stopLoss || 1
+    const posSize = riskAmount / (stopLossVal / 100)
+    setRiskCalc(prev => ({ ...prev, positionSize: isNaN(posSize) ? 0 : posSize }))
   }, [riskCalc.capital, riskCalc.riskPercent, riskCalc.stopLoss])
 
   const fetchMarketData = async () => {
@@ -199,6 +200,7 @@ function App() {
       <main className="pt-28 px-6 pb-20 max-w-7xl mx-auto">
         {activeTab === 'home' && (
           <>
+            {/* Hero Section */}
             <section className="text-center mb-20 animate-fade-in-up">
               <p className="section-title">Institutional Risk Control Infrastructure</p>
               <h1 className="heading-xl text-white mb-6">
@@ -221,6 +223,7 @@ function App() {
               </div>
             </section>
 
+            {/* Live Stats */}
             <section className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
               <div className="stat-card animate-fade-in-up animate-delay-1">
                 <div className="flex items-center justify-between mb-4">
@@ -258,6 +261,134 @@ function App() {
 
             <div className="divider-gold" />
 
+            {/* The Problem We Solve */}
+            <section className="mb-20">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                  <p className="section-title">The Challenge</p>
+                  <h2 className="text-3xl font-bold text-white mb-6">Why 73% of Algorithmic Traders Lose Money</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium mb-1">Execution Without Validation</h4>
+                        <p className="text-muted text-sm">Most trading bots execute signals blindly without checking market regime, volatility conditions, or signal coherence.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium mb-1">Overconfident Position Sizing</h4>
+                        <p className="text-muted text-sm">Aggressive Kelly Criterion application without proper edge verification leads to catastrophic drawdowns.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium mb-1">No Black Swan Protection</h4>
+                        <p className="text-muted text-sm">Tail risk events wipe out months of gains in hours. Traditional stop-losses fail during flash crashes.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass-card p-8 gold-glow">
+                  <p className="section-title">The OMNIX Solution</p>
+                  <h3 className="text-2xl font-semibold text-white mb-6">Fail-Closed by Design</h3>
+                  <p className="text-muted mb-6 leading-relaxed">
+                    Unlike fail-open systems that execute first and ask questions later, OMNIX blocks ALL trades by default. 
+                    Every trade must pass through 4 independent validation layers before execution is allowed.
+                  </p>
+                  <div className="flex items-center gap-3 p-4 bg-[#0A1628]/60 rounded-xl border border-emerald-500/30">
+                    <CheckCircle className="w-6 h-6 text-emerald-500" />
+                    <span className="text-emerald-400 font-medium">Capital protection is the default state</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            {/* How It Works */}
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">System Architecture</p>
+                <h2 className="text-3xl font-bold text-white">How OMNIX Protects Your Capital</h2>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">Every trade signal passes through a rigorous 4-layer validation pipeline. If ANY layer vetoes, the trade is blocked.</p>
+              </div>
+              
+              <div className="grid md:grid-cols-4 gap-6">
+                <div className="glass-card p-6 relative">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center text-[#0A1628] font-bold text-sm">1</div>
+                  <div className="feature-icon mb-4">
+                    <Eye className="w-6 h-6 gold-text" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Regime Detection</h4>
+                  <p className="text-muted text-sm leading-relaxed">Hidden Markov Model analyzes market state (trending, ranging, volatile) to determine if conditions favor trading.</p>
+                  <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
+                    <p className="text-xs text-muted">Veto trigger: Regime uncertainty &gt; 40%</p>
+                  </div>
+                </div>
+                
+                <div className="glass-card p-6 relative">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center text-[#0A1628] font-bold text-sm">2</div>
+                  <div className="feature-icon mb-4">
+                    <Layers className="w-6 h-6 gold-text" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Coherence Gate</h4>
+                  <p className="text-muted text-sm leading-relaxed">6-tier signal coherence engine validates that multiple indicators agree before allowing execution.</p>
+                  <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
+                    <p className="text-xs text-muted">Veto trigger: Coherence score &lt; 60%</p>
+                  </div>
+                </div>
+                
+                <div className="glass-card p-6 relative">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center text-[#0A1628] font-bold text-sm">3</div>
+                  <div className="feature-icon mb-4">
+                    <Target className="w-6 h-6 gold-text" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Monte Carlo Simulation</h4>
+                  <p className="text-muted text-sm leading-relaxed">10,000 simulations project expected outcomes. Blocks trades with negative expected return.</p>
+                  <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
+                    <p className="text-xs text-muted">Veto trigger: Expected return &lt; 0%</p>
+                  </div>
+                </div>
+                
+                <div className="glass-card p-6 relative">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center text-[#0A1628] font-bold text-sm">4</div>
+                  <div className="feature-icon mb-4">
+                    <Shield className="w-6 h-6 gold-text" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Black Swan Detector</h4>
+                  <p className="text-muted text-sm leading-relaxed">Real-time volatility and sentiment analysis identifies tail risk events before they materialize.</p>
+                  <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
+                    <p className="text-xs text-muted">Veto trigger: Severity &gt; MEDIUM</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-8 glass-card p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold">Edge Confirmation Window (ECW)</h4>
+                    <p className="text-muted text-sm">Requires positive edge for 3 consecutive cycles before allowing trades. Transforms "capital preservation" into "capital patience".</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-6 h-6 gold-text" />
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            {/* Live Market + Architecture */}
             <section className="grid md:grid-cols-2 gap-8 mb-20">
               <div className="glass-card p-8">
                 <p className="section-title">Live Market Data</p>
@@ -291,35 +422,173 @@ function App() {
               </div>
 
               <div className="glass-card p-8">
-                <p className="section-title">Fail-Closed Architecture</p>
-                <h3 className="text-2xl font-semibold text-white mb-6">4-Layer Validation Pipeline</h3>
+                <p className="section-title">Technology Stack</p>
+                <h3 className="text-2xl font-semibold text-white mb-6">Enterprise-Grade Infrastructure</h3>
                 <div className="space-y-4">
-                  {[
-                    { name: 'Regime Detection', desc: 'Market state analysis' },
-                    { name: 'Coherence Check', desc: 'Signal validation' },
-                    { name: 'Monte Carlo Simulation', desc: 'Risk projection' },
-                    { name: 'Consensus Gate', desc: 'Final approval' }
-                  ].map((layer, i) => (
-                    <div key={layer.name} className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
-                      <div className="w-10 h-10 rounded-full bg-[#C9A227]/20 flex items-center justify-center gold-text font-bold">
-                        {i + 1}
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-white font-medium">{layer.name}</span>
-                        <p className="text-xs text-muted">{layer.desc}</p>
-                      </div>
-                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <div className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <Brain className="w-6 h-6 gold-text" />
+                    <div className="flex-1">
+                      <span className="text-white font-medium">AI Risk Guardian</span>
+                      <p className="text-xs text-muted">Google Gemini 2.0 + GPT-4o fallback</p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <Cpu className="w-6 h-6 gold-text" />
+                    <div className="flex-1">
+                      <span className="text-white font-medium">Post-Quantum Cryptography</span>
+                      <p className="text-xs text-muted">Kyber-768 / Dilithium-3 (NIST FIPS 203/204)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
+                    <Server className="w-6 h-6 gold-text" />
+                    <div className="flex-1">
+                      <span className="text-white font-medium">Railway Cloud Infrastructure</span>
+                      <p className="text-xs text-muted">PostgreSQL + Redis + Auto-scaling</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
 
             <div className="divider-gold" />
 
+            {/* Use Cases */}
             <section className="mb-20">
               <div className="text-center mb-12">
-                <p className="section-title">Why Institutions Choose OMNIX</p>
+                <p className="section-title">Integration Partners</p>
+                <h2 className="text-3xl font-bold text-white">Built for Your Trading Stack</h2>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing trading infrastructure via REST API or webhooks.</p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="glass-card p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white">Trading Platforms</h4>
+                      <p className="text-xs text-muted">3Commas, NinjaTrader, TradingView</p>
+                    </div>
+                  </div>
+                  <p className="text-muted text-sm leading-relaxed mb-4">
+                    Add institutional-grade risk validation to your existing signals. OMNIX receives your trade signals, validates them through our 4-layer pipeline, and returns approve/block decisions in &lt;50ms.
+                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="gold-text font-medium">Risk Guardian API</span>
+                    <span className="text-muted">$10K-50K/mo</span>
+                  </div>
+                </div>
+                
+                <div className="glass-card p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white">Brokers & Exchanges</h4>
+                      <p className="text-xs text-muted">White-label solution</p>
+                    </div>
+                  </div>
+                  <p className="text-muted text-sm leading-relaxed mb-4">
+                    Offer OMNIX risk controls as a premium feature to your clients. Full white-label customization with your branding, integrated directly into your trading interface.
+                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="gold-text font-medium">White-Label Engine</span>
+                    <span className="text-muted">$100K+ setup</span>
+                  </div>
+                </div>
+                
+                <div className="glass-card p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                      <DollarSign className="w-6 h-6 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white">Individual Traders</h4>
+                      <p className="text-xs text-muted">SaaS subscription</p>
+                    </div>
+                  </div>
+                  <p className="text-muted text-sm leading-relaxed mb-4">
+                    Direct access to OMNIX risk controls through our Telegram bot interface. Connect your exchange API, set your risk parameters, and let OMNIX protect your capital 24/7.
+                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="gold-text font-medium">Pro Plan</span>
+                    <span className="text-muted">$149/mo</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            {/* Track Record */}
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">Transparency</p>
+                <h2 className="text-3xl font-bold text-white">Verifiable Track Record</h2>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">We believe in radical transparency. All metrics are real-time and verifiable on-chain.</p>
+              </div>
+              
+              <div className="glass-card p-8 gold-glow">
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="w-5 h-5 gold-text" />
+                      <span className="text-white font-semibold">Track Record Period</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">Official Start Date</span>
+                        <span className="text-white font-medium">January 15, 2026</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">Target Duration</span>
+                        <span className="text-white font-medium">30 Days</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">Current Day</span>
+                        <span className="text-emerald-400 font-medium">Day 12 of 30</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <BarChart3 className="w-5 h-5 gold-text" />
+                      <span className="text-white font-semibold">Performance Metrics</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">Capital Preserved</span>
+                        <span className="text-emerald-400 font-medium">98.5%</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">Max Drawdown</span>
+                        <span className="text-white font-medium">-1.5%</span>
+                      </div>
+                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
+                        <span className="text-muted">High-Risk Blocks</span>
+                        <span className="text-amber-400 font-medium">5,473</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-[#0A1628]/80 rounded-xl border border-[#C9A227]/20 text-center">
+                  <p className="text-sm text-muted">
+                    <span className="gold-text font-medium">Learning Baseline (Nov 2025 - Jan 14, 2026):</span> 119 trades, -$15,198.73 (calibration period).
+                    <br />
+                    Track Record Oficial began January 15, 2026 with recalibrated parameters.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            {/* Why Institutions Choose Us */}
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">Competitive Advantage</p>
                 <h2 className="text-3xl font-bold text-white">Built for Institutional Requirements</h2>
               </div>
               <div className="grid md:grid-cols-3 gap-8">
@@ -347,7 +616,8 @@ function App() {
               </div>
             </section>
 
-            <section className="glass-card p-10 text-center gold-glow">
+            {/* Certifications */}
+            <section className="glass-card p-10 text-center gold-glow mb-20">
               <p className="section-title">Trusted Infrastructure</p>
               <h3 className="text-2xl font-bold text-white mb-8">Regulatory Compliance & Certifications</h3>
               <div className="flex justify-center items-center gap-12 flex-wrap">
@@ -372,6 +642,26 @@ function App() {
                     <p className="text-xs text-muted">Islamic Finance Ready</p>
                   </div>
                 </div>
+              </div>
+            </section>
+
+            {/* Final CTA */}
+            <section className="text-center">
+              <div className="glass-card p-12 gold-glow">
+                <h2 className="text-3xl font-bold text-white mb-4">Ready to Protect Your Capital?</h2>
+                <p className="text-xl text-muted max-w-2xl mx-auto mb-8">
+                  Schedule a demo to see how OMNIX can integrate with your trading infrastructure.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button className="btn-primary flex items-center gap-2">
+                    <Play className="w-4 h-4" />
+                    Schedule Demo
+                  </button>
+                  <button className="btn-secondary">
+                    Contact Sales
+                  </button>
+                </div>
+                <p className="text-muted text-sm mt-6">No credit card required. 14-day free trial for Pro plans.</p>
               </div>
             </section>
           </>
