@@ -27,3 +27,9 @@ def classic_dashboard():
     """Classic dashboard page"""
     init_database()
     return render_template('dashboard.html')
+
+
+@views_bp.route('/<path:path>')
+def catch_all(path):
+    """Redirect unknown routes to terminal dashboard"""
+    return redirect('/terminal')
