@@ -946,7 +946,7 @@ export default function InstitutionalPage() {
               <h3 className="text-xl font-bold text-white mb-2">Ivan Guzman</h3>
               <p className="text-[#C9A227] font-semibold mb-4">Lead Developer</p>
               <p className="text-sm text-muted">
-                Technical architect behind OMNIX's multi-layer veto system, post-quantum cryptography, and real-time risk validation engine.
+                Full-stack developer and software architect.
               </p>
             </div>
           </div>
