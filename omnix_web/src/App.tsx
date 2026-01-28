@@ -27,11 +27,12 @@ interface MarketData {
 }
 
 function useCountUp(end: number, duration: number = 2000, startOnMount: boolean = true) {
+  const safeEnd = isNaN(end) || end === null || end === undefined ? 0 : end
   const [count, setCount] = useState(0)
   const countRef = useRef(0)
   
   useEffect(() => {
-    if (!startOnMount) return
+    if (!startOnMount || safeEnd === 0) return
     const startTime = Date.now()
     const startValue = 0
     
@@ -39,7 +40,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
       const now = Date.now()
       const progress = Math.min((now - startTime) / duration, 1)
       const easeOut = 1 - Math.pow(1 - progress, 3)
-      countRef.current = startValue + (end - startValue) * easeOut
+      countRef.current = startValue + (safeEnd - startValue) * easeOut
       setCount(Math.floor(countRef.current))
       
       if (progress < 1) {
@@ -48,7 +49,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
     }
     
     requestAnimationFrame(animate)
-  }, [end, duration, startOnMount])
+  }, [safeEnd, duration, startOnMount])
   
   return count
 }
@@ -88,14 +89,19 @@ function App() {
         const response = await fetch('/api/metrics')
         if (response.ok) {
           const data = await response.json()
-          setMetrics(data)
+          if (data && typeof data.evaluationCycles === 'number') {
+            setMetrics(prev => ({
+              ...prev,
+              evaluationCycles: data.evaluationCycles || prev.evaluationCycles,
+              vetosExecuted: data.vetosExecuted || prev.vetosExecuted,
+              capitalPreserved: data.capitalPreserved || prev.capitalPreserved,
+              systemUptime: data.systemUptime || prev.systemUptime,
+              lastUpdate: new Date().toISOString()
+            }))
+          }
         }
       } catch {
-        setMetrics(prev => ({
-          ...prev,
-          evaluationCycles: prev.evaluationCycles + Math.floor(Math.random() * 10),
-          lastUpdate: new Date().toISOString()
-        }))
+        // Keep existing values, just update timestamp
       }
     }
     
@@ -623,21 +629,21 @@ function App() {
                   <Globe className="w-8 h-8 gold-text" />
                   <div className="text-left">
                     <p className="text-white font-semibold">ADGM</p>
-                    <p className="text-xs text-muted">Abu Dhabi Global Market</p>
+                    <p className="text-xs text-amber-400">Target Jurisdiction</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Award className="w-8 h-8 gold-text" />
                   <div className="text-left">
                     <p className="text-white font-semibold">NIST FIPS 203/204</p>
-                    <p className="text-xs text-muted">Post-Quantum Certified</p>
+                    <p className="text-xs text-emerald-400">Implemented</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Shield className="w-8 h-8 gold-text" />
                   <div className="text-left">
                     <p className="text-white font-semibold">Sharia Compliant</p>
-                    <p className="text-xs text-muted">Islamic Finance Ready</p>
+                    <p className="text-xs text-amber-400">In Development</p>
                   </div>
                 </div>
               </div>
