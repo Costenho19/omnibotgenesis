@@ -1,11 +1,13 @@
 # Nixpacks configuration for Railway deployment
-# Forces Python as the primary runtime for the Telegram bot
+# OMNIX Telegram Bot - Python 3.11
+
+providers = ["python"]
 
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip"]
+nixPkgs = ["gcc", "libffi", "openssl"]
 
 [phases.install]
-cmds = ["python -m pip install --upgrade pip", "python -m pip install -r requirements.txt"]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
 
 [start]
 cmd = "python -u main.py"
