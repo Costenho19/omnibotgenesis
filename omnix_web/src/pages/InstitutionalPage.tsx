@@ -917,6 +917,42 @@ export default function InstitutionalPage() {
         )}
       </main>
 
+      {/* Team Section */}
+      <section className="py-20 bg-gradient-to-b from-[#0A1628] to-[#050D18]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Leadership Team</h2>
+            <p className="text-lg text-muted max-w-2xl mx-auto">
+              The minds behind OMNIX QUANTUM's institutional-grade risk infrastructure
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-[#0D1B2A]/80 border border-[#C9A227]/20 rounded-xl p-8 text-center hover:border-[#C9A227]/40 transition-all">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#C9A227] to-[#8B7355] flex items-center justify-center">
+                <Users className="w-12 h-12 text-[#050D18]" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Harold Nunes</h3>
+              <p className="text-[#C9A227] font-semibold mb-4">Founder & CEO</p>
+              <p className="text-sm text-muted">
+                Visionary entrepreneur driving OMNIX QUANTUM's mission to democratize institutional-grade risk control for algorithmic trading.
+              </p>
+            </div>
+            
+            <div className="bg-[#0D1B2A]/80 border border-[#C9A227]/20 rounded-xl p-8 text-center hover:border-[#C9A227]/40 transition-all">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#C9A227] to-[#8B7355] flex items-center justify-center">
+                <Cpu className="w-12 h-12 text-[#050D18]" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Ivan Guzman</h3>
+              <p className="text-[#C9A227] font-semibold mb-4">Lead Developer</p>
+              <p className="text-sm text-muted">
+                Technical architect behind OMNIX's multi-layer veto system, post-quantum cryptography, and real-time risk validation engine.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-[#C9A227]/10 bg-[#050D18]">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
