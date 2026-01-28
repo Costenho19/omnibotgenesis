@@ -1,0 +1,7 @@
+# Nixpacks configuration for Railway deployment
+# OMNIX Telegram Bot
+
+providers = ["python"]
+
+[start]
+cmd = "python main.py"
