@@ -133,12 +133,18 @@ export default function CommercialLanding() {
               Call Us
             </a>
           </div>
-          <div className="flex justify-center items-center gap-8 text-sm">
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors flex items-center gap-2">
+              <Mail className="w-4 h-4" />
               contacto@omnixquantum.net
             </a>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors">
-              +1 (650) 481-5494
+            <a href="tel:+16505078293" className="text-[#10b981] hover:text-white transition-colors flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              Phone: +1 (650) 507-8293
+            </a>
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-[#10b981] hover:text-white transition-colors flex items-center gap-2">
+              <span className="text-lg">💬</span>
+              WhatsApp: +1 (650) 481-5494
             </a>
           </div>
         </section>
