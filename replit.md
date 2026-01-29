@@ -119,7 +119,30 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context, a System 
 The project utilizes a multi-port architecture:
 -   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/) and Institutional Page (/institutional) with animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
 -   **Flask Dashboard (Port 5000)**: Flask + Jinja2 internal dashboard for demos and investor metrics. Main webview port.
--   **Streamlit Analytics (Port 8080)**: Streamlit application for shadow analytics and investor metrics.
+
+### Custom Domain Configuration
+| Domain | Purpose | Platform |
+|--------|---------|----------|
+| **www.omnixquantum.net** | Commercial Landing (Published) | Replit Static Deployment |
+| **omnixquantum.net** | Dashboard/Bot (Production) | Railway |
+
+**DNS Configuration (Cloudflare):**
+- A record: www → 34.111.179.208 (Solo DNS)
+- TXT record: www → replit-verify=c554b789-9f74-4d37-8420-c740ae31b663
+
+### Contact Information
+| Channel | Contact |
+|---------|---------|
+| **Email** | contacto@omnixquantum.net |
+| **Phone** | +1 (650) 507-8293 |
+| **WhatsApp** | +1 (650) 481-5494 |
+
+### Recent Changes (Jan 29, 2026)
+- Configured custom domain www.omnixquantum.net for commercial landing
+- Added separate Phone and WhatsApp contact options to landing pages
+- Removed Streamlit Dashboard (port 8080) - had proxy issues with Replit
+- Simplified to 2 workflows: Flask Dashboard (5000) + OMNIX Web (3000)
+- Full session log: `docs/history/2026-01/2026-01-29-domain-setup.md`
 
 ### Recent Changes (Jan 28, 2026)
 - Added automatic redirect from `/terminal` to `/` in OMNIX Web to prevent navigation issues
