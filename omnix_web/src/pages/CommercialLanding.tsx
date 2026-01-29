@@ -14,7 +14,7 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
         </div>
       </nav>
@@ -33,7 +33,7 @@ export default function CommercialLanding() {
               Request Access
               <ArrowRight className="w-5 h-5" />
             </a>
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               <Phone className="w-5 h-5" />
               Talk to Us
             </a>
@@ -128,7 +128,7 @@ export default function CommercialLanding() {
               <Mail className="w-4 h-4" />
               Request Access
             </a>
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">
               <Phone className="w-4 h-4" />
               Call Us
             </a>
@@ -137,8 +137,8 @@ export default function CommercialLanding() {
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors">
               contacto@omnixquantum.net
             </a>
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors">
-              +1 (650) 507-8293
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors">
+              +1 (650) 481-5494
             </a>
           </div>
         </section>
@@ -161,7 +161,7 @@ export default function CommercialLanding() {
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details
             </Link>
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
+            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
               Contact
             </a>
           </div>
