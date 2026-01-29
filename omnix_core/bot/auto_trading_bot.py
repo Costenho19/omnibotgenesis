@@ -120,6 +120,13 @@ except ImportError:
     MIN_SPREAD_BPS = 25  # ADR-004 fallback
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
+# ADR-019 v1.1: Log ECW thresholds at startup for auditability
+ECW_MC_WR_MIN = int(os.getenv('ECW_MC_WR_MIN', '50'))
+ECW_MC_ER_MIN = float(os.getenv('ECW_MC_ER_MIN', '0'))
+ECW_CYCLES_REQUIRED = int(os.getenv('ECW_CYCLES_REQUIRED', '3'))
+ECW_CONFIG_VERSION = "1.1" if ECW_MC_WR_MIN == 50 else "1.0"
+logger.info(f"📊 ECW CONFIG v{ECW_CONFIG_VERSION}: MC_WR_MIN={ECW_MC_WR_MIN}%, MC_ER_MIN={ECW_MC_ER_MIN}%, CYCLES={ECW_CYCLES_REQUIRED}")
+
 try:
     from omnix_core.utils.logger import get_institutional_logger, InstitutionalDecisionLogger
     INSTITUTIONAL_LOGGER_AVAILABLE = True
@@ -2947,11 +2954,17 @@ class AutoTradingBot:
             ecw_previous_counter = 0  # Track previous counter for reset detection
             
             try:
-                # Configuración ECW - defaults que coinciden con system_state_manifest.json
+                # Configuración ECW - ENV-configurable para rollback sin redeploy (ADR-019 v1.1)
+                # ECW_MC_WR_MIN: Default 50% (reducido de 52% el 29 Ene 2026)
+                # Cambio documentado para permitir más trades en mercados con edge marginal
+                ecw_mc_wr_min = int(os.getenv('ECW_MC_WR_MIN', '50'))
+                ecw_mc_er_min = float(os.getenv('ECW_MC_ER_MIN', '0'))
+                ecw_cycles = int(os.getenv('ECW_CYCLES_REQUIRED', '3'))
+                
                 ecw_cfg = {
-                    'mc_wr_min': 52,      # MC win rate min % (data comes as 0-1, scaled to 0-100)
-                    'mc_er_min': 0,       # MC expected return min % (data comes as 0-1, scaled to 0-100)
-                    'consecutive_required': 3,
+                    'mc_wr_min': ecw_mc_wr_min,      # MC win rate min % (ENV: ECW_MC_WR_MIN, default 50)
+                    'mc_er_min': ecw_mc_er_min,      # MC expected return min % (ENV: ECW_MC_ER_MIN, default 0)
+                    'consecutive_required': ecw_cycles,  # Cycles required (ENV: ECW_CYCLES_REQUIRED, default 3)
                     'black_swan_max': ['NONE', 'LOW', 'MEDIUM']  # Permitidos
                 }
                 
@@ -3066,6 +3079,14 @@ class AutoTradingBot:
                 ecw_reason = f"ECW: {ecw_counter}/{ecw_cfg['consecutive_required']} cycles ({condition_details})"
                 
                 # Guardar estado ECW en decision - ADR-019 Enhanced with ecw_progress
+                # ADR-019 v1.1: Include config version for track record integrity auditing
+                ecw_config_version = "1.1" if ecw_cfg['mc_wr_min'] == 50 else "1.0"
+                decision['v52_analysis']['ecw_config_version'] = ecw_config_version
+                decision['v52_analysis']['ecw_thresholds'] = {
+                    'mc_wr_min': ecw_cfg['mc_wr_min'],
+                    'mc_er_min': ecw_cfg['mc_er_min'],
+                    'cycles_required': ecw_cfg['consecutive_required']
+                }
                 decision['v52_analysis']['ecw_counter'] = ecw_counter
                 decision['v52_analysis']['ecw_required'] = ecw_cfg['consecutive_required']
                 decision['v52_analysis']['ecw_passed'] = ecw_passed

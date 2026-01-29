@@ -98,7 +98,17 @@ OMNIX incorporates an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto
 The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It includes AI-first command detection, a Multilingual Prompt Architecture, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior. A Performance Honesty Guard provides honest metrics. AI responses are adaptively detailed based on user requests, with comprehensive responses for investor queries. An Anti-Servile Post-Processing Filter removes servile phrases after AI generation.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals. The Edge Confirmation Window (ECW) requires edge persistence (MC_WR ≥ 52%, MC_ER > 0%, Black Swan ≤ MEDIUM for 3 consecutive cycles) before allowing trades, ensuring "capital patience."
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals. The Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience."
+
+### ECW Configuration (v1.1 - Jan 29, 2026)
+| Parameter | Value | ENV Variable |
+|-----------|-------|--------------|
+| **MC Win Rate Min** | 50% | `ECW_MC_WR_MIN` |
+| **MC Expected Return Min** | > 0% | `ECW_MC_ER_MIN` |
+| **Consecutive Cycles** | 3 | `ECW_CYCLES_REQUIRED` |
+| **Black Swan Max** | MEDIUM | Hardcoded |
+
+**Rollback to v1.0**: Set `ECW_MC_WR_MIN=52` in Railway Variables + restart service.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
@@ -138,11 +148,12 @@ The project utilizes a multi-port architecture:
 | **WhatsApp** | +1 (650) 481-5494 |
 
 ### Recent Changes (Jan 29, 2026)
+- **ECW Calibration v1.1**: Reduced MC_WR_MIN from 52% to 50% (ENV-configurable for rollback)
 - Configured custom domain www.omnixquantum.net for commercial landing
 - Added separate Phone and WhatsApp contact options to landing pages
 - Removed Streamlit Dashboard (port 8080) - had proxy issues with Replit
 - Simplified to 2 workflows: Flask Dashboard (5000) + OMNIX Web (3000)
-- Full session log: `docs/history/2026-01/2026-01-29-domain-setup.md`
+- Full session logs: `docs/history/2026-01/2026-01-29-ecw-calibration.md`, `docs/history/2026-01/2026-01-29-domain-setup.md`
 
 ### Recent Changes (Jan 28, 2026)
 - Added automatic redirect from `/terminal` to `/` in OMNIX Web to prevent navigation issues

@@ -214,6 +214,71 @@ python scripts/casi_trade_demo.py -o demo.json  # Save to file
 2. **Per-Symbol Thresholds**: Different assets may need different confirmation windows
 3. **Regime-Adaptive ECW**: Reduce required cycles in trending markets
 
+---
+
+## Revision v1.1 - January 29, 2026
+
+### Context
+
+After 14 days of Track Record (Jan 15-28, 2026), the system executed 0 trades due to ECW blocking with MC_WR typically showing 49-50% (below 52% threshold). Analysis showed:
+
+- Monte Carlo consistently reports WR ~49-50% in sideways/volatile markets
+- Other signals (Non-Markovian Kernel 67%, CAES 1.27x) indicate potential opportunities
+- System is overly conservative for track record validation phase
+
+### Decision
+
+Reduce `mc_wr_min` threshold from 52% to 50% as controlled experiment.
+
+### Changes
+
+| Parameter | v1.0 | v1.1 | Rationale |
+|-----------|------|------|-----------|
+| **MC Win Rate Min** | 52% | **50%** | Allow trades at break-even edge |
+| **MC Expected Return Min** | > 0% | > 0% | Unchanged - still require positive edge |
+| **Consecutive Cycles** | 3 | 3 | Unchanged - still require confirmation |
+| **Black Swan Max** | MEDIUM | MEDIUM | Unchanged - no trades in tail risk |
+
+### ENV Configuration
+
+All ECW thresholds are now ENV-configurable for rollback without redeploy:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ECW_MC_WR_MIN` | 50 | MC Win Rate minimum % |
+| `ECW_MC_ER_MIN` | 0 | MC Expected Return minimum % |
+| `ECW_CYCLES_REQUIRED` | 3 | Consecutive cycles required |
+
+### Rollback Procedure
+
+To revert to v1.0 thresholds:
+1. Railway: Set `ECW_MC_WR_MIN=52` in Variables
+2. Restart service
+3. No code change or redeploy required
+
+### Track Record Integrity
+
+- **Pre-v1.1 data (Jan 15-28)**: Immutable, logged under config epoch v1.0
+- **Post-v1.1 data (Jan 29+)**: New trades logged with `ecw_config_version: 1.1`
+- **No retroactive impact**: Historical decisions remain unchanged
+
+### Guardrails Maintained
+
+- Kelly max 2% / $20K cap (ADR-004)
+- Only BTC/USD and XRP/USD allowed
+- Black Swan ≤ MEDIUM required
+- ER > 0% required (positive edge mandatory)
+- 3 consecutive cycles confirmation
+
+### Success Criteria (Day 30 Review)
+
+- At least 5-10 trades executed
+- Win rate ≥ 45%
+- No drawdown > 3%
+- If criteria not met: Evaluate further calibration
+
+---
+
 ## Related ADRs
 
 - ADR-007: Coherence Threshold Calibration
