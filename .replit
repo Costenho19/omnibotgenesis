@@ -32,10 +32,6 @@ args = "OMNIX Web"
 task = "workflow.run"
 args = "Flask Dashboard"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Streamlit Dashboard"
-
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -92,18 +88,6 @@ outputType = "webview"
 task = "shell.exec"
 args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=5000"
 waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Streamlit Dashboard"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd omnix_dashboard && TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567890 streamlit run streamlit_app.py --server.port 8080 --server.address 0.0.0.0 --server.headless true"
-waitForPort = 8080
 
 [[ports]]
 localPort = 3000
