@@ -218,17 +218,52 @@ python scripts/casi_trade_demo.py -o demo.json  # Save to file
 
 ## Revision v1.1 - January 29, 2026
 
-### Context
+### Motivation
 
-After 14 days of Track Record (Jan 15-28, 2026), the system executed 0 trades due to ECW blocking with MC_WR typically showing 49-50% (below 52% threshold). Analysis showed:
+Alta tasa de HOLD por MC_WR ≈ 49–50% con ER ≈ 0% en mercados volátiles, sin degradación de otros módulos (Non-Markovian Kernel 67%, CAES 1.27x, EMA SHORT 38-43%). Después de 14 días de Track Record (Jan 15-28, 2026), el sistema ejecutó 0 trades.
 
-- Monte Carlo consistently reports WR ~49-50% in sideways/volatile markets
-- Other signals (Non-Markovian Kernel 67%, CAES 1.27x) indicate potential opportunities
-- System is overly conservative for track record validation phase
+### Hypothesis
+
+Reducir WR mínimo de 52% a 50% permitirá evaluar si el bloqueo es estadístico (umbral muy alto) o de mercado (sin edge real), sin comprometer capital debido a los guardrails restantes (ER>0%, 3 ciclos, Black Swan, $20K cap).
 
 ### Decision
 
 Reduce `mc_wr_min` threshold from 52% to 50% as controlled experiment.
+
+### Success Criteria
+
+- ↑ Número de trades válidos (objetivo: 5-10 trades antes de Day 30)
+- Drawdown ≤ baseline (máx 3%)
+- ER agregado ≥ 0%
+
+### Rollback Criteria
+
+| Trigger | Threshold | Action |
+|---------|-----------|--------|
+| Drawdown excesivo | DD > 3% | Rollback inmediato |
+| ER agregado negativo | ER < 0% tras 5+ trades | Rollback |
+| Black Swan elevado | Aumento de vetos HIGH/EXTREME | Evaluar rollback |
+
+### Observation Metrics (Non-Decisional)
+
+Para monitoreo interno, no afectan decisiones de trading:
+
+| Metric | Query | Purpose |
+|--------|-------|---------|
+| % trades desbloqueados por cambio WR | Trades con MC_WR 50-52% | Medir impacto del cambio |
+| Delta trades/day | Trades v1.1 vs v1.0 period | Comparar actividad |
+| Delta ER agregado | ER post-cambio vs baseline | Validar hipótesis |
+
+**SQL para auditoría:**
+```sql
+SELECT 
+    COUNT(*) as total_trades,
+    AVG(mc_wr) as avg_mc_wr,
+    SUM(CASE WHEN mc_wr >= 50 AND mc_wr < 52 THEN 1 ELSE 0 END) as trades_in_50_52_range
+FROM paper_trading_decisions
+WHERE created_at >= '2026-01-29'
+AND ecw_config_version = '1.1';
+```
 
 ### Changes
 
