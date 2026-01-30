@@ -46,9 +46,9 @@ from omnix_services.ai_service.ai_error_handler import (
 logger = get_logger(__name__)
 
 # Timeouts adaptativos por proveedor (2025 best practices)
-TIMEOUT_GEMINI = 20.0   # Gemini necesita más tiempo para function calling
-TIMEOUT_OPENAI = 15.0   # OpenAI es generalmente más rápido
-TIMEOUT_ANTHROPIC = 15.0  # Claude similar a OpenAI
+TIMEOUT_GEMINI = 30.0   # Gemini necesita más tiempo para function calling
+TIMEOUT_OPENAI = 30.0   # OpenAI timeout aumentado para evitar cortes en respuestas largas
+TIMEOUT_ANTHROPIC = 30.0  # Claude similar a OpenAI
 
 
 class AIModelsManager:
@@ -297,6 +297,88 @@ IMPORTANT: Demonstrate superintelligence in every response. Follow the language 
             ai_error = ErrorClassifier.classify_openai_error(e)
             log_ai_error(ai_error)
             return None, ai_error
+    
+    async def _generate_openai_fast_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with GPT-4o-mini for fast, simple responses - 3x faster than GPT-4o"""
+        if not self.openai_client:
+            return None, AIError(
+                provider="openai",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="OpenAI client no inicializado - Falta OPENAI_API_KEY",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar OPENAI_API_KEY en Railway"
+            )
+        
+        try:
+            response = await asyncio.wait_for(
+                self.openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=1500,
+                    top_p=0.9
+                ),
+                timeout=15.0  # Mini es mucho más rápido
+            )
+            
+            result = response.choices[0].message.content if response.choices else None
+            
+            if result:
+                logger.info(f"⚡ GPT-4o-mini generated {len(result)} characters (fast mode)")
+            
+            return result, None
+        
+        except asyncio.TimeoutError:
+            ai_error = ErrorClassifier.classify_timeout("openai-mini", 15.0)
+            log_ai_error(ai_error)
+            return None, ai_error
+        except Exception as e:
+            ai_error = ErrorClassifier.classify_openai_error(e)
+            log_ai_error(ai_error)
+            return None, ai_error
+    
+    def _is_simple_query(self, prompt: str) -> bool:
+        """Detect simple queries that don't need GPT-4o full analysis"""
+        simple_patterns = [
+            r'^(hola|hello|hi|hey|buenos?\s*d[ií]as?|buenas?\s*tardes?|buenas?\s*noches?)',
+            r'^(c[oó]mo\s*est[aá]s?|how\s*are\s*you|qu[eé]\s*tal)',
+            r'^(gracias|thanks|thank\s*you)',
+            r'^(adi[oó]s|bye|chao|hasta\s*luego)',
+            r'^\?$',
+            r'^(s[ií]|no|ok|okay)$',
+            r'^(test|ping|status)$',
+        ]
+        
+        prompt_lower = prompt.lower().strip()
+        
+        # Si es muy corto (< 20 chars) y no tiene keywords de trading
+        if len(prompt_lower) < 20:
+            trading_keywords = ['btc', 'eth', 'xrp', 'precio', 'price', 'mercado', 'market', 
+                               'trade', 'trading', 'buy', 'sell', 'comprar', 'vender', 
+                               'an[aá]lisis', 'analysis', 'reporte', 'report']
+            has_trading = any(kw in prompt_lower for kw in trading_keywords)
+            if not has_trading:
+                return True
+        
+        # Check explicit simple patterns
+        for pattern in simple_patterns:
+            if re.match(pattern, prompt_lower, re.IGNORECASE):
+                return True
+        
+        return False
+    
+    async def generate_smart_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Smart model selection: GPT-4o-mini for simple, GPT-4o for complex"""
+        if self._is_simple_query(prompt):
+            logger.info(f"⚡ Using GPT-4o-mini for simple query: '{prompt[:50]}...'")
+            return await self._generate_openai_fast_async(prompt, system_prompt)
+        else:
+            return await self._generate_openai_async(prompt, system_prompt)
     
     async def _generate_gemini_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
         """Generate with Gemini 2.0 (Async via thread pool with timeout) - Returns (response, error)"""
