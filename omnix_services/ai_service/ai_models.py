@@ -55,6 +55,7 @@ class AIModelsManager:
     """Enterprise AI Models Manager - Multi-AI Strategy"""
     
     MIN_RESPONSE_LENGTH = 50
+    MIN_RESPONSE_LENGTH_SIMPLE = 10  # Lower threshold for simple queries (greetings, etc)
     MAX_RETRIES_PER_MODEL = 3
     BASE_DELAY_SECONDS = 0.5
     
@@ -80,9 +81,13 @@ class AIModelsManager:
         self._initialize_gemini()
         self._initialize_anthropic()
     
-    def _validate_response(self, response: Optional[str]) -> Tuple[bool, str]:
+    def _validate_response(self, response: Optional[str], is_simple: bool = False) -> Tuple[bool, str]:
         """
         Validate AI response before sending to user
+        
+        Args:
+            response: The AI response text
+            is_simple: If True, use relaxed validation for simple queries (greetings, etc)
         
         Returns:
             Tuple[bool, str]: (is_valid, reason)
@@ -95,8 +100,10 @@ class AIModelsManager:
         
         response_clean = response.strip()
         
-        if len(response_clean) < self.MIN_RESPONSE_LENGTH:
-            return False, f"Response too short: {len(response_clean)} chars (min: {self.MIN_RESPONSE_LENGTH})"
+        # Use relaxed length threshold for simple queries
+        min_length = self.MIN_RESPONSE_LENGTH_SIMPLE if is_simple else self.MIN_RESPONSE_LENGTH
+        if len(response_clean) < min_length:
+            return False, f"Response too short: {len(response_clean)} chars (min: {min_length})"
         
         response_lower = response_clean.lower()
         for pattern in self.INVALID_RESPONSE_PATTERNS:
@@ -190,8 +197,15 @@ class AIModelsManager:
                 response = None
                 ai_error = None
                 
+                is_simple = False
                 if 'gpt' in model_name.lower():
-                    response, ai_error = await self._generate_openai_async(prompt, system_prompt)
+                    # Smart model selection: GPT-4o-mini for simple, GPT-4o for complex
+                    is_simple = self._is_simple_query(prompt)
+                    if is_simple:
+                        logger.info(f"⚡ Using GPT-4o-mini for simple query")
+                        response, ai_error = await self._generate_openai_fast_async(prompt, system_prompt)
+                    else:
+                        response, ai_error = await self._generate_openai_async(prompt, system_prompt)
                 elif 'gemini' in model_name.lower():
                     response, ai_error = await self._generate_gemini_async(prompt, system_prompt)
                 elif 'claude' in model_name.lower():
@@ -214,7 +228,8 @@ class AIModelsManager:
                     else:
                         continue
                 
-                is_valid, reason = self._validate_response(response)
+                # Use relaxed validation for simple queries
+                is_valid, reason = self._validate_response(response, is_simple=is_simple)
                 
                 if is_valid:
                     logger.info(f"✅ [SUCCESS] {model_name} generó respuesta válida (intento {attempt + 1}, total: {total_attempts})")
