@@ -1,8 +1,8 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 28 de Enero 2026  
-**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 12
+**Actualizado**: 30 de Enero 2026  
+**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 15
 
 ---
 
@@ -34,6 +34,22 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### AI Response Speed Optimization (Jan 30, 2026)
+- **ESTADO**: ✅ DESPLEGADO - Optimización de velocidad de respuesta AI
+- **PROBLEMA**: Timeout de OpenAI a 15s causando respuestas incompletas
+- **SOLUCIÓN**:
+  - Timeout aumentado a 30s (OpenAI, Gemini, Anthropic)
+  - GPT-4o-mini fast path para consultas simples (3x más rápido)
+  - Selección inteligente: simples → 4o-mini, complejas → 4o
+  - Validación relajada para respuestas cortas (10 chars vs 50)
+- **DOCUMENTACIÓN**: [2026-01-30-ai-speed-optimization.md](history/2026-01/2026-01-30-ai-speed-optimization.md)
+
+### ECW Calibration v1.1 (Jan 29, 2026)
+- **ESTADO**: ✅ ACTIVO - Reducción de umbral MC_WR de 52% a 50%
+- **PROPÓSITO**: Permitir trades en mercados con edge marginal
+- **ENV-CONFIGURABLE**: `ECW_MC_WR_MIN=52` para rollback
+- **DOCUMENTACIÓN**: [2026-01-29-ecw-calibration.md](history/2026-01/2026-01-29-ecw-calibration.md)
 
 ### Sitio Web Institucional Lanzado (Jan 28, 2026)
 - **ESTADO**: ✅ OPERATIVO - Landing page institucional en Puerto 5000
