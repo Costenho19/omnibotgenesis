@@ -147,6 +147,13 @@ The project utilizes a multi-port architecture:
 | **Phone** | +1 (650) 507-8293 |
 | **WhatsApp** | +1 (650) 481-5494 |
 
+### Recent Changes (Jan 30, 2026)
+- **AI Response Speed Optimization**: 
+  - Increased AI timeouts from 15s to 30s for OpenAI, Gemini, Anthropic
+  - Added GPT-4o-mini fast path for simple queries (greetings, short messages)
+  - Smart model selection: simple queries → GPT-4o-mini (3x faster), complex → GPT-4o
+  - Relaxed validation for simple responses (MIN_RESPONSE_LENGTH_SIMPLE=10 vs 50)
+
 ### Recent Changes (Jan 29, 2026)
 - **ECW Calibration v1.1**: Reduced MC_WR_MIN from 52% to 50% (ENV-configurable for rollback)
 - Configured custom domain www.omnixquantum.net for commercial landing
