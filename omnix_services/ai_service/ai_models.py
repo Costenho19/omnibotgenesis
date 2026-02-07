@@ -80,6 +80,15 @@ class AIModelsManager:
         self._initialize_openai()
         self._initialize_gemini()
         self._initialize_anthropic()
+        
+        available = []
+        if self.openai_client:
+            available.append("OpenAI")
+        if self.gemini_client:
+            available.append("Gemini")
+        if self.anthropic_client:
+            available.append("Anthropic")
+        logger.info(f"🤖 AI Fallback Chain: Primary={self.primary_model} | Available: {available or ['NONE']} | Fallbacks: {self.fallback_models}")
     
     def _validate_response(self, response: Optional[str], is_simple: bool = False) -> Tuple[bool, str]:
         """
@@ -439,7 +448,7 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
 
             if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
                 response = self.gemini_client.models.generate_content(
-                    model="gemini-2.0-flash-exp",
+                    model="gemini-2.5-flash",
                     contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.85,
@@ -454,7 +463,7 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
                     return text, None
             elif GEMINI_SDK_VERSION == 'legacy':
                 model = genai.GenerativeModel(
-                    "gemini-2.0-flash-exp",
+                    "gemini-2.5-flash",
                     system_instruction=system_prompt
                 )
                 response = model.generate_content(

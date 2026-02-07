@@ -45,7 +45,7 @@ class AIConfig:
     """Configuración servicios IA"""
     openai_key: str = env_config.get('OPENAI_API_KEY', default='')
     gemini_key: str = env_config.get('GEMINI_API_KEY', default='')
-    primary_model: str = 'gemini-2.0-flash-exp'
+    primary_model: str = 'gemini-2.5-flash'
     fallback_models: Optional[list] = None
     max_retries: int = 1
     timeout: int = 10

@@ -67,7 +67,7 @@ class CommunityAnalyzer:
                     logger.info("✅ CommunityAnalyzer con Gemini AI activado (NUEVO SDK)")
                 else:
                     genai.configure(api_key=api_key)
-                    self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                    self.model = genai.GenerativeModel('gemini-2.5-flash')
                     self.gemini_client = None
                     self.ai_available = True
                     logger.info("✅ CommunityAnalyzer con Gemini AI activado (LEGACY SDK)")
@@ -208,7 +208,7 @@ IMPORTANTE: Las recomendaciones son SOLO sugerencias, no se implementarán autom
             
             if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
                 response = self.gemini_client.models.generate_content(
-                    model="gemini-2.0-flash-exp",
+                    model="gemini-2.5-flash",
                     contents=prompt
                 )
                 if response:

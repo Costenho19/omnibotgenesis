@@ -338,7 +338,7 @@ Harold pregunta: {user_message}
 Responde con datos reales y tono amigable:"""
 
                     gemini_response = self.gemini_client.models.generate_content(
-                        model="gemini-2.0-flash-exp",
+                        model="gemini-2.5-flash",
                         contents=gemini_prompt
                     )
                     
@@ -737,7 +737,7 @@ Usuario: {prompt}
 GENERAR RESPUESTA DE 2000+ CARACTERES CON ESTRUCTURA PROFESIONAL Y ANÁLISIS MULTIDIMENSIONAL."""
 
                 response = self.gemini_client.models.generate_content(
-                    model="gemini-2.0-flash-exp",
+                    model="gemini-2.5-flash",
                     contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.85,

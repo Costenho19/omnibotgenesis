@@ -83,7 +83,7 @@ class EnvConfig:
         'OPENAI_API_KEY': {
             'category': EnvCategory.AI_APIS,
             'required': False,
-            'validator': lambda x: x.startswith('sk-') and len(x) > 40,
+            'validator': lambda x: len(x) > 20,
             'description': 'API Key de OpenAI GPT-4',
             'example': 'sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         },

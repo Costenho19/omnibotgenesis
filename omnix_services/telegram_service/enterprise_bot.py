@@ -5156,7 +5156,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                             except ImportError:
                                 import google.generativeai as genai
                                 genai.configure(api_key=gemini_key)
-                                gemini_client = genai.GenerativeModel("gemini-2.0-flash-exp")
+                                gemini_client = genai.GenerativeModel("gemini-2.5-flash")
                                 gemini_sdk_version = 'legacy'
                                 logger.info("✅ Gemini usando LEGACY SDK (google-generativeai)")
                             
@@ -5287,7 +5287,7 @@ ESTILO:
                             
                             if gemini_sdk_version == 'new':
                                 response = gemini_client.models.generate_content(
-                                    model="gemini-2.0-flash-exp",
+                                    model="gemini-2.5-flash",
                                     contents=gemini_prompt
                                 )
                             else:

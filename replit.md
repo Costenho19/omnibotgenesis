@@ -147,6 +147,14 @@ The project utilizes a multi-port architecture:
 | **Phone** | +1 (650) 507-8293 |
 | **WhatsApp** | +1 (650) 481-5494 |
 
+### Recent Changes (Feb 7, 2026)
+- **CRITICAL FIX - Gemini Model Update**: Google deprecated `gemini-2.0-flash-exp` (retirement March 31, 2026)
+  - Updated ALL instances across 6 files to `gemini-2.5-flash` (stable GA model)
+  - Files: settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py
+  - AI fallback chain: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
+- **OpenAI Key Validator Fix**: Relaxed from `startswith('sk-') and len > 40` to `len > 20` to support new key formats
+- **AI Startup Diagnostics**: Added summary log showing available models and fallback chain at initialization
+
 ### Recent Changes (Jan 30, 2026)
 - **AI Response Speed Optimization**: 
   - Increased AI timeouts from 15s to 30s for OpenAI, Gemini, Anthropic
