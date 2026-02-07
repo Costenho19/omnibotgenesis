@@ -1,9 +1,9 @@
 # OMNIX V6.5.4e - Arquitectura
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 14 de Enero 2026  
+**Actualizado**: 7 de Febrero 2026  
 **Estado**: Producción 24/7  
-**Último Cambio**: ADR-007 Coherence Threshold Calibration
+**Último Cambio**: Gemini 2.5 Flash Migration (Feb 7, 2026)
 
 ---
 
@@ -31,7 +31,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  EXTERNAL APIs                                                   │
 │  ├── Kraken - Crypto data + ejecución                           │
-│  ├── Gemini 2.0 Flash - AI primario                             │
+│  ├── Gemini 2.5 Flash - AI primario                             │
 │  └── Tavily - Web search                                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -43,7 +43,7 @@
 | Componente | Archivo | Función |
 |------------|---------|---------|
 | LanguageContextManager | `omnix_services/ai_service/prompt_templates.py` | Detección AI-first + Redis persistence |
-| Gemini AI Detection | `gemini-2.0-flash-lite` | Detección de textos cortos (<50 chars) |
+| Gemini AI Detection | `gemini-2.5-flash` | Detección de textos cortos (<50 chars) |
 | fast-langdetect | FastText-based | Detección de textos largos (≥50 chars) |
 | Redis Language Cache | `omnix:user_language:{chat_id}` | 24h TTL por usuario |
 
@@ -53,7 +53,7 @@ Usuario escribe texto
     ↓
 ¿Texto ≥50 chars?
     SI → fast-langdetect (FastText, muy preciso)
-    NO → Gemini AI (gemini-2.0-flash-lite, temp=0)
+    NO → Gemini AI (gemini-2.5-flash, temp=0)
     ↓
 Fallback chain: fast-langdetect → langdetect → 'en'
     ↓
@@ -72,7 +72,7 @@ def detect_language(text):
     
     # 2. Textos cortos: Gemini AI (singleton client)
     result = gemini.generate_content(
-        model="gemini-2.0-flash-lite",
+        model="gemini-2.5-flash",
         prompt=f"Detect language, return ISO code only: {text}",
         temperature=0.0, max_tokens=5
     )

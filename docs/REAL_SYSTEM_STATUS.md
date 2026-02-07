@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
 
-**Fecha**: 28 de Enero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 12 | Shadow Portfolio ACTIVO | Website LIVE
+**Fecha**: 7 de Febrero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 24 | Shadow Portfolio ACTIVO | Website LIVE
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -45,6 +45,21 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 ---
 
 ## Cambios Recientes
+
+### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)
+
+**PROBLEMA:** Google deprecó `gemini-2.0-flash-exp` (retirement March 31, 2026). Bot respondía "System busy" porque el modelo primario ya no existía.
+
+| Cambio | Detalle |
+|--------|---------|
+| Modelo AI | `gemini-2.0-flash-exp` → `gemini-2.5-flash` (estable GA) |
+| Archivos actualizados | 6 (settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py) |
+| OpenAI Key Validator | Relajado para soportar nuevos formatos de API key |
+| Startup Diagnostics | Nuevo log de resumen mostrando modelos disponibles |
+
+**Cadena de fallback actualizada:** Gemini 2.5 Flash → GPT-4o → Claude Sonnet 4
+
+---
 
 ### Sitio Web Institucional Lanzado (Jan 28, 2026)
 
@@ -1564,7 +1579,7 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
 - **FLUJO AI-First**:
   - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
-  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
+  - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
   - Fallback: fast-langdetect → langdetect → 'en'
 - **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
 - **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)

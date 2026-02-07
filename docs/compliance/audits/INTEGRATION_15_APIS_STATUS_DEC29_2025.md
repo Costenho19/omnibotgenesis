@@ -51,7 +51,7 @@
 |-----------|-------|
 | **Legacy Files** | `omnix_services/ai_service/providers/gemini_provider.py` |
 | **V7 Port** | `src/omnix/infrastructure/adapters/gemini_adapter.py` |
-| **Model** | gemini-2.0-flash |
+| **Model** | gemini-2.5-flash |
 | **Secret Required** | `GEMINI_API_KEY` |
 | **Secret Status** | PROVIDED |
 | **Status** | OPERATIONAL |

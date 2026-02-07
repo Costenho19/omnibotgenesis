@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** January 18, 2026  
+**Updated:** February 7, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
 
@@ -335,7 +335,7 @@ UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
 - **FLUJO AI-First**:
   - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
-  - Textos cortos (<50 chars): Gemini AI (`gemini-2.0-flash-lite`, temp=0, max_tokens=5)
+  - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
   - Fallback: fast-langdetect → langdetect → 'en'
 - **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)

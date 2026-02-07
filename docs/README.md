@@ -1,8 +1,8 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 30 de Enero 2026  
-**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 15
+**Actualizado**: 7 de Febrero 2026  
+**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 24
 
 ---
 
@@ -34,6 +34,16 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 ---
 
 ## Cambios Recientes
+
+### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)
+- **ESTADO**: ✅ DESPLEGADO - Migración de modelo AI deprecado
+- **PROBLEMA**: Google deprecó `gemini-2.0-flash-exp` (retirement March 31, 2026), causando fallo total de AI ("System busy")
+- **SOLUCIÓN**:
+  - Actualizado TODAS las instancias de `gemini-2.0-flash-exp` → `gemini-2.5-flash` (modelo estable GA)
+  - 6 archivos actualizados: settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py
+  - Cadena de fallback: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
+- **OpenAI Key Validator**: Relajado de `startswith('sk-') and len > 40` a `len > 20` para soportar nuevos formatos
+- **AI Startup Diagnostics**: Log de resumen al inicio mostrando modelos disponibles y cadena de fallback
 
 ### AI Response Speed Optimization (Jan 30, 2026)
 - **ESTADO**: ✅ DESPLEGADO - Optimización de velocidad de respuesta AI
