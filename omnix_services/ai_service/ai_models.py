@@ -171,7 +171,7 @@ class AIModelsManager:
         prompt: str, 
         system_prompt: str,
         model: Optional[str] = None,
-        max_retries: int = 3
+        max_retries: int = 2
     ) -> Optional[str]:
         """
         Generate AI response with automatic fallback, retry logic, and validation
@@ -371,25 +371,30 @@ IMPORTANT: Demonstrate superintelligence in every response. Follow the language 
         simple_patterns = [
             r'^(hola|hello|hi|hey|buenos?\s*d[ií]as?|buenas?\s*tardes?|buenas?\s*noches?)',
             r'^(c[oó]mo\s*est[aá]s?|how\s*are\s*you|qu[eé]\s*tal)',
-            r'^(gracias|thanks|thank\s*you)',
-            r'^(adi[oó]s|bye|chao|hasta\s*luego)',
+            r'^(gracias|thanks|thank\s*you|te agradezco)',
+            r'^(adi[oó]s|bye|chao|hasta\s*luego|nos vemos)',
             r'^\?$',
-            r'^(s[ií]|no|ok|okay)$',
+            r'^(s[ií]|no|ok|okay|dale|listo|entendido|perfecto|genial)$',
             r'^(test|ping|status)$',
+            r'^(qui[eé]n\s*eres|who\s*are\s*you|qu[eé]\s*eres)',
+            r'^(ayuda|help|menu|men[uú])$',
+            r'^(qu[eé]\s*puedes\s*hacer|what\s*can\s*you\s*do)',
+            r'^(buen\s*d[ií]a|good\s*morning|good\s*night|good\s*evening)',
         ]
         
         prompt_lower = prompt.lower().strip()
         
-        # Si es muy corto (< 20 chars) y no tiene keywords de trading
-        if len(prompt_lower) < 20:
-            trading_keywords = ['btc', 'eth', 'xrp', 'precio', 'price', 'mercado', 'market', 
+        if len(prompt_lower) < 30:
+            trading_keywords = ['btc', 'eth', 'xrp', 'sol', 'ada', 'precio', 'price', 'mercado', 'market', 
                                'trade', 'trading', 'buy', 'sell', 'comprar', 'vender', 
-                               'an[aá]lisis', 'analysis', 'reporte', 'report']
+                               'análisis', 'analisis', 'analysis', 'reporte', 'report',
+                               'portafolio', 'portfolio', 'balance', 'señal', 'signal',
+                               'riesgo', 'risk', 'kelly', 'monte carlo', 'veto',
+                               'inversi', 'invest', 'rendimiento', 'performance']
             has_trading = any(kw in prompt_lower for kw in trading_keywords)
             if not has_trading:
                 return True
         
-        # Check explicit simple patterns
         for pattern in simple_patterns:
             if re.match(pattern, prompt_lower, re.IGNORECASE):
                 return True

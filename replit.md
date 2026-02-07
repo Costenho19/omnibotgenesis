@@ -154,6 +154,12 @@ The project utilizes a multi-port architecture:
   - AI fallback chain: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
 - **OpenAI Key Validator Fix**: Relaxed from `startswith('sk-') and len > 40` to `len > 20` to support new key formats
 - **AI Startup Diagnostics**: Added summary log showing available models and fallback chain at initialization
+- **Response Time Optimization (~20s → ~10-14s)**:
+  - Message aggregation delay: 1.5s → 0.5s (saves ~1s per message)
+  - AI model max retries: 3 → 2 (avoids unnecessary retry loops)
+  - Response validation retries: 2 → 1 (first response is usually good enough)
+  - Market data timeouts: async 5s → 3s, sync 10s → 5s (faster failure/fallback)
+  - Expanded simple query detection: threshold 20 → 30 chars, more patterns (GPT-4o-mini 3x faster)
 
 ### Recent Changes (Jan 30, 2026)
 - **AI Response Speed Optimization**: 

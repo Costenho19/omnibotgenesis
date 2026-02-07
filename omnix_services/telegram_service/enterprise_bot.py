@@ -347,7 +347,7 @@ class EnterpriseTelegramBot:
         
         self._message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._message_timers: Dict[str, asyncio.Task] = {}
-        self._message_aggregation_delay = 1.5
+        self._message_aggregation_delay = 0.5
         
         self._sync_message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._sync_message_timers: Dict[str, Any] = {}

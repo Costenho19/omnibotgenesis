@@ -922,7 +922,7 @@ class ConversationalAI:
                     # Prepend override BEFORE user message for maximum influence
                     effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
                 
-                max_retries = 2
+                max_retries = 1
                 retry_count = 0
                 current_message = effective_user_message
                 
@@ -1147,7 +1147,7 @@ class ConversationalAI:
                             'data_source': 'Kraken'
                         }
                     return None
-                return await asyncio.wait_for(loop.run_in_executor(None, _fetch), timeout=5.0)
+                return await asyncio.wait_for(loop.run_in_executor(None, _fetch), timeout=3.0)
             except Exception as e:
                 logger.warning(f"⚠️ [ASYNC] Kraken AUTH failed: {e}")
             return None
@@ -1158,7 +1158,7 @@ class ConversationalAI:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
                         'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
-                        timeout=aiohttp.ClientTimeout(total=5),
+                        timeout=aiohttp.ClientTimeout(total=3),
                         headers={'User-Agent': 'OMNIX/6.0'}
                     ) as resp:
                         if resp.status == 200:
@@ -1185,7 +1185,7 @@ class ConversationalAI:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
                         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_high=true&include_24hr_low=true',
-                        timeout=aiohttp.ClientTimeout(total=5),
+                        timeout=aiohttp.ClientTimeout(total=3),
                         headers={'User-Agent': 'OMNIX/6.0'}
                     ) as resp:
                         if resp.status == 200:
@@ -1379,7 +1379,7 @@ class ConversationalAI:
                 logger.info("📡 [2/3] Kraken PUBLIC API...")
                 resp = requests.get(
                     'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
-                    timeout=10,
+                    timeout=5,
                     headers={'User-Agent': 'OMNIX/6.0'}
                 )
                 logger.info(f"📡 Kraken response status: {resp.status_code}")
@@ -1434,7 +1434,7 @@ class ConversationalAI:
                 logger.info("📡 [3/3] CoinGecko BACKUP...")
                 resp = requests.get(
                     'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_high=true&include_24hr_low=true',
-                    timeout=10,
+                    timeout=5,
                     headers={'User-Agent': 'OMNIX/6.0'}
                 )
                 if resp.status_code == 200:
