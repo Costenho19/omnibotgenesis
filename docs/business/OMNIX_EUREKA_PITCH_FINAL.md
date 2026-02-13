@@ -293,7 +293,8 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 |--------|---------------|
 | **ADGM** | World-class regulatory framework for digital assets |
 | **Sovereign capital** | Actively deploying into fintech and AI |
-| **Hub71 / DIFC** | Direct access to institutional investor network |
+| **DIFC** | Direct access to institutional investor network |
+| **Hub71** | Applied — pending response (innovation accelerator) |
 | **200+ prop firms** | Immediate addressable market in the region |
 | **Geographic position** | Bridge between Asia, Europe, and Africa |
 | **Investor sophistication** | Capital allocators who value discipline over hype |
@@ -307,20 +308,26 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 **Harold Nunes**
 *Founder & Product Architect*
 
-- Built OMNIX from concept to production-running system — solo
+- Built OMNIX from concept to production-running system
 - Designed the 6-checkpoint security engine, risk logic, and AI orchestration
 - Self-taught technologist with institutional finance discipline
-- Relocating to Dubai for ADGM/Hub71 ecosystem
+- Relocating to Dubai for ADGM ecosystem
+
+**Ivan David Guzman Ruiz**
+*Software Engineer*
+
+- Key contributor to OMNIX's engineering and production infrastructure
+- Instrumental in bringing professional-grade architecture to the platform
 
 **Current Structure:**
 - Core architecture, risk logic, and roadmap: Founder-led
-- Implementation and engineering: Trusted external developers
-- Advisory: Building network in ADGM/Hub71 ecosystem
+- Engineering and production infrastructure: 2-person core team
+- Ecosystem: Applied to Hub71 (pending), building network in ADGM/DIFC
 
 **Why This Works:**
 - Speed of execution over team size — product already running 24/7
 - Real-market validation from day one — not theoretical research
-- $500K raise includes 2-3 key engineering hires for enterprise API
+- $500K raise includes 2-3 additional engineering hires for enterprise API
 
 **LinkedIn:** linkedin.com/in/harold-nunes-21bb65285
 

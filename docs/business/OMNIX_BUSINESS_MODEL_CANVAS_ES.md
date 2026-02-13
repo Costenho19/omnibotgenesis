@@ -23,7 +23,7 @@
 
 **Regulatorio & Ecosistema (Objetivo)**
 - ADGM (Ecosistema de licenciamiento objetivo)
-- Hub71 (Red de innovacion)
+- Hub71 (Aplicacion enviada — pendiente de respuesta)
 - DIFC (Ecosistema de expansion futura)
 
 **Socios Estrategicos (Pipeline)**
@@ -139,7 +139,7 @@
 | Canal | Enfoque |
 |-------|---------|
 | Outreach directo | 50 contactos dirigidos/mes |
-| Introducciones Hub71 | Intros calidas via red de innovacion |
+| Hub71 (si aceptado) | Intros calidas via red de innovacion |
 | Networking ecosistema ADGM | Engagement con comunidad regulatoria |
 | Eventos fintech | TOKEN2049 Dubai, FinTech Abu Dhabi, ADGM Innovation Hub |
 
@@ -200,7 +200,7 @@
 ### Capital Humano
 
 - Arquitectura de producto liderada por el fundador (Harold Nunes)
-- Equipo de desarrollo externo de confianza
+- Software Engineer (Ivan David Guzman Ruiz)
 - 2-3 contrataciones clave de ingenieria planificadas (post-funding)
 
 ### Infraestructura
@@ -348,7 +348,7 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 
 | Atributo | Valor |
 |----------|-------|
-| Preparado para | Eureka Dubai 2026, Revision institucional, Ecosistema Hub71 |
+| Preparado para | Eureka Dubai 2026, Revision institucional, Ecosistema ADGM |
 | Alineacion | Todos los numeros coinciden con Pitch Deck Final de OMNIX Eureka |
 | Fundador | Harold Nunes |
 | Contacto | contacto@omnixquantum.net |

@@ -23,7 +23,7 @@
 
 **Regulatory & Ecosystem (Target)**
 - ADGM (Target licensing ecosystem)
-- Hub71 (Innovation network)
+- Hub71 (Applied — pending response)
 - DIFC (Future expansion ecosystem)
 
 **Strategic Partners (Pipeline)**
@@ -139,7 +139,7 @@
 | Channel | Approach |
 |---------|----------|
 | Direct outreach | 50 targeted outreaches/month |
-| Hub71 introductions | Warm intros via innovation network |
+| Hub71 (if accepted) | Warm intros via innovation network |
 | ADGM ecosystem networking | Regulatory community engagement |
 | Fintech events | TOKEN2049 Dubai, FinTech Abu Dhabi, ADGM Innovation Hub |
 
@@ -200,7 +200,7 @@
 ### Human Capital
 
 - Founder-led product architecture (Harold Nunes)
-- Trusted external development team
+- Software Engineer (Ivan David Guzman Ruiz)
 - 2-3 key engineering hires planned (post-funding)
 
 ### Infrastructure
@@ -348,7 +348,7 @@ Primary value driver: Avoided tail-risk exposure
 
 | Attribute | Value |
 |-----------|-------|
-| Prepared for | Eureka Dubai 2026, Institutional review, Hub71 ecosystem |
+| Prepared for | Eureka Dubai 2026, Institutional review, ADGM ecosystem |
 | Alignment | All numbers match OMNIX Eureka Pitch Deck Final |
 | Founder | Harold Nunes |
 | Contact | contacto@omnixquantum.net |

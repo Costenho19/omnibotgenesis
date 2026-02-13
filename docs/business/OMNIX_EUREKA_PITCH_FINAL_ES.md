@@ -293,7 +293,8 @@ La gestion de riesgo institucional existe — dentro de hedge funds con $100M+ A
 |--------|-----------------|
 | **ADGM** | Marco regulatorio de clase mundial para activos digitales |
 | **Capital soberano** | Desplegando activamente en fintech e IA |
-| **Hub71 / DIFC** | Acceso directo a red de inversores institucionales |
+| **DIFC** | Acceso directo a red de inversores institucionales |
+| **Hub71** | Aplicacion enviada — pendiente de respuesta (aceleradora de innovacion) |
 | **200+ prop firms** | Mercado direccionable inmediato en la region |
 | **Posicion geografica** | Puente entre Asia, Europa y Africa |
 | **Sofisticacion de inversores** | Asignadores de capital que valoran disciplina sobre hype |
@@ -307,20 +308,26 @@ La gestion de riesgo institucional existe — dentro de hedge funds con $100M+ A
 **Harold Nunes**
 *Fundador & Arquitecto de Producto*
 
-- Construyo OMNIX desde concepto hasta sistema corriendo en produccion — solo
+- Construyo OMNIX desde concepto hasta sistema corriendo en produccion
 - Diseno el motor de seguridad de 6 checkpoints, logica de riesgo y orquestacion de IA
 - Tecnologo autodidacta con disciplina de finanzas institucionales
-- Reubicandose a Dubai para ecosistema ADGM/Hub71
+- Reubicandose a Dubai para ecosistema ADGM
+
+**Ivan David Guzman Ruiz**
+*Software Engineer*
+
+- Contribuidor clave en la ingenieria e infraestructura de produccion de OMNIX
+- Instrumental en llevar arquitectura de grado profesional a la plataforma
 
 **Estructura Actual:**
 - Arquitectura core, logica de riesgo y roadmap: Liderado por el fundador
-- Implementacion e ingenieria: Desarrolladores externos de confianza
-- Advisory: Construyendo red en ecosistema ADGM/Hub71
+- Ingenieria e infraestructura de produccion: Equipo core de 2 personas
+- Ecosistema: Aplicacion a Hub71 (pendiente), construyendo red en ADGM/DIFC
 
 **Por Que Funciona:**
 - Velocidad de ejecucion sobre tamano del equipo — producto ya corriendo 24/7
 - Validacion en mercado real desde el dia uno — no investigacion teorica
-- La ronda de $500K incluye 2-3 contrataciones clave de ingenieria para API enterprise
+- La ronda de $500K incluye 2-3 contrataciones adicionales de ingenieria para API enterprise
 
 **LinkedIn:** linkedin.com/in/harold-nunes-21bb65285
 
