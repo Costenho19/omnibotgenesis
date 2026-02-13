@@ -100,21 +100,19 @@ The AI service adheres to SOLID principles and dependency injection, supporting 
 ### Hierarchical Veto Flow
 The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals. The Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience."
 
-### ECW Configuration (v1.1 - Jan 29, 2026)
-| Parameter | Value | ENV Variable |
-|-----------|-------|--------------|
-| **MC Win Rate Min** | 50% | `ECW_MC_WR_MIN` |
-| **MC Expected Return Min** | > 0% | `ECW_MC_ER_MIN` |
-| **Consecutive Cycles** | 3 | `ECW_CYCLES_REQUIRED` |
-| **Black Swan Max** | MEDIUM | Hardcoded |
+### ECW Configuration (v1.2 - Feb 13, 2026)
+| Parameter | Value | Previous | ENV Variable |
+|-----------|-------|----------|--------------|
+| **MC Win Rate Min** | 50% | 50% (unchanged) | `ECW_MC_WR_MIN` |
+| **MC Expected Return Min** | > 0% | > 0% (unchanged) | `ECW_MC_ER_MIN` |
+| **Consecutive Cycles** | 2 | 3 | `ECW_CYCLES_REQUIRED` |
+| **Black Swan Max** | MEDIUM | MEDIUM (unchanged) | Hardcoded |
+| **TRACK_RECORD_MODE** | false | true | `TRACK_RECORD_MODE` |
 
-**Rollback to v1.0**: Set `ECW_MC_WR_MIN=52` in Railway Variables + restart service.
+**Rollback to v1.1**: Set `TRACK_RECORD_MODE=true` and `ECW_CYCLES_REQUIRED=3` in Railway Variables + restart service.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
-
-### TRACK_RECORD_MODE
-This mode caps scores, reduces sizing, enables `WEAK_TREND` scoring, and maintains guardrails. It auto-deactivates when `total_trades >= 100` AND `win_rate >= 45%`.
 
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system tracks vetoed trades to learn filter calibration. It analyzes price movement, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity. The system is currently active with over 192,000 shadow trade events captured.
@@ -140,54 +138,12 @@ The project utilizes a multi-port architecture:
 - A record: www → 34.111.179.208 (Solo DNS)
 - TXT record: www → replit-verify=c554b789-9f74-4d37-8420-c740ae31b663
 
-### Contact Information
-| Channel | Contact |
-|---------|---------|
-| **Email** | contacto@omnixquantum.net |
-| **Phone** | +1 (650) 507-8293 |
-| **WhatsApp** | +1 (650) 481-5494 |
-
-### Recent Changes (Feb 7, 2026)
-- **CRITICAL FIX - Gemini Model Update**: Google deprecated `gemini-2.0-flash-exp` (retirement March 31, 2026)
-  - Updated ALL instances across 6 files to `gemini-2.5-flash` (stable GA model)
-  - Files: settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py
-  - AI fallback chain: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
-- **OpenAI Key Validator Fix**: Relaxed from `startswith('sk-') and len > 40` to `len > 20` to support new key formats
-- **AI Startup Diagnostics**: Added summary log showing available models and fallback chain at initialization
-- **Response Time Optimization (~20s → ~10-14s)**:
-  - Message aggregation delay: 1.5s → 0.5s (saves ~1s per message)
-  - AI model max retries: 3 → 2 (avoids unnecessary retry loops)
-  - Response validation retries: 2 → 1 (first response is usually good enough)
-  - Market data timeouts: async 5s → 3s, sync 10s → 5s (faster failure/fallback)
-  - Expanded simple query detection: threshold 20 → 30 chars, more patterns (GPT-4o-mini 3x faster)
-
-### Recent Changes (Jan 30, 2026)
-- **AI Response Speed Optimization**: 
-  - Increased AI timeouts from 15s to 30s for OpenAI, Gemini, Anthropic
-  - Added GPT-4o-mini fast path for simple queries (greetings, short messages)
-  - Smart model selection: simple queries → GPT-4o-mini (3x faster), complex → GPT-4o
-  - Relaxed validation for simple responses (MIN_RESPONSE_LENGTH_SIMPLE=10 vs 50)
-
-### Recent Changes (Jan 29, 2026)
-- **ECW Calibration v1.1**: Reduced MC_WR_MIN from 52% to 50% (ENV-configurable for rollback)
-- Configured custom domain www.omnixquantum.net for commercial landing
-- Added separate Phone and WhatsApp contact options to landing pages
-- Removed Streamlit Dashboard (port 8080) - had proxy issues with Replit
-- Simplified to 2 workflows: Flask Dashboard (5000) + OMNIX Web (3000)
-- Full session logs: `docs/history/2026-01/2026-01-29-ecw-calibration.md`, `docs/history/2026-01/2026-01-29-domain-setup.md`
-
-### Recent Changes (Jan 28, 2026)
-- Added automatic redirect from `/terminal` to `/` in OMNIX Web to prevent navigation issues
-- Added comparison table "OMNIX vs Traditional Trading" to Institutional Page
-- Added FAQ section with 5 investor-focused questions
-- Full session log: `docs/history/2026-01/2026-01-28-landing-improvements.md`
-
 ## External Dependencies
 
 ### APIs and Services
 -   **Kraken Exchange**: Crypto data and order execution.
 -   **Alpaca**: Stock data and historical bars.
--   **Google Gemini (2.0 Flash)**: Primary AI model.
+-   **Google Gemini (2.5 Flash)**: Primary AI model.
 -   **OpenAI (GPT-4o, Whisper)**: AI services.
 -   **Anthropic Claude**: AI fallback.
 -   **ElevenLabs**: Text-to-speech.

@@ -17,7 +17,7 @@
       "Monte Carlo VETO (ER < 0 = BLOCKED)",
       "RMS VETO (VaR95 > -3% = BLOCKED)",
       "Black Swan detector (always active)",
-      "Coherence Gate (< 30% critical, < 45% normal)"
+      "Coherence Gate (< 30% critical block, < 45% normal block)"
     ],
     "rollback": "Set TRACK_RECORD_MODE=true and ECW_CYCLES_REQUIRED=3 in Railway ENV + restart"
   },
@@ -99,8 +99,8 @@
       "sentiment": "Penalty only"
     },
     "coherence_gate": {
-      "veto_critical": "< 35% coherence",
-      "veto_normal": "< 50% coherence"
+      "veto_critical": "< 30% coherence",
+      "veto_normal": "< 45% coherence"
     }
   },
   
