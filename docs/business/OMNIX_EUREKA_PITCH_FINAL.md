@@ -217,7 +217,7 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 
 | Customer Type | Use Case | Pricing |
 |---------------|----------|---------|
-| **Prop Trading Firms** (200+ in ADGM/DIFC) | Protect trader capital with automated risk gates | $15K–50K/month |
+| **Prop Trading Firms** (200+ in ADGM/DIFC) | Protect trader capital with automated risk gates | $15K–35K/month |
 | **Trading Platforms** (3Commas, NinjaTrader) | Risk-as-a-Service for their users | $0.01–0.05/validation |
 | **Regulated Funds** (MiCA compliance) | Audit trail + risk governance for compliance | $100K+ annual license |
 

@@ -217,7 +217,7 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 | Tipo de Cliente | Caso de Uso | Precio |
 |-----------------|-------------|--------|
-| **Prop Trading Firms** (200+ en ADGM/DIFC) | Proteger capital de traders con puertas de riesgo automatizadas | $15K–50K/mes |
+| **Prop Trading Firms** (200+ en ADGM/DIFC) | Proteger capital de traders con puertas de riesgo automatizadas | $15K–35K/mes |
 | **Plataformas de Trading** (3Commas, NinjaTrader) | Risk-as-a-Service para sus usuarios | $0.01–0.05/validacion |
 | **Fondos Regulados** (compliance MiCA) | Trail de auditoria + gobernanza de riesgo para compliance | $100K+ licencia anual |
 
