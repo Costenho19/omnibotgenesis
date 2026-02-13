@@ -1,10 +1,26 @@
 {
   "version": "V6.5.4e INSTITUTIONAL+",
-  "last_updated": "2026-01-23",
+  "last_updated": "2026-02-13",
   "track_record_start": "2026-01-15",
-  "track_record_day": 9,
+  "track_record_day": 30,
+  "track_record_status": "COMPLETED",
   "trading_mode": "paper",
   "paper_capital": 1000000,
+  "operational_phase": {
+    "current": "PHASE_1_GRADUAL_ACTIVATION",
+    "started": "2026-02-13",
+    "changes": {
+      "TRACK_RECORD_MODE": "false (was true - score cap removed)",
+      "ECW_CYCLES_REQUIRED": "2 (was 3 - faster edge confirmation)"
+    },
+    "safety_preserved": [
+      "Monte Carlo VETO (ER < 0 = BLOCKED)",
+      "RMS VETO (VaR95 > -3% = BLOCKED)",
+      "Black Swan detector (always active)",
+      "Coherence Gate (< 30% critical, < 45% normal)"
+    ],
+    "rollback": "Set TRACK_RECORD_MODE=true and ECW_CYCLES_REQUIRED=3 in Railway ENV + restart"
+  },
   
   "track_record_periods": {
     "CRITICAL_DISTINCTION": "SIEMPRE distinguir entre Learning Baseline y Track Record Oficial al reportar trades",
@@ -34,7 +50,7 @@
         "ECW_WAITING": 24
       },
       "telemetry_source": "REAL",
-      "investor_note": "Track record oficial - sistema en modo ultra-conservador por Black Swan activo"
+      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 1 operativa."
     },
     "response_rules": {
       "mandatory_disclosure": "Cuando se mencione CUALQUIER métrica (P&L, win rate, trades, losses), incluir nota de período al FINAL",
@@ -106,18 +122,18 @@
       "status": "ENFORCEMENT",
       "description": "Requiere persistencia del edge antes de permitir trades",
       "thresholds": {
-        "mc_wr_min": 52,
+        "mc_wr_min": 50,
         "mc_er_min": 0,
-        "consecutive_cycles_required": 3,
+        "consecutive_cycles_required": 2,
         "black_swan_max": "MEDIUM"
       },
       "behavior": {
-        "counter_increments": "When MC_WR >= 52%, MC_ER > 0, Black Swan <= MEDIUM",
+        "counter_increments": "When MC_WR >= 50%, MC_ER > 0, Black Swan <= MEDIUM",
         "counter_resets": "When any condition fails",
         "trade_allowed": "When counter >= consecutive_cycles_required"
       },
       "adr": "ADR-019",
-      "investor_explanation": "No operamos en el primer ciclo positivo. Esperamos confirmación de 3 ciclos consecutivos con edge estadístico (WR >= 52%, ER > 0%) y sin riesgo severo. Esto transforma 'preservación de capital' en 'paciencia de capital'."
+      "investor_explanation": "No operamos en el primer ciclo positivo. Esperamos confirmación de 2 ciclos consecutivos con edge estadístico (WR >= 50%, ER > 0%) y sin riesgo severo. Esto transforma 'preservación de capital' en 'paciencia de capital'."
     }
   },
   
