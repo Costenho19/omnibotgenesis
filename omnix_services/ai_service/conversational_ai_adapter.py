@@ -25,9 +25,22 @@ BLACKLISTED_PHRASES = [
     # Uses lookbehind to keep the name prefix when present
     # ===========================================================================
     
+    # NAME + GRATITUDE opener pattern (Feb 2026) - "Harold, agradezco..." / "Harold, thank you..."
+    r'^[A-Z][a-záéíóú]+,?\s+agradezco\s+[^.]*\.\s*',
+    r'^[A-Z][a-záéíóú]+,?\s+thank\s+you[^.]*\.\s*',
+    r'^[A-Z][a-záéíóú]+,?\s+I\s+appreciate[^.]*\.\s*',
+    r'^[A-Z][a-záéíóú]+,?\s+gracias\s+por[^.]*\.\s*',
+    r'^[A-Z][a-záéíóú]+,?\s+agradezco\s+sinceramente[^.]*\.\s*',
+    r'^[A-Z][a-záéíóú]+,?\s+su\s+nivel\s+de\s+escrutinio[^.]*\.\s*',
+    
     # GENERIC "Agradezco...perspicacia" pattern - catches all variations
     r'(?<=\.\s)Agradezco[^.]*perspicacia[^.]*\.\s*',
     r'^Agradezco[^.]*perspicacia[^.]*\.\s*',
+    
+    # Generic "Agradezco" at start of response
+    r'^Agradezco\s+sinceramente[^.]*\.\s*',
+    r'^Agradezco\s+su\s+[^.]*\.\s*',
+    r'^Agradezco\s+tu\s+[^.]*\.\s*',
     
     # Specific "Agradezco" patterns without perspicacia
     r'(?<=\.\s)Agradezco tu pregunta[^.]*\.\s*',
@@ -175,6 +188,14 @@ BLACKLISTED_PHRASES = [
     # "Comprendo tu preocupación" - empathy without substance
     r'(?<=\.\s)Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
     r'^Comprendo tu (?:preocupaci[oó]n|inquietud|duda)[^.]*\.\s*',
+    
+    # "Su nivel de escrutinio" / "Your level of scrutiny" - investor flattery (Feb 2026)
+    r'(?<=\.\s)Su nivel de escrutinio[^.]*\.\s*',
+    r'^Su nivel de escrutinio[^.]*\.\s*',
+    r'(?<=\.\s)Your level of scrutiny[^.]*\.\s*',
+    r'^Your level of scrutiny[^.]*\.\s*',
+    r'(?<=\.\s)Tu nivel de escrutinio[^.]*\.\s*',
+    r'^Tu nivel de escrutinio[^.]*\.\s*',
     
     # "OMNIX entiende la necesidad" - evasive preamble (Jan 25, 2026)
     r'^OMNIX entiende[^.]*\.\s*',
