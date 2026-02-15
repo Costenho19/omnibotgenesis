@@ -169,7 +169,10 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-6">
             <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">
-              Governance Demo
+              Credit Demo
+            </Link>
+            <Link to="/governance-demo-insurance" className="text-muted hover:text-white text-sm transition-colors">
+              Insurance Demo
             </Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details

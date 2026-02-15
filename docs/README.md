@@ -40,11 +40,12 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 ## Cambios Recientes
 
 ### Multi-Vertical Governance Architecture (Feb 15, 2026)
-- **ESTADO**: ✅ COMPLETADO - ADR-026 + Interactive Demo
+- **ESTADO**: ✅ COMPLETADO - ADR-026 + 2 Interactive Demos
 - **ADR-026**: Documenta arquitectura Domain Adapter para expansión multi-vertical del motor de gobernanza
-- **Governance Demo**: Página interactiva en `/governance-demo` (OMNIX Web, Puerto 3000) que demuestra los 6 checkpoints aplicados a decisiones de crédito/préstamo
+- **Credit Demo**: Página interactiva en `/governance-demo` — 6 checkpoints aplicados a decisiones de crédito/préstamo
+- **Insurance Demo**: Página interactiva en `/governance-demo-insurance` — 6 checkpoints aplicados a underwriting de seguros (BIND/REFER/DECLINE)
 - **Patrón**: Domain Adapter + Normalized Governance Signals — misma arquitectura de 6 checkpoints, diferentes señales por dominio
-- **Navegación**: Links añadidos desde CommercialLanding y InstitutionalPage
+- **Navegación**: Links añadidos desde CommercialLanding, InstitutionalPage, y entre demos
 - **DOCUMENTACIÓN**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md)
 
 ### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)

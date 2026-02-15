@@ -9,8 +9,11 @@
     "adr": "ADR-026",
     "pattern": "Domain Adapter + Normalized Governance Signals",
     "validated_vertical": "Digital Asset Trading (192,000+ decisions)",
-    "demo_vertical": "Credit/Lending (Interactive Demo at /governance-demo)",
-    "roadmap_verticals": ["Supply Chain (Year 2)", "Insurance (Year 2-3)", "Energy Trading (Year 3)"],
+    "demo_verticals": [
+      "Credit/Lending (Interactive Demo at /governance-demo)",
+      "Insurance Underwriting (Interactive Demo at /governance-demo-insurance)"
+    ],
+    "roadmap_verticals": ["Supply Chain (Year 2)", "Energy Trading (Year 3)"],
     "core_abstraction": "6-Checkpoint Fail-Closed Governance Engine"
   },
   "last_updated": "2026-02-15",

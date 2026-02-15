@@ -208,7 +208,8 @@ export default function InstitutionalPage() {
             <button onClick={() => setActiveTab('home')} className={`nav-link text-sm ${activeTab === 'home' ? 'active' : ''}`}>Dashboard</button>
             <button onClick={() => setActiveTab('news')} className={`nav-link text-sm ${activeTab === 'news' ? 'active' : ''}`}>Market Intel</button>
             <button onClick={() => setActiveTab('tools')} className={`nav-link text-sm ${activeTab === 'tools' ? 'active' : ''}`}>Risk Tools</button>
-            <Link to="/governance-demo" className="nav-link text-sm text-emerald-400">Governance Demo</Link>
+            <Link to="/governance-demo" className="nav-link text-sm text-emerald-400">Credit Demo</Link>
+            <Link to="/governance-demo-insurance" className="nav-link text-sm text-blue-400">Insurance Demo</Link>
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Request Access</a>
           </div>
         </div>

@@ -125,7 +125,7 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context, a System 
 
 ### Web Infrastructure
 The project utilizes a multi-port architecture:
--   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/), Institutional Page (/institutional), and Credit Governance Demo (/governance-demo) with interactive 6-checkpoint evaluation for loan decisions. Also includes animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
+-   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/), Institutional Page (/institutional), Credit Governance Demo (/governance-demo) with interactive 6-checkpoint evaluation for loan decisions, and Insurance Governance Demo (/governance-demo-insurance) with interactive 6-checkpoint evaluation for underwriting decisions. Also includes animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
 -   **Flask Dashboard (Port 5000)**: Flask + Jinja2 internal dashboard for demos and investor metrics. Main webview port.
 
 ### Custom Domain Configuration
