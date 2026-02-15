@@ -23,12 +23,12 @@ interface PolicyApplication {
 }
 
 const POLICY_TYPES = [
-  { value: 'property', label: 'Property Insurance', baseRisk: 0.12, avgClaim: 45000 },
-  { value: 'health', label: 'Health Insurance', baseRisk: 0.18, avgClaim: 32000 },
-  { value: 'auto', label: 'Auto Insurance', baseRisk: 0.15, avgClaim: 18000 },
-  { value: 'life', label: 'Life Insurance', baseRisk: 0.08, avgClaim: 250000 },
-  { value: 'commercial', label: 'Commercial Liability', baseRisk: 0.22, avgClaim: 120000 },
-  { value: 'cyber', label: 'Cyber Insurance', baseRisk: 0.28, avgClaim: 85000 },
+  { value: 'property', label: 'Property Insurance', baseRisk: 0.12, avgCoverage: 350000 },
+  { value: 'health', label: 'Health Insurance', baseRisk: 0.18, avgCoverage: 200000 },
+  { value: 'auto', label: 'Auto Insurance', baseRisk: 0.15, avgCoverage: 50000 },
+  { value: 'life', label: 'Life Insurance', baseRisk: 0.08, avgCoverage: 500000 },
+  { value: 'commercial', label: 'Commercial Liability', baseRisk: 0.22, avgCoverage: 500000 },
+  { value: 'cyber', label: 'Cyber Insurance', baseRisk: 0.28, avgCoverage: 250000 },
 ]
 
 const GEOGRAPHIC_ZONES = [
@@ -50,33 +50,36 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
   const geoData = GEOGRAPHIC_ZONES.find(g => g.value === app.geographicZone) || GEOGRAPHIC_ZONES[0]
   const marketData = MARKET_CONDITIONS.find(m => m.value === app.marketCondition) || MARKET_CONDITIONS[0]
 
-  const ageFactor = app.applicantAge < 25 ? 0.6 : app.applicantAge < 40 ? 0.9 : app.applicantAge < 55 ? 0.8 : app.applicantAge < 70 ? 0.6 : 0.35
-  const claimsPenalty = app.claimsHistory * 0.12
-  const coverageRatio = app.coverageAmount / policyData.avgClaim
+  const ageFactor = app.applicantAge < 25 ? 0.55 : app.applicantAge < 35 ? 0.90 : app.applicantAge < 50 ? 0.85 : app.applicantAge < 65 ? 0.65 : app.applicantAge < 75 ? 0.45 : 0.25
+  const claimsPenalty = app.claimsHistory <= 1 ? app.claimsHistory * 0.10 : app.claimsHistory <= 3 ? 0.10 + (app.claimsHistory - 1) * 0.15 : 0.40 + (app.claimsHistory - 3) * 0.20
+  const coverageRatio = app.coverageAmount / policyData.avgCoverage
   const baseClaimProb = policyData.baseRisk + claimsPenalty + (1 - ageFactor) * 0.15
-  const adjustedClaimProb = Math.min(0.95, Math.max(0.02, baseClaimProb * (1 + (coverageRatio - 1) * 0.1)))
+  const adjustedClaimProb = Math.min(0.98, Math.max(0.02, baseClaimProb * (1 + Math.max(0, coverageRatio - 1) * 0.2)))
   const probabilityScore = Math.round((1 - adjustedClaimProb) * 100)
 
-  const coverageExposure = Math.min(100, Math.round(coverageRatio * 25))
-  const geoExposure = Math.round((1 - geoData.factor) * 50)
-  const concentrationRisk = Math.min(100, coverageExposure + geoExposure)
-  const riskScore = 100 - concentrationRisk
+  const coverageExposure = Math.min(100, Math.round(coverageRatio * 40))
+  const geoExposure = Math.round((1 - geoData.factor) * 60)
+  const claimsExposure = Math.min(40, app.claimsHistory * 10)
+  const concentrationRisk = Math.min(100, Math.round((coverageExposure + geoExposure + claimsExposure) * 0.7))
+  const riskScore = Math.max(0, 100 - concentrationRisk)
 
   const ageSignal = Math.round(ageFactor * 100)
-  const claimsSignal = Math.max(0, Math.round((1 - app.claimsHistory * 0.2) * 100))
+  const claimsSignal = Math.max(0, Math.round((1 - app.claimsHistory * 0.25) * 100))
   const geoSignal = Math.round(geoData.factor * 100)
-  const coherenceScore = Math.round(ageSignal * 0.30 + claimsSignal * 0.40 + geoSignal * 0.30)
+  const coherenceScore = Math.round(ageSignal * 0.25 + claimsSignal * 0.50 + geoSignal * 0.25)
 
-  const claimsTrend = app.claimsHistory === 0 ? 95 : app.claimsHistory <= 1 ? 75 : app.claimsHistory <= 2 ? 50 : app.claimsHistory <= 3 ? 30 : 15
-  const trendScore = Math.round(claimsTrend * ageFactor)
+  const claimsTrend = app.claimsHistory === 0 ? 95 : app.claimsHistory === 1 ? 70 : app.claimsHistory === 2 ? 45 : app.claimsHistory === 3 ? 25 : app.claimsHistory === 4 ? 12 : 5
+  const trendScore = Math.round(claimsTrend * (ageFactor * 0.6 + geoData.factor * 0.4))
 
-  const stressScore = Math.round(marketData.factor * 100)
+  const marketStress = marketData.factor
+  const claimsStress = Math.max(0, 1 - app.claimsHistory * 0.15)
+  const stressScore = Math.round(marketStress * 60 + claimsStress * 40)
 
   const signals = [probabilityScore, riskScore, coherenceScore, trendScore, stressScore]
   const avg = signals.reduce((a, b) => a + b, 0) / signals.length
   const variance = signals.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / signals.length
   const divergence = Math.sqrt(variance)
-  const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 1.8)))
+  const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 2.0)))
 
   return [
     {
@@ -89,7 +92,7 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
       reasoning: probabilityScore >= 65
         ? `Estimated claim probability ${(adjustedClaimProb * 100).toFixed(1)}% is within acceptable underwriting range`
         : `Estimated claim probability ${(adjustedClaimProb * 100).toFixed(1)}% exceeds acceptable risk for this policy type`,
-      detail: `Age factor: ${(ageFactor * 100).toFixed(0)}% | Claims penalty: +${(claimsPenalty * 100).toFixed(0)}% | Coverage ratio: ${coverageRatio.toFixed(1)}x avg claim | P(no claim) = ${probabilityScore}%`
+      detail: `Age factor: ${(ageFactor * 100).toFixed(0)}% | Claims penalty: +${(claimsPenalty * 100).toFixed(0)}% | Coverage ratio: ${coverageRatio.toFixed(1)}x avg | P(no claim) = ${probabilityScore}%`
     },
     {
       name: 'Exposure Limits',
@@ -101,7 +104,7 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
       reasoning: riskScore >= 50
         ? `Coverage exposure within portfolio concentration limits`
         : `Excessive exposure — $${(app.coverageAmount / 1000).toFixed(0)}K coverage in ${geoData.label} creates concentration risk`,
-      detail: `Coverage exposure: ${coverageExposure}% | Geo risk: ${geoExposure}% | Combined concentration: ${concentrationRisk}% | Risk score: ${riskScore}/100`
+      detail: `Coverage exposure: ${coverageExposure}% | Geo risk: ${geoExposure}% | Claims exposure: ${claimsExposure}% | Concentration: ${concentrationRisk}% | Risk score: ${riskScore}/100`
     },
     {
       name: 'Underwriting Coherence',
@@ -121,7 +124,7 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
       icon: <TrendingUp className="w-5 h-5" />,
       status: 'pending',
       score: trendScore,
-      threshold: 45,
+      threshold: 35,
       reasoning: trendScore >= 45
         ? `Claims history trend (${app.claimsHistory} prior claims) confirms acceptable risk trajectory`
         : `Claims history trend (${app.claimsHistory} prior claims) indicates deteriorating risk profile`,
@@ -172,6 +175,12 @@ export default function InsuranceGovernanceDemo() {
 
   const runGovernanceEvaluation = () => {
     const results = evaluateCheckpoints(application)
+    const finalResults = results.map(cp => {
+      const passed = cp.score >= cp.threshold
+      const finalStatus: 'pass' | 'warn' | 'block' = passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block'
+      return { ...cp, finalStatus }
+    })
+
     setCheckpoints(results)
     setIsEvaluating(true)
     setEvaluationComplete(false)
@@ -179,17 +188,17 @@ export default function InsuranceGovernanceDemo() {
 
     let step = 0
     const animate = () => {
-      if (step < results.length) {
+      if (step < finalResults.length) {
         setCheckpoints(prev => prev.map((cp, i) => {
-          if (i === step) return { ...cp, status: 'evaluating' }
+          if (i === step) return { ...cp, status: 'evaluating' as const }
           return cp
         }))
 
         setTimeout(() => {
+          const finalStatus = finalResults[step].finalStatus
           setCheckpoints(prev => prev.map((cp, i) => {
             if (i === step) {
-              const passed = cp.score >= cp.threshold
-              return { ...cp, status: passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block' }
+              return { ...cp, status: finalStatus }
             }
             return cp
           }))

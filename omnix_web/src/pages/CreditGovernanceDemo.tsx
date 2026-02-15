@@ -169,6 +169,12 @@ export default function CreditGovernanceDemo() {
 
   const runGovernanceEvaluation = () => {
     const results = evaluateCheckpoints(application)
+    const finalResults = results.map(cp => {
+      const passed = cp.score >= cp.threshold
+      const finalStatus: 'pass' | 'warn' | 'block' = passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block'
+      return { ...cp, finalStatus }
+    })
+
     setCheckpoints(results)
     setIsEvaluating(true)
     setEvaluationComplete(false)
@@ -176,17 +182,17 @@ export default function CreditGovernanceDemo() {
 
     let step = 0
     const animate = () => {
-      if (step < results.length) {
+      if (step < finalResults.length) {
         setCheckpoints(prev => prev.map((cp, i) => {
-          if (i === step) return { ...cp, status: 'evaluating' }
+          if (i === step) return { ...cp, status: 'evaluating' as const }
           return cp
         }))
 
         setTimeout(() => {
+          const finalStatus = finalResults[step].finalStatus
           setCheckpoints(prev => prev.map((cp, i) => {
             if (i === step) {
-              const passed = cp.score >= cp.threshold
-              return { ...cp, status: passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block' }
+              return { ...cp, status: finalStatus }
             }
             return cp
           }))
