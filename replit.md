@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4e INSTITUTIONAL+ is an **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty." Its domain-agnostic 6-checkpoint architecture prevents costly mistakes before they happen across high-stakes decision domains. The first vertical validated is digital asset trading, with capital preservation as the core proof metric. The system integrates post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. Future verticals include supply chain, lending/credit, insurance, energy trading, and RegTech/compliance (Year 2-3+). It offers a dual revenue model: B2B Decision Governance Licensing (80% focus: prop firms, trading platforms, regulated funds) and B2C SaaS (20%). See ADR-025 for the strategic repositioning rationale.
+OMNIX V6.5.4e INSTITUTIONAL+ is an **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty." Its domain-agnostic 6-checkpoint architecture prevents costly mistakes before they happen across high-stakes decision domains. The first vertical validated is digital asset trading, with capital preservation as the core proof metric. The system integrates post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. Future verticals include supply chain, lending/credit, insurance, energy trading, and RegTech/compliance (Year 2-3+). It offers a dual revenue model: B2B Decision Governance Licensing (80% focus: prop firms, trading platforms, regulated funds) and B2C SaaS (20%). See ADR-025 for the strategic repositioning rationale. ADR-026 documents the Multi-Vertical Governance Architecture (Domain Adapter pattern, checkpoint abstraction, implementation roadmap). An interactive Credit/Lending governance demo is available at `/governance-demo` on the OMNIX Web (port 3000).
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -125,7 +125,7 @@ The dashboard displays a Dual Win Rate Framework, enriched AI context, a System 
 
 ### Web Infrastructure
 The project utilizes a multi-port architecture:
--   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/) and Institutional Page (/institutional) with animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
+-   **OMNIX Web (Port 3000)**: React + Vite public landing pages. Features Commercial Landing (/), Institutional Page (/institutional), and Credit Governance Demo (/governance-demo) with interactive 6-checkpoint evaluation for loan decisions. Also includes animated statistics, 4-Layer Validation Architecture, FAQ section, comparison table (OMNIX vs Traditional Trading), live market data, risk calculator, and multi-tier pricing. Automatic redirects from /terminal and unknown routes to /.
 -   **Flask Dashboard (Port 5000)**: Flask + Jinja2 internal dashboard for demos and investor metrics. Main webview port.
 
 ### Custom Domain Configuration

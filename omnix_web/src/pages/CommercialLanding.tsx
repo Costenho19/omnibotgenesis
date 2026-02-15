@@ -149,7 +149,11 @@ export default function CommercialLanding() {
           </div>
         </section>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-3">
+          <Link to="/governance-demo" className="text-emerald-400 hover:text-white transition-colors flex items-center justify-center gap-2">
+            See our multi-vertical governance demo in action
+            <ArrowRight className="w-4 h-4" />
+          </Link>
           <Link to="/institutional" className="text-[#C9A227] hover:text-white transition-colors flex items-center justify-center gap-2">
             Looking for technical details? View our Institutional page
             <ArrowRight className="w-4 h-4" />
@@ -164,6 +168,9 @@ export default function CommercialLanding() {
             <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6">
+            <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">
+              Governance Demo
+            </Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details
             </Link>

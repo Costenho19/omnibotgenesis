@@ -32,11 +32,20 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.
 
 **Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor  
-**Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform
+**Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform  
+**Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)
 
 ---
 
 ## Cambios Recientes
+
+### Multi-Vertical Governance Architecture (Feb 15, 2026)
+- **ESTADO**: ✅ COMPLETADO - ADR-026 + Interactive Demo
+- **ADR-026**: Documenta arquitectura Domain Adapter para expansión multi-vertical del motor de gobernanza
+- **Governance Demo**: Página interactiva en `/governance-demo` (OMNIX Web, Puerto 3000) que demuestra los 6 checkpoints aplicados a decisiones de crédito/préstamo
+- **Patrón**: Domain Adapter + Normalized Governance Signals — misma arquitectura de 6 checkpoints, diferentes señales por dominio
+- **Navegación**: Links añadidos desde CommercialLanding y InstitutionalPage
+- **DOCUMENTACIÓN**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md)
 
 ### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)
 - **ESTADO**: ✅ DESPLEGADO - Migración de modelo AI deprecado
