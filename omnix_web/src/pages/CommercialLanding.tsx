@@ -22,11 +22,11 @@ export default function CommercialLanding() {
       <main className="pt-32 px-6 pb-20 max-w-6xl mx-auto">
         <section className="text-center mb-24 animate-fade-in-up">
           <h1 className="heading-xl text-white mb-8 leading-tight">
-            Stop Catastrophic <br />
-            <span className="gold-gradient">Trading Losses</span>
+            Stop Costly Mistakes <br />
+            <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-12 leading-relaxed">
-            OMNIX helps prevent catastrophic trading losses by blocking high-risk executions before they happen.
+            OMNIX is an AI Decision Governance Platform that blocks high-risk decisions before they cause damage. First validated in digital asset trading.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
@@ -46,9 +46,9 @@ export default function CommercialLanding() {
               <div className="w-16 h-16 rounded-full bg-[#C9A227]/20 flex items-center justify-center mx-auto mb-6">
                 <Shield className="w-8 h-8 gold-text" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Capital Protection</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Decision Governance</h3>
               <p className="text-muted leading-relaxed">
-                Every trade is validated before execution. Risky trades are blocked automatically.
+                Every high-stakes decision is validated through 6 independent checkpoints before execution.
               </p>
             </div>
 
@@ -80,19 +80,19 @@ export default function CommercialLanding() {
             <div className="grid md:grid-cols-4 gap-8">
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">1</div>
-                <p className="text-white font-medium">You make a trade decision</p>
+                <p className="text-white font-medium">You face a high-stakes decision</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">2</div>
-                <p className="text-white font-medium">OMNIX checks if it's safe</p>
+                <p className="text-white font-medium">OMNIX validates it through 6 checkpoints</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">3</div>
-                <p className="text-white font-medium">Bad trades get blocked</p>
+                <p className="text-white font-medium">Risky actions get blocked</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">4</div>
-                <p className="text-white font-medium">Safe trades go through</p>
+                <p className="text-white font-medium">Only validated decisions proceed</p>
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function CommercialLanding() {
           <div className="space-y-4 max-w-2xl mx-auto">
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-muted"><span className="text-white font-medium">Blocks first, asks questions later.</span> We stop risky trades before they cost you money.</p>
+              <p className="text-muted"><span className="text-white font-medium">Blocks first, asks questions later.</span> We stop risky decisions before they cost you money.</p>
             </div>
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
@@ -113,15 +113,15 @@ export default function CommercialLanding() {
             </div>
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-muted"><span className="text-white font-medium">No false promises.</span> We don't guarantee profits. We help prevent catastrophic losses.</p>
+              <p className="text-muted"><span className="text-white font-medium">No false promises.</span> We don't guarantee outcomes. We help prevent costly mistakes.</p>
             </div>
           </div>
         </section>
 
         <section className="text-center glass-card p-12 gold-glow">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to Protect Your Capital?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to Govern Your Decisions?</h2>
           <p className="text-xl text-muted max-w-2xl mx-auto mb-8">
-            Let's talk about how OMNIX can help protect your trading portfolio.
+            Let's talk about how OMNIX can help govern high-stakes decisions for your organization.
           </p>
           <div className="flex justify-center gap-4 flex-wrap mb-8">
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary flex items-center gap-2">

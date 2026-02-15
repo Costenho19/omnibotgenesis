@@ -4,7 +4,7 @@
 **Source**: Content from OMNIX investor documentation  
 **Format**: Convert to Google Slides / Keynote / PDF  
 **Classification**: Investor Confidential  
-**Last Updated**: January 24, 2026
+**Last Updated**: February 15, 2026
 
 ---
 
@@ -12,12 +12,12 @@
 
 ```
 OMNIX
-AI Capital & Risk Orchestration Engine
+AI Decision Governance Platform
 
-"Preserve capital before optimizing returns"
+"Preventing costly mistakes before they happen"
 
 [Logo placeholder]
-Seed Round | January 2026
+Pre-Seed Round | February 2026
 ```
 
 ---
@@ -25,17 +25,20 @@ Seed Round | January 2026
 ## SLIDE 2 — The Problem
 
 ```
-95% of retail traders lose money
+95% of high-stakes decision systems ask the wrong question
 
 ┌─────────────────────────────────────────────────┐
 │  • Emotional decisions under pressure           │
 │  • Lack of systematic discipline                │
 │  • Single-layer risk checks                     │
-│  • No institutional-grade infrastructure        │
+│  • No institutional-grade governance            │
+│  • $68B+ lost annually by traders alone         │
+│  • Billions more in bad supply chain, lending,  │
+│    and insurance decisions                      │
 └─────────────────────────────────────────────────┘
 
-Institutional tools exist.
-Advanced user access doesn't.
+They ask: "When should I act?"
+The right question: "When should I NOT act?"
 ```
 
 ---
@@ -46,15 +49,20 @@ Advanced user access doesn't.
 Market Size
 
 ┌───────────────────────────────────────────────┐
-│  $2.1T    Crypto market cap                   │
 │  $18.8B   Algorithmic trading market          │
-│  21M      Advanced crypto users globally      │
+│  $3.2B    Supply chain analytics              │
+│  $7.4B    Credit risk management              │
+│  $5.1B    Insurtech                           │
+│  $2.8B    Energy risk management              │
+│                                               │
+│  Combined addressable: $37.3B+                │
 └───────────────────────────────────────────────┘
 
 The Gap:
-Retail infrastructure vs. institutional-grade risk management
+Institutional-grade decision governance exists inside
+hedge funds with $100M+ AUM. Nobody else has access.
 
-OMNIX bridges this gap for advanced users.
+OMNIX makes decision governance infrastructure accessible.
 ```
 
 ---
@@ -62,7 +70,7 @@ OMNIX bridges this gap for advanced users.
 ## SLIDE 4 — The Solution
 
 ```
-OMNIX = Risk-first AI trading infrastructure
+OMNIX = AI Decision Governance Platform
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
@@ -151,11 +159,11 @@ This slide makes us CREDIBLE.
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  89,000+ evaluation cycles  Risk veto system active     │
+│  192,000+ evaluation cycles Risk veto system active     │
 │  1.5% max drawdown          Capital preservation focus  │
 │  98.5% capital preserved    Historical through baseline │
 │  119 baseline trades        Learning phase complete     │
-│  Day 10 of 30               Official track record       │
+│  Day 30+ completed          Official track record       │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
@@ -168,35 +176,32 @@ Official Track Record began Jan 15, 2026.
 
 ---
 
-## SLIDE 9 — Business Model (Dual Revenue)
+## SLIDE 9 — Business Model (B2B Decision Governance)
 
 ```
-TWO REVENUE STREAMS
+B2B DECISION GOVERNANCE INFRASTRUCTURE
 
 ┌─────────────────────────────────────────────────────────┐
-│  STREAM 1: B2C SaaS (Direct Users)                      │
+│  PRIMARY: B2B Decision Governance Licensing              │
 │                                                         │
-│  Buyer: Retail / semi-pro traders                       │
+│  Buyer: CTO, Head of Risk, Compliance, CIO              │
 │                                                         │
-│  Starter     $49/month      Basic risk monitoring       │
+│  Prop Firms (200+ in ADGM/DIFC)  $15K-35K/month       │
+│  Trading Platforms                $0.01-0.05/validation │
+│  Regulated Funds (MiCA)           $100K+ annual license │
+│                                                         │
+│  Target: Prop firms, trading platforms, regulated funds │
+│  Value: Institutional-grade decision governance         │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│  SECONDARY: B2C SaaS (Post-Enterprise Validation)       │
+│                                                         │
 │  Pro         $149/month     Full Risk Guardian access   │
 │  Advanced    $499/month     API access, custom config   │
 └─────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────┐
-│  STREAM 2: B2B Enterprise Licensing                     │
-│                                                         │
-│  Buyer: CTO, Head of Risk, Compliance, CIO              │
-│                                                         │
-│  Risk Guardian API    $10K-50K/month   Per-platform     │
-│  White-Label Engine   $100K+ setup + $20K/mo  Full integration │
-│  Per-Validation       $0.01-0.05       Pay-per-use      │
-│                                                         │
-│  Target: 3Commas, NinjaTrader, smaller trading bots     │
-│  Value: They get institutional-grade risk protection    │
-└─────────────────────────────────────────────────────────┘
-
-"Institutions pay for what blocks bad trades, not for alpha."
+"Institutions pay for what blocks bad decisions, not for alpha."
 
 License-based revenue. No tokens.
 ```
@@ -232,21 +237,56 @@ without them building anything.
 
 ---
 
-## SLIDE 10 — Market & Growth
+## SLIDE 9.75 — Multi-Vertical Vision
 
 ```
-Target Market
+The Same Engine. Different Domains. Same Discipline.
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  Total Addressable:  21M advanced crypto users          │
-│  Serviceable:        2.1M (10% advanced segment)        │
-│  Initial Target:     10,500 users (0.5% penetration)    │
+│  VERTICAL              STATUS           TIMELINE        │
+│                                                         │
+│  Digital Asset Trading  VALIDATED        Now             │
+│  Supply Chain           Roadmap          Year 2-3        │
+│  Lending / Credit       Roadmap          Year 2-3        │
+│  Insurance              Roadmap          Year 3+         │
+│  Energy Trading         Roadmap          Year 3+         │
+│  RegTech / Compliance   Roadmap          Year 3+         │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+The 6-checkpoint architecture is domain-agnostic.
+The inputs change. The governance logic is identical.
+
+"We validated in the hardest domain first — 
+real-time financial markets. Everything else 
+is a simpler input set."
+```
+
+---
+
+## SLIDE 10 — Market & Growth
+
+```
+Target Market — Multi-Vertical Expansion
+
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│  Algorithmic Trading:   $18.8B (current vertical)       │
+│  Supply Chain:          $3.2B  (Year 2-3)               │
+│  Credit Risk:           $7.4B  (Year 2-3)               │
+│  Insurtech:             $5.1B  (Year 3+)                │
+│  Energy Risk:           $2.8B  (Year 3+)                │
+│                                                         │
+│  Combined Addressable:  $37.3B+                         │
+│                                                         │
+│  Year 1 Target:  3 enterprise pilots (digital assets)   │
+│  Year 2-3:       Multi-vertical expansion               │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
 Conservative assumptions.
-Focus on quality over viral growth.
+Focus on enterprise pilots over viral growth.
 ```
 
 ---
@@ -254,15 +294,17 @@ Focus on quality over viral growth.
 ## SLIDE 11 — Roadmap
 
 ```
-Validation → Beta → Launch → Scale
+Validation → Enterprise Pilots → Multi-Vertical → Scale
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  Q1 2026    Complete 30-day track record (Day 30: Feb 13)│
+│  Q1 2026    30-day track record completed (Feb 13)      │
 │  Q1 2026    500+ trades validation target               │
-│  Q2 2026    Private beta with select users              │
+│  Q2 2026    First enterprise pilot (prop firm/platform) │
 │  Q3 2026    Public launch (license model)               │
 │  Q4 2026    Series A readiness                          │
+│  Year 2-3   Multi-vertical expansion                    │
+│             (supply chain, lending, insurance)           │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
@@ -274,13 +316,13 @@ Milestone-driven, not timeline-driven.
 ## SLIDE 12 — The Ask
 
 ```
-Seed Round
+Pre-Seed Round
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
 │  Raising:         $500,000                              │
-│  Valuation:       $4.5M pre-money                       │
-│  Equity:          10%                                   │
+│  Valuation:       $2.5M-$3M pre-money                   │
+│  Equity:          16.7%                                 │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
@@ -313,6 +355,8 @@ Capital preservation focus extends to your capital too.
 3. **Auditability** — Every decision logged and reviewable
 4. **Discipline** — Delayed deployment is intentional validation
 5. **Infrastructure** — Not a trading bot, not a token
+6. **Domain-agnostic** — Same 6-checkpoint engine, multiple verticals
+7. **Multi-vertical governance** — Trading validated, supply chain/lending/insurance on roadmap
 
 ### What NOT to Say
 

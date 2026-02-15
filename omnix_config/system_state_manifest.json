@@ -1,6 +1,11 @@
 {
   "version": "V6.5.4e INSTITUTIONAL+",
-  "last_updated": "2026-02-13",
+  "platform_identity": "AI Decision Governance Platform",
+  "tagline": "Governing Decisions Under Uncertainty",
+  "first_vertical": "Digital Asset Trading (Validated)",
+  "future_verticals": ["Supply Chain", "Lending/Credit", "Insurance", "Energy Trading", "RegTech/Compliance"],
+  "adr_reference": "ADR-025",
+  "last_updated": "2026-02-15",
   "track_record_start": "2026-01-15",
   "track_record_day": 30,
   "track_record_status": "COMPLETED",

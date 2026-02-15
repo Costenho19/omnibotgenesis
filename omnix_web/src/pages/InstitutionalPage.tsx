@@ -56,7 +56,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
 
 export default function InstitutionalPage() {
   const [metrics, setMetrics] = useState<SystemMetrics>({
-    evaluationCycles: 175192,
+    evaluationCycles: 192000,
     vetosExecuted: 5473,
     capitalPreserved: 98.5,
     systemUptime: '99.9%',
@@ -217,14 +217,14 @@ export default function InstitutionalPage() {
         {activeTab === 'home' && (
           <>
             <section className="text-center mb-20 animate-fade-in-up">
-              <p className="section-title">Institutional Risk Control Infrastructure</p>
+              <p className="section-title">AI Decision Governance Platform</p>
               <h1 className="heading-xl text-white mb-6">
                 The Governance Layer That<br />
-                <span className="gold-gradient">Protects Institutional Capital</span>
+                <span className="gold-gradient">Prevents Costly Mistakes</span>
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
-                OMNIX validates every trade before execution. Our 4-layer fail-closed architecture 
-                ensures capital preservation is never compromised by aggressive execution.
+                OMNIX validates every decision before execution. Our 6-checkpoint fail-closed architecture 
+                ensures capital preservation across high-stakes domains. First vertical validated: digital asset trading.
               </p>
               <div className="flex justify-center gap-4">
                 <button className="btn-primary flex items-center gap-2">
@@ -253,7 +253,7 @@ export default function InstitutionalPage() {
                   <AlertTriangle className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="metric-value text-amber-500">{formatNumber(vetosCount)}</div>
-                <p className="text-muted mt-2 text-sm">High-Risk Trades Blocked</p>
+                <p className="text-muted mt-2 text-sm">High-Risk Decisions Blocked</p>
               </div>
               
               <div className="stat-card animate-fade-in-up animate-delay-3">
@@ -279,7 +279,7 @@ export default function InstitutionalPage() {
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
                   <p className="section-title">The Challenge</p>
-                  <h2 className="text-3xl font-bold text-white mb-6">Why 73% of Algorithmic Traders Lose Money</h2>
+                  <h2 className="text-3xl font-bold text-white mb-6">Why 73% of Algorithmic Decision Systems Fail</h2>
                   <div className="space-y-4">
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-1">
@@ -315,7 +315,7 @@ export default function InstitutionalPage() {
                   <h3 className="text-2xl font-semibold text-white mb-6">Fail-Closed by Design</h3>
                   <p className="text-muted mb-6 leading-relaxed">
                     Unlike fail-open systems that execute first and ask questions later, OMNIX blocks ALL trades by default. 
-                    Every trade must pass through 4 independent validation layers before execution is allowed.
+                    Every trade must pass through 6 independent validation checkpoints before execution is allowed.
                   </p>
                   <div className="flex items-center gap-3 p-4 bg-[#0A1628]/60 rounded-xl border border-emerald-500/30">
                     <CheckCircle className="w-6 h-6 text-emerald-500" />
@@ -331,7 +331,7 @@ export default function InstitutionalPage() {
               <div className="text-center mb-12">
                 <p className="section-title">System Architecture</p>
                 <h2 className="text-3xl font-bold text-white">How OMNIX Protects Your Capital</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">Every trade signal passes through a rigorous 4-layer validation pipeline. If ANY layer vetoes, the trade is blocked.</p>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">Every trade signal passes through a rigorous 6-checkpoint validation pipeline. If ANY checkpoint vetoes, the trade is blocked.</p>
               </div>
               
               <div className="grid md:grid-cols-4 gap-6">

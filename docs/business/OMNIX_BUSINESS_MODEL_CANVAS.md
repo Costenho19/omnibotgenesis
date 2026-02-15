@@ -8,12 +8,12 @@
 
 ## BUSINESS MODEL CANVAS — OMNIX
 
-**"Pre-Execution Risk Governance Infrastructure for Digital Asset Trading"**
+**"AI Decision Governance Platform — Preventing Costly Mistakes Before They Happen"**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            OMNIX BUSINESS MODEL                                 │
-│              Institutional Risk Governance for Digital Assets                    │
+│         AI Decision Governance Platform | First Vertical: Digital Assets         │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -29,6 +29,7 @@
 **Strategic Partners (Pipeline)**
 - Trading platforms (API integrations)
 - Prop trading firms (pilot partners)
+- Supply chain and fintech platforms (future verticals)
 
 **Technology Providers**
 - Cloud infrastructure (Railway / scalable cloud)
@@ -40,12 +41,13 @@
 ## KEY ACTIVITIES
 
 **Core Operations**
-- Risk Engine Development & Calibration
-- 6-Checkpoint Validation Architecture
+- Decision Governance Engine Development & Calibration
+- 6-Checkpoint Validation Architecture (domain-agnostic)
 - Decision Trace Logging (100% telemetry coverage)
-- Shadow Portfolio Analysis (192,000+ events)
+- Shadow Portfolio Analysis (192,000+ governed decisions)
 - API Integration for Enterprise Clients
 - Model Validation against real market conditions
+- Multi-vertical domain adaptation (trading → supply chain → lending)
 
 **Governance Operations**
 - Compliance Monitoring
@@ -56,32 +58,46 @@
 
 ## VALUE PROPOSITION
 
-> "Capital protection before capital deployment."
+> "Preventing costly mistakes before they happen."
 
-**OMNIX provides:**
+**OMNIX is an AI Decision Governance Platform** that provides:
 
-- Multi-layer pre-execution trade validation (6 independent checkpoints)
-- Fail-closed architecture (default = no trade)
+- Multi-layer pre-execution decision validation (6 independent checkpoints)
+- Fail-closed architecture (default = don't act)
 - Full audit-grade decision trace
 - Regime detection & tail risk awareness
-- Institutional governance logic for digital asset trading
+- Domain-agnostic governance logic — first validated in digital asset trading
 
 **DIFFERENTIATION:**
 
 | Traditional Systems | OMNIX |
 |--------------------| ------|
-| Optimize entries | Optimizes disciplined restraint |
+| Optimize for action | Optimizes for disciplined restraint |
 | 1 risk check | 6 independent checkpoints |
-| Trade first, manage risk after | Block first, trade only with confirmed edge |
+| Act first, manage risk after | Block first, act only with confirmed edge |
+| Single domain | Domain-agnostic governance architecture |
 
-**CUSTOMER OUTCOME (From Validation Data):**
+**CUSTOMER OUTCOME (From First Vertical — Digital Asset Trading):**
 
 | Outcome | Evidence |
 |---------|----------|
 | Capital preserved during volatility | 98.5% preserved while BTC dropped 7.37% |
-| High-risk trades correctly blocked | 47 trades blocked, 91% would have lost money |
+| High-risk actions correctly blocked | 47 trades blocked, 91% would have lost money |
 | Full auditability | 192,000+ decision cycles logged |
 | System reliability | 95%+ uptime, ~120ms execution latency |
+
+**MULTI-VERTICAL APPLICABILITY:**
+
+The same 6-checkpoint architecture governs decisions across domains:
+
+| Vertical | Governance Application | Status |
+|----------|----------------------|--------|
+| Digital Asset Trading | Trade execution governance | Validated |
+| Supply Chain | Procurement risk governance | Roadmap (Year 2-3) |
+| Lending / Credit | Credit extension governance | Roadmap (Year 2-3) |
+| Insurance | Underwriting governance | Roadmap (Year 3+) |
+| Energy Trading | Energy procurement governance | Roadmap (Year 3+) |
+| RegTech / Compliance | Operational compliance governance | Roadmap (Year 3+) |
 
 ---
 
@@ -112,13 +128,22 @@
 | **Regulated Funds** (Crypto hedge funds) | Audit requirements, MiCA compliance | Full decision audit trail |
 | **Family Offices** (MENA/Asia focused) | Crypto uncertainty, no institutional tools | Institutional-grade risk controls |
 
+### FUTURE VERTICALS — B2B Decision Governance (Year 2-3+)
+
+| Segment | Pain Point | OMNIX Application |
+|---------|-----------|------------------|
+| **Supply Chain Operators** | Costly procurement mistakes under uncertainty | Procurement decision governance |
+| **Lending Platforms** | High-risk credit approvals causing defaults | Credit extension governance |
+| **Insurance Underwriters** | Accumulating tail risk exposure | Underwriting decision governance |
+| **Energy Traders** | Volatile energy procurement decisions | Energy contract governance |
+
 ### SECONDARY — B2C (20% Focus, Post-Enterprise Validation)
 
 - Advanced independent traders
 - Semi-professional traders
 - High-net-worth individuals managing own capital
 
-### Market Sizing
+### Market Sizing — First Vertical (Digital Asset Trading)
 
 | Metric | Value |
 |--------|-------|
@@ -129,6 +154,17 @@
 | Estimated institutional targets (MENA) | ~300 |
 | Conservative penetration (5-10%) | 15-30 clients |
 | Year 1 target | 3 enterprise pilots |
+
+### Multi-Vertical TAM Expansion (Year 2-3+)
+
+| Vertical | Addressable Market | Timeline |
+|----------|-------------------|----------|
+| Digital Asset Trading (Current) | $18.8B algorithmic trading | Now (validated) |
+| Supply Chain Risk | $3.2B supply chain analytics | Year 2-3 |
+| Credit / Lending Governance | $7.4B credit risk management | Year 2-3 |
+| Insurance Underwriting | $5.1B insurtech | Year 3+ |
+| Energy Trading | $2.8B energy risk management | Year 3+ |
+| **Combined TAM** | **$37.3B+** | Progressive |
 
 ---
 
@@ -179,7 +215,7 @@
 | Year 3 | Scale + geographic expansion (ADGM to EU MiCA) | $2M+ |
 | Regional potential (MENA, 15-30 clients) | Steady state | $3M–6M annually |
 
-> "Institutions pay for what BLOCKS bad trades, not for alpha."
+> "Institutions pay for what BLOCKS bad decisions, not for alpha."
 > License-based revenue. No tokens. No performance fees.
 
 ---
@@ -190,9 +226,9 @@
 
 | Asset | Description |
 |-------|-------------|
-| 6-Checkpoint Security Engine | Multi-layer pre-execution validation |
-| Decision Trace Framework | Full audit trail for every decision |
-| Shadow Portfolio Engine | 192,000+ counterfactual trade events |
+| 6-Checkpoint Governance Engine | Multi-layer pre-execution decision validation (domain-agnostic) |
+| Decision Trace Framework | Full audit trail for every governed decision |
+| Shadow Portfolio Engine | 192,000+ counterfactual decision events |
 | Multi-AI Orchestration | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
 | Post-Quantum Cryptography | Dilithium-3 order signing (NIST FIPS 204) |
 | Non-Markovian Memory | Behavioral pattern detection beyond recency |
@@ -291,13 +327,14 @@ Primary value driver: Avoided tail-risk exposure
 
 | Category | Limitation | OMNIX Advantage |
 |----------|-----------|-----------------|
-| Retail Bots | Too simple, no risk governance | 6-checkpoint institutional architecture |
+| Retail Bots | Too simple, no decision governance | 6-checkpoint governance architecture |
 | Quant Funds | Too expensive ($10M+ minimum) | Accessible infrastructure |
 | Manual Oversight | Too slow for real-time | <120ms automated validation |
+| Single-Domain Tools | Built for one industry only | Domain-agnostic governance engine |
 
 **Positioning:**
 
-> "Institutional discipline at accessible scale."
+> "Institutional-grade decision governance at accessible scale."
 
 ---
 
@@ -305,10 +342,10 @@ Primary value driver: Avoided tail-risk exposure
 
 | Phase | Focus | Timeline |
 |-------|-------|----------|
-| Phase 1 | Pilot validation (3 enterprise clients) | Months 1-6 |
-| Phase 2 | Regional expansion (ADGM/DIFC/MENA) | Months 6-12 |
-| Phase 3 | Platform partnerships (API integrations) | Months 12-18 |
-| Phase 4 | Global scaling (EU MiCA, Asia) | Months 18-36 |
+| Phase 1 | Pilot validation — 3 enterprise clients (digital asset trading) | Months 1-6 |
+| Phase 2 | Regional expansion (ADGM/DIFC/MENA) + platform partnerships | Months 6-12 |
+| Phase 3 | Multi-vertical expansion — supply chain, lending governance pilots | Months 12-24 |
+| Phase 4 | Global scaling (EU MiCA, Asia) + insurance, energy verticals | Months 24-36 |
 
 ---
 
@@ -357,5 +394,5 @@ Primary value driver: Avoided tail-risk exposure
 
 ---
 
-*OMNIX — Protecting Capital First*
+*OMNIX — Governing Decisions Under Uncertainty*
 *Eureka Dubai 2026 — Semifinalist*

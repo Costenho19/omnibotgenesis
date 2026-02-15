@@ -9,9 +9,9 @@
 ## SLIDE 1 — TITLE
 
 **OMNIX**
-*AI Capital & Risk Orchestration Engine*
+*AI Decision Governance Platform*
 
-> "The best trade is often the one you don't make."
+> "The best decision is often the one you don't make."
 
 Harold Nunes — Founder & Product Architect
 Pre-Seed | February 2026
@@ -22,49 +22,53 @@ contacto@omnixquantum.net | www.omnixquantum.net
 
 ## SLIDE 2 — THE PROBLEM (10-Second Hook)
 
-**95% of trading systems ask the wrong question.**
+**95% of high-stakes decision systems ask the wrong question.**
 
-They ask: *"When should I enter the market?"*
+They ask: *"When should I act?"*
 
 The right question is:
 
-> **"When should capital NOT be deployed?"**
+> **"When should I NOT act?"**
 
 **What happens today:**
-- Retail bots trade constantly — even in dangerous conditions
+- Automated systems execute constantly — even in dangerous conditions
 - No regime awareness = capital erosion during volatility
 - Single-layer risk checks that fail under stress
-- $68B+ lost annually by retail traders globally
+- $68B+ lost annually by traders globally — and billions more in bad decisions across supply chain, lending, and insurance
 
-**The result:** Capital destruction is the norm, not the exception.
+**The result:** Costly mistakes are the norm, not the exception.
 
-Most systems optimize for *entries*. Nobody optimizes for *restraint*.
+Most systems optimize for *action*. Nobody optimizes for *restraint*.
+
+**First domain: Digital asset trading.** But the problem is universal — any industry where decisions under uncertainty involve money at risk.
 
 ---
 
 ## SLIDE 3 — THE SOLUTION
 
-**OMNIX is a risk-first AI decision engine that blocks bad trades before they happen.**
+**OMNIX is an AI decision governance platform that blocks costly mistakes before they happen.**
 
-Unlike trading bots that chase every signal, OMNIX operates as a **fail-closed system**: if edge confidence falls below defined thresholds, capital deployment is automatically halted.
+Unlike systems that chase every opportunity, OMNIX operates as a **fail-closed governance engine**: if confidence falls below defined thresholds, action is automatically halted. The same 6-checkpoint architecture applies to any domain where decisions under uncertainty involve capital at risk.
 
 **Three Principles:**
 
 | Principle | What It Means |
 |-----------|---------------|
-| **Capital Preservation First** | Protect before profit. Always. |
-| **Fail-Closed Architecture** | Default = don't trade. Must earn the right to execute. |
+| **Protection Before Action** | Prevent losses before pursuing gains. Always. |
+| **Fail-Closed Architecture** | Default = don't act. Must earn the right to execute. |
 | **Full Decision Auditability** | Every decision — executed or blocked — is logged with complete rationale. |
 
-> "Knowing when NOT to trade is a stronger edge than forcing returns."
+**First vertical validated: Digital asset trading.** The architecture is domain-agnostic — the same engine governs decisions in trading, supply chain, lending, insurance, and compliance.
+
+> "Knowing when NOT to act is a stronger edge than forcing action."
 
 ---
 
 ## SLIDE 4 — HOW IT WORKS (6 Security Checkpoints)
 
-**Think of it as airport security for your capital.**
+**Think of it as airport security for every high-stakes decision.**
 
-Every trade signal must pass through 6 independent security checkpoints. If ANY checkpoint fails, the trade is automatically blocked.
+Every decision must pass through 6 independent security checkpoints. If ANY checkpoint fails, the action is automatically blocked.
 
 ```
 Trade Signal Arrives
@@ -110,9 +114,9 @@ Trade Signal Arrives
                 APPROVED or BLOCKED
 ```
 
-**ALL 6 must approve — or the trade is blocked.**
+**ALL 6 must approve — or the action is blocked.**
 
-Most systems have 1 risk check. OMNIX has 6 independent ones that must ALL agree.
+Most systems have 1 risk check. OMNIX has 6 independent ones that must ALL agree. This architecture is domain-agnostic — the same checkpoints govern trading decisions, procurement approvals, credit extensions, and compliance validations.
 
 > "Airport security doesn't let you through if one scanner fails. Neither does OMNIX."
 
@@ -200,20 +204,49 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 
 | Technology | Simple Explanation | Competitive Advantage |
 |------------|-------------------|----------------------|
-| **6-Checkpoint Security Engine** | 5 independent AI models must agree before any trade | No single model can override the system |
-| **Behavioral Memory System** | Remembers market patterns beyond recent data | Sees what other systems miss |
+| **6-Checkpoint Governance Engine** | 5 independent AI models must agree before any action | No single model can override the system |
+| **Behavioral Memory System** | Remembers patterns beyond recent data | Sees what other systems miss |
 | **Edge Confirmation Window** | Requires trend persistence for 3 cycles — not just a spike | Turns "preservation" into "patience" |
-| **Shadow Portfolio Engine** | Tracks every vetoed trade to learn (192,000+ events) | The system learns from what it DOESN'T do |
-| **Post-Quantum Security** | Orders signed with Dilithium-3 (NIST FIPS 204) | Operational today — not roadmap |
+| **Shadow Portfolio Engine** | Tracks every vetoed decision to learn (192,000+ events) | The system learns from what it DOESN'T do |
+| **Post-Quantum Security** | Decisions signed with Dilithium-3 (NIST FIPS 204) | Operational today — not roadmap |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with failover | Zero single-provider dependency |
 
 > "Every decision is logged, traceable, and reviewable. Full audit trail — always."
 
 ---
 
-## SLIDE 8 — BUSINESS MODEL (B2B Risk Infrastructure)
+## SLIDE 8 — MULTI-VERTICAL VISION (Beyond Trading)
 
-### PRIMARY: B2B Risk Infrastructure — Licensing to Institutions
+**The same 6-checkpoint engine. Different domains. Same discipline.**
+
+OMNIX is not a trading bot — it is a **decision governance platform**. Digital asset trading is the first vertical where the architecture has been validated. The same engine applies wherever high-stakes decisions under uncertainty involve capital at risk.
+
+| Vertical | What OMNIX Governs | Decision Example |
+|----------|-------------------|------------------|
+| **Digital Asset Trading** (Validated) | Trade execution governance | "Should this $50K position be opened?" |
+| **Supply Chain** | Procurement risk governance | "Should we commit $2M to this supplier order?" |
+| **Lending / Credit** | Credit extension governance | "Should this $500K loan be approved?" |
+| **Insurance** | Underwriting governance | "Should this high-exposure policy be issued?" |
+| **Energy Trading** | Energy procurement governance | "Should we lock in this energy contract?" |
+| **RegTech / Compliance** | Operational compliance governance | "Does this transaction violate regulatory limits?" |
+
+**Why this works:**
+
+Every domain above shares the same core requirements:
+- Multiple signals to evaluate under uncertainty
+- High cost of wrong decisions
+- Need for audit trails and regulatory compliance
+- Benefit from fail-closed architecture (block first, act only when confident)
+
+**The 6-checkpoint architecture is domain-agnostic.** The inputs change (market data vs. supplier data vs. credit scores), but the governance logic is identical.
+
+> "We validated the engine in the hardest domain first — real-time financial markets. Everything else is a simpler input set."
+
+---
+
+## SLIDE 9 — BUSINESS MODEL (B2B Decision Governance Infrastructure)
+
+### PRIMARY: B2B Decision Governance — Licensing to Institutions
 
 | Customer Type | Use Case | Pricing |
 |---------------|----------|---------|
@@ -249,12 +282,12 @@ Impact for the firm:
 | Year 2 | 5-8 enterprise licenses + SaaS growth | $800K–1.2M |
 | Year 3 | Scale + geographic expansion (ADGM → EU MiCA) | $2M+ |
 
-> "Institutions pay for what BLOCKS bad trades, not for alpha."
+> "Institutions pay for what BLOCKS bad decisions, not for alpha."
 > License-based revenue. No tokens. No performance fees.
 
 ---
 
-## SLIDE 9 — MARKET OPPORTUNITY
+## SLIDE 10 — MARKET OPPORTUNITY
 
 ### The Numbers
 
@@ -268,24 +301,35 @@ Impact for the firm:
 
 ### The Gap Nobody Is Filling
 
-Institutional-grade risk management exists — inside hedge funds with $100M+ AUM. There is NO accessible risk infrastructure for:
+Institutional-grade decision governance exists — inside hedge funds with $100M+ AUM. There is NO accessible governance infrastructure for:
 
 - Prop trading firms that need to protect trader capital
 - Trading platforms adding risk governance for compliance
 - Regulated funds (ADGM, DIFC, MiCA) needing audit trails
 - Family offices entering crypto without institutional tools
+- Supply chain and lending operations needing automated risk controls
 
 ### Why Now — Two Forces Converging
 
-1. **Institutional capital is flooding into crypto** — but without proper risk infrastructure
-2. **MiCA regulation (EU) + ADGM requirements** — platforms MUST have risk controls and audit trails
+1. **Institutional capital is flooding into digital assets** — but without proper governance infrastructure
+2. **MiCA regulation (EU) + ADGM requirements** — platforms MUST have decision governance and audit trails
 
-> The market needs risk infrastructure. Not more trading signals.
+### Multi-Vertical Market Expansion
+
+| Vertical | Addressable Market | Timeline |
+|----------|-------------------|----------|
+| Digital Asset Trading (Current) | $18.8B algorithmic trading | Now (validated) |
+| Supply Chain Risk | $3.2B supply chain analytics | Year 2-3 |
+| Credit / Lending Governance | $7.4B credit risk management | Year 2-3 |
+| Insurance Underwriting | $5.1B insurtech | Year 3+ |
+| Energy Trading | $2.8B energy risk management | Year 3+ |
+
+> The market needs decision governance infrastructure. Not more trading signals.
 > The regulatory clock is ticking — and OMNIX is ready.
 
 ---
 
-## SLIDE 10 — WHY DUBAI & MENA
+## SLIDE 11 — WHY DUBAI & MENA
 
 **Strategic alignment with the region's vision:**
 
@@ -303,7 +347,7 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 
 ---
 
-## SLIDE 11 — FOUNDER & TEAM
+## SLIDE 12 — FOUNDER & TEAM
 
 **Harold Nunes**
 *Founder & Product Architect*
@@ -333,7 +377,7 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 
 ---
 
-## SLIDE 12 — THE ASK
+## SLIDE 13 — THE ASK
 
 ### Pre-Seed Round
 
@@ -375,15 +419,16 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 
 ### The 60-Second Case
 
-1. **The problem is massive** — $68B+ lost by traders annually, zero accessible risk infrastructure
-2. **The timing is perfect** — MiCA + ADGM mandating risk controls NOW
+1. **The problem is massive** — $68B+ lost by traders annually, billions more in bad decisions across industries
+2. **The timing is perfect** — MiCA + ADGM mandating decision governance NOW
 3. **The product exists** — Not a slide deck. Running in production for 3+ months.
 4. **The approach is unique** — Nobody else optimizes for restraint
-5. **The data is real** — 192,000+ events, 98.5% capital preserved, 91% block accuracy
-6. **The market is here** — Dubai/ADGM is the epicenter of institutional crypto infrastructure
+5. **The data is real** — 192,000+ governed decisions, 98.5% capital preserved, 91% block accuracy
+6. **The market is here** — Dubai/ADGM is the epicenter of institutional governance infrastructure
+7. **The vision scales** — Same engine, multiple verticals: trading, supply chain, lending, insurance
 
-> "Most trading systems ask: 'How do I make money?'
-> OMNIX asks: 'How do I make sure I don't lose it?'
+> "Most decision systems ask: 'How do I maximize returns?'
+> OMNIX asks: 'How do I make sure costly mistakes don't happen?'
 > That question is worth $500K to answer at scale."
 
 ---
@@ -392,27 +437,27 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 
 *For oral presentation practice:*
 
-> "95% of trading systems ask: 'When should I enter the market?'
+> "95% of high-stakes decision systems ask: 'When should I act?'
 >
-> The right question is: 'When should capital NOT be deployed?'
+> The right question is: 'When should I NOT act?'
 >
-> $68 billion — lost annually by traders globally. Why? No institutional-grade risk controls.
+> $68 billion — lost annually by traders alone. Billions more in bad procurement, credit, and insurance decisions. Why? No institutional-grade decision governance.
 >
-> OMNIX is a fail-closed risk engine. Think of it as airport security for your capital. Every trade must survive 6 independent security checkpoints before execution. One failed check — automatic block.
+> OMNIX is a fail-closed AI governance platform. Think of it as airport security for every high-stakes decision. Every action must survive 6 independent checkpoints before execution. One failed check — automatic block.
 >
-> Real example: February 3rd. BTC breakout — up 6% in two hours. Market euphoric. Traditional bots bought. OMNIX blocked — trend not sustained. 48 hours later, BTC crashed 9%. Capital preserved: $50,000.
+> We validated this in the hardest domain first — real-time financial markets. Real example: February 3rd. BTC breakout — up 6% in two hours. Market euphoric. Traditional bots bought. OMNIX blocked — trend not sustained. 48 hours later, BTC crashed 9%. Capital preserved: $50,000.
 >
-> We've analyzed 192,000 decision cycles. 98.5% capital preserved. 91% of blocked trades would have lost money. System running in production 24/7 for three months.
+> 192,000 governed decisions. 98.5% capital preserved. 91% of blocked actions would have resulted in losses. Running in production 24/7 for three months.
 >
-> Our market: prop trading firms, trading platforms, regulated funds — all need risk infrastructure. 200+ prop firms in ADGM and DIFC alone. MiCA compliance mandatory in the EU — 2,000+ platforms need this.
+> Our first market: prop trading firms, trading platforms, regulated funds. 200+ prop firms in ADGM and DIFC alone. But the same engine applies to supply chain, lending, insurance, and compliance.
 >
-> We're raising $500K to close 3 enterprise pilots and establish our ADGM regulatory structure.
+> We're raising $500K to close 3 enterprise pilots in digital assets and begin multi-vertical expansion.
 >
-> The best trade is often the one you don't make. That's what we build.
+> The best decision is often the one you don't make. That's what we build.
 >
 > Questions?"
 
-*Timing: ~88 seconds*
+*Timing: ~90 seconds*
 
 ---
 
@@ -492,9 +537,9 @@ Institutional-grade risk management exists — inside hedge funds with $100M+ AU
 
 ---
 
-*OMNIX — Protecting Capital First*
+*OMNIX — Governing Decisions Under Uncertainty*
 *Eureka Dubai 2026 — Semifinalist*
 
 ---
 
-**Disclaimer:** This document describes paper trading activity during a validation period. All metrics are from decision engine operation in real market conditions. Past performance does not guarantee future results. OMNIX is risk infrastructure, not an investment product. Revenue projections are estimates based on conservative assumptions.
+**Disclaimer:** This document describes decision governance engine operation during a validation period using digital asset trading as the first vertical. All metrics are from decision engine operation in real market conditions. Past performance does not guarantee future results. OMNIX is decision governance infrastructure, not an investment product. Revenue projections are estimates based on conservative assumptions. Multi-vertical expansion timelines are projections, not commitments.

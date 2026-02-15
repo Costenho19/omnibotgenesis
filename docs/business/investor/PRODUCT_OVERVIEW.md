@@ -1,10 +1,10 @@
-# OMNIX: AI Capital & Risk Orchestration Engine
+# OMNIX: AI Decision Governance Platform
 
 **Version**: V6.5.4e Advanced Tier  
 **Document Type**: Product Overview  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
-**Last Updated**: January 23, 2026
+**Last Updated**: February 15, 2026
 
 ---
 
@@ -25,9 +25,9 @@ Traditional algorithmic trading systems optimize for **returns first, risk secon
 
 ## What OMNIX Is
 
-**OMNIX is an AI Capital & Risk Orchestration Engine.**
+**OMNIX is an AI Decision Governance Platform.**
 
-It is infrastructure designed to **protect capital first** while systematically identifying high-probability trading opportunities in cryptocurrency markets.
+It is a domain-agnostic decision governance platform validated in digital asset trading. The same 6-checkpoint architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
 
 ### Core Identity
 
@@ -35,18 +35,19 @@ It is infrastructure designed to **protect capital first** while systematically 
 |-----------|-------------|
 | **Primary Objective** | Capital preservation (target: 98%+ maintained) |
 | **Secondary Objective** | Systematic exposure to validated statistical edge |
-| **Architecture** | Multi-layer veto system with AI governance |
-| **Security Standard** | Experimenting with NIST-aligned PQC (Kyber-768, Dilithium-3) |
+| **Architecture** | Multi-layer veto system with AI governance (6 independent checkpoints) |
+| **Security Standard** | NIST-aligned PQC implemented (Kyber-768, Dilithium-3) — operational since Nov 2025 |
+| **Domain** | Domain-agnostic — validated in digital asset trading, expandable to supply chain, lending, insurance, and compliance |
 
 ### Critical Distinction
 
-> **OMNIX is a risk-gating and capital-preservation layer, not a trading signal provider.**
+> **OMNIX is a decision governance platform, not a trading signal provider.**
 
-We do not sell alpha. We sell protection from bad trades.
+We sell protection from costly mistakes.
 
 ### Positioning Statement
 
-> OMNIX doesn't try to beat the market every day. It waits for confirmed statistical edge, validates through multiple independent systems, and only acts when risk parameters are satisfied across all layers.
+> OMNIX doesn't try to beat the market every day. It waits for confirmed statistical edge, validates through multiple independent systems, and only acts when risk parameters are satisfied across all layers. The same governance architecture applies to any domain where high-stakes decisions under uncertainty involve capital at risk — from trading to supply chain to lending.
 
 ---
 
@@ -140,6 +141,21 @@ OMNIX is one of the first advanced trading platforms experimenting with **NIST-a
 | Post-Quantum Cryptography | Experimenting (Nov 2025) | NIST-aligned Kyber-768, Dilithium-3 |
 | Decision Audit Trail | Operational | Full decision_trace logging |
 | Investor Dashboard | Operational | 23 widgets, real-time metrics |
+
+---
+
+## Multi-Vertical Vision
+
+The same 6-checkpoint governance architecture applies wherever high-stakes decisions under uncertainty involve capital at risk. Digital asset trading is the first validated vertical.
+
+| Vertical | Status | Timeline |
+|----------|--------|----------|
+| **Digital Asset Trading** | Validated | Current (production since Nov 2025) |
+| **Supply Chain** | Roadmap | Year 2-3 |
+| **Lending / Credit** | Roadmap | Year 2-3 |
+| **Insurance** | Roadmap | Year 3+ |
+| **Energy Trading** | Roadmap | Year 3+ |
+| **RegTech / Compliance** | Roadmap | Year 3+ |
 
 ---
 

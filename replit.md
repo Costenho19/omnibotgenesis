@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4e INSTITUTIONAL+ is an institutional-grade risk control infrastructure for cryptocurrency trading. Its core purpose is capital preservation through a multi-layer veto architecture, integrating post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The system prioritizes safeguarding capital to build a credible track record for institutional investors. It offers a dual revenue model: B2C SaaS for direct users and B2B Enterprise Licensing for platforms, brokers, and exchanges.
+OMNIX V6.5.4e INSTITUTIONAL+ is an **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty." Its domain-agnostic 6-checkpoint architecture prevents costly mistakes before they happen across high-stakes decision domains. The first vertical validated is digital asset trading, with capital preservation as the core proof metric. The system integrates post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. Future verticals include supply chain, lending/credit, insurance, energy trading, and RegTech/compliance (Year 2-3+). It offers a dual revenue model: B2B Decision Governance Licensing (80% focus: prop firms, trading platforms, regulated funds) and B2C SaaS (20%). See ADR-025 for the strategic repositioning rationale.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).

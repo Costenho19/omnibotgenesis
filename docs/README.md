@@ -1,8 +1,9 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Actualizado**: 7 de Febrero 2026  
-**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record Day 24
+**Identidad**: AI Decision Governance Platform  
+**Actualizado**: 15 de Febrero 2026  
+**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record COMPLETADO (30 días) | Fase 1 Operativa
 
 ---
 
@@ -27,9 +28,11 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
 | [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
 
-**Posicionamiento**: OMNIX = **AI Capital & Risk Orchestration Engine** (no "bot de trading")
+**Posicionamiento**: OMNIX = **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty"  
+Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.
 
-**Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Cambios de posicionamiento documentados
+**Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor  
+**Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform
 
 ---
 
