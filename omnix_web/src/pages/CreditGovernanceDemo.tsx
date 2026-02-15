@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, CreditCard, TrendingUp, BarChart3, Zap, Lock, Activity, Layers, Target, Brain } from 'lucide-react'
+import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, CreditCard, TrendingUp, BarChart3, Zap, Activity, Layers, Target, Brain } from 'lucide-react'
 
 interface CheckpointResult {
   name: string
@@ -164,8 +164,8 @@ export default function CreditGovernanceDemo() {
   const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>([])
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [evaluationComplete, setEvaluationComplete] = useState(false)
-  const [currentCheckpoint, setCurrentCheckpoint] = useState(-1)
-  const evaluationRef = useRef<NodeJS.Timeout | null>(null)
+  const [_currentCheckpoint, setCurrentCheckpoint] = useState(-1)
+  const evaluationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const runGovernanceEvaluation = () => {
     const results = evaluateCheckpoints(application)

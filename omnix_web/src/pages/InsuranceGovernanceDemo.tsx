@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Zap, Activity, Layers, Target, Brain, Umbrella, MapPin, Heart } from 'lucide-react'
+import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Activity, Layers, Target, Brain, Umbrella } from 'lucide-react'
 
 interface CheckpointResult {
   name: string
@@ -167,8 +167,8 @@ export default function InsuranceGovernanceDemo() {
   const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>([])
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [evaluationComplete, setEvaluationComplete] = useState(false)
-  const [currentCheckpoint, setCurrentCheckpoint] = useState(-1)
-  const evaluationRef = useRef<NodeJS.Timeout | null>(null)
+  const [_currentCheckpoint, setCurrentCheckpoint] = useState(-1)
+  const evaluationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const runGovernanceEvaluation = () => {
     const results = evaluateCheckpoints(application)
