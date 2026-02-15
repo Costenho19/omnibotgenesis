@@ -154,7 +154,7 @@ class PositionMonitor:
                 balance_data = self.db.get_paper_trading_balance(user_id)
                 if balance_data:
                     balance = balance_data.get('balance', self.config.initial_capital)
-            except:
+            except Exception:
                 pass
         
         return {
@@ -207,7 +207,7 @@ class PositionMonitor:
                     metrics.daily_trades_count = daily_stats.get('trades_count', 0)
                     if metrics.total_balance_usd > 0:
                         metrics.daily_pnl_pct = (metrics.daily_pnl_usd / metrics.total_balance_usd) * 100
-            except:
+            except Exception:
                 pass
         
         if self.config.initial_capital > 0:

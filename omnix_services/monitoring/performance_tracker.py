@@ -153,7 +153,7 @@ class AdvancedPerformanceTracker:
             import psutil
             process = psutil.Process()
             return process.memory_info().rss / 1024 / 1024  # MB
-        except:
+        except Exception:
             return 0.0
     
     def _get_cpu_usage(self) -> float:
@@ -161,7 +161,7 @@ class AdvancedPerformanceTracker:
         try:
             import psutil
             return psutil.cpu_percent(interval=0.1)
-        except:
+        except Exception:
             return 0.0
     
     def _calculate_system_health(self) -> str:
@@ -177,7 +177,7 @@ class AdvancedPerformanceTracker:
                 return "🟡 BUENO"
             else:
                 return "🔴 NECESITA OPTIMIZACIÓN"
-        except:
+        except Exception:
             return "🟡 MIDIENDO"
     
     def _get_top_intents(self) -> dict:

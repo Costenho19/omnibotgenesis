@@ -58,5 +58,5 @@ def calculate_confidence_score(data):
         
         total_confidence = (base_confidence + data_quality + market_stability) / 3
         return min(0.95, max(0.1, total_confidence))
-    except:
+    except Exception:
         return 0.7

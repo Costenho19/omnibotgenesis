@@ -139,7 +139,7 @@ class CallbackHandler:
             logger.error(f"❌ Error procesando callback: {e}")
             try:
                 await query.edit_message_text(f"❌ Error procesando acción: {str(e)[:100]}")
-            except:
+            except Exception:
                 pass
     
     async def _show_main_menu(self, query, context):

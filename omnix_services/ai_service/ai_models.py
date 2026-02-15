@@ -29,7 +29,7 @@ except ImportError:
 try:
     import anthropic
     ANTHROPIC_AVAILABLE = True
-except:
+except Exception:
     ANTHROPIC_AVAILABLE = False
 
 from omnix_config.settings import settings

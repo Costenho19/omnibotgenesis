@@ -220,9 +220,10 @@ class ConversationalAIService:
                 from .prompt_templates import DIAGNOSTIC_ONLY_PROMPT, get_system_state_prompt
                 
                 # Get real metrics from RealContextProvider or market_data
+                # Fallback values from system_state_manifest.json (learning baseline)
                 total_trades = 119
                 win_rate = 20.2
-                pnl = -19848.65
+                pnl = -15198.73
                 
                 # Try to get real metrics from RealContextProvider
                 if REAL_CONTEXT_AVAILABLE and get_real_context_provider:

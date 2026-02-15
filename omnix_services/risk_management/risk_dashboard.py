@@ -197,14 +197,14 @@ class RiskDashboard:
         if self.db:
             try:
                 historical = self.db.get_risk_metrics_history(user_id, period_days)
-            except:
+            except Exception:
                 pass
         
         breach_history = []
         if self.db:
             try:
                 breach_history = self.db.get_risk_breaches(user_id, period_days)
-            except:
+            except Exception:
                 pass
         
         stats = self._calculate_period_stats(historical)

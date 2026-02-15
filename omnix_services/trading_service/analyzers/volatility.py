@@ -39,5 +39,5 @@ class AdvancedVolatilityAnalyzer:
                 'volatility_regime': regime,
                 'percentile_rank': min(100, volatility * 1000)
             }
-        except:
+        except Exception:
             return {'current_volatility': 0.02, 'volatility_regime': 'NORMAL', 'percentile_rank': 50}

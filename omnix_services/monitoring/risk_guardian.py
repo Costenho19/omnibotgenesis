@@ -547,7 +547,7 @@ class AIRiskGuardian:
         if isinstance(timestamp, str):
             try:
                 return datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-            except:
+            except Exception:
                 pass
         return datetime.utcnow()
     

@@ -315,7 +315,7 @@ class UserSettings:
         if data.get('pause_until'):
             try:
                 pause_until = datetime.fromisoformat(data['pause_until'])
-            except:
+            except Exception:
                 pass
         
         return cls(

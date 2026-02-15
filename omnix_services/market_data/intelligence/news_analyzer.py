@@ -18,7 +18,7 @@ except ImportError:
     try:
         from textblob import TextBlob
         SENTIMENT_ANALYSIS_AVAILABLE = True
-    except:
+    except Exception:
         SENTIMENT_ANALYSIS_AVAILABLE = False
 
 
@@ -49,10 +49,10 @@ class FreeNewsAnalyzer:
                                 'published': entry.get('published', ''),
                                 'source': source.split('//')[1].split('/')[0]
                             })
-                except:
+                except Exception:
                     continue
             return all_news[:limit]
-        except:
+        except Exception:
             return []
     
     def analyze_sentiment(self, text):
@@ -83,5 +83,5 @@ class FreeNewsAnalyzer:
                     return {'sentiment': 'NEGATIVE', 'score': -0.5}
                 else:
                     return {'sentiment': 'NEUTRAL', 'score': 0.0}
-        except:
+        except Exception:
             return {'sentiment': 'NEUTRAL', 'score': 0.0}

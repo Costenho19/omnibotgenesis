@@ -22,7 +22,7 @@ class AdvancedOrderBookAnalyzer:
                 'total_whale_volume': sum([float(o[1]) for o in large_bids + large_asks]),
                 'whale_activity_detected': len(large_bids + large_asks) > 0
             }
-        except:
+        except Exception:
             return {'whale_activity_detected': False, 'whale_bids': 0, 'whale_asks': 0}
     
     def calculate_market_depth_score(self, order_book):
@@ -38,5 +38,5 @@ class AdvancedOrderBookAnalyzer:
             if total_volume > 50:
                 return min(100, total_volume / 2)  # Score 0-100
             return max(10, total_volume * 2)
-        except:
+        except Exception:
             return 50  # Score neutral

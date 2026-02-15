@@ -122,7 +122,7 @@ class AdvancedMLModule:
             
             return max(0, min(100, rsi))
             
-        except:
+        except Exception:
             return 50
     
     def _generate_lstm_prediction(self, symbol, config):
@@ -227,7 +227,7 @@ class AdvancedMLModule:
                 'risk_level': 'low' if recommended_size <= 25 else 'medium'
             }
             
-        except:
+        except Exception:
             return {'usd_amount': 20.0, 'percentage_of_capital': 22.4, 'risk_level': 'low'}
 
     def _calculate_atr_alerts(self, market_data):

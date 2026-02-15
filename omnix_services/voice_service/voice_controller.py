@@ -81,7 +81,7 @@ class VoiceEngine:
             if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY') and SPEECH_TO_TEXT_ENABLED:
                 try:
                     self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-                except:
+                except Exception:
                     pass
             self.using_enterprise = False
         

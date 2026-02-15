@@ -382,7 +382,7 @@ class StockStrategyEngine:
         if self.hmm_detector:
             try:
                 return self.hmm_detector.detect(prices)
-            except:
+            except Exception:
                 pass
         
         if len(prices) < 20:

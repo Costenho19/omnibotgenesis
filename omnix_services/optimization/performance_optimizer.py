@@ -62,7 +62,7 @@ class PerformanceOptimizer:
                 with open('/proc/loadavg', 'r') as f:
                     load_avg = float(f.read().split()[0])
                 cpu_estimate = min(100, load_avg * 20)  # Estimación básica
-            except:
+            except Exception:
                 cpu_estimate = 25.0  # Valor conservador
             
             return {

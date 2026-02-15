@@ -374,7 +374,7 @@ Responde con datos reales y tono amigable:"""
                                 balance_info = f"${trading_system.get_balance():.2f} USD"
                         else:
                             balance_info = f"${trading_system.get_balance():.2f} USD"
-                    except:
+                    except Exception:
                         pass
                 
                 # 🔴 INYECTAR DATOS REALES DE KRAKEN EN EL PROMPT  
@@ -1117,7 +1117,7 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
                 try:
                     btc_data = trading_system.get_btc_price()
                     btc_price = f"${btc_data['price']:,.2f}"
-                except:
+                except Exception:
                     btc_price = "$95,247.50"
             
             # Banners según el tipo de intención

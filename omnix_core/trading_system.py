@@ -381,7 +381,7 @@ class TradingSystem:
                         # Verificar que el par existe en Kraken
                         if self.kraken and pair not in optimal_pairs:
                             optimal_pairs.append(pair)
-                    except:
+                    except Exception:
                         continue
             
             # Pares crypto-to-crypto si no hay USD suficiente
@@ -465,7 +465,7 @@ class TradingSystem:
                             try:
                                 btc_price = self.get_btc_price().get('price', 0)
                                 total_usd_value += free_val * btc_price
-                            except:
+                            except Exception:
                                 pass
             
             real_balance['estimated_total_usd'] = total_usd_value
@@ -694,7 +694,7 @@ class TradingSystem:
                                 'exchange': 'CoinGecko API',
                                 'timestamp': datetime.now().isoformat()
                             }
-                    except:
+                    except Exception:
                         continue
                         
                 # SISTEMA 100% REAL - SIN FALLBACKS
@@ -720,7 +720,7 @@ class TradingSystem:
                 'recommendation': self._get_sentiment_recommendation(fear_greed),
                 'timestamp': datetime.now().isoformat()
             }
-        except:
+        except Exception:
             return {
                 'fear_greed_index': 45,
                 'sentiment': 'Neutral',
@@ -808,7 +808,7 @@ class TradingSystem:
                     'signal': self._get_asset_signal(asset, change),
                     'risk_level': self._get_risk_level(asset)
                 }
-            except:
+            except Exception:
                 pass
         
         return analysis
@@ -1292,7 +1292,7 @@ def generar_grafico_trading(trading_system):
         
         # Solo devolver si hay datos reales
         return grafico_url if grafico_url else None
-    except:
+    except Exception:
         return None  # Sin datos reales = sin imagen falsa
 
 def generar_video_demo():
@@ -1310,7 +1310,7 @@ def generar_imagen_mercado(trading_system):
     try:
         # Imagen de análisis de mercado
         return "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&h=400&fit=crop"
-    except:
+    except Exception:
         return "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&h=400&fit=crop"
 
 def create_flask_app():
@@ -1343,7 +1343,7 @@ def create_flask_app():
         try:
             with open('landing.html', 'r', encoding='utf-8') as f:
                 return f.read()
-        except:
+        except Exception:
             return "Landing page no disponible", 404
     
     @app.route('/')
@@ -2151,7 +2151,7 @@ def create_flask_app():
                             # Limpiar archivo temporal
                             try:
                                 os.remove(audio_path)
-                            except:
+                            except Exception:
                                 pass
                         else:
                             logger.error("🎤 Error: No se pudo descargar audio")
@@ -2328,7 +2328,7 @@ def create_flask_app():
 🤖 OMNIX V5.1 ENTERPRISE - Análisis 24/7
 ⚡ Sistema Inteligente Activo
 👨‍💻 Harold Nunes - Datos Reales Kraken"""
-                except:
+                except Exception:
                     respuesta = "ANÁLISIS TÉCNICO BTC/USD - Sistema OMNIX analizando mercados en tiempo real - Desarrollado por Harold Nunes"
             
             elif text.startswith('/chart') or text.startswith('/grafico'):
@@ -4723,7 +4723,7 @@ Contacta al administrador para instalar el módulo."""
 
 🚀 OMNIX V5.1 - Biometrics Ready
 👨‍💻 Harold Nunes - Seguridad Máxima"""
-                    except:
+                    except Exception:
                         respuesta = """🧬 ERROR LEYENDO FIRMA BIOMÉTRICA 🧬
                         
 ⚠️ Hay una firma registrada pero corrupta

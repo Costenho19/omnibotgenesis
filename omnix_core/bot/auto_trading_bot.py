@@ -124,7 +124,7 @@ except ImportError:
 ECW_MC_WR_MIN = int(os.getenv('ECW_MC_WR_MIN', '50'))
 ECW_MC_ER_MIN = float(os.getenv('ECW_MC_ER_MIN', '0'))
 ECW_CYCLES_REQUIRED = int(os.getenv('ECW_CYCLES_REQUIRED', '3'))
-ECW_CONFIG_VERSION = "1.1" if ECW_MC_WR_MIN == 50 else "1.0"
+ECW_CONFIG_VERSION = "1.2" if ECW_CYCLES_REQUIRED == 2 else ("1.1" if ECW_MC_WR_MIN == 50 else "1.0")
 logger.info(f"📊 ECW CONFIG v{ECW_CONFIG_VERSION}: MC_WR_MIN={ECW_MC_WR_MIN}%, MC_ER_MIN={ECW_MC_ER_MIN}%, CYCLES={ECW_CYCLES_REQUIRED}")
 
 try:
@@ -4432,7 +4432,7 @@ class AutoTradingBot:
                                 hours=24,
                                 limit=100
                             )
-                        except:
+                        except Exception:
                             recent_trades = []
                     
                     # VALIDAR TODOS LOS RIESGOS
@@ -4909,7 +4909,7 @@ class AutoTradingBot:
                             ticker = self.trading_service.get_ticker(self.config['trading_pair'])
                             if ticker and 'last' in ticker:
                                 current_price = float(ticker['last'])
-                        except:
+                        except Exception:
                             pass
                     
                     if current_price and current_price > 0:
@@ -5822,7 +5822,7 @@ class AutoTradingBot:
                     try:
                         open_orders = self.trading_service.get_open_orders()
                         has_open_positions = bool(open_orders)
-                    except:
+                    except Exception:
                         pass
             
             if has_open_positions:
@@ -5932,7 +5932,7 @@ class AutoTradingBot:
                         'current_spread': spread.get('spread', 0.001) if spread else 0.001,
                         'current_volume': spread.get('volume', 1000000) if spread else 1000000
                     }
-                except:
+                except Exception:
                     pass
             
             # Procesar señal del kernel

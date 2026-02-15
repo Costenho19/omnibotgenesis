@@ -341,7 +341,7 @@ def demo_pqc_encryption():
     
     if shared_secret_sender == shared_secret_receiver:
         print("✅ ¡ÉXITO! Secretos coinciden - Comunicación segura establecida")
-        print(f"   Secreto compartido: {shared_secret_sender[:16].hex()}... ({len(shared_secret_sender)} bytes)")
+        print(f"   Secreto compartido: [REDACTED] ({len(shared_secret_sender)} bytes)")
     else:
         print("❌ ERROR: Secretos no coinciden")
 

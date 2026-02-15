@@ -1302,7 +1302,7 @@ class ConversationalAI:
                 market_data['trading_mode'] = 'PAPER'
             elif trading_system and hasattr(trading_system, 'real_trading_enabled'):
                 market_data['trading_mode'] = 'REAL' if trading_system.real_trading_enabled else 'PAPER'
-        except:
+        except Exception:
             pass
         
         leverage_match = re.search(r'(\d+)\s*x|leverage\s*(\d+)|apalancamiento\s*(\d+)', message_lower)
@@ -1489,7 +1489,7 @@ class ConversationalAI:
                 market_data['trading_mode'] = 'PAPER'
             elif trading_system and hasattr(trading_system, 'real_trading_enabled'):
                 market_data['trading_mode'] = 'REAL' if trading_system.real_trading_enabled else 'PAPER'
-        except:
+        except Exception:
             pass
         
         # 📊 FIX Dec 10, 2025: Obtener datos REALES de trading desde PostgreSQL

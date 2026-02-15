@@ -446,14 +446,14 @@ class PaperTradingManager:
                     btc_ticker = self.trading_service.get_ticker('BTC/USD')
                     if btc_ticker and balance.get('btc_balance', 0) > 0:
                         total_usd += balance['btc_balance'] * float(btc_ticker['last'])
-                except:
+                except Exception:
                     pass
                 
                 try:
                     eth_ticker = self.trading_service.get_ticker('ETH/USD')
                     if eth_ticker and balance.get('eth_balance', 0) > 0:
                         total_usd += balance['eth_balance'] * float(eth_ticker['last'])
-                except:
+                except Exception:
                     pass
             
             # Calcular P&L

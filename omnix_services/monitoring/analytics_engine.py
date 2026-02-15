@@ -843,14 +843,14 @@ def analisis_sentimental_tiempo_real():
             if response.status_code == 200:
                 news_data = response.json()
                 real_headlines = [article.get('title', '') for article in news_data.get('articles', [])[:5]]
-        except:
+        except Exception:
             try:
                 # CryptoCompare API como respaldo
                 response = requests.get('https://min-api.cryptocompare.com/data/v2/news/?lang=EN', timeout=10)
                 if response.status_code == 200:
                     news_data = response.json()
                     real_headlines = [article.get('title', '') for article in news_data.get('Data', [])[:5]]
-            except:
+            except Exception:
                 # Fallback con análisis de keywords sin noticias falsas
                 real_headlines = []
         

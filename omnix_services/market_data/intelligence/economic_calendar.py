@@ -31,7 +31,7 @@ class FreeEconomicCalendar:
                     selected_events = real_events if real_events else major_events[:3]
                 else:
                     selected_events = major_events[:3]
-            except:
+            except Exception:
                 selected_events = major_events[:3]
             
             return {
@@ -39,5 +39,5 @@ class FreeEconomicCalendar:
                 'events': selected_events,
                 'total_high_impact': len([e for e in selected_events if e['impact'] == 'HIGH'])
             }
-        except:
+        except Exception:
             return {'date': 'unknown', 'events': [], 'total_high_impact': 0}

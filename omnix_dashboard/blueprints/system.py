@@ -657,7 +657,7 @@ def api_asset_quarantine():
                         match = re.search(r'-\$?([\d,]+)', notes)
                         if match:
                             loss_amount = float(match.group(1).replace(',', ''))
-                    except:
+                    except Exception:
                         pass
                 
                 quarantined_assets.append({
@@ -818,7 +818,7 @@ def api_system_equity():
             if btc_price_data and 'price' in btc_price_data:
                 btc_current_price = btc_price_data['price']
                 btc_pct_change = ((btc_current_price - btc_start_price) / btc_start_price) * 100
-        except:
+        except Exception:
             pass
         
         if omnix_curve:

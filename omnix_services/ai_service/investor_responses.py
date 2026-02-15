@@ -828,7 +828,7 @@ Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protoc
         headline="",
         body="""_Modo diagnóstico activado._
 
-**Datos:** Total trades: 119 | Win rate: 20.2% | P&L: -19,848.65 USD
+**Datos:** Total trades: 119 | Win rate: 20.2% | P&L: -15,198.73 USD
 
 **Conclusión:** No es posible determinar si el problema es señal, sizing, filtro o ejecución.
 

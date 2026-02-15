@@ -929,7 +929,7 @@ Sistema operando en fase de validación."""
                              self.trading_enterprise is not None and 
                              hasattr(self.trading_enterprise, 'kraken_client') and
                              self.trading_enterprise.kraken_client is not None)
-            except:
+            except Exception:
                 pass
             
             version_text = f"""🔧 **OMNIX {VERSION_BANNER} - BUILD INFO**
@@ -1457,7 +1457,7 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
                         try:
                             vol_num = float(volumen.replace('M', '').replace('K', '')) if isinstance(volumen, str) else volumen
                             total_volume_usd += vol_num
-                        except:
+                        except Exception:
                             pass
                     
                 except Exception as e:
@@ -3199,7 +3199,7 @@ Ejemplo: /risk_events 48
                     # Generar histórico simulado (en producción usar API real)
                     return [current_price * (1 + np.random.normal(0, 0.02)) for _ in range(days)]
             return None
-        except:
+        except Exception:
             return None
     
     def _get_order_book(self, symbol):
@@ -3209,7 +3209,7 @@ Ejemplo: /risk_events 48
                 order_book = self.trading.exchange.fetch_order_book(f"{symbol}/USD")
                 return order_book
             return None
-        except:
+        except Exception:
             return None
 
     async def _process_aggregated_messages(self, user_id: str, context):
@@ -3243,7 +3243,7 @@ Ejemplo: /risk_events 48
             try:
                 if buffered_messages and buffered_messages[0].get('update'):
                     await buffered_messages[0]['update'].message.reply_text(f"⚠️ Error procesando mensaje: {str(e)[:200]}")
-            except:
+            except Exception:
                 pass
 
     async def handle_message(self, update, context):
@@ -3286,7 +3286,7 @@ Ejemplo: /risk_events 48
             try:
                 # FIX Dec 31, 2025: No mostrar errores técnicos al usuario
                 await update.message.reply_text("🤖 OMNIX procesando tu mensaje. Por favor espera un momento...")
-            except:
+            except Exception:
                 pass
 
     async def _process_message_content(self, update, context, user_message: str, user, user_id: str, user_name: str, telegram_chat_id: str):
@@ -3744,7 +3744,7 @@ Usa: `/autotrading activar ACEPTO`"""
             try:
                 # FIX Dec 31, 2025: No mostrar errores técnicos al usuario
                 await update.message.reply_text("🤖 OMNIX procesando tu mensaje. Por favor espera un momento...")
-            except:
+            except Exception:
                 pass
     
     async def handle_callback(self, update, context):
@@ -3769,7 +3769,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 query = update.callback_query
                 await query.answer()
                 await query.edit_message_text(f"❌ Error procesando acción: {str(e)[:100]}")
-            except:
+            except Exception:
                 pass
 
     async def handle_voice_message(self, update, context):
@@ -3848,7 +3848,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 # Limpiar archivo temporal
                 try:
                     os.unlink(voice_path)
-                except:
+                except Exception:
                     pass
                 
                 if transcribed_text:
@@ -3916,7 +3916,7 @@ Usa: `/autotrading activar ACEPTO`"""
                                     
                                     try:
                                         os.unlink(tmp_file.name)
-                                    except:
+                                    except Exception:
                                         pass
                         except Exception as voice_error:
                             logger.warning(f"⚠️ Error voz respuesta: {voice_error}")
@@ -3933,7 +3933,7 @@ Usa: `/autotrading activar ACEPTO`"""
             logger.error(f"❌ Error crítico handle_voice_message: {e}")
             try:
                 await update.message.reply_text("❌ Error procesando voz. Usa texto por favor.")
-            except:
+            except Exception:
                 pass
 
     async def handle_video_message(self, update, context):
@@ -4014,7 +4014,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 
                 try:
                     os.unlink(video_path)
-                except:
+                except Exception:
                     pass
                 
                 if analysis_result:
@@ -4070,7 +4070,7 @@ Usa: `/autotrading activar ACEPTO`"""
             logger.error(f"❌ Error crítico handle_video_message: {e}")
             try:
                 await update.message.reply_text("❌ Error procesando video. Intenta de nuevo o usa texto.")
-            except:
+            except Exception:
                 pass
     
     async def _analyze_video_with_vision(self, video_path: str, user_name: str) -> str:
@@ -4186,7 +4186,7 @@ Usa: `/autotrading activar ACEPTO`"""
                                 eth_price = self.trading_system.get_current_price('ETH/USD')
                                 if eth_price:
                                     balance_usd += float(amount) * eth_price
-                except:
+                except Exception:
                     balance_usd = 0
                 
                 balance_display = f"${balance_usd:,.2f} USD" if balance_usd > 0 else "Conectando..."
@@ -4218,7 +4218,7 @@ Usa: `/autotrading activar ACEPTO`"""
                         response_text += "📈 Datos en tiempo real de Kraken"
                     else:
                         response_text += "❌ Error obteniendo precio"
-                except:
+                except Exception:
                     response_text += "❌ Error conectando con Kraken"
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
@@ -4246,7 +4246,7 @@ Usa: `/autotrading activar ACEPTO`"""
                         response_text += f"\n📊 Total estimado: ~${total_usd:,.2f} USD"
                     else:
                         response_text += "❌ Error obteniendo balance"
-                except:
+                except Exception:
                     response_text += "❌ Error conectando con Kraken"
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
@@ -4652,7 +4652,7 @@ Usa /autotrading stop para detener"""
                                         balance_display = f"${current_balance:,.2f}"
                                         pnl_emoji = "📈" if pnl >= 0 else "📉"
                                         pnl_text = f"\n{pnl_emoji} P&L Total: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
-                                except:
+                                except Exception:
                                     pass
                             
                             response_text = f"""🛑 **AUTO-TRADING DETENIDO**
@@ -4693,7 +4693,7 @@ Perdedores: {stats.get('losing_trades', 0)}
                                         balance_display = f"${current_balance:,.2f}"
                                         pnl_emoji = "📈" if pnl >= 0 else "📉"
                                         pnl_text = f"\n{pnl_emoji} P&L: ${pnl:+,.2f} ({pnl_pct:+.2f}%)"
-                                except:
+                                except Exception:
                                     pass
                             
                             # V6.5: Obtener pares activos (get_status devuelve trading_pairs directamente)
@@ -5616,7 +5616,7 @@ ESTILO:
                         'text': text[:4000] if len(text) > 4000 else text
                     }
                     requests.post(fallback_url, json=fallback_data, timeout=30)
-            except:
+            except Exception:
                 pass
             return False
 
@@ -5694,7 +5694,7 @@ ESTILO:
                         await update.message.reply_text(part)
                 else:
                     await update.message.reply_text(response_text)
-            except:
+            except Exception:
                 pass
             return False
 

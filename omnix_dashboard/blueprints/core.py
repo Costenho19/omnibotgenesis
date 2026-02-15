@@ -1005,7 +1005,7 @@ def api_live_status():
                 if isinstance(last_trade_time, str):
                     try:
                         last_trade_time = datetime.fromisoformat(last_trade_time.replace('Z', '+00:00'))
-                    except:
+                    except Exception:
                         last_trade_time = None
                 
                 if last_trade_time:
@@ -1544,8 +1544,14 @@ def api_comparative_metrics():
             with get_db_connection() as conn:
                 if conn:
                     cursor = conn.cursor()
-                    cursor.execute("SELECT COUNT(*) FROM capital_protected_events")
-                    veto_count = cursor.fetchone()[0] or 695
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM information_schema.tables 
+                        WHERE table_name = 'capital_protected_events'
+                    """)
+                    table_exists = cursor.fetchone()[0] > 0
+                    if table_exists:
+                        cursor.execute("SELECT COUNT(*) FROM capital_protected_events")
+                        veto_count = cursor.fetchone()[0] or 695
                     cursor.close()
         except Exception:
             pass

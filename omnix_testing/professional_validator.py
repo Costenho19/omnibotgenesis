@@ -713,7 +713,7 @@ potential overfitting and unrealistic assumptions.
             
             try:
                 signal = strategy(data[:i+1])
-            except:
+            except Exception:
                 signal = 'hold'
             
             if signal == 'buy' and position is None and balance_usd >= 100:
@@ -888,7 +888,7 @@ potential overfitting and unrealistic assumptions.
             if isinstance(timestamp, str):
                 try:
                     timestamp = datetime.fromisoformat(timestamp)
-                except:
+                except Exception:
                     timestamp = datetime.now()
             
             breakdown = tca.calculate_total_cost(

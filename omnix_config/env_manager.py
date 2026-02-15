@@ -409,7 +409,11 @@ class EnvConfig:
     def _is_secret_variable(self, var_name: str) -> bool:
         """Check if variable contains sensitive data"""
         sensitive_keywords = ['TOKEN', 'KEY', 'SECRET', 'PASSWORD', 'API', 'ENCRYPTION']
-        return any(keyword in var_name.upper() for keyword in sensitive_keywords)
+        sensitive_exact_names = ['DATABASE_URL', 'REDIS_URL', 'CELERY_BROKER_URL', 'CELERY_RESULT_BACKEND', 'SENTRY_DSN']
+        return (
+            any(keyword in var_name.upper() for keyword in sensitive_keywords) or
+            var_name in sensitive_exact_names
+        )
     
     def _validate_value(self, var_name: str, value: str) -> bool:
         """Validate value format according to catalog rules"""

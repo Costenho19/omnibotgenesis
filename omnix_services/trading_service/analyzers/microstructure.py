@@ -37,7 +37,7 @@ class MicrostructureAnalyzer:
                 }
             else:
                 return {'spread': 0, 'spread_percentage': 0, 'liquidity_score': 50, 'market_efficiency': 'MEDIUM'}
-        except:
+        except Exception:
             return {'spread': 0, 'spread_percentage': 0, 'liquidity_score': 50, 'market_efficiency': 'MEDIUM'}
 
 
@@ -65,7 +65,7 @@ class AdvancedRiskManagement:
                 'var_30d': var_30d,
                 'confidence_level': confidence
             }
-        except:
+        except Exception:
             return {'var_1d': 0, 'var_7d': 0, 'var_30d': 0, 'confidence_level': 0.95}
     
     def run_stress_test(self, position_btc, current_price):
@@ -101,5 +101,5 @@ class AdvancedRiskManagement:
                 'worst_case': min(results.values(), key=lambda x: x['pnl']),
                 'best_case': max(results.values(), key=lambda x: x['pnl'])
             }
-        except:
+        except Exception:
             return {'current_value': 0, 'scenarios': {}, 'worst_case': {}, 'best_case': {}}

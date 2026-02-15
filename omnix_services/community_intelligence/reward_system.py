@@ -203,12 +203,12 @@ class RewardSystem:
             if 'cursor' in locals() and cursor:
                 try:
                     cursor.close()
-                except:
+                except Exception:
                     pass
             if 'conn' in locals() and conn:
                 try:
                     conn.close()
-                except:
+                except Exception:
                     pass
             return self._get_default_profile(user_id)
     
