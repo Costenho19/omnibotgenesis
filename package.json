@@ -7,6 +7,7 @@
     "test": "tests"
   },
   "scripts": {
+    "build": "cd omnix_web && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
