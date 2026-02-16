@@ -377,11 +377,6 @@ def _classify_message_context(user_message: str) -> str:
         return 'casual'
     msg = user_message.strip().lower()
 
-    if len(msg) < 30 and any(re.search(p, msg) for p in GREETING_PATTERNS):
-        has_technical = any(re.search(p, msg) for p in TECHNICAL_PATTERNS)
-        if not has_technical:
-            return 'greeting'
-
     if any(re.search(p, msg) for p in TECHNICAL_PATTERNS):
         return 'technical'
 
@@ -390,6 +385,9 @@ def _classify_message_context(user_message: str) -> str:
 
     if any(re.search(p, msg) for p in MARKET_PATTERNS):
         return 'market'
+
+    if len(msg) < 30 and any(re.search(p, msg) for p in GREETING_PATTERNS):
+        return 'greeting'
 
     if len(msg) < 40:
         return 'casual'
@@ -410,18 +408,20 @@ def compress_response_contextual(response: str, user_message: str) -> str:
     lines = [l for l in response.split('\n') if l.strip()]
 
     if context == 'greeting':
-        core_lines = []
-        for line in lines[:4]:
-            cleaned = re.sub(r'(?:Su|La|Una|El|Esta|Cada|Los|Las)\s+(?:funcionalidad|arquitectura|infraestructura|propósito|articulación)[^.]*\.\s*', '', line)
-            cleaned = re.sub(r'K\(t-s\)\s*=\s*[^.]+\.', '', cleaned)
-            cleaned = re.sub(r'\(?\d+\s*pts?\)?', '', cleaned)
-            cleaned = re.sub(r'(?:τ|ε|Ω)\s*=\s*[\d.]+\s*(?:horas?|rad/periodo)?', '', cleaned)
-            cleaned = cleaned.strip()
-            if cleaned and len(cleaned) > 15:
-                core_lines.append(cleaned)
-        if not core_lines:
-            core_lines = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
-        result = '\n'.join(core_lines[:3])
+        first_line = lines[0] if lines else ""
+        sentences = re.split(r'(?<=[.!?])\s+', first_line)
+        kept = []
+        for s in sentences[:3]:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|\d+\s*pts|rad/periodo', s):
+                continue
+            if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', s, re.IGNORECASE):
+                continue
+            if len(s) > 200:
+                s = s[:200].rsplit(' ', 1)[0] + '.'
+            kept.append(s)
+        if not kept:
+            kept = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
+        result = ' '.join(kept)
         logger.info(f"🗜️ [COMPRESS] greeting: {len(response)} → {len(result)} chars")
         return result
 
