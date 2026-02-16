@@ -67,12 +67,129 @@ except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False
     logger.warning("⚠️ ConversationalAI no disponible")
 
-try:
-    from omnix_services.ai_service.conversational_ai_adapter import compress_response_contextual
-    CONTEXTUAL_COMPRESS_AVAILABLE = True
-except ImportError:
-    CONTEXTUAL_COMPRESS_AVAILABLE = False
-    logger.warning("⚠️ compress_response_contextual no disponible")
+CONTEXTUAL_COMPRESS_AVAILABLE = True
+
+_GREETING_PATTERNS = [
+    r'^hola\b', r'^hey\b', r'^buenas?\b', r'^buenos?\s', r'^saludos?\b',
+    r'^hi\b', r'^hello\b', r'^qu[eé]\s+tal\b', r'^c[oó]mo\s+est[aá]s',
+    r'^amigo\b', r'^caballero\b', r'^bro\b', r'^hermano\b',
+    r'^hola\s+(?:amigo|caballero|hermano|bro)\b',
+]
+_MARKET_PATTERNS = [
+    r'mercado', r'market', r'bitcoin', r'btc', r'ethereum', r'eth',
+    r'precio', r'price', r'cotiza', r'tendencia', r'trend',
+    r'hoy', r'today', r'cripto', r'crypto', r'acci[oó]n', r'stock',
+    r'bull', r'bear', r'alcist', r'bajist',
+]
+_TECHNICAL_PATTERNS = [
+    r'especificacion', r'specification', r't[eé]cnic[ao]', r'technical',
+    r'arquitectura', r'architecture', r'infraestructura', r'infrastructure',
+    r'm[oó]dulo', r'module', r'kernel', r'motor\s+de', r'engine',
+    r'algoritm', r'algorithm', r'monte\s*carlo', r'kalman', r'markov',
+    r'coherencia', r'coherence', r'veto', r'scoring', r'checkpoint',
+    r'c[oó]digo', r'code', r'api\b', r'detalle', r'detail', r'profundidad',
+    r'explica.*c[oó]mo\s+funciona', r'explain.*how.*works',
+]
+_FUNCTIONALITY_PATTERNS = [
+    r'qu[eé]\s+sabes\s+hacer', r'qu[eé]\s+puedes\s+hacer',
+    r'funcionalidad', r'functionality', r'feature',
+    r'capacidad', r'capability', r'habilidad',
+    r'para\s+qu[eé]\s+sirves', r'what\s+can\s+you\s+do',
+    r'dime.*funcionalidad', r'cu[aá]les\s+son\s+tus',
+]
+
+def _classify_msg_context(user_message: str) -> str:
+    if not user_message:
+        return 'casual'
+    msg = user_message.strip().lower()
+    if any(re.search(p, msg) for p in _TECHNICAL_PATTERNS):
+        return 'technical'
+    if any(re.search(p, msg) for p in _FUNCTIONALITY_PATTERNS):
+        return 'overview'
+    if any(re.search(p, msg) for p in _MARKET_PATTERNS):
+        return 'market'
+    if len(msg) < 30 and any(re.search(p, msg) for p in _GREETING_PATTERNS):
+        return 'greeting'
+    if len(msg) < 40:
+        return 'casual'
+    return 'general'
+
+def compress_response_contextual(response: str, user_message: str) -> str:
+    if not response or not user_message:
+        return response
+    context = _classify_msg_context(user_message)
+    logger.info(f"🗜️ [COMPRESS] context={context} | msg='{user_message[:50]}' | input={len(response)} chars")
+    if context == 'technical':
+        return response
+    lines = [l for l in response.split('\n') if l.strip()]
+    if context == 'greeting':
+        first_line = lines[0] if lines else ""
+        sentences = re.split(r'(?<=[.!?])\s+', first_line)
+        kept = []
+        for s in sentences[:3]:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|\d+\s*pts|rad/periodo', s):
+                continue
+            if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', s, re.IGNORECASE):
+                continue
+            if len(s) > 200:
+                s = s[:200].rsplit(' ', 1)[0] + '.'
+            kept.append(s)
+        if not kept:
+            kept = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
+        result = ' '.join(kept)
+        logger.info(f"🗜️ [COMPRESS] greeting: {len(response)} → {len(result)} chars")
+        return result
+    if context == 'overview':
+        core_lines = []
+        for line in lines:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+                continue
+            if re.search(r'\(\d+\s*pts?\)', line):
+                continue
+            if len(line) > 300:
+                sents = re.split(r'(?<=[.!?])\s+', line)
+                line = ' '.join(sents[:2])
+            core_lines.append(line)
+        result = '\n'.join(core_lines[:8])
+        if len(result) > 1200:
+            sents = re.split(r'(?<=[.!?])\s+', result)
+            result = ' '.join(sents[:8])
+        logger.info(f"🗜️ [COMPRESS] overview: {len(response)} → {len(result)} chars")
+        return result
+    if context == 'market':
+        core_lines = []
+        for line in lines:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+                continue
+            if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', line, re.IGNORECASE):
+                continue
+            if re.search(r'\(\d+\s*pts?\)', line):
+                continue
+            core_lines.append(line)
+        result = '\n'.join(core_lines[:8])
+        if len(result) > 1500:
+            sents = re.split(r'(?<=[.!?])\s+', result)
+            result = ' '.join(sents[:10])
+        logger.info(f"🗜️ [COMPRESS] market: {len(response)} → {len(result)} chars")
+        return result
+    core_lines = []
+    for line in lines:
+        if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+            continue
+        if re.search(r'\(\d+\s*pts?\)', line):
+            continue
+        if len(line) > 300:
+            sents = re.split(r'(?<=[.!?])\s+', line)
+            line = ' '.join(sents[:2])
+        core_lines.append(line)
+    result = '\n'.join(core_lines[:8])
+    if len(result) > 1200:
+        sents = re.split(r'(?<=[.!?])\s+', result)
+        result = ' '.join(sents[:8])
+    logger.info(f"🗜️ [COMPRESS] {context}: {len(response)} → {len(result)} chars")
+    return result
+
+logger.info(f"✅ Contextual Response Compressor INLINE - eliminada dependencia de import externo")
 
 # Investor Response Engine with Diagnostic Validator (Jan 1, 2026)
 try:
@@ -3665,7 +3782,13 @@ Usa: `/autotrading activar ACEPTO`"""
                     ai_response = f"🧠 OMNIX IA procesando tu consulta, {user_name}. Sistema operativo."
                 
                 if CONTEXTUAL_COMPRESS_AVAILABLE:
-                    ai_response = compress_response_contextual(ai_response, user_message)
+                    try:
+                        pre_len = len(ai_response)
+                        ai_response = compress_response_contextual(ai_response, user_message)
+                        post_len = len(ai_response)
+                        logger.info(f"🗜️ [COMPRESS_APPLIED] {pre_len} → {post_len} chars for '{user_message[:40]}'")
+                    except Exception as compress_err:
+                        logger.error(f"❌ [COMPRESS_ERROR] {compress_err} - sending uncompressed")
                 
                 # HAROLD FIX V2: Dividir mensajes >4096 chars usando async Telegram API
                 # Ya NO se trunca la respuesta - se envía completa dividida inteligentemente
