@@ -107,7 +107,6 @@ externalPort = 8080
 
 [deployment]
 deploymentTarget = "static"
-run = ["python", "-u", "main.py"]
 build = ["bash", "-c", "cd omnix_web && npm install && npm run build"]
 publicDir = "omnix_web/dist"
 
