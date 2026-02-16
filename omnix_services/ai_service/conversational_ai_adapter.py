@@ -339,6 +339,148 @@ def _has_disclosure_note(text: str) -> bool:
     text_lower = text.lower()
     return any(indicator in text_lower for indicator in disclosure_indicators)
 
+GREETING_PATTERNS = [
+    r'^hola\b', r'^hey\b', r'^buenas?\b', r'^buenos?\s', r'^saludos?\b',
+    r'^hi\b', r'^hello\b', r'^qu[eé]\s+tal\b', r'^c[oó]mo\s+est[aá]s',
+    r'^amigo\b', r'^caballero\b', r'^bro\b', r'^hermano\b',
+    r'^hola\s+(?:amigo|caballero|hermano|bro)\b',
+]
+
+MARKET_PATTERNS = [
+    r'mercado', r'market', r'bitcoin', r'btc', r'ethereum', r'eth',
+    r'precio', r'price', r'cotiza', r'tendencia', r'trend',
+    r'hoy', r'today', r'cripto', r'crypto', r'acci[oó]n', r'stock',
+    r'bull', r'bear', r'alcist', r'bajist',
+]
+
+TECHNICAL_PATTERNS = [
+    r'especificacion', r'specification', r't[eé]cnic[ao]', r'technical',
+    r'arquitectura', r'architecture', r'infraestructura', r'infrastructure',
+    r'm[oó]dulo', r'module', r'kernel', r'motor\s+de', r'engine',
+    r'algoritm', r'algorithm', r'monte\s*carlo', r'kalman', r'markov',
+    r'coherencia', r'coherence', r'veto', r'scoring', r'checkpoint',
+    r'c[oó]digo', r'code', r'api\b', r'detalle', r'detail', r'profundidad',
+    r'explica.*c[oó]mo\s+funciona', r'explain.*how.*works',
+]
+
+FUNCTIONALITY_PATTERNS = [
+    r'qu[eé]\s+sabes\s+hacer', r'qu[eé]\s+puedes\s+hacer',
+    r'funcionalidad', r'functionality', r'feature',
+    r'capacidad', r'capability', r'habilidad',
+    r'para\s+qu[eé]\s+sirves', r'what\s+can\s+you\s+do',
+    r'dime.*funcionalidad', r'cu[aá]les\s+son\s+tus',
+]
+
+
+def _classify_message_context(user_message: str) -> str:
+    if not user_message:
+        return 'casual'
+    msg = user_message.strip().lower()
+
+    if len(msg) < 30 and any(re.search(p, msg) for p in GREETING_PATTERNS):
+        has_technical = any(re.search(p, msg) for p in TECHNICAL_PATTERNS)
+        if not has_technical:
+            return 'greeting'
+
+    if any(re.search(p, msg) for p in TECHNICAL_PATTERNS):
+        return 'technical'
+
+    if any(re.search(p, msg) for p in FUNCTIONALITY_PATTERNS):
+        return 'overview'
+
+    if any(re.search(p, msg) for p in MARKET_PATTERNS):
+        return 'market'
+
+    if len(msg) < 40:
+        return 'casual'
+
+    return 'general'
+
+
+def compress_response_contextual(response: str, user_message: str) -> str:
+    if not response or not user_message:
+        return response
+
+    context = _classify_message_context(user_message)
+    logger.info(f"🗜️ [COMPRESS] Message context: {context} | Input: {len(response)} chars")
+
+    if context == 'technical':
+        return response
+
+    lines = [l for l in response.split('\n') if l.strip()]
+
+    if context == 'greeting':
+        core_lines = []
+        for line in lines[:4]:
+            cleaned = re.sub(r'(?:Su|La|Una|El|Esta|Cada|Los|Las)\s+(?:funcionalidad|arquitectura|infraestructura|propósito|articulación)[^.]*\.\s*', '', line)
+            cleaned = re.sub(r'K\(t-s\)\s*=\s*[^.]+\.', '', cleaned)
+            cleaned = re.sub(r'\(?\d+\s*pts?\)?', '', cleaned)
+            cleaned = re.sub(r'(?:τ|ε|Ω)\s*=\s*[\d.]+\s*(?:horas?|rad/periodo)?', '', cleaned)
+            cleaned = cleaned.strip()
+            if cleaned and len(cleaned) > 15:
+                core_lines.append(cleaned)
+        if not core_lines:
+            core_lines = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
+        result = '\n'.join(core_lines[:3])
+        logger.info(f"🗜️ [COMPRESS] greeting: {len(response)} → {len(result)} chars")
+        return result
+
+    if context == 'overview':
+        core_lines = []
+        for line in lines:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+                continue
+            if re.search(r'\(\d+\s*pts?\)', line):
+                continue
+            if len(line) > 300:
+                sentences = re.split(r'(?<=[.!?])\s+', line)
+                line = ' '.join(sentences[:2])
+            core_lines.append(line)
+        result = '\n'.join(core_lines[:8])
+        if len(result) > 1200:
+            sentences = re.split(r'(?<=[.!?])\s+', result)
+            result = ' '.join(sentences[:8])
+        logger.info(f"🗜️ [COMPRESS] overview: {len(response)} → {len(result)} chars")
+        return result
+
+    if context == 'market':
+        core_lines = []
+        for line in lines:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+                continue
+            if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', line, re.IGNORECASE):
+                continue
+            if re.search(r'\(\d+\s*pts?\)', line):
+                continue
+            core_lines.append(line)
+        result = '\n'.join(core_lines[:8])
+        if len(result) > 1500:
+            sentences = re.split(r'(?<=[.!?])\s+', result)
+            result = ' '.join(sentences[:10])
+        logger.info(f"🗜️ [COMPRESS] market: {len(response)} → {len(result)} chars")
+        return result
+
+    if context in ('casual', 'general'):
+        core_lines = []
+        for line in lines:
+            if re.search(r'K\(t-s\)|τ=|ε=|Ω=|exp\(-|rad/periodo', line):
+                continue
+            if re.search(r'\(\d+\s*pts?\)', line):
+                continue
+            if len(line) > 300:
+                sentences = re.split(r'(?<=[.!?])\s+', line)
+                line = ' '.join(sentences[:2])
+            core_lines.append(line)
+        result = '\n'.join(core_lines[:8])
+        if len(result) > 1200:
+            sentences = re.split(r'(?<=[.!?])\s+', result)
+            result = ' '.join(sentences[:8])
+        logger.info(f"🗜️ [COMPRESS] {context}: {len(response)} → {len(result)} chars")
+        return result
+
+    return response
+
+
 def post_process_response(response: str) -> str:
     """
     Remove blacklisted phrases and apply institutional language transforms.

@@ -67,6 +67,13 @@ except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False
     logger.warning("⚠️ ConversationalAI no disponible")
 
+try:
+    from omnix_services.ai_service.conversational_ai_adapter import compress_response_contextual
+    CONTEXTUAL_COMPRESS_AVAILABLE = True
+except ImportError:
+    CONTEXTUAL_COMPRESS_AVAILABLE = False
+    logger.warning("⚠️ compress_response_contextual no disponible")
+
 # Investor Response Engine with Diagnostic Validator (Jan 1, 2026)
 try:
     from omnix_services.ai_service.investor_responses import (
@@ -3656,6 +3663,9 @@ Usa: `/autotrading activar ACEPTO`"""
                 
                 if not ai_response:
                     ai_response = f"🧠 OMNIX IA procesando tu consulta, {user_name}. Sistema operativo."
+                
+                if CONTEXTUAL_COMPRESS_AVAILABLE:
+                    ai_response = compress_response_contextual(ai_response, user_message)
                 
                 # HAROLD FIX V2: Dividir mensajes >4096 chars usando async Telegram API
                 # Ya NO se trunca la respuesta - se envía completa dividida inteligentemente
