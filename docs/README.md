@@ -28,6 +28,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
 | [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
 | [OMNIX_PITCH_SCRIPTS.md](business/OMNIX_PITCH_SCRIPTS.md) | Scripts 60s y 90s (EN/ES) con notas de entrega | Eureka Dubai, Elevator, Networking |
+| [OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md](business/OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md) | Evidencia real de gobernanza activa con datos de producción | Pitch, Due Diligence, Auditoría |
 
 **Posicionamiento**: OMNIX = **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure.  
 Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.
