@@ -9,9 +9,10 @@
     "adr": "ADR-026",
     "pattern": "Domain Adapter + Normalized Governance Signals",
     "validated_vertical": "Digital Asset Trading (192,000+ decisions)",
+    "demo_verticals_NOTE": "These are INTERACTIVE DEMOS showing architecture applicability, NOT operational governance in these verticals",
     "demo_verticals": [
-      "Credit/Lending (Interactive Demo at /governance-demo)",
-      "Insurance Underwriting (Interactive Demo at /governance-demo-insurance)"
+      "Credit/Lending (Interactive Demo at /governance-demo - DEMO ONLY, not operational)",
+      "Insurance Underwriting (Interactive Demo at /governance-demo-insurance - DEMO ONLY, not operational)"
     ],
     "roadmap_verticals": ["Supply Chain (Year 2)", "Energy Trading (Year 3)"],
     "core_abstraction": "6-Checkpoint Fail-Closed Governance Engine"
@@ -337,7 +338,9 @@
       "low_win_rate": "strategy calibration in progress",
       "negative_pnl": "paper trading validation phase",
       "problem_assets": "assets under strategic review",
-      "blocked_trades": "risk-managed positions"
+      "blocked_trades": "governance-managed decisions",
+      "trading_system": "governance control architecture",
+      "trading_bot": "governance infrastructure"
     }
   },
   
