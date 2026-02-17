@@ -394,5 +394,6 @@ Primary value driver: Avoided tail-risk exposure
 
 ---
 
-*OMNIX — Governing Decisions Under Uncertainty*
+*OMNIX — When systems can act, but choose discipline.*
+*Institutionalizing discipline in automated systems.*
 *Eureka Dubai 2026 — Semifinalist*
