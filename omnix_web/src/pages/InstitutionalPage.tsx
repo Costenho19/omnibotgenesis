@@ -225,8 +225,8 @@ export default function InstitutionalPage() {
                 <span className="gold-gradient">Prevents Costly Mistakes</span>
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
-                OMNIX validates every decision before execution. Our 6-checkpoint fail-closed architecture 
-                ensures capital preservation across high-stakes domains. First vertical validated: digital asset trading.
+                A governance control architecture for automated decision systems. Our 6-checkpoint fail-closed engine 
+                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading.
               </p>
               <div className="flex justify-center gap-4">
                 <button className="btn-primary flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function InstitutionalPage() {
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
                   <p className="section-title">The Challenge</p>
-                  <h2 className="text-3xl font-bold text-white mb-6">Why 73% of Algorithmic Decision Systems Fail</h2>
+                  <h2 className="text-3xl font-bold text-white mb-6">Why 73% of Automated Decision Systems Fail</h2>
                   <div className="space-y-4">
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-1">
@@ -289,7 +289,7 @@ export default function InstitutionalPage() {
                       </div>
                       <div>
                         <h4 className="text-white font-medium mb-1">Execution Without Validation</h4>
-                        <p className="text-muted text-sm">Most trading bots execute signals blindly without checking market regime, volatility conditions, or signal coherence.</p>
+                        <p className="text-muted text-sm">Most automated systems execute decisions blindly without checking conditions, risk context, or signal coherence.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -316,8 +316,8 @@ export default function InstitutionalPage() {
                   <p className="section-title">The OMNIX Solution</p>
                   <h3 className="text-2xl font-semibold text-white mb-6">Fail-Closed by Design</h3>
                   <p className="text-muted mb-6 leading-relaxed">
-                    Unlike fail-open systems that execute first and ask questions later, OMNIX blocks ALL trades by default. 
-                    Every trade must pass through 6 independent validation checkpoints before execution is allowed.
+                    Unlike fail-open systems that execute first and ask questions later, OMNIX blocks ALL actions by default. 
+                    Every decision must pass through 6 independent validation checkpoints before execution is allowed.
                   </p>
                   <div className="flex items-center gap-3 p-4 bg-[#0A1628]/60 rounded-xl border border-emerald-500/30">
                     <CheckCircle className="w-6 h-6 text-emerald-500" />
@@ -332,8 +332,8 @@ export default function InstitutionalPage() {
             <section className="mb-20">
               <div className="text-center mb-12">
                 <p className="section-title">System Architecture</p>
-                <h2 className="text-3xl font-bold text-white">How OMNIX Protects Your Capital</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">Every trade signal passes through a rigorous 6-checkpoint validation pipeline. If ANY checkpoint vetoes, the trade is blocked.</p>
+                <h2 className="text-3xl font-bold text-white">How OMNIX Governs Your Decisions</h2>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">Every decision passes through a rigorous 6-checkpoint validation pipeline. If ANY checkpoint vetoes, execution is blocked.</p>
               </div>
               
               <div className="grid md:grid-cols-4 gap-6">
@@ -343,7 +343,7 @@ export default function InstitutionalPage() {
                     <Eye className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-lg font-semibold text-white mb-2">Regime Detection</h4>
-                  <p className="text-muted text-sm leading-relaxed">Hidden Markov Model analyzes market state (trending, ranging, volatile) to determine if conditions favor trading.</p>
+                  <p className="text-muted text-sm leading-relaxed">Hidden Markov Model analyzes market state (trending, ranging, volatile) to determine if conditions favor execution.</p>
                   <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
                     <p className="text-xs text-muted">Veto trigger: Regime uncertainty &gt; 40%</p>
                   </div>
@@ -367,7 +367,7 @@ export default function InstitutionalPage() {
                     <Target className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-lg font-semibold text-white mb-2">Monte Carlo Simulation</h4>
-                  <p className="text-muted text-sm leading-relaxed">10,000 simulations project expected outcomes. Blocks trades with negative expected return.</p>
+                  <p className="text-muted text-sm leading-relaxed">10,000 simulations project expected outcomes. Blocks decisions with negative expected return.</p>
                   <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
                     <p className="text-xs text-muted">Veto trigger: Expected return &lt; 0%</p>
                   </div>
@@ -393,7 +393,7 @@ export default function InstitutionalPage() {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold">Edge Confirmation Window (ECW)</h4>
-                    <p className="text-muted text-sm">Requires positive edge for 3 consecutive cycles before allowing trades. Transforms "capital preservation" into "capital patience".</p>
+                    <p className="text-muted text-sm">Requires positive edge for 3 consecutive cycles before allowing execution. Transforms "capital preservation" into "capital patience".</p>
                   </div>
                 </div>
                 <ArrowRight className="w-6 h-6 gold-text" />
@@ -468,8 +468,8 @@ export default function InstitutionalPage() {
             <section className="mb-20">
               <div className="text-center mb-12">
                 <p className="section-title">Integration Partners</p>
-                <h2 className="text-3xl font-bold text-white">Built for Your Trading Stack</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing trading infrastructure via REST API or webhooks.</p>
+                <h2 className="text-3xl font-bold text-white">Built for Your Decision Infrastructure</h2>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. First vertical: digital asset trading.</p>
               </div>
               
               <div className="grid md:grid-cols-3 gap-8">
@@ -479,12 +479,12 @@ export default function InstitutionalPage() {
                       <TrendingUp className="w-6 h-6 text-blue-500" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-white">Trading Platforms</h4>
+                      <h4 className="text-lg font-semibold text-white">Decision Platforms</h4>
                       <p className="text-xs text-muted">3Commas, NinjaTrader, TradingView</p>
                     </div>
                   </div>
                   <p className="text-muted text-sm leading-relaxed mb-4">
-                    Add institutional-grade risk validation to your existing signals. OMNIX receives your trade signals, validates them through our 4-layer pipeline, and returns approve/block decisions in &lt;50ms.
+                    Add institutional-grade governance validation to your existing signals. OMNIX receives your decision signals, validates them through our 6-checkpoint pipeline, and returns approve/block decisions in &lt;50ms.
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="gold-text font-medium">API Integration</span>
@@ -503,7 +503,7 @@ export default function InstitutionalPage() {
                     </div>
                   </div>
                   <p className="text-muted text-sm leading-relaxed mb-4">
-                    White-label our risk engine for your platform. Offer institutional-grade risk controls to your clients as a premium feature or compliance requirement.
+                    White-label our governance engine for your platform. Offer institutional-grade decision controls to your clients as a premium feature or compliance requirement.
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="gold-text font-medium">White-Label Engine</span>
@@ -517,12 +517,12 @@ export default function InstitutionalPage() {
                       <DollarSign className="w-6 h-6 text-emerald-500" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-white">Individual Traders</h4>
+                      <h4 className="text-lg font-semibold text-white">Individual Users</h4>
                       <p className="text-xs text-muted">SaaS subscription</p>
                     </div>
                   </div>
                   <p className="text-muted text-sm leading-relaxed mb-4">
-                    Direct access to OMNIX risk controls through our Telegram bot interface. Connect your exchange API, set your risk parameters, and let OMNIX protect your capital 24/7.
+                    Direct access to OMNIX governance controls through our Telegram bot interface. Connect your exchange API, set your risk parameters, and let OMNIX govern your decisions 24/7.
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="gold-text font-medium">Pro Plan</span>
@@ -607,7 +607,7 @@ export default function InstitutionalPage() {
                     <Lock className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-3">Fail-Closed by Default</h4>
-                  <p className="text-muted leading-relaxed">Every trade is blocked unless ALL validation layers explicitly approve. Safety is the default state, not an afterthought.</p>
+                  <p className="text-muted leading-relaxed">Every decision is blocked unless ALL validation layers explicitly approve. Safety is the default state, not an afterthought.</p>
                 </div>
                 <div className="glass-card p-8">
                   <div className="feature-icon mb-6">
@@ -659,15 +659,15 @@ export default function InstitutionalPage() {
             <section className="mb-20">
               <div className="text-center mb-12">
                 <p className="section-title">Comparison</p>
-                <h2 className="text-3xl font-bold text-white">OMNIX vs Traditional Algorithmic Trading</h2>
+                <h2 className="text-3xl font-bold text-white">OMNIX vs Traditional Automated Decision Systems</h2>
               </div>
               <div className="glass-card overflow-hidden">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[#C9A227]/20 bg-[#0A1628]/80">
                       <th className="text-left py-4 px-6 text-[#C9A227] font-semibold">Feature</th>
-                      <th className="text-left py-4 px-6 text-muted font-medium">Traditional Algo Trading</th>
-                      <th className="text-left py-4 px-6 text-emerald-400 font-semibold">OMNIX Infrastructure</th>
+                      <th className="text-left py-4 px-6 text-muted font-medium">Traditional Automated Systems</th>
+                      <th className="text-left py-4 px-6 text-emerald-400 font-semibold">OMNIX Governance</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#C9A227]/10">
@@ -721,7 +721,7 @@ export default function InstitutionalPage() {
               <div className="max-w-4xl mx-auto space-y-4">
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">Is OMNIX a trading bot?</h4>
-                  <p className="text-muted leading-relaxed">No. OMNIX does not generate trading signals or alpha. It is a governance and validation infrastructure that sits between your signal generation and execution. It decides when NOT to trade, preserving capital during unfavorable conditions.</p>
+                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 6 independent checkpoints. Digital asset trading is the first validated vertical.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How does OMNIX integrate with existing systems?</h4>
@@ -729,7 +729,7 @@ export default function InstitutionalPage() {
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">What makes OMNIX institutional-grade?</h4>
-                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST FIPS 203/204), and real-time risk validation. OMNIX is built for fiduciary standards, not retail trading.</p>
+                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST FIPS 203/204), and real-time decision validation. OMNIX is built for fiduciary standards, not retail tools.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How is performance measured?</h4>
@@ -744,9 +744,9 @@ export default function InstitutionalPage() {
 
             <section className="text-center">
               <div className="glass-card p-12 gold-glow">
-                <h2 className="text-3xl font-bold text-white mb-4">Ready to Protect Your Capital?</h2>
+                <h2 className="text-3xl font-bold text-white mb-4">Ready to Govern Your Decisions?</h2>
                 <p className="text-xl text-muted max-w-2xl mx-auto mb-8">
-                  Schedule a demo to see how OMNIX can integrate with your trading infrastructure.
+                  Schedule a demo to see how OMNIX can integrate with your decision infrastructure.
                 </p>
                 <div className="flex justify-center gap-4">
                   <button className="btn-primary flex items-center gap-2">
@@ -825,7 +825,7 @@ export default function InstitutionalPage() {
           <section className="animate-fade-in-up">
             <div className="mb-8">
               <p className="section-title">Risk Management</p>
-              <h2 className="text-3xl font-bold text-white">Professional Trading Tools</h2>
+              <h2 className="text-3xl font-bold text-white">Professional Risk Tools</h2>
             </div>
             
             <div className="glass-card p-8 mb-8">
@@ -851,7 +851,7 @@ export default function InstitutionalPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-muted mb-2 font-medium">Risk Per Trade (%)</label>
+                    <label className="block text-sm text-muted mb-2 font-medium">Risk Per Decision (%)</label>
                     <input 
                       type="number"
                       value={riskCalc.riskPercent}
@@ -943,7 +943,7 @@ export default function InstitutionalPage() {
               <h3 className="text-xl font-bold text-white mb-2">Harold Nunes</h3>
               <p className="text-[#C9A227] font-semibold mb-4">Founder & CEO</p>
               <p className="text-sm text-muted">
-                Visionary entrepreneur driving OMNIX QUANTUM's mission to democratize institutional-grade risk control for algorithmic trading.
+                Visionary entrepreneur driving OMNIX QUANTUM's mission to democratize institutional-grade decision governance for automated systems.
               </p>
             </div>
             
@@ -969,7 +969,7 @@ export default function InstitutionalPage() {
                 <img src="/logo.png" alt="OMNIX QUANTUM" className="w-14 h-14 object-contain" />
                 <span className="font-bold text-white">OMNIX QUANTUM</span>
               </div>
-              <p className="text-sm text-muted">Institutional-grade risk control infrastructure for algorithmic trading.</p>
+              <p className="text-sm text-muted">Governance control architecture for automated decision systems.</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Company</h4>
@@ -1004,8 +1004,8 @@ export default function InstitutionalPage() {
           </div>
           <div className="border-t border-[#C9A227]/10 pt-8">
             <p className="footer-disclaimer mb-4">
-              DISCLAIMER: OMNIX QUANTUM provides risk validation infrastructure for algorithmic trading. Past performance does not guarantee future results. 
-              Trading involves substantial risk of loss. This platform is designed for institutional investors and qualified professional clients only. 
+              DISCLAIMER: OMNIX QUANTUM provides decision governance infrastructure. Past performance does not guarantee future results. 
+              High-stakes decision domains involve substantial risk. This platform is designed for institutional investors and qualified professional clients only. 
               Not available in all jurisdictions. Please consult your legal and financial advisors before use.
             </p>
             <div className="flex justify-between items-center">

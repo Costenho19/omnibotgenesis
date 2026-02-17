@@ -26,7 +26,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-12 leading-relaxed">
-            OMNIX is an AI Decision Governance Platform that blocks high-risk decisions before they cause damage. First validated in digital asset trading.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. First validated in digital asset trading.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
@@ -58,7 +58,7 @@ export default function CommercialLanding() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">Works with Your Tools</h3>
               <p className="text-muted leading-relaxed">
-                Connects to your existing trading platform. No need to change how you trade.
+                Connects to your existing decision infrastructure. No need to change how you operate.
               </p>
             </div>
 
@@ -109,7 +109,7 @@ export default function CommercialLanding() {
             </div>
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-muted"><span className="text-white font-medium">Real-time market analysis.</span> We check market conditions before every trade.</p>
+              <p className="text-muted"><span className="text-white font-medium">Real-time context analysis.</span> We evaluate conditions before every decision.</p>
             </div>
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
