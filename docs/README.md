@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e - Documentación
 
 **Versión**: V6.5.4e INSTITUTIONAL+  
-**Identidad**: AI Decision Governance Platform  
+**Identidad**: Decision Governance Infrastructure for Automated Systems  
 **Actualizado**: 15 de Febrero 2026  
 **Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record COMPLETADO (30 días) | Fase 1 Operativa
 
@@ -28,12 +28,13 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
 | [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
 
-**Posicionamiento**: OMNIX = **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty"  
+**Posicionamiento**: OMNIX = **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure.  
 Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.
 
 **Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor  
 **Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform  
-**Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)
+**Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)  
+**Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)
 
 ---
 
@@ -319,7 +320,7 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **DOCUMENTACIÓN**: Ver `docs/investigations/TRADE_INVESTIGATION_JAN2026.md` para análisis completo
 
 ### Official Positioning & Language Guide (Jan 10, 2026)
-- **ADR-003**: OMNIX officially positioned as "institutional-grade risk control infrastructure"
+- **ADR-003**: OMNIX officially positioned as "Decision Governance Infrastructure for Automated Systems" (updated by ADR-027)
 - **NEW DOCUMENT**: `docs/reference/omnix_official_language.md` - Complete language guide
 - **TWO RESPONSE MODES**: 
   - Mode 1 (Positioning): Lead with architecture/preservation for general inquiries

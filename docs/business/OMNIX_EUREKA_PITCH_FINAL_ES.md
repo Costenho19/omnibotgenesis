@@ -9,7 +9,7 @@
 ## SLIDE 1 — TITULO
 
 **OMNIX**
-*Plataforma de Gobernanza de Decisiones con IA*
+*Infraestructura de Gobernanza de Decisiones*
 
 > "La mejor decision es, muchas veces, la que no se hace."
 
@@ -46,7 +46,7 @@ La mayoria de los sistemas optimizan para la *accion*. Nadie optimiza para la *c
 
 ## SLIDE 3 — LA SOLUCION
 
-**OMNIX es una plataforma de gobernanza de decisiones con IA que bloquea errores costosos antes de que sucedan.**
+**OMNIX construye la capa de gobernanza para sistemas de decisión automatizados — bloqueando errores costosos antes de que sucedan.**
 
 A diferencia de los sistemas que persiguen cada oportunidad, OMNIX opera como un **motor de gobernanza fail-closed**: si la confianza cae por debajo de umbrales definidos, la accion se detiene automaticamente. La misma arquitectura de 6 checkpoints se aplica a cualquier dominio donde las decisiones bajo incertidumbre involucran capital en riesgo.
 

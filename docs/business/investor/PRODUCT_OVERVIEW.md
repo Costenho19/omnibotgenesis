@@ -1,4 +1,4 @@
-# OMNIX: AI Decision Governance Platform
+# OMNIX: Decision Governance Infrastructure for Automated Systems
 
 **Version**: V6.5.4e Advanced Tier  
 **Document Type**: Product Overview  
@@ -25,9 +25,9 @@ Traditional algorithmic trading systems optimize for **returns first, risk secon
 
 ## What OMNIX Is
 
-**OMNIX is an AI Decision Governance Platform.**
+**OMNIX builds the governance layer for automated decision systems.**
 
-It is a domain-agnostic decision governance platform validated in digital asset trading. The same 6-checkpoint architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
+It is Decision Governance Infrastructure validated in digital asset trading. The same 6-checkpoint architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
 
 ### Core Identity
 

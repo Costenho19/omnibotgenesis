@@ -1,6 +1,6 @@
 # OMNIX Investor Documents - Narrative Consistency Matrix
 
-**Last Updated:** January 25, 2026
+**Last Updated:** February 17, 2026
 
 This table tracks key phrases and messaging across all investor-facing documents to ensure narrative consistency.
 
@@ -10,7 +10,8 @@ This table tracks key phrases and messaging across all investor-facing documents
 
 | Element | one_pager.md | PITCH_DECK_HUB71.md | INVESTOR_FAQ.md | FOUNDATIONAL.md |
 |---------|--------------|---------------------|-----------------|-----------------|
-| **Opening Hook** | "Most trading systems fail not because of lack of signals, but because of inadequate risk governance." | "Most trading systems fail not because of lack of signals, but because of inadequate risk governance." | N/A (FAQ format) | N/A (narrative format) |
+| **Opening Hook** | "Most automated systems fail not because of lack of signals, but because of inadequate governance infrastructure." | "Most automated systems fail not because of lack of signals, but because of inadequate governance infrastructure." | N/A (FAQ format) | N/A (narrative format) |
+| **Platform Identity** | "Decision Governance Infrastructure for Automated Systems" | "Decision Governance Infrastructure for Automated Systems" | "Decision Governance Infrastructure for Automated Systems" | "Decision Governance Infrastructure for Automated Systems" |
 | **Restraint Line** | "Most competitors optimize for entries. OMNIX optimizes for restraint." | "Most competitors optimize for entries. OMNIX optimizes for restraint." | N/A | N/A |
 | **Churn Assumption** | "<3% monthly" | "<3% monthly" | N/A | N/A |
 | **Market Source** | "estimate based on active wallet behavior and exchange volume data" | "estimate based on active wallet behavior and exchange volume data" | N/A | N/A |
@@ -46,8 +47,8 @@ This table tracks key phrases and messaging across all investor-facing documents
 | Element | one_pager.md | PITCH_DECK_HUB71.md | INVESTOR_FAQ.md | FOUNDATIONAL.md |
 |---------|--------------|---------------------|-----------------|-----------------|
 | **Raising** | $500K | $500K | $500K | $500K |
-| **Equity** | 10% | 10% | 10% | 10% |
-| **Pre-Money** | $4.5M | ~$4.5M | $4.5M | $4.5M |
+| **Equity** | 16.7% | 16.7% | 16.7% | 16.7% |
+| **Pre-Money** | $2.5M-$3M | $2.5M-$3M | $2.5M-$3M | $2.5M-$3M |
 
 ---
 
@@ -62,7 +63,7 @@ This table tracks key phrases and messaging across all investor-facing documents
 
 ---
 
-## Verified Consistency: January 25, 2026
+## Verified Consistency: February 17, 2026
 
 All documents now share:
 - Same opening hook (governance, not signals)
@@ -70,7 +71,8 @@ All documents now share:
 - Same drawdown framing (15% cap / 1.5% observed)
 - Same 89K clarification (evaluation cycles)
 - Same PQC disclaimer (production-integrated, not compliance)
-- Same valuation ($4.5M pre-money)
+- Same platform identity (Decision Governance Infrastructure for Automated Systems)
+- Same valuation ($2.5M-$3M pre-money)
 
 ---
 

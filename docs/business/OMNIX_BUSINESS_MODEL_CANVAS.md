@@ -8,12 +8,12 @@
 
 ## BUSINESS MODEL CANVAS — OMNIX
 
-**"AI Decision Governance Platform — Preventing Costly Mistakes Before They Happen"**
+**"Decision Governance Infrastructure — Preventing Costly Mistakes Before They Happen"**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            OMNIX BUSINESS MODEL                                 │
-│         AI Decision Governance Platform | First Vertical: Digital Assets         │
+│         Decision Governance Infrastructure | First Vertical: Digital Assets         │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -60,7 +60,7 @@
 
 > "Preventing costly mistakes before they happen."
 
-**OMNIX is an AI Decision Governance Platform** that provides:
+**OMNIX is Decision Governance Infrastructure** that provides:
 
 - Multi-layer pre-execution decision validation (6 independent checkpoints)
 - Fail-closed architecture (default = don't act)

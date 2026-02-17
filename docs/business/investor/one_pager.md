@@ -9,7 +9,7 @@
 
 **Most trading systems fail not because of lack of signals, but because of inadequate risk governance.** Retail and semi-institutional platforms continue trading during adverse regimes, leading to capital erosion and misleading performance narratives.
 
-**OMNIX provides institutional-grade risk control infrastructure**, making AI-powered, risk-managed automated trading accessible to advanced users for $49-499/month.
+**OMNIX builds the governance layer for automated decision systems — Decision Governance Infrastructure that prevents costly mistakes before they happen.** Making AI-powered, risk-managed automated trading accessible to advanced users for $49-499/month.
 
 ---
 
@@ -139,11 +139,11 @@ OMNIX differentiates through:
 
 ### THE ASK
 
-**Raising:** $500,000 Seed Round  
-**Valuation:** $4.5M Pre-Money (10% equity)  
+**Raising:** $500,000 Pre-Seed Round  
+**Valuation:** $2.5M–$3M Pre-Money (16.7% equity)  
 **Runway:** 12-18 months  
 
-**Why $4.5M Valuation?**
+**Why $2.5M–$3M Valuation?**
 - Conservative valuation for validation-phase infrastructure
 - MENA seed mean valuation: $18.9M (MAGNiTT 2024) - significant upside
 - Unique IP: Non-Markovian Kernel, ECW, DCI, Shadow Portfolio

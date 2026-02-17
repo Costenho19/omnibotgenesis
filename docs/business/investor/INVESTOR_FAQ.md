@@ -97,6 +97,14 @@ This explains why the system doesn't trade during uncertain conditions—it's no
 
 **Clarification:** The 15% is the hard system cap (absolute maximum before circuit breaker). The 1.5% is what was actually observed during the Learning Baseline period. The Risk Guardian V5.4 monitors these limits in real-time and activates circuit breakers automatically.
 
+### Q-NEW: What is "Decision Governance Infrastructure" and why is OMNIX creating this category?
+
+**A:** Decision Governance Infrastructure is the control layer for automated decision systems — ensuring that every automated decision passes through independent validation checkpoints before execution. 
+
+Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 192,000+ governed decisions and 98.5% of capital preserved.
+
+The right question for investors is not "how much alpha does OMNIX generate?" but "how much capital risk exists in automated systems without governance control?"
+
 ---
 
 ## Technology & Security
@@ -224,10 +232,10 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 
 | Term | Value |
 |------|-------|
-| Round | Seed |
+| Round | Pre-Seed |
 | Amount | $500,000 |
-| Pre-money Valuation | $4.5M |
-| Equity | 10% |
+| Pre-money Valuation | $2.5M–$3M |
+| Equity | 16.7% |
 | Runway | 12-18 months |
 
 ### Q20: How will funds be used?

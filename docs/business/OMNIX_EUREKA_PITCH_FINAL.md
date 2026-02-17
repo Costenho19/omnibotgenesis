@@ -9,7 +9,7 @@
 ## SLIDE 1 — TITLE
 
 **OMNIX**
-*AI Decision Governance Platform*
+*Decision Governance Infrastructure*
 
 > "The best decision is often the one you don't make."
 
@@ -46,7 +46,7 @@ Most systems optimize for *action*. Nobody optimizes for *restraint*.
 
 ## SLIDE 3 — THE SOLUTION
 
-**OMNIX is an AI decision governance platform that blocks costly mistakes before they happen.**
+**OMNIX builds the governance layer for automated decision systems — blocking costly mistakes before they happen.**
 
 Unlike systems that chase every opportunity, OMNIX operates as a **fail-closed governance engine**: if confidence falls below defined thresholds, action is automatically halted. The same 6-checkpoint architecture applies to any domain where decisions under uncertainty involve capital at risk.
 

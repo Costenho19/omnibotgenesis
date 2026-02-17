@@ -2,7 +2,8 @@
 
 **Phase 1 — Institutional Validation**  
 **Version**: OMNIX V6.5.4e  
-**Issue Date**: 15 January 2026
+**Issue Date**: 15 January 2026  
+**Platform Identity**: Decision Governance Infrastructure for Automated Systems
 
 ---
 

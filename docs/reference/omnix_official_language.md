@@ -1,7 +1,7 @@
 # OMNIX - Official Language & Positioning Guide
 
-**Version:** 1.0  
-**Date:** January 10, 2026  
+**Version:** 2.0  
+**Date:** February 17, 2026  
 **Status:** APPROVED  
 **Authority:** Core Team + AI Architect
 
@@ -11,8 +11,8 @@
 
 ### What OMNIX IS:
 
-**Primary Definition:**
-> OMNIX is institutional-grade **risk control infrastructure** for cryptocurrency trading, designed to prevent capital loss through multi-layer veto architecture.
+**Primary Definition (Canonical — per ADR-027):**
+> OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. The first validated vertical is digital asset trading.
 
 **NOT a:**
 - "Trading bot" (implies it tries to make money)
@@ -20,10 +20,11 @@
 - "Automated trader" (misses the risk focus)
 
 **IS a:**
-- Risk control infrastructure
+- Decision Governance Infrastructure for automated systems
+- Governance control architecture for automated decision systems
 - Capital preservation system
-- Institutional-grade decision framework
 - Multi-layer veto architecture
+- Building the category of Decision Governance Infrastructure
 
 ---
 
@@ -66,7 +67,9 @@ Target: 40%+ before active trading resumes
 ### When Describing OMNIX to Public:
 
 **APPROVED Phrases:**
-- "Institutional-grade risk control infrastructure"
+- "Decision Governance Infrastructure for Automated Systems"
+- "Governance control architecture for automated decision systems"
+- "Building the category of Decision Governance Infrastructure"
 - "Multi-layer veto architecture"
 - "Capital preservation system"
 - "Designed to prevent loss, not chase gains"
@@ -80,6 +83,25 @@ Target: 40%+ before active trading resumes
 - "Beat the market" (unproven claim)
 - "Guaranteed returns" (illegal in most jurisdictions)
 - Any phrase implying win rate >40% when current is 20%
+- "Global leader" or "dominating" (always use "building")
+
+---
+
+## Category-Creation Language
+
+### Framing
+
+> Just as payment infrastructure became necessary before e-commerce scaled, governance infrastructure will become necessary before automated decision systems scale.
+
+### Investor Question Reframe
+
+> How much capital risk exists in automated systems without governance control?
+
+### Key Principles
+- OMNIX is **building** the category — never "leading" or "dominating"
+- The category is **Decision Governance Infrastructure**
+- The first validated vertical is **digital asset trading**
+- Future verticals are roadmap, not current revenue
 
 ---
 
@@ -101,9 +123,9 @@ Target: 40%+ before active trading resumes
 
 **Example Response:**
 ```
-OMNIX is institutional-grade risk control infrastructure 
-for cryptocurrency trading. The system uses a multi-layer 
-veto architecture including:
+OMNIX is a governance control architecture for automated 
+decision systems. It is building the category of Decision 
+Governance Infrastructure. Key capabilities include:
 
 - Coherence Gate (434 vetos)
 - Black Swan Monitor (261 vetos)  
@@ -204,10 +226,11 @@ START
 
 **Answer:**
 ```
-OMNIX is institutional-grade risk control infrastructure 
-for cryptocurrency trading. It's designed to prevent capital 
-loss through a multi-layer veto system that automatically 
-blocks high-risk operations.
+OMNIX is a governance control architecture for automated
+decision systems. It is building the category of Decision
+Governance Infrastructure. The first validated vertical is
+digital asset trading, preventing capital loss through a 
+6-checkpoint sequential governance engine.
 
 Key features:
 - Coherence Gate: Blocks trades when strategies disagree
@@ -332,6 +355,8 @@ A: "Sí. El motor aplica los mismos vetos, gates y protección de capital.
 - **ADR-002:** Honest Framing over Censorship
 - **ADR-003:** Official Positioning Strategy (this document's rationale)
 - **ADR-009:** Brevity First Policy (response length limits)
+- **ADR-025:** Decision Governance Platform Repositioning
+- **ADR-027:** Decision Governance Infrastructure for Automated Systems (canonical definition)
 - **MASTER_SYSTEM_PROMPT:** AI behavior rules
 - **docs/REAL_SYSTEM_STATUS.md:** Current metrics source
 
@@ -340,8 +365,8 @@ A: "Sí. El motor aplica los mismos vetos, gates y protección de capital.
 ## Approval & Updates
 
 **Approved By:** Core Team + AI Architect  
-**Date:** January 10, 2026  
-**Next Review:** February 10, 2026 (or when win rate >35%)
+**Date:** February 17, 2026  
+**Next Review:** March 17, 2026 (or when win rate >35%)
 
 **Update Process:**
 1. Propose changes to this document

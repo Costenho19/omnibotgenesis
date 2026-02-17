@@ -1,9 +1,11 @@
 # ADR-003: Official Positioning Strategy
 
+**Note (Feb 17, 2026):** Extended by ADR-025 and ADR-027. The canonical definition is now "Decision Governance Infrastructure for Automated Systems."
+
 **Status:** ACCEPTED  
 **Date:** 2026-01-10  
 **Deciders:** Core Team, AI Architect  
-**Related:** ADR-001 (Brutal Honesty), ADR-002 (Honest Framing)
+**Related:** ADR-001 (Brutal Honesty), ADR-002 (Honest Framing), ADR-025 (Decision Governance Platform), ADR-027 (Decision Governance Infrastructure)
 
 ---
 
@@ -33,7 +35,7 @@ We need **one official positioning** that is:
 
 **OMNIX is officially positioned as:**
 
-> **Institutional-grade risk control infrastructure** for cryptocurrency trading
+> **Governance control architecture for automated decision systems** — building the category of Decision Governance Infrastructure
 
 **Primary KPIs (in order):**
 1. Capital preservation (98.5% current)
@@ -59,7 +61,7 @@ We need **one official positioning** that is:
 
 ## Rationale
 
-### Why "Risk Control Infrastructure" vs "Trading Bot"?
+### Why "Decision Governance Infrastructure" vs "Trading Bot"?
 
 **Trading Bot Implies:**
 - Primary goal is making money (it's not)
@@ -245,9 +247,10 @@ We need **one official positioning** that is:
 
 **Consistent Answer (Mode 1):**
 ```
-OMNIX is institutional-grade risk control infrastructure 
-for cryptocurrency trading. The system uses multi-layer 
-veto architecture to prevent capital loss.
+OMNIX is a governance control architecture for automated
+decision systems. It is building the category of Decision
+Governance Infrastructure. The first validated vertical is
+digital asset trading.
 
 Key achievements:
 - 98.5% capital preservation

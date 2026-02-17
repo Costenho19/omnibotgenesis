@@ -12,7 +12,7 @@
 
 ```
 OMNIX
-AI Decision Governance Platform
+Decision Governance Infrastructure
 
 "Preventing costly mistakes before they happen"
 
@@ -70,7 +70,7 @@ OMNIX makes decision governance infrastructure accessible.
 ## SLIDE 4 — The Solution
 
 ```
-OMNIX = AI Decision Governance Platform
+OMNIX = Decision Governance Infrastructure
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │

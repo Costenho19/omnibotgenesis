@@ -1,5 +1,7 @@
 # ADR-025: Decision Governance Platform Repositioning
 
+**Note (Feb 17, 2026):** Extended by ADR-027, which upgrades "AI Decision Governance Platform" to "Decision Governance Infrastructure for Automated Systems" with category-creation framing.
+
 **Status**: ADOPTED  
 **Date**: February 15, 2026  
 **Author**: Harold Nunes, OMNIX Team  
@@ -21,13 +23,13 @@ Reposition OMNIX from:
 
 | Before | After |
 |--------|-------|
-| "AI Capital & Risk Orchestration Engine" | **"AI Decision Governance Platform"** |
+| "AI Capital & Risk Orchestration Engine" | **"Decision Governance Infrastructure for Automated Systems"** |
 | Crypto trading risk infrastructure | Decision governance infrastructure for any high-stakes domain |
 | Single vertical (digital asset trading) | Multi-vertical platform with crypto as first validated use case |
 
 ### New Core Identity
 
-> **OMNIX is an AI Decision Governance Platform that prevents costly mistakes before they happen.**
+> **OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. The first validated vertical is digital asset trading.**
 
 ### New Tagline
 

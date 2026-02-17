@@ -219,7 +219,7 @@ export default function InstitutionalPage() {
         {activeTab === 'home' && (
           <>
             <section className="text-center mb-20 animate-fade-in-up">
-              <p className="section-title">AI Decision Governance Platform</p>
+              <p className="section-title">Decision Governance Infrastructure</p>
               <h1 className="heading-xl text-white mb-6">
                 The Governance Layer That<br />
                 <span className="gold-gradient">Prevents Costly Mistakes</span>

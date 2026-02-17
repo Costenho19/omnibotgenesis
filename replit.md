@@ -1,7 +1,7 @@
 # OMNIX V6.5.4e INSTITUTIONAL+
 
 ## Overview
-OMNIX V6.5.4e INSTITUTIONAL+ is an **AI Decision Governance Platform** — "Governing Decisions Under Uncertainty." Its domain-agnostic 6-checkpoint architecture prevents costly mistakes before they happen across high-stakes decision domains. The first vertical validated is digital asset trading, with capital preservation as the core proof metric. The system integrates post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. Future verticals include supply chain, lending/credit, insurance, energy trading, and RegTech/compliance (Year 2-3+). It offers a dual revenue model: B2B Decision Governance Licensing (80% focus: prop firms, trading platforms, regulated funds) and B2C SaaS (20%). See ADR-025 for the strategic repositioning rationale. ADR-026 documents the Multi-Vertical Governance Architecture (Domain Adapter pattern, checkpoint abstraction, implementation roadmap). An interactive Credit/Lending governance demo is available at `/governance-demo` on the OMNIX Web (port 3000).
+OMNIX V6.5.4e INSTITUTIONAL+ is a **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure. OMNIX is a governance control architecture for automated decision systems. The first validated vertical is digital asset trading, with capital preservation as the core proof metric. Its domain-agnostic 6-checkpoint architecture prevents costly mistakes before they happen across high-stakes decision domains. The system integrates post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. Future verticals include supply chain, lending/credit, insurance, energy trading, and RegTech/compliance (Year 2-3+). It offers a dual revenue model: B2B Decision Governance Licensing (80% focus: prop firms, trading platforms, regulated funds) and B2C SaaS (20%). See ADR-025 for the strategic repositioning rationale. ADR-026 documents the Multi-Vertical Governance Architecture (Domain Adapter pattern, checkpoint abstraction, implementation roadmap). An interactive Credit/Lending governance demo is available at `/governance-demo` on the OMNIX Web (port 3000).
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -40,7 +40,7 @@ OMNIX V6.5.4e INSTITUTIONAL+ is an **AI Decision Governance Platform** — "Gove
 | **4. Arquitectura** | `docs/current/` | ARCHITECTURE.md, HEXAGONAL_MIGRATION_STATUS.md, TECHNICAL_DEBT.md |
 | **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md |
 | **6. Historial** | `docs/history/` | Decisiones previas, migraciones, contexto histórico |
-| **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.md, ADRs |
+| **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.md, ADRs (incl. ADR-027 Decision Governance Infrastructure) |
 | **8. Seguridad** | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | PQC implementado Nov 2025 (Kyber-768/Dilithium-3) |
 
 **Después de cambios significativos**, actualizar la documentación relevante.
