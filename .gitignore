@@ -80,6 +80,9 @@ omnix_testing/reports/pdf/*.pdf
 omnix_testing/data_cache/
 *.pkl
 
+# IP Strategy Documents - NEVER push to public repos
+docs/ip/
+
 # Scripts & Documentation (antiguos)
 *.sh
 RAILWAY_*.md
