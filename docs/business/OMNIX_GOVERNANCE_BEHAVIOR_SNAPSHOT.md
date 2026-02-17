@@ -11,9 +11,9 @@
 
 ## 1. Observación Operacional
 
-During the last 33 days of live market conditions, OMNIX has been continuously evaluating automated trading decisions — and consistently choosing NOT to execute.
+**The system was technically capable of executing. It chose not to.**
 
-This is not a malfunction. This is governance.
+During the last 33 days of live market conditions, OMNIX has continuously evaluated automated trading decisions — and consistently chosen preservation over execution. This is governance by design.
 
 ### What the System Sees — Layer 1: External Guards
 
@@ -45,15 +45,13 @@ After all guards pass, OMNIX runs a deeper analysis: the Coherence Engine V5.4 a
 
 **Final Decision**: HOLD — Blocked by Coherence Engine (structural signal contradiction detected).
 
-The coherence pre-gate (Layer 1) confirms that the system is not broken — signals exist and exceed the minimum filter. But the Coherence Engine (Layer 2) analyzes how those signals relate to each other and finds structural contradiction. The DCI score of 72.9 quantifies this: the decision-making system does not agree with itself. Execution is automatically blocked.
+The coherence pre-gate (Layer 1) confirms signal availability above minimum thresholds. But the Coherence Engine (Layer 2) analyzes how those signals relate to each other and finds structural contradiction. The DCI score of 72.9 quantifies this: the decision-making system does not agree with itself. Execution is automatically blocked.
 
 ---
 
 ## 2. What This Means
 
-This is not inactivity. This is not a failure to find opportunities.
-
-This is **structural conflict detection** between internal decision signals:
+The governance architecture detected **structural conflict between internal decision signals**:
 
 - **Regime Misalignment**: Trend detection and regime classification are pulling in different directions (TRENDING regime with 15-point penalty + MEDIUM risk at 7 points)
 - **Momentum vs. Reversion Tension**: EMA signals suggest movement, but Monte Carlo simulations show near-zero expected return — the edge is not real
@@ -83,7 +81,9 @@ The DCI captures all of this in a single score. When that score exceeds 70, the 
 
 ## 3. Why This Matters
 
-Most automated decision systems operate when they can. OMNIX operates only when it should. This governance control architecture — first validated in digital asset trading — has evaluated 192,000+ automated decisions and preserved 98.5% of capital. That result is not from prediction. It's from structural discipline.
+Most automated decision systems operate when they can. OMNIX operates only when it should.
+
+This governance control architecture — first validated in digital asset trading — has evaluated **192,000+ automated decisions and preserved 98.5% of capital** since November 2025. That result is not from prediction. It's from structural discipline.
 
 ### The Governance Difference
 
@@ -93,16 +93,15 @@ Most automated decision systems operate when they can. OMNIX operates only when 
 | Rule-Based Risk Management | Blocks only on explicit violations (drawdown, position limits) | Misses structural conflicts |
 | **OMNIX Decision Governance Infrastructure** | **Detects contradiction between signal layers and blocks preemptively** | **Capital preservation by design** |
 
-The DCI does not check if rules are broken. It checks whether **the decision-making system agrees with itself**. If it doesn't, the fail-closed architecture activates automatically — as demonstrated by the 192,000+ decisions governed and 98.5% capital preserved since November 2025.
+The DCI does not check if rules are broken. It checks whether **the decision-making system agrees with itself**. If it doesn't, the fail-closed architecture activates automatically.
 
 ### Operational Evidence
 
 Running 24/7 in production since November 2025, with fail-closed behavior activated consistently:
 
-- **192,000+** automated decisions evaluated through the governance architecture
-- **98.5%** of capital preserved under disciplined risk conditions
-- **Zero** manual overrides — all blocks are automatic
-- **Continuous operation** across volatile and stable market regimes
+- Zero manual overrides — all blocks are automatic
+- Continuous operation across volatile and stable market regimes
+- Behavior consistent with the governance track record established during the initial validation period
 
 The architecture is not optimized for activity. It is optimized for discipline.
 
@@ -112,17 +111,17 @@ The architecture is not optimized for activity. It is optimized for discipline.
 
 ### Ready-to-Use Statement (English)
 
-> "Right now, the system could be executing. All external conditions are met — Monte Carlo, risk management, edge confirmation, all passing. But internally, the Decision Contradiction Index detects that the signals don't agree with each other. Score: 72.9 out of 100 — classified as contradictory. So it blocks. Automatically. No human intervention. That's not inactivity — that's governance in action."
+> "Right now, the system could be executing. All external conditions are met — Monte Carlo, risk management, edge confirmation, all passing. But internally, the Decision Contradiction Index detects that the signals don't agree with each other. Score: 72.9 out of 100 — classified as contradictory. So it blocks. Automatically. No human intervention. That is governance by design."
 
 ### Ready-to-Use Statement (Español)
 
-> "En este momento, el sistema podría estar ejecutando. Todas las condiciones externas se cumplen — Monte Carlo, gestión de riesgo, confirmación de edge, todo pasa. Pero internamente, el Índice de Contradicción de Decisiones detecta que las señales no están de acuerdo entre sí. Score: 72.9 de 100 — clasificado como contradictorio. Entonces bloquea. Automáticamente. Sin intervención humana. Eso no es inactividad — es gobernanza en acción."
+> "En este momento, el sistema podría estar ejecutando. Todas las condiciones externas se cumplen — Monte Carlo, gestión de riesgo, confirmación de edge, todo pasa. Pero internamente, el Índice de Contradicción de Decisiones detecta que las señales no están de acuerdo entre sí. Score: 72.9 de 100 — clasificado como contradictorio. Entonces bloquea. Automáticamente. Sin intervención humana. Eso es gobernanza por diseño."
 
 ### Investor Challenge Response
 
 If an investor asks: *"Why isn't the system trading?"*
 
-> "Because it shouldn't be. The system has evaluated over 192,000 decisions since November 2025. When internal signals contradict each other — even when external guards pass — the architecture blocks execution. A 50.6% win rate with near-zero expected return is not a tradeable edge. The system knows this. That discipline is why 98.5% of capital was preserved during the initial validation period — and why the governance architecture continues to block in current conditions."
+> "Because it shouldn't be. When internal signals contradict each other — even when all external guards pass — the architecture blocks execution. A 50.6% win rate with near-zero expected return is not a tradeable edge. The system knows this. That same discipline is what preserved capital during the initial validation period — and it's the same discipline operating right now."
 
 ### Structural Analogy
 
@@ -130,7 +129,59 @@ If an investor asks: *"Why isn't the system trading?"*
 
 ---
 
-## 5. Post-Eureka Roadmap (For Reference Only)
+## 5. Slide Visual — Governance in Action
+
+Single slide for pitch deck. Visual structure:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│              GOVERNANCE IN ACTION                            │
+│              Real-Time Production Data                       │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐     │
+│  │  LAYER 1: External Guards                           │     │
+│  │                                                     │     │
+│  │  ✅ Monte Carlo    ✅ RMS    ✅ EMA Signal          │     │
+│  │  ✅ Coherence Gate ✅ ECW    ✅ Consensus           │     │
+│  │                                                     │     │
+│  │  ALL PASSED — System capable of execution           │     │
+│  └─────────────────────────────────────────────────────┘     │
+│                          │                                   │
+│                          ▼                                   │
+│  ┌─────────────────────────────────────────────────────┐     │
+│  │  LAYER 2: Structural Coherence Analysis             │     │
+│  │                                                     │     │
+│  │  Decision Contradiction Index:  72.9 / 100          │     │
+│  │  Classification:               CONTRADICTORY        │     │
+│  │  Confidence:                   58.5%                │     │
+│  │                                                     │     │
+│  │  ⛔ BLOCKED — Internal signals do not agree         │     │
+│  └─────────────────────────────────────────────────────┘     │
+│                                                              │
+│           ╔═══════════════════════════════════════╗           │
+│           ║                                       ║           │
+│           ║  Capable of execution.                ║           │
+│           ║  Chose preservation.                  ║           │
+│           ║                                       ║           │
+│           ╚═══════════════════════════════════════╝           │
+│                                                              │
+│  Source: Railway production logs — Feb 17, 2026              │
+│  OMNIX — Decision Governance Infrastructure                  │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Slide Notes for Presenter:**
+- Layer 1 boxes should be green (all PASSED)
+- Layer 2 box should be red/amber (BLOCKED)
+- Central statement in large, bold typography — this is the punchline
+- No numbers repeated from other slides — this slide stands alone
+- If asked about performance: "Same discipline preserved capital during the initial validation period"
+
+---
+
+## 6. Post-Eureka Roadmap (For Reference Only)
 
 This section documents the planned calibration adjustments **after** Eureka Dubai competition. No changes will be made before competition.
 
@@ -174,6 +225,7 @@ This section documents the planned calibration adjustments **after** Eureka Duba
 | Date | Version | Changes |
 |------|---------|---------|
 | Feb 17, 2026 | 1.0 | Initial snapshot. Real production log data from Railway. ADR-027 compliant. |
+| Feb 17, 2026 | 1.1 | Framing adjustments: reduced number repetition, moved key statement to top, institutional tone (no defensive phrasing), added slide visual structure. |
 
 ---
 
