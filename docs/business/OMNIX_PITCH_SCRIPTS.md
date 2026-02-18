@@ -44,6 +44,12 @@
 | Learning Baseline P&L | -$15,198.73 | Nov 2025 – Jan 14, 2026 (119 trades) |
 | System Uptime | 24/7 for 3+ months | Railway production deployment |
 
+### Institutional Governance Statement (Ready-to-Use)
+
+> "OMNIX operates under a structured human governance layer with defined executive authority, parameter control, and override mechanisms, designed to scale into multi-party oversight as the platform institutionalizes."
+
+Use when investors ask about team structure, oversight, or who controls the system. Full governance framework: [INSTITUTIONAL_GOVERNANCE_STRUCTURE.md](../business/investor/INSTITUTIONAL_GOVERNANCE_STRUCTURE.md)
+
 ### Anti-Abstraction Rule
 
 Every statement about "infrastructure" or "category" MUST be followed within 2 sentences by:

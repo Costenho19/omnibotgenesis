@@ -29,6 +29,7 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
 | [OMNIX_PITCH_SCRIPTS.md](business/OMNIX_PITCH_SCRIPTS.md) | Scripts 60s y 90s (EN/ES) con notas de entrega | Eureka Dubai, Elevator, Networking |
 | [OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md](business/OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md) | Evidencia real de gobernanza activa con datos de producción | Pitch, Due Diligence, Auditoría |
+| [INSTITUTIONAL_GOVERNANCE_STRUCTURE.md](business/investor/INSTITUTIONAL_GOVERNANCE_STRUCTURE.md) | Estructura de gobernanza institucional: 3 layers (Human Authority, Control Architecture, Future Expansion) | Due Diligence, Compliance, Board |
 
 **Posicionamiento**: OMNIX = **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure.  
 Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.

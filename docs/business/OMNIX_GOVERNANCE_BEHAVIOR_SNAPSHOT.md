@@ -163,6 +163,8 @@ If an investor asks: *"Why isn't the system trading?"*
 
 **Current policy**: Discipline over movement.
 
+**Governance Structure**: See [INSTITUTIONAL_GOVERNANCE_STRUCTURE.md](investor/INSTITUTIONAL_GOVERNANCE_STRUCTURE.md) for the full 3-layer governance framework (Human Authority, Control Architecture, Institutional Expansion).
+
 ---
 
 ## Appendix: Raw Log Evidence

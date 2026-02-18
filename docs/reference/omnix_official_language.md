@@ -77,6 +77,15 @@ Target: 40%+ before active trading resumes
 - "Y high-risk operations automatically blocked"
 - "System prioritizes preservation over volume"
 
+**APPROVED Governance Roles (Harold Nunes, Founder):**
+- "Architecture Owner" — approves all architectural changes and checkpoint calibration
+- "Risk Parameter Authority" — controls DCI thresholds, ECW configuration, coherence gates
+- "Deployment Approval Authority" — authorizes all production deployments
+- "Override Authority" — can override any automated decision (zero overrides exercised to date)
+
+**APPROVED Institutional Statement:**
+> "OMNIX operates under a structured human governance layer with defined executive authority, parameter control, and override mechanisms, designed to scale into multi-party oversight as the platform institutionalizes."
+
 **PROHIBITED Phrases:**
 - "AI-powered trading bot that makes money" (misleading)
 - "Automated profit generation" (overpromise)
