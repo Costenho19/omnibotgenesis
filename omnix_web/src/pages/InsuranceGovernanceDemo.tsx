@@ -207,6 +207,7 @@ export default function InsuranceGovernanceDemo() {
           evaluationRef.current = setTimeout(animate, 600)
         }, 800)
       } else {
+        setCheckpoints(finalResults.map(fr => ({ ...fr, status: fr.finalStatus })))
         setIsEvaluating(false)
         setEvaluationComplete(true)
       }
@@ -225,11 +226,12 @@ export default function InsuranceGovernanceDemo() {
     if (!evaluationComplete || checkpoints.length === 0) return null
     const blocked = checkpoints.filter(cp => cp.status === 'block')
     const warned = checkpoints.filter(cp => cp.status === 'warn')
+    const passed = checkpoints.filter(cp => cp.status === 'pass')
 
-    if (blocked.length >= 2) return { decision: 'DECLINE', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Underwriting recommendation: DECLINE this policy — risk profile exceeds acceptable thresholds.` }
-    if (blocked.length === 1) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Underwriting recommendation: REFER to senior underwriter for manual review of ${blocked[0].name.toLowerCase()}.` }
-    if (warned.length >= 3) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Underwriting recommendation: REFER — cumulative marginal risk requires senior review and possible premium adjustment.` }
-    return { decision: 'BIND', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Underwriting recommendation: BIND — policy meets all governance thresholds for automated approval.' }
+    if (blocked.length >= 2) return { decision: 'DECLINE', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Underwriting recommendation: DECLINE this policy — risk profile exceeds acceptable thresholds.`, passed: passed.length + warned.length }
+    if (blocked.length === 1) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Underwriting recommendation: REFER to senior underwriter for manual review of ${blocked[0].name.toLowerCase()}.`, passed: passed.length + warned.length }
+    if (warned.length >= 3) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Underwriting recommendation: REFER — cumulative marginal risk requires senior review and possible premium adjustment.`, passed: passed.length + warned.length }
+    return { decision: 'BIND', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Underwriting recommendation: BIND — policy meets all governance thresholds for automated approval.', passed: passed.length + warned.length }
   }
 
   const decision = getGovernanceDecision()
@@ -528,7 +530,7 @@ export default function InsuranceGovernanceDemo() {
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Passed</p>
                         <p className="text-white font-semibold">
-                          {checkpoints.filter(cp => cp.status === 'pass' || cp.status === 'warn').length}/6
+                          {decision.passed}/6
                         </p>
                       </div>
                     </div>

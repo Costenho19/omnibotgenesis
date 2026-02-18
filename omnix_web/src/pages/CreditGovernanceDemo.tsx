@@ -201,6 +201,7 @@ export default function CreditGovernanceDemo() {
           evaluationRef.current = setTimeout(animate, 600)
         }, 800)
       } else {
+        setCheckpoints(finalResults.map(fr => ({ ...fr, status: fr.finalStatus })))
         setIsEvaluating(false)
         setEvaluationComplete(true)
       }
@@ -219,11 +220,12 @@ export default function CreditGovernanceDemo() {
     if (!evaluationComplete || checkpoints.length === 0) return null
     const blocked = checkpoints.filter(cp => cp.status === 'block')
     const warned = checkpoints.filter(cp => cp.status === 'warn')
+    const passed = checkpoints.filter(cp => cp.status === 'pass')
 
-    if (blocked.length >= 2) return { decision: 'BLOCK', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Governance recommendation: DO NOT APPROVE this loan until conditions improve.` }
-    if (blocked.length === 1) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Governance recommendation: HOLD — review ${blocked[0].name.toLowerCase()} before proceeding.` }
-    if (warned.length >= 3) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Governance recommendation: HOLD — elevated cumulative risk requires additional review.` }
-    return { decision: 'APPROVE', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Governance recommendation: APPROVE — decision meets all governance thresholds.' }
+    if (blocked.length >= 2) return { decision: 'BLOCK', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Governance recommendation: DO NOT APPROVE this loan until conditions improve.`, passed: passed.length + warned.length }
+    if (blocked.length === 1) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Governance recommendation: HOLD — review ${blocked[0].name.toLowerCase()} before proceeding.`, passed: passed.length + warned.length }
+    if (warned.length >= 3) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Governance recommendation: HOLD — elevated cumulative risk requires additional review.`, passed: passed.length + warned.length }
+    return { decision: 'APPROVE', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Governance recommendation: APPROVE — decision meets all governance thresholds.', passed: passed.length + warned.length }
   }
 
   const decision = getGovernanceDecision()
@@ -522,7 +524,7 @@ export default function CreditGovernanceDemo() {
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Passed</p>
                         <p className="text-white font-semibold">
-                          {checkpoints.filter(cp => cp.status === 'pass' || cp.status === 'warn').length}/6
+                          {decision.passed}/6
                         </p>
                       </div>
                     </div>
