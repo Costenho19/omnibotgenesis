@@ -159,6 +159,7 @@ If an investor asks: *"Why isn't the system trading?"*
 | Calibration Phase 2 | DCI threshold 70 → 75 | Allow trades with moderate contradiction |
 | Asset Expansion | Add 2-3 trading pairs | More opportunities for signal alignment |
 | Backtest Validation | 60-90 day historical backtest | Validate before live deployment |
+| Voice Interface | OMNIX Voice — hands-free governance interaction | Web-based always-listening interface: speak to OMNIX, get voice responses with real-time governance analysis. Leverages existing TTS/STT infrastructure (Whisper + gTTS/ElevenLabs). |
 
 **Current policy**: Discipline over movement.
 
