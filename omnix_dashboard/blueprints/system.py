@@ -109,7 +109,7 @@ def api_active_signals():
     if not signals:
         signals = [
             {
-                'strategy': 'OMNIX V6.5',
+                'strategy': 'OMNIX_Core',
                 'symbol': 'BTC/USD',
                 'signal': 'ANALYZING',
                 'confidence': 0,
@@ -190,7 +190,7 @@ def api_system_status():
     
     if not strategies:
         strategies = {
-            'OMNIX_V6.5': {'active': bot_active, 'signals_today': trades_today},
+            'OMNIX_Core': {'active': bot_active, 'signals_today': trades_today},
             'Auto_Trading_Bot': {'active': bot_active, 'signals_today': open_positions}
         }
     
@@ -223,7 +223,7 @@ def api_system_status():
         },
         'risk_guardian': {
             'status': 'ACTIVE',
-            'version': 'V5.4',
+            'module': 'risk_guardian',
             'risk_level': risk_level,
             'circuit_breaker': {
                 'active': drawdown_tier == 'CRITICAL',
@@ -295,7 +295,7 @@ def api_system_adaptive():
                 ''')
                 
                 for row in cursor.fetchall():
-                    strat_name = row[0] or 'OMNIX_V6.5'
+                    strat_name = row[0] or 'OMNIX_Core'
                     trade_count = row[1]
                     win_rate = float(row[2]) if row[2] else 0.5
                     
@@ -344,7 +344,7 @@ def api_system_adaptive():
         strategy_weights = {
             'Quantum_Momentum': {'weight': 0.85, 'trades_24h': 0, 'win_rate': 58.0, 'status': 'ACTIVE'},
             'Non_Markovian': {'weight': 0.80, 'trades_24h': 0, 'win_rate': 54.0, 'status': 'ACTIVE'},
-            'OMNIX_V6.5': {'weight': 0.75, 'trades_24h': 0, 'win_rate': 55.0, 'status': 'ACTIVE'},
+            'OMNIX_Core': {'weight': 0.75, 'trades_24h': 0, 'win_rate': 55.0, 'status': 'ACTIVE'},
             'Monte_Carlo': {'weight': 0.70, 'trades_24h': 0, 'win_rate': 52.0, 'status': 'ACTIVE'},
             'Kalman_Filter': {'weight': 0.65, 'trades_24h': 0, 'win_rate': 51.0, 'status': 'ACTIVE'},
             'HMM_Regime': {'weight': 0.60, 'trades_24h': 0, 'win_rate': 50.0, 'status': 'ACTIVE'}
@@ -358,7 +358,7 @@ def api_system_adaptive():
             main_driver = name
     
     adaptive_data = {
-        'version': 'ULTRA',
+        'engine': 'adaptive',
         'status': 'ACTIVE',
         'main_driver': {
             'name': main_driver,
@@ -576,7 +576,7 @@ def api_health_bootstrap():
         'success': True,
         'healthy': overall_healthy,
         'container': container_health,
-        'version': 'V7.0 Phase 5',
+        'architecture': 'hexagonal',
         'timestamp': datetime.now().isoformat()
     })
 

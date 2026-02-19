@@ -21,10 +21,8 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omnix_dashboard.api_client import get_api_client
-from omnix_config import VERSION_BANNER
-
 st.set_page_config(
-    page_title=f"OMNIX {VERSION_BANNER}",
+    page_title="OMNIX Decision Governance",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -152,7 +150,7 @@ def load_shadow_portfolio():
 
 
 def main():
-    st.markdown(f'<p class="header-title">OMNIX {VERSION_BANNER}</p>', unsafe_allow_html=True)
+    st.markdown('<p class="header-title">OMNIX Decision Governance</p>', unsafe_allow_html=True)
     st.markdown("### Investor-Grade Trading Analytics Dashboard")
     st.markdown("---")
     
@@ -165,7 +163,7 @@ def main():
                 -webkit-text-fill-color: transparent;">
                 OMNIX
             </span>
-            <span style="font-size: 12px; color: #8B92A5; margin-left: 5px;">{VERSION_BANNER}</span>
+            <span style="font-size: 12px; color: #8B92A5; margin-left: 5px;">Decision Governance</span>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("### Navigation")
