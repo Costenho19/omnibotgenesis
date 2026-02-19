@@ -127,16 +127,27 @@ The right question for investors is not "how much alpha does OMNIX generate?" bu
 
 **Important disclaimer:** Currently applied to order authentication and internal security layers. This is not marketed as a compliance guarantee or external security certification.
 
-### Q10: How auditable is the system?
+### Q10: How auditable and explainable is the system? (XAI / Explainability)
 
-**A:** Every decision is logged with:
+**A:** OMNIX is designed as the opposite of a "black box." Every decision — executed or blocked — produces a full, structured audit record:
 
-- Unique `decision_id` (UUID)
-- 11 lifecycle events per trade
-- Complete `decision_trace` JSONB with all inputs
-- Timestamps, scores, veto reasons
+| Audit Component | Detail |
+|----------------|--------|
+| **Decision Trace** | Structured JSON per decision: timestamp, 6 checkpoint verdicts with individual data, final decision with reasoning, capital impact |
+| **Checkpoint Explainability** | Each of 6 checkpoints produces a human-readable verdict (e.g., "Win probability 48.7% — below 50% threshold") |
+| **Post-Quantum Signatures** | Every decision signed with Dilithium-3 (NIST FIPS 204) — immutable, tamper-proof |
+| **Counterfactual Evidence** | Shadow Portfolio shows what would have happened if a blocked decision had been executed |
+| **Export Format** | Grafana/Loki/ELK compatible. Structured JSON ready for regulatory submission |
+| **Data Integrity** | >91% referential integrity across 45+ PostgreSQL tables |
+| **Decision Dataset** | 192,000+ fully traced governance decisions available for audit |
 
-The InstitutionalDecisionLogger V6.5.4 provides Grafana/Loki/ELK compatible audit trails. Data integrity is >91% referential integrity across 45+ PostgreSQL tables.
+**Compliance Officer Deliverables:**
+1. Real-time Decision Audit Dashboard with checkpoint drill-down
+2. Exportable Decision Traces (structured JSON, per-decision or bulk)
+3. Cryptographically signed records (post-quantum — cannot be altered after the fact)
+4. Counterfactual evidence proving governance value with hard numbers
+
+A compliance officer or regulator can request the trace for any decision and receive it in minutes — not weeks.
 
 ### Q11: What external services does OMNIX integrate?
 

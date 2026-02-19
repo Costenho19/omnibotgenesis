@@ -38,6 +38,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | Pre-execution governance | 6 checkpoints | 0 | 0 | 0 | 1-2 | 0 |
 | Fail-closed architecture | Yes | No | No | N/A | Varies | N/A |
 | Decision audit trail | Full | Partial | None | Post-trade | Limited | Transaction |
+| Explainability (XAI) | Checkpoint-level | None | None | Summary | Varies | Transaction |
 | Multi-AI orchestration | 3 providers | 0 | 0 | 0 | 1 (if any) | 0 |
 | Post-quantum security | Dilithium-3 | No | No | No | No | No |
 | Shadow Portfolio learning | 192K+ events | No | No | No | Rare | No |
@@ -110,6 +111,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
 | **Post-quantum security** | Dilithium-3 operational since Nov 2025 (NIST FIPS 204) | 3-6 months |
 | **Domain-agnostic design** | Same engine validated across trading, credit, insurance | 6-12 months per vertical |
+| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — no black box. Compliance-ready audit exports | Cultural/architectural rebuild |
 | **Embedded infrastructure lock-in** | Once integrated, switching cost = re-integration + re-calibration | High switching cost |
 
 ### 4.2 Patent Strategy

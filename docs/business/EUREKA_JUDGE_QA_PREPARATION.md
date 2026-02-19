@@ -220,6 +220,57 @@
 
 ---
 
+### Q: "Most AI systems are black boxes that regulators can't approve. How does OMNIX guarantee explainability and traceability?"
+
+**Answer:**
+> "This is exactly why we built OMNIX the way we did. Explainability isn't a feature we added later — it IS the architecture. Three pillars:
+>
+> **Pillar 1 — Decision Trace (Full Audit Per Decision)**
+> Every decision OMNIX makes — executed OR blocked — generates a complete structured record with: exact timestamp, all 6 checkpoints evaluated with individual verdicts and the data that justified each one, the final decision with specific reasoning, and the capital preserved or committed.
+>
+> No black box. A compliance officer can open any decision from the last 3 months and see exactly WHY the system acted or stopped. 192,000+ of these traces exist today.
+>
+> **Pillar 2 — Fail-Closed Architecture = Explainability by Design**
+> In a black box, the system acts and then you try to explain why. In OMNIX, the system does NOT act until 6 independent checkpoints approve. Each checkpoint is individually explainable:
+> - 'Win probability was 48.7% — below the 50% threshold'
+> - 'Only 3 of 5 models agreed — insufficient consensus at 44% vs 45% required'
+> - 'Trend did not persist for 3 consecutive cycles'
+>
+> It's never 'the algorithm decided.' It's 'checkpoint 3 failed because consensus was 44% against the threshold of 45%.' Every number, every threshold, every verdict — visible and verifiable.
+>
+> **Pillar 3 — Compliance Officer Toolkit**
+> - **Decision Trace export**: Structured JSON, ready for regulatory audit submission
+> - **Post-quantum signatures**: Every decision signed with Dilithium-3 (NIST FIPS 204) — immutable, tamper-proof, and verifiable
+> - **Shadow Portfolio**: Not just what was decided, but what WOULD HAVE happened with a different decision — counterfactual evidence
+> - **27 documented ADRs**: Every architecture decision has formal justification
+>
+> An ADGM regulator can request the trace for any decision from the last quarter, and we deliver it in minutes — not weeks."
+
+**Key framing:** Contrast with "black box" AI directly. Give concrete numeric examples (48.7%, 44% vs 45%). Mention NIST FIPS 204 — resonates with compliance officers. Close with "minutes, not weeks" — operational readiness.
+
+**Follow-up if pressed on regulatory readiness:** "We're not claiming compliance certification today — that requires ADGM formal review. What we're saying is: every piece of data a regulator would need already exists, is structured, and is exportable. That's a 12-month head start on any competitor building this from scratch."
+
+---
+
+### Q: "What tools do you give a compliance officer so they sleep well at night?"
+
+**Answer:**
+> "Four specific deliverables:
+>
+> 1. **Decision Audit Dashboard** — Real-time view of all governance decisions with drill-down into each checkpoint. Filter by time, decision type (executed/blocked), or risk level.
+>
+> 2. **Exportable Decision Traces** — Every decision as structured JSON with complete checkpoint data, timestamps, and rationale. Compatible with Grafana, Loki, ELK, or any audit platform.
+>
+> 3. **Immutable Signatures** — Every governance decision is cryptographically signed with Dilithium-3 (post-quantum, NIST FIPS 204). No one — including us — can alter a decision record after the fact.
+>
+> 4. **Counterfactual Evidence** — The Shadow Portfolio shows what would have happened if the system HAD executed a blocked decision. This proves governance value with hard numbers, not estimates.
+>
+> The compliance officer doesn't have to trust OMNIX. They have to verify OMNIX. And we give them every tool to do exactly that."
+
+**Key framing:** "Trust vs verify" is the key distinction. Most AI asks for trust. OMNIX provides verification tools.
+
+---
+
 ### Q: "Why post-quantum cryptography? Isn't that overkill?"
 
 **Answer:**
