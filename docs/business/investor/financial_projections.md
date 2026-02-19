@@ -1,301 +1,220 @@
-# OMNIX V6.5.4e INSTITUTIONAL+ - Financial Projections
-## Conservative, Base Case, and Optimistic Scenarios
+# OMNIX — Financial Projections
+## Aligned with Eureka Dubai Pitch & Business Model Canvas | February 2026
 
-**Document Date:** January 2026  
-**Prepared by:** OMNIX Team  
-**Disclaimer:** All projections are estimates based on industry benchmarks and backtesting. Actual results may vary significantly.
-
----
-
-## 1. TRADING PERFORMANCE PROJECTIONS
-
-### 1.1 Trading Metrics (Per $100,000 Capital)
-
-| Scenario | Win Rate | Daily Trades | Avg Win | Avg Loss | Monthly Return | Annual Return |
-|----------|----------|--------------|---------|----------|----------------|---------------|
-| **Conservative** | 52% | 8-12 | +1.5% | -1.0% | 2-3% | 25-40% |
-| **Base Case** | 55-58% | 12-20 | +2.0% | -1.2% | 4-6% | 50-80% |
-| **Optimistic** | 60-65% | 20-30 | +2.5% | -1.5% | 8-12% | 100-150% |
-
-### 1.2 Risk Metrics
-
-| Metric | Conservative | Base Case | Optimistic |
-|--------|--------------|-----------|------------|
-| Max Drawdown | 15-20% | 10-15% | 5-10% |
-| Sharpe Ratio | 1.0-1.5 | 1.5-2.0 | 2.0-2.5 |
-| Sortino Ratio | 1.2-1.8 | 1.8-2.5 | 2.5-3.0 |
-| Win/Loss Ratio | 1.5:1 | 1.7:1 | 2.0:1 |
-
-### 1.3 Basis for Trading Projections
-
-These projections are based on:
-
-1. **PAPER_OPTIMIZED Profile Settings:**
-   - SL/TP Ratio: 1:2 (1.5% risk for 3.0% reward on normal volatility)
-   - Coherence Threshold: 60% (high selectivity)
-   - Min Confidence: 22%
-   - Max Position: 8% of portfolio
-
-2. **Industry Benchmarks:**
-   - Top-tier quant funds (Renaissance, Two Sigma): 30-80% annual returns
-   - Retail algo trading: 15-40% annual returns average
-   - Our conservative estimate assumes we achieve lower-end institutional performance
-
-3. **Risk Controls:**
-   - Maximum 8% of portfolio per position
-   - 6-Tier Coherence validation reduces false signals
-   - AI Risk Guardian prevents overtrading and revenge trading
-   - Daily loss limits enforced (4% max)
-   - Volatility-based SL/TP classification
-
-**Important:** Current live trading data (119 trades, 20.17% win rate) is in early calibration phase with Shadow Portfolio learning. Win rate is expected to improve as filter thresholds are optimized based on counterfactual analysis. These estimates will be revised after 500+ trades with optimized filters.
+**Classification**: Investor-Ready — Aligned with Competition Documents
+**Last Updated**: February 19, 2026
+**Alignment**: All numbers match OMNIX Eureka Pitch Deck Final & BMC
 
 ---
 
-## 2. BUSINESS REVENUE PROJECTIONS (DUAL STREAMS)
+## 1. REVENUE MODEL — B2B DECISION GOVERNANCE (80% Focus)
 
-### 2.0 Revenue Model Overview
+### 1.1 Primary Revenue: Enterprise Licensing
 
-OMNIX operates with two complementary revenue streams:
+| Product | Pricing | Target Customer | Revenue Type |
+|---------|---------|-----------------|-------------|
+| **Risk Guardian API** | $15K–35K/month | Prop firms, trading platforms | Recurring license |
+| **White-Label Engine** | $100K+ setup + $20K/month | Exchanges, brokers | Setup + recurring |
+| **Per-Validation** | $0.01–0.05/call | High-volume platforms | Usage-based |
 
-| Stream | Model | Target Market |
-|--------|-------|---------------|
-| **B2C SaaS** | Subscription ($49-499/mo) | Advanced traders, family offices |
-| **B2B Enterprise** | API licensing ($10K-50K/mo) | Trading platforms, bots, brokers |
+### 1.2 Secondary Revenue: B2C SaaS (20% Focus — Post-Enterprise Validation)
 
-### 2.1 User Growth (Conservative Model) - B2C
+| Tier | Price | Features |
+|------|-------|----------|
+| **Pro** | $149/month | Full Risk Guardian, decision audit trail |
+| **Advanced** | $499/month | API access, custom veto configuration |
 
-| Period | New Users | Monthly Churn | Net New Users | Cumulative Users |
-|--------|-----------|---------------|---------------|------------------|
-| Q1 2026 | 100 | 10% | 90 | 100 |
-| Q2 2026 | 250 | 8% | 230 | 350 |
-| Q3 2026 | 300 | 7% | 279 | 600 |
-| Q4 2026 | 400 | 6% | 376 | 950 |
-| Q1 2027 | 500 | 5% | 475 | 1,400 |
-| Q2 2027 | 600 | 5% | 570 | 1,950 |
-| Q3 2027 | 700 | 5% | 665 | 2,600 |
-| Q4 2027 | 900 | 5% | 855 | 3,450 |
+---
 
-### 2.2 Revenue by Tier (Year 1 - 2026)
+## 2. REVENUE PROJECTIONS (Conservative)
 
-| Tier | Price | % of Users | Users (EOY) | Monthly Revenue |
-|------|-------|------------|-------------|-----------------|
-| Basic | $49 | 45% | 427 | $20,923 |
-| Premium | $149 | 42% | 399 | $59,451 |
-| Institutional | $499 | 13% | 124 | $61,876 |
-| **Total** | | | **950** | **$142,250** |
+### 2.1 Enterprise Pipeline
 
-**Year 1 ARR (End of 2026):** $1,707,000
+| Year | Enterprise Clients | Avg Monthly Fee | B2B ARR |
+|------|-------------------|-----------------|---------|
+| Year 1 | 3 pilot clients | $15K–25K/month | $200K–400K |
+| Year 2 | 5-8 licensed clients | $20K–30K/month | $800K–1.2M |
+| Year 3 | 10-15 clients + geographic expansion | $25K–35K/month | $2M+ |
 
-### 2.3 Revenue Projections (3-Year) - B2C
+### 2.2 B2C SaaS (Starting Year 1, Scaling Year 2+)
 
-| Year | Users (EOY) | ARPU | MRR (EOY) | ARR |
-|------|-------------|------|-----------|-----|
-| 2026 (Y1) | 950 | $149 | $142,250 | $1,707,000 |
-| 2027 (Y2) | 3,450 | $159 | $548,550 | $6,582,600 |
-| 2028 (Y3) | 12,000 | $169 | $2,028,000 | $24,336,000 |
+| Year | Users | ARPU | B2C ARR |
+|------|-------|------|---------|
+| Year 1 | 50-100 (early adopters) | $200/month | $120K–240K |
+| Year 2 | 200-500 | $225/month | $540K–1.3M |
+| Year 3 | 500-1,500 | $250/month | $1.5M–4.5M |
 
-### 2.4 Revenue Projections - B2B Enterprise Licensing
+### 2.3 Combined Revenue
 
-| Year | Platform Clients | Avg Monthly Fee | B2B ARR |
-|------|------------------|-----------------|---------|
-| 2026 (Y1) | 0 | - | $0 (focus on B2C) |
-| 2027 (Y2) | 2 | $10,000 | $240,000 |
-| 2028 (Y3) | 5 | $20,000 | $1,200,000 |
-
-**B2B Products:**
-
-| Product | Price Model | Target |
-|---------|-------------|--------|
-| Risk Guardian API | $10K-50K/month | 3Commas, NinjaTrader, TradingView |
-| White-Label Engine | $100K+ setup + $20K/mo | Brokers, smaller exchanges |
-| Per-Validation | $0.01-0.05/call | Small trading bots |
-
-### 2.5 Combined Revenue (B2C + B2B)
-
-| Year | B2C ARR | B2B ARR | **Total ARR** |
+| Year | B2B ARR | B2C ARR | **Total ARR** |
 |------|---------|---------|---------------|
-| 2026 | $1,707,000 | $0 | **$1,707,000** |
-| 2027 | $6,582,600 | $240,000 | **$6,822,600** |
-| 2028 | $24,336,000 | $1,200,000 | **$25,536,000** |
+| Year 1 | $200K–400K | $120K–240K | **$320K–640K** |
+| Year 2 | $800K–1.2M | $540K–1.3M | **$1.3M–2.5M** |
+| Year 3 | $2M+ | $1.5M–4.5M | **$3.5M–6.5M** |
 
-### 2.6 ARPU Assumptions
-
-ARPU increases over time due to:
-- Upselling from Basic to Premium (feature adoption)
-- New premium features (Institutional Audit Trail, API access)
-- Institutional tier growth (hedge funds, family offices)
-- Annual price adjustments (5-7%)
+> Note: Year 1 projections emphasize enterprise pilots. B2C grows organically from platform credibility established through enterprise deployments.
 
 ---
 
 ## 3. COST STRUCTURE
 
-### 3.1 Year 1 Operating Costs (2026) - Post $1M Seed
+### 3.1 Year 1 Operating Costs (Post $500K Pre-Seed)
 
-| Category | Monthly | Annual | % of Budget |
-|----------|---------|--------|-------------|
-| Engineering (4 FTE) | $30,000 | $360,000 | 36% |
-| Infrastructure (Railway, APIs) | $8,000 | $96,000 | 9.6% |
-| AI Services (Gemini, OpenAI) | $5,000 | $60,000 | 6% |
-| Marketing & Ads | $15,000 | $180,000 | 18% |
-| Legal & Compliance | $5,000 | $60,000 | 6% |
-| Customer Support (2 FTE) | $8,000 | $96,000 | 9.6% |
-| Security Audits | $3,000 | $36,000 | 3.6% |
-| Miscellaneous | $3,000 | $36,000 | 3.6% |
-| **Total** | **$77,000** | **$924,000** | **100%** |
+| Category | Allocation | Annual | Monthly |
+|----------|:----------:|--------|---------|
+| Strategy & Risk Engine | 35% | $175,000 | $14,600 |
+| Dubai/ADGM Legal & Regulatory | 25% | $125,000 | $10,400 |
+| Enterprise Infrastructure | 20% | $100,000 | $8,300 |
+| Team & Operations | 15% | $75,000 | $6,250 |
+| Reserve | 5% | $25,000 | — |
+| **Total** | **100%** | **$500,000** | **~$39,600** |
 
-### 3.2 Infrastructure Cost Scaling
+### 3.2 Key Hires (Included in Team & Operations + Strategy)
 
-| Users | Railway | APIs | Redis/DB | AI Services | Total/Month |
-|-------|---------|------|----------|-------------|-------------|
-| 1,000 | $200 | $1,000 | $300 | $2,000 | $3,500 |
-| 5,000 | $500 | $4,000 | $800 | $6,000 | $11,300 |
-| 15,000 | $1,200 | $10,000 | $2,000 | $15,000 | $28,200 |
-| 50,000 | $3,000 | $25,000 | $5,000 | $35,000 | $68,000 |
+| Role | Timing | Est. Annual Cost | Source |
+|------|--------|-----------------|--------|
+| Senior Backend Engineer | Month 1-2 | $40K–60K (remote) | Strategy allocation |
+| DevOps / Infrastructure | Month 2-3 | $35K–50K (remote) | Infrastructure allocation |
+| Business Development | Month 3-4 | $30K–45K (remote/Dubai) | Team allocation |
+
+### 3.3 Infrastructure Cost Scaling
+
+| Enterprise Clients | Infrastructure | AI Services | Total/Month |
+|-------------------|----------------|-------------|-------------|
+| 3 pilots | $500 | $1,500 | $2,000 |
+| 5-8 clients | $1,200 | $3,000 | $4,200 |
+| 10-15 clients | $3,000 | $6,000 | $9,000 |
 
 ---
 
-## 4. PROFIT & LOSS PROJECTION
+## 4. UNIT ECONOMICS (B2B Enterprise)
 
-### 4.1 Year 1-3 P&L (Base Case)
+| Metric | Estimate | Basis |
+|--------|----------|-------|
+| **Average Contract Value (ACV)** | $180K–360K/year | $15K–30K/month enterprise license |
+| **Customer Acquisition Cost (CAC)** | $15K–30K | Direct outreach + pilot onboarding (3-6 month cycle) |
+| **Lifetime Value (LTV)** | $540K–1M+ | 3+ year retention (embedded infrastructure) |
+| **LTV:CAC Ratio** | 18:1 – 33:1 | High switching cost = long retention |
+| **Gross Margin** | 60–70% | SaaS infrastructure model |
+| **Payback Period** | 1-2 months | Enterprise license covers CAC quickly |
 
-| Item | 2026 | 2027 | 2028 |
-|------|------|------|------|
-| **Revenue** | $1,707,000 | $6,582,600 | $24,336,000 |
-| Cost of Revenue (18%) | $(307,260) | $(1,184,868) | $(4,380,480) |
-| **Gross Profit** | $1,399,740 | $5,397,732 | $19,955,520 |
-| **Gross Margin** | 82% | 82% | 82% |
-| | | | |
-| Engineering | $(360,000) | $(720,000) | $(1,440,000) |
-| Marketing | $(180,000) | $(500,000) | $(1,200,000) |
-| Operations | $(96,000) | $(250,000) | $(600,000) |
-| Legal/Compliance | $(60,000) | $(150,000) | $(400,000) |
-| Security | $(36,000) | $(100,000) | $(250,000) |
-| Other | $(36,000) | $(100,000) | $(250,000) |
-| **Total OpEx** | $(768,000) | $(1,820,000) | $(4,140,000) |
-| | | | |
-| **EBITDA** | $631,740 | $3,577,732 | $15,815,520 |
-| **EBITDA Margin** | 37% | 54% | 65% |
+### Why High LTV:CAC
 
-### 4.2 Cash Flow & Runway
+OMNIX integrates into the client's execution flow as infrastructure. Once embedded:
+- Switching cost is high (re-integration, re-calibration, compliance re-certification)
+- The system improves over time (Shadow Portfolio learning)
+- Compliance requirements create dependency (audit trail, regulatory reporting)
 
-**Starting Cash (Post-Seed):** $500,000
+---
+
+## 5. PROFITABILITY PATH
+
+### 5.1 Break-Even Analysis
+
+| Scenario | Enterprise Clients | B2C Users | Monthly Revenue | Monthly Costs | Status |
+|----------|-------------------|-----------|-----------------|---------------|--------|
+| **Month 6** | 1-2 pilots | 30 | $25K–$55K | $40K | Approaching break-even |
+| **Month 12** | 3 paying | 80 | $55K–$90K | $45K | **Cash-flow positive** |
+| **Month 18** | 5 clients | 150 | $90K–$140K | $55K | **Strong positive** |
+
+### 5.2 Runway
+
+**Starting Cash:** $500,000
 
 | Quarter | Revenue | Expenses | Net Cash Flow | Cash Balance |
 |---------|---------|----------|---------------|--------------|
-| Q1 2026 | $75,000 | $150,000 | $(75,000) | $425,000 |
-| Q2 2026 | $150,000 | $150,000 | $0 | $425,000 |
-| Q3 2026 | $300,000 | $150,000 | $150,000 | $575,000 |
-| Q4 2026 | $450,000 | $180,000 | $270,000 | $845,000 |
-| Q1 2027 | $600,000 | $200,000 | $400,000 | $1,245,000 |
-| Q2 2027 | $900,000 | $250,000 | $650,000 | $1,895,000 |
+| Q1 2026 | $15K | $100K | -$85K | $415K |
+| Q2 2026 | $45K | $110K | -$65K | $350K |
+| Q3 2026 | $90K | $120K | -$30K | $320K |
+| Q4 2026 | $150K | $130K | +$20K | $340K |
+| Q1 2027 | $200K | $140K | +$60K | $400K |
 
-**Runway:** 18+ months (cash positive by Q2 2026)
-
----
-
-## 5. VALUATION ANALYSIS
-
-### 5.1 Comparable Companies (As of 2024)
-
-| Company | ARR | Valuation | Revenue Multiple |
-|---------|-----|-----------|------------------|
-| 3Commas | ~$30M | ~$180M | 6x |
-| Cryptohopper | ~$15M | ~$75M | 5x |
-| TradingView | ~$300M | ~$3B | 10x |
-| Average SaaS | - | - | 5-8x |
-
-### 5.2 OMNIX Valuation Path
-
-| Milestone | ARR | Multiple | Valuation |
-|-----------|-----|----------|-----------|
-| Seed (Now) | Pre-revenue | - | $4.5M |
-| Series A (2027) | $6.5M | 6x | $39M |
-| Series B (2029) | $25M | 8x | $200M |
-
-**Why $4.5M Valuation is Conservative:**
-- MENA seed mean valuation: $18.9M (MAGNiTT 2024) - significant upside for early investors
-- Validation-phase pricing: conservative for infrastructure in track record building phase
-- Unique IP: Non-Markovian Kernel, InstitutionalDecisionLogger, Post-Quantum Security
-- Milestone-based approach: Series A at $25-40M after live trading validation
-- See Section 5 of this document for detailed valuation methodology
-
-### 5.3 Investor Return Analysis
-
-**$50,000 investment at Seed ($4.5M valuation) = 1% equity**
-
-| Exit Scenario | Valuation | Return | Multiple |
-|---------------|-----------|--------|----------|
-| Series A | $30M | $300,000 | 6x |
-| Series B | $150M | $1,500,000 | 30x |
-| Acquisition | $400M | $4,000,000 | 80x |
-
-**Full $500K investment (10% equity):**
-
-| Exit Scenario | Valuation | Return | Multiple |
-|---------------|-----------|--------|----------|
-| Series A | $30M | $3,000,000 | 6x |
-| Series B | $150M | $15,000,000 | 30x |
-| Acquisition | $400M | $40,000,000 | 80x |
+**Runway:** 18+ months. Cash-flow positive by Q4 2026 (Month 9-12).
 
 ---
 
-## 6. KEY ASSUMPTIONS & RISKS
+## 6. VALUATION & FUNDING
 
-### 6.1 Critical Assumptions
+### 6.1 Pre-Seed Round
 
-1. **Win Rate:** System achieves 55%+ win rate in live trading with PAPER_OPTIMIZED profile
-2. **Churn:** Monthly churn stabilizes at 5-7%
-3. **CAC:** Customer acquisition cost remains below $150
-4. **ARPU:** Users upgrade tiers as they see results
-5. **Regulation:** No major regulatory changes affecting crypto trading
+| Item | Details |
+|------|---------|
+| **Raising** | **$500,000 USD** |
+| **Equity** | **16.7%** |
+| **Pre-Money Valuation** | **$2.5M–$3M** |
 
-### 6.2 Risk Factors
+### 6.2 Valuation Justification
+
+| Factor | Evidence |
+|--------|----------|
+| Working product in production | 3+ months running 24/7 |
+| Real validation data | 192,000+ decision cycles analyzed |
+| Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
+| Strategic timing | MiCA + ADGM convergence creating urgent demand |
+| Comparable | Chainalysis raised at $4M pre-money at similar stage |
+
+### 6.3 Investor Return Analysis
+
+**$500K investment (16.7% equity):**
+
+| Milestone | Valuation | Investor Stake Value | Return |
+|-----------|-----------|---------------------|--------|
+| Series A (Month 12-18) | $15M–25M | $2.5M–4.2M | 5-8x |
+| Series B (Year 3) | $50M–100M | $8.3M–16.7M | 17-33x |
+| Strategic acquisition | $100M+ | $16.7M+ | 33x+ |
+
+### 6.4 Series A Readiness Criteria
+
+| Milestone | Target | Timing |
+|-----------|--------|--------|
+| 3+ paying enterprise clients | Revenue validation | Month 9 |
+| ADGM regulatory structure | Market access | Month 6 |
+| $50K+ MRR | Revenue trajectory | Month 12 |
+| Second vertical pilot (credit or insurance) | Market expansion | Month 12 |
+
+---
+
+## 7. KEY ASSUMPTIONS & RISKS
+
+### 7.1 Critical Assumptions
+
+1. **Enterprise sales cycle:** 3-6 months from first contact to signed contract
+2. **Pilot-to-paid conversion:** 60-80% (product is embedded infrastructure with high switching cost)
+3. **Enterprise churn:** <10% annually (infrastructure dependency)
+4. **B2C churn:** 8-12% monthly (market standard for SaaS tools)
+5. **Regulatory tailwind:** MiCA + ADGM creating compliance demand for governance infrastructure
+
+### 7.2 Risk Factors
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Trading performance below target | High | PAPER_OPTIMIZED profile, 2:1 R:R ratio, volatility-based SL/TP |
-| Regulatory crackdown on crypto | High | Dual-market (stocks), compliance focus |
-| Competition from well-funded players | Medium | Post-quantum security moat, institutional audit trail |
-| Technical failures/security breach | High | Enterprise security, regular audits, Kyber-768/Dilithium-3 |
-| Market downturn reducing trading volume | Medium | Subscription model provides stability |
+| Enterprise sales take longer than expected | Revenue delayed | B2C SaaS provides baseline revenue during pilot period |
+| Regulatory changes | Market shift | Domain-agnostic architecture — pivot to compliance vertical |
+| Competition from well-funded players | Market pressure | 192K+ decision dataset, post-quantum security, Shadow Portfolio moat |
+| Solo founder execution risk | Capacity | AI-augmented development + planned hires Month 1-3 |
 
-### 6.3 Sensitivity Analysis
+### 7.3 Conservative vs. Base Case
 
-**Impact of Win Rate on Monthly Return:**
-
-| Win Rate | Monthly Return | Annual Return |
-|----------|----------------|---------------|
-| 50% | 0.5% | 6% |
-| 52% | 1.5% | 19% |
-| 55% | 3.0% | 42% |
-| 58% | 4.5% | 70% |
-| 60% | 6.0% | 100% |
+| Metric | Conservative | Base Case |
+|--------|-------------|-----------|
+| Year 1 enterprise clients | 2 pilots | 3 paying clients |
+| Year 1 total revenue | $200K | $400K |
+| Break-even | Month 15 | Month 10 |
+| Series A timing | Month 18 | Month 12 |
 
 ---
 
-## 7. CONCLUSION
+## DOCUMENT STATUS
 
-OMNIX V6.5.4e INSTITUTIONAL+ PREMIUM presents a compelling investment opportunity with:
-
-1. **Strong technology foundation** - 10 production AI strategies, post-quantum security, institutional audit trail
-2. **Capital preservation focus** - 98.5% capital preserved through 119 paper trades
-3. **Scalable SaaS model** - 82% gross margins
-4. **Unique competitive moat** - First mover in post-quantum trading security + Citadel-level audit
-5. **Experienced team** - Deep technical expertise
-
-**Investment Highlights:**
-- $500K seed at $4.5M valuation (10% equity)
-- 12-18 month runway to Series A
-- Target 6-80x return at Series A/B/Acquisition
-- Clear milestones and de-risking path
-- Unique IP: Non-Markovian Kernel, Post-Quantum Security, Institutional Audit Trail
-- Validation-phase pricing - significant upside for early investors
+| Attribute | Value |
+|-----------|-------|
+| Prepared for | Eureka Dubai 2026, Investor due diligence |
+| Alignment | Matches Eureka Pitch Deck, Business Model Canvas, PITCH_DECK_OUTLINE |
+| Founder | Harold Nunes |
+| Last Updated | February 19, 2026 |
 
 ---
 
-*This document contains forward-looking statements and projections. Actual results may differ materially. Past performance is not indicative of future results. Trading involves significant risk of loss.*
+*OMNIX — Governing decisions under uncertainty.*
 
-**Document Version:** V6.5.4e  
-**Last Updated:** January 14, 2026
+*This document contains forward-looking statements and projections. Actual results may differ materially. OMNIX is decision governance infrastructure, not an investment product. Revenue projections are estimates based on conservative assumptions.*

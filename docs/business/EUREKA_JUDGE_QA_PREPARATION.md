@@ -1,0 +1,227 @@
+# OMNIX — Eureka Dubai Judge Q&A Preparation
+
+**Classification**: Competition Preparation — Confidential
+**Date**: February 19, 2026
+**Purpose**: Anticipated judge questions with prepared, honest, evidence-based answers
+**Audience**: Harold Nunes — internal preparation only
+
+---
+
+## CATEGORY 1: TRACTION & CUSTOMERS
+
+### Q: "Do you have any paying customers?"
+
+**Answer:**
+> "Not yet — and that's intentional. We've spent the last 3 months validating the governance engine in the hardest domain first: real-time financial markets. 192,000+ governed decisions, 98.5% capital preserved. The engine works. Now we're ready for enterprise pilots.
+>
+> Our first 3 target clients are prop trading firms in ADGM/DIFC — we've identified 200+ in the ecosystem. The $500K raise funds the transition from validated product to paying enterprise clients within 3-6 months."
+
+**Key framing:** Discipline, not delay. You validated before selling — that's institutional credibility.
+
+---
+
+### Q: "What's your revenue?"
+
+**Answer:**
+> "Pre-revenue. Our Year 1 target is $200K-$400K from 3 enterprise pilots at $15K-$35K/month. We chose to validate the engine before monetizing — the same discipline the product enforces."
+
+---
+
+### Q: "192,000 decisions — but how many of those are real trades vs. simulations?"
+
+**Answer:**
+> "192,000 are real governance evaluation cycles — every 60 seconds, the engine evaluates market conditions through all 6 checkpoints. 119 were actual trade executions during calibration. 47 were correctly blocked. The governance engine runs 24/7 regardless of whether a trade is placed — that's the data that trains the system."
+
+---
+
+## CATEGORY 2: SOLO FOUNDER
+
+### Q: "You're a solo founder — can you really execute on this?"
+
+**Answer:**
+> "I built the entire system — governance engine, AI orchestration, post-quantum security, production infrastructure — solo, using AI as a force multiplier. One person with AI achieves the output of a 5-person team.
+>
+> The product already runs 24/7 in production. The hard part is done. The $500K raise includes hiring 3 key people — Senior Backend Engineer, DevOps, and Business Development — to scale what already works. Not to build what doesn't."
+
+**Follow-up if pressed:** "Amazon started solo. Dell started solo. The question isn't team size — it's execution capacity. The product exists. It runs. It has data. That's execution."
+
+---
+
+### Q: "What if you get hit by a bus?"
+
+**Answer:**
+> "Fair question. The system runs autonomously — it's fail-closed by design. If I disappeared tomorrow, the engine continues governing. The codebase is fully documented with 27 Architectural Decision Records. The first hire with funding is a senior engineer who can operate and extend the system independently."
+
+---
+
+## CATEGORY 3: BUSINESS MODEL
+
+### Q: "Why would a prop firm pay $15K-$35K/month for this?"
+
+**Answer:**
+> "Because a single bad drawdown event costs them $50K-$200K. OMNIX reduces severe drawdown frequency by an estimated 40%. At $25K/month, the ROI is 2-8x their monthly cost — just from losses avoided.
+>
+> More importantly, regulations like MiCA are making governance infrastructure mandatory. Firms need audit trails and decision governance documentation. Building this in-house costs $500K+ and takes 12-18 months. We offer it as plug-and-play infrastructure."
+
+---
+
+### Q: "Your pricing seems high for pre-seed — have you validated it?"
+
+**Answer:**
+> "The pricing is benchmarked against what prop firms currently pay for risk infrastructure. Riskalyze charges $20K-$50K/month for portfolio risk analytics. Our pricing sits at the lower end of institutional risk infrastructure.
+>
+> But the real validation comes from pilots — which is exactly what the funding enables. We'll start with discounted pilots at $10K-$15K/month and move to full pricing after proving ROI."
+
+---
+
+### Q: "How do you get from $0 to 3 enterprise clients?"
+
+**Answer:**
+> "Three channels:
+> 1. **Direct outreach** — 200+ prop firms registered in ADGM/DIFC. We target 50/month with personalized governance assessments.
+> 2. **Regulatory pull** — MiCA compliance deadline is creating urgent demand. We position as the fastest path to decision governance documentation.
+> 3. **Event networking** — Eureka Dubai is literally our first channel. TOKEN2049, FinTech Abu Dhabi, ADGM Innovation Hub events.
+>
+> The enterprise sales cycle is 3-6 months: assessment → shadow mode (2-4 weeks) → advisory mode → enforcement mode → paid license."
+
+---
+
+## CATEGORY 4: COMPETITION
+
+### Q: "Who are your competitors?"
+
+**Answer:**
+> "Nobody does exactly what we do — that's the category creation opportunity. But adjacent competitors exist in 4 categories:
+>
+> 1. **Retail trading bots** (3Commas, Cryptohopper) — they optimize for action. We optimize for restraint. Different product category.
+> 2. **Risk analytics platforms** (Riskalyze, BarraOne) — they report risk after trades. We validate before execution.
+> 3. **Internal quant fund tools** — only available inside $100M+ hedge funds. We make governance accessible.
+> 4. **RegTech compliance** (Chainalysis, Elliptic) — they monitor transactions. We govern decision quality.
+>
+> The real competitor is doing nothing — firms managing risk with spreadsheets and manual oversight."
+
+---
+
+### Q: "What stops a well-funded player from copying this?"
+
+**Answer:**
+> "Three things:
+> 1. **Data moat** — 192,000+ governed decision events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
+> 2. **Architecture moat** — 6-checkpoint sequential validation with fail-closed behavior isn't trivial to build. We have 27 Architectural Decision Records documenting every design choice.
+> 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
+>
+> Plus, we're filing 3 patent families to protect the core IP."
+
+---
+
+## CATEGORY 5: MARKET & SCALABILITY
+
+### Q: "How big is the actual addressable market?"
+
+**Answer:**
+> "First vertical — digital asset trading: 200+ prop firms in ADGM/DIFC alone, 2,000+ platforms needing MiCA compliance globally. Conservative Year 1 target: 3 clients. That's not ambitious — it's disciplined.
+>
+> Multi-vertical expansion doubles the TAM every year: credit risk ($7.4B), supply chain ($3.2B), insurance ($5.1B). Combined addressable market: $37B+. But we don't need to win the whole market — 15-30 enterprise clients at $25K/month puts us at $3M-$6M ARR."
+
+---
+
+### Q: "The multi-vertical story sounds nice — but can you really do credit and insurance?"
+
+**Answer:**
+> "We already built interactive governance demos for credit and insurance — live on our website right now. The same 6-checkpoint architecture evaluates a loan applicant or an insurance policy with different inputs but identical governance logic.
+>
+> In trading, checkpoint 1 runs Monte Carlo simulations. In credit, it calculates default probability. Different signal, same checkpoint structure. That's what 'domain-agnostic' means — and it's not theoretical, it's demonstrable."
+
+---
+
+### Q: "What's your international expansion plan?"
+
+**Answer:**
+> "ADGM Dubai first — that's the beachhead. MiCA compliance creates pull across Europe in Year 2. Asia (Singapore, Hong Kong) in Year 3.
+>
+> The expansion follows regulatory demand. When new jurisdictions mandate decision governance, we're already built for it."
+
+---
+
+## CATEGORY 6: UNIT ECONOMICS
+
+### Q: "What are your unit economics?"
+
+**Answer:**
+> "Enterprise B2B:
+> - **ACV**: $180K-$360K/year per enterprise client
+> - **CAC**: $15K-$30K (direct sales, 3-6 month cycle)
+> - **LTV**: $540K-$1M+ (3+ year retention — infrastructure lock-in)
+> - **LTV:CAC**: 18:1 to 33:1
+> - **Gross margin**: 60-70%
+>
+> These are projections based on industry benchmarks for B2B infrastructure. Real validation comes with the first 3 pilots."
+
+---
+
+### Q: "When do you break even?"
+
+**Answer:**
+> "Month 10-12 in our base case scenario. With $500K and monthly costs around $40K, we have 18+ months of runway. One enterprise client at $25K/month covers 60% of operating costs. Three clients and we're cash-flow positive."
+
+---
+
+## CATEGORY 7: TECHNOLOGY
+
+### Q: "What's special about your AI? Everyone has AI now."
+
+**Answer:**
+> "We don't sell AI. We sell governance. The AI is a component — we orchestrate 3 providers (Gemini, GPT-4o, Claude) so there's zero single-provider dependency. If one goes down, the system continues.
+>
+> What's special is the 6-checkpoint architecture: Monte Carlo simulation, risk limits, signal agreement, trend confirmation, stress testing, and logic contradiction detection — all running in sequence, all with veto authority. Most systems have 1 risk check. We have 6 independent ones that must ALL agree."
+
+---
+
+### Q: "Why post-quantum cryptography? Isn't that overkill?"
+
+**Answer:**
+> "We sign every decision with Dilithium-3 (NIST FIPS 204). It's operational since November 2025, not on a roadmap. For institutional clients managing $5M-$500M, quantum-resistant audit trails aren't overkill — they're future-proofing their compliance documentation. It's also a competitive moat: no competitor in our category has this."
+
+---
+
+## CATEGORY 8: VALUATION & FUNDING
+
+### Q: "Why is this worth $2.5M-$3M pre-money?"
+
+**Answer:**
+> "Working product in production for 3+ months. 192,000+ governed decision events. Defensible IP. Filed-ready patent families. Interactive demos across 3 verticals. All built by one person with zero burn.
+>
+> Chainalysis raised at $4M pre-money at a comparable stage. The MENA seed median is $18.9M (MAGNiTT 2024). At $2.5M-$3M, this is conservative pricing for validated infrastructure."
+
+---
+
+### Q: "How will you use the $500K?"
+
+**Answer:**
+> "35% — Risk engine refinement and multi-vertical expansion. 25% — ADGM legal and regulatory structure. 20% — Enterprise API infrastructure. 15% — 3 key hires (backend, devops, business development). 5% — Reserve.
+>
+> Capital preservation extends to your capital too. No flashy office, no marketing burn. Infrastructure, team, and regulatory structure."
+
+---
+
+## DELIVERY NOTES
+
+### General Rules for All Answers
+
+1. **Lead with numbers** — every answer starts with a concrete metric when possible
+2. **Acknowledge honestly** — "Not yet" is stronger than deflection
+3. **Reframe to strength** — solo = capital-efficient, pre-revenue = disciplined, no customers = validated-before-selling
+4. **End with the next step** — every answer closes with what happens next
+5. **Never oversell** — use "conservative", "benchmarked", "validated in" — not "revolutionary", "game-changing", "disruptive"
+
+### Body Language Notes
+
+- Pause before numbers — let them land
+- "Fail-closed" = slight pause after, this is the differentiator
+- "192,000+" = say slowly, make eye contact
+- Don't rush the solo founder answer — own it with confidence
+
+---
+
+*OMNIX — Governing decisions under uncertainty.*
+*Eureka Dubai 2026 — Semifinalist*

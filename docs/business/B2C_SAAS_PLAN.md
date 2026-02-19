@@ -1,9 +1,11 @@
 # OMNIX B2C Implementation Plan
 
-**Version:** 1.0  
-**Created:** December 10, 2025  
-**Status:** ROADMAP - NOT STARTED  
+**Version:** 1.0
+**Created:** December 10, 2025
+**Status:** ARCHIVED — SUPERSEDED BY B2B-FIRST STRATEGY
 **Target Product:** OMNIX Asesor Personal IA
+
+> **ARCHIVAL NOTE (Feb 19, 2026):** This document reflects an earlier strategy focused on B2C SaaS as the primary revenue model. As of February 2026, OMNIX has repositioned as **Decision Governance Infrastructure** with an 80% B2B / 20% B2C revenue split. The current business model prioritizes enterprise licensing to prop firms, trading platforms, and regulated funds. B2C SaaS remains a secondary revenue stream (Pro $149/mo, Advanced $499/mo) that launches after enterprise validation. See `OMNIX_BUSINESS_MODEL_CANVAS.md` and `OMNIX_EUREKA_PITCH_FINAL.md` for the current strategy. The B2C pricing below ($49 Basic tier) is no longer in the active plan.
 
 > **Note (Dec 24, 2025):** This plan is on the roadmap but NOT yet implemented. No Stripe, Auth0, or Clerk integration exists. Multi-tenant infrastructure is planned but not built.
 

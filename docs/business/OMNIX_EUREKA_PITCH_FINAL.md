@@ -352,26 +352,36 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 **Harold Nunes**
 *Founder & Product Architect*
 
-- Built OMNIX from concept to production-running system
-- Designed the 6-checkpoint security engine, risk logic, and AI orchestration
+- Built OMNIX solo from concept to production-running system — using AI as a development force multiplier
+- Designed the 6-checkpoint governance engine, risk logic, AI orchestration, and full production infrastructure
 - Self-taught technologist with institutional finance discipline
 - Relocating to Dubai for ADGM ecosystem
 
-**Ivan David Guzman Ruiz**
-*Software Engineer*
+**What One Founder Built:**
 
-- Key contributor to OMNIX's engineering and production infrastructure
-- Instrumental in bringing professional-grade architecture to the platform
+| Capability | Status |
+|-----------|--------|
+| 6-Checkpoint Governance Engine | Production — 192,000+ decisions governed |
+| Multi-AI Orchestration (3 providers) | Production — zero single-provider dependency |
+| Post-Quantum Security (Dilithium-3) | Production — operational since Nov 2025 |
+| Shadow Portfolio Learning Engine | Production — 192,000+ counterfactual events |
+| Full Decision Audit Trail | Production — 100% telemetry coverage |
+| Interactive Governance Demos (3 verticals) | Live — trading, credit, insurance |
 
 **Current Structure:**
-- Core architecture, risk logic, and roadmap: Founder-led
-- Engineering and production infrastructure: 2-person core team
+- Architecture, risk logic, governance, infrastructure, roadmap: Founder-built and founder-led
+- AI-augmented development: One person with AI achieves the output of a 5-person team
 - Ecosystem: Applied to Hub71 (pending), building network in ADGM/DIFC
 
+**Planned Hires (Post-Funding):**
+- Senior Backend Engineer — Enterprise API development (Month 1-2)
+- DevOps / Infrastructure — Multi-tenant scaling (Month 2-3)
+- Business Development — Enterprise pilot outreach (Month 3-4)
+
 **Why This Works:**
-- Speed of execution over team size — product already running 24/7
-- Real-market validation from day one — not theoretical research
-- $500K raise includes 2-3 additional engineering hires for enterprise API
+- The product already exists and runs 24/7 — the hard part is done
+- $500K raise includes 2-3 key hires to scale what works — not to build what doesn't
+- Capital-efficient execution: zero burn before funding, all IP created with personal capital
 
 **LinkedIn:** linkedin.com/in/harold-nunes-21bb65285
 

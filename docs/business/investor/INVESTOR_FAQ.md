@@ -1,7 +1,8 @@
-# OMNIX V6.5.4e Advanced Tier — Investor FAQ
+# OMNIX — Investor FAQ
+## Decision Governance Infrastructure
 
-**Classification**: Investor Confidential  
-**Last Updated**: January 24, 2026
+**Classification**: Investor Confidential
+**Last Updated**: February 19, 2026
 
 ---
 
@@ -204,11 +205,11 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 
 **A:**
 
-1. Complete 30-day Track Record (Feb 14, 2026)
-2. Private beta with 100 selected users
-3. Public launch targeting advanced crypto traders
-4. License-based revenue ($49-499/month tiers)
-5. Future: Institutional API licensing, white-label options
+1. Complete track record validation
+2. First enterprise pilot (prop firm or trading platform) — Month 3
+3. ADGM regulatory structure complete — Month 6
+4. 3 paying enterprise clients — Month 9
+5. Series A readiness with validated revenue metrics — Month 12
 
 ### Q18: What are the key risks?
 

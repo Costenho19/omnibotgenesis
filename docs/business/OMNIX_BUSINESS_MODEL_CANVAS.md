@@ -168,24 +168,53 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 ---
 
-## CHANNELS
+## CHANNELS & GO-TO-MARKET STRATEGY
+
+### First 3 Target Pilots (Month 1-6)
+
+| Target Type | Count in ADGM/DIFC | Entry Strategy | Pricing |
+|-------------|:-------------------:|----------------|---------|
+| **Prop trading firms** | 200+ registered | Free governance assessment → shadow mode demo → paid license | $10K-$15K/month (pilot rate) |
+| **Crypto-native trading platforms** | 50+ | MiCA compliance urgency → governance-as-a-service | Per-validation ($0.01-0.05/call) |
+| **Regulated funds** | 100+ | Audit trail + decision governance documentation | $25K-$35K/month |
+
+### Enterprise Sales Funnel
+
+| Stage | Action | Timeline | Conversion |
+|-------|--------|----------|:----------:|
+| **Awareness** | 50 direct outreaches/month + event networking | Ongoing | — |
+| **Assessment** | Free governance health check for their system | Week 1-2 | 30% |
+| **Shadow Mode** | OMNIX runs alongside their system (no execution) | 2-4 weeks | 60% |
+| **Advisory Mode** | OMNIX provides pre-execution recommendations | 2-4 weeks | 75% |
+| **Enforcement Mode** | Full governance integration with veto authority | Ongoing | 80% → paid |
+| **Paid License** | Monthly enterprise license | Month 3-6 | — |
 
 ### Institutional Channels (Primary)
 
-| Channel | Approach |
-|---------|----------|
-| Direct outreach | 50 targeted outreaches/month |
-| Hub71 (if accepted) | Warm intros via innovation network |
-| ADGM ecosystem networking | Regulatory community engagement |
-| Fintech events | TOKEN2049 Dubai, FinTech Abu Dhabi, ADGM Innovation Hub |
+| Channel | Approach | Expected Output |
+|---------|----------|----------------|
+| Direct outreach | 50 targeted contacts/month via LinkedIn + email | 15 meetings/month |
+| ADGM Innovation Hub | Regulatory community + startup programs | 5-10 warm intros/quarter |
+| Hub71 (if accepted) | Accelerator network + corporate intros | 3-5 qualified leads/quarter |
+| Industry events | TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX | 10+ qualified contacts/event |
+| Eureka Dubai (current) | Competition exposure + judge introductions | Immediate pipeline |
 
 ### Digital Presence (Secondary)
 
-| Channel | Purpose |
-|---------|---------|
-| Web dashboard (omnixquantum.net) | Product demonstration |
-| LinkedIn thought leadership | Risk governance content positioning |
-| Risk governance content | Industry credibility building |
+| Channel | Purpose | Target |
+|---------|---------|--------|
+| omnixquantum.net | Interactive governance demos + institutional credibility | 500+ monthly visitors |
+| LinkedIn thought leadership | Weekly content on decision governance + risk management | 1,000+ followers in 6 months |
+| Case studies (post-pilot) | Documented ROI from first enterprise clients | Conversion tool for pipeline |
+
+### Timeline to First Revenue
+
+| Milestone | Target Date | Dependency |
+|-----------|------------|------------|
+| First pilot agreement | Month 3 | Direct outreach + event networking |
+| First paid license | Month 6 | Successful shadow + advisory period |
+| 3 paying clients | Month 9 | Pipeline from channels above |
+| $50K+ MRR | Month 12 | Scale from validated enterprise model |
 
 ---
 
@@ -235,9 +264,9 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 ### Human Capital
 
-- Founder-led product architecture (Harold Nunes)
-- Software Engineer (Ivan David Guzman Ruiz)
-- 2-3 key engineering hires planned (post-funding)
+- Solo founder — product architecture, risk logic, and infrastructure (Harold Nunes)
+- AI-augmented development: one person with AI achieves the output of a 5-person team
+- 2-3 key engineering hires planned (post-funding): Senior Backend, DevOps, Business Development
 
 ### Infrastructure
 

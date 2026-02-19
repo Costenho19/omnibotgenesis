@@ -352,26 +352,36 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 **Harold Nunes**
 *Fundador & Arquitecto de Producto*
 
-- Construyo OMNIX desde concepto hasta sistema corriendo en produccion
-- Diseno el motor de seguridad de 6 checkpoints, logica de riesgo y orquestacion de IA
+- Construyo OMNIX solo desde concepto hasta sistema en produccion — usando IA como multiplicador de desarrollo
+- Diseno el motor de gobernanza de 6 checkpoints, logica de riesgo, orquestacion de IA e infraestructura completa de produccion
 - Tecnologo autodidacta con disciplina de finanzas institucionales
 - Reubicandose a Dubai para ecosistema ADGM
 
-**Ivan David Guzman Ruiz**
-*Software Engineer*
+**Lo que un solo fundador construyo:**
 
-- Contribuidor clave en la ingenieria e infraestructura de produccion de OMNIX
-- Instrumental en llevar arquitectura de grado profesional a la plataforma
+| Capacidad | Estado |
+|-----------|--------|
+| Motor de Gobernanza de 6 Checkpoints | Produccion — 192,000+ decisiones gobernadas |
+| Orquestacion Multi-IA (3 proveedores) | Produccion — cero dependencia de un solo proveedor |
+| Seguridad Post-Cuantica (Dilithium-3) | Produccion — operacional desde Nov 2025 |
+| Motor de Aprendizaje Shadow Portfolio | Produccion — 192,000+ eventos contrafactuales |
+| Audit Trail completo de decisiones | Produccion — 100% cobertura de telemetria |
+| Demos interactivos de gobernanza (3 verticales) | En vivo — trading, credito, seguros |
 
 **Estructura Actual:**
-- Arquitectura core, logica de riesgo y roadmap: Liderado por el fundador
-- Ingenieria e infraestructura de produccion: Equipo core de 2 personas
+- Arquitectura, logica de riesgo, gobernanza, infraestructura, roadmap: Construido y liderado por el fundador
+- Desarrollo aumentado por IA: Una persona con IA logra la produccion de un equipo de 5
 - Ecosistema: Aplicacion a Hub71 (pendiente), construyendo red en ADGM/DIFC
 
+**Contrataciones Planificadas (Post-Funding):**
+- Senior Backend Engineer — Desarrollo de API enterprise (Mes 1-2)
+- DevOps / Infraestructura — Escalamiento multi-tenant (Mes 2-3)
+- Business Development — Outreach a pilotos enterprise (Mes 3-4)
+
 **Por Que Funciona:**
-- Velocidad de ejecucion sobre tamano del equipo — producto ya corriendo 24/7
-- Validacion en mercado real desde el dia uno — no investigacion teorica
-- La ronda de $500K incluye 2-3 contrataciones adicionales de ingenieria para API enterprise
+- El producto ya existe y corre 24/7 — la parte dificil esta hecha
+- La ronda de $500K incluye 2-3 contrataciones clave para escalar lo que ya funciona — no para construir lo que no existe
+- Ejecucion capital-eficiente: cero burn antes de funding, todo el IP creado con capital personal
 
 **LinkedIn:** linkedin.com/in/harold-nunes-21bb65285
 

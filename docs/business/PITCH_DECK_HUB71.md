@@ -1,18 +1,20 @@
-# OMNIX Quantum - Pitch Deck for Hub71
-## Investor Presentation | January 2026
+# OMNIX — Pitch Deck for Hub71
+## Investor Presentation | February 2026
+
+> **NOTE (Feb 19, 2026):** This deck was originally prepared for Hub71 application (January 2026). It has been updated to align with the current positioning as **Decision Governance Infrastructure** ($500K raise, $2.5M-$3M pre-money, 16.7% equity). For the latest narrative, see OMNIX_EUREKA_PITCH_FINAL.md.
 
 ---
 
 ## SLIDE 1: COVER
 
-**OMNIX Quantum**
+**OMNIX**
 
-*Institutional Risk Control Infrastructure for Crypto Trading*
+*Decision Governance Infrastructure for Automated Systems*
 
 Founder: Harold Nunes
-Location: Relocating to Abu Dhabi
+Location: Relocating to Abu Dhabi / Dubai
 Stage: Pre-Seed
-Date: January 2026
+Date: February 2026
 
 contacto@omnixquantum.net
 
@@ -44,9 +46,9 @@ Capital loss is the norm, not the exception.
 
 **The Solution**
 
-OMNIX is an AI-powered institutional trading platform that **protects capital first**.
+OMNIX is **Decision Governance Infrastructure** — a governance control architecture that validates automated decisions before execution.
 
-Unlike traditional bots that chase signals, OMNIX is a **risk-first decision engine** that blocks bad trades before execution.
+Unlike traditional platforms that optimize for action, OMNIX is a **fail-closed governance engine** that ensures every decision earns the right to execute.
 
 **Core Concept:**
 OMNIX operates as a **fail-closed system**: if edge confidence falls below defined thresholds, trading is automatically halted.
@@ -221,8 +223,8 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 | Item | Details |
 |------|---------|
 | Raising | $500,000 USD |
-| Equity | 10% |
-| Pre-Money Valuation | ~$4.5M |
+| Equity | 16.7% |
+| Pre-Money Valuation | $2.5M–$3M |
 
 **Use of Funds:**
 
@@ -324,8 +326,8 @@ Founder & Product Architect
 | Track Record Start | Jan 15, 2026 |
 | Target Win Rate | >45% |
 | Raising | $500K |
-| Equity Offered | 10% |
-| Valuation | $4.5M pre-money |
+| Equity Offered | 16.7% |
+| Valuation | $2.5M–$3M pre-money |
 
 ---
 

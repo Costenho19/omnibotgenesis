@@ -132,24 +132,53 @@
 
 ---
 
-## CANALES
+## CANALES Y ESTRATEGIA GO-TO-MARKET
+
+### Primeros 3 Pilotos Objetivo (Mes 1-6)
+
+| Tipo de Cliente | Cantidad en ADGM/DIFC | Estrategia de Entrada | Precio |
+|----------------|:---------------------:|----------------------|--------|
+| **Prop trading firms** | 200+ registradas | Evaluacion de gobernanza gratuita → modo shadow → licencia paga | $10K-$15K/mes (tarifa piloto) |
+| **Plataformas crypto-nativas** | 50+ | Urgencia de cumplimiento MiCA → governance-as-a-service | Por validacion ($0.01-0.05/call) |
+| **Fondos regulados** | 100+ | Audit trail + documentacion de gobernanza de decisiones | $25K-$35K/mes |
+
+### Embudo de Ventas Enterprise
+
+| Etapa | Accion | Timeline | Conversion |
+|-------|--------|----------|:----------:|
+| **Awareness** | 50 outreaches directos/mes + networking en eventos | Continuo | — |
+| **Assessment** | Chequeo gratuito de salud de gobernanza | Semana 1-2 | 30% |
+| **Shadow Mode** | OMNIX corre al lado de su sistema (sin ejecucion) | 2-4 semanas | 60% |
+| **Advisory Mode** | OMNIX provee recomendaciones pre-ejecucion | 2-4 semanas | 75% |
+| **Enforcement Mode** | Integracion completa de gobernanza con autoridad de veto | Continuo | 80% → pago |
+| **Licencia Paga** | Licencia enterprise mensual | Mes 3-6 | — |
 
 ### Canales Institucionales (Primario)
 
-| Canal | Enfoque |
-|-------|---------|
-| Outreach directo | 50 contactos dirigidos/mes |
-| Hub71 (si aceptado) | Intros calidas via red de innovacion |
-| Networking ecosistema ADGM | Engagement con comunidad regulatoria |
-| Eventos fintech | TOKEN2049 Dubai, FinTech Abu Dhabi, ADGM Innovation Hub |
+| Canal | Enfoque | Output Esperado |
+|-------|---------|----------------|
+| Outreach directo | 50 contactos dirigidos/mes via LinkedIn + email | 15 reuniones/mes |
+| ADGM Innovation Hub | Comunidad regulatoria + programas startup | 5-10 intros calidas/trimestre |
+| Hub71 (si aceptado) | Red de aceleradora + intros corporativas | 3-5 leads calificados/trimestre |
+| Eventos de industria | TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX | 10+ contactos calificados/evento |
+| Eureka Dubai (actual) | Exposicion de competencia + intros de jueces | Pipeline inmediato |
 
 ### Presencia Digital (Secundario)
 
-| Canal | Proposito |
-|-------|-----------|
-| Dashboard web (omnixquantum.net) | Demostracion de producto |
-| LinkedIn thought leadership | Posicionamiento de contenido de gobernanza de riesgo |
-| Contenido de gobernanza de riesgo | Construccion de credibilidad en la industria |
+| Canal | Proposito | Objetivo |
+|-------|-----------|----------|
+| omnixquantum.net | Demos interactivos de gobernanza + credibilidad institucional | 500+ visitantes/mes |
+| LinkedIn thought leadership | Contenido semanal sobre decision governance + risk management | 1,000+ seguidores en 6 meses |
+| Case studies (post-piloto) | ROI documentado de primeros clientes enterprise | Herramienta de conversion |
+
+### Timeline al Primer Ingreso
+
+| Hito | Fecha Objetivo | Dependencia |
+|------|---------------|-------------|
+| Primer acuerdo piloto | Mes 3 | Outreach directo + networking |
+| Primera licencia paga | Mes 6 | Periodo exitoso de shadow + advisory |
+| 3 clientes pagando | Mes 9 | Pipeline de canales anteriores |
+| $50K+ MRR | Mes 12 | Escala desde modelo enterprise validado |
 
 ---
 
@@ -199,9 +228,9 @@
 
 ### Capital Humano
 
-- Arquitectura de producto liderada por el fundador (Harold Nunes)
-- Software Engineer (Ivan David Guzman Ruiz)
-- 2-3 contrataciones clave de ingenieria planificadas (post-funding)
+- Fundador solo — arquitectura de producto, logica de riesgo e infraestructura (Harold Nunes)
+- Desarrollo aumentado por IA: una persona con IA logra la produccion de un equipo de 5
+- 2-3 contrataciones clave planificadas (post-funding): Senior Backend, DevOps, Business Development
 
 ### Infraestructura
 

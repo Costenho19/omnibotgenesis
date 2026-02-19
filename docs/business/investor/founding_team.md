@@ -1,77 +1,79 @@
-# OMNIX V6.5.4 - Equipo Fundador
+# OMNIX — Founding Team
+
+**Last Updated**: February 19, 2026
 
 ---
 
-## HAROLD
-### Fundador & CEO
+## HAROLD NUNES
+### Founder & Product Architect
 
-**Rol:** Creador del producto y toda la propiedad intelectual diferencial
+**Role:** Creator of all product IP, architecture, risk logic, governance engine, and production infrastructure
 
-**Historia:**
+**Story:**
 
-> "No vengo de Wall Street ni tengo un PhD en matemáticas. Soy un emprendedor que vio un problema real: el 95% de los traders minoristas pierden dinero porque no tienen acceso a las herramientas que usan los profesionales.
+> "I didn't come from Wall Street or a PhD program. I'm an entrepreneur who saw a real problem: automated systems make high-stakes decisions every day — and almost none of them have a real governance layer to control those decisions before they execute.
 >
-> Pasé más de un año investigando, aprendiendo y construyendo OMNIX desde cero. Cada línea de código de la tecnología diferencial - el Non-Markovian Memory Kernel, el 6-Tier Coherence Engine, las 15+ estrategias de AI, la seguridad post-cuántica - la diseñé y desarrollé yo mismo.
+> I spent over a year researching, learning, and building OMNIX from scratch. Every line of the core technology — the 6-Checkpoint Governance Engine, Non-Markovian Memory Kernel, Post-Quantum Security, Shadow Portfolio Engine — I designed and built myself, with AI as my development multiplier.
 >
-> No busco impresionar con credenciales. Busco demostrar con resultados."
+> I don't seek to impress with credentials. I seek to demonstrate with results: 192,000+ governed decisions, 98.5% capital preserved, running 24/7 in production for 3+ months."
 
-**Contribuciones a OMNIX:**
+**Core Contributions to OMNIX:**
 
-| Componente | Descripción |
-|------------|-------------|
-| Non-Markovian Memory Kernel | Sistema de memoria temporal único a nivel mundial |
-| 6-Tier Coherence Engine | Validación de consenso entre estrategias |
-| 10+ Estrategias AI | Quantum Momentum, Monte Carlo, HMM, Kalman, Kelly, etc. |
-| Post-Quantum Security | Kyber-768, Dilithium-3 (NIST FIPS-203/204) |
-| InstitutionalDecisionLogger | Audit trail de nivel hedge fund |
-| Execution Protocol PREMIUM | TWAP/VWAP/ICEBERG institucional |
+| Component | Description |
+|-----------|-------------|
+| 6-Checkpoint Governance Engine | Multi-layer pre-execution decision validation (domain-agnostic) |
+| Non-Markovian Memory Kernel | Temporal pattern recognition beyond recency — unique globally |
+| Post-Quantum Security | Kyber-768, Dilithium-3 (NIST FIPS-203/204) — operational since Nov 2025 |
+| Shadow Portfolio Engine | 192,000+ counterfactual decision events for continuous learning |
+| Decision Trace Framework | Full audit trail for every governed decision — 100% telemetry |
+| Multi-AI Orchestration | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with failover |
+| Execution Protocol | TWAP/VWAP/ICEBERG institutional-grade execution |
 
-**Por qué esto importa:**
+**Why This Matters:**
 
-La propiedad intelectual de OMNIX costaría $1.3-2.0M replicar con un equipo de PhDs durante 6-12 meses. Harold la construyó solo, demostrando capacidad de ejecución excepcional.
-
----
-
-## IVÁN
-### Co-fundador & CTO
-
-**Rol:** Arquitecto de software y escalabilidad del sistema
-
-**Experiencia:** Desarrollador profesional con experiencia en arquitectura de software empresarial
-
-**Contribuciones a OMNIX:**
-
-| Área | Descripción |
-|------|-------------|
-| Arquitectura de Microservicios | Sistema modular y escalable |
-| Código Profesional | Buenas prácticas, testing, documentación |
-| Memoria Persistente | PostgreSQL + Redis para estado y cache |
-| Integración de Sistemas | APIs, exchanges, servicios externos |
-| DevOps | Deploy en Railway, CI/CD, monitoreo |
-
-**Por qué esto importa:**
-
-Iván transforma las innovaciones de Harold en software de producción escalable. Su enfoque en arquitectura limpia asegura que OMNIX pueda crecer a 100,000+ usuarios sin reescrituras.
+Replicating OMNIX's IP would cost $1.3-2.0M with a team of PhDs over 6-12 months. Harold built it solo using AI as a development force multiplier — demonstrating exceptional execution capacity and capital efficiency.
 
 ---
 
-## POR QUÉ ESTE EQUIPO FUNCIONA
+## SOLO FOUNDER — STRENGTH, NOT WEAKNESS
 
-| Harold | Iván |
-|--------|------|
-| Innovación | Estabilidad |
-| Visión del producto | Ejecución técnica |
-| Tecnología diferencial | Arquitectura escalable |
-| "Qué construir" | "Cómo construirlo bien" |
+### Why Solo + AI Works
 
-**Combinación clásica de startups exitosas:** El visionario que inventa + El ingeniero que escala.
+| Factor | Evidence |
+|--------|----------|
+| **Product already exists** | Running 24/7 in production for 3+ months |
+| **AI as team multiplier** | One person with AI tools achieves the output of a 5-person team |
+| **Capital efficiency** | Zero burn before funding — all IP created with personal capital |
+| **Speed of execution** | No coordination overhead — concept to production in months |
+| **Full IP ownership** | 100% of the technology created by the founder — no dependency risk |
+
+### Why Hiring Comes After Funding, Not Before
+
+Most pre-seed startups have 1-2 founders and hire after raising. OMNIX is in a stronger position than most because:
+
+1. **The product is live** — Not a prototype, not a deck. Production-running 24/7
+2. **The data is real** — 192,000+ governed decisions analyzed
+3. **The architecture is scalable** — Hexagonal architecture designed for team onboarding
+4. **The first hires are defined** — See below
+
+### Planned Hires (Post-Funding)
+
+| Role | Priority | Purpose |
+|------|----------|---------|
+| **Senior Backend Engineer** | Month 1-2 | Enterprise API development, prop firm integrations |
+| **DevOps / Infrastructure** | Month 2-3 | Scale production infrastructure, multi-tenant architecture |
+| **Business Development** | Month 3-4 | Enterprise pilot outreach, ADGM ecosystem networking |
+
+### The Narrative
+
+> "One founder built a governance engine that has made 192,000+ decisions in production. The $500K raise includes hiring 2-3 key people to scale what already works — not to build what doesn't exist yet."
 
 ---
 
-## FILOSOFÍA DEL EQUIPO
+## PHILOSOPHY
 
-> "No tenemos pedigree de Stanford o Goldman Sachs. Tenemos algo mejor: un producto que funciona, código que lo demuestra, y el hambre de hacerlo crecer."
+> "I don't have pedigree from Stanford or Goldman Sachs. I have something better: a product that works, code that proves it, and the drive to scale it."
 
 ---
 
-*Diciembre 2025*
+*February 2026*
