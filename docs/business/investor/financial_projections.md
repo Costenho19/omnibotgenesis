@@ -191,7 +191,7 @@ OMNIX integrates into the client's execution flow as infrastructure. Once embedd
 | Enterprise sales take longer than expected | Revenue delayed | B2C SaaS provides baseline revenue during pilot period |
 | Regulatory changes | Market shift | Domain-agnostic architecture — pivot to compliance vertical |
 | Competition from well-funded players | Market pressure | 192K+ decision dataset, post-quantum security, Shadow Portfolio moat |
-| Solo founder execution risk | Capacity | AI-augmented development + planned hires Month 1-3 |
+| Solo founder / key-person risk | Operational continuity | 3-layer mitigation: (1) Documented hexagonal architecture + 27 ADRs — 2-3 week onboarding; (2) 3 hires Month 1-4 reduce dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, runbooks by Month 6 |
 
 ### 7.3 Conservative vs. Base Case
 

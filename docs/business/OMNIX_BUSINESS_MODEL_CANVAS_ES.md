@@ -230,7 +230,8 @@
 
 - Fundador solo — arquitectura de producto, logica de riesgo e infraestructura (Harold Nunes)
 - Desarrollo aumentado por IA: una persona con IA logra la produccion de un equipo de 5
-- 2-3 contrataciones clave planificadas (post-funding): Senior Backend, DevOps, Business Development
+- 2-3 contrataciones clave planificadas (post-funding): Senior Backend (Mes 1-2), DevOps (Mes 2-3), Business Development (Mes 3-4)
+- **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (27 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
 
 ### Infraestructura
 
@@ -249,7 +250,7 @@
 | Estrategia y Motor de Riesgo | 35% | Refinamiento de algoritmos, expansion de Shadow Portfolio |
 | Legal y Regulatorio Dubai/ADGM | 25% | Formacion de empresa, estructura regulatoria |
 | Infraestructura Enterprise | 20% | API para prop firms, certificaciones de seguridad |
-| Equipo y Operaciones | 15% | 2-3 contrataciones clave de ingenieria |
+| Equipo y Operaciones | 15% | 2-3 contrataciones clave — eliminando riesgo de persona clave (Mes 1-4) |
 | Reserva | 5% | Contingencia |
 
 ### Modelo Operativo

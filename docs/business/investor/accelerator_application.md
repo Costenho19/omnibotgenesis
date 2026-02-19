@@ -180,7 +180,7 @@ Built OMNIX solo from concept to production using AI as a development force mult
 | Strategy & Risk Engine | 35% | Algorithm refinement, multi-vertical expansion |
 | Dubai/ADGM Legal & Regulatory | 25% | Company formation, regulatory structure |
 | Enterprise Infrastructure | 20% | API for prop firms, security certifications |
-| Team & Operations | 15% | 2-3 key hires |
+| Team & Operations | 15% | 2-3 key hires — eliminating key-person risk (Month 1-4) |
 | Reserve | 5% | Contingency |
 
 **Runway:** 18+ months to Series A

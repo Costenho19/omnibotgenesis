@@ -70,6 +70,56 @@ Most pre-seed startups have 1-2 founders and hire after raising. OMNIX is in a s
 
 ---
 
+## KEY-PERSON RISK MITIGATION PLAN
+
+### The Honest Assessment
+
+Today, OMNIX has a single-founder dependency. This is acknowledged, taken seriously, and is the #1 priority that the $500K raise addresses.
+
+### 3-Layer Mitigation Strategy
+
+**Layer 1 — Defensive Architecture (Already Implemented)**
+
+| Protection | Status |
+|-----------|--------|
+| Hexagonal architecture with domain-agnostic patterns | Production |
+| 27 Architectural Decision Records documenting every design choice | Complete |
+| Full traceability matrices and operational documentation | Version-controlled |
+| System runs 24/7 autonomously — zero manual intervention required | Production since Nov 2025 |
+| Senior engineer onboarding time | 2-3 weeks (not months) |
+
+**Layer 2 — Team Building (Months 1-4 Post-Investment)**
+
+| Hire | Timeline | Key-Person Risk Impact |
+|------|----------|----------------------|
+| Senior Backend Engineer | Month 1-2 | Full knowledge transfer of core engine. Can independently operate and extend the system by Month 3 |
+| DevOps / Infrastructure | Month 2-3 | Production infrastructure fully documented and transferred. Deployment, monitoring, incident response — founder-independent |
+| Business Development | Month 3-4 | Commercial relationships and partner management distributed |
+
+**Dependency Reduction Metrics:**
+
+| Milestone | Founder Dependency |
+|-----------|-------------------|
+| Today (pre-funding) | 100% |
+| Month 2 (first hire onboarded) | ~70% |
+| Month 4 (3 hires onboarded) | ~30% |
+| Month 6 (structural protections complete) | ~20% (strategic direction only) |
+
+**Layer 3 — Structural Protections (Months 3-6)**
+
+| Protection | Timeline | Purpose |
+|-----------|----------|---------|
+| IP assignment to company | Month 3-4 | All intellectual property formally owned by the entity, not the founder |
+| Key-person insurance | Month 4-5 | Financial protection for investors and operations |
+| Operational runbooks | Month 3-6 | Step-by-step procedures for every critical process |
+| Cross-training validation | Month 5-6 | At least 2 people can handle any critical function |
+
+### By Month 6
+
+The founder's role transitions from "the only person who can do everything" to "strategic direction and product vision" — the role a founder should have. The system operates, scales, and serves clients independently of any single person.
+
+---
+
 ## PHILOSOPHY
 
 > "I don't have pedigree from Stanford or Goldman Sachs. I have something better: a product that works, code that proves it, and the drive to scale it."

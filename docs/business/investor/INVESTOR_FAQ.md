@@ -221,7 +221,7 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 | **Technology Risk** | 99.9% uptime, redundant infrastructure |
 | **Regulatory Risk** | DIFC/ADGM preparation, no token exposure |
 | **Execution Risk** | Paper trading validation before live capital |
-| **Key Person Risk** | Documentation, codebase on GitHub, 25+ ADRs |
+| **Key Person Risk** | 3-layer mitigation: (1) Documented architecture with 27 ADRs — senior engineer can onboard in 2-3 weeks; (2) First 3 hires Month 1-4 reduce founder dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, operational runbooks by Month 6 |
 
 ---
 
@@ -245,11 +245,13 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 
 | Allocation | Percentage | Purpose |
 |------------|------------|---------|
-| Engineering | 40% | Risk system refinement, 3 FTE |
-| Infrastructure | 20% | Security audits, scaling |
-| Trading Capital | 20% | Live validation phase |
-| Legal/Compliance | 10% | DIFC/ADGM preparation |
-| Operations | 10% | Reserve, operational costs |
+| Strategy & Risk Engine | 35% | Algorithm refinement, Shadow Portfolio expansion, multi-vertical development |
+| Dubai/ADGM Legal & Regulatory | 25% | Company formation, regulatory structure |
+| Enterprise Infrastructure | 20% | API for prop firms, security certifications |
+| Team & Operations | 15% | 2-3 key hires (Senior Backend, DevOps, Business Development) — eliminating key-person risk |
+| Reserve | 5% | Contingency |
+
+**Priority #1 within Team & Operations:** Eliminate single-founder dependency. Senior Backend Engineer (Month 1-2) absorbs core engine knowledge. DevOps (Month 2-3) makes infrastructure founder-independent. By Month 4, no critical function depends on a single person.
 
 ---
 

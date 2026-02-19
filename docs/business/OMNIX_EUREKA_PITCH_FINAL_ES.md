@@ -414,7 +414,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 | Estrategia y Motor de Riesgo | 35% | Refinar algoritmos, expandir aprendizaje Shadow Portfolio |
 | Legal y Regulatorio Dubai/ADGM | 25% | Formacion de empresa, estructura regulatoria |
 | Infraestructura Enterprise | 20% | API para prop firms, certificaciones de seguridad |
-| Equipo y Operaciones | 15% | 2-3 contrataciones clave de ingenieria |
+| Equipo y Operaciones | 15% | 2-3 contrataciones clave — eliminando riesgo de persona clave (Mes 1-4) |
 | Reserva | 5% | Contingencia |
 
 ### Hitos con Financiacion

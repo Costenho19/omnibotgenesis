@@ -111,7 +111,7 @@
 | Strategy & Risk Engine | 35% |
 | Dubai/ADGM Legal & Regulatory | 25% |
 | Enterprise Infrastructure | 20% |
-| Team & Operations | 15% |
+| Team & Operations | 15% | Key-person risk elimination: 3 hires Month 1-4 |
 | Reserve | 5% |
 
 ---

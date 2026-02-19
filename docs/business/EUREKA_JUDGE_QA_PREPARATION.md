@@ -47,10 +47,53 @@
 
 ---
 
-### Q: "What if you get hit by a bus?"
+### Q: "What if you get hit by a bus?" / "How do you mitigate key-person risk?"
 
 **Answer:**
-> "Fair question. The system runs autonomously — it's fail-closed by design. If I disappeared tomorrow, the engine continues governing. The codebase is fully documented with 27 Architectural Decision Records. The first hire with funding is a senior engineer who can operate and extend the system independently."
+> "Excellent question — and it's exactly what the first $500K resolves. The mitigation plan has 3 layers:
+>
+> **Layer 1 — Documentation & Defensive Architecture (Already Done)**
+> The codebase is built with hexagonal architecture and domain-agnostic patterns — not artisanal code that only I understand. 27 Architectural Decision Records, full traceability matrices, and operational runbooks are version-controlled in the repository. A senior engineer can onboard in 2-3 weeks, not months. And the system already runs 24/7 autonomously — it doesn't require manual intervention to operate.
+>
+> **Layer 2 — First Hires (Months 1-4 Post-Investment)**
+> - Senior Backend Engineer (Month 1-2): absorbs knowledge of the core engine
+> - DevOps/Infrastructure (Month 2-3): makes operations founder-independent
+> - Business Development (Month 3-4): distributes commercial responsibility
+>
+> With these 2-3 hires, founder dependency drops from 100% to approximately 30%.
+>
+> **Layer 3 — Structural Protections (Months 3-6)**
+> - Formal IP assignment to the company (not the founder)
+> - Operational runbooks for every critical process
+> - Key-person insurance as part of the operating budget
+> - Cross-training protocols so no single person holds exclusive knowledge
+>
+> But I want to be honest: today I am a single point of failure, and that's precisely why I'm raising capital. Objective #1 of the funding is not just product — it's eliminating this risk by building the core team in the first 4 months."
+
+**Key framing:** Acknowledge the risk honestly (investors detect evasion). Show that mitigation is already partially in place (architecture, autonomous system). Connect the use of capital directly to solving this risk. Give a concrete timeline (4 months, not "eventually").
+
+**Follow-up if pressed:** "The system has been running 24/7 for 3+ months with zero manual intervention for core operation. The hard dependency isn't keeping the system alive — it's evolving and selling it. That's what the hires solve."
+
+---
+
+### Q: "OMNIX is 100% dependent on you. If you retire or something happens, our regional partners lose support. How do you mitigate this critical operational risk in the first 6 months?"
+
+**Answer:**
+> "You're right — and I take this seriously. Here's the 6-month operational risk elimination plan:
+>
+> **Month 1-2:** Senior Backend Engineer hired. Full knowledge transfer of core engine. Pair programming on all critical modules. This person can independently operate and extend the system by Month 3.
+>
+> **Month 2-3:** DevOps/Infrastructure engineer hired. Production infrastructure documented and transferred. Deployment, monitoring, and incident response no longer depend on the founder.
+>
+> **Month 3-4:** Business Development hired. Commercial relationships and partner management distributed. IP formally assigned to the company.
+>
+> **Month 4-6:** Key-person insurance active. Operational runbooks complete for all critical processes. Cross-training validated — at least 2 people can handle any critical function.
+>
+> **By Month 6:** Founder dependency reduced from 100% to ~20% (strategic direction and product vision only). The system operates, scales, and serves partners independently of any single person.
+>
+> The architecture was designed for this — hexagonal, modular, documented. It's not spaghetti code that only I understand. It's infrastructure built to be operated by a team."
+
+**Key framing:** This is the detailed operational version for investors who probe deeper. Show concrete month-by-month dependency reduction with measurable outcomes.
 
 ---
 

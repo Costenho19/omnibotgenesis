@@ -266,7 +266,8 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 - Solo founder — product architecture, risk logic, and infrastructure (Harold Nunes)
 - AI-augmented development: one person with AI achieves the output of a 5-person team
-- 2-3 key engineering hires planned (post-funding): Senior Backend, DevOps, Business Development
+- 2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)
+- **Key-person risk mitigation:** Documented hexagonal architecture (27 ADRs, 2-3 week onboarding). First hires reduce founder dependency from 100% to ~30% by Month 4. IP assignment to company, key-person insurance, and operational runbooks by Month 6
 
 ### Infrastructure
 
@@ -285,7 +286,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 | Strategy & Risk Engine | 35% | Algorithm refinement, Shadow Portfolio expansion |
 | Dubai/ADGM Legal & Regulatory | 25% | Company formation, regulatory structure |
 | Enterprise Infrastructure | 20% | API for prop firms, security certifications |
-| Team & Operations | 15% | 2-3 key engineering hires |
+| Team & Operations | 15% | 2-3 key hires — eliminating key-person risk (Month 1-4) |
 | Reserve | 5% | Contingency |
 
 ### Operating Model

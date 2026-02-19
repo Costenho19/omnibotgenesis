@@ -68,15 +68,16 @@ This aligns with:
 
 ## Funding
 
-**Raising:** USD 500,000 (Pre-Seed)  
-**Equity:** 10%  
-**Pre-money Valuation:** ~USD 4.5-5M
+**Raising:** USD 500,000 (Pre-Seed)
+**Equity:** 16.7%
+**Pre-money Valuation:** USD $2.5M–$3M
 
 **Use of Funds:**
-- Refine strategies and validate edge
-- Calibrate the risk engine
-- Prepare institutional infrastructure out of Dubai
-- Legal and regulatory structure
+- 35% — Strategy & Risk Engine refinement
+- 25% — Dubai/ADGM Legal & Regulatory structure
+- 20% — Enterprise Infrastructure (API, certifications)
+- 15% — Team & Operations (key-person risk elimination: 3 hires Month 1-4)
+- 5% — Reserve
 
 ---
 
@@ -169,15 +170,16 @@ Esto se alinea con:
 
 ## Financiación
 
-**Objetivo:** USD 500,000 (Pre-Seed)  
-**Equity:** 10%  
-**Valoración Pre-money:** ~USD 4.5-5M
+**Objetivo:** USD 500,000 (Pre-Seed)
+**Equity:** 16.7%
+**Valoracion Pre-money:** USD $2.5M–$3M
 
 **Uso de Fondos:**
-- Refinamiento de estrategias y validación de edge
-- Calibración del motor de riesgo
-- Preparación de infraestructura institucional desde Dubái
-- Estructura legal y regulatoria
+- 35% — Estrategia y Motor de Riesgo
+- 25% — Legal y Regulatorio Dubai/ADGM
+- 20% — Infraestructura Enterprise (API, certificaciones)
+- 15% — Equipo y Operaciones (eliminar riesgo persona clave: 3 contrataciones Mes 1-4)
+- 5% — Reserva
 
 ---
 

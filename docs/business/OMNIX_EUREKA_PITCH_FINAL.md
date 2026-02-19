@@ -414,7 +414,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 | Strategy & Risk Engine | 35% | Refine algorithms, expand Shadow Portfolio learning |
 | Dubai/ADGM Legal & Regulatory | 25% | Company formation, regulatory structure |
 | Enterprise Infrastructure | 20% | API for prop firms, security certifications |
-| Team & Operations | 15% | 2-3 key engineering hires |
+| Team & Operations | 15% | 2-3 key hires — eliminating key-person risk (Month 1-4) |
 | Reserve | 5% | Contingency |
 
 ### Milestones with Funding

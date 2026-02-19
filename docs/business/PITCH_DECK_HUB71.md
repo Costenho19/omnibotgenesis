@@ -233,7 +233,7 @@ Knowing when NOT to trade is a stronger edge than forcing returns.
 | Strategy & Risk Engine Refinement | 35% |
 | Dubai/ADGM Legal & Regulatory | 25% |
 | Institutional Infrastructure | 20% |
-| Team & Operations | 15% |
+| Team & Operations | 15% | Key-person risk elimination: 3 hires Month 1-4 |
 | Reserve | 5% |
 
 **Milestones with Funding:**

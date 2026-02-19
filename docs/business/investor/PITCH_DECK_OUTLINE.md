@@ -327,10 +327,11 @@ Pre-Seed Round
 └─────────────────────────────────────────────────────────┘
 
 Use of Funds:
-• 40% - Engineering (risk system refinement)
-• 30% - Operations (track record completion)
-• 20% - Marketing (beta user acquisition)
-• 10% - Legal/Compliance
+• 35% - Strategy & Risk Engine
+• 25% - Dubai/ADGM Legal & Regulatory
+• 20% - Enterprise Infrastructure
+• 15% - Team & Operations (key-person risk elimination: 3 hires Month 1-4)
+• 5%  - Reserve
 
 Capital preservation focus extends to your capital too.
 ```
