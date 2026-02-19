@@ -1,7 +1,7 @@
 # OMNIX – EXECUTIVE FACT SHEET
 
 **Phase 1 — Institutional Validation**  
-**Version**: OMNIX V6.5.4e  
+**Version**: OMNIX  
 **Issue Date**: 15 January 2026  
 **Platform Identity**: Decision Governance Infrastructure for Automated Systems
 
@@ -49,7 +49,7 @@ Before activating the official record, OMNIX was stress-tested under real market
 | Max Drawdown (OMNIX) | 1.5% |
 | Veto System | 6-tier active |
 | Risk Volume Blocked | >$43M notional |
-| Production Version | V6.5.4e Institutional+ |
+| Production Version | OMNIX Decision Governance |
 
 **This phase proved survival first, before profit seeking.**
 

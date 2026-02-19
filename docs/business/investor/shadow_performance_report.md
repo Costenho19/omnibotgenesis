@@ -172,4 +172,4 @@ The Shadow Portfolio feeds the Learning Engine with:
 
 *Document generated: January 19, 2026*  
 *Last updated: January 27, 2026*  
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX Decision Governance*

@@ -1,9 +1,23 @@
-# OMNIX V6.5.4e Technical Debt Registry
+# OMNIX Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** February 7, 2026  
+**Updated:** February 19, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Tailwind CSS CDN Usage (Feb 19, 2026)
+
+**Status:** ACCEPTED (Demo Environment)
+
+**Issue:** `omnix_dashboard/templates/base.html` loads Tailwind CSS from `cdn.tailwindcss.com`, which generates a browser console warning: "cdn.tailwindcss.com should not be used in production."
+
+**Decision:** Accepted for the current development/demo environment. The dashboard runs on port 5000 in Replit (development) and Railway (production internal). It is not exposed to end users — only used for investor demos and internal monitoring.
+
+**Future action:** When preparing for production SaaS deployment, bundle Tailwind locally via PostCSS build pipeline. This is a low-priority optimization tracked here for completeness.
+
+**Risk:** Low. Console warning visible only if inspector is open. No functional impact.
 
 ---
 

@@ -293,7 +293,7 @@ const DashboardApp = (function() {
 
         OmnixCommon.startAutoRefresh(refreshAllData, 10000);
 
-        console.log('OMNIX Dashboard V6.5.4e INSTITUTIONAL+ | Performance Dashboard Active');
+        console.log('OMNIX Decision Governance | Performance Dashboard Active');
     }
 
     function destroy() {

@@ -1,4 +1,4 @@
-# OMNIX V6.5.4e INSTITUTIONAL+ - Current System Metrics
+# OMNIX Decision Governance - Current System Metrics
 ## Real-Time Transparency Report
 
 **Last Updated:** January 14, 2026  
@@ -70,11 +70,11 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 
 ## SYSTEM STATUS
 
-### Core Engines (V6.5.4e INSTITUTIONAL+ PREMIUM)
+### Core Engines (Decision Governance)
 
 | Engine | Status | Version |
 |--------|--------|---------|
-| AutoTradingBot | Active | V6.5.4e INSTITUTIONAL+ |
+| AutoTradingBot | Active | OMNIX Decision Governance |
 | Non-Markovian Kernel | Active | V6.5 |
 | Coherence Engine | Active | V6.5 ULTRA (ADR-007 calibrated) |
 | CAES (Adaptive Entry) | Active | V6.5.4 |
@@ -82,14 +82,14 @@ The system is in **calibration phase**. Early trades used the PAPER_AGGRESSIVE p
 | Kelly Criterion | Active | V6.5.4 |
 | AI Risk Guardian | Active | V5.4 |
 | Monte Carlo | Active | Quantum-Enhanced |
-| Kalman Filter | Active | V6.5.4e Optimized |
+| Kalman Filter | Active | Optimized |
 | HMM Regime Detector | Active | Standard |
-| Portfolio Manager | Active | V6.4 INSTITUTIONAL+ |
+| Portfolio Manager | Active | V6.4 Decision Governance |
 | **InstitutionalDecisionLogger** | **Active** | **V6.5.4** |
 | **Execution Protocol** | **Active** | **V6.5.4 PREMIUM** |
 | **Position Manager** | **Active** | **V6.5.4 PREMIUM** |
 
-### New V6.5.4e Features (Jan 2026)
+### New Features (Jan 2026)
 
 | Feature | Description |
 |---------|-------------|
@@ -245,5 +245,5 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 
 ---
 
-**Document Version:** V6.5.4e  
+**Document Version:** OMNIX  
 **Last Updated:** January 14, 2026

@@ -1,4 +1,4 @@
-# OMNIX V6.5.4e INSTITUTIONAL+
+# OMNIX Decision Governance
 ## Complete Feature Catalog
 ### End-User Functionality Reference
 
@@ -153,7 +153,7 @@
 | **Auto-Revert** | 1% drawdown in 24 hours | Automatic config rollback |
 | **Emergency Stop** | Critical breach | Halt all trading immediately |
 
-### 3.5 Adaptive Coherence Gate V6.5.4e (Jan 2026) - ADR-007
+### 3.5 Adaptive Coherence Gate (Jan 2026) - ADR-007
 
 | EMA Signal | Black Swan Severity | Coherence Threshold | Benefit |
 |------------|---------------------|---------------------|---------|

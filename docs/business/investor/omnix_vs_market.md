@@ -128,4 +128,4 @@ The system preserved 100% of capital during a period when passive exposure would
 ---
 
 *Document generated: January 19, 2026*  
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX Decision Governance*

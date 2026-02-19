@@ -1,9 +1,9 @@
-# OMNIX V6.5.4e - Documentación
+# OMNIX — Documentación
 
-**Versión**: V6.5.4e INSTITUTIONAL+  
 **Identidad**: Decision Governance Infrastructure for Automated Systems  
-**Actualizado**: 15 de Febrero 2026  
-**Estado**: Producción 24/7 en Railway (100% Legacy) | Track Record COMPLETADO (30 días) | Fase 1 Operativa
+**Actualizado**: 19 de Febrero 2026  
+**Estado**: Producción 24/7 en Railway | Track Record COMPLETADO (30 días) | Fase 1 Operativa  
+**Versión interna (dev)**: V6.5.4e
 
 ---
 

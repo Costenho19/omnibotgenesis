@@ -209,7 +209,7 @@ def api_system_status():
     status = {
         'bot_active': bot_active,
         'trading_enabled': trading_enabled,
-        'version': 'INSTITUTIONAL+',
+        'version': 'DGI',
         'uptime': '24/7 Railway',
         'last_activity': datetime.now().isoformat(),
         'database_connected': DB_AVAILABLE,

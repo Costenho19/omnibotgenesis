@@ -1,6 +1,6 @@
 # OMNIX Risk Guardian™
 
-**Version**: V6.5.4e Advanced Tier  
+**Version**: OMNIX Advanced Tier  
 **Document Type**: Product Feature Sheet  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Risk Officers, Compliance Teams  

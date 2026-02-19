@@ -1,4 +1,4 @@
-# OMNIX V6.5.4e - GCC Market Readiness Assessment
+# OMNIX - GCC Market Readiness Assessment
 ## Why We Are Prepared for the Arab Market
 
 ---

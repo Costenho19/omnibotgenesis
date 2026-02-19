@@ -1,5 +1,5 @@
 """
-OMNIX INSTITUTIONAL+ PREMIUM - API Client
+OMNIX Decision Governance - API Client
 API Client for Streamlit Dashboard
 
 Client to consume metrics from the main Flask API.

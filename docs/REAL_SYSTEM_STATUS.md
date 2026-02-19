@@ -1,7 +1,8 @@
-# OMNIX V6.5.4e INSTITUTIONAL+ - Estado REAL del Sistema
+# OMNIX — Estado REAL del Sistema
 
-**Fecha**: 7 de Febrero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 23/23 | Track Record Day 24 | Shadow Portfolio ACTIVO | Website LIVE
+**Fecha**: 19 de Febrero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE  
+**Versión interna (dev)**: V6.5.4e
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 

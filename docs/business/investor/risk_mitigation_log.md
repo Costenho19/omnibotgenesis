@@ -113,4 +113,4 @@ The market conditions during Day 1–4 triggered OMNIX's fail-closed architectur
 ---
 
 *Document generated: January 19, 2026*  
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX Decision Governance*

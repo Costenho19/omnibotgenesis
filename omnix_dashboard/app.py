@@ -1,5 +1,5 @@
 """
-OMNIX Performance Dashboard INSTITUTIONAL+
+OMNIX Decision Governance Dashboard
 Professional Institutional-Grade Trading & Portfolio Analytics
 Premium 2025 Design with Portfolio Management - REAL DATA
 

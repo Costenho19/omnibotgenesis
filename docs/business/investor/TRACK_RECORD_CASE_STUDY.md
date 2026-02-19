@@ -1,6 +1,6 @@
 # Case Study: How OMNIX Protects Capital in Volatile Markets
 
-**Version**: V6.5.4e Advanced Tier  
+**Version**: OMNIX Advanced Tier  
 **Document Type**: Case Study  
 **Classification**: Investor Confidential  
 **Audience**: Prospective Investors, Due Diligence Teams  

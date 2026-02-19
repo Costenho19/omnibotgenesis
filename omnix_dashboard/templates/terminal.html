@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}OMNIX V6.5.4e - Trading Terminal{% endblock %}
+{% block title %}OMNIX - Trading Terminal{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/terminal.css') }}">
@@ -54,9 +54,9 @@
                     <span class="day1-timeline-date">Jan 15</span>
                     <span class="day1-timeline-label">Day 1</span>
                 </div>
-                <div class="day1-timeline-item future">
+                <div class="day1-timeline-item complete">
                     <span class="day1-timeline-date">Feb 14</span>
-                    <span class="day1-timeline-label">Day 30 Review</span>
+                    <span class="day1-timeline-label">Day 30 Complete</span>
                 </div>
             </div>
             <p class="day1-disclosure">Pre-Day 1 data is labeled as calibration and separated from the official track record.</p>
@@ -73,7 +73,7 @@
     <span style="color: #888; font-size: 10px;">|</span>
     <span style="color: #aaa; font-size: 10px;">No real capital at risk. Virtual $1M portfolio for track record validation.</span>
     <span style="color: #888; font-size: 10px;">|</span>
-    <span style="color: #aaa; font-size: 10px;">Track Record: Jan 15 - Feb 14, 2026</span>
+    <span style="color: #aaa; font-size: 10px;">Track Record: Jan 15, 2026 - Present</span>
 </div>
 
 <div class="terminal-wrapper">
@@ -83,7 +83,7 @@
             <img src="{{ url_for('static', filename='images/omnix_logo.png') }}" alt="OMNIX" class="logo-image">
             <div>
                 <div class="logo-text">OMNIX TERMINAL</div>
-                <div class="logo-version">V6.5.4e INSTITUTIONAL+</div>
+                <div class="logo-version">Decision Governance</div>
             </div>
         </div>
         
@@ -122,7 +122,7 @@
             </div>
         </div>
         
-        <div class="day30-countdown" id="day30-countdown" title="Track Record Progress: Day X of 30 (Jan 15 - Feb 14, 2026)">
+        <div class="day30-countdown" id="day30-countdown" title="Track Record Progress (Jan 15, 2026 - Present)">
             <span class="day30-icon">&#128197;</span>
             <span class="day30-text">Day <span id="current-day">--</span>/30</span>
         </div>

@@ -1,7 +1,7 @@
 # OMNIX 4-Layer Security Architecture
 
 **For**: Hub71 Venture Builder Technical Review  
-**Version**: V6.5.4e INSTITUTIONAL+  
+**Version**: OMNIX Decision Governance  
 **Date**: January 2026
 
 ---
@@ -215,4 +215,4 @@ This ensures capital is never at risk due to system failures.
 ---
 
 *Document generated: January 19, 2026*  
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX Decision Governance*

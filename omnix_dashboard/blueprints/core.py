@@ -295,7 +295,7 @@ def api_trades_history():
                     'warning': None if is_statistically_significant else f'Sample size ({total_trades}) is below minimum ({min_trades_for_significance}) for statistical significance. Metrics may vary significantly as more trades are executed.'
                 },
                 'source': 'PostgreSQL (Railway)',
-                'version': 'INSTITUTIONAL+',
+                'version': 'DGI',
                 'timestamp': datetime.now().isoformat()
             })
             
@@ -446,7 +446,7 @@ def api_portfolio():
                     'cluster_detector': True
                 },
                 'source': 'PostgreSQL',
-                'version': '6.5 INSTITUTIONAL+',
+                'version': 'DGI',
                 'timestamp': datetime.now().isoformat()
             })
             
@@ -618,7 +618,7 @@ def api_health():
     
     return jsonify({
         'status': 'healthy' if is_healthy else 'degraded',
-        'version': 'INSTITUTIONAL+',
+        'version': 'DGI',
         'db_connected': DB_AVAILABLE,
         'db_error': DB_ERROR_MESSAGE if not DB_AVAILABLE else None,
         'pool': pool_stats,
@@ -635,7 +635,7 @@ def api_health():
 @require_api_key
 def api_institutional_metrics():
     """
-    V6.5.4 INSTITUTIONAL+ PREMIUM
+    OMNIX Decision Governance
     Institutional metrics: Sharpe, Sortino, Calmar by pair
     For investor and fund presentations
     """
@@ -736,7 +736,7 @@ def api_institutional_metrics():
 @require_api_key
 def api_generate_pdf_report():
     """
-    V6.5.4 INSTITUTIONAL+ PREMIUM
+    OMNIX Decision Governance
     Genera informe PDF institucional para inversores
     """
     from flask import Response
@@ -807,7 +807,7 @@ def api_generate_pdf_report():
         pdf_bytes = report_gen.generate_report(
             metrics=portfolio_metrics.to_dict(),
             calibration=PAIR_CALIBRATIONS,
-            company_name="OMNIX V6.5.4 INSTITUTIONAL+",
+            company_name="OMNIX Decision Governance",
             period="All Time"
         )
         
@@ -1253,8 +1253,8 @@ def calibration_progress():
                 'progress': round(phase1_progress, 1),
                 'complete': phase1_complete,
                 'icon': 'database',
-                'eta': '~Day 30' if not phase1_complete else 'Complete',
-                'target_date': '2026-02-14' if not phase1_complete else None
+                'eta': 'Complete',
+                'target_date': None
             },
             {
                 'id': 2,
@@ -1312,7 +1312,7 @@ def calibration_progress():
                 'current_day': days_since_start,
                 'day30_review': '2026-02-14',
                 'day60_target': '2026-03-16',
-                'next_milestone': 'Day 30 Review' if days_since_start < 30 else 'Day 60 Optimization'
+                'next_milestone': 'Day 60 Optimization' if days_since_start >= 30 else 'Day 30 Review'
             },
             'last_updated': datetime.now().isoformat()
         })
@@ -2365,7 +2365,7 @@ def _calculate_opportunity_tracker(conn):
                 'current_day': current_day,
                 'total_days': 30,
                 'review_date': review_date.strftime('%Y-%m-%d'),
-                'review_date_display': 'Feb 14, 2026'
+                'review_date_display': 'Complete'
             },
             'recommendation': recommendation,
             'near_miss': {
@@ -2382,7 +2382,7 @@ def _calculate_opportunity_tracker(conn):
             'missed': {'count': 0, 'est_profit': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'avoided': {'count': 0, 'est_loss': 0, 'avg_coherence': 0, 'conditions': 'N/A'},
             'net': {'value': 0, 'interpretation': 'UNKNOWN', 'interpretation_text': 'Calculation error'},
-            'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-14', 'review_date_display': 'Feb 14, 2026'},
+            'day_progress': {'current_day': 1, 'total_days': 30, 'review_date': '2026-02-14', 'review_date_display': 'Complete'},
             'recommendation': 'CONTINUE_MONITORING',
             'near_miss': {'count': 0, 'avg_ema': 0, 'avg_coherence': 0, 'conditions': 'N/A'}
         }

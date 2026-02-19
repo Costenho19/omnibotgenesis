@@ -1,5 +1,5 @@
 """
-OMNIX V6.5.4 INSTITUTIONAL+ PREMIUM
+OMNIX Decision Governance
 Streamlit Dashboard - Investor-Grade Visualization
 
 For investor presentations in UAE/GCC.

@@ -111,7 +111,7 @@
                 </div>
                 
                 <div class="tracker-footer">
-                    <span class="review-date">📅 Review: ${dayProgress.review_date_display || 'Feb 14, 2026'}</span>
+                    <span class="review-date">📅 Day 30 Review: Complete</span>
                     <span class="rec-badge ${recBadge.class}">${recBadge.text}</span>
                 </div>
                 

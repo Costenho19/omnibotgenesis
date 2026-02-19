@@ -1,7 +1,7 @@
-# OMNIX V6.5.4e Advanced Tier: Arquitectura, Implementación y Visión Fundacional
+# OMNIX Advanced Tier: Arquitectura, Implementación y Visión Fundacional
 
 **Autor**: Harold A. Nunes  
-**Versión**: 6.5.4e Advanced Tier  
+**Versión**: Advanced Tier  
 **Última actualización**: Enero 24, 2026  
 **Clasificación**: Investor Confidential
 
@@ -23,7 +23,7 @@ Desde el principio, mi objetivo fue construir algo real, funcional y escalable, 
 
 ---
 
-## 2. Arquitectura General V6.5.4e
+## 2. Arquitectura General
 
 OMNIX está organizado en capas modulares con arquitectura hexagonal (V7.0 en progreso):
 
@@ -36,7 +36,7 @@ OMNIX está organizado en capas modulares con arquitectura hexagonal (V7.0 en pr
 
 ### 2.2 Capa Cuantitativa (Decision Engine)
 
-**Scoring Architecture V6.5.4e** (100 puntos totales):
+**Scoring Architecture** (100 puntos totales):
 
 | Componente | Peso | Función |
 |------------|------|---------|
