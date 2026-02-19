@@ -364,9 +364,9 @@ class OmnixPortfolioEngine:
         status = self.get_portfolio_status()
         
         if status["status"] == "NO_PORTFOLIO":
-            return "**OMNIX V6.4 INSTITUTIONAL+**\nNo portfolio constructed yet."
+            return "**OMNIX Decision Governance**\nNo portfolio constructed yet."
         
-        msg = f"""**OMNIX V6.4 INSTITUTIONAL+**
+        msg = f"""**OMNIX Decision Governance**
 Portfolio Status
 
 **Performance**

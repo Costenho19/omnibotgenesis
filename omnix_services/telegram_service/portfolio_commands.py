@@ -237,7 +237,7 @@ async def handle_portfolio_status(update, context) -> None:
         if not PORTFOLIO_AVAILABLE:
             await update.message.reply_text(
                 "Portfolio management module not available.\n"
-                "Please ensure V6.4 INSTITUTIONAL+ is properly installed."
+                "Please ensure OMNIX Decision Governance is properly installed."
             )
             return
         
@@ -245,7 +245,7 @@ async def handle_portfolio_status(update, context) -> None:
         status = engine.get_portfolio_status()
         
         if status.get("status") == "NO_PORTFOLIO":
-            msg = """**OMNIX V6.4 INSTITUTIONAL+**
+            msg = """**OMNIX Decision Governance**
 Portfolio Status
 
 No active portfolio constructed yet.
@@ -267,7 +267,7 @@ based on current market conditions and module signals.
         exp = status['exposure']
         div = status['diversification']
         
-        msg = f"""**OMNIX V6.4 INSTITUTIONAL+**
+        msg = f"""**OMNIX Decision Governance**
 Portfolio Status | {datetime.now().strftime('%H:%M:%S')}
 
 **Performance Metrics**
@@ -334,7 +334,7 @@ async def handle_risk_dashboard(update, context) -> None:
         report = engine.get_risk_report()
         
         if report.get("status") == "NO_DATA":
-            msg = """**OMNIX V6.4 INSTITUTIONAL+**
+            msg = """**OMNIX Decision Governance**
 Risk Dashboard
 
 No risk metrics computed yet.
@@ -345,7 +345,7 @@ Run /rebalance_portfolio first to compute risk metrics."""
         
         vol_regime = report['volatility_regime']
         
-        msg = f"""**OMNIX V6.4 INSTITUTIONAL+**
+        msg = f"""**OMNIX Decision Governance**
 Risk Dashboard | {datetime.now().strftime('%H:%M:%S')}
 
 **Data Quality**: {report['data_quality']}
@@ -405,7 +405,7 @@ async def handle_rebalance_portfolio(update, context) -> None:
             return
         
         await update.message.reply_text(
-            "**OMNIX V6.4 INSTITUTIONAL+**\n\n"
+            "**OMNIX Decision Governance**\n\n"
             "Building optimal portfolio...\n\n"
             " RiskModelEngine\n"
             " PortfolioOptimizer\n"
@@ -436,7 +436,7 @@ async def handle_rebalance_portfolio(update, context) -> None:
             key=lambda x: -x[1]
         )
         
-        msg = f"""**OMNIX V6.4 INSTITUTIONAL+**
+        msg = f"""**OMNIX Decision Governance**
 Portfolio Constructed Successfully
 
 **Performance**
@@ -487,7 +487,7 @@ async def handle_module_status(update, context) -> None:
         engine = get_portfolio_engine()
         status = engine.get_all_module_status()
         
-        msg = """**OMNIX V6.4 INSTITUTIONAL+**
+        msg = """**OMNIX Decision Governance**
 Module Status
 
 **Portfolio Engine**

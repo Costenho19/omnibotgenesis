@@ -1,10 +1,11 @@
-# OMNIX V6.5.4e INSTITUTIONAL+ - Changelog
+# OMNIX — Decision Governance Infrastructure - Changelog
 
 Registro de cambios, correcciones y mejoras del sistema.
+**Internal Build Reference**: 6.5.4e
 
 ---
 
-## [2026-01-14] - ADR-007 Coherence Threshold Calibration (V6.5.4e)
+## [2026-01-14] - ADR-007 Coherence Threshold Calibration
 
 ### Diagnóstico
 Sistema sobre-protector bloqueando demasiados trades:
@@ -189,7 +190,7 @@ All references to ARES removed from:
 | Version | Fecha | Cambios Principales |
 |---------|-------|---------------------|
 | V6.5 | Dic 2024 | Adaptive Parameter Engine, On-Chain Intelligence |
-| V6.4 | Nov 2024 | Portfolio INSTITUTIONAL+, Market Intelligence |
+| V6.4 | Nov 2024 | Portfolio Management, Market Intelligence |
 | V6.3 | Nov 2024 | Stock Trading ULTRA, Real Data Integration |
 | V6.2 | Oct 2024 | RMS Memory-Enhanced, Derivatives |
 | V6.1 | Oct 2024 | Non-Markovian Kernel, Coherence Engine |
@@ -197,4 +198,4 @@ All references to ARES removed from:
 
 ---
 
-*OMNIX V6.5 INSTITUTIONAL+ | Sistema de Trading Automatizado*
+*OMNIX — Decision Governance Infrastructure*

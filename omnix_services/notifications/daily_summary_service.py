@@ -353,7 +353,7 @@ class DailySummaryService:
             
             message += f"""
 ━━━━━━━━━━━━━━━━━━━━━
-🤖 _OMNIX INSTITUTIONAL+_
+🤖 _OMNIX Decision Governance_
 """
             
             return message

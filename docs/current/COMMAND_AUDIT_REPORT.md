@@ -1,4 +1,5 @@
-# OMNIX V6.5.4e - Auditoría Completa de Comandos y Callbacks
+# OMNIX — Auditoría Completa de Comandos y Callbacks
+**Internal Build Reference**: 6.5.4e
 
 **Fecha**: 14 de Enero 2026  
 **Auditor**: Sistema Automatizado  
@@ -263,4 +264,4 @@ Todos los comandos con side effects están protegidos:
 
 ---
 
-**Documento generado automáticamente - OMNIX V6.5.4e INSTITUTIONAL+**
+**Documento generado automáticamente - OMNIX Decision Governance**

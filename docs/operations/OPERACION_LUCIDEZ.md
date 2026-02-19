@@ -1,7 +1,7 @@
 # Operación Lucidez - Segmented Expectancy Analysis
 
 **Date**: January 1, 2026
-**Version**: V6.5.4d INSTITUTIONAL+
+**Internal Build Reference**: 6.5.4d
 **Status**: IMPLEMENTED
 
 ## Overview

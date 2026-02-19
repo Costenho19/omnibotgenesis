@@ -1,6 +1,6 @@
-# OMNIX V6.5.4e - Arquitectura
+# OMNIX — Arquitectura
 
-**Versión**: V6.5.4e INSTITUTIONAL+  
+**Internal Build Reference**: 6.5.4e  
 **Actualizado**: 7 de Febrero 2026  
 **Estado**: Producción 24/7  
 **Último Cambio**: Gemini 2.5 Flash Migration (Feb 7, 2026)
@@ -11,7 +11,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX V6.5.4e INSTITUTIONAL+                  │
+│                    OMNIX — Decision Governance Infrastructure     │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACES                                                      │
 │  ├── Telegram Bot (enterprise_bot.py)                           │
@@ -682,4 +682,4 @@ Modern prompt engineering architecture with language-neutral base prompts:
 
 ---
 
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX — Decision Governance Infrastructure*

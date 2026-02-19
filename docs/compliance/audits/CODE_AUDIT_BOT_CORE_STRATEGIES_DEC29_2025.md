@@ -1,5 +1,5 @@
 # CODE AUDIT: omnix_core/ (29 files)
-## OMNIX V6.5.4d INSTITUTIONAL+ - Phase 2A
+## OMNIX — Phase 2A
 **Date**: December 29, 2025  
 **Auditor**: AI Assistant  
 **Scope**: Core runtime modules (29 Python files, ~19,000 LOC)

@@ -2,7 +2,7 @@
 ## Auditoria Tecnica y Recomendaciones
 
 **Fecha:** Diciembre 2025  
-**Version:** 6.5.4 INSTITUTIONAL+
+**Internal Build Reference:** 6.5.4
 
 ---
 

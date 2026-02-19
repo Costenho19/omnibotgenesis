@@ -89,6 +89,22 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 
 **NO aplica para**: saludos, comandos, preguntas técnicas sin métricas. Ver ADR-023.
 
+### Branding Policy (Feb 19, 2026)
+**Strategy**: Invisible internal versioning, stable external identity (like Stripe).
+
+| Surface | Branding | Version |
+|---------|----------|---------|
+| **Dashboard UI** | "OMNIX Decision Governance" | None visible |
+| **Bot AI Responses** | "OMNIX Decision Governance" | None visible |
+| **Telegram Messages** | "OMNIX Decision Governance" | None visible |
+| **Business/Investor Docs** | "OMNIX" or "OMNIX — Decision Governance Infrastructure" | None visible |
+| **Technical Docs (H1)** | "OMNIX — [Topic]" | "Internal Build Reference: 6.5.4e" in metadata |
+| **Source Code Constants** | N/A (internal) | VERSION = "6.5.4e", VERSION_NAME = "INSTITUTIONAL+" |
+| **Source Code Docstrings** | N/A (internal) | May reference INSTITUTIONAL+ (internal only) |
+| **Historical ADRs/Audits** | Preserved as-is | Historical context maintained |
+
+**Rule**: NEVER use "V6.5.4e INSTITUTIONAL+" or version strings in any user-facing, investor-facing, or bot-facing output.
+
 ## System Architecture
 
 ### Core Components and Design Patterns

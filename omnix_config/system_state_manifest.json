@@ -1,5 +1,6 @@
 {
-  "version": "V6.5.4e INSTITUTIONAL+",
+  "version": "OMNIX Decision Governance",
+  "internal_build": "6.5.4e",
   "platform_identity": "Decision Governance Infrastructure for Automated Systems",
   "category_creation": "OMNIX is building the category of Decision Governance Infrastructure",
   "tagline": "Governing Decisions Under Uncertainty",

@@ -1,6 +1,6 @@
 # OMNIX V6.5.4d - Guía de Deployment (Railway)
 
-**Versión**: V6.5.4d INSTITUTIONAL+  
+**Internal Build Reference**: 6.5.4d  
 **Actualizado**: Diciembre 2025  
 **Estado**: Producción 24/7
 
@@ -178,4 +178,4 @@ railway cron run shadow-portfolio-runner
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+*
+*OMNIX — Decision Governance Infrastructure*

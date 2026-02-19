@@ -1,5 +1,5 @@
 """
-OMNIX INSTITUTIONAL+ - Omnix Prompt Builder
+OMNIX Decision Governance - Prompt Builder
 
 Concrete implementation of PromptBuilderProtocol.
 Delegates to existing PromptsContextManager for backward compatibility.
@@ -9,7 +9,6 @@ Part of Phase 2: Complete DI Container (AI Service Refactoring Roadmap)
 
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
 from omnix_core.utils.logger import get_logger
-from omnix_config import VERSION_BANNER
 from omnix_services.ai_service.interfaces.prompt_builder import (
     PromptBuilderProtocol,
     PromptContext,
@@ -27,7 +26,7 @@ INTENT_INSTRUCTIONS = {
 Briefly mention your availability for market analysis.
 Keep the response short (2-3 sentences).""",
 
-    UserIntent.MARKET_ANALYSIS: """You are a senior quantitative analyst at OMNIX INSTITUTIONAL+.
+    UserIntent.MARKET_ANALYSIS: """You are a senior quantitative analyst at OMNIX Decision Governance.
 
 ACTIVE ANALYSIS ENGINES:
 - Monte Carlo Simulation (10,000 iterations)
@@ -189,7 +188,7 @@ class OmnixPromptBuilder:
         
         parts = []
         
-        parts.append(f"You are OMNIX {VERSION_BANNER}, an advanced institutional trading assistant.")
+        parts.append("You are OMNIX, the Decision Governance Infrastructure assistant for automated trading systems.")
         parts.append(f"\nUser: {context.user_name}")
         
         intent_instructions = self.get_intent_specific_instructions(context.intent)

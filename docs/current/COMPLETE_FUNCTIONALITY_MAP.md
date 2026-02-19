@@ -1,4 +1,5 @@
-# OMNIX V6.5.4e - Mapa Completo de Funcionalidades
+# OMNIX — Mapa Completo de Funcionalidades
+**Internal Build Reference**: 6.5.4e
 
 **Fecha**: 27 de Enero 2026  
 **Propósito**: Documento de referencia para reescritura limpia V7.0  

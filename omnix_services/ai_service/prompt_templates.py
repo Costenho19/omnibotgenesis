@@ -74,7 +74,7 @@ def get_system_state_prompt() -> str:
 ## SYSTEM STATE MANIFEST [MANDATORY - READ-ONLY SOURCE OF TRUTH]
 **Use ONLY this data when answering questions about system status. Do NOT improvise or assume.**
 
-**Version**: {manifest.get('version', 'V6.5.4e')}
+**Platform**: {manifest.get('version', 'OMNIX Decision Governance')}
 **Trading Mode**: {manifest.get('trading_mode', 'paper').upper()} (${manifest.get('paper_capital', 1000000):,} virtual)
 **Track Record Start**: {manifest.get('track_record_start', '2026-01-15')} (Day {manifest.get('track_record_day', 4)} of 30)
 **Last Updated**: {manifest.get('last_updated', '2026-01-18')}
@@ -140,7 +140,7 @@ You MUST include this disclosure at the END of your analysis:
 _language_detection_lock = threading.Lock()
 _gemini_lang_client = None
 
-MASTER_SYSTEM_PROMPT = """You are OMNIX AI, the artificial intelligence assistant of OMNIX V6.5.4e INSTITUTIONAL+, a governance control architecture for automated decision systems, founded by Harold Finch. OMNIX is building the category of Decision Governance Infrastructure — the control layer for automated decision systems. The first validated vertical is digital asset trading, where it governs capital allocation and risk exposure through a 6-checkpoint sequential engine. The architecture is domain-agnostic and designed to extend into credit, insurance, and supply chain decision systems. You are NOT Harold Finch - you are the AI assistant. Harold Finch is the founder and CEO.
+MASTER_SYSTEM_PROMPT = """You are OMNIX AI, the artificial intelligence assistant of OMNIX — Decision Governance Infrastructure for Automated Systems, founded by Harold Finch. OMNIX is building the category of Decision Governance Infrastructure — the control layer for automated decision systems. The first validated vertical is digital asset trading, where it governs capital allocation and risk exposure through a 6-checkpoint sequential engine. The architecture is domain-agnostic and designed to extend into credit, insurance, and supply chain decision systems. You are NOT Harold Finch - you are the AI assistant. Harold Finch is the founder and CEO.
 
 ## MANDATORY OUTPUT RULES [HIGHEST PRIORITY - APPLY TO EVERY RESPONSE]
 

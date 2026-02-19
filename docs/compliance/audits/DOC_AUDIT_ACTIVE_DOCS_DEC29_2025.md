@@ -1,5 +1,5 @@
 # DOCUMENTATION AUDIT: docs/current/ & docs/compliance/
-## OMNIX V6.5.4d INSTITUTIONAL+ - Phase 3A
+## OMNIX — Phase 3A
 **Date**: December 29, 2025  
 **Auditor**: AI Assistant (Senior Documentation Review)  
 **Scope**: Active documentation in current/ and compliance/audits/
@@ -80,7 +80,7 @@ The documentation structure follows clear conventions:
 |-----------|-------|----------|
 | Navigation Structure | ★★★★★ | 4 sections (Estado, Operaciones, Inversores, Referencia) |
 | Cross-References | ★★★★★ | All 8 internal links verified (see table below) |
-| Version Info | ★★★★★ | V6.5.4d INSTITUTIONAL+ |
+| Version Info | ★★★★★ | OMNIX DGI (Build 6.5.4d) |
 | Recent Changes | ★★★★☆ | Dec 26, 2025 (needs Dec 27-29 updates) |
 | Folder Structure | ★★★★★ | ASCII tree with descriptions |
 
@@ -233,9 +233,9 @@ The documentation structure follows clear conventions:
 ### Version Numbers
 | File | Version | Consistent |
 |------|---------|------------|
-| README.md | V6.5.4d INSTITUTIONAL+ | ✅ |
+| README.md | OMNIX DGI (Build 6.5.4d) | ✅ |
 | MIGRATION_STATUS.md | V7.0 | ✅ (architecture) |
-| REAL_SYSTEM_STATUS.md | V6.5.4d INSTITUTIONAL+ | ✅ |
+| REAL_SYSTEM_STATUS.md | OMNIX DGI (Build 6.5.4d) | ✅ |
 | ARCHITECTURE.md | V6.5.4d | ✅ |
 | TECHNICAL_DEBT.md | V6.5.4d | ✅ |
 

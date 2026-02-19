@@ -239,4 +239,4 @@ LIMIT 7;
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+ - Shadow Portfolio Learning Engine*
+*OMNIX — Shadow Portfolio Learning Engine*

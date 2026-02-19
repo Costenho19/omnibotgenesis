@@ -160,4 +160,5 @@ def get_data_quality_metrics():
 
 ---
 
-*OMNIX V6.5.4e INSTITUTIONAL+*
+*OMNIX — Decision Governance Infrastructure*
+*Internal Build Reference: 6.5.4e*

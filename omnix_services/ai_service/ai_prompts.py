@@ -1,5 +1,5 @@
 """
-OMNIX INSTITUTIONAL+ - Prompts & Context Manager
+OMNIX Decision Governance - Prompts & Context Manager
 Intent Analysis, Context Building, Prompt Engineering
 
 Features:
@@ -317,7 +317,7 @@ class PromptsContextManager:
         # Base system prompt - INSTITUTIONAL GRADE (Language-Neutral V6.5.4d)
         base_prompt = f"""
 ═══════════════════════════════════════════════════════════════
-                    OMNIX INSTITUTIONAL+
+                    OMNIX — Decision Governance
      Decision Governance Infrastructure for Automated Systems
 ═══════════════════════════════════════════════════════════════
 

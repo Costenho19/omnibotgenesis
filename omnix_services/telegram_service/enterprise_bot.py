@@ -1328,7 +1328,7 @@ Las clasificaciones Halal/Haram se basan en investigación académica (Mufti Taq
 
 **CONTACTO:**
 Desarrollador: Harold Nunes
-Sistema: OMNIX INSTITUTIONAL+
+Sistema: OMNIX Decision Governance
 Última actualización: Diciembre 2025
 
 ⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones financieras.
@@ -1645,7 +1645,7 @@ Actualizado: {datetime.now().strftime('%H:%M:%S')}
    `/analisis ETH` - Análisis técnico completo
    `/arbitrage_scan BTC/USD` - Buscar arbitraje
 
-*OMNIX INSTITUTIONAL+ - Market Intelligence*
+*OMNIX Decision Governance - Market Intelligence*
 """
             else:
                 response = "❌ No se pudieron obtener datos del mercado. Verifica la conexión con Kraken."
@@ -4428,7 +4428,7 @@ Pregúntame cualquier cosa sobre:
 • Física cuántica aplicada
 • Criptomonedas
 
-*OMNIX INSTITUTIONAL+ - Harold Nunes*"""
+*OMNIX Decision Governance - Harold Nunes*"""
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/quantum_stats'):
@@ -8456,7 +8456,7 @@ Usa `/miconfig` para ver todos los detalles.
 El bot está activo y buscando oportunidades.
 Usa `/autotrading status` para ver el estado.
 
-_OMNIX INSTITUTIONAL+_""", parse_mode='Markdown')
+_OMNIX Decision Governance_""", parse_mode='Markdown')
             else:
                 await update.message.reply_text("❌ Servicio de resumen no disponible")
                 

@@ -379,7 +379,7 @@ UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7
 
 ## Executive Summary
 
-This document registers known technical debt in OMNIX V6.5.4e. All items are **intentionally deferred** to prioritize track record generation for investor presentations. Refactoring is planned for V7.0 after achieving the 500-trade milestone.
+This document registers known technical debt in OMNIX (Internal Build 6.5.4e). All items are **intentionally deferred** to prioritize track record generation for investor presentations. Refactoring is planned for the next major release after achieving the 500-trade milestone.
 
 ---
 

@@ -1,6 +1,6 @@
-# OMNIX V6.5.4e Trading Operations
+# OMNIX — Trading Operations
 
-**Version:** 6.5.4e INSTITUTIONAL+ PREMIUM  
+**Internal Build Reference**: 6.5.4e  
 **Last Updated:** January 14, 2026  
 **Active Profile:** PRODUCTION_STABLE  
 **Latest Change:** ADR-007 Coherence Threshold Calibration

@@ -1,6 +1,6 @@
-# OMNIX V6.5.4e - Arquitectura Multi-Usuario
+# OMNIX — Arquitectura Multi-Usuario
 
-**Versión**: V6.5.4e INSTITUTIONAL+  
+**Internal Build Reference**: 6.5.4e  
 **Fecha de Auditoría**: 22 de Diciembre 2025  
 **Estado**: ✅ FASE 3b COMPLETADA - Multi-Usuario OPERACIONAL  
 **Autor**: Auditoría de Arquitectura OMNIX
@@ -1246,4 +1246,4 @@ SELECT * FROM pg_policies WHERE tablename LIKE '%trading%';
 ---
 
 *Documento generado: 20 de Diciembre 2025*  
-*OMNIX V6.5.4e INSTITUTIONAL+ - Auditoría de Arquitectura Multi-Usuario*
+*OMNIX — Decision Governance Infrastructure - Auditoría de Arquitectura Multi-Usuario*

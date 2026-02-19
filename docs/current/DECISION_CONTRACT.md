@@ -1,7 +1,7 @@
-# OMNIX V6.5.4e Decision Contract
+# OMNIX — Decision Contract
 
 > **Fecha**: January 14, 2026 (Updated)  
-> **Versión**: V6.5.4e PRODUCTION_STABLE  
+> **Internal Build Reference**: 6.5.4e  
 > **Propósito**: Documentación formal del sistema de decisiones para auditoría e inversores  
 > **Último Cambio**: ADR-007 Coherence Threshold Calibration
 

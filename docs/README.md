@@ -531,7 +531,7 @@ docs/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX V6.5.4d INSTITUTIONAL+                  │
+│                    OMNIX — Decision Governance Infrastructure     │
 ├─────────────────────────────────────────────────────────────────┤
 │  PRODUCCIÓN (Railway)                                            │
 │  ├── 100% código legacy operando 24/7                           │
@@ -587,4 +587,4 @@ Ver [MIGRATION_STATUS.md](MIGRATION_STATUS.md) para plan completo de activación
 
 ---
 
-*OMNIX V6.5.4d INSTITUTIONAL+ - Última actualización: 9 Enero 2026*
+*OMNIX — Decision Governance Infrastructure - Última actualización: Febrero 2026*
