@@ -1,0 +1,771 @@
+{
+  "audit_metadata": {
+    "tool": "OMNIX Institutional Security Stress Audit",
+    "version": "1.0",
+    "timestamp": "2026-02-20T04:10:13.309834+00:00",
+    "target": "http://localhost:5000",
+    "config": {
+      "total_requests": 2000,
+      "concurrency": 50,
+      "duration_limit_s": 30,
+      "actual_duration_s": 8.55
+    }
+  },
+  "summary": {
+    "endpoints_tested": 20,
+    "total_requests": 2000,
+    "total_errors": 100,
+    "overall_error_rate": 5.0,
+    "throughput_rps": 233.9,
+    "security_headers_compliant": true,
+    "missing_headers": [],
+    "forbidden_headers_present": [
+      "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+    ],
+    "info_leaks_found": 0,
+    "info_leak_details": [],
+    "verdict": "PASS"
+  },
+  "header_audit": {
+    "/api/health": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 2.81
+    },
+    "/api/core/trades": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 595.75
+    },
+    "/api/core/performance": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 595.8
+    },
+    "/api/core/balance": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 598.72
+    },
+    "/api/core/decisions": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 593.7
+    },
+    "/api/core/portfolio": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 594.16
+    },
+    "/api/core/equity_curve": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 594.06
+    },
+    "/api/core/win_rate_dual": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 588.26
+    },
+    "/api/core/pnl_breakdown": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 600.49
+    },
+    "/api/core/drawdown_chart": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 590.45
+    },
+    "/api/market/btc": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 591.95
+    },
+    "/api/market/sentiment": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 612.49
+    },
+    "/api/market/time_heatmap": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 595.68
+    },
+    "/api/intelligence/shadow": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 595.88
+    },
+    "/api/intelligence/learning": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 594.93
+    },
+    "/api/intelligence/regime": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 592.54
+    },
+    "/api/intelligence/correlation_heatmap": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 594.11
+    },
+    "/api/intelligence/dci": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 595.08
+    },
+    "/api/system/version": {
+      "status": 200,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 593.93
+    },
+    "/api/system/quarantine": {
+      "status": 503,
+      "headers": {
+        "present": [
+          "X-Content-Type-Options",
+          "X-Frame-Options",
+          "X-XSS-Protection",
+          "Referrer-Policy",
+          "Permissions-Policy",
+          "Strict-Transport-Security",
+          "Content-Security-Policy",
+          "X-Request-ID",
+          "Cache-Control"
+        ],
+        "missing": [],
+        "forbidden_present": [
+          "Server: Werkzeug/3.1.3 Python/3.11.14 (version fingerprinting)"
+        ]
+      },
+      "info_leakage": [],
+      "latency_ms": 11.78
+    }
+  },
+  "latency_audit": {
+    "/api/health": {
+      "requests": 100,
+      "p50": 5.66,
+      "p95": 36.66,
+      "p99": 69.97,
+      "min": 2.61,
+      "max": 69.97,
+      "mean": 8.35,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 100
+      }
+    },
+    "/api/system/quarantine": {
+      "requests": 100,
+      "p50": 9.75,
+      "p95": 53.67,
+      "p99": 119.2,
+      "min": 6.84,
+      "max": 119.2,
+      "mean": 14.76,
+      "error_count": 100,
+      "error_rate": 100.0,
+      "status_codes": {
+        "503": 100
+      }
+    },
+    "/api/intelligence/dci": {
+      "requests": 100,
+      "p50": 40.52,
+      "p95": 100.56,
+      "p99": 738.92,
+      "min": 11.95,
+      "max": 738.92,
+      "mean": 65.28,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/system/version": {
+      "requests": 100,
+      "p50": 41.33,
+      "p95": 114.11,
+      "p99": 734.69,
+      "min": 10.86,
+      "max": 734.69,
+      "mean": 65.82,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/intelligence/learning": {
+      "requests": 100,
+      "p50": 41.57,
+      "p95": 84.29,
+      "p99": 755.57,
+      "min": 8.37,
+      "max": 755.57,
+      "mean": 66.64,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/intelligence/correlation_heatmap": {
+      "requests": 100,
+      "p50": 43.13,
+      "p95": 109.7,
+      "p99": 743.19,
+      "min": 14.33,
+      "max": 743.19,
+      "mean": 67.59,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/market/sentiment": {
+      "requests": 100,
+      "p50": 42.27,
+      "p95": 115.99,
+      "p99": 761.58,
+      "min": 12.22,
+      "max": 761.58,
+      "mean": 69.61,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/core/drawdown_chart": {
+      "requests": 100,
+      "p50": 43.48,
+      "p95": 102.67,
+      "p99": 1293.08,
+      "min": 12.71,
+      "max": 1293.08,
+      "mean": 72.55,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 3,
+        "429": 97
+      }
+    },
+    "/api/core/pnl_breakdown": {
+      "requests": 100,
+      "p50": 44.84,
+      "p95": 100.68,
+      "p99": 808.54,
+      "min": 14.25,
+      "max": 808.54,
+      "mean": 74.84,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/intelligence/shadow": {
+      "requests": 100,
+      "p50": 43.61,
+      "p95": 98.34,
+      "p99": 1349.33,
+      "min": 18.19,
+      "max": 1349.33,
+      "mean": 77.04,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/market/time_heatmap": {
+      "requests": 100,
+      "p50": 43.13,
+      "p95": 632.84,
+      "p99": 778.71,
+      "min": 14.03,
+      "max": 778.71,
+      "mean": 76.87,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/market/btc": {
+      "requests": 100,
+      "p50": 44.61,
+      "p95": 128.74,
+      "p99": 1281.68,
+      "min": 17.74,
+      "max": 1281.68,
+      "mean": 77.56,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 4,
+        "429": 96
+      }
+    },
+    "/api/intelligence/regime": {
+      "requests": 100,
+      "p50": 43.23,
+      "p95": 645.36,
+      "p99": 787.18,
+      "min": 21.04,
+      "max": 787.18,
+      "mean": 77.41,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/win_rate_dual": {
+      "requests": 100,
+      "p50": 47.28,
+      "p95": 632.12,
+      "p99": 736.84,
+      "min": 13.36,
+      "max": 736.84,
+      "mean": 79.52,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/equity_curve": {
+      "requests": 100,
+      "p50": 47.6,
+      "p95": 625.16,
+      "p99": 742.6,
+      "min": 9.35,
+      "max": 742.6,
+      "mean": 79.63,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/portfolio": {
+      "requests": 100,
+      "p50": 48.57,
+      "p95": 642.05,
+      "p99": 780.0,
+      "min": 10.6,
+      "max": 780.0,
+      "mean": 80.45,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/decisions": {
+      "requests": 100,
+      "p50": 53.14,
+      "p95": 628.2,
+      "p99": 706.28,
+      "min": 6.67,
+      "max": 706.28,
+      "mean": 81.3,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/balance": {
+      "requests": 100,
+      "p50": 55.98,
+      "p95": 632.17,
+      "p99": 727.85,
+      "min": 3.52,
+      "max": 727.85,
+      "mean": 81.54,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/performance": {
+      "requests": 100,
+      "p50": 57.25,
+      "p95": 636.46,
+      "p99": 716.9,
+      "min": 3.08,
+      "max": 716.9,
+      "mean": 81.82,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    },
+    "/api/core/trades": {
+      "requests": 100,
+      "p50": 55.26,
+      "p95": 631.11,
+      "p99": 720.41,
+      "min": 2.49,
+      "max": 720.41,
+      "mean": 82.35,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "status_codes": {
+        "200": 5,
+        "429": 95
+      }
+    }
+  }
+}

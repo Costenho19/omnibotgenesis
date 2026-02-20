@@ -72,6 +72,12 @@ def create_app():
 app = create_app()
 
 
+@app.after_request
+def strip_server_header(response):
+    response.headers['Server'] = 'OMNIX-DGI'
+    return response
+
+
 if __name__ == '__main__':
     from .utils.database import get_database_url, init_database, DB_AVAILABLE, DB_ERROR_MESSAGE
     

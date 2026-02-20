@@ -762,11 +762,18 @@ def api_asset_quarantine():
             'timestamp': datetime.now().isoformat()
         })
         
-    except Exception as e:
-        logger.error(f"Error in quarantine endpoint: {e}")
+    except (ImportError, ValueError, RuntimeError) as e:
+        logger.warning(f"Quarantine endpoint: dependency not available ({type(e).__name__})")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Feature unavailable',
+            'reason': 'Required service not configured'
+        }), 503
+    except Exception as e:
+        logger.error(f"Error in quarantine endpoint: {type(e).__name__}")
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
         }), 500
 
 
