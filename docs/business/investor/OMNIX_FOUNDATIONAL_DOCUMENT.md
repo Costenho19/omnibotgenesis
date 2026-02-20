@@ -179,10 +179,10 @@ Persistencia en PostgreSQL de todos los eventos de veto:
 
 **Módulos PQC integrados en producción** alineados con estándares NIST 2024:
 
-| Componente | Algoritmo | Estándar NIST | Propósito |
-|------------|-----------|---------------|-----------|
-| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Intercambio seguro de claves |
-| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Autenticación de órdenes |
+| Componente | Algoritmo | Estándar | Propósito |
+|------------|-----------|----------|-----------|
+| Key Encapsulation | Kyber-768 (ML-KEM-768) | NIST-standardized | Intercambio seguro de claves |
+| Digital Signatures | Dilithium-3 (ML-DSA-65) | NIST-standardized | Autenticación de órdenes |
 
 - Las órdenes de trading se firman con Dilithium-3 antes de ejecución
 - Nivel de seguridad NIST Level 3 (~192-bit equivalente clásico)

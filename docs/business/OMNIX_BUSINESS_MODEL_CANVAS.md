@@ -44,7 +44,7 @@
 - Decision Governance Engine Development & Calibration
 - 6-Checkpoint Validation Architecture (domain-agnostic)
 - Decision Trace Logging (100% telemetry coverage)
-- Shadow Portfolio Analysis (192,000+ governed decisions)
+- Shadow Portfolio Analysis (192,000+ evaluation cycles)
 - API Integration for Enterprise Clients
 - Model Validation against real market conditions
 - Multi-vertical domain adaptation (trading → supply chain → lending)
@@ -64,7 +64,7 @@
 
 - Multi-layer pre-execution decision validation (6 independent checkpoints)
 - Fail-closed architecture (default = don't act)
-- Full audit-grade decision trace
+- Full institutional-level decision trace
 - Regime detection & tail risk awareness
 - Domain-agnostic governance logic — first validated in digital asset trading
 
@@ -256,10 +256,10 @@ The same 6-checkpoint architecture governs decisions across domains:
 | Asset | Description |
 |-------|-------------|
 | 6-Checkpoint Governance Engine | Multi-layer pre-execution decision validation (domain-agnostic) |
-| Decision Trace Framework | Full audit trail for every governed decision |
+| Decision Trace Framework | Full audit trail for every governance evaluation |
 | Shadow Portfolio Engine | 192,000+ counterfactual decision events |
 | Multi-AI Orchestration | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
-| Post-Quantum Cryptography | Dilithium-3 order signing (NIST FIPS 204) |
+| Post-Quantum Cryptography | NIST-standardized post-quantum decision signing |
 | Non-Markovian Memory | Behavioral pattern detection beyond recency |
 
 ### Human Capital

@@ -362,8 +362,8 @@
 
 | Algorithm | Standard | Purpose | Status |
 |-----------|----------|---------|--------|
-| **Kyber-768** | NIST FIPS-203 | Key encapsulation | Active |
-| **Dilithium-3** | NIST FIPS-204 | Digital signatures | Active |
+| **Kyber-768** | NIST-standardized | Key encapsulation | Active |
+| **Dilithium-3** | NIST-standardized | Digital signatures | Active |
 
 ### 8.2 Data Protection
 

@@ -12,7 +12,7 @@
 ### Q: "Do you have any paying customers?"
 
 **Answer:**
-> "Not yet — and that's intentional. We've spent the last 3 months validating the governance engine in the hardest domain first: real-time financial markets. 192,000+ governed decisions, 98.5% capital preserved. The engine works. Now we're ready for enterprise pilots.
+> "Not yet — and that's intentional. We've spent the last 3 months validating the governance engine in the hardest domain first: real-time financial markets. 192,000+ evaluation cycles, 98.5% capital preserved. The engine works. Now we're ready for enterprise pilots.
 >
 > Our first 3 target clients are prop trading firms in ADGM/DIFC — we've identified 200+ in the ecosystem. The $500K raise funds the transition from validated product to paying enterprise clients within 3-6 months."
 
@@ -149,7 +149,7 @@
 
 **Answer:**
 > "Three things:
-> 1. **Data moat** — 192,000+ governed decision events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
+> 1. **Data moat** — 192,000+ evaluation cycle events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
 > 2. **Architecture moat** — 6-checkpoint sequential validation with fail-closed behavior isn't trivial to build. We have 27 Architectural Decision Records documenting every design choice.
 > 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
 >
@@ -240,13 +240,13 @@
 >
 > **Pillar 3 — Compliance Officer Toolkit**
 > - **Decision Trace export**: Structured JSON, ready for regulatory audit submission
-> - **Post-quantum signatures**: Every decision signed with Dilithium-3 (NIST FIPS 204) — immutable, tamper-proof, and verifiable
+> - **Post-quantum signatures**: Every decision signed with NIST-standardized post-quantum algorithms — immutable, tamper-proof, and verifiable
 > - **Shadow Portfolio**: Not just what was decided, but what WOULD HAVE happened with a different decision — counterfactual evidence
 > - **27 documented ADRs**: Every architecture decision has formal justification
 >
 > An ADGM regulator can request the trace for any decision from the last quarter, and we deliver it in minutes — not weeks."
 
-**Key framing:** Contrast with "black box" AI directly. Give concrete numeric examples (48.7%, 44% vs 45%). Mention NIST FIPS 204 — resonates with compliance officers. Close with "minutes, not weeks" — operational readiness.
+**Key framing:** Contrast with "black box" AI directly. Give concrete numeric examples (48.7%, 44% vs 45%). Mention NIST-standardized post-quantum cryptography — resonates with compliance officers. Close with "minutes, not weeks" — operational readiness.
 
 **Follow-up if pressed on regulatory readiness:** "We're not claiming compliance certification today — that requires ADGM formal review. What we're saying is: every piece of data a regulator would need already exists, is structured, and is exportable. That's a 12-month head start on any competitor building this from scratch."
 
@@ -261,7 +261,7 @@
 >
 > 2. **Exportable Decision Traces** — Every decision as structured JSON with complete checkpoint data, timestamps, and rationale. Compatible with Grafana, Loki, ELK, or any audit platform.
 >
-> 3. **Immutable Signatures** — Every governance decision is cryptographically signed with Dilithium-3 (post-quantum, NIST FIPS 204). No one — including us — can alter a decision record after the fact.
+> 3. **Immutable Signatures** — Every governance decision is cryptographically signed with NIST-standardized post-quantum algorithms. No one — including us — can alter a decision record after the fact.
 >
 > 4. **Counterfactual Evidence** — The Shadow Portfolio shows what would have happened if the system HAD executed a blocked decision. This proves governance value with hard numbers, not estimates.
 >
@@ -274,7 +274,7 @@
 ### Q: "Why post-quantum cryptography? Isn't that overkill?"
 
 **Answer:**
-> "We sign every decision with Dilithium-3 (NIST FIPS 204). It's operational since November 2025, not on a roadmap. For institutional clients managing $5M-$500M, quantum-resistant audit trails aren't overkill — they're future-proofing their compliance documentation. It's also a competitive moat: no competitor in our category has this."
+> "We sign every decision with NIST-standardized post-quantum cryptography. It's operational since November 2025, not on a roadmap. For institutional clients managing $5M-$500M, quantum-resistant audit trails aren't overkill — they're future-proofing their compliance documentation. It's also a competitive moat: no competitor in our category has this."
 
 ---
 
@@ -283,7 +283,7 @@
 ### Q: "Why is this worth $2.5M-$3M pre-money?"
 
 **Answer:**
-> "Working product in production for 3+ months. 192,000+ governed decision events. Defensible IP. Filed-ready patent families. Interactive demos across 3 verticals. All built by one person with zero burn.
+> "Working product in production for 3+ months. 192,000+ evaluation cycle events. Defensible IP. Filed-ready patent families. Interactive demos across 3 verticals. All built by one person with zero burn.
 >
 > Chainalysis raised at $4M pre-money at a comparable stage. The MENA seed median is $18.9M (MAGNiTT 2024). At $2.5M-$3M, this is conservative pricing for validated infrastructure."
 

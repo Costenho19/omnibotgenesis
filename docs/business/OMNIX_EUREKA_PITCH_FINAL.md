@@ -208,7 +208,7 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 | **Behavioral Memory System** | Remembers patterns beyond recent data | Sees what other systems miss |
 | **Edge Confirmation Window** | Requires trend persistence for 3 cycles — not just a spike | Turns "preservation" into "patience" |
 | **Shadow Portfolio Engine** | Tracks every vetoed decision to learn (192,000+ events) | The system learns from what it DOESN'T do |
-| **Post-Quantum Security** | Decisions signed with Dilithium-3 (NIST FIPS 204) | Operational today — not roadmap |
+| **Post-Quantum Security** | NIST-standardized post-quantum cryptographic signing | Operational today — not roadmap |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with failover | Zero single-provider dependency |
 
 > "Every decision is logged, traceable, and reviewable. Full audit trail — always."
@@ -361,7 +361,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 
 | Capability | Status |
 |-----------|--------|
-| 6-Checkpoint Governance Engine | Production — 192,000+ decisions governed |
+| 6-Checkpoint Governance Engine | Production — 192,000+ evaluation cycles |
 | Multi-AI Orchestration (3 providers) | Production — zero single-provider dependency |
 | Post-Quantum Security (Dilithium-3) | Production — operational since Nov 2025 |
 | Shadow Portfolio Learning Engine | Production — 192,000+ counterfactual events |
@@ -433,7 +433,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 2. **The timing is perfect** — MiCA + ADGM mandating decision governance NOW
 3. **The product exists** — Not a slide deck. Running in production for 3+ months.
 4. **The approach is unique** — Nobody else optimizes for restraint
-5. **The data is real** — 192,000+ governed decisions, 98.5% capital preserved, 91% block accuracy
+5. **The data is real** — 192,000+ evaluation cycles, 98.5% capital preserved, 91% block accuracy
 6. **The market is here** — Dubai/ADGM is the epicenter of institutional governance infrastructure
 7. **The vision scales** — Same engine, multiple verticals: trading, supply chain, lending, insurance
 
@@ -457,7 +457,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 >
 > We validated this in the hardest domain first — real-time financial markets. Real example: February 3rd. BTC breakout — up 6% in two hours. Market euphoric. Traditional bots bought. OMNIX blocked — trend not sustained. 48 hours later, BTC crashed 9%. Capital preserved: $50,000.
 >
-> 192,000 governed decisions. 98.5% capital preserved. 91% of blocked actions would have resulted in losses. Running in production 24/7 for three months.
+> 192,000 evaluation cycles. 98.5% capital preserved. 91% of blocked actions would have resulted in losses. Running in production 24/7 for three months.
 >
 > Our first market: prop trading firms, trading platforms, regulated funds. 200+ prop firms in ADGM and DIFC alone. But the same engine applies to supply chain, lending, insurance, and compliance.
 >

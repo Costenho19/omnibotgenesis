@@ -43,7 +43,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | Post-quantum security | Dilithium-3 | No | No | No | No | No |
 | Shadow Portfolio learning | 192K+ events | No | No | No | Rare | No |
 | Domain-agnostic | Yes | No | No | No | No | No |
-| Regulatory compliance ready | MiCA/ADGM | No | No | Partial | Varies | Yes |
+| Designed for regulatory frameworks | MiCA/ADGM | No | No | Partial | Varies | Yes |
 | Accessible to <$100M AUM | Yes | Yes | Yes | Yes | No | Yes |
 | **Monthly pricing** | **$15K-35K** | **$49-199** | **$19-99** | **Custom** | **$500K+ dev** | **Custom** |
 
@@ -106,12 +106,12 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 
 | Moat Type | Description | Time to Replicate |
 |-----------|-------------|:------------------:|
-| **Data moat** | 192,000+ governed decision events with outcome tracking | 6-12 months minimum |
+| **Data moat** | 192,000+ evaluation cycle events with outcome tracking | 6-12 months minimum |
 | **Architecture moat** | 6-checkpoint sequential governance with fail-closed behavior | 12-18 months to build |
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
-| **Post-quantum security** | Dilithium-3 operational since Nov 2025 (NIST FIPS 204) | 3-6 months |
+| **Post-quantum security** | NIST-standardized PQC operational since Nov 2025 | 3-6 months |
 | **Domain-agnostic design** | Same engine validated across trading, credit, insurance | 6-12 months per vertical |
-| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — no black box. Compliance-ready audit exports | Cultural/architectural rebuild |
+| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — no black box. Structured audit exports | Cultural/architectural rebuild |
 | **Embedded infrastructure lock-in** | Once integrated, switching cost = re-integration + re-calibration | High switching cost |
 
 ### 4.2 Patent Strategy

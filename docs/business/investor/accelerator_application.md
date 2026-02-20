@@ -138,7 +138,7 @@ When there is no governance layer:
 | **Manual risk committees** | Human review, slow | <120ms automated validation, 24/7 |
 
 **Defensible moat:**
-1. 192,000+ governed decision dataset — no competitor has this learning foundation
+1. 192,000+ evaluation cycle dataset — no competitor has this learning foundation
 2. Post-Quantum Security (Dilithium-3) — operational, not roadmap
 3. Shadow Portfolio Engine — learns from what the system doesn't do
 4. Domain-agnostic architecture — same engine governs trading, credit, insurance
@@ -152,7 +152,7 @@ When there is no governance layer:
 Built OMNIX solo from concept to production using AI as a development force multiplier. Designed the 6-checkpoint governance engine, risk logic, AI orchestration, post-quantum security, and full production infrastructure.
 
 **What one founder built:**
-- Production governance engine (192,000+ decisions governed)
+- Production governance engine (192,000+ evaluation cycles)
 - Multi-AI orchestration (3 providers, zero single-provider dependency)
 - Post-quantum security (operational since Nov 2025)
 - Interactive governance demos across 3 verticals
@@ -203,7 +203,7 @@ Built OMNIX solo from concept to production using AI as a development force mult
 
 **What we bring:**
 - Working product in production (not a prototype)
-- 192,000+ governed decisions (real data, not simulations)
+- 192,000+ evaluation cycles (real data, not simulations)
 - Category-defining positioning (Decision Governance Infrastructure)
 - MENA market alignment (ADGM/DIFC ecosystem)
 - Capital-efficient execution (zero burn before funding)

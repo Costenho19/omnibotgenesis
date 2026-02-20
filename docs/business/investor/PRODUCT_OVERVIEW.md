@@ -113,7 +113,7 @@ OMNIX does not act on the first positive signal. It requires:
 
 ### 4. Post-Quantum Security
 
-OMNIX is one of the first advanced trading platforms experimenting with **NIST-aligned post-quantum cryptography standards**. Trading orders are signed with Dilithium-3 (NIST FIPS 204) before execution, providing quantum-resistant cryptographic protection.
+OMNIX is one of the first advanced trading platforms implementing **NIST-standardized post-quantum cryptography**. Trading orders are cryptographically signed before execution using NIST-standardized algorithms, providing quantum-resistant protection.
 
 ---
 

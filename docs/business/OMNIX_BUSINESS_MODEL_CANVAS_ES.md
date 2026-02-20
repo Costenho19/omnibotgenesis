@@ -62,7 +62,7 @@
 
 - Validacion pre-ejecucion de operaciones multi-capa (6 checkpoints independientes)
 - Arquitectura fail-closed (default = no operar)
-- Decision trace de grado de auditoria completo
+- Decision trace institucional completo
 - Deteccion de regimen y conciencia de riesgo de cola
 - Logica de gobernanza institucional para trading de activos digitales
 
@@ -223,7 +223,7 @@
 | Framework de Decision Trace | Trail de auditoria completo para cada decision |
 | Motor Shadow Portfolio | 192,000+ eventos de operaciones contrafactuales |
 | Orquestacion Multi-IA | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
-| Criptografia Post-Cuantica | Firma de ordenes Dilithium-3 (NIST FIPS 204) |
+| Criptografia Post-Cuantica | Firma post-cuantica de decisiones (NIST-standardized) |
 | Memoria No-Markoviana | Deteccion de patrones conductuales mas alla de recencia |
 
 ### Capital Humano

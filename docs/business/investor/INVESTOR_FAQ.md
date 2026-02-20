@@ -102,7 +102,7 @@ This explains why the system doesn't trade during uncertain conditions—it's no
 
 **A:** Decision Governance Infrastructure is the control layer for automated decision systems — ensuring that every automated decision passes through independent validation checkpoints before execution. 
 
-Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 192,000+ governed decisions and 98.5% of capital preserved.
+Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 192,000+ evaluation cycles and 98.5% of capital preserved.
 
 The right question for investors is not "how much alpha does OMNIX generate?" but "how much capital risk exists in automated systems without governance control?"
 
@@ -114,10 +114,10 @@ The right question for investors is not "how much alpha does OMNIX generate?" bu
 
 **A:** OMNIX has **production-integrated post-quantum cryptography modules** for order signing and key exchange, aligned with NIST 2024 standards:
 
-| Component | Algorithm | NIST Standard | Purpose |
-|-----------|-----------|---------------|---------|
-| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Secure key exchange |
-| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Trading order authentication |
+| Component | Algorithm | Standard | Purpose |
+|-----------|-----------|----------|---------|
+| Key Encapsulation | Kyber-768 (ML-KEM-768) | NIST-standardized | Secure key exchange |
+| Digital Signatures | Dilithium-3 (ML-DSA-65) | NIST-standardized | Trading order authentication |
 
 **Key facts:**
 - Trading orders are signed with Dilithium-3 before execution
@@ -135,7 +135,7 @@ The right question for investors is not "how much alpha does OMNIX generate?" bu
 |----------------|--------|
 | **Decision Trace** | Structured JSON per decision: timestamp, 6 checkpoint verdicts with individual data, final decision with reasoning, capital impact |
 | **Checkpoint Explainability** | Each of 6 checkpoints produces a human-readable verdict (e.g., "Win probability 48.7% — below 50% threshold") |
-| **Post-Quantum Signatures** | Every decision signed with Dilithium-3 (NIST FIPS 204) — immutable, tamper-proof |
+| **Post-Quantum Signatures** | Every decision signed with NIST-standardized algorithms — immutable, tamper-proof |
 | **Counterfactual Evidence** | Shadow Portfolio shows what would have happened if a blocked decision had been executed |
 | **Export Format** | Grafana/Loki/ELK compatible. Structured JSON ready for regulatory submission |
 | **Data Integrity** | >91% referential integrity across 45+ PostgreSQL tables |

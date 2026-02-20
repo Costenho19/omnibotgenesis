@@ -36,7 +36,7 @@
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| Governed Decisions | 192,000+ | Shadow Portfolio + decision logs |
+| Evaluation Cycles | 192,000+ | Shadow Portfolio + decision logs |
 | Capital Preserved | 98.5% | Learning Baseline period |
 | Raising | $500,000 USD | Pre-Seed |
 | Equity | 16.7% | — |
@@ -69,7 +69,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Today, systems can execute decisions automatically — but almost none have a real mechanism to control those decisions before they execute. And when there's no control, risk becomes invisible.
 >
-> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 192,000+ governed decisions, 98.5% of capital preserved, running 24/7 since November 2025.
+> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 192,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > We're not a trading bot. We're not a prediction system. We are the control layer that determines whether an automated action can or cannot execute.
 >
@@ -93,7 +93,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Hoy los sistemas pueden ejecutar decisiones automáticamente — pero casi ninguno tiene un mecanismo real que las controle antes de ejecutarlas. Y cuando no hay control, el riesgo se vuelve invisible.
 >
-> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: más de 192,000 decisiones gobernadas, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: más de 192,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > No somos un bot de trading. No somos un sistema de predicción. Somos la capa de control que decide si una acción automatizada puede o no ejecutarse.
 >
@@ -121,7 +121,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Our architecture uses a sequential checkpoint system with veto authority: if a decision can't be properly validated, it's blocked. Fail-closed by design.
 >
-> First validated in digital asset trading — 192,000+ governed decisions, 98.5% of capital preserved, running 24/7 since November 2025.
+> First validated in digital asset trading — 192,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > The architecture is domain-agnostic. Designed to extend into credit, insurance, and supply chain — anywhere automated decisions involve capital at risk.
 >
@@ -141,7 +141,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Nuestra arquitectura usa un sistema secuencial de checkpoints con autoridad de veto: si una decisión no se puede validar correctamente, se bloquea. Fail-closed por diseño.
 >
-> Primera validación en trading de activos digitales — más de 192,000 decisiones gobernadas, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> Primera validación en trading de activos digitales — más de 192,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > La arquitectura es independiente del dominio. Diseñada para extenderse a crédito, seguros y supply chain — cualquier entorno donde decisiones automatizadas impliquen capital en riesgo.
 >

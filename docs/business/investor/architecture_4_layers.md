@@ -160,7 +160,7 @@ Tracks every vetoed trade for:
 
 ## Security Features
 
-### Post-Quantum Cryptography (NIST FIPS-203/204)
+### Post-Quantum Cryptography (NIST-standardized)
 
 | Algorithm | Purpose |
 |-----------|---------|

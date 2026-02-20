@@ -9,7 +9,7 @@
 
 **Automation is growing faster than governance.** Automated systems make high-stakes decisions every day — in trading, lending, insurance, supply chain — but almost none have a real mechanism to control those decisions before they execute.
 
-**OMNIX is Decision Governance Infrastructure** — a 6-checkpoint governance control architecture that validates automated decisions before execution. First vertical validated in digital asset trading (192,000+ governed decisions, 98.5% capital preserved). Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
+**OMNIX is Decision Governance Infrastructure** — a 6-checkpoint governance control architecture that validates automated decisions before execution. First vertical validated in digital asset trading (192,000+ evaluation cycles, 98.5% capital preserved). Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
 
 ---
 
@@ -21,8 +21,8 @@
 | **Shadow Portfolio Learning Engine** | 192,000+ counterfactual events — learns from decisions NOT taken |
 | **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — unique globally |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 — zero single-provider dependency |
-| **Post-Quantum Security** | Dilithium-3 decision signing (NIST FIPS 204) — operational since Nov 2025 |
-| **Full Decision Audit Trail** | 100% telemetry coverage — every governed decision documented |
+| **Post-Quantum Security** | NIST-standardized post-quantum decision signing — operational since Nov 2025 |
+| **Full Decision Audit Trail** | 100% telemetry coverage — every governance evaluation documented |
 | **Interactive Multi-Vertical Demos** | Trading (validated), Credit, Insurance — live on omnixquantum.net |
 
 ---
@@ -90,7 +90,7 @@
 | RegTech (Chainalysis) | Monitor transactions | We govern decision quality |
 
 **Defensible Moat:**
-1. **Data moat** — 192,000+ governed decision events with outcome tracking
+1. **Data moat** — 192,000+ evaluation cycle events with outcome tracking
 2. **Shadow Portfolio** — Learns from decisions the system doesn't make (unique globally)
 3. **Embedded infrastructure** — High switching cost once integrated
 4. **Post-quantum security** — Operational, not roadmap

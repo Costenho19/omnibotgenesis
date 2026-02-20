@@ -12,7 +12,7 @@
 
 ADR-025 repositioned OMNIX from a digital asset trading risk engine to **Decision Governance Infrastructure for Automated Systems** (extended by ADR-027) — a governance control architecture that prevents costly mistakes before they happen across any high-stakes decision domain. That decision was strategic and narrative. This ADR defines the **technical architecture** required to make the 6-checkpoint governance engine truly domain-agnostic.
 
-Today, every checkpoint in the OMNIX engine is tightly coupled to trading-specific signals: Monte Carlo simulations over price paths, EMA/HMM regime detection on OHLCV candles, Kalman filtering of market noise, and a coherence gate that evaluates agreement among trading indicators. While these implementations are battle-tested — 192,000+ decisions governed, 98.5% capital preserved — they cannot directly process credit risk data, supply chain metrics, or insurance underwriting inputs without a structural abstraction layer.
+Today, every checkpoint in the OMNIX engine is tightly coupled to trading-specific signals: Monte Carlo simulations over price paths, EMA/HMM regime detection on OHLCV candles, Kalman filtering of market noise, and a coherence gate that evaluates agreement among trading indicators. While these implementations are battle-tested — 192,000+ evaluation cycles, 98.5% capital preserved — they cannot directly process credit risk data, supply chain metrics, or insurance underwriting inputs without a structural abstraction layer.
 
 This document proposes a **Domain Adapter pattern** that decouples domain-specific signal generation from the domain-agnostic governance evaluation pipeline. The same fail-closed, 6-checkpoint architecture that governs trade execution can govern loan approvals, procurement decisions, or insurance underwriting — provided each domain supplies a conforming adapter that translates raw domain data into normalized governance signals.
 
@@ -178,7 +178,7 @@ This is the existing, production-proven implementation that serves as the refere
 - CP-6 (Logic Check): DCI — signal divergence < 70 for action
 
 **Validation Evidence:**
-- 192,000+ decisions governed in real market conditions
+- 192,000+ evaluation cycles in real market conditions
 - 98.5% capital preserved ($1M paper trading portfolio)
 - 91% block accuracy (blocked trades that would have resulted in losses)
 - 30-day official track record completed (Jan 15 – Feb 13, 2026)

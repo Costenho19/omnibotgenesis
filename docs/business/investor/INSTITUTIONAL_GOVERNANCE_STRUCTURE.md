@@ -55,7 +55,7 @@ The governance engine operates autonomously within the parameters set by Layer 1
 
 - **6-checkpoint sequential evaluation** — no checkpoint can be bypassed
 - **Fail-closed behavior** — if any evaluation fails or times out, execution is blocked
-- **Full auditability** — every governed decision produces a complete decision trace
+- **Full auditability** — every governance evaluation produces a complete decision trace
 - **Domain-agnostic core** — governance logic separable from vertical-specific signals via Domain Adapter pattern (ADR-026)
 
 ---
@@ -98,7 +98,7 @@ This is the difference between a product that *could* be governed and a product 
 | Evidence | Detail |
 |----------|--------|
 | Parameter changes documented | 27 ADRs recording every architectural decision |
-| Zero manual overrides | All 192,000+ governed decisions handled by architecture |
+| Zero manual overrides | All 192,000+ evaluation cycles handled by architecture |
 | Fail-closed demonstrated | System blocking execution for 33+ consecutive days under structural contradiction |
 | Full audit trail | Decision Trace with complete reasoning chain for every evaluation cycle |
 | Production continuity | 24/7 operation since November 2025 without human intervention |
