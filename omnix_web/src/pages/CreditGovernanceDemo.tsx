@@ -269,8 +269,8 @@ export default function CreditGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 6-checkpoint governance architecture
-            applies to credit/lending decisions — the same pattern validated with 192,000+
-            decisions in digital asset trading.
+            applies to credit/lending decisions — the same pattern validated across 192,000+
+            evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust the loan parameters below and run the governance evaluation to see each checkpoint in action.
@@ -568,7 +568,7 @@ export default function CreditGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">192,000+ decisions governed | 98.5% capital preserved</p>
+                <p className="text-xs text-emerald-400">192,000+ evaluation cycles | 98.5% capital preserved (internal dataset)</p>
               </div>
             </div>
 
@@ -624,17 +624,17 @@ export default function CreditGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">The Hardest Part Is Already Done</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             Building a robust, battle-tested governance engine is the hardest engineering challenge.
-            OMNIX has already done this — validated with 192,000+ real decisions. Expanding to new
+            OMNIX has already done this — validated across 192,000+ evaluation cycles. Expanding to new
             domains is an adapter problem, not a research problem.
           </p>
           <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-8">
             <div>
               <div className="text-2xl font-bold text-white">192K+</div>
-              <div className="text-xs text-muted">Decisions Governed</div>
+              <div className="text-xs text-muted">Evaluation Cycles</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400">98.5%</div>
-              <div className="text-xs text-muted">Capital Preserved</div>
+              <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
               <div className="text-2xl font-bold gold-text">6</div>
@@ -652,8 +652,8 @@ export default function CreditGovernanceDemo() {
             This is a governance architecture demonstration. The credit evaluation shown uses simplified models
             for illustrative purposes. Production credit governance would integrate with real credit bureaus,
             financial data providers, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
-            validated in digital asset trading with 192,000+ governed decisions. See ADR-026 for technical
-            architecture details.
+            validated in digital asset trading across 192,000+ evaluation cycles (internal dataset, not externally audited).
+            See ADR-026 for technical architecture details.
           </p>
         </div>
       </main>

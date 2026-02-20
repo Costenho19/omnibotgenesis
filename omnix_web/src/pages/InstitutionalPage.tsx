@@ -581,6 +581,9 @@ export default function InstitutionalPage() {
                         <span className="text-muted">High-Risk Blocks</span>
                         <span className="text-amber-400 font-medium">5,473</span>
                       </div>
+                      <div className="p-2 bg-[#0A1628]/40 rounded-lg">
+                        <p className="text-[10px] text-muted/60 text-center italic">Internal evaluation dataset · Not externally audited</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -614,7 +617,7 @@ export default function InstitutionalPage() {
                     <BarChart3 className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-3">Complete Audit Trail</h4>
-                  <p className="text-muted leading-relaxed">Every decision is logged with timestamps, risk metrics, and validation results. ADGM and SEC compliance ready.</p>
+                  <p className="text-muted leading-relaxed">Every decision is logged with timestamps, risk metrics, and validation results. Designed for ADGM and SEC regulatory frameworks.</p>
                 </div>
                 <div className="glass-card p-8">
                   <div className="feature-icon mb-6">
@@ -634,7 +637,7 @@ export default function InstitutionalPage() {
                   <Globe className="w-8 h-8 gold-text" />
                   <div className="text-left">
                     <p className="text-white font-semibold">ADGM</p>
-                    <p className="text-xs text-amber-400">Target Jurisdiction</p>
+                    <p className="text-xs text-amber-400">Designed for Compliance</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -729,7 +732,7 @@ export default function InstitutionalPage() {
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">What makes OMNIX institutional-grade?</h4>
-                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST-standardized), and real-time decision validation. OMNIX is built for fiduciary standards, not retail tools.</p>
+                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure designed for frameworks like ADGM, post-quantum cryptography (NIST-standardized), and real-time decision validation. OMNIX is built for fiduciary standards, not retail tools.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How is performance measured?</h4>
@@ -987,7 +990,7 @@ export default function InstitutionalPage() {
                     WhatsApp
                   </a>
                 </li>
-                <li>Abu Dhabi (ADGM)</li>
+                <li>Abu Dhabi, UAE</li>
               </ul>
             </div>
           </div>
@@ -998,7 +1001,7 @@ export default function InstitutionalPage() {
               Not available in all jurisdictions. Please consult your legal and financial advisors before use.
             </p>
             <div className="flex justify-between items-center">
-              <p className="text-xs text-muted">&copy; 2026 OMNIX QUANTUM. All rights reserved. Abu Dhabi Global Market (ADGM).</p>
+              <p className="text-xs text-muted">&copy; 2026 OMNIX QUANTUM. All rights reserved.</p>
               <div className="flex gap-6 text-xs text-muted">
                 <span>Privacy Policy</span>
                 <span>Terms of Service</span>

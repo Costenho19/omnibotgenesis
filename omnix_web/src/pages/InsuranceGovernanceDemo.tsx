@@ -275,8 +275,8 @@ export default function InsuranceGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 6-checkpoint governance architecture
-            applies to insurance underwriting decisions — the same pattern validated with 192,000+
-            decisions in digital asset trading.
+            applies to insurance underwriting decisions — the same pattern validated across 192,000+
+            evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust the policy parameters below and run the governance evaluation to see each checkpoint assess the risk.
@@ -574,7 +574,7 @@ export default function InsuranceGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">192,000+ decisions governed | 98.5% capital preserved</p>
+                <p className="text-xs text-emerald-400">192,000+ evaluation cycles | 98.5% capital preserved (internal dataset)</p>
               </div>
             </div>
 
@@ -631,16 +631,16 @@ export default function InsuranceGovernanceDemo() {
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX now demonstrates governance across three distinct domains — trading, credit, and insurance.
             Each uses the same 6-checkpoint fail-closed architecture with domain-specific signals.
-            The core engine is validated with 192,000+ real decisions.
+            The core engine is validated across 192,000+ evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
             <div>
               <div className="text-2xl font-bold text-white">192K+</div>
-              <div className="text-xs text-muted">Decisions Governed</div>
+              <div className="text-xs text-muted">Evaluation Cycles</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400">98.5%</div>
-              <div className="text-xs text-muted">Capital Preserved</div>
+              <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
               <div className="text-2xl font-bold gold-text">6</div>
@@ -662,8 +662,8 @@ export default function InsuranceGovernanceDemo() {
             This is a governance architecture demonstration. The insurance evaluation shown uses simplified actuarial models
             for illustrative purposes. Production insurance governance would integrate with real actuarial tables,
             claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
-            validated in digital asset trading with 192,000+ governed decisions. See ADR-026 for technical
-            architecture details.
+            validated in digital asset trading across 192,000+ evaluation cycles (internal dataset, not externally audited).
+            See ADR-026 for technical architecture details.
           </p>
         </div>
       </main>
