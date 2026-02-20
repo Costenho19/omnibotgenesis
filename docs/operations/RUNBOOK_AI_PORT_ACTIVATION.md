@@ -204,7 +204,6 @@ AIGatewayShim.generate_text()
 ## Contacto
 
 - **Responsable**: Harold (Founder)
-- **Backup**: Iván (CTO)
 - **Rollback inmediato**: Cualquiera puede cambiar flag a false
 
 ---

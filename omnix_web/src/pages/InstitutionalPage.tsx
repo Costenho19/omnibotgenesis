@@ -935,7 +935,7 @@ export default function InstitutionalPage() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-1 gap-8 max-w-lg mx-auto">
             <div className="bg-[#0D1B2A]/80 border border-[#C9A227]/20 rounded-xl p-8 text-center hover:border-[#C9A227]/40 transition-all">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#C9A227] to-[#8B7355] flex items-center justify-center">
                 <Users className="w-12 h-12 text-[#050D18]" />
@@ -944,17 +944,6 @@ export default function InstitutionalPage() {
               <p className="text-[#C9A227] font-semibold mb-4">Founder & CEO</p>
               <p className="text-sm text-muted">
                 Visionary entrepreneur driving OMNIX QUANTUM's mission to democratize institutional-grade decision governance for automated systems.
-              </p>
-            </div>
-            
-            <div className="bg-[#0D1B2A]/80 border border-[#C9A227]/20 rounded-xl p-8 text-center hover:border-[#C9A227]/40 transition-all">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#C9A227] to-[#8B7355] flex items-center justify-center">
-                <Cpu className="w-12 h-12 text-[#050D18]" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Ivan Guzman</h3>
-              <p className="text-[#C9A227] font-semibold mb-4">Lead Developer</p>
-              <p className="text-sm text-muted">
-                Full-stack developer and software architect.
               </p>
             </div>
           </div>

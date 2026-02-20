@@ -503,7 +503,7 @@ WHERE status = 'CLOSED';
 | Role | Access | Actions Allowed |
 |------|--------|-----------------|
 | **Founder (Harold)** | Full | Code changes, strategy modifications, profile selection |
-| **CTO (Iván)** | Full | Architecture changes, infrastructure, deployments |
+| **Engineering** | Scoped | Architecture changes, infrastructure, deployments (contract-based) |
 | **Investor (Read-Only)** | Dashboard | View metrics, download reports, audit logs |
 | **Public** | None | No access to system internals |
 
@@ -513,7 +513,7 @@ WHERE status = 'CLOSED';
 |-------------|---------|
 | Strategy Logic | Code review, test on paper, 48h observation |
 | Profile Parameters | Document rationale, announce before deploy |
-| Risk Limits | Dual approval (Harold + Iván) |
+| Risk Limits | Founder approval required |
 | Infrastructure | Staged rollout with rollback plan |
 
 ### 10.3 Error Recovery & Emergency Protocols
@@ -902,7 +902,6 @@ This Internal Audit & Transparency Report has been prepared by the OMNIX foundin
 
 **Prepared by:**
 - Harold, Founder & CEO
-- Iván, Co-founder & CTO
 
 **Document Version:** 1.2  
 **Last Updated:** December 17, 2025  

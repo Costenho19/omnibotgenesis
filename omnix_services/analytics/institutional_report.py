@@ -703,15 +703,9 @@ class InstitutionalReportGenerator:
         
         elements.append(Spacer(1, 10))
         
-        elements.append(Paragraph("Ivan David Guzman Ruiz", self.styles['SubHeading']))
         elements.append(Paragraph(
-            "<b>Chief Technology Officer</b>",
-            self.styles['TeamMember']
-        ))
-        elements.append(Paragraph(
-            "Backend architecture and MLOps specialist. Expert in Railway deployment, "
-            "security infrastructure, and microservices. Leads integration with Telegram, "
-            "APIs, Streamlit dashboards, and PostgreSQL databases.",
+            "Engineering resources are supplemented by contract developers and specialized "
+            "infrastructure consultants as needed for specific modules and integrations.",
             self.styles['TeamMember']
         ))
         

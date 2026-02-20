@@ -90,7 +90,7 @@ If the system starts losing money or behaving unexpectedly:
 
 | Document | Changes |
 |----------|---------|
-| Pitch Deck EN/ES | Prop firms pricing $15K-$50K → $15K-$35K, team updated with Ivan, Hub71 marked as "Applied - pending" |
+| Pitch Deck EN/ES | Prop firms pricing $15K-$50K → $15K-$35K, team section updated, Hub71 marked as "Applied - pending" |
 | Business Model Canvas EN/ES | Created new, all numbers aligned with pitch deck |
 | system_state_manifest.json | track_record_day=30, status=COMPLETED, Phase 1 documented |
 

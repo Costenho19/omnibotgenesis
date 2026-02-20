@@ -1,6 +1,6 @@
 # Modernización de Tablas de Usuario - Diseño
 **Fecha**: Nov 26, 2025  
-**Autor**: Iván (con asistencia de Architect Agent)  
+**Autor**: OMNIX Engineering  
 **Objetivo**: Mejorar consistencia y normalización de tablas relacionadas con usuarios
 
 ## 🎯 Problema Identificado

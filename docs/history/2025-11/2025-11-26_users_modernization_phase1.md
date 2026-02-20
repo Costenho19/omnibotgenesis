@@ -1,7 +1,7 @@
 # Database Schema Modernization - FASE 1
 
 **Fecha**: Nov 26, 2025  
-**Autor**: Ivan (Replit Agent)  
+**Autor**: OMNIX Engineering  
 **Enfoque**: Conservador (100% backward compatible)  
 **Status**: ✅ COMPLETADO
 
