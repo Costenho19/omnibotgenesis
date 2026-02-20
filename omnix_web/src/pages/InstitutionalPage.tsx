@@ -449,7 +449,7 @@ export default function InstitutionalPage() {
                     <Cpu className="w-6 h-6 gold-text" />
                     <div className="flex-1">
                       <span className="text-white font-medium">Post-Quantum Cryptography</span>
-                      <p className="text-xs text-muted">Kyber-768 / Dilithium-3 (NIST FIPS 203/204)</p>
+                      <p className="text-xs text-muted">Kyber-768 / Dilithium-3 (NIST-standardized algorithms)</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
@@ -621,7 +621,7 @@ export default function InstitutionalPage() {
                     <Shield className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-3">Post-Quantum Security</h4>
-                  <p className="text-muted leading-relaxed">Kyber-768 encryption and Dilithium-3 signatures. NIST FIPS 203/204 compliant cryptography.</p>
+                  <p className="text-muted leading-relaxed">Kyber-768 encryption and Dilithium-3 signatures. NIST-standardized post-quantum cryptography.</p>
                 </div>
               </div>
             </section>
@@ -640,7 +640,7 @@ export default function InstitutionalPage() {
                 <div className="flex items-center gap-3">
                   <Award className="w-8 h-8 gold-text" />
                   <div className="text-left">
-                    <p className="text-white font-semibold">NIST FIPS 203/204</p>
+                    <p className="text-white font-semibold">NIST PQC Standards</p>
                     <p className="text-xs text-emerald-400">Implemented</p>
                   </div>
                 </div>
@@ -729,7 +729,7 @@ export default function InstitutionalPage() {
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">What makes OMNIX institutional-grade?</h4>
-                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST FIPS 203/204), and real-time decision validation. OMNIX is built for fiduciary standards, not retail tools.</p>
+                  <p className="text-muted leading-relaxed">Full auditability, fail-closed architecture, regulatory compliance infrastructure (ADGM-ready), post-quantum cryptography (NIST-standardized), and real-time decision validation. OMNIX is built for fiduciary standards, not retail tools.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How is performance measured?</h4>

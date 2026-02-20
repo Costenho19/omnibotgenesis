@@ -38,7 +38,8 @@ OMNIX is a **Decision Governance Infrastructure for Automated Systems** — buil
 | **2. Crítico** | `docs/MIGRATION_STATUS.md` | Estado consolidado V7.0 |
 | **3. Crítico** | `docs/REAL_SYSTEM_STATUS.md` | Estado real del sistema |
 | **4. Arquitectura** | `docs/current/` | ARCHITECTURE.md, HEXAGONAL_MIGRATION_STATUS.md, TECHNICAL_DEBT.md |
-| **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md |
+| **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md, OMNIX_Security_Audit_v1.0_INTERNAL.md |
+| **5b. Seguridad** | `docs/compliance/` | SECURITY_OVERVIEW.md (público/pitch), CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md (institucional) |
 | **6. Historial** | `docs/history/` | Decisiones previas, migraciones, contexto histórico |
 | **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.md, ADRs (incl. ADR-027 Decision Governance Infrastructure) |
 | **8. Seguridad** | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | PQC implementado Nov 2025 (Kyber-768/Dilithium-3) |

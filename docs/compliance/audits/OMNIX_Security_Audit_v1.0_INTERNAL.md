@@ -259,19 +259,11 @@ The stress test scanned all endpoint responses for 14 leak patterns including:
 
 ## 5. Architecture Security Features
 
-### 5.1 Post-Quantum Cryptography (Active Since November 2025)
+### 5.1 Post-Quantum Cryptography
 
-OMNIX implements NIST-approved post-quantum cryptographic algorithms:
+OMNIX implements NIST-standardized post-quantum cryptographic algorithms for decision signing and key exchange. Active since November 2025.
 
-| Algorithm | Purpose | Standard |
-|-----------|---------|----------|
-| CRYSTALS-Dilithium Level 3 | Digital signatures (trade order signing) | FIPS 204 |
-| CRYSTALS-Kyber-768 | Key encapsulation (secure key exchange) | FIPS 203 |
-
-All trading decisions are cryptographically signed before execution, providing:
-- Non-repudiation of automated decisions
-- Tamper-evident decision audit trail
-- Quantum-resistant security posture
+For full details, see: `docs/compliance/CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md`
 
 ### 5.2 Decision Governance Architecture
 
@@ -293,7 +285,7 @@ Each checkpoint can independently VETO a decision, ensuring no single point of f
 | Regulation | Relevance | Status |
 |------------|-----------|--------|
 | GDPR (Data Protection) | User data handling | Controls in place (log redaction, no PII in errors) |
-| SOC 2 Type I (Security) | Security controls | Aligned (access control, audit logging, encryption) |
+| SOC 2 (Security Principles) | Security controls | Aligned with core SOC 2 security control principles (access control, audit logging, encryption) |
 | MiFID II (Financial) | Decision auditability | Supported (decision_trace, PQC signatures) |
 | DORA (Digital Resilience) | Operational resilience | Rate limiting, error isolation, graceful degradation |
 
@@ -332,7 +324,9 @@ Each checkpoint can independently VETO a decision, ensuring no single point of f
 | Summary report | `output/stress_summary.md` |
 | Security middleware | `omnix_dashboard/utils/auth.py` |
 | PQC implementation | `omnix_core/security/pqc_security.py` |
-| This audit report | `docs/compliance/audits/OMNIX_Security_Audit_v1.0.md` |
+| Cryptographic architecture | `docs/compliance/CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md` |
+| Security overview (public) | `docs/compliance/SECURITY_OVERVIEW.md` |
+| This audit report | `docs/compliance/audits/OMNIX_Security_Audit_v1.0_INTERNAL.md` |
 
 ---
 

@@ -92,7 +92,7 @@ omnix_web/
 - White-Label Engine: $100K+ setup
 
 ### 8. Certifications
-- NIST FIPS 203/204: **Implemented** (Kyber-768/Dilithium-3)
+- NIST PQC Standards: **Implemented** (Kyber-768/Dilithium-3)
 - ADGM: Target Jurisdiction
 - Sharia Compliant: In Development
 
