@@ -16,6 +16,7 @@
 │  INTERFACES                                                      │
 │  ├── Telegram Bot (enterprise_bot.py)                           │
 │  ├── Flask Dashboard (puerto 5000)                              │
+│  ├── Verification Server (puerto 8000, aiohttp)                 │
 │  └── Streamlit Dashboard (puerto 8080)                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  CORE ENGINES                                                    │

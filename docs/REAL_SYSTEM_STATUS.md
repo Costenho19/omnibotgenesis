@@ -47,6 +47,30 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### Public Verification Server Deployed (Feb 21, 2026)
+
+**PROPÓSITO:** Endpoint público para que inversores y auditores verifiquen la autenticidad de decisiones de governance sin exponer datos internos.
+
+| Componente | Detalle |
+|------------|---------|
+| Stack | aiohttp (async, non-blocking) |
+| Puerto | 8000 (Railway, mismo proceso que bot) |
+| Endpoints | `/verify`, `/api/verify/{id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics` |
+| Seguridad | Rate limit 30/min, zero internal data exposure |
+| Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
+| Ciclos documentados | 641,000+ evaluation cycles |
+
+**URL Pública:** `https://omnibotgenesis-production.up.railway.app/verify`
+
+**Archivos:**
+- `omnix_core/evidence/verification_server.py` — servidor standalone
+- `src/omnix/bootstrap/main_entry.py` — integración (importlib lazy load)
+
+**Datos públicos expuestos:** receipt_id, timestamp, asset, decision, content_hash, prev_hash (truncado), signature_algorithm, governance gate categories.
+**Datos NO expuestos:** veto_chain, policy_version, engine_version, thresholds internos.
+
+---
+
 ### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)
 
 **PROBLEMA:** Google deprecó `gemini-2.0-flash-exp` (retirement March 31, 2026). Bot respondía "System busy" porque el modelo primario ya no existía.
@@ -78,7 +102,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Puerto | Servicio | Propósito |
 |--------|----------|-----------|
 | 5000 | OMNIX Web | Landing page institucional |
-| 8000 | Flask Dashboard | Demos internos |
+| 8000 | Verification Server | Verificación pública de recibos (aiohttp) |
 | 8080 | Streamlit | Shadow analytics |
 
 **Documentación:** `docs/current/WEB_INFRASTRUCTURE.md`, `omnix_web/README.md`

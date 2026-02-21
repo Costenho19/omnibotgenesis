@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure for Automated Systems, establishing a new category in financial technology. Its primary purpose is to provide governance control for automated decision systems, with an initial focus on digital asset trading to ensure capital preservation. The system employs a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key capabilities include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX plans to expand into supply chain, lending/credit, insurance, energy trading, and RegTech/compliance. The project operates with a dual revenue model: B2B Decision Governance Licensing and B2C SaaS. An interactive Credit/Lending governance demo is available on the OMNIX Web.
+OMNIX is a Decision Governance Infrastructure designed for automated systems, initially focusing on digital asset trading to ensure capital preservation. It utilizes a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key features include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various financial and industrial sectors. The project operates with a dual revenue model: B2B Decision Governance Licensing and B2C SaaS.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -137,45 +137,31 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX's architecture includes an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. It supports multi-user roles, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The UI is designed for an "Investor-Ready" presentation. The Decision Engine uses an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement, with all decisions auditable via `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) with activation via the Strangler Fig pattern.
+OMNIX's architecture integrates an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine) for robust decision governance. Key features include AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, and an Execution Protocol. The system supports multi-user roles, Flask and Streamlit dashboards with an "Investor-Ready" UI, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement, with all decisions auditable via `decision_trace`. Defensive hardening includes Position Size Factor Clamping and Veto Sentinel Logs. The system is designed with a hexagonal architecture (V7.0) activated via the Strangler Fig pattern.
 
 ### AI Architecture and Enforcement
-The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It includes AI-first command detection, a Multilingual Prompt Architecture, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior. A Performance Honesty Guard provides honest metrics. AI responses follow an Institutional Communication Style: statement-format (not conversational), 4-8 lines max, no name+gratitude openers, no unsolicited technical details, depth only when requested. An Anti-Servile Post-Processing Filter removes servile phrases, name+flattery openers, and investor flattery patterns after AI generation.
+The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture, and a Chain-of-Thought Framework. An AI Self-Knowledge System, driven by `system_state_manifest.json`, prevents "hallucinations." OMNIX Identity Prompt and Investor Response Rules enhance AI behavior, with a Performance Honesty Guard ensuring truthful metrics. AI responses maintain an Institutional Communication Style: statement-format (not conversational), 4-8 lines max, no name+gratitude openers, no unsolicited technical details, and depth only when requested. An Anti-Servile Post-Processing Filter removes servile phrases and flattery patterns.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals. The Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience."
-
-### ECW Configuration (v1.2)
-| Parameter | Value |
-|-----------|-------|
-| **MC Win Rate Min** | 50% |
-| **MC Expected Return Min** | > 0% |
-| **Consecutive Cycles** | 2 |
-| **Black Swan Max** | MEDIUM |
-| **TRACK_RECORD_MODE** | false |
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals, and the Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience." ECW configuration (v1.2) requires a minimum MC Win Rate of 50%, MC Expected Return > 0%, 2 consecutive cycles, and a Black Swan Max of MEDIUM. `TRACK_RECORD_MODE` is set to `false`.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system tracks vetoed trades to learn filter calibration. It analyzes price movement, determines veto correctness, and provides filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs Losses Avoided vs Net Opportunity. The system has captured over 192,000 shadow trade events.
+A counterfactual analysis system tracks vetoed trades to learn filter calibration by analyzing price movement, determining veto correctness, and providing filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs. Losses Avoided vs. Net Opportunity, having captured over 192,000 shadow trade events.
 
 ### Decision Contradiction Index (DCI)
-A shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates high internal contradiction between signals, mandating a HOLD. Realistic execution thresholds require MC WR > 50%, MC ER > 0%, Coherence > 50%, and DCI < 70.
+A shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates significant internal contradiction, mandating a HOLD. Realistic execution thresholds require MC WR > 50%, MC ER > 0%, Coherence > 50%, and DCI < 70.
 
 ### Dashboard Features
-The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Credibility improvements include clarifying "Est. Loss Avoided" vs "Notional Blocked" and distinguishing "Market Trend" from "Trading Regime." Additional widgets include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
+The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Features include clarifying "Est. Loss Avoided" vs "Notional Blocked," distinguishing "Market Trend" from "Trading Regime," Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
+
+### Public Verification Server
+A standalone aiohttp web server (`omnix_core/evidence/verification_server.py`) runs alongside the Telegram bot in Railway production (Port 8000), providing public receipt verification endpoints with zero internal data exposure and rate limiting. It features endpoints for interactive verification, specific receipt verification, recent receipts, public key viewing (Dilithium-3), and governance metrics. Security includes SHA-256 hash chain verification and PQC signature validation (Dilithium-3), with legal disclaimers for public metrics.
 
 ### Web Infrastructure
-The project utilizes a multi-port architecture:
--   **OMNIX Web (Port 3000)**: React + Vite public landing pages, including Commercial Landing, Institutional Page, Credit Governance Demo, and Insurance Governance Demo. Features include animated statistics, 4-Layer Validation Architecture, FAQ, comparison table, live market data, risk calculator, and multi-tier pricing. Automatic redirects are configured.
--   **Flask Dashboard (Port 5000)**: Flask + Jinja2 internal dashboard for demos and investor metrics.
-
-### Custom Domain Configuration
-| Domain | Purpose | Platform |
-|--------|---------|----------|
-| **www.omnixquantum.net** | Commercial Landing (Published) | Replit Static Deployment |
-| **omnixquantum.net** | Dashboard/Bot (Production) | Railway |
+The project uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demos, and the Verification Server (Port 8000) for public receipt validation. Custom domains are configured for commercial landing (`www.omnixquantum.net` on Replit Static Deployment) and the Dashboard/Bot (`omnixquantum.net` on Railway).
 
 ## External Dependencies
 
