@@ -17,6 +17,24 @@ except ImportError:
     dilithium3 = None
 
 
+def _get_db_connection(db_url: str):
+    if not db_url:
+        return None
+    try:
+        import psycopg2
+        return psycopg2.connect(db_url)
+    except ImportError:
+        try:
+            import psycopg
+            return psycopg.connect(db_url, autocommit=False)
+        except Exception as e:
+            logger.error(f"DB connection failed (psycopg3): {e}")
+            return None
+    except Exception as e:
+        logger.error(f"DB connection failed: {e}")
+        return None
+
+
 class DecisionReceiptEngine:
 
     def __init__(self, db_url: Optional[str] = None):
@@ -99,9 +117,11 @@ class DecisionReceiptEngine:
         if not self.db_url:
             logger.warning("No database URL configured - receipt not stored")
             return False
+        conn = _get_db_connection(self.db_url)
+        if not conn:
+            logger.warning("Failed to connect to DB for receipt storage")
+            return False
         try:
-            import psycopg2
-            conn = psycopg2.connect(self.db_url)
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO decision_receipts 
@@ -130,14 +150,19 @@ class DecisionReceiptEngine:
             return True
         except Exception as e:
             logger.error(f"Failed to store receipt: {e}")
+            try:
+                conn.close()
+            except Exception:
+                pass
             return False
 
     def get_last_hash(self) -> str:
         if not self.db_url:
             return ""
+        conn = _get_db_connection(self.db_url)
+        if not conn:
+            return ""
         try:
-            import psycopg2
-            conn = psycopg2.connect(self.db_url)
             cur = conn.cursor()
             cur.execute("""
                 SELECT content_hash FROM decision_receipts 
@@ -148,6 +173,10 @@ class DecisionReceiptEngine:
             conn.close()
             return row[0] if row else ""
         except Exception:
+            try:
+                conn.close()
+            except Exception:
+                pass
             return ""
 
 

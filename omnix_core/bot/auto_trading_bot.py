@@ -632,7 +632,7 @@ class AutoTradingBot:
             else:
                 logger.debug(f"Receipt generation skipped (store failed)")
         except Exception as e:
-            logger.debug(f"Receipt generation failed (non-critical): {e}")
+            logger.warning(f"Receipt generation failed (non-critical): {e}")
 
     def _get_estimated_blocked_capital(self) -> float:
         """Estimate capital that would be blocked (2% of balance)"""
