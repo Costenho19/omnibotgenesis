@@ -202,6 +202,26 @@ def initialize_services_v7():
     }
 
 
+async def start_verification_server_task():
+    """Start the public verification web server on port 8000."""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "verification_server",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))))),
+                "omnix_core", "evidence", "verification_server.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        runner = await mod.start_verification_server(port=8000)
+        logger.info("Public verification server started on port 8000")
+        return runner
+    except Exception as e:
+        logger.warning(f"Verification server failed to start: {e}")
+        return None
+
+
 async def run_telegram_bot_legacy(services: dict):
     """Run the Telegram bot using EnterpriseTelegramBot (100% async nativo).
     
@@ -212,6 +232,8 @@ async def run_telegram_bot_legacy(services: dict):
     from omnix_config import env_config
     
     token = env_config.get_required('TELEGRAM_BOT_TOKEN')
+    
+    verification_runner = await start_verification_server_task()
     
     logger.info("Starting Telegram bot (async native mode)...")
     
@@ -231,6 +253,8 @@ async def run_telegram_bot_v7(services: dict):
     telegram_adapter = container.telegram_adapter
     
     if telegram_adapter:
+        verification_runner = await start_verification_server_task()
+        
         logger.info("Starting Telegram bot (V7.0 mode)...")
         await telegram_adapter.start()
         await telegram_adapter.run_polling()
