@@ -51,7 +51,7 @@ def create_app():
     if IS_RAILWAY and not DASHBOARD_API_KEY:
         logger.warning("DASHBOARD_API_KEY not configured - sensitive endpoints will be public in production!")
     
-    from omnix_dashboard.blueprints import views_bp, core_bp, market_bp, intelligence_bp, system_bp, snapshots_bp
+    from omnix_dashboard.blueprints import views_bp, core_bp, market_bp, intelligence_bp, system_bp, snapshots_bp, verification_bp
     
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
@@ -59,6 +59,7 @@ def create_app():
     app.register_blueprint(intelligence_bp)
     app.register_blueprint(system_bp)
     app.register_blueprint(snapshots_bp)
+    app.register_blueprint(verification_bp)
     
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
