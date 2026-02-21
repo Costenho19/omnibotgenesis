@@ -195,6 +195,18 @@ function renderCheck(val) {
     return '<span style="color:#eab308;">N/A</span>';
 }
 
+function formatTime(ts) {
+    try {
+        var d = new Date(ts);
+        var now = new Date();
+        var diff = Math.floor((now - d) / 1000);
+        if (diff < 60) return diff + 's ago';
+        if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+        return d.toISOString().slice(0,16).replace('T',' ') + ' UTC';
+    } catch(e) { return ''; }
+}
+
 async function loadRecent() {
     try {
         var res = await fetch('/api/verify/recent?limit=10');
@@ -207,10 +219,12 @@ async function loadRecent() {
         var html = '';
         data.receipts.forEach(function(r) {
             var decColor = r.decision==='APPROVE'?'#22c55e':r.decision==='BLOCK'?'#ef4444':'#eab308';
+            var timeStr = formatTime(r.timestamp);
             html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer;" onclick="searchInput.value=\\'' + r.receipt_id + '\\'; verifyReceipt();">';
             html += '<div><span style="font-family:monospace; font-size:0.8rem; color:#60a5fa;">' + r.receipt_id + '</span>';
             html += '<span style="margin-left:8px; font-size:0.8rem; color:' + decColor + ';">' + r.decision + '</span>';
-            html += '<span style="margin-left:8px; font-size:0.78rem; color:#6b7280;">' + r.asset + '</span></div>';
+            html += '<span style="margin-left:8px; font-size:0.78rem; color:#6b7280;">' + r.asset + '</span>';
+            html += '<span style="margin-left:8px; font-size:0.7rem; color:#374151;">' + timeStr + '</span></div>';
             html += '<span style="font-size:0.75rem; color:#4b5563;">' + (r.signed ? 'PQC Signed' : 'Unsigned') + '</span></div>';
         });
         list.innerHTML = html;
@@ -220,6 +234,7 @@ async function loadRecent() {
 }
 
 loadRecent();
+setInterval(loadRecent, 30000);
 </script>
 </body>
 </html>"""
