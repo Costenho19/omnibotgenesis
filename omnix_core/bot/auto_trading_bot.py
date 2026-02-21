@@ -331,6 +331,16 @@ except ImportError:
     SHADOW_PORTFOLIO_AVAILABLE = False
     logger.warning("⚠️ Shadow Portfolio no disponible - Learning Engine desactivado")
 
+# Import Decision Receipt Engine - Cryptographic Governance Receipts (Feb 2026)
+try:
+    from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+    RECEIPT_ENGINE_AVAILABLE = True
+    logger.info("🔏 Decision Receipt Engine disponible - governance receipts activos")
+except ImportError:
+    DecisionReceiptEngine = None
+    RECEIPT_ENGINE_AVAILABLE = False
+    logger.warning("⚠️ Decision Receipt Engine no disponible")
+
 # Import Adaptive Parameter Engine - AUTO-CALIBRATION FOR ARES
 try:
     from omnix_services.adaptive_engine import (
@@ -593,6 +603,37 @@ class AutoTradingBot:
             except Exception as e:
                 logger.debug(f"Shadow event log failed (non-critical): {e}")
     
+    def _generate_governance_receipt(self, decision: Dict) -> None:
+        if not self.receipt_engine:
+            return
+        try:
+            action = decision.get('action', 'HOLD')
+            vetoed = decision.get('vetoed', False)
+            if vetoed or action in ('BLOCKED',):
+                receipt_decision = 'BLOCK'
+            elif action in ('BUY', 'SELL'):
+                receipt_decision = 'APPROVE'
+            else:
+                receipt_decision = 'HOLD'
+
+            receipt_input = {
+                'symbol': decision.get('symbol', 'UNKNOWN'),
+                'decision': receipt_decision,
+                'decision_trace': decision.get('decision_trace', []),
+                'policy_version': os.environ.get('OMNIX_VERSION', '6.5.4e'),
+            }
+
+            prev_hash = self.receipt_engine.get_last_hash()
+            receipt = self.receipt_engine.generate_receipt(receipt_input, prev_hash)
+            stored = self.receipt_engine.store_receipt(receipt)
+
+            if stored:
+                logger.info(f"🔏 Receipt {receipt['receipt_id']} | {receipt_decision} | {receipt_input['symbol']}")
+            else:
+                logger.debug(f"Receipt generation skipped (store failed)")
+        except Exception as e:
+            logger.debug(f"Receipt generation failed (non-critical): {e}")
+
     def _get_estimated_blocked_capital(self) -> float:
         """Estimate capital that would be blocked (2% of balance)"""
         try:
@@ -1056,6 +1097,15 @@ class AutoTradingBot:
         if low_vol_mode:
             logger.info("   ⚠️ LOW_VOL_MODE: Phase 1 relaxation active (-0.07% threshold)")
         logger.info(f"   🛡️ Guardrails: max_loss=${self.mc_veto_config['rollback_daily_loss_limit']}, min_wr={self.mc_veto_config['rollback_min_win_rate']*100}%")
+        
+        # Decision Receipt Engine - Cryptographic Governance Receipts (Feb 2026)
+        self.receipt_engine = None
+        if RECEIPT_ENGINE_AVAILABLE:
+            try:
+                self.receipt_engine = DecisionReceiptEngine()
+                logger.info("🔏 Decision Receipt Engine ACTIVADO - governance receipts con PQC")
+            except Exception as e:
+                logger.warning(f"⚠️ Decision Receipt Engine error: {e}")
         
         mode = "PAPER TRADING ($1M virtual)" if self.config['paper_mode'] else "🚨 REAL TRADING (Kraken) 💰"
         logger.info(f"🤖 AutoTradingBot {VERSION_BANNER} inicializado - Modo: {mode}")
@@ -2602,6 +2652,8 @@ class AutoTradingBot:
                 logger.debug(f"💎 KELLY_SKIPPED: action=HOLD (size would be {kelly.get('position_size', 0):.2%})")
             
             logger.info(f"📊 Análisis V5.2 completado: {action} - Confianza: {decision.get('confidence', 0):.1%}")
+            
+            self._generate_governance_receipt(decision)
             
             return decision
             
