@@ -1,6 +1,6 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 19 de Febrero 2026  
+**Fecha**: 21 de Febrero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE  
 **Versión interna (dev)**: V6.5.4e
 
@@ -58,7 +58,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Endpoints | `/verify`, `/api/verify/{id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics` |
 | Seguridad | Rate limit 30/min, zero internal data exposure |
 | Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
-| Ciclos documentados | 641,000+ evaluation cycles |
+| Ciclos documentados | 641,000+ evaluation cycles (internal dataset, not externally audited) |
 
 **URL Pública:** `https://omnibotgenesis-production.up.railway.app/verify`
 
