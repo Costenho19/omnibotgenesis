@@ -2977,9 +2977,15 @@ class AutoTradingBot:
                 
                 bs_level = 'MEDIUM'
                 if black_swan:
-                    bs_level = black_swan.get('level', black_swan.get('severity', 'MEDIUM'))
-                    if isinstance(bs_level, (int, float)):
-                        bs_level = 'HIGH' if bs_level >= 0.7 else ('MEDIUM' if bs_level >= 0.3 else 'LOW')
+                    bs_severity = black_swan.get('severity', '')
+                    if isinstance(bs_severity, str) and bs_severity.upper() in ('LOW', 'MEDIUM', 'HIGH'):
+                        bs_level = bs_severity.upper()
+                    else:
+                        bs_level_raw = black_swan.get('level', 'MEDIUM')
+                        if isinstance(bs_level_raw, (int, float)):
+                            bs_level = 'HIGH' if bs_level_raw >= 0.7 else ('MEDIUM' if bs_level_raw >= 0.3 else 'LOW')
+                        elif isinstance(bs_level_raw, str):
+                            bs_level = bs_level_raw.upper() if bs_level_raw.upper() in ('LOW', 'MEDIUM', 'HIGH') else 'MEDIUM'
                 
                 # Verificar condiciones ECW
                 wr_ok = mc_wr >= ecw_cfg['mc_wr_min']
