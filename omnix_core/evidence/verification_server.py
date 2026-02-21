@@ -115,7 +115,7 @@ VERIFY_HTML = """<!DOCTYPE html>
     <div id="result" style="display: none;"></div>
 
     <div id="recentSection" style="margin-top: 2rem;">
-        <h3 style="font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Recent Governance Receipts</h3>
+        <h3 id="recentHeader" style="font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Recent Governance Receipts</h3>
         <div id="recentList" style="font-size: 0.85rem; color: #6b7280;">Loading...</div>
     </div>
 
@@ -200,10 +200,13 @@ function formatTime(ts) {
         var d = new Date(ts);
         var now = new Date();
         var diff = Math.floor((now - d) / 1000);
-        if (diff < 60) return diff + 's ago';
-        if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-        if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-        return d.toISOString().slice(0,16).replace('T',' ') + ' UTC';
+        var rel = '';
+        if (diff < 60) rel = diff + 's ago';
+        else if (diff < 3600) rel = Math.floor(diff/60) + 'm ago';
+        else if (diff < 86400) rel = Math.floor(diff/3600) + 'h ago';
+        else rel = Math.floor(diff/86400) + 'd ago';
+        var exact = d.toISOString().slice(11,19) + ' UTC';
+        return exact + ' (' + rel + ')';
     } catch(e) { return ''; }
 }
 
@@ -216,16 +219,20 @@ async function loadRecent() {
             list.innerHTML = '<div style="color:#4b5563; font-style:italic;">No receipts recorded yet. Receipts are generated as the governance engine processes evaluation cycles.</div>';
             return;
         }
+        var header = document.getElementById('recentHeader');
+        if (header && data.total) {
+            header.innerHTML = 'RECENT GOVERNANCE RECEIPTS <span style="font-size:0.7rem; color:#4b5563; font-weight:normal; margin-left:8px;">Showing ' + data.count + ' of ' + data.total + ' total receipts</span>';
+        }
         var html = '';
         data.receipts.forEach(function(r) {
             var decColor = r.decision==='APPROVE'?'#22c55e':r.decision==='BLOCK'?'#ef4444':'#eab308';
             var timeStr = formatTime(r.timestamp);
             html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer;" onclick="searchInput.value=\\'' + r.receipt_id + '\\'; verifyReceipt();">';
-            html += '<div><span style="font-family:monospace; font-size:0.8rem; color:#60a5fa;">' + r.receipt_id + '</span>';
+            html += '<div style="flex:1;"><span style="font-family:monospace; font-size:0.8rem; color:#60a5fa;">' + r.receipt_id + '</span>';
             html += '<span style="margin-left:8px; font-size:0.8rem; color:' + decColor + ';">' + r.decision + '</span>';
             html += '<span style="margin-left:8px; font-size:0.78rem; color:#6b7280;">' + r.asset + '</span>';
-            html += '<span style="margin-left:8px; font-size:0.7rem; color:#374151;">' + timeStr + '</span></div>';
-            html += '<span style="font-size:0.75rem; color:#4b5563;">' + (r.signed ? 'PQC Signed' : 'Unsigned') + '</span></div>';
+            html += '<div style="font-size:0.7rem; color:#4b5563; margin-top:2px;">' + timeStr + '</div></div>';
+            html += '<span style="font-size:0.75rem; color:#4b5563; white-space:nowrap;">' + (r.signed ? 'PQC Signed' : 'Unsigned') + '</span></div>';
         });
         list.innerHTML = html;
     } catch(e) {
@@ -405,6 +412,8 @@ async def handle_recent_receipts(request):
 
     try:
         cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM decision_receipts")
+        total = cur.fetchone()[0]
         cur.execute("""
             SELECT receipt_id, timestamp_utc, asset, decision,
                    signature_algorithm, content_hash
@@ -428,7 +437,7 @@ async def handle_recent_receipts(request):
             for r in rows
         ]
 
-        return web.json_response({'receipts': receipts, 'count': len(receipts)})
+        return web.json_response({'receipts': receipts, 'count': len(receipts), 'total': total})
     except Exception as e:
         logger.error(f"Error fetching recent receipts: {e}")
         if conn:
