@@ -84,7 +84,7 @@ export default function InstitutionalPage() {
   // Day 1 = Jan 15, Day 15 = Jan 29, Day 16 = Jan 30, etc.
   const trackRecordStartDate = new Date('2026-01-15T00:00:00Z')
   const daysSinceStart = Math.floor((Date.now() - trackRecordStartDate.getTime()) / (1000 * 60 * 60 * 24))
-  const currentDay = Math.max(1, Math.min(30, daysSinceStart + 1))
+  const currentDay = Math.max(1, daysSinceStart + 1)
   
   const evalCycles = useCountUp(metrics.evaluationCycles, 2500)
   const vetosCount = useCountUp(metrics.vetosExecuted, 2000)
@@ -554,12 +554,8 @@ export default function InstitutionalPage() {
                         <span className="text-white font-medium">January 15, 2026</span>
                       </div>
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
-                        <span className="text-muted">Target Duration</span>
-                        <span className="text-white font-medium">30 Days</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">Current Day</span>
-                        <span className="text-emerald-400 font-medium">Day {currentDay} of 30</span>
+                        <span className="text-emerald-400 font-medium">Day {currentDay}</span>
                       </div>
                     </div>
                   </div>
