@@ -5,7 +5,7 @@ import base64
 import logging
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from aiohttp import web
@@ -115,8 +115,25 @@ VERIFY_HTML = """<!DOCTYPE html>
     <div id="result" style="display: none;"></div>
 
     <div id="recentSection" style="margin-top: 2rem;">
-        <h3 id="recentHeader" style="font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Recent Governance Receipts</h3>
+        <h3 id="recentHeader" style="font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Governance Receipts</h3>
+        
+        <div id="filters" style="display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
+            <input type="date" id="dateFrom" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem; color-scheme: dark;" placeholder="From">
+            <input type="date" id="dateTo" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem; color-scheme: dark;" placeholder="To">
+            <select id="decisionFilter" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+                <option value="">All Decisions</option>
+            </select>
+            <button onclick="currentPage=1; loadRecent();" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Filter</button>
+            <button onclick="clearFilters();" style="background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Clear</button>
+        </div>
+        
         <div id="recentList" style="font-size: 0.85rem; color: #6b7280;">Loading...</div>
+        
+        <div id="pagination" style="display: none; margin-top: 1rem; justify-content: space-between; align-items: center;">
+            <button id="prevBtn" onclick="changePage(-1)" style="background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" disabled>&larr; Previous</button>
+            <span id="pageInfo" style="font-size: 0.8rem; color: #6b7280;">Page 1 of 1</span>
+            <button id="nextBtn" onclick="changePage(1)" style="background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" disabled>Next &rarr;</button>
+        </div>
     </div>
 
     <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
@@ -210,19 +227,90 @@ function formatTime(ts) {
     } catch(e) { return ''; }
 }
 
+var currentPage = 1;
+var totalPages = 1;
+var filtersLoaded = false;
+
+function clearFilters() {
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('decisionFilter').value = '';
+    currentPage = 1;
+    loadRecent();
+}
+
+function changePage(delta) {
+    var newPage = currentPage + delta;
+    if (newPage < 1 || newPage > totalPages) return;
+    currentPage = newPage;
+    loadRecent();
+}
+
+function updatePagination(data) {
+    var pagination = document.getElementById('pagination');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var pageInfo = document.getElementById('pageInfo');
+
+    if (data.total <= data.limit) {
+        pagination.style.display = 'none';
+        return;
+    }
+
+    pagination.style.display = 'flex';
+    totalPages = data.total_pages;
+
+    var startItem = (data.page - 1) * data.limit + 1;
+    var endItem = Math.min(data.page * data.limit, data.total);
+    pageInfo.innerHTML = 'Showing ' + startItem + '-' + endItem + ' of ' + data.total + ' &middot; Page ' + data.page + ' of ' + data.total_pages;
+
+    prevBtn.disabled = data.page <= 1;
+    nextBtn.disabled = data.page >= data.total_pages;
+    prevBtn.style.opacity = data.page <= 1 ? '0.4' : '1';
+    nextBtn.style.opacity = data.page >= data.total_pages ? '0.4' : '1';
+}
+
 async function loadRecent() {
     try {
-        var res = await fetch('/api/verify/recent?limit=10');
+        var dateFrom = document.getElementById('dateFrom').value;
+        var dateTo = document.getElementById('dateTo').value;
+        var decision = document.getElementById('decisionFilter').value;
+
+        var params = 'limit=10&page=' + currentPage;
+        if (dateFrom) params += '&date_from=' + dateFrom;
+        if (dateTo) params += '&date_to=' + dateTo;
+        if (decision) params += '&decision=' + encodeURIComponent(decision);
+
+        var res = await fetch('/api/verify/recent?' + params);
         var data = await res.json();
         var list = document.getElementById('recentList');
+
+        if (!filtersLoaded && data.decision_types) {
+            var sel = document.getElementById('decisionFilter');
+            data.decision_types.forEach(function(dt) {
+                var opt = document.createElement('option');
+                opt.value = dt;
+                opt.textContent = dt;
+                sel.appendChild(opt);
+            });
+            filtersLoaded = true;
+        }
+
         if (!data.receipts || data.receipts.length === 0) {
-            list.innerHTML = '<div style="color:#4b5563; font-style:italic;">No receipts recorded yet. Receipts are generated as the governance engine processes evaluation cycles.</div>';
+            list.innerHTML = '<div style="color:#4b5563; font-style:italic; padding: 1rem 0;">No receipts found for the selected criteria.</div>';
+            document.getElementById('pagination').style.display = 'none';
+            var header = document.getElementById('recentHeader');
+            header.innerHTML = 'GOVERNANCE RECEIPTS <span style="font-size:0.7rem; color:#4b5563; font-weight:normal; margin-left:8px;">0 results</span>';
             return;
         }
+
         var header = document.getElementById('recentHeader');
-        if (header && data.total) {
-            header.innerHTML = 'RECENT GOVERNANCE RECEIPTS <span style="font-size:0.7rem; color:#4b5563; font-weight:normal; margin-left:8px;">Showing ' + data.count + ' of ' + data.total + ' total receipts</span>';
+        if (header) {
+            var startItem = (data.page - 1) * data.limit + 1;
+            var endItem = Math.min(data.page * data.limit, data.total);
+            header.innerHTML = 'GOVERNANCE RECEIPTS <span style="font-size:0.7rem; color:#4b5563; font-weight:normal; margin-left:8px;">Showing ' + startItem + '-' + endItem + ' of ' + data.total + ' total receipts</span>';
         }
+
         var html = '';
         data.receipts.forEach(function(r) {
             var decColor = r.decision==='APPROVE'?'#22c55e':r.decision==='BLOCK'?'#ef4444':'#eab308';
@@ -235,13 +323,15 @@ async function loadRecent() {
             html += '<span style="font-size:0.75rem; color:#4b5563; white-space:nowrap;">' + (r.signed ? 'PQC Signed' : 'Unsigned') + '</span></div>';
         });
         list.innerHTML = html;
+
+        updatePagination(data);
     } catch(e) {
         document.getElementById('recentList').innerHTML = '<div style="color:#4b5563;">Unable to load recent receipts.</div>';
     }
 }
 
 loadRecent();
-setInterval(loadRecent, 30000);
+setInterval(function() { if (currentPage === 1) loadRecent(); }, 30000);
 </script>
 </body>
 </html>"""
@@ -403,8 +493,15 @@ async def handle_public_key(request):
 
 
 async def handle_recent_receipts(request):
-    limit = int(request.query.get('limit', '20'))
-    limit = min(limit, 100)
+    limit = int(request.query.get('limit', '10'))
+    limit = min(max(1, limit), 50)
+    page = int(request.query.get('page', '1'))
+    page = max(1, page)
+    offset = (page - 1) * limit
+
+    date_from = request.query.get('date_from', '')
+    date_to = request.query.get('date_to', '')
+    decision_type = request.query.get('decision', '')
 
     conn = _get_db_connection()
     if not conn:
@@ -412,16 +509,55 @@ async def handle_recent_receipts(request):
 
     try:
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM decision_receipts")
+
+        where_clauses = []
+        params_count = []
+        params_query = []
+
+        if date_from:
+            try:
+                datetime.strptime(date_from, '%Y-%m-%d')
+                where_clauses.append("timestamp_utc >= %s")
+                from_ts = date_from + 'T00:00:00Z'
+                params_count.append(from_ts)
+                params_query.append(from_ts)
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                to_date = datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1)
+                where_clauses.append("timestamp_utc < %s")
+                to_ts = to_date.strftime('%Y-%m-%dT00:00:00Z')
+                params_count.append(to_ts)
+                params_query.append(to_ts)
+            except ValueError:
+                pass
+        if decision_type:
+            where_clauses.append("decision = %s")
+            params_count.append(decision_type)
+            params_query.append(decision_type)
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+
+        cur.execute(f"SELECT COUNT(*) FROM decision_receipts {where_sql}", params_count)
         total = cur.fetchone()[0]
-        cur.execute("""
+
+        params_query.extend([limit, offset])
+        cur.execute(f"""
             SELECT receipt_id, timestamp_utc, asset, decision,
                    signature_algorithm, content_hash
             FROM decision_receipts
+            {where_sql}
             ORDER BY created_at DESC
-            LIMIT %s
-        """, (limit,))
+            LIMIT %s OFFSET %s
+        """, params_query)
         rows = cur.fetchall()
+
+        cur.execute("SELECT DISTINCT decision FROM decision_receipts ORDER BY decision")
+        decision_types = [r[0] for r in cur.fetchall()]
+
         cur.close()
         conn.close()
 
@@ -437,7 +573,17 @@ async def handle_recent_receipts(request):
             for r in rows
         ]
 
-        return web.json_response({'receipts': receipts, 'count': len(receipts), 'total': total})
+        total_pages = -(-total // limit) if total > 0 else 0
+
+        return web.json_response({
+            'receipts': receipts,
+            'count': len(receipts),
+            'total': total,
+            'page': page,
+            'total_pages': total_pages,
+            'limit': limit,
+            'decision_types': decision_types,
+        })
     except Exception as e:
         logger.error(f"Error fetching recent receipts: {e}")
         if conn:
