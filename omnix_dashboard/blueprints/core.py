@@ -2263,7 +2263,7 @@ def _calculate_opportunity_tracker(conn):
         tracking_start = datetime(2026, 1, 14)
         review_date = datetime(2026, 2, 13)
         today = datetime.now()
-        current_day = min(30, max(1, (today - tracking_start).days + 1))
+        current_day = max(1, (today - tracking_start).days + 1)
         
         # ADR-018: Realistic metrics - cap estimates to available capital
         # Max capital: $1M virtual, Max opportunity cost: 5% of capital = $50K

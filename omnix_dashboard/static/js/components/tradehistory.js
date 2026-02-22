@@ -48,11 +48,11 @@ const TradeHistoryWidget = {
             const trackRecordStart = new Date('2026-01-15T00:00:00Z');
             const now = new Date();
             const daysSinceStart = Math.ceil((now - trackRecordStart) / (1000 * 60 * 60 * 24));
-            const currentDay = Math.max(1, Math.min(30, daysSinceStart));
+            const currentDay = Math.max(1, daysSinceStart);
             
             html += `
                 <div class="official-notice" style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 12px; text-align: center;">
-                    <div style="font-size: 14px; color: #00ff88; margin-bottom: 8px;">Official Track Record - Day ${currentDay}/30</div>
+                    <div style="font-size: 14px; color: #00ff88; margin-bottom: 8px;">Official Track Record - Day ${currentDay}</div>
                     <div style="font-size: 12px; color: #888;">
                         No trades executed. System evaluating market conditions.<br>
                         <span style="color: #666; font-style: italic;">Switch to "Full History" to see Learning Baseline trades.</span>

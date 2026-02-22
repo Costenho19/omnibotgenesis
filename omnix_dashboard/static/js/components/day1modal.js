@@ -41,11 +41,9 @@ const Day1Modal = {
     updateCountdown() {
         const now = new Date();
         const trackRecordStart = new Date('2026-01-15T00:00:00Z');
-        const diff = this.DAY30_DATE - now;
-        const daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
         
         const daysSinceStart = Math.ceil((now - trackRecordStart) / (1000 * 60 * 60 * 24));
-        const currentDay = Math.max(1, Math.min(30, daysSinceStart));
+        const currentDay = Math.max(1, daysSinceStart);
         
         const el = document.getElementById('current-day');
         if (el) {
@@ -54,14 +52,9 @@ const Day1Modal = {
         
         const container = document.getElementById('day30-countdown');
         if (container) {
-            if (daysRemaining === 0) {
-                container.querySelector('.day30-text').innerHTML = 'Day <strong>30</strong>/30';
-                container.style.borderColor = '#00ff88';
-                container.style.background = 'rgba(0, 255, 136, 0.1)';
-            } else if (daysRemaining <= 7) {
-                container.style.borderColor = '#ff5722';
-                container.style.background = 'rgba(255, 87, 34, 0.1)';
-            }
+            container.querySelector('.day30-text').innerHTML = 'Day <strong>' + currentDay + '</strong>';
+            container.style.borderColor = '#00ff88';
+            container.style.background = 'rgba(0, 255, 136, 0.1)';
         }
     },
     
