@@ -59,12 +59,27 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Seguridad | Rate limit 30/min, zero internal data exposure |
 | Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
 | Ciclos documentados | 641,000+ evaluation cycles (internal dataset, not externally audited) |
+| Auto-refresh | 30s interval, lista se actualiza sin recargar |
+| Timestamps | Hora exacta UTC + tiempo relativo (ej: "23:55:39 UTC (2m ago)") |
+| Contador total | "Showing 10 of N total receipts" visible en header |
 
 **URL Pública:** `https://omnibotgenesis-production.up.railway.app/verify`
 
 **Archivos:**
-- `omnix_core/evidence/verification_server.py` — servidor standalone
+- `omnix_core/evidence/verification_server.py` — servidor standalone + UI verificación
+- `omnix_core/evidence/decision_receipt.py` — motor de receipts (genera, firma, almacena)
 - `src/omnix/bootstrap/main_entry.py` — integración (importlib lazy load)
+
+**Receipt Generation Flow:**
+1. Bot analiza asset en `_analyze_market()` (auto_trading_bot.py)
+2. `_generate_governance_receipt()` crea receipt con DecisionReceiptEngine
+3. Receipt firmado con Dilithium-3 PQC, hash SHA-256 encadenado al anterior
+4. Almacenado en tabla `decision_receipts` (PostgreSQL)
+5. Visible en `/verify` y verificable via `/api/verify/{receipt_id}`
+
+**Database Driver Compatibility:**
+- `_get_db_connection()` helper con fallback: psycopg2 (Replit) → psycopg3 (Railway)
+- Compartido entre `decision_receipt.py` y `verification_server.py`
 
 **Datos públicos expuestos:** receipt_id, timestamp, asset, decision, content_hash, prev_hash (truncado), signature_algorithm, governance gate categories.
 **Datos NO expuestos:** veto_chain, policy_version, engine_version, thresholds internos.
