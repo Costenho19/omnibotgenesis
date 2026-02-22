@@ -1,9 +1,33 @@
 # OMNIX Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** February 19, 2026  
+**Updated:** February 22, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Security Hardening — Verification Server (Feb 22, 2026)
+
+**Status:** PENDING — Deferred until post-fundraise
+
+**Context:** The public verification server (`/verify`, port 8000) is live in production with rate limiting (30 req/min) and zero internal data exposure. The following improvements would strengthen the security posture for institutional-grade deployment.
+
+| Mejora | Prioridad | Detalle |
+|--------|-----------|---------|
+| Dashboard authentication | HIGH | Agregar autenticación para endpoints internos del dashboard (Flask, port 5000) |
+| Access attempt logging | MEDIUM | Registrar intentos de acceso sospechosos (patrones anómalos, IPs repetitivas) |
+| CORS restrictivo | MEDIUM | Configurar CORS en verification server para limitar orígenes permitidos |
+| Request anomaly monitoring | LOW | Detección de patrones inusuales en volumen/frecuencia de peticiones |
+
+**Current protections already in place:**
+- Rate limiting: 30 req/min per IP
+- Zero internal data exposure (no veto_chain, thresholds, engine_version)
+- PQC-signed receipts (Dilithium-3) — unforgeable without private key
+- SHA-256 hash chain — tamper-evident audit trail
+- Secrets stored as encrypted environment variables, never in code
+
+**Risk:** Low. Current protections are sufficient for pre-seed stage. Improvements recommended before enterprise/institutional deployment.
 
 ---
 
