@@ -8,23 +8,16 @@ export interface LiveMetrics {
   system_uptime_days: number
 }
 
-interface LiveMetricsResponse {
-  success: boolean
-  live: boolean
-  metrics: LiveMetrics
-  source: string
-  last_updated: string
-}
-
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 670000,
-  pqc_signed_receipts: 16000,
+  evaluation_cycles: 673673,
+  pqc_signed_receipts: 16308,
   capital_preserved_pct: 98.5,
   verticals_demo: 4,
-  system_uptime_days: 0,
+  system_uptime_days: 85,
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'
+const LOCAL_API = import.meta.env.VITE_API_BASE || ''
 
 export function useLiveMetrics(refreshIntervalMs = 60000) {
   const [metrics, setMetrics] = useState<LiveMetrics>(FALLBACK_METRICS)
@@ -35,21 +28,51 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
   useEffect(() => {
     let mounted = true
 
-    const fetchMetrics = async () => {
+    const fetchFromLocal = async (): Promise<boolean> => {
       try {
-        const response = await fetch(`${API_BASE}/api/live-metrics`)
+        const response = await fetch(`${LOCAL_API}/api/live-metrics`)
         if (response.ok) {
-          const data: LiveMetricsResponse = await response.json()
+          const data = await response.json()
           if (mounted && data.success && data.metrics) {
             setMetrics(data.metrics)
             setIsLive(data.live)
             setLastUpdated(data.last_updated)
+            return true
           }
         }
-      } catch {
-      } finally {
-        if (mounted) setLoading(false)
+      } catch {}
+      return false
+    }
+
+    const fetchFromRailway = async (): Promise<boolean> => {
+      try {
+        const response = await fetch(`${RAILWAY_PUBLIC_API}/api/governance/metrics`)
+        if (response.ok) {
+          const data = await response.json()
+          if (mounted && data.governance_summary) {
+            const gs = data.governance_summary
+            setMetrics({
+              evaluation_cycles: gs.total_evaluation_cycles || FALLBACK_METRICS.evaluation_cycles,
+              pqc_signed_receipts: gs.total_receipts || FALLBACK_METRICS.pqc_signed_receipts,
+              capital_preserved_pct: gs.capital_preserved_pct ?? FALLBACK_METRICS.capital_preserved_pct,
+              verticals_demo: gs.verticals_demo ?? FALLBACK_METRICS.verticals_demo,
+              system_uptime_days: gs.system_uptime_days ?? FALLBACK_METRICS.system_uptime_days,
+            })
+            setIsLive(true)
+            setLastUpdated(new Date().toISOString())
+            return true
+          }
+        }
+      } catch {}
+      return false
+    }
+
+    const fetchMetrics = async () => {
+      const localOk = await fetchFromLocal()
+      if (!localOk) {
+        await fetchFromRailway()
       }
+      if (mounted) setLoading(false)
     }
 
     fetchMetrics()
