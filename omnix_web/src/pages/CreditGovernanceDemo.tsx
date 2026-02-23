@@ -254,6 +254,7 @@ export default function CreditGovernanceDemo() {
           <div className="flex items-center gap-8">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/governance-demo-insurance" className="nav-link">Insurance Demo</Link>
+            <Link to="/governance-demo-energy" className="nav-link">Energy Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
           </div>
@@ -269,7 +270,7 @@ export default function CreditGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 6-checkpoint governance architecture
-            applies to credit/lending decisions — the same pattern validated across 192,000+
+            applies to credit/lending decisions — the same pattern validated across 1,600,000+
             evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
@@ -548,7 +549,7 @@ export default function CreditGovernanceDemo() {
             <p className="section-title">Architecture Comparison</p>
             <h2 className="text-3xl font-bold text-white">Same 6 Checkpoints. Every Domain.</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -568,7 +569,7 @@ export default function CreditGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">192,000+ evaluation cycles | 98.5% capital preserved (internal dataset)</p>
+                <p className="text-xs text-emerald-400">1,600,000+ evaluation cycles | 98.5% capital preserved (internal dataset)</p>
               </div>
             </div>
 
@@ -617,6 +618,29 @@ export default function CreditGovernanceDemo() {
                 <p className="text-xs text-blue-400">Year 2-3 roadmap — domain adapter in design</p>
               </div>
             </div>
+
+            <div className="glass-card p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <h4 className="text-white font-medium">Energy Trading</h4>
+                  <Link to="/governance-demo-energy" className="text-xs text-orange-500 font-medium hover:text-white transition-colors">VIEW DEMO →</Link>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm text-muted">
+                <p><span className="text-white">CP-1:</span> Price forecast confidence</p>
+                <p><span className="text-white">CP-2:</span> Grid exposure limits</p>
+                <p><span className="text-white">CP-3:</span> Supply-demand coherence</p>
+                <p><span className="text-white">CP-4:</span> Price trend persistence</p>
+                <p><span className="text-white">CP-5:</span> Regulatory & climate stress</p>
+                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-orange-500/20">
+                <p className="text-xs text-orange-500">Interactive demo — energy governance in action</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -624,12 +648,12 @@ export default function CreditGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">The Hardest Part Is Already Done</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             Building a robust, battle-tested governance engine is the hardest engineering challenge.
-            OMNIX has already done this — validated across 192,000+ evaluation cycles. Expanding to new
+            OMNIX has already done this — validated across 1,600,000+ evaluation cycles. Expanding to new
             domains is an adapter problem, not a research problem.
           </p>
-          <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-8">
+          <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
             <div>
-              <div className="text-2xl font-bold text-white">192K+</div>
+              <div className="text-2xl font-bold text-white">1.6M+</div>
               <div className="text-xs text-muted">Evaluation Cycles</div>
             </div>
             <div>
@@ -639,6 +663,10 @@ export default function CreditGovernanceDemo() {
             <div>
               <div className="text-2xl font-bold gold-text">6</div>
               <div className="text-xs text-muted">Independent Checkpoints</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-orange-500">4</div>
+              <div className="text-xs text-muted">Verticals</div>
             </div>
           </div>
           <a href="https://wa.me/16504815494?text=Hi%2C%20I%20saw%20the%20governance%20demo%20and%20I%27m%20interested" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
@@ -652,7 +680,7 @@ export default function CreditGovernanceDemo() {
             This is a governance architecture demonstration. The credit evaluation shown uses simplified models
             for illustrative purposes. Production credit governance would integrate with real credit bureaus,
             financial data providers, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
-            validated in digital asset trading across 192,000+ evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across 1,600,000+ evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>
         </div>
@@ -666,6 +694,7 @@ export default function CreditGovernanceDemo() {
           </div>
           <div className="flex items-center gap-6">
             <Link to="/" className="text-muted hover:text-white text-sm transition-colors">Home</Link>
+            <Link to="/governance-demo-energy" className="text-muted hover:text-white text-sm transition-colors">Energy Demo</Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">Technical Details</Link>
             <a href="https://wa.me/16504815494" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">Contact</a>
           </div>
