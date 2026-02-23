@@ -293,7 +293,98 @@ def build_pdf():
     elements.append(Paragraph("Founder &amp; CEO — OMNIX", body_style))
     elements.append(Paragraph("Eureka Dubai GCC 2026 — Semifinalist", subtitle_style))
 
+    # ===== RESPONSE FORM SECTION =====
+    from reportlab.platypus import PageBreak
+    elements.append(PageBreak())
+
+    elements.append(Paragraph("Response Form", title_style))
+    elements.append(Paragraph(
+        "Eureka Dubai GCC 2026 — Validation Interview Record",
+        subtitle_style
+    ))
+    elements.append(Paragraph(
+        "Please complete the following sections. Your contact details are required by the "
+        "Eureka program to verify that this validation was conducted with a real industry professional. "
+        "Your information will only be used for program verification purposes.",
+        body_style
+    ))
+
+    elements.append(Paragraph("Respondent Information", heading_style))
+
+    field_label_style = ParagraphStyle('FieldLabel', parent=body_style,
+        fontName='Helvetica-Bold', fontSize=10, spaceAfter=2)
+    field_line_style = ParagraphStyle('FieldLine', parent=body_style,
+        fontName='Helvetica', fontSize=10, textColor=LIGHT_GRAY, spaceAfter=14)
+
+    contact_fields = [
+        ("Full Name:", "________________________________________________________"),
+        ("Role / Title:", "________________________________________________________"),
+        ("Organization:", "________________________________________________________"),
+        ("Email:", "________________________________________________________"),
+        ("Phone:", "________________________________________________________"),
+        ("LinkedIn (optional):", "________________________________________________________"),
+    ]
+    for label, line in contact_fields:
+        elements.append(Paragraph(f"<b>{label}</b>  {line}", body_style))
+
+    elements.append(Paragraph("Responses", heading_style))
+    elements.append(Paragraph(
+        "Please provide your honest answers to each question. You may respond as briefly "
+        "or as extensively as you wish.",
+        body_style
+    ))
+
+    for i, q in enumerate(questions, 1):
+        elements.append(Paragraph(f"<b>Question {i}:</b> {q}", subheading_style))
+        elements.append(Paragraph("Your response:", field_label_style))
+        for _ in range(4):
+            elements.append(Paragraph("___________________________________________________________________________", field_line_style))
+        elements.append(Spacer(1, 6))
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("Key Feedback Summary", heading_style))
+    elements.append(Paragraph(
+        "This section helps us consolidate your most important insights for the Eureka evaluation panel.",
+        body_style
+    ))
+
+    feedback_sections = [
+        ("Pain Point",
+         "What is the biggest challenge or risk you see with automated decision-making in your industry today?"),
+        ("Perceived Value",
+         "How valuable would a governance infrastructure like OMNIX be for your organization or industry? "
+         "What specific problems would it solve?"),
+        ("Pricing Sensitivity",
+         "Would your organization (or similar organizations) be willing to invest in a solution that reduces "
+         "operational and legal risk from automated decisions? What factors would influence that decision?"),
+    ]
+    for title, prompt in feedback_sections:
+        elements.append(Paragraph(f"<b>{title}</b>", subheading_style))
+        elements.append(Paragraph(prompt, body_style))
+        elements.append(Paragraph("Your response:", field_label_style))
+        for _ in range(5):
+            elements.append(Paragraph("___________________________________________________________________________", field_line_style))
+        elements.append(Spacer(1, 8))
+
+    elements.append(Spacer(1, 16))
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=MEDIUM_GRAY, spaceBefore=8, spaceAfter=12))
+
+    elements.append(Paragraph(
+        "<b>Authorization:</b> By completing this form, I confirm that the responses above reflect "
+        "my honest professional opinion and I authorize their use for the Eureka Dubai GCC 2026 "
+        "program validation process.",
+        body_style
+    ))
+
     elements.append(Spacer(1, 20))
+    sig_fields = [
+        ("Signature:", "________________________________________"),
+        ("Date:", "________________________________________"),
+    ]
+    for label, line in sig_fields:
+        elements.append(Paragraph(f"<b>{label}</b>  {line}", body_style))
+
+    elements.append(Spacer(1, 30))
     elements.append(Paragraph(
         "OMNIX Decision Governance Infrastructure — Abu Dhabi, UAE<br/>"
         "Internal dataset, not externally audited. Evaluation cycles represent governance engine processing.",
