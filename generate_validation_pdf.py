@@ -275,7 +275,7 @@ def build_pdf():
         body_style
     ))
     elements.append(Paragraph(
-        '<a href="https://t.me/OmniGenesis_bot" color="#3b82f6">https://t.me/OmniGenesis_bot</a>',
+        '<a href="https://t.me/omnixglobal2025_bot" color="#3b82f6">https://t.me/omnixglobal2025_bot</a>',
         link_style
     ))
 
