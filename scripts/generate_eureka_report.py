@@ -354,7 +354,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Current Stage:</b> MVP (Live Product) \u2014 Running 24/7 in production since November 2025. "
-        "655,000+ evaluation cycles completed, 6,580+ cryptographically signed governance receipts, "
+        "1,600,000+ evaluation cycles completed, 16,000+ cryptographically signed governance receipts, "
         "100% post-quantum cryptography coverage.",
         styles['BodyText2']
     ))
@@ -367,8 +367,8 @@ def build_section_1(styles):
 
     elements.append(Spacer(1, 8))
     kpi_data = [
-        ['655,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
-        ['6,580+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
+        ['1,600,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
+        ['16,000+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
         ['98.5%', 'Capital Preserved', 'During BTC -7.37% volatility'],
         ['<120ms', 'Decision Latency', 'Real-time governance validation'],
         ['$49.7B+', 'Combined TAM', 'Multi-vertical addressable market (6 verticals)'],
@@ -698,7 +698,7 @@ def build_section_6(styles):
     today_items = [
         "<b>Fail-closed by default:</b> Every other system defaults to execute. OMNIX defaults to protect.",
         "<b>Post-quantum security in production:</b> No competitor has PQC-signed decision receipts.",
-        "<b>Full audit trail:</b> 6,580+ governance receipts, publicly verifiable, zero information leakage.",
+        "<b>Full audit trail:</b> 16,000+ governance receipts, publicly verifiable, zero information leakage.",
         "<b>Domain-agnostic architecture:</b> Same engine validates trading, credit, insurance, and robotics/autonomous systems decisions.",
     ]
     elements.extend(bullet_list(today_items, styles))
@@ -791,8 +791,8 @@ def build_section_8(styles):
     traction_data = [
         ['Metric', 'Value', 'Significance'],
         ['Production Uptime', '24/7 since Nov 2025', 'System operational for 4+ months continuously'],
-        ['Evaluation Cycles', '655,000+', 'Governance engine processing decisions in real-time'],
-        ['PQC-Signed Receipts', '6,580+', 'Every decision signed with Dilithium-3 (100% coverage)'],
+        ['Evaluation Cycles', '1,600,000+', 'Governance engine processing decisions in real-time'],
+        ['PQC-Signed Receipts', '16,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
         ['Shadow Trade Events', '192,000+', 'Counterfactual analysis of vetoed decisions'],
         ['Veto Accuracy', '100%', '50 validated shadow outcomes \u2014 all vetos were correct'],
@@ -943,7 +943,7 @@ def build_section_10(styles):
         "governance systems and the institutional requirements of regulated financial markets. "
         "The AI-augmented development model has enabled solo construction of a system that would "
         "typically require a 5-person engineering team \u2014 evidenced by 42+ database tables, 27 ADRs, "
-        "655,000+ evaluation cycles, and 4+ months of continuous production operation. Post-funding, "
+        "1,600,000+ evaluation cycles, and 4+ months of continuous production operation. Post-funding, "
         "the first hires are designed to eliminate key-person risk and accelerate enterprise sales.",
         styles['BodyText2']
     ))
@@ -991,7 +991,7 @@ def build_section_11(styles):
     elements.append(Paragraph("<b>Valuation Justification</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
-        "<b>Real validation data:</b> 655,000+ evaluation cycles, 6,580+ PQC-signed receipts",
+        "<b>Real validation data:</b> 1,600,000+ evaluation cycles, 16,000+ PQC-signed receipts",
         "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
         "<b>Strategic timing:</b> MiCA + ADGM convergence creating urgent demand for governance infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",

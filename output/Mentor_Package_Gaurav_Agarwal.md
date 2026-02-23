@@ -74,13 +74,13 @@ contacto@omnixquantum.net
 **One-liner:** OMNIX is Decision Governance Infrastructure that validates automated decisions through 6 independent checkpoints before execution.
 
 **Elevator pitch (30 seconds):**
-"Automated systems — trading bots, lending algorithms, supply chains — make thousands of decisions per day with minimal oversight. OMNIX adds an independent governance layer that validates every decision before it executes. Think of it as a 6-layer safety check that prevents costly mistakes. We're already running 24/7 in production with 655,000+ evaluation cycles and post-quantum cryptographic signing on every decision."
+"Automated systems — trading bots, lending algorithms, supply chains, robotics — make thousands of decisions per day with minimal oversight. OMNIX adds an independent governance layer that validates every decision before it executes. Think of it as a 6-layer safety check that prevents costly mistakes. We're already running 24/7 in production with 1,600,000+ evaluation cycles and post-quantum cryptographic signing on every decision."
 
 **Key numbers:**
-- 655,000+ evaluation cycles (live production)
-- 6,580+ cryptographically signed governance receipts
+- 1,600,000+ evaluation cycles (live production)
+- 16,000+ cryptographically signed governance receipts
 - 98.5% capital preserved during BTC -7.37% volatility
-- $37.3B+ combined addressable market (5 verticals)
+- $49.7B+ combined addressable market (6 verticals including robotics)
 - Raising $500K pre-seed at $2.5M–$3M pre-money valuation
 
 ---

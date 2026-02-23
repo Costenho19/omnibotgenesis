@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed for automated systems, initially focused on digital asset trading to ensure capital preservation. It utilizes a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key features include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand (Year 2-3+) into various financial and industrial sectors — including robotics/autonomous physical systems, supply chain, credit/lending, insurance, and energy trading — operating with a dual revenue model: B2B Decision Governance Licensing and B2C SaaS. Combined TAM: $49.7B+ across 6+ verticals.
+OMNIX is a Decision Governance Infrastructure designed for automated systems, initially focused on digital asset trading to ensure capital preservation. It utilizes a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key features include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various financial and industrial sectors — including robotics/autonomous physical systems, supply chain, credit/lending, insurance, and energy trading — operating with a dual revenue model: B2B Decision Governance Licensing and B2C SaaS. The combined Total Addressable Market (TAM) is estimated at $49.7B+ across 6+ verticals.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -85,7 +85,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ```
 
 > **REGLA**: Cuando la IA reporte métricas (P&L, win rate, trades, losses), DEBE agregar al final:
-> 
+>
 > **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
 
 **NO aplica para**: saludos, comandos, preguntas técnicas sin métricas. Ver ADR-023.
@@ -107,7 +107,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 - Footer/copyright: "Abu Dhabi, UAE" — no ADGM affiliation implied
 
 **Public Metrics Contextualization (MANDATORY):**
-- "192,000+ evaluation cycles" — NOT "decisions governed"
+- "1,600,000+ evaluation cycles" — NOT "decisions governed"
 - Always add "(internal dataset)" or "(internal dataset, not externally audited)"
 - "Capital Preserved*" with asterisk when shown as metric
 - Pitch deck: "internal evaluation data" — NOT "audit-grade data"
@@ -149,7 +149,7 @@ The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE G
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system tracks vetoed trades to learn filter calibration by analyzing price movement, determining veto correctness, and providing filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs. Losses Avoided vs. Net Opportunity, having captured over 192,000 shadow trade events.
+A counterfactual analysis system tracks vetoed trades to learn filter calibration by analyzing price movement, determining veto correctness, and providing filter threshold recommendations. An Opportunity Tracker analyzes Missed Opportunities vs. Losses Avoided vs. Net Opportunity, having captured over 192,000+ shadow trade events.
 
 ### Decision Contradiction Index (DCI)
 A shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates significant internal contradiction, mandating a HOLD. Realistic execution thresholds require MC WR > 50%, MC ER > 0%, Coherence > 50%, and DCI < 70.

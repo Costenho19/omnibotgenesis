@@ -1,9 +1,29 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 21 de Febrero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE  
+**Fecha**: 23 de Febrero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA  
 **Versión interna (dev)**: V6.5.4e  
 **TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
+
+### Métricas de Producción (Feb 23, 2026)
+
+| Métrica | Valor | Notas |
+|---------|-------|-------|
+| PQC-Signed Receipts | 16,000+ | Dilithium-3, 100% coverage |
+| Evaluation Cycles | 1,600,000+ | Motor 24/7 desde Nov 2025 |
+| Shadow Trade Events | 192,000+ | Análisis contrafactual de vetos |
+| Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
+| Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
+
+### Cambios Recientes (Feb 17-23, 2026)
+
+- **Feb 23**: Vertical Robótica/Sistemas Autónomos agregada a reporte Eureka, website, documentación (Year 3+, TAM +$12.4B)
+- **Feb 23**: Fix saludos AI — bot responde con calidez a "hola/hello" en vez de datos de mercado
+- **Feb 22**: Reporte Eureka PDF generado (14 secciones, formato institucional) + paquetes para mentores
+- **Feb 21**: Optimización costos Railway — check_interval a 90s (~77% reducción en ciclos/día)
+- **Feb 20**: Mejoras página verificación — filtros por fecha/decisión, paginación, conteo total
+- **Feb 19**: Página institucional actualizada — sin límites hardcodeados de duración
+- **Feb 17-19**: Servidor Verificación Pública lanzado — generación receipts, firma PQC, hash chain, branding
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 
@@ -59,7 +79,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Endpoints | `/verify`, `/api/verify/{id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics` |
 | Seguridad | Rate limit 30/min, zero internal data exposure |
 | Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
-| Ciclos documentados | 641,000+ evaluation cycles (internal dataset, not externally audited) |
+| Ciclos documentados | 1,600,000+ evaluation cycles (internal dataset, not externally audited) |
 | Auto-refresh | 30s interval, lista se actualiza sin recargar |
 | Timestamps | Hora exacta UTC + tiempo relativo (ej: "23:55:39 UTC (2m ago)") |
 | Contador total | "Showing 10 of N total receipts" visible en header |
