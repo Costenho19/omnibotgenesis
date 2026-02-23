@@ -2,7 +2,8 @@
 
 **Fecha**: 21 de Febrero 2026  
 **Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE  
-**Versión interna (dev)**: V6.5.4e
+**Versión interna (dev)**: V6.5.4e  
+**TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
 
 > **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
 

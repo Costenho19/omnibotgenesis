@@ -226,7 +226,7 @@ export default function InstitutionalPage() {
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
                 A governance control architecture for automated decision systems. Our 6-checkpoint fail-closed engine 
-                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading.
+                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading. Future verticals (Year 2-3+): robotics/autonomous systems, supply chain, lending, and insurance.
               </p>
               <div className="flex justify-center gap-4">
                 <button className="btn-primary flex items-center gap-2">
@@ -469,7 +469,7 @@ export default function InstitutionalPage() {
               <div className="text-center mb-12">
                 <p className="section-title">Integration Partners</p>
                 <h2 className="text-3xl font-bold text-white">Built for Your Decision Infrastructure</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. First vertical: digital asset trading.</p>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. First vertical: digital asset trading. Future verticals (Year 2-3+): robotics, supply chain, lending, and insurance.</p>
               </div>
               
               <div className="grid md:grid-cols-3 gap-8">
@@ -720,7 +720,7 @@ export default function InstitutionalPage() {
               <div className="max-w-4xl mx-auto space-y-4">
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">Is OMNIX a trading bot?</h4>
-                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 6 independent checkpoints. Digital asset trading is the first validated vertical.</p>
+                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 6 independent checkpoints. Digital asset trading is the first validated vertical. The same architecture is designed to expand (Year 2-3+) into robotics/autonomous systems, supply chain, lending, and insurance.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How does OMNIX integrate with existing systems?</h4>

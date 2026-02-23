@@ -344,7 +344,7 @@ def build_section_1(styles):
     elements.append(Paragraph(
         "<b>Target Customer:</b> B2B \u2014 Prop trading firms, trading platforms, regulated funds, and family offices "
         "in ADGM/DIFC ecosystem (200+ registered firms). Future verticals: supply chain operators, lending platforms, "
-        "insurance underwriters.",
+        "insurance underwriters, and robotics/autonomous physical systems (Year 3+).",
         styles['BodyText2']
     ))
     elements.append(Paragraph(
@@ -371,7 +371,7 @@ def build_section_1(styles):
         ['6,580+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
         ['98.5%', 'Capital Preserved', 'During BTC -7.37% volatility'],
         ['<120ms', 'Decision Latency', 'Real-time governance validation'],
-        ['$37.3B+', 'Combined TAM', 'Multi-vertical addressable market'],
+        ['$49.7B+', 'Combined TAM', 'Multi-vertical addressable market (6 verticals)'],
     ]
     t = make_table(['Metric', 'Description', 'Context'], kpi_data, [90, 160, 210])
     elements.append(t)
@@ -398,7 +398,7 @@ def build_section_2(styles):
         "Our 6-checkpoint architecture acts as an independent governance layer: it does not generate signals \u2014 "
         "it validates and governs them. The architecture is domain-agnostic, validated first in digital asset "
         "trading (the hardest domain due to 24/7 operation, high volatility, and zero circuit breakers), "
-        "with expansion planned into supply chain, credit/lending, insurance, and energy trading.",
+        "with expansion planned (Year 2\u20133+) into supply chain, credit/lending, insurance, energy trading, and robotics/autonomous systems.",
         styles['BodyText2']
     ))
 
@@ -454,7 +454,7 @@ def build_section_3(styles):
     elements.append(Paragraph("<b>Problem Statement</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
         "Automated decision systems across industries \u2014 algorithmic trading, supply chain procurement, "
-        "credit approvals, insurance underwriting \u2014 operate without adequate pre-execution governance. "
+        "credit approvals, insurance underwriting, and robotics/autonomous physical systems \u2014 operate without adequate pre-execution governance. "
         "The consequences are severe:",
         styles['BodyText2']
     ))
@@ -489,7 +489,8 @@ def build_section_3(styles):
         ['Credit / Lending Governance', '$7.4B credit risk management', 'Year 2\u20133'],
         ['Insurance Underwriting', '$5.1B insurtech', 'Year 3+'],
         ['Energy Trading', '$2.8B energy risk management', 'Year 3+'],
-        ['Combined TAM', '$37.3B+', 'Progressive'],
+        ['Robotics / Autonomous Systems', '$12.4B industrial robotics safety', 'Year 3+'],
+        ['Combined TAM', '$49.7B+', 'Progressive'],
     ]
     elements.append(make_table(market_data[0], market_data[1:], [170, 160, 130]))
 
@@ -541,7 +542,7 @@ def build_section_4(styles):
         "<b>Compliance urgency:</b> MiCA regulation (2025+) creates immediate demand for decision governance documentation",
         "<b>Risk-first positioning resonates:</b> 'Preventing costly mistakes' is a stronger value proposition than 'maximizing returns'",
         "<b>Fail-closed architecture is differentiating:</b> Institutions value systems that default to protect over systems that default to act",
-        "<b>Multi-vertical potential recognized:</b> The same governance engine logic applies to credit, insurance, and supply chain decisions",
+        "<b>Multi-vertical potential recognized:</b> The same governance engine logic applies to credit, insurance, supply chain, and robotics/autonomous systems decisions",
     ], styles))
 
     elements.append(Paragraph("<b>Willingness to Pay</b>", styles['SubsectionTitle']))
@@ -616,6 +617,7 @@ def build_section_5(styles):
         ['Supply Chain Domain Adapter', 'Planned', 'Year 2\u20133'],
         ['Credit/Lending Domain Adapter', 'Planned', 'Year 2\u20133'],
         ['Insurance Domain Adapter', 'Planned', 'Year 3+'],
+        ['Robotics / Autonomous Systems Adapter', 'Planned', 'Year 3+'],
     ]
     elements.append(make_table(roadmap_data[0], roadmap_data[1:], [180, 60, 220]))
 
@@ -679,7 +681,7 @@ def build_section_6(styles):
         ['Gauntlet Networks', 'DeFi Risk', '2\u20133', 'No', 'DeFi only', 'Enterprise'],
         ['Chainalysis', 'Compliance', '0 (monitoring only)', 'No', 'Compliance only', '$100K+/yr'],
         ['Internal Quant Teams', 'Prop Funds', '2\u20134', 'Rare', 'No', '$1M+/yr team cost'],
-        ['OMNIX', 'Decision Governance', '6 independent', 'Yes (NIST)', 'Yes (5+ verticals)', '$15K\u2013$35K/mo'],
+        ['OMNIX', 'Decision Governance', '6 independent', 'Yes (NIST)', 'Yes (6+ verticals)', '$15K\u2013$35K/mo'],
     ]
     elements.append(make_table(comp_data[0], comp_data[1:], [85, 85, 85, 55, 65, 85]))
 
@@ -697,14 +699,14 @@ def build_section_6(styles):
         "<b>Fail-closed by default:</b> Every other system defaults to execute. OMNIX defaults to protect.",
         "<b>Post-quantum security in production:</b> No competitor has PQC-signed decision receipts.",
         "<b>Full audit trail:</b> 6,580+ governance receipts, publicly verifiable, zero information leakage.",
-        "<b>Domain-agnostic architecture:</b> Same engine validates trading, credit, and insurance decisions.",
+        "<b>Domain-agnostic architecture:</b> Same engine validates trading, credit, insurance, and robotics/autonomous systems decisions.",
     ]
     elements.extend(bullet_list(today_items, styles))
 
     elements.append(Paragraph("<b>At Scale:</b>", styles['Highlight']))
     scale_items = [
         "<b>Network effects:</b> More decisions governed = better calibration. Shadow Portfolio learns from every veto.",
-        "<b>Multi-vertical expansion:</b> One architecture, multiple verticals. Each new domain increases TAM without rebuilding core.",
+        "<b>Multi-vertical expansion:</b> One architecture, multiple verticals (trading, supply chain, lending, insurance, energy, robotics). Each new domain increases TAM without rebuilding core.",
         "<b>Regulatory moat:</b> MiCA, ADGM, and emerging compliance requirements create demand for auditable decision governance.",
         "<b>Switching costs:</b> OMNIX embeds into execution flow \u2014 high switching cost once integrated.",
     ]
@@ -880,7 +882,7 @@ def build_section_9(styles):
         ['Phase', 'Focus', 'Timeline'],
         ['Phase 1', 'Pilot validation \u2014 3 enterprise clients (digital assets)', 'Months 1\u20136'],
         ['Phase 2', 'Regional expansion (ADGM/DIFC/MENA) + platform partnerships', 'Months 6\u201312'],
-        ['Phase 3', 'Multi-vertical expansion \u2014 supply chain, lending governance', 'Months 12\u201324'],
+        ['Phase 3', 'Multi-vertical expansion \u2014 supply chain, lending, robotics/autonomous systems', 'Months 12\u201324'],
         ['Phase 4', 'Global scaling (EU MiCA, Asia) + insurance, energy', 'Months 24\u201336'],
     ]
     elements.append(make_table(scale_data[0], scale_data[1:], [60, 280, 120]))
@@ -1111,7 +1113,7 @@ def build_section_13(styles):
         ),
         Paragraph(
             "<b>Mitigation:</b> OMNIX is positioned as decision governance infrastructure, not a crypto product. "
-            "The multi-vertical architecture (supply chain, lending, insurance) reduces dependency on any single market. "
+            "The multi-vertical architecture (supply chain, lending, insurance, robotics/autonomous systems) reduces dependency on any single market. "
             "Bear markets actually increase demand for risk governance.",
             styles['BodyText2']
         ),
@@ -1133,7 +1135,7 @@ def build_section_13(styles):
         "<b>Regulatory changes:</b> ADGM/DIFC regulations could shift. OMNIX's compliance-aligned architecture "
         "makes adaptation straightforward.",
         "<b>Competition from incumbents:</b> Large exchanges could build in-house governance. "
-        "OMNIX's 4-month head start, PQC integration, and multi-vertical design create defensible position.",
+        "OMNIX's 4-month head start, PQC integration, and multi-vertical design (6+ verticals including robotics) create defensible position.",
         "<b>AI regulation:</b> Emerging AI governance regulations (EU AI Act) could affect multi-AI orchestration. "
         "OMNIX's transparent decision audit trail is aligned with explainability requirements.",
     ], styles))
