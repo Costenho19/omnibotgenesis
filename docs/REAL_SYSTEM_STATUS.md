@@ -17,6 +17,9 @@
 
 ### Cambios Recientes (Feb 17-23, 2026)
 
+- **Feb 23**: Auditoría consistencia documentación Eureka — arabic_executive_summary actualizado (equity 10%→16.7%, valuación $4.5M→$2.5M-$3M, rebranding a Decision Governance Infrastructure)
+- **Feb 23**: Fix system_uptime_days en verification_server.py — ahora calcula desde shadow_trade_events con fallback a Nov 28, 2025 (antes solo usaba decision_receipts mostrando 2 días)
+- **Feb 23**: NARRATIVE_CONSISTENCY.md actualizado — arabic_executive_summary agregado a la matriz de seguimiento
 - **Feb 23**: Vertical Robótica/Sistemas Autónomos agregada a reporte Eureka, website, documentación (Year 3+, TAM +$12.4B)
 - **Feb 23**: Fix saludos AI — bot responde con calidez a "hola/hello" en vez de datos de mercado
 - **Feb 22**: Reporte Eureka PDF generado (14 secciones, formato institucional) + paquetes para mentores

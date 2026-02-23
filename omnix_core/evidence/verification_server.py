@@ -652,9 +652,23 @@ async def handle_governance_metrics(request):
         """)
         asset_breakdown = [{'asset': row[0], 'count': row[1]} for row in cur.fetchall()]
 
-        cur.execute("SELECT MIN(created_at) FROM decision_receipts")
-        first_receipt_row = cur.fetchone()
-        first_receipt_date = first_receipt_row[0] if first_receipt_row and first_receipt_row[0] else None
+        earliest_dates = []
+
+        try:
+            cur.execute("SELECT MIN(created_at) FROM shadow_trade_events")
+            row = cur.fetchone()
+            if row and row[0]:
+                earliest_dates.append(row[0])
+        except Exception:
+            pass
+
+        try:
+            cur.execute("SELECT MIN(created_at) FROM decision_receipts")
+            row = cur.fetchone()
+            if row and row[0]:
+                earliest_dates.append(row[0])
+        except Exception:
+            pass
 
         cur.close()
         conn.close()
@@ -663,13 +677,22 @@ async def handle_governance_metrics(request):
         if total_shadow > 0:
             block_rate = round((vetoed_count / total_shadow) * 100, 1)
 
+        SYSTEM_LAUNCH_FALLBACK = datetime(2025, 11, 28, tzinfo=timezone.utc)
+
         uptime_days = 0
-        if first_receipt_date:
-            if hasattr(first_receipt_date, 'date'):
-                delta = datetime.now(timezone.utc) - first_receipt_date.replace(tzinfo=timezone.utc) if first_receipt_date.tzinfo is None else datetime.now(timezone.utc) - first_receipt_date
+        if earliest_dates:
+            first_date = min(earliest_dates)
+            if hasattr(first_date, 'date'):
+                if first_date.tzinfo is None:
+                    first_date = first_date.replace(tzinfo=timezone.utc)
             else:
-                delta = datetime.now(timezone.utc) - datetime.combine(first_receipt_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+                first_date = datetime.combine(first_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+            delta = datetime.now(timezone.utc) - first_date
             uptime_days = max(0, delta.days)
+        else:
+            delta = datetime.now(timezone.utc) - SYSTEM_LAUNCH_FALLBACK
+            uptime_days = max(0, delta.days)
+            logger.info("Using fallback system launch date for uptime calculation")
 
         resp = web.json_response({
             'governance_summary': {
