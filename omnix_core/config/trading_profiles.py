@@ -507,7 +507,7 @@ class TradingProfile:
     take_profit_pct_high_vol: float = 0.035
     max_daily_loss_pct: float = 0.08
     min_confidence: float = 0.14
-    check_interval_seconds: int = 25
+    check_interval_seconds: int = 90
     trades_per_day_target: int = 25
     
     coherence_veto_critical: float = 30.0
@@ -611,7 +611,7 @@ INSTITUTIONAL_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.04,
     max_daily_loss_pct=0.08,
     min_confidence=0.14,
-    check_interval_seconds=25,
+    check_interval_seconds=90,
     trades_per_day_target=25,
     
     coherence_veto_critical=30.0,
@@ -653,7 +653,7 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.05,
     max_daily_loss_pct=0.12,
     min_confidence=0.10,
-    check_interval_seconds=20,
+    check_interval_seconds=90,
     trades_per_day_target=40,
     
     coherence_veto_critical=20.0,
@@ -701,7 +701,7 @@ BALANCED_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.045,
     max_daily_loss_pct=0.10,
     min_confidence=0.12,
-    check_interval_seconds=22,
+    check_interval_seconds=90,
     trades_per_day_target=32,
     
     coherence_veto_critical=25.0,
@@ -743,7 +743,7 @@ PAPER_OPTIMIZED_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.045,
     max_daily_loss_pct=0.04,
     min_confidence=0.22,
-    check_interval_seconds=35,
+    check_interval_seconds=90,
     trades_per_day_target=12,
     
     coherence_veto_critical=45.0,
@@ -809,7 +809,7 @@ WIN_RATE_OPTIMIZED_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.050,
     max_daily_loss_pct=0.03,
     min_confidence=0.25,
-    check_interval_seconds=15,
+    check_interval_seconds=90,
     trades_per_day_target=12,
     
     coherence_veto_critical=50.0,
@@ -862,7 +862,7 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     take_profit_pct_high_vol=0.050,
     max_daily_loss_pct=0.03,
     min_confidence=0.15,
-    check_interval_seconds=15,
+    check_interval_seconds=90,
     trades_per_day_target=15,
     
     # V6.5.4d: Umbrales SUBIDOS (Dec 24, 2025) - Coherence Gate más estricto
