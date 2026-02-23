@@ -416,12 +416,18 @@ def compress_response_contextual(response: str, user_message: str) -> str:
                 continue
             if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', s, re.IGNORECASE):
                 continue
-            if len(s) > 200:
-                s = s[:200].rsplit(' ', 1)[0] + '.'
+            if re.search(r'infraestructura|gobernanza|governance|architecture|consolidad[ao]|operativo', s, re.IGNORECASE):
+                continue
+            if re.search(r'mercado|market|bitcoin|btc|precio|price|\$\d', s, re.IGNORECASE):
+                continue
+            if len(s) > 150:
+                s = s[:150].rsplit(' ', 1)[0] + '.'
             kept.append(s)
         if not kept:
-            kept = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
+            kept = ["¡Hola! ¿En qué puedo ayudarte hoy?"]
         result = ' '.join(kept)
+        if len(result) > 200:
+            result = "¡Hola! ¿En qué puedo ayudarte hoy?"
         logger.info(f"🗜️ [COMPRESS] greeting: {len(response)} → {len(result)} chars")
         return result
 

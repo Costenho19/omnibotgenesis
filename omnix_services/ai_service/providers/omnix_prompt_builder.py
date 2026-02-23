@@ -22,9 +22,15 @@ logger = get_logger(__name__)
 
 
 INTENT_INSTRUCTIONS = {
-    UserIntent.GREETING: """Respond in a friendly and professional manner.
-Briefly mention your availability for market analysis.
-Keep the response short (2-3 sentences).""",
+    UserIntent.GREETING: """The user is greeting you. Respond warmly and naturally.
+
+RULES:
+1. Say hello back FIRST with warmth (e.g., "¡Hola! Buen día." or "Hi! Good to hear from you.")
+2. Offer to help briefly (e.g., "¿En qué puedo ayudarte?" or "How can I help?")
+3. Keep it to 2-3 sentences maximum
+4. Do NOT provide market data, system status, or technical information unless asked
+5. Be human and friendly, not robotic or institutional
+6. Match the user's language (Spanish greeting = Spanish response)""",
 
     UserIntent.MARKET_ANALYSIS: """You are a senior quantitative analyst at OMNIX Decision Governance.
 
