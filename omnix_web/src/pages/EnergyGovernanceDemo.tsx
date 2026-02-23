@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Activity, Layers, Target, Brain, Zap, Flame, Wind, Sun, Umbrella } from 'lucide-react'
+import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Activity, Layers, Target, Brain, Zap, Umbrella } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface CheckpointResult {

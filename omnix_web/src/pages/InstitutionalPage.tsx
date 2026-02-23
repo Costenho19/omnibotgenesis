@@ -56,7 +56,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
 }
 
 export default function InstitutionalPage() {
-  const { metrics: liveMetrics, isLive, formatNumber: formatLiveNumber } = useLiveMetrics(30000)
+  const { metrics: liveMetrics } = useLiveMetrics(30000)
   
   const [metrics, setMetrics] = useState<SystemMetrics>({
     evaluationCycles: 670000,
