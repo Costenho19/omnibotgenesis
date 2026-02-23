@@ -1,7 +1,10 @@
 import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 export default function CommercialLanding() {
+  const { metrics, isLive, formatNumber } = useLiveMetrics()
+  
   return (
     <div className="min-h-screen bg-institutional">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
@@ -104,23 +107,25 @@ export default function CommercialLanding() {
             <p className="text-sm text-center text-muted mb-8">Internal dataset, not externally audited</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold gold-text">670K+</div>
+                <div className="text-3xl font-bold gold-text">{formatNumber(metrics.evaluation_cycles)}</div>
                 <div className="text-sm text-muted mt-1">Evaluation Cycles</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-emerald-400">16,000+</div>
+                <div className="text-3xl font-bold text-emerald-400">{formatNumber(metrics.pqc_signed_receipts)}</div>
                 <div className="text-sm text-muted mt-1">PQC-Signed Receipts</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-white">98.5%</div>
+                <div className="text-3xl font-bold text-white">{metrics.capital_preserved_pct}%</div>
                 <div className="text-sm text-muted mt-1">Capital Preserved</div>
               </div>
               <div>
-                <div className="text-3xl font-bold gold-text">4</div>
+                <div className="text-3xl font-bold gold-text">{metrics.verticals_demo}</div>
                 <div className="text-sm text-muted mt-1">Vertical Demos</div>
               </div>
             </div>
-            <p className="text-xs text-center text-muted/60 mt-6">Running 24/7 in production since November 2025</p>
+            <p className="text-xs text-center text-muted/60 mt-6">
+              {isLive ? '🟢 Live from PostgreSQL' : '⏳ Loading...'} — Running 24/7 since November 2025{metrics.system_uptime_days > 0 ? ` (${metrics.system_uptime_days} days)` : ''}
+            </p>
           </div>
         </section>
 

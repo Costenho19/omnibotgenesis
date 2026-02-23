@@ -44,7 +44,8 @@ def create_app():
             'https://*.repl.co'
         ]
         if not IS_RAILWAY:
-            ALLOWED_ORIGINS.extend(['http://localhost:5000', 'http://127.0.0.1:5000'])
+            ALLOWED_ORIGINS.extend(['http://localhost:5000', 'http://127.0.0.1:5000', 'http://localhost:3000', 'http://127.0.0.1:3000'])
+        ALLOWED_ORIGINS.extend(['https://www.omnixquantum.net', 'https://omnixquantum.net'])
     CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
     
     DASHBOARD_API_KEY = os.environ.get('DASHBOARD_API_KEY')

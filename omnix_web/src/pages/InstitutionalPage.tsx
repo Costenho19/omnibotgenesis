@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server } from 'lucide-react'
+import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface SystemMetrics {
   evaluationCycles: number
@@ -55,6 +56,8 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
 }
 
 export default function InstitutionalPage() {
+  const { metrics: liveMetrics, isLive, formatNumber: formatLiveNumber } = useLiveMetrics(30000)
+  
   const [metrics, setMetrics] = useState<SystemMetrics>({
     evaluationCycles: 670000,
     vetosExecuted: 5473,
@@ -90,31 +93,15 @@ export default function InstitutionalPage() {
   const vetosCount = useCountUp(metrics.vetosExecuted, 2000)
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const response = await fetch('/api/metrics')
-        if (response.ok) {
-          const data = await response.json()
-          if (data && typeof data.evaluationCycles === 'number') {
-            setMetrics(prev => ({
-              ...prev,
-              evaluationCycles: data.evaluationCycles || prev.evaluationCycles,
-              vetosExecuted: data.vetosExecuted || prev.vetosExecuted,
-              capitalPreserved: data.capitalPreserved || prev.capitalPreserved,
-              systemUptime: data.systemUptime || prev.systemUptime,
-              lastUpdate: new Date().toISOString()
-            }))
-          }
-        }
-      } catch {
-        // Keep existing values
-      }
+    if (liveMetrics.evaluation_cycles > 0) {
+      setMetrics(prev => ({
+        ...prev,
+        evaluationCycles: liveMetrics.evaluation_cycles,
+        capitalPreserved: liveMetrics.capital_preserved_pct,
+        lastUpdate: new Date().toISOString()
+      }))
     }
-    
-    fetchMetrics()
-    const interval = setInterval(fetchMetrics, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  }, [liveMetrics])
 
   useEffect(() => {
     fetchMarketData()

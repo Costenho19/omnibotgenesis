@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Zap, Activity, Layers, Target, Brain, Umbrella } from 'lucide-react'
+import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface CheckpointResult {
   name: string
@@ -158,6 +159,7 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
 }
 
 export default function InsuranceGovernanceDemo() {
+  const { metrics: liveMetrics, isLive, formatNumberFull } = useLiveMetrics()
   const [application, setApplication] = useState<PolicyApplication>({
     policyType: 'property',
     applicantAge: 40,
@@ -276,7 +278,7 @@ export default function InsuranceGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 6-checkpoint governance architecture
-            applies to insurance underwriting decisions — the same pattern validated across 670,000+
+            applies to insurance underwriting decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
             evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
@@ -575,7 +577,7 @@ export default function InsuranceGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">670,000+ evaluation cycles | 98.5% capital preserved (internal dataset)</p>
+                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (internal dataset)</p>
               </div>
             </div>
 
@@ -655,15 +657,15 @@ export default function InsuranceGovernanceDemo() {
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX now demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
             Each uses the same 6-checkpoint fail-closed architecture with domain-specific signals.
-            The core engine is validated across 670,000+ evaluation cycles.
+            The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
             <div>
-              <div className="text-2xl font-bold text-white">670K+</div>
-              <div className="text-xs text-muted">Evaluation Cycles</div>
+              <div className="text-2xl font-bold text-white">{formatNumberFull(liveMetrics.evaluation_cycles)}</div>
+              <div className="text-xs text-muted">Evaluation Cycles {isLive && '🟢'}</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-emerald-400">98.5%</div>
+              <div className="text-2xl font-bold text-emerald-400">{liveMetrics.capital_preserved_pct}%</div>
               <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
@@ -671,7 +673,7 @@ export default function InsuranceGovernanceDemo() {
               <div className="text-xs text-muted">Checkpoints</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-500">4</div>
+              <div className="text-2xl font-bold text-orange-500">{liveMetrics.verticals_demo}</div>
               <div className="text-xs text-muted">Verticals</div>
             </div>
           </div>
@@ -686,7 +688,7 @@ export default function InsuranceGovernanceDemo() {
             This is a governance architecture demonstration. The insurance evaluation shown uses simplified actuarial models
             for illustrative purposes. Production insurance governance would integrate with real actuarial tables,
             claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
-            validated in digital asset trading across 670,000+ evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>
         </div>
