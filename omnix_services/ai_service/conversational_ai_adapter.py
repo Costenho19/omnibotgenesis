@@ -377,6 +377,9 @@ def _classify_message_context(user_message: str) -> str:
         return 'casual'
     msg = user_message.strip().lower()
 
+    if len(msg) < 30 and any(re.search(p, msg) for p in GREETING_PATTERNS):
+        return 'greeting'
+
     if any(re.search(p, msg) for p in TECHNICAL_PATTERNS):
         return 'technical'
 
@@ -385,9 +388,6 @@ def _classify_message_context(user_message: str) -> str:
 
     if any(re.search(p, msg) for p in MARKET_PATTERNS):
         return 'market'
-
-    if len(msg) < 30 and any(re.search(p, msg) for p in GREETING_PATTERNS):
-        return 'greeting'
 
     if len(msg) < 40:
         return 'casual'

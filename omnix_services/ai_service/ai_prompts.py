@@ -123,12 +123,27 @@ class PromptsContextManager:
         message_lower = message_normalized.strip()
         word_count = len(message_lower.split())
         
-        # PRIORIDAD 1: Detectar saludos/agradecimientos MUY simples primero
-        simple_greetings = ['hola', 'hey', 'buenas', 'que tal', 'como estas', 'como esta', 
-                           'buenos dias', 'buenas tardes', 'buenas noches', 'hi', 'hello',
-                           'saludos', 'que onda', 'gracias', 'thanks', 'ok', 'vale', 'si', 'no']
-        if message_lower in simple_greetings:
+        # PRIORIDAD 1: Detectar saludos/agradecimientos - incluye combinados
+        greeting_words = {'hola', 'hey', 'buenas', 'buenos', 'hi', 'hello', 'saludos', 'que tal',
+                         'como estas', 'como esta', 'que onda', 'good morning', 'good afternoon',
+                         'good evening', 'whats up', 'sup'}
+        greeting_modifiers = {'dias', 'tardes', 'noches', 'dia', 'tarde', 'noche',
+                             'amigo', 'amiga', 'bro', 'hermano', 'caballero', 'master',
+                             'que tal', 'como estas', 'como esta', 'buenos dias',
+                             'buenas tardes', 'buenas noches'}
+        simple_responses = {'gracias', 'thanks', 'ok', 'vale', 'si', 'no', 'genial',
+                           'perfecto', 'entendido', 'claro', 'dale', 'listo', 'thank you'}
+        
+        words = message_lower.split()
+        first_word = words[0] if words else ''
+        
+        if message_lower in simple_responses:
             return 'general_conversation'
+        
+        if word_count <= 5 and (first_word in greeting_words or message_lower in greeting_words):
+            remaining = ' '.join(words[1:]) if len(words) > 1 else ''
+            if not remaining or remaining in greeting_modifiers or all(w in greeting_modifiers for w in words[1:]):
+                return 'greeting'
         
         # PRIORIDAD 2: INVESTOR CHALLENGE → QUANTIFIED TRADE-OFF RESPONSE (ADR-024)
         # Comparative questions requiring NUMBER → FRAMEWORK → POSITIONING structure
@@ -282,6 +297,36 @@ class PromptsContextManager:
         Returns:
             System prompt string
         """
+        
+        # 👋 GREETING FAST PATH — minimal prompt, no market data, no heavy context
+        if intent == 'greeting':
+            detected_language = 'es'
+            if user_message:
+                try:
+                    from .prompt_templates import LanguageContextManager
+                    lang_manager = LanguageContextManager()
+                    detected_language = lang_manager.detect_language(user_message)
+                except Exception:
+                    pass
+            lang_note = "Respond in Spanish." if detected_language == 'es' else f"Respond in {detected_language}."
+            return f"""You are OMNIX AI, a friendly assistant for decision governance infrastructure.
+
+{lang_note}
+
+The user is greeting you. Respond with a warm, short greeting (2-3 sentences max).
+Say hello back first, then briefly offer to help.
+
+DO NOT include:
+- Market prices or Bitcoin data
+- Trading statistics or P&L
+- System architecture or technical details
+- Any data dumps or analysis
+
+Examples:
+- "¡Hola! Buen día. ¿En qué puedo ayudarte hoy?"
+- "¡Buenos días! ¿Qué necesitas?"
+- "Hi! How can I help you today?"
+"""
         
         # 🌍 LANGUAGE DETECTION - Detect user language and generate directive
         detected_language = 'en'
@@ -938,6 +983,32 @@ CONVERSATION STYLE (incorrect):
         """Get specific instructions for each intent - INSTITUTIONAL GRADE"""
         
         intent_map = {
+            'greeting': """
+CONTEXTO: Saludo / Greeting
+
+INSTRUCCIÓN ABSOLUTA: El usuario te está saludando. Responde SOLO con un saludo cálido y breve.
+
+FORMATO OBLIGATORIO:
+- Máximo 2-3 oraciones
+- Saluda de vuelta primero
+- Ofrece ayuda brevemente
+- NO incluir datos de mercado
+- NO incluir precios de Bitcoin
+- NO incluir estadísticas de trading
+- NO incluir análisis técnico
+- NO incluir información del sistema
+
+EJEMPLOS CORRECTOS:
+- "¡Hola! Buen día. ¿En qué puedo ayudarte?"
+- "¡Buenos días! ¿Qué necesitas hoy?"
+- "Hi! How can I help you today?"
+
+EJEMPLOS INCORRECTOS (NUNCA HACER):
+- Mencionar Bitcoin o cualquier precio
+- Dar datos de mercado
+- Describir la arquitectura de OMNIX
+- Dar un resumen del sistema
+""",
             'trading_action': """
 CONTEXTO: Ejecución de Operación
 - Proporcionar análisis técnico estructurado

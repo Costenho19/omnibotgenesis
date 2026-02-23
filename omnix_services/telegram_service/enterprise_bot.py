@@ -102,14 +102,14 @@ def _classify_msg_context(user_message: str) -> str:
     if not user_message:
         return 'casual'
     msg = user_message.strip().lower()
+    if len(msg) < 30 and any(re.search(p, msg) for p in _GREETING_PATTERNS):
+        return 'greeting'
     if any(re.search(p, msg) for p in _TECHNICAL_PATTERNS):
         return 'technical'
     if any(re.search(p, msg) for p in _FUNCTIONALITY_PATTERNS):
         return 'overview'
     if any(re.search(p, msg) for p in _MARKET_PATTERNS):
         return 'market'
-    if len(msg) < 30 and any(re.search(p, msg) for p in _GREETING_PATTERNS):
-        return 'greeting'
     if len(msg) < 40:
         return 'casual'
     return 'general'
@@ -131,12 +131,18 @@ def compress_response_contextual(response: str, user_message: str) -> str:
                 continue
             if re.search(r'funcionalidad\s+central|propósito\s+fundamental|articulan\s+en', s, re.IGNORECASE):
                 continue
+            if re.search(r'infraestructura|gobernanza|governance|architecture|consolidad[ao]|operativo', s, re.IGNORECASE):
+                continue
+            if re.search(r'mercado|market|bitcoin|btc|precio|price|\$\d|trading|P&L', s, re.IGNORECASE):
+                continue
             if len(s) > 200:
                 s = s[:200].rsplit(' ', 1)[0] + '.'
             kept.append(s)
         if not kept:
-            kept = ["OMNIX AI operativo. ¿En qué puedo asistirte?"]
+            kept = ["¡Hola! ¿En qué puedo ayudarte hoy?"]
         result = ' '.join(kept)
+        if len(result) > 200:
+            result = "¡Hola! ¿En qué puedo ayudarte hoy?"
         logger.info(f"🗜️ [COMPRESS] greeting: {len(response)} → {len(result)} chars")
         return result
     if context == 'overview':

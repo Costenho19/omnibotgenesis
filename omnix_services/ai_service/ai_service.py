@@ -175,10 +175,12 @@ class ConversationalAIService:
                 'user_name': user_name
             })
             
-            # 4. Prepare additional context
+            # 4. Prepare additional context (skip market data for greetings)
             additional_context = {}
-            if market_data:
+            if market_data and intent != 'greeting':
                 additional_context.update(market_data)
+            elif intent == 'greeting':
+                logger.info("👋 Greeting detected — skipping market data injection")
             
             # 4.5 Web Search V6.5.4 PREMIUM - Automatic real-time info fetching
             web_search_context = None
