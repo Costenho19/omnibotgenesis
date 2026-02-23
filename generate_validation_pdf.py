@@ -83,9 +83,9 @@ def build_pdf():
 
     elements = []
 
-    logo_path = "omnix_web/public/logo.png"
+    logo_path = "attached_assets/image_1771886763766.png"
     if os.path.exists(logo_path):
-        logo = Image(logo_path, width=40, height=40)
+        logo = Image(logo_path, width=50, height=50)
         logo_text = Paragraph(
             '<font size="18" color="#0a0f1a"><b>OMNIX</b></font>'
             '<font size="10" color="#6b7280">  Decision Governance Infrastructure</font>',
