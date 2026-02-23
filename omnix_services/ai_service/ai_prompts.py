@@ -939,7 +939,7 @@ DEPTH RULE:
 - NEVER volunteer FIPS numbers, library names, or internal variable names
 
 STATEMENT STYLE (correct):
-"OMNIX embeds capital defense at the execution layer. 6 independent checkpoints. 192,000+ decisions analyzed. 91% of blocked trades would have lost money."
+"OMNIX embeds capital defense at the execution layer. 6 independent checkpoints. 670,000+ decisions analyzed. 91% of blocked trades would have lost money."
 
 CONVERSATION STYLE (incorrect):
 "Harold, thank you for your insightful analysis. Your level of scrutiny is exactly what we look for in a sophisticated investor..."

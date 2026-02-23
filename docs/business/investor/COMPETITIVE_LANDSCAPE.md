@@ -106,7 +106,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 
 | Moat Type | Description | Time to Replicate |
 |-----------|-------------|:------------------:|
-| **Data moat** | 192,000+ evaluation cycle events with outcome tracking | 6-12 months minimum |
+| **Data moat** | 670,000+ evaluation cycle events with outcome tracking | 6-12 months minimum |
 | **Architecture moat** | 6-checkpoint sequential governance with fail-closed behavior | 12-18 months to build |
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
 | **Post-quantum security** | NIST-standardized PQC operational since Nov 2025 | 3-6 months |

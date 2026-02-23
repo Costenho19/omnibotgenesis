@@ -98,7 +98,7 @@ This is the difference between a product that *could* be governed and a product 
 | Evidence | Detail |
 |----------|--------|
 | Parameter changes documented | 27 ADRs recording every architectural decision |
-| Zero manual overrides | All 192,000+ evaluation cycles handled by architecture |
+| Zero manual overrides | All 670,000+ evaluation cycles handled by architecture |
 | Fail-closed demonstrated | System blocking execution for 33+ consecutive days under structural contradiction |
 | Full audit trail | Decision Trace with complete reasoning chain for every evaluation cycle |
 | Production continuity | 24/7 operation since November 2025 without human intervention |

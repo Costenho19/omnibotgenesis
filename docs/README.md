@@ -97,7 +97,7 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ ACTIVADO - Análisis contrafactual operativo
 - **PROPÓSITO**: Validar que los vetos del sistema fueron correctos usando precios históricos reales
 - **TABLAS**:
-  - `shadow_trade_events`: 192,000+ eventos capturados
+  - `shadow_trade_events`: 670,000+ eventos capturados
   - `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
 - **FIX APLICADO**: Timezone bug (`datetime.utcnow()` → `datetime.now(timezone.utc)`)
 - **EJECUCIÓN**: `python -m omnix_services.database_service.shadow_portfolio_runner --max-events 500`

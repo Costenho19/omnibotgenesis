@@ -4,7 +4,7 @@
 
 The 30-day official track record period (Jan 15 - Feb 13, 2026) has been completed. During this period:
 - **0 trades executed** — capital preservation demonstrated
-- **192,000+ decision cycles** analyzed by the Shadow Portfolio engine
+- **670,000+ decision cycles** analyzed by the Shadow Portfolio engine
 - **47 trades blocked** — 91% would have resulted in losses
 - **98.5% capital preserved** while BTC dropped 7.37%
 

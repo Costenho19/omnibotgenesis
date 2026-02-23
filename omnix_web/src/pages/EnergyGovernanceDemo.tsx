@@ -294,7 +294,7 @@ export default function EnergyGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 6-checkpoint governance architecture
-            applies to energy trading decisions — the same pattern validated across 1,600,000+
+            applies to energy trading decisions — the same pattern validated across 670,000+
             evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
@@ -584,7 +584,7 @@ export default function EnergyGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Contradiction Index</p>
               </div>
               <div className="mt-4 pt-3 border-t border-emerald-500/10">
-                <p className="text-xs text-emerald-400">1,600,000+ cycles | 98.5% preserved</p>
+                <p className="text-xs text-emerald-400">670,000+ cycles | 98.5% preserved</p>
               </div>
             </div>
 
@@ -664,11 +664,11 @@ export default function EnergyGovernanceDemo() {
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
             Each uses the same 6-checkpoint fail-closed architecture with domain-specific signals.
-            The core engine is validated across 1,600,000+ evaluation cycles.
+            The core engine is validated across 670,000+ evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
             <div>
-              <div className="text-2xl font-bold text-white">1.6M+</div>
+              <div className="text-2xl font-bold text-white">670K+</div>
               <div className="text-xs text-muted">Evaluation Cycles</div>
             </div>
             <div>
@@ -695,7 +695,7 @@ export default function EnergyGovernanceDemo() {
             This is a governance architecture demonstration. The energy evaluation shown uses simplified market models
             for illustrative purposes. Production energy governance would integrate with real-time grid data (CAISO, ERCOT, PJM),
             weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 6-checkpoint architecture is
-            validated in digital asset trading across 1,600,000+ evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across 670,000+ evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>
         </div>

@@ -44,7 +44,7 @@
 - Decision Governance Engine Development & Calibration
 - 6-Checkpoint Validation Architecture (domain-agnostic)
 - Decision Trace Logging (100% telemetry coverage)
-- Shadow Portfolio Analysis (192,000+ evaluation cycles)
+- Shadow Portfolio Analysis (670,000+ evaluation cycles)
 - API Integration for Enterprise Clients
 - Model Validation against real market conditions
 - Multi-vertical domain adaptation (trading → supply chain → lending)
@@ -83,7 +83,7 @@
 |---------|----------|
 | Capital preserved during volatility | 98.5% preserved while BTC dropped 7.37% |
 | High-risk actions correctly blocked | 47 trades blocked, 91% would have lost money |
-| Full auditability | 192,000+ decision cycles logged |
+| Full auditability | 670,000+ decision cycles logged |
 | System reliability | 95%+ uptime, ~120ms execution latency |
 
 **MULTI-VERTICAL APPLICABILITY:**
@@ -257,7 +257,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 |-------|-------------|
 | 6-Checkpoint Governance Engine | Multi-layer pre-execution decision validation (domain-agnostic) |
 | Decision Trace Framework | Full audit trail for every governance evaluation |
-| Shadow Portfolio Engine | 192,000+ counterfactual decision events |
+| Shadow Portfolio Engine | 670,000+ counterfactual decision events |
 | Multi-AI Orchestration | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
 | Post-Quantum Cryptography | NIST-standardized post-quantum decision signing |
 | Non-Markovian Memory | Behavioral pattern detection beyond recency |
@@ -394,7 +394,7 @@ Primary value driver: Avoided tail-risk exposure
 | Factor | Evidence |
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
-| Real validation data | 192,000+ decision cycles analyzed |
+| Real validation data | 670,000+ decision cycles analyzed |
 | Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Comparable | Chainalysis raised at $4M pre-money at similar stage |

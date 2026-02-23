@@ -56,7 +56,7 @@ function useCountUp(end: number, duration: number = 2000, startOnMount: boolean 
 
 export default function InstitutionalPage() {
   const [metrics, setMetrics] = useState<SystemMetrics>({
-    evaluationCycles: 192000,
+    evaluationCycles: 670000,
     vetosExecuted: 5473,
     capitalPreserved: 98.5,
     systemUptime: '99.9%',

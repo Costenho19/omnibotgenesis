@@ -102,7 +102,7 @@ This explains why the system doesn't trade during uncertain conditions—it's no
 
 **A:** Decision Governance Infrastructure is the control layer for automated decision systems — ensuring that every automated decision passes through independent validation checkpoints before execution. 
 
-Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 192,000+ evaluation cycles and 98.5% of capital preserved.
+Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 670,000+ evaluation cycles and 98.5% of capital preserved.
 
 The right question for investors is not "how much alpha does OMNIX generate?" but "how much capital risk exists in automated systems without governance control?"
 
@@ -139,7 +139,7 @@ The right question for investors is not "how much alpha does OMNIX generate?" bu
 | **Counterfactual Evidence** | Shadow Portfolio shows what would have happened if a blocked decision had been executed |
 | **Export Format** | Grafana/Loki/ELK compatible. Structured JSON ready for regulatory submission |
 | **Data Integrity** | >91% referential integrity across 45+ PostgreSQL tables |
-| **Decision Dataset** | 192,000+ fully traced governance decisions available for audit |
+| **Decision Dataset** | 670,000+ fully traced governance decisions available for audit |
 
 **Compliance Officer Deliverables:**
 1. Real-time Decision Audit Dashboard with checkpoint drill-down

@@ -12,7 +12,7 @@
 ### Q: "Do you have any paying customers?"
 
 **Answer:**
-> "Not yet — and that's intentional. We've spent the last 3 months validating the governance engine in the hardest domain first: real-time financial markets. 192,000+ evaluation cycles, 98.5% capital preserved. The engine works. Now we're ready for enterprise pilots.
+> "Not yet — and that's intentional. We've spent the last 3 months validating the governance engine in the hardest domain first: real-time financial markets. 670,000+ evaluation cycles, 98.5% capital preserved. The engine works. Now we're ready for enterprise pilots.
 >
 > Our first 3 target clients are prop trading firms in ADGM/DIFC — we've identified 200+ in the ecosystem. The $500K raise funds the transition from validated product to paying enterprise clients within 3-6 months."
 
@@ -27,10 +27,10 @@
 
 ---
 
-### Q: "192,000 decisions — but how many of those are real trades vs. simulations?"
+### Q: "670,000 decisions — but how many of those are real trades vs. simulations?"
 
 **Answer:**
-> "192,000 are real governance evaluation cycles — every 60 seconds, the engine evaluates market conditions through all 6 checkpoints. 119 were actual trade executions during calibration. 47 were correctly blocked. The governance engine runs 24/7 regardless of whether a trade is placed — that's the data that trains the system."
+> "670,000 are real governance evaluation cycles — every 60 seconds, the engine evaluates market conditions through all 6 checkpoints. 119 were actual trade executions during calibration. 47 were correctly blocked. The governance engine runs 24/7 regardless of whether a trade is placed — that's the data that trains the system."
 
 ---
 
@@ -149,7 +149,7 @@
 
 **Answer:**
 > "Three things:
-> 1. **Data moat** — 192,000+ evaluation cycle events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
+> 1. **Data moat** — 670,000+ evaluation cycle events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
 > 2. **Architecture moat** — 6-checkpoint sequential validation with fail-closed behavior isn't trivial to build. We have 27 Architectural Decision Records documenting every design choice.
 > 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
 >
@@ -228,7 +228,7 @@
 > **Pillar 1 — Decision Trace (Full Audit Per Decision)**
 > Every decision OMNIX makes — executed OR blocked — generates a complete structured record with: exact timestamp, all 6 checkpoints evaluated with individual verdicts and the data that justified each one, the final decision with specific reasoning, and the capital preserved or committed.
 >
-> No black box. A compliance officer can open any decision from the last 3 months and see exactly WHY the system acted or stopped. 192,000+ of these traces exist today.
+> No black box. A compliance officer can open any decision from the last 3 months and see exactly WHY the system acted or stopped. 670,000+ of these traces exist today.
 >
 > **Pillar 2 — Fail-Closed Architecture = Explainability by Design**
 > In a black box, the system acts and then you try to explain why. In OMNIX, the system does NOT act until 6 independent checkpoints approve. Each checkpoint is individually explainable:
@@ -283,7 +283,7 @@
 ### Q: "Why is this worth $2.5M-$3M pre-money?"
 
 **Answer:**
-> "Working product in production for 3+ months. 192,000+ evaluation cycle events. Defensible IP. Filed-ready patent families. Interactive demos across 3 verticals. All built by one person with zero burn.
+> "Working product in production for 3+ months. 670,000+ evaluation cycle events. Defensible IP. Filed-ready patent families. Interactive demos across 3 verticals. All built by one person with zero burn.
 >
 > Chainalysis raised at $4M pre-money at a comparable stage. The MENA seed median is $18.9M (MAGNiTT 2024). At $2.5M-$3M, this is conservative pricing for validated infrastructure."
 
@@ -312,7 +312,7 @@
 
 - Pause before numbers — let them land
 - "Fail-closed" = slight pause after, this is the differentiator
-- "192,000+" = say slowly, make eye contact
+- "670,000+" = say slowly, make eye contact
 - Don't rush the solo founder answer — own it with confidence
 
 ---

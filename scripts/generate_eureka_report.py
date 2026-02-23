@@ -354,7 +354,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Current Stage:</b> MVP (Live Product) \u2014 Running 24/7 in production since November 2025. "
-        "1,600,000+ evaluation cycles completed, 16,000+ cryptographically signed governance receipts, "
+        "670,000+ evaluation cycles completed, 16,000+ cryptographically signed governance receipts, "
         "100% post-quantum cryptography coverage.",
         styles['BodyText2']
     ))
@@ -367,7 +367,7 @@ def build_section_1(styles):
 
     elements.append(Spacer(1, 8))
     kpi_data = [
-        ['1,600,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
+        ['670,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
         ['16,000+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
         ['98.5%', 'Capital Preserved', 'During BTC -7.37% volatility'],
         ['<120ms', 'Decision Latency', 'Real-time governance validation'],
@@ -424,7 +424,7 @@ def build_section_2(styles):
         ['Investor Dashboard', 'Live \u2014 19 widgets, real-time metrics'],
         ['Institutional Website', 'Live \u2014 www.omnixquantum.net'],
         ['Multi-Vertical Demos', 'Live \u2014 Credit/Lending + Insurance interactive demos'],
-        ['Shadow Portfolio Analysis', 'Live \u2014 192,000+ counterfactual events'],
+        ['Shadow Portfolio Analysis', 'Live \u2014 670,000+ counterfactual events'],
         ['Enterprise API', 'In Development \u2014 Q2 2026 target'],
     ]
     t_data = [[Paragraph(c, styles['TableCell']) for c in row] for row in stage_data]
@@ -597,7 +597,7 @@ def build_section_5(styles):
         ['Decision Contradiction Index (DCI)', 'Live', 'Measures internal signal divergence (0\u2013100); high DCI mandates HOLD'],
         ['Post-Quantum Cryptography', 'Live', 'NIST-standardized Dilithium-3 signatures + Kyber-768 key encapsulation'],
         ['Public Verification Server', 'Live', 'Public receipt verification endpoint with zero internal data exposure'],
-        ['Shadow Portfolio Engine', 'Live', '192,000+ counterfactual events; validates veto accuracy (100% accuracy on 50 validated)'],
+        ['Shadow Portfolio Engine', 'Live', '670,000+ counterfactual events; validates veto accuracy (100% accuracy on 50 validated)'],
         ['Non-Markovian Memory Kernel', 'Live', 'Behavioral pattern detection beyond recency bias'],
         ['Multi-AI Orchestration', 'Live', 'Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with automatic failover'],
         ['Investor Dashboard', 'Live', '19 widgets with real-time metrics, dual win rate framework, regime detection'],
@@ -791,10 +791,10 @@ def build_section_8(styles):
     traction_data = [
         ['Metric', 'Value', 'Significance'],
         ['Production Uptime', '24/7 since Nov 2025', 'System operational for 4+ months continuously'],
-        ['Evaluation Cycles', '1,600,000+', 'Governance engine processing decisions in real-time'],
+        ['Evaluation Cycles', '670,000+', 'Governance engine processing decisions in real-time'],
         ['PQC-Signed Receipts', '16,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
-        ['Shadow Trade Events', '192,000+', 'Counterfactual analysis of vetoed decisions'],
+        ['Shadow Trade Events', '670,000+', 'Counterfactual analysis of vetoed decisions'],
         ['Veto Accuracy', '100%', '50 validated shadow outcomes \u2014 all vetos were correct'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
         ['Database Tables', '42+', '90% foreign key coverage \u2014 institutional-grade data model'],
@@ -943,7 +943,7 @@ def build_section_10(styles):
         "governance systems and the institutional requirements of regulated financial markets. "
         "The AI-augmented development model has enabled solo construction of a system that would "
         "typically require a 5-person engineering team \u2014 evidenced by 42+ database tables, 27 ADRs, "
-        "1,600,000+ evaluation cycles, and 4+ months of continuous production operation. Post-funding, "
+        "670,000+ evaluation cycles, and 4+ months of continuous production operation. Post-funding, "
         "the first hires are designed to eliminate key-person risk and accelerate enterprise sales.",
         styles['BodyText2']
     ))
@@ -991,7 +991,7 @@ def build_section_11(styles):
     elements.append(Paragraph("<b>Valuation Justification</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
-        "<b>Real validation data:</b> 1,600,000+ evaluation cycles, 16,000+ PQC-signed receipts",
+        "<b>Real validation data:</b> 670,000+ evaluation cycles, 16,000+ PQC-signed receipts",
         "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
         "<b>Strategic timing:</b> MiCA + ADGM convergence creating urgent demand for governance infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",
@@ -1028,7 +1028,7 @@ def build_section_12(styles):
         ['Adaptive Coherence Gate', 'Dynamic threshold calibration based on market regime', 'Proprietary algorithm'],
         ['Edge Confirmation Window', 'Statistical edge persistence validation (3-cycle)', 'Proprietary methodology'],
         ['Decision Contradiction Index', 'Internal signal divergence measurement (0\u2013100)', 'Proprietary metric'],
-        ['Shadow Portfolio Engine', '192,000+ counterfactual events for veto validation', 'Proprietary dataset + methodology'],
+        ['Shadow Portfolio Engine', '670,000+ counterfactual events for veto validation', 'Proprietary dataset + methodology'],
         ['Non-Markovian Memory Kernel', 'Behavioral pattern detection beyond recency bias', 'Proprietary algorithm'],
         ['PQC Integration Architecture', 'Production-integrated post-quantum decision signing', 'First-mover advantage'],
     ]

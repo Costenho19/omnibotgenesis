@@ -11,7 +11,7 @@
 
 ## Context
 
-OMNIX has successfully completed its 30-day paper trading track record (Jan 15 - Feb 13, 2026) and advanced to **Semifinalist** status in Eureka Dubai. The core technology — a 6-checkpoint veto architecture, Monte Carlo simulation, Non-Markovian Memory, Shadow Portfolio learning engine — has been validated in real market conditions with 192,000+ decision cycles analyzed.
+OMNIX has successfully completed its 30-day paper trading track record (Jan 15 - Feb 13, 2026) and advanced to **Semifinalist** status in Eureka Dubai. The core technology — a 6-checkpoint veto architecture, Monte Carlo simulation, Non-Markovian Memory, Shadow Portfolio learning engine — has been validated in real market conditions with 670,000+ decision cycles analyzed.
 
 Upon review, the technology OMNIX has built is **not limited to trading**. The core engine solves a universal problem: **governing high-stakes decisions under uncertainty**. Crypto trading is simply the first domain where this was validated.
 
@@ -71,7 +71,7 @@ All existing metrics remain exactly as documented:
 | Max Drawdown | 1.5% | Unchanged |
 | Trades Blocked | 47 | Unchanged |
 | Block Success Rate | 91% | Unchanged |
-| Decision Cycles | 192,000+ | Unchanged |
+| Decision Cycles | 670,000+ | Unchanged |
 | P&L (Learning Baseline) | -$15,198.73 | Unchanged |
 | B2B Prop Firm Pricing | $15K-35K/month | Unchanged |
 | B2C Pro | $149/month | Unchanged |
@@ -100,7 +100,7 @@ All existing metrics remain exactly as documented:
 
 1. **Problem**: Universal — "95% of high-stakes decision systems lack proper governance"
 2. **Solution**: "6-checkpoint AI governance engine that blocks bad decisions before they happen"
-3. **First Vertical (Proof)**: Digital asset trading — 98.5% capital preserved, 192,000+ cycles
+3. **First Vertical (Proof)**: Digital asset trading — 98.5% capital preserved, 670,000+ cycles
 4. **Multi-Vertical Vision**: Supply chain, lending, insurance, energy, RegTech
 5. **Business Model**: B2B risk infrastructure licensing (unchanged pricing)
 6. **Market**: Expanded TAM — not just crypto, but all regulated decision-making
@@ -114,7 +114,7 @@ All existing metrics remain exactly as documented:
 | Value Prop | "Prevents costly mistakes before they happen", "Governs decisions under uncertainty" |
 | First Vertical | "Validated in digital asset trading", "First vertical: crypto (proven)" |
 | Expansion | "Vertical-agnostic architecture", "Same 6-checkpoint engine, different domains" |
-| Moat | "192,000+ governed decisions", "Learning from what it blocks" |
+| Moat | "670,000+ governed decisions", "Learning from what it blocks" |
 
 ### Key Phrases to AVOID
 

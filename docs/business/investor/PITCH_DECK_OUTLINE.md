@@ -159,7 +159,7 @@ This slide makes us CREDIBLE.
 
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  192,000+ evaluation cycles Risk veto system active     │
+│  670,000+ evaluation cycles Risk veto system active     │
 │  1.5% max drawdown          Capital preservation focus  │
 │  98.5% capital preserved    Historical through baseline │
 │  119 baseline trades        Learning phase complete     │

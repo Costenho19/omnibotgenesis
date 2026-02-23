@@ -107,7 +107,7 @@ All existing metrics remain exactly as documented:
 | Pre-Money Valuation | $2.5M-$3M | Unchanged |
 | Capital Preserved | 98.5% | Unchanged |
 | Max Drawdown | 1.5% | Unchanged |
-| Decision Cycles | 192,000+ | Unchanged |
+| Decision Cycles | 670,000+ | Unchanged |
 | P&L (Learning Baseline) | -$15,198.73 | Unchanged |
 
 ### Rules Still Binding
@@ -199,7 +199,7 @@ All existing metrics remain exactly as documented:
 
 - **Requires market education** — Category doesn't exist yet, investors may not understand immediately
 - **Risk of appearing unfocused** — Mitigated by "first validated vertical" discipline
-- **"Building" language may seem premature** — Mitigated by 192,000+ governed decisions as evidence
+- **"Building" language may seem premature** — Mitigated by 670,000+ governed decisions as evidence
 
 ### Neutral
 

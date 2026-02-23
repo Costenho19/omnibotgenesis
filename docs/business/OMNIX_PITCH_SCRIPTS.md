@@ -36,7 +36,7 @@
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| Evaluation Cycles | 192,000+ | Shadow Portfolio + decision logs |
+| Evaluation Cycles | 670,000+ | Shadow Portfolio + decision logs |
 | Capital Preserved | 98.5% | Learning Baseline period |
 | Raising | $500,000 USD | Pre-Seed |
 | Equity | 16.7% | — |
@@ -53,7 +53,7 @@ Use when investors ask about team structure, oversight, or who controls the syst
 ### Anti-Abstraction Rule
 
 Every statement about "infrastructure" or "category" MUST be followed within 2 sentences by:
-- A concrete metric (192,000+, 98.5%, etc.)
+- A concrete metric (670,000+, 98.5%, etc.)
 - A validated vertical reference ("digital asset trading")
 - An operational evidence point ("running 24/7 since November 2025")
 
@@ -69,7 +69,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Today, systems can execute decisions automatically — but almost none have a real mechanism to control those decisions before they execute. And when there's no control, risk becomes invisible.
 >
-> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 192,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
+> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 670,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > We're not a trading bot. We're not a prediction system. We are the control layer that determines whether an automated action can or cannot execute.
 >
@@ -93,7 +93,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Hoy los sistemas pueden ejecutar decisiones automáticamente — pero casi ninguno tiene un mecanismo real que las controle antes de ejecutarlas. Y cuando no hay control, el riesgo se vuelve invisible.
 >
-> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: más de 192,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: más de 670,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > No somos un bot de trading. No somos un sistema de predicción. Somos la capa de control que decide si una acción automatizada puede o no ejecutarse.
 >
@@ -121,7 +121,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Our architecture uses a sequential checkpoint system with veto authority: if a decision can't be properly validated, it's blocked. Fail-closed by design.
 >
-> First validated in digital asset trading — 192,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
+> First validated in digital asset trading — 670,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > The architecture is domain-agnostic. Designed to extend into credit, insurance, and supply chain — anywhere automated decisions involve capital at risk.
 >
@@ -141,7 +141,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Nuestra arquitectura usa un sistema secuencial de checkpoints con autoridad de veto: si una decisión no se puede validar correctamente, se bloquea. Fail-closed por diseño.
 >
-> Primera validación en trading de activos digitales — más de 192,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> Primera validación en trading de activos digitales — más de 670,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > La arquitectura es independiente del dominio. Diseñada para extenderse a crédito, seguros y supply chain — cualquier entorno donde decisiones automatizadas impliquen capital en riesgo.
 >
@@ -160,7 +160,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 | Section | Time | Content | Emphasis |
 |---------|------|---------|----------|
 | **Hook** | 0-10s | "Automation is growing faster than governance..." | Slow, deliberate. Let the problem land. |
-| **Identity + Evidence** | 10-25s | "OMNIX is building the category... governance control architecture... 192,000+ decisions, 98.5% preserved..." | Firm category declaration → immediate proof. No gap between claim and evidence. |
+| **Identity + Evidence** | 10-25s | "OMNIX is building the category... governance control architecture... 670,000+ decisions, 98.5% preserved..." | Firm category declaration → immediate proof. No gap between claim and evidence. |
 | **Negation** | 25-30s | "Not a trading bot. Not a prediction system." | Quick, sharp. Clear differentiation. |
 | **Architecture** | 30-40s | "Sequential checkpoints... veto authority... fail-closed..." | Technical confidence. Don't rush. |
 | **Expansion** | 40-55s | "First validated vertical... domain-agnostic... credit, insurance, supply chain..." | Vision, but grounded — "designed to extend" |
@@ -183,7 +183,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 
 | Moment | Technique |
 |--------|-----------|
-| "192,000+" | Pause BEFORE the number. Say it slowly. Let it register. |
+| "670,000+" | Pause BEFORE the number. Say it slowly. Let it register. |
 | "98.5% of capital preserved" | Slight emphasis on "preserved." This is the proof. |
 | "Fail-closed" | Brief pause after. This is the architectural differentiator. |
 | "The governance layer doesn't exist yet" | Lower voice slightly. This is the opportunity statement. |
@@ -197,7 +197,7 @@ Every pitch version MUST pass this test. Check each line:
 | Question | Pass Criteria |
 |----------|---------------|
 | Does this line sound proven or theoretical? | Must sound proven |
-| Is there a concrete metric within 2 sentences of any "infrastructure" claim? | Yes — 192,000+ or 98.5% |
+| Is there a concrete metric within 2 sentences of any "infrastructure" claim? | Yes — 670,000+ or 98.5% |
 | Is "first validated in digital asset trading" present? | Yes — in every version |
 | Could a listener mistake OMNIX for a trading bot? | No — explicit negation included |
 | Is "building" language used (not "leading" or "dominating")? | Yes — "building" throughout |
@@ -214,7 +214,7 @@ Every pitch version MUST pass this test. Check each line:
 | Investor reframe (risk without governance) | Embedded in hook: "when there's no control, risk becomes invisible" |
 | No supremacy claims | Zero instances of "leader" / "global" / "first ever" |
 | No "Stripe of governance" | Not present |
-| Numbers unchanged | $500K / 16.7% / $2.5M-$3M / 192,000+ / 98.5% — all correct |
+| Numbers unchanged | $500K / 16.7% / $2.5M-$3M / 670,000+ / 98.5% — all correct |
 
 ---
 

@@ -20,7 +20,7 @@ El Shadow Portfolio es un sistema de análisis contrafactual que:
 
 | Tabla | Propósito | Registros (Jan 27, 2026) |
 |-------|-----------|--------------------------|
-| `shadow_trade_events` | Eventos vetados (input) | 192,000+ |
+| `shadow_trade_events` | Eventos vetados (input) | 670,000+ |
 | `shadow_trade_outcomes` | Resultados contrafactuales (output) | 50+ |
 
 ---

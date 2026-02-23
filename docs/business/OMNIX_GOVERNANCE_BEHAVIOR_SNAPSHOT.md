@@ -73,7 +73,7 @@ When DCI exceeds the execution threshold, the system enters capital preservation
 
 Most automated decision systems operate when they can. OMNIX operates only when it should.
 
-This governance control architecture — first validated in digital asset trading — has evaluated **192,000+ automated decisions and preserved 98.5% of capital** since November 2025. That result is not from prediction. It's from structural discipline.
+This governance control architecture — first validated in digital asset trading — has evaluated **670,000+ automated decisions and preserved 98.5% of capital** since November 2025. That result is not from prediction. It's from structural discipline.
 
 ### The Governance Difference
 

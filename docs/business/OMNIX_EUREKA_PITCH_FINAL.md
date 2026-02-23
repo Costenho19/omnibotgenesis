@@ -184,7 +184,7 @@ Capital Preserved: $50,000
 | **Max Drawdown** | **1.5%** | vs BTC max drawdown of -7.37% |
 | **Trades Blocked** | **47** | High-risk signals correctly vetoed |
 | **Block Success Rate** | **91%** | Blocked trades would have lost money |
-| **Decision Cycles Analyzed** | **192,000+** | Shadow Portfolio learning engine |
+| **Decision Cycles Analyzed** | **670,000+** | Shadow Portfolio learning engine |
 | **System Uptime** | **95%+** | Production (Railway), not test environment |
 | **Execution Latency** | **~120ms** | Measured, not estimated |
 
@@ -207,7 +207,7 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 | **6-Checkpoint Governance Engine** | 5 independent AI models must agree before any action | No single model can override the system |
 | **Behavioral Memory System** | Remembers patterns beyond recent data | Sees what other systems miss |
 | **Edge Confirmation Window** | Requires trend persistence for 3 cycles — not just a spike | Turns "preservation" into "patience" |
-| **Shadow Portfolio Engine** | Tracks every vetoed decision to learn (192,000+ events) | The system learns from what it DOESN'T do |
+| **Shadow Portfolio Engine** | Tracks every vetoed decision to learn (670,000+ events) | The system learns from what it DOESN'T do |
 | **Post-Quantum Security** | NIST-standardized post-quantum cryptographic signing | Operational today — not roadmap |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with failover | Zero single-provider dependency |
 
@@ -361,10 +361,10 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 
 | Capability | Status |
 |-----------|--------|
-| 6-Checkpoint Governance Engine | Production — 192,000+ evaluation cycles |
+| 6-Checkpoint Governance Engine | Production — 670,000+ evaluation cycles |
 | Multi-AI Orchestration (3 providers) | Production — zero single-provider dependency |
 | Post-Quantum Security (Dilithium-3) | Production — operational since Nov 2025 |
-| Shadow Portfolio Learning Engine | Production — 192,000+ counterfactual events |
+| Shadow Portfolio Learning Engine | Production — 670,000+ counterfactual events |
 | Full Decision Audit Trail | Production — 100% telemetry coverage |
 | Interactive Governance Demos (3 verticals) | Live — trading, credit, insurance |
 
@@ -402,7 +402,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 | Factor | Evidence |
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
-| Real validation data | 192,000+ decision cycles analyzed |
+| Real validation data | 670,000+ decision cycles analyzed |
 | Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Comparable | Chainalysis raised at $4M pre-money at similar stage |
@@ -433,7 +433,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 2. **The timing is perfect** — MiCA + ADGM mandating decision governance NOW
 3. **The product exists** — Not a slide deck. Running in production for 3+ months.
 4. **The approach is unique** — Nobody else optimizes for restraint
-5. **The data is real** — 192,000+ evaluation cycles, 98.5% capital preserved, 91% block accuracy
+5. **The data is real** — 670,000+ evaluation cycles, 98.5% capital preserved, 91% block accuracy
 6. **The market is here** — Dubai/ADGM is the epicenter of institutional governance infrastructure
 7. **The vision scales** — Same engine, multiple verticals: trading, supply chain, lending, insurance
 
@@ -457,7 +457,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 >
 > We validated this in the hardest domain first — real-time financial markets. Real example: February 3rd. BTC breakout — up 6% in two hours. Market euphoric. Traditional bots bought. OMNIX blocked — trend not sustained. 48 hours later, BTC crashed 9%. Capital preserved: $50,000.
 >
-> 192,000 evaluation cycles. 98.5% capital preserved. 91% of blocked actions would have resulted in losses. Running in production 24/7 for three months.
+> 670,000 evaluation cycles. 98.5% capital preserved. 91% of blocked actions would have resulted in losses. Running in production 24/7 for three months.
 >
 > Our first market: prop trading firms, trading platforms, regulated funds. 200+ prop firms in ADGM and DIFC alone. But the same engine applies to supply chain, lending, insurance, and compliance.
 >
@@ -525,7 +525,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 |----------|-------------|
 | Executive Fact Sheet | System status and governance framework |
 | Track Record Case Study | Day-by-day capital protection narrative |
-| Shadow Portfolio Report | 192,000+ counterfactual trade analysis |
+| Shadow Portfolio Report | 670,000+ counterfactual trade analysis |
 | Architecture Decision Records | 22+ documented technical decisions (ADRs) |
 | System State Manifest | Live configuration (JSON, machine-readable) |
 

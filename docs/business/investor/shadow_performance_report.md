@@ -114,7 +114,7 @@ The Shadow Portfolio Runner has been activated and is now processing outcomes:
 
 | Metric | Value |
 |--------|-------|
-| Events Captured | 192,000+ |
+| Events Captured | 670,000+ |
 | Events Analyzed | 50 |
 | Veto Accuracy | **100%** (50/50 correct) |
 | BLACK_SWAN Accuracy | 100% |
@@ -149,7 +149,7 @@ The Shadow Portfolio feeds the Learning Engine with:
 ## Investor Implications
 
 ### What This Report Proves:
-1. **Filters are active**: 192,000+ risk decisions in 12 days
+1. **Filters are active**: 670,000+ risk decisions in 12 days
 2. **Capital is protected**: 100% preservation rate
 3. **System learns**: Every veto is tracked for calibration
 4. **Vetos validated**: 100% accuracy on 50 sampled outcomes

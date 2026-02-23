@@ -13,7 +13,7 @@
   "multi_vertical_architecture": {
     "adr": "ADR-026",
     "pattern": "Domain Adapter + Normalized Governance Signals",
-    "validated_vertical": "Digital Asset Trading (192,000+ decisions)",
+    "validated_vertical": "Digital Asset Trading (670,000+ decisions)",
     "demo_verticals_NOTE": "These are INTERACTIVE DEMOS showing architecture applicability, NOT operational governance in these verticals",
     "demo_verticals": [
       "Credit/Lending (Interactive Demo at /governance-demo - DEMO ONLY, not operational)",

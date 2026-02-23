@@ -43,7 +43,7 @@
 - Desarrollo y Calibracion del Motor de Riesgo
 - Arquitectura de Validacion de 6 Checkpoints
 - Registro de Decision Trace (100% cobertura de telemetria)
-- Analisis de Shadow Portfolio (192,000+ eventos)
+- Analisis de Shadow Portfolio (670,000+ eventos)
 - Integracion API para Clientes Enterprise
 - Validacion de modelos contra condiciones reales de mercado
 
@@ -80,7 +80,7 @@
 |-----------|-----------|
 | Capital preservado durante volatilidad | 98.5% preservado mientras BTC cayo 7.37% |
 | Operaciones de alto riesgo bloqueadas correctamente | 47 trades bloqueados, 91% habrian perdido dinero |
-| Auditabilidad completa | 192,000+ ciclos de decision registrados |
+| Auditabilidad completa | 670,000+ ciclos de decision registrados |
 | Confiabilidad del sistema | 95%+ uptime, ~120ms latencia de ejecucion |
 
 ---
@@ -221,7 +221,7 @@
 |--------|-------------|
 | Motor de Seguridad de 6 Checkpoints | Validacion pre-ejecucion multi-capa |
 | Framework de Decision Trace | Trail de auditoria completo para cada decision |
-| Motor Shadow Portfolio | 192,000+ eventos de operaciones contrafactuales |
+| Motor Shadow Portfolio | 670,000+ eventos de operaciones contrafactuales |
 | Orquestacion Multi-IA | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
 | Criptografia Post-Cuantica | Firma post-cuantica de decisiones (NIST-standardized) |
 | Memoria No-Markoviana | Deteccion de patrones conductuales mas alla de recencia |
@@ -357,7 +357,7 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 | Factor | Evidencia |
 |--------|-----------|
 | Producto funcionando en produccion | 3+ meses corriendo 24/7 |
-| Data de validacion real | 192,000+ ciclos de decision analizados |
+| Data de validacion real | 670,000+ ciclos de decision analizados |
 | IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
 | Comparable | Chainalysis levanto a $4M pre-money en etapa similar |

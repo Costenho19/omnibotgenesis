@@ -99,6 +99,32 @@ export default function CommercialLanding() {
         </section>
 
         <section className="mb-24">
+          <div className="glass-card p-12">
+            <h2 className="text-3xl font-bold text-white text-center mb-2">Live Production Data</h2>
+            <p className="text-sm text-center text-muted mb-8">Internal dataset, not externally audited</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold gold-text">670K+</div>
+                <div className="text-sm text-muted mt-1">Evaluation Cycles</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-emerald-400">16,000+</div>
+                <div className="text-sm text-muted mt-1">PQC-Signed Receipts</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-white">98.5%</div>
+                <div className="text-sm text-muted mt-1">Capital Preserved</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold gold-text">4</div>
+                <div className="text-sm text-muted mt-1">Vertical Demos</div>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted/60 mt-6">Running 24/7 in production since November 2025</p>
+          </div>
+        </section>
+
+        <section className="mb-24">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">What Makes OMNIX Different</h2>
           </div>

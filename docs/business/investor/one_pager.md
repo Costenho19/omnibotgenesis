@@ -9,7 +9,7 @@
 
 **Automation is growing faster than governance.** Automated systems make high-stakes decisions every day — in trading, lending, insurance, supply chain — but almost none have a real mechanism to control those decisions before they execute.
 
-**OMNIX is Decision Governance Infrastructure** — a 6-checkpoint governance control architecture that validates automated decisions before execution. First vertical validated in digital asset trading (192,000+ evaluation cycles, 98.5% capital preserved). Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
+**OMNIX is Decision Governance Infrastructure** — a 6-checkpoint governance control architecture that validates automated decisions before execution. First vertical validated in digital asset trading (670,000+ evaluation cycles, 98.5% capital preserved). Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
 
 ---
 
@@ -18,7 +18,7 @@
 | Component | Description |
 |-----------|-------------|
 | **6-Checkpoint Governance Engine** | Multi-layer pre-execution decision validation — fail-closed by design |
-| **Shadow Portfolio Learning Engine** | 192,000+ counterfactual events — learns from decisions NOT taken |
+| **Shadow Portfolio Learning Engine** | 670,000+ counterfactual events — learns from decisions NOT taken |
 | **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — unique globally |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 — zero single-provider dependency |
 | **Post-Quantum Security** | NIST-standardized post-quantum decision signing — operational since Nov 2025 |
@@ -31,7 +31,7 @@
 
 | Metric | Value | Context |
 |--------|-------|---------|
-| Decision Cycles Governed | **192,000+** | Real-time + Shadow Portfolio evaluation |
+| Decision Cycles Governed | **670,000+** | Real-time + Shadow Portfolio evaluation |
 | Capital Preserved | **98.5%** | While BTC dropped 7.37% in same period |
 | Trades Correctly Blocked | **47** | 91% would have resulted in losses |
 | System Uptime | **95%+** | Production on Railway since Nov 2025 |
@@ -90,7 +90,7 @@
 | RegTech (Chainalysis) | Monitor transactions | We govern decision quality |
 
 **Defensible Moat:**
-1. **Data moat** — 192,000+ evaluation cycle events with outcome tracking
+1. **Data moat** — 670,000+ evaluation cycle events with outcome tracking
 2. **Shadow Portfolio** — Learns from decisions the system doesn't make (unique globally)
 3. **Embedded infrastructure** — High switching cost once integrated
 4. **Post-quantum security** — Operational, not roadmap

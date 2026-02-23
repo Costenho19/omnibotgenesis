@@ -184,7 +184,7 @@ Capital Preservado: $50,000
 | **Max Drawdown** | **1.5%** | vs drawdown maximo de BTC de -7.37% |
 | **Trades Bloqueados** | **47** | Senales de alto riesgo correctamente vetadas |
 | **Tasa de Exito de Bloqueos** | **91%** | Trades bloqueados habrian perdido dinero |
-| **Ciclos de Decision Analizados** | **192,000+** | Motor de aprendizaje Shadow Portfolio |
+| **Ciclos de Decision Analizados** | **670,000+** | Motor de aprendizaje Shadow Portfolio |
 | **Uptime del Sistema** | **95%+** | Produccion (Railway), no ambiente de prueba |
 | **Latencia de Ejecucion** | **~120ms** | Medido, no estimado |
 
@@ -207,7 +207,7 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 | **Motor de Gobernanza de 6 Checkpoints** | 5 modelos de IA independientes deben coincidir antes de cualquier accion | Ningun modelo individual puede anular el sistema |
 | **Sistema de Memoria Conductual** | Recuerda patrones del mercado mas alla de datos recientes | Ve lo que otros sistemas no ven |
 | **Ventana de Confirmacion de Edge** | Requiere persistencia de tendencia por 3 ciclos — no solo un spike | Transforma "preservacion" en "paciencia" |
-| **Motor Shadow Portfolio** | Rastrea cada decision vetada para aprender (192,000+ eventos) | El sistema aprende de lo que NO hace |
+| **Motor Shadow Portfolio** | Rastrea cada decision vetada para aprender (670,000+ eventos) | El sistema aprende de lo que NO hace |
 | **Seguridad Post-Cuantica** | Firma criptografica post-cuantica (NIST-standardized) | Operacional hoy — no en roadmap |
 | **Orquestacion Multi-IA** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 con failover | Cero dependencia de un solo proveedor |
 
@@ -361,10 +361,10 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 
 | Capacidad | Estado |
 |-----------|--------|
-| Motor de Gobernanza de 6 Checkpoints | Produccion — 192,000+ ciclos de evaluacion |
+| Motor de Gobernanza de 6 Checkpoints | Produccion — 670,000+ ciclos de evaluacion |
 | Orquestacion Multi-IA (3 proveedores) | Produccion — cero dependencia de un solo proveedor |
 | Seguridad Post-Cuantica (Dilithium-3) | Produccion — operacional desde Nov 2025 |
-| Motor de Aprendizaje Shadow Portfolio | Produccion — 192,000+ eventos contrafactuales |
+| Motor de Aprendizaje Shadow Portfolio | Produccion — 670,000+ eventos contrafactuales |
 | Audit Trail completo de decisiones | Produccion — 100% cobertura de telemetria |
 | Demos interactivos de gobernanza (3 verticales) | En vivo — trading, credito, seguros |
 
@@ -402,7 +402,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 | Factor | Evidencia |
 |--------|-----------|
 | Producto funcionando en produccion | 3+ meses corriendo 24/7 |
-| Data de validacion real | 192,000+ ciclos de decision analizados |
+| Data de validacion real | 670,000+ ciclos de decision analizados |
 | IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
 | Comparable | Chainalysis levanto a $4M pre-money en etapa similar |
@@ -433,7 +433,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 2. **El timing es perfecto** — MiCA + ADGM mandando gobernanza de decisiones AHORA
 3. **El producto existe** — No es un slide deck. Corriendo en produccion por 3+ meses.
 4. **El enfoque es unico** — Nadie mas optimiza para la contencion
-5. **La data es real** — 192,000+ ciclos de evaluacion, 98.5% capital preservado, 91% precision de bloqueos
+5. **La data es real** — 670,000+ ciclos de evaluacion, 98.5% capital preservado, 91% precision de bloqueos
 6. **El mercado esta aqui** — Dubai/ADGM es el epicentro de infraestructura de gobernanza institucional
 7. **La vision escala** — Mismo motor, multiples verticales: trading, supply chain, credito, seguros
 
@@ -457,7 +457,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 >
 > Validamos esto en el dominio mas dificil primero — mercados financieros en tiempo real. Ejemplo real: 3 de febrero. Breakout de BTC — sube 6% en dos horas. Mercado euforico. Los bots tradicionales compraron. OMNIX bloqueo — la tendencia no era sostenida. 48 horas despues, BTC se desplomo 9%. Capital preservado: $50,000.
 >
-> 192,000 ciclos de evaluacion. 98.5% de capital preservado. El 91% de las acciones bloqueadas habrian resultado en perdidas. Sistema corriendo en produccion 24/7 por tres meses.
+> 670,000 ciclos de evaluacion. 98.5% de capital preservado. El 91% de las acciones bloqueadas habrian resultado en perdidas. Sistema corriendo en produccion 24/7 por tres meses.
 >
 > Nuestro primer mercado: prop trading firms, plataformas de trading, fondos regulados. 200+ prop firms solo en ADGM y DIFC. Pero el mismo motor se aplica a supply chain, credito, seguros y compliance.
 >
@@ -525,7 +525,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 |-----------|-------------|
 | Executive Fact Sheet | Estado del sistema y marco de gobernanza |
 | Track Record Case Study | Narrativa dia a dia de proteccion de capital |
-| Shadow Portfolio Report | Analisis contrafactual de 192,000+ operaciones |
+| Shadow Portfolio Report | Analisis contrafactual de 670,000+ operaciones |
 | Architecture Decision Records | 22+ decisiones tecnicas documentadas (ADRs) |
 | System State Manifest | Configuracion en vivo (JSON, legible por maquina) |
 
