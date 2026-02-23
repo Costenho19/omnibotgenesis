@@ -92,3 +92,4 @@ import-linter
 langdetect
 fast-langdetect
 pytest-env
+reportlab
