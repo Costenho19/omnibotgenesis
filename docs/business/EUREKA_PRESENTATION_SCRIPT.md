@@ -94,11 +94,21 @@ Ninety-eight point five percent of capital preserved — during a period where B
 
 Forty-seven high-risk trades blocked. Ninety-one percent of those blocks were correct — those trades would have lost money.
 
-Six hundred seventy thousand evaluation cycles analyzed in our Shadow Portfolio learning engine.
+Six hundred seventy thousand evaluation cycles analyzed in our Shadow Portfolio learning engine. Sixteen thousand governance decisions cryptographically signed and publicly verifiable.
 
 And every single trade is reconciled against real exchange data. We have one hundred percent P&L reconciliation across all one hundred nineteen trades. We call this Execution Integrity.
 
 This is not backtesting. This is not simulation. This is live."
+
+---
+
+## WHY ME (20 seconds)
+
+"Three months. Personal capital. No team. No investors. No safety net.
+
+I chose the hardest domain first — real-time financial markets. Not because it was easy. Because if the governance engine survives here, it survives anywhere.
+
+That is not a slide. That is conviction."
 
 ---
 
@@ -134,11 +144,13 @@ Year three: geographic expansion — ADGM to EU under MiCA. Two million plus."
 
 ## WHY DUBAI (20 seconds)
 
-"Why here?
+"Why here? Why now?
 
-ADGM — world-class regulatory framework for digital assets. Two hundred plus prop firms in ADGM and DIFC. Sovereign capital actively investing in fintech and AI. And the regulatory shift from crypto wild west to institutional infrastructure is happening here first.
+MiCA in Europe and ADGM in Dubai are creating mandatory demand for decision governance infrastructure — not optional, mandatory. Two thousand plus platforms need compliance documentation. Two hundred plus prop firms in ADGM and DIFC need governance infrastructure.
 
-Dubai is not just our headquarters. It is our first market."
+The regulatory window is open. This is the moment to establish the standard.
+
+Dubai is not just our headquarters. It is our first market — and the fastest path to institutional clients."
 
 ---
 
@@ -181,13 +193,14 @@ Thank you. I'm happy to take questions."
 | The Solution | 0:45 | 2:00 |
 | Proof (BTC example) | 0:45 | 2:45 |
 | Traction | 0:45 | 3:30 |
-| Technology Moat | 0:30 | 4:00 |
-| Business Model | 0:45 | 4:45 |
-| Why Dubai | 0:20 | 5:05 |
-| The Ask | 0:30 | 5:35 |
-| Close | 0:15 | 5:50 |
+| Why Me | 0:20 | 3:50 |
+| Technology Moat | 0:30 | 4:20 |
+| Business Model | 0:45 | 5:05 |
+| Why Dubai / Why Now | 0:30 | 5:35 |
+| The Ask | 0:30 | 6:05 |
+| Close | 0:15 | 6:20 |
 
-**Total: ~5:50** — leaves room for natural pauses and emphasis.
+**Total: ~6:20** — target range for Eureka 5-7 minute format. Adjust pace on Tech Moat and Business Model if time is tight.
 
 ---
 

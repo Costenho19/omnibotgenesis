@@ -22,7 +22,7 @@ contacto@omnixquantum.net | www.omnixquantum.net
 
 ## SLIDE 2 — THE PROBLEM (10-Second Hook)
 
-**95% of high-stakes decision systems ask the wrong question.**
+**The vast majority of high-stakes decision systems ask the wrong question.**
 
 They ask: *"When should I act?"*
 
@@ -54,7 +54,7 @@ Unlike systems that chase every opportunity, OMNIX operates as a **fail-closed g
 
 | Principle | What It Means |
 |-----------|---------------|
-| **Protection Before Action** | Prevent losses before pursuing gains. Always. |
+| **Protection Before Action** | Prevent losses before pursuing gains. By design. |
 | **Fail-Closed Architecture** | Default = don't act. Must earn the right to execute. |
 | **Full Decision Auditability** | Every decision — executed or blocked — is logged with complete rationale. |
 
@@ -185,6 +185,7 @@ Capital Preserved: $50,000
 | **Trades Blocked** | **47** | High-risk signals correctly vetoed |
 | **Block Success Rate** | **91%** | Blocked trades would have lost money |
 | **Decision Cycles Analyzed** | **670,000+** | Shadow Portfolio learning engine |
+| **PQC-Signed Receipts** | **16,000+** | Every governance decision cryptographically signed |
 | **System Uptime** | **95%+** | Production (Railway), not test environment |
 | **Execution Latency** | **~120ms** | Measured, not estimated |
 
@@ -215,7 +216,7 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 
 > All financial performance metrics are calculated from database-verified P&L including exchange fees. See Mathematical Audit Report.
 
-> "Every decision is logged, traceable, and reviewable. Full audit trail — always."
+> "Every decision is logged, traceable, and reviewable. Full audit trail — by architecture."
 
 ---
 
@@ -223,28 +224,17 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 
 **The same 6-checkpoint engine. Different domains. Same discipline.**
 
-OMNIX is not a trading bot — it is a **decision governance platform**. Digital asset trading is the first vertical where the architecture has been validated. The same engine applies wherever high-stakes decisions under uncertainty involve capital at risk.
+OMNIX is not a trading bot — it is a **decision governance infrastructure**. Digital asset trading is the first vertical where the architecture has been validated in production.
 
-| Vertical | What OMNIX Governs | Decision Example |
-|----------|-------------------|------------------|
-| **Digital Asset Trading** (Validated) | Trade execution governance | "Should this $50K position be opened?" |
-| **Supply Chain** | Procurement risk governance | "Should we commit $2M to this supplier order?" |
-| **Lending / Credit** | Credit extension governance | "Should this $500K loan be approved?" |
-| **Insurance** | Underwriting governance | "Should this high-exposure policy be issued?" |
-| **Energy Trading** | Energy procurement governance | "Should we lock in this energy contract?" |
-| **RegTech / Compliance** | Operational compliance governance | "Does this transaction violate regulatory limits?" |
+The governance logic is designed as domain-agnostic: the inputs change, but the six checkpoints — probability, risk limits, signal agreement, trend persistence, stress testing, and contradiction detection — apply identically to any high-stakes automated decision.
 
-**Why this works:**
+| Stage | Vertical | Status |
+|-------|----------|--------|
+| **Now — Validated** | Digital Asset Trading | Production since Nov 2025 |
+| **Year 2-3 — Roadmap** | Supply Chain, Lending/Credit | Architecture designed, demos live |
+| **Year 3+ — Future** | Insurance, Energy Trading | Market opportunity identified |
 
-Every domain above shares the same core requirements:
-- Multiple signals to evaluate under uncertainty
-- High cost of wrong decisions
-- Need for audit trails and regulatory compliance
-- Benefit from fail-closed architecture (block first, act only when confident)
-
-**The 6-checkpoint architecture is domain-agnostic.** The inputs change (market data vs. supplier data vs. credit scores), but the governance logic is identical.
-
-> "We validated the engine in the hardest domain first — real-time financial markets. Everything else is a simpler input set."
+> "We deliberately go deep in one domain before expanding. Trading is the hardest test. If the governance engine works here, it works everywhere."
 
 ---
 
@@ -362,6 +352,10 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 - Self-taught technologist with institutional finance discipline
 - Relocating to Dubai for ADGM ecosystem
 
+**Why Me:**
+
+I spent three months building this with personal capital. No investors. No team. No external validation required. I chose the hardest domain first — real-time financial markets — because if the governance engine works here, it works everywhere. That is not theory. That is conviction backed by 670,000+ data points.
+
 **What One Founder Built:**
 
 | Capability | Status |
@@ -437,7 +431,7 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 1. **The problem is massive** — Billions in preventable losses annually from poor automated risk governance
 2. **The timing is perfect** — MiCA + ADGM mandating decision governance NOW
 3. **The product exists** — Not a slide deck. Running in production for 3+ months.
-4. **The approach is unique** — Nobody else optimizes for restraint
+4. **The approach is differentiated** — To our knowledge, no comparable infrastructure optimizes for restraint
 5. **The data is real** — 670,000+ evaluation cycles, 98.5% capital preserved, 91% block accuracy
 6. **The market is here** — Dubai/ADGM is the epicenter of institutional governance infrastructure
 7. **The vision scales** — Same engine, multiple verticals: trading, supply chain, lending, insurance

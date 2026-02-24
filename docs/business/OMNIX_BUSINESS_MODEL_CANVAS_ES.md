@@ -81,6 +81,7 @@
 | Capital preservado durante volatilidad | 98.5% preservado mientras BTC cayo 7.37% |
 | Operaciones de alto riesgo bloqueadas correctamente | 47 trades bloqueados, 91% habrian perdido dinero |
 | Auditabilidad completa | 670,000+ ciclos de decision registrados |
+| Integridad criptografica | 16,000+ recibos de gobernanza firmados con PQC |
 | Confiabilidad del sistema | 95%+ uptime, ~120ms latencia de ejecucion |
 
 ---
@@ -111,6 +112,10 @@
 | **Plataformas de Trading** (3Commas, NinjaTrader) | Sin diferenciacion, presion de compliance | Risk-as-a-Service para sus usuarios |
 | **Fondos Regulados** (Crypto hedge funds) | Requisitos de auditoria, compliance MiCA | Trail de auditoria de decisiones completo |
 | **Family Offices** (Enfoque MENA/Asia) | Incertidumbre crypto, sin herramientas institucionales | Controles de riesgo de grado institucional |
+
+### VERTICALES FUTURAS — Gobernanza de Decisiones B2B (Ano 2-3+)
+
+Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3+). Mismo motor de 6 checkpoints, inputs especificos por dominio. Arquitectura disenada; expansion sigue la validacion en trading.
 
 ### SECUNDARIO — B2C (20% Enfoque, Post-Validacion Enterprise)
 

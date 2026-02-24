@@ -22,7 +22,7 @@ contacto@omnixquantum.net | www.omnixquantum.net
 
 ## SLIDE 2 — EL PROBLEMA (Gancho de 10 Segundos)
 
-**El 95% de los sistemas de decisiones de alto riesgo hacen la pregunta equivocada.**
+**La gran mayoria de los sistemas de decisiones de alto riesgo hacen la pregunta equivocada.**
 
 Preguntan: *"Cuando deberia actuar?"*
 
@@ -54,7 +54,7 @@ A diferencia de los sistemas que persiguen cada oportunidad, OMNIX opera como un
 
 | Principio | Que Significa |
 |-----------|---------------|
-| **Proteccion Antes de Accion** | Prevenir perdidas antes de buscar ganancias. Siempre. |
+| **Proteccion Antes de Accion** | Prevenir perdidas antes de buscar ganancias. Por diseno. |
 | **Arquitectura Fail-Closed** | El default = no actuar. Debe ganarse el derecho a ejecutar. |
 | **Auditabilidad Total** | Cada decision — ejecutada o bloqueada — queda registrada con justificacion completa. |
 
@@ -185,6 +185,7 @@ Capital Preservado: $50,000
 | **Trades Bloqueados** | **47** | Senales de alto riesgo correctamente vetadas |
 | **Tasa de Exito de Bloqueos** | **91%** | Trades bloqueados habrian perdido dinero |
 | **Ciclos de Decision Analizados** | **670,000+** | Motor de aprendizaje Shadow Portfolio |
+| **Recibos PQC Firmados** | **16,000+** | Cada decision de gobernanza firmada criptograficamente |
 | **Uptime del Sistema** | **95%+** | Produccion (Railway), no ambiente de prueba |
 | **Latencia de Ejecucion** | **~120ms** | Medido, no estimado |
 
@@ -215,7 +216,7 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 > Todas las metricas de rendimiento financiero se calculan a partir de P&L verificado en base de datos incluyendo comisiones del exchange. Ver Reporte de Auditoria Matematica.
 
-> "Cada decision queda registrada, trazable y revisable. Trail de auditoria — siempre."
+> "Cada decision queda registrada, trazable y revisable. Trail de auditoria — por arquitectura."
 
 ---
 
@@ -223,28 +224,17 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 **El mismo motor de 6 checkpoints. Diferentes dominios. La misma disciplina.**
 
-OMNIX no es un bot de trading — es una **plataforma de gobernanza de decisiones**. El trading de activos digitales es la primera vertical donde la arquitectura ha sido validada. El mismo motor se aplica donde sea que decisiones de alto riesgo bajo incertidumbre involucren capital en riesgo.
+OMNIX no es un bot de trading — es una **infraestructura de gobernanza de decisiones**. El trading de activos digitales es la primera vertical donde la arquitectura ha sido validada en produccion.
 
-| Vertical | Que Gobierna OMNIX | Ejemplo de Decision |
-|----------|-------------------|---------------------|
-| **Trading de Activos Digitales** (Validado) | Gobernanza de ejecucion de trades | "Deberia abrirse esta posicion de $50K?" |
-| **Supply Chain** | Gobernanza de riesgo de compras | "Deberiamos comprometer $2M en esta orden de proveedor?" |
-| **Credito / Prestamos** | Gobernanza de extension de credito | "Deberia aprobarse este prestamo de $500K?" |
-| **Seguros** | Gobernanza de suscripcion | "Deberia emitirse esta poliza de alta exposicion?" |
-| **Trading de Energia** | Gobernanza de compra de energia | "Deberiamos fijar este contrato de energia?" |
-| **RegTech / Compliance** | Gobernanza de compliance operacional | "Esta transaccion viola limites regulatorios?" |
+La logica de gobernanza esta disenada como agnostica al dominio: los inputs cambian, pero los seis checkpoints — probabilidad, limites de riesgo, acuerdo de senales, persistencia de tendencia, test de estres y deteccion de contradiccion — aplican identicamente a cualquier decision automatica de alto riesgo.
 
-**Por que esto funciona:**
+| Fase | Vertical | Estado |
+|------|----------|--------|
+| **Ahora — Validado** | Trading de Activos Digitales | Produccion desde Nov 2025 |
+| **Ano 2-3 — Roadmap** | Supply Chain, Credito/Prestamos | Arquitectura disenada, demos en vivo |
+| **Ano 3+ — Futuro** | Seguros, Trading de Energia | Oportunidad de mercado identificada |
 
-Cada dominio anterior comparte los mismos requisitos fundamentales:
-- Multiples senales a evaluar bajo incertidumbre
-- Alto costo de decisiones equivocadas
-- Necesidad de trails de auditoria y compliance regulatorio
-- Beneficio de arquitectura fail-closed (bloquear primero, actuar solo cuando hay confianza)
-
-**La arquitectura de 6 checkpoints es agnostica al dominio.** Los inputs cambian (datos de mercado vs. datos de proveedor vs. scores de credito), pero la logica de gobernanza es identica.
-
-> "Validamos el motor en el dominio mas dificil primero — mercados financieros en tiempo real. Todo lo demas es un conjunto de inputs mas simple."
+> "Vamos profundo en un dominio antes de expandir. Trading es la prueba mas dificil. Si el motor de gobernanza funciona aqui, funciona en todos lados."
 
 ---
 
@@ -362,6 +352,10 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 - Tecnologo autodidacta con disciplina de finanzas institucionales
 - Reubicandose a Dubai para ecosistema ADGM
 
+**Por Que Yo:**
+
+Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equipo. Sin validacion externa requerida. Elegi el dominio mas dificil primero — mercados financieros en tiempo real — porque si el motor de gobernanza funciona aqui, funciona en todos lados. Eso no es teoria. Es conviccion respaldada por 670,000+ datos reales.
+
 **Lo que un solo fundador construyo:**
 
 | Capacidad | Estado |
@@ -437,7 +431,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 1. **El problema es masivo** — Miles de millones en perdidas prevenibles anualmente por pobre gobernanza de riesgo automatizada
 2. **El timing es perfecto** — MiCA + ADGM mandando gobernanza de decisiones AHORA
 3. **El producto existe** — No es un slide deck. Corriendo en produccion por 3+ meses.
-4. **El enfoque es unico** — Nadie mas optimiza para la contencion
+4. **El enfoque es diferenciado** — Hasta donde sabemos, ninguna infraestructura comparable optimiza para la contencion
 5. **La data es real** — 670,000+ ciclos de evaluacion, 98.5% capital preservado, 91% precision de bloqueos
 6. **El mercado esta aqui** — Dubai/ADGM es el epicentro de infraestructura de gobernanza institucional
 7. **La vision escala** — Mismo motor, multiples verticales: trading, supply chain, credito, seguros

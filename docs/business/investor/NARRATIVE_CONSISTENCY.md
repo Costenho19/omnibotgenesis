@@ -1,6 +1,6 @@
 # OMNIX Investor Documents - Narrative Consistency Matrix
 
-**Last Updated:** February 23, 2026
+**Last Updated:** February 24, 2026
 
 This table tracks key phrases and messaging across all investor-facing documents to ensure narrative consistency.
 
@@ -27,7 +27,9 @@ This table tracks key phrases and messaging across all investor-facing documents
 | **Baseline Trades** | 119 | 119 | 119 | 119 | N/A (summary level) |
 | **Drawdown (observed)** | 1.5% | 1.5% | 1.5% | 1.5% | N/A |
 | **Drawdown (hard cap)** | 15% | 15% | 15% | 15% | N/A |
-| **PQC Receipts** | N/A | N/A | N/A | N/A | 16,000+ |
+| **PQC Receipts** | 16,000+ | N/A | N/A | N/A | 16,000+ |
+
+> **Standard**: 16,000+ PQC-signed receipts must appear in all main Eureka pitch documents (Slide 6 traction table, Canvas customer outcome). Added Feb 24, 2026.
 
 ---
 
@@ -82,11 +84,13 @@ This table tracks key phrases and messaging across all investor-facing documents
 
 | Document | Status | Consistency Verified |
 |----------|--------|---------------------|
-| **OMNIX_EUREKA_PITCH_FINAL.md** | Ready | Feb 23, 2026 |
-| **OMNIX_EUREKA_PITCH_FINAL_ES.md** | Ready | Feb 23, 2026 |
-| **OMNIX_BUSINESS_MODEL_CANVAS.md** | Ready | Feb 23, 2026 |
-| **OMNIX_BUSINESS_MODEL_CANVAS_ES.md** | Ready | Feb 23, 2026 |
+| **OMNIX_EUREKA_PITCH_FINAL.md** | Ready | Feb 24, 2026 |
+| **OMNIX_EUREKA_PITCH_FINAL_ES.md** | Ready | Feb 24, 2026 |
+| **OMNIX_BUSINESS_MODEL_CANVAS.md** | Ready | Feb 24, 2026 |
+| **OMNIX_BUSINESS_MODEL_CANVAS_ES.md** | Ready | Feb 24, 2026 |
 | **EUREKA_JUDGE_QA_PREPARATION.md** | Ready | Feb 23, 2026 |
+| **EUREKA_20_TOUGH_QUESTIONS.md** | Ready | Feb 24, 2026 |
+| **EUREKA_PRESENTATION_SCRIPT.md** | Ready | Feb 24, 2026 |
 | **OMNIX_PITCH_SCRIPTS.md** | Ready | Feb 23, 2026 |
 
 ---
@@ -100,18 +104,29 @@ This table tracks key phrases and messaging across all investor-facing documents
 | Feb 23, 2026 | arabic_executive_summary.md | Used "15+ AI strategies", "Citadel-level" | Removed prohibited language |
 | Feb 23, 2026 | arabic_executive_summary.md | Missing contact info | Added contacto@omnixquantum.net + Telegram |
 | Feb 23, 2026 | verification_server.py | system_uptime_days showed 2 (from decision_receipts) | Fixed to query shadow_trade_events + fallback to Nov 28, 2025 |
+| Feb 24, 2026 | All Eureka docs | "Always" absolute claims | Replaced "Always" with "By design", "always" with "by architecture" |
+| Feb 24, 2026 | All Eureka docs | "unique globally" / "nobody else" | Qualified with "To our knowledge, no comparable..." |
+| Feb 24, 2026 | All Eureka docs | "95% of decision systems" (unverifiable hook) | Changed to "vast majority of high-stakes decision systems" |
+| Feb 24, 2026 | Pitch EN/ES, Canvas EN/ES, Script | 16,000+ PQC receipts missing from main docs | Added to traction metrics tables in all main Eureka documents |
+| Feb 24, 2026 | Canvas EN + Pitch EN/ES | TAM: $37.3B+ vs $49.7B+ inconsistency | Canvas/Pitch: $37.3B+ core + italicized note for robotics +$12.4B (total $49.7B+) |
+| Feb 24, 2026 | Pitch EN/ES, Canvas EN/ES | Slide 8 multi-vertical: ~800 words, 6-row tables | Compressed to ~150 words, 3-row stage table (Now/Year 2-3/Year 3+) |
+| Feb 24, 2026 | Pitch EN/ES | Founder section: missing conviction narrative | Added "Why Me" paragraph with capital/conviction framing |
+| Feb 24, 2026 | Presentation Script | No "Why Me" section, weak "Why Now" | Added "WHY ME (20 seconds)" section + strengthened Why Dubai/Why Now |
 
 ---
 
-## Verified Consistency: February 23, 2026
+## Verified Consistency: February 24, 2026
 
 All documents now share:
 - Same platform identity (Decision Governance Infrastructure for Automated Systems)
 - Same valuation ($2.5M-$3M pre-money, 16.7% equity, $500K raise)
-- Same core metrics (670,000+ evaluation cycles, 98.5% capital preserved)
+- Same core metrics (670,000+ evaluation cycles, 98.5% capital preserved, 16,000+ PQC receipts)
 - Same PQC disclaimer (production-integrated, not compliance guarantee)
 - Same use of funds allocation (35/25/20/15/5)
-- Arabic summary aligned with all English documents
+- Qualified claims: "By design" not "Always", "To our knowledge" not "unique globally"
+- TAM standard: $37.3B+ core + $49.7B+ with robotics (noted separately)
+- Multi-vertical: lead with trading validation, roadmap for others (Year 2-3+)
+- Founder conviction narrative: "Why Me" present in Pitch and Script
 
 ---
 

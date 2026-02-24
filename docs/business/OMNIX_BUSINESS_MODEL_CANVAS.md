@@ -84,20 +84,18 @@
 | Capital preserved during volatility | 98.5% preserved while BTC dropped 7.37% |
 | High-risk actions correctly blocked | 47 trades blocked, 91% would have lost money |
 | Full auditability | 670,000+ decision cycles logged |
+| Cryptographic integrity | 16,000+ PQC-signed governance receipts |
 | System reliability | 95%+ uptime, ~120ms execution latency |
 
 **MULTI-VERTICAL APPLICABILITY:**
 
-The same 6-checkpoint architecture governs decisions across domains:
+The governance logic is designed as domain-agnostic. First validated in digital asset trading. Same engine, different inputs.
 
-| Vertical | Governance Application | Status |
-|----------|----------------------|--------|
-| Digital Asset Trading | Trade execution governance | Validated |
-| Supply Chain | Procurement risk governance | Roadmap (Year 2-3) |
-| Lending / Credit | Credit extension governance | Roadmap (Year 2-3) |
-| Insurance | Underwriting governance | Roadmap (Year 3+) |
-| Energy Trading | Energy procurement governance | Roadmap (Year 3+) |
-| RegTech / Compliance | Operational compliance governance | Roadmap (Year 3+) |
+| Stage | Vertical | Status |
+|-------|----------|--------|
+| Now | Digital Asset Trading | Validated in production |
+| Year 2-3 | Supply Chain, Lending/Credit | Architecture designed |
+| Year 3+ | Insurance, Energy Trading | Roadmap |
 
 ---
 
@@ -130,12 +128,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 ### FUTURE VERTICALS — B2B Decision Governance (Year 2-3+)
 
-| Segment | Pain Point | OMNIX Application |
-|---------|-----------|------------------|
-| **Supply Chain Operators** | Costly procurement mistakes under uncertainty | Procurement decision governance |
-| **Lending Platforms** | High-risk credit approvals causing defaults | Credit extension governance |
-| **Insurance Underwriters** | Accumulating tail risk exposure | Underwriting decision governance |
-| **Energy Traders** | Volatile energy procurement decisions | Energy contract governance |
+Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+). Same 6-checkpoint engine, domain-specific inputs. Architecture designed; expansion follows trading validation.
 
 ### SECONDARY — B2C (20% Focus, Post-Enterprise Validation)
 
@@ -165,6 +158,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 | Insurance Underwriting | $5.1B insurtech | Year 3+ |
 | Energy Trading | $2.8B energy risk management | Year 3+ |
 | **Combined TAM** | **$37.3B+** | Progressive |
+| *Incl. Robotics/Autonomous Systems* | *+$12.4B* | *Year 3+ (total: $49.7B+)* |
 
 ---
 

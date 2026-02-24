@@ -19,7 +19,7 @@
 |-----------|-------------|
 | **6-Checkpoint Governance Engine** | Multi-layer pre-execution decision validation — fail-closed by design |
 | **Shadow Portfolio Learning Engine** | 670,000+ counterfactual events — learns from decisions NOT taken |
-| **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — unique globally |
+| **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — to our knowledge, no comparable solution globally |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 — zero single-provider dependency |
 | **Post-Quantum Security** | NIST-standardized post-quantum decision signing — operational since Nov 2025 |
 | **Full Decision Audit Trail** | 100% telemetry coverage — every governance evaluation documented |
@@ -91,7 +91,7 @@
 
 **Defensible Moat:**
 1. **Data moat** — 670,000+ evaluation cycle events with outcome tracking
-2. **Shadow Portfolio** — Learns from decisions the system doesn't make (unique globally)
+2. **Shadow Portfolio** — Learns from decisions the system doesn't make (to our knowledge, no comparable solution globally)
 3. **Embedded infrastructure** — High switching cost once integrated
 4. **Post-quantum security** — Operational, not roadmap
 5. **Patent families planned** — 3 filings covering core IP

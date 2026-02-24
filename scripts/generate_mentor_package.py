@@ -474,6 +474,7 @@ def generate_canvas(mentor_name, output_path):
         ['Capital preserved during volatility', '98.5% preserved while BTC dropped 7.37%'],
         ['High-risk trades correctly blocked', '47 trades blocked, 91% would have lost money'],
         ['Complete auditability', '670,000+ decision cycles logged'],
+        ['Cryptographic integrity', '16,000+ PQC-signed governance receipts'],
         ['System reliability', '95%+ uptime, ~120ms execution latency'],
     ]
     elements.append(canvas_table(outcome_data[0], outcome_data[1:], [250, 310]))
