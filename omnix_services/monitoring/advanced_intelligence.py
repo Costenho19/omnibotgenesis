@@ -881,10 +881,11 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             logger.debug(f"Error análisis noticias: {e}")
         
         return {
-            'sentiment': 'Neutral',
-            'score': 0,
-            'headlines': ['Datos no disponibles'],
-            'source': 'Fallback'
+            'sentiment': None,
+            'score': None,
+            'headlines': [],
+            'status': 'insufficient_data',
+            'source': 'unavailable'
         }
     
     def _get_on_chain_metrics(self):

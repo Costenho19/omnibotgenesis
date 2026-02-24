@@ -33,7 +33,6 @@ EXCLUDED_PATHS = {
     'omnix_core/quantum/physics_validator.py',
     'omnix_core/quantum/testing_framework.py',
     'omnix_core/config/trading_profiles.py',
-    'omnix_services/coherence_service/coherence_engine.py',
     'omnix_services/trading_service/advanced_features.py',
     'omnix_services/trading_service/kelly_criterion.py',
     'omnix_services/trading_service/kalman_filter.py',
@@ -58,6 +57,7 @@ EXCLUDED_PATHS = {
     'omnix_services/market_data/validators.py',
     'omnix_services/market_data/latency_monitor.py',
     'omnix_services/portfolio_management/',
+    'examples/',
 }
 
 SUSPICIOUS_PATTERNS = [
@@ -133,6 +133,33 @@ SUSPICIOUS_PATTERNS = [
         r"calibration_success_rate['\"]?\s*[=:]\s*0\.\d+",
         "Hardcoded calibration success rate"
     ),
+    (
+        r"\.get\(['\"]price['\"],\s*\d{4,6}\)",
+        "Fallback price in .get() default — use None instead"
+    ),
+    (
+        r"\.get\(['\"]change['\"],\s*\d+\.?\d*\)",
+        "Fallback change% in .get() default — use None instead"
+    ),
+    (
+        r"['\"]BTC['\"]\s*:\s*9[0-9]{4}|['\"]ETH['\"]\s*:\s*3[0-9]{3}",
+        "Hardcoded crypto price (BTC/ETH) — use real API data"
+    ),
+    (
+        r"source['\"]?\s*:\s*['\"](?:Estimado|Fallback)['\"]",
+        "Data source marked as estimated/fallback — must use real source"
+    ),
+]
+
+SYNTHETIC_DATA_PATTERNS = [
+    (
+        r"np\.random\.(normal|uniform|randint|random|seed)",
+        "numpy random in runtime code — synthetic data generation"
+    ),
+    (
+        r"random\.(?:random|uniform|gauss|normalvariate)\(",
+        "Python random in runtime code — synthetic data generation"
+    ),
 ]
 
 CONTEXT_SAFE_PATTERNS = [
@@ -169,22 +196,44 @@ def _should_exclude(filepath):
     return False
 
 
-def _is_in_main_block(filepath, line_number):
+_main_block_cache = {}
+
+def _get_main_block_lines(filepath):
+    """Pre-compute which lines are inside __main__ blocks (cached per file)"""
+    if filepath in _main_block_cache:
+        return _main_block_cache[filepath]
+    
+    main_lines = set()
     try:
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
         
-        for i in range(line_number - 1, -1, -1):
-            stripped = lines[i].strip()
+        in_main = False
+        main_indent = 0
+        for i, line in enumerate(lines):
+            stripped = line.strip()
             if stripped.startswith('if __name__') and '__main__' in stripped:
-                return True
-            if stripped and not stripped.startswith('#') and not stripped.startswith('"""'):
-                indent = len(lines[i]) - len(lines[i].lstrip())
-                if indent == 0 and ('def ' in stripped or 'class ' in stripped):
-                    return False
-        return False
+                in_main = True
+                main_indent = len(line) - len(line.lstrip())
+                main_lines.add(i + 1)
+                continue
+            if in_main:
+                if stripped and not stripped.startswith('#'):
+                    current_indent = len(line) - len(line.lstrip())
+                    if current_indent <= main_indent and not line[main_indent:main_indent+1].isspace():
+                        if stripped.startswith(('def ', 'class ')) or (not stripped.startswith(('def ', 'class ')) and current_indent == 0 and i > 0):
+                            in_main = False
+                            continue
+                main_lines.add(i + 1)
     except Exception:
-        return False
+        pass
+    
+    _main_block_cache[filepath] = main_lines
+    return main_lines
+
+
+def _is_in_main_block(filepath, line_number):
+    return line_number in _get_main_block_lines(filepath)
 
 
 def _is_context_safe(line):
@@ -318,6 +367,110 @@ class TestNoHardcodedMetrics:
             report += f"\n{'=' * 60}"
             report += f"\nTotal violations: {len(violations)}"
             report += "\n\nFix: Return {'status': 'insufficient_data'} instead of hardcoded values"
+
+            pytest.fail(report)
+
+    def test_no_synthetic_data_in_runtime(self):
+        """Scan runtime code for numpy/random synthetic data generation"""
+        files = _collect_python_files()
+        violations = []
+
+        synthetic_safe_paths = {
+            'omnix_services/trading_service/monte_carlo.py',
+            'omnix_services/trading_service/advanced_features.py',
+            'omnix_services/stock_trading/premium/modules/monte_carlo.py',
+            'omnix_services/stock_trading/premium/stock_auto_optimizer.py',
+            'omnix_services/trading_service/backtesting_engine.py',
+            'omnix_services/analytics/institutional_report.py',
+            'omnix_services/ai_service/video/analyzer.py',
+            'omnix_services/ai_service/ai_models.py',
+            'omnix_services/optimization/auto_optimizer.py',
+            'omnix_core/quantum/',
+        }
+
+        for filepath in files:
+            normalized = filepath.replace('\\', '/')
+            is_safe = any(safe in normalized for safe in synthetic_safe_paths)
+            if is_safe:
+                continue
+
+            try:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+            except Exception:
+                continue
+
+            for line_num, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#'):
+                    continue
+                if _is_in_main_block(filepath, line_num):
+                    continue
+
+                for pattern, desc in SYNTHETIC_DATA_PATTERNS:
+                    if re.search(pattern, stripped):
+                        violations.append({
+                            'file': filepath,
+                            'line': line_num,
+                            'content': stripped[:120],
+                            'pattern': desc
+                        })
+
+        if violations:
+            report = "\n\nSYNTHETIC DATA GENERATION IN RUNTIME CODE:\n"
+            report += "=" * 60 + "\n"
+            for v in violations:
+                report += f"\n  File: {v['file']}:{v['line']}\n"
+                report += f"  Type: {v['pattern']}\n"
+                report += f"  Code: {v['content']}\n"
+            report += f"\n{'=' * 60}"
+            report += f"\nTotal violations: {len(violations)}"
+            report += "\nFix: Remove synthetic generation or move to /tests or /examples"
+
+            pytest.fail(report)
+
+    def test_no_demo_main_blocks_with_fake_data(self):
+        """Verify __main__ blocks in runtime don't contain simulated trading signals"""
+        files = _collect_python_files()
+        violations = []
+
+        demo_patterns = [
+            r"^signal\s*=\s*Signal\.",
+            r"^StrategySignal\(",
+        ]
+
+        for filepath in files:
+            try:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+            except Exception:
+                continue
+
+            in_main = False
+            for line_num, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if '__name__' in stripped and '__main__' in stripped:
+                    in_main = True
+                    continue
+                if in_main:
+                    for pattern in demo_patterns:
+                        if re.search(pattern, stripped, re.IGNORECASE):
+                            violations.append({
+                                'file': filepath,
+                                'line': line_num,
+                                'content': stripped[:120],
+                                'pattern': f"Demo data in __main__: {pattern}"
+                            })
+
+        if violations:
+            report = "\n\nDEMO DATA IN __main__ BLOCKS:\n"
+            report += "=" * 60 + "\n"
+            for v in violations:
+                report += f"\n  File: {v['file']}:{v['line']}\n"
+                report += f"  Type: {v['pattern']}\n"
+                report += f"  Code: {v['content']}\n"
+            report += f"\n{'=' * 60}"
+            report += "\nFix: Move demo code to examples/ directory"
 
             pytest.fail(report)
 

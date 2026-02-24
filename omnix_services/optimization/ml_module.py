@@ -205,7 +205,7 @@ class AdvancedMLModule:
             
         except Exception as e:
             logger.debug(f"Error interpreting LSTM: {e}")
-            return {'signal': 'HOLD', 'confidence': 0.5}
+            return {'signal': 'HOLD', 'confidence': None, 'status': 'insufficient_data'}
     
     def _calculate_position_size(self, signal, confidence):
         """Calcula tamaño de posición recomendado"""
@@ -351,163 +351,31 @@ class AdvancedMLModule:
             
             return strategies
         except Exception as e:
-            logger.warning(f"Backtest calculation fallback: {e}")
-            return {
-                'conservative': {'return_30d': 4.2, 'max_drawdown': 2.8, 'win_rate': 70, 'profit_factor': 1.6},
-                'moderate': {'return_30d': 8.5, 'max_drawdown': 5.5, 'win_rate': 63, 'profit_factor': 1.5},
-                'aggressive': {'return_30d': 13.2, 'max_drawdown': 11.8, 'win_rate': 57, 'profit_factor': 1.3},
-                'recommended': {'strategy': 'Moderate', 'monthly_roi': 8.5, 'max_risk': 5.5}
-            }
+            logger.warning(f"Backtest calculation error: {e}")
+            return {'status': 'insufficient_data', 'note': 'Backtest requires real historical trade data'}
 
     def _get_market_sentiment_analysis(self):
-        """Análisis sentimiento mercado desde fuentes gratuitas"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simular análisis de fuentes reales
-            twitter_data = {
-                'btc_mentions': 50,
-                'overall_sentiment': "neutral",
-                'sentiment_score': 1.0,
-                'trending_keywords': random.sample(['hodl', 'btc', 'pump', 'moon', 'dip', 'buy'], 3)
-            }
-            
-            news_data = {
-                'articles_count': 50,
-                'overall_sentiment': "neutral",
-                'sentiment_score': 1.0,
-                'price_impact': "neutral"
-            }
-            
-            reddit_data = {
-                'posts_analyzed': 50,
-                'dominant_sentiment': "neutral",
-                'fear_greed_index': 50
-            }
-            
-            # Generar recomendación basada en sentimiento
-            overall_sentiment = [twitter_data['overall_sentiment'], news_data['overall_sentiment']]
-            bullish_count = sum(1 for s in overall_sentiment if s in ['Bullish', 'Positive'])
-            
-            if bullish_count >= 2:
-                entry_signal = '🟢 COMPRAR'
-                confidence = 1.0
-                position_size = min(179.86 * 0.08, 14.39)  # Max 8% del capital
-                rationale = 'Sentimiento mayormente positivo across fuentes'
-            elif bullish_count == 0:
-                entry_signal = '🔴 EVITAR'
-                confidence = 1.0
-                position_size = 0
-                rationale = 'Sentimiento negativo dominante - esperar'
-            else:
-                entry_signal = '🟡 NEUTRO'
-                confidence = 1.0
-                position_size = min(179.86 * 0.05, 8.99)  # 5% del capital
-                rationale = 'Sentimiento mixto - posición conservadora'
-            
-            return {
-                'twitter': twitter_data,
-                'news': news_data,
-                'reddit': reddit_data,
-                'recommendation': {
-                    'entry_signal': entry_signal,
-                    'confidence': confidence,
-                    'position_size': position_size,
-                    'rationale': rationale
-                }
-            }
-        except Exception as e:
-            logger.warning(f"Sentiment analysis fallback: {e}")
-            return {
-                'twitter': {'btc_mentions': 28000, 'overall_sentiment': 'Neutral', 'sentiment_score': 3.2, 'trending_keywords': ['btc', 'hodl', 'pump']},
-                'news': {'articles_count': 45, 'overall_sentiment': 'Neutral', 'sentiment_score': 3.1, 'price_impact': 'Neutral'},
-                'reddit': {'posts_analyzed': 220, 'dominant_sentiment': 'Cauteloso', 'fear_greed_index': 52},
-                'recommendation': {'entry_signal': '🟡 NEUTRO', 'confidence': 65, 'position_size': 8.99, 'rationale': 'Sentimiento neutral - trading conservador'}
-            }
+        """Market sentiment analysis — requires real API connections"""
+        return {
+            'status': 'insufficient_data',
+            'note': 'Sentiment analysis requires real API connections (Twitter, news, Reddit)',
+            'twitter': None,
+            'news': None,
+            'reddit': None,
+            'recommendation': None
+        }
 
     def _calculate_performance_metrics(self):
-        """Calcula métricas de rendimiento para dashboard"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simular métricas de trading histórico
-            total_trades = 50
-            win_rate = 1.0
-            winning_trades = int(total_trades * (win_rate / 100))
-            losing_trades = total_trades - winning_trades
-            
-            avg_win = 1.0
-            avg_loss = 1.0
-            
-            profit_factor = avg_win / avg_loss if avg_loss > 0 else 1.5
-            
-            metrics = {
-                'total_trades': total_trades,
-                'winning_trades': winning_trades,
-                'losing_trades': losing_trades,
-                'win_rate': win_rate,
-                'loss_rate': 100 - win_rate,
-                'avg_win': avg_win,
-                'avg_loss': avg_loss,
-                'max_drawdown': 1.0,
-                'current_drawdown': 1.0,
-                'profit_factor': profit_factor,
-                'sharpe_ratio': 1.0,
-                'best_trade': 1.0,
-                'worst_trade': -1.0,
-                'expectancy': (avg_win * (win_rate/100)) - (avg_loss * ((100-win_rate)/100)),
-                'recovery_factor': 1.0,
-                'monthly_roi': 1.0,
-                'daily_trades': total_trades / 30 if total_trades > 0 else 0
-            }
-            
-            # Generar sugerencias basadas en métricas
-            suggestions = []
-            if metrics['win_rate'] < 60:
-                suggestions.append("• Mejorar filtros de entrada")
-            if metrics['profit_factor'] < 1.3:
-                suggestions.append("• Optimizar ratio ganancia/pérdida")
-            if metrics['max_drawdown'] > 7:
-                suggestions.append("• Reducir tamaño posiciones")
-            if metrics['sharpe_ratio'] < 1.0:
-                suggestions.append("• Mejorar consistencia retornos")
-            
-            if not suggestions:
-                suggestions.append("• Rendimiento sólido - mantener estrategia")
-            
-            metrics['optimization_suggestions'] = '\n'.join(suggestions)
-            
-            return metrics
-        except Exception as e:
-            logger.warning(f"Performance metrics fallback: {e}")
-            return {
-                'total_trades': 12, 'winning_trades': 8, 'losing_trades': 4, 'win_rate': 66.7, 'loss_rate': 33.3,
-                'avg_win': 7.50, 'avg_loss': 4.20, 'max_drawdown': 4.8, 'current_drawdown': 1.2,
-                'profit_factor': 1.79, 'sharpe_ratio': 1.35, 'best_trade': 21.30, 'worst_trade': -9.80,
-                'expectancy': 3.61, 'recovery_factor': 2.1, 'monthly_roi': 6.8, 'daily_trades': 0.4,
-                'optimization_suggestions': '• Rendimiento sólido - mantener estrategia'
-            }
+        """Performance metrics — requires real trade data from database"""
+        return {
+            'status': 'insufficient_data',
+            'note': 'Performance metrics require real executed trade data from database'
+        }
 
     def _analyze_order_execution(self):
-        """Analiza optimización de ejecución de órdenes"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simular métricas de ejecución
-            metrics = {
-                'avg_latency': 1.0,  # ms
-                'avg_slippage': 1.0,  # %
-                'orders_executed': 50,
-                'execution_rate': 1.0  # %
-            }
-            
-            return metrics
-        except Exception as e:
-            logger.warning(f"Order execution analysis fallback: {e}")
-            return {
-                'avg_latency': 120,
-                'avg_slippage': 0.045,
-                'orders_executed': 28,
-                'execution_rate': 97.8
-            }
+        """Order execution analysis — requires real execution data"""
+        return {
+            'status': 'insufficient_data',
+            'note': 'Execution analysis requires real order fill data from exchange'
+        }
 

@@ -84,4 +84,4 @@ class FreeNewsAnalyzer:
                 else:
                     return {'sentiment': 'NEUTRAL', 'score': 0.0}
         except Exception:
-            return {'sentiment': 'NEUTRAL', 'score': 0.0}
+            return {'sentiment': None, 'score': None, 'status': 'insufficient_data'}

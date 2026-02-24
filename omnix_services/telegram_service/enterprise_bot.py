@@ -3318,16 +3318,16 @@ Ejemplo: /risk_events 48
             await update.message.reply_text(f"⚠️ Error: {e}")
     
     def _get_price_history(self, symbol, days=100):
-        """Obtener histórico de precios"""
+        """Obtener histórico de precios — requiere datos reales de API"""
         try:
-            # Usar trading system si está disponible
-            if self.trading:
-                # Implementación simple - en producción usar API real
-                current_price = self.trading.get_current_price(f"{symbol}/USD")
-                if current_price:
-                    import numpy as np
-                    # Generar histórico simulado (en producción usar API real)
-                    return [current_price * (1 + np.random.normal(0, 0.02)) for _ in range(days)]
+            if self.trading and hasattr(self.trading, 'kraken'):
+                pair_map = {'BTC': 'XBTUSD', 'ETH': 'ETHUSD'}
+                kraken_pair = pair_map.get(symbol, f"{symbol}USD")
+                ohlc_data = self.trading.kraken.get_ohlc(kraken_pair, interval=1440)
+                if ohlc_data and len(ohlc_data) >= days:
+                    return [float(candle[4]) for candle in ohlc_data[-days:]]
+                elif ohlc_data:
+                    return [float(candle[4]) for candle in ohlc_data]
             return None
         except Exception:
             return None

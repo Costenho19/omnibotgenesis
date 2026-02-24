@@ -722,9 +722,10 @@ class TradingSystem:
             }
         except Exception:
             return {
-                'fear_greed_index': 45,
-                'sentiment': 'Neutral',
-                'recommendation': 'Cautious optimism',
+                'fear_greed_index': None,
+                'sentiment': None,
+                'recommendation': None,
+                'status': 'insufficient_data',
                 'timestamp': datetime.now().isoformat()
             }
     
