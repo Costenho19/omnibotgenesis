@@ -65,7 +65,7 @@ const TradeHistoryWidget = {
             html += `
                 <div class="calibration-notice" style="background: rgba(255, 152, 0, 0.05); border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
                     <div style="font-size: 11px; color: #ff9800;">
-                        <strong>LEARNING BASELINE</strong> (Nov 2025 - Jan 14, 2026): 119 trades, -$15,198.73 P&L.<br>
+                        <strong>LEARNING BASELINE</strong> (Nov 2025 - Jan 14, 2026): ${statistics ? statistics.total_trades + ' trades, ' + OmnixUtils.formatCurrency(statistics.total_pnl, { showSign: true }) + ' P&L' : 'Loading...'}.<br>
                         This data is separated from the Official Track Record and used for system calibration only.
                     </div>
                 </div>
