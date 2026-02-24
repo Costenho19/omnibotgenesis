@@ -603,6 +603,8 @@ def build_section_5(styles):
         ['Investor Dashboard', 'Live', '19 widgets with real-time metrics, dual win rate framework, regime detection'],
         ['Institutional Website', 'Live', 'Public landing at www.omnixquantum.net with live market data integration'],
         ['Interactive Governance Demos', 'Live', 'Credit/Lending + Insurance underwriting demos showing multi-vertical applicability'],
+        ['Execution Integrity', 'Live', 'Kraken fill reconciliation \u2014 real exchange data verification for every trade'],
+        ['Mathematical Audit', 'Live', '100% P&L reconciliation (119/119 trades verified against exchange fees)'],
     ]
     elements.append(make_table(features_data[0], features_data[1:], [150, 35, 275]))
 
@@ -821,6 +823,8 @@ def build_section_8(styles):
         ['Feb 15, 2026', 'Multi-Vertical Demos (Credit + Insurance)', 'Domain-agnostic architecture demonstrated'],
         ['Feb 21, 2026', 'Public Verification Server', 'Transparent governance receipts'],
         ['Feb 23, 2026', 'Railway cost optimization (77% reduction)', 'Operational efficiency for scaling'],
+        ['Feb 24, 2026', 'Execution Integrity v1', 'Kraken fill reconciliation \u2014 real exchange data verification'],
+        ['Feb 24, 2026', 'Mathematical Audit', '119/119 trades P&L reconciled (100% accuracy)'],
     ]
     elements.append(make_table(milestones_data[0], milestones_data[1:], [70, 200, 190]))
 
