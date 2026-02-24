@@ -231,11 +231,40 @@ def generate_canvas(mentor_name, output_path):
 
     elements = []
 
+    title_style = ParagraphStyle('CanvasTitle', fontName='Helvetica-Bold', fontSize=16,
+                                 leading=20, textColor=BRAND_NAVY, alignment=TA_CENTER, spaceAfter=4)
+    subtitle_style = ParagraphStyle('CanvasSub', fontName='Helvetica', fontSize=10,
+                                    leading=14, textColor=BRAND_GRAY, alignment=TA_CENTER, spaceAfter=12)
+    section_title = ParagraphStyle('CSectionTitle', fontName='Helvetica-Bold', fontSize=14,
+                                   leading=18, textColor=BRAND_NAVY, spaceBefore=16, spaceAfter=8)
+    subsec_title = ParagraphStyle('CSubsecTitle', fontName='Helvetica-Bold', fontSize=11,
+                                   leading=15, textColor=BRAND_BLUE, spaceBefore=10, spaceAfter=6)
+    body = ParagraphStyle('CBody', fontName='Helvetica', fontSize=9, leading=13,
+                          textColor=BRAND_DARK_TEXT, alignment=TA_JUSTIFY, spaceAfter=6)
+    body_bold = ParagraphStyle('CBodyBold', fontName='Helvetica-Bold', fontSize=9, leading=13,
+                               textColor=BRAND_DARK_TEXT, spaceAfter=6)
+    bullet = ParagraphStyle('CBullet', fontName='Helvetica', fontSize=9, leading=13,
+                            textColor=BRAND_DARK_TEXT, leftIndent=16, bulletIndent=6, spaceAfter=3)
+    quote_style = ParagraphStyle('CQuote', fontName='Helvetica-Oblique', fontSize=10, leading=14,
+                                  textColor=BRAND_BLUE, leftIndent=15, rightIndent=15,
+                                  spaceBefore=6, spaceAfter=10, borderWidth=2,
+                                  borderColor=BRAND_ACCENT, borderPadding=8)
+    footer_note = ParagraphStyle('CanvasFooter', fontName='Helvetica', fontSize=7,
+                                 leading=9, textColor=BRAND_GRAY, alignment=TA_CENTER)
+    note_style = ParagraphStyle('CNote', fontName='Helvetica-Oblique', fontSize=8, leading=11,
+                                textColor=BRAND_GRAY, spaceAfter=6)
+
+    def sec_hr():
+        return HRFlowable(width="100%", thickness=2, color=BRAND_ACCENT, spaceBefore=8, spaceAfter=4)
+
+    def canvas_table(headers, rows, col_widths=None):
+        return make_table(headers, rows, col_widths)
+
     elements.append(Spacer(1, 80))
     elements.append(Paragraph("OMNIX", s['CoverTitle']))
     elements.append(Paragraph("Business Model Canvas", s['CoverSubtitle']))
     elements.append(Spacer(1, 10))
-    elements.append(Paragraph('"Decision Governance Infrastructure for Automated Systems"', s['CoverTagline']))
+    elements.append(Paragraph('"Pre-Execution Risk Governance Infrastructure for Digital Asset Trading"', s['CoverTagline']))
     elements.append(Spacer(1, 30))
     info_style = ParagraphStyle(
         'CoverInfo', fontName='Helvetica', fontSize=11, leading=16,
@@ -252,8 +281,9 @@ def generate_canvas(mentor_name, output_path):
         'CoverDate', fontName='Helvetica', fontSize=9, leading=12,
         textColor=BRAND_GOLD, alignment=TA_LEFT
     )
-    elements.append(Paragraph(f"March 2026 | Abu Dhabi, UAE", date_style))
-    elements.append(Paragraph("Classification: Confidential \u2014 Mentor Review", date_style))
+    elements.append(Paragraph("Eureka Dubai Aligned | March 2026", date_style))
+    elements.append(Paragraph("Classification: Competition Supplement \u2014 Expert Reviewed", date_style))
+    elements.append(Paragraph("Alignment: All numbers match the OMNIX Eureka Final Pitch Deck", date_style))
     elements.append(PageBreak())
 
     hdr = ParagraphStyle('BMCHdr', fontName='Helvetica-Bold', fontSize=8, leading=10,
@@ -269,105 +299,8 @@ def generate_canvas(mentor_name, output_path):
             content.append(Paragraph(f"\u2022 {item}", cell))
         return content
 
-    kp = bmc_cell("KEY PARTNERS", [
-        "ADGM/DIFC regulatory ecosystem",
-        "Hub71 accelerator (applied)",
-        "AI providers: Google, OpenAI, Anthropic",
-        "Cloud: Railway (production 24/7)",
-        "Exchange APIs: Kraken, Alpaca",
-        "NIST PQC standards body",
-    ])
-    ka = bmc_cell("KEY ACTIVITIES", [
-        "6-checkpoint governance engine R&D",
-        "Enterprise API development",
-        "Multi-vertical domain adapter design",
-        "Shadow Portfolio counterfactual analysis",
-        "PQC receipt signing (Dilithium-3)",
-        "Regulatory compliance alignment",
-        "Execution integrity validation",
-    ])
-    kr = bmc_cell("KEY RESOURCES", [
-        "Proprietary 6-checkpoint architecture",
-        "670,000+ evaluation cycles dataset",
-        "16,000+ PQC-signed governance receipts",
-        "27 Architecture Decision Records",
-        "Hexagonal codebase (42+ DB tables)",
-        "Shadow Portfolio engine",
-        "Solo founder: Harold Nunes",
-    ])
-    vp = bmc_cell("VALUE PROPOSITIONS", [
-        "Pre-execution decision governance (fail-closed)",
-        "6 independent validation checkpoints",
-        "PQC-signed audit trail (NIST-standardized)",
-        "Domain-agnostic: trading, supply chain, lending, insurance, energy, robotics",
-        "Real-time validation (<120ms latency)",
-        "Capital preservation (98.5% during BTC -7.37%)",
-        "Publicly verifiable governance receipts",
-        "Mathematical audit: 100% P&L reconciliation",
-    ])
-    cr = bmc_cell("CUSTOMER RELATIONSHIPS", [
-        "Enterprise-first, founder-led sales",
-        "Progressive onboarding: Shadow \u2192 Advisory \u2192 Enforcement",
-        "Live verification system (public)",
-        "Interactive governance demos (credit, insurance)",
-        "24/7 operational monitoring",
-        "Institutional dashboard (19 widgets)",
-    ])
-    ch = bmc_cell("CHANNELS", [
-        "ADGM/DIFC direct outreach (50/month)",
-        "Eureka GCC 2026 (Semifinalist)",
-        "Hub71 accelerator program",
-        "Industry events: TOKEN2049, GITEX, FinTech Abu Dhabi",
-        "LinkedIn + content marketing",
-        "Public verification server",
-        "Institutional website: omnixquantum.net",
-    ])
-    cs = bmc_cell("CUSTOMER SEGMENTS", [
-        "<b>Primary (B2B - 80%):</b>",
-        "Prop trading firms (ADGM/DIFC: 200+)",
-        "Trading platforms & exchanges",
-        "Regulated funds & family offices",
-        "<b>Secondary (B2C - 20%):</b>",
-        "Advanced independent traders",
-        "<b>Future verticals (Year 2-3+):</b>",
-        "Supply chain, credit/lending, insurance, energy, robotics/autonomous systems",
-    ])
-    cost = bmc_cell("COST STRUCTURE", [
-        "AI API costs (Gemini, GPT-4o, Claude)",
-        "Cloud infrastructure (Railway, Redis, PostgreSQL)",
-        "Market data feeds (Kraken, Alpaca, Finnhub)",
-        "Regulatory & legal (ADGM formation)",
-        "Team: 3 key hires post-funding (Month 1-4)",
-        "Break-even target: 18-24 months",
-    ])
-    rev = bmc_cell("REVENUE STREAMS", [
-        "<b>B2B Enterprise Licenses:</b> $15K-$35K/month",
-        "<b>Per-Validation API:</b> $0.01-$0.05/call",
-        "<b>White-Label Engine:</b> $100K+ setup + $20K/month",
-        "<b>B2C Pro SaaS:</b> $149/month",
-        "<b>B2C Advanced SaaS:</b> $499/month",
-        "LTV/CAC ratio: 18x-84x (enterprise)",
-        "Target Year 1 revenue: $200K-$400K",
-    ])
-
-    col_w = (w - 60) / 5
-
-    top_row_h = 220
-    bot_row_h = 120
-
-    def cell_table(content_list, width, height):
-        t = Table([[content_list]], colWidths=[width - 4], rowHeights=[height])
-        t.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        return t
-
-    def header_cell(text, width):
-        t = Table([[Paragraph(text, hdr)]], colWidths=[width - 4], rowHeights=[18])
+    def header_cell(text, col_width):
+        t = Table([[Paragraph(text, hdr)]], colWidths=[col_width - 4], rowHeights=[18])
         t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), TABLE_HEADER_BG),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -377,25 +310,97 @@ def generate_canvas(mentor_name, output_path):
         ]))
         return t
 
-    title_style = ParagraphStyle('CanvasTitle', fontName='Helvetica-Bold', fontSize=16,
-                                 leading=20, textColor=BRAND_NAVY, alignment=TA_CENTER, spaceAfter=4)
-    subtitle_style = ParagraphStyle('CanvasSub', fontName='Helvetica', fontSize=10,
-                                    leading=14, textColor=BRAND_GRAY, alignment=TA_CENTER, spaceAfter=20)
-
     elements.append(Paragraph("OMNIX \u2014 Business Model Canvas", title_style))
-    elements.append(Paragraph("Decision Governance Infrastructure for Automated Systems", subtitle_style))
+    elements.append(Paragraph("Institutional Risk Governance for Digital Assets", subtitle_style))
+
+    col_w = (w - 60) / 5
+
+    kp = bmc_cell("KEY PARTNERS", [
+        "<b>Regulatory &amp; Ecosystem (Target):</b>",
+        "ADGM (Target licensing ecosystem)",
+        "Hub71 (Application sent \u2014 pending response)",
+        "DIFC (Future expansion ecosystem)",
+        "<b>Strategic Partners (Pipeline):</b>",
+        "Trading platforms (API integrations)",
+        "Prop trading firms (pilot partners)",
+        "<b>Technology Providers:</b>",
+        "Cloud infrastructure (Railway / scalable cloud)",
+        "AI providers (Google Gemini 2.5 Flash, OpenAI GPT-4o, Anthropic Claude Sonnet 4)",
+        "Database infrastructure (PostgreSQL)",
+    ])
+    ka = bmc_cell("KEY ACTIVITIES", [
+        "<b>Core Operations:</b>",
+        "Risk Engine Development &amp; Calibration",
+        "6-Checkpoint Validation Architecture",
+        "Decision Trace Logging (100% telemetry coverage)",
+        "Shadow Portfolio Analysis (670,000+ events)",
+        "Enterprise API Integration",
+        "Model validation against real market conditions",
+        "<b>Governance Operations:</b>",
+        "Compliance Monitoring",
+        "Telemetry Analysis",
+        "Institutional Reporting &amp; Audit Trail Generation",
+    ])
+    vp = bmc_cell("VALUE PROPOSITIONS", [
+        "Multi-layer pre-execution trade validation (6 independent checkpoints)",
+        "Fail-closed architecture (default = do not trade)",
+        "Complete institutional decision trace",
+        "Regime detection and tail risk awareness",
+        "Institutional governance logic for digital asset trading",
+    ])
+    cr = bmc_cell("CUSTOMER RELATIONSHIPS", [
+        "<b>B2B Institutional:</b>",
+        "Structured onboarding with risk threshold customization",
+        "Technical integration support",
+        "Governance review sessions",
+        "SLA-based uptime commitments (target: 99.5%)",
+        "<b>Retention Strategy:</b>",
+        "Embedded in execution flow (high switching cost)",
+        "Positioned as mission-critical infrastructure",
+        "Continuous improvement via Shadow Portfolio learning",
+        "Network effects: more data improves the engine",
+    ])
+    cs = bmc_cell("CUSTOMER SEGMENTS", [
+        "<b>PRIMARY \u2014 B2B Institutional (80% Focus):</b>",
+        "Prop Trading Firms (200+ in ADGM/DIFC)",
+        "Trading Platforms (3Commas, NinjaTrader)",
+        "Regulated Funds (Crypto hedge funds)",
+        "Family Offices (MENA/Asia Focus)",
+        "<b>SECONDARY \u2014 B2C (20% Focus):</b>",
+        "Advanced independent traders",
+        "Semi-professional traders",
+        "High net worth individuals managing own capital",
+    ])
+    cost_items = bmc_cell("COST STRUCTURE", [
+        "Strategy &amp; Risk Engine: 35%",
+        "Dubai/ADGM Legal &amp; Regulatory: 25%",
+        "Enterprise Infrastructure: 20%",
+        "Team &amp; Operations: 15%",
+        "Reserve: 5%",
+        "Gross margin: 60\u201370%",
+        "Break-even: 18\u201324 months",
+    ])
+    rev_items = bmc_cell("REVENUE STREAMS", [
+        "<b>B2B Enterprise (80%):</b>",
+        "Risk Guardian API: $15K\u201335K/mo",
+        "White-Label Engine: $100K+ setup + $20K/mo",
+        "Per-Validation: $0.01\u20130.05/call",
+        "<b>B2C SaaS (20%):</b>",
+        "Pro: $149/mo",
+        "Advanced: $499/mo",
+    ])
 
     canvas_data = [
         [
             [header_cell("KEY PARTNERS", col_w)] + kp,
-            [header_cell("KEY ACTIVITIES", col_w)] + ka + [Spacer(1, 10), header_cell("KEY RESOURCES", col_w)] + kr,
+            [header_cell("KEY ACTIVITIES", col_w)] + ka,
             [header_cell("VALUE PROPOSITIONS", col_w)] + vp,
-            [header_cell("CUSTOMER RELATIONSHIPS", col_w)] + cr + [Spacer(1, 10), header_cell("CHANNELS", col_w)] + ch,
+            [header_cell("CUSTOMER RELATIONSHIPS", col_w)] + cr,
             [header_cell("CUSTOMER SEGMENTS", col_w)] + cs,
         ],
     ]
 
-    main_table = Table(canvas_data, colWidths=[col_w]*5, rowHeights=[340])
+    main_table = Table(canvas_data, colWidths=[col_w]*5, rowHeights=[380])
     main_table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1, BRAND_BLUE),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -412,8 +417,8 @@ def generate_canvas(mentor_name, output_path):
 
     bottom_data = [
         [
-            [header_cell("COST STRUCTURE", col_w * 2.5)] + cost,
-            [header_cell("REVENUE STREAMS", col_w * 2.5)] + rev,
+            [header_cell("COST STRUCTURE", col_w * 2.5)] + cost_items,
+            [header_cell("REVENUE STREAMS", col_w * 2.5)] + rev_items,
         ]
     ]
     bottom_table = Table(bottom_data, colWidths=[col_w * 2.5, col_w * 2.5], rowHeights=[140])
@@ -428,59 +433,400 @@ def generate_canvas(mentor_name, output_path):
     ]))
     elements.append(bottom_table)
 
-    elements.append(Spacer(1, 8))
-    footer_note = ParagraphStyle('CanvasFooter', fontName='Helvetica', fontSize=7,
-                                 leading=9, textColor=BRAND_GRAY, alignment=TA_CENTER)
+    elements.append(Spacer(1, 6))
     elements.append(Paragraph(
-        "OMNIX \u2014 Eureka GCC 2026 Semifinalist | Pre-Seed: $500K @ $2.5M-$3M valuation (16.7% equity) | "
+        "OMNIX \u2014 Eureka GCC 2026 Semifinalist | Pre-Seed: $500K @ $2.5M\u2013$3M valuation (16.7% equity) | "
         "All metrics from internal dataset, not externally audited | Abu Dhabi, UAE",
         footer_note
     ))
-
     elements.append(PageBreak())
 
-    elements.append(Paragraph("Key Metrics & Validation", title_style))
-    elements.append(Spacer(1, 12))
+    elements.append(sec_hr())
+    elements.append(Paragraph("VALUE PROPOSITION \u2014 Detailed", section_title))
+    elements.append(Paragraph(
+        '"Capital protection before capital deployment."',
+        quote_style
+    ))
+    elements.append(Paragraph("OMNIX provides:", body_bold))
+    for item in [
+        "Multi-layer pre-execution trade validation (6 independent checkpoints)",
+        "Fail-closed architecture (default = do not trade)",
+        "Complete institutional decision trace",
+        "Regime detection and tail risk awareness",
+        "Institutional governance logic for digital asset trading",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
 
-    metrics_data = [
-        ['Metric', 'Value', 'Significance'],
-        ['Production Uptime', '24/7 since Nov 2025', '4+ months continuous operation'],
-        ['Evaluation Cycles', '670,000+', 'Governance engine processing decisions in real-time'],
-        ['PQC-Signed Receipts', '16,000+', '100% Dilithium-3 coverage (NIST-standardized)'],
-        ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
-        ['Shadow Trade Events', '670,000+', 'Counterfactual analysis of vetoed decisions'],
-        ['Decision Latency', '<120ms', 'Real-time governance validation'],
-        ['P&L Reconciliation', '100%', '119/119 trades mathematically audited'],
-        ['Execution Integrity', 'Kraken-verified', 'Real fill data from exchange (not estimated)'],
-        ['Database Tables', '42+', '90% foreign key coverage'],
-        ['Architecture Decisions', '27 ADRs', 'Documented engineering discipline'],
-        ['Combined TAM', '$49.7B+', '6 verticals: trading, supply chain, lending, insurance, energy, robotics'],
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("DIFFERENTIATION:", body_bold))
+    diff_data = [
+        ['Traditional Systems', 'OMNIX'],
+        ['Optimize entries', 'Optimizes disciplined containment'],
+        ['1 risk control', '6 independent checkpoints'],
+        ['Trade first, manage risk later', 'Block first, trade only with confirmed edge'],
     ]
-    metrics_t = make_table(metrics_data[0], metrics_data[1:], [130, 130, 300])
-    elements.append(metrics_t)
+    elements.append(canvas_table(diff_data[0], diff_data[1:], [280, 280]))
 
-    elements.append(Spacer(1, 16))
-    elements.append(Paragraph("Fundraising Summary", ParagraphStyle(
-        'FundTitle', fontName='Helvetica-Bold', fontSize=14, leading=18,
-        textColor=BRAND_NAVY, alignment=TA_CENTER, spaceAfter=8)))
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("CLIENT OUTCOME (From Validation Data):", body_bold))
+    outcome_data = [
+        ['Outcome', 'Evidence'],
+        ['Capital preserved during volatility', '98.5% preserved while BTC dropped 7.37%'],
+        ['High-risk trades correctly blocked', '47 trades blocked, 91% would have lost money'],
+        ['Complete auditability', '670,000+ decision cycles logged'],
+        ['System reliability', '95%+ uptime, ~120ms execution latency'],
+    ]
+    elements.append(canvas_table(outcome_data[0], outcome_data[1:], [250, 310]))
+    elements.append(PageBreak())
 
+    elements.append(sec_hr())
+    elements.append(Paragraph("CUSTOMER SEGMENTS \u2014 Detailed", section_title))
+    elements.append(Paragraph("PRIMARY \u2014 B2B Institutional (80% Focus)", subsec_title))
+    seg_data = [
+        ['Segment', 'Pain', 'Need'],
+        ['Prop Trading Firms (200+ in ADGM/DIFC)', 'Severe drawdowns during volatile regimes', 'Automated pre-execution risk governance'],
+        ['Trading Platforms (3Commas, NinjaTrader)', 'No differentiation, compliance pressure', 'Risk-as-a-Service for their users'],
+        ['Regulated Funds (Crypto hedge funds)', 'Audit requirements, MiCA compliance', 'Complete decision audit trail'],
+        ['Family Offices (MENA/Asia Focus)', 'Crypto uncertainty, no institutional tools', 'Institutional-grade risk controls'],
+    ]
+    elements.append(canvas_table(seg_data[0], seg_data[1:], [190, 200, 200]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("SECONDARY \u2014 B2C (20% Focus, Post-Enterprise Validation)", subsec_title))
+    for item in [
+        "Advanced independent traders",
+        "Semi-professional traders",
+        "High net worth individuals managing their own capital",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Market Sizing", subsec_title))
+    mkt_data = [
+        ['Metric', 'Value'],
+        ['Global daily crypto trading volume', '$2.3T+'],
+        ['Algorithmic trading market', '$18.8B (growing 12% CAGR)'],
+        ['Prop firms in ADGM/DIFC alone', '200+'],
+        ['Platforms needing MiCA compliance (2025+)', '2,000+'],
+        ['Estimated institutional targets (MENA)', '~300'],
+        ['Conservative penetration (5-10%)', '15-30 clients'],
+        ['Year 1 target', '3 enterprise pilots'],
+    ]
+    elements.append(canvas_table(mkt_data[0], mkt_data[1:], [280, 280]))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("CHANNELS &amp; GO-TO-MARKET STRATEGY", section_title))
+
+    elements.append(Paragraph("First 3 Target Pilots (Month 1-6)", subsec_title))
+    pilot_data = [
+        ['Client Type', 'Quantity in ADGM/DIFC', 'Entry Strategy', 'Price'],
+        ['Prop trading firms', '200+ registered', 'Free governance assessment \u2192 shadow mode \u2192 paid license', '$10K-$15K/mo (pilot rate)'],
+        ['Crypto-native platforms', '50+', 'MiCA compliance urgency \u2192 governance-as-a-service', 'Per validation ($0.01-0.05/call)'],
+        ['Regulated funds', '100+', 'Audit trail + decision governance documentation', '$25K-$35K/mo'],
+    ]
+    elements.append(canvas_table(pilot_data[0], pilot_data[1:], [120, 110, 230, 130]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Enterprise Sales Funnel", subsec_title))
+    funnel_data = [
+        ['Stage', 'Action', 'Timeline', 'Conversion'],
+        ['Awareness', '50 direct outreaches/month + event networking', 'Ongoing', '\u2014'],
+        ['Assessment', 'Free governance health check', 'Week 1-2', '30%'],
+        ['Shadow Mode', 'OMNIX runs alongside their system (no execution)', '2-4 weeks', '60%'],
+        ['Advisory Mode', 'OMNIX provides pre-execution recommendations', '2-4 weeks', '75%'],
+        ['Enforcement Mode', 'Full governance integration with veto authority', 'Ongoing', '80% \u2192 paid'],
+        ['Paid License', 'Monthly enterprise license', 'Month 3-6', '\u2014'],
+    ]
+    elements.append(canvas_table(funnel_data[0], funnel_data[1:], [110, 220, 100, 90]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Institutional Channels (Primary)", subsec_title))
+    ch_data = [
+        ['Channel', 'Focus', 'Expected Output'],
+        ['Direct outreach', '50 targeted contacts/month via LinkedIn + email', '15 meetings/month'],
+        ['ADGM Innovation Hub', 'Regulatory community + startup programs', '5-10 warm intros/quarter'],
+        ['Hub71 (if accepted)', 'Accelerator network + corporate intros', '3-5 qualified leads/quarter'],
+        ['Industry events', 'TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX', '10+ qualified contacts/event'],
+        ['Eureka Dubai (current)', 'Competition exposure + judge intros', 'Immediate pipeline'],
+    ]
+    elements.append(canvas_table(ch_data[0], ch_data[1:], [130, 230, 200]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Digital Presence (Secondary)", subsec_title))
+    dig_data = [
+        ['Channel', 'Purpose', 'Target'],
+        ['omnixquantum.net', 'Interactive governance demos + institutional credibility', '500+ visitors/month'],
+        ['LinkedIn thought leadership', 'Weekly content on decision governance + risk management', '1,000+ followers in 6 months'],
+        ['Case studies (post-pilot)', 'Documented ROI from first enterprise clients', 'Conversion tool'],
+    ]
+    elements.append(canvas_table(dig_data[0], dig_data[1:], [170, 250, 170]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Timeline to First Revenue", subsec_title))
+    rev_timeline = [
+        ['Milestone', 'Target Date', 'Dependency'],
+        ['First pilot agreement', 'Month 3', 'Direct outreach + networking'],
+        ['First paid license', 'Month 6', 'Successful shadow + advisory period'],
+        ['3 paying clients', 'Month 9', 'Pipeline from previous channels'],
+        ['$50K+ MRR', 'Month 12', 'Scale from validated enterprise model'],
+    ]
+    elements.append(canvas_table(rev_timeline[0], rev_timeline[1:], [170, 130, 260]))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("REVENUE STREAMS \u2014 Detailed", section_title))
+
+    elements.append(Paragraph("B2B Enterprise (80% of Revenue)", subsec_title))
+    b2b_data = [
+        ['Product', 'Price', 'Target Client'],
+        ['Risk Guardian API', '$15K\u201335K/month', 'Prop firms, trading platforms'],
+        ['White-Label Engine', '$100K+ setup + $20K/month', 'Exchanges, brokers'],
+        ['Per-Validation', '$0.01\u20130.05/call', 'High-volume platforms'],
+    ]
+    elements.append(canvas_table(b2b_data[0], b2b_data[1:], [180, 180, 200]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("B2C SaaS (20% of Revenue \u2014 Post-Enterprise Validation)", subsec_title))
+    b2c_data = [
+        ['Tier', 'Price', 'Features'],
+        ['Pro', '$149/month', 'Full Risk Guardian, decision audit trail'],
+        ['Advanced', '$499/month', 'API access, custom veto configuration'],
+    ]
+    elements.append(canvas_table(b2c_data[0], b2c_data[1:], [120, 150, 290]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("Revenue Projections (Conservative)", subsec_title))
+    proj_data = [
+        ['Year', 'Focus', 'Revenue'],
+        ['Year 1', '3 enterprise pilots + early SaaS', '$200K\u2013400K'],
+        ['Year 2', '5-8 enterprise licenses + SaaS growth', '$800K\u20131.2M'],
+        ['Year 3', 'Scale + geographic expansion (ADGM to EU MiCA)', '$2M+'],
+        ['Regional potential (MENA, 15-30 clients)', 'Steady state', '$3M\u20136M annually'],
+    ]
+    elements.append(canvas_table(proj_data[0], proj_data[1:], [220, 200, 140]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        '"Institutions pay for what BLOCKS bad trades, not for alpha." '
+        'License-based revenue. No tokens. No performance fees.',
+        quote_style
+    ))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("KEY RESOURCES \u2014 Detailed", section_title))
+
+    elements.append(Paragraph("Proprietary Technology", subsec_title))
+    tech_data = [
+        ['Asset', 'Description'],
+        ['6-Checkpoint Security Engine', 'Multi-layer pre-execution validation'],
+        ['Decision Trace Framework', 'Complete audit trail for every decision'],
+        ['Shadow Portfolio Engine', '670,000+ counterfactual trade events'],
+        ['Multi-AI Orchestration', 'Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4'],
+        ['Post-Quantum Cryptography', 'Post-quantum decision signing (NIST-standardized)'],
+        ['Non-Markovian Memory', 'Behavioral pattern detection beyond recency'],
+    ]
+    elements.append(canvas_table(tech_data[0], tech_data[1:], [220, 340]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Human Capital", subsec_title))
+    for item in [
+        "Solo founder \u2014 product architecture, risk logic and infrastructure (Harold Nunes)",
+        "AI-augmented development: one person with AI achieves the output of a 5-person team",
+        "2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)",
+        "Key-person risk mitigation: Documented hexagonal architecture (27 ADRs, onboarding in 2-3 weeks). "
+        "First hires reduce founder dependency from 100% to ~30% by Month 4. "
+        "IP assignment to company, key-person insurance and operational runbooks by Month 6",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Infrastructure", subsec_title))
+    for item in [
+        "Cloud deployment (Railway \u2014 production 24/7)",
+        "PostgreSQL database with complete telemetry",
+        "Modular hexagonal architecture",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("COST STRUCTURE \u2014 Detailed", section_title))
+
+    elements.append(Paragraph("Year 1 (Planned Allocation \u2014 $500K Funding Scenario)", subsec_title))
+    cost_data = [
+        ['Category', 'Allocation', 'Purpose'],
+        ['Strategy &amp; Risk Engine', '35%', 'Algorithm refinement, Shadow Portfolio expansion'],
+        ['Dubai/ADGM Legal &amp; Regulatory', '25%', 'Company formation, regulatory structure'],
+        ['Enterprise Infrastructure', '20%', 'API for prop firms, security certifications'],
+        ['Team &amp; Operations', '15%', '2-3 key hires \u2014 eliminating key-person risk (Month 1-4)'],
+        ['Reserve', '5%', 'Contingency'],
+    ]
+    elements.append(canvas_table(cost_data[0], cost_data[1:], [180, 70, 310]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Operating Model", subsec_title))
+    op_data = [
+        ['Metric', 'Target'],
+        ['Gross margin', '60\u201370%'],
+        ['Break-even', '18\u201324 months'],
+        ['Model type', 'High-margin SaaS infrastructure'],
+    ]
+    elements.append(canvas_table(op_data[0], op_data[1:], [280, 280]))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("IDEAL CLIENT PROFILE \u2014 MODELED CASE STUDY", section_title))
+    elements.append(Paragraph('"AlphaEdge Capital" (Representative Deployment Scenario)', subsec_title))
+    elements.append(Paragraph(
+        "Note: This is a representative deployment scenario based on risk simulations and pilot architecture modeling. "
+        "It is not a real client.",
+        note_style
+    ))
+
+    profile_data = [
+        ['Attribute', 'Detail'],
+        ['Company Type', 'Prop Trading Firm'],
+        ['Region', 'ADGM Ecosystem'],
+        ['Deployed Capital', '$5M'],
+        ['Traders', '15-25 active'],
+    ]
+    elements.append(canvas_table(profile_data[0], profile_data[1:], [200, 360]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("Problem", subsec_title))
+    for item in [
+        "Severe drawdowns during volatile regimes",
+        "No unified pre-execution validation",
+        "No centralized risk governance layer",
+        "Gaps in compliance documentation",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("OMNIX Deployment Model", subsec_title))
+    deploy_data = [
+        ['Phase', 'Activity', 'Duration'],
+        ['Phase 1', 'Integration and Calibration', '2-4 weeks'],
+        ['Phase 2', 'Observation Mode (shadow, no blocking)', '2-4 weeks'],
+        ['Phase 3', 'Advisory Mode (alerts, no enforcement)', '2-4 weeks'],
+        ['Phase 4', 'Enforcement Mode (active blocking)', 'Ongoing'],
+    ]
+    elements.append(canvas_table(deploy_data[0], deploy_data[1:], [120, 250, 190]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph("Modeled Impact (Simulation-Based)", subsec_title))
+    impact_data = [
+        ['Metric', 'Expected Impact'],
+        ['Severe drawdown frequency', 'Significantly reduced'],
+        ['Win-rate quality (post-veto filter)', 'Improved'],
+        ['Institutional transparency', 'Complete audit trail'],
+        ['Compliance reporting', 'Automated'],
+    ]
+    elements.append(canvas_table(impact_data[0], impact_data[1:], [280, 280]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("ROI Model", subsec_title))
+    for item in [
+        "Monthly OMNIX cost: $25K (mid-range API license)",
+        "Monthly capital at risk: $5M",
+        "Drawdown reduction impact: -40% severe events",
+        "Est. capital preserved/month: $50K-200K",
+        "ROI: 2x-8x monthly cost",
+        "Primary value driver: Tail risk exposure avoided",
+    ]:
+        elements.append(Paragraph(f"\u2022  {item}", bullet))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("MARKET POSITIONING", section_title))
+    elements.append(Paragraph("The Gap OMNIX Fills", subsec_title))
+    gap_data = [
+        ['Category', 'Limitation', 'OMNIX Advantage'],
+        ['Retail Bots', 'Too simple, no risk governance', 'Institutional 6-checkpoint architecture'],
+        ['Quant Funds', 'Too expensive (minimum $10M+)', 'Accessible infrastructure'],
+        ['Manual Oversight', 'Too slow for real-time', 'Automated validation &lt;120ms'],
+    ]
+    elements.append(canvas_table(gap_data[0], gap_data[1:], [140, 200, 220]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        '"Institutional discipline at accessible scale."',
+        quote_style
+    ))
+
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("GROWTH STRATEGY", section_title))
+    growth_data = [
+        ['Phase', 'Focus', 'Timeline'],
+        ['Phase 1', 'Pilot validation (3 enterprise clients)', 'Months 1-6'],
+        ['Phase 2', 'Regional expansion (ADGM/DIFC/MENA)', 'Months 6-12'],
+        ['Phase 3', 'Platform partnerships (API integrations)', 'Months 12-18'],
+        ['Phase 4', 'Global scale (EU MiCA, Asia)', 'Months 18-36'],
+    ]
+    elements.append(canvas_table(growth_data[0], growth_data[1:], [120, 250, 190]))
+    elements.append(PageBreak())
+
+    elements.append(sec_hr())
+    elements.append(Paragraph("FUNDING", section_title))
+
+    elements.append(Paragraph("Pre-Seed Round", subsec_title))
     fund_data = [
         ['Item', 'Details'],
-        ['Raising', '$500,000 USD (Pre-Seed)'],
+        ['Raising', '$500,000 USD'],
         ['Equity', '16.7%'],
         ['Pre-Money Valuation', '$2.5M\u2013$3M'],
-        ['Funds Raised to Date', '$0 (bootstrapped)'],
-        ['Stage', 'MVP (Live Product, 24/7 production)'],
-        ['Competition', 'Eureka GCC 2026 \u2014 Semifinalist'],
-        ['Runway', '18+ months to Series A'],
     ]
-    fund_t = make_table(fund_data[0], fund_data[1:], [180, 380])
-    elements.append(fund_t)
+    elements.append(canvas_table(fund_data[0], fund_data[1:], [280, 280]))
 
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Valuation Justification", subsec_title))
+    val_data = [
+        ['Factor', 'Evidence'],
+        ['Product running in production', '3+ months running 24/7'],
+        ['Real validation data', '670,000+ decision cycles analyzed'],
+        ['Defensible IP', '6-checkpoint architecture + Shadow Portfolio Engine'],
+        ['Strategic timing', 'MiCA + ADGM convergence creating urgent demand'],
+        ['Comparable', 'Chainalysis raised at $4M pre-money at similar stage'],
+    ]
+    elements.append(canvas_table(val_data[0], val_data[1:], [200, 360]))
+
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("Milestones with Funding", subsec_title))
+    mile_data = [
+        ['Timeline', 'Milestone'],
+        ['Month 1', 'Complete track record, initiate institutional outreach'],
+        ['Month 3', 'First enterprise pilot (prop firm or trading platform)'],
+        ['Month 6', 'ADGM regulatory structure complete'],
+        ['Month 9', '3 enterprise clients paying'],
+        ['Month 12', 'Series A readiness with validated revenue metrics'],
+    ]
+    elements.append(canvas_table(mile_data[0], mile_data[1:], [120, 440]))
+
+    elements.append(Spacer(1, 14))
+    elements.append(sec_hr())
+    elements.append(Paragraph("DOCUMENT STATUS", section_title))
+    doc_data = [
+        ['Attribute', 'Value'],
+        ['Prepared for', 'Eureka Dubai 2026, Institutional Review, ADGM Ecosystem'],
+        ['Alignment', 'All numbers match OMNIX Eureka Final Pitch Deck'],
+        ['Founder', 'Harold Nunes'],
+        ['Contact', 'contacto@omnixquantum.net'],
+        ['Website', 'www.omnixquantum.net'],
+        ['LinkedIn', 'linkedin.com/in/harold-nunes-21bb65285'],
+    ]
+    elements.append(canvas_table(doc_data[0], doc_data[1:], [200, 360]))
+
+    elements.append(Spacer(1, 14))
+    elements.append(HRFlowable(width="100%", thickness=1, color=BRAND_GOLD, spaceBefore=8, spaceAfter=8))
     elements.append(Paragraph(
-        "All metrics from internal dataset, not externally audited. Past performance does not guarantee future results.",
-        footer_note
+        "OMNIX \u2014 Protecting Capital First",
+        ParagraphStyle('EndTag', fontName='Helvetica-Bold', fontSize=12, textColor=BRAND_NAVY, alignment=TA_CENTER)
+    ))
+    elements.append(Paragraph(
+        "Eureka Dubai 2026 \u2014 Semifinalist",
+        ParagraphStyle('EndSub', fontName='Helvetica', fontSize=10, textColor=BRAND_GOLD, alignment=TA_CENTER, spaceAfter=8)
     ))
 
     doc.build(elements, onFirstPage=draw_cover_landscape, onLaterPages=on_later_pages_landscape)
