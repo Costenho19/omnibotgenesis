@@ -436,7 +436,7 @@ export default function InstitutionalPage() {
                     <Cpu className="w-6 h-6 gold-text" />
                     <div className="flex-1">
                       <span className="text-white font-medium">Post-Quantum Cryptography</span>
-                      <p className="text-xs text-muted">Kyber-768 / Dilithium-3 (NIST-standardized algorithms)</p>
+                      <p className="text-xs text-muted">NIST-standardized post-quantum cryptography (CRYSTALS family)</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/10">
@@ -607,7 +607,7 @@ export default function InstitutionalPage() {
                     <Shield className="w-6 h-6 gold-text" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-3">Post-Quantum Security</h4>
-                  <p className="text-muted leading-relaxed">Kyber-768 encryption and Dilithium-3 signatures. NIST-standardized post-quantum cryptography.</p>
+                  <p className="text-muted leading-relaxed">NIST-standardized post-quantum cryptography — key encapsulation and digital signatures.</p>
                 </div>
               </div>
             </section>

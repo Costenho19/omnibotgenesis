@@ -11,13 +11,14 @@
 ### Q1: "670,000 evaluation cycles — how many were REAL executed trades?"
 
 **Answer:**
-"119 trades were executed during our calibration phase. The 670,000 cycles represent our Shadow Portfolio engine — a counterfactual analysis system that tracks every decision the system evaluates, including the ones it blocks. Think of it as a flight simulator that runs continuously — the 119 real flights validated the system, and the 670,000 simulated scenarios trained it."
+"119 trades were executed during our calibration phase. The 670,000 cycles represent our Shadow Portfolio engine — a counterfactual analysis system that tracks every decision the system evaluates, including the ones it blocks. Think of it as a flight simulator that runs continuously — the 119 real flights validated the system, and the 670,000 simulated scenarios trained it. Additionally, 16,000+ governance decisions are cryptographically signed and publicly verifiable at omnixquantum.net/verify — that is institutional-grade auditability, not a claim."
 
 **Key terms to clarify if asked:**
 - Evaluation cycle = one full pass through all 6 checkpoints
 - Executed trade = signal that passed all 6 checkpoints and was placed on the exchange
 - Veto = signal that was blocked by one or more checkpoints
 - Shadow event = a counterfactual record tracking what would have happened
+- PQC receipt = cryptographically signed governance decision, publicly verifiable
 
 ---
 
@@ -173,7 +174,7 @@
 ### Q-BONUS-1: "What's your unfair advantage?"
 
 **Answer:**
-"Three months of real-market operation. 670,000+ calibrated data points. And a fail-closed architecture that nobody else is building because the industry is optimized for action, not restraint. Our unfair advantage is discipline — encoded into software."
+"Three months of real-market operation. 670,000+ calibrated data points. And a fail-closed architecture that, to our knowledge, no comparable infrastructure is building — because the industry is optimized for action, not restraint. Our unfair advantage is discipline — encoded into software."
 
 ---
 

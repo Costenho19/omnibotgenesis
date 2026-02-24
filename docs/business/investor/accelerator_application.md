@@ -27,11 +27,11 @@ When there is no governance layer:
 4. **No audit trail** — regulators and investors can't verify decision quality
 
 **The cost:**
-- $68B+ lost by traders annually from undisciplined execution
-- Billions more in bad procurement, credit, and insurance decisions
+- Undisciplined automated execution produces measurable, recurring capital loss. OMNIX's own baseline period documented $15,198.73 across 119 real trades — consistent with documented industry patterns.
+- Compounding losses in procurement, credit, and insurance decisions from systems with no restraint layer
 - Growing regulatory pressure (MiCA, ADGM) requiring governance documentation
 
-**The gap:** Institutional-grade decision governance exists inside hedge funds with $100M+ AUM. Nobody else has access to it — and the market is demanding it now.
+**The gap:** Institutional-grade decision governance exists inside hedge funds with $100M+ AUM. To our knowledge, no comparable domain-agnostic governance system currently operates in production with these characteristics for firms under $100M AUM — and the market is demanding it now.
 
 ---
 

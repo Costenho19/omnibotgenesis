@@ -112,10 +112,16 @@ This table tracks key phrases and messaging across all investor-facing documents
 | Feb 24, 2026 | Pitch EN/ES, Canvas EN/ES | Slide 8 multi-vertical: ~800 words, 6-row tables | Compressed to ~150 words, 3-row stage table (Now/Year 2-3/Year 3+) |
 | Feb 24, 2026 | Pitch EN/ES | Founder section: missing conviction narrative | Added "Why Me" paragraph with capital/conviction framing |
 | Feb 24, 2026 | Presentation Script | No "Why Me" section, weak "Why Now" | Added "WHY ME (20 seconds)" section + strengthened Why Dubai/Why Now |
+| Feb 24, 2026 | accelerator_application.md | "$68B+" — prohibited, unverifiable source | Replaced with OMNIX own baseline data ($15,198.73 / 119 trades) |
+| Feb 24, 2026 | accelerator_application.md | "Nobody else has access to it" — unqualified | → "To our knowledge, no comparable domain-agnostic governance system currently operates in production with these characteristics for firms under $100M AUM" |
+| Feb 24, 2026 | EUREKA_20_TOUGH_QUESTIONS.md | "nobody else is building" — unqualified | → "To our knowledge, no comparable infrastructure is building" |
+| Feb 24, 2026 | EUREKA_20_TOUGH_QUESTIONS.md | 16,000+ PQC receipts absent from Q1 traction answer | Added with public verification URL (omnixquantum.net/verify) |
+| Feb 24, 2026 | InstitutionalPage.tsx (public route /institutional) | "Kyber-768 / Dilithium-3" named explicitly on public page | → "NIST-standardized post-quantum cryptography (CRYSTALS family)" |
+| Feb 24, 2026 | verification_server.py | engine_version/policy_version exposure risk | **Verified clean** — neither field is included in any public JSON response; values stay in DB only |
 
 ---
 
-## Verified Consistency: February 24, 2026
+## Verified Consistency: February 24, 2026 (Final Audit Pass)
 
 All documents now share:
 - Same platform identity (Decision Governance Infrastructure for Automated Systems)
@@ -127,6 +133,8 @@ All documents now share:
 - TAM standard: $37.3B+ core + $49.7B+ with robotics (noted separately)
 - Multi-vertical: lead with trading validation, roadmap for others (Year 2-3+)
 - Founder conviction narrative: "Why Me" present in Pitch and Script
+- Zero $68B+ references across all surfaces
+- Zero Kyber-768/Dilithium-3 on public web pages (institutional tier: NIST-standardized language only)
 
 ---
 

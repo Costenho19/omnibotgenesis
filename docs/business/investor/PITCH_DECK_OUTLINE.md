@@ -32,7 +32,8 @@ Pre-Seed Round | February 2026
 │  • Lack of systematic discipline                │
 │  • Single-layer risk checks                     │
 │  • No institutional-grade governance            │
-│  • $68B+ lost annually by traders alone         │
+│  • Documented recurring capital loss from         │
+│    undisciplined automated execution             │
 │  • Billions more in bad supply chain, lending,  │
 │    and insurance decisions                      │
 └─────────────────────────────────────────────────┘
@@ -60,7 +61,8 @@ Market Size
 
 The Gap:
 Institutional-grade decision governance exists inside
-hedge funds with $100M+ AUM. Nobody else has access.
+hedge funds with $100M+ AUM. To our knowledge, no comparable
+system makes this accessible to firms under $100M AUM.
 
 OMNIX makes decision governance infrastructure accessible.
 ```

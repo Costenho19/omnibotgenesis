@@ -22,7 +22,7 @@
 | Component | Description |
 |-----------|-------------|
 | 6-Checkpoint Governance Engine | Multi-layer pre-execution decision validation (domain-agnostic) |
-| Non-Markovian Memory Kernel | Temporal pattern recognition beyond recency — unique globally |
+| Non-Markovian Memory Kernel | Temporal pattern recognition beyond recency — to our knowledge, no comparable system applies this in live governance |
 | Post-Quantum Security | NIST-standardized post-quantum cryptography — operational since Nov 2025 |
 | Shadow Portfolio Engine | 670,000+ counterfactual decision events for continuous learning |
 | Decision Trace Framework | Full audit trail for every governance evaluation — 100% telemetry |
