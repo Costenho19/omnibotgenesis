@@ -6219,7 +6219,7 @@ class AutoTradingBot:
             'win_rate': win_rate,
             'total_profit_loss': total_pnl,
             'initial_balance': self.state['initial_balance'],
-            'roi': 0.0  # TODO: Calcular ROI real
+            'roi': round(((total_pnl / self.state['initial_balance']) * 100), 2) if self.state.get('initial_balance', 0) > 0 else None
         }
     
     def _get_dual_win_rates(self) -> Dict:

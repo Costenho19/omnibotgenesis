@@ -93,12 +93,12 @@ SENTIMIENTO DEL MERCADO:
 - Recomendación: {sentiment_data['recommendation']}
 
 ANÁLISIS TÉCNICO MULTI-TIMEFRAME:
-- RSI: {technical_data['rsi']} {'(Sobrecomprado)' if technical_data['rsi'] > 70 else '(Sobrevendido)' if technical_data['rsi'] < 30 else '(Neutral)'}
-- MACD: {technical_data['macd']}
-- Tendencia: {technical_data['trend']}
-- Señal: {technical_data['signal']}
-- Resistencias: ${technical_data['resistance_levels'][0]:,.2f}, ${technical_data['resistance_levels'][1]:,.2f}
-- Soportes: ${technical_data['support_levels'][0]:,.2f}, ${technical_data['support_levels'][1]:,.2f}
+- RSI: {technical_data.get('rsi', 'N/A')} {'(Sobrecomprado)' if technical_data.get('rsi') and technical_data['rsi'] > 70 else '(Sobrevendido)' if technical_data.get('rsi') and technical_data['rsi'] < 30 else '(Neutral o sin datos)'}
+- MACD: {technical_data.get('macd', 'N/A')}
+- Tendencia: {technical_data.get('trend', 'N/A — requiere indicadores reales')}
+- Señal: {technical_data.get('signal', 'N/A — requiere indicadores reales')}
+- Resistencias: {f"${technical_data['resistance_levels'][0]:,.2f}, ${technical_data['resistance_levels'][1]:,.2f}" if technical_data.get('resistance_levels') else 'N/A'}
+- Soportes: {f"${technical_data['support_levels'][0]:,.2f}, ${technical_data['support_levels'][1]:,.2f}" if technical_data.get('support_levels') else 'N/A'}
 
 ELLIOTT WAVE + FIBONACCI:
 - Patrón Detectado: {elliott_wave.get('wave_pattern', 'N/A') if elliott_wave else 'Requiere datos reales'}

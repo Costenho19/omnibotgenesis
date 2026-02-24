@@ -1265,7 +1265,9 @@ Responde en JSON con esta estructura:
                             clean_text = clean_text.split('```')[1].split('```')[0]
                         
                         analysis = json.loads(clean_text.strip())
-                        analysis['confidence'] = 0.85
+                        if 'confidence' not in analysis:
+                            analysis['confidence'] = None
+                            analysis['confidence_note'] = 'AI model did not provide confidence score'
                         logger.info(f"✅ Análisis IA completado: estrategia={analysis.get('strategy', 'N/A')}")
                         return analysis
                     except json.JSONDecodeError:
@@ -1274,7 +1276,8 @@ Responde en JSON con esta estructura:
                             'raw_analysis': result_text,
                             'strategy': 'Ver análisis completo',
                             'summary': result_text[:500] if result_text else '',
-                            'confidence': 0.7
+                            'confidence': None,
+                            'confidence_note': 'Could not parse structured response'
                         }
                 else:
                     return {

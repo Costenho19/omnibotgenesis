@@ -40,7 +40,7 @@ except ImportError:
     logger.warning("⚠️ AuthorizationAdapter not available - using legacy checks")
 
 class DummyPerformanceTracker:
-    """Placeholder for performance tracking when real tracker not available"""
+    """Fallback when real performance tracker not available"""
     response_times = []
     total_interactions = 0
     successful_predictions = 0
@@ -53,9 +53,9 @@ class DummyPerformanceTracker:
     def get_bottlenecks(self): return []
     def get_performance_summary(self): return {}
     def get_real_time_dashboard_data(self): return {}
-    def _calculate_system_health(self): return 100.0
-    def _get_memory_usage(self): return 0.0
-    def _get_cpu_usage(self): return 0.0
+    def _calculate_system_health(self): return None
+    def _get_memory_usage(self): return None
+    def _get_cpu_usage(self): return None
     
 class DummyCache:
     """Placeholder for intelligent cache when not available"""
@@ -742,31 +742,28 @@ class TradingSystem:
             return "Extreme Greed - High risk, consider SELL"
     
     def get_technical_analysis(self):
-        """Análisis técnico avanzado con datos reales"""
+        """Análisis técnico — requiere datos reales de indicadores"""
         btc_data = self.get_btc_price()
-        price = btc_data['price']
+        price = btc_data.get('price')
         
-        # Simulación de indicadores técnicos
-        rsi = 50.0  # RSI neutral por defecto
-        macd = 0.0  # MACD neutral por defecto
-        sma_20 = price * 0.99  # SMA20 ligeramente inferior
-        sma_50 = price * 0.97  # SMA50 más inferior
-        
-        # Resistencias y soportes
-        resistance_1 = price * 1.05
-        resistance_2 = price * 1.10
-        support_1 = price * 0.95
-        support_2 = price * 0.90
+        if price is None:
+            return {
+                'status': 'insufficient_data',
+                'message': 'No real BTC price available',
+                'timestamp': datetime.now().isoformat()
+            }
         
         return {
-            'rsi': round(rsi, 1),
-            'macd': round(macd, 2),
-            'sma_20': round(sma_20, 2),
-            'sma_50': round(sma_50, 2),
-            'resistance_levels': [round(resistance_1, 2), round(resistance_2, 2)],
-            'support_levels': [round(support_1, 2), round(support_2, 2)],
-            'trend': 'Bullish' if price > sma_20 > sma_50 else 'Bearish',
-            'signal': self._get_trading_signal(rsi, macd, price, sma_20),
+            'price': price,
+            'rsi': None,
+            'macd': None,
+            'sma_20': None,
+            'sma_50': None,
+            'resistance_levels': None,
+            'support_levels': None,
+            'trend': None,
+            'signal': None,
+            'indicators_status': 'Real RSI/MACD/SMA require historical OHLCV data — not computed without real indicator feed',
             'timestamp': datetime.now().isoformat()
         }
     
@@ -784,34 +781,13 @@ class TradingSystem:
             return "HOLD"
     
     def get_multi_asset_analysis(self):
-        """Análisis de múltiples activos crypto"""
-        assets = ['BTC', 'ETH', 'ADA', 'AVAX', 'POL']
-        analysis = {}
-        
-        for asset in assets:
-            try:
-                # Simulación de datos múltiples activos
-                base_price = {
-                    'BTC': 95000, 'ETH': 3200, 'ADA': 0.45, 
-                    'AVAX': 28, 'POL': 0.55
-                }[asset]
-                
-                change = 2.5  # Cambio promedio conservador
-                price = base_price * (1 + change/100)
-                
-                analysis[asset] = {
-                    'price': round(price, 2 if asset in ['BTC', 'ETH'] else 4),
-                    'change_24h': round(change, 2),
-                    'volume': 25000,  # Volumen promedio típico
-                    'market_cap_rank': assets.index(asset) + 1,
-                    'sharia_compliant': self._check_sharia_compliance(asset),
-                    'signal': self._get_asset_signal(asset, change),
-                    'risk_level': self._get_risk_level(asset)
-                }
-            except Exception:
-                pass
-        
-        return analysis
+        """Análisis de múltiples activos crypto — requiere datos reales de mercado"""
+        return {
+            'status': 'insufficient_data',
+            'message': 'Multi-asset analysis requires real-time market data feeds for each asset. No hardcoded prices.',
+            'assets_supported': ['BTC', 'ETH', 'ADA', 'AVAX', 'POL'],
+            'timestamp': datetime.now().isoformat()
+        }
     
     def _check_sharia_compliance(self, asset):
         """Verificación de cumplimiento Sharia"""
@@ -1057,24 +1033,29 @@ class TradingSystem:
                 analysis_score -= 30
                 decision_factors.append("🔴 Extreme Greed detected - Sell signal")
             
-            # Factor 2: Análisis técnico
-            rsi = technical['rsi']
-            if rsi <= 30:  # Oversold
-                analysis_score += 25
-                decision_factors.append(f"📈 RSI Oversold ({rsi}) - Buy signal")
-            elif rsi >= 70:  # Overbought
-                analysis_score -= 25
-                decision_factors.append(f"📉 RSI Overbought ({rsi}) - Sell signal")
+            # Factor 2: Análisis técnico (only if real indicators available)
+            rsi = technical.get('rsi')
+            if rsi is not None:
+                if rsi <= 30:
+                    analysis_score += 25
+                    decision_factors.append(f"📈 RSI Oversold ({rsi}) - Buy signal")
+                elif rsi >= 70:
+                    analysis_score -= 25
+                    decision_factors.append(f"📉 RSI Overbought ({rsi}) - Sell signal")
+            else:
+                decision_factors.append("⚠️ RSI not available — real indicator data required")
             
             # Factor 3: Precio vs medias móviles
             price = btc_data['price']
-            sma_20 = technical['sma_20']
-            if price > sma_20:
+            sma_20 = technical.get('sma_20')
+            if sma_20 is not None and price > sma_20:
                 analysis_score += 15
                 decision_factors.append("📊 Price above SMA20 - Bullish")
-            else:
+            elif sma_20 is not None:
                 analysis_score -= 15
                 decision_factors.append("📊 Price below SMA20 - Bearish")
+            else:
+                decision_factors.append("⚠️ SMA20 not available — real indicator data required")
             
             # Factor 4: Cambio de precio 24h
             change_24h = btc_data['change']
@@ -1768,14 +1749,15 @@ def create_flask_app():
                     'recommendation': sentiment_data['recommendation']
                 },
                 'technical': {
-                    'rsi': technical_data['rsi'],
-                    'macd': technical_data['macd'],
-                    'trend': technical_data['trend'],
-                    'signal': technical_data['signal'],
-                    'sma_20': technical_data['sma_20'],
-                    'sma_50': technical_data['sma_50'],
-                    'resistance_levels': technical_data['resistance_levels'],
-                    'support_levels': technical_data['support_levels']
+                    'rsi': technical_data.get('rsi'),
+                    'macd': technical_data.get('macd'),
+                    'trend': technical_data.get('trend'),
+                    'signal': technical_data.get('signal'),
+                    'sma_20': technical_data.get('sma_20'),
+                    'sma_50': technical_data.get('sma_50'),
+                    'resistance_levels': technical_data.get('resistance_levels'),
+                    'support_levels': technical_data.get('support_levels'),
+                    'indicators_status': technical_data.get('indicators_status')
                 },
                 'portfolio': multi_asset_data,
                 'arbitrage': arbitrage_data,
@@ -1864,46 +1846,42 @@ def create_flask_app():
             concurrency_stats = concurrency_manager.get_status()
             
             status_response = {
-                'omnix_version': 'V5.1 ENTERPRISE FUSION',
-                'improvements_status': 'TODAS IMPLEMENTADAS Y ACTIVAS',
+                'omnix_version': 'OMNIX Decision Governance',
+                'improvements_status': 'ACTIVE',
                 'timestamp': datetime.now().isoformat(),
                 
                 # 🚀 MEJORA #1: Métricas Avanzadas
                 'performance_tracking': {
-                    'status': 'ACTIVO',
-                    'uptime': performance_stats['system_uptime'],
-                    'total_interactions': performance_stats['total_interactions'],
-                    'avg_response_time': performance_stats['avg_response_time'],
-                    'trading_accuracy': performance_stats.get('trading_accuracy', 'N/A — no executed trades'),
+                    'status': 'ACTIVO' if performance_stats else 'NOT_INITIALIZED',
+                    'uptime': performance_stats.get('system_uptime'),
+                    'total_interactions': performance_stats.get('total_interactions'),
+                    'avg_response_time': performance_stats.get('avg_response_time'),
+                    'trading_accuracy': performance_stats.get('trading_accuracy'),
                     'system_health': performance_tracker._calculate_system_health()
                 },
                 
-                # 🚀 MEJORA #2: Cache Inteligente  
                 'intelligent_cache': {
-                    'status': 'ACTIVO',
-                    'hit_rate': cache_stats['hit_rate'],
-                    'size': cache_stats['size'],
-                    'max_size': cache_stats['max_size'],
-                    'utilization': cache_stats['utilization']
+                    'status': 'ACTIVO' if cache_stats else 'NOT_INITIALIZED',
+                    'hit_rate': cache_stats.get('hit_rate'),
+                    'size': cache_stats.get('size'),
+                    'max_size': cache_stats.get('max_size'),
+                    'utilization': cache_stats.get('utilization')
                 },
                 
-                # 🚀 MEJORA #3: Concurrencia Optimizada
                 'optimized_concurrency': {
-                    'status': 'ACTIVO',
-                    'available_cores': concurrency_stats['available_cores'],
-                    'optimal_workers': concurrency_stats['optimal_workers'],
-                    'success_rate': concurrency_stats['success_rate'],
-                    'total_tasks': concurrency_stats['total_submitted']
+                    'status': 'ACTIVO' if concurrency_stats else 'NOT_INITIALIZED',
+                    'available_cores': concurrency_stats.get('available_cores'),
+                    'optimal_workers': concurrency_stats.get('optimal_workers'),
+                    'success_rate': concurrency_stats.get('success_rate'),
+                    'total_tasks': concurrency_stats.get('total_submitted')
                 },
                 
-                # Estado general del sistema
                 'system_resources': {
-                    'memory_usage': f"{performance_tracker._get_memory_usage():.1f} MB",
-                    'cpu_usage': f"{performance_tracker._get_cpu_usage():.1f}%"
+                    'memory_usage': f"{performance_tracker._get_memory_usage():.1f} MB" if performance_tracker._get_memory_usage() is not None else None,
+                    'cpu_usage': f"{performance_tracker._get_cpu_usage():.1f}%" if performance_tracker._get_cpu_usage() is not None else None
                 },
                 
-                'harold_priority': 'ACTIVADO - Máxima prioridad en todas las operaciones',
-                'real_trading': 'ACTIVO - Balance: $159.93 USD',
+                'real_trading': 'PAPER_MODE',
                 'improvements_count': 3,
                 'next_improvements': 'Sistema completo y optimizado'
             }
@@ -2290,10 +2268,22 @@ def create_flask_app():
                     sentiment = trading_system.get_market_sentiment()
                     technical = trading_system.get_technical_analysis()
                     
-                    # Determinar iconos dinámicos
                     sentiment_icon = "🟢😊" if sentiment['fear_greed_index'] > 60 else "🟡😐" if sentiment['fear_greed_index'] > 40 else "🔴😰"
-                    rsi_icon = "🔥" if technical['rsi'] > 70 else "❄️" if technical['rsi'] < 30 else "⚖️"
-                    trend_icon = "🚀" if "alcista" in technical['trend'].lower() else "📉" if "bajista" in technical['trend'].lower() else "🔄"
+                    
+                    rsi_val = technical.get('rsi')
+                    rsi_display = str(rsi_val) if rsi_val is not None else 'N/A'
+                    rsi_label = ('🔴 Sobrecomprado' if rsi_val and rsi_val > 70 else '🟢 Sobrevendido' if rsi_val and rsi_val < 30 else '🟡 Neutral') if rsi_val is not None else '⚠️ Requiere datos reales'
+                    rsi_icon = "🔥" if rsi_val and rsi_val > 70 else "❄️" if rsi_val and rsi_val < 30 else "⚖️"
+                    trend_display = technical.get('trend') or 'N/A (requiere indicadores reales)'
+                    signal_display = technical.get('signal') or 'N/A (requiere indicadores reales)'
+                    trend_icon = "🔄"
+                    
+                    indicators_note = technical.get('indicators_status', '')
+                    indicators_section = f"""│ {rsi_icon} RSI: {rsi_display} {rsi_label}    │
+│ {trend_icon} Tendencia: {trend_display}        │
+│ 🎯 Señal: {signal_display}              │"""
+                    if indicators_note:
+                        indicators_section += f"\n│ ⚠️ {indicators_note[:50]}│"
                     
                     respuesta = f"""🔥 ANÁLISIS TÉCNICO PROFESIONAL 🔥
 
@@ -2316,15 +2306,10 @@ def create_flask_app():
 ┌─────────────────────────────────────┐
 │ ⚡ INDICADORES TÉCNICOS ⚡          │
 ├─────────────────────────────────────┤
-│ {rsi_icon} RSI: {technical['rsi']} {('🔴 Sobrecomprado' if technical['rsi'] > 70 else '🟢 Sobrevendido' if technical['rsi'] < 30 else '🟡 Neutral')}    │
-│ {trend_icon} Tendencia: {technical['trend']}        │
-│ 🎯 Señal: {technical['signal']}              │
-│ 🛡️ Resistencias: ${technical['resistance_levels'][0]:,.0f}, ${technical['resistance_levels'][1]:,.0f} │
-│ 📍 Soportes: ${technical['support_levels'][0]:,.0f}, ${technical['support_levels'][1]:,.0f}     │
+{indicators_section}
 └─────────────────────────────────────┘
 
-🤖 OMNIX V5.1 ENTERPRISE - Análisis 24/7
-⚡ Sistema Inteligente Activo
+🤖 OMNIX Decision Governance
 👨‍💻 Harold Nunes - Datos Reales Kraken"""
                 except Exception:
                     respuesta = "ANÁLISIS TÉCNICO BTC/USD - Sistema OMNIX analizando mercados en tiempo real - Desarrollado por Harold Nunes"
@@ -3933,7 +3918,7 @@ Contacta al administrador para activar PQC completamente."""
 
 ❌ PQC no disponible
 📦 Requiere: pip install pypqc
-📜 Estándares: NIST FIPS 203 + 204
+📜 Estándares: NIST-standardized algorithms (ML-KEM + ML-DSA)
 
 Contacta al administrador para instalar el módulo."""
                 
