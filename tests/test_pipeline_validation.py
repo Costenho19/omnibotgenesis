@@ -101,9 +101,8 @@ class TestDBDataIntegrity:
         """)
         severe = cur.fetchone()[0]
         conn.close()
-        assert severe <= 1, (
-            f"Found {severe} trades where price went up >1% but P&L is severely negative. "
-            f"1 known anomaly (trade #1) is acceptable."
+        assert severe == 0, (
+            f"Found {severe} trades where price went up >1% but P&L is severely negative."
         )
 
 
@@ -382,4 +381,93 @@ class TestNoHardcodedMetricsInFrontend:
         matches = re.findall(pattern, content)
         assert len(matches) == 0, (
             f"Found hardcoded '119 trades' in tradehistory.js: must use dynamic data."
+        )
+
+
+class TestPnLFeeConsistency:
+    """Anti-regression: P&L must equal gross_pnl minus fees for ALL trades"""
+
+    def test_all_trades_pnl_equals_gross_minus_fees(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) as total,
+                COUNT(CASE WHEN ABS(
+                    profit_loss - ((exit_price - entry_price) * quantity) + fees_usd
+                ) < 0.01 THEN 1 END) as consistent
+            FROM paper_trading_trades
+            WHERE closed_at IS NOT NULL
+        """)
+        row = cur.fetchone()
+        conn.close()
+        total, consistent = row[0], row[1]
+        assert total == consistent, (
+            f"P&L inconsistency: {total - consistent}/{total} trades have "
+            f"profit_loss != gross_pnl - fees_usd"
+        )
+
+    def test_fees_column_populated(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM paper_trading_trades
+            WHERE closed_at IS NOT NULL AND (fees_usd IS NULL OR fees_usd = 0)
+        """)
+        missing = cur.fetchone()[0]
+        conn.close()
+        assert missing == 0, (
+            f"Found {missing} closed trades with missing or zero fees_usd"
+        )
+
+    def test_no_direction_errors(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM paper_trading_trades
+            WHERE closed_at IS NOT NULL
+            AND side = 'buy'
+            AND ((exit_price > entry_price * 1.01 AND profit_loss < -100)
+              OR (exit_price < entry_price * 0.99 AND profit_loss > 100))
+        """)
+        errors = cur.fetchone()[0]
+        conn.close()
+        assert errors == 0, (
+            f"Found {errors} trades with P&L direction contradicting price movement"
+        )
+
+    def test_fee_rate_is_reasonable(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT 
+                AVG(fees_usd / NULLIF((entry_price * quantity + exit_price * quantity), 0)) as avg_fee_rate
+            FROM paper_trading_trades
+            WHERE closed_at IS NOT NULL AND fees_usd > 0
+        """)
+        avg_rate = float(cur.fetchone()[0])
+        conn.close()
+        assert 0.002 < avg_rate < 0.003, (
+            f"Average fee rate {avg_rate:.6f} is outside expected range "
+            f"(0.0026 = Kraken taker fee)"
+        )
+
+    def test_total_pnl_reconciliation(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT 
+                ROUND(SUM(profit_loss)::numeric, 2) as total_pnl,
+                ROUND(SUM((exit_price - entry_price) * quantity)::numeric, 2) as total_gross,
+                ROUND(SUM(fees_usd)::numeric, 2) as total_fees
+            FROM paper_trading_trades
+            WHERE closed_at IS NOT NULL
+        """)
+        row = cur.fetchone()
+        conn.close()
+        total_pnl, total_gross, total_fees = float(row[0]), float(row[1]), float(row[2])
+        reconciled = round(total_gross - total_fees, 2)
+        assert abs(total_pnl - reconciled) < 1.0, (
+            f"P&L reconciliation failed: stored={total_pnl}, "
+            f"gross({total_gross}) - fees({total_fees}) = {reconciled}, "
+            f"delta = {abs(total_pnl - reconciled)}"
         )

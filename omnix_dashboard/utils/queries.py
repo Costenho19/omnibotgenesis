@@ -285,9 +285,10 @@ def calculate_metrics(trades):
     gross_loss = abs(sum(losing)) if losing else 1
     profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
     
+    INITIAL_PAPER_BALANCE = 1_000_000
+    
     if len(pnls) > 1:
-        initial_capital_for_sharpe = 1_000_000
-        pct_returns = np.array(pnls) / initial_capital_for_sharpe * 100
+        pct_returns = np.array(pnls) / INITIAL_PAPER_BALANCE * 100
         
         risk_free_rate = 0.05 / 252
         excess_returns = pct_returns - risk_free_rate
@@ -308,7 +309,7 @@ def calculate_metrics(trades):
         sharpe = 0
         sortino = 0
     
-    initial_capital = 1_000_000
+    initial_capital = INITIAL_PAPER_BALANCE
     cumulative = np.cumsum(pnls)
     equity_curve = initial_capital + cumulative
     peak = np.maximum.accumulate(equity_curve)

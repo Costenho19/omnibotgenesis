@@ -534,25 +534,29 @@ class PaperTradingManager:
             entry_price_float = float(entry_price_db)
             quantity_float = float(quantity_db)
             
-            # Calcular P&L
             quote_notional_usd = quantity_float * exit_price
-            fee_usd = self._calculate_fee(quote_notional_usd)
+            entry_notional_usd = quantity_float * entry_price_float
+            exit_fee_usd = self._calculate_fee(quote_notional_usd)
+            entry_fee_usd = self._calculate_fee(entry_notional_usd)
+            total_fees = entry_fee_usd + exit_fee_usd
             gross_pnl = (exit_price - entry_price_float) * quantity_float
+            net_pnl = gross_pnl - total_fees
             profit_pct = ((exit_price / entry_price_float) - 1) * 100 if entry_price_float > 0 else 0
-            total_proceeds = quote_notional_usd - fee_usd
+            total_proceeds = quote_notional_usd - exit_fee_usd
             
-            # Cerrar trade usando columnas reales
             self.database_service.execute_query(
                 """
                 UPDATE paper_trading_trades
                 SET exit_price = %s,
                     profit_loss = %s,
                     profit_pct = %s,
+                    fees_usd = %s,
                     status = 'closed',
-                    closed_at = NOW()
+                    closed_at = NOW(),
+                    telemetry_source = 'REAL'
                 WHERE id = %s
                 """,
-                (exit_price, gross_pnl, profit_pct, trade_id)
+                (exit_price, net_pnl, profit_pct, total_fees, trade_id)
             )
             
             # Actualizar balance
