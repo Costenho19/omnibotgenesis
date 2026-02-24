@@ -235,7 +235,7 @@ class KrakenAPIClient:
         price: Optional[float] = None
     ) -> Dict[str, Any]:
         """
-        Place trading order
+        Place trading order and capture txid for fill reconciliation.
         
         Args:
             pair: Trading pair
@@ -243,6 +243,10 @@ class KrakenAPIClient:
             side: 'buy' or 'sell'
             volume: Order volume
             price: Limit price (required for limit orders)
+            
+        Returns:
+            Dict with 'txid' (list of order IDs), 'descr' (order description),
+            or empty dict on failure.
         """
         try:
             data = {
@@ -258,13 +262,103 @@ class KrakenAPIClient:
             result = self._request('/0/private/AddOrder', data=data, authenticated=True)
             
             if result:
-                logger.info(f"✅ Order placed: {side} {volume} {pair} at {price if price else 'market'}")
+                txids = result.get('txid', [])
+                descr = result.get('descr', {})
+                logger.info(
+                    f"✅ Order placed: {side} {volume} {pair} "
+                    f"at {price if price else 'market'} | "
+                    f"txid={txids}"
+                )
             
             return result
             
         except Exception as e:
             logger.error(f"Failed to place order: {e}")
             return {}
+
+    def query_order(self, txid: str) -> Optional[Dict[str, Any]]:
+        """
+        Query a specific order by txid to get fill details.
+        
+        Kraken QueryOrders returns: status, vol_exec (filled volume),
+        cost (total cost), fee (fees charged), price (average fill price).
+        
+        Args:
+            txid: Transaction ID from place_order response
+            
+        Returns:
+            Dict with order details including fill_price, fee, status,
+            or None if query fails.
+        """
+        try:
+            result = self._request(
+                '/0/private/QueryOrders',
+                data={'txid': txid},
+                authenticated=True
+            )
+            
+            if not result or txid not in result:
+                logger.warning(f"⚠️ No order data for txid {txid}")
+                return None
+            
+            order_data = result[txid]
+            status = order_data.get('status', 'unknown')
+            vol_exec = float(order_data.get('vol_exec', 0))
+            cost = float(order_data.get('cost', 0))
+            fee = float(order_data.get('fee', 0))
+            avg_price = float(order_data.get('price', 0))
+            
+            fill_info = {
+                'txid': txid,
+                'status': status,
+                'fill_price': avg_price,
+                'fill_volume': vol_exec,
+                'fill_cost': cost,
+                'kraken_fee': fee,
+                'is_filled': status == 'closed' and vol_exec > 0,
+            }
+            
+            logger.info(
+                f"📋 Order {txid}: status={status}, "
+                f"fill_price=${avg_price:,.2f}, fee=${fee:.4f}, "
+                f"vol_exec={vol_exec}"
+            )
+            
+            return fill_info
+            
+        except Exception as e:
+            logger.error(f"Failed to query order {txid}: {e}")
+            return None
+
+    def query_order_with_retry(
+        self, txid: str, max_attempts: int = 3, delay_seconds: float = 2.0
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Query order with retries — market orders may take a moment to fill.
+        
+        Args:
+            txid: Transaction ID
+            max_attempts: Maximum query attempts
+            delay_seconds: Delay between attempts
+            
+        Returns:
+            Fill info dict if order is filled, None otherwise.
+        """
+        for attempt in range(max_attempts):
+            fill_info = self.query_order(txid)
+            
+            if fill_info and fill_info.get('is_filled'):
+                return fill_info
+            
+            if attempt < max_attempts - 1:
+                logger.info(
+                    f"⏳ Order {txid} not yet filled (attempt {attempt + 1}/{max_attempts}), "
+                    f"retrying in {delay_seconds}s..."
+                )
+                time.sleep(delay_seconds)
+        
+        logger.warning(f"⚠️ Order {txid} not filled after {max_attempts} attempts")
+        return fill_info
     
     def get_open_orders(self) -> Dict[str, Any]:
         """Get list of open orders"""

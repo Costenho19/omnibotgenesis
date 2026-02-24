@@ -583,13 +583,33 @@ class TradingServiceEnterprise:
             )
             
             if result:
-                logger.info(f"✅ Trade executed: {side} {amount} {pair}")
-                return {
+                txid = result.get('txid', [''])[0] if 'txid' in result else ''
+                logger.info(f"✅ Trade executed: {side} {amount} {pair} | txid={txid}")
+                
+                execution_result = {
                     'success': True,
-                    'order_id': result.get('txid', [''])[0] if 'txid' in result else '',
+                    'order_id': txid,
                     'signature': signature.hex() if signature else None,
-                    'pqc_secured': signature is not None
+                    'pqc_secured': signature is not None,
+                    'fill_info': None,
                 }
+                
+                if txid:
+                    fill_info = self.kraken.query_order_with_retry(txid)
+                    if fill_info and fill_info.get('is_filled'):
+                        execution_result['fill_info'] = fill_info
+                        logger.info(
+                            f"✅ Fill confirmed: txid={txid}, "
+                            f"fill_price=${fill_info['fill_price']:,.2f}, "
+                            f"kraken_fee=${fill_info['kraken_fee']:.4f}"
+                        )
+                    else:
+                        logger.warning(
+                            f"⚠️ Fill not confirmed for txid={txid} — "
+                            f"trade stored with ESTIMATED telemetry"
+                        )
+                
+                return execution_result
             else:
                 return {'success': False, 'error': 'Order execution failed'}
                 

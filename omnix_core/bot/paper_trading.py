@@ -497,13 +497,22 @@ class PaperTradingManager:
             return None
     
     def _close_position_fifo_v2(self, user_id: str, symbol: str, sell_quantity: float, 
-                                exit_price: float) -> Optional[Dict]:
+                                exit_price: float, fill_info: Optional[Dict] = None) -> Optional[Dict]:
         """
-        Cerrar posición FIFO (SELL)
+        Cerrar posición FIFO (SELL) con soporte para fill data real de Kraken.
         
-        Schema Dec 5, 2025: Usa columnas reales de paper_trading_trades:
-        id, user_id, symbol, side, quantity, entry_price, exit_price, 
-        profit_loss, profit_pct, strategy, status, opened_at, closed_at
+        Execution Integrity v1:
+        - Si fill_info contiene datos reales de Kraken (fill_price, kraken_fee, txid),
+          se usan esos valores y se marca telemetry_source='REAL'.
+        - Si fill_info es None, se calculan fees estimadas y se marca 'ESTIMATED'.
+        
+        Args:
+            user_id: User ID
+            symbol: Trading pair symbol
+            sell_quantity: Quantity to sell
+            exit_price: Exit price (used as fallback if no fill_price)
+            fill_info: Optional dict from Kraken with keys:
+                       txid, fill_price, kraken_fee, is_filled
         
         Returns:
             Dict con P&L info o None si falla
@@ -513,7 +522,6 @@ class PaperTradingManager:
                 logger.error("Database service no disponible")
                 return None
             
-            # Buscar posición abierta más antigua (FIFO) usando columnas reales
             result = self.database_service.execute_query(
                 """
                 SELECT id, entry_price, quantity, opened_at
@@ -534,15 +542,41 @@ class PaperTradingManager:
             entry_price_float = float(entry_price_db)
             quantity_float = float(quantity_db)
             
-            quote_notional_usd = quantity_float * exit_price
-            entry_notional_usd = quantity_float * entry_price_float
-            exit_fee_usd = self._calculate_fee(quote_notional_usd)
-            entry_fee_usd = self._calculate_fee(entry_notional_usd)
-            total_fees = entry_fee_usd + exit_fee_usd
-            gross_pnl = (exit_price - entry_price_float) * quantity_float
+            has_real_fill = (
+                fill_info is not None 
+                and fill_info.get('is_filled') 
+                and fill_info.get('txid')
+            )
+            
+            if has_real_fill:
+                actual_exit_price = fill_info['fill_price']
+                kraken_fee = fill_info['kraken_fee']
+                kraken_order_id = fill_info['txid']
+                entry_notional_usd = quantity_float * entry_price_float
+                entry_fee_usd = self._calculate_fee(entry_notional_usd)
+                total_fees = entry_fee_usd + kraken_fee
+                telemetry = 'REAL'
+                logger.info(
+                    f"🔗 Using REAL Kraken fill: txid={kraken_order_id}, "
+                    f"fill_price=${actual_exit_price:,.2f}, fee=${kraken_fee:.4f}"
+                )
+            else:
+                actual_exit_price = exit_price
+                kraken_order_id = None
+                quote_notional_usd = quantity_float * exit_price
+                entry_notional_usd = quantity_float * entry_price_float
+                exit_fee_usd = self._calculate_fee(quote_notional_usd)
+                entry_fee_usd = self._calculate_fee(entry_notional_usd)
+                total_fees = entry_fee_usd + exit_fee_usd
+                kraken_fee = None
+                telemetry = 'ESTIMATED'
+            
+            gross_pnl = (actual_exit_price - entry_price_float) * quantity_float
             net_pnl = gross_pnl - total_fees
-            profit_pct = ((exit_price / entry_price_float) - 1) * 100 if entry_price_float > 0 else 0
-            total_proceeds = quote_notional_usd - exit_fee_usd
+            profit_pct = ((actual_exit_price / entry_price_float) - 1) * 100 if entry_price_float > 0 else 0
+            quote_notional_usd = quantity_float * actual_exit_price
+            exit_fee_for_proceeds = kraken_fee if has_real_fill else self._calculate_fee(quote_notional_usd)
+            total_proceeds = quote_notional_usd - exit_fee_for_proceeds
             
             self.database_service.execute_query(
                 """
@@ -551,15 +585,21 @@ class PaperTradingManager:
                     profit_loss = %s,
                     profit_pct = %s,
                     fees_usd = %s,
+                    fill_price = %s,
+                    kraken_fee = %s,
+                    kraken_order_id = %s,
                     status = 'closed',
                     closed_at = NOW(),
-                    telemetry_source = 'REAL'
+                    telemetry_source = %s
                 WHERE id = %s
                 """,
-                (exit_price, net_pnl, profit_pct, total_fees, trade_id)
+                (actual_exit_price, net_pnl, profit_pct, total_fees,
+                 fill_info.get('fill_price') if has_real_fill else None,
+                 kraken_fee,
+                 kraken_order_id,
+                 telemetry, trade_id)
             )
             
-            # Actualizar balance
             is_winning_trade = gross_pnl > 0
             
             self.database_service.execute_query(
@@ -572,16 +612,24 @@ class PaperTradingManager:
                 (total_proceeds, user_id)
             )
             
-            logger.info(f"✅ Posición cerrada FIFO: {quantity_float:.8f} {symbol} @ ${exit_price:,.2f} | P&L: ${gross_pnl:,.2f}")
+            source_label = "REAL (Kraken fill)" if has_real_fill else "ESTIMATED"
+            logger.info(
+                f"✅ Posición cerrada FIFO [{source_label}]: "
+                f"{quantity_float:.8f} {symbol} @ ${actual_exit_price:,.2f} | "
+                f"P&L: ${net_pnl:,.2f} (gross: ${gross_pnl:,.2f}, fees: ${total_fees:,.2f})"
+            )
             
             return {
                 'trade_id': trade_id,
                 'entry_price': entry_price_float,
-                'exit_price': exit_price,
+                'exit_price': actual_exit_price,
                 'quantity': quantity_float,
                 'gross_pnl': gross_pnl,
+                'net_pnl': net_pnl,
                 'profit_pct': profit_pct,
-                'fee_usd': fee_usd,
+                'fees_usd': total_fees,
+                'kraken_order_id': kraken_order_id,
+                'telemetry_source': telemetry,
                 'is_winning_trade': is_winning_trade
             }
             
