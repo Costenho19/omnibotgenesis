@@ -1,7 +1,7 @@
 # OMNIX — Eureka Dubai Pitch Deck
-## Final Competition Version | February 2026
+## Final Competition Version | March 2026
 
-**Classification**: Competition Ready — Expert-Reviewed
+**Classification**: Competition Ready — Expert-Reviewed & Mentor-Optimized
 **Target**: Eureka Dubai — Semifinal Round
 
 ---
@@ -14,7 +14,7 @@
 > "The best decision is often the one you don't make."
 
 Harold Nunes — Founder & Product Architect
-Pre-Seed | February 2026
+Pre-Seed | March 2026
 
 contacto@omnixquantum.net | www.omnixquantum.net
 
@@ -34,7 +34,7 @@ The right question is:
 - Automated systems execute constantly — even in dangerous conditions
 - No regime awareness = capital erosion during volatility
 - Single-layer risk checks that fail under stress
-- $68B+ lost annually by traders globally — and billions more in bad decisions across supply chain, lending, and insurance
+- Billions in preventable losses occur annually due to poor automated risk governance — across trading, supply chain, lending, and insurance
 
 **The result:** Costly mistakes are the norm, not the exception.
 
@@ -208,8 +208,10 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 | **Behavioral Memory System** | Remembers patterns beyond recent data | Sees what other systems miss |
 | **Edge Confirmation Window** | Requires trend persistence for 3 cycles — not just a spike | Turns "preservation" into "patience" |
 | **Shadow Portfolio Engine** | Tracks every vetoed decision to learn (670,000+ events) | The system learns from what it DOESN'T do |
-| **Post-Quantum Security** | NIST-standardized post-quantum cryptographic signing | Operational today — not roadmap |
+| **Post-Quantum Security** | Cryptographically signed decision receipts (post-quantum architecture) | Operational today — not roadmap |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with failover | Zero single-provider dependency |
+| **Execution Integrity** | Every trade reconciled against real exchange fill data (Kraken) | No estimated data — verified execution |
+| **Mathematical Audit** | 100% P&L reconciliation — 119/119 trades verified | Every cent accounted for |
 
 > "Every decision is logged, traceable, and reviewable. Full audit trail — always."
 
@@ -301,7 +303,7 @@ Impact for the firm:
 
 ### The Gap Nobody Is Filling
 
-Institutional-grade decision governance exists — inside hedge funds with $100M+ AUM. There is NO accessible governance infrastructure for:
+Institutional-level governance frameworks are typically inaccessible to smaller trading operations. There is no accessible governance infrastructure for:
 
 - Prop trading firms that need to protect trader capital
 - Trading platforms adding risk governance for compliance
@@ -363,7 +365,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 |-----------|--------|
 | 6-Checkpoint Governance Engine | Production — 670,000+ evaluation cycles |
 | Multi-AI Orchestration (3 providers) | Production — zero single-provider dependency |
-| Post-Quantum Security (Dilithium-3) | Production — operational since Nov 2025 |
+| Post-Quantum Cryptographic Signing | Production — operational since Nov 2025 |
 | Shadow Portfolio Learning Engine | Production — 670,000+ counterfactual events |
 | Full Decision Audit Trail | Production — 100% telemetry coverage |
 | Interactive Governance Demos (3 verticals) | Live — trading, credit, insurance |
@@ -429,7 +431,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 
 ### The 60-Second Case
 
-1. **The problem is massive** — $68B+ lost by traders annually, billions more in bad decisions across industries
+1. **The problem is massive** — Billions in preventable losses annually from poor automated risk governance
 2. **The timing is perfect** — MiCA + ADGM mandating decision governance NOW
 3. **The product exists** — Not a slide deck. Running in production for 3+ months.
 4. **The approach is unique** — Nobody else optimizes for restraint
@@ -451,7 +453,7 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 >
 > The right question is: 'When should I NOT act?'
 >
-> $68 billion — lost annually by traders alone. Billions more in bad procurement, credit, and insurance decisions. Why? No institutional-grade decision governance.
+> Billions in preventable losses — every year — across trading, procurement, credit, and insurance. Why? No institutional-grade decision governance.
 >
 > OMNIX is a fail-closed AI governance platform. Think of it as airport security for every high-stakes decision. Every action must survive 6 independent checkpoints before execution. One failed check — automatic block.
 >
@@ -526,7 +528,9 @@ Institutional-grade decision governance exists — inside hedge funds with $100M
 | Executive Fact Sheet | System status and governance framework |
 | Track Record Case Study | Day-by-day capital protection narrative |
 | Shadow Portfolio Report | 670,000+ counterfactual trade analysis |
-| Architecture Decision Records | 22+ documented technical decisions (ADRs) |
+| Architecture Decision Records | 27 documented technical decisions (ADRs) |
+| Execution Integrity Report | Kraken fill reconciliation — real exchange data verification |
+| Mathematical Audit Report | 100% P&L reconciliation — 119/119 trades verified |
 | System State Manifest | Live configuration (JSON, machine-readable) |
 
 **All documents available upon request for qualified investors.**

@@ -891,11 +891,11 @@ def generate_pitch_deck(mentor_name, output_path):
         s['BodyText2']
     ))
     elements.extend(bullet_list([
-        "<b>$68B+ lost annually</b> by traders due to undisciplined decision-making",
+        "<b>Billions in preventable losses</b> annually due to poor automated risk governance",
         "<b>95% of algorithmic systems</b> ask 'When should I act?' instead of 'When should I NOT act?'",
         "<b>Single-layer risk checks</b> fail during tail events (flash crashes, liquidity cascades)",
         "<b>No audit trail</b> for automated decisions \u2014 regulatory and compliance gaps",
-        "<b>Institutional-grade governance</b> exists only inside hedge funds with $100M+ AUM",
+        "<b>Institutional-level governance</b> typically inaccessible to smaller trading operations",
     ], s))
     elements.append(PageBreak())
 
@@ -920,7 +920,7 @@ def generate_pitch_deck(mentor_name, output_path):
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
         "Every decision (executed or blocked) is cryptographically signed with NIST-standardized "
-        "post-quantum algorithms (Dilithium-3) and stored with a full audit trail.",
+        "post-quantum algorithms and stored with a full audit trail.",
         s['BodyText2']
     ))
     elements.append(PageBreak())
@@ -936,7 +936,7 @@ def generate_pitch_deck(mentor_name, output_path):
         ['Metric', 'Value', 'Context'],
         ['Production Uptime', '24/7 since Nov 2025', '4+ months continuous operation'],
         ['Evaluation Cycles', '670,000+', 'Governance engine operational in real-time'],
-        ['PQC-Signed Receipts', '16,000+', '100% Dilithium-3 coverage'],
+        ['PQC-Signed Receipts', '16,000+', '100% post-quantum coverage'],
         ['Capital Preserved', '98.5%', 'During BTC -7.37% volatility'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
         ['P&L Reconciliation', '100%', 'Mathematical audit: 119/119 trades verified'],
@@ -957,7 +957,7 @@ def generate_pitch_deck(mentor_name, output_path):
     features_data = [
         ['Feature', 'Status', 'Description'],
         ['6-Checkpoint Governance', 'Live', 'Multi-layer pre-execution decision validation'],
-        ['Post-Quantum Cryptography', 'Live', 'NIST-standardized Dilithium-3 + Kyber-768 (since Nov 2025)'],
+        ['Post-Quantum Cryptography', 'Live', 'NIST-standardized PQC signing (since Nov 2025)'],
         ['Public Verification Server', 'Live', 'Receipt verification with zero internal data exposure'],
         ['Shadow Portfolio Engine', 'Live', '670,000+ counterfactual events; veto accuracy validation'],
         ['Execution Integrity', 'Live', 'Kraken fill reconciliation; real exchange data verification'],
@@ -974,7 +974,7 @@ def generate_pitch_deck(mentor_name, output_path):
         ['Frontend', 'React 18 + TypeScript + Tailwind CSS + Vite'],
         ['Database', 'PostgreSQL (90% FK coverage) + Redis'],
         ['AI Models', 'Google Gemini 2.5 Flash, OpenAI GPT-4o, Anthropic Claude'],
-        ['Cryptography', 'Dilithium-3 (ML-DSA-65) + Kyber-768 (ML-KEM-768)'],
+        ['Cryptography', 'NIST-standardized post-quantum signing (operational since Nov 2025)'],
         ['Infrastructure', 'Railway (production 24/7), Replit (development)'],
     ]
     elements.append(make_table(tech_data[0], tech_data[1:], [110, 350]))
@@ -1153,7 +1153,7 @@ def generate_pitch_deck(mentor_name, output_path):
     elements.append(Paragraph("<b>Key Milestones Achieved</b>", s['SubsectionTitle']))
     milestones_data = [
         ['Date', 'Milestone'],
-        ['Nov 2025', 'PQC implemented (Dilithium-3 + Kyber-768) \u2014 production'],
+        ['Nov 2025', 'Post-quantum cryptographic signing \u2014 production'],
         ['Nov\u2013Dec 2025', 'Learning Baseline: 119 trades, system calibration'],
         ['Jan 15, 2026', 'Official Track Record Day 1 (calibrated parameters)'],
         ['Jan 28, 2026', 'Institutional website launched (omnixquantum.net)'],

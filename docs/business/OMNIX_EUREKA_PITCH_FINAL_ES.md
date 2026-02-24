@@ -1,7 +1,7 @@
 # OMNIX — Eureka Dubai Pitch Deck
-## Version Final para Competencia | Febrero 2026
+## Version Final para Competencia | Marzo 2026
 
-**Clasificacion**: Listo para Competencia — Revisado por Expertos
+**Clasificacion**: Listo para Competencia — Revisado por Expertos y Mentores
 **Destino**: Eureka Dubai — Ronda Semifinal
 
 ---
@@ -14,7 +14,7 @@
 > "La mejor decision es, muchas veces, la que no se hace."
 
 Harold Nunes — Fundador & Arquitecto de Producto
-Pre-Seed | Febrero 2026
+Pre-Seed | Marzo 2026
 
 contacto@omnixquantum.net | www.omnixquantum.net
 
@@ -34,7 +34,7 @@ La pregunta correcta es:
 - Los sistemas automatizados ejecutan constantemente — incluso en condiciones peligrosas
 - Sin deteccion de regimen = erosion de capital durante volatilidad
 - Controles de riesgo de una sola capa que fallan bajo estres
-- $68B+ perdidos anualmente por traders retail a nivel global — y miles de millones mas en malas decisiones en supply chain, credito y seguros
+- Miles de millones en perdidas prevenibles ocurren anualmente debido a pobre gobernanza de riesgo automatizada — en trading, supply chain, credito y seguros
 
 **El resultado:** Los errores costosos son la norma, no la excepcion.
 
@@ -208,8 +208,10 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 | **Sistema de Memoria Conductual** | Recuerda patrones del mercado mas alla de datos recientes | Ve lo que otros sistemas no ven |
 | **Ventana de Confirmacion de Edge** | Requiere persistencia de tendencia por 3 ciclos — no solo un spike | Transforma "preservacion" en "paciencia" |
 | **Motor Shadow Portfolio** | Rastrea cada decision vetada para aprender (670,000+ eventos) | El sistema aprende de lo que NO hace |
-| **Seguridad Post-Cuantica** | Firma criptografica post-cuantica (NIST-standardized) | Operacional hoy — no en roadmap |
+| **Seguridad Post-Cuantica** | Recibos de decision firmados criptograficamente (arquitectura post-cuantica) | Operacional hoy — no en roadmap |
 | **Orquestacion Multi-IA** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 con failover | Cero dependencia de un solo proveedor |
+| **Integridad de Ejecucion** | Cada trade reconciliado contra datos reales del exchange (Kraken) | Datos verificados, no estimados |
+| **Auditoria Matematica** | 100% reconciliacion de P&L — 119/119 trades verificados | Cada centavo contabilizado |
 
 > "Cada decision queda registrada, trazable y revisable. Trail de auditoria — siempre."
 
@@ -301,7 +303,7 @@ Impacto para la firma:
 
 ### La Brecha Que Nadie Esta Llenando
 
-La gobernanza de decisiones de grado institucional existe — dentro de hedge funds con $100M+ AUM. NO hay infraestructura de gobernanza accesible para:
+Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles para operaciones de trading mas pequenas. No hay infraestructura de gobernanza accesible para:
 
 - Prop trading firms que necesitan proteger capital de traders
 - Plataformas de trading agregando gobernanza de riesgo para compliance
@@ -363,7 +365,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 |-----------|--------|
 | Motor de Gobernanza de 6 Checkpoints | Produccion — 670,000+ ciclos de evaluacion |
 | Orquestacion Multi-IA (3 proveedores) | Produccion — cero dependencia de un solo proveedor |
-| Seguridad Post-Cuantica (Dilithium-3) | Produccion — operacional desde Nov 2025 |
+| Firma Criptografica Post-Cuantica | Produccion — operacional desde Nov 2025 |
 | Motor de Aprendizaje Shadow Portfolio | Produccion — 670,000+ eventos contrafactuales |
 | Audit Trail completo de decisiones | Produccion — 100% cobertura de telemetria |
 | Demos interactivos de gobernanza (3 verticales) | En vivo — trading, credito, seguros |
@@ -429,7 +431,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 
 ### El Caso en 60 Segundos
 
-1. **El problema es masivo** — $68B+ perdidos por traders anualmente, miles de millones mas en malas decisiones en multiples industrias
+1. **El problema es masivo** — Miles de millones en perdidas prevenibles anualmente por pobre gobernanza de riesgo automatizada
 2. **El timing es perfecto** — MiCA + ADGM mandando gobernanza de decisiones AHORA
 3. **El producto existe** — No es un slide deck. Corriendo en produccion por 3+ meses.
 4. **El enfoque es unico** — Nadie mas optimiza para la contencion
@@ -451,7 +453,7 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 >
 > La pregunta correcta es: 'Cuando NO deberia actuar?'
 >
-> $68 mil millones — perdidos anualmente solo por traders. Miles de millones mas en malas decisiones de compras, credito y seguros. Por que? Cero gobernanza de decisiones de grado institucional.
+> Miles de millones en perdidas prevenibles — cada ano — en trading, compras, credito y seguros. Por que? Cero gobernanza de decisiones de grado institucional.
 >
 > OMNIX es una plataforma de gobernanza de IA fail-closed. Piensa en esto como seguridad de aeropuerto para cada decision de alto riesgo. Cada accion debe sobrevivir 6 checkpoints independientes antes de ejecutarse. Un check falla — bloqueo automatico.
 >
@@ -526,7 +528,9 @@ La gobernanza de decisiones de grado institucional existe — dentro de hedge fu
 | Executive Fact Sheet | Estado del sistema y marco de gobernanza |
 | Track Record Case Study | Narrativa dia a dia de proteccion de capital |
 | Shadow Portfolio Report | Analisis contrafactual de 670,000+ operaciones |
-| Architecture Decision Records | 22+ decisiones tecnicas documentadas (ADRs) |
+| Architecture Decision Records | 27 decisiones tecnicas documentadas (ADRs) |
+| Reporte de Integridad de Ejecucion | Reconciliacion Kraken — verificacion con datos reales del exchange |
+| Reporte de Auditoria Matematica | 100% reconciliacion P&L — 119/119 trades verificados |
 | System State Manifest | Configuracion en vivo (JSON, legible por maquina) |
 
 **Todos los documentos disponibles bajo solicitud para inversores calificados.**
