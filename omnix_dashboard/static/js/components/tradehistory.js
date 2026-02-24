@@ -115,27 +115,27 @@ const TradeHistoryWidget = {
                     </div>
                     <div class="trade-stat-mini" title="Directional: Price moved as predicted">
                         <span class="trade-stat-mini-label">WR Dir:</span>
-                        <span class="trade-stat-mini-value ${statistics.win_rate_directional >= 40 ? 'positive' : ''}">${(statistics.win_rate_directional || 0).toFixed(1)}%</span>
+                        <span class="trade-stat-mini-value ${statistics.win_rate_directional >= 40 ? 'positive' : ''}">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.win_rate_directional), v => v.toFixed(1) + '%')}</span>
                     </div>
                     <div class="trade-stat-mini" title="Net: Profitable after fees">
                         <span class="trade-stat-mini-label">WR Net:</span>
-                        <span class="trade-stat-mini-value ${statistics.win_rate >= 40 ? 'positive' : ''}">${statistics.win_rate}%</span>
+                        <span class="trade-stat-mini-value ${statistics.win_rate >= 40 ? 'positive' : ''}">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.win_rate), v => v + '%')}</span>
                     </div>
                     <div class="trade-stat-mini" title="Trades that won in direction but lost to fees">
                         <span class="trade-stat-mini-label">Fee Eroded:</span>
-                        <span class="trade-stat-mini-value negative">${statistics.fee_eroded_trades || 0}</span>
+                        <span class="trade-stat-mini-value negative">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.fee_eroded_trades), v => v, '0')}</span>
                     </div>
                     <div class="trade-stat-mini">
                         <span class="trade-stat-mini-label">Total P&L:</span>
-                        <span class="trade-stat-mini-value ${statistics.total_pnl >= 0 ? 'positive' : 'negative'}">$${statistics.total_pnl.toFixed(2)}</span>
+                        <span class="trade-stat-mini-value ${statistics.total_pnl >= 0 ? 'positive' : 'negative'}">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.total_pnl), v => '$' + v.toFixed(2))}</span>
                     </div>
                     <div class="trade-stat-mini">
                         <span class="trade-stat-mini-label">Best:</span>
-                        <span class="trade-stat-mini-value positive">+$${statistics.best_trade.toFixed(2)}</span>
+                        <span class="trade-stat-mini-value positive">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.best_trade), v => '+$' + v.toFixed(2))}</span>
                     </div>
                     <div class="trade-stat-mini">
                         <span class="trade-stat-mini-label">Worst:</span>
-                        <span class="trade-stat-mini-value negative">$${statistics.worst_trade.toFixed(2)}</span>
+                        <span class="trade-stat-mini-value negative">${OmnixUtils.renderMetricValue(OmnixUtils.safeMetric(statistics.worst_trade), v => '$' + v.toFixed(2))}</span>
                     </div>
                     ${modeBadge}
                     ${significanceBadge}

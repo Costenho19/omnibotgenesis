@@ -13,23 +13,27 @@ const TerminalApp = (function() {
         const data = await OmnixAPI.getMetrics();
         if (data.success) {
             const m = data.metrics;
-            const pnlEl = document.getElementById('total-pnl');
-            pnlEl.textContent = `${m.total_pnl >= 0 ? '+' : ''}$${m.total_pnl.toFixed(2)}`;
-            pnlEl.className = `header-stat-value ${m.total_pnl >= 0 ? 'positive' : 'negative'}`;
+            const sm = OmnixUtils.safeMetric;
+            const rv = OmnixUtils.renderMetricValue;
 
-            const winRateDir = m.win_rate_directional || 0;
-            const winRateNet = m.win_rate_net || m.win_rate || 0;
-            OmnixUtils.setElement('win-rate-dir', `${winRateDir.toFixed(1)}%`);
-            OmnixUtils.setElement('win-rate-net', `${winRateNet.toFixed(1)}%`);
+            const pnl = sm(m.total_pnl);
+            const pnlEl = document.getElementById('total-pnl');
+            pnlEl.textContent = rv(pnl, v => `${v >= 0 ? '+' : ''}$${v.toFixed(2)}`);
+            pnlEl.className = `header-stat-value ${pnl !== null && pnl >= 0 ? 'positive' : pnl !== null ? 'negative' : ''}`;
+
+            const winRateDir = sm(m.win_rate_directional);
+            const winRateNet = sm(m.win_rate_net) !== null ? sm(m.win_rate_net) : sm(m.win_rate);
+            OmnixUtils.setElement('win-rate-dir', rv(winRateDir, v => `${v.toFixed(1)}%`));
+            OmnixUtils.setElement('win-rate-net', rv(winRateNet, v => `${v.toFixed(1)}%`));
             if (document.getElementById('win-rate')) {
-                OmnixUtils.setElement('win-rate', `${m.win_rate.toFixed(1)}%`);
+                OmnixUtils.setElement('win-rate', rv(sm(m.win_rate), v => `${v.toFixed(1)}%`));
             }
-            OmnixUtils.setElement('trades-count', m.total_trades);
-            OmnixUtils.setElement('max-dd', `${m.max_drawdown.toFixed(1)}%`);
-            OmnixUtils.setElement('sharpe', m.sharpe_ratio.toFixed(2));
-            OmnixUtils.setElement('sortino', m.sortino_ratio.toFixed(2));
-            OmnixUtils.setElement('profit-factor', m.profit_factor.toFixed(2));
-            OmnixUtils.setElement('expectancy', `$${m.expectancy.toFixed(2)}`);
+            OmnixUtils.setElement('trades-count', rv(sm(m.total_trades), v => v));
+            OmnixUtils.setElement('max-dd', rv(sm(m.max_drawdown), v => `${v.toFixed(1)}%`));
+            OmnixUtils.setElement('sharpe', rv(sm(m.sharpe_ratio), v => v.toFixed(2)));
+            OmnixUtils.setElement('sortino', rv(sm(m.sortino_ratio), v => v.toFixed(2)));
+            OmnixUtils.setElement('profit-factor', rv(sm(m.profit_factor), v => v.toFixed(2)));
+            OmnixUtils.setElement('expectancy', rv(sm(m.expectancy), v => `$${v.toFixed(2)}`));
         }
     }
 

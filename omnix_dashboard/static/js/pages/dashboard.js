@@ -35,42 +35,45 @@ const DashboardApp = (function() {
     }
 
     function updateMetricsUI(metrics) {
-        const pnl = metrics.total_pnl || 0;
-        const pnlEl = document.getElementById('total-pnl');
-        pnlEl.textContent = OmnixUtils.formatCurrency(pnl, { showSign: true });
-        pnlEl.className = `text-2xl lg:text-3xl font-bold mono ${OmnixUtils.getStatClass(pnl)}`;
+        const sm = OmnixUtils.safeMetric;
+        const rv = OmnixUtils.renderMetricValue;
 
-        const winRateDir = metrics.win_rate_directional || 0;
+        const pnl = sm(metrics.total_pnl);
+        const pnlEl = document.getElementById('total-pnl');
+        pnlEl.textContent = rv(pnl, v => OmnixUtils.formatCurrency(v, { showSign: true }));
+        pnlEl.className = `text-2xl lg:text-3xl font-bold mono ${pnl !== null ? OmnixUtils.getStatClass(pnl) : 'stat-neutral'}`;
+
+        const winRateDir = sm(metrics.win_rate_directional);
         const winRateDirEl = document.getElementById('win-rate-dir');
         if (winRateDirEl) {
-            winRateDirEl.textContent = `${winRateDir.toFixed(1)}%`;
-            winRateDirEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateDir >= 40 ? 'stat-positive' : winRateDir > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+            winRateDirEl.textContent = rv(winRateDir, v => `${v.toFixed(1)}%`);
+            winRateDirEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateDir !== null && winRateDir >= 40 ? 'stat-positive' : winRateDir !== null && winRateDir > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
         }
         
-        const winRateNet = metrics.win_rate_net || metrics.win_rate || 0;
+        const winRateNet = sm(metrics.win_rate_net) !== null ? sm(metrics.win_rate_net) : sm(metrics.win_rate);
         const winRateNetEl = document.getElementById('win-rate-net');
         if (winRateNetEl) {
-            winRateNetEl.textContent = `${winRateNet.toFixed(1)}%`;
-            winRateNetEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateNet >= 40 ? 'stat-positive' : winRateNet > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+            winRateNetEl.textContent = rv(winRateNet, v => `${v.toFixed(1)}%`);
+            winRateNetEl.className = `text-2xl lg:text-3xl font-bold mono ${winRateNet !== null && winRateNet >= 40 ? 'stat-positive' : winRateNet !== null && winRateNet > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
         }
         
         const winRateEl = document.getElementById('win-rate');
         if (winRateEl) {
-            const winRate = metrics.win_rate || 0;
-            winRateEl.textContent = `${winRate.toFixed(1)}%`;
-            winRateEl.className = `text-2xl lg:text-3xl font-bold mono ${winRate >= 50 ? 'stat-positive' : winRate > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
+            const winRate = sm(metrics.win_rate);
+            winRateEl.textContent = rv(winRate, v => `${v.toFixed(1)}%`);
+            winRateEl.className = `text-2xl lg:text-3xl font-bold mono ${winRate !== null && winRate >= 50 ? 'stat-positive' : winRate !== null && winRate > 0 ? 'text-yellow-500' : 'stat-neutral'}`;
         }
 
-        OmnixUtils.setElement('wins-losses', `${metrics.winning_trades || 0}W / ${metrics.losing_trades || 0}L`);
-        OmnixUtils.setElement('sharpe-ratio', (metrics.sharpe_ratio || 0).toFixed(2));
-        OmnixUtils.setElement('max-drawdown', `${(metrics.max_drawdown || 0).toFixed(1)}%`);
-        OmnixUtils.setElement('profit-factor', (metrics.profit_factor || 0).toFixed(2));
-        OmnixUtils.setElement('sortino-ratio', (metrics.sortino_ratio || 0).toFixed(2));
-        OmnixUtils.setElement('avg-win', OmnixUtils.formatCurrency(metrics.avg_win || 0, { showSign: true }));
-        OmnixUtils.setElement('avg-loss', OmnixUtils.formatCurrency(-(metrics.avg_loss || 0)));
-        OmnixUtils.setElement('best-trade', OmnixUtils.formatCurrency(metrics.best_trade || 0, { showSign: true }));
-        OmnixUtils.setElement('worst-trade', OmnixUtils.formatCurrency(metrics.worst_trade || 0));
-        OmnixUtils.setElement('expectancy', OmnixUtils.formatCurrency(metrics.expectancy || 0, { showSign: true }));
+        OmnixUtils.setElement('wins-losses', rv(sm(metrics.total_trades), () => `${sm(metrics.winning_trades, 0)}W / ${sm(metrics.losing_trades, 0)}L`));
+        OmnixUtils.setElement('sharpe-ratio', rv(sm(metrics.sharpe_ratio), v => v.toFixed(2)));
+        OmnixUtils.setElement('max-drawdown', rv(sm(metrics.max_drawdown), v => `${v.toFixed(1)}%`));
+        OmnixUtils.setElement('profit-factor', rv(sm(metrics.profit_factor), v => v.toFixed(2)));
+        OmnixUtils.setElement('sortino-ratio', rv(sm(metrics.sortino_ratio), v => v.toFixed(2)));
+        OmnixUtils.setElement('avg-win', rv(sm(metrics.avg_win), v => OmnixUtils.formatCurrency(v, { showSign: true })));
+        OmnixUtils.setElement('avg-loss', rv(sm(metrics.avg_loss), v => OmnixUtils.formatCurrency(-v)));
+        OmnixUtils.setElement('best-trade', rv(sm(metrics.best_trade), v => OmnixUtils.formatCurrency(v, { showSign: true })));
+        OmnixUtils.setElement('worst-trade', rv(sm(metrics.worst_trade), v => OmnixUtils.formatCurrency(v)));
+        OmnixUtils.setElement('expectancy', rv(sm(metrics.expectancy), v => OmnixUtils.formatCurrency(v, { showSign: true })));
     }
 
     function updateAssetsUI(assets) {

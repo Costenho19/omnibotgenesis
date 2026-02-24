@@ -66,6 +66,28 @@ const OmnixUtils = (function() {
         });
     }
 
+    function safeMetric(value, fallback) {
+        if (value === null || value === undefined || value === '') return fallback !== undefined ? fallback : null;
+        if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) return fallback !== undefined ? fallback : null;
+        if (typeof value === 'object' && value.status === 'insufficient_data') return fallback !== undefined ? fallback : null;
+        return value;
+    }
+
+    function renderMetricValue(value, formatter, naText) {
+        naText = naText || 'N/A';
+        if (value === null || value === undefined) return naText;
+        if (typeof value === 'object' && value.status === 'insufficient_data') return naText;
+        if (typeof value === 'number' && isNaN(value)) return naText;
+        if (formatter) return formatter(value);
+        return String(value);
+    }
+
+    function isDataAvailable(value) {
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'object' && value.status === 'insufficient_data') return false;
+        return true;
+    }
+
     function formatTime(date, options = {}) {
         if (typeof OmnixTime !== 'undefined') {
             return OmnixTime.formatTime(date, options);
@@ -171,6 +193,9 @@ const OmnixUtils = (function() {
         formatCurrency,
         formatPercent,
         formatNumber,
+        safeMetric,
+        renderMetricValue,
+        isDataAvailable,
         formatTime,
         formatDate,
         formatDateTime,
