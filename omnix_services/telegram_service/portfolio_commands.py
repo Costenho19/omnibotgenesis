@@ -93,8 +93,8 @@ def _fetch_real_prices() -> Dict[str, List[float]]:
         except Exception as e:
             logger.warning(f"Error fetching OHLC for {symbol}: {e}")
         
-        prices[symbol] = _get_fallback_price(symbol)
         data_quality['fallback'].append(symbol)
+        logger.warning(f"⚠️ {symbol}: No real OHLC data available — excluded from optimization")
     
     for symbol in stock_symbols:
         try:
@@ -108,8 +108,8 @@ def _fetch_real_prices() -> Dict[str, List[float]]:
         except Exception as e:
             logger.warning(f"Error fetching bars for {symbol}: {e}")
         
-        prices[symbol] = _get_fallback_price(symbol)
         data_quality['fallback'].append(symbol)
+        logger.warning(f"⚠️ {symbol}: No real price data available — excluded from optimization")
     
     logger.info(f"📊 Data Quality: {len(data_quality['real'])} REAL, {len(data_quality['fallback'])} fallback")
     return prices
@@ -147,25 +147,13 @@ def _fetch_alpaca_bars(alpaca_service, symbol: str, days: int) -> Optional[List[
     return None
 
 
-def _get_fallback_price(symbol: str) -> List[float]:
+def _get_fallback_price(symbol: str) -> None:
     """
-    Fallback prices when APIs are unavailable - generates synthetic series
-    ⚠️ DEPRECATED: This is only used when real data APIs fail
+    REMOVED: Previously generated synthetic price series with hardcoded values.
+    Now returns None — fail-closed policy requires real data only.
     """
-    fallback_prices = {
-        'BTC': 95000, 'ETH': 3500, 'AAPL': 230, 'MSFT': 430,
-        'GOOGL': 175, 'NVDA': 140, 'TSLA': 350, 'JPM': 240, 'SPY': 600
-    }
-    price = fallback_prices.get(symbol, 100)
-    volatility = 0.02 if symbol in ['BTC', 'ETH'] else 0.015
-    logger.warning(f"⚠️ FALLBACK: Using synthetic data for {symbol} (API unavailable)")
-    
-    returns = np.random.normal(0, volatility, 59)
-    log_prices = np.cumsum(returns)
-    log_prices = np.insert(log_prices, 0, 0)
-    log_prices = log_prices - log_prices[-1]
-    prices = price * np.exp(log_prices)
-    return prices.tolist()
+    logger.warning(f"⚠️ FAIL-CLOSED: No synthetic data for {symbol} — real API data required")
+    return None
 
 
 def _generate_real_signals(prices: Dict[str, List[float]]) -> Dict[str, Dict]:

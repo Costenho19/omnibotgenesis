@@ -101,15 +101,15 @@ ANÁLISIS TÉCNICO MULTI-TIMEFRAME:
 - Soportes: {f"${technical_data['support_levels'][0]:,.2f}, ${technical_data['support_levels'][1]:,.2f}" if technical_data.get('support_levels') else 'N/A'}
 
 ELLIOTT WAVE + FIBONACCI:
-- Patrón Detectado: {elliott_wave.get('wave_pattern', 'N/A') if elliott_wave else 'Requiere datos reales'}
-- Confianza: {f"{elliott_wave.get('confidence', 0):.1%}" if elliott_wave else 'N/A'}
-- Próximo Target: {f"${elliott_wave.get('next_target', 0):,.2f}" if elliott_wave else 'N/A'}
+- Estado: {elliott_wave.get('note', 'N/A') if elliott_wave else 'Requiere datos reales'}
 
 ANÁLISIS ORDER BOOK:
 - Estado: {'Datos en tiempo real disponibles' if order_book else 'Requiere conexión WebSocket'}
 
 ANÁLISIS ESTADÍSTICO:
-- Estado: {'Análisis disponible' if statistical_analysis else 'Requiere datos de mercado'}
+- Estado: {statistical_analysis.get('note', 'N/A') if statistical_analysis else 'Requiere datos de mercado'}
+- Precio: {f"${statistical_analysis['current_price']:,.2f}" if statistical_analysis and statistical_analysis.get('current_price') else 'N/A'}
+- Cambio 24h: {f"{statistical_analysis['change_24h']:+.2f}%" if statistical_analysis and statistical_analysis.get('change_24h') is not None else 'N/A'}
 
 ANÁLISIS DE NOTICIAS CRYPTO (TIEMPO REAL):
 - Sentimiento General: {news_sentiment['sentiment']} (Score: {news_sentiment['score']})
@@ -117,10 +117,10 @@ ANÁLISIS DE NOTICIAS CRYPTO (TIEMPO REAL):
 - Headlines Recientes: {', '.join(news_sentiment['headlines'])}
 
 MÉTRICAS ON-CHAIN:
-- BTC Circulante: {onchain_metrics.get('total_bitcoins', 0):,.0f} BTC
-- Hash Rate: {onchain_metrics.get('hash_rate', 0):.2e} H/s
-- Dificultad: {onchain_metrics.get('difficulty', 0):,.0f}
-- Volumen Trading: {onchain_metrics.get('trade_volume_btc', 0):,.0f} BTC
+- Estado: {onchain_metrics.get('source', 'N/A') if onchain_metrics.get('status') == 'insufficient_data' else 'Datos reales disponibles'}
+- BTC Circulante: {f"{onchain_metrics.get('total_bitcoins', 0):,.0f} BTC" if onchain_metrics.get('total_bitcoins') else 'N/A'}
+- Hash Rate: {f"{onchain_metrics.get('hash_rate', 0):.2e} H/s" if onchain_metrics.get('hash_rate') else 'N/A'}
+- Volumen Trading: {f"{onchain_metrics.get('trade_volume_btc', 0):,.0f} BTC" if onchain_metrics.get('trade_volume_btc') else 'N/A'}
 """
             except Exception as e:
                 logger.debug(f"Error datos avanzados: {e}")
@@ -911,110 +911,48 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             logger.debug(f"Error métricas on-chain: {e}")
         
         return {
-            'total_bitcoins': 19800000,
-            'market_price_usd': 119000,
-            'hash_rate': 700000000000000000000,
-            'source': 'Estimado'
+            'status': 'insufficient_data',
+            'source': 'Blockchain.info API unavailable',
+            'note': 'On-chain metrics require live API connection'
         }
     
     def _get_elliott_wave_analysis(self, price_data):
-        """Análisis Elliott Wave con auto-detección de patrones"""
-        try:
-            # Simulación de análisis Elliott Wave avanzado
-            current_price = price_data.get('price', 119000)
-            change_24h = price_data.get('change', 0.6)
-            
-            # Detectar patrón de ondas basado en precio y volatilidad
-            if change_24h > 3:
-                wave_pattern = "Onda 3 (Impulso alcista fuerte)"
-                wave_confidence = 0.85
-                next_target = current_price * 1.15
-            elif change_24h > 1:
-                wave_pattern = "Onda 1 (Inicio impulso alcista)"
-                wave_confidence = 0.72
-                next_target = current_price * 1.08
-            elif change_24h < -3:
-                wave_pattern = "Onda C (Corrección final)"
-                wave_confidence = 0.80
-                next_target = current_price * 0.92
-            elif change_24h < -1:
-                wave_pattern = "Onda A (Inicio corrección)"
-                wave_confidence = 0.68
-                next_target = current_price * 0.95
-            else:
-                wave_pattern = "Onda 4 (Consolidación)"
-                wave_confidence = 0.60
-                next_target = current_price * 1.02
-            
-            # Niveles Fibonacci automáticos
-            fib_levels = {
-                '23.6%': current_price * 0.764,
-                '38.2%': current_price * 0.618,
-                '50%': current_price * 0.5,
-                '61.8%': current_price * 0.382,
-                '78.6%': current_price * 0.214
-            }
-            
-            return {
-                'wave_pattern': wave_pattern,
-                'confidence': wave_confidence,
-                'next_target': next_target,
-                'fibonacci_levels': fib_levels,
-                'analysis_type': 'Elliott Wave + Fibonacci'
-            }
-        except Exception as e:
-            logger.debug(f"Error Elliott Wave: {e}")
-            return {
-                'wave_pattern': 'Análisis en progreso',
-                'confidence': 0.5,
-                'next_target': 120000,
-                'fibonacci_levels': {},
-                'analysis_type': 'Fallback'
-            }
+        """Elliott Wave analysis — requires real OHLCV series for proper wave counting"""
+        return {
+            'status': 'insufficient_data',
+            'note': 'Elliott Wave analysis requires validated OHLCV series with proper wave counting algorithm — not available in current build',
+            'analysis_type': 'Elliott Wave + Fibonacci'
+        }
     
     def _get_order_book_analysis(self):
         """Análisis del libro de órdenes - Requiere conexión WebSocket real"""
         return None
     
     def _get_statistical_analysis(self, market_data):
-        """Análisis estadístico avanzado basado en modelos matemáticos"""
-        try:
-            price = market_data.get('price', 119000)
-            volatility = abs(market_data.get('change', 0.6))
-            
-            # Análisis probabilístico para múltiples escenarios
-            market_states = {
-                'bullish_probability': 0.4 + (volatility / 10),
-                'bearish_probability': 0.3 - (volatility / 20),
-                'sideways_probability': 0.3 + (volatility / 30)
-            }
-            
-            # Normalizar probabilidades
-            total_prob = sum(market_states.values())
-            market_states = {k: v/total_prob for k, v in market_states.items()}
-            
-            market_correlation = {
-                'note': 'Correlations require real-time market data feed — not available in current build',
-                'data_source': 'N/A'
-            }
-            
-            # Eventos extremos basados en volatilidad
-            extreme_event_probability = max(0.01, volatility / 100)
-            
+        """Statistical analysis — requires calibrated model with real historical data"""
+        price = market_data.get('price')
+        change = market_data.get('change')
+        
+        if price is None or change is None:
             return {
-                'market_states': market_states,
-                'market_correlation': market_correlation,
-                'extreme_event_risk': extreme_event_probability,
-                'analysis_time': f"{24 - int(volatility * 2)} horas",
-                'dominant_state': max(market_states.keys(), key=market_states.get),
+                'status': 'insufficient_data',
+                'note': 'Statistical analysis requires real price and change data',
                 'analysis_type': 'Advanced Statistical Model'
             }
-        except Exception as e:
-            logger.debug(f"Error Statistical Analysis: {e}")
-            return {
-                'market_states': {'neutral': 1.0},
-                'analysis_type': 'Fallback'
-            }
+        
+        market_correlation = {
+            'note': 'Correlations require real-time market data feed — not available in current build',
+            'data_source': 'N/A'
+        }
+        
+        return {
+            'current_price': price,
+            'change_24h': change,
+            'market_correlation': market_correlation,
+            'status': 'partial',
+            'note': 'Probability model requires calibrated historical dataset — showing raw data only',
+            'analysis_type': 'Advanced Statistical Model'
+        }
     
 
     
@@ -1035,11 +973,13 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
         except Exception as e:
             logger.warning(f"Error getting performance metrics: {e}")
             return {
-                'response_time': 0,
-                'memory_usage_mb': 0,
-                'cpu_percent': 0,
-                'api_calls_today': 0,
-                'uptime_hours': 0
+                'response_time': None,
+                'memory_usage_mb': None,
+                'cpu_percent': None,
+                'api_calls_today': None,
+                'uptime_hours': None,
+                'status': 'insufficient_data',
+                'note': 'Process metrics unavailable'
             }
     
 

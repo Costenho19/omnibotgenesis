@@ -5793,7 +5793,7 @@ class AutoTradingBot:
             has_valid_volumes = any(v > 0 for v in volumes)
             if not has_valid_volumes:
                 volumes = self._generate_synthetic_volumes(closes, target_length=data_len)
-                logger.debug(f"📊 Using synthetic volumes for {pair} ({data_len} candles)")
+                logger.warning(f"⚠️ SYNTHETIC VOLUMES for {pair} ({data_len} candles) — Kraken did not provide volume data. Used internally for indicator calculations only, never shown to users.")
             
             if not all(len(arr) == data_len for arr in [opens, highs, lows, closes, volumes]):
                 logger.warning(f"⚠️ OHLC array length mismatch for {pair}, padding to {data_len}")
