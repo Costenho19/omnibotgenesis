@@ -238,84 +238,16 @@ class EnterpriseAnalyticsEngine:
     
     # Métodos auxiliares para las funcionalidades enterprise
     def _get_reddit_crypto_sentiment(self):
-        """MEJORA 2: Análisis avanzado de Reddit con comprensión de narrativas complejas"""
-        # Análisis de sentimiento contextual mejorado
-        narrative_analysis = self._analyze_complex_narratives()
-        cultural_context = self._detect_cultural_emotional_context()
-        
-        return {
-            'overall_sentiment': 'bullish_with_narrative_drivers',
-            'confidence': 0.87,  # Mejorada precisión
-            'trending_topics': [
-                'BTC institutional adoption narrative', 
-                'Alt season cycle psychology',
-                'Advanced crypto security',
-                'Regulatory clarity momentum'
-            ],
-            'sentiment_score': 8.1,
-            'narrative_strength': narrative_analysis.get('strength', 0.82),
-            'cultural_sentiment': cultural_context.get('sentiment', 'optimistic'),
-            'emotional_indicators': {
-                'fear_greed_index': 78,
-                'fomo_level': 'moderate_high',
-                'hodl_conviction': 'strong',
-                'narrative_coherence': 0.85
-            },
-            'sentiment_drivers': [
-                'institutional_flow_positive',
-                'technical_breakout_anticipation', 
-                'crypto_security_awareness',
-                'regulatory_optimism'
-            ]
-        }
+        """Reddit sentiment — requires real Reddit API integration (not available)"""
+        return {'status': 'insufficient_data', 'message': 'Requires Reddit API integration', 'source': None}
     
     def _analyze_complex_narratives(self):
         """Análisis profundo de narrativas del mercado"""
-        try:
-            # Análisis de narrativas basado en patrones observados
-            narrative_themes = [
-                'advanced_crypto_security',
-                'institutional_adoption_wave',
-                'regulatory_clarity_catalyst',
-                'technological_breakthrough'
-            ]
-            
-            # Fuerza de narrativa basada en contexto actual
-            narrative_strength = 0.85  # Fuerza promedio observada
-            
-            return {
-                'strength': narrative_strength,
-                'primary_narrative': 'institutional_adoption_wave',  # Narrativa dominante actual
-                'narrative_coherence': 0.87,  # Coherencia típica observada
-                'viral_potential': 0.8   # Potencial viral promedio
-            }
-        except Exception as e:
-            logger.warning(f"Narrative analysis fallback: {e}")
-            return {'strength': 0.82, 'primary_narrative': 'institutional_adoption'}
+        return {'status': 'insufficient_data', 'message': 'Requires real narrative data feed', 'source': None}
     
     def _detect_cultural_emotional_context(self):
         """Detección de contexto cultural y emocional avanzado"""
-        try:
-            # Análisis contextual multicultural
-            cultural_indicators = {
-                'western_sentiment': 'optimistic',
-                'asian_sentiment': 'cautiously_bullish',
-                'emerging_markets': 'adoption_focused',
-                'institutional_sentiment': 'increasingly_positive'
-            }
-            
-            # Análisis emocional profundo
-            emotional_state = 'rational_optimism'  # vs irrational_exuberance
-            
-            return {
-                'sentiment': 'culturally_aware_bullish',
-                'cultural_indicators': cultural_indicators,
-                'emotional_state': emotional_state,
-                'market_psychology': 'maturation_phase'
-            }
-        except Exception as e:
-            logger.warning(f"Cultural context fallback: {e}")
-            return {'sentiment': 'optimistic', 'emotional_state': 'positive'}
+        return {'status': 'insufficient_data', 'message': 'Requires real cultural data feed', 'source': None}
     
     def _get_twitter_crypto_trends(self):
         """Simulación de análisis de Twitter crypto"""
@@ -341,72 +273,45 @@ class EnterpriseAnalyticsEngine:
         statistical_analysis = self._statistical_amplitude_estimation(market_data)
         monte_carlo_advanced = self._advanced_monte_carlo_simulation(market_data)
         
+        if statistical_analysis.get('status') == 'insufficient_data':
+            return {'status': 'insufficient_data', 'message': 'Pattern detection requires valid market data', 'source': None}
+
         return {
             'pattern_detected': 'ascending_triangle_confirmed',
-            'probability': statistical_analysis.get('probability', 0.82),
-            'statistical_confidence': statistical_analysis.get('confidence', 0.95),
-            'monte_carlo_iterations': monte_carlo_advanced.get('iterations', 100000),
-            'statistical_advantage': monte_carlo_advanced.get('advantage_factor', 2.3),
+            'probability': statistical_analysis.get('probability'),
+            'statistical_confidence': statistical_analysis.get('confidence'),
+            'monte_carlo': monte_carlo_advanced,
             'time_horizon': '7-14 days',
-            'confidence': 'statistical_enhanced',
-            'security_level': 'enterprise_grade'
+            'source': 'statistical_analysis'
         }
     
     def _statistical_amplitude_estimation(self, market_data):
         """Análisis Estadístico Avanzado para valoración de derivados"""
         try:
-            # Análisis estadístico de alta precisión
-            # Random import removed per Harold requirement
             import math
             
-            # Parámetros estadísticos reales
-            data_fidelity = 0.999
-            statistical_iterations = 10000
+            price = market_data.get('price')
+            change = market_data.get('change')
+            if price is None or change is None:
+                return {'status': 'insufficient_data', 'message': 'Missing real price/change data', 'source': None}
             
-            # Calcular probabilidad estadística basada en datos de mercado
-            price = market_data.get('price', 60000)
-            volatility = abs(market_data.get('change', 2.5)) / 100
-            
-            # Algoritmo estadístico para detección de patrones
+            volatility = abs(change) / 100
             amplitude = math.sin(price / 10000) * (1 + volatility)
-            probability = (amplitude ** 2) * data_fidelity
+            probability = (amplitude ** 2)
             
             return {
                 'probability': min(max(probability, 0.1), 0.99),
-                'confidence': data_fidelity,
-                'statistical_iterations': statistical_iterations,
-                'amplitude': amplitude
+                'confidence': None,
+                'amplitude': amplitude,
+                'source': 'computed_from_market_data'
             }
         except Exception as e:
             logger.warning(f"Statistical analysis fallback: {e}")
-            return {'probability': 0.82, 'confidence': 0.85}
+            return {'status': 'insufficient_data', 'message': 'Statistical analysis requires valid market data', 'source': None}
     
     def _advanced_monte_carlo_simulation(self, market_data):
         """Monte Carlo avanzado con 100,000+ iteraciones"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simulación Monte Carlo de alta fidelidad
-            iterations = 150000  # Superando los 100,000 requeridos
-            statistical_advantage = 0
-            
-            for i in range(min(iterations, 1000)):  # Optimizar para no sobrecargar
-                # Simulación estadística de precios
-                # Corrección estadística basada en patrones observados
-                statistical_correction = 1.0  # Corrección neutral
-                statistical_advantage += statistical_correction * 0.5  # Factor conservador
-            
-            advantage_factor = abs(statistical_advantage / 1000) + 1.5
-            
-            return {
-                'iterations': iterations,
-                'advantage_factor': min(advantage_factor, 3.0),
-                'optimization_confirmed': 'confirmed',
-                'sobol_sequences': True
-            }
-        except Exception as e:
-            logger.warning(f"Advanced Monte Carlo fallback: {e}")
-            return {'iterations': 100000, 'advantage_factor': 2.0}
+        return {'status': 'insufficient_data', 'message': 'Monte Carlo simulation requires real market data pipeline', 'source': None}
     
     def _generate_trading_recommendations(self, market_data, ml_analysis):
         """MEJORA 3: Recomendaciones con algoritmos optimizados y gestión de riesgo avanzada"""
@@ -420,17 +325,18 @@ class EnterpriseAnalyticsEngine:
         arbitrage_opportunities = self._detect_arbitrage_opportunities(market_data)
         
         return {
+            'status': 'requires_real_data',
             'action': 'ACCUMULATE_WITH_STATISTICAL_OPTIMIZATION',
             'symbol': 'BTC',
-            'confidence': 0.91,  # Mejorada con análisis estadístico
+            'confidence': None,
             'time_horizon': 'adaptive_medium_term',
             'entry_zones': self._calculate_dynamic_entry_zones(market_data),
             'target_zones': self._statistical_optimized_targets(market_data),
-            'stop_loss': risk_metrics.get('dynamic_stop_loss', 55000),
-            'position_sizing': risk_metrics.get('optimal_position_size', 0.15),
-            'risk_reward_ratio': risk_metrics.get('risk_reward_ratio', 2.8),
-            'market_microstructure': hft_analysis.get('microstructure_health', 'strong'),
-            'arbitrage_score': arbitrage_opportunities.get('opportunity_score', 0.12),
+            'stop_loss': risk_metrics.get('dynamic_stop_loss'),
+            'position_sizing': risk_metrics.get('optimal_position_size'),
+            'risk_reward_ratio': risk_metrics.get('risk_reward_ratio'),
+            'market_microstructure': hft_analysis.get('microstructure_health'),
+            'arbitrage_score': arbitrage_opportunities.get('opportunity_score'),
             'volatility_protection': risk_metrics.get('volatility_shield', 'active'),
             'algorithm_optimization': {
                 'execution_strategy': 'iceberg_with_statistical_timing',
@@ -442,44 +348,29 @@ class EnterpriseAnalyticsEngine:
     
     def _high_frequency_market_analysis(self, market_data):
         """Análisis de mercado de alta frecuencia y baja latencia"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simulación de datos HFT
-            order_book_depth = 0.9  # Profundidad típica del order book
-            bid_ask_spread = 0.03   # Spread promedio observado
-            market_impact = 0.05    # Impacto de mercado típico
-            
-            return {
-                'microstructure_health': 'strong' if order_book_depth > 0.85 else 'moderate',
-                'liquidity_score': order_book_depth,
-                'spread_efficiency': 1 - bid_ask_spread,
-                'market_impact_score': 1 - market_impact,
-                'execution_quality': 'optimal' if bid_ask_spread < 0.03 else 'good'
-            }
-        except Exception as e:
-            logger.warning(f"HFT analysis fallback: {e}")
-            return {'microstructure_health': 'strong', 'liquidity_score': 0.85}
+        return {'status': 'insufficient_data', 'message': 'Requires real HFT data feed', 'source': None}
     
     def _dynamic_risk_assessment(self, market_data, ml_analysis):
         """Gestión dinámica de riesgos con adaptación continua"""
         try:
-            # Random import removed per Harold requirement
-            
-            # Verificar ml_analysis válido
             if not ml_analysis:
-                ml_analysis = {'statistical_confidence': 0.85, 'combined_score': 0.5}
+                return {'status': 'insufficient_data', 'message': 'No ML analysis input provided', 'source': None}
             
-            # Calcular riesgo dinámico basado en condiciones actuales
-            current_price = market_data.get('price', 60000)
-            volatility = abs(market_data.get('change', 2.5)) / 100
-            statistical_confidence = ml_analysis.get('statistical_confidence', 0.85)
+            current_price = market_data.get('price')
+            change = market_data.get('change')
+            if current_price is None or change is None:
+                return {'status': 'insufficient_data', 'message': 'Missing real price/change data', 'source': None}
+            
+            volatility = abs(change) / 100
+            statistical_confidence = ml_analysis.get('statistical_confidence')
             
             # Posición óptima basada en Kelly Criterion modificado
-            kelly_fraction = statistical_confidence * 0.25  # Conservador
-            optimal_position = min(kelly_fraction, 0.20)  # Max 20%
+            if statistical_confidence is None:
+                return {'status': 'insufficient_data', 'message': 'No statistical_confidence in ML analysis', 'source': None}
+
+            kelly_fraction = statistical_confidence * 0.25
+            optimal_position = min(kelly_fraction, 0.20)
             
-            # Stop loss dinámico basado en volatilidad
             volatility_multiplier = 2.5 if volatility < 0.03 else 3.0
             dynamic_stop = current_price * (1 - volatility * volatility_multiplier)
             
@@ -489,61 +380,36 @@ class EnterpriseAnalyticsEngine:
                 'risk_reward_ratio': 3.2 * statistical_confidence,
                 'volatility_shield': 'active',
                 'adaptive_sizing': True,
-                'max_drawdown_protection': 0.15
+                'source': 'computed_from_market_data'
             }
         except Exception as e:
-            logger.warning(f"Risk assessment fallback: {e}")
-            return {'dynamic_stop_loss': 55000, 'optimal_position_size': 0.15}
+            logger.warning(f"Risk assessment error: {e}")
+            return {'status': 'insufficient_data', 'message': f'Risk assessment failed: {e}', 'source': None}
     
     def _detect_arbitrage_opportunities(self, market_data):
         """Detección de oportunidades de arbitraje multi-exchange"""
-        try:
-            # Random import removed per Harold requirement
-            
-            # Simular análisis de arbitraje entre exchanges
-            exchanges = ['kraken', 'coinbase', 'binance', 'bitstamp']
-            price_differences = []
-            
-            base_price = market_data.get('price', 60000)
-            for exchange in exchanges:
-                # Simular variaciones de precio entre exchanges
-                variation = 0.001  # Variación pequeña típica
-                exchange_price = base_price * (1 + variation)
-                price_differences.append(abs(variation))
-            
-            max_spread = max(price_differences) * 2
-            opportunity_score = max_spread if max_spread > 0.001 else 0
-            
-            return {
-                'opportunity_score': min(opportunity_score, 0.20),
-                'max_spread': max_spread,
-                'profitable_threshold': 0.003,  # 0.3% mínimo
-                'execution_feasibility': 'high' if max_spread > 0.005 else 'moderate'
-            }
-        except Exception as e:
-            logger.warning(f"Arbitrage detection fallback: {e}")
-            return {'opportunity_score': 0.02, 'execution_feasibility': 'moderate'}
+        return {'status': 'insufficient_data', 'message': 'Requires multi-exchange real-time data', 'source': None}
     
     def _calculate_dynamic_entry_zones(self, market_data):
         """Zonas de entrada dinámicas basadas en análisis técnico"""
-        current_price = market_data.get('price', 60000)
-        
-        # Zonas calculadas con Fibonacci y optimización estadística
+        current_price = market_data.get('price')
+        if current_price is None:
+            return None
         return [
-            current_price * 0.95,  # Zona conservadora
-            current_price * 0.98,  # Zona moderada  
-            current_price * 1.01   # Zona agresiva (breakout)
+            current_price * 0.95,
+            current_price * 0.98,
+            current_price * 1.01
         ]
     
     def _statistical_optimized_targets(self, market_data):
-        """Objetivos optimizados con algoritmos estadísticos"""
-        current_price = market_data.get('price', 60000)
-        
-        # Targets con optimización estadística
+        """Objetivos basados en precio actual"""
+        current_price = market_data.get('price')
+        if current_price is None:
+            return None
         return [
-            current_price * 1.15,  # Target conservador
-            current_price * 1.25,  # Target moderado
-            current_price * 1.40   # Target optimista
+            current_price * 1.15,
+            current_price * 1.25,
+            current_price * 1.40
         ]
     
     def _send_automated_report(self, chat_id, report):
@@ -584,58 +450,58 @@ class EnterpriseAnalyticsEngine:
     
     # Métodos auxiliares adicionales requeridos
     def _get_institutional_flows(self):
-        return {'net_flows': 'positive', 'volume': 'high', 'trend': 'bullish'}
+        return {'status': 'insufficient_data', 'message': 'Requires institutional flow data', 'source': None}
     
     def _get_social_volume_metrics(self):
-        return {'volume_24h': 'high', 'engagement': 'increasing', 'sentiment': 'positive'}
+        return {'status': 'insufficient_data', 'message': 'Requires social volume API', 'source': None}
     
     def _get_whale_movement_data(self):
-        return {'large_transactions': 5, 'direction': 'accumulation', 'confidence': 0.85}
+        return {'status': 'insufficient_data', 'message': 'Requires on-chain analytics API', 'source': None}
     
     def _process_external_correlations(self, sources):
-        return {'correlation_score': 0.78, 'consensus': 'bullish', 'reliability': 'high'}
+        return {'status': 'insufficient_data', 'message': 'Requires external correlation data', 'source': None}
     
     def _calculate_external_data_confidence(self, sources):
-        return 0.82
+        return None
     
     def _generate_price_predictions(self, market_data):
-        return {'7_day_target': 125000, 'probability': 0.72, 'direction': 'up'}
+        return {'status': 'insufficient_data', 'message': 'Price predictions require validated model', 'source': None}
     
     def _detect_market_anomalies(self, market_data):
-        return {'anomalies_detected': 0, 'risk_level': 'low', 'status': 'normal'}
+        return {'status': 'insufficient_data', 'message': 'Requires anomaly detection pipeline', 'source': None}
     
     def _advanced_sentiment_analysis(self):
-        return {'overall_sentiment': 0.75, 'trend': 'improving', 'sources': 5}
+        """Sentiment analysis — requires real sentiment API integration"""
+        return {'status': 'insufficient_data', 'message': 'Requires real sentiment data sources', 'source': None}
     
     def _multi_asset_correlation_analysis(self):
-        return {'btc_eth_correlation': 0.85, 'market_correlation': 0.70}
+        """Multi-asset correlation — requires real-time multi-asset data feed"""
+        return {'status': 'insufficient_data', 'message': 'Requires real-time multi-asset correlation data', 'source': None}
     
     def _ml_based_risk_assessment(self, market_data):
-        return {'risk_score': 0.35, 'level': 'moderate', 'factors': ['volatility', 'sentiment']}
+        """ML risk assessment — requires trained model with real data"""
+        return {'status': 'insufficient_data', 'message': 'ML risk model requires validated training data', 'source': None}
     
     def _calculate_optimal_timing(self, market_data):
-        return {'entry_signal': 'strong', 'timing_score': 0.88, 'window': '24-48h'}
+        """Optimal timing — requires real order flow data"""
+        return {'status': 'insufficient_data', 'message': 'Timing analysis requires real order flow data', 'source': None}
     
     def _combine_ml_insights(self, insights):
         """Combinar insights de ML para compatibilidad"""
-        # Extraer datos de market_patterns para compatibilidad
         if insights and 'market_patterns' in insights:
             pattern_data = insights['market_patterns']
             return {
-                'pattern_detected': pattern_data.get('pattern_detected', 'bullish_trend'),
-                'probability': pattern_data.get('probability', 0.82),
-                'combined_score': 0.82, 
-                'recommendation': 'bullish', 
-                'confidence': 'high'
+                'pattern_detected': pattern_data.get('pattern_detected'),
+                'probability': pattern_data.get('probability'),
+                'combined_score': pattern_data.get('probability'),
+                'recommendation': pattern_data.get('recommendation'),
+                'source': 'market_patterns_analysis'
             }
         
-        # Fallback si no hay datos
         return {
-            'pattern_detected': 'bullish_trend',
-            'probability': 0.75,
-            'combined_score': 0.75, 
-            'recommendation': 'bullish', 
-            'confidence': 'medium'
+            'status': 'insufficient_data',
+            'message': 'Insufficient real data for ML analysis',
+            'source': None
         }
     
     def _determine_market_trend(self, market_data):
@@ -652,7 +518,8 @@ class EnterpriseAnalyticsEngine:
         else: return 'low'
     
     def _comprehensive_risk_assessment(self):
-        return {'overall_risk': 'medium', 'factors': ['market_volatility', 'sentiment'], 'score': 0.4}
+        """Risk assessment — requires real risk data pipeline"""
+        return {'status': 'insufficient_data', 'message': 'Requires real risk assessment pipeline', 'source': None}
 
 # Inicializar Enterprise Analytics Engine
 enterprise_analytics = None

@@ -63,20 +63,18 @@ def api_active_signals():
                         
                         if buy_ratio > 0.7:
                             signal_type = 'BULLISH'
-                            confidence = int(buy_ratio * 100)
                         elif buy_ratio < 0.3:
                             signal_type = 'BEARISH'
-                            confidence = int((1 - buy_ratio) * 100)
                         else:
                             signal_type = 'NEUTRAL'
-                            confidence = 50
                         
                         signals.append({
                             'strategy': list(stats['strategies'])[0] if stats['strategies'] else 'OMNIX',
                             'symbol': symbol,
                             'signal': signal_type,
-                            'confidence': confidence,
+                            'buy_ratio': round(buy_ratio, 2),
                             'trades_24h': total,
+                            'source': 'paper_trading_trades',
                             'timestamp': datetime.now().isoformat()
                         })
                 
@@ -95,8 +93,9 @@ def api_active_signals():
                             'strategy': pos[2] or 'OMNIX',
                             'symbol': pos[0],
                             'signal': 'LONG' if pos[1] == 'buy' else 'SHORT',
-                            'confidence': 75,
                             'position_open': True,
+                            'entry_price': float(pos[3]) if pos[3] else None,
+                            'source': 'paper_trading_trades',
                             'timestamp': pos[4].isoformat() if pos[4] else datetime.now().isoformat()
                         })
                 
@@ -106,21 +105,11 @@ def api_active_signals():
             except Exception as e:
                 logger.error(f"Error fetching signals from DB: {e}")
     
-    if not signals:
-        signals = [
-            {
-                'strategy': 'OMNIX_Core',
-                'symbol': 'BTC/USD',
-                'signal': 'ANALYZING',
-                'confidence': 0,
-                'message': 'Waiting for trading activity',
-                'timestamp': datetime.now().isoformat()
-            }
-        ]
-    
     return jsonify({
         'success': True,
         'signals': signals,
+        'count': len(signals),
+        'message': 'No active signals — no trading activity in last 24h' if not signals else None,
         'source': 'PostgreSQL',
         'timestamp': datetime.now().isoformat()
     })
@@ -276,8 +265,8 @@ def api_system_adaptive():
     """API endpoint for Adaptive Parameter Engine ULTRA telemetry"""
     from omnix_dashboard.utils.database import DB_AVAILABLE
     
-    current_regime = 'TRENDING'
-    regime_confidence = 0.85
+    current_regime = None
+    regime_confidence = None
     strategy_weights = {}
     calibration_history = []
     
@@ -341,14 +330,7 @@ def api_system_adaptive():
                 logger.error(f"Error reading adaptive engine data: {e}")
     
     if not strategy_weights:
-        strategy_weights = {
-            'Quantum_Momentum': {'weight': 0.85, 'trades_24h': 0, 'win_rate': 58.0, 'status': 'ACTIVE'},
-            'Non_Markovian': {'weight': 0.80, 'trades_24h': 0, 'win_rate': 54.0, 'status': 'ACTIVE'},
-            'OMNIX_Core': {'weight': 0.75, 'trades_24h': 0, 'win_rate': 55.0, 'status': 'ACTIVE'},
-            'Monte_Carlo': {'weight': 0.70, 'trades_24h': 0, 'win_rate': 52.0, 'status': 'ACTIVE'},
-            'Kalman_Filter': {'weight': 0.65, 'trades_24h': 0, 'win_rate': 51.0, 'status': 'ACTIVE'},
-            'HMM_Regime': {'weight': 0.60, 'trades_24h': 0, 'win_rate': 50.0, 'status': 'ACTIVE'}
-        }
+        strategy_weights = {}
     
     main_driver = None
     max_weight = 0
@@ -368,7 +350,7 @@ def api_system_adaptive():
         } if main_driver else None,
         'regime': {
             'current': current_regime,
-            'confidence': round(regime_confidence, 2),
+            'confidence': round(regime_confidence, 2) if regime_confidence is not None else None,
             'detected_at': datetime.now().isoformat(),
             'history': [
                 {'regime': current_regime, 'duration_hours': 4, 'confidence': regime_confidence}
@@ -389,9 +371,9 @@ def api_system_adaptive():
             'description': 'Non-Markovian Memory Kernel parameters'
         },
         'performance_metrics': {
-            'signal_quality_avg': 0.72,
-            'regime_accuracy_7d': 0.78,
-            'calibration_success_rate': 0.95
+            'status': 'insufficient_data',
+            'message': 'Requires real-time calibration telemetry (not available in demo)',
+            'source': None
         },
         'source': 'PostgreSQL' if DB_AVAILABLE else 'defaults',
         'timestamp': datetime.now().isoformat()

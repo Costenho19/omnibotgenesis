@@ -36,6 +36,49 @@
 | `trading_system.py` | 43-47 | `failed_predictions` | 0 (never incremented) | trading_accuracy now returns "N/A — no executed trades" |
 | `advanced_intelligence.py` | 54-67 | `scan_arbitrage_opportunities()` | volatility=0.025 hardcoded, fabricated spread | Returns None — requires real multi-exchange data feed |
 
+### Phase 2: Exhaustive System-Wide Audit (Feb 24, 2026)
+
+Extended audit beyond advanced_intelligence.py to ALL modules:
+
+| File | Method/Value | Fabricated | Replacement |
+|------|-------------|------------|-------------|
+| `analytics_engine.py` | `_get_reddit_crypto_sentiment()` | confidence 0.87, fear_greed 78, sentiment_score 8.1 | Returns insufficient_data |
+| `analytics_engine.py` | `_analyze_complex_narratives()` | narrative_strength 0.85, coherence 0.87, viral 0.8 | Returns insufficient_data |
+| `analytics_engine.py` | `_detect_cultural_emotional_context()` | All cultural indicators hardcoded | Returns insufficient_data |
+| `analytics_engine.py` | `_statistical_amplitude_estimation()` | data_fidelity=0.999 | Removed; kept real math from inputs |
+| `analytics_engine.py` | `_advanced_monte_carlo_simulation()` | Claims 150K iters, runs 1K | Returns insufficient_data |
+| `analytics_engine.py` | `_high_frequency_market_analysis()` | order_book_depth=0.9, spread=0.03 | Returns insufficient_data |
+| `analytics_engine.py` | `_detect_arbitrage_opportunities()` | Simulated exchange prices | Returns insufficient_data |
+| `analytics_engine.py` | `_generate_trading_recommendations()` | confidence=0.91 | confidence=None |
+| `analytics_engine.py` | `_get_institutional_flows()` | All hardcoded | Returns insufficient_data |
+| `analytics_engine.py` | `_get_social_volume_metrics()` | All hardcoded | Returns insufficient_data |
+| `analytics_engine.py` | `_get_whale_movement_data()` | confidence=0.85 | Returns insufficient_data |
+| `analytics_engine.py` | `_process_external_correlations()` | correlation_score=0.78 | Returns insufficient_data |
+| `analytics_engine.py` | `_calculate_external_data_confidence()` | Returns 0.82 | Returns None |
+| `analytics_engine.py` | `_generate_price_predictions()` | target=125000, probability=0.72 | Returns insufficient_data |
+| `analytics_engine.py` | `_detect_market_anomalies()` | All hardcoded | Returns insufficient_data |
+| `analytics_engine.py` | `_advanced_sentiment_analysis()` | sentiment=0.75 | Returns insufficient_data |
+| `analytics_engine.py` | `_multi_asset_correlation_analysis()` | btc_eth=0.85, market=0.70 | Returns insufficient_data |
+| `analytics_engine.py` | `_ml_based_risk_assessment()` | risk_score=0.35 | Returns insufficient_data |
+| `analytics_engine.py` | `_calculate_optimal_timing()` | timing_score=0.88 | Returns insufficient_data |
+| `analytics_engine.py` | `_comprehensive_risk_assessment()` | score=0.4 | Returns insufficient_data |
+| `analytics_engine.py` | `_combine_ml_insights()` fallback | probability=0.75, score=0.75 | Returns insufficient_data |
+| `analytics_engine.py` | `_detect_market_patterns_ml()` | probability=0.82, confidence=0.95 fallbacks | Reads from actual analysis |
+| `system.py` (dashboard) | Fallback strategy_weights | 6 strategies with fake win_rates (50-58%) | Empty dict (no fallback) |
+| `system.py` (dashboard) | performance_metrics | signal_quality=0.72, regime_accuracy=0.78, calibration=0.95 | Returns insufficient_data |
+| `core.py` (dashboard) | avg_bot comparison | return=-25%, dd=-35%, wr=45%, trades=250 | All None with insufficient_data note |
+| `core.py` (dashboard) | veto_count fallback | Hardcoded 695 | Fallback to 0 (not fabricated number) |
+
+### Real-Data Integrity Infrastructure Created
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `REAL_DATA_MODE` flag | `omnix_core/data_integrity.py` | Global switch — always True in production |
+| `@real_data_required` decorator | `omnix_core/data_integrity.py` | Blocks functions without verified data source |
+| `is_insufficient()` helper | `omnix_core/data_integrity.py` | Checks if a result indicates missing data |
+| `validate_metric()` | `omnix_core/data_integrity.py` | Validates metric has real source |
+| Anti-regression test | `tests/test_no_hardcoded_metrics.py` | Scans all source for suspicious patterns |
+
 ### What Real Data Is Now Used
 
 | Metric | Source | Query |

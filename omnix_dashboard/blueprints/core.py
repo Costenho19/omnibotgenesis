@@ -1535,11 +1535,11 @@ def api_comparative_metrics():
         except Exception as e:
             logger.warning(f"Could not fetch BTC prices for period: {e}")
         
-        avg_bot_return = -25.0
-        avg_bot_dd = -35.0
-        avg_bot_wr = 45.0
+        avg_bot_return = None
+        avg_bot_dd = None
+        avg_bot_wr = None
         
-        veto_count = 695
+        veto_count = 0
         try:
             with get_db_connection() as conn:
                 if conn:
@@ -1551,7 +1551,7 @@ def api_comparative_metrics():
                     table_exists = cursor.fetchone()[0] > 0
                     if table_exists:
                         cursor.execute("SELECT COUNT(*) FROM capital_protected_events")
-                        veto_count = cursor.fetchone()[0] or 695
+                        veto_count = cursor.fetchone()[0] or 0
                     cursor.close()
         except Exception:
             pass
@@ -1599,14 +1599,15 @@ def api_comparative_metrics():
             },
             'avg_bot': {
                 'name': 'AVG BOT',
-                'return_pct': avg_bot_return,
-                'capital_preserved_pct': round(100 + avg_bot_return, 2),
-                'max_drawdown_pct': avg_bot_dd,
-                'win_rate': avg_bot_wr,
+                'return_pct': None,
+                'capital_preserved_pct': None,
+                'max_drawdown_pct': None,
+                'win_rate': None,
                 'risk_blocked': 0,
-                'trades': 250,
+                'trades': None,
                 'highlight': None,
-                'note': 'Industry average (estimated)'
+                'note': 'Insufficient real data — no verified industry benchmark available',
+                'status': 'insufficient_data'
             }
         }
         

@@ -17,7 +17,8 @@
 
 ### Cambios Recientes (Feb 17-23, 2026)
 
-- **Feb 24**: AUDITORÍA CRÍTICA: 17 métricas hardcodeadas encontradas y eliminadas — ai_confidence 93%, prediction_accuracy 88%, correlations, cpu_efficiency, success_rate, momentum, volatility, BTC price fallback. Todas reemplazadas con queries reales a PostgreSQL (shadow_trade_events, decision_receipts). Documentado en TECHNICAL_DEBT.md
+- **Feb 24**: REAL-DATA INTEGRITY AUDIT (Phase 2): 40+ métricas fabricadas eliminadas del sistema completo — analytics_engine.py (20+ métodos con datos inventados: fake HFT, fake arbitraje, fake Monte Carlo 150K→1K, fake sentimiento, fake correlaciones), dashboard system.py (strategy_weights falsos 50-58% win_rate, performance_metrics inventados), dashboard core.py (avg_bot comparación con datos falsos de industria). Creado módulo data_integrity.py (REAL_DATA_MODE=True, @real_data_required decorator) y test anti-regresión (test_no_hardcoded_metrics.py). Zero violations en scan final.
+- **Feb 24**: AUDITORÍA CRÍTICA (Phase 1): 18 métricas hardcodeadas encontradas y eliminadas — ai_confidence 93%, prediction_accuracy 88%, correlations, cpu_efficiency, success_rate, momentum, volatility, BTC price fallback, scan_arbitrage_opportunities. Todas reemplazadas con queries reales a PostgreSQL (shadow_trade_events, decision_receipts). Documentado en TECHNICAL_DEBT.md
 - **Feb 23**: Auditoría consistencia documentación Eureka — arabic_executive_summary actualizado (equity 10%→16.7%, valuación $4.5M→$2.5M-$3M, rebranding a Decision Governance Infrastructure)
 - **Feb 23**: Fix system_uptime_days en verification_server.py — ahora calcula desde shadow_trade_events con fallback a Nov 28, 2025 (antes solo usaba decision_receipts mostrando 2 días)
 - **Feb 23**: NARRATIVE_CONSISTENCY.md actualizado — arabic_executive_summary agregado a la matriz de seguimiento
