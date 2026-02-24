@@ -164,7 +164,7 @@
 ### Q20: "How did one person build all of this?"
 
 **Answer:**
-"AI-augmented development. I use AI as a force multiplier — not to write code blindly, but as an engineering partner for architecture, testing, and documentation. One person with AI achieves the output of a 5-person team. The result: zero burn rate before funding, all IP created with personal capital, and a working product in production. That's capital efficiency that investors value."
+"Lean architecture designed for scalability. I use AI as a force multiplier — not to write code blindly, but as an engineering partner for architecture, testing, and documentation. AI-assisted development reduces burn while maintaining velocity. The result: zero burn rate before funding, all IP created with personal capital, and a working product in production. That's capital efficiency that investors value."
 
 ---
 

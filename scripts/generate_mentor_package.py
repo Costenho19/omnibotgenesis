@@ -504,7 +504,7 @@ def generate_canvas(mentor_name, output_path):
     elements.append(Paragraph("Market Sizing", subsec_title))
     mkt_data = [
         ['Metric', 'Value'],
-        ['Global daily crypto trading volume', '$2.3T+'],
+        ['Global daily crypto trading volume', '$2.3T+ (target serviceable: institutional algorithmic segment, ~5-10%)'],
         ['Algorithmic trading market', '$18.8B (growing 12% CAGR)'],
         ['Prop firms in ADGM/DIFC alone', '200+'],
         ['Platforms needing MiCA compliance (2025+)', '2,000+'],
@@ -633,7 +633,7 @@ def generate_canvas(mentor_name, output_path):
     elements.append(Paragraph("Human Capital", subsec_title))
     for item in [
         "Solo founder \u2014 product architecture, risk logic and infrastructure (Harold Nunes)",
-        "AI-augmented development: one person with AI achieves the output of a 5-person team",
+        "Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity",
         "2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)",
         "Key-person risk mitigation: Documented hexagonal architecture (27 ADRs, onboarding in 2-3 weeks). "
         "First hires reduce founder dependency from 100% to ~30% by Month 4. "
@@ -680,8 +680,8 @@ def generate_canvas(mentor_name, output_path):
     elements.append(Paragraph("IDEAL CLIENT PROFILE \u2014 MODELED CASE STUDY", section_title))
     elements.append(Paragraph('"AlphaEdge Capital" (Representative Deployment Scenario)', subsec_title))
     elements.append(Paragraph(
-        "Note: This is a representative deployment scenario based on risk simulations and pilot architecture modeling. "
-        "It is not a real client.",
+        "Note: This is a representative deployment scenario modeled using internal baseline dataset "
+        "(Learning Baseline period) \u2014 not representing a real client deployment.",
         note_style
     ))
 
@@ -1083,7 +1083,7 @@ def generate_pitch_deck(mentor_name, output_path):
     elements.extend(bullet_list([
         "Built OMNIX end-to-end: concept to production system running 24/7",
         "Deep domain expertise in algorithmic trading, decision systems, cryptographic security",
-        "AI-augmented development: one person with AI achieves the output of a 5-person team",
+        "Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity",
         "Designed 6-checkpoint governance architecture, PQC integration, multi-vertical adapter pattern",
     ], s))
     elements.append(Spacer(1, 8))
@@ -1163,6 +1163,12 @@ def generate_pitch_deck(mentor_name, output_path):
         ['Feb 24, 2026', 'Mathematical Audit: 119/119 trades P&L verified'],
     ]
     elements.append(make_table(milestones_data[0], milestones_data[1:], [90, 370]))
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(
+        "<i>All financial performance metrics are calculated from database-verified P&amp;L including exchange fees. "
+        "See Mathematical Audit Report.</i>",
+        ParagraphStyle('FinNote', parent=s['BodyText2'], fontSize=8, textColor=BRAND_GRAY, alignment=TA_LEFT)
+    ))
 
     elements.append(Spacer(1, 20))
     elements.append(HRFlowable(width="100%", thickness=1, color=BRAND_GOLD, spaceBefore=10, spaceAfter=10))

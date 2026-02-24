@@ -213,6 +213,8 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 | **Integridad de Ejecucion** | Cada trade reconciliado contra datos reales del exchange (Kraken) | Datos verificados, no estimados |
 | **Auditoria Matematica** | 100% reconciliacion de P&L — 119/119 trades verificados | Cada centavo contabilizado |
 
+> Todas las metricas de rendimiento financiero se calculan a partir de P&L verificado en base de datos incluyendo comisiones del exchange. Ver Reporte de Auditoria Matematica.
+
 > "Cada decision queda registrada, trazable y revisable. Trail de auditoria — siempre."
 
 ---
@@ -296,6 +298,7 @@ Impacto para la firma:
 | Mercado | Tamano |
 |---------|--------|
 | Volumen diario global de trading crypto | **$2.3T+** |
+| Volumen serviceable objetivo | Segmento algoritmico institucional (~5-10% del volumen total) |
 | Mercado de trading algoritmico | **$18.8B** (creciendo 12% CAGR) |
 | Prop firms solo en ADGM/DIFC | **200+** |
 | Plataformas que necesitan compliance MiCA (2025+) | **2,000+** |
@@ -372,7 +375,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 
 **Estructura Actual:**
 - Arquitectura, logica de riesgo, gobernanza, infraestructura, roadmap: Construido y liderado por el fundador
-- Desarrollo aumentado por IA: Una persona con IA logra la produccion de un equipo de 5
+- Arquitectura lean disenada para escalabilidad; desarrollo asistido por IA reduce burn manteniendo velocidad
 - Ecosistema: Aplicacion a Hub71 (pendiente), construyendo red en ADGM/DIFC
 
 **Contrataciones Planificadas (Post-Funding):**

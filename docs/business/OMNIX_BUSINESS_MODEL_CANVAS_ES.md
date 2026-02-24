@@ -122,7 +122,7 @@
 
 | Metrica | Valor |
 |---------|-------|
-| Volumen diario global de trading crypto | $2.3T+ |
+| Volumen diario global de trading crypto | $2.3T+ (segmento objetivo: trading algoritmico institucional, ~5-10% del volumen total) |
 | Mercado de trading algoritmico | $18.8B (creciendo 12% CAGR) |
 | Prop firms solo en ADGM/DIFC | 200+ |
 | Plataformas que necesitan compliance MiCA (2025+) | 2,000+ |
@@ -228,10 +228,12 @@
 | Auditoria Matematica | 100% reconciliacion P&L — 119/119 trades verificados |
 | Memoria No-Markoviana | Deteccion de patrones conductuales mas alla de recencia |
 
+> Todas las metricas de rendimiento financiero se calculan a partir de P&L verificado en base de datos incluyendo comisiones del exchange. Ver Reporte de Auditoria Matematica.
+
 ### Capital Humano
 
 - Fundador solo — arquitectura de producto, logica de riesgo e infraestructura (Harold Nunes)
-- Desarrollo aumentado por IA: una persona con IA logra la produccion de un equipo de 5
+- Arquitectura lean disenada para escalabilidad; desarrollo asistido por IA reduce burn manteniendo velocidad
 - 2-3 contrataciones clave planificadas (post-funding): Senior Backend (Mes 1-2), DevOps (Mes 2-3), Business Development (Mes 3-4)
 - **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (27 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
 
@@ -269,7 +271,7 @@
 
 ### "AlphaEdge Capital" (Escenario de Despliegue Representativo)
 
-> **Nota:** Este es un escenario de despliegue representativo basado en simulaciones de riesgo y modelado de arquitectura piloto. No es un cliente real.
+> **Nota:** Este es un escenario de despliegue representativo modelado usando dataset interno de linea base (periodo Learning Baseline) — no representa un despliegue con cliente real.
 
 | Atributo | Detalle |
 |----------|---------|

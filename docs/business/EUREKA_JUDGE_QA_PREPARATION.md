@@ -39,7 +39,7 @@
 ### Q: "You're a solo founder — can you really execute on this?"
 
 **Answer:**
-> "I built the entire system — governance engine, AI orchestration, post-quantum security, production infrastructure — solo, using AI as a force multiplier. One person with AI achieves the output of a 5-person team.
+> "I built the entire system — governance engine, AI orchestration, post-quantum security, production infrastructure — solo, using AI as a force multiplier. Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity.
 >
 > The product already runs 24/7 in production. The hard part is done. The $500K raise includes hiring 3 key people — Senior Backend Engineer, DevOps, and Business Development — to scale what already works. Not to build what doesn't."
 

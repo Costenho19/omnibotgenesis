@@ -213,6 +213,8 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 | **Execution Integrity** | Every trade reconciled against real exchange fill data (Kraken) | No estimated data — verified execution |
 | **Mathematical Audit** | 100% P&L reconciliation — 119/119 trades verified | Every cent accounted for |
 
+> All financial performance metrics are calculated from database-verified P&L including exchange fees. See Mathematical Audit Report.
+
 > "Every decision is logged, traceable, and reviewable. Full audit trail — always."
 
 ---
@@ -296,6 +298,7 @@ Impact for the firm:
 | Market | Size |
 |--------|------|
 | Global crypto daily trading volume | **$2.3T+** |
+| Target serviceable volume | Institutional algorithmic segment (~5-10% of total volume) |
 | Algorithmic trading market | **$18.8B** (growing 12% CAGR) |
 | Prop firms in ADGM/DIFC alone | **200+** |
 | Platforms needing MiCA compliance (2025+) | **2,000+** |
@@ -372,7 +375,7 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 
 **Current Structure:**
 - Architecture, risk logic, governance, infrastructure, roadmap: Founder-built and founder-led
-- AI-augmented development: One person with AI achieves the output of a 5-person team
+- Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity
 - Ecosystem: Applied to Hub71 (pending), building network in ADGM/DIFC
 
 **Planned Hires (Post-Funding):**

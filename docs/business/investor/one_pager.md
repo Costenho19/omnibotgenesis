@@ -120,7 +120,7 @@
 
 **Harold Nunes** — Solo Founder & Product Architect
 
-Built OMNIX from concept to production solo using AI as a development force multiplier. One person with AI achieving the output of a 5-person team.
+Built OMNIX from concept to production solo using AI as a development force multiplier. Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity.
 
 **Planned hires (post-funding):** Senior Backend Engineer (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)
 

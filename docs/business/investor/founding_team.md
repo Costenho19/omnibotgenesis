@@ -42,7 +42,7 @@ Replicating OMNIX's IP would cost $1.3-2.0M with a team of PhDs over 6-12 months
 | Factor | Evidence |
 |--------|----------|
 | **Product already exists** | Running 24/7 in production for 3+ months |
-| **AI as team multiplier** | One person with AI tools achieves the output of a 5-person team |
+| **AI as team multiplier** | Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity |
 | **Capital efficiency** | Zero burn before funding — all IP created with personal capital |
 | **Speed of execution** | No coordination overhead — concept to production in months |
 | **Full IP ownership** | 100% of the technology created by the founder — no dependency risk |

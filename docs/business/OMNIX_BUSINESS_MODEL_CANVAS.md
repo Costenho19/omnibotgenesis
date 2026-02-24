@@ -147,7 +147,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 | Metric | Value |
 |--------|-------|
-| Global crypto daily trading volume | $2.3T+ |
+| Global crypto daily trading volume | $2.3T+ (target serviceable: institutional algorithmic segment, ~5-10% of total volume) |
 | Algorithmic trading market | $18.8B (growing 12% CAGR) |
 | Prop firms in ADGM/DIFC alone | 200+ |
 | Platforms needing MiCA compliance (2025+) | 2,000+ |
@@ -264,10 +264,12 @@ The same 6-checkpoint architecture governs decisions across domains:
 | Mathematical Audit | 100% P&L reconciliation — 119/119 trades verified |
 | Non-Markovian Memory | Behavioral pattern detection beyond recency |
 
+> All financial performance metrics are calculated from database-verified P&L including exchange fees. See Mathematical Audit Report.
+
 ### Human Capital
 
 - Solo founder — product architecture, risk logic, and infrastructure (Harold Nunes)
-- AI-augmented development: one person with AI achieves the output of a 5-person team
+- Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity
 - 2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)
 - **Key-person risk mitigation:** Documented hexagonal architecture (27 ADRs, 2-3 week onboarding). First hires reduce founder dependency from 100% to ~30% by Month 4. IP assignment to company, key-person insurance, and operational runbooks by Month 6
 
@@ -305,7 +307,7 @@ The same 6-checkpoint architecture governs decisions across domains:
 
 ### "AlphaEdge Capital" (Representative Deployment Scenario)
 
-> **Note:** This is a representative deployment scenario based on risk simulations and pilot architecture modeling. Not a real client.
+> **Note:** This is a representative deployment scenario modeled using internal baseline dataset (Learning Baseline period) — not representing a real client deployment.
 
 | Attribute | Detail |
 |-----------|--------|
