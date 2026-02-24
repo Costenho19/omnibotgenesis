@@ -1,9 +1,63 @@
 # OMNIX Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** February 22, 2026  
+**Updated:** February 24, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## CRITICAL: Hardcoded Metrics Audit & Remediation (Feb 24, 2026)
+
+**Status:** COMPLETED — All fabricated metrics removed and replaced with real database-backed data
+
+**Context:** User investigation revealed that the Telegram bot was reporting metrics like "91% veto accuracy" and "88% prediction accuracy" that were NOT calculated from real data — they were hardcoded constants in the source code. This is a critical data integrity violation given the policy: "todo real, nada inventado."
+
+### Fabricated Metrics Found & Remediated
+
+| File | Line(s) | Fabricated Metric | Value | Replacement |
+|------|---------|-------------------|-------|-------------|
+| `advanced_intelligence.py` | 1071-1077 | `ai_confidence` | 0.93 (hardcoded) | REMOVED — replaced with real DB query (total_evaluation_cycles) |
+| `advanced_intelligence.py` | 1071-1077 | `prediction_accuracy` | 0.88 (hardcoded) | REMOVED — replaced with real DB query (governance_coverage) |
+| `advanced_intelligence.py` | 1071-1077 | `response_optimization` | 0.94 (hardcoded) | REMOVED — replaced with real DB query (avg_coherence_score) |
+| `advanced_intelligence.py` | 1071-1077 | `learning_rate` | 0.83 (hardcoded) | REMOVED — replaced with real DB query (top_veto_gate) |
+| `advanced_intelligence.py` | 1071-1077 | `market_analysis_depth` | 0.91 (hardcoded) | REMOVED — replaced with real DB query (total_pqc_receipts) |
+| `advanced_intelligence.py` | 1009-1011 | `btc_eth_correlation` | 0.75 (hardcoded) | REMOVED — marked as "requires real-time market data feed" |
+| `advanced_intelligence.py` | 1009-1011 | `btc_gold_correlation` | 0.25 (hardcoded) | REMOVED — marked as "requires real-time market data feed" |
+| `advanced_intelligence.py` | 1009-1011 | `btc_sp500_correlation` | 0.45 (hardcoded) | REMOVED — marked as "requires real-time market data feed" |
+| `advanced_intelligence.py` | 1036-1042 | `cpu_efficiency` | 0.92 (hardcoded) | Replaced with psutil real process metrics |
+| `advanced_intelligence.py` | 1036-1042 | `success_rate` | 0.97 (hardcoded) | Replaced with psutil real process metrics |
+| `advanced_intelligence.py` | 1036-1042 | `response_time` | 1.2 (hardcoded) | Replaced with psutil real process metrics |
+| `advanced_intelligence.py` | 1036-1042 | `api_calls_today` | 450 (hardcoded) | Replaced with actual counter |
+| `advanced_intelligence.py` | 1084-1085 | `momentum_score` | 0.65 (hardcoded) | REMOVED — generate_market_insights now queries real 24h DB data |
+| `advanced_intelligence.py` | 1084-1085 | `volatility` | 0.025 (hardcoded) | REMOVED — generate_market_insights now queries real 24h DB data |
+| `advanced_intelligence.py` | 1121 | BTC price fallback | "$95,247.50" (hardcoded) | Replaced with "N/A" |
+| `trading_system.py` | 43-47 | `successful_predictions` | 0 (never incremented) | trading_accuracy now returns "N/A — no executed trades" |
+| `trading_system.py` | 43-47 | `failed_predictions` | 0 (never incremented) | trading_accuracy now returns "N/A — no executed trades" |
+| `advanced_intelligence.py` | 54-67 | `scan_arbitrage_opportunities()` | volatility=0.025 hardcoded, fabricated spread | Returns None — requires real multi-exchange data feed |
+
+### What Real Data Is Now Used
+
+| Metric | Source | Query |
+|--------|--------|-------|
+| Evaluation Cycles | `shadow_trade_events` | `SELECT COUNT(*)` |
+| PQC-Signed Receipts | `decision_receipts` | `SELECT COUNT(*)` |
+| Governance Coverage | `shadow_trade_events` | `COUNT(vetoed) / COUNT(total)` |
+| Top Veto Gate | `shadow_trade_events` | `GROUP BY veto_type ORDER BY cnt DESC LIMIT 1` |
+| Avg Coherence Score | `shadow_trade_events` | `AVG(coherence_score)` |
+| 24h Cycle Count | `shadow_trade_events` | `WHERE created_at >= NOW() - INTERVAL '24 hours'` |
+| Performance Metrics | `psutil` library | Real CPU, memory, response times from process |
+
+### Affected Commands
+
+| Command/Endpoint | Before | After |
+|-----------------|--------|-------|
+| `/insights` (Telegram) | Showed fake ai_confidence 93%, prediction_accuracy 88% | Shows real evaluation cycles, PQC receipts, governance coverage from DB |
+| `generate_market_insights()` | Hardcoded momentum/volatility/sentiment | Real 24h governance data from PostgreSQL |
+| `/api/live-data` (Flask) | `trading_accuracy: 0` (misleading) | `trading_accuracy: N/A — no executed trades` |
+| `/api/system-status` (Flask) | Referenced fake `trading_accuracy` | Safe fallback with explanation |
+
+**Risk Assessment:** HIGH — if an Eureka judge or investor had asked "show me how you calculate that 91%", there would have been no verifiable answer. Now every metric shown can be traced to a specific PostgreSQL query.
 
 ---
 

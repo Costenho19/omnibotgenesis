@@ -1840,11 +1840,9 @@ def create_flask_app():
                 'memory_usage': performance_tracker._get_memory_usage(),
                 'cpu_usage': performance_tracker._get_cpu_usage(),
                 'total_interactions': performance_tracker.total_interactions,
-                'trading_accuracy': (performance_tracker.successful_predictions / 
-                                   (performance_tracker.successful_predictions + performance_tracker.failed_predictions) * 100) 
-                                   if (performance_tracker.successful_predictions + performance_tracker.failed_predictions) > 0 else 0,
+                'trading_accuracy': 'N/A — no executed trades in track record period',
                 'uptime_hours': (time.time() - performance_tracker.start_time) / 3600,
-                'status': 'MEJORA IMPLEMENTADA'
+                'status': 'ACTIVE'
             }
             
             return jsonify(live_data)
@@ -1876,7 +1874,7 @@ def create_flask_app():
                     'uptime': performance_stats['system_uptime'],
                     'total_interactions': performance_stats['total_interactions'],
                     'avg_response_time': performance_stats['avg_response_time'],
-                    'trading_accuracy': performance_stats['trading_accuracy'],
+                    'trading_accuracy': performance_stats.get('trading_accuracy', 'N/A — no executed trades'),
                     'system_health': performance_tracker._calculate_system_health()
                 },
                 
@@ -2642,33 +2640,30 @@ def create_flask_app():
                     respuesta = "❌ Módulos avanzados no disponibles"
 
             elif text.startswith('/insights'):
-                # NUEVA MEJORA HAROLD: Comando de Insights Inteligentes
                 intelligence_metrics = ai_system.get_intelligence_metrics()
-                market_insights = ai_system.generate_market_insights()
                 alerts = ai_system.check_intelligent_alerts()
-                
-                respuesta = f"""🧠 INSIGHTS INTELIGENTES OMNIX V5.1 🧠
 
-⚡ MÉTRICAS DE INTELIGENCIA:
-• Confianza IA: {intelligence_metrics['ai_confidence']*100:.1f}%
-• Precisión análisis: {intelligence_metrics['prediction_accuracy']*100:.1f}%
-• Optimización respuesta: {intelligence_metrics['response_optimization']*100:.1f}%
-• Tasa aprendizaje: {intelligence_metrics['learning_rate']*100:.1f}%
+                total_cycles = intelligence_metrics.get('total_evaluation_cycles', 0)
+                total_receipts = intelligence_metrics.get('total_pqc_receipts', 0)
+                coverage = intelligence_metrics.get('governance_coverage', 0)
+                top_gate = intelligence_metrics.get('top_veto_gate', 'N/A')
+                avg_coherence = intelligence_metrics.get('avg_coherence_score', 0)
 
-📊 INSIGHTS DE MERCADO:"""
-                
-                for insight in market_insights:
-                    respuesta += f"\n• {insight}"
-                
+                respuesta = f"""🧠 OMNIX GOVERNANCE INSIGHTS 🧠
+
+📊 MÉTRICAS EN TIEMPO REAL (PostgreSQL):
+• Evaluation Cycles: {total_cycles:,}
+• PQC-Signed Receipts: {total_receipts:,}
+• Governance Coverage: {coverage*100:.1f}%
+• Top Veto Gate: {top_gate}
+• Avg Coherence Score: {avg_coherence:.1f}%"""
+
                 if alerts:
                     respuesta += "\n\n🚨 ALERTAS ACTIVAS:"
                     for alert in alerts[:2]:
                         respuesta += f"\n• {alert['message']}"
-                
-                respuesta += """
 
-🎯 SISTEMA AUTO-OPTIMIZADO EN TIEMPO REAL
-⚡ Harold, OMNIX está aprendiendo y mejorando continuamente"""
+                respuesta += "\n\n📡 Datos en tiempo real desde base de datos de producción"
 
 # NUEVOS COMANDOS MEJORAS GRATUITAS - AGOSTO 2025
             elif text.startswith('/noticias') or text.startswith('/news'):

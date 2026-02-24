@@ -52,18 +52,7 @@ class OmnixAdvancedIntelligence:
         return None
     
     def scan_arbitrage_opportunities(self):
-        """Escaner de oportunidades de arbitraje"""
-        # Volatilidad estimada
-        volatility = 0.025  # 2.5% volatilidad típica
-        
-        # Spread estimado basado en volatilidad
-        spread = min(0.05, max(0.001, volatility * 0.3))
-        if spread > 0.02:
-            return {
-                'type': 'ARBITRAGE_OPPORTUNITY',
-                'spread': spread,
-                'message': f'💰 Oportunidad arbitraje ({spread:.3f}%) entre exchanges'
-            }
+        """Arbitrage scanning — requires real-time multi-exchange data feed (not available)"""
         return None
     
     def get_context_specific_prompt(self, intent, user_name, user_message, trading_system=None, chat_id=""):
@@ -1004,11 +993,9 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             total_prob = sum(market_states.values())
             market_states = {k: v/total_prob for k, v in market_states.items()}
             
-            # Correlaciones de mercados
             market_correlation = {
-                'btc_eth_correlation': 0.75,  # Correlación histórica promedio
-                'btc_gold_correlation': 0.25,  # Correlación histórica promedio  
-                'btc_sp500_correlation': 0.45   # Correlación histórica promedio
+                'note': 'Correlations require real-time market data feed — not available in current build',
+                'data_source': 'N/A'
             }
             
             # Eventos extremos basados en volatilidad
@@ -1032,14 +1019,28 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
 
     
     def _get_performance_metrics(self):
-        """Sistema de Monitoreo de Performance en Tiempo Real - NUEVA MEJORA HAROLD"""
-        return {
-            'response_time': 1.2,  # Tiempo promedio observado
-            'memory_usage': 0.5,   # Uso típico de memoria
-            'cpu_efficiency': 0.92, # Eficiencia típica
-            'api_calls_today': 450, # Promedio diario típico
-            'success_rate': 0.97    # Tasa de éxito observada
-        }
+        """Sistema de Monitoreo de Performance — datos reales del proceso"""
+        import psutil
+        import time
+        try:
+            process = psutil.Process()
+            mem_info = process.memory_info()
+            return {
+                'response_time': sum(self.response_times[-10:]) / max(1, len(self.response_times[-10:])) if hasattr(self, 'response_times') and self.response_times else 0,
+                'memory_usage_mb': round(mem_info.rss / (1024 * 1024), 1),
+                'cpu_percent': process.cpu_percent(interval=0.1),
+                'api_calls_today': getattr(self, '_api_call_count', 0),
+                'uptime_hours': round((time.time() - getattr(self, '_start_time', time.time())) / 3600, 1)
+            }
+        except Exception as e:
+            logger.warning(f"Error getting performance metrics: {e}")
+            return {
+                'response_time': 0,
+                'memory_usage_mb': 0,
+                'cpu_percent': 0,
+                'api_calls_today': 0,
+                'uptime_hours': 0
+            }
     
 
     
@@ -1067,46 +1068,115 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             context['optimal_response_length'] = (context['optimal_response_length'] + response_length) / 2
     
     def get_intelligence_metrics(self):
-        """NUEVA MEJORA HAROLD: Métricas de Inteligencia en Tiempo Real"""
-        return {
-            'ai_confidence': 0.93,      # Confianza promedio del AI
-            'market_analysis_depth': 0.91, # Profundidad análisis típica
-            'prediction_accuracy': 0.88,    # Precisión observada promedio
-            'response_optimization': 0.94,  # Optimización respuesta típica
-            'learning_rate': 0.83           # Tasa aprendizaje promedio
+        """Métricas de gobernanza reales desde base de datos PostgreSQL"""
+        import psycopg2
+        metrics = {
+            'total_evaluation_cycles': 0,
+            'total_pqc_receipts': 0,
+            'governance_coverage': 0.0,
+            'top_veto_gate': 'N/A',
+            'avg_coherence_score': 0.0,
         }
+        try:
+            db_url = os.environ.get('DATABASE_URL')
+            if not db_url:
+                logger.warning("DATABASE_URL not available for intelligence metrics")
+                return metrics
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
+            metrics['total_evaluation_cycles'] = cur.fetchone()[0]
+
+            try:
+                cur.execute("SELECT COUNT(*) FROM decision_receipts")
+                metrics['total_pqc_receipts'] = cur.fetchone()[0]
+            except Exception:
+                pass
+
+            cur.execute("""
+                SELECT COUNT(*) FROM shadow_trade_events 
+                WHERE veto_reason IS NOT NULL AND veto_reason != ''
+            """)
+            vetoed = cur.fetchone()[0]
+            total = metrics['total_evaluation_cycles']
+            if total > 0:
+                metrics['governance_coverage'] = round(vetoed / total, 4)
+
+            cur.execute("""
+                SELECT veto_type, COUNT(*) as cnt 
+                FROM shadow_trade_events 
+                WHERE veto_type IS NOT NULL AND veto_type != ''
+                GROUP BY veto_type 
+                ORDER BY cnt DESC 
+                LIMIT 1
+            """)
+            row = cur.fetchone()
+            if row:
+                metrics['top_veto_gate'] = row[0]
+
+            cur.execute("""
+                SELECT AVG(coherence_score) FROM shadow_trade_events 
+                WHERE coherence_score IS NOT NULL
+            """)
+            row = cur.fetchone()
+            if row and row[0]:
+                metrics['avg_coherence_score'] = round(float(row[0]), 2)
+
+            cur.close()
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Error fetching real intelligence metrics: {e}")
+        return metrics
     
     def generate_market_insights(self):
-        """NUEVA MEJORA HAROLD: Insights Inteligentes de Mercado"""
+        """Insights de gobernanza basados en datos reales de PostgreSQL"""
         insights = []
-        
-        # Valores estimados
-        momentum_score = 0.65  # Momentum neutral-positivo
-        volatility = 0.025  # 2.5% volatilidad típica
-        
-        # Análisis de tendencias
-        # Trend strength basado en momentum real
-        trend_strength = min(0.9, max(0.3, momentum_score))
-        if trend_strength > 0.7:
-            insights.append("📈 Tendencia alcista fuerte detectada - Momento favorable para posiciones largas")
-        elif trend_strength < 0.4:
-            insights.append("📉 Corrección en curso - Oportunidades de entrada en niveles de soporte")
-        
-        # Análisis de volumen
-        # Volume analysis basado en volatilidad observada  
-        volume_analysis = min(0.8, max(0.2, volatility * 4))
-        if volume_analysis > 0.6:
-            insights.append("📊 Volumen institucional elevado - Posible movimiento significativo")
-        
-        # Análisis de sentimiento
-        # Sentiment basado en trend direction
-        sentiment = 0.6 + (0.2 if trend_strength > 0.6 else -0.1)
-        if sentiment > 0.65:
-            insights.append("💚 Sentimiento del mercado positivo - Fear & Greed Index favorable")
-        elif sentiment < 0.35:
-            insights.append("❤️ Oportunidad de compra - Miedo extremo en el mercado")
-        
-        return insights[:2]  # Máximo 2 insights para no saturar
+        try:
+            import psycopg2
+            db_url = os.environ.get('DATABASE_URL')
+            if not db_url:
+                return ["📡 Database not available for insights"]
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            cur.execute("""
+                SELECT COUNT(*) FROM shadow_trade_events 
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+            """)
+            recent_cycles = cur.fetchone()[0]
+            if recent_cycles > 0:
+                insights.append(f"📊 {recent_cycles:,} evaluation cycles in the last 24h — governance engine active")
+
+            cur.execute("""
+                SELECT veto_type, COUNT(*) as cnt 
+                FROM shadow_trade_events 
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+                AND veto_type IS NOT NULL AND veto_type != ''
+                GROUP BY veto_type 
+                ORDER BY cnt DESC 
+                LIMIT 1
+            """)
+            row = cur.fetchone()
+            if row:
+                insights.append(f"🛡️ Top governance gate (24h): {row[0]} ({row[1]:,} activations)")
+
+            cur.execute("""
+                SELECT AVG(coherence_score), AVG(black_swan_prob) 
+                FROM shadow_trade_events 
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+                AND coherence_score IS NOT NULL
+            """)
+            row = cur.fetchone()
+            if row and row[0]:
+                insights.append(f"📈 Avg coherence: {float(row[0]):.1f}% | Black swan prob: {float(row[1] or 0):.1f}%")
+
+            cur.close()
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Error generating market insights: {e}")
+            insights.append("📡 Governance engine monitoring active")
+        return insights[:3]
 
     def _enhance_visual_format(self, response_text, intent, trading_system=None):
         """Mejora el formato visual de las respuestas de IA con emojis y estructura atractiva"""
@@ -1118,7 +1188,7 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
                     btc_data = trading_system.get_btc_price()
                     btc_price = f"${btc_data['price']:,.2f}"
                 except Exception:
-                    btc_price = "$95,247.50"
+                    btc_price = "N/A"
             
             # Banners según el tipo de intención
             if intent == 'trading_action':
