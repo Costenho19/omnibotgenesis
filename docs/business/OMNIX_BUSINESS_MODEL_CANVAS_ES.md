@@ -224,6 +224,8 @@
 | Motor Shadow Portfolio | 670,000+ eventos de operaciones contrafactuales |
 | Orquestacion Multi-IA | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
 | Criptografia Post-Cuantica | Firma post-cuantica de decisiones (NIST-standardized) |
+| Integridad de Ejecucion | Cada trade reconciliado contra datos reales del exchange (Kraken) |
+| Auditoria Matematica | 100% reconciliacion P&L — 119/119 trades verificados |
 | Memoria No-Markoviana | Deteccion de patrones conductuales mas alla de recencia |
 
 ### Capital Humano
@@ -360,7 +362,7 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 | Data de validacion real | 670,000+ ciclos de decision analizados |
 | IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
-| Comparable | Chainalysis levanto a $4M pre-money en etapa similar |
+| Referencia de mercado | Startups de infraestructura comparables levantaron $3M-$5M en etapa similar |
 
 ### Hitos con Financiacion
 

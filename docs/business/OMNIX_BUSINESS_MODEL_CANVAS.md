@@ -260,6 +260,8 @@ The same 6-checkpoint architecture governs decisions across domains:
 | Shadow Portfolio Engine | 670,000+ counterfactual decision events |
 | Multi-AI Orchestration | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
 | Post-Quantum Cryptography | NIST-standardized post-quantum decision signing |
+| Execution Integrity | Every trade reconciled against real exchange fill data (Kraken) |
+| Mathematical Audit | 100% P&L reconciliation — 119/119 trades verified |
 | Non-Markovian Memory | Behavioral pattern detection beyond recency |
 
 ### Human Capital
@@ -397,7 +399,7 @@ Primary value driver: Avoided tail-risk exposure
 | Real validation data | 670,000+ decision cycles analyzed |
 | Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
-| Comparable | Chainalysis raised at $4M pre-money at similar stage |
+| Market reference | Comparable infrastructure startups raised $3M-$5M at similar stage |
 
 ### Milestones with Funding
 

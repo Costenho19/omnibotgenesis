@@ -407,7 +407,7 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 | Real validation data | 670,000+ decision cycles analyzed |
 | Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
-| Comparable | Chainalysis raised at $4M pre-money at similar stage |
+| Market reference | Comparable infrastructure startups raised $3M-$5M at similar stage |
 
 ### Use of Funds
 

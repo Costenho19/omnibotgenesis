@@ -407,7 +407,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 | Data de validacion real | 670,000+ ciclos de decision analizados |
 | IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
-| Comparable | Chainalysis levanto a $4M pre-money en etapa similar |
+| Referencia de mercado | Startups de infraestructura comparables levantaron $3M-$5M en etapa similar |
 
 ### Uso de Fondos
 

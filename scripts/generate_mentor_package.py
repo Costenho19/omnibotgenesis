@@ -788,7 +788,7 @@ def generate_canvas(mentor_name, output_path):
         ['Real validation data', '670,000+ decision cycles analyzed'],
         ['Defensible IP', '6-checkpoint architecture + Shadow Portfolio Engine'],
         ['Strategic timing', 'MiCA + ADGM convergence creating urgent demand'],
-        ['Comparable', 'Chainalysis raised at $4M pre-money at similar stage'],
+        ['Market reference', 'Comparable infrastructure startups raised $3M\u2013$5M at similar stage'],
     ]
     elements.append(canvas_table(val_data[0], val_data[1:], [200, 360]))
 
@@ -909,12 +909,12 @@ def generate_pitch_deck(mentor_name, output_path):
     ))
     sol_data = [
         ['Checkpoint', 'Function'],
-        ['1. Monte Carlo Validation', '10,000 simulation paths; blocks negative expected return'],
-        ['2. RMS VETO', 'VaR95, drawdown limits, portfolio risk boundaries'],
-        ['3. Adaptive Coherence Gate', 'Dynamic signal agreement scoring by market regime'],
-        ['4. Edge Confirmation Window', 'Requires 3 consecutive cycles of confirmed statistical edge'],
-        ['5. Weighted Scoring', '5 inputs, 100 points (EMA, HMM, Kalman, Memory, Kelly)'],
-        ['6. Final Decision', 'EXECUTE only if all gates pass; otherwise HOLD/BLOCK'],
+        ['1. Probability Check', 'Simulates thousands of scenarios; blocks if likely to lose'],
+        ['2. Risk Limits', 'Enforces drawdown caps and portfolio risk boundaries'],
+        ['3. Signal Agreement', 'Multiple independent models must agree before action'],
+        ['4. Trend Confirmation', 'Requires sustained edge for 3 consecutive cycles'],
+        ['5. Stress Test', 'Real-time tail risk and crash probability detection'],
+        ['6. Logic Check', 'Blocks if internal signals contradict each other'],
     ]
     elements.append(make_table(sol_data[0], sol_data[1:], [160, 300]))
     elements.append(Spacer(1, 8))
