@@ -89,12 +89,12 @@
                     <div class="insight best">
                         <span class="insight-label">Best</span>
                         <span class="insight-value">${best.day || '-'} ${best.hour || '-'}</span>
-                        <span class="insight-pnl positive">${formatPnl(best.pnl || 0)}</span>
+                        <span class="insight-pnl positive">${OmnixUtils.isDataAvailable(best.pnl) ? formatPnl(best.pnl) : 'N/A'}</span>
                     </div>
                     <div class="insight worst">
                         <span class="insight-label">Worst</span>
                         <span class="insight-value">${worst.day || '-'} ${worst.hour || '-'}</span>
-                        <span class="insight-pnl negative">${formatPnl(worst.pnl || 0)}</span>
+                        <span class="insight-pnl negative">${OmnixUtils.isDataAvailable(worst.pnl) ? formatPnl(worst.pnl) : 'N/A'}</span>
                     </div>
                 </div>
             </div>

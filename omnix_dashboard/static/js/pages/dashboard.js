@@ -107,7 +107,11 @@ const DashboardApp = (function() {
             return;
         }
 
-        const sorted = Object.entries(strategies).sort((a, b) => b[1].pnl - a[1].pnl);
+        const sorted = Object.entries(strategies).sort((a, b) => {
+            const pnlA = a[1].pnl != null ? a[1].pnl : -Infinity;
+            const pnlB = b[1].pnl != null ? b[1].pnl : -Infinity;
+            return pnlB - pnlA;
+        });
 
         container.innerHTML = sorted.map(([name, data]) => `
             <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition border border-slate-700/30">

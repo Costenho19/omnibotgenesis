@@ -87,7 +87,7 @@
                     <div class="balance-card missed">
                         <div class="card-icon">💎</div>
                         <div class="card-label">MISSED</div>
-                        <div class="card-value">${formatPnl(missed.est_profit || 0)}</div>
+                        <div class="card-value">${OmnixUtils.isDataAvailable(missed.est_profit) ? formatPnl(missed.est_profit) : 'N/A'}</div>
                         <div class="card-count">${missed.count || 0} trades</div>
                     </div>
                     
@@ -99,14 +99,14 @@
                     <div class="balance-card avoided">
                         <div class="card-icon">✅</div>
                         <div class="card-label">AVOIDED</div>
-                        <div class="card-value">-${formatCapital(avoided.est_loss || 0)}</div>
+                        <div class="card-value">${OmnixUtils.isDataAvailable(avoided.est_loss) ? '-' + formatCapital(avoided.est_loss) : 'N/A'}</div>
                         <div class="card-count">${avoided.count || 0} trades</div>
                     </div>
                 </div>
                 
                 <div class="tracker-net ${interpClass}">
                     <span class="net-label">NET:</span>
-                    <span class="net-value">${netSign}${formatCapital(Math.abs(net.value || 0))}</span>
+                    <span class="net-value">${OmnixUtils.isDataAvailable(net.value) ? netSign + formatCapital(Math.abs(net.value)) : 'N/A'}</span>
                     <span class="net-text">= ${net.interpretation_text || 'Calculando...'}</span>
                 </div>
                 

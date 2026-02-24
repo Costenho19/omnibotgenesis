@@ -33,7 +33,7 @@ var CalibrationProgressWidget = (function() {
         if (!container) return;
         
         var phases = data.phases || [];
-        var overallProgress = data.overall_progress || 0;
+        var overallProgress = OmnixUtils.isDataAvailable(data.overall_progress) ? data.overall_progress : 0;
         var status = data.status || 'CALIBRATING';
         var currentPhase = data.current_phase || 1;
         var timeline = data.timeline || {};

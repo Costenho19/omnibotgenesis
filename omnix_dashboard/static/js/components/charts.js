@@ -127,9 +127,14 @@ const OmnixCharts = (function() {
             return renderEmpty(containerId, 'Waiting for trading data...');
         }
 
+        const validData = data.filter(d => d.date != null && d.equity != null && isFinite(d.equity));
+        if (validData.length < 2) {
+            return renderEmpty(containerId, 'Insufficient valid data points');
+        }
+
         const trace = {
-            x: data.map(d => d.date),
-            y: data.map(d => d.equity),
+            x: validData.map(d => d.date),
+            y: validData.map(d => d.equity),
             type: 'scatter',
             mode: 'lines',
             name: 'Portfolio',
@@ -152,7 +157,7 @@ const OmnixCharts = (function() {
         const { labels = [], colors: customColors = null, hole = 0.65, centerText = '' } = options;
         const defaultColors = [dashboardColors.purple, dashboardColors.blue];
 
-        const total = data.reduce((sum, val) => sum + val, 0);
+        const total = data.reduce((sum, val) => sum + (val || 0), 0);
 
         if (total === 0) {
             return renderEmpty(containerId, '0');

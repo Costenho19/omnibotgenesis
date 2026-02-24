@@ -89,12 +89,13 @@ const AdaptiveEngine = (function() {
         let html = '<div class="strategy-matrix">';
         
         for (const [name, data] of Object.entries(strategies)) {
-            const weight = data.weight || 0;
-            const winRate = data.win_rate || 0;
+            const sm = OmnixUtils.safeMetric;
+            const rv = OmnixUtils.renderMetricValue;
+            const weight = sm(data.weight);
             const trades = data.trades_24h || 0;
             const status = data.status || 'UNKNOWN';
             
-            const barWidth = Math.round(weight * 100);
+            const barWidth = weight !== null ? Math.round(weight * 100) : 0;
             const statusClass = status === 'ACTIVE' ? 'status-active' : 'status-reduced';
             const displayName = name.replace(/_/g, ' ').substring(0, 15);
             
@@ -104,7 +105,7 @@ const AdaptiveEngine = (function() {
                     <div class="strategy-bar-container">
                         <div class="strategy-bar" style="width: ${barWidth}%"></div>
                     </div>
-                    <div class="strategy-weight">${(weight * 100).toFixed(0)}%</div>
+                    <div class="strategy-weight">${rv(weight, v => (v * 100).toFixed(0) + '%')}</div>
                     <div class="strategy-status ${statusClass}">${status}</div>
                 </div>
             `;
@@ -168,18 +169,21 @@ const AdaptiveEngine = (function() {
             return '<div class="no-data">No metrics</div>';
         }
 
+        const sm = OmnixUtils.safeMetric;
+        const rv = OmnixUtils.renderMetricValue;
+
         return `
             <div class="adaptive-metrics">
                 <div class="metric-card">
-                    <div class="metric-value">${(metrics.signal_quality_avg * 100).toFixed(0)}%</div>
+                    <div class="metric-value">${rv(sm(metrics.signal_quality_avg), v => (v * 100).toFixed(0) + '%')}</div>
                     <div class="metric-label">Signal Quality</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">${(metrics.regime_accuracy_7d * 100).toFixed(0)}%</div>
+                    <div class="metric-value">${rv(sm(metrics.regime_accuracy_7d), v => (v * 100).toFixed(0) + '%')}</div>
                     <div class="metric-label">Regime Accuracy</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">${(metrics.calibration_success_rate * 100).toFixed(0)}%</div>
+                    <div class="metric-value">${rv(sm(metrics.calibration_success_rate), v => (v * 100).toFixed(0) + '%')}</div>
                     <div class="metric-label">Calib Success</div>
                 </div>
             </div>
