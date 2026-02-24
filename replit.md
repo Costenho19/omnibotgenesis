@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed for automated systems, initially focused on digital asset trading to ensure capital preservation. It utilizes a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key features include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various financial and industrial sectors — including robotics/autonomous physical systems, supply chain, credit/lending, insurance, and energy trading — operating with a dual revenue model: B2B Decision Governance Licensing and B2C SaaS. The combined Total Addressable Market (TAM) is estimated at $49.7B+ across 6+ verticals.
+OMNIX is a Decision Governance Infrastructure for automated systems, initially focused on digital asset trading for capital preservation. It employs a domain-agnostic 6-checkpoint architecture to prevent errors in high-stakes decision-making. Key features include post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various financial and industrial sectors, including robotics, supply chain, credit/lending, insurance, and energy trading, with a dual revenue model of B2B Decision Governance Licensing and B2C SaaS. The projected Total Addressable Market (TAM) exceeds $49.7B across multiple verticals.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
