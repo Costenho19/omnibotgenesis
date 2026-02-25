@@ -4,13 +4,21 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,
     allowedHosts: true,
     proxy: {
       '/api/live-metrics': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/news': {
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
     },
