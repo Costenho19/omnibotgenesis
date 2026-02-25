@@ -84,6 +84,7 @@ omnix_testing/data_cache/
 # Validation PDFs - temporary, not for repo
 OMNIX_Validation_*.pdf
 generate_validation_*.py
+output/*.pdf
 
 # IP Strategy Documents - NEVER push to public repos
 docs/ip/
