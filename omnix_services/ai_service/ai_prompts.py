@@ -11,8 +11,6 @@ Features:
 - Market Intelligence
 """
 
-print("✅ ai_prompts.py CARGADO - REAL CONTEXT PROVIDER + MARKET INTEL + ADAPTIVE ENGINE")
-
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from omnix_core.cache.redis_cache import cache

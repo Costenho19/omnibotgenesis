@@ -7,8 +7,6 @@ Escalabilidad: 50K+ usuarios con stateless design
 + Real Context Provider for institutional transparency
 """
 
-print("✅ ai_service.py CARGADO - REAL CONTEXT PROVIDER + DI")
-
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from datetime import datetime
 import logging
