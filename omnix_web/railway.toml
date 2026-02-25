@@ -3,8 +3,8 @@ builder = "nixpacks"
 buildCommand = "npm install && npm run build"
 
 [deploy]
-startCommand = "gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
+startCommand = "gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --preload"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
