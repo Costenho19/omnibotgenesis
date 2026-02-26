@@ -190,10 +190,10 @@ class EnvConfig:
         'SECRET_KEY': {
             'category': EnvCategory.SECURITY,
             'required': False,
-            'default': 'omnix-enterprise-secret-key-change-in-prod',
+            'default': None,
             'validator': lambda x: len(x) >= 20,
-            'description': 'Secret key general de la aplicación',
-            'example': 'omnix-ultra-secret-production-key-2025'
+            'description': 'Secret key general de la aplicación (debe configurarse como variable de entorno)',
+            'example': 'set-via-environment-variable-only'
         },
         
         # APP SETTINGS
