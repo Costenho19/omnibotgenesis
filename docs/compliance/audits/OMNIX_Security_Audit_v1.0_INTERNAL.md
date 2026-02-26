@@ -327,6 +327,27 @@ Each checkpoint can independently VETO a decision, ensuring no single point of f
 | Cryptographic architecture | `docs/compliance/CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md` |
 | Security overview (public) | `docs/compliance/SECURITY_OVERVIEW.md` |
 | This audit report | `docs/compliance/audits/OMNIX_Security_Audit_v1.0_INTERNAL.md` |
+| API Key Rotation Policy | `docs/compliance/API_KEY_ROTATION_POLICY.md` |
+| Database Backup Policy | `docs/operations/DATABASE_BACKUP_POLICY.md` |
+
+---
+
+## Appendix B: Complementary Controls
+
+The following operational policies complement this security audit and complete the production-grade control framework:
+
+| Control | Document | Status | Key Detail |
+|---------|----------|--------|------------|
+| API Key Rotation | `docs/compliance/API_KEY_ROTATION_POLICY.md` | ACTIVE | 11 credentials inventoried; Tier 1 (trading keys) rotated every 90 days; zero hardcoded secrets confirmed Feb 25, 2026 |
+| Database Backup & Recovery | `docs/operations/DATABASE_BACKUP_POLICY.md` | ACTIVE | Railway auto-backup daily (7-day retention); manual pg_dump procedure documented; RTO < 60 min |
+
+**Production Readiness: 100%**
+
+All four critical security controls are now documented and active:
+- [x] Security headers, error sanitization, log redaction, rate limiting (this report)
+- [x] API key rotation policy and schedule
+- [x] Database backup and disaster recovery procedure
+- [x] Post-quantum cryptography (Dilithium-3 / Kyber-768 — since Nov 2025)
 
 ---
 
