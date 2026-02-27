@@ -16,7 +16,6 @@ import uuid
 from collections import defaultdict
 from flask import Blueprint, jsonify, request
 
-from omnix_dashboard.utils.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +86,7 @@ def api_governance_schema():
     return jsonify({
         'schema': schema,
         'endpoint': 'POST /api/governance/evaluate',
-        'auth': 'X-API-Key header required (when DASHBOARD_API_KEY is configured)',
+        'auth': 'X-API-Key header required (when B2B_API_KEY is configured in environment)',
         'rate_limit': f'{_RATE_LIMIT_MAX} requests per {_RATE_LIMIT_WINDOW}s per IP',
         'documentation': 'docs/reference/adr/ADR-028-external-signal-evaluation-api.md',
         'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
@@ -95,12 +94,18 @@ def api_governance_schema():
 
 
 @governance_bp.route('/api/governance/evaluate', methods=['POST'])
-@require_api_key
 def api_governance_evaluate():
     """
     Evaluate external signals through OMNIX 6-checkpoint governance pipeline.
     Returns a PQC-signed governance receipt.
     """
+    b2b_key = os.environ.get("B2B_API_KEY")
+    if b2b_key:
+        provided = request.headers.get("X-API-Key")
+        if provided != b2b_key:
+            logger.warning(f"Unauthorized governance/evaluate attempt from {request.remote_addr or 'unknown'}")
+            return jsonify({"error": "Unauthorized", "status": 401}), 401
+
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
 
     if _is_rate_limited(client_ip):
