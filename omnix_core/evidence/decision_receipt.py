@@ -122,13 +122,17 @@ class DecisionReceiptEngine:
             logger.warning("Failed to connect to DB for receipt storage")
             return False
         try:
+            from datetime import timedelta
+            retention_until = (datetime.now(timezone.utc) + timedelta(days=365)).date()
+
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO decision_receipts 
                 (receipt_id, timestamp_utc, asset, decision, veto_chain, 
                  policy_version, engine_version, prev_hash, content_hash,
-                 signature, signature_algorithm, public_key)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 signature, signature_algorithm, public_key,
+                 client_id, encrypted_payload, retention_until)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (receipt_id) DO NOTHING
             """, (
                 receipt['receipt_id'],
@@ -142,7 +146,10 @@ class DecisionReceiptEngine:
                 receipt['content_hash'],
                 receipt['signature'],
                 receipt['signature_algorithm'],
-                receipt['public_key']
+                receipt['public_key'],
+                receipt.get('client_id'),
+                receipt.get('encrypted_payload'),
+                retention_until,
             ))
             conn.commit()
             cur.close()

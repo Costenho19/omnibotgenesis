@@ -160,9 +160,19 @@ X-API-Key: <your_api_key>
 
 ---
 
-## Authentication
+## Authentication & Multi-Tenant
 
-Uses the existing `DASHBOARD_API_KEY` mechanism (`X-API-Key` header or `api_key` query param). In Railway production, `DASHBOARD_API_KEY` must be set. In development, the endpoint is public.
+**API Key**: The endpoint uses a dedicated `B2B_API_KEY` environment variable. Required header:
+```
+X-API-Key: <your_b2b_api_key>
+```
+In Railway production, `B2B_API_KEY` must be configured. In development (unset), the endpoint is open.
+
+**Client Identification**: Each request may include an optional `X-Client-ID` header (max 64 chars):
+```
+X-Client-ID: quant-fund-alpha-01
+```
+This value is stored in `decision_receipts.client_id` and `shadow_trade_events.client_id`, enabling per-client data segmentation and audit queries. Defaults to `"anonymous"` if omitted.
 
 ---
 
@@ -179,7 +189,8 @@ Uses the existing `DASHBOARD_API_KEY` mechanism (`X-API-Key` header or `api_key`
 ```bash
 curl -s -X POST https://omnix-dashboard.up.railway.app/api/governance/evaluate \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your_key" \
+  -H "X-API-Key: your_b2b_api_key" \
+  -H "X-Client-ID: quant-fund-alpha-01" \
   -d '{
     "asset": "BTC/USD",
     "domain": "trading",
@@ -198,7 +209,8 @@ curl -s -X POST https://omnix-dashboard.up.railway.app/api/governance/evaluate \
 ```bash
 curl -s -X POST https://omnix-dashboard.up.railway.app/api/governance/evaluate \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your_key" \
+  -H "X-API-Key: your_b2b_api_key" \
+  -H "X-Client-ID: credit-desk-01" \
   -d '{
     "asset": "LOAN-2847",
     "domain": "credit",
@@ -220,19 +232,53 @@ curl -s https://omnix-dashboard.up.railway.app/api/governance/schema | python3 -
 
 ---
 
+## Data Governance
+
+### Payload Encryption at Rest
+
+Client signal payloads are encrypted before storage using **Fernet** (AES-128-CBC + HMAC-SHA256).
+
+- **Config**: Set `PAYLOAD_ENCRYPTION_KEY` in Railway Variables (generate with `python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`)
+- **Storage**: `decision_receipts.encrypted_payload` (TEXT, nullable)
+- **Dev mode**: If key not set, column is NULL — signals are not stored in plaintext
+- **Response field**: `payload_encrypted: true/false`
+
+> **Due diligence statement**: "Client signal data is encrypted at rest at the application layer using AES-128-CBC with HMAC-SHA256 integrity verification. Encryption keys are managed exclusively via environment secrets."
+
+### Data Retention
+
+Each receipt receives `retention_until = created_at + 365 days` (12-month default, configurable per contract).
+
+See full policy: `docs/operations/DATA_RETENTION_POLICY.md`
+
+### Database Schema — New Columns
+
+```sql
+ALTER TABLE decision_receipts ADD COLUMN client_id VARCHAR(64);
+ALTER TABLE decision_receipts ADD COLUMN encrypted_payload TEXT;
+ALTER TABLE decision_receipts ADD COLUMN retention_until DATE;
+ALTER TABLE shadow_trade_events ADD COLUMN client_id VARCHAR(64);
+```
+
+---
+
 ## Consequences
 
 ### Positive
 - OMNIX becomes an **external governance service** — not just self-contained infrastructure
-- B2B product is now demonstrable with a single curl command
-- Every external evaluation generates a PQC-signed receipt stored in the hash chain — the audit trail grows organically with client usage
-- Domain-agnostic: same endpoint works for trading, credit, insurance, supply chain signals
-- Verifiable at public URL — clients can show their auditors cryptographic proof of governance
+- B2B product is demonstrable with a single curl command
+- Every evaluation generates a PQC-signed receipt stored in the hash chain — audit trail grows with client usage
+- Domain-agnostic: same endpoint works for trading, credit, insurance, supply chain
+- Verifiable at public URL — clients can show auditors cryptographic proof of governance
+- **Multi-tenant from day one**: `client_id` enables per-client data segmentation
+- **Encryption at rest**: Fernet-encrypted payloads — defensible in due diligence
+- **Retention policy**: 12-month default, configurable per contract
 
 ### Constraints
-- Thresholds are currently fixed (configured in `CHECKPOINT_DEFAULTS`). Post-investment, per-client configurable thresholds become a premium feature.
-- The endpoint does not fetch market data — signal generation is the client's responsibility. OMNIX evaluates, not forecasts.
-- `DASHBOARD_API_KEY` must be configured in Railway for production security.
+- Thresholds are currently fixed (`CHECKPOINT_DEFAULTS`). Post-investment, per-client thresholds are a premium feature.
+- The endpoint does not fetch market data — signal generation is the client's responsibility.
+- `B2B_API_KEY` must be configured in Railway for production security.
+- Fernet key rotation requires re-encryption of stored payloads — operational procedure to be defined pre-scale.
 
 ---
 
@@ -242,11 +288,13 @@ curl -s https://omnix-dashboard.up.railway.app/api/governance/schema | python3 -
 |------|---------|
 | `omnix_core/governance/external_evaluator.py` | GovernanceEvaluationEngine — 6-checkpoint logic |
 | `omnix_core/governance/__init__.py` | Module init |
-| `omnix_dashboard/blueprints/governance.py` | Flask blueprint — POST endpoint |
+| `omnix_dashboard/blueprints/governance.py` | Flask blueprint — POST/GET endpoints, B2B auth, multi-tenant, Fernet encryption |
 | `omnix_dashboard/blueprints/__init__.py` | Export governance_bp |
 | `omnix_dashboard/app.py` | Blueprint registration |
+| `omnix_core/evidence/decision_receipt.py` | store_receipt() — persists client_id, encrypted_payload, retention_until |
+| `docs/operations/DATA_RETENTION_POLICY.md` | Full data retention and client rights policy |
 
 ---
 
-*OMNIX Decision Governance Infrastructure — ADR-028*  
+*OMNIX Decision Governance Infrastructure — ADR-028 (Updated Feb 27, 2026)*  
 *Internal Build Reference: 6.5.4e*

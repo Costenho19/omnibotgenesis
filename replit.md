@@ -159,7 +159,13 @@ A shadow observational metric measuring internal signal divergence to explain HO
 The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Features include clarifying "Est. Loss Avoided" vs "Notional Blocked," distinguishing "Market Trend" from "Trading Regime," Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-Live B2B endpoint allowing any external system to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). The API requires an `X-API-Key` for evaluation, and provides a public schema endpoint. It expects 6 normalized signals (0-100) and operates on a fail-closed principle with a rate limit of 10 req/min.
+Live B2B endpoint allowing any external system to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). Auth: `B2B_API_KEY` env var (`X-API-Key` header). Rate limit: 10 req/min. 6 normalized signals (0-100), fail-closed.
+
+**B2B Data Governance Layer** (pre-first-client, implemented Feb 27 2026):
+- **Multi-tenant**: `X-Client-ID` header stored as `client_id` in `decision_receipts` + `shadow_trade_events`
+- **Encryption at rest**: Fernet (AES-128-CBC + HMAC-SHA256) via `PAYLOAD_ENCRYPTION_KEY` → `decision_receipts.encrypted_payload`
+- **Data retention**: `retention_until = created_at + 365 days` on every receipt. Policy: `docs/operations/DATA_RETENTION_POLICY.md`
+- **Due diligence**: "Client signal data is encrypted at rest at the application layer using AES-128-CBC with HMAC-SHA256 integrity verification."
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone aiohttp web server runs alongside the Telegram bot in Railway production, providing public receipt verification endpoints with zero internal data exposure. Endpoints include `/verify` (interactive HTML), `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security uses SHA-256 hash chain and Dilithium-3 PQC signatures.

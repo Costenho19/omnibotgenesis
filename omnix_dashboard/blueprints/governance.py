@@ -16,6 +16,27 @@ import uuid
 from collections import defaultdict
 from flask import Blueprint, jsonify, request
 
+try:
+    from cryptography.fernet import Fernet
+    _FERNET_AVAILABLE = True
+except ImportError:
+    _FERNET_AVAILABLE = False
+
+
+def _encrypt_payload(data: str) -> str | None:
+    """Encrypt a string payload using Fernet (AES-128-CBC + HMAC-SHA256).
+    Returns base64-encoded ciphertext or None if key not configured."""
+    key = os.environ.get("PAYLOAD_ENCRYPTION_KEY")
+    if not key or not _FERNET_AVAILABLE:
+        return None
+    try:
+        f = Fernet(key.encode() if isinstance(key, str) else key)
+        return f.encrypt(data.encode()).decode()
+    except Exception as e:
+        logger_ref = logging.getLogger(__name__)
+        logger_ref.warning(f"Payload encryption failed: {e}")
+        return None
+
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +127,7 @@ def api_governance_evaluate():
             logger.warning(f"Unauthorized governance/evaluate attempt from {request.remote_addr or 'unknown'}")
             return jsonify({"error": "Unauthorized", "status": 401}), 401
 
+    client_id = str(request.headers.get("X-Client-ID", "anonymous"))[:64]
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
 
     if _is_rate_limited(client_ip):
@@ -184,6 +206,8 @@ def api_governance_evaluate():
             'reference': ref_id
         }), 500
 
+    encrypted_payload = _encrypt_payload(json.dumps(signals, sort_keys=True))
+
     try:
         receipt_engine = _DecisionReceiptEngine()
         prev_hash = receipt_engine.get_last_hash()
@@ -199,9 +223,13 @@ def api_governance_evaluate():
             'external_evaluation': True,
             'checkpoints_total': evaluation['checkpoints_total'],
             'checkpoints_passed': evaluation['checkpoints_passed'],
+            'client_id': client_id,
+            'encrypted_payload': encrypted_payload,
         }
 
         receipt = receipt_engine.generate_receipt(decision_payload, prev_hash=prev_hash)
+        receipt['client_id'] = client_id
+        receipt['encrypted_payload'] = encrypted_payload
         receipt_engine.store_receipt(receipt)
     except Exception as e:
         ref_id = str(uuid.uuid4())[:8]
@@ -219,6 +247,7 @@ def api_governance_evaluate():
     response = {
         'receipt_id': receipt.get('receipt_id'),
         'timestamp': receipt.get('timestamp'),
+        'client_id': client_id,
         'asset': asset,
         'domain': domain,
         'decision': evaluation['decision'],
@@ -233,15 +262,16 @@ def api_governance_evaluate():
         'signature': receipt.get('signature'),
         'signature_algorithm': receipt.get('signature_algorithm', 'NONE'),
         'pqc_signed': receipt.get('signature') is not None,
+        'payload_encrypted': encrypted_payload is not None,
         'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
         'policy_version': receipt.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
     }
 
     logger.info(
-        f"[GOVERNANCE] evaluate: asset={asset} domain={domain} "
+        f"[GOVERNANCE] evaluate: client={client_id} asset={asset} domain={domain} "
         f"decision={evaluation['decision']} "
         f"passed={evaluation['checkpoints_passed']}/{evaluation['checkpoints_total']} "
-        f"receipt={receipt.get('receipt_id')} ip={client_ip}"
+        f"receipt={receipt.get('receipt_id')} encrypted={encrypted_payload is not None} ip={client_ip}"
     )
 
     return jsonify(response), 200
