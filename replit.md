@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, initially focusing on digital asset trading for capital preservation. It features a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various sectors like finance and supply chain, leveraging a dual revenue model of B2B Decision Governance Licensing and B2C SaaS to target a Total Addressable Market (TAM) exceeding $49.7B.
+OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, initially focused on digital asset trading for capital preservation. It features a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to expand into various sectors like finance and supply chain, leveraging a dual revenue model of B2B Decision Governance Licensing and B2C SaaS to target a Total Addressable Market (TAM) exceeding $49.7B.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -159,20 +159,11 @@ A shadow observational metric measuring internal signal divergence to explain HO
 The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Features include clarifying "Est. Loss Avoided" vs "Notional Blocked," distinguishing "Market Trend" from "Trading Regime," Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-Live B2B endpoint allowing any external system to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). Auth: RBAC via `b2b_clients` table (X-API-Key header → SHA-256 lookup). Rate limit: 10 req/min. 6 normalized signals (0-100), fail-closed.
-
-**B2B Data Governance Layer** (fully implemented Feb 27 2026):
-- **RBAC Authentication**: `b2b_clients` table — one API key per client, SHA-256 stored (plaintext never persisted). `client_id` comes from DB auth, NOT from header — no spoofing possible. Roles: `standard` (evaluate + own receipts) and `admin` (manage clients). Module: `omnix_dashboard/blueprints/auth_rbac.py`
-- **Admin endpoints**: `POST/GET/DELETE /api/governance/admin/clients` — create, list, deactivate clients. `POST /api/governance/admin/clients/<id>/rotate` — key rotation. All require `admin` role.
-- **Client receipts endpoint**: `GET /api/governance/receipts` — client sees ONLY their own receipts (enforced by `WHERE client_id = authenticated_client_id`).
-- **Multi-tenant**: `client_id` stored in `decision_receipts` + `shadow_trade_events` (from DB auth, not header).
-- **Encryption at rest**: Fernet (AES-128-CBC + HMAC-SHA256) via `PAYLOAD_ENCRYPTION_KEY` → `decision_receipts.encrypted_payload`
-- **Data retention**: `retention_until = created_at + 365 days` on every receipt. Policy: `docs/operations/DATA_RETENTION_POLICY.md` (v2.0 with RBAC section)
-- **Due diligence**: "Each B2B client is issued a unique cryptographic API key. Client identities are validated server-side on every request. A client can only access their own governance receipts. Client access can be revoked instantly without system restart. Client signal data is encrypted at rest using AES-128-CBC with HMAC-SHA256 integrity verification."
-- **Current clients**: `omnix-admin` (role=admin), `quant-fund-alpha-01` (role=standard, pilot). Keys stored as Railway secrets.
+Live B2B endpoint allowing any external system to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). Authentication uses RBAC via the `b2b_clients` table (X-API-Key header → SHA-256 lookup) with a rate limit of 10 req/min. It supports 6 normalized signals (0-100) and operates in a fail-closed manner.
+The B2B Data Governance Layer includes RBAC authentication (`b2b_clients` table), admin endpoints for client management and key rotation, client-specific receipt access, multi-tenancy, encryption at rest using Fernet, and data retention policies.
 
 ### Public Verification Server (Railway — Port 8000)
-A standalone aiohttp web server runs alongside the Telegram bot in Railway production, providing public receipt verification endpoints with zero internal data exposure. Endpoints include `/verify` (interactive HTML), `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security uses SHA-256 hash chain and Dilithium-3 PQC signatures.
+A standalone `aiohttp` web server runs alongside the Telegram bot, providing public receipt verification endpoints with zero internal data exposure. Endpoints include `/verify` (interactive HTML), `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security uses SHA-256 hash chain and Dilithium-3 PQC signatures.
 
 ### Web Infrastructure
 The project uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demos, and the Verification Server (Port 8000) for public receipt validation.
