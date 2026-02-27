@@ -37,7 +37,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor  
 **Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform  
 **Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)  
-**Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)
+**Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)  
+**Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)
 
 ---
 

@@ -53,9 +53,9 @@ OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes de
 
 Cuando un inversor pregunte sobre trade-offs comparativos (opportunity cost, risk avoided, buy & hold vs, justify), el bot DEBE responder con estructura:
 
-1. **NUMBER FIRST**: Abrir con cuantificación (ej: "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493")
-2. **FRAMEWORK SECOND**: Explicar cómo se calculó (fórmulas ADR-020, data freshness)
-3. **POSITIONING THIRD**: Clarificar qué es OMNIX ("governance infrastructure, not BTC hold competitor")
+1.  **NUMBER FIRST**: Abrir con cuantificación (ej: "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493")
+2.  **FRAMEWORK SECOND**: Explicar cómo se calculó (fórmulas ADR-020, data freshness)
+3.  **POSITIONING THIRD**: Clarificar qué es OMNIX ("governance infrastructure, not BTC hold competitor")
 
 **PROHIBIDO en investor_challenge:**
 - "Estamos en fase de aprendizaje" (suena a "confía sin datos")
@@ -138,13 +138,13 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX utilizes a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, multi-user roles, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement.
+OMNIX utilizes a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, multi-user roles, Flask and Streamlit dashboards, an Asset Quarantine System, Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement.
 
 ### AI Architecture and Enforcement
-The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture, a Chain-of-Thought Framework, and an AI Self-Knowledge System driven by `system_state_manifest.json`. AI responses maintain an Institutional Communication Style (statement-format, 4-8 lines max, no name+gratitude openers, no unsolicited technical details, depth only when requested). An Anti-Servile Post-Processing Filter removes servile phrases.
+The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers. It features AI-first command detection, a Multilingual Prompt Architecture, a Chain-of-Thought Framework, and an AI Self-Knowledge System driven by `system_state_manifest.json`. AI responses maintain an Institutional Communication Style, with an Anti-Servile Post-Processing Filter removing servile phrases.
 
 ### Hierarchical Veto Flow
-The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals, and the Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience." ECW configuration (v1.2) requires a minimum MC Win Rate of 50%, MC Expected Return > 0%, 2 consecutive cycles, and a Black Swan Max of MEDIUM.
+The execution order is: 1. MC VETO → 2. RMS VETO → 3. **ADAPTIVE COHERENCE GATE** → 4. **ECW GATE** → 5. Scoring → 6. Decision. The Adaptive Coherence Gate dynamically blocks low-quality signals, and the Edge Confirmation Window (ECW) requires edge persistence before allowing trades, ensuring "capital patience." ECW configuration requires a minimum MC Win Rate of 50%, MC Expected Return > 0%, 2 consecutive cycles, and a Black Swan Max of MEDIUM.
 
 ### Scoring Logic
 Scoring is based on 5 core inputs: EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer (Monte Carlo, Black Swan, Sentiment, Quantum Momentum) applies only penalties.
@@ -158,13 +158,14 @@ A shadow observational metric measuring internal signal divergence to explain HO
 ### Dashboard Features
 The dashboard displays a Dual Win Rate Framework, enriched AI context, a System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Features include clarifying "Est. Loss Avoided" vs "Notional Blocked," distinguishing "Market Trend" from "Trading Regime," Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries for segmented metrics.
 
-### Public Verification Server (Railway — Port 8000)
-A standalone aiohttp web server (`omnix_core/evidence/verification_server.py`) runs alongside the Telegram bot in Railway production, providing public receipt verification endpoints with zero internal data exposure. Endpoints: `/verify` (interactive HTML), `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics`. Security: SHA-256 hash chain + Dilithium-3 PQC signatures. Legal: "NIST-standardized algorithms", "Internal dataset, not externally audited" on all public metrics. Public URL: `https://omnibotgenesis-production.up.railway.app/verify`.
+### External Governance API (Flask Dashboard — Port 5000)
+Live B2B endpoint allowing any external system to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). The API requires an `X-API-Key` for evaluation, and provides a public schema endpoint. It expects 6 normalized signals (0-100) and operates on a fail-closed principle with a rate limit of 10 req/min.
 
-**Receipt Engine** (`omnix_core/evidence/decision_receipt.py`): Generates, signs (Dilithium-3), and stores governance receipts. Each receipt is SHA-256 hash-chained to its predecessor. Hook point: `_generate_governance_receipt()` in `auto_trading_bot.py._analyze_market()`.
+### Public Verification Server (Railway — Port 8000)
+A standalone aiohttp web server runs alongside the Telegram bot in Railway production, providing public receipt verification endpoints with zero internal data exposure. Endpoints include `/verify` (interactive HTML), `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security uses SHA-256 hash chain and Dilithium-3 PQC signatures.
 
 ### Web Infrastructure
-The project uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demos, and the Verification Server (Port 8000) for public receipt validation. Custom domains are configured for commercial landing (`www.omnixquantum.net` on Replit Static Deployment) and the Dashboard/Bot (`omnixquantum.net` on Railway).
+The project uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demos, and the Verification Server (Port 8000) for public receipt validation.
 
 ## External Dependencies
 

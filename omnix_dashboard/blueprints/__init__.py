@@ -10,6 +10,7 @@ from .intelligence import intelligence_bp
 from .system import system_bp
 from .snapshots import snapshots_bp
 from .verification import verification_bp
+from .governance import governance_bp
 
 __all__ = [
     'views_bp',
@@ -18,5 +19,6 @@ __all__ = [
     'intelligence_bp',
     'system_bp',
     'snapshots_bp',
-    'verification_bp'
+    'verification_bp',
+    'governance_bp',
 ]

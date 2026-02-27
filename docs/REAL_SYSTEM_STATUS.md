@@ -1,7 +1,7 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 23 de Febrero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA  
+**Fecha**: 27 de Febrero 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE**  
 **Versión interna (dev)**: V6.5.4e  
 **TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
 
@@ -15,8 +15,10 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
-### Cambios Recientes (Feb 17-23, 2026)
+### Cambios Recientes (Feb 17-27, 2026)
 
+- **Feb 27**: External Governance API — `POST /api/governance/evaluate` lanzado (ADR-028). Cualquier sistema externo puede enviar 6 señales normalizadas (0-100) y recibir evaluación a través del pipeline de 6 checkpoints fail-closed de OMNIX, con governance receipt firmado con Dilithium-3. Verificado en producción local: APPROVED (6/6 gates) y BLOCKED (CP-2 Risk Limits veto) — ambos con firma PQC válida. `GET /api/governance/schema` disponible sin auth. Nuevo módulo: `omnix_core/governance/external_evaluator.py`. ADR-028 documentado.
+- **Feb 26**: Política de rotación de API keys (11 credenciales inventariadas, Tier 1 trading keys due May 2026) y política de backup de base de datos (Railway auto-backup diario, procedimiento pg_dump documentado, RTO < 60 min) — Production Readiness: 100%.
 - **Feb 24**: FAIL-CLOSED AUDIT (Phase 4): portfolio_commands.py — eliminada función _get_fallback_price() que generaba series SINTÉTICAS con np.random.normal() y precios hardcoded (BTC=95000, ETH=3500, etc). advanced_intelligence.py — Elliott Wave COMPLETAMENTE FABRICADO eliminado (confidence hardcoded por ranges, next_target inventado), statistical analysis con probabilidades inventadas eliminado, on-chain fallback con BTC=119000/hash_rate inventado eliminado, performance_metrics fallback con ceros reemplazado por None. Volúmenes sintéticos en auto_trading_bot marcados como internal-only. Prompt builder actualizado para manejar nuevos formatos insufficient_data.
 - **Feb 24**: DEEP AUDIT (Phase 3): trading_system.py — fake technical analysis (RSI=50.0, MACD=0.0, fake SMA percentages) eliminado, fake multi-asset analysis (BTC=95000, ETH=3200 hardcoded, change=2.5%, volume=25000) eliminado, DummyPerformanceTracker ya no reporta system_health=100.0/memory=0.0/cpu=0.0 (ahora None), video/analyzer.py confidence 0.85 hardcoded eliminado, auto_trading_bot ROI 0.0 TODO implementado con cálculo real, FIPS 203/204 references corregidas a "NIST-standardized algorithms", balance hardcoded $159.93 eliminado. Todos los callers actualizados para manejar None.
 - **Feb 24**: REAL-DATA INTEGRITY AUDIT (Phase 2): 40+ métricas fabricadas eliminadas del sistema completo — analytics_engine.py (20+ métodos con datos inventados: fake HFT, fake arbitraje, fake Monte Carlo 150K→1K, fake sentimiento, fake correlaciones), dashboard system.py (strategy_weights falsos 50-58% win_rate, performance_metrics inventados), dashboard core.py (avg_bot comparación con datos falsos de industria). Creado módulo data_integrity.py (REAL_DATA_MODE=True, @real_data_required decorator) y test anti-regresión (test_no_hardcoded_metrics.py). Zero violations en scan final.
