@@ -128,5 +128,7 @@ PAPER_MODE = "TRUE"
 REDIS_URL = "redis://default:GOZQUHyOucycXwFuMlRXZBWIsblTiXnv@shinkansen.proxy.rlwy.net:32595"
 TRADING_PROFILE = "PAPER_OPTIMIZED"
 LEGACY_USER_ID = "7014748854"
+OMNIX_ADMIN_CLIENT_ID = "omnix-admin"
+OMNIX_PILOT_CLIENT_ID = "quant-fund-alpha-01"
 
 [userenv.development]
