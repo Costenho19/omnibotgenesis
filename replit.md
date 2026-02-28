@@ -121,7 +121,7 @@ La causa raíz de la violación (Feb 2026): `system_state_manifest.json` conten�
 **Public Metrics Contextualization (MANDATORY):**
 - "670,000+ evaluation cycles" — NOT "decisions governed"
 - Always add "(internal dataset)" or "(internal dataset, not externally audited)"
-- "Capital Preserved*" with asterisk when shown as metric
+- "Capital Preserved*" con asterisco when shown as metric
 - Pitch deck: "internal evaluation data" — NOT "audit-grade data"
 
 ### Team Narrative
