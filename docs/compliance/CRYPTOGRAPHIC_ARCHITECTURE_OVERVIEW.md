@@ -34,20 +34,24 @@ All real trading orders include:
 - `pqc_algorithm`: Algorithm identifier (Dilithium-3 / ML-DSA-65)
 - Signature payload linked to order parameters (symbol, amount, price, timestamp, user)
 
-### Key Encapsulation (CRYSTALS-Kyber-768)
+### Key Encapsulation — Not Data Encryption (CRYSTALS-Kyber-768)
 
 Secure key exchange uses CRYSTALS-Kyber, a NIST-standardized key encapsulation mechanism (ML-KEM-768), providing quantum-resistant protection for:
 
 - API key transmission and storage
-- Inter-service secure communication
-- Shared secret generation
+- Inter-service shared secret establishment
+- Quantum-resistant key exchange
 
-### Security Level
+**Important distinction for compliance and due diligence:** Kyber-768 is a Key Encapsulation Mechanism (KEM) — it establishes a shared secret between parties. Actual payload encryption uses symmetric AES/Fernet. This is cryptographic best practice: PQC-KEM for key exchange + symmetric cipher for bulk data. Describing Kyber-768 as a "data encryption" algorithm would be technically incorrect.
 
-Both algorithms provide NIST Level 3 security (~192-bit classical equivalent), protecting against:
+### Quantum Resistance
+
+Both algorithms are designed to resist attacks from both classical and quantum computers, protecting against:
 - Classical brute-force and cryptanalytic attacks
 - Quantum attacks via Shor's algorithm (factoring/discrete log)
 - Quantum speedup via Grover's algorithm (symmetric key search)
+
+Both operate at strong security levels aligned with NIST standardized guidance.
 
 ---
 

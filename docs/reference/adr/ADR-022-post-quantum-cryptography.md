@@ -2,11 +2,14 @@
 
 **Status**: IMPLEMENTED  
 **Date**: 2026-01-23  
+**Updated**: 2026-02-28 (added communication rules + KEM clarification)  
 **Authors**: Harold Nunes, OMNIX Team
 
 ## Context
 
 OMNIX markets itself as an institutional-grade trading system with post-quantum cryptography protection. Investor presentations reference "PQC security" as a differentiator. There was confusion about whether PQC was actually implemented or merely a roadmap item.
+
+A secondary issue was identified (Feb 2026): the AI bot was using internal technical labels (FIPS numbers, "NIST Level 3") in external conversations, and incorrectly describing Kyber-768 as "data encryption" rather than a key encapsulation mechanism. These have been corrected via manifest and documentation updates.
 
 ## Decision
 
@@ -16,8 +19,55 @@ The implementation was completed in November 2025 using the NIST 2024 standardiz
 
 | Component | Algorithm | NIST Standard | Purpose |
 |-----------|-----------|---------------|---------|
-| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Secure key exchange resistant to quantum attacks |
-| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Trading order authentication |
+| Key Encapsulation | Kyber-768 (ML-KEM-768) | FIPS 203 | Secure key exchange — establishes shared secrets resistant to quantum attacks |
+| Digital Signatures | Dilithium-3 (ML-DSA-65) | FIPS 204 | Decision signing and trading order authentication |
+
+> **Note**: FIPS numbers (FIPS 203, FIPS 204) are referenced here for internal/technical accuracy. They must NOT appear in external communications or bot responses. See Communication Rules below.
+
+---
+
+## Critical Technical Distinction: KEM vs. Data Encryption
+
+**Kyber-768 is a Key Encapsulation Mechanism (KEM) — not a data encryption algorithm.**
+
+| Term | Correct | Incorrect |
+|------|---------|-----------|
+| Kyber-768 role | "key encapsulation", "shared secret generation", "key exchange" | "data encryption", "secure data encryption", "payload encryption" |
+| Data payload protection | AES/Fernet symmetric encryption | (PQC alone does not encrypt data) |
+
+This distinction matters for institutional credibility: describing Kyber-768 as a "data encryption" system is a category error that signals shallow cryptographic understanding to technical due diligence reviewers.
+
+**Correct architecture:**
+```
+PQC-KEM (Kyber-768) → establishes shared secret
+                              ↓
+Symmetric cipher (AES/Fernet) → encrypts actual data payload
+```
+
+---
+
+## Communication Rules by Audience
+
+The following rules govern how PQC must be described depending on who is receiving the information:
+
+| Audience | Allowed | Prohibited |
+|----------|---------|-----------|
+| **External / Public** (bot responses, Telegram, website) | "NIST-standardized algorithms", "post-quantum cryptography", "quantum-resistant audit trail" | FIPS 203, FIPS 204, "NIST Level 3", algorithm names (Kyber-768, Dilithium-3) |
+| **Institutional** (investors, partners, pitch docs) | Algorithm names (Dilithium-3, Kyber-768), "NIST-standardized", "operational since Nov 2025" | FIPS numbers, "NIST Level 3 security equivalent" (without qualifier) |
+| **Internal** (ADRs, audits, technical data room) | Full technical detail including FIPS 203/204, NIST Level 3, key sizes | N/A — full accuracy required |
+
+### Approved phrasing by tier
+
+**External (bot/Telegram):**
+> "OMNIX signs every governance decision with NIST-standardized post-quantum cryptographic algorithms. Every decision generates an immutable, tamper-proof cryptographic receipt."
+
+**Institutional (investor conversations):**
+> "OMNIX implements post-quantum cryptography using NIST-standardized algorithms — Kyber-768 for key exchange and Dilithium-3 for digital signatures. Operational since November 2025, not a roadmap item."
+
+**Internal (data room, technical due diligence):**
+> "CRYSTALS-Dilithium-3 (ML-DSA-65, FIPS 204) for decision signing. CRYSTALS-Kyber-768 (ML-KEM-768, FIPS 203) for key encapsulation. Both at NIST Level 3 (~192-bit classical security equivalent)."
+
+---
 
 ## Implementation Details
 
@@ -31,7 +81,7 @@ The implementation was completed in November 2025 using the NIST 2024 standardiz
    - Dilithium-3: Public key (1952 bytes), Secret key (4000 bytes)
 
 2. **Key Encapsulation (Kyber-768)**
-   - `encapsulate_secret()`: Creates shared secret with ciphertext
+   - `encapsulate_secret()`: Creates shared secret with ciphertext (key exchange, not data encryption)
    - `decapsulate_secret()`: Recovers shared secret from ciphertext
 
 3. **Digital Signatures (Dilithium-3)**
@@ -41,7 +91,7 @@ The implementation was completed in November 2025 using the NIST 2024 standardiz
    - `verify_trading_order()`: Verifies trading order authenticity
 
 4. **API Key Protection**
-   - `secure_api_key()`: Encrypts API keys for secure transmission
+   - `secure_api_key()`: Uses Kyber-768 KEM + XOR encryption for API key transmission
 
 ### Trading Order Integration
 
@@ -71,6 +121,8 @@ Both algorithms provide NIST Level 3 security (~192-bit classical security equiv
 - Classical brute-force attacks
 - Future quantum computer attacks (Shor's algorithm, Grover's algorithm)
 
+> **Internal use only**: "NIST Level 3" is an internal engineering benchmark. It must not appear in external or investor-facing communications without the qualifier "internal benchmark."
+
 ### Dependencies
 
 ```
@@ -82,29 +134,30 @@ The module includes graceful degradation if pypqc is not available:
 - All methods return `None` or `False` when PQC unavailable
 - Warning logged at startup
 
-## AI Prompt Updates
+---
 
-The system state manifest (`omnix_config/system_state_manifest.json`) now includes:
+## AI Prompt Configuration
 
-```json
-"post_quantum_cryptography": {
-    "status": "IMPLEMENTED",
-    "CRITICAL_FACT": "PQC YA ESTÁ IMPLEMENTADO - NO está en roadmap",
-    "NEVER_SAY": [
-        "PQC está en roadmap",
-        "PQC planificado para Q3 2026",
-        "Seguridad cuántica no implementada"
-    ]
-}
-```
+The system state manifest (`omnix_config/system_state_manifest.json`) controls how the bot discusses PQC. The manifest now includes:
 
-This prevents the AI from incorrectly stating PQC is a future feature.
+- `communication_tier_rule`: explicit tiering rules for external / institutional / internal language
+- `NEVER_SAY`: expanded list including FIPS 203, FIPS 204, "NIST Level 3 security equivalent", and "Kyber-768 for data encryption"
+- `data_encryption_note`: clarifies that Kyber-768 is KEM, not data encryption
+- `investor_explanation`: uses institutional-tier language (algorithm names, no FIPS)
+
+---
 
 ## Investor Messaging
 
-When asked about PQC, the AI should respond with:
+When asked about PQC, the AI should respond at the institutional tier:
 
-> "OMNIX implementa criptografía post-cuántica usando los estándares NIST 2024 (Kyber-768 para encriptación, Dilithium-3 para firmas digitales). Esto protege las comunicaciones y órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo desde noviembre 2025."
+> "OMNIX implementa criptografía post-cuántica usando algoritmos estandarizados por NIST (Kyber-768 para intercambio de claves, Dilithium-3 para firmas digitales). Esto protege el audit trail de gobernanza y las órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo desde noviembre 2025, no es roadmap."
+
+For English institutional context:
+
+> "OMNIX implements post-quantum cryptography using NIST-standardized algorithms — Kyber-768 for key exchange and Dilithium-3 for digital signatures. Every governance decision is cryptographically signed, producing a tamper-proof audit trail. Operational since November 2025."
+
+---
 
 ## Patent Notice
 
@@ -123,6 +176,7 @@ The Kyber cryptosystem may be protected under patents (FR2956541A1/US9094189B2/E
 - Protection against future quantum threats
 - Audit trail for signed trading orders
 - Differentiator from competitors
+- Clear communication tiers prevent institutional credibility damage
 
 ### Negative
 - Larger key and signature sizes (increased storage/bandwidth)
@@ -135,7 +189,7 @@ The Kyber cryptosystem may be protected under patents (FR2956541A1/US9094189B2/E
 - ADR-019: Edge Confirmation Window
 - ADR-020: Institutional Response Quality Standards
 
-## References
+## References (Internal Use)
 
 - [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography)
 - [FIPS 203 (ML-KEM)](https://csrc.nist.gov/pubs/fips/203/final)

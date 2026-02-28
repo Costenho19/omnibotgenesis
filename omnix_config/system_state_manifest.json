@@ -165,27 +165,35 @@
     "implementation_date": "2025-11",
     "CRITICAL_FACT": "PQC YA ESTÁ IMPLEMENTADO - NO está en roadmap. Módulo operativo con pypqc.",
     "standards": {
-      "encryption": "ML-KEM-768 (Kyber-768) - NIST FIPS 203",
-      "signatures": "ML-DSA-65 (Dilithium-3) - NIST FIPS 204"
+      "key_encapsulation": "ML-KEM-768 (Kyber-768) — NIST-standardized key encapsulation mechanism (shared secret generation for secure key exchange, NOT bulk data encryption)",
+      "digital_signatures": "ML-DSA-65 (Dilithium-3) — NIST-standardized digital signature algorithm (decision signing and order authentication)"
     },
+    "data_encryption_note": "Payload data is encrypted using AES/Fernet symmetric encryption. Kyber-768 handles key encapsulation (shared secret generation), not bulk data encryption. This follows cryptographic best practice: PQC-KEM for key exchange + symmetric cipher for data.",
     "capabilities": {
-      "key_encapsulation": "Kyber-768 genera secretos compartidos resistentes a ataques cuánticos",
-      "digital_signatures": "Dilithium-3 firma órdenes de trading para autenticación",
-      "api_key_protection": "Encriptación PQC de claves API para transmisión segura"
+      "key_encapsulation": "Kyber-768 establece secretos compartidos resistentes a ataques cuánticos (intercambio de claves, no cifrado de datos)",
+      "digital_signatures": "Dilithium-3 firma cada decisión de gobernanza y órdenes de trading para autenticación e inmutabilidad",
+      "api_key_protection": "Protección de claves API mediante encapsulación PQC para transmisión segura"
     },
-    "security_level": "NIST Level 3 (~192-bit classical security)",
+    "security_level": "Strong quantum resistance — NIST-standardized algorithms (internal engineering benchmark: comparable to ~192-bit classical security)",
     "key_sizes": {
       "kyber768_public": "1184 bytes",
       "kyber768_secret": "2400 bytes",
       "dilithium3_signature": "~3309 bytes"
     },
     "module_location": "omnix_core/security/pqc_security.py",
-    "investor_explanation": "OMNIX implementa criptografía post-cuántica usando los estándares NIST 2024 (Kyber-768 para encriptación, Dilithium-3 para firmas). Esto protege las comunicaciones y órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo, no es roadmap.",
+    "communication_tier_rule": "EXTERNAL (bot, Telegram, web): use 'NIST-standardized algorithms' only — never FIPS numbers, never algorithm names. INSTITUTIONAL (investors, partners): may use algorithm names (Dilithium-3, Kyber-768) + 'NIST-standardized' — never FIPS numbers. INTERNAL (ADRs, audits): full technical detail including FIPS numbers is acceptable.",
+    "investor_explanation": "OMNIX implementa criptografía post-cuántica usando algoritmos estandarizados por NIST (Kyber-768 para intercambio de claves, Dilithium-3 para firmas digitales). Esto protege el audit trail de gobernanza y las órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo desde noviembre 2025, no es roadmap.",
     "NEVER_SAY": [
       "PQC está en roadmap",
       "PQC planificado para Q3 2026",
       "Seguridad cuántica no implementada",
-      "Usamos TLS 1.3 mientras esperamos PQC"
+      "Usamos TLS 1.3 mientras esperamos PQC",
+      "NIST FIPS 203",
+      "NIST FIPS 204",
+      "NIST Level 3 security equivalent",
+      "Kyber-768 para cifrado de datos",
+      "Kyber-768 for data encryption",
+      "Kyber-768 for secure data encryption"
     ]
   },
   

@@ -15,10 +15,10 @@ OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes de
 **NEVER run the bot on Replit and Railway simultaneously** - Telegram allows only ONE active connection per token.
 
 ### Workflow for Debugging
-1. **Railway Logs**: User provides logs directly for debugging
-2. **DO NOT start bot locally** - Use Railway logs provided
-3. **Code sync**: GitHub -> Railway auto-deploy from main branch
-4. **After testing on Replit**: ALWAYS stop workflow before ending session
+1.  **Railway Logs**: User provides logs directly for debugging
+2.  **DO NOT start bot locally** - Use Railway logs provided
+3.  **Code sync**: GitHub -> Railway auto-deploy from main branch
+4.  **After testing on Replit**: ALWAYS stop workflow before ending session
 
 ### Bot Testing Protocol (MANDATORY)
 > **REGLA OBLIGATORIA**: Cada vez que se active el bot en Replit para testing:
@@ -107,6 +107,17 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 - ADGM badge on web: "Designed for Compliance" (not "Target Jurisdiction")
 - Footer/copyright: "Abu Dhabi, UAE" — no ADGM affiliation implied
 
+**PQC Communication Tier Rules (CRITICAL — updated Feb 2026):**
+| Tier | Audiencia | Lenguaje permitido | Prohibido |
+|------|-----------|-------------------|-----------|
+| External | Bot, Telegram, web | "NIST-standardized algorithms", "post-quantum cryptography" | FIPS 203/204, "NIST Level 3", nombres de algoritmos |
+| Institutional | Inversores, partners | Nombres (Dilithium-3, Kyber-768), "NIST-standardized" | FIPS 203/204, "NIST Level 3 security equivalent" |
+| Internal | ADRs, audits, código | Todo, incluyendo FIPS y NIST Level 3 | N/A |
+
+**Kyber-768 es un KEM (Key Encapsulation Mechanism), NO un algoritmo de cifrado de datos.** Decir "Kyber-768 for data encryption" es un error técnico que daña la credibilidad institucional. El cifrado de datos lo hace AES/Fernet. Ver ADR-022.
+
+La causa raíz de la violación (Feb 2026): `system_state_manifest.json` contenía "NIST FIPS 203/204" en campos que el bot leía. Ya corregido — el manifest ahora tiene `communication_tier_rule` y `NEVER_SAY` expandido.
+
 **Public Metrics Contextualization (MANDATORY):**
 - "670,000+ evaluation cycles" — NOT "decisions governed"
 - Always add "(internal dataset)" or "(internal dataset, not externally audited)"
@@ -114,10 +125,10 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 - Pitch deck: "internal evaluation data" — NOT "audit-grade data"
 
 ### Team Narrative
-- **Harold Nunes**: Solo Founder & CEO — only name visible in all surfaces
-- **Ivan/Iván Guzman**: Removed from ALL files (code, docs, web, reports, audit)
-- If asked about technical help: "I've worked with contract developers and infrastructure consultants"
-- `institutional_report.py` team section: generic "contract developers" line, no individual names
+-   **Harold Nunes**: Solo Founder & CEO — only name visible in all surfaces
+-   **Ivan/Iván Guzman**: Removed from ALL files (code, docs, web, reports, audit)
+-   If asked about technical help: "I've worked with contract developers and infrastructure consultants"
+-   `institutional_report.py` team section: generic "contract developers" line, no individual names
 
 ### Branding Policy
 **Strategy**: Invisible internal versioning, stable external identity (like Stripe).
