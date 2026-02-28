@@ -86,9 +86,9 @@ def get_system_state_prompt() -> str:
 - This is a NEW 30-day paper trading validation phase
 
 **POST-QUANTUM CRYPTOGRAPHY STATUS**: {pqc_status}
-- **Encryption**: {pqc_standards.get('encryption', 'Kyber-768 (ML-KEM-768) - NIST FIPS 203')}
-- **Signatures**: {pqc_standards.get('signatures', 'Dilithium-3 (ML-DSA-65) - NIST FIPS 204')}
-- **Security Level**: NIST Level 3 (~192-bit classical security)
+- **Key Exchange (KEM)**: {pqc_standards.get('key_encapsulation', 'ML-KEM-768 (Kyber-768) — NIST-standardized key encapsulation mechanism (key exchange, not data encryption)')}
+- **Signatures**: {pqc_standards.get('digital_signatures', 'ML-DSA-65 (Dilithium-3) — NIST-standardized digital signature algorithm')}
+- **Security Level**: Strong quantum resistance — NIST-standardized algorithms
 - **CRITICAL**: PQC YA ESTÁ IMPLEMENTADO, NO está en roadmap. Módulo operativo desde Nov 2025.
 - **NEVER SAY**: "PQC en roadmap Q3 2026", "seguridad cuántica planificada", "TLS 1.3 mientras esperamos PQC"
 

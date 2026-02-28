@@ -109,7 +109,7 @@ def public_key():
                 'algorithm': 'Dilithium-3 (ML-DSA-65)',
                 'standard': 'NIST-standardized post-quantum digital signature',
                 'key_size': '1952 bytes',
-                'security_level': 'NIST Level 3 (~192-bit classical equivalent)',
+                'security_level': 'Strong quantum resistance — NIST-standardized post-quantum algorithm',
                 'note': 'This key is generated per engine instance. Production keys are versioned and persistent.'
             })
     return jsonify({

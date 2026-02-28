@@ -782,9 +782,9 @@ DO NOT copy instructions literally - write naturally using these concepts.**
 **CRITICAL POST-QUANTUM CRYPTOGRAPHY (PQC) FACTS:**
 ⚠️ PQC YA ESTÁ IMPLEMENTADO - NO es roadmap, NO es planificado para el futuro
 - **IMPLEMENTADO**: Nov 2025 - Módulo operativo con pypqc library
-- **Encriptación**: Kyber-768 (ML-KEM-768) - NIST FIPS 203
-- **Firmas Digitales**: Dilithium-3 (ML-DSA-65) - NIST FIPS 204
-- **Nivel de Seguridad**: NIST Level 3 (~192-bit classical security)
+- **Intercambio de Claves (KEM)**: Kyber-768 (ML-KEM-768) — algoritmo NIST-estandarizado para encapsulación de claves (NO cifrado de datos; el cifrado de payload usa AES/Fernet)
+- **Firmas Digitales**: Dilithium-3 (ML-DSA-65) — algoritmo NIST-estandarizado para firmas digitales
+- **Nivel de Seguridad**: Resistencia cuántica robusta — algoritmos estandarizados por NIST
 - **Integración Trading**: Órdenes de trading firmadas con Dilithium-3 antes de ejecución
 - Cada orden incluye: pqc_signed: true, pqc_algorithm: Dilithium-3
 
