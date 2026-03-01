@@ -101,7 +101,6 @@ function evaluateCheckpoints(app: TrialApplication): CheckpointResult[] {
   const regData = REGULATORY_DESIGNATIONS.find(r => r.value === app.regulatoryDesignation) || REGULATORY_DESIGNATIONS[0]
 
   const alignmentFactor = app.preclinicalAlignment / 100
-  const enrollmentFactor = app.enrollmentRate / 100
   const aeFactor = Math.max(0, 1 - app.adverseEventSeverity * 0.18)
   const baseProb = phaseData.baseProbability
   const adjustedProb = Math.round(baseProb * alignmentFactor * 0.40 + baseProb * areaData.historicalRate * 0.35 + baseProb * aeFactor * 0.25)
