@@ -17,6 +17,7 @@
 
 ### Cambios Recientes (Mar 1, 2026)
 
+- **Mar 01**: Insurance Domain Pilot validado (ADR-030) — tercer dominio validado con receipts PQC reales. 3 escenarios ejecutados vía `POST /api/governance/evaluate` con `domain: insurance`. Receipts: `OMNIX-AB1D878EC56A` (APPROVED, AUTO-POL-2847, 6/6 CP), `OMNIX-B5782882E993` (BLOCKED, AUTO-POL-9999, 6/6 vetados), `OMNIX-C23154E3D1B0` (BLOCKED, LIFE-POL-4521, CP-3+CP-4 vetados). Cliente `insurance-pilot-01` creado en b2b_clients. Domain Adapter documentado en `docs/reference/domain-adapters/insurance-domain-adapter.md`. Zero cambios al motor — extensibilidad multi-dominio demostrada con evidencia real.
 - **Mar 01**: 5 Governance Compliance Modules implementados (ADR-029) — NIST AI RMF + ISO/IEC 42001 + EU AI Act alineados. 7 nuevas tablas PostgreSQL (governance_risk_map, governance_metrics, governance_drift_log, governance_overrides, governance_incidents, governance_incident_reviews, governance_reports). 5 engines core en `omnix_core/governance/`: RiskMappingEngine, MeasurementMonitoringEngine, HumanOversightEngine, IncidentManagementEngine, GovernanceReportingEngine. 5 blueprints Flask: 21 endpoints nuevos bajo `/api/governance/`. Human oversight overrides firmados con Dilithium-3 (PQC). Reportes de compliance con linaje completo de decisiones (EU AI Act Art. 12). Implementación ADITIVA — cero cambios a tablas o endpoints existentes.
 
 ### Cambios Recientes (Feb 17-27, 2026)

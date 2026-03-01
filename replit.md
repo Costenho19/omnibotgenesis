@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, specifically in digital asset trading. It features a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX's primary goal is to provide robust, error-free decision-making across various sectors, with a strong emphasis on capital preservation.
+OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, specifically in digital asset trading. It features a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX's primary goal is to provide robust, error-free decision-making across various sectors, with a strong emphasis on capital preservation. The project envisions broad market potential by offering a critical infrastructure layer for automated decision governance, ensuring reliability and security across high-stakes applications.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -149,7 +149,7 @@ La causa raíz de la violación (Feb 2026): `system_state_manifest.json` conten�
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. Dashboards are built with Flask and Streamlit, providing real-time monitoring and administrative alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+OMNIX employs a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. Dashboards are built with Flask and Streamlit. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
 
 ### Hierarchical Veto Flow
 Decisions progress through a series of veto checks: Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, an Edge Confirmation Window (ECW) Gate, Scoring, and a final Decision.
@@ -171,6 +171,9 @@ This B2B endpoint allows external systems to submit signals for processing throu
 
 ### Governance Compliance Modules — 5 Modules (ADR-029)
 Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce 7 new PostgreSQL tables and 21 new REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting. Human oversight overrides are PQC-signed (Dilithium-3) complementary records and do not alter the immutable `decision_receipts` chain. Compliance reports include full EU AI Act Art. 12 decision lineage.
+
+### Insurance Domain Pilot — Multi-Domain Extensibility (ADR-030)
+The system has been validated across three domains: Trading (699,000+ real evaluation cycles), Insurance (3 PQC-signed receipts for underwriting governance), and HealthTech (conceptual framework + interactive demo). This demonstrates OMNIX's extensibility without changes to the core engine.
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure. Endpoints include `/verify`, `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security is maintained using SHA-256 hash chains and Dilithium-3 PQC signatures.

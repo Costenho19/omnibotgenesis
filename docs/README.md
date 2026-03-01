@@ -38,11 +38,21 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform  
 **Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)  
 **Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)  
-**Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)
+**Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)  
+**Referencia**: [ADR-029](reference/adr/ADR-029-governance-compliance-modules.md) - Governance Compliance Modules — NIST AI RMF + ISO/IEC 42001 + EU AI Act (5 módulos, 21 endpoints, 7 tablas)  
+**Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026)
 
 ---
 
 ## Cambios Recientes
+
+### Insurance Domain Pilot — Multi-Domain Extensibility Validated (Mar 1, 2026)
+- **ESTADO**: ✅ COMPLETADO - ADR-030 + 3 PQC-signed receipts reales
+- **Evidencia**: 3 escenarios reales vía External Governance API — AUTO-POL-2847 (APPROVED), AUTO-POL-9999 (BLOCKED 6/6), LIFE-POL-4521 (BLOCKED 2/6)
+- **Receipt IDs**: `OMNIX-AB1D878EC56A` · `OMNIX-B5782882E993` · `OMNIX-C23154E3D1B0`
+- **Domain Adapter**: `docs/reference/domain-adapters/insurance-domain-adapter.md`
+- **Posicionamiento**: "OMNIX governance engine validated across 3 domains — trading (699K+ cycles) + insurance (real receipts) + HealthTech (framework)"
+- **DOCUMENTACIÓN**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md)
 
 ### Multi-Vertical Governance Architecture (Feb 15, 2026)
 - **ESTADO**: ✅ COMPLETADO - ADR-026 + 2 Interactive Demos
