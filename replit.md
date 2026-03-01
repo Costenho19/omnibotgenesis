@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It utilizes a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The primary goal is to ensure robust, error-free decision-making and capital preservation across various sectors, aiming to establish a critical infrastructure layer for automated decision governance. The system has been validated across Trading, Insurance, and HealthTech domains.
+OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It utilizes a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. The primary goal is to ensure robust, error-free decision-making and capital preservation across various sectors, aiming to establish a critical infrastructure layer for automated decision governance.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -66,10 +66,24 @@ Ver ADR-024 para keywords de detección y ejemplos.
 
 ### Track Record Period Disclosure (OBLIGATORIO)
 
-| Período | Fechas | Trades | P&L | Propósito |
-|---------|--------|--------|-----|-----------|
-| **Learning Baseline** | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración |
-| **Track Record Oficial** | 15 Ene 2026 - presente | 0 | $0 | Validación recalibrada |
+| Período | Tipo de dinero | Fechas | Trades | P&L | Propósito |
+|---------|---------------|--------|--------|-----|-----------|
+| **Phase 0 — Real Capital** | **REAL** (Kraken) | Jul 6 – Ago 18, 2025 | 1,115 | -$1,167 (-28.6%) | Capital real sin gobernanza |
+| **Learning Baseline** | Paper (simulado) | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración del motor |
+| **Track Record Oficial** | Paper (simulado) | 15 Ene 2026 - presente | 0 | $0 | Validación recalibrada |
+
+> **REGLA CRÍTICA**: Phase 0 = dinero real Kraken. Learning Baseline y Track Record = dinero simulado/paper. NUNCA mezclar en reportes o respuestas al inversor.
+
+### Backtest Phase 0 — Due Diligence Interna (Mar 1, 2026)
+
+| Dato | Valor |
+|------|-------|
+| Resultado principal | 95.6% de evaluaciones habrían sido BLOQUEADAS por el motor de 6 checkpoints |
+| Checkpoints más activos | CP-1 Probability (74%), CP-3 Coherence (71%), CP-4 Persistence (69%) |
+| Claim válido | "El motor detecta el tipo de régimen que causó las pérdidas → responde fail-closed" |
+| Claim NO válido | Un P&L específico de mejora (sin replay exacto no se puede cuantificar) |
+| Documentación | `docs/reference/backtest/PHASE0_GOVERNANCE_BACKTEST.md` |
+| BD | `kraken_real_trades`, `backtest_phase0_signals`, `backtest_phase0_results` |
 
 ### Dashboard Investor Credibility
 

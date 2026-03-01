@@ -83,6 +83,29 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 ## Cambios Recientes
 
+### Phase 0 Retrospective Governance Backtest (Mar 1, 2026)
+
+**PROPÓSITO:** Due diligence interna — ¿habría bloqueado el motor de 6 checkpoints los trades reales de julio-agosto 2025?
+
+| Métrica | Valor |
+|---------|-------|
+| Período | Jul 6 – Ago 18, 2025 (Phase 0, dinero real Kraken) |
+| Capital real desplegado | $4,076.66 |
+| Trades reales ejecutados | 1,115 (ledger importado a `kraken_real_trades`) |
+| P&L real | -$1,167 (-28.6%) |
+| Tipo de dinero | **REAL** — nunca simulado |
+| Puntos evaluados (asset × hora) | 225 con datos suficientes |
+| **Resultado BLOCKED** | **215 / 225 = 95.6%** |
+| **Resultado APPROVED** | **10 / 225 = 4.4%** |
+| Checkpoint más frecuente | CP-1 Probability (166x), CP-3 Coherence (159x), CP-4 Persistence (156x) |
+| Tablas BD | `kraken_real_trades`, `backtest_phase0_signals`, `backtest_phase0_results` |
+
+**Conclusión honesta:** El motor de gobernanza habría detectado incertidumbre extrema en el 95.6% de los puntos evaluados — consistente con las pérdidas reales. El claim válido es: "el sistema identifica el tipo de régimen de mercado que causó las pérdidas y responde con fail-closed". Ver metodología y limitaciones completas en `docs/reference/backtest/PHASE0_GOVERNANCE_BACKTEST.md`.
+
+**Limitación metodológica documentada (Architect Review):** Las señales son reconstruidas desde el historial de precios reales, no un replay en vivo. Los parámetros reflejan calibración Nov 2025–Ene 2026. Resultado = estimación retrospectiva de alta calidad, no replay exacto.
+
+---
+
 ### Public Verification Server Deployed (Feb 21, 2026)
 
 **PROPÓSITO:** Endpoint público para que inversores y auditores verifiquen la autenticidad de decisiones de governance sin exponer datos internos.
