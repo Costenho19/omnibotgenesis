@@ -164,19 +164,35 @@ Capital Preserved: $50,000
 
 ## SLIDE 6 — TRACTION & PROOF (This Is Real, Not Theory)
 
-**OMNIX has been running continuously since November 2025 — in real market conditions.**
+**OMNIX has a three-phase history — each phase is real, verified, and clearly labeled.**
 
-### Track Record Performance
+### Three-Phase Evolution
 
 ```
- CALIBRATION PHASE              OFFICIAL TRACK RECORD          NEXT PHASE
- Nov 2025 – Jan 14, 2026  →    Jan 15 – Feb 13, 2026    →    Phase 2
- 119 test trades                30 days completed              Gradual profit
- Risk engine calibrated         Capital preserved              optimization
- 6-layer veto tuned             System running 24/7
+ PHASE 0 — REAL MONEY         PHASE 1 — PAPER (SIMULATED)    PHASE 2 — PAPER (CALIBRATED)
+ Jul 6 – Aug 18, 2025    →    Nov 2025 – Jan 14, 2026   →    Jan 15, 2026 – present
+ $4,076 real capital           119 paper trades               Official Track Record
+ 1,115 real Kraken trades      6-checkpoint engine built       98.5% capital preserved
+ P&L: -$1,167 (-28.6%)        Risk engine calibrated          BTC dropped 7.37%
+ ↓ Problem identified          ↓ Solution built                ↓ Solution proven
 ```
 
-### Key Metrics
+> **Money type is explicit**: Phase 0 = real Kraken exchange capital. Phase 1 & 2 = paper/simulated portfolio used for safe calibration. These are never mixed.
+
+**This is a story of engineering discipline:** The system lost money with real capital, identified the root cause, built the 6-checkpoint governance engine, and then preserved 98.5% of capital through a BTC downturn. That is not theory — that is a verifiable arc of improvement.
+
+### Phase 0 — Real Capital Results (Kraken Exchange, Verified)
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Capital Deployed** | **$4,076** | Real USD deposited to Kraken |
+| **Trades Executed** | **1,115** | Verified in Kraken ledger |
+| **Assets Traded** | BTC, SOL, ETH, AVAX | Real exchange fills |
+| **P&L** | **-$1,167 (-28.6%)** | Calculated from Kraken CSV |
+| **Fees Paid** | $168.84 | Real Kraken commissions |
+| **Decision** | Stop. Build governance. | Switched to paper mode for calibration |
+
+### Phase 2 — Paper Track Record Metrics (Post-Governance, Jan 15–Feb 13, 2026)
 
 | Metric | Value | Context |
 |--------|-------|---------|
@@ -184,16 +200,16 @@ Capital Preserved: $50,000
 | **Max Drawdown** | **1.5%** | vs BTC max drawdown of -7.37% |
 | **Trades Blocked** | **47** | High-risk signals correctly vetoed |
 | **Block Success Rate** | **91%** | Blocked trades would have lost money |
-| **Decision Cycles Analyzed** | **670,000+** | Shadow Portfolio learning engine |
-| **PQC-Signed Receipts** | **16,000+** | Every governance decision cryptographically signed |
+| **Decision Cycles Analyzed** | **670,000+** | Shadow Portfolio learning engine (internal dataset) |
+| **PQC-Signed Receipts** | **31,000+** | Every governance decision cryptographically signed |
 | **System Uptime** | **95%+** | Production (Railway), not test environment |
 | **Execution Latency** | **~120ms** | Measured, not estimated |
 
-### What These Numbers Mean
+### What This Arc Means
 
-While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades it blocked, 91% would have resulted in losses.
+Phase 0 showed real losses with no governance. Phase 2 shows 98.5% capital preservation with the 6-checkpoint engine active. The difference between those two outcomes **is** OMNIX.
 
-**The system's restraint saved capital — that IS the value proposition.**
+**The system's discipline saved capital — that IS the value proposition.**
 
 > "We don't measure success by how much we made. We measure it by how much we didn't lose."
 
