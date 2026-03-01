@@ -11,14 +11,24 @@ from .system import system_bp
 from .snapshots import snapshots_bp
 from .verification import verification_bp
 from .governance import governance_bp
+from .governance_risk import governance_risk_bp
+from .governance_metrics import governance_metrics_bp
+from .governance_oversight import governance_oversight_bp
+from .governance_incidents import governance_incidents_bp
+from .governance_reports import governance_reports_bp
 
 __all__ = [
     'views_bp',
-    'core_bp', 
+    'core_bp',
     'market_bp',
     'intelligence_bp',
     'system_bp',
     'snapshots_bp',
     'verification_bp',
     'governance_bp',
+    'governance_risk_bp',
+    'governance_metrics_bp',
+    'governance_oversight_bp',
+    'governance_incidents_bp',
+    'governance_reports_bp',
 ]

@@ -15,6 +15,10 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 1, 2026)
+
+- **Mar 01**: 5 Governance Compliance Modules implementados (ADR-029) — NIST AI RMF + ISO/IEC 42001 + EU AI Act alineados. 7 nuevas tablas PostgreSQL (governance_risk_map, governance_metrics, governance_drift_log, governance_overrides, governance_incidents, governance_incident_reviews, governance_reports). 5 engines core en `omnix_core/governance/`: RiskMappingEngine, MeasurementMonitoringEngine, HumanOversightEngine, IncidentManagementEngine, GovernanceReportingEngine. 5 blueprints Flask: 21 endpoints nuevos bajo `/api/governance/`. Human oversight overrides firmados con Dilithium-3 (PQC). Reportes de compliance con linaje completo de decisiones (EU AI Act Art. 12). Implementación ADITIVA — cero cambios a tablas o endpoints existentes.
+
 ### Cambios Recientes (Feb 17-27, 2026)
 
 - **Feb 27**: B2B Data Governance Layer implementada. Multi-tenant: `client_id` (VARCHAR 64) agregado a `decision_receipts` y `shadow_trade_events` — extraído del header `X-Client-ID` en cada request externo. Cifrado Fernet (AES-128-CBC + HMAC-SHA256): payload de señales cifrado en reposo en columna `encrypted_payload` cuando `PAYLOAD_ENCRYPTION_KEY` está configurado en Railway. Retención: columna `retention_until = created_at + 365 días` en `decision_receipts`. Política documentada en `docs/operations/DATA_RETENTION_POLICY.md`. Auth actualizada a `B2B_API_KEY` (variable dedicada, separada del dashboard). ADR-028 actualizado con todas las secciones: Data Governance, Authentication & Multi-Tenant, updated curl examples con `X-Client-ID`.

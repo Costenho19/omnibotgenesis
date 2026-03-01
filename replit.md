@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, initially in digital asset trading. It employs a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX aims to provide robust, error-free decision-making across various sectors, prioritizing capital preservation.
+OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, specifically in digital asset trading. It features a domain-agnostic 6-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Kelly Criterion sizing. OMNIX's primary goal is to provide robust, error-free decision-making across various sectors, with a strong emphasis on capital preservation.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -149,31 +149,34 @@ La causa raíz de la violación (Feb 2026): `system_state_manifest.json` conten�
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX utilizes a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It includes an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. Dashboards are built with Flask and Streamlit, featuring a Real-Time Latency Monitor, Price Stale Detection, and Admin Alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles and dependency injection, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+OMNIX employs a hexagonal architecture (V7.0) integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. Dashboards are built with Flask and Streamlit, providing real-time monitoring and administrative alerts. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
 
 ### Hierarchical Veto Flow
-Decisions flow through Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, an ECW Gate, Scoring, and a final Decision. The Adaptive Coherence Gate filters low-quality signals, and the Edge Confirmation Window (ECW) enforces signal persistence for trades.
+Decisions progress through a series of veto checks: Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, an Edge Confirmation Window (ECW) Gate, Scoring, and a final Decision.
 
 ### Scoring Logic
-Decision scoring is based on inputs from EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer applies penalties from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum.
+Decision scoring integrates inputs from EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer applies penalties from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system tracks vetoed trades to learn filter calibration by analyzing price movement, determining veto correctness, and providing filter threshold recommendations. It includes an Opportunity Tracker for Missed Opportunities vs. Losses Avoided vs. Net Opportunity.
+A counterfactual analysis system tracks vetoed trades to refine filter calibration. It analyzes price movements to determine veto correctness and recommends filter threshold adjustments, including an Opportunity Tracker for Missed Opportunities vs. Losses Avoided vs. Net Opportunity.
 
 ### Decision Contradiction Index (DCI)
-DCI is a shadow observational metric measuring internal signal divergence to explain HOLDs. High DCI (≥70) indicates significant internal contradiction, mandating a HOLD.
+DCI is a shadow metric that quantifies internal signal divergence to explain HOLD decisions. A high DCI (≥70) indicates significant internal contradiction, mandating a HOLD.
 
 ### Dashboard Features
-The dashboard displays a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Features include clarifying "Est. Loss Avoided" vs "Notional Blocked," distinguishing "Market Trend" from "Trading Regime," Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` facilitates read-only SQL queries.
+The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. It clarifies metrics like "Est. Loss Avoided" vs. "Notional Blocked" and "Market Trend" vs. "Trading Regime." Other features include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` enables read-only SQL queries.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-A B2B endpoint allows external systems to submit signals through the OMNIX 6-checkpoint governance pipeline and receive a PQC-signed governance receipt (ADR-028). It uses RBAC authentication via the `b2b_clients` table with rate limiting, supports 6 normalized signals (0-100), and operates in a fail-closed manner.
+This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt (ADR-028), utilizes RBAC authentication via the `b2b_clients` table with rate limiting, supports 6 normalized signals (0-100), and operates in a fail-closed manner.
+
+### Governance Compliance Modules — 5 Modules (ADR-029)
+Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce 7 new PostgreSQL tables and 21 new REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting. Human oversight overrides are PQC-signed (Dilithium-3) complementary records and do not alter the immutable `decision_receipts` chain. Compliance reports include full EU AI Act Art. 12 decision lineage.
 
 ### Public Verification Server (Railway — Port 8000)
-A standalone `aiohttp` web server provides public receipt verification endpoints with zero internal data exposure, including `/verify`, `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security utilizes SHA-256 hash chain and Dilithium-3 PQC signatures.
+A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure. Endpoints include `/verify`, `/api/verify/{receipt_id}`, `/api/verify/recent`, `/api/public_key`, and `/api/governance/metrics`. Security is maintained using SHA-256 hash chains and Dilithium-3 PQC signatures.
 
 ### Web Infrastructure
-The project uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demos, and the Verification Server (Port 8000) for public receipt validation.
+The project utilizes a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demonstrations, and the Verification Server (Port 8000) for public receipt validation.
 
 ## External Dependencies
 
@@ -193,5 +196,5 @@ The project uses a multi-port architecture: OMNIX Web (Port 3000) for public lan
 -   **ANU QRNG**: Quantum random numbers.
 
 ### Databases
--   **PostgreSQL (Railway)**: Main persistence for trading data, analysis, conversations, balance history, derivatives, community intelligence, risk management, adaptive engine data, and user settings.
+-   **PostgreSQL (Railway)**: Main persistence for all trading, analysis, and system configuration data.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.
