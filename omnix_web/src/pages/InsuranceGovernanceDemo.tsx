@@ -263,6 +263,7 @@ export default function InsuranceGovernanceDemo() {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/governance-demo" className="nav-link">Credit Demo</Link>
             <Link to="/governance-demo-energy" className="nav-link">Energy Demo</Link>
+            <Link to="/governance-demo-biotech" className="nav-link">Biotech Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
           </div>
