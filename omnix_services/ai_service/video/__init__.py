@@ -1,5 +1,5 @@
 """
-OMNIX AI Video Services
+OMNIX Decision Governance Video Services
 Análisis de video, aprendizaje de YouTube, extracción de insights
 """
 
