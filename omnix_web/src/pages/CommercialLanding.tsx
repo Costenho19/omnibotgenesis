@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 export default function CommercialLanding() {
-  const { metrics, isLive, formatNumber } = useLiveMetrics()
+  const { metrics, isLive, formatNumber, formatNumberFull } = useLiveMetrics()
   
   return (
     <div className="min-h-screen bg-institutional">
@@ -107,7 +107,7 @@ export default function CommercialLanding() {
             <p className="text-sm text-center text-muted mb-8">Internal dataset, not externally audited</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold gold-text">{formatNumber(metrics.evaluation_cycles)}</div>
+                <div className="text-3xl font-bold gold-text">{formatNumberFull(metrics.evaluation_cycles)}</div>
                 <div className="text-sm text-muted mt-1">Evaluation Cycles</div>
               </div>
               <div>
