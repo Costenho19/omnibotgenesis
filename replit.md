@@ -74,17 +74,6 @@ Ver ADR-024 para keywords de detección y ejemplos.
 
 > **REGLA CRÍTICA**: Phase 0 = dinero real Kraken. Learning Baseline y Track Record = dinero simulado/paper. NUNCA mezclar en reportes o respuestas al inversor.
 
-### Backtest Phase 0 — Due Diligence Interna (Mar 1, 2026)
-
-| Dato | Valor |
-|------|-------|
-| Resultado principal | 95.6% de evaluaciones habrían sido BLOQUEADAS por el motor de 6 checkpoints |
-| Checkpoints más activos | CP-1 Probability (74%), CP-3 Coherence (71%), CP-4 Persistence (69%) |
-| Claim válido | "El motor detecta el tipo de régimen que causó las pérdidas → responde fail-closed" |
-| Claim NO válido | Un P&L específico de mejora (sin replay exacto no se puede cuantificar) |
-| Documentación | `docs/reference/backtest/PHASE0_GOVERNANCE_BACKTEST.md` |
-| BD | `kraken_real_trades`, `backtest_phase0_signals`, `backtest_phase0_results` |
-
 ### Dashboard Investor Credibility
 
 | Métrica | Comportamiento |
