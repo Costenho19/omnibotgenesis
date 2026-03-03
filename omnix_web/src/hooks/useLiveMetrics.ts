@@ -21,6 +21,11 @@ const FALLBACK_METRICS: LiveMetrics = {
 const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'
 const LOCAL_API = import.meta.env.VITE_API_BASE || ''
 
+const NO_CACHE_OPTS: RequestInit = {
+  cache: 'no-store',
+  headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+}
+
 export function useLiveMetrics(refreshIntervalMs = 60000) {
   const [metrics, setMetrics] = useState<LiveMetrics>(FALLBACK_METRICS)
   const [isLive, setIsLive] = useState(false)
@@ -30,25 +35,10 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
   useEffect(() => {
     let mounted = true
 
-    const fetchFromLocal = async (): Promise<boolean> => {
-      try {
-        const response = await fetch(`${LOCAL_API}/api/live-metrics`)
-        if (response.ok) {
-          const data = await response.json()
-          if (mounted && data.success && data.metrics) {
-            setMetrics(data.metrics)
-            setIsLive(data.live)
-            setLastUpdated(data.last_updated)
-            return true
-          }
-        }
-      } catch {}
-      return false
-    }
-
     const fetchFromRailway = async (): Promise<boolean> => {
       try {
-        const response = await fetch(`${RAILWAY_PUBLIC_API}/api/governance/metrics`)
+        const ts = Date.now()
+        const response = await fetch(`${RAILWAY_PUBLIC_API}/api/governance/metrics?_t=${ts}`, NO_CACHE_OPTS)
         if (response.ok) {
           const data = await response.json()
           if (mounted && data.governance_summary) {
@@ -70,10 +60,27 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
       return false
     }
 
+    const fetchFromLocal = async (): Promise<boolean> => {
+      try {
+        const ts = Date.now()
+        const response = await fetch(`${LOCAL_API}/api/live-metrics?_t=${ts}`, NO_CACHE_OPTS)
+        if (response.ok) {
+          const data = await response.json()
+          if (mounted && data.success && data.metrics && data.live) {
+            setMetrics(data.metrics)
+            setIsLive(true)
+            setLastUpdated(data.last_updated)
+            return true
+          }
+        }
+      } catch {}
+      return false
+    }
+
     const fetchMetrics = async () => {
-      const localOk = await fetchFromLocal()
-      if (!localOk) {
-        await fetchFromRailway()
+      const railwayOk = await fetchFromRailway()
+      if (!railwayOk) {
+        await fetchFromLocal()
       }
       if (mounted) setLoading(false)
     }
