@@ -14,11 +14,11 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api/live-metrics': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/api/news': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },

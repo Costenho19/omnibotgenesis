@@ -179,7 +179,7 @@
 > 2. **Architecture moat** — 6-checkpoint sequential validation with fail-closed behavior isn't trivial to build. We have 27 Architectural Decision Records documenting every design choice.
 > 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
 >
-> Plus, we're filing 3 patent families to protect the core IP."
+> Plus, we have a filing-ready IP framework structured across 3 patent families — provisional applications targeted Q2 2026 post-funding."
 
 ---
 
