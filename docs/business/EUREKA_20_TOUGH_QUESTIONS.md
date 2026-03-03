@@ -251,6 +251,52 @@
 
 ---
 
+### Q-BONUS-11: "Show me Level 5 signing in action. Can you demonstrate it right now?"
+
+**Context**: A technical evaluator (or investor with cryptographic background) challenges the Level 3 choice and asks for a live demonstration of Level 5 capability. This tests whether the architecture is genuinely configurable or just a marketing claim.
+
+**Verbal answer (institutional tier):**
+
+"Yes — right now."
+
+Run this:
+```
+python scripts/pqc_level_demo.py --level 5
+```
+
+"You will see Dilithium-5 (ML-DSA-87) generate a fresh key pair, sign a real governance decision payload — same structure we use in production — and verify it. Tamper detection also runs: modifying the payload by a single byte causes the verification to fail. Both levels are operational. We run Level 3 in production today because that's the NIST enterprise baseline appropriate for institutional capital governance. Level 5 is available by setting one environment variable in the deployment. No code changes, no architectural rewrite."
+
+**What the output proves:**
+
+1. **Dilithium-5 (ML-DSA-87) is operationally available** — not a claim. The library is present, the key generation works, the signing works, the verification works.
+
+2. **The architecture is genuinely configurable** — `omnix_core/security/pqc_config.py` reads `PQC_SIGNING_LEVEL` at service startup. Setting `PQC_SIGNING_LEVEL=5` in Railway and redeploying activates Level 5 for all signing. Callers don't change.
+
+3. **Level 3 is the correct production choice** — Level 3 signatures are 3,309 bytes at ~0.6ms. Level 5 signatures are 4,627 bytes (+39.8%) at ~0.9ms. At 700,000+ daily governance evaluations, that overhead is material. Level 3 (~192-bit classical security) is the NIST target for institutional deployments; Level 5 (~256-bit) is for national-grade or state-secrecy contexts.
+
+**Side-by-side comparison command:**
+```
+python scripts/pqc_level_demo.py --compare
+```
+
+**For programmatic verification:**
+```
+python scripts/pqc_level_demo.py --compare --json
+```
+
+**If pushed: "Why not Level 5 in production right now?"**
+
+"Because threat model drives level selection, not maximalism. OMNIX governs capital-sensitive institutional decisions — not classified state communications. AES-192 equivalent assurance (Level 3) is the designed NIST enterprise target. We would activate Level 5 for a client with national-grade assurance requirements. The architecture is ready. The decision is deployment-context driven."
+
+**What NOT to say:**
+- "We'll add Level 5 support later" — it's already there, running
+- "Level 3 is our minimum" — Level 3 is the designed enterprise baseline
+- "We can switch it in real-time without restart" — a service restart is required
+
+**References**: ADR-022, ADR-031, `docs/business/investor/PQC_DUE_DILIGENCE_DEMO.md`
+
+---
+
 ## DELIVERY RULES
 
 1. **Start with the answer, then explain.** Never start with background.
