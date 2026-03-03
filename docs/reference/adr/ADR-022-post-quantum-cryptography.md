@@ -183,11 +183,24 @@ The Kyber cryptosystem may be protected under patents (FR2956541A1/US9094189B2/E
 - Potential patent encumbrances
 - Library dependency on pypqc
 
+## Assurance Tier Configurability (added March 2026)
+
+ADR-031 extends this implementation to support configurable signing levels via the `PQC_SIGNING_LEVEL` environment variable:
+
+- **Level 3** (default, `PQC_SIGNING_LEVEL=3`): ML-DSA-65 (Dilithium-3) — enterprise baseline, current production configuration
+- **Level 5** (`PQC_SIGNING_LEVEL=5`): ML-DSA-87 (Dilithium-5) — high-assurance / national-grade deployments
+
+No architectural rewrite is required to change tiers. The selection happens at deployment startup via `omnix_core/security/pqc_config.py`. See ADR-031 for full threat model by tier and approved institutional framing.
+
+**Approved institutional statement** (verified technically accurate as of March 2026):
+> "Dilithium-3 (ML-DSA-65) is the enterprise production baseline. For high-assurance or national-grade deployments, the architecture is configurable to Dilithium-5 (ML-DSA-87) via a single deployment-environment parameter — no architectural rewrite required."
+
 ## Related ADRs
 
 - ADR-015: Dashboard Security Enhancement
 - ADR-019: Edge Confirmation Window
 - ADR-020: Institutional Response Quality Standards
+- ADR-031: PQC Configurable Assurance Tiers (configurable Level 3 / Level 5 via env var)
 
 ## References (Internal Use)
 

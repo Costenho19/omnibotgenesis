@@ -183,6 +183,17 @@
     "module_location": "omnix_core/security/pqc_security.py",
     "communication_tier_rule": "EXTERNAL (bot, Telegram, web): use 'NIST-standardized algorithms' only — never FIPS numbers, never algorithm names. INSTITUTIONAL (investors, partners): may use algorithm names (Dilithium-3, Kyber-768) + 'NIST-standardized' — never FIPS numbers. INTERNAL (ADRs, audits): full technical detail including FIPS numbers is acceptable.",
     "investor_explanation": "OMNIX implementa criptografía post-cuántica usando algoritmos estandarizados por NIST (Kyber-768 para intercambio de claves, Dilithium-3 para firmas digitales). Esto protege el audit trail de gobernanza y las órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo desde noviembre 2025, no es roadmap.",
+    "assurance_tiers": {
+      "adr": "ADR-031",
+      "production_level": 3,
+      "production_algorithm": "Dilithium-3 (ML-DSA-65)",
+      "high_assurance_available": true,
+      "high_assurance_algorithm": "Dilithium-5 (ML-DSA-87)",
+      "configuration_mechanism": "PQC_SIGNING_LEVEL environment variable at deployment",
+      "institutional_framing": "Dilithium-3 (ML-DSA-65) is the enterprise production baseline. For high-assurance or national-grade deployments, the architecture is configurable to Dilithium-5 (ML-DSA-87) via a single deployment-environment parameter — no architectural rewrite required.",
+      "threat_model_note": "Cryptographic level is threat-model driven, not a ceiling. Level 3 (~AES-192 class security) is appropriate for capital-sensitive institutional environments. Level 5 (~AES-256 class security) is for national-grade or maximum-assurance contexts.",
+      "sovereignty_clarification": "'Sovereign' in OMNIX refers to structural decision authority and deterministic enforceability at the execution boundary — not exclusively to maximum cryptographic strength. Cryptographic level scales with deployment context."
+    },
     "NEVER_SAY": [
       "PQC está en roadmap",
       "PQC planificado para Q3 2026",
@@ -193,7 +204,11 @@
       "NIST Level 3 security equivalent",
       "Kyber-768 para cifrado de datos",
       "Kyber-768 for data encryption",
-      "Kyber-768 for secure data encryption"
+      "Kyber-768 for secure data encryption",
+      "swap dinámico en runtime entre Level 3 y Level 5",
+      "Level 5 ya activo en producción",
+      "configurable en tiempo de ejecución",
+      "Level 3 es nuestro mínimo"
     ]
   },
   
