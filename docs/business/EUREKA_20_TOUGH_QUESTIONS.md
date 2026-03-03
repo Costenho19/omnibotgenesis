@@ -192,6 +192,65 @@
 
 ---
 
+### SOBRE EL PAPER DE SSRN (Si el juez lo menciona)
+
+---
+
+### Q-BONUS-4: "¿Fue revisado por pares?" / "Was this peer-reviewed?"
+
+**Answer:**
+"Es un preprint publicado en SSRN — no tiene revisión por pares, y quiero ser preciso sobre eso. Lo publicamos para establecer un registro técnico público con fecha, DOI y verificación. Los datos son reales y trazables contra Kraken exchange. SSRN es el repositorio estándar en finanzas y economía para exactamente este tipo de estudio — es donde los practitioners publican antes que las revistas académicas."
+
+**Key framing:** Honestidad primero. No decir "peer-reviewed" si no lo es. SSRN es legítimo — es donde los investigadores del Fed, BIS y hedge funds publican preprints.
+
+---
+
+### Q-BONUS-5: "¿Lo escribiste tú solo?" / "Did you write this paper yourself?"
+
+**Answer:**
+"El contenido técnico — los datos, la arquitectura, los resultados, la metodología — son míos. Yo construí el sistema que el paper describe. Para la redacción académica usé asistencia de IA, igual que lo hacen hoy muchos investigadores y fundadores técnicos. Lo importante es que el sistema existe, corre en producción, y cada resultado en el paper es verificable contra datos reales."
+
+**Key framing:** No esconder el uso de IA — eso sería peor si se descubre. La honestidad refuerza la credibilidad. El punto central es que los datos y el sistema son reales.
+
+---
+
+### Q-BONUS-6: "¿Por qué SSRN y no una revista académica?" / "Why SSRN and not a journal?"
+
+**Answer:**
+"Una revisión por pares tarda 12-18 meses. SSRN nos da lo que necesitamos en esta etapa: timestamp público permanente, DOI citable, e indexación en Google Scholar — esta semana, no en 2027. El paper no pretende ser investigación universitaria. Es documentación técnica de un deployment en producción, publicada para establecer registro público de la arquitectura antes de esta ronda de inversión."
+
+---
+
+### Q-BONUS-7: "¿Cuál es la contribución principal del paper?" / "What's the main contribution?"
+
+**Answer:**
+"El paper reporta el primer deployment en producción conocido de governance receipts firmados con criptografía post-quantum para sistemas de decisión autónomos. No es teórico — es una descripción de arquitectura con datos reales: 49 días de operación continua, 693,890 ciclos de evaluación, 27,449 receipts firmados con Dilithium-3 en una cadena SHA-256 verificable públicamente. Cualquier persona puede verificar cualquier receipt en omnixquantum.net/verify sin acceso interno."
+
+---
+
+### Q-BONUS-8: "El paper dice 693,890 ciclos pero el pitch dice 670,000+. ¿Por qué la diferencia?"
+
+**Answer:**
+"Períodos distintos. El paper cubre enero 9 a febrero 27, 2026 — 49 días específicos con 693,890 ciclos. El pitch usa 670,000+ como cifra conservadora redondeada que cubre el Track Record Oficial desde enero 15. El número real al momento actual es mayor — siempre usamos el más conservador en materiales públicos, nunca inflamos."
+
+**Key framing:** Esta es la pregunta más técnica posible — si un juez la hace, significa que realmente leyó el paper. Tenerla preparada genera credibilidad inmediata.
+
+---
+
+### Q-BONUS-9: "¿Es citable? ¿Tiene DOI?" / "Is it citable?"
+
+**Answer:**
+"Sí. SSRN asigna DOI a todos los papers publicados. Está indexado en Google Scholar. Cualquier persona puede buscarlo, citarlo, y verificar la fecha de publicación — febrero 2026. Eso nos da un registro público de la arquitectura con timestamp anterior a cualquier conversación de inversión."
+
+---
+
+### Q-BONUS-10: "El paper menciona el caso Knight Capital. ¿La comparación es justa?" / "Is the Knight Capital comparison fair?"
+
+**Answer:**
+"Es justa como motivación del problema — no como comparación de escala. Knight Capital perdió $440M porque no había un mecanismo que bloqueara decisiones incorrectas antes de ejecutarlas. Ese es exactamente el problema que OMNIX resuelve. No reclamamos ser el sistema que Knight Capital necesitaba. Lo usamos para ilustrar qué pasa cuando sistemas autónomos operan sin governance en tiempo real — un problema de industria universal que va mucho más allá del trading."
+
+---
+
 ## DELIVERY RULES
 
 1. **Start with the answer, then explain.** Never start with background.
