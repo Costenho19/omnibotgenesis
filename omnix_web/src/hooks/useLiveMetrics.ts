@@ -3,17 +3,19 @@ import { useState, useEffect } from 'react'
 export interface LiveMetrics {
   evaluation_cycles: number
   pqc_signed_receipts: number
+  decisions_blocked: number
   capital_preserved_pct: number
   verticals_demo: number
   system_uptime_days: number
 }
 
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 673673,
-  pqc_signed_receipts: 16308,
+  evaluation_cycles: 708674,
+  pqc_signed_receipts: 37503,
+  decisions_blocked: 5473,
   capital_preserved_pct: 98.5,
   verticals_demo: 4,
-  system_uptime_days: 85,
+  system_uptime_days: 52,
 }
 
 const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'
@@ -54,6 +56,7 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
             setMetrics({
               evaluation_cycles: gs.total_evaluation_cycles || FALLBACK_METRICS.evaluation_cycles,
               pqc_signed_receipts: gs.total_receipts || FALLBACK_METRICS.pqc_signed_receipts,
+              decisions_blocked: gs.decisions_blocked ?? FALLBACK_METRICS.decisions_blocked,
               capital_preserved_pct: gs.capital_preserved_pct ?? FALLBACK_METRICS.capital_preserved_pct,
               verticals_demo: gs.verticals_demo ?? FALLBACK_METRICS.verticals_demo,
               system_uptime_days: gs.system_uptime_days ?? FALLBACK_METRICS.system_uptime_days,

@@ -2586,16 +2586,23 @@ def api_live_metrics():
             cursor.execute("SELECT COUNT(*) FROM decision_receipts")
             pqc_receipts = cursor.fetchone()[0]
             
+            cursor.execute("""
+                SELECT COUNT(*) FROM decision_receipts
+                WHERE decision IN ('BLOCK', 'BLOCKED')
+            """)
+            decisions_blocked = cursor.fetchone()[0]
+            
             cursor.execute("SELECT EXTRACT(EPOCH FROM (NOW() - MIN(created_at)))/86400 AS uptime_days FROM shadow_trade_events")
             row = cursor.fetchone()
             uptime_days = int(row[0]) if row and row[0] else 0
             
-            return jsonify({
+            response = jsonify({
                 'success': True,
                 'live': True,
                 'metrics': {
                     'evaluation_cycles': evaluation_cycles,
                     'pqc_signed_receipts': pqc_receipts,
+                    'decisions_blocked': decisions_blocked,
                     'capital_preserved_pct': 98.5,
                     'verticals_demo': 4,
                     'system_uptime_days': uptime_days,
@@ -2603,6 +2610,10 @@ def api_live_metrics():
                 'source': 'postgresql',
                 'last_updated': datetime.now().isoformat()
             })
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            return response
             
         except Exception as e:
             logger.error(f"Live metrics error: {e}")

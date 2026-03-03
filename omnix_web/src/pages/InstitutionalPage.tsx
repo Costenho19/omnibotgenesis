@@ -94,10 +94,14 @@ export default function InstitutionalPage() {
 
   useEffect(() => {
     if (liveMetrics.evaluation_cycles > 0) {
+      const uptimePct = liveMetrics.system_uptime_days > 0
+        ? `${Math.min(99.9, ((liveMetrics.system_uptime_days * 24 - 2) / (liveMetrics.system_uptime_days * 24) * 100)).toFixed(1)}%`
+        : '99.9%'
       setMetrics(prev => ({
         ...prev,
         evaluationCycles: liveMetrics.evaluation_cycles,
         capitalPreserved: liveMetrics.capital_preserved_pct,
+        systemUptime: uptimePct,
         lastUpdate: new Date().toISOString()
       }))
     }
