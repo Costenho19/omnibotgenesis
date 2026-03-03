@@ -1,9 +1,9 @@
 # OMNIX — Pitch Scripts
 
-**Version**: 1.0  
-**Date**: February 17, 2026  
+**Version**: 1.1  
+**Date**: March 3, 2026  
 **Author**: Harold Nunes, Founder & Product Architect  
-**Status**: APPROVED  
+**Status**: MENTOR-REVIEWED  
 **ADR Compliance**: ADR-023, ADR-024, ADR-025, ADR-027  
 **Target**: Eureka Dubai Semifinal, Investor Meetings, Elevator Conversations
 
@@ -223,6 +223,7 @@ Every pitch version MUST pass this test. Check each line:
 | Date | Version | Changes |
 |------|---------|---------|
 | Feb 17, 2026 | 1.0 | Initial creation. 90s and 60s versions (EN/ES). Based on Harold Nunes's draft with "why now" and strengthened ask. ADR-027 compliant. |
+| Mar 3, 2026 | 1.1 | Mentor review applied. Updated metadata status to MENTOR-REVIEWED. See `docs/business/MENTOR_FEEDBACK_EUREKA_2026.md` for full feedback audit trail. |
 
 ---
 

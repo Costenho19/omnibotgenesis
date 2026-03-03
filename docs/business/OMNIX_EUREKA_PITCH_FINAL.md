@@ -182,7 +182,7 @@ Capital Preserved: $50,000
 |--------|-------|---------|
 | **Capital Preserved** | **98.5%** | During a period where BTC dropped 7.37% |
 | **Max Drawdown** | **1.5%** | vs BTC max drawdown of -7.37% |
-| **Trades Blocked** | **47** | High-risk signals correctly vetoed |
+| **Trades Blocked** | **47** | Signals vetoed by governance engine (91% validated against subsequent 48h price action — internal dataset) |
 | **Block Success Rate** | **91%** | Blocked trades would have lost money |
 | **Decision Cycles Analyzed** | **670,000+** | Shadow Portfolio learning engine |
 | **PQC-Signed Receipts** | **16,000+** | Every governance decision cryptographically signed |
@@ -279,6 +279,8 @@ Impact for the firm:
 > "Institutions pay for what BLOCKS bad decisions, not for alpha."
 > License-based revenue. No tokens. No performance fees.
 
+> "Institutions are not asking if they need governance. They are asking how soon they can implement it."
+
 ---
 
 ## SLIDE 10 — MARKET OPPORTUNITY
@@ -354,7 +356,7 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 
 **Why Me:**
 
-I spent three months building this with personal capital. No investors. No team. No external validation required. I chose the hardest domain first — real-time financial markets — because if the governance engine works here, it works everywhere. That is not theory. That is conviction backed by 670,000+ data points.
+I spent three months building this with personal capital. Lean, focused build. Governance-first architecture. The product was validated before seeking external capital. I chose the hardest domain first — real-time financial markets — because if the governance engine works here, it works everywhere. That is not theory. That is conviction backed by 670,000+ data points.
 
 **What One Founder Built:**
 

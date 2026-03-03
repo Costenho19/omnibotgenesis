@@ -9,6 +9,32 @@
 
 ## CATEGORY 1: TRACTION & CUSTOMERS
 
+### Q: "How do you define 'high-risk'? What's your methodology for the blocked signals?"
+
+**Answer:**
+> "We don't use the term 'high-risk' as an external label — the governance engine doesn't categorize market conditions subjectively. A signal is blocked when one or more of the 6 internal checkpoints fails. Specifically: if the Monte Carlo simulation shows win probability below 50%, or if the 5 AI models don't reach 45% consensus, or if trend persistence isn't confirmed over 3 consecutive cycles — the action is blocked.
+>
+> The 91% figure comes from comparing the entry price of each blocked signal against the actual price movement in the following 48 hours. If the market moved against the would-have-been position, the block is validated as correct. This is calculated from our internal Shadow Portfolio dataset — 119 trades total, all reconciled against real Kraken exchange fill data."
+
+**Key framing:** Remove the ambiguity of "high-risk" — the methodology is mechanical and traceable, not subjective. The block criteria are defined by the engine's thresholds, not by human judgment calls.
+
+**Follow-up if pressed:** "The definition is in the architecture: a signal is blocked when ≥1 of 6 independent checkpoints fails. The checkpoints have fixed mathematical thresholds — not discretionary judgment."
+
+---
+
+### Q: "The 91% block accuracy — is that audited externally?"
+
+**Answer:**
+> "It's an internal dataset — not externally audited, and I want to be precise about that. What it is: 47 blocked signals from our Learning Baseline period, each compared against subsequent 48-hour price movements. 43 of the 47 moved against the would-have-been position, which is 91%. Every trade is reconciled against real Kraken exchange data — that reconciliation is 100% verified.
+>
+> External audit of the methodology is part of the use of funds. The infrastructure to run it is already there — we need the legal and accounting structure in ADGM to formalize it."
+
+**Key framing:** Never say "audited" without specifying by whom. This answer is honest, technically precise, and shows institutional maturity — you know the difference between internal validation and third-party audit.
+
+**Follow-up if pressed:** "The data is real. The reconciliation against Kraken is verifiable. What we don't yet have is a third-party opinion on the methodology — and we've budgeted specifically for that."
+
+---
+
 ### Q: "Do you have any paying customers?"
 
 **Answer:**

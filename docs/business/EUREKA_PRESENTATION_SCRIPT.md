@@ -92,7 +92,7 @@ Here are the numbers.
 
 Ninety-eight point five percent of capital preserved — during a period where Bitcoin dropped over seven percent.
 
-Forty-seven high-risk trades blocked. Ninety-one percent of those blocks were correct — those trades would have lost money.
+Forty-seven signals blocked by the governance engine. Ninety-one percent validated against subsequent 48-hour price data — those trades would have lost money. Internal dataset.
 
 Six hundred seventy thousand evaluation cycles analyzed in our Shadow Portfolio learning engine. Sixteen thousand governance decisions cryptographically signed and publicly verifiable.
 
@@ -104,7 +104,7 @@ This is not backtesting. This is not simulation. This is live."
 
 ## WHY ME (20 seconds)
 
-"Three months. Personal capital. No team. No investors. No safety net.
+"Three months. Personal capital. Lean, focused build. Governance-first architecture.
 
 I chose the hardest domain first — real-time financial markets. Not because it was easy. Because if the governance engine survives here, it survives anywhere.
 
@@ -138,7 +138,9 @@ No tokens. No performance fees. Clean licensing.
 
 Year one target: three enterprise pilots. Two hundred to four hundred thousand in revenue.
 Year two: five to eight enterprise licenses. Eight hundred thousand to one point two million.
-Year three: geographic expansion — ADGM to EU under MiCA. Two million plus."
+Year three: geographic expansion — ADGM to EU under MiCA. Two million plus.
+
+Institutions are not asking if they need governance. They are asking how soon they can implement it."
 
 ---
 
