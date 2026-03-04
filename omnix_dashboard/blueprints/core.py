@@ -328,7 +328,7 @@ def api_equity_curve():
     
     initial_capital = 1000000
     equity = initial_capital
-    curve_data = [{'date': (datetime.now() - timedelta(days=30)).isoformat(), 'equity': initial_capital}]
+    curve_data = [{'date': '2026-01-15T00:00:00', 'equity': initial_capital}]
     
     for trade in sorted_trades:
         pnl = float(trade.get('pnl', 0) or 0)
@@ -854,7 +854,8 @@ def api_health_score():
         
         risk_score = 100
         veto_active = True
-        capital_preserved = 98.5
+        total_pnl = metrics.get('total_pnl', 0) or 0
+        capital_preserved = round(max(0, (1_000_000 + total_pnl) / 1_000_000 * 100), 2)
         risk_score = min(100, capital_preserved + (5 if veto_active else 0))
         
         data_score = 100
@@ -1162,7 +1163,8 @@ def api_quick_insights():
                 'priority': 4
             })
         
-        capital_preserved = 98.5
+        total_pnl_for_cp = metrics.get('total_pnl', 0) or 0
+        capital_preserved = round(max(0, (1_000_000 + total_pnl_for_cp) / 1_000_000 * 100), 2)
         if capital_preserved >= 95:
             insights.append({
                 'type': 'SUCCESS',
@@ -1338,7 +1340,8 @@ def recommended_actions():
         total_trades = len(closed_trades)
         win_rate = metrics.get('win_rate_directional', 0) or metrics.get('win_rate', 0)
         profit_factor = metrics.get('profit_factor', 0)
-        capital_preserved = 98.5
+        total_pnl_for_cp = metrics.get('total_pnl', 0) or 0
+        capital_preserved = round(max(0, (1_000_000 + total_pnl_for_cp) / 1_000_000 * 100), 2)
         
         actions = []
         
@@ -2595,7 +2598,12 @@ def api_live_metrics():
             cursor.execute("SELECT EXTRACT(EPOCH FROM (NOW() - MIN(created_at)))/86400 AS uptime_days FROM shadow_trade_events")
             row = cursor.fetchone()
             uptime_days = int(row[0]) if row and row[0] else 0
-            
+
+            cursor.execute("SELECT COALESCE(SUM(profit_loss), 0) FROM paper_trading_trades WHERE status = 'closed'")
+            pnl_row = cursor.fetchone()
+            total_pnl = float(pnl_row[0] or 0)
+            capital_preserved_pct = round(max(0, (1_000_000 + total_pnl) / 1_000_000 * 100), 2)
+
             response = jsonify({
                 'success': True,
                 'live': True,
@@ -2603,7 +2611,7 @@ def api_live_metrics():
                     'evaluation_cycles': evaluation_cycles,
                     'pqc_signed_receipts': pqc_receipts,
                     'decisions_blocked': decisions_blocked,
-                    'capital_preserved_pct': 98.5,
+                    'capital_preserved_pct': capital_preserved_pct,
                     'verticals_demo': 4,
                     'system_uptime_days': uptime_days,
                 },
