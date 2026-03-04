@@ -5,6 +5,14 @@
 
 **Regla de oro:** Número primero. Siempre. Luego explicas.
 
+**Última actualización:** Marzo 4, 2026
+
+> **CONTEXTO ARQUITECTURA — ACTUALIZACIÓN MARZO 2026:**
+> El trading pipeline opera ahora con **7 checkpoints** (6 validados + TCV agregado en marzo 2026, ADR-032).
+> - Todas las estadísticas en este documento (670,000+ ciclos, 91%, 98.5% capital) **corresponden al sistema de 6 checkpoints**, período hasta febrero 2026.
+> - Si un juez pregunta "¿cuántos checkpoints tienen?": responder **7** (con el contexto temporal correcto).
+> - Las latencias citadas (8-15 segundos por ciclo) son del sistema de 6 checkpoints — TCV agrega una capa adicional de evaluación ligera.
+
 ---
 
 ## JUEZ 1 — EL TÉCNICO
@@ -19,12 +27,12 @@
 🎯 **Lo que realmente pregunta:** ¿Sabes matemáticas o solo usas el nombre?
 
 ✅ **Respuesta ideal (30 seg):**
-> "Ejecutamos 10,000 simulaciones por ciclo de decisión. Distribución de retornos históricos del activo con cola pesada — no normal, para capturar eventos extremos. El resultado: win rate esperado y retorno esperado. Si el win rate es menor al 50% o el retorno esperado es negativo, el sistema veta automáticamente — no importa cuánto diga el resto del modelo. Es el primer checkpoint de los seis."
+> "Ejecutamos 10,000 simulaciones por ciclo de decisión. Distribución de retornos históricos del activo con cola pesada — no normal, para capturar eventos extremos. El resultado: win rate esperado y retorno esperado. Si el win rate es menor al 50% o el retorno esperado es negativo, el sistema veta automáticamente — no importa cuánto diga el resto del modelo. Es el primer checkpoint de los siete."
 
 🪤 **Follow-up trampa:** *"¿Por qué 10,000 y no 1,000 o 100,000? ¿Cuánto tarda cada ciclo?"*
 
 🛡️ **Cómo manejar:**
-> "10,000 es el balance entre precisión estadística y latencia. A 1,000 el error estándar es demasiado alto. A 100,000 la latencia supera la ventana de trading. Cada ciclo completo — incluyendo los seis checkpoints — tarda entre 8 y 15 segundos en producción. Para governance esto es aceptable; no somos un sistema de alta frecuencia."
+> "10,000 es el balance entre precisión estadística y latencia. A 1,000 el error estándar es demasiado alto. A 100,000 la latencia supera la ventana de trading. Cada ciclo completo — incluyendo los siete checkpoints — tarda entre 8 y 15 segundos en producción (datos del sistema de 6 checkpoints hasta feb 2026; TCV agrega una capa ligera de evaluación de trayectoria). Para governance esto es aceptable; no somos un sistema de alta frecuencia."
 
 ---
 
@@ -47,7 +55,7 @@
 🎯 **Lo que realmente pregunta:** ¿Es real el audit trail o es solo un counter?
 
 ✅ **Respuesta ideal (30 seg):**
-> "Cada receipt firma el payload completo de la decisión: timestamp, activo, señal, resultado de los 6 checkpoints, scoring final, razón del veto si aplica, y el hash del receipt anterior — formando una cadena hash. La firma usa Dilithium-3, algoritmo NIST-estandardizado post-cuántico. Cualquiera puede verificar cualquier receipt en tiempo real en omnixquantum.net/verify — con la clave pública disponible públicamente."
+> "Cada receipt firma el payload completo de la decisión: timestamp, activo, señal, resultado de todos los checkpoints de governance, scoring final, razón del veto si aplica, y el hash del receipt anterior — formando una cadena hash. La firma usa Dilithium-3, algoritmo NIST-estandardizado post-cuántico. Cualquiera puede verificar cualquier receipt en tiempo real en omnixquantum.net/verify — con la clave pública disponible públicamente."
 
 🪤 **Follow-up trampa:** *"¿Quién verificó externamente que las firmas son válidas? ¿Tienen un audit externo?"*
 
@@ -91,12 +99,12 @@
 🎯 **Lo que realmente pregunta:** ¿Puedes defender una pérdida o te pones nervioso?
 
 ✅ **Respuesta ideal (30 seg):**
-> "Esa pérdida fue intencional y documentada. Fue el costo de calibración — 119 trades en condiciones reales para ajustar 6 checkpoints a datos de mercado live. Ningún sistema de governance nace calibrado. Desde el 15 de enero, el sistema opera con los parámetros recalibrados: 98.5% de capital preservado durante un período en que Bitcoin cayó 7.37%. La pregunta correcta no es '¿por qué perdieron $15K?' — es '¿cuánto habrían perdido sin el sistema en ese mismo período?'"
+> "Esa pérdida fue intencional y documentada. Fue el costo de calibración — 119 trades en condiciones reales para ajustar los checkpoints de governance a datos de mercado live. Ningún sistema de governance nace calibrado. Desde el 15 de enero, el sistema opera con los parámetros recalibrados: 98.5% de capital preservado durante un período en que Bitcoin cayó 7.37%. La pregunta correcta no es '¿por qué perdieron $15K?' — es '¿cuánto habrían perdido sin el sistema en ese mismo período?'"
 
 🪤 **Follow-up trampa:** *"¿Y por qué no tienen más trades en el Track Record Oficial? Cero trades en 6 semanas suena a que el sistema está demasiado conservador para ser útil."*
 
 🛡️ **Cómo manejar:**
-> "El sistema bloqueó durante ese período porque las condiciones de mercado no pasaron los 6 checkpoints. Bitcoin estuvo en un régimen de alta volatilidad. Un sistema de governance que ejecuta en cualquier condición no es un sistema de governance — es un sistema de trading normal. El valor es precisamente que sabe cuándo NO ejecutar. Si en ese período hubiéramos forzado trades, habríamos perdido capital. En cambio, preservamos el 98.5%."
+> "El sistema bloqueó durante ese período porque las condiciones de mercado no pasaron los checkpoints de governance. Bitcoin estuvo en un régimen de alta volatilidad. Un sistema de governance que ejecuta en cualquier condición no es un sistema de governance — es un sistema de trading normal. El valor es precisamente que sabe cuándo NO ejecutar. Si en ese período hubiéramos forzado trades, habríamos perdido capital. En cambio, preservamos el 98.5%."
 
 ---
 
@@ -149,7 +157,7 @@
 🎯 **Lo que realmente pregunta:** ¿Eres resiliente o te rindes cuando algo sale mal?
 
 ✅ **Respuesta ideal (30 seg):**
-> "El momento más difícil fue la fase de calibración — perder $15,000 mientras el sistema estaba aprendiendo. Lo peor no fue el dinero. Fue darme cuenta de que tenía 6 checkpoints pero los parámetros estaban mal calibrados. Tuve dos opciones: parar o recalibrar con los datos reales. Elegí recalibrar. Lo que aprendí: en sistemas de governance, el fracaso controlado es parte del diseño — si tu sistema no puede aprender de sus errores, no puede proteger de los errores de otros."
+> "El momento más difícil fue la fase de calibración — perder $15,000 mientras el sistema estaba aprendiendo. Lo peor no fue el dinero. Fue darme cuenta de que tenía los checkpoints correctos pero los parámetros estaban mal calibrados. Tuve dos opciones: parar o recalibrar con los datos reales. Elegí recalibrar. Lo que aprendí: en sistemas de governance, el fracaso controlado es parte del diseño — si tu sistema no puede aprender de sus errores, no puede proteger de los errores de otros."
 
 🪤 **Follow-up trampa:** *"¿No te desmotivaste después de perder ese dinero?"*
 
@@ -182,9 +190,10 @@
 🪤 **Follow-up trampa:** *"Eso es muy ambicioso para un solo founder. ¿No es mejor enfocarte solo en trading?"*
 
 🛡️ **Cómo manejar:**
-> "El enfoque de Año 1 es 100% trading — tres pilotos en ADGM. La arquitectura domain-agnostic no es una promesa de Año 5, es una consecuencia del diseño de Año 1. Construí los 6 checkpoints sin hardcodear lógica de trading — es governance logic. Si hubiera construido un sistema de trading, estaría compitiendo con 3Commas. Construí infraestructura de governance que hoy se aplica a trading. La expansión no requiere reconstruir — requiere re-parametrizar."
+> "El enfoque de Año 1 es 100% trading — tres pilotos en ADGM. La arquitectura domain-agnostic no es una promesa de Año 5, es una consecuencia del diseño de Año 1. Construí los checkpoints de governance sin hardcodear lógica de trading — es governance logic. Si hubiera construido un sistema de trading, estaría compitiendo con 3Commas. Construí infraestructura de governance que hoy se aplica a trading (7 checkpoints en el pipeline de trading, incluyendo TCV desde marzo 2026). La expansión no requiere reconstruir — requiere re-parametrizar."
 
 ---
+
 
 ## REGLAS DE ENTREGA EN ESCENARIO
 

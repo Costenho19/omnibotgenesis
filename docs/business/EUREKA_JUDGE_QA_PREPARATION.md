@@ -1,9 +1,23 @@
 # OMNIX — Eureka Dubai Judge Q&A Preparation
 
 **Classification**: Competition Preparation — Confidential
-**Date**: February 19, 2026
+**Date**: February 19, 2026 | **Last Updated**: March 4, 2026
 **Purpose**: Anticipated judge questions with prepared, honest, evidence-based answers
 **Audience**: Harold Nunes — internal preparation only
+
+---
+
+## ⚡ ACTUALIZACIÓN MARZO 2026 — CHECKPOINT 7: TEMPORAL COHERENCE VALIDATION (TCV)
+
+> **En marzo de 2026, el trading pipeline se extendió de 6 a 7 checkpoints** con la adición de Temporal Coherence Validation (ADR-032).
+>
+> **Marco dual para presentar honestamente:**
+> - Todas las métricas publicadas (670,000+ ciclos, 91% precisión, 98.5% capital preserved) **fueron generadas bajo el sistema validado de 6 checkpoints** (hasta feb 2026).
+> - El **Checkpoint 7 — TCV** fue agregado en marzo 2026: evalúa si una decisión propuesta es "temporalmente admisible" dado el comportamiento reciente del sistema (Direction Coherence 40% + Regime Alignment 35% + Signal Stability 25%).
+> - Las demos de dominio (Credit, Insurance, Energy, Biotech) utilizan **6 señales normalizadas** vía el Domain Adapter — TCV es específico del pipeline de trading interno. El número de checkpoints puede variar por dominio conforme se calibran.
+>
+> **Respuesta canónica si un juez pregunta "¿7 checkpoints?" o "¿cuántos checkpoints tienen?":**
+> > "El sistema de trading opera con 7 checkpoints desde marzo 2026. El Checkpoint 7, Temporal Coherence Validation, evalúa la trayectoria reciente del sistema — pregunta: ¿esta decisión es consistente con adónde ha estado yendo el sistema en los últimos N ciclos? Todas las métricas publicadas — 670,000+ ciclos, 91% de precisión en bloqueos — corresponden al período validado de 6 checkpoints hasta febrero 2026. El Checkpoint 7 es una mejora aditiva, no un reemplazo."
 
 ---
 
@@ -12,13 +26,13 @@
 ### Q: "How do you define 'high-risk'? What's your methodology for the blocked signals?"
 
 **Answer:**
-> "We don't use the term 'high-risk' as an external label — the governance engine doesn't categorize market conditions subjectively. A signal is blocked when one or more of the 6 internal checkpoints fails. Specifically: if the Monte Carlo simulation shows win probability below 50%, or if the 5 AI models don't reach 45% consensus, or if trend persistence isn't confirmed over 3 consecutive cycles — the action is blocked.
+> "We don't use the term 'high-risk' as an external label — the governance engine doesn't categorize market conditions subjectively. A signal is blocked when one or more of the governance checkpoints fails. Specifically: if the Monte Carlo simulation shows win probability below 50%, or if the 5 AI models don't reach 45% consensus, or if trend persistence isn't confirmed over 3 consecutive cycles — the action is blocked.
 >
-> The 91% figure comes from comparing the entry price of each blocked signal against the actual price movement in the following 48 hours. If the market moved against the would-have-been position, the block is validated as correct. This is calculated from our internal Shadow Portfolio dataset — 119 trades total, all reconciled against real Kraken exchange fill data."
+> The 91% figure comes from comparing the entry price of each blocked signal against the actual price movement in the following 48 hours. If the market moved against the would-have-been position, the block is validated as correct. This is calculated from our internal Shadow Portfolio dataset — 119 trades total, all reconciled against real Kraken exchange fill data. These metrics were produced under the validated 6-checkpoint system (through February 2026). In March 2026 we added Checkpoint 7: Temporal Coherence Validation (ADR-032)."
 
 **Key framing:** Remove the ambiguity of "high-risk" — the methodology is mechanical and traceable, not subjective. The block criteria are defined by the engine's thresholds, not by human judgment calls.
 
-**Follow-up if pressed:** "The definition is in the architecture: a signal is blocked when ≥1 of 6 independent checkpoints fails. The checkpoints have fixed mathematical thresholds — not discretionary judgment."
+**Follow-up if pressed:** "The definition is in the architecture: a signal is blocked when ≥1 independent checkpoints fails. The checkpoints have fixed mathematical thresholds — not discretionary judgment. The trading pipeline now has 7 checkpoints (6 validated + TCV added March 2026)."
 
 ---
 
@@ -56,7 +70,7 @@
 ### Q: "670,000 decisions — but how many of those are real trades vs. simulations?"
 
 **Answer:**
-> "670,000 are real governance evaluation cycles — every 60 seconds, the engine evaluates market conditions through all 6 checkpoints. 119 were actual trade executions during calibration. 47 were correctly blocked. The governance engine runs 24/7 regardless of whether a trade is placed — that's the data that trains the system."
+> "670,000 are real governance evaluation cycles — every 60 seconds, the engine evaluates market conditions through all governance checkpoints. 119 were actual trade executions during calibration. 47 were correctly blocked. The governance engine runs 24/7 regardless of whether a trade is placed — that's the data that trains the system. These 670,000 cycles were processed under the validated 6-checkpoint system through February 2026; the trading pipeline now includes a 7th checkpoint (TCV) added in March 2026."
 
 ---
 
@@ -176,7 +190,7 @@
 **Answer:**
 > "Three things:
 > 1. **Data moat** — 670,000+ evaluation cycle events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
-> 2. **Architecture moat** — 6-checkpoint sequential validation with fail-closed behavior isn't trivial to build. We have 27 Architectural Decision Records documenting every design choice.
+> 2. **Architecture moat** — 7-checkpoint sequential validation with fail-closed behavior isn't trivial to build (6 validated + TCV added March 2026). We have 32 Architectural Decision Records documenting every design choice.
 > 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
 >
 > Plus, we have a filing-ready IP framework structured across 3 patent families — provisional applications targeted Q2 2026 post-funding."
@@ -197,9 +211,9 @@
 ### Q: "The multi-vertical story sounds nice — but can you really do credit and insurance?"
 
 **Answer:**
-> "We already built interactive governance demos for credit and insurance — live on our website right now. The same 6-checkpoint architecture evaluates a loan applicant or an insurance policy with different inputs but identical governance logic.
+> "We already built interactive governance demos for credit and insurance — live on our website right now. The same governance architecture evaluates a loan applicant or an insurance policy with different inputs but identical governance logic.
 >
-> In trading, checkpoint 1 runs Monte Carlo simulations. In credit, it calculates default probability. Different signal, same checkpoint structure. That's what 'domain-agnostic' means — and it's not theoretical, it's demonstrable."
+> In trading, checkpoint 1 runs Monte Carlo simulations. In credit, it calculates default probability. Different signal, same checkpoint structure. That's what 'domain-agnostic' means — and it's not theoretical, it's demonstrable. The trading pipeline now includes 7 checkpoints; domain-specific temporal calibration (like TCV) is introduced per vertical as they mature."
 
 ---
 
@@ -242,7 +256,7 @@
 **Answer:**
 > "We don't sell AI. We sell governance. The AI is a component — we orchestrate 3 providers (Gemini, GPT-4o, Claude) so there's zero single-provider dependency. If one goes down, the system continues.
 >
-> What's special is the 6-checkpoint architecture: Monte Carlo simulation, risk limits, signal agreement, trend confirmation, stress testing, and logic contradiction detection — all running in sequence, all with veto authority. Most systems have 1 risk check. We have 6 independent ones that must ALL agree."
+> What's special is the 7-checkpoint governance architecture: Monte Carlo simulation, risk limits, signal agreement, trend confirmation, stress testing, logic contradiction detection, and temporal trajectory validation — all running in sequence, all with veto authority. Most systems have 1 risk check. We have 7 independent ones that must ALL agree. The first 6 were validated across 670,000+ evaluation cycles (through February 2026). Checkpoint 7 — Temporal Coherence Validation — was added in March 2026."
 
 ---
 
@@ -252,12 +266,12 @@
 > "This is exactly why we built OMNIX the way we did. Explainability isn't a feature we added later — it IS the architecture. Three pillars:
 >
 > **Pillar 1 — Decision Trace (Full Audit Per Decision)**
-> Every decision OMNIX makes — executed OR blocked — generates a complete structured record with: exact timestamp, all 6 checkpoints evaluated with individual verdicts and the data that justified each one, the final decision with specific reasoning, and the capital preserved or committed.
+> Every decision OMNIX makes — executed OR blocked — generates a complete structured record with: exact timestamp, all governance checkpoints evaluated with individual verdicts and the data that justified each one, the final decision with specific reasoning, and the capital preserved or committed.
 >
 > No black box. A compliance officer can open any decision from the last 3 months and see exactly WHY the system acted or stopped. 670,000+ of these traces exist today.
 >
 > **Pillar 2 — Fail-Closed Architecture = Explainability by Design**
-> In a black box, the system acts and then you try to explain why. In OMNIX, the system does NOT act until 6 independent checkpoints approve. Each checkpoint is individually explainable:
+> In a black box, the system acts and then you try to explain why. In OMNIX, the system does NOT act until all governance checkpoints approve. Each checkpoint is individually explainable:
 > - 'Win probability was 48.7% — below the 50% threshold'
 > - 'Only 3 of 5 models agreed — insufficient consensus at 44% vs 45% required'
 > - 'Trend did not persist for 3 consecutive cycles'
@@ -343,5 +357,22 @@
 
 ---
 
+---
+
+## ✅ NUEVA PREGUNTA — CHECKPOINT 7 (PREPARAR SI LA MENCIONAN)
+
+### Q: "Your website mentions 7 checkpoints — what's Checkpoint 7?"
+
+**Answer:**
+> "Checkpoint 7 is Temporal Coherence Validation — we added it in March 2026. The first 6 checkpoints evaluate a decision in isolation: is the signal valid right now? Checkpoint 7 asks a different question: is this decision consistent with where the system has been heading? It evaluates the trajectory of the last N cycles across three dimensions — Direction Coherence (40%), Regime Alignment (35%), and Signal Stability (25%). If the system has been trending HOLD but suddenly a BUY appears, TCV flags the inconsistency. It's the difference between evaluating a single frame versus watching the movie. All published metrics — 670,000+ cycles, 91% block accuracy — were produced under the validated 6-checkpoint system through February 2026. TCV is documented in ADR-032."
+
+**Key framing:** This shows the system is actively improving. The architecture isn't static — it gets better. And the honesty about which metrics correspond to which version shows institutional maturity.
+
+**Follow-up if pressed on TCV threshold calibration:**
+> "The current threshold (20/100) is conservatively set to minimize false vetos during the calibration period. A full backtest using the 711,000+ events already in our Shadow Portfolio is planned within 3 weeks post-funding. We designed the threshold to be configurable precisely because calibration requires real operational data."
+
+---
+
 *OMNIX — Governing decisions under uncertainty.*
 *Eureka Dubai 2026 — Semifinalist*
+*Last Updated: March 4, 2026 (7-checkpoint architecture, ADR-032)*

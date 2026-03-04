@@ -332,9 +332,9 @@ export default function BiotechGovernanceDemo() {
             <span className="gold-gradient">Before It Advances.</span>
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            The same 6-checkpoint governance engine that has processed {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles
+            The same governance engine that has processed {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles
             in digital asset trading — applied to clinical trial advancement decisions.
-            Real data from ClinicalTrials.gov. Real PQC-signed receipts.
+            Real data from ClinicalTrials.gov. Real PQC-signed receipts. Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (Temporal Coherence Validation, Mar 2026).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Three pre-validated scenarios use real NCT trial data. Or configure your own parameters below.

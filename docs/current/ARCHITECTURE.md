@@ -1,9 +1,9 @@
 # OMNIX — Arquitectura
 
 **Internal Build Reference**: 6.5.4e  
-**Actualizado**: 7 de Febrero 2026  
-**Estado**: Producción 24/7  
-**Último Cambio**: Gemini 2.5 Flash Migration (Feb 7, 2026)
+**Actualizado**: 4 de Marzo 2026  
+**Estado**: Producción 24/7 — 7-checkpoint trading pipeline (TCV, ADR-032)  
+**Último Cambio**: Temporal Coherence Validation — Checkpoint 7 (Mar 4, 2026)
 
 ---
 
@@ -21,7 +21,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  CORE ENGINES                                                    │
 │  ├── AutoTradingBot V6.5.4e - Multi-crypto scanner              │
-│  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto                   │
+│  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto + TCV (7th)       │
 │  ├── Non-Markovian Kernel V6.5 - Memoria temporal               │
 │  └── Risk Guardian V5.4 - Protección drawdown                   │
 ├─────────────────────────────────────────────────────────────────┤
@@ -355,6 +355,7 @@ class AdaptiveGateDecision:
 | AutoTradingBot V6.5.4e | `omnix_core/bot/auto_trading_bot.py` | Scanner multi-crypto, señales tiered, emergency SL |
 | TradingSystem V6.5 | `omnix_core/trading_system.py` | Orquestador de ejecución |
 | CoherenceEngine V6.5.4e | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe + ADR-007 calibrated |
+| TemporalCoherenceValidator | `omnix_core/temporal/coherence_validator.py` | **Checkpoint 7 (TCV, ADR-032)** — trajectory consistency gate (Mar 2026) |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
@@ -497,7 +498,9 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
     │  4. _analyze_market() → 10 estrategias                      │
     │  5. _make_v52_decision() → scoring ponderado                │
     │  6. Coherence Engine → 6-tier veto                          │
-    │  7. _execute_smart_trade() → Paper o Real                   │
+    │     ↳ TCV (Checkpoint 7, ADR-032) → temporal trajectory     │
+    │  7. ECW Gate → edge persistence (3 consecutive cycles)      │
+    │  8. _execute_smart_trade() → Paper o Real                   │
     └─────────────────────────────────────────────────────────────┘
                                    │
               ┌────────────────────┼────────────────────┐

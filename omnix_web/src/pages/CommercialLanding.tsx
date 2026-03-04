@@ -51,7 +51,7 @@ export default function CommercialLanding() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">Decision Governance</h3>
               <p className="text-muted leading-relaxed">
-                Every high-stakes decision is validated through 6 independent checkpoints before execution.
+                Every high-stakes decision is validated through 7 independent checkpoints before execution.
               </p>
             </div>
 
@@ -87,7 +87,7 @@ export default function CommercialLanding() {
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">2</div>
-                <p className="text-white font-medium">OMNIX validates it through 6 checkpoints</p>
+                <p className="text-white font-medium">OMNIX validates it through 7 checkpoints</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">3</div>

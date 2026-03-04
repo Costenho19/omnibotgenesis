@@ -15,6 +15,10 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 4, 2026)
+
+- **Mar 04**: **Temporal Coherence Validation (TCV) — Checkpoint 7 documentado en toda la documentación** — EUREKA_JUDGE_QA_PREPARATION.md, EUREKA_20_TOUGH_QUESTIONS.md, EUREKA_QA_SIMULATION.md, INVESTOR_FAQ.md, one_pager.md, ARCHITECTURE.md, InstitutionalPage.tsx, CommercialLanding.tsx, BiotechGovernanceDemo.tsx, EnergyGovernanceDemo.tsx, REAL_SYSTEM_STATUS.md actualizados con marco dual: "6 checkpoints validados hasta feb 2026 + TCV Checkpoint 7 agregado marzo 2026 (ADR-032)". README.md actualizado con referencia a ADR-032. MIGRATION_STATUS.md actualizado con nota temporal. Verificación final: cero referencias ambiguas a "6 checkpoints" en superficies críticas (Eureka, inversores, web principal).
+
 ### Cambios Recientes (Mar 1, 2026)
 
 - **Mar 01**: Insurance Domain Pilot validado (ADR-030) — tercer dominio validado con receipts PQC reales. 3 escenarios ejecutados vía `POST /api/governance/evaluate` con `domain: insurance`. Receipts: `OMNIX-AB1D878EC56A` (APPROVED, AUTO-POL-2847, 6/6 CP), `OMNIX-B5782882E993` (BLOCKED, AUTO-POL-9999, 6/6 vetados), `OMNIX-C23154E3D1B0` (BLOCKED, LIFE-POL-4521, CP-3+CP-4 vetados). Cliente `insurance-pilot-01` creado en b2b_clients. Domain Adapter documentado en `docs/reference/domain-adapters/insurance-domain-adapter.md`. Zero cambios al motor — extensibilidad multi-dominio demostrada con evidencia real.

@@ -40,7 +40,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)  
 **Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)  
 **Referencia**: [ADR-029](reference/adr/ADR-029-governance-compliance-modules.md) - Governance Compliance Modules — NIST AI RMF + ISO/IEC 42001 + EU AI Act (5 módulos, 21 endpoints, 7 tablas)  
-**Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026)
+**Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026)  
+**Referencia**: [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md) - Temporal Coherence Validation (TCV) — Checkpoint 7 del trading pipeline. Evalúa admisibilidad temporal de decisiones (Mar 2026). 49 tests pasando.
 
 ---
 

@@ -4,6 +4,9 @@
 **Patrón**: Strangler Fig  
 **Estado**: ESTRUCTURA 100% | ACTIVACIÓN 0% | ✅ AUDITORÍA CRÍTICA COMPLETADA
 
+> **NOTA TEMPORAL (Marzo 2026):** Este documento es un snapshot histórico hasta Feb 2026. 
+> Para cambios post-febrero 2026 (incluyendo Checkpoint 7 — TCV, ADR-032), ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) y [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md).
+
 > **NOTA**: Este documento describe la arquitectura V7.0 implementada.
 > Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para el estado real de producción.
 

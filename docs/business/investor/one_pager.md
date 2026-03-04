@@ -9,7 +9,7 @@
 
 **Automation is growing faster than governance.** Automated systems make high-stakes decisions every day — in trading, lending, insurance, supply chain — but almost none have a real mechanism to control those decisions before they execute.
 
-**OMNIX is Decision Governance Infrastructure** — a 6-checkpoint governance control architecture that validates automated decisions before execution. First vertical validated in digital asset trading (670,000+ evaluation cycles, 98.5% capital preserved). Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
+**OMNIX is Decision Governance Infrastructure** — a 7-checkpoint governance control architecture that validates automated decisions before execution. The first 6 checkpoints were validated across 670,000+ evaluation cycles (98.5% capital preserved) through February 2026; Checkpoint 7 (Temporal Coherence Validation, ADR-032) was added in March 2026. First vertical validated: digital asset trading. Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
 
 ---
 
@@ -17,7 +17,7 @@
 
 | Component | Description |
 |-----------|-------------|
-| **6-Checkpoint Governance Engine** | Multi-layer pre-execution decision validation — fail-closed by design |
+| **7-Checkpoint Governance Engine** | Multi-layer pre-execution decision validation — fail-closed by design (6 validated through Feb 2026 + TCV added Mar 2026) |
 | **Shadow Portfolio Learning Engine** | 670,000+ counterfactual events — learns from decisions NOT taken |
 | **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — to our knowledge, no comparable solution globally |
 | **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 — zero single-provider dependency |
@@ -157,4 +157,4 @@ Founder & Product Architect, OMNIX
 
 *This document is for informational purposes. OMNIX is decision governance infrastructure, not an investment product. All metrics are from governance engine operation in real market conditions.*
 
-**Last Updated:** February 19, 2026
+**Last Updated:** March 4, 2026 — 7-checkpoint architecture (TCV, ADR-032)

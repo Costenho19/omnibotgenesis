@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It employs a domain-agnostic 7-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, Kelly Criterion sizing, and Temporal Coherence Validation. The project's vision is to establish a critical infrastructure layer for robust, error-free decision governance and capital preservation across various sectors.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It employs a 7-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, Kelly Criterion sizing, and Temporal Coherence Validation. The project aims to provide robust, error-free decision governance and capital preservation across various sectors, ensuring financial integrity and strategic advantage in automated decision-making.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -119,14 +119,6 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 
 **Kyber-768 es un KEM (Key Encapsulation Mechanism), NO un algoritmo de cifrado de datos.** Decir "Kyber-768 for data encryption" es un error técnico que daña la credibilidad institucional. El cifrado de datos lo hace AES/Fernet. Ver ADR-022.
 
-La causa raíz de la violación (Feb 2026): `system_state_manifest.json` contenía "NIST FIPS 203/204" en campos que el bot leía. Ya corregido — el manifest ahora tiene `communication_tier_rule` y `NEVER_SAY` expandido.
-
-**Public Metrics Contextualization (MANDATORY):**
-- "670,000+ evaluation cycles" — NOT "decisions governed"
-- Always add "(internal dataset)" or "(internal dataset, not externally audited)"
-- "Capital Preserved*" con asterisco when shown as metric
-- Pitch deck: "internal evaluation data" — NOT "audit-grade data"
-
 ### Team Narrative
 -   **Harold Nunes**: Solo Founder & CEO — only name visible in all surfaces
 -   **Ivan/Iván Guzman**: Removed from ALL files (code, docs, web, reports, audit)
@@ -141,7 +133,7 @@ La causa raíz de la violación (Feb 2026): `system_state_manifest.json` conten�
 | **Dashboard UI** | "OMNIX Decision Governance" | None visible |
 | **Bot AI Responses** | "OMNIX Decision Governance" | None visible |
 | **Telegram Messages** | "OMNIX Decision Governance" | None visible |
-| **Business/Investor Docs** | "OMNIX" or "OMNIX — Decision Governance Infrastructure" | None visible |
+**Business/Investor Docs** | "OMNIX" or "OMNIX — Decision Governance Infrastructure" | None visible |
 | **Technical Docs (H1)** | "OMNIX — [Topic]" | "Internal Build Reference: 6.5.4e" in metadata |
 | **Source Code Constants** | N/A (internal) | VERSION = "6.5.4e", VERSION_NAME = "INSTITUTIONAL+" |
 | **Source Code Docstrings** | N/A (internal) | May reference INSTITUTIONAL+ (internal only) |
@@ -152,13 +144,13 @@ La causa raíz de la violación (Feb 2026): `system_state_manifest.json` conten�
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX utilizes a hexagonal architecture integrating an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), and a Temporal Coherence Validator (Checkpoint 7). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+OMNIX employs a hexagonal architecture integrating an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), and a Temporal Coherence Validator (Checkpoint 7). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
 
 ### Hierarchical Veto Flow
-Decisions progress through 7 checkpoints: Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, Temporal Coherence Validation (TCV), an Edge Confirmation Window (ECW) Gate, Scoring, and a final Decision. TCV evaluates whether the proposed action is "temporally admissible" given the recent system trajectory (Direction Coherence 40% + Regime Alignment 35% + Signal Stability 25%). Fail-safe design ensures errors result in pass-through.
+Decisions progress through 7 checkpoints: Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, Temporal Coherence Validation (TCV), an Edge Confirmation Window (ECW) Gate, Scoring, and a final Decision. TCV evaluates whether the proposed action is "temporally admissible" given the recent system trajectory. Fail-safe design ensures errors result in pass-through.
 
 ### Scoring Logic
-Decision scoring integrates inputs from EMA Regime Signal (40 pts), HMM Regime (25 pts), Kalman Filter (15 pts), Non-Markovian Memory (15 pts), and Kelly Criterion (10 pts). A separate Veto/Penalty layer applies penalties from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
+Decision scoring integrates inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with a separate Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
 
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system tracks vetoed trades to refine filter calibration, analyzing price movements to determine veto correctness and recommend filter threshold adjustments.
@@ -173,7 +165,7 @@ The dashboard provides a Dual Win Rate Framework, enriched AI context, System He
 This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, utilizes RBAC authentication via the `b2b_clients` table with rate limiting, supports 6 normalized signals (0-100), and operates in a fail-closed manner.
 
 ### Governance Compliance Modules — 5 Modules
-Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce 7 new PostgreSQL tables and 21 new REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting. Human oversight overrides are PQC-signed (Dilithium-3) complementary records and do not alter the immutable `decision_receipts` chain. Compliance reports include full EU AI Act Art. 12 decision lineage.
+Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting. Human oversight overrides are PQC-signed (Dilithium-3) complementary records and do not alter the immutable `decision_receipts` chain. Compliance reports include full EU AI Act Art. 12 decision lineage.
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure. Security is maintained using SHA-256 hash chains and Dilithium-3 PQC signatures.

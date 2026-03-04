@@ -296,9 +296,9 @@ export default function EnergyGovernanceDemo() {
             <span className="gold-gradient">Before It Trades.</span>
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            This interactive demo shows how OMNIX's 6-checkpoint governance architecture
+            This interactive demo shows how OMNIX's governance architecture
             applies to energy trading decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
-            evaluation cycles in digital asset trading (internal dataset).
+            evaluation cycles in digital asset trading (internal dataset). Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (Temporal Coherence Validation, Mar 2026).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust energy trade parameters and run the governance evaluation to see each checkpoint assess the risk in real time.
@@ -666,7 +666,7 @@ export default function EnergyGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">Four Verticals. One Governance Engine.</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
-            Each uses the same 6-checkpoint fail-closed architecture with domain-specific signals.
+            Each uses the same fail-closed governance architecture with domain-specific signals. Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (TCV, Mar 2026).
             The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
