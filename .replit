@@ -91,27 +91,11 @@ waitForPort = 5000
 
 [[ports]]
 localPort = 3000
-externalPort = 3000
-
-[[ports]]
-localPort = 3001
-externalPort = 3001
-
-[[ports]]
-localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 8080
-externalPort = 8080
-
-[[ports]]
-localPort = 9091
-externalPort = 3002
-
-[[ports]]
-localPort = 9092
-externalPort = 3003
+localPort = 5000
+externalPort = 5000
 
 [deployment]
 deploymentTarget = "static"
