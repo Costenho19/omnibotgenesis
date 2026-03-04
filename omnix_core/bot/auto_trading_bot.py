@@ -201,6 +201,17 @@ except ImportError:
     COHERENCE_ENGINE_AVAILABLE = False
     logger.warning("⚠️ Coherence Engine no disponible - validación de coherencia desactivada")
 
+# Import Temporal Coherence Validator — ADR-032 (Checkpoint 7)
+try:
+    from omnix_core.temporal.coherence_validator import TemporalCoherenceValidator
+    _tcv_instance = TemporalCoherenceValidator()
+    TCV_AVAILABLE = True
+except Exception:
+    TemporalCoherenceValidator = None
+    _tcv_instance = None
+    TCV_AVAILABLE = False
+    logger.warning("⚠️ Temporal Coherence Validator no disponible - checkpoint 7 desactivado")
+
 # Import Quantum Enhancements (V5.3 ULTRA - QRNG + QAOA)
 try:
     from quantum_enhancements import global_qaoa, get_quantum_stats
@@ -2993,7 +3004,92 @@ class AutoTradingBot:
                     )
                 )
                 return decision
-            
+
+            # ========== ADR-032: TEMPORAL COHERENCE VALIDATION (TCV) — CHECKPOINT 7 ==========
+            # Evaluates temporal admissibility: does this decision cohere with recent trajectory?
+            # Probabilistic governance (CP 1-6) validates the decision in isolation.
+            # TCV validates the decision in sequence — is this action consistent with where the
+            # system has been going? Inspired by QTD (JJ Jimenez, Feb 2026).
+            # Fail-safe design: if TCV module unavailable or errors → pipeline continues.
+            # Threshold: TCV_THRESHOLD env var (default 20 — conservative, anti-over-veto).
+            if TCV_AVAILABLE and _tcv_instance is not None:
+                try:
+                    # Derive INTENDED action from EMA signal direction (pre-scoring).
+                    # CRITICAL: decision["action"] == "HOLD" at this pipeline stage —
+                    # BUY/SELL assignment happens during scoring (~line 3700+).
+                    # TCV must evaluate what the EMA signal INTENDS, not the default HOLD.
+                    _tcv_proposed = "HOLD"
+                    if ema_signal and hasattr(ema_signal, "direction") and ema_signal.direction:
+                        _raw_dir = str(ema_signal.direction).upper()
+                        if _raw_dir in ("LONG", "BUY", "BULLISH", "STRONG_BUY", "UPTREND"):
+                            _tcv_proposed = "BUY"
+                        elif _raw_dir in ("SHORT", "SELL", "BEARISH", "STRONG_SELL", "DOWNTREND"):
+                            _tcv_proposed = "SELL"
+
+                    _tcv_context = {
+                        "ema_score": (
+                            getattr(ema_signal, "confidence", None)
+                            if ema_signal else None
+                        ),
+                        "hmm_regime": (
+                            hmm_regime.upper() if isinstance(hmm_regime, str)
+                            else str(hmm_regime) if hmm_regime else None
+                        ),
+                    }
+                    _tcv_result = _tcv_instance.validate(
+                        proposed_action=_tcv_proposed,
+                        symbol=symbol,
+                        context=_tcv_context,
+                    )
+                    decision["temporal_coherence_score"] = _tcv_result.trajectory_score
+                    decision["temporal_coherence_admissible"] = _tcv_result.admissible
+                    decision["temporal_coherence_pass_through"] = _tcv_result.pass_through
+                    decision["decision_trace"].append(
+                        f"TCV: intended={_tcv_proposed} "
+                        f"score={_tcv_result.trajectory_score:.1f} "
+                        f"admissible={_tcv_result.admissible} "
+                        f"pass_through={_tcv_result.pass_through} "
+                        f"events={_tcv_result.events_analyzed} "
+                        f"sources={_tcv_result.data_sources} "
+                        f"reason={_tcv_result.reason[:80]}"
+                    )
+                    if not _tcv_result.admissible:
+                        decision["action"] = "HOLD"
+                        decision["vetoed"] = True
+                        decision["veto_reason"] = "TEMPORAL_COHERENCE"
+                        decision["reason"].append(
+                            f"⏱️ TCV VETO: Trajectory incoherence detected "
+                            f"(score={_tcv_result.trajectory_score:.1f}) — "
+                            f"{_tcv_result.reason}"
+                        )
+                        self._log_veto(
+                            veto_type="TEMPORAL_COHERENCE",
+                            symbol=symbol,
+                            blocked_capital=decision.get("position_size_usd", 0),
+                            reason=_tcv_result.reason,
+                            shadow_context=self._build_shadow_context(
+                                symbol=symbol,
+                                current_price=current_price,
+                                decision=decision,
+                                ema_signal=ema_signal,
+                                monte_carlo=monte_carlo,
+                                black_swan=black_swan,
+                                coherence_score=decision.get("temporal_coherence_score"),
+                            ),
+                        )
+                        logger.info(
+                            f"⏱️ [TCV_VETO] {symbol} | score={_tcv_result.trajectory_score:.1f} "
+                            f"< threshold={_tcv_instance.threshold} | {_tcv_result.reason}"
+                        )
+                        return decision
+                    else:
+                        logger.info(
+                            f"✅ [TCV] {symbol} | score={_tcv_result.trajectory_score:.1f} "
+                            f"admissible=True | events={_tcv_result.events_analyzed}"
+                        )
+                except Exception as _tcv_exc:
+                    logger.warning(f"⚠️ [TCV] Exception for {symbol}: {_tcv_exc} → pass-through")
+
             # ========== ADR-019: EDGE CONFIRMATION WINDOW (ECW) GATE (Jan 21, 2026) ==========
             # No basta con edge una vez. Requiere persistencia del edge N ciclos consecutivos.
             # Esto transforma "capital preservation" en "capital patience mode".

@@ -8,7 +8,13 @@
   "investor_one_liner": "OMNIX builds the governance layer for automated decision systems. First validated in digital asset trading.",
   "investor_question_reframe": "How much capital risk exists in automated systems without governance control?",
   "first_vertical": "Digital Asset Trading (Validated)",
-  "future_verticals": ["Supply Chain", "Lending/Credit", "Insurance", "Energy Trading", "RegTech/Compliance"],
+  "future_verticals": [
+    "Supply Chain",
+    "Lending/Credit",
+    "Insurance",
+    "Energy Trading",
+    "RegTech/Compliance"
+  ],
   "adr_reference": "ADR-025, ADR-026, ADR-027",
   "multi_vertical_architecture": {
     "adr": "ADR-026",
@@ -19,7 +25,10 @@
       "Credit/Lending (Interactive Demo at /governance-demo - DEMO ONLY, not operational)",
       "Insurance Underwriting (Interactive Demo at /governance-demo-insurance - DEMO ONLY, not operational)"
     ],
-    "roadmap_verticals": ["Supply Chain (Year 2)", "Energy Trading (Year 3)"],
+    "roadmap_verticals": [
+      "Supply Chain (Year 2)",
+      "Energy Trading (Year 3)"
+    ],
     "core_abstraction": "6-Checkpoint Fail-Closed Governance Engine"
   },
   "last_updated": "2026-02-15",
@@ -43,7 +52,6 @@
     ],
     "rollback": "Set TRACK_RECORD_MODE=true and ECW_CYCLES_REQUIRED=3 in Railway ENV + restart"
   },
-  
   "track_record_periods": {
     "CRITICAL_DISTINCTION": "SIEMPRE distinguir entre Learning Baseline y Track Record Oficial al reportar trades",
     "learning_baseline": {
@@ -77,18 +85,35 @@
     "response_rules": {
       "mandatory_disclosure": "Cuando se mencione CUALQUIER métrica (P&L, win rate, trades, losses), incluir nota de período al FINAL",
       "disclosure_text": "**Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.",
-      "triggers": ["P&L", "win rate", "trades", "losses", "-$15,198", "20.2%", "119 trades", "símbolos problemáticos"],
-      "when_NOT_to_mention": ["saludos", "comandos", "arquitectura", "preguntas sin métricas"],
+      "triggers": [
+        "P&L",
+        "win rate",
+        "trades",
+        "losses",
+        "-$15,198",
+        "20.2%",
+        "119 trades",
+        "símbolos problemáticos"
+      ],
+      "when_NOT_to_mention": [
+        "saludos",
+        "comandos",
+        "arquitectura",
+        "preguntas sin métricas"
+      ],
       "never_mix": "NUNCA reportar métricas del baseline sin la nota de período"
     }
   },
-  
   "critical_dates": {
     "track_record_start": "2026-01-15",
     "target_duration_days": 30,
-    "DO_NOT_MENTION": ["2024", "2023", "years of data", "años de datos"]
+    "DO_NOT_MENTION": [
+      "2024",
+      "2023",
+      "years of data",
+      "años de datos"
+    ]
   },
-  
   "signal_architecture": {
     "version": "V6.5.4d",
     "scoring_model": "5 Core Inputs (105 points max)",
@@ -118,14 +143,14 @@
       "monte_carlo": "VETO only - no additive scoring",
       "black_swan": "VETO only - tail event monitoring",
       "quantum_momentum": "Penalty only",
-      "sentiment": "Penalty only"
+      "sentiment": "Penalty only",
+      "temporal_coherence": "VETO only — trajectory incoherence blocks action"
     },
     "coherence_gate": {
       "veto_critical": "< 30% coherence",
       "veto_normal": "< 45% coherence"
     }
   },
-  
   "veto_system": {
     "monte_carlo": {
       "status": "ENFORCEMENT",
@@ -156,9 +181,30 @@
       },
       "adr": "ADR-019",
       "investor_explanation": "No operamos en el primer ciclo positivo. Esperamos confirmación de 2 ciclos consecutivos con edge estadístico (WR >= 50%, ER > 0%) y sin riesgo severo. Esto transforma 'preservación de capital' en 'paciencia de capital'."
+    },
+    "temporal_coherence_validation": {
+      "status": "ACTIVE",
+      "checkpoint": 7,
+      "description": "Temporal admissibility validator — evaluates whether proposed decision coheres with recent system trajectory",
+      "dimensions": {
+        "signal_direction_consistency": "40% weight — stability of EMA score trend",
+        "regime_action_alignment": "35% weight — proposed action vs dominant HMM regime",
+        "signal_velocity": "25% weight — rate of change of EMA signals"
+      },
+      "default_threshold": 20,
+      "env_override": "TCV_THRESHOLD",
+      "window_events": 15,
+      "fail_safe": "On DB error or module unavailable → admissible=True (pass-through)",
+      "adr": "ADR-032",
+      "position_in_pipeline": "After Coherence Gate (CP4), before ECW Gate (ADR-019)",
+      "vertical_calibration": {
+        "trading": "threshold=20, window=15 (lenient — markets are noisy)",
+        "robotics": "threshold=60, window=5 (strict — irreversible physical actions)",
+        "healthcare": "threshold=45, window=10 (moderate — regulatory auditability)"
+      },
+      "investor_explanation": "Beyond evaluating whether each decision is statistically justified, TCV evaluates whether the sequence of decisions produces a coherent system trajectory. A system that pivots from HOLD to BUY without a regime change is flagged as temporally inadmissible."
     }
   },
-  
   "post_quantum_cryptography": {
     "status": "IMPLEMENTED",
     "adr": "ADR-022",
@@ -211,7 +257,6 @@
       "Level 3 es nuestro mínimo"
     ]
   },
-  
   "decision_contradiction_index": {
     "purpose": "Shadow metric measuring internal signal divergence to explain HOLD decisions",
     "adr": "ADR-018",
@@ -223,7 +268,7 @@
         "action": "Sistema puede operar si otros criterios pasan"
       },
       "TENSIONED": {
-        "range": "35-69", 
+        "range": "35-69",
         "meaning": "Señales mixtas detectadas, ejerciendo cautela",
         "action": "Preferir HOLD, requiere edge adicional para operar"
       },
@@ -241,7 +286,6 @@
     },
     "investor_explanation": "El DCI cuantifica por qué el sistema decidió HOLD cuando una señal local (ej: NM BUY 70%) sugería operar. Un DCI de 72 significa que aunque NM dice comprar, el edge global (MC sin edge), el régimen (volátil) y el riesgo (Black Swan) contradicen esa señal. El sistema prioriza preservación de capital sobre señales individuales."
   },
-  
   "loss_avoidance_calculation": {
     "purpose": "Cuantificar pérdida esperada evitada en decisiones HOLD",
     "method": "Position size × VaR95 × Historical loss rate for similar conditions",
@@ -262,7 +306,6 @@
     },
     "NEVER_SAY": "Es difícil cuantificar la pérdida evitada"
   },
-  
   "realistic_thresholds": {
     "purpose": "Umbrales realistas para ejecución - NO curve-fitting ni fantasías",
     "for_trade_execution": {
@@ -274,24 +317,25 @@
     },
     "NEVER_CLAIM": [
       "WR > 60% para operar",
-      "ER > 5% para operar", 
+      "ER > 5% para operar",
       "DCI > 90 para operar (INVERTIDO - esto es INCORRECTO)"
     ],
     "investor_honesty": "Operamos con edge modesto pero consistente. No buscamos home runs, buscamos acumulación de pequeñas ganancias mientras evitamos pérdidas grandes."
   },
-  
   "asset_status": {
-    "active_pairs": ["BTC/USD", "XRP/USD"],
+    "active_pairs": [
+      "BTC/USD",
+      "XRP/USD"
+    ],
     "quarantined": {
       "ADA/USD": "16 losses, -$3,847",
-      "SOL/USD": "12 losses, -$2,156", 
+      "SOL/USD": "12 losses, -$2,156",
       "ETH/USD": "8 losses, -$1,334",
       "AVAX/USD": "Probation (max 40% size, 3 loss limit)",
       "LINK/USD": "16 losses, -$4,482"
     },
     "quarantine_reason": "Capital protection - $11,819+ in avoided losses"
   },
-  
   "phase2_offensive": {
     "partial_position_sizing": {
       "status": "ACTIVE",
@@ -308,13 +352,11 @@
       "rules": "Max 40% size, auto-revert after 3 consecutive losses"
     }
   },
-  
   "dashboard_status": {
     "widgets": "14/14 operational",
     "total_trades": 109,
     "data_source": "PostgreSQL (real trades)"
   },
-  
   "command_surface": {
     "audit_date": "2025-12-24",
     "total_commands": 85,
@@ -322,11 +364,10 @@
     "aliases": 4,
     "status": "Audited and sealed"
   },
-  
   "roadmap_features": {
     "v7_planned": [
       "alerts_inline (inline buttons)",
-      "history_inline (inline buttons)", 
+      "history_inline (inline buttons)",
       "settings_inline (inline buttons)",
       "hexagonal_activation (strangler fig pattern)"
     ],
@@ -336,7 +377,6 @@
       "settings": "/miconfig, /perfil, /limites"
     }
   },
-  
   "institutional_language": {
     "blacklisted_phrases": [
       "rendimiento subóptimo",
@@ -371,6 +411,5 @@
       "trading_bot": "governance infrastructure"
     }
   },
-  
   "founder_narrative": "Always refer to the founder (Harold Nunes) in THIRD PERSON as the one controlling risk. You are OMNIX AI, the assistant - never speak as if you are the founder."
 }
