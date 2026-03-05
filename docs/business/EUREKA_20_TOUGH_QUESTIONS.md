@@ -3,9 +3,20 @@
 
 **Purpose**: Structured answers for the hardest questions Eureka judges will ask.
 **Rule**: Short, confident, data-backed. No rambling. No apologizing.
-**Last Updated**: March 4, 2026 — Checkpoint 7 (TCV, ADR-032) added to trading pipeline.
+**Last Updated**: March 5, 2026 — 8-checkpoint pipeline: 4 Architectural Gaps implemented (SIV CP-0, FTI CP-7b, RCK, EGL — ADR-033/034/035/036).
 
-> **NOTA ARQUITECTURA (Mar 2026):** El trading pipeline pasó de 6 a **7 checkpoints** con la adición de Temporal Coherence Validation (TCV, ADR-032). Todas las métricas publicadas (670,000+ ciclos, 91%, 98.5%) fueron generadas bajo el sistema validado de **6 checkpoints** hasta febrero 2026. TCV es el Checkpoint 7 — aditivo, no reemplaza los anteriores.
+> **NOTA ARQUITECTURA (Mar 2026):** El trading pipeline evolucionó en dos fases este mes:
+> - **Mar 4**: TCV (Checkpoint 7, ADR-032) — validación temporal backward.
+> - **Mar 5**: 4 gaps arquitecturales adicionales implementados:
+>   - **SIV** (CP-0, ADR-033): Data integrity gate pre-análisis — 46 tests
+>   - **FTI** (CP-7b, ADR-034): Forward trajectory implication — 45 tests
+>   - **RCK** (ADR-035): Regime-conditioned Kelly inputs — 36 tests
+>   - **EGL** (ADR-036): 3-gate exit governance + PQC exit receipts — 44 tests
+>
+> Pipeline actual: **8 checkpoints de entrada** (CP-0 SIV → CP-8 ECW) + **pipeline de salida de 3 gates (EGL)**.
+> ADR count: **36** (ADR-001 → ADR-036). Nuevos tests en marzo 2026: **220+**.
+>
+> **Invariante crítico**: Todas las métricas publicadas (670,000+ ciclos, 91%, 98.5%) fueron generadas bajo el sistema validado de **6 checkpoints** hasta febrero 2026. Los 8 checkpoints y EGL son mejoras aditivas — no reemplazan los anteriores, no alteran las métricas históricas.
 
 ---
 
@@ -17,7 +28,7 @@
 "119 trades were executed during our calibration phase. The 670,000 cycles represent our Shadow Portfolio engine — a counterfactual analysis system that tracks every decision the system evaluates, including the ones it blocks. Think of it as a flight simulator that runs continuously — the 119 real flights validated the system, and the 670,000 simulated scenarios trained it. Additionally, 16,000+ governance decisions are cryptographically signed and publicly verifiable at omnixquantum.net/verify — that is institutional-grade auditability, not a claim."
 
 **Key terms to clarify if asked:**
-- Evaluation cycle = one full pass through all governance checkpoints (6 checkpoints through Feb 2026; 7 checkpoints including TCV from March 2026)
+- Evaluation cycle = one full pass through all governance checkpoints (6 checkpoints through Feb 2026; 8 checkpoints entry + EGL 3-gate exit pipeline from March 5, 2026)
 - Executed trade = signal that passed all checkpoints and was placed on the exchange
 - Veto = signal that was blocked by one or more checkpoints
 - Shadow event = a counterfactual record tracking what would have happened
@@ -42,7 +53,7 @@
 ### Q4: "119 trades in calibration — isn't that a small sample?"
 
 **Answer:**
-"For statistical validation of the governance architecture, 119 trades are sufficient to validate the core logic. But the real validation comes from the 670,000+ counterfactual cycles — which confirm the system's restraint logic at scale. We also have a mathematical audit verifying 100% P&L reconciliation across all 119 trades — every cent accounted for against real exchange fill data from Kraken. These results are anchored to the 6-checkpoint system validated through February 2026. In March 2026 we added Checkpoint 7 (Temporal Coherence Validation, ADR-032)."
+"For statistical validation of the governance architecture, 119 trades are sufficient to validate the core logic. But the real validation comes from the 670,000+ counterfactual cycles — which confirm the system's restraint logic at scale. We also have a mathematical audit verifying 100% P&L reconciliation across all 119 trades — every cent accounted for against real exchange fill data from Kraken. These results are anchored to the 6-checkpoint system validated through February 2026. In March 2026 we added Checkpoint 7 (TCV, ADR-032), then on March 5 we completed 4 additional architectural gaps: SIV data integrity gate (CP-0), Forward Trajectory Implicator (CP-7b), Regime-Conditioned Kelly sizing, and Exit Governance Layer with PQC-signed exit receipts — 171 new tests, 36 total ADRs."
 
 ---
 
@@ -55,10 +66,10 @@
 
 ## CATEGORY 2: TECHNOLOGY
 
-### Q6: "What makes your 7 governance checkpoints better than existing risk management?"
+### Q6: "What makes your 8 governance checkpoints better than existing risk management?"
 
 **Answer:**
-"Most risk systems have one layer — a stop-loss or a position limit. OMNIX has 7 independent checkpoints that ALL must agree. The key difference is fail-closed architecture: the default is 'don't act.' The system must earn the right to execute. This is how airport security works — one failed scanner and you don't board the plane. The first 6 checkpoints were validated across 670,000+ evaluation cycles (through February 2026). Checkpoint 7 — Temporal Coherence Validation — was added in March 2026 and ensures every decision is consistent with the system's recent trajectory."
+"Most risk systems have one layer — a stop-loss or a position limit. OMNIX has 8 independent entry checkpoints that ALL must agree, plus a separate 3-gate exit governance pipeline. The key difference is fail-closed architecture: the default is 'don't act.' The system must earn the right to execute. This is how airport security works — one failed scanner and you don't board the plane. The first 6 checkpoints were validated across 670,000+ evaluation cycles (through February 2026). In March 2026 we added 3 more: Temporal Coherence Validation — which ensures decisions are consistent with the system's recent trajectory — a Forward Trajectory Implicator that evaluates what the proposed action implies for the next N cycles, and a Signal Integrity Validator that confirms data quality before any analysis begins. Plus a 3-gate exit governance pipeline — exits now go through the same rigor as entries."
 
 ---
 
@@ -89,7 +100,7 @@
 ### Q10: "Can this be copied by a big player?"
 
 **Answer:**
-"The architecture can be described in a slide. Building it takes 3+ months of continuous real-market operation, 32 documented architecture decisions (including ADR-032 for Checkpoint 7), a Shadow Portfolio engine with 670,000+ events, and domain expertise in behavioral risk. Our moat isn't just technology — it's the calibrated intelligence the system has accumulated. Plus, big players build for themselves. We build governance-as-infrastructure for everyone else."
+"The architecture can be described in a slide. Building it takes 3+ months of continuous real-market operation, 36 documented architecture decisions (ADR-001 through ADR-036, including 4 new ones completed March 5, 2026), 220+ automated tests, a Shadow Portfolio engine with 670,000+ events, and domain expertise in behavioral risk. Our moat isn't just technology — it's the calibrated intelligence the system has accumulated. Plus, big players build for themselves. We build governance-as-infrastructure for everyone else."
 
 ---
 
@@ -313,4 +324,4 @@ python scripts/pqc_level_demo.py --compare --json
 
 *OMNIX — Governing Decisions Under Uncertainty*
 *Eureka Dubai 2026 — Semifinalist*
-*Last Updated: March 4, 2026 — 7-checkpoint architecture (TCV, ADR-032)*
+*Last Updated: March 5, 2026 — 8-checkpoint entry pipeline + EGL 3-gate exit governance (ADR-033/034/035/036) | 36 ADRs | 220+ tests*
