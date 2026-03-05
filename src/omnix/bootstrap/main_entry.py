@@ -128,7 +128,7 @@ def initialize_services_legacy():
     )
     from omnix_services.optimization import MathematicalOptimizer, PerformanceOptimizer
     from omnix_services.database_service import DatabaseManager
-    from omnix_services.ai_service import ConversationalAI
+    from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI
     from omnix_services.monitoring import AdvancedPerformanceTracker
     from omnix_services.trading_service import MultiCurrencyTradingEngine, EnhancedTradingSystem
     from omnix_services.telegram_service import EnterpriseTelegramBot

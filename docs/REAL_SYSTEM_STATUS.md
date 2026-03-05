@@ -15,7 +15,15 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
-### Cambios Recientes (Mar 5, 2026)
+### Cambios Recientes (Mar 5, 2026) — Production Bug Fixes
+
+- **Mar 05 (tarde)**: **2 bugs de producción corregidos — bot Railway restaurado**:
+  - **Bug 1 — ConversationalAI undefined**: `ai_service/__init__.py` importa `container.py` que requiere `dependency_injector` (no disponible en Railway). Cuando el `__init__.py` falla, `ConversationalAI` no queda definida en `enterprise_bot.py` → NameError en línea 476 → `TelegramBotAdapter` no inicializa → bot caído. **Fix**: Import cambiado a `from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI` (directamente del módulo que solo usa stdlib). Mismo fix aplicado en `src/omnix/bootstrap/main_entry.py` (legacy path). `ConversationalAI = None` añadido como fallback defensivo pre-try.
+  - **Bug 2 — columna was_correct faltante**: Tabla `trade_evaluations` existía en Railway antes de que se añadiera la columna `was_correct BOOLEAN NOT NULL`. `CREATE TABLE IF NOT EXISTS` no actualiza tablas existentes → error en inicialización. **Fix**: `ALTER TABLE trade_evaluations ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE` añadido en la sección de migraciones de `_init_tables_enterprise()`.
+  - **Tests post-fix**: 27/27 passing. Revisión arquitectural: PASS — fixes correctos y completos.
+  - **Archivos**: `omnix_services/telegram_service/enterprise_bot.py`, `omnix_services/database_service/database_service.py`, `src/omnix/bootstrap/main_entry.py`
+
+### Cambios Recientes (Mar 5, 2026) — Architectural Gaps
 
 - **Mar 05**: **4 Architectural Gaps implemented — ADR-033/034/035/036** — Gaps identificados proactivamente mediante análisis arquitectural post-TCV:
   - **ADR-033**: Signal Integrity Validator (SIV) — Checkpoint 0. Pre-pipeline data quality gate. 4 validation categories: freshness, completeness, anomaly detection, cross-source consistency. Integrated in `_make_v52_decision()` before Monte Carlo VETO. 46 tests passing. FAIL-SAFE: pass-through on module error.

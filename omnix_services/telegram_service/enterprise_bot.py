@@ -60,8 +60,9 @@ def _check_admin_permission(user_id: str, permission_type: str = 'admin') -> boo
         return user_id_str == str(settings.TELEGRAM_ADMIN_ID)
 
 # Import omnix services
+ConversationalAI = None
 try:
-    from omnix_services.ai_service import ConversationalAI
+    from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI
     OMNIX_ENTERPRISE_AVAILABLE = True
 except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False

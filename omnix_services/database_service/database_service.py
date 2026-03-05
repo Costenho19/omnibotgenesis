@@ -2272,6 +2272,12 @@ class DatabaseServiceEnterprise:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_trade_reasonings_user_id ON trade_reasonings(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_trade_evaluations_user_id ON trade_evaluations(user_id)')
             
+            # Migration: add was_correct column if table pre-existed without it
+            cursor.execute("""
+                ALTER TABLE trade_evaluations
+                ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE
+            """)
+            
             # Community Intelligence Tables
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_community_feedback_user_id ON community_feedback(user_id)')
             
