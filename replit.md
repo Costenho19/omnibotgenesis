@@ -153,7 +153,7 @@ Architectural Gaps implemented include:
 - **Exit Governance Layer (EGL)**: 3-gate exit pipeline with regime-adjusted thresholds, coherence checks, and TCV.
 
 ### Hierarchical Veto Flow
-Entry decisions progress through 8 named checkpoints: SIV (data integrity), Monte Carlo VETO, RMS VETO, VETO Early Return, Coherence Engine 6-tier, Adaptive Coherence Gate, TCV backward trajectory, FTI forward implication, ECW Gate edge persistence, then Scoring → Decision. Exit decisions go through the 3-gate EGL pipeline. All checkpoints and exit evaluations are fail-safe. All decisions generate PQC-signed receipts.
+Entry decisions progress through 8 named checkpoints: SIV CP-0 (data integrity), Monte Carlo VETO CP-1, RMS VETO CP-2, VETO Early Return CP-3, Coherence Engine 6-tier CP-4, Adaptive Coherence Gate CP-5, TCV backward trajectory CP-7 (ADR-032), FTI forward implication CP-7b (ADR-034), ECW Gate edge persistence CP-8 (ADR-019), then Scoring → Decision. CP-6 is unassigned (numbering reflects ADR introduction order, not sequential pipeline position). Exit decisions go through the 3-gate EGL pipeline: Regime-Adjusted Thresholds → Exit Coherence Gate → TCV Exit Check. All checkpoints and exit evaluations are fail-safe. All decisions generate PQC-signed receipts.
 
 ### Scoring Logic
 Decision scoring integrates inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with a separate Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
