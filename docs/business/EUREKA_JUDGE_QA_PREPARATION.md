@@ -361,6 +361,28 @@
 
 ## ✅ NUEVA PREGUNTA — CHECKPOINT 7 (PREPARAR SI LA MENCIONAN)
 
+### Q: "You mentioned identifying 4 architectural gaps proactively — what were they, and why does it matter?"
+
+**Answer:**
+> "After implementing TCV (Checkpoint 7) in early March 2026, I ran a structured architectural audit: if TCV validates temporal coherence, what else is missing from a complete governance system? I identified four gaps — not because the system was failing, but because a rigorous system should catch them before they become problems.
+>
+> **Gap 1 — Signal Integrity Validator (SIV, Checkpoint 0):** The pipeline had no data quality gate. Stale prices, missing fields, or cross-source inconsistencies could pass through all 7 checkpoints — garbage in, garbage out. SIV now runs at the very beginning: 4 validation categories (freshness, completeness, anomaly detection, cross-source consistency), score below 60/100 → HOLD with reason SIV_FAIL. 46 tests.
+>
+> **Gap 2 — Forward Trajectory Implicator (FTI, Checkpoint 7b):** TCV is backward-looking — it asks 'is this action consistent with where we've been?' But it never asked 'what does this action imply for where we're going?' FTI evaluates the forward implication of a proposed decision across 3 dimensions: regime transition risk (40%), implied decision consistency (35%), signal momentum sustainability (25%). Threshold: 25/100 — only vetoes when the forward implication is strongly negative. 45 tests.
+>
+> **Gap 3 — Regime-Conditioned Kelly (RCK):** Kelly position sizing used hardcoded global win_rate=0.55, avg_win=3%, avg_loss=2%. Problem: those numbers merge TRENDING regime (historically 62%+ WR) with VOLATILE regime (historically 44% WR) into an average that's optimal for neither. RCK now queries historical performance by HMM market regime with a 3-level fallback chain. Conservative on Day 1, evidence-based as trades accumulate. 36 tests.
+>
+> **Gap 4 — Exit Governance Layer (EGL):** Every entry passes through 8 checkpoints and generates a PQC-signed receipt. Exits used simple price comparison: pnl ≥ tp? Close. No regime awareness, no coherence check, no audit trail. EGL adds a 3-gate exit pipeline: regime-adjusted TP/SL thresholds, exit coherence gate, TCV exit check — and every exit evaluation generates a Dilithium-3 signed receipt stored in the database. 44 tests.
+>
+> Total: 171 new tests, all passing. Combined with the 49 tests for TCV (ADR-032), the system has 220+ tests added in March 2026 alone, covering the complete decision lifecycle — from data ingestion (SIV) through entry governance (CP-1 to CP-8) through position sizing (RCK) through exit governance (EGL). That's institutional-grade engineering discipline."
+
+**Key framing:** This demonstrates proactive architectural thinking — not reactive bug-fixing. A judge who asks this is checking whether the team can identify risks before they materialize.
+
+**If the judge asks: "Why didn't you have this from the beginning?"**
+> "Excellent question. SIV, FTI, RCK, and EGL each required a prerequisite that didn't exist before: SIV requires a validated pipeline to gate. FTI requires TCV to complement. RCK requires regime detection (HMM, Jan 2026) to segment. EGL requires entry governance to achieve parity with. The sequence is logical — you build the foundation before the walls. The system's architecture has always been designed as additive layers, with each ADR documenting what problem it solves and what it doesn't solve yet."
+
+---
+
 ### Q: "Your website mentions 7 checkpoints — what's Checkpoint 7?"
 
 **Answer:**
@@ -398,4 +420,4 @@
 
 *OMNIX — Governing decisions under uncertainty.*
 *Eureka Dubai 2026 — Semifinalist*
-*Last Updated: March 5, 2026 (7-checkpoint architecture, ADR-032 | JJ Jimenez Q&A added)*
+*Last Updated: March 5, 2026 (8-checkpoint pipeline — SIV CP-0, TCV CP-7, FTI CP-7b | EGL 3-gate exit governance | RCK regime-conditioned sizing | ADR-033/034/035/036 | 4 architectural gaps implemented)*

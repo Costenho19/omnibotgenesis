@@ -15,6 +15,17 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 5, 2026)
+
+- **Mar 05**: **4 Architectural Gaps implemented — ADR-033/034/035/036** — Gaps identificados proactivamente mediante análisis arquitectural post-TCV:
+  - **ADR-033**: Signal Integrity Validator (SIV) — Checkpoint 0. Pre-pipeline data quality gate. 4 validation categories: freshness, completeness, anomaly detection, cross-source consistency. Integrated in `_make_v52_decision()` before Monte Carlo VETO. 46 tests passing. FAIL-SAFE: pass-through on module error.
+  - **ADR-034**: Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV (backward-looking). Evaluates what proposed action implies for next N cycles using: Regime Transition Risk (40%), Implied Decision Consistency (35%), Signal Momentum Sustainability (25%). Conservative threshold (25/100). 45 tests passing. Positioned between TCV and ECW gate.
+  - **ADR-035**: Regime-Conditioned Kelly. Kelly inputs (win_rate, avg_win, avg_loss) now segmented by HMM market regime. 3-level fallback chain: regime-specific → global → conservative defaults. Replaces hardcoded `win_rate=0.55` in `_analyze_market()`. Confidence levels: HIGH (≥30 samples), MEDIUM (10-29), LOW (fallback). 36 tests passing.
+  - **ADR-036**: Exit Governance Layer (EGL). 3-gate pipeline for exit decisions: Regime-Adjusted Threshold Gate + Exit Coherence Gate + TCV Exit Check. PQC-signed exit receipts stored in `exit_governance_receipts` table. Integrated in `_check_open_positions_tp_sl()`. Emergency SL bypasses EGL (capital protection = absolute priority). 44 tests passing.
+  - **Total nuevos tests**: 171 tests (46+45+36+44) — todos pasando
+  - **ADR count**: Now 36 (ADR-001 → ADR-036)
+  - **Pipeline**: Entry governance now has 8 named checkpoints (CP-0 SIV through CP-8 ECW). Exit governance now has 3-gate pipeline (previously: price comparison only).
+
 ### Cambios Recientes (Mar 4, 2026)
 
 - **Mar 04**: **Temporal Coherence Validation (TCV) — Checkpoint 7 documentado en toda la documentación** — EUREKA_JUDGE_QA_PREPARATION.md, EUREKA_20_TOUGH_QUESTIONS.md, EUREKA_QA_SIMULATION.md, INVESTOR_FAQ.md, one_pager.md, ARCHITECTURE.md, InstitutionalPage.tsx, CommercialLanding.tsx, BiotechGovernanceDemo.tsx, EnergyGovernanceDemo.tsx, REAL_SYSTEM_STATUS.md actualizados con marco dual: "6 checkpoints validados hasta feb 2026 + TCV Checkpoint 7 agregado marzo 2026 (ADR-032)". README.md actualizado con referencia a ADR-032. MIGRATION_STATUS.md actualizado con nota temporal. Verificación final: cero referencias ambiguas a "6 checkpoints" en superficies críticas (Eureka, inversores, web principal).

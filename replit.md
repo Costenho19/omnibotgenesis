@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It employs a 7-checkpoint architecture, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, Kelly Criterion sizing, and Temporal Coherence Validation. The project aims to provide robust, error-free decision governance and capital preservation across various sectors, ensuring financial integrity and strategic advantage in automated decision-making.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It employs an 8-checkpoint entry governance pipeline, a 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing. The project aims to provide robust, error-free decision governance and capital preservation across various sectors, ensuring financial integrity and strategic advantage in automated decision-making.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -144,28 +144,34 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture integrating an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), and a Temporal Coherence Validator (Checkpoint 7). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+OMNIX employs a hexagonal architecture integrating an AutoTradingBot, Non-Markovian Memory Kernel, a 6-Tier Veto System (Coherence Engine), and a Temporal Coherence Validator. Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+
+Architectural Gaps implemented include:
+- **Signal Integrity Validator (SIV)**: Pre-pipeline data quality gate.
+- **Forward Trajectory Implicator (FTI)**: Forward-looking complement to TCV, evaluates decision implications.
+- **Regime-Conditioned Kelly (RCK)**: Kelly inputs segmented by HMM market regime.
+- **Exit Governance Layer (EGL)**: 3-gate exit pipeline with regime-adjusted thresholds, coherence checks, and TCV.
 
 ### Hierarchical Veto Flow
-Decisions progress through 7 checkpoints: Monte Carlo VETO, RMS VETO, an Adaptive Coherence Gate, Temporal Coherence Validation (TCV), an Edge Confirmation Window (ECW) Gate, Scoring, and a final Decision. TCV evaluates whether the proposed action is "temporally admissible" given the recent system trajectory. Fail-safe design ensures errors result in pass-through.
+Entry decisions progress through 8 named checkpoints: SIV (data integrity), Monte Carlo VETO, RMS VETO, VETO Early Return, Coherence Engine 6-tier, Adaptive Coherence Gate, TCV backward trajectory, FTI forward implication, ECW Gate edge persistence, then Scoring → Decision. Exit decisions go through the 3-gate EGL pipeline. All checkpoints and exit evaluations are fail-safe. All decisions generate PQC-signed receipts.
 
 ### Scoring Logic
 Decision scoring integrates inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with a separate Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system tracks vetoed trades to refine filter calibration, analyzing price movements to determine veto correctness and recommend filter threshold adjustments.
+A counterfactual analysis system tracks vetoed trades to refine filter calibration.
 
 ### Decision Contradiction Index (DCI)
 DCI quantifies internal signal divergence to explain HOLD decisions; a high DCI (≥70) mandates a HOLD.
 
 ### Dashboard Features
-The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. It clarifies metrics like "Est. Loss Avoided" vs. "Notional Blocked" and "Market Trend" vs. "Trading Regime." Other features include Comparative Metrics, P&L Breakdown, Correlation Heatmap, Time Heatmap, Regime Detection Dashboard, and Learning Engine Insights. An `InvestorDataProvider` enables read-only SQL queries. Dashboards are built with Flask and Streamlit.
+The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Dashboards are built with Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, utilizes RBAC authentication via the `b2b_clients` table with rate limiting, supports 6 normalized signals (0-100), and operates in a fail-closed manner.
+This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, utilizes RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
 
 ### Governance Compliance Modules — 5 Modules
-Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting. Human oversight overrides are PQC-signed (Dilithium-3) complementary records and do not alter the immutable `decision_receipts` chain. Compliance reports include full EU AI Act Art. 12 decision lineage.
+Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure. Security is maintained using SHA-256 hash chains and Dilithium-3 PQC signatures.

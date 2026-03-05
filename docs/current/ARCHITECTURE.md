@@ -1,9 +1,9 @@
 # OMNIX — Arquitectura
 
 **Internal Build Reference**: 6.5.4e  
-**Actualizado**: 4 de Marzo 2026  
-**Estado**: Producción 24/7 — 7-checkpoint trading pipeline (TCV, ADR-032)  
-**Último Cambio**: Temporal Coherence Validation — Checkpoint 7 (Mar 4, 2026)
+**Actualizado**: 5 de Marzo 2026  
+**Estado**: Producción 24/7 — 8-checkpoint trading pipeline (SIV CP-0, TCV CP-7, FTI CP-7b)  
+**Último Cambio**: 4 Architectural Gaps implemented — ADR-033/034/035/036 (Mar 5, 2026)
 
 ---
 
@@ -355,7 +355,11 @@ class AdaptiveGateDecision:
 | AutoTradingBot V6.5.4e | `omnix_core/bot/auto_trading_bot.py` | Scanner multi-crypto, señales tiered, emergency SL |
 | TradingSystem V6.5 | `omnix_core/trading_system.py` | Orquestador de ejecución |
 | CoherenceEngine V6.5.4e | `omnix_services/coherence_service/coherence_engine.py` | 6-tier veto, FAIL-CLOSED, type-safe + ADR-007 calibrated |
-| TemporalCoherenceValidator | `omnix_core/temporal/coherence_validator.py` | **Checkpoint 7 (TCV, ADR-032)** — trajectory consistency gate (Mar 2026) |
+| **SignalIntegrityValidator** | `omnix_core/data/signal_integrity_validator.py` | **Checkpoint 0 (SIV, ADR-033)** — data quality gate before analysis (Mar 2026) |
+| TemporalCoherenceValidator | `omnix_core/temporal/coherence_validator.py` | **Checkpoint 7 (TCV, ADR-032)** — backward trajectory consistency gate (Mar 2026) |
+| **ForwardTrajectoryImplicator** | `omnix_core/temporal/forward_trajectory.py` | **Checkpoint 7b (FTI, ADR-034)** — forward implication gate (Mar 2026) |
+| **RegimeConditionedKelly** | `omnix_core/sizing/regime_conditioned_kelly.py` | **ADR-035** — regime-segmented Kelly inputs with 3-level fallback (Mar 2026) |
+| **ExitGovernanceEngine** | `omnix_core/governance/exit_governance.py` | **ADR-036** — 3-gate exit pipeline + PQC-signed receipts (Mar 2026) |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
@@ -496,11 +500,20 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
     │  2. Heartbeat cada 12 ciclos (~5min) → Redis                │
     │  3. Rotar par (BTC→ETH→SOL...)                              │
     │  4. _analyze_market() → 10 estrategias                      │
-    │  5. _make_v52_decision() → scoring ponderado                │
-    │  6. Coherence Engine → 6-tier veto                          │
-    │     ↳ TCV (Checkpoint 7, ADR-032) → temporal trajectory     │
-    │  7. ECW Gate → edge persistence (3 consecutive cycles)      │
-    │  8. _execute_smart_trade() → Paper o Real                   │
+    │  5. _make_v52_decision():                                    │
+    │     ├── [CP-0]  SIV → data integrity (ADR-033)              │
+    │     ├── [CP-1]  Monte Carlo VETO → probabilistic gate       │
+    │     ├── [CP-2]  RMS VETO → risk management                  │
+    │     ├── [CP-3]  VETO Early Return                           │
+    │     ├── [CP-4]  Coherence Engine → 6-tier veto              │
+    │     ├── [CP-5]  Adaptive Coherence Gate (ADR-007)           │
+    │     ├── [CP-6]  TCV → backward trajectory (ADR-032)         │
+    │     ├── [CP-7b] FTI → forward implication (ADR-034)         │
+    │     ├── [CP-8]  ECW Gate → edge persistence (ADR-019)       │
+    │     └── [SCORE] Weighted scoring → final decision           │
+    │  6. _execute_smart_trade() → Paper o Real                   │
+    │  7. _check_open_positions_tp_sl():                          │
+    │     └── EGL → 3-gate exit governance (ADR-036)              │
     └─────────────────────────────────────────────────────────────┘
                                    │
               ┌────────────────────┼────────────────────┐

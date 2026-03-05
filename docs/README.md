@@ -41,11 +41,24 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)  
 **Referencia**: [ADR-029](reference/adr/ADR-029-governance-compliance-modules.md) - Governance Compliance Modules — NIST AI RMF + ISO/IEC 42001 + EU AI Act (5 módulos, 21 endpoints, 7 tablas)  
 **Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026)  
-**Referencia**: [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md) - Temporal Coherence Validation (TCV) — Checkpoint 7 del trading pipeline. Evalúa admisibilidad temporal de decisiones (Mar 2026). 49 tests pasando.
+**Referencia**: [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md) - Temporal Coherence Validation (TCV) — Checkpoint 7 del trading pipeline. Evalúa admisibilidad temporal de decisiones (Mar 2026). 49 tests pasando.  
+**Referencia**: [ADR-033](reference/adr/ADR-033-signal-integrity-validator.md) - Signal Integrity Validator (SIV) — Checkpoint 0. Data quality gate pre-análisis: freshness + completeness + anomaly + cross-source. 46 tests pasando (Mar 2026).  
+**Referencia**: [ADR-034](reference/adr/ADR-034-forward-trajectory-implication.md) - Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV: Regime Transition Risk + Implied Consistency + Signal Momentum. 45 tests pasando (Mar 2026).  
+**Referencia**: [ADR-035](reference/adr/ADR-035-regime-conditioned-kelly.md) - Regime-Conditioned Kelly (RCK). Kelly inputs segmentados por régimen HMM con 3-level fallback chain. 36 tests pasando (Mar 2026).  
+**Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026).
 
 ---
 
 ## Cambios Recientes
+
+### 4 Architectural Gaps — Pipeline Completeness (Mar 5, 2026)
+- **ESTADO**: ✅ COMPLETADO — ADR-033 · ADR-034 · ADR-035 · ADR-036 | 171 nuevos tests pasando
+- **SIV (CP-0, ADR-033)**: `omnix_core/data/signal_integrity_validator.py` — 4 validation categories, score 0-100, threshold 60, fail-safe pass-through. 46 tests.
+- **FTI (CP-7b, ADR-034)**: `omnix_core/temporal/forward_trajectory.py` — 3-dimension forward implication (Regime Transition Risk 40%, Implied Consistency 35%, Signal Momentum 25%). Threshold 25/100. 45 tests.
+- **RCK (ADR-035)**: `omnix_core/sizing/regime_conditioned_kelly.py` — Kelly inputs segmented by HMM regime, 3-level fallback chain. Replaces hardcoded win_rate=0.55. 36 tests.
+- **EGL (ADR-036)**: `omnix_core/governance/exit_governance.py` — 3-gate exit pipeline + PQC-signed exit receipts in `exit_governance_receipts`. Emergency SL bypasses EGL. 44 tests.
+- **Pipeline**: Entry governance = 8 checkpoints (CP-0 SIV through CP-8 ECW). Exit governance = 3 gates (EGL).
+- **ADR count**: 36 (ADR-001 → ADR-036)
 
 ### Insurance Domain Pilot — Multi-Domain Extensibility Validated (Mar 1, 2026)
 - **ESTADO**: ✅ COMPLETADO - ADR-030 + 3 PQC-signed receipts reales

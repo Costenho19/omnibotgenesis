@@ -212,6 +212,54 @@ except Exception:
     TCV_AVAILABLE = False
     logger.warning("⚠️ Temporal Coherence Validator no disponible - checkpoint 7 desactivado")
 
+# Import Signal Integrity Validator — ADR-033 (Checkpoint 0)
+try:
+    from omnix_core.data.signal_integrity_validator import SignalIntegrityValidator
+    _siv_instance = SignalIntegrityValidator()
+    SIV_AVAILABLE = True
+    logger.info("🔍 Signal Integrity Validator (ADR-033) disponible - Checkpoint 0 activo")
+except Exception:
+    SignalIntegrityValidator = None
+    _siv_instance = None
+    SIV_AVAILABLE = False
+    logger.warning("⚠️ Signal Integrity Validator no disponible - checkpoint 0 desactivado")
+
+# Import Forward Trajectory Implicator — ADR-034 (Checkpoint 7b)
+try:
+    from omnix_core.temporal.forward_trajectory import ForwardTrajectoryImplicator
+    _fti_instance = ForwardTrajectoryImplicator()
+    FTI_AVAILABLE = True
+    logger.info("🔮 Forward Trajectory Implicator (ADR-034) disponible - Checkpoint 7b activo")
+except Exception:
+    ForwardTrajectoryImplicator = None
+    _fti_instance = None
+    FTI_AVAILABLE = False
+    logger.warning("⚠️ Forward Trajectory Implicator no disponible - checkpoint 7b desactivado")
+
+# Import Regime-Conditioned Kelly — ADR-035
+try:
+    from omnix_core.sizing.regime_conditioned_kelly import RegimeConditionedKelly
+    _rck_instance = RegimeConditionedKelly()
+    RCK_AVAILABLE = True
+    logger.info("📊 Regime-Conditioned Kelly (ADR-035) disponible - Kelly inputs segmentados por régimen")
+except Exception:
+    RegimeConditionedKelly = None
+    _rck_instance = None
+    RCK_AVAILABLE = False
+    logger.warning("⚠️ Regime-Conditioned Kelly no disponible - usando Kelly inputs globales")
+
+# Import Exit Governance Engine — ADR-036
+try:
+    from omnix_core.governance.exit_governance import ExitGovernanceEngine
+    _egl_instance = ExitGovernanceEngine(tcv_instance=_tcv_instance)
+    EGL_AVAILABLE = True
+    logger.info("🚪 Exit Governance Engine (ADR-036) disponible - exit pipeline activo")
+except Exception:
+    ExitGovernanceEngine = None
+    _egl_instance = None
+    EGL_AVAILABLE = False
+    logger.warning("⚠️ Exit Governance Engine no disponible - exits usan lógica naive")
+
 # Import Quantum Enhancements (V5.3 ULTRA - QRNG + QAOA)
 try:
     from quantum_enhancements import global_qaoa, get_quantum_stats
@@ -2150,15 +2198,59 @@ class AutoTradingBot:
                 
                 if pnl_pct <= -self.EMERGENCY_SL_PCT:
                     # EMERGENCIA: Pérdida mayor al límite absoluto - CIERRA INMEDIATAMENTE
+                    # Emergency SL bypasses EGL (capital protection = absolute priority)
                     should_close = True
                     close_reason = f"🚨 EMERGENCY SL V6.5.4d ({pnl_pct*100:.2f}%) - MAX LOSS EXCEEDED [Limit:{self.EMERGENCY_SL_PCT*100:.1f}%]"
                     logger.warning(f"🚨 EMERGENCY STOP LOSS: {symbol} pérdida {pnl_pct*100:.2f}% > límite absoluto {self.EMERGENCY_SL_PCT*100:.1f}%")
-                elif pnl_pct >= tp_pct:
-                    should_close = True
-                    close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%) [Vol:{vol_class}]"
-                elif pnl_pct <= -sl_pct:
-                    should_close = True
-                    close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%) [Vol:{vol_class}]"
+                else:
+                    # ADR-036: EXIT GOVERNANCE LAYER — 3-gate pipeline for non-emergency exits
+                    _naive_tp = pnl_pct >= tp_pct
+                    _naive_sl = pnl_pct <= -sl_pct
+                    if EGL_AVAILABLE and _egl_instance is not None and (_naive_tp or _naive_sl):
+                        try:
+                            _egl_pos = {
+                                "position_id": str(position.get("id", "unknown")),
+                                "symbol": symbol,
+                                "action": position.get("action", "BUY"),
+                                "entry_price": entry_price,
+                                "take_profit_price": entry_price * (1 + tp_pct),
+                                "stop_loss_price": entry_price * (1 - sl_pct),
+                            }
+                            _egl_regime = "NEUTRAL"
+                            _egl_result = _egl_instance.evaluate_exit(
+                                position=_egl_pos,
+                                current_price=current_price,
+                                naive_tp_triggered=_naive_tp,
+                                naive_sl_triggered=_naive_sl,
+                                regime=_egl_regime,
+                                context={},
+                            )
+                            if _egl_result.should_exit:
+                                should_close = True
+                                close_reason = (
+                                    f"🚪 EGL EXIT: {_egl_result.reason} "
+                                    f"[conf={_egl_result.confidence:.0f}, "
+                                    f"receipt={_egl_result.exit_receipt_id[:8]}]"
+                                )
+                            else:
+                                logger.info(
+                                    "🚪 [EGL] Exit denied for %s: %s",
+                                    symbol, _egl_result.reason
+                                )
+                        except Exception as _egl_exc:
+                            logger.warning("⚠️ [EGL] Exception for %s: %s → naive exit", symbol, _egl_exc)
+                            if _naive_tp:
+                                should_close = True
+                                close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%) [Vol:{vol_class}]"
+                            elif _naive_sl:
+                                should_close = True
+                                close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%) [Vol:{vol_class}]"
+                    elif _naive_tp:
+                        should_close = True
+                        close_reason = f"✅ TAKE PROFIT (+{pnl_pct*100:.2f}%) [Vol:{vol_class}]"
+                    elif _naive_sl:
+                        should_close = True
+                        close_reason = f"🛑 STOP LOSS ({pnl_pct*100:.2f}%) [Vol:{vol_class}]"
                 
                 if should_close:
                     import json as json_module
@@ -2469,14 +2561,44 @@ class AutoTradingBot:
             kelly = None
             if self.config['use_v52_strategies'] and self.advanced_features:
                 if hasattr(self.advanced_features, 'kelly_optimizer'):
+                    # ADR-035: Use Regime-Conditioned Kelly inputs when available.
+                    # Falls back to global defaults if RCK unavailable or insufficient data.
+                    _kelly_win_rate, _kelly_avg_win, _kelly_avg_loss = 0.55, 0.03, 0.02
+                    _kelly_regime_conditioned = False
+                    _kelly_rck_meta = {}
+                    if RCK_AVAILABLE and _rck_instance is not None:
+                        try:
+                            _current_regime_for_kelly = (
+                                hmm_regime.get("regime", "NEUTRAL")
+                                if isinstance(hmm_regime, dict) else "NEUTRAL"
+                            )
+                            _rck_stats = _rck_instance.get_regime_stats(
+                                regime=_current_regime_for_kelly,
+                                symbol=symbol,
+                            )
+                            _kelly_win_rate = _rck_stats.win_rate
+                            _kelly_avg_win = _rck_stats.avg_win
+                            _kelly_avg_loss = _rck_stats.avg_loss
+                            _kelly_regime_conditioned = not _rck_stats.fallback_used
+                            _kelly_rck_meta = {
+                                "kelly_regime_conditioned": _kelly_regime_conditioned,
+                                "kelly_regime": _rck_stats.regime,
+                                "kelly_regime_samples": _rck_stats.sample_count,
+                                "kelly_confidence": _rck_stats.confidence,
+                                "kelly_fallback_level": _rck_stats.fallback_level,
+                            }
+                        except Exception as _rck_exc:
+                            logger.warning("⚠️ [RCK] Exception: %s → global defaults", _rck_exc)
                     kelly = self.advanced_features.kelly_optimizer.calculate_optimal_position(
-                        win_rate=0.55,  # Basado en histórico
-                        avg_win=0.03,
-                        avg_loss=0.02,
+                        win_rate=_kelly_win_rate,
+                        avg_win=_kelly_avg_win,
+                        avg_loss=_kelly_avg_loss,
                         total_capital=self._get_balance(),
                         max_position=KELLY_MAX_POSITION,  # ADR-004: 20% → 2%
                         log=False  # ADR-016: Log only if action != HOLD
                     )
+                    if kelly and _kelly_rck_meta:
+                        kelly.update(_kelly_rck_meta)
             
             # 6. HMM Regime Detection - Detectar régimen de mercado
             # FIX: Solo requiere prices, volumes es opcional
@@ -2733,6 +2855,57 @@ class AutoTradingBot:
                 'low_vol_mode': LOW_VOL_MODE
             }
             
+            # ========== ADR-033: SIGNAL INTEGRITY VALIDATOR (SIV) — CHECKPOINT 0 ==========
+            # Validates ALL input data quality BEFORE governance scoring begins.
+            # If data is stale, incomplete, or anomalous → HOLD immediately.
+            # Fail-safe: if SIV module errors → pipeline continues (pass-through).
+            if SIV_AVAILABLE and _siv_instance is not None:
+                try:
+                    _siv_market_data = {
+                        'price': current_price,
+                        'bid': None,
+                        'ask': None,
+                        'volume': None,
+                        'ohlc': None,
+                    }
+                    _siv_result = _siv_instance.validate(
+                        symbol=symbol,
+                        market_data=_siv_market_data,
+                        fetch_timestamps={},
+                        secondary_prices={},
+                    )
+                    decision['siv_score'] = _siv_result.score
+                    decision['siv_passed'] = _siv_result.passed
+                    decision['siv_pass_through'] = _siv_result.pass_through
+                    decision['siv_violations'] = [
+                        v.code for v in _siv_result.violations
+                    ]
+                    decision['decision_trace'].append(
+                        f"SIV(CP-0): score={_siv_result.score:.1f} "
+                        f"violations={len(_siv_result.violations)} "
+                        f"pass_through={_siv_result.pass_through}"
+                    )
+                    if not _siv_result.passed and not _siv_result.pass_through:
+                        _siv_codes = ', '.join(decision['siv_violations'])
+                        logger.warning(
+                            "🔍 [SIV_FAIL] %s | score=%.1f < %.0f | violations=[%s] → HOLD",
+                            symbol, _siv_result.score, _siv_instance.threshold, _siv_codes
+                        )
+                        decision['reason'].append(
+                            f"SIV_FAIL: Data integrity score {_siv_result.score:.0f}/100 "
+                            f"below threshold {_siv_instance.threshold:.0f} "
+                            f"(violations: {_siv_codes})"
+                        )
+                        decision['veto_chain'].append('SIV_DATA_INTEGRITY')
+                        return decision
+                    else:
+                        logger.debug(
+                            "🔍 [SIV] %s | score=%.1f | violations=%d → PASS",
+                            symbol, _siv_result.score, len(_siv_result.violations)
+                        )
+                except Exception as _siv_exc:
+                    logger.warning("⚠️ [SIV] Exception for %s: %s → pass-through", symbol, _siv_exc)
+
             # ========== V6.5.4d MONTE CARLO VETO ENGINE ==========
             # Monte Carlo ahora VETA trades en lugar de solo loguear
             mc_veto_applied = False
@@ -3089,6 +3262,62 @@ class AutoTradingBot:
                         )
                 except Exception as _tcv_exc:
                     logger.warning(f"⚠️ [TCV] Exception for {symbol}: {_tcv_exc} → pass-through")
+
+            # ========== ADR-034: FORWARD TRAJECTORY IMPLICATOR (FTI) — CHECKPOINT 7b ==========
+            # Forward-looking complement to TCV. Evaluates what the proposed action implies
+            # for the next N cycles using regime transition risk, implied consistency,
+            # and signal momentum sustainability.
+            # Conservative threshold (25): only vetoes strongly negative forward implications.
+            if FTI_AVAILABLE and _fti_instance is not None:
+                try:
+                    _fti_context = {
+                        "current_regime": v52_analysis.get("hmm_regime", "NEUTRAL"),
+                        "recent_ema_scores": v52_analysis.get("recent_ema_scores", []),
+                        "regime_history": v52_analysis.get("regime_history", []),
+                        "hmm_transition_matrix": v52_analysis.get("hmm_transition_matrix"),
+                    }
+                    _fti_proposed = decision.get("intended_action", ema_signal_direction or "HOLD")
+                    _fti_result = _fti_instance.evaluate(
+                        proposed_action=_fti_proposed,
+                        symbol=symbol,
+                        context=_fti_context,
+                    )
+                    decision["fti_score"] = _fti_result.implied_score
+                    decision["fti_passed"] = _fti_result.passed
+                    decision["fti_regime_transition_risk"] = _fti_result.regime_transition_risk
+                    decision["fti_pass_through"] = _fti_result.pass_through
+                    decision["decision_trace"].append(
+                        f"FTI(CP-7b): action={_fti_proposed} "
+                        f"score={_fti_result.implied_score:.1f} "
+                        f"transition_risk={_fti_result.regime_transition_risk:.2%} "
+                        f"pass_through={_fti_result.pass_through}"
+                    )
+                    if not _fti_result.passed and not _fti_result.pass_through:
+                        decision["action"] = "HOLD"
+                        decision["vetoed"] = True
+                        decision["veto_reason"] = "FORWARD_TRAJECTORY_IMPLICATION"
+                        decision["veto_chain"].append("FTI_FORWARD_TRAJECTORY")
+                        decision["reason"].append(
+                            f"FTI_VETO: Implied score {_fti_result.implied_score:.0f}/100 "
+                            f"below threshold {_fti_instance.threshold:.0f} "
+                            f"(regime_transition_risk={_fti_result.regime_transition_risk:.1%})"
+                        )
+                        logger.warning(
+                            "🔮 [FTI_VETO] %s | action=%s | implied=%.1f < %.0f | "
+                            "transition_risk=%.1%% → HOLD",
+                            symbol, _fti_proposed, _fti_result.implied_score,
+                            _fti_instance.threshold, _fti_result.regime_transition_risk * 100
+                        )
+                        return decision
+                    else:
+                        logger.debug(
+                            "🔮 [FTI] %s | action=%s | score=%.1f | transition_risk=%.1%% → PASS",
+                            symbol, _fti_proposed,
+                            _fti_result.implied_score,
+                            _fti_result.regime_transition_risk * 100
+                        )
+                except Exception as _fti_exc:
+                    logger.warning("⚠️ [FTI] Exception for %s: %s → pass-through", symbol, _fti_exc)
 
             # ========== ADR-019: EDGE CONFIRMATION WINDOW (ECW) GATE (Jan 21, 2026) ==========
             # No basta con edge una vez. Requiere persistencia del edge N ciclos consecutivos.
