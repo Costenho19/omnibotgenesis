@@ -373,6 +373,29 @@
 
 ---
 
+## ✅ NUEVA PREGUNTA — RELACIÓN CON JJ JIMENEZ / QUANTUMTHREAT LABS
+
+### Q: "¿El TCV de OMNIX está relacionado con el trabajo de JJ Jimenez en QuantumThreat Labs?"
+
+*(Variante: "¿Esto se basa en el 'Temporal Continuity Validation' de QuantumThreat Labs?")*
+
+**Answer:**
+> "Buena pregunta — y la distinción es importante. En febrero de 2026 tuve una conversación con JJ Jimenez, investigador que trabaja en Quantum Temporal Dynamics y fundador de QuantumThreat Labs. Esa conversación me hizo identificar un gap estructural en OMNIX: el sistema evaluaba cada decisión de manera aislada — '¿es esta señal estadísticamente válida ahora mismo?' — pero no evaluaba si la secuencia de decisiones producía una trayectoria coherente del sistema.
+>
+> La implementación de OMNIX es completamente propia. JJ trabaja en 'Temporal Continuity Validation' para seguridad criptográfica — específicamente, la continuidad de sistemas bajo condiciones adversariales y ataques cuánticos. OMNIX implementa 'Temporal Coherence Validation' para governance de decisiones de trading — si una serie de acciones individuales, cada una válida por sí sola, forma una trayectoria coherente. Son dominios distintos, propósitos distintos, e implementaciones completamente distintas.
+>
+> Lo que ambos comparten es el principio: que evaluar un instante en aislamiento es insuficiente; la trayectoria importa. OMNIX aplicó ese principio al dominio de governance de decisiones. ADR-032 documenta el gap identificado, los 5 problemas críticos que requirió resolver la implementación, y las 49 pruebas que la validan."
+
+**Key framing:** Esto demuestra tres cosas a la vez: (1) OMNIX escucha a expertos del ecosistema cuántico, (2) somos capaces de traducir principios teóricos en implementaciones concretas y probadas, (3) somos honestos sobre la inspiración sin reclamar IP ajena. Un juez que conozca a JJ lo verá como una señal positiva de que OMNIX está conectado con la comunidad correcta.
+
+**Si el juez conoce a JJ personalmente:**
+> "Exactamente. El trabajo de JJ en QTD es el punto de partida filosófico — la trayectoria como variable de control, no el instante aislado. OMNIX aplica ese principio a un dominio completamente diferente. Hemos mantenido el diálogo."
+
+**Si el juez pregunta por la diferencia en el nombre (Continuity vs Coherence):**
+> "El nombre refleja la diferencia de dominio. 'Continuity' en el trabajo de JJ se refiere a continuidad de sistemas criptográficos bajo ataque — persistencia a través del tiempo bajo adversario. 'Coherence' en OMNIX se refiere a coherencia interna de la trayectoria de decisiones — que la secuencia de acciones tenga una lógica direccional consistente. Son problemas relacionados pero distintos."
+
+---
+
 *OMNIX — Governing decisions under uncertainty.*
 *Eureka Dubai 2026 — Semifinalist*
-*Last Updated: March 4, 2026 (7-checkpoint architecture, ADR-032)*
+*Last Updated: March 5, 2026 (7-checkpoint architecture, ADR-032 | JJ Jimenez Q&A added)*

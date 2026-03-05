@@ -40,6 +40,37 @@ whether the proposed action is admissible given that trajectory.
 
 ---
 
+## Distinction from Related Temporal Frameworks
+
+A February 2026 conversation with JJ Jimenez (QuantumThreat Labs, originator of
+Quantum Temporal Dynamics™) surfaced the structural gap described above. For
+due-diligence clarity, the distinction between his work and OMNIX's TCV is
+documented here explicitly:
+
+| Aspect | JJ Jimenez / QuantumThreat Labs | OMNIX TCV (this ADR) |
+|--------|--------------------------------|----------------------|
+| **Full name** | Temporal **Continuity** Validation | Temporal **Coherence** Validation |
+| **Domain** | Post-quantum cryptographic security | Decision governance for automated systems |
+| **Core question** | Does the cryptographic system maintain continuity under adversarial / quantum attack? | Does the sequence of governance decisions form a coherent directional trajectory? |
+| **Implementation** | Validation infrastructure for secure communications and PQC migration | Checkpoint 7 in the OMNIX trading governance pipeline (49 unit tests) |
+| **IP ownership** | Quantum Temporal Dynamics™ doctrine (JJ Jimenez / QuantumThreat Labs) | OMNIX implementation (Harold Nunes / OMNIX) |
+
+**What the two share:** The underlying philosophical principle that evaluating a
+system at a single instant is insufficient — the trajectory over time carries
+information that point-in-time analysis discards. Both frameworks treat temporal
+structure as a first-class variable rather than an afterthought.
+
+**What differs:** The problem domain, the threat model, the implementation, and
+the intended use case are completely different. OMNIX's TCV is not derived from
+QTD doctrine; it applies a related intuition — trajectory coherence — to the
+distinct problem of decision governance in automated trading.
+
+The conversation with JJ Jimenez identified the gap in OMNIX's architecture.
+The implementation (including the 5 production-grade corrections documented
+below) is OMNIX's own work.
+
+---
+
 ## Decision
 
 Add Temporal Coherence Validation as **Checkpoint 7** in the OMNIX governance pipeline.
