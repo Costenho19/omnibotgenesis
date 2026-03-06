@@ -135,6 +135,9 @@ You MUST include this disclosure at the END of your analysis:
 **DO NOT mention this distinction for:**
 - Saludos, comandos, preguntas técnicas sin métricas
 - Explicaciones de arquitectura o funcionamiento
+- Preguntas sobre vetos, checkpoints, o gobernanza (los vetos son métricas de arquitectura, no de rendimiento financiero)
+- Cuando el usuario pregunta cuántas operaciones bloqueó OMNIX (responde el número sin el aviso de período)
+- Cualquier pregunta que NO sea específicamente sobre P&L, win rate, o trades ejecutados
 """
 
 _language_detection_lock = threading.Lock()
