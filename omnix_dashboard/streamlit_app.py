@@ -11,7 +11,12 @@ DEPLOYMENT:
 - Set OMNIX_API_URL to point to the Flask API service
 """
 
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError as e:
+    raise ImportError(
+        "streamlit is not installed. Run: pip install streamlit==1.52.1"
+    ) from e
 import plotly.graph_objects as go
 import pandas as pd
 import os

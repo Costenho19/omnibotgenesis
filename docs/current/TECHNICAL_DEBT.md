@@ -1,9 +1,48 @@
 # OMNIX Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** February 24, 2026  
+**Updated:** March 6, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Requirements.txt Audit & Cleanup (Mar 6, 2026)
+
+**Status:** COMPLETED — Production requirements cleaned, versions pinned, dev dependencies separated
+
+**Context:** Pre-fundraise (Eureka Dubai GCC March 15, 2026) audit to ensure Railway deployments are reproducible and conflict-free. Prior state had duplicates, unpinned packages, and a namespace conflict with the standalone `telegram` package.
+
+### Issues Found & Resolved
+
+| Issue | Package(s) | Severity | Resolution |
+|-------|-----------|----------|------------|
+| Namespace conflict | `telegram==0.0.1` vs `python-telegram-bot==21.9` | HIGH | Removed `telegram` standalone |
+| Unpinned version | `tavily-python`, `fast-langdetect`, `streamlit`, `dependency-injector`, `pydantic-settings` | MEDIUM | Pinned to installed versions |
+| Loose version ranges | `gevent>=24.2.1`, `websockets>=13.0`, `aiohttp>=3.9.0`, `yt-dlp>=2024.1.0`, `dwave-ocean-sdk>=6.0.0`, `ccxt>=4.5.24` | MEDIUM | Pinned to exact versions |
+| Duplicate entries | `langdetect` (x2), `plotly` (x2), `reportlab` (x2) | LOW | Deduplicated, kept versioned entry |
+| Test deps in prod | `pytest-asyncio`, `pytest-env`, `import-linter` | LOW | Moved to `requirements-dev.txt` |
+| Unguarded import | `streamlit` in `omnix_dashboard/streamlit_app.py` | LOW | Added try/except with clear error message |
+
+### Optional Packages — Documented & Commented
+
+| Package | Reason Optional | Guard in Code |
+|---------|----------------|---------------|
+| `dependency-injector==4.48.3` | Not available on Railway; V7.0 hexagonal arch inactive | `try/except` in `ai_service/__init__.py` |
+| `dwave-ocean-sdk==9.0.0` | Requires D-Wave Leap account + DWAVE_API_TOKEN | `try/except` in `quantum/enhancements.py`, `quantum/dwave_qaoa.py` |
+| `kaleido==0.2.1` | Requires Chromium/Orca for Plotly static export | Fallback path in PDF generation |
+| `tables==3.9.2` | Requires libhdf5 system library; backtesting only | Not in main trading pipeline |
+
+### New File Created
+
+- `requirements-dev.txt`: Development-only deps (`-r requirements.txt` + pytest stack + import-linter)
+
+### Residual Debt
+
+- `google-genai>=1.0.0` still uses `>=` (intentional: tracks new SDK updates)
+- `flask-cors>=4.0.0` still uses `>=` (intentional: patch version flexible)
+- `httpx~=0.27.2` uses compatible release (intentional: allows patch updates)
+- Railway does not auto-install optional packages — verify Railway nixpacks.toml if `kaleido`/`tables` needed in production
 
 ---
 

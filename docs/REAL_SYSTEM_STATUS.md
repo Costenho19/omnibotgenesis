@@ -15,6 +15,17 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 6, 2026) — Requirements Audit
+
+- **Mar 06**: **requirements.txt auditado y producción-ificado** — separación prod/dev, versiones pinadas, conflictos eliminados:
+  - **Duplicados eliminados**: `langdetect` (x2), `plotly` (x2), `reportlab` (x2) → una sola entrada cada uno con versión exacta
+  - **Conflicto resuelto**: paquete `telegram` (standalone v0.0.1) eliminado — conflicto de namespace con `python-telegram-bot==21.9`
+  - **Versiones pinadas**: `tavily-python==0.7.14`, `fast-langdetect==1.0.0`, `pydantic-settings==2.12.0`, `streamlit==1.52.1`, `dependency-injector==4.48.3`, `gevent==25.9.1`, `websockets==14.2`, `aiohttp==3.13.2`, `yt-dlp==2025.11.12`, `ccxt==4.5.24`, `dwave-ocean-sdk==9.0.0`
+  - **requirements-dev.txt creado**: `pytest==9.0.2`, `pytest-asyncio==1.3.0`, `pytest-env==1.2.0`, `import-linter==2.9` separados de producción
+  - **Paquetes OPTIONAL documentados** con comentarios explícitos: `dependency-injector` (Railway no disponible — guarded), `kaleido` (Chromium dependency), `tables` (libhdf5 system dependency), `dwave-ocean-sdk` (DWAVE_API_TOKEN requerido)
+  - **streamlit import** protegido con try/except en `omnix_dashboard/streamlit_app.py`
+  - **Archivos**: `requirements.txt`, `requirements-dev.txt` (nuevo), `omnix_dashboard/streamlit_app.py`
+
 ### Cambios Recientes (Mar 5, 2026) — Production Bug Fixes
 
 - **Mar 05 (tarde)**: **2 bugs de producción corregidos — bot Railway restaurado**:
