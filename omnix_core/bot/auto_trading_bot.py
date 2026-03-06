@@ -2566,6 +2566,7 @@ class AutoTradingBot:
                     _kelly_win_rate, _kelly_avg_win, _kelly_avg_loss = 0.55, 0.03, 0.02
                     _kelly_regime_conditioned = False
                     _kelly_rck_meta = {}
+                    hmm_regime = None
                     if RCK_AVAILABLE and _rck_instance is not None:
                         try:
                             _current_regime_for_kelly = (
@@ -3270,6 +3271,7 @@ class AutoTradingBot:
             # Conservative threshold (25): only vetoes strongly negative forward implications.
             if FTI_AVAILABLE and _fti_instance is not None:
                 try:
+                    v52_analysis = decision.get('v52_analysis', {})
                     _fti_context = {
                         "current_regime": v52_analysis.get("hmm_regime", "NEUTRAL"),
                         "recent_ema_scores": v52_analysis.get("recent_ema_scores", []),
