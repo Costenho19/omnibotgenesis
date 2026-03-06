@@ -514,7 +514,7 @@ The right question is not "how much alpha?" but "how much risk exists without go
 - Decision Governance Infrastructure for automated systems (the category it is building)
 - Governance control architecture for automated decision systems (canonical definition)
 - Capital preservation system validated in digital assets (98.5% of capital preserved)
-- Multi-layer veto architecture (6-checkpoint sequential governance engine)
+- Multi-layer veto architecture (8-checkpoint entry pipeline + 3-gate EGL exit governance)
 - Domain-agnostic decision governance framework (first vertical: digital asset trading)
 
 **OMNIX IS NOT:**
