@@ -2575,7 +2575,7 @@ class AutoTradingBot:
                             )
                             _rck_stats = _rck_instance.get_regime_stats(
                                 regime=_current_regime_for_kelly,
-                                symbol=symbol,
+                                symbol=pair,
                             )
                             _kelly_win_rate = _rck_stats.win_rate
                             _kelly_avg_win = _rck_stats.avg_win
@@ -3278,7 +3278,7 @@ class AutoTradingBot:
                         "regime_history": v52_analysis.get("regime_history", []),
                         "hmm_transition_matrix": v52_analysis.get("hmm_transition_matrix"),
                     }
-                    _fti_proposed = decision.get("intended_action", ema_signal_direction or "HOLD")
+                    _fti_proposed = decision.get("intended_action", ema_direction or "HOLD")
                     _fti_result = _fti_instance.evaluate(
                         proposed_action=_fti_proposed,
                         symbol=symbol,
