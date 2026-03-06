@@ -22,6 +22,10 @@
   - **Bug 2 — columna was_correct faltante**: Tabla `trade_evaluations` existía en Railway antes de que se añadiera la columna `was_correct BOOLEAN NOT NULL`. `CREATE TABLE IF NOT EXISTS` no actualiza tablas existentes → error en inicialización. **Fix**: `ALTER TABLE trade_evaluations ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE` añadido en la sección de migraciones de `_init_tables_enterprise()`.
   - **Tests post-fix**: 27/27 passing. Revisión arquitectural: PASS — fixes correctos y completos.
   - **Archivos**: `omnix_services/telegram_service/enterprise_bot.py`, `omnix_services/database_service/database_service.py`, `src/omnix/bootstrap/main_entry.py`
+- **Mar 05 (noche) — Fix v2**: Los fixes anteriores eran incompletos. Causas raíz reales identificadas:
+  - **Bug 1 (real)**: Python ejecuta `__init__.py` del paquete antes de importar cualquier submodulo. El `__init__.py` de `ai_service` importa `container.py` sin protección → todo el paquete falla. **Fix real**: envolver el import de `.container` en try/except en `omnix_services/ai_service/__init__.py`. Ahora `ConversationalAI` queda disponible aunque `dependency_injector` no esté instalado en Railway.
+  - **Bug 2 (real)**: El `CREATE INDEX ... ON trade_evaluations(was_correct)` en línea 1906 fallaba ANTES de que corriese el ALTER TABLE que habíamos puesto en línea 2278. **Fix real**: mover el ALTER TABLE a línea ~1903, inmediatamente después del CREATE TABLE y antes de los CREATE INDEX que referencian la columna.
+  - **Tests post-fix v2**: 27/27 passing.
 
 ### Cambios Recientes (Mar 5, 2026) — Architectural Gaps
 

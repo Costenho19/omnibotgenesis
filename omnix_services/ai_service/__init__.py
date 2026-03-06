@@ -31,12 +31,18 @@ from .ai_prompts import PromptsContextManager
 from .conversational_brain import ConversationalBrain, get_conversational_brain
 from .conversational_ai_adapter import ConversationalAI
 
-from .container import (
-    AIServiceContainer,
-    get_container,
-    get_ai_gateway,
-    create_container,
-)
+try:
+    from .container import (
+        AIServiceContainer,
+        get_container,
+        get_ai_gateway,
+        create_container,
+    )
+except ImportError:
+    AIServiceContainer = None
+    get_container = None
+    get_ai_gateway = None
+    create_container = None
 
 from .interfaces.ai_gateway import (
     AIGatewayProtocol,
