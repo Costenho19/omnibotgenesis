@@ -60,7 +60,7 @@ export default function InstitutionalPage() {
   
   const [metrics, setMetrics] = useState<SystemMetrics>({
     evaluationCycles: 670000,
-    vetosExecuted: 5473,
+    vetosExecuted: 22000,
     capitalPreserved: 98.5,
     systemUptime: '99.9%',
     lastUpdate: new Date().toISOString()
@@ -567,7 +567,7 @@ export default function InstitutionalPage() {
                       </div>
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">High-Risk Blocks</span>
-                        <span className="text-amber-400 font-medium">5,473</span>
+                        <span className="text-amber-400 font-medium">22,000+</span>
                       </div>
                       <div className="p-2 bg-[#0A1628]/40 rounded-lg">
                         <p className="text-[10px] text-muted/60 text-center italic">Internal evaluation dataset · Not externally audited</p>

@@ -114,7 +114,7 @@ def get_system_state_prompt() -> str:
 
 **Two Periods - NEVER Mix Without Clarifying:**
 1. **Learning Baseline** (Nov 2025 - 14 Ene 2026): 119 trades, -$15,198.73 P&L, 20.2% WR - Fase de CALIBRACIÓN
-2. **Track Record Oficial** (15 Ene 2026 - presente): Sistema recalibrado, ~0 trades, 89,000+ decisiones bloqueadas
+2. **Track Record Oficial** (15 Ene 2026 - presente): Sistema recalibrado, ~0 trades, 22,000+ decisiones bloqueadas
 
 **MANDATORY DISCLOSURE RULE:**
 Whenever you mention ANY of these metrics in your response:
