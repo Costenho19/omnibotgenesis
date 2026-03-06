@@ -1,5 +1,5 @@
 # OMNIX — Business Model Canvas
-## Version Alineada para Eureka Dubai | Febrero 2026
+## Version Alineada para Eureka Dubai | Marzo 2026
 
 **Clasificacion**: Suplemento de Competencia — Revisado por Expertos
 **Alineacion**: Todos los numeros coinciden con el Pitch Deck Final de OMNIX Eureka
@@ -41,7 +41,7 @@
 
 **Operaciones Core**
 - Desarrollo y Calibracion del Motor de Riesgo
-- Arquitectura de Validacion de 6 Checkpoints
+- Arquitectura de Validacion de 8 Checkpoints
 - Registro de Decision Trace (100% cobertura de telemetria)
 - Analisis de Shadow Portfolio (670,000+ eventos)
 - Integracion API para Clientes Enterprise
@@ -60,7 +60,7 @@
 
 **OMNIX provee:**
 
-- Validacion pre-ejecucion de operaciones multi-capa (6 checkpoints independientes)
+- Validacion pre-ejecucion de operaciones multi-capa (8 checkpoints de entrada independientes + 3 gates de gobernanza de salida)
 - Arquitectura fail-closed (default = no operar)
 - Decision trace institucional completo
 - Deteccion de regimen y conciencia de riesgo de cola
@@ -71,7 +71,7 @@
 | Sistemas Tradicionales | OMNIX |
 |------------------------| ------|
 | Optimizan entradas | Optimiza contencion disciplinada |
-| 1 control de riesgo | 6 checkpoints independientes |
+| 1 control de riesgo | 8 checkpoints de entrada + 3 gates de salida |
 | Operar primero, gestionar riesgo despues | Bloquear primero, operar solo con edge confirmado |
 
 **RESULTADO PARA EL CLIENTE (De Data de Validacion):**
@@ -115,7 +115,7 @@
 
 ### VERTICALES FUTURAS — Gobernanza de Decisiones B2B (Ano 2-3+)
 
-Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3+). Mismo motor de 6 checkpoints, inputs especificos por dominio. Arquitectura disenada; expansion sigue la validacion en trading.
+Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3+). Mismo motor de 8 checkpoints, inputs especificos por dominio. Arquitectura disenada; expansion sigue la validacion en trading.
 
 ### SECUNDARIO — B2C (20% Enfoque, Post-Validacion Enterprise)
 
@@ -224,7 +224,8 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 
 | Activo | Descripcion |
 |--------|-------------|
-| Motor de Seguridad de 6 Checkpoints | Validacion pre-ejecucion multi-capa |
+| Motor de Gobernanza de 8 Checkpoints + EGL | Validacion pre-ejecucion multi-capa y gobernanza de salida |
+| 4 Gaps Arquitectónicos (SIV/FTI/RCK/EGL) | Completados marzo 2026 — 36 ADRs, 171 tests |
 | Framework de Decision Trace | Trail de auditoria completo para cada decision |
 | Motor Shadow Portfolio | 670,000+ eventos de operaciones contrafactuales |
 | Orquestacion Multi-IA | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
@@ -240,7 +241,7 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 - Fundador solo — arquitectura de producto, logica de riesgo e infraestructura (Harold Nunes)
 - Arquitectura lean disenada para escalabilidad; desarrollo asistido por IA reduce burn manteniendo velocidad
 - 2-3 contrataciones clave planificadas (post-funding): Senior Backend (Mes 1-2), DevOps (Mes 2-3), Business Development (Mes 3-4)
-- **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (27 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
+- **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (36 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
 
 ### Infraestructura
 
@@ -330,7 +331,7 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 
 | Categoria | Limitacion | Ventaja OMNIX |
 |-----------|-----------|---------------|
-| Bots Retail | Demasiado simples, sin gobernanza de riesgo | Arquitectura institucional de 6 checkpoints |
+| Bots Retail | Demasiado simples, sin gobernanza de riesgo | Arquitectura institucional de 8 checkpoints |
 | Fondos Quant | Demasiado caros (minimo $10M+) | Infraestructura accesible |
 | Supervision Manual | Demasiado lenta para tiempo real | Validacion automatizada <120ms |
 
@@ -367,7 +368,7 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 |--------|-----------|
 | Producto funcionando en produccion | 3+ meses corriendo 24/7 |
 | Data de validacion real | 670,000+ ciclos de decision analizados |
-| IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
+| IP defensible | 8 checkpoints + EGL |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
 | Referencia de mercado | Startups de infraestructura comparables levantaron $3M-$5M en etapa similar |
 

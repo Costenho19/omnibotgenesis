@@ -1,6 +1,6 @@
 # OMNIX — Competitive Landscape Analysis
 
-**Last Updated**: February 19, 2026
+**Last Updated**: March 6, 2026
 **Purpose**: Investor due diligence and Eureka presentation preparation
 
 ---
@@ -35,13 +35,13 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 
 | Feature | OMNIX | 3Commas | Cryptohopper | Riskalyze | Internal Quant Tools | Chainalysis |
 |---------|:-----:|:-------:|:------------:|:---------:|:--------------------:|:-----------:|
-| Pre-execution governance | 6 checkpoints | 0 | 0 | 0 | 1-2 | 0 |
+| Pre-execution governance | 8 checkpoints + EGL | 0 | 0 | 0 | 1-2 | 0 |
 | Fail-closed architecture | Yes | No | No | N/A | Varies | N/A |
 | Decision audit trail | Full | Partial | None | Post-trade | Limited | Transaction |
 | Explainability (XAI) | Checkpoint-level | None | None | Summary | Varies | Transaction |
 | Multi-AI orchestration | 3 providers | 0 | 0 | 0 | 1 (if any) | 0 |
 | Post-quantum security | Dilithium-3 | No | No | No | No | No |
-| Shadow Portfolio learning | 192K+ events | No | No | No | Rare | No |
+| Shadow Portfolio learning | 670K+ events | No | No | No | Rare | No |
 | Domain-agnostic | Yes | No | No | No | No | No |
 | Designed for regulatory frameworks | MiCA/ADGM | No | No | Partial | Varies | Yes |
 | Accessible to <$100M AUM | Yes | Yes | Yes | Yes | No | Yes |
@@ -107,11 +107,11 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | Moat Type | Description | Time to Replicate |
 |-----------|-------------|:------------------:|
 | **Data moat** | 670,000+ evaluation cycle events with outcome tracking | 6-12 months minimum |
-| **Architecture moat** | 6-checkpoint sequential governance with fail-closed behavior | 12-18 months to build |
+| **Architecture moat** | 8-checkpoint entry + 3-gate exit (EGL) with fail-closed behavior | 12-18 months to build |
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
 | **Post-quantum security** | NIST-standardized PQC operational since Nov 2025 | 3-6 months |
 | **Domain-agnostic design** | Same engine validated across trading, credit, insurance | 6-12 months per vertical |
-| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — no black box. Structured audit exports | Cultural/architectural rebuild |
+| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — 36 ADRs | Cultural/architectural rebuild |
 | **Embedded infrastructure lock-in** | Once integrated, switching cost = re-integration + re-calibration | High switching cost |
 
 ### 4.2 Patent Strategy

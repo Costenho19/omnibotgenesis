@@ -48,7 +48,7 @@ Most systems optimize for *action*. Nobody optimizes for *restraint*.
 
 **OMNIX builds the governance layer for automated decision systems — blocking costly mistakes before they happen.**
 
-Unlike systems that chase every opportunity, OMNIX operates as a **fail-closed governance engine**: if confidence falls below defined thresholds, action is automatically halted. The same 6-checkpoint architecture applies to any domain where decisions under uncertainty involve capital at risk.
+Unlike systems that chase every opportunity, OMNIX operates as a **fail-closed governance engine**: if confidence falls below defined thresholds, action is automatically halted. The same 8-checkpoint entry + 3-gate exit governance architecture applies to any domain where decisions under uncertainty involve capital at risk.
 
 **Three Principles:**
 
@@ -222,11 +222,11 @@ While Bitcoin dropped 7.37%, OMNIX preserved 98.5% of capital. Of the 47 trades 
 
 ## SLIDE 8 — MULTI-VERTICAL VISION (Beyond Trading)
 
-**The same 6-checkpoint engine. Different domains. Same discipline.**
+**The same 8-checkpoint entry engine + EGL. Different domains. Same discipline.**
 
 OMNIX is not a trading bot — it is a **decision governance infrastructure**. Digital asset trading is the first vertical where the architecture has been validated in production.
 
-The governance logic is designed as domain-agnostic: the inputs change, but the six checkpoints — probability, risk limits, signal agreement, trend persistence, stress testing, and contradiction detection — apply identically to any high-stakes automated decision.
+The governance logic is designed as domain-agnostic: the inputs change, but the eight entry checkpoints — data integrity (SIV), probability (Monte Carlo), risk limits (RMS), veto early return, signal agreement (Coherence Engine), adaptive coherence gate, backward trajectory (TCV), forward implication (FTI), and edge persistence (ECW) — plus the 3-gate exit pipeline (EGL), apply identically to any high-stakes automated decision.
 
 | Stage | Vertical | Status |
 |-------|----------|--------|
@@ -350,7 +350,7 @@ Institutional-level governance frameworks are typically inaccessible to smaller 
 *Founder & Product Architect*
 
 - Built OMNIX solo from concept to production-running system — using AI as a development force multiplier
-- Designed the 6-checkpoint governance engine, risk logic, AI orchestration, and full production infrastructure
+- Designed the 8-checkpoint entry governance engine + 3-gate exit pipeline (EGL), risk logic, AI orchestration, and full production infrastructure
 - Self-taught technologist with institutional finance discipline
 - Relocating to Dubai for ADGM ecosystem
 
@@ -404,7 +404,7 @@ I spent three months building this with personal capital. Lean, focused build. G
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
 | Real validation data | 670,000+ decision cycles analyzed |
-| Defensible IP | 6-checkpoint architecture + Shadow Portfolio engine |
+| Defensible IP | 8-checkpoint entry + EGL + Shadow Portfolio engine (36 ADRs) |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Market reference | Comparable infrastructure startups raised $3M-$5M at similar stage |
 
@@ -473,6 +473,8 @@ I spent three months building this with personal capital. Lean, focused build. G
 ---
 
 ## APPENDIX A — DECISION TRACE (Live System Output)
+
+> *Historical example from February 10, 2026 — generated under the 6-checkpoint system validated through Feb 2026. Current system operates with 8 entry checkpoints + 3-gate EGL exit pipeline (added March 5, 2026).*
 
 ```json
 {

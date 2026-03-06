@@ -4,7 +4,7 @@
 **Document Type**: Product Overview  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
-**Last Updated**: February 15, 2026
+**Last Updated**: March 6, 2026
 
 ---
 
@@ -27,7 +27,7 @@ Traditional algorithmic trading systems optimize for **returns first, risk secon
 
 **OMNIX builds the governance layer for automated decision systems.**
 
-It is Decision Governance Infrastructure validated in digital asset trading. The same 6-checkpoint architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
+It is Decision Governance Infrastructure validated in digital asset trading. The same 8-checkpoint entry + 3-gate exit architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
 
 ### Core Identity
 
@@ -35,7 +35,7 @@ It is Decision Governance Infrastructure validated in digital asset trading. The
 |-----------|-------------|
 | **Primary Objective** | Capital preservation (target: 98%+ maintained) |
 | **Secondary Objective** | Systematic exposure to validated statistical edge |
-| **Architecture** | Multi-layer veto system with AI governance (6 independent checkpoints) |
+| **Architecture** | Multi-layer veto system with AI governance (8 independent entry checkpoints + 3-gate exit layer) |
 | **Security Standard** | NIST-aligned PQC implemented (Kyber-768, Dilithium-3) — operational since Nov 2025 |
 | **Domain** | Domain-agnostic — validated in digital asset trading, expandable to supply chain, lending, insurance, and compliance |
 
@@ -85,11 +85,12 @@ We sell protection from costly mistakes.
 
 ### 1. Multi-Layer Risk Orchestration
 
-Every potential trade passes through **6 independent validation layers** before execution is considered:
+Every potential trade passes through **8 independent validation entry layers** plus a **3-gate exit layer** before execution is considered:
 
 ```
-Signal Detection → Monte Carlo Validation → RMS Limits → 
-Coherence Engine → Edge Confirmation → Final Decision
+Data Integrity (SIV) → Monte Carlo → RMS Limits → Coherence Engine → 
+Temporal Coherence (TCV) → Future Trajectory (FTI) → Edge Confirmation (ECW) → 
+Position Sizing (RCK) → Final Decision
 ```
 
 ### 2. Statistical Edge Confirmation
@@ -134,19 +135,20 @@ OMNIX is one of the first advanced trading platforms implementing **NIST-standar
 
 | Capability | Status | Evidence |
 |------------|--------|----------|
-| 6-Tier Veto System | Operational | ADR-019, system logs |
+| 8-Tier Veto System | Operational | ADR-036, 171 tests |
 | Monte Carlo Validation | Operational | 10,000 simulation paths per decision |
 | Edge Confirmation Window | Operational | 3-cycle confirmation requirement |
 | Black Swan Detection | Operational | Real-time severity monitoring |
-| Post-Quantum Cryptography | Experimenting (Nov 2025) | NIST-aligned Kyber-768, Dilithium-3 |
+| Post-Quantum Cryptography | Operational | NIST-aligned Kyber-768, Dilithium-3 |
 | Decision Audit Trail | Operational | Full decision_trace logging |
 | Investor Dashboard | Operational | 23 widgets, real-time metrics |
+| Exit Governance Layer | Operational | 3-gate automated exit discipline |
 
 ---
 
 ## Multi-Vertical Vision
 
-The same 6-checkpoint governance architecture applies wherever high-stakes decisions under uncertainty involve capital at risk. Digital asset trading is the first validated vertical.
+The same 8-checkpoint entry + 3-gate exit governance architecture applies wherever high-stakes decisions under uncertainty involve capital at risk. Digital asset trading is the first validated vertical.
 
 | Vertical | Status | Timeline |
 |----------|--------|----------|

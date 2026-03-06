@@ -72,7 +72,7 @@ The default is: don't act. The system must earn the right to execute."
 
 February third, twenty-twenty-six. Bitcoin breaks out. Up six percent in two hours. Market is euphoric. Every traditional bot is buying.
 
-OMNIX ran its six checkpoints. Five passed. One failed: trend confirmation. The system said: this momentum is not sustained. It blocked the trade.
+OMNIX ran its governance checkpoints — this was February 2026, under the original six-checkpoint system. Five passed. One failed: trend confirmation. The system said: this momentum is not sustained. It blocked the trade.
 
 Forty-eight hours later — Bitcoin dropped nine percent.
 

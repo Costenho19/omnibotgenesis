@@ -1,9 +1,9 @@
 # OMNIX — Institutional Governance Structure
 
 **Classification**: Governance Framework  
-**Date**: February 18, 2026  
+**Date**: March 6, 2026  
 **Status**: ACTIVE  
-**ADR Compliance**: ADR-027 (Category Creation), ADR-025 (Strategic Repositioning)  
+**ADR Compliance**: ADR-027 (Category Creation), ADR-036 (Exit Governance)  
 **Identity**: OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems.
 
 ---
@@ -31,7 +31,7 @@ The Founder Governance Authority holds executive responsibility over all system 
 
 - **Separation of concerns**: Human authority governs parameters. The architecture governs execution.
 - **No manual trading**: The Founder does not place trades. The system does — only when the architecture permits.
-- **Audit-first culture**: Every parameter change is documented via ADR (Architectural Decision Record) before implementation.
+- **Audit-first culture**: Every parameter change is documented via ADR (Architectural Decision Record) before implementation — 36 ADRs active.
 - **Fail-closed default**: When in doubt, the system blocks. Human authority reinforces this principle, never overrides it.
 
 ---
@@ -53,7 +53,8 @@ The governance engine operates autonomously within the parameters set by Layer 1
 
 ### Architecture Characteristics
 
-- **6-checkpoint sequential evaluation** — no checkpoint can be bypassed
+- **8-checkpoint sequential entry evaluation** — no checkpoint can be bypassed
+- **3-gate exit governance pipeline (EGL)** — automated exit discipline
 - **Fail-closed behavior** — if any evaluation fails or times out, execution is blocked
 - **Full auditability** — every governance evaluation produces a complete decision trace
 - **Domain-agnostic core** — governance logic separable from vertical-specific signals via Domain Adapter pattern (ADR-026)
@@ -97,7 +98,7 @@ This is the difference between a product that *could* be governed and a product 
 
 | Evidence | Detail |
 |----------|--------|
-| Parameter changes documented | 27 ADRs recording every architectural decision |
+| Parameter changes documented | 36 ADRs recording every architectural decision |
 | Zero manual overrides | All 670,000+ evaluation cycles handled by architecture |
 | Fail-closed demonstrated | System blocking execution for 33+ consecutive days under structural contradiction |
 | Full audit trail | Decision Trace with complete reasoning chain for every evaluation cycle |

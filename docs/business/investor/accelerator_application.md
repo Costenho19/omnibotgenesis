@@ -149,7 +149,7 @@ When there is no governance layer:
 
 **Harold Nunes** — Founder & Product Architect
 
-Built OMNIX solo from concept to production using AI as a development force multiplier. Designed the 6-checkpoint governance engine, risk logic, AI orchestration, post-quantum security, and full production infrastructure.
+Built OMNIX solo from concept to production using AI as a development force multiplier. Designed the 8-checkpoint entry governance engine + 3-gate exit pipeline (EGL), risk logic, AI orchestration, post-quantum security, and full production infrastructure.
 
 **What one founder built:**
 - Production governance engine (670,000+ evaluation cycles)

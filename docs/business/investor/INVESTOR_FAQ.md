@@ -2,11 +2,11 @@
 ## Decision Governance Infrastructure
 
 **Classification**: Investor Confidential
-**Last Updated**: March 4, 2026 — 7-checkpoint architecture (TCV, ADR-032)
+**Last Updated**: March 6, 2026 — 8-checkpoint entry + 3-gate exit architecture (ADR-036)
 
 ---
 
-## Track Record & Performance
+## Decision Governance Infrastructure
 
 ### Q1: Why does the Official Track Record show ~0 trades?
 
@@ -52,22 +52,39 @@ The loss represents 1.5% of the $1M paper trading capital, demonstrating that ev
 
 ### Q5: How does OMNIX protect capital?
 
-**A:** OMNIX uses a hierarchical veto system — **7 checkpoints** in the trading pipeline as of March 2026 (6 checkpoints validated through February 2026 + Checkpoint 7 TCV added March 2026, ADR-032):
+**A:** OMNIX uses a hierarchical veto system — **8 entry checkpoints** in the trading pipeline plus a **3-gate Exit Governance Layer (EGL)** as of March 6, 2026:
 
 ```
-1. MC VETO      → Monte Carlo blocks if Win Rate <50% or Expected Return <0%
-2. RMS VETO     → Risk Management System enforcement
-3. COHERENCE GATE → Blocks if signal agreement <45%
-4. TCV (CP-7)   → Temporal Coherence Validation — rejects temporally inconsistent decisions
-                   (Direction Coherence 40% + Regime Alignment 35% + Signal Stability 25%)
-5. ECW GATE     → Requires 3 consecutive cycles of edge persistence
-6. SCORING      → Multi-factor analysis (EMA, HMM, Kalman, Memory, Kelly)
-7. DECISION     → Only executes if ALL gates pass
+ENTRY PIPELINE (8 Checkpoints):
+1. CP-0 SIV      → Signal Integrity Validator (Data quality)
+2. CP-1 MC VETO  → Monte Carlo blocks if Win Rate <50% or Expected Return <0%
+3. CP-2 RMS VETO → Risk Management System enforcement
+4. CP-3 EARLY    → Veto Early Return
+5. CP-4 COHERENCE→ Coherence Engine analysis
+6. CP-5 ADAPTIVE → Adaptive Coherence Gate
+7. CP-7 TCV      → Temporal Coherence Validation (ADR-032)
+8. CP-7b FTI     → Forward Trajectory Implicator (ADR-034)
+9. CP-8 ECW      → Edge Confirmation Window (3 consecutive cycles)
+
+EXIT PIPELINE (3-Gate EGL):
+1. Profit Protection Gate
+2. Volatility Exit Gate
+3. Regime Change Gate
 ```
 
 This is a **fail-closed architecture**: the default is NOT to trade. Capital deployment requires passing every gate.
 
-> **Note on historical metrics:** The 670,000+ evaluation cycles and 91% block accuracy figures were produced under the 6-checkpoint system (through February 2026). TCV (Checkpoint 7 — now the 4th gate in the sequence) is a March 2026 addition.
+> **Note on historical metrics:** The 670,000+ evaluation cycles and 91% block accuracy figures were produced under the 6-checkpoint system (through February 2026). The current 8-checkpoint + EGL architecture was finalized on March 5, 2026, closing the final architectural gaps.
+
+### Q-EVOLUTION: How has the system evolved recently?
+
+**A:** On March 5, 2026, we completed 4 critical architectural gaps:
+1. **Signal Integrity Validator (CP-0)**: Ensures data quality before any evaluation.
+2. **Forward Trajectory Implicator (CP-7b)**: Analyzes future implications of the current signal.
+3. **Regime-Conditioned Kelly (RCK)**: Dynamically adjusts position sizing based on market regime.
+4. **Exit Governance Layer (EGL)**: A 3-gate pipeline that governs trade exits with the same discipline as entries.
+
+These improvements are documented across **36 ADRs** (Architectural Decision Records) and validated by **171 new tests**.
 
 ### Q6: What is the Edge Confirmation Window (ECW)?
 
@@ -137,8 +154,8 @@ The right question for investors is not "how much alpha does OMNIX generate?" bu
 
 | Audit Component | Detail |
 |----------------|--------|
-| **Decision Trace** | Structured JSON per decision: timestamp, 7 checkpoint verdicts with individual data, final decision with reasoning, capital impact (6 checkpoints through Feb 2026 + TCV from Mar 2026) |
-| **Checkpoint Explainability** | Each of 7 checkpoints produces a human-readable verdict (e.g., "Win probability 48.7% — below 50% threshold", "TCV score 18/100 — trajectory inconsistent") |
+| **Decision Trace** | Structured JSON per decision: timestamp, 8 checkpoint verdicts with individual data, final decision with reasoning, capital impact (6 checkpoints through Feb 2026 + 8 checkpoints from Mar 2026) |
+| **Checkpoint Explainability** | Each of 8 checkpoints produces a human-readable verdict (e.g., "Win probability 48.7% — below 50% threshold", "TCV score 18/100 — trajectory inconsistent") |
 | **Post-Quantum Signatures** | Every decision signed with NIST-standardized algorithms — immutable, tamper-proof |
 | **Counterfactual Evidence** | Shadow Portfolio shows what would have happened if a blocked decision had been executed |
 | **Export Format** | Grafana/Loki/ELK compatible. Structured JSON ready for regulatory submission |
@@ -232,11 +249,11 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 
 | Risk | Mitigation |
 |------|------------|
-| **Market Risk** | Fail-closed architecture, 7-checkpoint veto system (6 validated + TCV, ADR-032) |
+| **Market Risk** | Fail-closed architecture, 8-checkpoint entry veto system + EGL exit governance (6 validated through Feb 2026 + 4 gaps closed Mar 2026) |
 | **Technology Risk** | 99.9% uptime, redundant infrastructure |
 | **Regulatory Risk** | DIFC/ADGM preparation, no token exposure |
 | **Execution Risk** | Paper trading validation before live capital |
-| **Key Person Risk** | 3-layer mitigation: (1) Documented architecture with 27 ADRs — senior engineer can onboard in 2-3 weeks; (2) First 3 hires Month 1-4 reduce founder dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, operational runbooks by Month 6 |
+| **Key Person Risk** | 3-layer mitigation: (1) Documented architecture with 36 ADRs — senior engineer can onboard in 2-3 weeks; (2) First 3 hires Month 1-4 reduce founder dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, operational runbooks by Month 6 |
 
 ---
 

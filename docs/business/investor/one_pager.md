@@ -1,5 +1,5 @@
 # OMNIX — Decision Governance Infrastructure
-## Executive Summary | February 2026
+## Executive Summary | March 2026
 
 **Classification**: Investor Confidential
 
@@ -9,7 +9,7 @@
 
 **Automation is growing faster than governance.** Automated systems make high-stakes decisions every day — in trading, lending, insurance, supply chain — but almost none have a real mechanism to control those decisions before they execute.
 
-**OMNIX is Decision Governance Infrastructure** — a 7-checkpoint governance control architecture that validates automated decisions before execution. The first 6 checkpoints were validated across 670,000+ evaluation cycles (98.5% capital preserved) through February 2026; Checkpoint 7 (Temporal Coherence Validation, ADR-032) was added in March 2026. First vertical validated: digital asset trading. Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
+**OMNIX is Decision Governance Infrastructure** — an 8-checkpoint entry governance control architecture + 3-gate Exit Governance Layer (EGL) that validates automated decisions. The first 6 checkpoints were validated across 670,000+ evaluation cycles (98.5% capital preserved) through February 2026. On March 5, 2026, we completed the final architectural gaps: Signal Integrity Validator (CP-0), Forward Trajectory Implicator (CP-7b), Regime-Conditioned Kelly (RCK), and the Exit Governance Layer (EGL). First vertical validated: digital asset trading. Domain-agnostic architecture extends to credit, insurance, supply chain, and energy.
 
 ---
 
@@ -17,12 +17,13 @@
 
 | Component | Description |
 |-----------|-------------|
-| **7-Checkpoint Governance Engine** | Multi-layer pre-execution decision validation — fail-closed by design (6 validated through Feb 2026 + TCV added Mar 2026) |
+| **8-Checkpoint Entry Engine** | Multi-layer pre-execution decision validation — fail-closed by design (6 validated through Feb 2026 + 2 added Mar 2026) |
+| **Exit Governance Layer (EGL)** | 3-gate automated exit discipline — ensuring consistency across the trade lifecycle |
 | **Shadow Portfolio Learning Engine** | 670,000+ counterfactual events — learns from decisions NOT taken |
 | **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — to our knowledge, no comparable solution globally |
-| **Multi-AI Orchestration** | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 — zero single-provider dependency |
+| **Multi-AI Orchestration** | Gemini 2.0 + GPT-4o + Claude 3.5 Sonnet — zero single-provider dependency |
 | **Post-Quantum Security** | NIST-standardized post-quantum decision signing — operational since Nov 2025 |
-| **Full Decision Audit Trail** | 100% telemetry coverage — every governance evaluation documented |
+| **Full Decision Audit Trail** | 100% telemetry coverage — 36 ADRs document every architectural decision |
 | **Interactive Multi-Vertical Demos** | Trading (validated), Credit, Insurance — live on omnixquantum.net |
 
 ---
@@ -157,4 +158,4 @@ Founder & Product Architect, OMNIX
 
 *This document is for informational purposes. OMNIX is decision governance infrastructure, not an investment product. All metrics are from governance engine operation in real market conditions.*
 
-**Last Updated:** March 4, 2026 — 7-checkpoint architecture (TCV, ADR-032)
+**Last Updated:** March 6, 2026 — 8-checkpoint entry + 3-gate exit (ADR-036)

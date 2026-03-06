@@ -48,7 +48,7 @@ La mayoria de los sistemas optimizan para la *accion*. Nadie optimiza para la *c
 
 **OMNIX construye la capa de gobernanza para sistemas de decisión automatizados — bloqueando errores costosos antes de que sucedan.**
 
-A diferencia de los sistemas que persiguen cada oportunidad, OMNIX opera como un **motor de gobernanza fail-closed**: si la confianza cae por debajo de umbrales definidos, la accion se detiene automaticamente. La misma arquitectura de 6 checkpoints se aplica a cualquier dominio donde las decisiones bajo incertidumbre involucran capital en riesgo.
+A diferencia de los sistemas que persiguen cada oportunidad, OMNIX opera como un **motor de gobernanza fail-closed**: si la confianza cae por debajo de umbrales definidos, la accion se detiene automaticamente. La misma arquitectura de 8 checkpoints de entrada + pipeline de 3 gates de salida se aplica a cualquier dominio donde las decisiones bajo incertidumbre involucran capital en riesgo.
 
 **Tres Principios:**
 
@@ -64,59 +64,71 @@ A diferencia de los sistemas que persiguen cada oportunidad, OMNIX opera como un
 
 ---
 
-## SLIDE 4 — COMO FUNCIONA (6 Checkpoints de Seguridad)
+## SLIDE 4 — COMO FUNCIONA (8 Checkpoints de Seguridad de Entrada + 3 Gates de Salida)
 
 **Piensa en esto como seguridad de aeropuerto para cada decision de alto riesgo.**
 
-Cada decision debe pasar por 6 checkpoints de seguridad independientes. Si CUALQUIERA falla, la accion se bloquea automaticamente.
+Cada decision debe pasar por 8 checkpoints de seguridad independientes de entrada. Si CUALQUIERA falla, la accion se bloquea automaticamente. Una vez aprobada, la ejecucion es gobernada por un pipeline de salida de 3 gates (EGL).
 
 ```
-Senal de Trading Llega
+Senal de Entrada Llega (Market Data / Intent)
         |
         v
   +─────────────────────────────────────────────+
-  | 1. CHECK DE PROBABILIDAD                     |
-  |    "Es probable que este trade gane?"         |
-  |    Corre 10,000 escenarios simulados          |
-  |    Bloquea si probabilidad de ganar < 50%     |
+  | 0. VALIDACION DE INTEGRIDAD (SIV)           |
+  |    "Los datos son reales y confiables?"     |
   +──────────────────────┬──────────────────────+
                          v
   +─────────────────────────────────────────────+
-  | 2. LIMITE DE RIESGO                          |
-  |    "Esto excederia limites seguros?"          |
-  |    Enforcement de drawdown maximo: 15%        |
+  | 1. CHECK DE PROBABILIDAD (MC)               |
+  |    "Es probable que esta accion gane?"      |
   +──────────────────────┬──────────────────────+
                          v
   +─────────────────────────────────────────────+
-  | 3. ACUERDO DE SENALES                        |
-  |    "5 modelos independientes estan de acuerdo?"|
-  |    Requiere 45%+ de consenso entre modelos    |
+  | 2. LIMITES DE RIESGO (RMS)                  |
+  |    "Esto excederia limites seguros?"        |
   +──────────────────────┬──────────────────────+
                          v
   +─────────────────────────────────────────────+
-  | 4. CONFIRMACION DE TENDENCIA                 |
-  |    "Es sostenido — o solo ruido?"             |
-  |    Requiere edge por 3 ciclos consecutivos    |
+  | 3. VETO TEMPRANO                            |
+  |    "Hay algun factor critico de bloqueo?"   |
   +──────────────────────┬──────────────────────+
                          v
   +─────────────────────────────────────────────+
-  | 5. PRUEBA DE ESTRES                          |
-  |    "Que pasa si el mercado se desploma ahora?"|
-  |    Deteccion de riesgo de cola en tiempo real  |
+  | 4. MOTOR DE COHERENCIA                      |
+  |    "La decision es coherente con el plan?"  |
   +──────────────────────┬──────────────────────+
                          v
   +─────────────────────────────────────────────+
-  | 6. CHECK LOGICO                              |
-  |    "Las senales se contradicen entre si?"     |
-  |    Alta contradiccion = hold obligatorio      |
+  | 5. ACUERDO DE MODELOS (GATE)                |
+  |    "Hay consenso entre las IAs?"            |
+  +──────────────────────┬──────────────────────+
+                         v
+  +─────────────────────────────────────────────+
+  | 6. COHERENCIA TEMPORAL (TCV)                |
+  |    "La señal persiste en el tiempo?"        |
+  +──────────────────────┬──────────────────────+
+                         v
+  +─────────────────────────────────────────────+
+  | 7. TRAYECTORIA FUTURA (FTI)                 |
+  |    "Hacia donde se proyecta el riesgo?"     |
+  +──────────────────────┬──────────────────────+
+                         v
+  +─────────────────────────────────────────────+
+  | 8. VENTANA DE CONFIRMACION (ECW)            |
+  |    "Es el momento optimo para actuar?"      |
   +──────────────────────┬──────────────────────+
                          v
                 APROBADO o BLOQUEADO
+                         |
+                         v
+            PIPELINE DE SALIDA (3 GATES EGL)
+            (Gobernanza de Cierre de Posicion)
 ```
 
-**LOS 6 deben aprobar — o la accion se bloquea.**
+**TODOS los checkpoints de entrada deben aprobar — o la accion se bloquea.**
 
-La mayoria de los sistemas tienen 1 control de riesgo. OMNIX tiene 6 independientes que TODOS deben estar de acuerdo. Esta arquitectura es agnostica al dominio — los mismos checkpoints gobiernan decisiones de trading, aprobaciones de compra, extensiones de credito y validaciones de compliance.
+La mayoria de los sistemas tienen 1 control de riesgo. OMNIX tiene 8 independientes de entrada mas gobernanza de salida. Esta arquitectura es agnostica al dominio — los mismos checkpoints gobiernan decisiones de trading, supply chain, credito y seguros.
 
 > "La seguridad del aeropuerto no te deja pasar si un scanner falla. OMNIX tampoco."
 
@@ -160,6 +172,8 @@ Capital Preservado: $50,000
 
 > "Un bot tradicional habria comprado en la euforia. OMNIX espero — y tenia razon."
 
+*Nota: Sistema actual: 8 checkpoints de entrada + 3 gates de salida. El escenario del 3 de febrero corresponde al sistema de 6 checkpoints validado hasta febrero 2026.*
+
 ---
 
 ## SLIDE 6 — TRACCION Y PRUEBA (Esto Es Real, No Teoria)
@@ -173,7 +187,7 @@ Capital Preservado: $50,000
  Nov 2025 – Ene 14, 2026   →    Ene 15 – Feb 13, 2026    →    Fase 2
  119 trades de prueba            30 dias completados            Optimizacion
  Motor de riesgo calibrado       Capital preservado             gradual de
- Veto de 6 capas afinado         Sistema corriendo 24/7         rentabilidad
+ Veto de 8 capas + EGL           Sistema corriendo 24/7         rentabilidad
 ```
 
 ### Metricas Clave
@@ -188,6 +202,7 @@ Capital Preservado: $50,000
 | **Recibos PQC Firmados** | **16,000+** | Cada decision de gobernanza firmada criptograficamente |
 | **Uptime del Sistema** | **95%+** | Produccion (Railway), no ambiente de prueba |
 | **Latencia de Ejecucion** | **~120ms** | Medido, no estimado |
+| **Pipeline actual** | **8 CP in + 3 gates out** | Completado 5 marzo 2026 |
 
 ### Que Significan Estos Numeros
 
@@ -201,11 +216,12 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 ## SLIDE 7 — FOSO TECNOLOGICO (Por Que Esto Es Dificil de Copiar)
 
-**Seis capas de tecnologia defensible construidas en 3+ meses de operacion en mercado real:**
+**Ocho capas de tecnologia defensible construidas en 4+ meses de operacion en mercado real:**
 
 | Tecnologia | Explicacion Simple | Ventaja Competitiva |
 |------------|-------------------|---------------------|
-| **Motor de Gobernanza de 6 Checkpoints** | 5 modelos de IA independientes deben coincidir antes de cualquier accion | Ningun modelo individual puede anular el sistema |
+| **Motor de Gobernanza de 8 Checkpoints** | 8 filtros independientes de entrada + 3 gates de salida (EGL) | Ningun modelo individual puede anular el sistema |
+| **4 Gaps Arquitectonicos** | SIV (data integrity), FTI (proyeccion futura), RCK (Kelly x regimen), EGL (salida) | Completados marzo 2026 — 171 nuevos tests, 36 ADRs |
 | **Sistema de Memoria Conductual** | Recuerda patrones del mercado mas alla de datos recientes | Ve lo que otros sistemas no ven |
 | **Ventana de Confirmacion de Edge** | Requiere persistencia de tendencia por 3 ciclos — no solo un spike | Transforma "preservacion" en "paciencia" |
 | **Motor Shadow Portfolio** | Rastrea cada decision vetada para aprender (670,000+ eventos) | El sistema aprende de lo que NO hace |
@@ -222,11 +238,11 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 ## SLIDE 8 — VISION MULTI-VERTICAL (Mas Alla del Trading)
 
-**El mismo motor de 6 checkpoints. Diferentes dominios. La misma disciplina.**
+**El mismo motor de 8 checkpoints + EGL. Diferentes dominios. La misma disciplina.**
 
 OMNIX no es un bot de trading — es una **infraestructura de gobernanza de decisiones**. El trading de activos digitales es la primera vertical donde la arquitectura ha sido validada en produccion.
 
-La logica de gobernanza esta disenada como agnostica al dominio: los inputs cambian, pero los seis checkpoints — probabilidad, limites de riesgo, acuerdo de senales, persistencia de tendencia, test de estres y deteccion de contradiccion — aplican identicamente a cualquier decision automatica de alto riesgo.
+La logica de gobernanza esta disenada como agnostica al dominio: los inputs cambian, pero los ocho checkpoints de entrada — integridad, probabilidad, limites de riesgo, veto temprano, coherencia, acuerdo de modelos, coherencia temporal y ventana de confirmacion — mas los 3 gates de salida (EGL) aplican identicamente a cualquier decision automatica de alto riesgo.
 
 | Fase | Vertical | Estado |
 |------|----------|--------|
@@ -348,7 +364,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 *Fundador & Arquitecto de Producto*
 
 - Construyo OMNIX solo desde concepto hasta sistema en produccion — usando IA como multiplicador de desarrollo
-- Diseno el motor de gobernanza de 6 checkpoints, logica de riesgo, orquestacion de IA e infraestructura completa de produccion
+- Diseno el motor de gobernanza de 8 checkpoints + EGL, logica de riesgo, orquestacion de IA e infraestructura completa de produccion
 - Tecnologo autodidacta con disciplina de finanzas institucionales
 - Reubicandose a Dubai para ecosistema ADGM
 
@@ -360,7 +376,8 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 
 | Capacidad | Estado |
 |-----------|--------|
-| Motor de Gobernanza de 6 Checkpoints | Produccion — 670,000+ ciclos de evaluacion |
+| Motor de Gobernanza de 8 Checkpoints + EGL | Produccion — 670,000+ ciclos de evaluacion |
+| 4 Gaps Arquitectonicos (SIV/FTI/RCK/EGL) | Produccion — 171 nuevos tests, 36 ADRs |
 | Orquestacion Multi-IA (3 proveedores) | Produccion — cero dependencia de un solo proveedor |
 | Firma Criptografica Post-Cuantica | Produccion — operacional desde Nov 2025 |
 | Motor de Aprendizaje Shadow Portfolio | Produccion — 670,000+ eventos contrafactuales |
@@ -402,7 +419,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 |--------|-----------|
 | Producto funcionando en produccion | 3+ meses corriendo 24/7 |
 | Data de validacion real | 670,000+ ciclos de decision analizados |
-| IP defensible | Arquitectura de 6 checkpoints + Motor Shadow Portfolio |
+| IP defensible | Arquitectura de 8 checkpoints + pipeline EGL |
 | Timing estrategico | Convergencia MiCA + ADGM creando demanda urgente |
 | Referencia de mercado | Startups de infraestructura comparables levantaron $3M-$5M en etapa similar |
 
@@ -452,7 +469,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 >
 > Miles de millones en perdidas prevenibles — cada ano — en trading, compras, credito y seguros. Por que? Cero gobernanza de decisiones de grado institucional.
 >
-> OMNIX es una plataforma de gobernanza de IA fail-closed. Piensa en esto como seguridad de aeropuerto para cada decision de alto riesgo. Cada accion debe sobrevivir 6 checkpoints independientes antes de ejecutarse. Un check falla — bloqueo automatico.
+> OMNIX es una plataforma de gobernanza de IA fail-closed. Piensa en esto como seguridad de aeropuerto para cada decision de alto riesgo. Cada accion debe sobrevivir 8 checkpoints independientes de entrada y un pipeline de salida antes de ejecutarse. Un check falla — bloqueo automatico.
 >
 > Validamos esto en el dominio mas dificil primero — mercados financieros en tiempo real. Ejemplo real: 3 de febrero. Breakout de BTC — sube 6% en dos horas. Mercado euforico. Los bots tradicionales compraron. OMNIX bloqueo — la tendencia no era sostenida. 48 horas despues, BTC se desplomo 9%. Capital preservado: $50,000.
 >
@@ -509,7 +526,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
       "verdict": "PASS"
     }
   },
-  "final_decision": "BLOCKED — 3 de 6 checkpoints fallaron",
+  "final_decision": "BLOCKED — 5 de 8 checkpoints de entrada fallaron",
   "capital_preserved": "$47,500"
 }
 ```
@@ -525,7 +542,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 | Executive Fact Sheet | Estado del sistema y marco de gobernanza |
 | Track Record Case Study | Narrativa dia a dia de proteccion de capital |
 | Shadow Portfolio Report | Analisis contrafactual de 670,000+ operaciones |
-| Architecture Decision Records | 27 decisiones tecnicas documentadas (ADRs) |
+| Architecture Decision Records | 36 decisiones tecnicas documentadas (ADRs) |
 | Reporte de Integridad de Ejecucion | Reconciliacion Kraken — verificacion con datos reales del exchange |
 | Reporte de Auditoria Matematica | 100% reconciliacion P&L — 119/119 trades verificados |
 | System State Manifest | Configuracion en vivo (JSON, legible por maquina) |

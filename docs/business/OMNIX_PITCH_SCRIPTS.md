@@ -1,17 +1,17 @@
 # OMNIX — Pitch Scripts
 
-**Version**: 1.1  
-**Date**: March 3, 2026  
+**Version**: 1.2  
+**Date**: March 6, 2026  
 **Author**: Harold Nunes, Founder & Product Architect  
 **Status**: MENTOR-REVIEWED  
-**ADR Compliance**: ADR-023, ADR-024, ADR-025, ADR-027  
+**ADR Compliance**: ADR-036 (Exit Governance Layer)  
 **Target**: Eureka Dubai Semifinal, Investor Meetings, Elevator Conversations
 
 ---
 
 ## Compliance Brief
 
-### Mandatory Language (ADR-027)
+### Mandatory Language (ADR-036)
 
 | Rule | Requirement |
 |------|-------------|
@@ -20,6 +20,7 @@
 | Category Framing | "building the category" — present tense, never past |
 | Vertical Anchor | "first validated in digital asset trading" — EVERY version |
 | Investor Reframe | "how much risk exists without governance?" not "how much alpha?" |
+| Pipeline Description | "8 sequential entry checkpoints + 3-gate Exit Governance Layer (EGL)" |
 
 ### Prohibited Language
 
@@ -36,13 +37,15 @@
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| Evaluation Cycles | 670,000+ | Shadow Portfolio + decision logs |
+| Evaluation Cycles | 670,000+ | Shadow Portfolio + decision logs (through Feb 2026) |
 | Capital Preserved | 98.5% | Learning Baseline period |
 | Raising | $500,000 USD | Pre-Seed |
 | Equity | 16.7% | — |
 | Pre-Money Valuation | $2.5M–$3M | — |
 | Learning Baseline P&L | -$15,198.73 | Nov 2025 – Jan 14, 2026 (119 trades) |
 | System Uptime | 24/7 for 3+ months | Railway production deployment |
+| Architecture Docs | 36 ADRs | Complete architectural record |
+| Verification | 171 New Tests | March 2026 Gap Closure (SIV, FTI, RCK, EGL) |
 
 ### Institutional Governance Statement (Ready-to-Use)
 
@@ -69,17 +72,17 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Today, systems can execute decisions automatically — but almost none have a real mechanism to control those decisions before they execute. And when there's no control, risk becomes invisible.
 >
-> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 670,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
+> OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. First validated in digital asset trading: 8 sequential entry checkpoints, 3-gate exit governance, 670,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > We're not a trading bot. We're not a prediction system. We are the control layer that determines whether an automated action can or cannot execute.
 >
-> Our architecture evaluates every decision through a sequential checkpoint system with veto authority and fail-closed behavior — if a decision cannot be properly evaluated, it is automatically blocked.
+> Our architecture evaluates every decision through a sequential checkpoint system with veto authority and fail-closed behavior — including the March 2026 addition of Signal Integrity Validation and Forward Trajectory Implication.
 >
 > Trading is the first validated vertical. The architecture is domain-agnostic — designed to extend into credit, insurance, and supply chain. Any environment where automated decisions involve real capital at risk.
 >
 > And the timing is urgent. Regulatory frameworks like MiCA in Europe and ADGM in the Middle East are now requiring governance of automated decision systems. Institutional adoption is accelerating — but the governance layer doesn't exist yet. We're building it.
 >
-> We're raising $500,000 pre-seed to file three patent families protecting our core IP, expand into enterprise verticals, and establish our regulatory structure in ADGM Dubai.
+> We're raising $500,000 pre-seed to file three patent families protecting our core IP — backed by 36 ADRs and 171 passing architectural tests — expand into enterprise verticals, and establish our regulatory structure in ADGM Dubai.
 >
 > OMNIX — governing decisions under uncertainty.
 
@@ -93,17 +96,17 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Hoy los sistemas pueden ejecutar decisiones automáticamente — pero casi ninguno tiene un mecanismo real que las controle antes de ejecutarlas. Y cuando no hay control, el riesgo se vuelve invisible.
 >
-> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: más de 670,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados. Primera validación en trading de activos digitales: 8 checkpoints secuenciales de entrada, 3 gates de gobernanza de salida (EGL), más de 670,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > No somos un bot de trading. No somos un sistema de predicción. Somos la capa de control que decide si una acción automatizada puede o no ejecutarse.
 >
-> Nuestra arquitectura evalúa cada decisión mediante un sistema secuencial de checkpoints con autoridad de veto y comportamiento fail-closed — si algo no se puede evaluar correctamente, la decisión se bloquea.
+> Nuestra arquitectura evalúa cada decisión mediante un sistema secuencial de checkpoints con autoridad de veto y comportamiento fail-closed — incluyendo las mejoras de marzo 2026 en integridad de datos y trayectoria futura.
 >
 > Trading es la primera vertical validada. La arquitectura es independiente del dominio y está diseñada para extenderse a crédito, seguros y supply chain — cualquier entorno donde decisiones automatizadas impliquen riesgo real.
 >
 > Y el timing es urgente. Marcos regulatorios como MiCA en Europa y ADGM en Medio Oriente ya están exigiendo gobernanza de sistemas de decisión automatizados. La adopción institucional se está acelerando — pero la capa de gobernanza aún no existe. La estamos construyendo.
 >
-> Estamos levantando $500,000 dólares pre-seed para registrar tres familias de patentes que protegen nuestro IP central, expandir hacia verticales enterprise y establecer nuestra estructura regulatoria en ADGM Dubai.
+> Estamos levantando $500,000 dólares pre-seed para registrar tres familias de patentes que protegen nuestro IP central — respaldado por 36 ADRs y 171 tests de arquitectura — expandir hacia verticales enterprise y establecer nuestra estructura regulatoria en ADGM Dubai.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
@@ -119,13 +122,13 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems.
 >
-> Our architecture uses a sequential checkpoint system with veto authority: if a decision can't be properly validated, it's blocked. Fail-closed by design.
+> Our architecture uses a sequential 8-checkpoint system with veto authority and a 3-gate Exit Governance Layer (EGL): if a decision can't be properly validated, it's blocked. Fail-closed by design.
 >
-> First validated in digital asset trading — 670,000+ evaluation cycles, 98.5% of capital preserved, running 24/7 since November 2025.
+> First validated in digital asset trading — 670,000+ evaluation cycles (through Feb 2026), 98.5% of capital preserved, running 24/7 since November 2025.
 >
 > The architecture is domain-agnostic. Designed to extend into credit, insurance, and supply chain — anywhere automated decisions involve capital at risk.
 >
-> We're raising $500,000 pre-seed. The regulatory window is open — MiCA and ADGM are creating demand for exactly this governance layer.
+> We're raising $500,000 pre-seed. The regulatory window is open — MiCA and ADGM are creating demand for exactly this governance layer, backed by 36 ADRs and 171 passing tests.
 >
 > OMNIX — governing decisions under uncertainty.
 
@@ -139,13 +142,13 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados.
 >
-> Nuestra arquitectura usa un sistema secuencial de checkpoints con autoridad de veto: si una decisión no se puede validar correctamente, se bloquea. Fail-closed por diseño.
+> Nuestra arquitectura usa un sistema secuencial de 8 checkpoints con autoridad de veto y una Capa de Gobernanza de Salida (EGL) de 3 gates: si una decisión no se puede validar correctamente, se bloquea. Fail-closed por diseño.
 >
-> Primera validación en trading de activos digitales — más de 670,000 ciclos de evaluación, 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
+> Primera validación en trading de activos digitales — más de 670,000 ciclos de evaluación (hasta feb 2026), 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >
 > La arquitectura es independiente del dominio. Diseñada para extenderse a crédito, seguros y supply chain — cualquier entorno donde decisiones automatizadas impliquen capital en riesgo.
 >
-> Estamos levantando $500,000 dólares pre-seed. La ventana regulatoria está abierta — MiCA y ADGM están creando demanda exactamente para esta capa de gobernanza.
+> Estamos levantando $500,000 dólares pre-seed. La ventana regulatoria está abierta — MiCA y ADGM están creando demanda exactamente para esta capa de gobernanza, respaldada por 36 ADRs y 171 tests.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
@@ -160,9 +163,9 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 | Section | Time | Content | Emphasis |
 |---------|------|---------|----------|
 | **Hook** | 0-10s | "Automation is growing faster than governance..." | Slow, deliberate. Let the problem land. |
-| **Identity + Evidence** | 10-25s | "OMNIX is building the category... governance control architecture... 670,000+ decisions, 98.5% preserved..." | Firm category declaration → immediate proof. No gap between claim and evidence. |
+| **Identity + Evidence** | 10-25s | "OMNIX is building the category... governance control architecture... 8 checkpoints, 3-gate EGL, 670,000+ decisions, 98.5% preserved..." | Firm category declaration → immediate proof. No gap between claim and evidence. |
 | **Negation** | 25-30s | "Not a trading bot. Not a prediction system." | Quick, sharp. Clear differentiation. |
-| **Architecture** | 30-40s | "Sequential checkpoints... veto authority... fail-closed..." | Technical confidence. Don't rush. |
+| **Architecture** | 30-40s | "8 sequential checkpoints... veto authority... 3-gate EGL... fail-closed..." | Technical confidence. Don't rush. |
 | **Expansion** | 40-55s | "First validated vertical... domain-agnostic... credit, insurance, supply chain..." | Vision, but grounded — "designed to extend" |
 | **Why Now** | 55-68s | "MiCA... ADGM... governance layer doesn't exist yet..." | Urgency. Lean forward. |
 | **Ask** | 68-80s | "$500,000 pre-seed... patent families... ADGM..." | Direct, confident. Eye contact. |
@@ -204,9 +207,9 @@ Every pitch version MUST pass this test. Check each line:
 | Does the ask include why NOW, not just what? | Yes — regulatory window (MiCA/ADGM) |
 | Are patent claims framed as "filing/protecting" not "granted"? | Yes — "file three patent families" |
 
-### ADR-027 Compliance Verification
+### ADR-036 Compliance Verification
 
-| ADR-027 Rule | Status |
+| ADR-036 Rule | Status |
 |--------------|--------|
 | Uses "Decision Governance Infrastructure" | Present in all 4 versions |
 | Uses "building the category" language | Present: "building" / "construyendo" |
@@ -215,6 +218,7 @@ Every pitch version MUST pass this test. Check each line:
 | No supremacy claims | Zero instances of "leader" / "global" / "first ever" |
 | No "Stripe of governance" | Not present |
 | Numbers unchanged | $500K / 16.7% / $2.5M-$3M / 670,000+ / 98.5% — all correct |
+| Pipeline updated | 8 checkpoints + 3-gate EGL explicitly stated |
 
 ---
 
@@ -224,6 +228,7 @@ Every pitch version MUST pass this test. Check each line:
 |------|---------|---------|
 | Feb 17, 2026 | 1.0 | Initial creation. 90s and 60s versions (EN/ES). Based on Harold Nunes's draft with "why now" and strengthened ask. ADR-027 compliant. |
 | Mar 3, 2026 | 1.1 | Mentor review applied. Updated metadata status to MENTOR-REVIEWED. See `docs/business/MENTOR_FEEDBACK_EUREKA_2026.md` for full feedback audit trail. |
+| Mar 6, 2026 | 1.2 | Updated to reflect 8-checkpoint entry + 3-gate exit (EGL) architecture. Added gap closure metrics (171 tests, 36 ADRs). |
 
 ---
 

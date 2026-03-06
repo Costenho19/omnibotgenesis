@@ -17,7 +17,7 @@ Decision Governance Infrastructure
 "Preventing costly mistakes before they happen"
 
 [Logo placeholder]
-Pre-Seed Round | February 2026
+Pre-Seed Round | March 2026
 ```
 
 ---
@@ -77,7 +77,7 @@ OMNIX = Decision Governance Infrastructure
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
 │   🎯 Decision Governance                                │
-│      AI-driven validation across 6 independent layers   │
+│      AI-driven validation across 8 entry + 3 exit gates │
 │                                                         │
 │   🛡️ Capital Preservation                               │
 │      Fail-closed architecture, default to protect       │
@@ -100,9 +100,9 @@ Core Components
 ┌──────────────────────────────────────────────────────────┐
 │                                                          │
 │  AI Decision Engine        → Multi-model orchestration   │
-│  Risk Guardian™            → 6-tier veto system          │
-│  Coherence Validation      → Signal agreement scoring    │
-│  Audit Trail               → Full decision traceability  │
+│  Risk Guardian™            → 8-tier entry veto system    │
+│  Exit Governance Layer     → 3-gate automated exits      │
+│  Audit Trail               → 36 ADRs, full traceability  │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 
@@ -118,11 +118,11 @@ Defensible Advantages
 
 ┌───────────────────────────────────────────────────────────┐
 │                                                           │
-│  6-Tier Coherence Engine     Unique multi-layer veto      │
-│  Non-Markovian Memory        Context beyond recent data   │
+│  8-Tier Governance Engine    Multi-layer entry + exit      │
+│  4 Architectural Gaps Closed SIV, FTI, RCK, EGL (Mar 2026) │
 │  Edge Confirmation Window    3-cycle validation required  │
-│  Post-Quantum Security       Production-integrated (NIST 2024)  │
-│  Full Decision Auditability  Every decision logged        │
+│  Post-Quantum Security       Production-integrated (NIST)  │
+│  Full Decision Auditability  36 ADRs document every step   │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
 
@@ -219,8 +219,8 @@ How a prop trading firm uses OMNIX to block drawdowns:
 │   TRADER    │ ──► │  OMNIX RISK     │ ──► │  DECISION   │
 │   ORDER     │     │    GATE         │     │             │
 │             │     │                 │     │ APPROVE or  │
-│ BUY 0.5 BTC │     │ 6-tier veto     │     │ VETO +      │
-│ @ $95,000   │     │ check <100ms    │     │ reason      │
+│ BUY 0.5 BTC │     │ 8-tier entry    │     │ VETO +      │
+│ @ $95,000   │     │ check <150ms    │     │ reason      │
 └─────────────┘     └─────────────────┘     └─────────────┘
 
 Impact for the Prop Firm:
@@ -257,7 +257,7 @@ The Same Engine. Different Domains. Same Discipline.
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
-The 6-checkpoint architecture is domain-agnostic.
+The 8-checkpoint architecture is domain-agnostic.
 The inputs change. The governance logic is identical.
 
 "We validated in the hardest domain first — 
@@ -358,7 +358,7 @@ Capital preservation focus extends to your capital too.
 3. **Auditability** — Every decision logged and reviewable
 4. **Discipline** — Delayed deployment is intentional validation
 5. **Infrastructure** — Not a trading bot, not a token
-6. **Domain-agnostic** — Same 6-checkpoint engine, multiple verticals
+6. **Domain-agnostic** — Same 8-checkpoint engine + EGL, multiple verticals
 7. **Multi-vertical governance** — Trading validated, supply chain/lending/insurance on roadmap
 
 ### What NOT to Say
