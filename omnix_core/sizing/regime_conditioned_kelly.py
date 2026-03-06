@@ -246,25 +246,20 @@ class RegimeConditionedKelly:
 
             if regime is not None:
                 query = f"""
-                    SELECT profit_loss, decision_trace
+                    SELECT profit_loss
                     FROM paper_trading_trades
                     WHERE created_at >= NOW() - INTERVAL '{self.lookback_days} days'
-                    AND (
-                        decision_trace::text ILIKE %s
-                        OR decision_trace::text ILIKE %s
-                    )
+                    AND hmm_regime = %s
                     {("AND symbol = %s" if symbol else "")}
                     ORDER BY created_at DESC
                     LIMIT 500
                 """
-                regime_pattern = f'%"hmm_regime": "{regime}"%'
-                regime_pattern2 = f'%hmm_regime={regime}%'
-                params: Tuple = (regime_pattern, regime_pattern2)
+                params: Tuple = (regime,)
                 if symbol:
                     params = params + (symbol,)
             else:
                 query = f"""
-                    SELECT profit_loss, decision_trace
+                    SELECT profit_loss
                     FROM paper_trading_trades
                     WHERE created_at >= NOW() - INTERVAL '{self.lookback_days} days'
                     {("AND symbol = %s" if symbol else "")}
