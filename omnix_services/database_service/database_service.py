@@ -1927,7 +1927,13 @@ class DatabaseServiceEnterprise:
                     processed_at TIMESTAMP WITH TIME ZONE
                 )
             ''')
-            
+
+            # Migration: add scheduled_at column BEFORE creating indexes that reference it
+            cursor.execute("""
+                ALTER TABLE pending_evaluations
+                ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            """)
+
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_pending_evaluations_scheduled 
                 ON pending_evaluations(scheduled_at) WHERE status = 'pending'
