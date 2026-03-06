@@ -7,7 +7,12 @@ Extraído de main.py para arquitectura limpia y mantenible
 import logging
 import os
 import time
-import ccxt
+try:
+    import ccxt
+    CCXT_AVAILABLE = True
+except ImportError:
+    ccxt = None
+    CCXT_AVAILABLE = False
 import requests
 import hashlib
 import json

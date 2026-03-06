@@ -3,7 +3,10 @@ OMNIX Core Modules
 Core trading system and bot functionality
 """
 
-from .trading_system import TradingSystem
+try:
+    from .trading_system import TradingSystem
+except ImportError:
+    TradingSystem = None
 
 __all__ = [
     'TradingSystem'

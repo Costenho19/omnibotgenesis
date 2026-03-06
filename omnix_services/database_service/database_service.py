@@ -2033,6 +2033,16 @@ class DatabaseServiceEnterprise:
                 )
             ''')
             
+            # Migration: add strategy column BEFORE creating indexes that reference it
+            cursor.execute("""
+                ALTER TABLE community_feedback
+                ADD COLUMN IF NOT EXISTS strategy TEXT
+            """)
+            cursor.execute("""
+                ALTER TABLE strategy_votes
+                ADD COLUMN IF NOT EXISTS strategy TEXT NOT NULL DEFAULT ''
+            """)
+
             # Índices para Community Intelligence
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_user ON community_feedback(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_feedback_strategy ON community_feedback(strategy)')

@@ -8,7 +8,12 @@ import time
 import threading
 import os
 from datetime import datetime
-import ccxt
+try:
+    import ccxt
+    CCXT_AVAILABLE = True
+except ImportError:
+    ccxt = None
+    CCXT_AVAILABLE = False
 import requests
 
 logger = logging.getLogger(__name__)
