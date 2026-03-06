@@ -7,17 +7,17 @@
 
 ---
 
-## ⚡ ACTUALIZACIÓN MARZO 2026 — CHECKPOINT 7: TEMPORAL COHERENCE VALIDATION (TCV)
+## ⚡ ACTUALIZACIÓN MARZO 2026 — 8 CHECKPOINTS DE ENTRADA + 3-GATE EGL
 
-> **En marzo de 2026, el trading pipeline se extendió de 6 a 7 checkpoints** con la adición de Temporal Coherence Validation (ADR-032).
+> **El 5 de marzo 2026, el trading pipeline se extendió a 8 checkpoints de entrada + pipeline de 3 gates de salida (Exit Governance Layer — EGL).** Se completaron 4 gaps arquitectónicos: Signal Integrity Validator (SIV — CP-0), Forward Trajectory Implicator (FTI — CP-7b), Regime-Conditioned Kelly (RCK), y Exit Governance Layer (EGL). 171 nuevos tests. 36 ADRs totales.
 >
 > **Marco dual para presentar honestamente:**
 > - Todas las métricas publicadas (670,000+ ciclos, 91% precisión, 98.5% capital preserved) **fueron generadas bajo el sistema validado de 6 checkpoints** (hasta feb 2026).
-> - El **Checkpoint 7 — TCV** fue agregado en marzo 2026: evalúa si una decisión propuesta es "temporalmente admisible" dado el comportamiento reciente del sistema (Direction Coherence 40% + Regime Alignment 35% + Signal Stability 25%).
-> - Las demos de dominio (Credit, Insurance, Energy, Biotech) utilizan **6 señales normalizadas** vía el Domain Adapter — TCV es específico del pipeline de trading interno. El número de checkpoints puede variar por dominio conforme se calibran.
+> - Los **4 gaps arquitectónicos** (SIV, FTI, RCK, EGL) fueron completados el 5 de marzo 2026 — son mejoras ADITIVAS. El pipeline ahora tiene 8 checkpoints de entrada (CP-0 SIV → CP-8 ECW) + 3-gate EGL de salida.
+> - Las demos de dominio (Credit, Insurance, Energy, Biotech) utilizan **6 señales normalizadas** vía el Domain Adapter. El número de checkpoints puede variar por dominio conforme se calibran.
 >
-> **Respuesta canónica si un juez pregunta "¿7 checkpoints?" o "¿cuántos checkpoints tienen?":**
-> > "El sistema de trading opera con 7 checkpoints desde marzo 2026. El Checkpoint 7, Temporal Coherence Validation, evalúa la trayectoria reciente del sistema — pregunta: ¿esta decisión es consistente con adónde ha estado yendo el sistema en los últimos N ciclos? Todas las métricas publicadas — 670,000+ ciclos, 91% de precisión en bloqueos — corresponden al período validado de 6 checkpoints hasta febrero 2026. El Checkpoint 7 es una mejora aditiva, no un reemplazo."
+> **Respuesta canónica si un juez pregunta "¿cuántos checkpoints tienen?":**
+> > "El sistema de trading opera con 8 checkpoints de entrada independientes (CP-0 SIV hasta CP-8 ECW) más un pipeline de 3 gates de gobernanza de salida (EGL). Los primeros 6 fueron validados en 670,000+ ciclos hasta febrero 2026. El 5 de marzo completamos los 4 gaps arquitectónicos restantes: SIV (integridad de datos), FTI (trayectoria futura), Regime-Conditioned Kelly (tamaño por régimen), y EGL (gobernanza de salida). 171 nuevos tests pasando. Los 8 checkpoints son aditivos — refuerzan las métricas históricas, no las reemplazan."
 
 ---
 
@@ -32,7 +32,7 @@
 
 **Key framing:** Remove the ambiguity of "high-risk" — the methodology is mechanical and traceable, not subjective. The block criteria are defined by the engine's thresholds, not by human judgment calls.
 
-**Follow-up if pressed:** "The definition is in the architecture: a signal is blocked when ≥1 independent checkpoints fails. The checkpoints have fixed mathematical thresholds — not discretionary judgment. The trading pipeline now has 7 checkpoints (6 validated + TCV added March 2026)."
+**Follow-up if pressed:** "The definition is in the architecture: a signal is blocked when ≥1 independent checkpoints fails. The checkpoints have fixed mathematical thresholds — not discretionary judgment. The trading pipeline now has 8 entry checkpoints + a 3-gate exit pipeline (EGL). The 4 architectural gaps were completed March 5, 2026: SIV (data quality gate, CP-0), FTI (forward trajectory, CP-7b), Regime-Conditioned Kelly (position sizing), and EGL (exit governance). 171 new tests."
 
 ---
 
@@ -190,7 +190,7 @@
 **Answer:**
 > "Three things:
 > 1. **Data moat** — 670,000+ evaluation cycle events. The Shadow Portfolio learns from decisions the system doesn't make. You can't replicate that dataset without running the engine for months.
-> 2. **Architecture moat** — 7-checkpoint sequential validation with fail-closed behavior isn't trivial to build (6 validated + TCV added March 2026). We have 32 Architectural Decision Records documenting every design choice.
+> 2. **Architecture moat** — 8-checkpoint entry + 3-gate exit sequential validation with fail-closed behavior isn't trivial to build. The first 6 were validated across 670,000+ cycles; 4 architectural gaps closed March 5, 2026. We have 36 Architectural Decision Records documenting every design choice.
 > 3. **Embedded infrastructure** — once a prop firm integrates OMNIX into their execution flow, switching cost is high. Re-integration, re-calibration, re-certification.
 >
 > Plus, we have a filing-ready IP framework structured across 3 patent families — provisional applications targeted Q2 2026 post-funding."
@@ -213,7 +213,7 @@
 **Answer:**
 > "We already built interactive governance demos for credit and insurance — live on our website right now. The same governance architecture evaluates a loan applicant or an insurance policy with different inputs but identical governance logic.
 >
-> In trading, checkpoint 1 runs Monte Carlo simulations. In credit, it calculates default probability. Different signal, same checkpoint structure. That's what 'domain-agnostic' means — and it's not theoretical, it's demonstrable. The trading pipeline now includes 7 checkpoints; domain-specific temporal calibration (like TCV) is introduced per vertical as they mature."
+> In trading, checkpoint 1 runs Monte Carlo simulations. In credit, it calculates default probability. Different signal, same checkpoint structure. That's what 'domain-agnostic' means — and it's not theoretical, it's demonstrable. The trading pipeline now includes 8 entry checkpoints + a 3-gate exit pipeline (EGL); domain-specific temporal calibration is introduced per vertical as they mature."
 
 ---
 
@@ -256,7 +256,7 @@
 **Answer:**
 > "We don't sell AI. We sell governance. The AI is a component — we orchestrate 3 providers (Gemini, GPT-4o, Claude) so there's zero single-provider dependency. If one goes down, the system continues.
 >
-> What's special is the 7-checkpoint governance architecture: Monte Carlo simulation, risk limits, signal agreement, trend confirmation, stress testing, logic contradiction detection, and temporal trajectory validation — all running in sequence, all with veto authority. Most systems have 1 risk check. We have 7 independent ones that must ALL agree. The first 6 were validated across 670,000+ evaluation cycles (through February 2026). Checkpoint 7 — Temporal Coherence Validation — was added in March 2026."
+> What's special is the 8-checkpoint entry governance architecture: data integrity (SIV), Monte Carlo simulation, risk limits, signal agreement, trend confirmation, stress testing, backward trajectory (TCV), forward implication (FTI), and edge persistence (ECW) — all running in sequence, all with veto authority. Plus a 3-gate exit governance pipeline (EGL). Most systems have 1 risk check. We have 8 independent entry checkpoints that must ALL agree. The first 6 were validated across 670,000+ evaluation cycles (through February 2026). The remaining 4 architectural gaps were closed March 5, 2026. 36 ADRs document every decision."
 
 ---
 
@@ -366,7 +366,7 @@
 **Answer:**
 > "After implementing TCV (Checkpoint 7) in early March 2026, I ran a structured architectural audit: if TCV validates temporal coherence, what else is missing from a complete governance system? I identified four gaps — not because the system was failing, but because a rigorous system should catch them before they become problems.
 >
-> **Gap 1 — Signal Integrity Validator (SIV, Checkpoint 0):** The pipeline had no data quality gate. Stale prices, missing fields, or cross-source inconsistencies could pass through all 7 checkpoints — garbage in, garbage out. SIV now runs at the very beginning: 4 validation categories (freshness, completeness, anomaly detection, cross-source consistency), score below 60/100 → HOLD with reason SIV_FAIL. 46 tests.
+> **Gap 1 — Signal Integrity Validator (SIV, Checkpoint 0):** The pipeline had no data quality gate. Stale prices, missing fields, or cross-source inconsistencies could pass through all entry checkpoints — garbage in, garbage out. SIV now runs at the very beginning: 4 validation categories (freshness, completeness, anomaly detection, cross-source consistency), score below 60/100 → HOLD with reason SIV_FAIL. 46 tests.
 >
 > **Gap 2 — Forward Trajectory Implicator (FTI, Checkpoint 7b):** TCV is backward-looking — it asks 'is this action consistent with where we've been?' But it never asked 'what does this action imply for where we're going?' FTI evaluates the forward implication of a proposed decision across 3 dimensions: regime transition risk (40%), implied decision consistency (35%), signal momentum sustainability (25%). Threshold: 25/100 — only vetoes when the forward implication is strongly negative. 45 tests.
 >
@@ -383,10 +383,10 @@
 
 ---
 
-### Q: "Your website mentions 7 checkpoints — what's Checkpoint 7?"
+### Q: "How many checkpoints does the system have? Your materials mention 8 — what changed?"
 
 **Answer:**
-> "Checkpoint 7 is Temporal Coherence Validation — we added it in March 2026. The first 6 checkpoints evaluate a decision in isolation: is the signal valid right now? Checkpoint 7 asks a different question: is this decision consistent with where the system has been heading? It evaluates the trajectory of the last N cycles across three dimensions — Direction Coherence (40%), Regime Alignment (35%), and Signal Stability (25%). If the system has been trending HOLD but suddenly a BUY appears, TCV flags the inconsistency. It's the difference between evaluating a single frame versus watching the movie. All published metrics — 670,000+ cycles, 91% block accuracy — were produced under the validated 6-checkpoint system through February 2026. TCV is documented in ADR-032."
+> "As of March 5, 2026, the trading pipeline has 8 independent entry checkpoints (CP-0 SIV through CP-8 ECW) plus a 3-gate exit governance pipeline (EGL). The first 6 were validated across 670,000+ cycles through February 2026. On March 5 we completed the 4 architectural gaps we had identified proactively: Signal Integrity Validator (CP-0, a data quality gate before any evaluation), Forward Trajectory Implicator (CP-7b, evaluates forward implications of a decision), Regime-Conditioned Kelly (position sizing by market regime), and Exit Governance Layer (3-gate exit pipeline with full PQC-signed audit trail). 171 new tests. All published metrics correspond to the 6-checkpoint system — the 8 checkpoints are additive improvements, not replacements. Checkpoint 7 specifically is Temporal Coherence Validation (TCV, ADR-032): it asks whether a proposed decision is consistent with where the system has been heading — Direction Coherence (40%), Regime Alignment (35%), Signal Stability (25%)."
 
 **Key framing:** This shows the system is actively improving. The architecture isn't static — it gets better. And the honesty about which metrics correspond to which version shows institutional maturity.
 
