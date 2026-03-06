@@ -36,6 +36,11 @@ DOCUMENTS = [
         "output": os.path.join(OUTPUT_DIR, "OMNIX_Presentation_Script_Jose.pdf"),
         "title": "OMNIX — Presentation Script (José Salvador)",
     },
+    {
+        "input": os.path.join(BASE_DIR, "docs", "business", "investor", "OMNIX_5YEAR_FINANCIAL_MODEL.md"),
+        "output": os.path.join(OUTPUT_DIR, "OMNIX_5Year_Financial_Model.pdf"),
+        "title": "OMNIX — 5-Year Financial Model",
+    },
 ]
 
 DATE_LABEL = "March 2026 | Confidential"
