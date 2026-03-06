@@ -601,6 +601,10 @@ def _add_cors_headers(response):
     return response
 
 
+async def handle_options(request):
+    return _add_cors_headers(web.Response(status=200))
+
+
 async def handle_governance_metrics(request):
     conn = _get_db_connection()
     if not conn:
@@ -733,6 +737,11 @@ def create_verification_app() -> web.Application:
     app.router.add_get('/api/verify/{receipt_id}', handle_verify_receipt)
     app.router.add_get('/api/public_key', handle_public_key)
     app.router.add_get('/api/governance/metrics', handle_governance_metrics)
+    app.router.add_route('OPTIONS', '/', handle_options)
+    app.router.add_route('OPTIONS', '/api/verify/recent', handle_options)
+    app.router.add_route('OPTIONS', '/api/verify/{receipt_id}', handle_options)
+    app.router.add_route('OPTIONS', '/api/public_key', handle_options)
+    app.router.add_route('OPTIONS', '/api/governance/metrics', handle_options)
     return app
 
 
