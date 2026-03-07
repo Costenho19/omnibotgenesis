@@ -1,6 +1,6 @@
 # OMNIX Investor Documents - Narrative Consistency Matrix
 
-**Last Updated:** February 24, 2026
+**Last Updated:** March 7, 2026
 
 This table tracks key phrases and messaging across all investor-facing documents to ensure narrative consistency.
 
@@ -25,11 +25,15 @@ This table tracks key phrases and messaging across all investor-facing documents
 | **Evaluation Cycles** | 670,000+ | 670,000+ | 670,000+ | 670,000+ | 670,000+ |
 | **Capital Preserved** | 98.5% | 98.5% | 98.5% | 98.5% | 98.5% |
 | **Baseline Trades** | 119 | 119 | 119 | 119 | N/A (summary level) |
+| **Signals Vetoed (Track Record, first 12 days)** | 47,507 | 47,507 | 47,507 | 47,507 | N/A |
+| **Signals Vetoed (Learning Baseline)** | 695 | 695 | 695 | 695 | N/A |
 | **Drawdown (observed)** | 1.5% | 1.5% | 1.5% | 1.5% | N/A |
 | **Drawdown (hard cap)** | 15% | 15% | 15% | 15% | N/A |
 | **PQC Receipts** | 16,000+ | N/A | N/A | N/A | 16,000+ |
 
 > **Standard**: 16,000+ PQC-signed receipts must appear in all main Eureka pitch documents (Slide 6 traction table, Canvas customer outcome). Added Feb 24, 2026.
+
+> **Critical Distinction (Mar 7, 2026):** NEVER cite "695 vetos" without specifying "Learning Baseline (Nov 2025 - Jan 14, 2026)". NEVER cite "22,000+ decisiones" — that number is obsolete. For the Track Record Oficial use 47,507 señales vetadas (first 12 days) + 670,000+ total governance cycles. The 91% block accuracy = 43 of 47 specific trades analyzed, validated against 48h price action, reconciled against Kraken fills — always clarify sample size when citing.
 
 ---
 
@@ -117,6 +121,9 @@ This table tracks key phrases and messaging across all investor-facing documents
 | Feb 24, 2026 | EUREKA_20_TOUGH_QUESTIONS.md | "nobody else is building" — unqualified | → "To our knowledge, no comparable infrastructure is building" |
 | Feb 24, 2026 | EUREKA_20_TOUGH_QUESTIONS.md | 16,000+ PQC receipts absent from Q1 traction answer | Added with public verification URL (omnixquantum.net/verify) |
 | Feb 24, 2026 | InstitutionalPage.tsx (public route /institutional) | "Kyber-768 / Dilithium-3" named explicitly on public page | → "NIST-standardized post-quantum cryptography (CRYSTALS family)" |
+| Mar 7, 2026 | prompt_templates.py (MASTER_SYSTEM_PROMPT + 6 inline references) | Bot cited "695 vetos" and "22,000+ decisiones" as current metrics — both from Learning Baseline, not Track Record | Added GOVERNANCE METRICS block with period-separated numbers. 695 = Learning Baseline label added. 22,000 replaced with 47,507 (Track Record, first 12 days) + 670,000+ (total cycles). NUNCA rules added. |
+| Mar 7, 2026 | investor_responses.py (docstring) | Header comment showed "Vetos activos: 695" without period context | Updated to show both periods clearly: 695 (Baseline) vs 47,507 (Track Record) |
+| Mar 7, 2026 | NARRATIVE_CONSISTENCY.md | 47,507 (Track Record vetoes) not tracked in metrics table | Added to Metrics Consistency table with period labels for both 47,507 and 695 |
 | Feb 24, 2026 | verification_server.py | engine_version/policy_version exposure risk | **Verified clean** — neither field is included in any public JSON response; values stay in DB only |
 
 ---

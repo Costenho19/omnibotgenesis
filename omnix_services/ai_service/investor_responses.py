@@ -5,11 +5,12 @@ OMNIX V6.5.4d - Investor-Grade Automated Responses
 Respuestas profesionales para preguntas difíciles de inversores.
 Basadas en datos reales del sistema, sin simulaciones ni datos inventados.
 
-DATOS REALES (Jan 2026):
-- 119 trades ejecutados
-- Balance: $984,801.27
-- Capital protegido: $16.5M+
-- Vetos activos: 695 (protección institucional)
+DATOS REALES (por período):
+Learning Baseline (Nov 2025 - Jan 14, 2026):
+- 119 trades ejecutados, 695 señales vetadas, -$15,198.73 P&L
+Track Record Oficial (Jan 15, 2026 - presente):
+- 0 trades ejecutados, 47,507+ señales vetadas (primeros 12 días)
+- 670,000+ ciclos de gobernanza totales, 98.5% capital preservado
 
 Autor: OMNIX Development Team
 Fecha: January 10, 2026
