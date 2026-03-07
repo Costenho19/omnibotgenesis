@@ -181,7 +181,16 @@ class PromptsContextManager:
             'net ev', 'ev neto', 'valor esperado neto',
             # Anti-TECHNICAL_DIAGNOSTIC priority (must detect before diagnostic handler)
             'dame un diagnostico', 'dame un diagnóstico', 'quiero diagnóstico',
-            'quiero diagnostico', 'necesito diagnostico', 'necesito diagnóstico'
+            'quiero diagnostico', 'necesito diagnostico', 'necesito diagnóstico',
+            # Spanish buy-and-hold comparison phrases (ADR-024 expansion Mar 2026)
+            'en lugar de invertir', 'en lugar de omnix', 'hubiera puesto',
+            'hubiera invertido', 'hubiera comprado', 'si hubiera', 'en vez de invertir',
+            'en vez de omnix', 'instead of omnix', 'instead of investing',
+            'if i had invested', 'had i put', 'had i invested',
+            'puesto en bitcoin', 'invertido en bitcoin', 'bitcoin en lugar',
+            'en bitcoin en lugar', 'bitcoin vs omnix', 'omnix vs bitcoin',
+            'cuánto tendría', 'cuanto tendria', 'cuánto hubiera', 'cuanto hubiera',
+            'rendido más', 'rendido mas', 'habría ganado', 'habria ganado'
         ]
         
         if any(keyword in message_lower for keyword in investor_challenge_keywords):
