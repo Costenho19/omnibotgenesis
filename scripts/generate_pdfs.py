@@ -41,6 +41,11 @@ DOCUMENTS = [
         "output": os.path.join(OUTPUT_DIR, "OMNIX_5Year_Financial_Model.pdf"),
         "title": "OMNIX — 5-Year Financial Model",
     },
+    {
+        "input": os.path.join(BASE_DIR, "docs", "business", "OMNIX_EUREKA_PITCH_HAROLD.md"),
+        "output": os.path.join(OUTPUT_DIR, "OMNIX_Eureka_Pitch_Harold.pdf"),
+        "title": "OMNIX — Eureka GCC 2026 Pitch Script (Harold Nunes)",
+    },
 ]
 
 DATE_LABEL = "March 2026 | Confidential"
