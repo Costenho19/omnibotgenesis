@@ -51,6 +51,11 @@ DOCUMENTS = [
         "output": os.path.join(OUTPUT_DIR, "OMNIX_Eureka_Top10_Questions.pdf"),
         "title": "OMNIX — Eureka GCC 2026 Top 10 Panel Questions",
     },
+    {
+        "input": os.path.join(BASE_DIR, "docs", "business", "OMNIX_PRESENTER_GUIDE.md"),
+        "output": os.path.join(OUTPUT_DIR, "OMNIX_Presenter_Guide.pdf"),
+        "title": "OMNIX — Presenter Guide (Eureka GCC 2026)",
+    },
 ]
 
 DATE_LABEL = "March 2026 | Confidential"
