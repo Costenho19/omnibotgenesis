@@ -269,7 +269,7 @@ def build_cover_page():
         'CoverDate', fontName='Helvetica', fontSize=9, leading=12,
         textColor=BRAND_GOLD, alignment=TA_LEFT
     )
-    elements.append(Paragraph(f"March 2026 | Abu Dhabi, UAE", date_style))
+    elements.append(Paragraph(f"March 2026 | United Arab Emirates", date_style))
     elements.append(Paragraph("Classification: Competition Submission \u2014 Confidential", date_style))
 
     elements.append(PageBreak())
