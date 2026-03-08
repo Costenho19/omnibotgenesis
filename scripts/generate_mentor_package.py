@@ -880,7 +880,7 @@ def generate_pitch_deck(mentor_name, output_path):
         'CoverDate', fontName='Helvetica', fontSize=9, leading=12,
         textColor=BRAND_GOLD, alignment=TA_LEFT
     )
-    elements.append(Paragraph("March 2026 | Abu Dhabi, UAE", date_style))
+    elements.append(Paragraph("March 2026 | United Arab Emirates", date_style))
     elements.append(Paragraph("Classification: Confidential \u2014 Mentor Review", date_style))
     elements.append(PageBreak())
 
