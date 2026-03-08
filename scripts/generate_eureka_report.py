@@ -368,7 +368,7 @@ def build_section_1(styles):
     elements.append(Spacer(1, 8))
     kpi_data = [
         ['670,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
-        ['16,000+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
+        ['30,000+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
         ['98.5%', 'Capital Preserved', 'During BTC -7.37% volatility'],
         ['<120ms', 'Decision Latency', 'Real-time governance validation'],
         ['$49.7B+', 'Combined TAM', 'Multi-vertical addressable market (6 verticals)'],
@@ -529,9 +529,10 @@ def build_section_4(styles):
 
     elements.append(Paragraph("<b>Discovery Method</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
-        "Customer validation has been conducted through multiple channels: direct conversations with "
-        "prop trading firm managers in the ADGM/DIFC ecosystem, participation in the Eureka GCC competition "
-        "(semifinalist status achieved), institutional investor due diligence sessions, and live product "
+        "Market validation has been conducted through multiple channels: LinkedIn engagement with "
+        "founders and architects building in adjacent spaces (AI governance, PQC, Zero Trust, autonomous systems), "
+        "participation in the Eureka GCC competition (semifinalist status achieved), publication of the "
+        "OMNIX technical paper on LinkedIn Pulse generating substantive expert responses, and live product "
         "demonstrations with the governance engine running in real-time production.",
         styles['BodyText2']
     ))
@@ -560,22 +561,56 @@ def build_section_4(styles):
     elements.append(make_table(pricing_data[0], pricing_data[1:], [120, 140, 200]))
 
     elements.append(Spacer(1, 12))
-    elements.append(Paragraph("<b>Customer Testimonials</b>", styles['SubsectionTitle']))
+    elements.append(Paragraph("<b>Market Validation \u2014 Expert & Peer Recognition</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
-        "<i>[Section reserved for 5 customer testimonials with name, role, contact details, and key feedback. "
-        "Testimonials are being collected from pilot conversations and will be included in the final submission.]</i>",
-        styles['SmallNote']
+        "At pre-seed stage, validation from domain experts who independently reviewed the architecture "
+        "and recognized its strategic direction is a strong signal of product-market fit. "
+        "The following interactions were unsolicited or initiated by Harold via LinkedIn outreach, "
+        "and resulted in substantive technical and strategic engagement:",
+        styles['BodyText2']
     ))
 
-    testimonial_template = [
-        ['#', 'Name', 'Role', 'Contact', 'Key Feedback'],
-        ['1', '[To be added]', '[Role]', '[Email/Phone]', '[Pain point, value perception, pricing sensitivity]'],
-        ['2', '[To be added]', '[Role]', '[Email/Phone]', '[Pain point, value perception, pricing sensitivity]'],
-        ['3', '[To be added]', '[Role]', '[Email/Phone]', '[Pain point, value perception, pricing sensitivity]'],
-        ['4', '[To be added]', '[Role]', '[Email/Phone]', '[Pain point, value perception, pricing sensitivity]'],
-        ['5', '[To be added]', '[Role]', '[Email/Phone]', '[Pain point, value perception, pricing sensitivity]'],
+    validation_data = [
+        ['Name', 'Role', 'Channel', 'Key Feedback'],
+        [
+            'James Moore',
+            'Founder/CEO, Nova Jema AI Systems\n(AI governance for healthcare & public infrastructure)',
+            'LinkedIn\n(public comment)',
+            '"Harold this is exactly the layer I\'ve been trying to articulate... Curious how OMNIX is approaching that boundary between recommendation and binding authority." — Identified the proposal-to-execution governance gap as the core structural challenge.'
+        ],
+        [
+            'Mostafa Monsour',
+            'Founder, ULTRA MATRIX\nCognitive & Strategic Architect — Sovereign Decision Design',
+            'LinkedIn\n(public comment)',
+            '"Your work with OMNIX Quantum appears to be exploring an important part of that stack." — Recognized OMNIX as addressing the authority + verification gap in autonomous systems.'
+        ],
+        [
+            'HIL-AIW',
+            'AI governance platform for enterprises\n(925+ LinkedIn followers)',
+            'LinkedIn\n(public comment)',
+            '"Your 8-checkpoint system with Monte Carlo VETO is brilliant — especially the fail-closed design... most teams aren\'t even thinking about quantum-resistant auditability yet." — Validated the fail-closed architecture and PQC approach as industry-leading.'
+        ],
+        [
+            'Christopher Turk',
+            'Quantum Security Architecture\nAgentic AI Security Architecture | Zero Trust Architecture',
+            'LinkedIn\n(public comment + DM)',
+            '"This is honestly pretty good." — Extended technical exchange on PQC architecture, Zero Trust applied to AI decisions, and decision provenance metadata model. Validated Dilithium-3 selection over Falcon for production stability.'
+        ],
+        [
+            'Francisco Javier (JJ) Jimenez',
+            'Founder, QuantumThreat Labs\nQuantum Temporal Dynamics\u2122 Research',
+            'LinkedIn DM\n(paper review)',
+            '"Governance infrastructure for autonomous systems is going to become increasingly important." — Read full OMNIX paper; his framing of probabilistic governance + trajectory coherence directly informed the design of OMNIX Checkpoint 7 (Temporal Coherence Validation, ADR-032).'
+        ],
     ]
-    elements.append(make_table(testimonial_template[0], testimonial_template[1:], [25, 80, 80, 100, 175]))
+    elements.append(make_table(validation_data[0], validation_data[1:], [85, 120, 70, 185]))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(
+        "Note: Public LinkedIn comments are cited as-is. JJ Jimenez interaction via private LinkedIn DM — "
+        "permission confirmation in progress before final submission.",
+        styles['SmallNote']
+    ))
 
     elements.append(PageBreak())
     return elements
@@ -700,7 +735,7 @@ def build_section_6(styles):
     today_items = [
         "<b>Fail-closed by default:</b> Every other system defaults to execute. OMNIX defaults to protect.",
         "<b>Post-quantum security in production:</b> No competitor has PQC-signed decision receipts.",
-        "<b>Full audit trail:</b> 16,000+ governance receipts, publicly verifiable, zero information leakage.",
+        "<b>Full audit trail:</b> 30,000+ governance receipts, publicly verifiable, zero information leakage.",
         "<b>Domain-agnostic architecture:</b> Same engine validates trading, credit, insurance, and robotics/autonomous systems decisions.",
     ]
     elements.extend(bullet_list(today_items, styles))
@@ -794,7 +829,7 @@ def build_section_8(styles):
         ['Metric', 'Value', 'Significance'],
         ['Production Uptime', '24/7 since Nov 2025', 'System operational 4+ months continuously'],
         ['Evaluation Cycles', '670,000+', 'Governance engine processing decisions in real-time'],
-        ['PQC-Signed Receipts', '16,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
+        ['PQC-Signed Receipts', '30,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
         ['Signals Vetoed (Track Record, first 12 days)', '47,507+', 'Black Swan conditions Jan 15\u201327 \u2014 capital 100% preserved'],
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
         ['Shadow Trade Events', '192,000+', 'Counterfactual analysis of vetoed decisions'],
@@ -1014,7 +1049,7 @@ def build_section_11(styles):
     elements.append(Paragraph("<b>Valuation Justification</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
-        "<b>Real validation data:</b> 670,000+ evaluation cycles, 16,000+ PQC-signed receipts",
+        "<b>Real validation data:</b> 670,000+ evaluation cycles, 30,000+ PQC-signed receipts",
         "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
         "<b>Strategic timing:</b> MiCA + ADGM convergence creating urgent demand for governance infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",
