@@ -46,6 +46,11 @@ DOCUMENTS = [
         "output": os.path.join(OUTPUT_DIR, "OMNIX_Eureka_Pitch_Harold.pdf"),
         "title": "OMNIX — Eureka GCC 2026 Pitch Script (Harold Nunes)",
     },
+    {
+        "input": os.path.join(BASE_DIR, "docs", "business", "EUREKA_TOP10_PANEL_QUESTIONS.md"),
+        "output": os.path.join(OUTPUT_DIR, "OMNIX_Eureka_Top10_Questions.pdf"),
+        "title": "OMNIX — Eureka GCC 2026 Top 10 Panel Questions",
+    },
 ]
 
 DATE_LABEL = "March 2026 | Confidential"
