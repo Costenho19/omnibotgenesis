@@ -360,7 +360,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Key Traction:</b> Eureka GCC 2026 Semifinalist. Live public verification system at "
-        "omnibotgenesis-production.up.railway.app/verify. Interactive governance demos for credit/lending "
+        "omnixquantum.net/verify. Interactive governance demos for credit/lending "
         "and insurance underwriting verticals. Institutional website live at www.omnixquantum.net.",
         styles['BodyText2']
     ))
@@ -421,10 +421,10 @@ def build_section_2(styles):
         ['6-Checkpoint Validation', 'Live \u2014 All 6 checkpoints operational'],
         ['Post-Quantum Cryptography', 'Live \u2014 Dilithium-3 + Kyber-768 since Nov 2025'],
         ['Public Verification Server', 'Live \u2014 Public receipt verification endpoint'],
-        ['Investor Dashboard', 'Live \u2014 19 widgets, real-time metrics'],
+        ['Investor Dashboard', 'Live \u2014 14/14 widgets operational, real-time metrics'],
         ['Institutional Website', 'Live \u2014 www.omnixquantum.net'],
         ['Multi-Vertical Demos', 'Live \u2014 Credit/Lending + Insurance interactive demos'],
-        ['Shadow Portfolio Analysis', 'Live \u2014 670,000+ counterfactual events'],
+        ['Shadow Portfolio Analysis', 'Live \u2014 192,000+ counterfactual events'],
         ['Enterprise API', 'In Development \u2014 Q2 2026 target'],
     ]
     t_data = [[Paragraph(c, styles['TableCell']) for c in row] for row in stage_data]
@@ -459,8 +459,8 @@ def build_section_3(styles):
         styles['BodyText2']
     ))
     elements.extend(bullet_list([
-        "<b>$68B+ lost annually</b> by traders alone due to emotional and undisciplined decision-making",
-        "<b>95% of algorithmic systems</b> ask 'When should I act?' instead of 'When should I NOT act?'",
+        "<b>Billions in preventable losses annually</b> due to governance failures in automated decision systems",
+        "<b>The vast majority of algorithmic systems</b> ask 'When should I act?' instead of 'When should I NOT act?'",
         "<b>Single-layer risk checks</b> fail during tail events (flash crashes, liquidity cascades)",
         "<b>No audit trail</b> for automated decisions, creating regulatory and compliance gaps",
         "<b>Institutional-grade governance</b> exists only inside hedge funds with $100M+ AUM \u2014 inaccessible to the rest of the market",
@@ -592,15 +592,15 @@ def build_section_5(styles):
         ['6-Checkpoint Governance Engine', 'Live', 'Multi-layer pre-execution decision validation with independent veto authority per checkpoint'],
         ['Monte Carlo Validation', 'Live', '10,000 simulation paths per decision; blocks trades with negative expected return'],
         ['Adaptive Coherence Gate', 'Live', 'Dynamically calibrated signal agreement scoring based on market regime severity'],
-        ['Edge Confirmation Window (ECW)', 'Live', 'Requires 3 consecutive cycles of confirmed statistical edge before execution'],
+        ['Edge Confirmation Window (ECW)', 'Live', 'Requires 2 consecutive cycles of confirmed statistical edge before execution'],
         ['Black Swan Detection', 'Live', 'Real-time tail risk monitoring with automatic exposure reduction (4 severity levels)'],
         ['Decision Contradiction Index (DCI)', 'Live', 'Measures internal signal divergence (0\u2013100); high DCI mandates HOLD'],
         ['Post-Quantum Cryptography', 'Live', 'NIST-standardized Dilithium-3 signatures + Kyber-768 key encapsulation'],
         ['Public Verification Server', 'Live', 'Public receipt verification endpoint with zero internal data exposure'],
-        ['Shadow Portfolio Engine', 'Live', '670,000+ counterfactual events; validates veto accuracy (100% accuracy on 50 validated)'],
+        ['Shadow Portfolio Engine', 'Live', '192,000+ counterfactual events; validates veto accuracy (91% \u2014 43 of 47 validated, cross-referenced against 48h price action)'],
         ['Non-Markovian Memory Kernel', 'Live', 'Behavioral pattern detection beyond recency bias'],
         ['Multi-AI Orchestration', 'Live', 'Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with automatic failover'],
-        ['Investor Dashboard', 'Live', '19 widgets with real-time metrics, dual win rate framework, regime detection'],
+        ['Investor Dashboard', 'Live', '14/14 widgets operational, real-time metrics, dual win rate framework, regime detection'],
         ['Institutional Website', 'Live', 'Public landing at www.omnixquantum.net with live market data integration'],
         ['Interactive Governance Demos', 'Live', 'Credit/Lending + Insurance underwriting demos showing multi-vertical applicability'],
         ['Execution Integrity', 'Live', 'Kraken fill reconciliation \u2014 real exchange data verification for every trade'],
@@ -625,7 +625,7 @@ def build_section_5(styles):
 
     elements.append(Paragraph("<b>Product Roadmap (Next 6\u201312 Months)</b>", styles['SubsectionTitle']))
     roadmap_items = [
-        "<b>Q1 2026:</b> Complete track record validation. Finalize institutional documentation. Eureka GCC competition.",
+        "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 47,507+ signals vetoed. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13.",
         "<b>Q2 2026:</b> Enterprise API launch (Risk Guardian API). First enterprise pilot (prop firm or trading platform). ADGM regulatory structure initiated.",
         "<b>Q3 2026:</b> Public license model launch. White-label SDK for platform integrations. Second and third enterprise clients.",
         "<b>Q4 2026:</b> Series A readiness with validated revenue metrics. Begin multi-vertical domain adapter development.",
@@ -657,7 +657,7 @@ def build_section_5(styles):
 
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
-        "<b>Demo Links:</b> Public verification: omnibotgenesis-production.up.railway.app/verify | "
+        "<b>Demo Links:</b> Public verification: omnixquantum.net/verify | "
         "Website: www.omnixquantum.net | Credit governance demo: www.omnixquantum.net/governance-demo | "
         "Insurance governance demo: www.omnixquantum.net/governance-demo-insurance",
         styles['SmallNote']
@@ -771,8 +771,8 @@ def build_section_7(styles):
         ['LTV/CAC Ratio', '18x\u201384x', 'Strong unit economics at enterprise tier'],
         ['CAC (B2C SaaS)', '$50\u2013$150', 'Content marketing + referral programs'],
         ['LTV (B2C SaaS)', '$1,788\u2013$5,988', '$149\u2013$499/month \u00d7 12-month avg retention'],
-        ['Gross Margin', '60\u201370%', 'SaaS infrastructure model'],
-        ['Break-Even', '18\u201324 months', 'Conservative estimate'],
+        ['Gross Margin', '83% (Y1) \u2192 86% (Y2\u2013Y5)', 'SaaS infrastructure model \u2014 low marginal cost per client'],
+        ['Break-Even', 'Q4 2026 (Month 9\u201312)', 'Conservative estimate with $500K runway'],
     ]
     elements.append(make_table(econ_data[0], econ_data[1:], [120, 120, 220]))
 
@@ -792,23 +792,24 @@ def build_section_8(styles):
 
     traction_data = [
         ['Metric', 'Value', 'Significance'],
-        ['Production Uptime', '24/7 since Nov 2025', 'System operational for 4+ months continuously'],
+        ['Production Uptime', '24/7 since Nov 2025', 'System operational 4+ months continuously'],
         ['Evaluation Cycles', '670,000+', 'Governance engine processing decisions in real-time'],
         ['PQC-Signed Receipts', '16,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
+        ['Signals Vetoed (Track Record, first 12 days)', '47,507+', 'Black Swan conditions Jan 15\u201327 \u2014 capital 100% preserved'],
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
-        ['Shadow Trade Events', '670,000+', 'Counterfactual analysis of vetoed decisions'],
-        ['Veto Accuracy', '100%', '50 validated shadow outcomes \u2014 all vetos were correct'],
+        ['Shadow Trade Events', '192,000+', 'Counterfactual analysis of vetoed decisions'],
+        ['Veto Accuracy', '91%', '43 of 47 validated shadow outcomes confirmed correct (48h price fill reconciliation)'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
         ['Database Tables', '42+', '90% foreign key coverage \u2014 institutional-grade data model'],
         ['Architecture Decisions', '27 ADRs', 'Documented engineering discipline'],
-        ['Dashboard Widgets', '19/19', 'Full operational visibility'],
+        ['Dashboard Widgets', '14/14', 'Full operational visibility'],
     ]
     elements.append(make_table(traction_data[0], traction_data[1:], [130, 110, 220]))
 
     elements.append(Paragraph("<b>Competition & Recognition</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Eureka GCC 2026:</b> Semifinalist \u2014 competing in Abu Dhabi startup competition",
-        "<b>Public verification:</b> Live at omnibotgenesis-production.up.railway.app/verify",
+        "<b>Public verification:</b> Live at omnixquantum.net/verify",
         "<b>Institutional website:</b> Live at www.omnixquantum.net with real-time market data",
     ], styles))
 
@@ -820,6 +821,7 @@ def build_section_8(styles):
         ['Jan 15, 2026', 'Official Track Record Day 1', 'Clean metrics from calibrated parameters'],
         ['Jan 21, 2026', 'Edge Confirmation Window + DCI', 'Capital patience + contradiction detection'],
         ['Jan 28, 2026', 'Institutional Website launched', 'Public credibility and demo capability'],
+        ['Feb 13, 2026', '30-Day Track Record COMPLETED', '0 trades executed, 47,507+ signals vetoed, 98.5% capital preserved'],
         ['Feb 15, 2026', 'Multi-Vertical Demos (Credit + Insurance)', 'Domain-agnostic architecture demonstrated'],
         ['Feb 21, 2026', 'Public Verification Server', 'Transparent governance receipts'],
         ['Feb 23, 2026', 'Railway cost optimization (77% reduction)', 'Operational efficiency for scaling'],
@@ -960,16 +962,16 @@ def build_section_11(styles):
     elements = []
     elements.extend(section_header("Financials & Fundraising", "11", styles))
 
-    elements.append(Paragraph("<b>3-Year Financial Projections</b>", styles['SubsectionTitle']))
+    elements.append(Paragraph("<b>5-Year Financial Projections</b>", styles['SubsectionTitle']))
     fin_data = [
-        ['', 'Year 1', 'Year 2', 'Year 3'],
-        ['Enterprise Clients', '3 pilots', '5\u20138 licenses', '15\u201330 licenses'],
-        ['B2C SaaS Users', '50\u2013100', '500\u20131,000', '2,000\u20135,000'],
-        ['Revenue', '$200K\u2013$400K', '$800K\u2013$1.2M', '$2M+'],
-        ['Gross Margin', '60\u201370%', '65\u201375%', '70\u201380%'],
-        ['Key Driver', 'Enterprise pilots', 'License expansion', 'Multi-vertical + SaaS scale'],
+        ['', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+        ['Enterprise Clients', '2 pilots', '5\u20138 licenses', '15\u201320', '30\u201340', '50+'],
+        ['B2C SaaS Users', '50\u2013100', '500\u20131,000', '2,000\u20135,000', '8,000+', '20,000+'],
+        ['Revenue', '$300K', '$1.8M', '$5.5M', '$13M', '$26M'],
+        ['Gross Margin', '83%', '86%', '86%', '86%', '85%'],
+        ['Key Driver', 'Enterprise pilots', 'License expansion', 'Multi-vertical + SaaS', 'MENA scale', 'Global + robotics'],
     ]
-    elements.append(make_table(fin_data[0], fin_data[1:], [110, 110, 120, 120]))
+    elements.append(make_table(fin_data[0], fin_data[1:], [90, 80, 85, 80, 75, 75]))
 
     elements.append(Paragraph("<b>Key Assumptions</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
@@ -977,20 +979,37 @@ def build_section_11(styles):
         "Average enterprise contract: $25K/month (mid-range of $15K\u2013$35K pricing)",
         "12-month minimum contract duration with 80% renewal rate",
         "B2C SaaS launched post-enterprise validation (Month 6\u20139)",
-        "Infrastructure costs scale linearly with client count at 60\u201370% gross margin",
+        "Infrastructure costs scale sub-linearly; gross margin 83% (Y1) expanding to 86% (Y2+)",
         "MiCA compliance urgency drives accelerated adoption in EU markets (Year 2+)",
     ], styles))
+
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(
+        "<b>Break-even:</b> Q4 2026 (Month 9\u201312). "
+        "<b>Series A:</b> $3.5M Q2 2027 at $18M pre-money. "
+        "<b>Series B:</b> $12M Q1 2029 at $60M pre-money.",
+        styles['SmallNote']
+    ))
 
     elements.append(Paragraph("<b>Fundraising</b>", styles['SubsectionTitle']))
     raise_data = [
         ['Item', 'Details'],
         ['Raising', '$500,000 USD'],
         ['Equity', '16.7%'],
-        ['Pre-Money Valuation', '$2.5M\u2013$3M'],
+        ['Pre-Money Valuation', '$3M'],
         ['Funds Raised to Date', '$0 (bootstrapped)'],
         ['Instrument', 'Equity (pre-seed round)'],
     ]
     elements.append(make_table(raise_data[0], raise_data[1:], [160, 300]))
+
+    elements.append(Paragraph("<b>Investor Returns (MOIC)</b>", styles['SubsectionTitle']))
+    moic_data = [
+        ['Scenario', 'Exit Year', 'Revenue at Exit', 'Valuation (5x Rev)', 'MOIC on $500K'],
+        ['Conservative', 'Year 5', '$13M', '$65M', '14.7x'],
+        ['Base Case', 'Year 5', '$26M', '$130M', '41x'],
+        ['Optimistic', 'Year 5', '$52M', '$260M', '102x'],
+    ]
+    elements.append(make_table(moic_data[0], moic_data[1:], [80, 65, 90, 110, 115]))
 
     elements.append(Paragraph("<b>Valuation Justification</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
@@ -1030,9 +1049,9 @@ def build_section_12(styles):
         ['IP Asset', 'Description', 'Protection'],
         ['6-Checkpoint Governance Engine', 'Multi-layer pre-execution decision validation architecture', 'Trade secret + documented ADRs'],
         ['Adaptive Coherence Gate', 'Dynamic threshold calibration based on market regime', 'Proprietary algorithm'],
-        ['Edge Confirmation Window', 'Statistical edge persistence validation (3-cycle)', 'Proprietary methodology'],
+        ['Edge Confirmation Window', 'Statistical edge persistence validation (2-cycle)', 'Proprietary methodology'],
         ['Decision Contradiction Index', 'Internal signal divergence measurement (0\u2013100)', 'Proprietary metric'],
-        ['Shadow Portfolio Engine', '670,000+ counterfactual events for veto validation', 'Proprietary dataset + methodology'],
+        ['Shadow Portfolio Engine', '192,000+ counterfactual events for veto validation', 'Proprietary dataset + methodology'],
         ['Non-Markovian Memory Kernel', 'Behavioral pattern detection beyond recency bias', 'Proprietary algorithm'],
         ['PQC Integration Architecture', 'Production-integrated post-quantum decision signing', 'First-mover advantage'],
     ]
@@ -1162,7 +1181,7 @@ def build_section_14(styles):
         |       1. Monte Carlo VETO (10,000 simulations)
         |       2. RMS VETO (VaR95, drawdown limits)
         |       3. Adaptive Coherence Gate (dynamic thresholds)
-        |       4. Edge Confirmation Window (3-cycle persistence)
+        |       4. Edge Confirmation Window (2-cycle persistence)
         |       5. Weighted Scoring (5 inputs, 100 points)
         |       6. Final Decision (EXECUTE / HOLD / BLOCK)
         |
@@ -1219,7 +1238,7 @@ def build_section_14(styles):
     elements.append(Paragraph("<b>D. Links & Resources</b>", styles['SubsectionTitle']))
     links = [
         "<b>Website:</b> www.omnixquantum.net",
-        "<b>Public Verification:</b> omnibotgenesis-production.up.railway.app/verify",
+        "<b>Public Verification:</b> omnixquantum.net/verify",
         "<b>Credit Governance Demo:</b> www.omnixquantum.net/governance-demo",
         "<b>Insurance Governance Demo:</b> www.omnixquantum.net/governance-demo-insurance",
         "<b>LinkedIn:</b> linkedin.com/in/harold-nunes-21bb65285",
