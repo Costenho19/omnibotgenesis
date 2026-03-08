@@ -86,6 +86,12 @@ OMNIX_Validation_*.pdf
 generate_validation_*.py
 output/*.pdf
 
+# Business documents — local only, not needed in Railway
+docs/business/pdfs/
+docs/business/pdf/
+output/*.md
+output/*.json
+
 # IP Strategy Documents - NEVER push to public repos
 docs/ip/
 
