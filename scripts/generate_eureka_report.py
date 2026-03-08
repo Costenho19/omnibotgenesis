@@ -40,8 +40,8 @@ TABLE_HEADER_BG = HexColor('#1E3A5F')
 TABLE_ALT_ROW = HexColor('#F0F4F8')
 TABLE_BORDER = HexColor('#D1D5DB')
 
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'output')
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'Report_OMNIX_HaroldNunes.pdf')
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'business', 'pdfs')
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'Report_OMNIX_HaroldNunes_March2026.pdf')
 
 
 def create_styles():
