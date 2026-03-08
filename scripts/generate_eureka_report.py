@@ -453,18 +453,21 @@ def build_section_3(styles):
 
     elements.append(Paragraph("<b>Problem Statement</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
-        "Automated systems are increasingly making high-stakes decisions across multiple industries "
-        "\u2014 from financial trading and credit approvals to supply chain procurement, insurance underwriting, "
-        "and robotics/autonomous systems.",
+        "High-stakes automated systems are now responsible for billions of dollars in capital allocation "
+        "every day \u2014 across trading, lending, insurance, and supply chain decisions.",
         styles['BodyText2']
     ))
     elements.append(Paragraph(
-        "However, most of these systems operate without a governance layer capable of validating decisions "
-        "<i>before</i> execution. As a result, automated decisions can trigger cascading losses, operational "
-        "disruptions, and regulatory risks at machine speed.",
+        "Yet most of these systems operate without a governance layer capable of validating decisions "
+        "<i>before</i> execution.",
         styles['BodyText2']
     ))
     elements.append(Paragraph(
+        "<b>When automated systems fail, they do not fail slowly. They fail at machine speed.</b>",
+        styles['BodyText2']
+    ))
+    elements.append(Paragraph(
+        "This creates cascading losses, operational disruptions, and regulatory risk across multiple industries. "
         "Today, most systems focus on generating signals or optimizing performance. "
         "Very few focus on governing <b>whether a decision should actually be executed.</b>",
         styles['BodyText2']
