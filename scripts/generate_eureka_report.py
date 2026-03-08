@@ -269,7 +269,7 @@ def build_cover_page():
         'CoverDate', fontName='Helvetica', fontSize=9, leading=12,
         textColor=BRAND_GOLD, alignment=TA_LEFT
     )
-    elements.append(Paragraph(f"March 2026 | Abu Dhabi, UAE", date_style))
+    elements.append(Paragraph(f"March 2026 | United States", date_style))
     elements.append(Paragraph("Classification: Competition Submission \u2014 Confidential", date_style))
 
     elements.append(PageBreak())
@@ -342,9 +342,9 @@ def build_section_1(styles):
         styles['BodyText2']
     ))
     elements.append(Paragraph(
-        "<b>Target Customer:</b> B2B \u2014 Prop trading firms, trading platforms, regulated funds, and family offices "
-        "in ADGM/DIFC ecosystem (200+ registered firms). Future verticals: supply chain operators, lending platforms, "
-        "insurance underwriters, and robotics/autonomous physical systems (Year 3+).",
+        "<b>Target Customer:</b> B2B Institutional \u2014 Prop trading firms, algorithmic trading platforms, "
+        "regulated funds, and lending/insurance automation systems globally. "
+        "Future verticals: supply chain operators, robotics/autonomous physical systems (Year 3+).",
         styles['BodyText2']
     ))
     elements.append(Paragraph(
@@ -453,17 +453,37 @@ def build_section_3(styles):
 
     elements.append(Paragraph("<b>Problem Statement</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
-        "Automated decision systems across industries \u2014 algorithmic trading, supply chain procurement, "
-        "credit approvals, insurance underwriting, and robotics/autonomous physical systems \u2014 operate without adequate pre-execution governance. "
-        "The consequences are severe:",
+        "Automated systems are increasingly making high-stakes decisions across multiple industries "
+        "\u2014 from financial trading and credit approvals to supply chain procurement, insurance underwriting, "
+        "and robotics/autonomous systems.",
+        styles['BodyText2']
+    ))
+    elements.append(Paragraph(
+        "However, most of these systems operate without a governance layer capable of validating decisions "
+        "<i>before</i> execution. As a result, automated decisions can trigger cascading losses, operational "
+        "disruptions, and regulatory risks at machine speed.",
+        styles['BodyText2']
+    ))
+    elements.append(Paragraph(
+        "Today, most systems focus on generating signals or optimizing performance. "
+        "Very few focus on governing <b>whether a decision should actually be executed.</b>",
         styles['BodyText2']
     ))
     elements.extend(bullet_list([
         "<b>Billions in preventable losses annually</b> due to governance failures in automated decision systems",
-        "<b>The vast majority of algorithmic systems</b> ask 'When should I act?' instead of 'When should I NOT act?'",
-        "<b>Single-layer risk checks</b> fail during tail events (flash crashes, liquidity cascades)",
-        "<b>No audit trail</b> for automated decisions, creating regulatory and compliance gaps",
-        "<b>Institutional-grade governance</b> exists only inside hedge funds with $100M+ AUM \u2014 inaccessible to the rest of the market",
+        "<b>Machine-speed decisions without machine-speed governance</b> \u2014 humans cannot oversee decisions made in milliseconds",
+        "<b>Single-layer risk checks fail</b> during tail events (flash crashes, liquidity cascades, model hallucinations)",
+        "<b>No audit trail</b> for automated decisions, creating regulatory and compliance exposure",
+        "<b>Institutional-grade governance</b> exists only inside the largest organizations \u2014 inaccessible to the rest of the market",
+    ], styles))
+
+    elements.append(Paragraph("<b>Examples of High-Risk Automated Decisions</b>", styles['SubsectionTitle']))
+    elements.extend(bullet_list([
+        "<b>Algorithmic trading</b> \u2014 executing large orders in volatile markets",
+        "<b>Credit scoring systems</b> \u2014 approving or rejecting loans automatically",
+        "<b>Supply chain systems</b> \u2014 triggering procurement decisions at scale",
+        "<b>Insurance underwriting</b> \u2014 evaluating risk and setting premiums automatically",
+        "<b>Robotics & autonomous systems</b> \u2014 executing real-world physical actions",
     ], styles))
 
     elements.append(Paragraph("<b>Existing Alternatives & Why They Are Inadequate</b>", styles['SubsectionTitle']))
@@ -495,16 +515,16 @@ def build_section_3(styles):
     elements.append(make_table(market_data[0], market_data[1:], [170, 160, 130]))
 
     elements.append(Spacer(1, 8))
-    elements.append(Paragraph("<b>Target Geography & Customer Segment</b>", styles['SubsectionTitle']))
+    elements.append(Paragraph("<b>Target Customer Segment</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
-        "<b>Primary Geography:</b> ADGM/DIFC ecosystem (Abu Dhabi/Dubai) \u2014 200+ registered prop trading firms, "
-        "100+ regulated funds, 50+ crypto-native platforms. <b>Expansion:</b> EU (MiCA compliance creating urgent demand), "
-        "Asia-Pacific (Year 2\u20133).",
+        "<b>Primary (80% focus):</b> B2B Institutional \u2014 prop trading firms, algorithmic trading platforms, "
+        "regulated funds, lending automation platforms, and insurance underwriting systems globally.",
         styles['BodyText2']
     ))
     elements.append(Paragraph(
-        "<b>Primary Segment:</b> B2B Institutional (80% focus) \u2014 Prop trading firms, trading platforms, "
-        "regulated funds, and family offices. <b>Secondary:</b> B2C SaaS for advanced independent traders (20%, post-enterprise validation).",
+        "<b>Secondary (20%, post-enterprise validation):</b> B2C SaaS for advanced independent traders. "
+        "<b>Regulatory tailwind:</b> MiCA (EU), EU AI Act, and global AI governance frameworks create "
+        "immediate demand for auditable decision governance infrastructure.",
         styles['BodyText2']
     ))
 
@@ -661,7 +681,7 @@ def build_section_5(styles):
     elements.append(Paragraph("<b>Product Roadmap (Next 6\u201312 Months)</b>", styles['SubsectionTitle']))
     roadmap_items = [
         "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 4,173 execution vetoes + 149,799 shadow evaluations during Black Swan period. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13.",
-        "<b>Q2 2026:</b> Enterprise API launch (Risk Guardian API). First enterprise pilot (prop firm or trading platform). ADGM regulatory structure initiated.",
+        "<b>Q2 2026:</b> Enterprise API launch (Risk Guardian API). First enterprise pilot (prop firm or trading platform). Legal & regulatory structure initiated.",
         "<b>Q3 2026:</b> Public license model launch. White-label SDK for platform integrations. Second and third enterprise clients.",
         "<b>Q4 2026:</b> Series A readiness with validated revenue metrics. Begin multi-vertical domain adapter development.",
     ]
@@ -744,7 +764,7 @@ def build_section_6(styles):
     scale_items = [
         "<b>Network effects:</b> More decisions governed = better calibration. Shadow Portfolio learns from every veto.",
         "<b>Multi-vertical expansion:</b> One architecture, multiple verticals (trading, supply chain, lending, insurance, energy, robotics). Each new domain increases TAM without rebuilding core.",
-        "<b>Regulatory moat:</b> MiCA, ADGM, and emerging compliance requirements create demand for auditable decision governance.",
+        "<b>Regulatory moat:</b> MiCA, EU AI Act, and emerging global compliance frameworks create demand for auditable decision governance.",
         "<b>Switching costs:</b> OMNIX embeds into execution flow \u2014 high switching cost once integrated.",
     ]
     elements.extend(bullet_list(scale_items, styles))
@@ -791,7 +811,7 @@ def build_section_7(styles):
     elements.append(Paragraph("<b>Customer Acquisition Channels</b>", styles['SubsectionTitle']))
     channels = [
         "<b>Direct outreach:</b> 50 targeted contacts/month via LinkedIn + email (targeting 15 meetings/month)",
-        "<b>ADGM Innovation Hub:</b> Regulatory community + startup programs (5\u201310 warm intros/quarter)",
+        "<b>Competition & accelerator network:</b> Eureka GCC, Hub71, and regional programs (5\u201310 warm intros/quarter)",
         "<b>Hub71:</b> Applied \u2014 pending response (3\u20135 qualified leads/quarter if accepted)",
         "<b>Industry events:</b> TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX (10+ contacts/event)",
         "<b>Eureka GCC:</b> Competition exposure + judge network (immediate pipeline)",
@@ -883,7 +903,7 @@ def build_section_9(styles):
     elements.append(Paragraph("<b>Customer Acquisition Strategy</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
         "OMNIX follows an enterprise-first go-to-market strategy, targeting institutional buyers "
-        "in the ADGM/DIFC ecosystem where regulatory urgency (MiCA 2025+) creates immediate demand "
+        "globally where regulatory urgency (MiCA 2025+, EU AI Act) creates immediate demand "
         "for decision governance infrastructure.",
         styles['BodyText2']
     ))
@@ -910,11 +930,11 @@ def build_section_9(styles):
     elements.append(Paragraph("<b>Key Partnerships (Target)</b>", styles['SubsectionTitle']))
     partners_data = [
         ['Partner Type', 'Target', 'Status'],
-        ['Regulatory Ecosystem', 'ADGM (Abu Dhabi)', 'Target licensing ecosystem'],
-        ['Accelerator', 'Hub71', 'Applied \u2014 pending response'],
-        ['Future Expansion', 'DIFC (Dubai)', 'Roadmap'],
+        ['Accelerator', 'Hub71 (UAE)', 'Applied \u2014 pending response'],
+        ['Competition Network', 'Eureka GCC 2026', 'Semifinalist \u2014 active'],
         ['Technology', 'Cloud infrastructure (Railway)', 'Active'],
         ['AI Providers', 'Google, OpenAI, Anthropic', 'Active (multi-provider)'],
+        ['Enterprise Targets', 'Prop firms, trading platforms globally', 'Outreach in progress'],
     ]
     elements.append(make_table(partners_data[0], partners_data[1:], [120, 170, 170]))
 
@@ -922,7 +942,7 @@ def build_section_9(styles):
     scale_data = [
         ['Phase', 'Focus', 'Timeline'],
         ['Phase 1', 'Pilot validation \u2014 3 enterprise clients (digital assets)', 'Months 1\u20136'],
-        ['Phase 2', 'Regional expansion (ADGM/DIFC/MENA) + platform partnerships', 'Months 6\u201312'],
+        ['Phase 2', 'Enterprise license expansion (MENA + EU) + platform partnerships', 'Months 6\u201312'],
         ['Phase 3', 'Multi-vertical expansion \u2014 supply chain, lending, robotics/autonomous systems', 'Months 12\u201324'],
         ['Phase 4', 'Global scaling (EU MiCA, Asia) + insurance, energy', 'Months 24\u201336'],
     ]
@@ -954,7 +974,7 @@ def build_section_10(styles):
         ['Role', 'Timeline', 'Purpose'],
         ['Senior Backend Engineer', 'Month 1\u20132', 'Enterprise API development, system scaling'],
         ['DevOps / Infrastructure', 'Month 2\u20133', 'Production reliability, deployment automation'],
-        ['Business Development', 'Month 3\u20134', 'Enterprise sales, ADGM ecosystem relationships'],
+        ['Business Development', 'Month 3\u20134', 'Enterprise sales, institutional ecosystem relationships'],
     ]
     elements.append(make_table(hires_data[0], hires_data[1:], [160, 100, 200]))
 
@@ -974,7 +994,7 @@ def build_section_10(styles):
     elements.append(Paragraph(
         "Advisory board is being assembled. The founder has worked with contract developers and "
         "infrastructure consultants during the development phase. Formal advisory relationships with "
-        "ADGM ecosystem participants and fintech domain experts are targeted post-funding.",
+        "institutional fintech and governance domain experts are targeted post-funding.",
         styles['BodyText2']
     ))
 
@@ -1010,7 +1030,7 @@ def build_section_11(styles):
 
     elements.append(Paragraph("<b>Key Assumptions</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
-        "3 enterprise pilots secured within 6 months via ADGM/DIFC ecosystem",
+        "3 enterprise pilots secured within 6 months via competition network and direct enterprise outreach",
         "Average enterprise contract: $25K/month (mid-range of $15K\u2013$35K pricing)",
         "12-month minimum contract duration with 80% renewal rate",
         "B2C SaaS launched post-enterprise validation (Month 6\u20139)",
@@ -1051,7 +1071,7 @@ def build_section_11(styles):
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
         "<b>Real validation data:</b> 728,868 shadow portfolio evaluations, 50,688 PQC-signed receipts",
         "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
-        "<b>Strategic timing:</b> MiCA + ADGM convergence creating urgent demand for governance infrastructure",
+        "<b>Strategic timing:</b> MiCA + EU AI Act + global AI governance regulation creating urgent demand for auditable decision infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",
     ], styles))
 
@@ -1059,7 +1079,7 @@ def build_section_11(styles):
     funds_data = [
         ['Category', 'Allocation', 'Purpose'],
         ['Strategy & Risk Engine', '35%', 'Algorithm refinement, Shadow Portfolio expansion, enterprise API'],
-        ['Dubai/ADGM Legal & Regulatory', '25%', 'Company formation, regulatory structure, compliance'],
+        ['Legal & Regulatory Structure', '25%', 'Company formation, regulatory structure, compliance'],
         ['Enterprise Infrastructure', '20%', 'API for prop firms, security certifications, scaling'],
         ['Team & Operations', '15%', '2\u20133 key hires eliminating key-person risk (Month 1\u20134)'],
         ['Reserve', '5%', 'Contingency'],
@@ -1093,7 +1113,7 @@ def build_section_12(styles):
     elements.append(make_table(ip_data[0], ip_data[1:], [130, 190, 140]))
 
     elements.append(Paragraph(
-        "Patent filing strategy will be evaluated post-funding with legal counsel in ADGM jurisdiction. "
+        "Patent filing strategy will be evaluated post-funding with legal counsel. "
         "Current protection relies on trade secrets, first-mover advantage, and architectural complexity.",
         styles['SmallNote']
     ))
@@ -1101,8 +1121,8 @@ def build_section_12(styles):
     elements.append(Paragraph("<b>Regulatory Framework</b>", styles['SubsectionTitle']))
     reg_data = [
         ['Framework', 'Status', 'Relevance'],
-        ['ADGM (Abu Dhabi)', 'Target ecosystem', 'Company formation + licensing structure'],
         ['MiCA (EU)', 'Creating demand', 'Decision governance documentation required for compliance'],
+        ['EU AI Act', 'Creating demand', 'Mandatory human oversight + audit trails for high-risk AI systems'],
         ['GDPR', 'Controls aligned', 'Data protection and PII handling'],
         ['SOC 2 Principles', 'Aligned', 'Access control, audit logging, encryption'],
         ['MiFID II', 'Aligned', 'Decision auditability and traceability'],
@@ -1115,7 +1135,7 @@ def build_section_12(styles):
         "<b>Regulatory classification:</b> OMNIX is infrastructure (not a financial product or fund). "
         "No asset custody, no investment advice, no token issuance.",
         "<b>Data residency:</b> PostgreSQL database with configurable deployment region. "
-        "ADGM/DIFC data handling requirements addressed through cloud infrastructure selection.",
+        "Client data residency requirements addressed through cloud infrastructure region selection.",
         "<b>Cryptographic compliance:</b> NIST-standardized algorithms (Dilithium-3, Kyber-768). "
         "No proprietary or unvetted cryptographic implementations.",
     ], styles))
@@ -1155,7 +1175,7 @@ def build_section_13(styles):
         ),
         Paragraph(
             "<b>Mitigation:</b> Progressive onboarding model (Shadow \u2192 Advisory \u2192 Enforcement) reduces "
-            "adoption friction. ADGM/DIFC ecosystem provides warm introductions. MiCA compliance urgency "
+            "adoption friction. Competition network (Eureka GCC) and LinkedIn outreach generate enterprise introductions. MiCA + EU AI Act urgency "
             "accelerates decision-making. $500K runway provides 18\u201324 month operating buffer.",
             styles['BodyText2']
         ),
@@ -1190,7 +1210,7 @@ def build_section_13(styles):
 
     elements.append(Paragraph("<b>Market & Regulatory Risks</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
-        "<b>Regulatory changes:</b> ADGM/DIFC regulations could shift. OMNIX's compliance-aligned architecture "
+        "<b>Regulatory changes:</b> Global regulatory landscape (MiCA, EU AI Act) could shift. OMNIX's compliance-aligned architecture "
         "makes adaptation straightforward.",
         "<b>Competition from incumbents:</b> Large exchanges could build in-house governance. "
         "OMNIX's 4-month head start, PQC integration, and multi-vertical design (6+ verticals including robotics) create defensible position.",
