@@ -354,7 +354,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Current Stage:</b> MVP (Live Product) \u2014 Running 24/7 in production since November 2025. "
-        "670,000+ evaluation cycles completed, 30,000+ cryptographically signed governance receipts, "
+        "728,868 shadow portfolio evaluations completed, 50,688 cryptographically signed governance receipts, "
         "100% post-quantum cryptography coverage.",
         styles['BodyText2']
     ))
@@ -367,8 +367,8 @@ def build_section_1(styles):
 
     elements.append(Spacer(1, 8))
     kpi_data = [
-        ['670,000+', 'Evaluation Cycles', 'Governance engine operational 24/7'],
-        ['30,000+', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
+        ['728,868', 'Shadow Portfolio Evaluations', 'Governance engine operational 24/7'],
+        ['50,688', 'PQC-Signed Receipts', '100% Dilithium-3 coverage'],
         ['98.5%', 'Capital Preserved', 'During BTC -7.37% volatility'],
         ['<120ms', 'Decision Latency', 'Real-time governance validation'],
         ['$49.7B+', 'Combined TAM', 'Multi-vertical addressable market (6 verticals)'],
@@ -424,7 +424,7 @@ def build_section_2(styles):
         ['Investor Dashboard', 'Live \u2014 14/14 widgets operational, real-time metrics'],
         ['Institutional Website', 'Live \u2014 www.omnixquantum.net'],
         ['Multi-Vertical Demos', 'Live \u2014 Credit/Lending + Insurance interactive demos'],
-        ['Shadow Portfolio Analysis', 'Live \u2014 192,000+ counterfactual events'],
+        ['Shadow Portfolio Analysis', 'Live \u2014 728,868 shadow portfolio evaluations'],
         ['Enterprise API', 'In Development \u2014 Q2 2026 target'],
     ]
     t_data = [[Paragraph(c, styles['TableCell']) for c in row] for row in stage_data]
@@ -632,7 +632,7 @@ def build_section_5(styles):
         ['Decision Contradiction Index (DCI)', 'Live', 'Measures internal signal divergence (0\u2013100); high DCI mandates HOLD'],
         ['Post-Quantum Cryptography', 'Live', 'NIST-standardized Dilithium-3 signatures + Kyber-768 key encapsulation'],
         ['Public Verification Server', 'Live', 'Public receipt verification endpoint with zero internal data exposure'],
-        ['Shadow Portfolio Engine', 'Live', '192,000+ counterfactual events; validates veto accuracy (91% \u2014 43 of 47 validated, cross-referenced against 48h price action)'],
+        ['Shadow Portfolio Engine', 'Live', '728,868 shadow portfolio evaluations; veto accuracy 100% (50/50 validated outcomes, cross-referenced against 48h price action)'],
         ['Non-Markovian Memory Kernel', 'Live', 'Behavioral pattern detection beyond recency bias'],
         ['Multi-AI Orchestration', 'Live', 'Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with automatic failover'],
         ['Investor Dashboard', 'Live', '14/14 widgets operational, real-time metrics, dual win rate framework, regime detection'],
@@ -660,7 +660,7 @@ def build_section_5(styles):
 
     elements.append(Paragraph("<b>Product Roadmap (Next 6\u201312 Months)</b>", styles['SubsectionTitle']))
     roadmap_items = [
-        "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 47,507+ signals vetoed. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13.",
+        "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 4,173 execution vetoes + 149,799 shadow evaluations during Black Swan period. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13.",
         "<b>Q2 2026:</b> Enterprise API launch (Risk Guardian API). First enterprise pilot (prop firm or trading platform). ADGM regulatory structure initiated.",
         "<b>Q3 2026:</b> Public license model launch. White-label SDK for platform integrations. Second and third enterprise clients.",
         "<b>Q4 2026:</b> Series A readiness with validated revenue metrics. Begin multi-vertical domain adapter development.",
@@ -735,7 +735,7 @@ def build_section_6(styles):
     today_items = [
         "<b>Fail-closed by default:</b> Every other system defaults to execute. OMNIX defaults to protect.",
         "<b>Post-quantum security in production:</b> No competitor has PQC-signed decision receipts.",
-        "<b>Full audit trail:</b> 30,000+ governance receipts, publicly verifiable, zero information leakage.",
+        "<b>Full audit trail:</b> 50,688 governance receipts, publicly verifiable, zero information leakage.",
         "<b>Domain-agnostic architecture:</b> Same engine validates trading, credit, insurance, and robotics/autonomous systems decisions.",
     ]
     elements.extend(bullet_list(today_items, styles))
@@ -828,12 +828,12 @@ def build_section_8(styles):
     traction_data = [
         ['Metric', 'Value', 'Significance'],
         ['Production Uptime', '24/7 since Nov 2025', 'System operational 4+ months continuously'],
-        ['Evaluation Cycles', '670,000+', 'Governance engine processing decisions in real-time'],
-        ['PQC-Signed Receipts', '30,000+', 'Every decision signed with Dilithium-3 (100% coverage)'],
-        ['Signals Vetoed (Track Record, first 12 days)', '47,507+', 'Black Swan conditions Jan 15\u201327 \u2014 capital 100% preserved'],
+        ['Shadow Portfolio Evaluations', '728,868', 'Total governance engine evaluations in production'],
+        ['PQC-Signed Receipts', '50,688', 'Every decision signed with Dilithium-3 (100% coverage)'],
+        ['Execution Vetoes (Track Record, first 12 days)', '4,173', 'Black Swan period Jan 15\u201327 \u2014 capital fully preserved'],
+        ['Shadow Evaluations (Track Record, first 12 days)', '149,799', 'Counterfactual governance analysis during Black Swan'],
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
-        ['Shadow Trade Events', '192,000+', 'Counterfactual analysis of vetoed decisions'],
-        ['Veto Accuracy', '91%', '43 of 47 validated shadow outcomes confirmed correct (48h price fill reconciliation)'],
+        ['Veto Accuracy', '100%', '50/50 validated outcomes confirmed correct (cross-referenced against 48h price action)'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
         ['Database Tables', '42+', '90% foreign key coverage \u2014 institutional-grade data model'],
         ['Architecture Decisions', '27 ADRs', 'Documented engineering discipline'],
@@ -856,7 +856,7 @@ def build_section_8(styles):
         ['Jan 15, 2026', 'Official Track Record Day 1', 'Clean metrics from calibrated parameters'],
         ['Jan 21, 2026', 'Edge Confirmation Window + DCI', 'Capital patience + contradiction detection'],
         ['Jan 28, 2026', 'Institutional Website launched', 'Public credibility and demo capability'],
-        ['Feb 13, 2026', '30-Day Track Record COMPLETED', '0 trades executed, 47,507+ signals vetoed, 98.5% capital preserved'],
+        ['Feb 13, 2026', '30-Day Track Record COMPLETED', '0 trades executed, 4,173 execution vetoes + 149,799 shadow evaluations, 98.5% capital preserved'],
         ['Feb 15, 2026', 'Multi-Vertical Demos (Credit + Insurance)', 'Domain-agnostic architecture demonstrated'],
         ['Feb 21, 2026', 'Public Verification Server', 'Transparent governance receipts'],
         ['Feb 23, 2026', 'Railway cost optimization (77% reduction)', 'Operational efficiency for scaling'],
@@ -984,7 +984,7 @@ def build_section_10(styles):
         "governance systems and the institutional requirements of regulated financial markets. "
         "The AI-augmented development model has enabled solo construction of a system that would "
         "typically require a 5-person engineering team \u2014 evidenced by 42+ database tables, 27 ADRs, "
-        "670,000+ evaluation cycles, and 4+ months of continuous production operation. Post-funding, "
+        "728,868 shadow portfolio evaluations, and 4+ months of continuous production operation. Post-funding, "
         "the first hires are designed to eliminate key-person risk and accelerate enterprise sales.",
         styles['BodyText2']
     ))
@@ -1049,7 +1049,7 @@ def build_section_11(styles):
     elements.append(Paragraph("<b>Valuation Justification</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
-        "<b>Real validation data:</b> 670,000+ evaluation cycles, 30,000+ PQC-signed receipts",
+        "<b>Real validation data:</b> 728,868 shadow portfolio evaluations, 50,688 PQC-signed receipts",
         "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
         "<b>Strategic timing:</b> MiCA + ADGM convergence creating urgent demand for governance infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",
@@ -1086,7 +1086,7 @@ def build_section_12(styles):
         ['Adaptive Coherence Gate', 'Dynamic threshold calibration based on market regime', 'Proprietary algorithm'],
         ['Edge Confirmation Window', 'Statistical edge persistence validation (2-cycle)', 'Proprietary methodology'],
         ['Decision Contradiction Index', 'Internal signal divergence measurement (0\u2013100)', 'Proprietary metric'],
-        ['Shadow Portfolio Engine', '192,000+ counterfactual events for veto validation', 'Proprietary dataset + methodology'],
+        ['Shadow Portfolio Engine', '728,868 shadow portfolio evaluations; 50 validated outcomes (100% accuracy)', 'Proprietary dataset + methodology'],
         ['Non-Markovian Memory Kernel', 'Behavioral pattern detection beyond recency bias', 'Proprietary algorithm'],
         ['PQC Integration Architecture', 'Production-integrated post-quantum decision signing', 'First-mover advantage'],
     ]
