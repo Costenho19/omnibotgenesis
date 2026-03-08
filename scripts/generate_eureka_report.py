@@ -354,7 +354,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Current Stage:</b> MVP (Live Product) \u2014 Running 24/7 in production since November 2025. "
-        "670,000+ evaluation cycles completed, 16,000+ cryptographically signed governance receipts, "
+        "670,000+ evaluation cycles completed, 30,000+ cryptographically signed governance receipts, "
         "100% post-quantum cryptography coverage.",
         styles['BodyText2']
     ))
