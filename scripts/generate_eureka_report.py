@@ -269,7 +269,7 @@ def build_cover_page():
         'CoverDate', fontName='Helvetica', fontSize=9, leading=12,
         textColor=BRAND_GOLD, alignment=TA_LEFT
     )
-    elements.append(Paragraph(f"March 2026 | United Arab Emirates", date_style))
+    elements.append(Paragraph(f"March 2026 | Abu Dhabi, UAE", date_style))
     elements.append(Paragraph("Classification: Competition Submission \u2014 Confidential", date_style))
 
     elements.append(PageBreak())
@@ -994,7 +994,7 @@ def build_section_10(styles):
     elements.append(Paragraph(
         "Advisory board is being assembled. The founder has worked with contract developers and "
         "infrastructure consultants during the development phase. Formal advisory relationships with "
-        "institutional fintech and governance domain experts are targeted post-funding.",
+        "ADGM ecosystem participants and fintech domain experts are targeted post-funding.",
         styles['BodyText2']
     ))
 
@@ -1135,7 +1135,7 @@ def build_section_12(styles):
         "<b>Regulatory classification:</b> OMNIX is infrastructure (not a financial product or fund). "
         "No asset custody, no investment advice, no token issuance.",
         "<b>Data residency:</b> PostgreSQL database with configurable deployment region. "
-        "Client data residency requirements addressed through cloud infrastructure region selection.",
+        "ADGM/DIFC data handling requirements addressed through cloud infrastructure selection.",
         "<b>Cryptographic compliance:</b> NIST-standardized algorithms (Dilithium-3, Kyber-768). "
         "No proprietary or unvetted cryptographic implementations.",
     ], styles))
@@ -1175,7 +1175,7 @@ def build_section_13(styles):
         ),
         Paragraph(
             "<b>Mitigation:</b> Progressive onboarding model (Shadow \u2192 Advisory \u2192 Enforcement) reduces "
-            "adoption friction. Competition network (Eureka GCC) and LinkedIn outreach generate enterprise introductions. MiCA + EU AI Act urgency "
+            "adoption friction. ADGM/DIFC ecosystem provides warm introductions. MiCA compliance urgency "
             "accelerates decision-making. $500K runway provides 18\u201324 month operating buffer.",
             styles['BodyText2']
         ),
@@ -1210,7 +1210,7 @@ def build_section_13(styles):
 
     elements.append(Paragraph("<b>Market & Regulatory Risks</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
-        "<b>Regulatory changes:</b> Global regulatory landscape (MiCA, EU AI Act) could shift. OMNIX's compliance-aligned architecture "
+        "<b>Regulatory changes:</b> ADGM/DIFC regulations could shift. OMNIX's compliance-aligned architecture "
         "makes adaptation straightforward.",
         "<b>Competition from incumbents:</b> Large exchanges could build in-house governance. "
         "OMNIX's 4-month head start, PQC integration, and multi-vertical design (6+ verticals including robotics) create defensible position.",
