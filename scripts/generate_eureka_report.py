@@ -589,7 +589,8 @@ def build_section_4(styles):
         "At pre-seed stage, validation from domain experts who independently reviewed the architecture "
         "and recognized its strategic direction is a strong signal of product-market fit. "
         "The following interactions were unsolicited or initiated by Harold via LinkedIn outreach, "
-        "and resulted in substantive technical and strategic engagement:",
+        "and resulted in substantive technical and strategic engagement. One contact independently "
+        "cited Harold by name in a published article, mapping OMNIX\u2019s architecture to his own governance framework:",
         styles['BodyText2']
     ))
 
@@ -620,18 +621,17 @@ def build_section_4(styles):
             '"This is honestly pretty good." — Extended technical exchange on PQC architecture, Zero Trust applied to AI decisions, and decision provenance metadata model. Validated Dilithium-3 selection over Falcon for production stability.'
         ],
         [
-            'Francisco Javier (JJ) Jimenez',
-            'Founder, QuantumThreat Labs\nQuantum Temporal Dynamics\u2122 Research',
-            'LinkedIn DM\n(paper review)',
-            '"Governance infrastructure for autonomous systems is going to become increasingly important." — Read full OMNIX paper; his framing of probabilistic governance + trajectory coherence directly informed the design of OMNIX Checkpoint 7 (Temporal Coherence Validation, ADR-032).'
+            'Guomin Yang',
+            'Strategist & Thought Leader\nCreator, Responsible Deployment Loop (RDL) Framework — AI Governance',
+            'LinkedIn\n(public post\u2014cited Harold by name)',
+            '"Harold alberto Nunes rodelo emphasized the real question often emerges at the execution boundary, where authority to act actually resides." \u2014 Independently cited Harold in a published article, mapping OMNIX\u2019s architecture to his 3-layer RDL governance model (Policy \u2192 Operational \u2192 Structural). Identified OMNIX\u2019s fail-closed design as an implementation of Structural Governance.'
         ],
     ]
     elements.append(make_table(validation_data[0], validation_data[1:], [85, 120, 70, 185]))
 
     elements.append(Spacer(1, 6))
     elements.append(Paragraph(
-        "Note: Public LinkedIn comments are cited as-is. JJ Jimenez interaction via private LinkedIn DM — "
-        "permission confirmation in progress before final submission.",
+        "Note: All citations are from public LinkedIn comments or published articles and are cited as-is.",
         styles['SmallNote']
     ))
 
