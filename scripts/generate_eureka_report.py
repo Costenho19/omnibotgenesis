@@ -626,6 +626,12 @@ def build_section_4(styles):
             'LinkedIn\n(public post\u2014cited Harold by name)',
             '"Harold alberto Nunes rodelo emphasized the real question often emerges at the execution boundary, where authority to act actually resides." \u2014 Independently cited Harold in a published article, mapping OMNIX\u2019s architecture to his 3-layer RDL governance model (Policy \u2192 Operational \u2192 Structural). Identified OMNIX\u2019s fail-closed design as an implementation of Structural Governance.'
         ],
+        [
+            'William Fedorich',
+            'Author & AI Risk Analyst\nPublisher, The Bill Fedorich Letter — Healthcare & AI Risk',
+            'LinkedIn\n(public comment)',
+            '"Ensuring that every AI decision is thoroughly vetted through multiple checkpoints is critical for mitigating risks, especially in high-stakes environments like trading and insurance... this foundational technology." \u2014 AI Risk Analyst independently validated the multi-checkpoint approach and identified trading and insurance as the primary high-stakes verticals for OMNIX\u2019s governance infrastructure.'
+        ],
     ]
     elements.append(make_table(validation_data[0], validation_data[1:], [85, 120, 70, 185]))
 
