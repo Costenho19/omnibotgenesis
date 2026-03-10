@@ -203,9 +203,11 @@ def generate():
     pdf.rect(x3, y1, c3, vp_h)
     pdf.set_font("DejaVu", "B", 7)
     pdf.set_text_color(*NAVY)
-    pdf.set_xy(x3 + 1.5, y1 + 1)
+    pdf.set_xy(x3 + 1.5, y1 + 1.2)
     pdf.cell(c3 - 3, 5, "VALUE PROPOSITION", align="C",
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    # Force content start AFTER the 7mm gold strip + 2mm padding
+    pdf.set_xy(x3 + 2, y1 + 9)
     vp_lines = [
         "*\"Preventing costly mistakes",
         "*before they happen.\"",
