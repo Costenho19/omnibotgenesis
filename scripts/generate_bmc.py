@@ -73,9 +73,9 @@ def block(pdf, x, y, w, h, title, lines, title_color=None, bg=None, header_bg=No
         prefix = "- " if not line.startswith("*") else ""
         text = line.lstrip("*")
         if text == "":
-            pdf.ln(1.5)
+            pdf.ln(1.0)
         else:
-            pdf.multi_cell(w - 3, 3.8, prefix + text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.multi_cell(w - 3, 3.5, prefix + text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
 def generate():
@@ -129,8 +129,8 @@ def generate():
     c4 = 37
     c5 = TW - c1 - c2 - c3 - c4  # ~41
 
-    row1_h = 62
-    row2_h = 28
+    row1_h = 85
+    row2_h = 38
 
     x1 = M
     x2 = M + c1
@@ -228,12 +228,12 @@ def generate():
         elif line.startswith("*"):
             pdf.set_font("DejaVu", "B", 6.5)
             pdf.set_text_color(*GOLD)
-            pdf.multi_cell(c3 - 4, 3.8, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.multi_cell(c3 - 4, 3.5, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("DejaVu", "", 6)
             pdf.set_text_color(200, 220, 255)
         else:
             pdf.set_text_color(200, 220, 255)
-            pdf.multi_cell(c3 - 4, 3.8, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.multi_cell(c3 - 4, 3.5, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # CUSTOMER RELATIONSHIPS (top half of col 4)
     block(pdf, x4, y1, c4, row1_h // 2, "Customer Relationships", [
