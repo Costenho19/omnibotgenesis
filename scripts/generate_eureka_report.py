@@ -280,8 +280,8 @@ def build_cover_page():
         textColor=HexColor('#8899AA'), alignment=TA_LEFT
     )
     elements.append(Paragraph("contacto@omnixquantum.net", contact_style))
-    elements.append(Paragraph("www.omnixquantum.net", contact_style))
-    elements.append(Paragraph("linkedin.com/in/harold-nunes-21bb65285", contact_style))
+    elements.append(Paragraph("https://omnixquantum.net", contact_style))
+    elements.append(Paragraph("https://linkedin.com/in/harold-nunes-21bb65285", contact_style))
 
     elements.append(Spacer(1, 40))
 
@@ -381,7 +381,7 @@ def build_section_1(styles):
     elements.append(Paragraph(
         "<b>Key Traction:</b> Eureka GCC 2026 Semifinalist. Live public verification system at "
         "https://omnibotgenesis-production.up.railway.app/verify. Interactive governance demos for credit/lending, "
-        "insurance, energy, and biotech verticals. Institutional website live at omnixquantum.net.",
+        "insurance, energy, and biotech verticals. Institutional website live at https://omnixquantum.net.",
         styles['BodyText2']
     ))
 
@@ -442,7 +442,7 @@ def build_section_2(styles):
         ['Post-Quantum Cryptography', 'Live \u2014 Dilithium-3 + Kyber-768 since Nov 2025'],
         ['Public Verification Server', 'Live \u2014 Public receipt verification endpoint'],
         ['Investor Dashboard', 'Live \u2014 14/14 widgets operational, real-time metrics'],
-        ['Institutional Website', 'Live \u2014 omnixquantum.net'],
+        ['Institutional Website', 'Live \u2014 https://omnixquantum.net'],
         ['Multi-Vertical Demos', 'Live \u2014 Credit/Lending + Insurance interactive demos'],
         ['Shadow Portfolio Analysis', 'Live \u2014 728,868 shadow portfolio evaluations'],
         ['Enterprise API', 'In Development \u2014 Q2 2026 target'],
@@ -685,7 +685,7 @@ def build_section_5(styles):
         ['Non-Markovian Memory Kernel', 'Live', 'Behavioral pattern detection beyond recency bias'],
         ['Multi-AI Orchestration', 'Live', 'Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 with automatic failover'],
         ['Investor Dashboard', 'Live', '14/14 widgets operational, real-time metrics, dual win rate framework, regime detection'],
-        ['Institutional Website', 'Live', 'Public landing at omnixquantum.net with live market data integration'],
+        ['Institutional Website', 'Live', 'Public landing at https://omnixquantum.net with live market data integration'],
         ['Interactive Governance Demos', 'Live', 'Credit/Lending + Insurance underwriting demos showing multi-vertical applicability'],
         ['Execution Integrity', 'Live', 'Kraken fill reconciliation \u2014 real exchange data verification for every trade'],
         ['Mathematical Audit', 'Live', '100% P&L reconciliation (119/119 trades verified against exchange fees)'],
@@ -742,10 +742,10 @@ def build_section_5(styles):
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
         "<b>Demo Links:</b> Public verification: https://omnibotgenesis-production.up.railway.app/verify | "
-        "Website: omnixquantum.net | Credit governance demo: omnixquantum.net/governance-demo | "
-        "Insurance demo: omnixquantum.net/governance-demo-insurance | "
-        "Energy demo: omnixquantum.net/governance-demo-energy | "
-        "Biotech demo: omnixquantum.net/governance-demo-biotech",
+        "Website: https://omnixquantum.net | Credit governance demo: https://omnixquantum.net/governance-demo | "
+        "Insurance demo: https://omnixquantum.net/governance-demo-insurance | "
+        "Energy demo: https://omnixquantum.net/governance-demo-energy | "
+        "Biotech demo: https://omnixquantum.net/governance-demo-biotech",
         styles['SmallNote']
     ))
 
@@ -896,7 +896,7 @@ def build_section_8(styles):
     elements.extend(bullet_list([
         "<b>Eureka GCC 2026:</b> Semifinalist \u2014 competing in Abu Dhabi startup competition",
         "<b>Public verification:</b> Live at https://omnibotgenesis-production.up.railway.app/verify",
-        "<b>Institutional website:</b> Live at omnixquantum.net with real-time market data",
+        "<b>Institutional website:</b> Live at https://omnixquantum.net with real-time market data",
     ], styles))
 
     elements.append(Paragraph("<b>Key Learning Milestones</b>", styles['SubsectionTitle']))
@@ -1326,13 +1326,13 @@ def build_section_14(styles):
     elements.append(Spacer(1, 8))
     elements.append(Paragraph("<b>D. Links & Resources</b>", styles['SubsectionTitle']))
     links = [
-        "<b>Website:</b> omnixquantum.net",
+        "<b>Website:</b> https://omnixquantum.net",
         "<b>Public Verification:</b> https://omnibotgenesis-production.up.railway.app/verify",
-        "<b>Credit Governance Demo:</b> omnixquantum.net/governance-demo",
-        "<b>Insurance Governance Demo:</b> omnixquantum.net/governance-demo-insurance",
-        "<b>Energy Governance Demo:</b> omnixquantum.net/governance-demo-energy",
-        "<b>Biotech Governance Demo:</b> omnixquantum.net/governance-demo-biotech",
-        "<b>LinkedIn:</b> linkedin.com/in/harold-nunes-21bb65285",
+        "<b>Credit Governance Demo:</b> https://omnixquantum.net/governance-demo",
+        "<b>Insurance Governance Demo:</b> https://omnixquantum.net/governance-demo-insurance",
+        "<b>Energy Governance Demo:</b> https://omnixquantum.net/governance-demo-energy",
+        "<b>Biotech Governance Demo:</b> https://omnixquantum.net/governance-demo-biotech",
+        "<b>LinkedIn:</b> https://linkedin.com/in/harold-nunes-21bb65285",
         "<b>Contact:</b> contacto@omnixquantum.net",
     ]
     elements.extend(bullet_list(links, styles))
