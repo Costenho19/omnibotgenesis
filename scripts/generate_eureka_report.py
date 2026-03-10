@@ -357,7 +357,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Solution:</b> OMNIX is Decision Governance Infrastructure that validates every automated decision "
-        "through 6 independent checkpoints before execution, with a fail-closed architecture that defaults to "
+        "through 8 independent checkpoints before execution, with a fail-closed architecture that defaults to "
         "protecting capital.",
         styles['BodyText2']
     ))
@@ -425,8 +425,8 @@ def build_section_2(styles):
     elements.append(Paragraph("<b>Product Description</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
         "OMNIX Decision Governance Engine is a real-time, AI-powered validation infrastructure that sits "
-        "between decision systems and execution. Every decision passes through 6 independent checkpoints: "
-        "Monte Carlo Validation, Risk Management System Limits, Adaptive Coherence Gate, Edge Confirmation "
+        "between decision systems and execution. Every decision passes through 8 independent checkpoints: "
+        "Signal Integrity Validator, Monte Carlo Validation, Risk Management System Limits, Adaptive Coherence Gate, Edge Confirmation "
         "Window, Weighted Scoring, and Final Decision. The system operates on a fail-closed principle \u2014 "
         "if any checkpoint raises concern, the decision is blocked. Every decision (executed or blocked) is "
         "cryptographically signed with NIST-standardized post-quantum algorithms (Dilithium-3) and stored "
@@ -512,7 +512,7 @@ def build_section_3(styles):
     elements.append(Paragraph("<b>Existing Alternatives & Why They Are Inadequate</b>", styles['SubsectionTitle']))
     alt_data = [
         ['Alternative', 'Limitation', 'OMNIX Advantage'],
-        ['Retail Trading Bots', 'No decision governance, single risk check', '6 independent checkpoint validation'],
+        ['Retail Trading Bots', 'No decision governance, single risk check', '8 independent checkpoint validation'],
         ['Quant Fund Tools', 'Minimum $10M+ capital, proprietary', 'Accessible infrastructure model'],
         ['Manual Oversight', 'Too slow for real-time (<120ms required)', 'Automated validation in <120ms'],
         ['Single-Domain Tools', 'Built for one industry only', 'Domain-agnostic governance engine'],
@@ -673,7 +673,7 @@ def build_section_5(styles):
 
     features_data = [
         ['Feature', 'Status', 'Description'],
-        ['6-Checkpoint Governance Engine', 'Live', 'Multi-layer pre-execution decision validation with independent veto authority per checkpoint'],
+        ['8-Checkpoint Governance Engine', 'Live', 'Multi-layer pre-execution decision validation with independent veto authority per checkpoint'],
         ['Monte Carlo Validation', 'Live', '10,000 simulation paths per decision; blocks trades with negative expected return'],
         ['Adaptive Coherence Gate', 'Live', 'Dynamically calibrated signal agreement scoring based on market regime severity'],
         ['Edge Confirmation Window (ECW)', 'Live', 'Requires 2 consecutive cycles of confirmed statistical edge before execution'],
@@ -774,7 +774,7 @@ def build_section_6(styles):
     elements.append(Paragraph("<b>Unique Selling Proposition (USP)</b>", styles['SubsectionTitle']))
     elements.append(Paragraph(
         "OMNIX is the first domain-agnostic Decision Governance Infrastructure with production-integrated "
-        "post-quantum cryptography, 6 independent validation checkpoints, and a publicly verifiable decision "
+        "post-quantum cryptography, 8 independent validation checkpoints, and a publicly verifiable decision "
         "audit trail. No competitor offers this combination.",
         styles['BodyText2']
     ))
@@ -1131,7 +1131,7 @@ def build_section_12(styles):
     ))
     ip_data = [
         ['IP Asset', 'Description', 'Protection'],
-        ['6-Checkpoint Governance Engine', 'Multi-layer pre-execution decision validation architecture', 'Trade secret + documented ADRs'],
+        ['8-Checkpoint Governance Engine', 'Multi-layer pre-execution decision validation architecture', 'Trade secret + documented ADRs'],
         ['Adaptive Coherence Gate', 'Dynamic threshold calibration based on market regime', 'Proprietary algorithm'],
         ['Edge Confirmation Window', 'Statistical edge persistence validation (2-cycle)', 'Proprietary methodology'],
         ['Decision Contradiction Index', 'Internal signal divergence measurement (0\u2013100)', 'Proprietary metric'],
@@ -1261,13 +1261,16 @@ def build_section_14(styles):
         |
         +-- Signal Detection (EMA Regime, HMM, Kalman, Non-Markovian, Kelly)
         |
-        +-- 6-Checkpoint Governance Flow:
-        |       1. Monte Carlo VETO (10,000 simulations)
-        |       2. RMS VETO (VaR95, drawdown limits)
-        |       3. Adaptive Coherence Gate (dynamic thresholds)
-        |       4. Edge Confirmation Window (2-cycle persistence)
-        |       5. Weighted Scoring (5 inputs, 100 points)
-        |       6. Final Decision (EXECUTE / HOLD / BLOCK)
+        +-- 8-Checkpoint Governance Flow:
+        |       1. CP-0: Signal Integrity Validator (SIV)
+        |       2. CP-1: Monte Carlo VETO (10,000 simulations)
+        |       3. CP-2: RMS VETO (VaR95, drawdown limits)
+        |       4. CP-3: VETO Early Return (critical threshold)
+        |       5. CP-4/5: Coherence Engine + Adaptive Gate
+        |       6. CP-7: Temporal Coherence Validator (TCV)
+        |       7. CP-7b: Forward Trajectory Implicator (FTI)
+        |       8. CP-8: Edge Confirmation Window (2-cycle)
+        |       --> Scoring + Final Decision (EXECUTE / HOLD / BLOCK)
         |
         +-- Post-Decision:
                 +-- Dilithium-3 PQC Signature
