@@ -405,7 +405,7 @@ def generate():
         ("50,688", "Governance decisions"),
         ("728,868", "Shadow evaluations"),
         ("100%", "Veto accuracy (50 validated)"),
-        ("Semifinalist", "Eureka Dubai GCC 2026"),
+        ("$0", "Capital at risk (Official Track Record)"),
     ]
     card_w = Inches(2.95)
     for i, (val, lbl) in enumerate(metrics):
