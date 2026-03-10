@@ -919,7 +919,10 @@ def build_section_8(styles):
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
         "Note: All metrics are from internal dataset, not externally audited. Evaluation cycles and receipts "
-        "represent governance engine activity, not trading performance.",
+        "represent governance engine activity, not trading performance. "
+        "Capital Period Disclosure: The Learning Baseline (Nov\u2013Dec 2025, 119 trades) and Official Track Record "
+        "(Jan 15, 2026\u2013present) use simulated/paper capital \u2014 not real money. "
+        "Phase 0 (Jul\u2013Aug 2025, 1,115 trades on Kraken) was conducted with real capital prior to governance infrastructure deployment.",
         styles['SmallNote']
     ))
 
