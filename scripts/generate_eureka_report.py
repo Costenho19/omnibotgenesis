@@ -279,9 +279,9 @@ def build_cover_page():
         'CoverContact', fontName='Helvetica', fontSize=9, leading=13,
         textColor=HexColor('#8899AA'), alignment=TA_LEFT
     )
-    elements.append(Paragraph("contacto@omnixquantum.net", contact_style))
-    elements.append(Paragraph("https://omnixquantum.net", contact_style))
-    elements.append(Paragraph("www.linkedin.com/in/harold-nunes", contact_style))
+    elements.append(Paragraph('<a href="mailto:contacto@omnixquantum.net" color="#4488CC">contacto@omnixquantum.net</a>', contact_style))
+    elements.append(Paragraph('<a href="https://omnixquantum.net" color="#4488CC">https://omnixquantum.net</a>', contact_style))
+    elements.append(Paragraph('<a href="https://www.linkedin.com/in/harold-nunes" color="#4488CC">www.linkedin.com/in/harold-nunes</a>', contact_style))
 
     elements.append(Spacer(1, 40))
 
@@ -1329,14 +1329,14 @@ def build_section_14(styles):
     elements.append(Spacer(1, 8))
     elements.append(Paragraph("<b>D. Links & Resources</b>", styles['SubsectionTitle']))
     links = [
-        "<b>Website:</b> https://omnixquantum.net",
-        "<b>Public Verification:</b> https://omnibotgenesis-production.up.railway.app/verify",
-        "<b>Credit Governance Demo:</b> https://omnixquantum.net/governance-demo",
-        "<b>Insurance Governance Demo:</b> https://omnixquantum.net/governance-demo-insurance",
-        "<b>Energy Governance Demo:</b> https://omnixquantum.net/governance-demo-energy",
-        "<b>Biotech Governance Demo:</b> https://omnixquantum.net/governance-demo-biotech",
-        "<b>LinkedIn:</b> www.linkedin.com/in/harold-nunes",
-        "<b>Contact:</b> contacto@omnixquantum.net",
+        '<b>Website:</b> <a href="https://omnixquantum.net" color="#1155CC">https://omnixquantum.net</a>',
+        '<b>Public Verification:</b> <a href="https://omnibotgenesis-production.up.railway.app/verify" color="#1155CC">https://omnibotgenesis-production.up.railway.app/verify</a>',
+        '<b>Credit Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo" color="#1155CC">https://omnixquantum.net/governance-demo</a>',
+        '<b>Insurance Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-insurance" color="#1155CC">https://omnixquantum.net/governance-demo-insurance</a>',
+        '<b>Energy Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-energy" color="#1155CC">https://omnixquantum.net/governance-demo-energy</a>',
+        '<b>Biotech Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-biotech" color="#1155CC">https://omnixquantum.net/governance-demo-biotech</a>',
+        '<b>LinkedIn:</b> <a href="https://www.linkedin.com/in/harold-nunes" color="#1155CC">www.linkedin.com/in/harold-nunes</a>',
+        '<b>Contact:</b> <a href="mailto:contacto@omnixquantum.net" color="#1155CC">contacto@omnixquantum.net</a>',
     ]
     elements.extend(bullet_list(links, styles))
 
