@@ -415,7 +415,7 @@ def build_section_2(styles):
     elements.append(Paragraph(
         "OMNIX builds Decision Governance Infrastructure for automated systems. We provide a multi-layer "
         "pre-execution validation engine that governs decisions across domains where capital is at risk. "
-        "Our 6-checkpoint architecture acts as an independent governance layer: it does not generate signals \u2014 "
+        "Our 8-checkpoint architecture acts as an independent governance layer: it does not generate signals \u2014 "
         "it validates and governs them. The architecture is domain-agnostic, validated first in digital asset "
         "trading (the hardest domain due to 24/7 operation, high volatility, and zero circuit breakers), "
         "with expansion planned (Year 2\u20133+) into supply chain, credit/lending, insurance, energy trading, and robotics/autonomous systems.",
@@ -438,7 +438,7 @@ def build_section_2(styles):
     stage_data = [
         ['Component', 'Status'],
         ['Decision Governance Engine', 'Live \u2014 Production 24/7 since Nov 2025'],
-        ['6-Checkpoint Validation', 'Live \u2014 All 6 checkpoints operational'],
+        ['8-Checkpoint Validation', 'Live \u2014 All 8 checkpoints operational'],
         ['Post-Quantum Cryptography', 'Live \u2014 Dilithium-3 + Kyber-768 since Nov 2025'],
         ['Public Verification Server', 'Live \u2014 Public receipt verification endpoint'],
         ['Investor Dashboard', 'Live \u2014 14/14 widgets operational, real-time metrics'],
@@ -995,7 +995,7 @@ def build_section_10(styles):
         "Built OMNIX end-to-end: from concept to production system running 24/7",
         "AI-augmented development methodology: one person with AI achieves the output of a 5-person team",
         "Deep domain expertise in algorithmic trading risk management, decision systems, and cryptographic security",
-        "Designed the 6-checkpoint governance architecture, post-quantum integration, and multi-vertical domain adapter pattern",
+        "Designed the 8-checkpoint governance architecture, post-quantum integration, and multi-vertical domain adapter pattern",
     ], styles))
 
     elements.append(Paragraph("<b>Key Hires Planned (Post-Funding)</b>", styles['SubsectionTitle']))
@@ -1099,7 +1099,7 @@ def build_section_11(styles):
     elements.extend(bullet_list([
         "<b>Working product in production:</b> 4+ months running 24/7 with real market data",
         "<b>Real validation data:</b> 728,868 shadow portfolio evaluations, 50,688 PQC-signed receipts",
-        "<b>Defensible IP:</b> 6-checkpoint architecture + Shadow Portfolio engine + PQC integration",
+        "<b>Defensible IP:</b> 8-checkpoint architecture + Shadow Portfolio engine + PQC integration",
         "<b>Strategic timing:</b> MiCA + EU AI Act + global AI governance regulation creating urgent demand for auditable decision infrastructure",
         "<b>Comparable:</b> Chainalysis raised at $4M pre-money at similar stage",
     ], styles))
