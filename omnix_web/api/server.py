@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
-app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
+app = Flask(__name__)
 CORS(app)
 
 
