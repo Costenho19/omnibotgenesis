@@ -46,36 +46,47 @@ class BMCPDF(FPDF):
 
 
 def block(pdf, x, y, w, h, title, lines, title_color=None, bg=None, header_bg=None):
+    LINE_H  = 3.4
+    STRIP_H = 6.5
+    PAD_X   = 2.0
+    PAD_TOP = 1.5
+
     # Background fill
-    bg_col = bg or WHITE
-    pdf.set_fill_color(*bg_col)
+    pdf.set_fill_color(*(bg or WHITE))
     pdf.rect(x, y, w, h, style="F")
     # Colored title strip
-    strip_h = 6.5
-    hdr_bg = header_bg or ACCENT
-    pdf.set_fill_color(*hdr_bg)
-    pdf.rect(x, y, w, strip_h, style="F")
-    # Border
+    pdf.set_fill_color(*(header_bg or ACCENT))
+    pdf.rect(x, y, w, STRIP_H, style="F")
+    # Border — draw LAST so it sits on top
     pdf.set_draw_color(*MID_GRAY)
-    pdf.set_line_width(0.25)
+    pdf.set_line_width(0.3)
     pdf.rect(x, y, w, h)
-    # Title text
-    tc = title_color or WHITE
+    # Title text inside the strip
     pdf.set_font("DejaVu", "B", 6.5)
-    pdf.set_text_color(*tc)
-    pdf.set_xy(x + 1.5, y + 0.8)
-    pdf.cell(w - 3, 5, title.upper(), align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    # Body lines
+    pdf.set_text_color(*(title_color or WHITE))
+    pdf.set_xy(x + PAD_X, y + PAD_TOP)
+    pdf.cell(w - PAD_X * 2, STRIP_H - PAD_TOP, title.upper(),
+             align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    # Body — clipped: never write past (y + h - 1mm safety margin)
+    max_y = y + h - 1.5
     pdf.set_font("DejaVu", "", 6)
     pdf.set_text_color(*DARK)
     for line in lines:
-        pdf.set_xy(x + 1.5, pdf.get_y())
-        prefix = "- " if not line.startswith("*") else ""
+        if pdf.get_y() >= max_y:
+            break
         text = line.lstrip("*")
         if text == "":
-            pdf.ln(1.0)
+            if pdf.get_y() + 1.0 < max_y:
+                pdf.ln(1.0)
         else:
-            pdf.multi_cell(w - 3, 3.5, prefix + text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            prefix = "- " if not line.startswith("*") else ""
+            # Position at correct x each time (multi_cell resets x to left margin)
+            pdf.set_xy(x + PAD_X, pdf.get_y())
+            # Only draw if there's room for at least one line
+            if pdf.get_y() + LINE_H <= max_y:
+                pdf.multi_cell(w - PAD_X * 2, LINE_H, prefix + text,
+                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
 def generate():
@@ -129,8 +140,8 @@ def generate():
     c4 = 37
     c5 = TW - c1 - c2 - c3 - c4  # ~41
 
-    row1_h = 85
-    row2_h = 38
+    row1_h = 104
+    row2_h = 48
 
     x1 = M
     x2 = M + c1
@@ -219,21 +230,28 @@ def generate():
         "NOT a trading system.",
         "The governance layer ABOVE it.",
     ]
+    vp_max_y = y1 + vp_h - 1.5
     pdf.set_font("DejaVu", "", 6)
     for line in vp_lines:
-        pdf.set_xy(x3 + 2, pdf.get_y())
+        if pdf.get_y() >= vp_max_y:
+            break
         text = line.lstrip("*")
         if text == "":
-            pdf.ln(1.5)
+            if pdf.get_y() + 1.0 < vp_max_y:
+                pdf.ln(1.0)
         elif line.startswith("*"):
-            pdf.set_font("DejaVu", "B", 6.5)
-            pdf.set_text_color(*GOLD)
-            pdf.multi_cell(c3 - 4, 3.5, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-            pdf.set_font("DejaVu", "", 6)
-            pdf.set_text_color(200, 220, 255)
+            if pdf.get_y() + 3.4 <= vp_max_y:
+                pdf.set_font("DejaVu", "B", 6.5)
+                pdf.set_text_color(*GOLD)
+                pdf.set_xy(x3 + 2, pdf.get_y())
+                pdf.multi_cell(c3 - 4, 3.4, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                pdf.set_font("DejaVu", "", 6)
+                pdf.set_text_color(200, 220, 255)
         else:
-            pdf.set_text_color(200, 220, 255)
-            pdf.multi_cell(c3 - 4, 3.5, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            if pdf.get_y() + 3.4 <= vp_max_y:
+                pdf.set_text_color(200, 220, 255)
+                pdf.set_xy(x3 + 2, pdf.get_y())
+                pdf.multi_cell(c3 - 4, 3.4, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # CUSTOMER RELATIONSHIPS (top half of col 4)
     block(pdf, x4, y1, c4, row1_h // 2, "Customer Relationships", [
