@@ -281,7 +281,7 @@ def build_cover_page():
     )
     elements.append(Paragraph("contacto@omnixquantum.net", contact_style))
     elements.append(Paragraph("https://omnixquantum.net", contact_style))
-    elements.append(Paragraph("https://www.linkedin.com/in/harold-nunes", contact_style))
+    elements.append(Paragraph("www.linkedin.com/in/harold-nunes", contact_style))
 
     elements.append(Spacer(1, 40))
 
@@ -1335,7 +1335,7 @@ def build_section_14(styles):
         "<b>Insurance Governance Demo:</b> https://omnixquantum.net/governance-demo-insurance",
         "<b>Energy Governance Demo:</b> https://omnixquantum.net/governance-demo-energy",
         "<b>Biotech Governance Demo:</b> https://omnixquantum.net/governance-demo-biotech",
-        "<b>LinkedIn:</b> https://www.linkedin.com/in/harold-nunes",
+        "<b>LinkedIn:</b> www.linkedin.com/in/harold-nunes",
         "<b>Contact:</b> contacto@omnixquantum.net",
     ]
     elements.extend(bullet_list(links, styles))
