@@ -520,29 +520,32 @@ def generate():
                series_data=[("Revenue ($USD)", [300000, 1200000, 4800000, 13000000, 26000000])],
                title="Revenue Projections Y1\u2013Y5")
 
-    # MOIC cards
+    # MOIC cards — fit within 13.13" right edge (0.2" margin)
+    # Available from x=8.0: 13.13 - 8.0 = 5.13" for 3 cards + 2 gaps
     moic_data = [
         ("14.7x", "Conservative\nMOIC", RGBColor(0, 100, 60)),
         ("41x", "Base\nMOIC", BLUE),
         ("102x", "Optimistic\nMOIC", NAVY),
     ]
-    mw = Inches(1.72)
+    mw = Inches(1.6)
+    mgap = Inches(0.09)
+    mstart = Inches(8.05)
     for i, (val, lbl, col) in enumerate(moic_data):
-        mx = Inches(8.1) + i * (mw + Inches(0.13))
+        mx = mstart + i * (mw + mgap)
         _rect(s, mx, Inches(2.35), mw, Inches(0.88), col)
         _txt(s, val, mx, Inches(2.38), mw, Inches(0.52),
              size=22, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
         _txt(s, lbl, mx, Inches(2.88), mw, Inches(0.32),
              size=9, color=RGBColor(200, 220, 255), align=PP_ALIGN.CENTER)
 
-    _txt(s, "Investor return scenarios\n(pre-seed entry):", Inches(8.1), Inches(3.4), Inches(5.1), Inches(0.6),
+    _txt(s, "Investor return scenarios\n(pre-seed entry):", Inches(8.05), Inches(3.4), Inches(5.05), Inches(0.6),
          size=11, bold=True, color=BLUE)
     _bullets(s, [
         "Break-even target: Q4 2026",
         "First revenue: Q2-Q3 2026",
         "Series A ready: Year 3",
         "Path to $26M ARR by Y5",
-    ], Inches(8.1), Inches(4.05), Inches(5.1), Inches(1.4), size=12)
+    ], Inches(8.05), Inches(4.05), Inches(5.05), Inches(1.4), size=12)
 
     # ── SLIDE 8: COMPETITIVE ADVANTAGE ────────────────────────────────────────
     s = new_slide(prs)
@@ -567,7 +570,8 @@ def generate():
         "Internal": RGBColor(140, 100, 0),
     }
 
-    row_h  = Inches(0.52)
+    # row_h=0.46 so 8 rows fit: 1.18 + 8*0.46 = 4.86" — footer starts at 5.0"
+    row_h  = Inches(0.46)
     table_y = Inches(1.18)
     start_x = Inches(0.35)
 
@@ -575,7 +579,7 @@ def generate():
     _rect(s, start_x, table_y, sum(col_ws), row_h, NAVY)
     x = start_x
     for ci, h in enumerate(headers):
-        _txt(s, h, x + Inches(0.06), table_y + Inches(0.06), col_ws[ci] - Inches(0.1), row_h,
+        _txt(s, h, x + Inches(0.05), table_y + Inches(0.04), col_ws[ci] - Inches(0.1), row_h,
              size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER if ci > 0 else PP_ALIGN.LEFT)
         x += col_ws[ci]
 
@@ -586,21 +590,22 @@ def generate():
         x = start_x
         for ci, cell in enumerate(row):
             if ci == 0:
-                _txt(s, cell, x + Inches(0.1), ry + Inches(0.1),
-                     col_ws[ci] - Inches(0.15), row_h - Inches(0.1),
-                     size=12, color=DARK)
+                _txt(s, cell, x + Inches(0.1), ry + Inches(0.07),
+                     col_ws[ci] - Inches(0.15), row_h - Inches(0.08),
+                     size=11, color=DARK)
             else:
                 c_bg = cell_colors.get(cell, GRAY_LITE)
-                _rect(s, x + Inches(0.04), ry + Inches(0.06),
-                      col_ws[ci] - Inches(0.08), row_h - Inches(0.12), c_bg)
-                _txt(s, cell, x + Inches(0.04), ry + Inches(0.1),
-                     col_ws[ci] - Inches(0.08), row_h - Inches(0.15),
+                _rect(s, x + Inches(0.04), ry + Inches(0.05),
+                      col_ws[ci] - Inches(0.08), row_h - Inches(0.1), c_bg)
+                _txt(s, cell, x + Inches(0.04), ry + Inches(0.07),
+                     col_ws[ci] - Inches(0.08), row_h - Inches(0.12),
                      size=11, bold=(cell == "YES \u2713"), color=WHITE, align=PP_ALIGN.CENTER)
             x += col_ws[ci]
 
-    _rect(s, Inches(0.35), Inches(5.12), Inches(12.6), Inches(0.55), BLUE)
+    # Footer banner — starts at y=5.0, safely below table end at 4.86"
+    _rect(s, Inches(0.35), Inches(5.0), Inches(12.6), Inches(0.6), BLUE)
     _txt(s, "The fundamental difference: OMNIX is fail-CLOSED. Every other system is fail-OPEN. A decision must earn execution.",
-         Inches(0.5), Inches(5.2), Inches(12.3), Inches(0.4),
+         Inches(0.5), Inches(5.1), Inches(12.3), Inches(0.45),
          size=13, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 
     # ── SLIDE 9: EXPERT VALIDATION ────────────────────────────────────────────
