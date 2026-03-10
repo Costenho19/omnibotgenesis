@@ -40,8 +40,9 @@ TABLE_HEADER_BG = HexColor('#1E3A5F')
 TABLE_ALT_ROW = HexColor('#F0F4F8')
 TABLE_BORDER = HexColor('#D1D5DB')
 
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'business', 'pdfs')
+OUTPUT_DIR  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'business', 'pdfs')
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'Report_OMNIX_HaroldNunes_March2026.pdf')
+LOGO_PATH   = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'omnix_web', 'public', 'logo.png')
 
 
 def create_styles():
@@ -223,11 +224,30 @@ def bullet_list(items, styles):
 
 def draw_cover_background(canvas, doc):
     canvas.saveState()
+    # Full dark navy background
     canvas.setFillColor(BRAND_NAVY)
     canvas.rect(0, 0, A4[0], A4[1], fill=True, stroke=False)
+    # Gold accent stripes
     canvas.setFillColor(BRAND_GOLD)
     canvas.rect(0, A4[1] - 100, A4[0], 4, fill=True, stroke=False)
     canvas.rect(0, 80, A4[0], 2, fill=True, stroke=False)
+    # Left accent bar
+    canvas.setFillColor(BRAND_GOLD)
+    canvas.rect(0, 0, 6, A4[1], fill=True, stroke=False)
+    # Logo top-right corner
+    try:
+        logo_size = 110
+        canvas.drawImage(
+            LOGO_PATH,
+            A4[0] - logo_size - 18,
+            A4[1] - logo_size - 12,
+            width=logo_size,
+            height=logo_size,
+            preserveAspectRatio=True,
+            mask='auto'
+        )
+    except Exception:
+        pass
     canvas.restoreState()
 
 
