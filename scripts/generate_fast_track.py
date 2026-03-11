@@ -68,7 +68,11 @@ POINTS = [
         "Pilot institutional pricing: $10,000-$15,000 per month. "
         "Full commercial pricing: $20,000-$35,000 per month. "
         "API validation model (platforms): $0.01-$0.05 per governance call. "
-        "B2C advanced traders: $149-$499 per month (SaaS tier)."
+        "B2C advanced traders: $149-$499 per month (SaaS tier). "
+        "Enterprise tier includes per-client checkpoint threshold configuration: institutional clients "
+        "calibrate governance parameters to their specific risk mandate via an admin-only control plane, "
+        "with hard safety floors that prevent governance bypass. This premium capability increases "
+        "switching cost and differentiates enterprise pricing from lower tiers."
     ),
     (
         "7. Value Proposition",

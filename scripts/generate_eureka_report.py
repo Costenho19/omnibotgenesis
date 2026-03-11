@@ -696,6 +696,7 @@ def build_section_5(styles):
         ['Interactive Governance Demos', 'Live', 'Credit/Lending + Insurance underwriting demos showing multi-vertical applicability'],
         ['Execution Integrity', 'Live', 'Kraken fill reconciliation \u2014 real exchange data verification for every trade'],
         ['Mathematical Audit', 'Live', '100% P&L reconciliation (119/119 trades verified against exchange fees)'],
+        ['Per-Client Governance Configuration', 'Live', 'Enterprise tier: custom checkpoint thresholds per B2B client \u2014 admin-managed via API, validated against hard safety floors, fail-closed fallback to system defaults (ADR-037)'],
     ]
     elements.append(make_table(features_data[0], features_data[1:], [150, 35, 275]))
 
@@ -705,7 +706,8 @@ def build_section_5(styles):
         ['Governance Engine (Digital Assets)', 'LIVE', 'Since Nov 2025'],
         ['PQC Decision Signing', 'LIVE', 'Since Nov 2025'],
         ['Public Verification System', 'LIVE', 'Since Feb 2026'],
-        ['Enterprise API (Risk Guardian)', 'Planned', 'Q2 2026'],
+        ['External Governance API (B2B + Per-Client Config)', 'LIVE', 'Since Mar 2026'],
+        ['Enterprise API \u2014 Risk Guardian (full launch)', 'Planned', 'Q2 2026'],
         ['White-Label SDK', 'Planned', 'Q3 2026'],
         ['Supply Chain Domain Adapter', 'Planned', 'Year 2\u20133'],
         ['Credit/Lending Domain Adapter', 'Planned', 'Year 2\u20133'],
@@ -716,7 +718,7 @@ def build_section_5(styles):
 
     elements.append(Paragraph("<b>Product Roadmap (Next 6\u201312 Months)</b>", styles['SubsectionTitle']))
     roadmap_items = [
-        "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 4,173 execution vetoes + 149,799 shadow evaluations during Black Swan period. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13.",
+        "<b>Q1 2026 (COMPLETED):</b> 30-day Official Track Record validated (Jan 15 \u2013 Feb 13, 2026). 0 trades executed, 4,173 execution vetoes + 149,799 shadow evaluations during Black Swan period. Institutional documentation finalized. Eureka GCC semifinalist confirmed. Phase 1 Gradual Activation started Feb 13. Per-client configurable thresholds (ADR-037) implemented and validated March 11 \u2014 enterprise clients can now calibrate checkpoint governance parameters to their specific risk mandates.",
         "<b>Q2 2026:</b> Enterprise API launch (Risk Guardian API). First enterprise pilot (prop firm or trading platform). Legal & regulatory structure initiated.",
         "<b>Q3 2026:</b> Public license model launch. White-label SDK for platform integrations. Second and third enterprise clients.",
         "<b>Q4 2026:</b> Series A readiness with validated revenue metrics. Begin multi-vertical domain adapter development.",
@@ -728,13 +730,13 @@ def build_section_5(styles):
         ['Layer', 'Technology'],
         ['Language', 'Python 3.11 (core engine)'],
         ['Frontend', 'React 18 + TypeScript + Tailwind CSS + Vite'],
-        ['Database', 'PostgreSQL (42+ tables, 90% FK coverage)'],
+        ['Database', 'PostgreSQL (43+ tables, 90% FK coverage)'],
         ['Cache', 'Redis (state management, rate limiting)'],
         ['AI Models', 'Google Gemini 2.5 Flash, OpenAI GPT-4o, Anthropic Claude Sonnet 4'],
         ['Cryptography', 'CRYSTALS-Dilithium-3 (ML-DSA-65), CRYSTALS-Kyber-768 (ML-KEM-768)'],
         ['Infrastructure', 'Railway (production 24/7), Replit (development)'],
         ['Verification', 'aiohttp async server (port 8000), SHA-256 hash chain'],
-        ['Architecture', 'Hexagonal (ports and adapters), 27 Architecture Decision Records'],
+        ['Architecture', 'Hexagonal (ports and adapters), 28 Architecture Decision Records'],
     ]
     elements.append(make_table(tech_data[0], tech_data[1:], [120, 340]))
 
@@ -841,6 +843,15 @@ def build_section_7(styles):
         styles['BodyText2']
     ))
     elements.append(Paragraph(
+        "<b>Enterprise tier unlock:</b> B2B clients at the $15K\u2013$35K/month tier receive access to "
+        "per-client checkpoint threshold configuration \u2014 allowing institutional clients to calibrate "
+        "governance parameters to their specific risk mandate (e.g. a credit fund may require a stricter "
+        "probability floor than a prop trading firm). This is managed exclusively through the admin control "
+        "plane with hard safety floors that prevent governance bypass. Premium differentiation that "
+        "increases switching cost and justifies enterprise pricing.",
+        styles['BodyText2']
+    ))
+    elements.append(Paragraph(
         '"Institutions pay for what blocks bad decisions, not for alpha. '
         'License-based revenue. No tokens. No performance fees."',
         styles['Quote']
@@ -893,8 +904,8 @@ def build_section_8(styles):
         ['Capital Preserved', '98.5%', 'During period when BTC dropped 7.37%'],
         ['Veto Accuracy', '100%', '50/50 validated outcomes confirmed correct (cross-referenced against 48h price action)'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
-        ['Database Tables', '42+', '90% foreign key coverage \u2014 institutional-grade data model'],
-        ['Architecture Decisions', '27 ADRs', 'Documented engineering discipline'],
+        ['Database Tables', '43+', '90% foreign key coverage \u2014 institutional-grade data model'],
+        ['Architecture Decisions', '28 ADRs', 'Documented engineering discipline'],
         ['Dashboard Widgets', '14/14', 'Full operational visibility'],
     ]
     elements.append(make_table(traction_data[0], traction_data[1:], [130, 110, 220]))
@@ -920,6 +931,7 @@ def build_section_8(styles):
         ['Feb 23, 2026', 'Railway cost optimization (77% reduction)', 'Operational efficiency for scaling'],
         ['Feb 24, 2026', 'Execution Integrity v1', 'Kraken fill reconciliation \u2014 real exchange data verification'],
         ['Feb 24, 2026', 'Mathematical Audit', '119/119 trades P&L reconciled (100% accuracy)'],
+        ['Mar 11, 2026', 'Per-Client Configurable Thresholds (ADR-037)', 'Enterprise premium tier unlocked \u2014 B2B clients can configure custom governance checkpoints; hard safety floors enforced; 5/5 integration tests passed'],
     ]
     elements.append(make_table(milestones_data[0], milestones_data[1:], [70, 200, 190]))
 
