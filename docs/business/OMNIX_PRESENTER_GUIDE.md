@@ -13,7 +13,7 @@ Read this once before the event. Carry the Pitch Card (page 2) in your pocket.
 | **The Problem** | Automated systems make high-stakes decisions without governance — costly mistakes happen at machine speed. |
 | **The Solution** | OMNIX is Decision Governance Infrastructure that validates automated decisions before execution. |
 | **Product Status** | Running 24/7 since November 2025. Not a concept. A working system. |
-| **Key Numbers** | 728,000+ evaluations · 50,000+ post-quantum signed receipts · under 120ms latency |
+| **Key Numbers** | 740,000+ evaluations · 58,000+ post-quantum signed receipts · ~305ms latency |
 | **Market** | $49.7B across trading, lending, insurance, supply chain, robotics |
 | **Business Model** | Enterprise licensing $15,000 – $35,000 per month |
 | **Core Advantage** | Fail-closed governance + post-quantum cryptographic audit trail + production-validated system |
@@ -34,8 +34,8 @@ SOLUTION:  OMNIX sits between the decision system and execution.
            8 independent checkpoints validate every decision.
            If any fails → blocked automatically. Fail-closed.
 
-PROOF:     Live since Nov 2025. 728,000+ evaluations.
-           50,000+ decisions cryptographically signed.
+PROOF:     Live since Nov 2025. 740,000+ evaluations.
+           58,000+ decisions cryptographically signed.
            Verify at omnixquantum.net/verify
 
 MARKET:    $49.7B — trading, lending, insurance, supply chain.
@@ -83,7 +83,7 @@ If you forget everything else — say this sentence. It covers the whole project
 ## PART 5 — THE 4 MOST LIKELY QUESTIONS
 
 **Q: "How many real trades vs simulations?"**
-> "119 real trades validated execution. The 728,000+ cycles validated the governance logic. Think of it like a flight simulator — the real flights prove it works, the simulations stress-test it at scale. Every result is verifiable at omnixquantum.net/verify."
+> "119 real trades validated execution. The 740,000+ cycles validated the governance logic. Think of it like a flight simulator — the real flights prove it works, the simulations stress-test it at scale. Every result is verifiable at omnixquantum.net/verify."
 
 **Q: "Why would someone pay $15K/month for this?"**
 > "They're not paying for software. They're paying for capital they don't lose. One avoided flash crash event covers the annual contract."
@@ -139,7 +139,7 @@ Say it. Then stop.
 |---|---|
 | Calm and confident | Nervous or defensive |
 | "The system is already running" | "We plan to build..." |
-| "728,000 evaluations validated this" | "We believe this works" |
+| "740,000 evaluations validated this" | "We believe this works" |
 | Short sentences | Long explanations |
 | Pause after key numbers | Rush through data |
 
