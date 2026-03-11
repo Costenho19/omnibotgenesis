@@ -43,7 +43,11 @@ POINTS = [
         "3. Target Market",
         "OMNIX is designed for institutions operating automated financial systems: hedge funds, proprietary "
         "trading firms, crypto exchanges, fintech investment platforms, and robo-advisors. Secondary verticals "
-        "include insurance, credit underwriting, and autonomous logistics systems."
+        "include insurance, credit underwriting, and autonomous logistics systems. "
+        "Regulatory demand is active: Brazil's Central Bank (BCB) Resolution 538 and CMN 5.274 (December 2025) "
+        "mandate cryptographic traceability, full audit trails, and explainable automated decisions for all "
+        "financial institutions -- compliance deadline March 1, 2026. Over 1,600 BCB-regulated institutions "
+        "face mandatory governance requirements today."
     ),
     (
         "4. Market Size",
@@ -72,7 +76,13 @@ POINTS = [
         "preventing operational mistakes, enforcing risk controls, and supervising automated decision-making. "
         "Fail-closed by design: when in doubt, the system blocks -- never acts. "
         "OMNIX is a SEMIFINALIST at Eureka Dubai GCC 2026, validating the governance infrastructure "
-        "concept at an international level."
+        "concept at an international level. "
+        "Regulatory validation: Brazil's BCB already mandates what OMNIX delivers natively -- "
+        "cryptographic audit trails (Resolution 538), explainable automated decisions (LGPD Art. 20), "
+        "and full decision traceability (CMN 5.274). Brazil's AI Law (PL 2.338/2023, approval expected 2026) "
+        "will extend these requirements across all automated systems. Regulatory demand is real and active, "
+        "not projected. Banco do Brasil (80M+ customers) is already implementing AI governance infrastructure "
+        "using IBM watsonx -- validating institutional appetite for exactly this solution."
     ),
     (
         "8. Client ROI (Evidence-Based)",

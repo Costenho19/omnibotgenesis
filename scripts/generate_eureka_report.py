@@ -547,7 +547,14 @@ def build_section_3(styles):
     elements.append(Paragraph(
         "<b>Secondary (20%, post-enterprise validation):</b> B2C SaaS for advanced independent traders. "
         "<b>Regulatory tailwind:</b> MiCA (EU), EU AI Act, and global AI governance frameworks create "
-        "immediate demand for auditable decision governance infrastructure.",
+        "immediate demand for auditable decision governance infrastructure. "
+        "<b>Brazil — active regulatory demand:</b> BCB Resolution 538 + CMN 5.274 (December 2025) mandate "
+        "cryptographic traceability, full audit trails, and explainable automated decisions for all financial "
+        "institutions — compliance deadline March 1, 2026. Over 1,600 BCB-regulated institutions face mandatory "
+        "governance requirements today. LGPD Article 20 requires explainable automated decisions. "
+        "Brazil's AI Law (PL 2.338/2023) expected approval in 2026. "
+        "Banco do Brasil (80M+ customers) already implementing AI governance with IBM watsonx + EY — "
+        "validating institutional appetite at scale.",
         styles['BodyText2']
     ))
 
@@ -1157,6 +1164,9 @@ def build_section_12(styles):
         ['Framework', 'Status', 'Relevance'],
         ['MiCA (EU)', 'Creating demand', 'Decision governance documentation required for compliance'],
         ['EU AI Act', 'Creating demand', 'Mandatory human oversight + audit trails for high-risk AI systems'],
+        ['Brazil BCB 538 + CMN 5.274', 'ACTIVE — deadline Mar 1, 2026', 'Cryptographic traceability + audit trails mandatory for 1,600+ institutions'],
+        ['Brazil LGPD Art. 20', 'ACTIVE', 'Explainable automated decisions required — banks must justify algorithmic outcomes'],
+        ['Brazil PL 2.338/2023', 'Approval expected 2026', 'National AI Law — extends governance requirements to all automated systems'],
         ['GDPR', 'Controls aligned', 'Data protection and PII handling'],
         ['SOC 2 Principles', 'Aligned', 'Access control, audit logging, encryption'],
         ['MiFID II', 'Aligned', 'Decision auditability and traceability'],
