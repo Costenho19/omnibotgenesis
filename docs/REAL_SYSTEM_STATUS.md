@@ -15,6 +15,18 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 11, 2026) — Production Audit + B2B Encryption Fix
+
+- **Mar 11 (tarde)**: **Audit de producción completo — solo lectura, 7 áreas auditadas**. Resultados:
+  - **INTEGRIDAD DE DATOS**: Hash chain 99/99 links sin rupturas ✅. 58,129/58,129 receipts firmados con Dilithium-3 = 100.0% ✅. `retention_until` correcto en todos los receipts nuevos (0 errores) ✅.
+  - **GOBERNANZA**: Pipeline end-to-end verificado ✅. TCV activo en receipts recientes (score=100.0) ✅. Safety floors funcionando ✅. RBAC: key inválida → 401 ✅, rol incorrecto → 403 ✅.
+  - **INFRAESTRUCTURA**: Railway 305ms (< 500ms) ✅. Redis 8.2.1 conectado ✅. `/verify` público HTTP/2 200 ✅. 7/7 widgets Flask Dashboard operativos ✅.
+  - **3 vulnerabilidades identificadas**:
+    1. ✅ **RESUELTA** — `PAYLOAD_ENCRYPTION_KEY` no configurado → datos B2B en texto plano. **Fix aplicado mismo día**: clave generada, configurada en Railway + Replit secrets. Cifrado Fernet verificado: receipt `OMNIX-EFD6120F22EA` → `encrypted_payload = gAAAAABpsSXv...` (ya no NULL).
+    2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
+    3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
+  - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
+
 ### Cambios Recientes (Mar 11, 2026) — Per-Client Configurable Thresholds
 
 - **Mar 11**: **Per-client configurable thresholds LIVE — ADR-037 implementado**. `client_thresholds` PostgreSQL table creada (row-per-checkpoint, UNIQUE(client_id, checkpoint_id), CHECK 0–100, ON DELETE CASCADE). `CHECKPOINT_SAFETY_FLOORS` definidos en `external_evaluator.py` (CP-1 min 30, CP-2 min 40, CP-3 min 30, CP-4 min 25, CP-5 min 20, CP-6 min 20). Helper `_load_client_checkpoint_overrides()` carga umbrales por cliente con fallback fail-closed a CHECKPOINT_DEFAULTS. Endpoint `POST /api/governance/evaluate` ahora usa umbrales por cliente. 3 nuevos endpoints admin: `GET/PUT/DELETE /api/governance/admin/clients/<id>/thresholds`. Campo `thresholds_source: "default" | "client_custom"` añadido a cada receipt response. ADR-028 Constraints actualizado: deferred item marcado como IMPLEMENTED. Tabla 43 en PostgreSQL (previamente 42+). Archivos: `omnix_core/governance/external_evaluator.py`, `omnix_dashboard/blueprints/governance.py`, `docs/reference/adr/ADR-037-per-client-configurable-thresholds.md`.

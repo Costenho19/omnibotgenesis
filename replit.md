@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure aimed at preventing high-stakes decision-making errors in automated systems, especially in digital asset trading. It features an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing. The project's vision is to provide robust, error-free decision governance and ensure capital preservation across various sectors, enhancing financial integrity and strategic advantage in automated decision-making.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It features an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing. The project aims to provide robust, error-free decision governance, ensuring capital preservation and enhancing financial integrity in automated decision-making across various sectors.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -169,6 +169,8 @@ The dashboard provides a Dual Win Rate Framework, enriched AI context, System He
 
 ### External Governance API (Flask Dashboard — Port 5000)
 This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It uses RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. Custom checkpoint threshold values per client are stored in `client_thresholds` PostgreSQL table, with fail-closed fallback to `CHECKPOINT_DEFAULTS` and hard-coded `CHECKPOINT_SAFETY_FLOORS` preventing bypass.
+
+**B2B Payload Encryption**: Client payloads are encrypted at rest using Fernet (AES-128-CBC + HMAC-SHA256) via `PAYLOAD_ENCRYPTION_KEY` environment secret.
 
 ### Governance Compliance Modules — 5 Modules
 Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
