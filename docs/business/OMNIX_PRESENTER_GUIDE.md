@@ -94,6 +94,9 @@ If you forget everything else — say this sentence. It covers the whole project
 **Q: "Why start with crypto?"**
 > "Crypto is the harshest environment to validate governance — 24/7, high volatility, millisecond execution. If it works here, it works anywhere. The same engine applies to lending, insurance, supply chain, and robotics."
 
+**Q: "The dashboard shows a loss of $15,000 — is the system losing money?"**
+> "That number is the Learning Baseline — November 2025 to January 14, 2026. Three important points: first, that is 100% virtual capital, paper money — no real funds were ever at risk. Second, that period was deliberate calibration — the system was learning the parameters, not operating with final settings. Third, the Official Track Record started January 15, 2026, with recalibrated parameters. That is the number that counts for performance evaluation. We show the baseline number publicly because institutional credibility requires full transparency — including calibration periods."
+
 ---
 
 ## PART 6 — IF YOU GO BLANK
