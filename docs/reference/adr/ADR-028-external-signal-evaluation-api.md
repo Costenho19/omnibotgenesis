@@ -275,7 +275,7 @@ ALTER TABLE shadow_trade_events ADD COLUMN client_id VARCHAR(64);
 - **Retention policy**: 12-month default, configurable per contract
 
 ### Constraints
-- Thresholds are currently fixed (`CHECKPOINT_DEFAULTS`). Post-investment, per-client thresholds are a premium feature.
+- ~~Thresholds are currently fixed (`CHECKPOINT_DEFAULTS`). Post-investment, per-client thresholds are a premium feature.~~ **→ IMPLEMENTED in ADR-037 (March 11, 2026)**: Per-client configurable thresholds are now live. See [ADR-037](ADR-037-per-client-configurable-thresholds.md) for schema, safety floors, and admin API.
 - The endpoint does not fetch market data — signal generation is the client's responsibility.
 - `B2B_API_KEY` must be configured in Railway for production security.
 - Fernet key rotation requires re-encryption of stored payloads — operational procedure to be defined pre-scale.

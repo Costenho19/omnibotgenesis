@@ -1,9 +1,28 @@
 # OMNIX Technical Debt Registry
 
 **Created:** December 11, 2025  
-**Updated:** March 6, 2026  
+**Updated:** March 11, 2026  
 **Status:** Active - Deferred until 500-trade milestone  
 **Priority:** Track record generation > Code refactoring
+
+---
+
+## Per-Client Configurable Thresholds — ADR-028 Deferred Item (Mar 11, 2026)
+
+**Status:** ✅ RESOLVED — ADR-037 implemented and deployed
+
+**Context:** ADR-028 (Feb 27, 2026) explicitly deferred per-client threshold customization as a "post-investment premium feature." This was the only identified deferred item in the ADR-028 Constraints section.
+
+**Resolution:**
+- `client_thresholds` PostgreSQL table created (row-per-checkpoint, UNIQUE constraint, CHECK 0–100, FK to `b2b_clients` with ON DELETE CASCADE)
+- `CHECKPOINT_SAFETY_FLOORS` defined in `omnix_core/governance/external_evaluator.py` — hard-coded mins/maxes prevent governance bypass
+- `_load_client_checkpoint_overrides()` helper in `omnix_dashboard/blueprints/governance.py` — fail-closed fallback to CHECKPOINT_DEFAULTS on any error
+- 3 admin endpoints: `GET/PUT/DELETE /api/governance/admin/clients/<id>/thresholds`
+- `thresholds_source: "default" | "client_custom"` field added to every evaluate response
+
+**Remaining related debt:**
+- No web UI for threshold management — admins must use the API directly (future sprint)
+- No per-client threshold audit log table (changes tracked via `updated_by` + `updated_at` columns only, not a full history table)
 
 ---
 

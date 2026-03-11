@@ -428,7 +428,7 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 
 ## 5. Data Layer
 
-### PostgreSQL (42+ tablas)
+### PostgreSQL (43+ tablas)
 
 | Categoría | Tablas | FK Coverage |
 |-----------|--------|-------------|
@@ -439,6 +439,9 @@ Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de produc
 | Community | 5 | 100% |
 | Snapshots/Analytics | 6 | 100% |
 | System | 8 | N/A |
+| B2B Governance | 3 (`b2b_clients`, `decision_receipts`, `client_thresholds`) | 100% |
+
+**`client_thresholds`** (added Mar 11, 2026 — ADR-037): stores per-client checkpoint threshold overrides. Row-per-checkpoint design with `UNIQUE(client_id, checkpoint_id)`, CHECK constraints 0–100, and `ON DELETE CASCADE` to `b2b_clients`.
 
 ### Redis Cache
 

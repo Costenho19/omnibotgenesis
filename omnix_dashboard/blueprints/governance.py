@@ -1,15 +1,19 @@
 """
 OMNIX Governance API — External Signal Evaluation Endpoint.
 
-POST /api/governance/evaluate         — Submit normalized signals, receive PQC-signed receipt.
-GET  /api/governance/schema           — Signal schema documentation (public).
-GET  /api/governance/receipts         — Client's own receipts (authenticated).
-POST /api/governance/admin/clients    — Create B2B client (admin only).
-GET  /api/governance/admin/clients    — List all B2B clients (admin only).
-DELETE /api/governance/admin/clients/<client_id> — Deactivate client (admin only).
-POST /api/governance/admin/clients/<client_id>/rotate — Rotate API key (admin only).
+POST /api/governance/evaluate                                    — Submit normalized signals, receive PQC-signed receipt.
+GET  /api/governance/schema                                      — Signal schema documentation (public).
+GET  /api/governance/receipts                                    — Client's own receipts (authenticated).
+POST /api/governance/admin/clients                               — Create B2B client (admin only).
+GET  /api/governance/admin/clients                               — List all B2B clients (admin only).
+DELETE /api/governance/admin/clients/<client_id>                 — Deactivate client (admin only).
+POST /api/governance/admin/clients/<client_id>/rotate            — Rotate API key (admin only).
+GET  /api/governance/admin/clients/<client_id>/thresholds        — Get effective thresholds for client (admin only).
+PUT  /api/governance/admin/clients/<client_id>/thresholds        — Set per-client checkpoint thresholds (admin only).
+DELETE /api/governance/admin/clients/<client_id>/thresholds      — Revert client thresholds to defaults (admin only).
 
 ADR-028: External Signal Evaluation API
+ADR-037: Per-Client Configurable Thresholds
 """
 
 import json
@@ -112,6 +116,93 @@ def _get_db_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
+def _ensure_thresholds_table() -> None:
+    """Ensure client_thresholds table exists. Called once on first evaluate request. ADR-037."""
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS client_thresholds (
+                id SERIAL PRIMARY KEY,
+                client_id VARCHAR(64) NOT NULL REFERENCES b2b_clients(client_id) ON DELETE CASCADE,
+                checkpoint_id VARCHAR(8) NOT NULL
+                    CHECK (checkpoint_id IN ('CP-1','CP-2','CP-3','CP-4','CP-5','CP-6')),
+                threshold NUMERIC(5,2) NOT NULL CHECK (threshold >= 0 AND threshold <= 100),
+                updated_by VARCHAR(64),
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(client_id, checkpoint_id)
+            )
+        """)
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_client_thresholds_client_id ON client_thresholds(client_id)"
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"_ensure_thresholds_table: {e}")
+
+
+_THRESHOLDS_TABLE_ENSURED = False
+
+
+def _load_client_checkpoint_overrides(client_id: str) -> list[dict]:
+    """
+    Load per-client checkpoint threshold overrides from client_thresholds table.
+    Merges with CHECKPOINT_DEFAULTS — only defined rows override the defaults.
+    Returns a list of checkpoint dicts compatible with GovernanceEvaluationEngine.
+
+    Fail-closed: any error (DB, parse, validation) → returns CHECKPOINT_DEFAULTS.
+    ADR-037: Per-Client Configurable Thresholds.
+    """
+    global _THRESHOLDS_TABLE_ENSURED
+    if not _THRESHOLDS_TABLE_ENSURED:
+        _ensure_thresholds_table()
+        _THRESHOLDS_TABLE_ENSURED = True
+
+    try:
+        import importlib.util as _ilu
+        import os as _os
+        _root = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
+        _ev_path = _os.path.join(_root, "omnix_core", "governance", "external_evaluator.py")
+        _spec = _ilu.spec_from_file_location("_omnix_ev_floors", _ev_path)
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        defaults = list(_mod.CHECKPOINT_DEFAULTS)
+    except Exception as e:
+        logger.warning(f"_load_client_checkpoint_overrides: could not load CHECKPOINT_DEFAULTS: {e}")
+        return []
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            "SELECT checkpoint_id, threshold FROM client_thresholds WHERE client_id = %s",
+            (client_id,)
+        )
+        rows = {r["checkpoint_id"]: float(r["threshold"]) for r in cur.fetchall()}
+        conn.close()
+    except Exception as e:
+        logger.warning(f"_load_client_checkpoint_overrides DB error for {client_id}: {e} — using defaults")
+        return defaults
+
+    if not rows:
+        return defaults
+
+    merged = []
+    for cp in defaults:
+        cp_copy = dict(cp)
+        if cp["id"] in rows:
+            cp_copy["threshold"] = rows[cp["id"]]
+            cp_copy["_source"] = "client_custom"
+        else:
+            cp_copy["_source"] = "default"
+        merged.append(cp_copy)
+
+    logger.info(f"Loaded {len(rows)} custom threshold(s) for client={client_id}")
+    return merged
+
+
 def _require_auth(require_admin: bool = False):
     """
     Authenticate request via X-API-Key header.
@@ -206,7 +297,12 @@ def api_governance_evaluate():
         metadata = {}
 
     try:
-        engine = _GovernanceEvaluationEngine()
+        checkpoint_overrides = _load_client_checkpoint_overrides(client_id)
+        thresholds_source = "client_custom" if any(
+            cp.get("_source") == "client_custom" for cp in checkpoint_overrides
+        ) else "default"
+        clean_overrides = [{k: v for k, v in cp.items() if k != "_source"} for cp in checkpoint_overrides]
+        engine = _GovernanceEvaluationEngine(checkpoint_overrides=clean_overrides if clean_overrides else None)
         evaluation = engine.evaluate(signals=signals, asset=asset, domain=domain, metadata=metadata)
     except Exception as e:
         ref_id = str(uuid.uuid4())[:8]
@@ -271,6 +367,7 @@ def api_governance_evaluate():
         'signature_algorithm': receipt.get('signature_algorithm', 'NONE'),
         'pqc_signed': receipt.get('signature') is not None,
         'payload_encrypted': encrypted_payload is not None,
+        'thresholds_source': thresholds_source,
         'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
         'policy_version': receipt.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
     }
@@ -279,6 +376,7 @@ def api_governance_evaluate():
         f"[GOVERNANCE] evaluate: client={client_id} asset={asset} domain={domain} "
         f"decision={evaluation['decision']} "
         f"passed={evaluation['checkpoints_passed']}/{evaluation['checkpoints_total']} "
+        f"thresholds={thresholds_source} "
         f"receipt={receipt.get('receipt_id')} encrypted={encrypted_payload is not None} ip={client_ip}"
     )
     return jsonify(response), 200
@@ -456,3 +554,173 @@ def admin_rotate_key(target_client_id: str):
         }), 200
     except ValueError as e:
         return jsonify({'error': str(e), 'status': 404}), 404
+
+
+# ── THRESHOLD MANAGEMENT ENDPOINTS (ADR-037) ──────────────────────────────────
+
+@governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/thresholds', methods=['GET'])
+def admin_get_thresholds(target_client_id: str):
+    """
+    Return effective checkpoints for a client.
+    Each entry shows current threshold value and source: 'default' or 'custom'.
+    Admin only. ADR-037.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    overrides = _load_client_checkpoint_overrides(target_client_id)
+    if not overrides:
+        return jsonify({'error': 'Could not load checkpoints', 'status': 500}), 500
+
+    result = []
+    for cp in overrides:
+        result.append({
+            'checkpoint_id': cp['id'],
+            'name': cp.get('name', ''),
+            'threshold': cp['threshold'],
+            'operator': cp.get('operator', ''),
+            'source': cp.get('_source', 'default'),
+        })
+
+    return jsonify({
+        'client_id': target_client_id,
+        'checkpoints': result,
+        'custom_count': sum(1 for r in result if r['source'] == 'client_custom'),
+        'total': len(result),
+    }), 200
+
+
+@governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/thresholds', methods=['PUT'])
+def admin_set_thresholds(target_client_id: str):
+    """
+    Set per-client checkpoint threshold overrides.
+    Body: {"CP-1": 60, "CP-3": 70}  — partial updates, only named checkpoints are changed.
+    Validates against CHECKPOINT_SAFETY_FLOORS.
+    Admin only. ADR-037.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        import importlib.util as _ilu
+        import os as _os
+        _root = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
+        _ev_path = _os.path.join(_root, "omnix_core", "governance", "external_evaluator.py")
+        _spec = _ilu.spec_from_file_location("_omnix_ev_floors_admin", _ev_path)
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        validate_fn = _mod.validate_threshold_against_floor
+        floors = _mod.CHECKPOINT_SAFETY_FLOORS
+    except Exception as e:
+        logger.error(f"admin_set_thresholds: cannot load safety floors: {e}")
+        return jsonify({'error': 'Internal configuration error', 'status': 500}), 500
+
+    if not request.is_json:
+        return jsonify({'error': 'Request must be Content-Type: application/json', 'status': 400}), 400
+    try:
+        body = request.get_json(force=True)
+    except Exception:
+        return jsonify({'error': 'Invalid JSON body', 'status': 400}), 400
+
+    if not isinstance(body, dict) or not body:
+        return jsonify({'error': 'Body must be a non-empty JSON object: {"CP-1": 60, ...}', 'status': 400}), 400
+
+    valid_cps = set(floors.keys())
+    errors = []
+    updates = {}
+
+    for cp_id, value in body.items():
+        if cp_id not in valid_cps:
+            errors.append(f"Unknown checkpoint '{cp_id}'. Valid: {sorted(valid_cps)}")
+            continue
+        try:
+            threshold = float(value)
+        except (TypeError, ValueError):
+            errors.append(f"{cp_id}: threshold must be a number, got {value!r}")
+            continue
+        ok, msg = validate_fn(cp_id, threshold)
+        if not ok:
+            errors.append(msg)
+            continue
+        updates[cp_id] = threshold
+
+    if errors:
+        return jsonify({'error': 'Validation failed', 'details': errors, 'status': 400}), 400
+
+    if not updates:
+        return jsonify({'error': 'No valid checkpoints provided', 'status': 400}), 400
+
+    admin_id = client['client_id']
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        for cp_id, threshold in updates.items():
+            cur.execute("""
+                INSERT INTO client_thresholds (client_id, checkpoint_id, threshold, updated_by, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (client_id, checkpoint_id)
+                DO UPDATE SET threshold = EXCLUDED.threshold,
+                              updated_by = EXCLUDED.updated_by,
+                              updated_at = NOW()
+            """, (target_client_id, cp_id, threshold, admin_id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"admin_set_thresholds DB error for {target_client_id}: {e}")
+        return jsonify({'error': 'Database error while saving thresholds', 'status': 500}), 500
+
+    logger.info(
+        f"[ADMIN] set thresholds for client={target_client_id} "
+        f"checkpoints={list(updates.keys())} by admin={admin_id}"
+    )
+
+    effective = _load_client_checkpoint_overrides(target_client_id)
+    result = [{
+        'checkpoint_id': cp['id'],
+        'name': cp.get('name', ''),
+        'threshold': cp['threshold'],
+        'operator': cp.get('operator', ''),
+        'source': cp.get('_source', 'default'),
+    } for cp in effective]
+
+    return jsonify({
+        'client_id': target_client_id,
+        'updated': list(updates.keys()),
+        'checkpoints': result,
+        'message': f"{len(updates)} threshold(s) updated successfully.",
+    }), 200
+
+
+@governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/thresholds', methods=['DELETE'])
+def admin_delete_thresholds(target_client_id: str):
+    """
+    Revert ALL threshold overrides for a client to system defaults.
+    Deletes all rows in client_thresholds for this client.
+    Admin only. ADR-037.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM client_thresholds WHERE client_id = %s", (target_client_id,))
+        deleted = cur.rowcount
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"admin_delete_thresholds DB error for {target_client_id}: {e}")
+        return jsonify({'error': 'Database error while deleting thresholds', 'status': 500}), 500
+
+    logger.info(
+        f"[ADMIN] reverted thresholds for client={target_client_id} "
+        f"deleted={deleted} by admin={client['client_id']}"
+    )
+    return jsonify({
+        'client_id': target_client_id,
+        'deleted_overrides': deleted,
+        'message': 'All custom thresholds removed. Client will now use system defaults.',
+    }), 200

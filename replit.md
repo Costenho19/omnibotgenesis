@@ -153,7 +153,7 @@ Architectural Gaps implemented include:
 - **Exit Governance Layer (EGL)**: 3-gate exit pipeline with regime-adjusted thresholds, coherence checks, and TCV.
 
 ### Hierarchical Veto Flow
-Entry decisions progress through 8 named checkpoints: SIV CP-0 (data integrity), Monte Carlo VETO CP-1, RMS VETO CP-2, VETO Early Return CP-3, Coherence Engine 6-tier CP-4, Adaptive Coherence Gate CP-5, TCV backward trajectory CP-7 (ADR-032), FTI forward implication CP-7b (ADR-034), ECW Gate edge persistence CP-8 (ADR-019), then Scoring → Decision. CP-6 is unassigned (numbering reflects ADR introduction order, not sequential pipeline position). Exit decisions go through the 3-gate EGL pipeline: Regime-Adjusted Thresholds → Exit Coherence Gate → TCV Exit Check. All checkpoints and exit evaluations are fail-safe. All decisions generate PQC-signed receipts.
+Entry decisions progress through 8 named checkpoints: SIV CP-0 (data integrity), Monte Carlo VETO CP-1, RMS VETO CP-2, VETO Early Return CP-3, Coherence Engine 6-tier CP-4, Adaptive Coherence Gate CP-5, TCV backward trajectory CP-7 (ADR-032), FTI forward implication CP-7b (ADR-034), ECW Gate edge persistence CP-8 (ADR-019), then Scoring → Decision. Exit decisions go through the 3-gate EGL pipeline: Regime-Adjusted Thresholds → Exit Coherence Gate → TCV Exit Check. All checkpoints and exit evaluations are fail-safe. All decisions generate PQC-signed receipts.
 
 ### Scoring Logic
 Decision scoring integrates inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with a separate Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
@@ -168,7 +168,7 @@ DCI quantifies internal signal divergence to explain HOLD decisions; a high DCI 
 The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Dashboards are built with Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, utilizes RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
+This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, utilizes RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. Each B2B client can have custom checkpoint threshold values stored in the `client_thresholds` PostgreSQL table. The `POST /api/governance/evaluate` endpoint loads per-client overrides (fail-closed fallback to `CHECKPOINT_DEFAULTS`). Hard-coded `CHECKPOINT_SAFETY_FLOORS` in `external_evaluator.py` prevent governance bypass. Admin-only management endpoints are provided for viewing, updating, and deleting client thresholds, with validation against safety floors.
 
 ### Governance Compliance Modules — 5 Modules
 Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.

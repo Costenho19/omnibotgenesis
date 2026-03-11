@@ -7,12 +7,43 @@ used internally by the OMNIX trading engine.
 
 ADR-028: External Signal Evaluation API
 ADR-026: Multi-Vertical Governance Architecture (Domain Adapter Pattern)
+ADR-037: Per-Client Configurable Thresholds
 """
 
 import logging
 from typing import Any
 
 logger = logging.getLogger("OMNIX.Governance")
+
+# Safety floors: absolute min/max each client is allowed to set per checkpoint.
+# Prevents clients from disabling governance by setting trivially permissive thresholds.
+# operator 'gte' checkpoints: threshold cannot be below min (would make it too easy to pass)
+# operator 'lte' checkpoints: threshold cannot be above max (would make it too easy to pass)
+# ADR-037
+CHECKPOINT_SAFETY_FLOORS: dict[str, dict[str, float]] = {
+    "CP-1": {"min": 30.0, "max": 90.0},
+    "CP-2": {"min": 40.0, "max": 85.0},
+    "CP-3": {"min": 30.0, "max": 90.0},
+    "CP-4": {"min": 25.0, "max": 90.0},
+    "CP-5": {"min": 20.0, "max": 80.0},
+    "CP-6": {"min": 20.0, "max": 80.0},
+}
+
+
+def validate_threshold_against_floor(checkpoint_id: str, threshold: float) -> tuple[bool, str]:
+    """
+    Validate a client-provided threshold against CHECKPOINT_SAFETY_FLOORS.
+    Returns (is_valid, error_message).
+    """
+    floors = CHECKPOINT_SAFETY_FLOORS.get(checkpoint_id)
+    if not floors:
+        return False, f"Unknown checkpoint_id: {checkpoint_id}"
+    if threshold < floors["min"] or threshold > floors["max"]:
+        return False, (
+            f"{checkpoint_id} threshold must be between {floors['min']} and {floors['max']}, "
+            f"got {threshold}"
+        )
+    return True, ""
 
 CHECKPOINT_DEFAULTS = [
     {
