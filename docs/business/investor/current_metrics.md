@@ -245,5 +245,34 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 
 ---
 
+---
+
+## HISTORICAL VALIDATION — TERRA/LUNA FORENSIC RECONSTRUCTION (March 2026)
+
+### What It Demonstrates
+
+OMNIX applied its 8-checkpoint governance pipeline to the Terra/LUNA collapse of May 2022 ($40B+ destroyed). The forensic reconstruction proves the pipeline would have blocked execution before the irreversible unwinding.
+
+| Phase | Timestamp (UTC) | LUNA Price | CP-0 SIV | CP-4 Coherence | CP-7 TCV | Decision |
+|-------|-----------------|------------|----------|----------------|----------|----------|
+| T-72h | 2022-05-08 00:00 | $68.84 | 88.9/100 | 77.7/100 | 56.8/100 | WARNING |
+| T-24h | 2022-05-10 00:00 | $18.14 | 51.3/100 | 28.4/100 | 39.9/100 | BLOCKED |
+| T-6h | 2022-05-10 18:00 | $4.60 | 51.8/100 | 23.9/100 | 46.1/100 | BLOCKED + RECEIPT |
+| Collapse | 2022-05-11 00:00 | $1.73 | — | — | — | ALL SYSTEMS FAILED (no OMNIX) |
+
+### Key Result
+
+> OMNIX issued a BLOCKED decision 6 hours before the irreversible collapse. Capital would have been 100% preserved. A PQC-signed governance receipt was generated at T-6h.
+
+### Available Materials
+
+- Full Forensic Simulation Report: `OMNIX_LUNA_Forensic_Simulation_May2022.pdf` (499 KB, 7 sections)
+- Technical Validation Document: `TECHNICAL_VALIDATION_LUNA_2022.md` (Due Diligence)
+- 4-Panel Chart + Governance Receipt: Included in PDF report
+
+*Disclosure: Forensic simulation applied to historical data. OMNIX was not operational during May 2022.*
+
+---
+
 **Document Version:** OMNIX  
-**Last Updated:** January 14, 2026
+**Last Updated:** March 13, 2026

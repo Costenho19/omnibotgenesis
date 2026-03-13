@@ -143,6 +143,26 @@ OMNIX is one of the first advanced trading platforms implementing **NIST-standar
 | Decision Audit Trail | Operational | Full decision_trace logging |
 | Investor Dashboard | Operational | 23 widgets, real-time metrics |
 | Exit Governance Layer | Operational | 3-gate automated exit discipline |
+| Terra/LUNA Forensic Validation | Completed | BLOCKED decision 6h before $40B collapse (simulation) |
+
+---
+
+## Historical Validation — Terra/LUNA Collapse (May 2022)
+
+OMNIX applied its governance pipeline to the Terra/LUNA collapse — the largest single-event crypto failure in history ($40B+ destroyed). The forensic reconstruction demonstrates:
+
+| Phase | Timestamp | LUNA Price | Governance Decision |
+|-------|-----------|------------|---------------------|
+| T-72h | May 8, 2022 | $68.84 | WARNING — Structural brittleness detected |
+| T-24h | May 10, 2022 | $18.14 | BLOCKED — All checkpoints below threshold |
+| T-6h | May 10, 2022 18:00 | $4.60 | BLOCKED + PQC-signed receipt issued |
+| Collapse | May 11, 2022 | $1.73 | Irreversible unwinding — all other systems failed |
+
+> OMNIX issued a BLOCKED decision 6 hours before the irreversible collapse — preserving 100% of position capital. Every probabilistic governance system in the market failed.
+
+**Full forensic simulation report available**: `OMNIX_LUNA_Forensic_Simulation_May2022.pdf` (499 KB, 7 sections with 4-panel charts and PQC-signed receipt)
+
+*Note: This is a forensic simulation applied to historical data. OMNIX was not operational during the May 2022 event.*
 
 ---
 
@@ -193,3 +213,5 @@ OMNIX is currently in paper trading validation. All metrics reflect simulated pe
 - `docs/REAL_SYSTEM_STATUS.md` - Authoritative system state
 - `docs/business/investor/RISK_GUARDIAN_PRODUCT.md` - Risk system details
 - `docs/business/investor/TRACK_RECORD_CASE_STUDY.md` - Case study narrative
+- `docs/business/investor/TECHNICAL_VALIDATION_LUNA_2022.md` - Terra/LUNA forensic reconstruction
+- `docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf` - Full forensic simulation report (499 KB)

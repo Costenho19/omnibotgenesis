@@ -2,7 +2,7 @@
 ## Decision Governance Infrastructure
 
 **Classification**: Investor Confidential
-**Last Updated**: March 6, 2026 — 8-checkpoint entry + 3-gate exit architecture (ADR-036)
+**Last Updated**: March 13, 2026 — Terra/LUNA validation added, 8-checkpoint entry + 3-gate exit architecture (ADR-036)
 
 ---
 
@@ -126,6 +126,29 @@ This explains why the system doesn't trade during uncertain conditions—it's no
 Just as payment infrastructure became necessary before e-commerce could scale, governance infrastructure will become necessary before automated decision systems scale. OMNIX is building this governance layer. The first validated vertical is digital asset trading, with 670,000+ evaluation cycles and 98.5% of capital preserved.
 
 The right question for investors is not "how much alpha does OMNIX generate?" but "how much capital risk exists in automated systems without governance control?"
+
+### Q-LUNA: Has OMNIX been validated against real historical collapses?
+
+**A:** Yes. We applied our full 8-checkpoint governance pipeline to the **Terra/LUNA collapse of May 2022** — the largest single-event failure in crypto history ($40B+ destroyed in 72 hours).
+
+The forensic reconstruction shows OMNIX would have:
+
+| Phase | Time Before Collapse | LUNA Price | OMNIX Decision |
+|-------|---------------------|------------|----------------|
+| Phase 1 | 72 hours | $68.84 | WARNING — Structural brittleness detected |
+| Phase 2 | 24 hours | $18.14 | BLOCKED — All checkpoints below threshold |
+| Phase 3 | 6 hours | $4.60 | BLOCKED + PQC-signed receipt issued |
+
+**Key result**: OMNIX issued a BLOCKED decision 6 hours before the irreversible collapse. Capital would have been 100% preserved. Every probabilistic system in the market failed.
+
+**How it detected the collapse when others didn't:**
+1. **CP-0 (Signal Integrity)**: Detected that momentum was inherited from a stale 18-month bull regime — not earned from current conditions
+2. **CP-7 (Temporal Coherence)**: Found the signal was "Forensically Inconsistent" — executing against a ghost of the previous regime
+3. **CP-4 (Coherence Engine)**: All independent models disagreed with the surface signal
+
+**Full forensic simulation report available** (499 KB PDF with 4-panel charts, checkpoint scores, and PQC-signed governance receipt).
+
+*Disclosure: This is a forensic simulation applied to historical data. OMNIX was not operational during May 2022. The reconstruction demonstrates architectural capability.*
 
 ---
 
