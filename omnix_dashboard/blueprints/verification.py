@@ -296,6 +296,19 @@ def governance_metrics():
             """)
             asset_breakdown = [{'asset': row[0], 'count': row[1]} for row in cur.fetchall()]
 
+            cur.execute("""
+                SELECT COALESCE(SUM(realized_pnl), 0)
+                FROM trades
+                WHERE status = 'closed'
+            """)
+            row = cur.fetchone()
+            total_pnl = float(row[0]) if row and row[0] is not None else 0.0
+            capital_preserved_pct = round(max(0, (1_000_000 + total_pnl) / 1_000_000 * 100), 2)
+
+            from datetime import datetime, timezone
+            track_record_start = datetime(2026, 1, 15, tzinfo=timezone.utc)
+            system_uptime_days = (datetime.now(timezone.utc) - track_record_start).days + 1
+
             cur.close()
 
         block_rate = 0
@@ -306,6 +319,10 @@ def governance_metrics():
             'governance_summary': {
                 'total_evaluation_cycles': total_shadow,
                 'total_receipts': total_receipts,
+                'decisions_blocked': vetoed_count,
+                'capital_preserved_pct': capital_preserved_pct,
+                'verticals_demo': 4,
+                'system_uptime_days': system_uptime_days,
                 'decisions': decision_counts,
                 'capital_exposure_block_rate': f"{block_rate}%",
                 'governance_gates_activity': veto_reasons,
