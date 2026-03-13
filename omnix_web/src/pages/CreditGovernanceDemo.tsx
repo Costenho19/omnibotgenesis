@@ -272,7 +272,7 @@ export default function CreditGovernanceDemo() {
             <span className="gold-gradient">Different Domain.</span>
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            This interactive demo shows how OMNIX's 6-checkpoint governance architecture
+            This interactive demo shows how OMNIX's 8-checkpoint governance architecture
             applies to credit/lending decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
             evaluation cycles in digital asset trading (internal dataset).
           </p>
@@ -682,7 +682,7 @@ export default function CreditGovernanceDemo() {
           <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
             This is a governance architecture demonstration. The credit evaluation shown uses simplified models
             for illustrative purposes. Production credit governance would integrate with real credit bureaus,
-            financial data providers, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
+            financial data providers, and regulatory frameworks. OMNIX's core 8-checkpoint architecture is
             validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>

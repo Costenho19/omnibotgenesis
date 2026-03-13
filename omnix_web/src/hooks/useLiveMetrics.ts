@@ -10,12 +10,12 @@ export interface LiveMetrics {
 }
 
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 708674,
-  pqc_signed_receipts: 37503,
-  decisions_blocked: 5473,
-  capital_preserved_pct: 98.5,
+  evaluation_cycles: 746903,
+  pqc_signed_receipts: 63024,
+  decisions_blocked: 910,
+  capital_preserved_pct: 98.42,
   verticals_demo: 4,
-  system_uptime_days: 52,
+  system_uptime_days: 62,
 }
 
 const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'

@@ -278,7 +278,7 @@ export default function InsuranceGovernanceDemo() {
             <span className="gold-gradient">Before It Binds.</span>
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            This interactive demo shows how OMNIX's 6-checkpoint governance architecture
+            This interactive demo shows how OMNIX's 8-checkpoint governance architecture
             applies to insurance underwriting decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
             evaluation cycles in digital asset trading (internal dataset).
           </p>
@@ -657,7 +657,7 @@ export default function InsuranceGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">Four Verticals. One Governance Engine.</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX now demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
-            Each uses the same 6-checkpoint fail-closed architecture with domain-specific signals.
+            Each uses the same 8-checkpoint fail-closed architecture with domain-specific signals.
             The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
@@ -688,7 +688,7 @@ export default function InsuranceGovernanceDemo() {
           <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
             This is a governance architecture demonstration. The insurance evaluation shown uses simplified actuarial models
             for illustrative purposes. Production insurance governance would integrate with real actuarial tables,
-            claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 6-checkpoint architecture is
+            claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 8-checkpoint architecture is
             validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>

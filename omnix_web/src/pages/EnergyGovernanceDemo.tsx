@@ -697,7 +697,7 @@ export default function EnergyGovernanceDemo() {
           <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
             This is a governance architecture demonstration. The energy evaluation shown uses simplified market models
             for illustrative purposes. Production energy governance would integrate with real-time grid data (CAISO, ERCOT, PJM),
-            weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 6-checkpoint architecture is
+            weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 8-checkpoint architecture is
             validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>

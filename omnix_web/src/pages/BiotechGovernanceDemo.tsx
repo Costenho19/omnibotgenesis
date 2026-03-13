@@ -278,7 +278,7 @@ export default function BiotechGovernanceDemo() {
     if (blocked.length >= 2) return { decision: 'HALT', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Recommendation: HALT advancement — risk profile exceeds governance thresholds. Blocked: ${blocked.map(b => b.name).join(', ')}.`, passed: passed.length + warned.length }
     if (blocked.length === 1) return { decision: 'SCIENTIFIC REVIEW', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Recommendation: Escalate to Data Safety Monitoring Board. The ${blocked[0].name.toLowerCase()} signal requires senior scientific review before advancement.`, passed: passed.length + warned.length }
     if (warned.length >= 3) return { decision: 'SCIENTIFIC REVIEW', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Recommendation: DSMB review — cumulative marginal signals require protocol amendment assessment.`, passed: passed.length + warned.length }
-    return { decision: 'ADVANCE', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All 6 checkpoints passed. Recommendation: ADVANCE — trial profile meets all governance thresholds for next phase progression.', passed: passed.length + warned.length }
+    return { decision: 'ADVANCE', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: `All ${passed.length + warned.length} checkpoints passed. Recommendation: ADVANCE — trial profile meets all governance thresholds for next phase progression.`, passed: passed.length + warned.length }
   }
 
   const decision = getGovernanceDecision()
@@ -671,7 +671,7 @@ export default function BiotechGovernanceDemo() {
               <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">Architecture — Domain Adapter Pattern</h3>
               <p className="text-sm text-muted leading-relaxed mb-4">
                 The core governance engine is domain-agnostic. It accepts 6 normalized signals (0–100)
-                and applies the same fail-closed 6-checkpoint evaluation, regardless of domain.
+                and applies the same fail-closed 8-checkpoint evaluation, regardless of domain.
                 The <strong className="text-white">Domain Adapter</strong> translates domain-specific data
                 (clinical signals, AE reports, enrollment data) into those 6 normalized inputs.
               </p>
