@@ -5,10 +5,11 @@ Also serves the built React frontend (dist/) as static files for Railway deploym
 """
 import os
 import json
-from flask import Flask, jsonify, send_from_directory, send_file
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 import psycopg2
 from datetime import datetime, timezone
+import re
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
@@ -200,6 +201,90 @@ def get_news():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
+
+def init_contact_leads_table():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS contact_leads (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                company VARCHAR(255),
+                email VARCHAR(255) NOT NULL,
+                referral_source VARCHAR(100) NOT NULL,
+                message TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Warning: Could not initialize contact_leads table: {e}")
+
+
+init_contact_leads_table()
+
+
+VALID_REFERRAL_SOURCES = {
+    'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
+    'LinkedIn', 'Google', 'Recomendación', 'Otro'
+}
+
+
+@app.route('/api/contact', methods=['POST'])
+def contact_lead():
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'Invalid request body'}), 400
+
+    name = (data.get('name') or '').strip()
+    company = (data.get('company') or '').strip()
+    email = (data.get('email') or '').strip()
+    referral_source = (data.get('referral_source') or '').strip()
+    message = (data.get('message') or '').strip()
+
+    if not name or not email or not referral_source:
+        return jsonify({'success': False, 'error': 'Name, email, and referral source are required'}), 400
+
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        return jsonify({'success': False, 'error': 'Invalid email address'}), 400
+
+    if referral_source not in VALID_REFERRAL_SOURCES:
+        return jsonify({'success': False, 'error': 'Invalid referral source'}), 400
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database unavailable',
+                'fallback_email': 'contacto@omnixquantum.net'
+            }), 503
+
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO contact_leads (name, company, email, referral_source, message)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (name, company or None, email, referral_source, message or None)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Contact information saved successfully'})
+
+    except Exception as e:
+        print(f"Error saving contact lead: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to save contact information',
+            'fallback_email': 'contacto@omnixquantum.net'
+        }), 500
 
 
 @app.route('/', defaults={'path': ''})

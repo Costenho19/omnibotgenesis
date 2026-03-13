@@ -1,9 +1,54 @@
-import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail } from 'lucide-react'
+import { useState } from 'react'
+import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
+const REFERRAL_OPTIONS = [
+  'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
+  'LinkedIn', 'Google', 'Recomendación', 'Otro'
+]
+
 export default function CommercialLanding() {
   const { metrics, isLive, formatNumber, formatNumberFull } = useLiveMetrics()
+  const [formData, setFormData] = useState({
+    name: '', company: '', email: '', referral_source: '', message: ''
+  })
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [formError, setFormError] = useState('')
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormStatus('sending')
+    setFormError('')
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        setFormStatus('success')
+        setFormData({ name: '', company: '', email: '', referral_source: '', message: '' })
+      } else {
+        setFormStatus('error')
+        if (data.fallback_email) {
+          setFormError(`Could not save your information. Please email us at ${data.fallback_email}`)
+        } else {
+          setFormError(data.error || 'Something went wrong. Please try again.')
+        }
+      }
+    } catch {
+      setFormStatus('error')
+      setFormError('Connection error. Please email us at contacto@omnixquantum.net')
+    }
+  }
   
   return (
     <div className="min-h-screen bg-institutional">
@@ -149,23 +194,128 @@ export default function CommercialLanding() {
           </div>
         </section>
 
-        <section className="text-center glass-card p-12 gold-glow">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to Govern Your Decisions?</h2>
-          <p className="text-xl text-muted max-w-2xl mx-auto mb-8">
+        <section className="glass-card p-12 gold-glow">
+          <h2 className="text-3xl font-bold text-white text-center mb-4">Ready to Govern Your Decisions?</h2>
+          <p className="text-xl text-muted max-w-2xl mx-auto mb-10 text-center">
             Let's talk about how OMNIX can help govern high-stakes decisions for your organization.
           </p>
-          <div className="flex justify-center gap-4 flex-wrap mb-8">
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Request Access
-            </a>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              Call Us
-            </a>
-          </div>
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="text-[#C9A227] hover:text-white transition-colors flex items-center gap-2">
+
+          {formStatus === 'success' ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Thank you for reaching out!</h3>
+              <p className="text-muted mb-6">We'll get back to you shortly.</p>
+              <button
+                onClick={() => setFormStatus('idle')}
+                className="text-[#C9A227] hover:text-white transition-colors text-sm"
+              >
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleFormSubmit} className="max-w-xl mx-auto space-y-5">
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label htmlFor="contact-name" className="block text-sm font-medium text-muted mb-1.5">Name *</label>
+                  <input
+                    id="contact-name"
+                    name="name"
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A227]/60 transition-colors"
+                    placeholder="Your name"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="contact-company" className="block text-sm font-medium text-muted mb-1.5">Company</label>
+                  <input
+                    id="contact-company"
+                    name="company"
+                    type="text"
+                    value={formData.company}
+                    onChange={handleFormChange}
+                    className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A227]/60 transition-colors"
+                    placeholder="Your company"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="contact-email" className="block text-sm font-medium text-muted mb-1.5">Email *</label>
+                <input
+                  id="contact-email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A227]/60 transition-colors"
+                  placeholder="you@company.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="contact-referral" className="block text-sm font-medium text-muted mb-1.5">How did you find us? *</label>
+                <select
+                  id="contact-referral"
+                  name="referral_source"
+                  required
+                  value={formData.referral_source}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white focus:outline-none focus:border-[#C9A227]/60 transition-colors appearance-none"
+                >
+                  <option value="" disabled className="text-gray-500">Select an option</option>
+                  {REFERRAL_OPTIONS.map(opt => (
+                    <option key={opt} value={opt} className="bg-[#0A1628] text-white">{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="contact-message" className="block text-sm font-medium text-muted mb-1.5">Message (optional)</label>
+                <textarea
+                  id="contact-message"
+                  name="message"
+                  rows={3}
+                  value={formData.message}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A227]/60 transition-colors resize-none"
+                  placeholder="Tell us about your needs..."
+                />
+              </div>
+
+              {formStatus === 'error' && (
+                <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                  {formError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={formStatus === 'sending'}
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-60"
+              >
+                {formStatus === 'sending' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send Message
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          <div className="flex flex-col items-center gap-3 text-sm mt-8 pt-8 border-t border-[#C9A227]/10">
+            <a href="mailto:contacto@omnixquantum.net" className="text-[#C9A227] hover:text-white transition-colors flex items-center gap-2">
               <Mail className="w-4 h-4" />
               contacto@omnixquantum.net
             </a>

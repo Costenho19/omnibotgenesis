@@ -4,9 +4,10 @@ Core API routes (/api/metrics, trades, equity-curve, portfolio, positions, healt
 """
 
 import os
+import re
 import logging
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from omnix_dashboard.utils.database import get_db_connection, init_database, get_pool_stats
 from omnix_dashboard.utils.database import DB_AVAILABLE, DB_ERROR_MESSAGE, DB_POOL
@@ -2627,3 +2628,57 @@ def api_live_metrics():
             logger.error(f"Live metrics error: {e}")
             fallback['error'] = str(e)
             return jsonify(fallback)
+
+
+VALID_REFERRAL_SOURCES = {
+    'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
+    'LinkedIn', 'Google', 'Recomendación', 'Otro'
+}
+
+
+@core_bp.route('/api/contact', methods=['POST'])
+def api_contact_lead():
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'Invalid request body'}), 400
+
+    name = (data.get('name') or '').strip()
+    company = (data.get('company') or '').strip()
+    email = (data.get('email') or '').strip()
+    referral_source = (data.get('referral_source') or '').strip()
+    message = (data.get('message') or '').strip()
+
+    if not name or not email or not referral_source:
+        return jsonify({'success': False, 'error': 'Name, email, and referral source are required'}), 400
+
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        return jsonify({'success': False, 'error': 'Invalid email address'}), 400
+
+    if referral_source not in VALID_REFERRAL_SOURCES:
+        return jsonify({'success': False, 'error': 'Invalid referral source'}), 400
+
+    with get_db_connection() as conn:
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database unavailable',
+                'fallback_email': 'contacto@omnixquantum.net'
+            }), 503
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO contact_leads (name, company, email, referral_source, message)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (name, company or None, email, referral_source, message or None)
+            )
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Contact information saved successfully'})
+
+        except Exception as e:
+            logger.error(f"Error saving contact lead: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to save contact information',
+                'fallback_email': 'contacto@omnixquantum.net'
+            }), 500
