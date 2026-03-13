@@ -172,7 +172,7 @@ Capital Preservado: $50,000
 
 > "Un bot tradicional habria comprado en la euforia. OMNIX espero — y tenia razon."
 
-*Nota: Sistema actual: 8 checkpoints de entrada + 3 gates de salida. El escenario del 3 de febrero corresponde al sistema de 6 checkpoints validado hasta febrero 2026.*
+*Nota: Sistema actual: 8 checkpoints de entrada + 3 gates de salida. El escenario del 3 de febrero corresponde a la arquitectura previa validada hasta febrero 2026.*
 
 ---
 
@@ -182,7 +182,7 @@ Capital Preservado: $50,000
 
 ### Reconstruccion Forense: Terra/LUNA — $40 Mil Millones Perdidos en 72 Horas
 
-Aplicamos el pipeline de gobernanza de 8 checkpoints de OMNIX a datos historicos reales del colapso Terra/LUNA de mayo 2022. El resultado: OMNIX habria bloqueado la ejecucion **6 horas antes de que comenzara el colapso irreversible.**
+Aplicamos el pipeline de gobernanza de 8 checkpoints de OMNIX a datos historicos reales del colapso Terra/LUNA de mayo 2022. El resultado: **OMNIX emitio una decision BLOCKED 6 horas antes del colapso irreversible** — con un recibo de gobernanza firmado criptograficamente.
 
 ```
 Gobernanza Forense OMNIX — Reconstruccion Pre-Colapso de 3 Fases

@@ -189,7 +189,7 @@ Capital Preserved: $50,000
 
 ### Forensic Reconstruction: Terra/LUNA — $40 Billion Lost in 72 Hours
 
-We applied OMNIX's 8-checkpoint governance pipeline to real historical market data from the Terra/LUNA collapse of May 2022. The result: OMNIX would have blocked execution **6 hours before the irreversible unwinding began.**
+We applied OMNIX's 8-checkpoint governance pipeline to real historical market data from the Terra/LUNA collapse of May 2022. The result: **OMNIX issued a BLOCKED decision 6 hours before the irreversible collapse** — with a cryptographically signed governance receipt.
 
 ```
 OMNIX Forensic Governance — 3-Phase Pre-Collapse Reconstruction
@@ -556,7 +556,7 @@ I spent three months building this with personal capital. Lean, focused build. G
 
 ## APPENDIX A — DECISION TRACE (Live System Output)
 
-> *Historical example from February 10, 2026 — generated under the 6-checkpoint system validated through Feb 2026. Current system operates with 8 entry checkpoints + 3-gate EGL exit pipeline (added March 5, 2026).*
+> *Historical example from February 10, 2026 — generated under the prior architecture validated through Feb 2026. Current system operates with 8 entry checkpoints + 3-gate EGL exit pipeline (finalized March 5, 2026).*
 
 ```json
 {
