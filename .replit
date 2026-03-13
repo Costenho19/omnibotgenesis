@@ -124,3 +124,7 @@ OMNIX_ADMIN_CLIENT_ID = "omnix-admin"
 OMNIX_PILOT_CLIENT_ID = "quant-fund-alpha-01"
 
 [userenv.development]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
