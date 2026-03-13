@@ -15,6 +15,12 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 12, 2026) — Sandbox + Alerts Modules
+
+- **Mar 12**: **Módulo Sandbox LIVE — ADR-038 implementado**. Clientes B2B pueden ahora testear decisiones de gobernanza en entorno aislado, sin afectar el hash chain de producción. Misma lógica de engine (GovernanceEvaluationEngine), mismo schema de señales, mismos 8 checkpoints. Tablas nuevas: `sandbox_sessions`, `sandbox_evaluations`. 6 endpoints nuevos: `POST/GET/DELETE /api/governance/sandbox/sessions`, `POST /api/governance/sandbox/evaluate`, `GET /api/governance/sandbox/schema`. Rate limit: 30 req/min (vs 10 producción). Max 100 evaluaciones por sesión. Sesiones expiran en 7 días. Receipt format: `OMNIX-SB-XXXXXXXX` (aislado, no verificable en cadena pública).
+
+- **Mar 12**: **Sistema de Alertas LIVE — ADR-039 implementado**. Notificaciones en tiempo real cuando ocurren eventos de gobernanza. Tipos: `decision_blocked`, `high_risk_score`, `checkpoint_veto`, `all_decisions`, `daily_summary`. Canales: `webhook` (HTTP POST a URL del cliente) y `email` (SMTP configurable). Delivery: asíncrono via daemon thread — cero impacto en latencia del pipeline de gobernanza. Registro completo en `alert_events` (delivered/failed/skipped). 5 endpoints nuevos: `GET/PUT /api/governance/alerts/config`, `DELETE /api/governance/alerts/config/<id>`, `GET /api/governance/alerts/events`, `POST /api/governance/alerts/test`. Tablas nuevas: `alert_configs`, `alert_events`. Integrado en `governance.py` → `api_governance_evaluate()`. Archivos: `omnix_dashboard/blueprints/governance_sandbox.py`, `omnix_dashboard/blueprints/governance_alerts.py`, `governance.py` (alerts trigger), `ADR-038`, `ADR-039`.
+
 ### Cambios Recientes (Mar 11, 2026) — Production Audit + B2B Encryption Fix
 
 - **Mar 11 (tarde)**: **Audit de producción completo — solo lectura, 7 áreas auditadas**. Resultados:

@@ -16,6 +16,8 @@ from .governance_metrics import governance_metrics_bp
 from .governance_oversight import governance_oversight_bp
 from .governance_incidents import governance_incidents_bp
 from .governance_reports import governance_reports_bp
+from .governance_sandbox import governance_sandbox_bp
+from .governance_alerts import governance_alerts_bp
 
 __all__ = [
     'views_bp',
@@ -31,4 +33,6 @@ __all__ = [
     'governance_oversight_bp',
     'governance_incidents_bp',
     'governance_reports_bp',
+    'governance_sandbox_bp',
+    'governance_alerts_bp',
 ]

@@ -44,6 +44,19 @@ from .auth_rbac import (
     update_last_seen,
 )
 
+_alerts_trigger = None
+
+def _get_alerts_trigger():
+    global _alerts_trigger
+    if _alerts_trigger is not None:
+        return _alerts_trigger
+    try:
+        from .governance_alerts import trigger_alerts
+        _alerts_trigger = trigger_alerts
+    except Exception:
+        _alerts_trigger = None
+    return _alerts_trigger
+
 logger = logging.getLogger(__name__)
 
 governance_bp = Blueprint('governance', __name__)
@@ -347,6 +360,21 @@ def api_governance_evaluate():
 
     # Update last_seen (best-effort)
     update_last_seen(client_id)
+
+    try:
+        _trigger = _get_alerts_trigger()
+        if _trigger:
+            import threading
+            alert_payload = dict(evaluation)
+            alert_payload["asset"] = asset
+            alert_payload["domain"] = domain
+            threading.Thread(
+                target=_trigger,
+                args=(client_id, alert_payload, receipt.get("receipt_id")),
+                daemon=True,
+            ).start()
+    except Exception as _ae:
+        logger.debug(f"Alert trigger skipped: {_ae}")
 
     response = {
         'receipt_id': receipt.get('receipt_id'),
