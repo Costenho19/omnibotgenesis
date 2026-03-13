@@ -588,7 +588,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
       "verdict": "PASS"
     }
   },
-  "final_decision": "BLOCKED — 3 de 6 checkpoints fallaron (arquitectura previa)",
+  "final_decision": "BLOCKED — 3 de 8 checkpoints de entrada fallaron",
   "capital_preserved": "$47,500"
 }
 ```
