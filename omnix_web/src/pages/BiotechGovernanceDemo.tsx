@@ -334,7 +334,7 @@ export default function BiotechGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             The same governance engine that has processed {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles
             in digital asset trading — applied to clinical trial advancement decisions.
-            Real data from ClinicalTrials.gov. Real PQC-signed receipts. Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (Temporal Coherence Validation, Mar 2026).
+            Real data from ClinicalTrials.gov. Real PQC-signed receipts. All verticals run through the same 8-checkpoint fail-closed governance engine.
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Three pre-validated scenarios use real NCT trial data. Or configure your own parameters below.
@@ -504,7 +504,7 @@ export default function BiotechGovernanceDemo() {
                 <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
                   <Microscope className="w-10 h-10 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">6-Checkpoint Clinical Governance Engine</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">8-Checkpoint Clinical Governance Engine</h3>
                 <p className="text-muted max-w-md mx-auto mb-8">
                   Select a real validated scenario above or configure a custom trial profile. Click "Run Governance Evaluation" to see each checkpoint evaluate in real time.
                 </p>
@@ -649,7 +649,7 @@ export default function BiotechGovernanceDemo() {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">6-Checkpoint Signal Mapping</h3>
+              <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">8-Checkpoint Signal Mapping</h3>
               <div className="space-y-3">
                 {[
                   { cp: 'CP-1', trading: 'Expected win probability', biotech: 'Trial success probability (phase + area historical rate)' },
@@ -670,10 +670,10 @@ export default function BiotechGovernanceDemo() {
             <div>
               <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">Architecture — Domain Adapter Pattern</h3>
               <p className="text-sm text-muted leading-relaxed mb-4">
-                The core governance engine is domain-agnostic. It accepts 6 normalized signals (0–100)
+                The core governance engine is domain-agnostic. It accepts 8 normalized signals (0–100)
                 and applies the same fail-closed 8-checkpoint evaluation, regardless of domain.
                 The <strong className="text-white">Domain Adapter</strong> translates domain-specific data
-                (clinical signals, AE reports, enrollment data) into those 6 normalized inputs.
+                (clinical signals, AE reports, enrollment data) into those 8 normalized inputs.
               </p>
               <p className="text-sm text-muted leading-relaxed">
                 The 3 scenarios above are real ClinicalTrials.gov trials with real NCT IDs. Their signals

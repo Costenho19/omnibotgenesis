@@ -409,7 +409,7 @@ export default function InsuranceGovernanceDemo() {
                 <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
                   <Umbrella className="w-10 h-10 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">6-Checkpoint Underwriting Engine</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">8-Checkpoint Underwriting Engine</h3>
                 <p className="text-muted max-w-md mx-auto mb-8">
                   Configure the policy application parameters and click "Run Underwriting Governance" to see each checkpoint evaluate the risk in real time.
                 </p>
@@ -541,7 +541,7 @@ export default function InsuranceGovernanceDemo() {
                     <p className="text-muted text-sm">{decision.reason}</p>
                     <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
                       <p className="text-xs text-[#64748B]">
-                        Decision Trace ID: GOV-INS-{Date.now().toString(36).toUpperCase()} | Architecture: 6-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
+                        Decision Trace ID: GOV-INS-{Date.now().toString(36).toUpperCase()} | Architecture: 8-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
                       </p>
                     </div>
                   </div>
@@ -556,7 +556,7 @@ export default function InsuranceGovernanceDemo() {
         <section className="mb-16">
           <div className="text-center mb-12">
             <p className="section-title">Multi-Vertical Governance</p>
-            <h2 className="text-3xl font-bold text-white">Same 6 Checkpoints. Every Domain.</h2>
+            <h2 className="text-3xl font-bold text-white">Same 8 Checkpoints. Every Domain.</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-card p-6">
@@ -670,7 +670,7 @@ export default function InsuranceGovernanceDemo() {
               <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
-              <div className="text-2xl font-bold gold-text">6</div>
+              <div className="text-2xl font-bold gold-text">8</div>
               <div className="text-xs text-muted">Checkpoints</div>
             </div>
             <div>

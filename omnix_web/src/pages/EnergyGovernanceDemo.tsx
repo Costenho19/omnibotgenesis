@@ -298,7 +298,7 @@ export default function EnergyGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's governance architecture
             applies to energy trading decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
-            evaluation cycles in digital asset trading (internal dataset). Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (Temporal Coherence Validation, Mar 2026).
+            evaluation cycles in digital asset trading (internal dataset). All verticals run through the same 8-checkpoint fail-closed governance engine.
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust energy trade parameters and run the governance evaluation to see each checkpoint assess the risk in real time.
@@ -418,7 +418,7 @@ export default function EnergyGovernanceDemo() {
                 <div className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-6">
                   <Zap className="w-10 h-10 text-orange-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">6-Checkpoint Energy Governance Engine</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">8-Checkpoint Energy Governance Engine</h3>
                 <p className="text-muted max-w-md mx-auto mb-8">
                   Configure energy trade parameters and click "Run Energy Governance" to see each checkpoint evaluate the risk in real time.
                 </p>
@@ -550,7 +550,7 @@ export default function EnergyGovernanceDemo() {
                     <p className="text-muted text-sm">{decision.reason}</p>
                     <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
                       <p className="text-xs text-[#64748B]">
-                        Decision Trace ID: GOV-NRG-{Date.now().toString(36).toUpperCase()} | Architecture: 6-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
+                        Decision Trace ID: GOV-NRG-{Date.now().toString(36).toUpperCase()} | Architecture: 8-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
                       </p>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export default function EnergyGovernanceDemo() {
         <section className="mb-16">
           <div className="text-center mb-12">
             <p className="section-title">Multi-Vertical Governance</p>
-            <h2 className="text-3xl font-bold text-white">Same 6 Checkpoints. Every Domain.</h2>
+            <h2 className="text-3xl font-bold text-white">Same 8 Checkpoints. Every Domain.</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-card p-6">
@@ -666,7 +666,7 @@ export default function EnergyGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">Four Verticals. One Governance Engine.</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
-            Each uses the same fail-closed governance architecture with domain-specific signals. Domain adapters evaluate 6 normalized signals per vertical; the trading pipeline includes a 7th checkpoint (TCV, Mar 2026).
+            Each uses the same 8-checkpoint fail-closed governance architecture with domain-specific signals.
             The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
@@ -679,7 +679,7 @@ export default function EnergyGovernanceDemo() {
               <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
-              <div className="text-2xl font-bold gold-text">6</div>
+              <div className="text-2xl font-bold gold-text">8</div>
               <div className="text-xs text-muted">Checkpoints</div>
             </div>
             <div>
