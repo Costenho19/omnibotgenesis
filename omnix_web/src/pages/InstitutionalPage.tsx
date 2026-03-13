@@ -560,15 +560,15 @@ export default function InstitutionalPage() {
                     <div className="space-y-3">
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">Capital Preserved</span>
-                        <span className="text-emerald-400 font-medium">98.5%</span>
+                        <span className="text-emerald-400 font-medium">{metrics.capitalPreserved}%</span>
                       </div>
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">Max Drawdown</span>
-                        <span className="text-white font-medium">-1.5%</span>
+                        <span className="text-white font-medium">-{(100 - metrics.capitalPreserved).toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between p-3 bg-[#0A1628]/60 rounded-lg">
                         <span className="text-muted">High-Risk Blocks</span>
-                        <span className="text-amber-400 font-medium">22,000+</span>
+                        <span className="text-amber-400 font-medium">{metrics.vetosExecuted.toLocaleString()}+</span>
                       </div>
                       <div className="p-2 bg-[#0A1628]/40 rounded-lg">
                         <p className="text-[10px] text-muted/60 text-center italic">Internal evaluation dataset · Not externally audited</p>
