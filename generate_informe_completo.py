@@ -116,6 +116,11 @@ def build_pdf():
 
     table_counts = get_db_table_counts()
     column_info = get_db_column_info()
+    if not table_counts or not column_info:
+        raise RuntimeError(
+            "Cannot generate report: database is unreachable or returned no data. "
+            "Ensure DATABASE_URL is set and PostgreSQL is running."
+        )
     total_tables = len(table_counts)
     today = datetime.now(timezone.utc).strftime("%B %d, %Y")
 
