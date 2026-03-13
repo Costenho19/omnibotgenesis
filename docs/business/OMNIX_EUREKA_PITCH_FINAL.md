@@ -181,6 +181,8 @@ Capital Preserved: $50,000
 
 > "A traditional bot would have bought the hype. OMNIX waited — and was right."
 
+*Note: Current system: 8 entry checkpoints + 3 exit gates. The February 3rd scenario corresponds to the prior architecture validated through February 2026.*
+
 ---
 
 ## SLIDE 6 — THE $40B PROOF (Terra/LUNA — May 2022)
