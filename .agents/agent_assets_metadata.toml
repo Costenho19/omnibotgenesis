@@ -6,3 +6,9 @@ id = "1wSIlrHhddlnvbp3eIEHS"
 uri = "file://docs/OMNIX_Informe_Completo_Mar2026.pdf"
 type = "pdf"
 title = "OMNIX - Informe Técnico Completo (Dic 2025 - Mar 2026)"
+
+[[outputs]]
+id = "w370VE341ZHWzvwnZKd9J"
+uri = "file://docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf"
+type = "pdf"
+title = "OMNIX — Forensic Simulation Terra/LUNA Collapse May 2022"
