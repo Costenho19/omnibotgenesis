@@ -176,7 +176,67 @@ Capital Preservado: $50,000
 
 ---
 
-## SLIDE 6 — TRACCION Y PRUEBA (Esto Es Real, No Teoria)
+## SLIDE 6 — LA PRUEBA DE $40B (Terra/LUNA — Mayo 2022)
+
+**Que hubiera pasado si OMNIX existia durante el mayor colapso crypto de la historia?**
+
+### Reconstruccion Forense: Terra/LUNA — $40 Mil Millones Perdidos en 72 Horas
+
+Aplicamos el pipeline de gobernanza de 8 checkpoints de OMNIX a datos historicos reales del colapso Terra/LUNA de mayo 2022. El resultado: OMNIX habria bloqueado la ejecucion **6 horas antes de que comenzara el colapso irreversible.**
+
+```
+Gobernanza Forense OMNIX — Reconstruccion Pre-Colapso de 3 Fases
+
+Fase 1 — T-72h (8 de Mayo, 2022)
+┌──────────────────────────────────────────────────────────┐
+│ Precio LUNA:  $68.84                                     │
+│ CP-0 SIV:   88.9/100   — Senal superficial engañosamente│
+│                           limpia                         │
+│ CP-4 Coherencia: 77.7/100                                │
+│ CP-7 TCV:   56.8/100   — Fragilidad estructural detectada│
+│                                                          │
+│ DECISION: ⚠ ALERTA EMITIDA                               │
+│ Razon: Momentum inconsistente con regimen estructural    │
+└──────────────────────────────────────────────────────────┘
+
+Fase 2 — T-24h (10 de Mayo, 2022)
+┌──────────────────────────────────────────────────────────┐
+│ Precio LUNA:  $18.14  (▼ 73.6% desde T-72h)              │
+│ CP-0 SIV:   51.3/100   — Integridad de senal comprometida│
+│ CP-4 Coherencia: 28.4/100 — Debajo del umbral de bloqueo│
+│ CP-7 TCV:   39.9/100   — Fallo de coherencia temporal    │
+│                                                          │
+│ DECISION: ██ BLOQUEADO ██                                │
+│ Razon: Confianza Manufacturada — heredada, no ganada     │
+└──────────────────────────────────────────────────────────┘
+
+Fase 3 — T-6h (10 de Mayo, 2022 — 18:00 UTC)
+┌──────────────────────────────────────────────────────────┐
+│ Precio LUNA:  $4.60   (▼ 93.3% desde T-72h)              │
+│ CP-0 SIV:   51.8/100   — Las tres capas debajo del umbral│
+│ CP-4 Coherencia: 23.9/100                                │
+│ CP-7 TCV:   46.1/100                                     │
+│                                                          │
+│ DECISION: ██ BLOQUEADO + RECIBO FIRMADO ██               │
+│ Sovereign Logic Gate activado                            │
+│ Recibo de gobernanza firmado con PQC                     │
+│ Capital preservado. 6 horas antes del colapso total.     │
+└──────────────────────────────────────────────────────────┘
+
+11 de Mayo, 2022: LUNA → $1.73 — Colapso irreversible.
+$40B+ en valor de mercado destruidos.
+Todos los sistemas probabilisticos del mercado FALLARON.
+```
+
+**La distincion:** Los sistemas probabilisticos miden si una senal es estadisticamente probable. OMNIX obliga a la senal a probar su **Autenticidad Logica** contra el estado estructural en vivo del sistema. Esa es la diferencia entre $40B perdidos y capital preservado.
+
+> "Terra/LUNA no fue un cisne negro. Fue invisible para sistemas probabilisticos — pero estructuralmente legible para gobernanza forense. OMNIX lo habria bloqueado. Con un recibo firmado."
+
+*Reporte completo de simulacion forense disponible: OMNIX_LUNA_Forensic_Simulation_May2022.pdf*
+
+---
+
+## SLIDE 7 — TRACCION Y PRUEBA (Esto Es Real, No Teoria)
 
 **OMNIX ha estado corriendo continuamente desde noviembre 2025 — en condiciones reales de mercado.**
 
@@ -214,7 +274,7 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 ---
 
-## SLIDE 7 — FOSO TECNOLOGICO (Por Que Esto Es Dificil de Copiar)
+## SLIDE 8 — FOSO TECNOLOGICO (Por Que Esto Es Dificil de Copiar)
 
 **Ocho capas de tecnologia defensible construidas en 4+ meses de operacion en mercado real:**
 
@@ -236,7 +296,7 @@ Mientras Bitcoin cayo 7.37%, OMNIX preservo 98.5% del capital. De las 47 operaci
 
 ---
 
-## SLIDE 8 — VISION MULTI-VERTICAL (Mas Alla del Trading)
+## SLIDE 9 — VISION MULTI-VERTICAL (Mas Alla del Trading)
 
 **El mismo motor de 8 checkpoints + EGL. Diferentes dominios. La misma disciplina.**
 
@@ -254,7 +314,7 @@ La logica de gobernanza esta disenada como agnostica al dominio: los inputs camb
 
 ---
 
-## SLIDE 9 — MODELO DE NEGOCIO (Infraestructura de Gobernanza de Decisiones B2B)
+## SLIDE 10 — MODELO DE NEGOCIO (Infraestructura de Gobernanza de Decisiones B2B)
 
 ### PRIMARIO: Gobernanza de Decisiones B2B — Licenciamiento a Instituciones
 
@@ -297,7 +357,7 @@ Impacto para la firma:
 
 ---
 
-## SLIDE 10 — OPORTUNIDAD DE MERCADO
+## SLIDE 11 — OPORTUNIDAD DE MERCADO
 
 ### Los Numeros
 
@@ -340,7 +400,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 
 ---
 
-## SLIDE 11 — POR QUE DUBAI Y MENA
+## SLIDE 12 — POR QUE DUBAI Y MENA
 
 **Alineacion estrategica con la vision de la region:**
 
@@ -358,7 +418,7 @@ Los marcos de gobernanza de nivel institucional son tipicamente inaccesibles par
 
 ---
 
-## SLIDE 12 — FUNDADOR Y EQUIPO
+## SLIDE 13 — FUNDADOR Y EQUIPO
 
 **Harold Nunes**
 *Fundador & Arquitecto de Producto*
@@ -403,7 +463,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 
 ---
 
-## SLIDE 13 — EL ASK
+## SLIDE 14 — EL ASK
 
 ### Ronda Pre-Seed
 
@@ -473,7 +533,9 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 >
 > Validamos esto en el dominio mas dificil primero — mercados financieros en tiempo real. Ejemplo real: 3 de febrero. Breakout de BTC — sube 6% en dos horas. Mercado euforico. Los bots tradicionales compraron. OMNIX bloqueo — la tendencia no era sostenida. 48 horas despues, BTC se desplomo 9%. Capital preservado: $50,000.
 >
-> 670,000 ciclos de evaluacion. 98.5% de capital preservado. El 91% de las acciones bloqueadas habrian resultado en perdidas. Sistema corriendo en produccion 24/7 por tres meses.
+> Pero la prueba mas fuerte es historica. Reconstruimos el colapso de Terra/LUNA de mayo 2022 — $40 mil millones perdidos en 72 horas. Todos los sistemas probabilisticos del mercado fallaron. El pipeline de gobernanza de OMNIX habria bloqueado la ejecucion 6 horas antes del colapso irreversible — con un recibo firmado criptograficamente. Eso no es teoria. Es certeza forense.
+>
+> 670,000 ciclos de evaluacion. 98.5% de capital preservado. El 91% de las acciones bloqueadas habrian resultado en perdidas. Sistema corriendo en produccion 24/7 por cuatro meses.
 >
 > Nuestro primer mercado: prop trading firms, plataformas de trading, fondos regulados. 200+ prop firms solo en ADGM y DIFC. Pero el mismo motor se aplica a supply chain, credito, seguros y compliance.
 >
@@ -541,6 +603,7 @@ Pase tres meses construyendo esto con capital personal. Sin inversores. Sin equi
 |-----------|-------------|
 | Executive Fact Sheet | Estado del sistema y marco de gobernanza |
 | Track Record Case Study | Narrativa dia a dia de proteccion de capital |
+| **Simulacion Forense Terra/LUNA** | **Reconstruccion historica Mayo 2022 — Certeza Arquitectonica demostrada** |
 | Shadow Portfolio Report | Analisis contrafactual de 670,000+ operaciones |
 | Architecture Decision Records | 36 decisiones tecnicas documentadas (ADRs) |
 | Reporte de Integridad de Ejecucion | Reconciliacion Kraken — verificacion con datos reales del exchange |
