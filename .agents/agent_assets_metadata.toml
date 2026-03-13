@@ -12,3 +12,15 @@ id = "w370VE341ZHWzvwnZKd9J"
 uri = "file://docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf"
 type = "pdf"
 title = "OMNIX — Forensic Simulation Terra/LUNA Collapse May 2022"
+
+[[outputs]]
+id = "TNC8wU17xjmXTa3iuNnXW"
+uri = "file://docs/business/pdf/OMNIX_Eureka_Pitch_Final.pdf"
+type = "pdf"
+title = "Pitch Eureka — Inglés (14 slides, con Terra/LUNA)"
+
+[[outputs]]
+id = "8ZVmY0cynmkOGfwb6Oguw"
+uri = "file://docs/business/pdf/OMNIX_Eureka_Pitch_Final_ES.pdf"
+type = "pdf"
+title = "Pitch Eureka — Español (14 slides, con Terra/LUNA)"
