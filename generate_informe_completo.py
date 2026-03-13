@@ -1,0 +1,666 @@
+import os
+import psycopg2
+from datetime import datetime, timezone
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+    HRFlowable, Image, PageBreak, KeepTogether
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+from reportlab.pdfgen import canvas
+
+
+DARK_BG = HexColor('#0a0f1a')
+GOLD = HexColor('#C9A227')
+GREEN_ACCENT = HexColor('#10b981')
+LIGHT_GRAY = HexColor('#6b7280')
+MEDIUM_GRAY = HexColor('#374151')
+LINK_BLUE = HexColor('#3b82f6')
+BODY_COLOR = HexColor('#1f2937')
+TABLE_HEADER_BG = HexColor('#1e293b')
+TABLE_ALT_BG = HexColor('#f1f5f9')
+TABLE_BORDER = HexColor('#cbd5e1')
+WHITE = HexColor('#ffffff')
+AMBER = HexColor('#d97706')
+
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.setFont("Helvetica", 8)
+            self.setFillColor(LIGHT_GRAY)
+            self.drawCentredString(
+                letter[0] / 2, 0.4 * inch,
+                f"OMNIX Decision Governance Infrastructure — Internal Report — Page {self._pageNumber} of {num_pages}"
+            )
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+
+def get_db_table_counts():
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        return {}
+    try:
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT relname, n_live_tup
+            FROM pg_stat_user_tables
+            WHERE schemaname = 'public'
+            ORDER BY relname
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return {r[0]: r[1] for r in rows}
+    except Exception as e:
+        print(f"DB error: {e}")
+        return {}
+
+
+def get_db_column_info():
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        return {}
+    try:
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT table_name, column_name, data_type
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            ORDER BY table_name, ordinal_position
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        result = {}
+        for tbl, col, dtype in rows:
+            if tbl not in result:
+                result[tbl] = []
+            result[tbl].append((col, dtype))
+        return result
+    except Exception as e:
+        print(f"DB columns error: {e}")
+        return {}
+
+
+def fmt(n):
+    return f"{n:,}"
+
+
+def build_pdf():
+    output_path = "docs/OMNIX_Informe_Completo_Mar2026.pdf"
+    os.makedirs("docs", exist_ok=True)
+
+    table_counts = get_db_table_counts()
+    column_info = get_db_column_info()
+    total_tables = len(table_counts)
+    today = datetime.now(timezone.utc).strftime("%B %d, %Y")
+
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=letter,
+        topMargin=0.6 * inch,
+        bottomMargin=0.7 * inch,
+        leftMargin=0.65 * inch,
+        rightMargin=0.65 * inch,
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle('Title2', parent=styles['Title'],
+        fontName='Helvetica-Bold', fontSize=22, textColor=DARK_BG, spaceAfter=4, alignment=TA_LEFT)
+    subtitle_style = ParagraphStyle('Sub', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, textColor=LIGHT_GRAY, spaceAfter=16, alignment=TA_LEFT)
+    h1 = ParagraphStyle('H1', parent=styles['Heading1'],
+        fontName='Helvetica-Bold', fontSize=16, textColor=DARK_BG, spaceBefore=24, spaceAfter=10)
+    h2 = ParagraphStyle('H2', parent=styles['Heading2'],
+        fontName='Helvetica-Bold', fontSize=13, textColor=DARK_BG, spaceBefore=16, spaceAfter=8)
+    h3 = ParagraphStyle('H3', parent=styles['Heading3'],
+        fontName='Helvetica-Bold', fontSize=11, textColor=BODY_COLOR, spaceBefore=12, spaceAfter=6)
+    body = ParagraphStyle('Body2', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=9.5, textColor=BODY_COLOR, leading=14, spaceAfter=6, alignment=TA_JUSTIFY)
+    bullet = ParagraphStyle('Bullet2', parent=body, leftIndent=18, spaceAfter=3, bulletIndent=6)
+    small = ParagraphStyle('Small2', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=7.5, textColor=LIGHT_GRAY, leading=10, spaceAfter=4, alignment=TA_CENTER)
+    toc_style = ParagraphStyle('TOC', parent=body, fontSize=10, spaceAfter=5, leftIndent=10)
+
+    elements = []
+
+    logo_path = "attached_assets/image_1771886763766.png"
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=45, height=45)
+        logo_text = Paragraph(
+            '<font size="18" color="#0a0f1a"><b>OMNIX</b></font>'
+            '<font size="9" color="#6b7280">  Decision Governance Infrastructure</font>',
+            ParagraphStyle('LT', parent=styles['Normal'], alignment=TA_LEFT)
+        )
+        logo_table = Table([[logo, logo_text]], colWidths=[50, 420])
+        logo_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (0, 0), 0),
+            ('LEFTPADDING', (1, 0), (1, 0), 8),
+        ]))
+        elements.append(logo_table)
+        elements.append(Spacer(1, 6))
+
+    elements.append(HRFlowable(width="100%", thickness=2, color=GOLD, spaceBefore=2, spaceAfter=16))
+    elements.append(Paragraph("Complete Technical Report", title_style))
+    elements.append(Paragraph("All changes, infrastructure, and features built — Dec 25, 2025 to present", subtitle_style))
+
+    meta_data = [
+        ['Report Date:', today],
+        ['Period:', 'December 25, 2025 — March 13, 2026'],
+        ['Total Database Tables:', str(total_tables)],
+        ['Total Decision Receipts:', fmt(table_counts.get('decision_receipts', 0))],
+        ['Total Evaluation Cycles:', fmt(table_counts.get('shadow_trade_events', 0))],
+        ['Classification:', 'Internal — Not for distribution'],
+    ]
+    meta_table = Table(meta_data, colWidths=[140, 350])
+    meta_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+        ('TEXTCOLOR', (0, 0), (0, -1), LIGHT_GRAY),
+        ('TEXTCOLOR', (1, 0), (1, -1), BODY_COLOR),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(meta_table)
+    elements.append(Spacer(1, 12))
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=MEDIUM_GRAY, spaceBefore=4, spaceAfter=16))
+
+    elements.append(Paragraph("Table of Contents", h1))
+    toc_items = [
+        "1. Executive Summary",
+        "2. Timeline — Dec 2025 to Jan 2026",
+        "3. Timeline — Feb 2026 (First Half)",
+        "4. Timeline — Feb 2026 (Second Half)",
+        "5. Timeline — Mar 2026 (First Week)",
+        "6. Timeline — Mar 2026 (Second Week)",
+        "7. Database — B2B Client Tables",
+        "8. Database — Sandbox Tables",
+        "9. Database — Alert System Tables",
+        "10. Database — Governance Receipts (PQC-signed)",
+        "11. Database — 5 Compliance Modules",
+        "12. Database — Decision Engine & Vetos",
+        "13. Database — Backtesting Phase 0",
+        "14. Database — Trading (Real & Paper)",
+        "15. Database — Users & Configuration",
+        "16. API Endpoints — B2B External",
+        "17. API Endpoints — Sandbox",
+        "18. API Endpoints — Alerts",
+        "19. API Endpoints — Compliance Modules",
+        "20. Web Pages (omnixquantum.net)",
+        "21. Documents Generated",
+        "22. Summary in Numbers",
+    ]
+    for item in toc_items:
+        elements.append(Paragraph(item, toc_style))
+
+    elements.append(PageBreak())
+
+    # === SECTION 1: EXECUTIVE SUMMARY ===
+    elements.append(Paragraph("1. Executive Summary", h1))
+    elements.append(Paragraph(
+        "This report documents every significant change, feature, and infrastructure component "
+        "built into OMNIX from December 25, 2025 through March 13, 2026. It covers database tables "
+        f"({total_tables} total), API endpoints, web pages, compliance modules, and generated documents. "
+        "All database row counts are queried live from the local PostgreSQL instance at generation time.",
+        body
+    ))
+    elements.append(Paragraph(
+        f"Key numbers: {fmt(table_counts.get('shadow_trade_events', 0))} evaluation cycles processed, "
+        f"{fmt(table_counts.get('decision_receipts', 0))} PQC-signed receipts generated, "
+        f"{fmt(table_counts.get('trading_veto_log', 0))} vetos logged, "
+        f"{fmt(table_counts.get('kraken_real_trades', 0))} real Kraken trades recorded, "
+        f"5 B2B clients registered, 4 vertical demos live.",
+        body
+    ))
+
+    # === SECTION 2-6: TIMELINE ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("2. Timeline — Dec 2025 to Jan 2026", h1))
+    elements.append(Paragraph("Foundation of the public website and bot stabilization", h3))
+    timeline_items_1 = [
+        "Created the public website (omnixquantum.net) with separate commercial and institutional pages",
+        "Added contact sections with WhatsApp, FAQ, competitor comparison table",
+        "Connected frontend with Railway backend correctly",
+        "Improved bot AI response speed (timeout optimization and model selection)",
+        "Upgraded primary AI model to Gemini 2.5 Flash",
+        "Configured dynamic Track Record day counter (no more hardcoded number)",
+        "Implemented dashboard caching for faster loading",
+        "Fixed navigation and unknown route redirects",
+        "Added leadership team section to institutional page",
+        "Configured Railway deployment with Python + Node.js build pipeline",
+    ]
+    for item in timeline_items_1:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    elements.append(Paragraph("3. Timeline — Feb 2026 (First Half)", h1))
+    elements.append(Paragraph("Repositioning as Decision Governance + Multi-vertical demos", h3))
+    timeline_items_2 = [
+        "OMNIX officially repositioned as 'Decision Governance Infrastructure' — not a trading bot",
+        "Added voice interface for hands-free governance interaction",
+        "Implemented AI response compression (contextual: institutional vs casual tone)",
+        "Built Insurance Governance Demo — underwriting with governance checkpoints",
+        "Built Credit/Lending Governance Demo — credit risk evaluation",
+        "Built Energy Trading Governance Demo — natural gas, crude oil, solar, wind, LNG, electricity",
+        "Built Biotech/Clinical Trial Governance Demo — real ClinicalTrials.gov NCT data",
+        "Updated bot tone to be more institutional, less servile",
+        "Improved AI greeting detection and natural language handling",
+        "Created mentor packages with personalized draft messages and resources",
+    ]
+    for item in timeline_items_2:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    elements.append(Paragraph("4. Timeline — Feb 2026 (Second Half)", h1))
+    elements.append(Paragraph("B2B infrastructure, security, and investor documents", h3))
+    timeline_items_3 = [
+        "Built B2B External Governance API with API key authentication (X-API-Key header)",
+        "Implemented RBAC (Role-Based Access Control) — regular clients vs admin with separate permissions",
+        "Added payload encryption at rest using Fernet (AES-128-CBC + HMAC-SHA256)",
+        "Built 5 Compliance Modules aligned with NIST AI RMF, ISO/IEC 42001, and EU AI Act",
+        "Module 1: Risk Mapping — use case classification, impact scoring, stakeholder mapping",
+        "Module 2: Measurement & Monitoring — checkpoint metrics, drift detection",
+        "Module 3: Human Oversight — override logging with PQC-signed audit trail",
+        "Module 4: Incident Management — incident reporting, review, and corrective actions",
+        "Module 5: Governance Reporting — period-based reports with content hashing",
+        "Generated research paper PDF with reproducibility section",
+        "Created 3-tier security documentation: public, institutional, and internal",
+        "Removed Ivan Guzman from all files — Harold Nunes as sole visible Founder",
+        "Launched public deployment on Railway + custom domain omnixquantum.net",
+        "Generated multiple investor PDF documents and mentor packages",
+        "Clarified PQC communication rules (no FIPS 204, use 'NIST-standardized')",
+        "Implemented API key rotation and database backup documentation",
+    ]
+    for item in timeline_items_3:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("5. Timeline — Mar 2026 (First Week)", h1))
+    elements.append(Paragraph("Eureka Dubai preparation and presentation materials", h3))
+    timeline_items_4 = [
+        "Created complete pitch deck with professional slides for Eureka Dubai (March 18)",
+        "Generated Business Model Canvas PDF",
+        "Created executive report for investors",
+        "Prepared presentation script with real operational data",
+        "Built Q&A simulation guide (tough investor questions with prepared answers)",
+        "Added Brazil financial regulations context for channel partner Richard (Blue Mesh)",
+        "Updated AI Risk Analyst report with independent validation",
+        "Fixed Black Swan detection classification logic",
+        "Made all website and contact links clickable in generated reports",
+    ]
+    for item in timeline_items_4:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    elements.append(Paragraph("6. Timeline — Mar 2026 (Second Week)", h1))
+    elements.append(Paragraph("8-checkpoint architecture + real-time data pipeline", h3))
+    timeline_items_5 = [
+        "Expanded governance pipeline from 6 to 8 checkpoints: added CP-0 (Signal Integrity) and CP-7 (Temporal Coherence)",
+        "Built interactive Sandbox for B2B clients — test evaluations without API key",
+        "Built configurable Alert System — Slack, email, webhook notifications per client",
+        "Added per-client threshold customization — each company adjusts their own checkpoint thresholds",
+        "Fixed all pages to consistently show 8 checkpoints (Energy, Biotech, Credit, Insurance demos)",
+        "Connected Railway public API to return all live metric fields (decisions_blocked, capital_preserved_pct, system_uptime_days, verticals_demo)",
+        "Made system_uptime_days calculate automatically each day from Jan 15, 2026",
+        "Eliminated all remaining hardcoded values in the web (22,000+, 98.5%, -1.5%)",
+        "All web pages now refresh metrics every 60 seconds from Railway production API",
+    ]
+    for item in timeline_items_5:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    # === HELPER FUNCTION FOR DB TABLES ===
+    def make_db_table(headers, rows, col_widths=None):
+        data = [headers] + rows
+        if col_widths is None:
+            col_widths = [150, 60, 280]
+        t = Table(data, colWidths=col_widths, repeatRows=1)
+        style_cmds = [
+            ('BACKGROUND', (0, 0), (-1, 0), TABLE_HEADER_BG),
+            ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8.5),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('TEXTCOLOR', (0, 1), (-1, -1), BODY_COLOR),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, TABLE_BORDER),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                style_cmds.append(('BACKGROUND', (0, i), (-1, i), TABLE_ALT_BG))
+        t.setStyle(TableStyle(style_cmds))
+        return t
+
+    # === SECTION 7: B2B CLIENT TABLES ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("7. Database — B2B Client Tables", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Key Columns'],
+        [
+            ['b2b_clients', fmt(table_counts.get('b2b_clients', 0)),
+             'client_id, api_key_hash, name, email, role, is_active, last_seen_at'],
+            ['client_thresholds', fmt(table_counts.get('client_thresholds', 0)),
+             'client_id, checkpoint_id, threshold, updated_by, updated_at'],
+        ]
+    ))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "b2b_clients stores registered API clients with hashed keys and RBAC roles. "
+        "client_thresholds allows per-client checkpoint threshold customization with audit trail.",
+        body
+    ))
+
+    # === SECTION 8: SANDBOX ===
+    elements.append(Paragraph("8. Database — Sandbox Tables", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Key Columns'],
+        [
+            ['sandbox_sessions', fmt(table_counts.get('sandbox_sessions', 0)),
+             'session_id, client_id, name, evaluation_count, expires_at'],
+            ['sandbox_evaluations', fmt(table_counts.get('sandbox_evaluations', 0)),
+             'asset, domain, signals (JSON), decision, decision_score, checkpoints_passed, veto_chain, receipt_signature'],
+        ]
+    ))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "The sandbox allows potential clients to test the governance engine without authentication. "
+        "Sessions expire automatically. Each evaluation generates a full 8-checkpoint trace.",
+        body
+    ))
+
+    # === SECTION 9: ALERTS ===
+    elements.append(Paragraph("9. Database — Alert System Tables", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Key Columns'],
+        [
+            ['alert_configs', fmt(table_counts.get('alert_configs', 0)),
+             'alert_config_id, client_id, alert_type, channel, enabled, config (JSON)'],
+            ['alert_events', fmt(table_counts.get('alert_events', 0)),
+             'event_id, alert_config_id, trigger_data (JSON), delivery_status, delivery_error'],
+        ]
+    ))
+
+    # === SECTION 10: GOVERNANCE RECEIPTS ===
+    elements.append(Paragraph("10. Database — Governance Receipts (PQC-signed)", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Key Columns'],
+        [
+            ['decision_receipts', fmt(table_counts.get('decision_receipts', 0)),
+             'receipt_id, asset, decision, veto_chain, signature (Dilithium-3), signature_algorithm, public_key, prev_hash, content_hash, encrypted_payload, client_id, retention_until'],
+            ['exit_governance_receipts', fmt(table_counts.get('exit_governance_receipts', 0)),
+             'receipt_id, position_id, symbol, exit_reason, gate1/gate2/gate3 verdicts, regime_adjusted_tp/sl, pqc_signature'],
+        ]
+    ))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "Every governance decision generates a cryptographically signed receipt using Dilithium-3 "
+        "(NIST-standardized post-quantum algorithm). Receipts form a SHA-256 hash chain for tamper detection. "
+        "Exit governance receipts track the 3-gate exit pipeline with regime-adjusted thresholds.",
+        body
+    ))
+
+    # === SECTION 11: COMPLIANCE MODULES ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("11. Database — 5 Compliance Modules (NIST AI RMF / EU AI Act)", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Module / Purpose'],
+        [
+            ['governance_risk_map', fmt(table_counts.get('governance_risk_map', 0)),
+             'Module 1 — Risk Mapping: use_case, classification, impact_financial/operational/regulatory, stakeholders, thresholds'],
+            ['governance_metrics', fmt(table_counts.get('governance_metrics', 0)),
+             'Module 2 — Measurement: checkpoint_id, approval_rate, block_rate, avg_score, window_start/end'],
+            ['governance_drift_log', fmt(table_counts.get('governance_drift_log', 0)),
+             'Module 2 — Drift Detection: signal_name, baseline_stats, current_stats, drift_score, alert_level'],
+            ['governance_overrides', fmt(table_counts.get('governance_overrides', 0)),
+             'Module 3 — Human Oversight: decision_before/after, justification, overridden_by, role, signature, prev_hash'],
+            ['governance_incidents', fmt(table_counts.get('governance_incidents', 0)),
+             'Module 4 — Incidents: incident_id, severity, title, status, related_receipt_id, resolved_at'],
+            ['governance_incident_reviews', fmt(table_counts.get('governance_incident_reviews', 0)),
+             'Module 4 — Reviews: reviewer, findings, corrective_actions'],
+            ['governance_reports', fmt(table_counts.get('governance_reports', 0)),
+             'Module 5 — Reporting: period_start/end, report_type, content_json, content_hash'],
+        ]
+    ))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "Five additive governance modules aligned with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. "
+        "Each module introduces dedicated PostgreSQL tables and REST endpoints. All override operations "
+        "generate PQC-signed audit trails.",
+        body
+    ))
+
+    # === SECTION 12: DECISION ENGINE ===
+    elements.append(Paragraph("12. Database — Decision Engine & Vetos", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Purpose'],
+        [
+            ['shadow_trade_events', fmt(table_counts.get('shadow_trade_events', 0)),
+             '33 columns: EMA, HMM, Coherence, Monte Carlo, Black Swan, Kelly, volatility, spread, ATR, volume — every trade evaluated by the pipeline'],
+            ['trading_veto_log', fmt(table_counts.get('trading_veto_log', 0)),
+             'Real-time veto log: veto_type, engine_stage, blocked_capital, severity, reason, metadata'],
+            ['filter_calibration_metrics', fmt(table_counts.get('filter_calibration_metrics', 0)),
+             'Veto accuracy per type: correct/incorrect vetoes, counterfactual P&L, recommended threshold adjustment'],
+            ['shadow_trade_outcomes', fmt(table_counts.get('shadow_trade_outcomes', 0)),
+             'Counterfactual analysis: what would have happened if vetoed trades were executed (25 columns)'],
+        ]
+    ))
+
+    # === SECTION 13: BACKTESTING ===
+    elements.append(Paragraph("13. Database — Backtesting Phase 0", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Purpose'],
+        [
+            ['backtest_phase0_results', fmt(table_counts.get('backtest_phase0_results', 0)),
+             'Results from Phase 0 backtest (Jul-Aug 2025 real capital period)'],
+            ['backtest_phase0_signals', fmt(table_counts.get('backtest_phase0_signals', 0)),
+             'Historical signals used in the backtest'],
+            ['backtest_phase0_ohlcv', fmt(table_counts.get('backtest_phase0_ohlcv', 0)),
+             'Historical OHLCV candlestick data for backtesting'],
+        ]
+    ))
+
+    # === SECTION 14: TRADING ===
+    elements.append(Paragraph("14. Database — Trading (Real & Paper)", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Purpose'],
+        [
+            ['kraken_real_trades', fmt(table_counts.get('kraken_real_trades', 0)),
+             'Real trades executed on Kraken exchange (Phase 0 — real capital, Jul-Aug 2025)'],
+            ['paper_trading_trades', fmt(table_counts.get('paper_trading_trades', 0)),
+             'Paper trades from Learning Baseline (Nov 2025 - Jan 2026)'],
+            ['paper_trading_balances', fmt(table_counts.get('paper_trading_balances', 0)),
+             'Paper trading account balances over time'],
+            ['paper_trading_daily_reports', fmt(table_counts.get('paper_trading_daily_reports', 0)),
+             'Daily performance summaries for paper trading period'],
+            ['trades', fmt(table_counts.get('trades', 0)),
+             'General trades table for active trading operations'],
+        ]
+    ))
+
+    # === SECTION 15: USERS ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("15. Database — Users & Configuration", h1))
+    elements.append(make_db_table(
+        ['Table', 'Rows', 'Purpose'],
+        [
+            ['users', fmt(table_counts.get('users', 0)),
+             'System users (19 columns)'],
+            ['user_settings', fmt(table_counts.get('user_settings', 0)),
+             'Per-user configuration (30 columns)'],
+            ['conversations', fmt(table_counts.get('conversations', 0)),
+             'Bot conversation history'],
+            ['system_config', fmt(table_counts.get('system_config', 0)),
+             'Global system configuration'],
+        ]
+    ))
+
+    # === SECTION 16: API ENDPOINTS — B2B ===
+    elements.append(Paragraph("16. API Endpoints — B2B External (authenticated with X-API-Key)", h1))
+    elements.append(make_db_table(
+        ['Method', 'Endpoint', 'Function'],
+        [
+            ['POST', '/api/governance/evaluate', 'Run 8-checkpoint evaluation, return PQC-signed receipt'],
+            ['GET', '/api/governance/receipts', 'List client receipts (isolated by client_id)'],
+            ['GET', '/api/governance/schema', 'Documentation of accepted signals'],
+            ['POST', '/api/governance/admin/clients', 'Create client and generate API key (admin)'],
+            ['DELETE', '/api/governance/admin/clients/<id>', 'Deactivate client (admin)'],
+            ['POST', '/api/governance/admin/clients/<id>/rotate', 'Rotate API key (admin)'],
+            ['GET', '/api/governance/admin/clients/<id>/thresholds', 'Get client thresholds (admin)'],
+            ['PUT', '/api/governance/admin/clients/<id>/thresholds', 'Set per-client thresholds (admin)'],
+            ['DELETE', '/api/governance/admin/clients/<id>/thresholds', 'Revert to defaults (admin)'],
+            ['GET', '/api/governance/metrics', 'Public real-time governance metrics'],
+            ['GET', '/api/verify/<receipt_id>', 'Public receipt verification'],
+        ],
+        col_widths=[50, 220, 220]
+    ))
+
+    # === SECTION 17: SANDBOX ENDPOINTS ===
+    elements.append(Paragraph("17. API Endpoints — Sandbox (no authentication)", h1))
+    elements.append(make_db_table(
+        ['Method', 'Endpoint', 'Function'],
+        [
+            ['POST', '/api/governance/sandbox/sessions', 'Create test session'],
+            ['GET', '/api/governance/sandbox/sessions', 'List sessions'],
+            ['GET', '/api/governance/sandbox/sessions/<id>', 'Get session details'],
+            ['DELETE', '/api/governance/sandbox/sessions/<id>', 'Delete session'],
+            ['POST', '/api/governance/sandbox/evaluate', 'Run evaluation without API key'],
+            ['GET', '/api/governance/sandbox/schema', 'Signal schema documentation'],
+        ],
+        col_widths=[50, 230, 210]
+    ))
+
+    # === SECTION 18: ALERT ENDPOINTS ===
+    elements.append(Paragraph("18. API Endpoints — Alerts", h1))
+    elements.append(make_db_table(
+        ['Method', 'Endpoint', 'Function'],
+        [
+            ['PUT', '/api/governance/alerts/config', 'Create alert configuration'],
+            ['GET', '/api/governance/alerts/config', 'List client alert configs'],
+            ['POST', '/api/governance/alerts/test', 'Test an alert'],
+            ['DELETE', '/api/governance/alerts/config/<id>', 'Delete alert config'],
+        ],
+        col_widths=[50, 230, 210]
+    ))
+
+    # === SECTION 19: COMPLIANCE ENDPOINTS ===
+    elements.append(Paragraph("19. API Endpoints — Compliance Modules", h1))
+    elements.append(make_db_table(
+        ['Module', 'Endpoints', 'Function'],
+        [
+            ['Risk Mapping', 'POST/GET /api/governance/risk-map', 'Create and list risk maps per client'],
+            ['Monitoring', 'GET /api/governance/metrics/live', 'Live approval/block statistics'],
+            ['Drift Detection', 'POST /api/governance/drift/detect', 'Detect signal drift vs baseline'],
+            ['Human Oversight', 'POST /api/governance/overrides', 'Log decision overrides with PQC signature'],
+            ['Incidents', 'POST/GET /api/governance/incidents', 'Report and track governance incidents'],
+            ['Incident Reviews', 'POST /api/governance/incidents/<id>/review', 'Submit incident review findings'],
+            ['Reporting', 'POST/GET /api/governance/reports', 'Generate and retrieve governance reports'],
+        ],
+        col_widths=[90, 200, 200]
+    ))
+
+    # === SECTION 20: WEB PAGES ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("20. Web Pages (omnixquantum.net)", h1))
+    elements.append(make_db_table(
+        ['Page', 'Status', 'Description'],
+        [
+            ['Commercial Landing', 'Live', 'Public-facing page with live metrics refreshing every 60 seconds'],
+            ['Institutional Page', 'Live', 'Track Record, PQC overview, competitor comparison, verifiable metrics'],
+            ['Credit/Lending Demo', 'Live', '8-checkpoint governance applied to credit risk evaluation'],
+            ['Insurance Demo', 'Live', '8-checkpoint underwriting governance with risk assessment'],
+            ['Energy Trading Demo', 'Live', '8-checkpoint energy trading governance (gas, oil, solar, wind, LNG)'],
+            ['Biotech/Clinical Demo', 'Live', '8-checkpoint clinical trial governance (real ClinicalTrials.gov data)'],
+        ],
+        col_widths=[120, 40, 330]
+    ))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "All pages use the useLiveMetrics hook which refreshes data every 60 seconds from the Railway "
+        "production API. Fallback values are used only when Railway is unreachable. System uptime days "
+        "are calculated dynamically from Track Record start date (January 15, 2026).",
+        body
+    ))
+
+    # === SECTION 21: DOCUMENTS ===
+    elements.append(Paragraph("21. Documents Generated", h1))
+    docs_list = [
+        "Pitch deck for Eureka Dubai GCC 2026 (March 18 presentation)",
+        "Business Model Canvas PDF",
+        "Executive Report for investors",
+        "Research Paper with reproducibility section",
+        "Personalized mentor packages (multiple recipients)",
+        "Q&A Simulation — tough investor questions with prepared answers",
+        "Presentation script with real operational data",
+        "AI Risk Analyst Report (independent validation)",
+        "3-tier Security Documentation (public / institutional / internal)",
+        "Internal Security Audit v1.0",
+        "Validation questionnaires for industry professionals (multiple recipients)",
+        "LinkedIn thought-leadership posts (English & Spanish)",
+    ]
+    for item in docs_list:
+        elements.append(Paragraph(f"\u2022 {item}", bullet))
+
+    # === SECTION 22: SUMMARY ===
+    elements.append(Paragraph("22. Summary in Numbers", h1))
+    elements.append(make_db_table(
+        ['Metric', 'Value', 'Notes'],
+        [
+            ['Total database tables', str(total_tables), 'PostgreSQL on Railway'],
+            ['Evaluation cycles', fmt(table_counts.get('shadow_trade_events', 0)), 'shadow_trade_events rows'],
+            ['PQC-signed receipts', fmt(table_counts.get('decision_receipts', 0)), 'Dilithium-3 signed'],
+            ['Vetos logged', fmt(table_counts.get('trading_veto_log', 0)), 'Real-time veto tracking'],
+            ['Real Kraken trades', fmt(table_counts.get('kraken_real_trades', 0)), 'Phase 0 (Jul-Aug 2025)'],
+            ['Paper trades', fmt(table_counts.get('paper_trading_trades', 0)), 'Learning Baseline (Nov-Jan)'],
+            ['Exit governance receipts', fmt(table_counts.get('exit_governance_receipts', 0)), '3-gate exit pipeline'],
+            ['B2B clients registered', fmt(table_counts.get('b2b_clients', 0)), 'With API key authentication'],
+            ['Sandbox sessions', fmt(table_counts.get('sandbox_sessions', 0)), 'Test sessions created'],
+            ['Sandbox evaluations', fmt(table_counts.get('sandbox_evaluations', 0)), 'Evaluations run in sandbox'],
+            ['Vertical demos live', '4', 'Trading, Credit, Insurance, Energy, Biotech'],
+            ['Governance checkpoints', '8', 'CP-0 through CP-7 (fail-closed)'],
+            ['Compliance modules', '5', 'NIST AI RMF / ISO 42001 / EU AI Act'],
+            ['Development months', '~3', 'Dec 25, 2025 - Mar 13, 2026'],
+            ['Target event', 'Eureka Dubai GCC', 'March 18, 2026 — Semifinalist'],
+        ],
+        col_widths=[150, 100, 240]
+    ))
+
+    elements.append(Spacer(1, 20))
+    elements.append(HRFlowable(width="100%", thickness=1, color=GOLD, spaceBefore=10, spaceAfter=12))
+    elements.append(Paragraph(
+        f"Report generated: {today}<br/>"
+        "OMNIX Decision Governance Infrastructure — Abu Dhabi, UAE<br/>"
+        "Internal document. Not externally audited. Not for distribution.",
+        small
+    ))
+
+    doc.build(elements, canvasmaker=NumberedCanvas)
+    file_size = os.path.getsize(output_path)
+    print(f"PDF generated: {output_path}")
+    print(f"File size: {file_size:,} bytes")
+    return output_path
+
+
+if __name__ == "__main__":
+    build_pdf()
