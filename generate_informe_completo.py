@@ -58,15 +58,22 @@ def get_db_table_counts():
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
         cur.execute("""
-            SELECT relname, n_live_tup
-            FROM pg_stat_user_tables
-            WHERE schemaname = 'public'
-            ORDER BY relname
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
         """)
-        rows = cur.fetchall()
+        tables = [r[0] for r in cur.fetchall()]
+        counts = {}
+        for tbl in tables:
+            try:
+                cur.execute(f'SELECT COUNT(*) FROM "{tbl}"')
+                counts[tbl] = cur.fetchone()[0]
+            except Exception:
+                conn.rollback()
+                counts[tbl] = 0
         cur.close()
         conn.close()
-        return {r[0]: r[1] for r in rows}
+        return counts
     except Exception as e:
         print(f"DB error: {e}")
         return {}
@@ -111,6 +118,16 @@ def build_pdf():
     column_info = get_db_column_info()
     total_tables = len(table_counts)
     today = datetime.now(timezone.utc).strftime("%B %d, %Y")
+
+    def cols_for(tbl):
+        if tbl in column_info:
+            return ", ".join(c[0] for c in column_info[tbl])
+        return "—"
+
+    def cols_typed(tbl):
+        if tbl in column_info:
+            return ", ".join(f"{c[0]} ({c[1].split()[0]})" for c in column_info[tbl][:8])
+        return "—"
 
     doc = SimpleDocTemplate(
         output_path,
@@ -357,12 +374,10 @@ def build_pdf():
     elements.append(PageBreak())
     elements.append(Paragraph("7. Database — B2B Client Tables", h1))
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Key Columns'],
+        ['Table', 'Rows', 'Columns (from DB schema)'],
         [
-            ['b2b_clients', fmt(table_counts.get('b2b_clients', 0)),
-             'client_id, api_key_hash, name, email, role, is_active, last_seen_at'],
-            ['client_thresholds', fmt(table_counts.get('client_thresholds', 0)),
-             'client_id, checkpoint_id, threshold, updated_by, updated_at'],
+            ['b2b_clients', fmt(table_counts.get('b2b_clients', 0)), cols_for('b2b_clients')],
+            ['client_thresholds', fmt(table_counts.get('client_thresholds', 0)), cols_for('client_thresholds')],
         ]
     ))
     elements.append(Spacer(1, 8))
@@ -375,12 +390,10 @@ def build_pdf():
     # === SECTION 8: SANDBOX ===
     elements.append(Paragraph("8. Database — Sandbox Tables", h1))
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Key Columns'],
+        ['Table', 'Rows', 'Columns (from DB schema)'],
         [
-            ['sandbox_sessions', fmt(table_counts.get('sandbox_sessions', 0)),
-             'session_id, client_id, name, evaluation_count, expires_at'],
-            ['sandbox_evaluations', fmt(table_counts.get('sandbox_evaluations', 0)),
-             'asset, domain, signals (JSON), decision, decision_score, checkpoints_passed, veto_chain, receipt_signature'],
+            ['sandbox_sessions', fmt(table_counts.get('sandbox_sessions', 0)), cols_for('sandbox_sessions')],
+            ['sandbox_evaluations', fmt(table_counts.get('sandbox_evaluations', 0)), cols_for('sandbox_evaluations')],
         ]
     ))
     elements.append(Spacer(1, 8))
@@ -393,24 +406,20 @@ def build_pdf():
     # === SECTION 9: ALERTS ===
     elements.append(Paragraph("9. Database — Alert System Tables", h1))
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Key Columns'],
+        ['Table', 'Rows', 'Columns (from DB schema)'],
         [
-            ['alert_configs', fmt(table_counts.get('alert_configs', 0)),
-             'alert_config_id, client_id, alert_type, channel, enabled, config (JSON)'],
-            ['alert_events', fmt(table_counts.get('alert_events', 0)),
-             'event_id, alert_config_id, trigger_data (JSON), delivery_status, delivery_error'],
+            ['alert_configs', fmt(table_counts.get('alert_configs', 0)), cols_for('alert_configs')],
+            ['alert_events', fmt(table_counts.get('alert_events', 0)), cols_for('alert_events')],
         ]
     ))
 
     # === SECTION 10: GOVERNANCE RECEIPTS ===
     elements.append(Paragraph("10. Database — Governance Receipts (PQC-signed)", h1))
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Key Columns'],
+        ['Table', 'Rows', 'Columns (from DB schema)'],
         [
-            ['decision_receipts', fmt(table_counts.get('decision_receipts', 0)),
-             'receipt_id, asset, decision, veto_chain, signature (Dilithium-3), signature_algorithm, public_key, prev_hash, content_hash, encrypted_payload, client_id, retention_until'],
-            ['exit_governance_receipts', fmt(table_counts.get('exit_governance_receipts', 0)),
-             'receipt_id, position_id, symbol, exit_reason, gate1/gate2/gate3 verdicts, regime_adjusted_tp/sl, pqc_signature'],
+            ['decision_receipts', fmt(table_counts.get('decision_receipts', 0)), cols_for('decision_receipts')],
+            ['exit_governance_receipts', fmt(table_counts.get('exit_governance_receipts', 0)), cols_for('exit_governance_receipts')],
         ]
     ))
     elements.append(Spacer(1, 8))
@@ -424,24 +433,18 @@ def build_pdf():
     # === SECTION 11: COMPLIANCE MODULES ===
     elements.append(PageBreak())
     elements.append(Paragraph("11. Database — 5 Compliance Modules (NIST AI RMF / EU AI Act)", h1))
+    compliance_tables = [
+        ('governance_risk_map', 'Module 1 — Risk Mapping'),
+        ('governance_metrics', 'Module 2 — Measurement'),
+        ('governance_drift_log', 'Module 2 — Drift Detection'),
+        ('governance_overrides', 'Module 3 — Human Oversight'),
+        ('governance_incidents', 'Module 4 — Incidents'),
+        ('governance_incident_reviews', 'Module 4 — Reviews'),
+        ('governance_reports', 'Module 5 — Reporting'),
+    ]
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Module / Purpose'],
-        [
-            ['governance_risk_map', fmt(table_counts.get('governance_risk_map', 0)),
-             'Module 1 — Risk Mapping: use_case, classification, impact_financial/operational/regulatory, stakeholders, thresholds'],
-            ['governance_metrics', fmt(table_counts.get('governance_metrics', 0)),
-             'Module 2 — Measurement: checkpoint_id, approval_rate, block_rate, avg_score, window_start/end'],
-            ['governance_drift_log', fmt(table_counts.get('governance_drift_log', 0)),
-             'Module 2 — Drift Detection: signal_name, baseline_stats, current_stats, drift_score, alert_level'],
-            ['governance_overrides', fmt(table_counts.get('governance_overrides', 0)),
-             'Module 3 — Human Oversight: decision_before/after, justification, overridden_by, role, signature, prev_hash'],
-            ['governance_incidents', fmt(table_counts.get('governance_incidents', 0)),
-             'Module 4 — Incidents: incident_id, severity, title, status, related_receipt_id, resolved_at'],
-            ['governance_incident_reviews', fmt(table_counts.get('governance_incident_reviews', 0)),
-             'Module 4 — Reviews: reviewer, findings, corrective_actions'],
-            ['governance_reports', fmt(table_counts.get('governance_reports', 0)),
-             'Module 5 — Reporting: period_start/end, report_type, content_json, content_hash'],
-        ]
+        ['Table', 'Rows', 'Module — Columns (from DB schema)'],
+        [[tbl, fmt(table_counts.get(tbl, 0)), f"{mod}: {cols_for(tbl)}"] for tbl, mod in compliance_tables]
     ))
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
@@ -453,67 +456,36 @@ def build_pdf():
 
     # === SECTION 12: DECISION ENGINE ===
     elements.append(Paragraph("12. Database — Decision Engine & Vetos", h1))
+    engine_tables = ['shadow_trade_events', 'trading_veto_log', 'filter_calibration_metrics', 'shadow_trade_outcomes']
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Purpose'],
-        [
-            ['shadow_trade_events', fmt(table_counts.get('shadow_trade_events', 0)),
-             '33 columns: EMA, HMM, Coherence, Monte Carlo, Black Swan, Kelly, volatility, spread, ATR, volume — every trade evaluated by the pipeline'],
-            ['trading_veto_log', fmt(table_counts.get('trading_veto_log', 0)),
-             'Real-time veto log: veto_type, engine_stage, blocked_capital, severity, reason, metadata'],
-            ['filter_calibration_metrics', fmt(table_counts.get('filter_calibration_metrics', 0)),
-             'Veto accuracy per type: correct/incorrect vetoes, counterfactual P&L, recommended threshold adjustment'],
-            ['shadow_trade_outcomes', fmt(table_counts.get('shadow_trade_outcomes', 0)),
-             'Counterfactual analysis: what would have happened if vetoed trades were executed (25 columns)'],
-        ]
+        ['Table', 'Rows', 'Columns (from DB schema)'],
+        [[tbl, fmt(table_counts.get(tbl, 0)), cols_for(tbl)] for tbl in engine_tables]
     ))
 
     # === SECTION 13: BACKTESTING ===
     elements.append(Paragraph("13. Database — Backtesting Phase 0", h1))
+    bt_tables = ['backtest_phase0_results', 'backtest_phase0_signals', 'backtest_phase0_ohlcv']
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Purpose'],
-        [
-            ['backtest_phase0_results', fmt(table_counts.get('backtest_phase0_results', 0)),
-             'Results from Phase 0 backtest (Jul-Aug 2025 real capital period)'],
-            ['backtest_phase0_signals', fmt(table_counts.get('backtest_phase0_signals', 0)),
-             'Historical signals used in the backtest'],
-            ['backtest_phase0_ohlcv', fmt(table_counts.get('backtest_phase0_ohlcv', 0)),
-             'Historical OHLCV candlestick data for backtesting'],
-        ]
+        ['Table', 'Rows', 'Columns (from DB schema)'],
+        [[tbl, fmt(table_counts.get(tbl, 0)), cols_for(tbl)] for tbl in bt_tables]
     ))
 
     # === SECTION 14: TRADING ===
     elements.append(Paragraph("14. Database — Trading (Real & Paper)", h1))
+    trade_tables = ['kraken_real_trades', 'paper_trading_trades', 'paper_trading_balances',
+                    'paper_trading_daily_reports', 'trades']
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Purpose'],
-        [
-            ['kraken_real_trades', fmt(table_counts.get('kraken_real_trades', 0)),
-             'Real trades executed on Kraken exchange (Phase 0 — real capital, Jul-Aug 2025)'],
-            ['paper_trading_trades', fmt(table_counts.get('paper_trading_trades', 0)),
-             'Paper trades from Learning Baseline (Nov 2025 - Jan 2026)'],
-            ['paper_trading_balances', fmt(table_counts.get('paper_trading_balances', 0)),
-             'Paper trading account balances over time'],
-            ['paper_trading_daily_reports', fmt(table_counts.get('paper_trading_daily_reports', 0)),
-             'Daily performance summaries for paper trading period'],
-            ['trades', fmt(table_counts.get('trades', 0)),
-             'General trades table for active trading operations'],
-        ]
+        ['Table', 'Rows', 'Columns (from DB schema)'],
+        [[tbl, fmt(table_counts.get(tbl, 0)), cols_for(tbl)] for tbl in trade_tables]
     ))
 
     # === SECTION 15: USERS ===
     elements.append(PageBreak())
     elements.append(Paragraph("15. Database — Users & Configuration", h1))
+    user_tables = ['users', 'user_settings', 'conversations', 'system_config']
     elements.append(make_db_table(
-        ['Table', 'Rows', 'Purpose'],
-        [
-            ['users', fmt(table_counts.get('users', 0)),
-             'System users (19 columns)'],
-            ['user_settings', fmt(table_counts.get('user_settings', 0)),
-             'Per-user configuration (30 columns)'],
-            ['conversations', fmt(table_counts.get('conversations', 0)),
-             'Bot conversation history'],
-            ['system_config', fmt(table_counts.get('system_config', 0)),
-             'Global system configuration'],
-        ]
+        ['Table', 'Rows', 'Columns (from DB schema)'],
+        [[tbl, fmt(table_counts.get(tbl, 0)), cols_for(tbl)] for tbl in user_tables]
     ))
 
     # === SECTION 16: API ENDPOINTS — B2B ===
