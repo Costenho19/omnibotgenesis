@@ -693,7 +693,7 @@ def build_pdf():
         ['Block Threshold', '65.0 / 100'],
         ['Regime', 'CRASH'],
         ['Failure Reason', 'TEMPORAL_COHERENCE_VIOLATION + SIGNAL_INTEGRITY_FAILURE'],
-        ['SHA-256 Hash', '3e2020dac7bc4e75265b454c98009ddd...'],
+        ['SHA-256 Hash', '3e2020dac7bc4e75265b454c98009ddd4fa87d73b4eef603'],
         ['Receipt Type', 'FORENSIC_SIMULATION'],
     ]
     receipt_table = Table(receipt_data, colWidths=[120, 310])
