@@ -218,7 +218,7 @@ def build_pdf():
         ["Metric", "Value"],
         ["Capital that would have been preserved", "100% of position value"],
         ["Time advantage over market", "6 hours before irreversible collapse"],
-        ["Governance decision", "BLOCKED at all three evaluation points"],
+        ["Governance decision", "WARNING at T-72h — BLOCKED at T-24h and T-6h"],
         ["Cryptographic proof", "PQC-signed receipt issued at T-6h (Dilithium-3)"],
         ["Market losses (without OMNIX)", "$40B+ total ecosystem destruction"],
     ]

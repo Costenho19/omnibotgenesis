@@ -23,7 +23,7 @@ This is the first documented proof of what we call **Architectural Certainty**: 
 |--------|-------|
 | **Capital that would have been preserved** | 100% of position value |
 | **Time advantage over market** | 6 hours before irreversible collapse |
-| **Governance decision** | BLOCKED at all three evaluation points |
+| **Governance decision** | WARNING at T-72h — BLOCKED at T-24h and T-6h |
 | **Cryptographic proof** | PQC-signed receipt (Dilithium-3) issued at T-6h |
 | **Market losses (without OMNIX)** | $40B+ total ecosystem destruction |
 
