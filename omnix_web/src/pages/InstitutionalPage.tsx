@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server, FileText, Download } from 'lucide-react'
+import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server, Download } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface SystemMetrics {
