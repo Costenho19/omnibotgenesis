@@ -408,8 +408,8 @@ export default function InstitutionalPage() {
                 </div>
 
                 <div className="flex items-start gap-6 mb-8">
-                  <div className="w-16 h-16 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-8 h-8 gold-text" />
+                  <div className="w-16 h-16 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src="/logo.png" alt="OMNIX" className="w-12 h-12 object-contain" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white mb-2">Terra/LUNA Forensic Reconstruction</h3>
