@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server } from 'lucide-react'
+import { Shield, Activity, AlertTriangle, Zap, BarChart3, Calculator, ExternalLink, Lock, Award, Globe, ChevronRight, Play, Target, Brain, Cpu, TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, Clock, Layers, Eye, Server, FileText, Download } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface SystemMetrics {
@@ -390,6 +390,92 @@ export default function InstitutionalPage() {
                   </div>
                 </div>
                 <ArrowRight className="w-6 h-6 gold-text" />
+              </div>
+            </section>
+
+            <div className="divider-gold" />
+
+            <section className="mb-20">
+              <div className="text-center mb-12">
+                <p className="section-title">Forensic Evidence</p>
+                <h2 className="text-3xl font-bold text-white">Technical Validation — Terra/LUNA May 2022</h2>
+                <p className="text-muted mt-4 max-w-3xl mx-auto">First documented proof of Architectural Certainty. OMNIX governance checkpoints applied to the $40B Terra/LUNA collapse using real historical data.</p>
+              </div>
+
+              <div className="glass-card p-8 gold-glow relative overflow-hidden">
+                <div className="absolute top-4 right-4 px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full">
+                  <span className="text-xs font-bold text-amber-400 tracking-wider uppercase">Forensic Evidence</span>
+                </div>
+
+                <div className="flex items-start gap-6 mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-8 h-8 gold-text" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Terra/LUNA Forensic Reconstruction</h3>
+                    <p className="text-muted leading-relaxed">3-phase governance simulation using OMNIX's 8-checkpoint fail-closed pipeline against the largest stablecoin collapse in history. Every checkpoint score, every governance decision, and the final cryptographic receipt — documented with real market data.</p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 mb-8">
+                  <div className="p-5 bg-[#0A1628]/60 rounded-xl border border-amber-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">T-72h</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">$68.84</div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="text-amber-400 font-semibold text-sm">WARNING ISSUED</span>
+                    </div>
+                    <p className="text-xs text-muted mt-2">Structural brittleness detected — Manufactured Confidence &gt; 70%</p>
+                  </div>
+
+                  <div className="p-5 bg-[#0A1628]/60 rounded-xl border border-red-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4 text-red-400" />
+                      <span className="text-xs font-semibold text-red-400 uppercase tracking-wider">T-24h</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">$18.14</div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span className="text-red-400 font-semibold text-sm">BLOCKED</span>
+                    </div>
+                    <p className="text-xs text-muted mt-2">Temporal Coherence failure — confidence inherited, not earned</p>
+                  </div>
+
+                  <div className="p-5 bg-[#0A1628]/60 rounded-xl border border-red-500/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4 text-red-400" />
+                      <span className="text-xs font-semibold text-red-400 uppercase tracking-wider">T-6h</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">$4.60</div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-red-400 font-semibold text-sm">BLOCKED + RECEIPT</span>
+                    </div>
+                    <p className="text-xs text-muted mt-2">Sovereign Gate activated — PQC-signed receipt issued</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-[#0A1628]/80 rounded-xl border border-[#C9A227]/20 mb-6">
+                  <p className="text-sm text-center text-muted">
+                    <span className="text-white font-medium">May 11, 2022 — $1.73</span> — Irreversible collapse.{' '}
+                    <span className="gold-text font-medium">OMNIX had already blocked execution 6 hours earlier.</span>
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <a
+                    href="/docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf"
+                    download
+                    className="btn-primary flex items-center gap-2 px-6 py-3"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Full Report (PDF)
+                  </a>
+                  <span className="text-xs text-muted">7 sections · Real data · Cryptographic receipt included</span>
+                </div>
               </div>
             </section>
 
