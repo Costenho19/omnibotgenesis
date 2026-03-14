@@ -245,9 +245,7 @@ Every blocked trade is tracked and analyzed 24-30 hours later to determine if th
 
 ---
 
----
-
-## HISTORICAL VALIDATION — TERRA/LUNA FORENSIC RECONSTRUCTION (March 2026)
+## TECHNICAL VALIDATION — Terra/LUNA Forensic Reconstruction (March 2026)
 
 ### What It Demonstrates
 

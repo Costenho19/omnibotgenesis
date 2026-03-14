@@ -532,7 +532,21 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
     story = []
 
     # ── COVER PAGE ────────────────────────────────────────────────────────────
-    story.append(Spacer(1, 0.6*inch))
+    story.append(Spacer(1, 0.3*inch))
+
+    # Logo centered at top
+    logo_path = "docs/omnix_quantum_logo.png"
+    if os.path.exists(logo_path):
+        logo_img = Image(logo_path, width=1.5*inch, height=1.5*inch)
+        logo_tbl = Table([[logo_img]], colWidths=[6.2*inch])
+        logo_tbl.setStyle(TableStyle([
+            ('ALIGN',    (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',   (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING',    (0,0), (-1,-1), 0),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ]))
+        story.append(logo_tbl)
+        story.append(Spacer(1, 0.18*inch))
 
     # Cover box
     cover_data = [[
