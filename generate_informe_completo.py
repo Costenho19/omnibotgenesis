@@ -230,8 +230,9 @@ def build_pdf():
         "18. API Endpoints — Alerts",
         "19. API Endpoints — Compliance Modules",
         "20. Web Pages (omnixquantum.net)",
-        "21. Documents Generated",
-        "22. Summary in Numbers",
+        "21. Technical Validation — Terra/LUNA Forensic Simulation (May 2022)",
+        "22. Documents Generated",
+        "23. Summary in Numbers",
     ]
     for item in toc_items:
         elements.append(Paragraph(item, toc_style))
@@ -580,8 +581,149 @@ def build_pdf():
         body
     ))
 
-    # === SECTION 21: DOCUMENTS ===
-    elements.append(Paragraph("21. Documents Generated", h1))
+    # === SECTION 21: TERRA/LUNA TECHNICAL VALIDATION ===
+    elements.append(PageBreak())
+    elements.append(Paragraph("21. Technical Validation — Terra/LUNA Forensic Simulation (May 2022)", h1))
+    elements.append(Paragraph(
+        "The Terra/LUNA collapse of May 2022 destroyed over $40 billion in market capitalization in 72 hours. "
+        "No automated governance system in the market detected the structural failure before it became irreversible. "
+        "OMNIX reconstructed this event using real historical market data to demonstrate how the 8-checkpoint "
+        "fail-closed governance pipeline would have responded.",
+        body
+    ))
+    elements.append(Paragraph(
+        "The simulation applied three key checkpoints — CP-0 (Signal Integrity Validator), CP-4 (Coherence Engine), "
+        "and CP-7 (Temporal Coherence Validation) — at three critical timestamps before the collapse. "
+        "The results demonstrate that OMNIX would have issued a WARNING at T-72h and a BLOCKED decision at both "
+        "T-24h and T-6h, preserving 100% of position capital before the irreversible unwinding began.",
+        body
+    ))
+    elements.append(Paragraph(
+        "This represents the first concrete demonstration of what OMNIX calls Architectural Certainty: "
+        "a governance standard where the execution boundary is owned by the runtime, not orbited by it. "
+        "The full forensic report is available as a separate document: "
+        "OMNIX_LUNA_Forensic_Simulation_May2022.pdf (7 sections, 668 KB).",
+        body
+    ))
+
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("3-Phase Governance Results", h2))
+    luna_results = [
+        ['Phase', 'Timestamp (UTC)', 'LUNA Price', 'CP-0 SIV', 'CP-4 Coherence', 'CP-7 TCV', 'Decision'],
+        ['Phase 1\nT-72h', '2022-05-08\n00:00', '$68.84', '88.9/100', '77.7/100', '56.8/100', 'WARNING'],
+        ['Phase 2\nT-24h', '2022-05-10\n00:00', '$18.14', '51.3/100', '28.4/100', '39.9/100', 'BLOCKED'],
+        ['Phase 3\nT-6h', '2022-05-10\n18:00', '$4.60', '51.8/100', '23.9/100', '46.1/100', 'BLOCKED\n+ RECEIPT'],
+        ['Collapse', '2022-05-11\n00:00', '$1.73', '—', '—', '—', 'ALL SYSTEMS\nFAILED'],
+    ]
+    luna_table = Table(luna_results, colWidths=[55, 65, 50, 55, 65, 55, 65], repeatRows=1)
+    luna_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), TABLE_HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 7.5),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 7.5),
+        ('TEXTCOLOR', (0, 1), (-1, -1), BODY_COLOR),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.5, TABLE_BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 1), (-1, 1), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 3), (-1, 3), TABLE_ALT_BG),
+        ('TEXTCOLOR', (-1, 1), (-1, 1), AMBER),
+        ('TEXTCOLOR', (-1, 2), (-1, 2), HexColor('#dc2626')),
+        ('TEXTCOLOR', (-1, 3), (-1, 3), HexColor('#dc2626')),
+        ('TEXTCOLOR', (-1, 4), (-1, 4), HexColor('#dc2626')),
+        ('FONTNAME', (-1, 1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    elements.append(luna_table)
+
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("Framework Comparison — Probabilistic vs. Forensic Governance", h2))
+    comparison_data = [
+        ['Dimension', 'Probabilistic Systems\n(Industry Standard)', 'OMNIX + VITT\n(Forensic Governance)'],
+        ['Signal Validation', 'Checks if data is\nstatistically clean', 'Forces signal to prove\nLogical Authenticity'],
+        ['Confidence Model', 'Inherits confidence from\nhistorical performance', 'Detects Manufactured Confidence;\nre-earned each cycle'],
+        ['Regime Awareness', 'Static thresholds,\nregime-agnostic', 'HMM continuous estimation;\nthresholds adapt in real time'],
+        ['Temporal Coherence', 'Point-in-time\nvalidation only', 'Must be consistent with\nentire historical trajectory'],
+        ['LUNA Outcome', 'FAILED — did not detect\nTopological Collapse', 'BLOCKED — Sovereign Gate\nactivated at T-6h'],
+    ]
+    comp_table = Table(comparison_data, colWidths=[90, 170, 170], repeatRows=1)
+    comp_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), TABLE_HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('TEXTCOLOR', (0, 1), (-1, -1), BODY_COLOR),
+        ('GRID', (0, 0), (-1, -1), 0.5, TABLE_BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 1), (-1, 1), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 3), (-1, 3), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 5), (-1, 5), TABLE_ALT_BG),
+        ('TEXTCOLOR', (-1, 5), (-1, 5), GREEN_ACCENT),
+        ('FONTNAME', (-1, 5), (-1, 5), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (1, 5), (1, 5), HexColor('#dc2626')),
+        ('FONTNAME', (1, 5), (1, 5), 'Helvetica-Bold'),
+    ]))
+    elements.append(comp_table)
+
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("Cryptographic Governance Receipt (T-6h)", h2))
+    elements.append(Paragraph(
+        "The T-6h BLOCKED decision generated a cryptographically signed governance receipt using "
+        "Dilithium-3 (NIST-standardized post-quantum signature algorithm). The receipt records the exact "
+        "checkpoint scores, failure reason, and regime classification. It is tamper-proof and publicly verifiable.",
+        body
+    ))
+    receipt_data = [
+        ['Field', 'Value'],
+        ['Decision', 'BLOCKED'],
+        ['Asset', 'LUNA/USD'],
+        ['Timestamp', '2022-05-10T18:00:00+00:00'],
+        ['Price at Gate', '$4.6044'],
+        ['CP-0 SIV Score', '51.76 / 100'],
+        ['CP-4 Coherence', '23.94 / 100'],
+        ['CP-7 TCV Score', '46.14 / 100'],
+        ['Block Threshold', '65.0 / 100'],
+        ['Regime', 'CRASH'],
+        ['Failure Reason', 'TEMPORAL_COHERENCE_VIOLATION + SIGNAL_INTEGRITY_FAILURE'],
+        ['SHA-256 Hash', '3e2020dac7bc4e75265b454c98009ddd...'],
+        ['Receipt Type', 'FORENSIC_SIMULATION'],
+    ]
+    receipt_table = Table(receipt_data, colWidths=[120, 310])
+    receipt_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), TABLE_HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8.5),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('TEXTCOLOR', (0, 1), (0, -1), LIGHT_GRAY),
+        ('TEXTCOLOR', (1, 1), (1, -1), BODY_COLOR),
+        ('GRID', (0, 0), (-1, -1), 0.5, TABLE_BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 1), (-1, 1), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 3), (-1, 3), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 5), (-1, 5), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 7), (-1, 7), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 9), (-1, 9), TABLE_ALT_BG),
+        ('BACKGROUND', (0, 11), (-1, 11), TABLE_ALT_BG),
+        ('TEXTCOLOR', (1, 1), (1, 1), HexColor('#dc2626')),
+        ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),
+    ]))
+    elements.append(receipt_table)
+
+    # === SECTION 22: DOCUMENTS ===
+    elements.append(Paragraph("22. Documents Generated", h1))
     docs_list = [
         "Pitch deck for Eureka Dubai GCC 2026 (March 18 presentation)",
         "Business Model Canvas PDF",
@@ -595,12 +737,14 @@ def build_pdf():
         "Internal Security Audit v1.0",
         "Validation questionnaires for industry professionals (multiple recipients)",
         "LinkedIn thought-leadership posts (English & Spanish)",
+        "Terra/LUNA Forensic Simulation Report (OMNIX_LUNA_Forensic_Simulation_May2022.pdf)",
+        "Technical Validation — Terra/LUNA for investor data room (OMNIX_Technical_Validation_LUNA_2022.pdf)",
     ]
     for item in docs_list:
         elements.append(Paragraph(f"\u2022 {item}", bullet))
 
-    # === SECTION 22: SUMMARY ===
-    elements.append(Paragraph("22. Summary in Numbers", h1))
+    # === SECTION 23: SUMMARY ===
+    elements.append(Paragraph("23. Summary in Numbers", h1))
     elements.append(make_db_table(
         ['Metric', 'Value', 'Notes'],
         [
