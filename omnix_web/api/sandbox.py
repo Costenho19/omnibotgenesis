@@ -147,7 +147,7 @@ def _check_rate_limit(ip: str) -> bool:
 
 
 def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
-    api_key = os.environ.get('GOOGLE_AI_API_KEY')
+    api_key = os.environ.get('GOOGLE_AI_API_KEY') or os.environ.get('GEMINI_API_KEY')
     if not api_key:
         raise RuntimeError("AI service not configured")
 
