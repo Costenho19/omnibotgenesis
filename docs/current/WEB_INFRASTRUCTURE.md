@@ -1,6 +1,6 @@
 # Web Infrastructure - OMNIX QUANTUM
 
-**Last Updated**: February 7, 2026  
+**Last Updated**: March 15, 2026  
 **Status**: Production Ready
 
 ## Overview
@@ -151,10 +151,11 @@ Los tres servicios corren simultáneamente en Replit (desarrollo/demos):
 
 > **Nota**: "Website LIVE" en docs/REAL_SYSTEM_STATUS.md indica que el sitio está operativo en desarrollo para demos de inversores. No hay hosting de producción separado aún.
 
-### Producción (Railway) - Bot Only
+### Producción (Railway)
 - **Bot Telegram**: Railway (24/7)
-- **Website**: Se ejecuta en Replit durante demos (no hosting producción dedicado)
-- **Roadmap**: Evaluando Vercel/Netlify para hosting estático de producción
+- **Website (omnixquantum.net)**: Railway — `omnix_web/api/server.py` (gunicorn) sirve React compilado + API endpoints
+- **Public Governance Sandbox (`/try`)**: Endpoint público sin autenticación, Gemini AI + 8-checkpoint pipeline, receipts almacenados en `decision_receipts` (`client_id='PUBLIC'`, `domain='public_sandbox'`), verificables en el servidor de verificación Railway
+- **Variables requeridas en Railway**: `DATABASE_URL`, `FINNHUB_API_KEY`, `GOOGLE_AI_API_KEY`
 
 ## Troubleshooting
 

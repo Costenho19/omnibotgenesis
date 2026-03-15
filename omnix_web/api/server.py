@@ -17,6 +17,9 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 app = Flask(__name__)
 CORS(app)
 
+from api.sandbox import register_sandbox_routes
+register_sandbox_routes(app)
+
 
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')

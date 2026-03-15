@@ -25,8 +25,10 @@ In the Railway dashboard for this service, add these variables:
 |----------|-------|----------|
 | `DATABASE_URL` | Your PostgreSQL connection string | Yes |
 | `FINNHUB_API_KEY` | Your Finnhub API key | Yes (for news feed) |
+| `GOOGLE_AI_API_KEY` | Google AI / Gemini API key | Yes (for `/try` sandbox) |
 
 > Copy the `DATABASE_URL` from your existing Railway bot service — it's the same database.
+> Copy the `GOOGLE_AI_API_KEY` from your bot service or generate one at https://aistudio.google.com/app/apikey
 
 ### 4. Deploy
 Railway will automatically:
@@ -55,6 +57,9 @@ For `www.omnixquantum.net`: point to the same Railway URL or keep on Replit Stat
 | `/api/live-metrics` | Live metrics from DB (JSON) |
 | `/api/news` | Crypto news from Finnhub (JSON) |
 | `/api/health` | Health check (JSON) |
+| `/try` | Public Governance Sandbox (React) |
+| `/api/public/sandbox/evaluate` | Sandbox evaluation endpoint (POST, JSON) |
+| `/api/public/sandbox/examples` | Example scenarios (GET, JSON) |
 
 ## Live Data
 The landing page shows live metrics fetched from the same PostgreSQL database as the bot.
