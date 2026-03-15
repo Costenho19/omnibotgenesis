@@ -2,7 +2,7 @@
 ## Decision Governance Infrastructure
 
 **Classification**: Investor Confidential
-**Last Updated**: March 13, 2026 — Terra/LUNA validation added, 8-checkpoint entry + 3-gate exit architecture (ADR-036)
+**Last Updated**: March 15, 2026 — SVB forensic validation added (Q-SVB, cross-domain proof, traditional banking)
 
 ---
 

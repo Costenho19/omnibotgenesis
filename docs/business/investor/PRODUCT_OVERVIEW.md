@@ -4,7 +4,7 @@
 **Document Type**: Product Overview  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
-**Last Updated**: March 6, 2026
+**Last Updated**: March 15, 2026 — SVB forensic validation added (cross-domain proof, traditional banking)
 
 ---
 
