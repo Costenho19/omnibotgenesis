@@ -26,6 +26,7 @@ interface ReceiptData {
 interface EvaluationResult {
   success: boolean
   scenario_summary: string
+  explanation: string
   language: string
   signals: Record<string, number>
   decision: 'APPROVED' | 'BLOCKED'
@@ -426,10 +427,15 @@ export default function PublicGovernanceSandbox() {
                   }`}>
                     {result.decision}
                   </h2>
-                  <p className="text-muted mb-4">
+                  <p className="text-muted mb-2">
                     {result.checkpoints_passed}/{result.checkpoints_total} checkpoints passed
                     {result.checkpoints_blocked > 0 && ` — ${result.checkpoints_blocked} blocked`}
                   </p>
+                  {result.explanation && (
+                    <p className="text-sm text-gray-300 max-w-lg mx-auto mb-4 leading-relaxed italic">
+                      {result.explanation}
+                    </p>
+                  )}
 
                   {result.receipt && (
                     <div className="mt-6 p-4 rounded-lg bg-[#0A1628]/60 border border-[#C9A227]/20 text-left max-w-md mx-auto">

@@ -63,7 +63,7 @@ def _check_rate_limit(ip: str) -> bool:
     return True
 
 
-def _parse_scenario_with_gemini(scenario_text: str) -> dict:
+def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
     api_key = os.environ.get('GOOGLE_AI_API_KEY')
     if not api_key:
         raise RuntimeError("AI service not configured")
@@ -71,6 +71,14 @@ def _parse_scenario_with_gemini(scenario_text: str) -> dict:
     import google.generativeai as genai
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-2.5-flash')
+
+    lang_instruction = ""
+    if language_hint and language_hint in ('en', 'es'):
+        lang_instruction = f'\nIMPORTANT: The user requested response language "{language_hint}". Set "language" to "{language_hint}" and write summary/reasoning in {"English" if language_hint == "en" else "Spanish"}.'
+
+    company_instruction = ""
+    if company_name:
+        company_instruction = f'\nThe entity/company involved is: "{company_name}". Include this in the asset identifier and summary.'
 
     prompt = f"""You are a governance signal extractor for OMNIX Decision Governance Infrastructure.
 
@@ -92,11 +100,12 @@ Also provide:
 - "asset": a short identifier for what's being evaluated (e.g. "PHASE-II-DRUG", "SOLAR-FARM-50M", "CYBER-POL-500K")
 - "language": "en" or "es" (detected from the input)
 - "summary": A one-sentence summary of the scenario (in the SAME language as the input)
+- "explanation": A 2-3 sentence overall decision rationale explaining the key risks and why this scenario would likely be blocked or approved (in the SAME language as the input)
 - "reasoning": For each signal, a brief explanation of WHY you assigned that score (in the SAME language as the input)
 
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
-
-CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. The JSON must have this exact structure:
+{lang_instruction}{company_instruction}
+CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST include ALL 8 signals — do not omit any. The JSON must have this exact structure:
 {{
   "signals": {{
     "probability_score": <number>,
@@ -112,6 +121,7 @@ CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. The JSON mu
   "asset": "<string>",
   "language": "en" or "es",
   "summary": "<string>",
+  "explanation": "<string>",
   "reasoning": {{
     "probability_score": "<string>",
     "risk_exposure": "<string>",
@@ -144,17 +154,23 @@ Scenario:
         'signal_integrity', 'temporal_coherence'
     ]
     signals = parsed.get('signals', {})
+    missing = [s for s in required_signals if s not in signals]
+    if missing:
+        raise ValueError(f"AI failed to extract required signals: {', '.join(missing)}")
+
     for sig in required_signals:
-        if sig not in signals:
-            signals[sig] = 50.0
         signals[sig] = max(0, min(100, float(signals[sig])))
+
+    if 'domain' not in parsed or 'asset' not in parsed:
+        raise ValueError("AI failed to extract required fields: domain, asset")
 
     return {
         'signals': signals,
-        'domain': parsed.get('domain', 'generic'),
-        'asset': parsed.get('asset', 'UNKNOWN'),
-        'language': parsed.get('language', 'en'),
+        'domain': parsed['domain'],
+        'asset': parsed['asset'],
+        'language': parsed.get('language', language_hint or 'en'),
         'summary': parsed.get('summary', scenario_text[:100]),
+        'explanation': parsed.get('explanation', ''),
         'reasoning': parsed.get('reasoning', {}),
     }
 
@@ -187,6 +203,7 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
     GovernanceEvaluationEngine = _load_governance_engine()
 
     engine = GovernanceEvaluationEngine()
+    asset = asset[:30] if asset else 'UNKNOWN'
     result = engine.evaluate(
         signals=signals,
         asset=asset,
@@ -308,11 +325,12 @@ def public_sandbox_evaluate():
         scenario_text = scenario_text[:500]
 
     try:
-        ai_result = _parse_scenario_with_gemini(scenario_text)
-    except json.JSONDecodeError:
+        ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.error(f"AI signal extraction failed: {e}")
         return jsonify({
-            'error': 'AI failed to parse scenario. Please try rephrasing.',
-            'error_es': 'La IA no pudo analizar el escenario. Intente reformularlo.',
+            'error': 'AI failed to extract governance signals. Please try rephrasing your scenario.',
+            'error_es': 'La IA no pudo extraer las señales de gobernanza. Intente reformular su escenario.',
         }), 500
     except Exception as e:
         logger.error(f"Gemini parsing failed: {e}")
@@ -339,6 +357,7 @@ def public_sandbox_evaluate():
     return jsonify({
         'success': True,
         'scenario_summary': ai_result['summary'],
+        'explanation': ai_result.get('explanation', ''),
         'language': ai_result['language'],
         'signals': ai_result['signals'],
         **pipeline_result,
