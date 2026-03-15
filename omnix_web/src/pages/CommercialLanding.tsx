@@ -61,6 +61,7 @@ export default function CommercialLanding() {
             </div>
           </div>
           <div className="flex items-center gap-8">
+            <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
@@ -77,10 +78,10 @@ export default function CommercialLanding() {
             OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. First validated in digital asset trading. Future verticals (Year 2-3+): robotics, biotech, supply chain, lending, and insurance.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <a href="https://mail.google.com/mail/?view=cm&to=contacto@omnixquantum.net" target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
-              Request Access
+            <Link to="/try" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+              Try OMNIX Live
               <ArrowRight className="w-5 h-5" />
-            </a>
+            </Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               <Phone className="w-5 h-5" />
               Talk to Us
@@ -349,6 +350,9 @@ export default function CommercialLanding() {
             <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6">
+            <Link to="/try" className="text-[#C9A227] hover:text-white text-sm transition-colors font-medium">
+              Try OMNIX
+            </Link>
             <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">
               Credit Demo
             </Link>

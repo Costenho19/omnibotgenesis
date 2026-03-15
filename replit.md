@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. It features an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing. The project aims to provide robust, error-free decision governance, ensuring capital preservation and enhancing financial integrity in automated decision-making across various sectors.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. Its purpose is to provide robust, error-free decision governance, ensuring capital preservation and enhancing financial integrity in automated decision-making across various sectors. Key capabilities include an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -133,7 +133,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 | **Dashboard UI** | "OMNIX Decision Governance" | None visible |
 | **Bot AI Responses** | "OMNIX Decision Governance" | None visible |
 | **Telegram Messages** | "OMNIX Decision Governance" | None visible |
-**Business/Investor Docs** | "OMNIX" or "OMNIX — Decision Governance Infrastructure" | None visible |
+| **Business/Investor Docs** | "OMNIX" or "OMNIX — Decision Governance Infrastructure" | None visible |
 | **Technical Docs (H1)** | "OMNIX — [Topic]" | "Internal Build Reference: 6.5.4e" in metadata |
 | **Source Code Constants** | N/A (internal) | VERSION = "6.5.4e", VERSION_NAME = "INSTITUTIONAL+" |
 | **Source Code Docstrings** | N/A (internal) | May reference INSTITUTIONAL+ (internal only) |
@@ -144,11 +144,18 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key features include an AI Risk Guardian, Portfolio Management, Confidence-Adaptive Entry System (CAES), On-Chain Data Intelligence, Execution Protocol, and Asset Quarantine System. The Decision Engine incorporates an EMA Regime Signal, a Monte Carlo VETO Engine, and RMS Enforcement. The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
+OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
 
-Architectural Gaps implemented include:
+Key features and architectural gaps include:
+-   **AI Risk Guardian**: Manages AI-related risks.
+-   **Portfolio Management**: Handles asset allocation and management.
+-   **Confidence-Adaptive Entry System (CAES)**: Dynamically adjusts entry based on confidence levels.
+-   **On-Chain Data Intelligence**: Integrates blockchain data for insights.
+-   **Execution Protocol**: Defines trade execution procedures.
+-   **Asset Quarantine System**: Isolates assets under review.
+-   **Decision Engine**: Incorporates an EMA Regime Signal, Monte Carlo VETO Engine, and RMS Enforcement.
 -   **Signal Integrity Validator (SIV)**: Pre-pipeline data quality gate.
--   **Forward Trajectory Implicator (FTI)**: Forward-looking complement to TCV, evaluates decision implications.
+-   **Forward Trajectory Implicator (FTI)**: Evaluates decision implications.
 -   **Regime-Conditioned Kelly (RCK)**: Kelly inputs segmented by HMM market regime.
 -   **Exit Governance Layer (EGL)**: 3-gate exit pipeline with regime-adjusted thresholds, coherence checks, and TCV.
 
@@ -168,15 +175,16 @@ DCI quantifies internal signal divergence to explain HOLD decisions; a high DCI 
 The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Quick Insights, Calibration Progress, and Recommended Actions. Dashboards are built with Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It uses RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. Custom checkpoint threshold values per client are stored in `client_thresholds` PostgreSQL table, with fail-closed fallback to `CHECKPOINT_DEFAULTS` and hard-coded `CHECKPOINT_SAFETY_FLOORS` preventing bypass.
-
-**B2B Payload Encryption**: Client payloads are encrypted at rest using Fernet (AES-128-CBC + HMAC-SHA256) via `PAYLOAD_ENCRYPTION_KEY` environment secret.
+This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It uses RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. Custom checkpoint threshold values per client are stored in a PostgreSQL table, with fail-closed fallback to `CHECKPOINT_DEFAULTS` and hard-coded `CHECKPOINT_SAFETY_FLOORS`. Client payloads are encrypted at rest using Fernet.
 
 ### Governance Compliance Modules — 5 Modules
 Five additive governance modules are built upon the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints, providing functionalities for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
+
+### Public Governance Sandbox (/try)
+A fully public, no-auth sandbox (React + Flask) where Gemini AI interprets free-form scenarios into 8 governance signals, runs through the REAL 8-checkpoint pipeline, and stores a PQC-signed receipt. This receipt is verifiable at the Railway verification server. Rate limited to 5/min per IP.
 
 ### Web Infrastructure
 The project utilizes a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demonstrations, and the Verification Server (Port 8000) for public receipt validation.
@@ -199,5 +207,5 @@ The project utilizes a multi-port architecture: OMNIX Web (Port 3000) for public
 -   **ANU QRNG**: Quantum random numbers.
 
 ### Databases
--   **PostgreSQL (Railway)**: Main persistence for all trading, analysis, and system configuration data.
+-   **PostgreSQL (Railway)**: Main persistence.
 -   **Redis (Railway)**: Caching, state management, and rate limiting.

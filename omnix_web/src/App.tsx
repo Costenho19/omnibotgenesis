@@ -5,6 +5,7 @@ import CreditGovernanceDemo from './pages/CreditGovernanceDemo'
 import InsuranceGovernanceDemo from './pages/InsuranceGovernanceDemo'
 import EnergyGovernanceDemo from './pages/EnergyGovernanceDemo'
 import BiotechGovernanceDemo from './pages/BiotechGovernanceDemo'
+import PublicGovernanceSandbox from './pages/PublicGovernanceSandbox'
 import './index.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/governance-demo-insurance" element={<InsuranceGovernanceDemo />} />
         <Route path="/governance-demo-energy" element={<EnergyGovernanceDemo />} />
         <Route path="/governance-demo-biotech" element={<BiotechGovernanceDemo />} />
+        <Route path="/try" element={<PublicGovernanceSandbox />} />
         <Route path="/terminal" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

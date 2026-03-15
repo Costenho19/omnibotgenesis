@@ -18,6 +18,7 @@ from .governance_incidents import governance_incidents_bp
 from .governance_reports import governance_reports_bp
 from .governance_sandbox import governance_sandbox_bp
 from .governance_alerts import governance_alerts_bp
+from .public_sandbox import public_sandbox_bp
 
 __all__ = [
     'views_bp',
@@ -35,4 +36,5 @@ __all__ = [
     'governance_reports_bp',
     'governance_sandbox_bp',
     'governance_alerts_bp',
+    'public_sandbox_bp',
 ]
