@@ -409,8 +409,72 @@ def _generate_receipt(decision: str, asset: str, decision_trace: list, db_url: s
     }
 
 
+def _init_sandbox_interactions_table(db_url: str):
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS sandbox_interactions (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                receipt_id VARCHAR(50),
+                scenario_text TEXT,
+                company_name VARCHAR(255),
+                language VARCHAR(10),
+                domain VARCHAR(50),
+                asset VARCHAR(50),
+                decision VARCHAR(20),
+                checkpoints_passed INTEGER,
+                checkpoints_blocked INTEGER,
+                client_ip VARCHAR(100),
+                user_agent VARCHAR(500)
+            )
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"Could not init sandbox_interactions table: {e}")
+
+
+def _log_sandbox_interaction(db_url: str, **kwargs):
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO sandbox_interactions
+                (receipt_id, scenario_text, company_name, language, domain, asset,
+                 decision, checkpoints_passed, checkpoints_blocked, client_ip, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            kwargs.get('receipt_id'),
+            kwargs.get('scenario_text', '')[:1000],
+            kwargs.get('company_name'),
+            kwargs.get('language'),
+            kwargs.get('domain'),
+            kwargs.get('asset', '')[:50],
+            kwargs.get('decision'),
+            kwargs.get('checkpoints_passed'),
+            kwargs.get('checkpoints_blocked'),
+            kwargs.get('client_ip', '')[:100],
+            kwargs.get('user_agent', '')[:500],
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info(f"Sandbox interaction logged for receipt {kwargs.get('receipt_id')}")
+    except Exception as e:
+        logger.warning(f"Could not log sandbox interaction: {e}")
+
+
 def register_sandbox_routes(app):
     from flask import request as flask_request, jsonify as flask_jsonify
+
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        _init_sandbox_interactions_table(db_url)
 
     @app.route('/api/public/sandbox/evaluate', methods=['POST'])
     def public_sandbox_evaluate():
@@ -502,6 +566,22 @@ def register_sandbox_routes(app):
                 'description': gate.get('description', ''),
                 'reasoning': reasoning.get(signal_key, ''),
             })
+
+        if db_url:
+            _log_sandbox_interaction(
+                db_url=db_url,
+                receipt_id=receipt_id,
+                scenario_text=scenario_text,
+                company_name=company_name,
+                language=ai_result['language'],
+                domain=ai_result['domain'],
+                asset=ai_result['asset'][:50],
+                decision=governance_result['decision'],
+                checkpoints_passed=governance_result['checkpoints_passed'],
+                checkpoints_blocked=governance_result['checkpoints_blocked'],
+                client_ip=client_ip,
+                user_agent=flask_request.headers.get('User-Agent', '')[:500],
+            )
 
         return flask_jsonify({
             'success': True,

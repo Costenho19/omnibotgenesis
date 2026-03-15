@@ -290,6 +290,71 @@ def contact_lead():
         }), 500
 
 
+@app.route('/api/sandbox/stats', methods=['GET'])
+def sandbox_stats():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database unavailable'}), 503
+    try:
+        cur = conn.cursor()
+
+        cur.execute("SELECT COUNT(*) FROM sandbox_interactions")
+        total = cur.fetchone()[0]
+
+        cur.execute("""
+            SELECT decision, COUNT(*) as cnt
+            FROM sandbox_interactions GROUP BY decision ORDER BY cnt DESC
+        """)
+        by_decision = {row[0]: row[1] for row in cur.fetchall()}
+
+        cur.execute("""
+            SELECT domain, COUNT(*) as cnt
+            FROM sandbox_interactions
+            WHERE domain IS NOT NULL
+            GROUP BY domain ORDER BY cnt DESC
+        """)
+        by_domain = {row[0]: row[1] for row in cur.fetchall()}
+
+        cur.execute("""
+            SELECT language, COUNT(*) as cnt
+            FROM sandbox_interactions
+            WHERE language IS NOT NULL
+            GROUP BY language ORDER BY cnt DESC
+        """)
+        by_language = {row[0]: row[1] for row in cur.fetchall()}
+
+        cur.execute("SELECT COUNT(DISTINCT client_ip) FROM sandbox_interactions WHERE client_ip IS NOT NULL")
+        unique_ips = cur.fetchone()[0]
+
+        cur.execute("""
+            SELECT id, created_at, company_name, domain, decision, checkpoints_passed,
+                   checkpoints_blocked, receipt_id,
+                   LEFT(scenario_text, 120) as scenario_preview
+            FROM sandbox_interactions
+            ORDER BY created_at DESC LIMIT 20
+        """)
+        cols = [desc[0] for desc in cur.description]
+        recent = [dict(zip(cols, row)) for row in cur.fetchall()]
+        for r in recent:
+            if r.get('created_at'):
+                r['created_at'] = r['created_at'].isoformat()
+
+        cur.close()
+        conn.close()
+
+        return jsonify({
+            'total_evaluations': total,
+            'unique_visitors': unique_ips,
+            'by_decision': by_decision,
+            'by_domain': by_domain,
+            'by_language': by_language,
+            'recent': recent,
+        })
+    except Exception as e:
+        print(f"Stats error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
