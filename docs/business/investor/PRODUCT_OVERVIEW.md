@@ -173,7 +173,7 @@ OMNIX applied its governance pipeline to the Silicon Valley Bank collapse — th
 
 | Phase | Timestamp | SVB Equity | Governance Decision |
 |-------|-----------|------------|---------------------|
-| T-90d | Dec 7, 2022 | $236.09/share | STRUCTURAL WARNING — High-risk flag raised |
+| T-90d | Dec 5, 2022 | $236.09/share | STRUCTURAL WARNING — High-risk flag raised |
 | T-14d | Feb 23, 2023 | $287.42/share | SUSPENDED — Kelly = 0%, WARNING escalated |
 | T-48h | March 8-9, 2023 | $267.83 → $106.04 | BLOCKED — Sovereign Logic Gate activated |
 | FDIC Takeover | March 10, 2023 | $0 | Capital 100% preserved — never deployed into SVB instruments |
