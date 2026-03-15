@@ -153,8 +153,8 @@ export default function PublicGovernanceSandbox() {
   const shareOnLinkedIn = () => {
     const verifyUrl = result?.verification_url || ''
     const text = result?.language === 'es'
-      ? `Acabo de probar OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluaron mi escenario y la decisión fue ${result?.decision}. Recibo PQC-firmado verificable: ${verifyUrl}\n\nPruébalo: `
-      : `Just tried OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluated my scenario and the decision was ${result?.decision}. PQC-signed verifiable receipt: ${verifyUrl}\n\nTry it: `
+      ? `Acabo de probar OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluaron mi escenario y la decisión fue ${result?.decision}. Recibo firmado verificable: ${verifyUrl}\n\nPruébalo: `
+      : `Just tried OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluated my scenario and the decision was ${result?.decision}. Signed verifiable receipt: ${verifyUrl}\n\nTry it: `
     const url = 'https://omnixquantum.net/try'
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank')
   }
@@ -518,7 +518,7 @@ export default function PublicGovernanceSandbox() {
                 <div className="p-4 rounded-lg bg-[#0A1628]/40">
                   <ExternalLink className="w-6 h-6 text-[#C9A227] mx-auto mb-3" />
                   <h4 className="text-sm font-medium text-white mb-1">Verifiable Receipt</h4>
-                  <p className="text-xs text-muted">Every evaluation generates a PQC-signed receipt stored in PostgreSQL and verifiable publicly</p>
+                  <p className="text-xs text-muted">Every evaluation generates a cryptographically signed receipt stored in PostgreSQL and verifiable publicly</p>
                 </div>
               </div>
             </div>
