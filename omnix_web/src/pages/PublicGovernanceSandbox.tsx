@@ -150,9 +150,10 @@ export default function PublicGovernanceSandbox() {
   }
 
   const shareOnLinkedIn = () => {
+    const verifyUrl = result?.verification_url || ''
     const text = result?.language === 'es'
-      ? `Acabo de probar OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluaron mi escenario y la decisión fue ${result?.decision}. Recibo PQC-firmado verificable. Pruébalo: `
-      : `Just tried OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluated my scenario and the decision was ${result?.decision}. PQC-signed verifiable receipt. Try it: `
+      ? `Acabo de probar OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluaron mi escenario y la decisión fue ${result?.decision}. Recibo PQC-firmado verificable: ${verifyUrl}\n\nPruébalo: `
+      : `Just tried OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluated my scenario and the decision was ${result?.decision}. PQC-signed verifiable receipt: ${verifyUrl}\n\nTry it: `
     const url = 'https://omnixquantum.net/try'
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank')
   }

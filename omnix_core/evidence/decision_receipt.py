@@ -131,8 +131,8 @@ class DecisionReceiptEngine:
                 (receipt_id, timestamp_utc, asset, decision, veto_chain, 
                  policy_version, engine_version, prev_hash, content_hash,
                  signature, signature_algorithm, public_key,
-                 client_id, encrypted_payload, retention_until)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 client_id, encrypted_payload, retention_until, domain)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (receipt_id) DO NOTHING
             """, (
                 receipt['receipt_id'],
@@ -150,6 +150,7 @@ class DecisionReceiptEngine:
                 receipt.get('client_id'),
                 receipt.get('encrypted_payload'),
                 retention_until,
+                receipt.get('domain'),
             ))
             conn.commit()
             cur.close()

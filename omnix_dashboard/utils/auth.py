@@ -149,6 +149,7 @@ def _is_exempt_path(path: str) -> bool:
         '/health',
         '/static/',
         '/favicon.ico',
+        '/api/public/',
     ]
     return any(path.startswith(p) or path == p for p in exempt_paths)
 
