@@ -354,6 +354,20 @@ def public_sandbox_evaluate():
             'error_es': 'La evaluación de gobernanza falló. Intente de nuevo.',
         }), 500
 
+    _log_sandbox_interaction(
+        receipt_id=pipeline_result.get('receipt_id'),
+        scenario_text=scenario_text,
+        company_name=company_name,
+        language=ai_result['language'],
+        domain=ai_result['domain'],
+        asset=ai_result.get('asset', '')[:50],
+        decision=pipeline_result.get('decision'),
+        checkpoints_passed=pipeline_result.get('checkpoints_passed'),
+        checkpoints_blocked=pipeline_result.get('checkpoints_blocked'),
+        client_ip=client_ip,
+        user_agent=request.headers.get('User-Agent', '')[:500],
+    )
+
     return jsonify({
         'success': True,
         'scenario_summary': ai_result['summary'],
