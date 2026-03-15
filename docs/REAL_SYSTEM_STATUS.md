@@ -15,6 +15,10 @@
 | Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 15, 2026) — Public Governance Sandbox (/try)
+
+- **Mar 15**: **Public Governance Sandbox LIVE — ADR-040 implementado**. Endpoint público sin autenticación donde cualquier usuario puede describir un escenario en texto libre (EN/ES, max 500 chars). Gemini AI interpreta el escenario en 8 señales de gobernanza. El pipeline REAL de 8 checkpoints (`GovernanceEvaluationEngine`) evalúa la decisión. Receipt PQC-firmado almacenado en `decision_receipts` con `client_id='PUBLIC'`, `domain='public_sandbox'`. Receipt verificable en Railway: `/verify/{receipt_id}`. Rate limit: 5/min por IP. Fail-closed: si el receipt falla, la evaluación retorna error 500. Blueprint: `omnix_dashboard/blueprints/public_sandbox.py`. React page: `omnix_web/src/pages/PublicGovernanceSandbox.tsx`. Ruta: `/try`. Campos opcionales: `company_name`, `language` (auto-detect por defecto).
+
 ### Cambios Recientes (Mar 12, 2026) — Sandbox + Alerts Modules
 
 - **Mar 12**: **Módulo Sandbox LIVE — ADR-038 implementado**. Clientes B2B pueden ahora testear decisiones de gobernanza en entorno aislado, sin afectar el hash chain de producción. Misma lógica de engine (GovernanceEvaluationEngine), mismo schema de señales, mismos 8 checkpoints. Tablas nuevas: `sandbox_sessions`, `sandbox_evaluations`. 6 endpoints nuevos: `POST/GET/DELETE /api/governance/sandbox/sessions`, `POST /api/governance/sandbox/evaluate`, `GET /api/governance/sandbox/schema`. Rate limit: 30 req/min (vs 10 producción). Max 100 evaluaciones por sesión. Sesiones expiran en 7 días. Receipt format: `OMNIX-SB-XXXXXXXX` (aislado, no verificable en cadena pública).

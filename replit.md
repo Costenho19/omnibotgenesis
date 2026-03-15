@@ -146,13 +146,9 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ### Core Components and Design Patterns
 OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
 
-Key features and architectural gaps include:
+Key features include:
 -   **AI Risk Guardian**: Manages AI-related risks.
--   **Portfolio Management**: Handles asset allocation and management.
 -   **Confidence-Adaptive Entry System (CAES)**: Dynamically adjusts entry based on confidence levels.
--   **On-Chain Data Intelligence**: Integrates blockchain data for insights.
--   **Execution Protocol**: Defines trade execution procedures.
--   **Asset Quarantine System**: Isolates assets under review.
 -   **Decision Engine**: Incorporates an EMA Regime Signal, Monte Carlo VETO Engine, and RMS Enforcement.
 -   **Signal Integrity Validator (SIV)**: Pre-pipeline data quality gate.
 -   **Forward Trajectory Implicator (FTI)**: Evaluates decision implications.

@@ -215,22 +215,23 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
             },
             prev_hash=prev_hash,
         )
-        receipt['client_id'] = 'PUBLIC_SANDBOX'
+        receipt['client_id'] = 'PUBLIC'
+        receipt['domain'] = 'public_sandbox'
         stored = receipt_engine.store_receipt(receipt)
-        if stored:
-            receipt_id = receipt['receipt_id']
-            receipt_data = {
-                'receipt_id': receipt['receipt_id'],
-                'timestamp': receipt['timestamp'],
-                'content_hash': receipt['content_hash'],
-                'signature_algorithm': receipt['signature_algorithm'],
-                'pqc_signed': receipt['signature'] is not None,
-            }
-            logger.info(f"Public sandbox receipt stored: {receipt_id}")
-        else:
-            logger.warning("Receipt generated but storage failed — continuing without receipt")
+        if not stored:
+            raise RuntimeError("Receipt storage returned False")
+        receipt_id = receipt['receipt_id']
+        receipt_data = {
+            'receipt_id': receipt['receipt_id'],
+            'timestamp': receipt['timestamp'],
+            'content_hash': receipt['content_hash'],
+            'signature_algorithm': receipt['signature_algorithm'],
+            'pqc_signed': receipt['signature'] is not None,
+        }
+        logger.info(f"Public sandbox receipt stored: {receipt_id}")
     except Exception as e:
-        logger.warning(f"Receipt generation unavailable: {e}")
+        logger.error(f"Receipt generation/storage failed (fail-closed): {e}")
+        raise RuntimeError(f"Receipt generation failed: {e}")
 
     checkpoint_names = {
         'CP-0': {'en': 'Signal Integrity', 'es': 'Integridad de Señal'},
@@ -270,7 +271,7 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         'gate_results': gate_results_enriched,
         'receipt': receipt_data,
         'receipt_id': receipt_id,
-        'verification_url': f"https://omnibotgenesis-production.up.railway.app/api/verify/{receipt_id}" if receipt_id else None,
+        'verification_url': f"https://omnibotgenesis-production.up.railway.app/verify/{receipt_id}" if receipt_id else None,
     }
 
 
@@ -287,21 +288,24 @@ def public_sandbox_evaluate():
         }), 429
 
     data = request.get_json(silent=True)
-    if not data or not data.get('scenario'):
+    if not data or not data.get('scenario_text', data.get('scenario')):
         return jsonify({
-            'error': 'Missing "scenario" field. Provide a free-form text description.',
-            'error_es': 'Falta el campo "scenario". Proporcione una descripción en texto libre.',
+            'error': 'Missing "scenario_text" field. Provide a free-form text description.',
+            'error_es': 'Falta el campo "scenario_text". Proporcione una descripción en texto libre.',
         }), 400
 
-    scenario_text = str(data['scenario']).strip()
+    scenario_text = str(data.get('scenario_text', data.get('scenario', ''))).strip()
+    company_name = str(data.get('company_name', '')).strip() or None
+    language_hint = str(data.get('language', '')).strip() or None
+
     if len(scenario_text) < 10:
         return jsonify({
             'error': 'Scenario too short. Please describe the decision in more detail.',
             'error_es': 'Escenario muy corto. Por favor describa la decisión con más detalle.',
         }), 400
 
-    if len(scenario_text) > 2000:
-        scenario_text = scenario_text[:2000]
+    if len(scenario_text) > 500:
+        scenario_text = scenario_text[:500]
 
     try:
         ai_result = _parse_scenario_with_gemini(scenario_text)

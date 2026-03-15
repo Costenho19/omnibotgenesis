@@ -46,7 +46,7 @@ interface ExampleScenario {
   domain: string
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
 
 const CHECKPOINT_ICONS: Record<string, string> = {
   'CP-0': '🔍', 'CP-1': '📊', 'CP-2': '⚠️', 'CP-3': '🔗',
@@ -56,6 +56,8 @@ const CHECKPOINT_ICONS: Record<string, string> = {
 export default function PublicGovernanceSandbox() {
   const { metrics: liveMetrics, formatNumberFull } = useLiveMetrics()
   const [scenario, setScenario] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [language, setLanguage] = useState<'auto' | 'en' | 'es'>('auto')
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [result, setResult] = useState<EvaluationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -92,7 +94,11 @@ export default function PublicGovernanceSandbox() {
       const res = await fetch(`${API_BASE}/api/public/sandbox/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenario: scenario.trim() }),
+        body: JSON.stringify({
+          scenario_text: scenario.trim().slice(0, 500),
+          ...(companyName ? { company_name: companyName } : {}),
+          ...(language !== 'auto' ? { language } : {}),
+        }),
       })
 
       if (res.status === 429) {
@@ -254,12 +260,40 @@ export default function PublicGovernanceSandbox() {
               onChange={e => setScenario(e.target.value)}
               placeholder="Example: A hedge fund wants to open a $5M long position on a cryptocurrency that surged 40% in 24 hours with unusual volume but declining on-chain metrics..."
               rows={4}
-              maxLength={2000}
+              maxLength={500}
               className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none resize-none placeholder-gray-600 mb-4"
             />
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-xs text-muted mb-1 block">Company / Entity Name (optional)</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={e => setCompanyName(e.target.value)}
+                  placeholder="e.g. Acme Capital"
+                  maxLength={100}
+                  className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-2.5 text-white text-sm focus:border-[#C9A227] focus:outline-none placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted mb-1 block">Language</label>
+                <div className="flex gap-2">
+                  {(['auto', 'en', 'es'] as const).map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => setLanguage(lang)}
+                      className={`px-4 py-2.5 rounded-lg text-sm border transition-colors ${language === lang ? 'bg-[#C9A227]/20 border-[#C9A227] text-[#C9A227]' : 'bg-[#0A1628] border-[#C9A227]/20 text-muted hover:border-[#C9A227]/40'}`}
+                    >
+                      {lang === 'auto' ? 'Auto-detect' : lang === 'en' ? 'English' : 'Español'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">{scenario.length}/2000</span>
+              <span className="text-xs text-muted">{scenario.length}/500</span>
               <button
                 onClick={runEvaluation}
                 disabled={isEvaluating || scenario.trim().length < 10}

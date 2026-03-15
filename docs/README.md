@@ -58,7 +58,15 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **RCK (ADR-035)**: `omnix_core/sizing/regime_conditioned_kelly.py` — Kelly inputs segmented by HMM regime, 3-level fallback chain. Replaces hardcoded win_rate=0.55. 36 tests.
 - **EGL (ADR-036)**: `omnix_core/governance/exit_governance.py` — 3-gate exit pipeline + PQC-signed exit receipts in `exit_governance_receipts`. Emergency SL bypasses EGL. 44 tests.
 - **Pipeline**: Entry governance = 8 checkpoints (CP-0 SIV through CP-8 ECW). Exit governance = 3 gates (EGL).
-- **ADR count**: 36 (ADR-001 → ADR-036)
+- **ADR count**: 40 (ADR-001 → ADR-040)
+
+### Public Governance Sandbox — "Try OMNIX" (Mar 15, 2026)
+- **ESTADO**: ✅ COMPLETADO — ADR-040
+- **Ruta**: `/try` (público, sin autenticación)
+- **Flujo**: Texto libre (EN/ES, max 500 chars) → Gemini AI → 8 señales → Pipeline REAL 8 checkpoints → Receipt PQC-firmado → Verificable en Railway `/verify/{receipt_id}`
+- **Fail-closed**: Si receipt falla, evaluación retorna 500
+- **Archivos**: `omnix_dashboard/blueprints/public_sandbox.py`, `omnix_web/src/pages/PublicGovernanceSandbox.tsx`
+- **DOCUMENTACIÓN**: [ADR-040](reference/adr/ADR-040-public-governance-sandbox.md)
 
 ### Insurance Domain Pilot — Multi-Domain Extensibility Validated (Mar 1, 2026)
 - **ESTADO**: ✅ COMPLETADO - ADR-030 + 3 PQC-signed receipts reales
