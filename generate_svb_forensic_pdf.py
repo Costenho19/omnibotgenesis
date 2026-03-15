@@ -372,18 +372,22 @@ def build_pdf():
         s_body
     ))
 
+    def pcell(txt, color=WHITE, bold=False):
+        fn = 'Helvetica-Bold' if bold else 'Helvetica'
+        return Paragraph(txt, S('_pc', fontSize=8, textColor=color, fontName=fn, leading=11))
+
     structure_rows = [
-        ["Balance Sheet Metric", "Value", "Risk Assessment"],
-        ["Total Assets (Dec 2022)", "$211.8 Billion", "2nd largest bank failure when seized"],
-        ["HTM Bond Portfolio", "$91.3 Billion", "CRITICAL — long-duration, rate-sensitive"],
-        ["Unrealized HTM Losses", "$15.9 Billion", "CRITICAL — exceeds tangible equity"],
-        ["Tangible Common Equity", "$11.8 Billion", "CRITICAL — fully erased by HTM losses"],
-        ["Total Deposits (Dec 2022)", "$173.1 Billion", "HIGH RISK — >95% uninsured"],
-        ["Uninsured Deposits", ">$151 Billion (87%)", "CRITICAL — above FDIC $250K limit"],
-        ["Deposit Concentration", "VC-backed tech startups", "HIGH RISK — correlated outflows"],
-        ["Q4 2022 Deposit Outflows", "$25 Billion", "WARNING — accelerating velocity"],
+        [pcell("Balance Sheet Metric", GOLD, True), pcell("Value", GOLD, True), pcell("Risk Assessment", GOLD, True)],
+        [pcell("Total Assets (Dec 2022)"), pcell("$211.8 Billion"), pcell("2nd largest US bank failure in history", RED_ALERT, True)],
+        [pcell("HTM Bond Portfolio"), pcell("$91.3 Billion"), pcell("CRITICAL — long-duration, rate-sensitive", RED_ALERT, True)],
+        [pcell("Unrealized HTM Losses"), pcell("$15.9 Billion"), pcell("CRITICAL — exceeds tangible equity", RED_ALERT, True)],
+        [pcell("Tangible Common Equity"), pcell("$11.8 Billion"), pcell("CRITICAL — fully erased by HTM losses", RED_ALERT, True)],
+        [pcell("Total Deposits (Dec 2022)"), pcell("$173.1 Billion"), pcell("HIGH RISK — concentrated, uninsured", YELLOW, True)],
+        [pcell("Uninsured Deposits"), pcell(">$151 Billion (87%)"), pcell("CRITICAL — above FDIC $250K limit", RED_ALERT, True)],
+        [pcell("Deposit Concentration"), pcell("VC-backed tech startups"), pcell("HIGH RISK — correlated outflows", YELLOW, True)],
+        [pcell("Q4 2022 Deposit Outflows"), pcell("$25 Billion"), pcell("WARNING — accelerating velocity", YELLOW, True)],
     ]
-    structure_tbl = Table(structure_rows, colWidths=[2.2*inch, 1.8*inch, 2.0*inch])
+    structure_tbl = Table(structure_rows, colWidths=[2.0*inch, 1.5*inch, 2.5*inch])
     structure_tbl.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), DARK_MID),
         ('TEXTCOLOR',     (0,0), (-1,0), GOLD),
