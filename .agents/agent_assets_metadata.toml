@@ -30,3 +30,9 @@ id = "jDr2V_9ubxMfS8-NfrFVs"
 uri = "file://docs/business/pdfs/Report_OMNIX_HaroldNunes_March2026.pdf"
 type = "pdf"
 title = "Reporte Eureka OMNIX — March 2026 (con paper SSRN)"
+
+[[outputs]]
+id = "XbWFvuuZXF2-M_oKYwlYK"
+uri = "file://docs/business/pdf/OMNIX_Forensic_SVB_March2023.pdf"
+type = "pdf"
+title = "OMNIX Forensic SVB — Reporte Corregido"

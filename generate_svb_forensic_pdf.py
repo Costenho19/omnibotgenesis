@@ -387,7 +387,7 @@ def build_pdf():
         [pcell("Deposit Concentration"), pcell("VC-backed tech startups"), pcell("HIGH RISK — correlated outflows", YELLOW, True)],
         [pcell("Q4 2022 Deposit Outflows"), pcell("$25 Billion"), pcell("WARNING — accelerating velocity", YELLOW, True)],
     ]
-    structure_tbl = Table(structure_rows, colWidths=[2.0*inch, 1.5*inch, 2.5*inch])
+    structure_tbl = Table(structure_rows, colWidths=[1.9*inch, 1.5*inch, 3.0*inch])
     structure_tbl.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), DARK_MID),
         ('TEXTCOLOR',     (0,0), (-1,0), GOLD),
