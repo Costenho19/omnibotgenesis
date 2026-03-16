@@ -835,7 +835,7 @@ def build_pdf():
         ('LEFTPADDING',   (0,0), (-1,-1), 8),
         ('GRID',          (0,0), (-1,-1), 0.3, MED_GRAY),
         ('BOX',           (0,0), (-1,-1), 1, GOLD),
-        ('ROWBACKGROUNDS',(0,1),(0,3), [CARD_BG, DARK_BG]),
+        ('ROWBACKGROUNDS',(0,1),(-1,3), [CARD_BG, DARK_BG]),
         ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
     ]))
     story.append(systemic_tbl)
