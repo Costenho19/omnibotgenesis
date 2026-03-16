@@ -8,7 +8,7 @@ from fpdf.enums import XPos, YPos
 
 BASE_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(BASE_DIR, "docs", "business", "pdfs")
-LOGO_PATH  = os.path.join(BASE_DIR, "assets", "omnix_logo.png")
+LOGO_PATH  = os.path.join(BASE_DIR, "omnix_web", "public", "logo.png")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 FONT_DIR = os.path.join(
@@ -18,13 +18,13 @@ FONT_DIR = os.path.join(
 FONT_REGULAR = os.path.join(FONT_DIR, "DejaVuSans.ttf")
 FONT_BOLD    = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
 
-DARK      = (15,  15,  15)
-NAVY      = (20,  20,  20)
-ACCENT    = (20,  20,  20)
-ACCENT2   = (201, 168, 55)
-GOLD      = (201, 168, 55)
-MID_GRAY  = (140, 140, 140)
-LIGHT_BG  = (245, 240, 218)
+DARK      = (20,  20,  40)
+NAVY      = (10,  18,  40)
+ACCENT    = (0,   80,  160)
+ACCENT2   = (0,   110, 190)
+GOLD      = (200, 155, 0)
+MID_GRAY  = (150, 155, 170)
+LIGHT_BG  = (240, 244, 252)
 WHITE     = (255, 255, 255)
 GREEN     = (20,  120, 60)
 GREEN_DK  = (10,  80,  40)
