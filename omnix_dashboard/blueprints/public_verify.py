@@ -543,7 +543,7 @@ def zenodo_download_hub():
 </head>
 <body>
   <h1>OMNIX Quantum — Zenodo Deposit Files</h1>
-  <p>Download all files, then upload them to zenodo.org</p>
+  <p>Published on Zenodo — DOI: <a href="https://doi.org/10.5281/zenodo.19056919" target="_blank" style="color:#4fc3f7">10.5281/zenodo.19056919</a></p>
 
   <a class="card" href="/paper" target="_blank">
     <div class="icon">📄</div>
@@ -617,7 +617,7 @@ def zenodo_download_hub():
     <div class="btn">Download</div>
   </a>
 
-  <p class="note">After downloading all 8 files, go to zenodo.org → New Upload → drag all files into the upload box.</p>
+  <p class="note">Publicado en Zenodo el 16 de marzo de 2026 · DOI: 10.5281/zenodo.19056919</p>
 </body>
 </html>'''
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}

@@ -2,7 +2,8 @@
 
 **Status**: IMPLEMENTED — November 2025  
 **Author**: Harold Nunes, OMNIX Quantum  
-**Part of**: OMNIX Quantum Zenodo Deposit — DOI: 10.5281/zenodo.XXXXXXX
+**Part of**: OMNIX Quantum Zenodo Deposit — DOI: 10.5281/zenodo.19056919  
+**Related preprint**: SSRN Working Paper 6321298 (under peer review) — https://ssrn.com/abstract=6321298
 
 ---
 

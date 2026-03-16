@@ -8,7 +8,9 @@ provided for academic reproducibility alongside the Zenodo publication:
     "OMNIX Quantum: Post-Quantum Decision Governance Infrastructure
      for Automated Financial Systems"
     Harold Nunes, OMNIX Quantum, March 2026
-    DOI: 10.5281/zenodo.XXXXXXX
+    Zenodo DOI: 10.5281/zenodo.19056919
+    Related preprint: SSRN Working Paper 6321298 (under peer review)
+    https://ssrn.com/abstract=6321298
 
 These implementations are simplified for clarity and readability.
 They do not constitute the full production system.

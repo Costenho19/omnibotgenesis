@@ -673,7 +673,9 @@ def build_section_4(styles):
     elements.append(Paragraph(
         "In parallel with product development, Harold has submitted a formal research paper documenting the "
         "OMNIX architecture and production findings to SSRN (Social Science Research Network), the leading "
-        "academic preprint platform operated by Elsevier. The paper is currently under review.",
+        "academic preprint platform operated by Elsevier. The paper is currently under review. "
+        "A companion technical deposit — including the full dataset of 72,443 real governance decisions "
+        "with cryptographic hash chain — has been published on Zenodo with a permanent DOI.",
         styles['BodyText2']
     ))
     elements.append(Spacer(1, 6))
@@ -681,17 +683,19 @@ def build_section_4(styles):
         ['Field', 'Details'],
         ['Title', 'Cryptographically Auditable Decision Governance for Autonomous Trading Systems: A Production Study OMNIX Quantum'],
         ['Author', 'Harold Nunes'],
-        ['Platform', 'SSRN — Social Science Research Network (Elsevier)'],
-        ['Abstract ID', '6321298'],
-        ['Submitted', 'February 28, 2026'],
-        ['Status', 'Under Review (PRELIMINARY_UPLOAD)'],
+        ['SSRN Platform', 'SSRN — Social Science Research Network (Elsevier)'],
+        ['SSRN Abstract ID', '6321298'],
+        ['SSRN Submitted', 'February 28, 2026'],
+        ['SSRN Status', 'Under Review (PRELIMINARY_UPLOAD)'],
+        ['Zenodo DOI', '10.5281/zenodo.19056919 (Published March 16, 2026)'],
+        ['Zenodo Dataset', '72,443 real governance decisions — Dilithium-3 signed, SHA-256 hash chain'],
     ]
     elements.append(make_table(ssrn_data[0], ssrn_data[1:], [100, 360]))
     elements.append(Spacer(1, 4))
     elements.append(Paragraph(
-        "This submission demonstrates that OMNIX is not only a production system but a documented "
-        "academic contribution — positioning Harold as both a builder and a thought leader in the "
-        "AI governance space.",
+        "This dual submission (SSRN preprint + Zenodo dataset with DOI) demonstrates that OMNIX is not only "
+        "a production system but a documented academic contribution with independently verifiable evidence — "
+        "positioning Harold as both a builder and a thought leader in the AI governance space.",
         styles['SmallNote']
     ))
 
@@ -1387,6 +1391,7 @@ def build_section_14(styles):
         '<b>LinkedIn:</b> <a href="https://www.linkedin.com/in/harold-nunes" color="#1155CC">www.linkedin.com/in/harold-nunes</a>',
         '<b>Public Governance Sandbox (Live Demo — No Login):</b> <a href="https://omnixquantum.net/try" color="#1155CC">https://omnixquantum.net/try</a>',
         '<b>SSRN Research Paper (under review):</b> <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298" color="#1155CC">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298</a>',
+        '<b>Zenodo Dataset + Technical Deposit (DOI):</b> <a href="https://doi.org/10.5281/zenodo.19056919" color="#1155CC">https://doi.org/10.5281/zenodo.19056919</a>',
         '<b>Contact:</b> <a href="mailto:contacto@omnixquantum.net" color="#1155CC">contacto@omnixquantum.net</a>',
     ]
     elements.extend(bullet_list(links, styles))

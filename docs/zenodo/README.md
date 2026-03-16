@@ -3,7 +3,7 @@
 **Title**: OMNIX Quantum: Post-Quantum Decision Governance Infrastructure for Automated Financial Systems
 **Author**: Harold Nunes — OMNIX Quantum, Abu Dhabi, UAE  
 **Date**: March 2026  
-**Related**: SSRN Working Paper 6321298
+**Related preprint**: SSRN Working Paper 6321298 (under peer review) — https://ssrn.com/abstract=6321298
 
 ---
 
@@ -124,8 +124,8 @@ You are free to share, adapt, and build upon this work for any purpose, provided
   year      = {2026},
   month     = {March},
   publisher = {Zenodo},
-  doi       = {10.5281/zenodo.XXXXXXX},
-  url       = {https://doi.org/10.5281/zenodo.XXXXXXX}
+  doi       = {10.5281/zenodo.19056919},
+  url       = {https://doi.org/10.5281/zenodo.19056919}
 }
 ```
 
