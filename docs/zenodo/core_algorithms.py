@@ -5,7 +5,7 @@ OMNIX Core Algorithm Reference Implementation
 Reference implementations of key OMNIX Decision Governance algorithms,
 provided for academic reproducibility alongside the Zenodo publication:
 
-    "OMNIX: Post-Quantum Decision Governance Infrastructure
+    "OMNIX Quantum: Post-Quantum Decision Governance Infrastructure
      for Automated Financial Systems"
     Harold Nunes, OMNIX Quantum, March 2026
     DOI: 10.5281/zenodo.XXXXXXX

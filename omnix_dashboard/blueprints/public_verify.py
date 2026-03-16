@@ -590,7 +590,34 @@ def zenodo_download_hub():
     <div class="btn">Download</div>
   </a>
 
-  <p class="note">After downloading all 5 files, go to zenodo.org → New Upload → drag all files into the upload box.</p>
+  <a class="card" href="/zenodo/download/adr_022_post_quantum_cryptography.md">
+    <div class="icon">🔐</div>
+    <div class="info">
+      <strong>adr_022_post_quantum_cryptography.md</strong>
+      <span>ADR-022 — Dilithium-3 + Kyber-768, operational Nov 2025</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/adr_042_hybrid_kem.md">
+    <div class="icon">🔑</div>
+    <div class="info">
+      <strong>adr_042_hybrid_kem.md</strong>
+      <span>ADR-042 — Hybrid KEM: X25519 + Kyber-768 via HKDF</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/adr_044_transparency_chain.md">
+    <div class="icon">⛓️</div>
+    <div class="info">
+      <strong>adr_044_transparency_chain.md</strong>
+      <span>ADR-044 — Rolling Merkle chain + RFC 3161 timestamps</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <p class="note">After downloading all 8 files, go to zenodo.org → New Upload → drag all files into the upload box.</p>
 </body>
 </html>'''
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
@@ -605,6 +632,9 @@ def zenodo_download_file(filename):
         'core_algorithms.py',
         'dataset_description.md',
         'README.md',
+        'adr_022_post_quantum_cryptography.md',
+        'adr_042_hybrid_kem.md',
+        'adr_044_transparency_chain.md',
     }
     if filename not in allowed:
         return 'File not found.', 404
