@@ -256,7 +256,7 @@ def build_pdf():
         ["Total assets at risk", "$209.0 Billion (2nd largest US bank failure in history)"],
         ["Domain", "Traditional Banking — domain-agnostic proof of OMNIX architecture"],
     ]
-    summary_tbl = Table(summary_rows, colWidths=[3.0*inch, 3.0*inch])
+    summary_tbl = Table(summary_rows, colWidths=[2.1*inch, 3.9*inch])
     summary_tbl.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), DARK_MID),
         ('TEXTCOLOR',     (0,0), (-1,0), GOLD),
@@ -750,7 +750,7 @@ def build_pdf():
         ["Capital Outcome\n($100,000 position)", "$0 remaining\n(-100% loss)",
          "$100,000 preserved\n(0% loss — BLOCKED before deployment)"],
     ]
-    preserve_tbl = Table(preserve_rows, colWidths=[1.6*inch, 2.2*inch, 2.2*inch])
+    preserve_tbl = Table(preserve_rows, colWidths=[1.3*inch, 1.9*inch, 2.8*inch])
     preserve_tbl.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), DARK_MID),
         ('TEXTCOLOR',     (0,0), (-1,0), GOLD),
@@ -876,7 +876,7 @@ def build_pdf():
          "$548B in bank assets frozen\n$40B in crypto destroyed",
          "100% capital preservation\nacross both reconstructions"],
     ]
-    arch_tbl = Table(arch_rows, colWidths=[1.5*inch, 2.25*inch, 2.25*inch])
+    arch_tbl = Table(arch_rows, colWidths=[1.5*inch, 2.0*inch, 2.5*inch])
     arch_tbl.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), DARK_MID),
         ('TEXTCOLOR',     (0,0), (-1,0), GOLD),
