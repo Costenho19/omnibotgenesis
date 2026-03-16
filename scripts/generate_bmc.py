@@ -187,7 +187,7 @@ def generate():
         "Governance engine (live, production)",
         "50,688 validated decisions",
         "728,868 shadow evaluations",
-        "36 Architecture Decision Records",
+        "27 Architecture Decision Records",
         "PQC cryptographic stack",
         "Harold Nunes -- Founder & CEO",
     ], bg=LIGHT_BG, header_bg=(0, 90, 160))
@@ -224,7 +224,7 @@ def generate():
         "What clients get:",
         "Capital protected before loss",
         "Full PQC-signed audit trail",
-        "MiCA + ADGM compliance ready",
+        "Designed for MiCA + ADGM frameworks",
         "Sharia governance assessment",
         "100% veto accuracy (validated)",
         "",
