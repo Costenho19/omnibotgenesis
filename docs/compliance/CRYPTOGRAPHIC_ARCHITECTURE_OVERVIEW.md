@@ -126,13 +126,34 @@ The PQC module is designed for resilience:
 
 ---
 
+## Extended Capabilities (March 2026)
+
+Three additional security enhancements were implemented in March 2026, building on the ADR-022 foundation:
+
+| Enhancement | ADR | Description |
+|-------------|-----|-------------|
+| **Hybrid Key Exchange** | ADR-042 | Combines X25519 (classical ECDH) and Kyber-768 (PQC KEM) via HKDF. Security requires breaking both algorithms simultaneously — the NIST-recommended approach for the quantum transition period. |
+| **Crypto-Agility** | ADR-043 | Provider abstraction layer allowing signing algorithm swap via environment variable (`ACTIVE_SIGNING_PROVIDER`) without code changes. Enables sub-hour response to any cryptographic advisory. |
+| **Self-Verifiable Receipts** | ADR-044 | RFC 3161-style internal timestamps, rolling Merkle accumulator, and append-only transparency log. Every receipt can be independently verified without OMNIX infrastructure — suitable for regulator-facing audit trails. |
+
+**Approved institutional statement for March 2026:**
+> "Beyond the base PQC implementation, OMNIX implements hybrid key exchange (classical + post-quantum, NIST-recommended approach), a crypto-agility layer enabling algorithm swaps without code changes, and self-verifiable governance receipts with rolling Merkle integrity chains. Every receipt contains all data required for independent verification."
+
+---
+
 ## Related Documentation
 
 | Document | Purpose |
 |----------|---------|
 | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | Technical decision record — base PQC implementation |
 | `docs/reference/adr/ADR-031-pqc-configurable-assurance-tiers.md` | Configurable assurance tiers — threat model by level, approved framing |
+| `docs/reference/adr/ADR-042-hybrid-cryptography.md` | Hybrid X25519 + Kyber-768 key exchange |
+| `docs/reference/adr/ADR-043-crypto-agility-layer.md` | Provider abstraction — algorithm swap without code changes |
+| `docs/reference/adr/ADR-044-quantum-secure-decision-receipts.md` | Self-verifiable receipts, Merkle chain, transparency log |
 | `omnix_core/security/pqc_config.py` | Tier configuration module (PQC_SIGNING_LEVEL) |
+| `omnix_core/security/crypto_providers.py` | Crypto-agility provider registry (ADR-043) |
+| `omnix_core/security/hybrid_crypto.py` | Hybrid KEM module (ADR-042) |
+| `omnix_core/evidence/transparency_chain.py` | Transparency log + internal timestamping (ADR-044) |
 | `omnix_core/security/pqc_security.py` | Source implementation |
 | `docs/compliance/audits/OMNIX_Security_Audit_v1.0_INTERNAL.md` | Security audit (internal, data room) |
 | `docs/compliance/SECURITY_OVERVIEW.md` | Public security overview (1-page) |

@@ -46,11 +46,33 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-034](reference/adr/ADR-034-forward-trajectory-implication.md) - Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV: Regime Transition Risk + Implied Consistency + Signal Momentum. 45 tests pasando (Mar 2026).  
 **Referencia**: [ADR-035](reference/adr/ADR-035-regime-conditioned-kelly.md) - Regime-Conditioned Kelly (RCK). Kelly inputs segmentados por régimen HMM con 3-level fallback chain. 36 tests pasando (Mar 2026).  
 **Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026).  
-**Referencia**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md) - Multi-Agent Decision Governance. 3 agentes especializados (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) con consenso ponderado paralelo. Feature flag `ENABLE_MULTI_AGENT_GOVERNANCE`. 19 tests pasando (Mar 2026).
+**Referencia**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md) - Multi-Agent Decision Governance. 3 agentes especializados (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) con consenso ponderado paralelo. Feature flag `ENABLE_MULTI_AGENT_GOVERNANCE`. 19 tests pasando (Mar 2026).  
+**Referencia**: [ADR-042](reference/adr/ADR-042-hybrid-cryptography.md) - Hybrid Cryptography. X25519 (ECDH clásico) + Kyber-768 (PQC KEM) combinados via HKDF. Secreto combinado = HKDF(kyber_secret || ecdh_secret). Degradación grácil: hybrid → kyber_only → ecdh_only. 8 tests pasando (Mar 2026).  
+**Referencia**: [ADR-043](reference/adr/ADR-043-crypto-agility-layer.md) - Crypto-Agility Layer. CryptoProvider interface + registry (dilithium3, dilithium5, ed25519). Swap de algoritmo vía `ACTIVE_SIGNING_PROVIDER` env var sin cambios de código. Backward-compatible. 10 tests pasando (Mar 2026).  
+**Referencia**: [ADR-044](reference/adr/ADR-044-quantum-secure-decision-receipts.md) - Quantum-Secure Decision Receipts. Timestamping RFC 3161-style interno, rolling Merkle root, transparency log (`governance_transparency_log`). Receipts auto-verificables sin infraestructura OMNIX. 18 tests pasando (Mar 2026).
 
 ---
 
 ## Cambios Recientes
+
+### ADR-044: Quantum-Secure Decision Receipts (Mar 16, 2026)
+- **ESTADO**: ✅ COMPLETADO — Transparency log, timestamping RFC-3161-style, rolling Merkle root
+- **Nuevo módulo**: `omnix_core/evidence/transparency_chain.py` — TransparencyChain + InternalTimestamp
+- **Nueva tabla**: `governance_transparency_log` (log_id, receipt_id, symbol, payload_hash, prev_log_hash, merkle_root, signing_provider, ts_utc)
+- **Actualizado**: `decision_receipt.py` → append automático al transparency log en cada receipt
+- **Auto-verificable**: Receipts contienen todos los datos para verificación independiente sin OMNIX
+
+### ADR-043: Crypto-Agility Layer (Mar 16, 2026)
+- **ESTADO**: ✅ COMPLETADO — Provider registry + interface abstracta
+- **Nuevo módulo**: `omnix_core/security/crypto_providers.py` — CryptoProvider ABC + 3 providers + registry
+- **Providers**: dilithium3 (enterprise default), dilithium5 (high-assurance), ed25519 (dev/test)
+- **Activación**: `ACTIVE_SIGNING_PROVIDER=dilithium5` — sin reescritura de código
+
+### ADR-042: Hybrid Cryptography (Mar 16, 2026)
+- **ESTADO**: ✅ COMPLETADO — X25519 + Kyber-768 + HKDF combiner
+- **Nuevo módulo**: `omnix_core/security/hybrid_crypto.py` — HybridKEM class
+- **Fórmula**: `combined_secret = HKDF(kyber_secret || ecdh_secret, label=OMNIX-ADR042-v1)`
+- **Degradación**: hybrid → kyber768_only → x25519_only (fail-safe, nunca bloquea)
 
 ### ADR-041: Multi-Agent Decision Governance (Mar 16, 2026)
 - **ESTADO**: ✅ COMPLETADO — Sistema multi-agente aditivo implementado

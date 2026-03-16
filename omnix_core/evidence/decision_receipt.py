@@ -10,10 +10,19 @@ from typing import Dict, Any, Optional, Tuple
 logger = logging.getLogger("OMNIX.Evidence")
 
 try:
-    from pqc.sign import dilithium3
+    from omnix_core.security.crypto_providers import get_active_provider, get_provider
+    _active_provider = get_active_provider()
     PQC_AVAILABLE = True
-except ImportError:
+except Exception:
+    _active_provider = None
     PQC_AVAILABLE = False
+    logger.warning("Crypto providers not available — receipts will use SHA-256 only")
+
+try:
+    from pqc.sign import dilithium3
+    _LEGACY_DILITHIUM3_AVAILABLE = True
+except ImportError:
+    _LEGACY_DILITHIUM3_AVAILABLE = False
     dilithium3 = None
 
 
@@ -40,56 +49,79 @@ class DecisionReceiptEngine:
     def __init__(self, db_url: Optional[str] = None):
         self.db_url = db_url or os.environ.get('DATABASE_URL')
         self._signing_keys: Optional[Tuple[bytes, bytes]] = None
+        self._provider = _active_provider
         self._init_keys()
 
     def _init_keys(self):
-        if not PQC_AVAILABLE:
-            logger.warning("PQC not available - receipts will use SHA-256 only")
+        if not PQC_AVAILABLE or self._provider is None:
+            logger.warning("Crypto provider not available - receipts will use SHA-256 only")
             return
         try:
-            self._signing_keys = dilithium3.keypair()
-            logger.info("Receipt signing keys generated (Dilithium-3)")
+            self._signing_keys = self._provider.generate_keypair()
+            logger.info(f"Receipt signing keys generated ({self._provider.algorithm_name()})")
         except Exception as e:
             logger.error(f"Failed to generate signing keys: {e}")
 
     @property
     def public_key_b64(self) -> Optional[str]:
-        if self._signing_keys:
-            return base64.b64encode(self._signing_keys[0]).decode('utf-8')
+        if self._signing_keys and self._provider:
+            return self._provider.serialize_public_key(self._signing_keys[0])
         return None
 
     def generate_receipt(self, decision: Dict[str, Any], prev_hash: str = "") -> Dict[str, Any]:
         receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
         timestamp = datetime.now(timezone.utc).isoformat()
 
+        provider_id = self._provider.provider_id() if self._provider else "none"
+        alg_name    = self._provider.algorithm_name() if self._provider else "NONE"
+
         public_payload = {
-            'receipt_id': receipt_id,
-            'timestamp': timestamp,
-            'asset': decision.get('symbol', decision.get('asset', 'UNKNOWN')),
-            'decision': decision.get('decision', 'UNKNOWN').upper(),
-            'veto_chain': self._extract_veto_chain(decision),
-            'policy_version': decision.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
-            'engine_version': os.environ.get('OMNIX_VERSION', '6.5.4e'),
-            'prev_hash': prev_hash,
+            'receipt_id':       receipt_id,
+            'timestamp':        timestamp,
+            'asset':            decision.get('symbol', decision.get('asset', 'UNKNOWN')),
+            'decision':         decision.get('decision', 'UNKNOWN').upper(),
+            'veto_chain':       self._extract_veto_chain(decision),
+            'policy_version':   decision.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
+            'engine_version':   os.environ.get('OMNIX_VERSION', '6.5.4e'),
+            'prev_hash':        prev_hash,
+            'signing_provider': provider_id,
         }
 
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 
         signature_b64 = None
-        if self._signing_keys and PQC_AVAILABLE:
+        if self._signing_keys and self._provider:
             try:
-                message = content_hash.encode('utf-8')
-                raw_sig = dilithium3.sign(message, self._signing_keys[1])
-                signature_b64 = base64.b64encode(raw_sig).decode('utf-8')
+                message   = content_hash.encode('utf-8')
+                raw_sig   = self._provider.sign(message, self._signing_keys[1])
+                if raw_sig:
+                    signature_b64 = base64.b64encode(raw_sig).decode('utf-8')
             except Exception as e:
                 logger.error(f"Failed to sign receipt: {e}")
 
-        public_payload['signature'] = signature_b64
-        public_payload['signature_algorithm'] = 'Dilithium-3 (ML-DSA-65)' if signature_b64 else 'NONE'
-        public_payload['public_key'] = self.public_key_b64
+        public_payload['signature']           = signature_b64
+        public_payload['signature_algorithm'] = alg_name if signature_b64 else 'NONE'
+        public_payload['public_key']          = self.public_key_b64
+
+        self._append_to_transparency_chain(receipt_id, public_payload)
 
         return public_payload
+
+    def _append_to_transparency_chain(self, receipt_id: str, payload: Dict[str, Any]) -> None:
+        """Non-blocking: append receipt to transparency log (ADR-044)."""
+        try:
+            from omnix_core.evidence.transparency_chain import TransparencyChain
+            chain = TransparencyChain()
+            chain.append(
+                receipt_id=receipt_id,
+                symbol=payload.get('asset', 'UNKNOWN'),
+                decision=payload.get('decision', 'UNKNOWN'),
+                payload_hash=payload.get('content_hash', ''),
+                event_type='decision',
+            )
+        except Exception as e:
+            logger.debug(f"Transparency chain append skipped (non-blocking): {e}")
 
     def _extract_veto_chain(self, decision: Dict[str, Any]) -> list:
         trace = decision.get('decision_trace', [])
@@ -193,51 +225,72 @@ class ReceiptVerifier:
     @staticmethod
     def verify_receipt(receipt: Dict[str, Any]) -> Dict[str, Any]:
         result = {
-            'receipt_id': receipt.get('receipt_id', 'UNKNOWN'),
-            'hash_valid': False,
-            'signature_valid': False,
-            'chain_valid': None,
+            'receipt_id':             receipt.get('receipt_id', 'UNKNOWN'),
+            'hash_valid':             False,
+            'signature_valid':        False,
+            'chain_valid':            None,
             'verification_timestamp': datetime.now(timezone.utc).isoformat(),
         }
 
         payload_for_hash = {
-            'receipt_id': receipt.get('receipt_id'),
-            'timestamp': receipt.get('timestamp'),
-            'asset': receipt.get('asset'),
-            'decision': receipt.get('decision'),
-            'veto_chain': receipt.get('veto_chain'),
-            'policy_version': receipt.get('policy_version'),
-            'engine_version': receipt.get('engine_version'),
-            'prev_hash': receipt.get('prev_hash'),
+            'receipt_id':       receipt.get('receipt_id'),
+            'timestamp':        receipt.get('timestamp'),
+            'asset':            receipt.get('asset'),
+            'decision':         receipt.get('decision'),
+            'veto_chain':       receipt.get('veto_chain'),
+            'policy_version':   receipt.get('policy_version'),
+            'engine_version':   receipt.get('engine_version'),
+            'prev_hash':        receipt.get('prev_hash'),
+            'signing_provider': receipt.get('signing_provider'),
         }
+        if payload_for_hash['signing_provider'] is None:
+            del payload_for_hash['signing_provider']
 
         canonical = json.dumps(payload_for_hash, sort_keys=True, ensure_ascii=True)
         computed_hash = hashlib.sha256(canonical.encode('utf-8')).hexdigest()
-        result['hash_valid'] = (computed_hash == receipt.get('content_hash'))
+        result['hash_valid']    = (computed_hash == receipt.get('content_hash'))
         result['computed_hash'] = computed_hash
-        result['stored_hash'] = receipt.get('content_hash')
+        result['stored_hash']   = receipt.get('content_hash')
 
-        sig_b64 = receipt.get('signature')
+        sig_b64     = receipt.get('signature')
         pub_key_b64 = receipt.get('public_key')
 
-        if sig_b64 and pub_key_b64 and PQC_AVAILABLE:
+        if sig_b64 and pub_key_b64:
+            provider_id = receipt.get('signing_provider', 'dilithium3')
+            provider = None
             try:
-                signature = base64.b64decode(sig_b64)
-                public_key = base64.b64decode(pub_key_b64)
-                message = receipt['content_hash'].encode('utf-8')
-                dilithium3.verify(signature, message, public_key)
-                result['signature_valid'] = True
+                from omnix_core.security.crypto_providers import get_provider as _get_provider
+                provider = _get_provider(provider_id)
             except Exception:
-                result['signature_valid'] = False
-        elif not PQC_AVAILABLE:
-            result['signature_valid'] = None
-            result['signature_note'] = 'PQC library not available for verification'
+                pass
+
+            if provider is None and _LEGACY_DILITHIUM3_AVAILABLE and provider_id == 'dilithium3':
+                try:
+                    signature  = base64.b64decode(sig_b64)
+                    public_key = base64.b64decode(pub_key_b64)
+                    message    = receipt['content_hash'].encode('utf-8')
+                    dilithium3.verify(signature, message, public_key)
+                    result['signature_valid'] = True
+                except Exception:
+                    result['signature_valid'] = False
+            elif provider:
+                try:
+                    signature  = base64.b64decode(sig_b64)
+                    public_key = provider.deserialize_public_key(pub_key_b64)
+                    message    = receipt['content_hash'].encode('utf-8')
+                    result['signature_valid'] = provider.verify(signature, message, public_key)
+                except Exception:
+                    result['signature_valid'] = False
+            else:
+                result['signature_valid'] = None
+                result['signature_note']  = f'Provider {provider_id!r} not available for verification'
         elif not sig_b64:
             result['signature_valid'] = None
-            result['signature_note'] = 'Receipt was not signed'
+            result['signature_note']  = 'Receipt was not signed'
 
         result['overall_valid'] = result['hash_valid'] and (result['signature_valid'] is not False)
-        result['algorithm'] = receipt.get('signature_algorithm', 'UNKNOWN')
+        result['algorithm']     = receipt.get('signature_algorithm', 'UNKNOWN')
+        result['signing_provider'] = receipt.get('signing_provider', 'dilithium3')
 
         return result
 
