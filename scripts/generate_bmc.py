@@ -36,12 +36,17 @@ class BMCPDF(FPDF):
 
     def footer(self):
         self.set_fill_color(*NAVY)
-        self.rect(0, self.h - 8, self.w, 8, style="F")
-        self.set_y(-7)
+        self.rect(0, self.h - 12, self.w, 12, style="F")
+        self.set_y(-11)
         self.set_font("DejaVu", "", 6)
         self.set_text_color(*GOLD)
         self.cell(0, 4,
                   "omnixquantum.net  |  Pre-Seed $500,000 USD  |  Eureka Dubai GCC 2026 Semifinalist  |  Confidential",
+                  align="C")
+        self.ln(3.5)
+        self.set_text_color(180, 180, 180)
+        self.cell(0, 4,
+                  "Research: SSRN Working Paper 6321298 (under peer review)  |  Zenodo DOI: 10.5281/zenodo.19056919 (published Mar 16, 2026)",
                   align="C")
 
 

@@ -635,6 +635,13 @@ I spent three months building this with personal capital. Lean, focused build. G
 | Website | www.omnixquantum.net |
 | LinkedIn | linkedin.com/in/harold-nunes-21bb65285 |
 
+**Research Publications**
+
+| Type | Reference |
+|------|-----------|
+| SSRN Preprint | Working Paper 6321298 — under peer review · https://ssrn.com/abstract=6321298 |
+| Zenodo Dataset | DOI: 10.5281/zenodo.19056919 — published March 16, 2026 · 72,443 real governance decisions |
+
 ---
 
 *OMNIX — Governing Decisions Under Uncertainty*
