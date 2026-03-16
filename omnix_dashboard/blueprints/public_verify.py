@@ -496,3 +496,18 @@ def verify_page_html(receipt_id: str):
 </body>
 </html>'''
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
+@public_verify_bp.route('/paper', methods=['GET'])
+def serve_zenodo_paper():
+    """Serve the OMNIX technical paper — printable to PDF for Zenodo submission."""
+    paper_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'docs', 'zenodo', 'omnix_technical_paper.html'
+    )
+    try:
+        with open(paper_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+    except FileNotFoundError:
+        return 'Paper not found.', 404

@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMNIX: Post-Quantum Decision Governance Infrastructure for Automated Financial Systems</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Linux+Libertine+O&family=Source+Code+Pro:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'EB Garamond', 'Georgia', 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.75;
+    color: #1a1a1a;
+    background: #fff;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 60px 60px 80px;
+  }
+
+  /* ── Header ── */
+  .paper-title {
+    font-size: 20pt;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    margin-bottom: 18px;
+    color: #0a0a0a;
+  }
+  .paper-authors {
+    text-align: center;
+    font-size: 11pt;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  .paper-affiliation {
+    text-align: center;
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+  .paper-date {
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    margin-bottom: 28px;
+  }
+  .paper-doi {
+    text-align: center;
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 32px;
+  }
+  .paper-doi a { color: #1a5276; }
+
+  /* ── Abstract ── */
+  .abstract-box {
+    border: 1px solid #ccc;
+    padding: 18px 24px;
+    margin-bottom: 36px;
+    background: #fafafa;
+  }
+  .abstract-box h2 {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    color: #222;
+  }
+  .abstract-text {
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #222;
+    text-align: justify;
+  }
+  .keywords {
+    margin-top: 12px;
+    font-size: 10pt;
+    color: #444;
+  }
+  .keywords strong { font-weight: 700; }
+
+  /* ── Sections ── */
+  h1 {
+    font-size: 13pt;
+    font-weight: 700;
+    margin-top: 32px;
+    margin-bottom: 10px;
+    color: #0a0a0a;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 4px;
+  }
+  h2 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    margin-top: 22px;
+    margin-bottom: 8px;
+    color: #111;
+  }
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    color: #222;
+    font-style: italic;
+  }
+
+  p {
+    text-align: justify;
+    margin-bottom: 10px;
+    font-size: 11.5pt;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px;
+    font-size: 10pt;
+  }
+  th {
+    background: #2c3e50;
+    color: #fff;
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 9.5pt;
+    letter-spacing: 0.03em;
+  }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: top;
+    font-size: 10.5pt;
+  }
+  tr:nth-child(even) td { background: #f7f7f7; }
+  .table-caption {
+    font-size: 9.5pt;
+    color: #555;
+    text-align: center;
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+
+  /* ── Code / algorithms ── */
+  pre {
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-left: 3px solid #2c3e50;
+    padding: 12px 16px;
+    font-family: 'Source Code Pro', 'Courier New', monospace;
+    font-size: 9pt;
+    overflow-x: auto;
+    margin: 12px 0 16px;
+    line-height: 1.55;
+  }
+  code {
+    font-family: 'Source Code Pro', 'Courier New', monospace;
+    font-size: 9.5pt;
+    background: #f4f4f4;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  /* ── Algorithm boxes ── */
+  .algorithm {
+    border: 1px solid #aaa;
+    padding: 14px 18px;
+    margin: 14px 0 18px;
+    background: #fdfdfd;
+  }
+  .algorithm-title {
+    font-weight: 700;
+    font-size: 10pt;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #2c3e50;
+  }
+  .algorithm pre { margin: 0; border: none; background: transparent; padding: 0; }
+
+  /* ── Figure ── */
+  .figure {
+    margin: 18px 0;
+    text-align: center;
+  }
+  .figure-caption {
+    font-size: 10pt;
+    color: #555;
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 14px 0;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 9.5pt;
+  }
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cp-badge {
+    background: #2c3e50;
+    color: #fff;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    border-radius: 3px;
+    min-width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cp-name { color: #1a1a1a; font-weight: 600; }
+  .cp-desc { color: #555; }
+  .pipeline-arrow { color: #888; text-align: center; font-size: 10pt; }
+
+  /* ── References ── */
+  .references { margin-top: 6px; }
+  .ref-item {
+    margin-bottom: 8px;
+    font-size: 10.5pt;
+    padding-left: 28px;
+    text-indent: -28px;
+    line-height: 1.55;
+  }
+
+  /* ── Footnotes ── */
+  .footnote {
+    font-size: 9pt;
+    color: #555;
+    border-top: 1px solid #ccc;
+    margin-top: 28px;
+    padding-top: 10px;
+    line-height: 1.55;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 20px 40px; font-size: 11pt; }
+    .paper-title { font-size: 18pt; }
+    h1 { page-break-before: auto; }
+    pre, .algorithm, table { page-break-inside: avoid; }
+  }
+
+  hr { border: none; border-top: 1px solid #ddd; margin: 28px 0; }
+  sup { font-size: 8pt; }
+  em { font-style: italic; }
+  strong { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  TITLE BLOCK                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="paper-title">
+  OMNIX: Post-Quantum Decision Governance Infrastructure<br>for Automated Financial Systems
+</div>
+
+<div class="paper-authors">Harold Nunes</div>
+<div class="paper-affiliation">OMNIX Quantum &nbsp;·&nbsp; Abu Dhabi, UAE</div>
+<div class="paper-date">March 2026</div>
+<div class="paper-doi">
+  Zenodo · DOI: <a href="#">10.5281/zenodo.XXXXXXX</a> &nbsp;|&nbsp;
+  SSRN Working Paper ID: 6321298 (under review)
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  ABSTRACT                                                     -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="abstract-box">
+  <h2>Abstract</h2>
+  <p class="abstract-text">
+    Automated decision-making systems operating in financial markets increasingly govern capital
+    allocation decisions at machine speed, yet the governance mechanisms ensuring the integrity,
+    auditability, and cryptographic provenance of those decisions remain largely absent from
+    production infrastructure. This paper presents OMNIX, a domain-agnostic Decision Governance
+    Infrastructure designed to prevent high-stakes decision-making errors in automated systems
+    through a layered, fail-closed pipeline of institutional-grade constraints.
+  </p>
+  <p class="abstract-text">
+    OMNIX implements an 8-checkpoint entry governance pipeline — spanning signal integrity
+    validation, Monte Carlo risk simulation, a 6-tier Coherence Engine, temporal coherence
+    validation, and forward trajectory implication — alongside a 3-gate exit governance layer.
+    All decisions pass through this pipeline before any execution occurs; no checkpoint can be
+    bypassed without explicit architectural justification recorded in a formal Architectural
+    Decision Record (ADR). The system has accumulated 44 such ADRs documenting every governance
+    trade-off.
+  </p>
+  <p class="abstract-text">
+    OMNIX further incorporates operational post-quantum cryptography using NIST-standardized
+    algorithms: CRYSTALS-Dilithium-3 (ML-DSA-65) for decision signing and a hybrid Key
+    Encapsulation Mechanism combining X25519 and CRYSTALS-Kyber-768 (ML-KEM-768) via HKDF
+    for quantum-resistant key exchange — active in production since November 2025. Every
+    governance decision produces a quantum-secure, tamper-evident receipt with SHA-256 hash
+    chaining and internal RFC 3161-style timestamps, forming an append-only cryptographic
+    ledger publicly verifiable without exposing system internals.
+  </p>
+  <p class="abstract-text">
+    Real-world deployment data from Phase 0 (1,115 live trades on Kraken exchange prior to
+    governance implementation, July–August 2025) documents the cost of ungoverned automated
+    decision-making: −28.6% drawdown on real capital in 44 days. Post-governance calibration
+    and the introduction of the full checkpoint pipeline has resulted in a system operating with
+    high selectivity — rejecting decisions that do not satisfy the complete governance contract
+    — demonstrating that systematic governance intervention is both technically feasible and
+    operationally deployable at production scale.
+  </p>
+  <div class="keywords">
+    <strong>Keywords:</strong> decision governance, post-quantum cryptography, automated trading,
+    AI risk management, cryptographic audit trail, Monte Carlo simulation, coherence engine,
+    CRYSTALS-Dilithium, CRYSTALS-Kyber, Non-Markovian memory, fail-closed systems,
+    multi-agent governance, financial infrastructure
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  1. INTRODUCTION                                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>1. Introduction</h1>
+
+<p>
+  Automated financial systems — algorithmic trading engines, AI-driven credit decisioning systems,
+  automated risk monitors — make decisions at speeds and volumes that fundamentally exceed human
+  supervisory capacity. A single misconfigured signal, an unhandled edge case in market regime
+  detection, or a momentary failure in risk constraint enforcement can propagate losses before
+  any human operator can intervene. The May 2010 Flash Crash, multiple algorithmic trading
+  incidents since, and the accelerating deployment of AI systems into capital allocation decisions
+  all point to the same structural gap: execution speed has far outpaced governance infrastructure.
+</p>
+
+<p>
+  Existing approaches to this problem fall into three categories: (1) pre-trade rule engines that
+  enforce static thresholds, (2) post-trade surveillance systems that flag anomalies after the
+  fact, and (3) model risk management frameworks that assess AI systems at design time but do not
+  govern individual decisions in real time. None of these approaches provides a cryptographically
+  auditable, decision-level governance contract that is enforced inline — before execution — and
+  that produces independently verifiable proof of governance for every decision made.
+</p>
+
+<p>
+  This paper presents OMNIX, a Decision Governance Infrastructure that fills this gap. OMNIX
+  operates as an inline governance layer: every candidate decision submitted to the system must
+  satisfy a complete pipeline of quantitative checkpoints before it is approved. A single failed
+  checkpoint blocks execution. Every outcome — approval or block — is recorded in a
+  cryptographically signed, hash-chained receipt that is publicly verifiable and quantum-resistant.
+</p>
+
+<p>
+  The primary contributions of this work are:
+</p>
+
+<p><strong>C1.</strong> A formally specified 8-checkpoint decision governance pipeline with
+  mathematically defined pass/fail criteria at each checkpoint, operating in a fail-closed mode
+  by default.</p>
+
+<p><strong>C2.</strong> A Non-Markovian Temporal Memory Kernel that incorporates higher-order
+  historical context into governance decisions, explicitly modeling path-dependency in financial
+  regimes.</p>
+
+<p><strong>C3.</strong> A production implementation of post-quantum cryptography for decision
+  governance — CRYSTALS-Dilithium-3 signatures and a hybrid X25519 + CRYSTALS-Kyber-768 KEM —
+  operational since November 2025.</p>
+
+<p><strong>C4.</strong> A Quantum-Secure Decision Receipt system with rolling SHA-256 Merkle
+  chains and RFC 3161-style internal timestamps, providing publicly verifiable governance proof
+  without exposing confidential system state.</p>
+
+<p><strong>C5.</strong> Real-world deployment data from 1,115 live trades documenting the
+  quantitative impact of ungoverned automated decision-making, motivating the governance
+  constraints designed into OMNIX.</p>
+
+<p><strong>C6.</strong> A formal Architectural Decision Record (ADR) system with 44 recorded
+  decisions, creating an auditable architectural history of every governance trade-off made
+  during system design.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  2. BACKGROUND                                                -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>2. Background and Related Work</h1>
+
+<h2>2.1 The Decision Governance Problem in Automated Systems</h2>
+
+<p>
+  The term "model governance" has emerged in financial regulation to describe the set of controls
+  applied to AI and algorithmic models. Frameworks such as the Federal Reserve's SR 11-7 guidance
+  on model risk management [1], the European Banking Authority's guidelines on internal models [2],
+  and the emerging EU AI Act [3] all establish requirements for model validation, ongoing monitoring,
+  and human oversight. However, these frameworks primarily address governance at the model level
+  (validation before deployment) rather than at the decision level (enforcement at execution time).
+</p>
+
+<p>
+  The distinction is critical. A validated model can still produce individual decisions that violate
+  risk constraints if market conditions diverge from the model's training distribution. Decision-level
+  governance requires that every individual output — not just the model in aggregate — satisfies a
+  defined set of risk criteria before being acted upon. OMNIX operationalizes this requirement.
+</p>
+
+<h2>2.2 Post-Quantum Cryptography in Financial Systems</h2>
+
+<p>
+  The National Institute of Standards and Technology (NIST) standardized its first set of
+  post-quantum cryptographic algorithms in 2024: ML-KEM (CRYSTALS-Kyber) for key encapsulation
+  and ML-DSA (CRYSTALS-Dilithium) for digital signatures. These algorithms are designed to resist
+  attacks from both classical computers and quantum computers with sufficient qubit counts to
+  execute Shor's algorithm against RSA and elliptic curve cryptography [4].
+</p>
+
+<p>
+  Financial systems are particularly exposed to the "harvest now, decrypt later" threat model:
+  adversaries may capture encrypted decision audit trails today for decryption once quantum
+  computing becomes viable. Decision governance audit trails — which may contain sensitive
+  information about risk thresholds, signal parameters, and trading strategies — therefore benefit
+  from quantum-resistant protection even before fault-tolerant quantum computers exist [5].
+</p>
+
+<p>
+  To the best of the author's knowledge, OMNIX represents one of the first production deployments
+  of NIST-standardized post-quantum cryptography specifically for decision governance audit trails
+  in financial systems.
+</p>
+
+<h2>2.3 Related Work</h2>
+
+<p>
+  <em>Algorithmic trading risk controls.</em> Aldridge [6] surveys pre-trade risk controls in
+  high-frequency trading, including position limits, order size constraints, and kill switches.
+  These controls are reactive and static, whereas OMNIX applies a multi-dimensional, adaptive
+  governance pipeline to each decision.
+</p>
+
+<p>
+  <em>AI governance frameworks.</em> The NIST AI Risk Management Framework (AI RMF 1.0) [7]
+  provides a structured approach to identifying, measuring, and managing AI risk across the full
+  model lifecycle. OMNIX implements several AI RMF practices — particularly around transparency,
+  accountability, and explainability — at the individual decision level in real time.
+</p>
+
+<p>
+  <em>Cryptographic audit trails.</em> The use of hash chains for tamper-evident audit logs is
+  well-established in blockchain and secure logging literature [8]. OMNIX extends this concept
+  with post-quantum signatures and RFC 3161-style internal timestamps, adapted to the
+  decision-governance context rather than financial transaction settlement.
+</p>
+
+<p>
+  <em>Monte Carlo methods in risk management.</em> Monte Carlo simulation has a long history in
+  financial risk management, particularly for Value-at-Risk estimation [9]. OMNIX applies Monte
+  Carlo simulation inline — as a real-time veto gate — rather than as a batch reporting tool,
+  requiring the simulation to complete within the decision latency budget.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  3. SYSTEM ARCHITECTURE                                       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>3. System Architecture</h1>
+
+<h2>3.1 Design Philosophy</h2>
+
+<p>
+  OMNIX is designed around three non-negotiable principles:
+</p>
+
+<p><strong>Fail-closed by default.</strong> Any checkpoint failure, exception, timeout, or
+  ambiguous result results in a decision being blocked, not approved. The system cannot be
+  "accidentally permissive."</p>
+
+<p><strong>Cryptographic non-repudiation.</strong> Every decision — approval or block — produces
+  a cryptographically signed receipt. It is not possible for the system to claim a governance
+  decision was made without producing verifiable cryptographic proof.</p>
+
+<p><strong>Architectural transparency.</strong> Every governance trade-off made during system
+  design is recorded in a formal Architectural Decision Record (ADR), creating a complete
+  institutional history of why each checkpoint exists, what alternatives were considered, and
+  what consequences were accepted.</p>
+
+<h2>3.2 High-Level Architecture</h2>
+
+<p>
+  OMNIX follows a hexagonal architecture pattern, separating the core governance engine from
+  its interfaces and external dependencies:
+</p>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│                   OMNIX — Decision Governance Infrastructure         │
+├──────────────────────────────┬──────────────────────────────────────┤
+│  INPUT INTERFACES            │  OUTPUT INTERFACES                   │
+│  ├── Telegram Bot (AI)       │  ├── Signed Decision Receipt         │
+│  ├── External Governance API │  ├── Public Verification Server      │
+│  ├── Public Sandbox (/try)   │  ├── Flask Dashboard (Port 5000)     │
+│  └── Direct SDK              │  └── Transparency Chain (DB)         │
+├──────────────────────────────┴──────────────────────────────────────┤
+│  CORE GOVERNANCE ENGINE                                              │
+│  ├── 8-Checkpoint Entry Pipeline (CP-0 → CP-7b)                     │
+│  ├── 3-Gate Exit Governance Layer (EGL)                             │
+│  ├── Coherence Engine V6.5 — 6-Tier Veto                           │
+│  ├── Non-Markovian Memory Kernel                                    │
+│  ├── Monte Carlo VETO Engine                                        │
+│  ├── Black Swan Detection Module                                    │
+│  ├── Decision Contradiction Index (DCI)                             │
+│  └── Multi-Agent Governance System (3 parallel agents)              │
+├─────────────────────────────────────────────────────────────────────┤
+│  CRYPTOGRAPHIC LAYER                                                 │
+│  ├── Dilithium-3 Signing (ML-DSA-65)                                │
+│  ├── Hybrid KEM: X25519 + Kyber-768 → HKDF                         │
+│  ├── Crypto-Agility Registry (ADR-043)                              │
+│  └── Transparency Chain (Rolling Merkle Root + RFC 3161 Timestamps) │
+├─────────────────────────────────────────────────────────────────────┤
+│  DATA LAYER                                                          │
+│  ├── PostgreSQL (42 tables, structured governance state)            │
+│  └── Redis (real-time state, rate limiting, caching)                │
+└─────────────────────────────────────────────────────────────────────┘
+</pre>
+
+<div class="figure-caption">Figure 1. OMNIX system architecture overview.</div>
+
+<h2>3.3 Domain-Agnostic Governance Normalization</h2>
+
+<p>
+  OMNIX normalizes incoming decision signals into a standardized 8-signal governance vector
+  regardless of domain. This allows the same governance pipeline to evaluate decisions in
+  financial trading, credit lending, insurance underwriting, biotech investment, and energy
+  infrastructure — any domain where high-stakes automated decisions are made.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Normalized Signal</th><th>Range</th><th>Semantic</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>market_momentum</code></td><td>[0, 1]</td><td>Directional strength of the signal</td></tr>
+    <tr><td><code>volatility_risk</code></td><td>[0, 1]</td><td>Uncertainty / dispersion risk</td></tr>
+    <tr><td><code>liquidity_score</code></td><td>[0, 1]</td><td>Execution feasibility</td></tr>
+    <tr><td><code>sentiment_score</code></td><td>[0, 1]</td><td>External context alignment</td></tr>
+    <tr><td><code>coherence_score</code></td><td>[0, 1]</td><td>Internal signal consistency</td></tr>
+    <tr><td><code>risk_reward_ratio</code></td><td>[0, 1]</td><td>Expected return relative to risk</td></tr>
+    <tr><td><code>time_horizon</code></td><td>[0, 1]</td><td>Decision urgency / duration relevance</td></tr>
+    <tr><td><code>confidence_level</code></td><td>[0, 1]</td><td>Overall signal confidence</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 1. OMNIX normalized governance signal vector.</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  4. THE 8-CHECKPOINT PIPELINE                                 -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>4. The 8-Checkpoint Entry Governance Pipeline</h1>
+
+<p>
+  Every decision candidate submitted to OMNIX traverses a sequential pipeline of 8 checkpoints.
+  The pipeline is strictly ordered: a failed checkpoint at position <em>n</em> terminates the
+  pipeline immediately; no subsequent checkpoint is evaluated. This design ensures that
+  computationally expensive checks (e.g., Monte Carlo simulation) are only reached after cheaper
+  pre-filters have confirmed signal viability.
+</p>
+
+<div class="figure">
+  <div class="pipeline">
+    <div class="pipeline-step"><span class="cp-badge">CP-0</span> <span class="cp-name">Signal Integrity Validation (SIV)</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-1</span> <span class="cp-name">Monte Carlo Risk Simulation</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-2</span> <span class="cp-name">Risk Management System (RMS) VETO</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-3/4/5</span> <span class="cp-name">Coherence Engine — 6-Tier Veto</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-6</span> <span class="cp-name">Edge Confirmation Window (ECW)</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-7</span> <span class="cp-name">Temporal Coherence Validation (TCV)</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">CP-7b</span> <span class="cp-name">Forward Trajectory Implication (FTI)</span></div>
+    <div class="pipeline-arrow">↓</div>
+    <div class="pipeline-step"><span class="cp-badge">SCORE</span> <span class="cp-name">Final Scoring &amp; Decision Output → PQC-Signed Receipt</span></div>
+  </div>
+  <div class="figure-caption">Figure 2. The OMNIX 8-checkpoint entry governance pipeline. A failed checkpoint at any stage terminates the pipeline with a BLOCKED decision.</div>
+</div>
+
+<h2>4.1 CP-0: Signal Integrity Validation (SIV)</h2>
+
+<p>
+  The Signal Integrity Validator performs structural and semantic validation of the incoming
+  signal vector before any quantitative evaluation begins. SIV checks for:
+  (1) completeness — all required signal fields are present and within valid ranges;
+  (2) internal consistency — signals that are mutually contradictory (e.g., high momentum
+  paired with high volatility risk above a defined ceiling) receive a violation count;
+  (3) data freshness — signal timestamps must be within a defined staleness window.
+</p>
+
+<p>
+  The SIV outputs a <em>score</em> (0–100), a <em>violation count</em>, and a
+  <em>pass_through</em> flag. Signals with violation counts above threshold enter downstream
+  checkpoints in a degraded state, allowing the pipeline to apply proportionally stricter
+  constraints.
+</p>
+
+<h2>4.2 CP-1: Monte Carlo Risk Simulation</h2>
+
+<p>
+  The Monte Carlo VETO Engine simulates the probability distribution of decision outcomes
+  using the incoming signal vector as the stochastic seed. The simulation runs <em>N</em>
+  iterations (default: 1,000), each generating a synthetic outcome drawn from a parameterized
+  distribution conditioned on the signal vector.
+</p>
+
+<p>
+  Three metrics govern the checkpoint decision:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Formula</th><th>Action on Failure</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Expected Return (ER)</td><td>E[R] = (1/N) Σ r_i</td><td>VETO if ER &lt; 0</td></tr>
+    <tr><td>Win Rate (WR)</td><td>WR = |{r_i &gt; 0}| / N</td><td>SIZE_REDUCE if WR &lt; 50%</td></tr>
+    <tr><td>Max Drawdown (MDD)</td><td>MDD = max(peak − trough) / peak</td><td>VETO if MDD &gt; threshold</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 2. Monte Carlo VETO Engine decision criteria.</div>
+
+<p>
+  The SIZE_REDUCE outcome represents a novel governance action: rather than binary
+  approve/block, the engine reduces the authorized decision size (position size in trading
+  terms) by a multiplier proportional to the win rate shortfall, allowing the decision to
+  proceed at reduced exposure.
+</p>
+
+<h2>4.3 CP-2: Risk Management System (RMS) VETO</h2>
+
+<p>
+  The Risk Management System enforces portfolio-level constraints that are independent of
+  individual signal quality. RMS checks include: (1) maximum drawdown enforcement relative
+  to portfolio peak value; (2) correlation-adjusted position limits; (3) session-level
+  exposure caps. RMS operates in a fail-closed mode: any RMS computation error results in
+  a VETO, never a pass-through.
+</p>
+
+<h2>4.4 CP-3/4/5: The Coherence Engine — 6-Tier Veto</h2>
+
+<p>
+  The Coherence Engine is the most sophisticated component of the governance pipeline.
+  It evaluates the internal consistency of the signal vector across six independent
+  analytical dimensions, each capable of independently vetoing the decision:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Tier</th><th>Dimension</th><th>Evaluation</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>EMA Regime Signal</td><td>Exponential Moving Average trend alignment</td></tr>
+    <tr><td>2</td><td>Hidden Markov Model (HMM)</td><td>Probabilistic regime classification (bull / bear / sideways)</td></tr>
+    <tr><td>3</td><td>Kalman Filter</td><td>State-space signal smoothing and noise reduction</td></tr>
+    <tr><td>4</td><td>Non-Markovian Memory</td><td>Higher-order path-dependent historical context (see §5)</td></tr>
+    <tr><td>5</td><td>Regime-Conditioned Kelly (RCK)</td><td>Optimal fraction adjusted for detected market regime</td></tr>
+    <tr><td>6</td><td>Quantum Momentum Scalar</td><td>Momentum consistency across multi-scale windows</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 3. The 6-tier Coherence Engine veto dimensions.</div>
+
+<p>
+  The Coherence Engine produces a composite <em>coherence score</em> (0–100%) representing
+  the weighted agreement across all six tiers. Decisions with coherence below a calibrated
+  minimum threshold (default: 30%) are blocked as WARN_THRESHOLD — a hard constraint
+  regardless of individual signal strength. A Decision Contradiction Index (DCI) is
+  computed as a secondary output: DCI ≥ 70 mandates a HOLD decision, indicating that
+  internal signal divergence is too high for confident directional commitment.
+</p>
+
+<h2>4.5 CP-6: Edge Confirmation Window (ECW)</h2>
+
+<p>
+  The Edge Confirmation Window enforces temporal convergence before a decision is approved.
+  An "edge" — a statistical advantage in the signal — must be confirmed over a sliding
+  window of recent evaluations before proceeding. The ECW requires simultaneous satisfaction
+  of three sub-conditions: win rate above threshold, positive expected return, and Black
+  Swan risk below ceiling. Decisions that pass all other checkpoints but fail ECW receive
+  a WAITING status: the decision is deferred, not blocked.
+</p>
+
+<h2>4.6 CP-7: Temporal Coherence Validation (TCV)</h2>
+
+<p>
+  The Temporal Coherence Validator confirms that the intended decision action is consistent
+  with the current temporal context. TCV evaluates: market session alignment (decisions
+  inappropriate for the current trading session are blocked), volatility regime timing,
+  and the presence of recent high-impact events that would invalidate the signal's temporal
+  assumptions. TCV integrates with the Non-Markovian Memory Kernel to access historical
+  temporal patterns not representable in first-order Markov models.
+</p>
+
+<h2>4.7 CP-7b: Forward Trajectory Implication (FTI)</h2>
+
+<p>
+  The Forward Trajectory Implicator evaluates the implied future trajectory of the signal
+  vector given its current state and the known historical behavior of similar signal
+  configurations. FTI produces an <em>action</em> (PROCEED / NONE / EXIT) and a
+  <em>transition risk</em> score representing the probability that the current regime will
+  undergo a structural change within the decision's intended horizon. High transition risk
+  results in a governance hold.
+</p>
+
+<h2>4.8 Pipeline Fail-Safe Properties</h2>
+
+<p>
+  Three engineering invariants are enforced throughout the pipeline:
+</p>
+
+<p><strong>Exception containment.</strong> Every checkpoint is wrapped in an exception handler.
+  Any unhandled exception at any checkpoint results in an immediate BLOCKED decision.
+  No exception propagates to produce a permissive outcome.</p>
+
+<p><strong>Timeout enforcement.</strong> Each checkpoint has a wall-clock timeout. A checkpoint
+  that exceeds its timeout budget is treated as failed.</p>
+
+<p><strong>Auditability.</strong> Every checkpoint records its input state, computation result,
+  and pass/fail determination. This complete trace is incorporated into the cryptographic receipt
+  (§7), enabling post-hoc reconstruction of any governance decision.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  5. NON-MARKOVIAN MEMORY KERNEL                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>5. Non-Markovian Temporal Memory Kernel</h1>
+
+<p>
+  Standard Markovian models of financial markets assume that the current state contains all
+  information necessary to predict future states — the past is irrelevant given the present.
+  Empirical evidence consistently contradicts this assumption: momentum, mean reversion, and
+  volatility clustering all exhibit path-dependent behavior that Markovian models fail to
+  capture [10].
+</p>
+
+<p>
+  OMNIX incorporates a Non-Markovian Temporal Memory Kernel that maintains a structured
+  representation of the historical decision context. The kernel stores not just recent
+  decisions but the higher-order <em>sequence structure</em> of past governance outcomes —
+  distinguishing, for example, a sequence of three consecutive blocks (indicating sustained
+  adverse conditions) from three isolated blocks interspersed with approvals.
+</p>
+
+<p>
+  Formally, the kernel maintains a weighted history vector <strong>H</strong> = {h₁, h₂, ..., h_k}
+  where each element h_i represents a past governance cycle, with exponential decay weighting
+  applied so that more recent history exerts greater influence. The kernel is queried by the
+  Coherence Engine (Tier 4) and TCV to condition current governance decisions on this
+  path-dependent context:
+</p>
+
+<div class="algorithm">
+  <div class="algorithm-title">Algorithm 1: Non-Markovian Memory Query</div>
+  <pre>
+Input:  Current signal vector S, history depth k
+Output: Memory-conditioned coherence adjustment Δ
+
+1. Retrieve H = {h₁, ..., h_k} from kernel store
+2. Compute decay-weighted sequence: Ĥ = Σᵢ λⁱ · h_{k-i}  (λ ∈ (0,1))
+3. Extract regime transition probability: P(regime_change) from Ĥ
+4. Compute streak context: streak_type ∈ {BLOCK_STREAK, APPROVE_STREAK, MIXED}
+5. Δ ← f(P(regime_change), streak_type, S.coherence_score)
+6. Return coherence_score_adjusted = S.coherence_score + Δ
+  </pre>
+</div>
+
+<p>
+  The kernel is implemented as a persistent PostgreSQL-backed store, ensuring that memory
+  survives system restarts. This persistence property is critical: a rebooted governance
+  engine retains the full historical context, preventing the "cold start" vulnerability
+  where a restarted system would treat every new signal as if no history existed.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  6. POST-QUANTUM CRYPTOGRAPHIC INFRASTRUCTURE                 -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>6. Post-Quantum Cryptographic Infrastructure</h1>
+
+<p>
+  The cryptographic architecture of OMNIX was designed under the assumption that long-lived
+  audit trails must remain tamper-evident even after fault-tolerant quantum computers render
+  classical public-key cryptography vulnerable. NIST standardized its first post-quantum
+  algorithms in 2024; OMNIX has been running these algorithms in production since November 2025.
+</p>
+
+<h2>6.1 Hybrid Key Encapsulation Mechanism (ADR-042)</h2>
+
+<p>
+  OMNIX implements a hybrid KEM that combines classical X25519 Elliptic Curve Diffie-Hellman
+  with CRYSTALS-Kyber-768 (ML-KEM-768) via HKDF key derivation. The hybrid approach provides
+  defense in depth: even if one algorithm is broken (classically or quantum), the composite
+  shared secret remains protected.
+</p>
+
+<div class="algorithm">
+  <div class="algorithm-title">Algorithm 2: OMNIX Hybrid KEM (ADR-042)</div>
+  <pre>
+Input:  Recipient public keys (pk_kyber, pk_x25519)
+Output: Ciphertext bundle (ct_kyber, ct_x25519), shared_secret
+
+1.  (ct_kyber, secret_kyber)  ← Kyber768.encapsulate(pk_kyber)
+2.  (eph_pub, secret_x25519)  ← X25519.generate_and_exchange(pk_x25519)
+3.  composite_input           ← secret_kyber || secret_x25519
+4.  shared_secret             ← HKDF-SHA256(
+                                  ikm   = composite_input,
+                                  label = "OMNIX-ADR042-HybridKEM-v1",
+                                  length = 32 bytes)
+5.  Return (ct_kyber, eph_pub), shared_secret
+
+Degradation policy (in order of preference):
+  hybrid     → kyber768_only     → x25519_only
+  (Any component failure triggers graceful fallback with audit log)
+  </pre>
+</div>
+
+<p>
+  The hybrid label (<code>OMNIX-ADR042-HybridKEM-v1</code>) is a domain separation string
+  that cryptographically binds the derived secret to this specific application context,
+  preventing cross-protocol attacks. The Kyber-768 public key size is 1,184 bytes; the
+  secret key is 2,400 bytes; the ciphertext is 1,088 bytes.
+</p>
+
+<h2>6.2 Crypto-Agility Layer (ADR-043)</h2>
+
+<p>
+  Cryptographic standards will evolve. OMNIX implements a Crypto-Agility Layer — a provider
+  registry that allows the active signing algorithm to be swapped without modifying core
+  governance logic. The registry maintains:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Provider ID</th><th>Algorithm</th><th>NIST Variant</th><th>Security Level</th><th>Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>dilithium3</code></td><td>CRYSTALS-Dilithium-3</td><td>ML-DSA-65</td><td>~192-bit classical equivalent</td><td>Production baseline</td></tr>
+    <tr><td><code>dilithium5</code></td><td>CRYSTALS-Dilithium-5</td><td>ML-DSA-87</td><td>~256-bit classical equivalent</td><td>High-assurance deployments</td></tr>
+    <tr><td><code>ed25519</code></td><td>Ed25519</td><td>—</td><td>~128-bit classical</td><td>Testing / compatibility</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 4. Crypto-Agility Registry. Active provider is configured via deployment environment variable; no code changes required.</div>
+
+<p>
+  The active provider is selected via the <code>ACTIVE_SIGNING_PROVIDER</code> deployment
+  variable. All receipts embed their <code>signing_provider</code> field, enabling the
+  verifier to correctly dispatch signature verification even when different receipts in the
+  same audit trail were signed with different algorithms during a migration.
+</p>
+
+<h2>6.3 Decision Signing Flow</h2>
+
+<p>
+  Every governance decision — whether APPROVED, BLOCKED, or HOLD — is signed before being
+  stored or transmitted. The signing payload is a deterministic SHA-256 hash of the
+  canonical receipt fields, ensuring that signature verification is reproducible:
+</p>
+
+<pre>
+payload_hash = SHA256(
+  receipt_id        ||
+  timestamp_utc     ||
+  decision          ||
+  asset             ||
+  veto_chain_json   ||
+  policy_version    ||
+  prev_hash         ||           # Links to previous receipt in chain
+  signing_provider              # Cryptographic algorithm used
+)
+
+signature = Dilithium3.sign(private_key, payload_hash)
+</pre>
+
+<p>
+  Public keys are stored in the governance database and published to the public verification
+  server, allowing any party to verify a receipt's authenticity without system access.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  7. QUANTUM-SECURE DECISION RECEIPTS                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>7. Quantum-Secure Decision Receipts and Transparency Chain</h1>
+
+<h2>7.1 Receipt Structure</h2>
+
+<p>
+  Every governance decision produces a structured receipt containing all information
+  necessary to independently verify the governance claim:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>receipt_id</code></td><td>string</td><td>Globally unique identifier (e.g., OMNIX-A1B2C3D4E5F6)</td></tr>
+    <tr><td><code>timestamp_utc</code></td><td>ISO 8601</td><td>Governance decision timestamp with microsecond precision</td></tr>
+    <tr><td><code>decision</code></td><td>enum</td><td>APPROVED / BLOCKED / HOLD / SIZE_REDUCE</td></tr>
+    <tr><td><code>asset</code></td><td>string</td><td>Decision subject identifier</td></tr>
+    <tr><td><code>veto_chain</code></td><td>JSON array</td><td>Ordered list of checkpoint results with metrics</td></tr>
+    <tr><td><code>policy_version</code></td><td>string</td><td>Governance policy version active at decision time</td></tr>
+    <tr><td><code>prev_hash</code></td><td>SHA-256</td><td>Hash of previous receipt (chain link)</td></tr>
+    <tr><td><code>content_hash</code></td><td>SHA-256</td><td>Hash of this receipt's canonical payload</td></tr>
+    <tr><td><code>signature</code></td><td>bytes</td><td>Dilithium-3 signature over content_hash</td></tr>
+    <tr><td><code>signature_algorithm</code></td><td>string</td><td>e.g., "Dilithium-3 (ML-DSA-65)"</td></tr>
+    <tr><td><code>public_key</code></td><td>bytes</td><td>Signing public key (1,952 bytes for Dilithium-3)</td></tr>
+    <tr><td><code>signing_provider</code></td><td>string</td><td>Crypto-Agility provider ID used</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 5. OMNIX Quantum-Secure Decision Receipt schema.</div>
+
+<h2>7.2 Rolling SHA-256 Merkle Chain (ADR-044)</h2>
+
+<p>
+  Individual receipts are linked into an append-only transparency chain using a rolling
+  Merkle root construction. The chain root is updated with each new receipt:
+</p>
+
+<pre>
+new_root = SHA256(prev_root || SHA256(receipt_payload))
+</pre>
+
+<p>
+  This construction has the property that any modification to any historical receipt
+  invalidates all subsequent chain roots, making tampering detectable by any party that
+  holds a known-good checkpoint of the chain root at any point in time. The chain root
+  is periodically published to the public verification server, enabling third-party
+  auditors to verify chain integrity independently.
+</p>
+
+<h2>7.3 Internal RFC 3161-Style Timestamps</h2>
+
+<p>
+  Each receipt includes an internal timestamp structure modeled after the RFC 3161
+  Time-Stamp Protocol. The timestamp token contains: the receipt hash, the governance
+  engine's policy version, a monotonically increasing sequence number, and a
+  Dilithium-3 signature over the complete token. This structure provides cryptographic
+  proof that a receipt existed at a specific point in the engine's operational sequence,
+  even without relying on external timestamping authorities.
+</p>
+
+<h2>7.4 Public Verification Interface</h2>
+
+<p>
+  OMNIX exposes two independent verification interfaces:
+</p>
+
+<p><strong>Public Verification Server (Railway, Port 8000).</strong> An <code>aiohttp</code>
+  standalone server exposing <code>/api/verify/{receipt_id}</code> and
+  <code>/api/verify/chain</code> endpoints. The server reads the cryptographic receipt,
+  recomputes the content hash, and verifies the Dilithium-3 signature against the stored
+  public key. It exposes no internal system state.</p>
+
+<p><strong>Human-Readable Governance Report.</strong> A Flask endpoint at
+  <code>/r/{receipt_id}</code> renders a structured HTML report of any receipt, showing
+  the complete checkpoint pipeline result in plain language, the cryptographic integrity
+  status, and hash chain linkage. This interface is intended for institutional auditors,
+  regulators, and investors who require human-readable governance proof without technical
+  tooling.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  8. MULTI-AGENT GOVERNANCE (ADR-041)                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>8. Multi-Agent Governance System (ADR-041)</h1>
+
+<p>
+  A single AI model evaluating a governance decision introduces model-specific failure modes:
+  distributional shift, prompt injection, and overconfidence in specific signal regimes.
+  OMNIX addresses this through a Multi-Agent Governance System (MAGS) in which three
+  specialized governance agents evaluate the decision independently and in parallel:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Agent</th><th>Specialization</th><th>Primary Signal Focus</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Agent α (Risk)</td><td>Downside risk and capital protection</td><td>Volatility, drawdown, tail risk</td></tr>
+    <tr><td>Agent β (Opportunity)</td><td>Expected return and edge confirmation</td><td>Momentum, win rate, expected return</td></tr>
+    <tr><td>Agent γ (Regime)</td><td>Market regime and structural context</td><td>HMM classification, coherence, memory kernel</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 6. Multi-Agent Governance System agent specializations.</div>
+
+<p>
+  Each agent produces a weighted recommendation (APPROVE / BLOCK / HOLD) and a confidence
+  score. The final governance decision is a weighted consensus: if any agent produces a
+  BLOCK recommendation with confidence above a defined threshold, the BLOCK propagates
+  regardless of other agents' recommendations (asymmetric block propagation). APPROVE
+  requires consensus above a supermajority threshold.
+</p>
+
+<p>
+  MAGS is disabled by default and enabled via the <code>ENABLE_MULTI_AGENT_GOVERNANCE</code>
+  deployment flag, allowing operators to use single-agent mode for latency-sensitive deployments
+  while retaining the multi-agent option for high-value decisions.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  9. B2B EXTERNAL GOVERNANCE API                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>9. External Governance API and B2B Infrastructure</h1>
+
+<p>
+  OMNIX exposes its governance pipeline to external systems through a B2B External Governance
+  API. External clients submit decision signals through a standardized REST endpoint; OMNIX
+  runs the complete 8-checkpoint pipeline and returns a PQC-signed governance receipt. This
+  architecture allows any automated decision-making system — regardless of its internal
+  implementation — to receive OMNIX governance coverage.
+</p>
+
+<p>
+  The API implements Role-Based Access Control (RBAC) with JWT authentication, per-client
+  rate limiting enforced via Redis, and client-specific checkpoint threshold customization
+  stored in PostgreSQL. Client payloads are encrypted at rest using AES/Fernet symmetric
+  encryption, with the encryption key derived via the hybrid KEM (§6.1). The API operates
+  in fail-closed mode: any internal error returns an explicit governance failure response
+  rather than defaulting to approval.
+</p>
+
+<p>
+  Five additive governance compliance modules extend the External Governance API to align
+  with institutional AI governance frameworks including NIST AI RMF 1.0, ISO/IEC 42001,
+  and the EU AI Act:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Module</th><th>Function</th><th>Regulatory Alignment</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Risk Mapping</td><td>Maps decision risks to governance risk taxonomy</td><td>NIST AI RMF Map function</td></tr>
+    <tr><td>Measurement &amp; Monitoring</td><td>Tracks governance metrics over time</td><td>NIST AI RMF Measure function</td></tr>
+    <tr><td>Human Oversight</td><td>Escalation triggers for human review</td><td>EU AI Act Art. 14</td></tr>
+    <tr><td>Incident Management</td><td>Governance failure classification and response</td><td>ISO/IEC 42001 §6.1.2</td></tr>
+    <tr><td>Governance Reporting</td><td>Structured audit reports for regulators</td><td>All frameworks</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 7. OMNIX governance compliance modules.</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  10. REAL-WORLD DEPLOYMENT ANALYSIS                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>10. Real-World Deployment and Empirical Analysis</h1>
+
+<h2>10.1 Phase 0: Pre-Governance Capital Deployment</h2>
+
+<p>
+  The motivating empirical case for OMNIX was a live capital deployment conducted from
+  July 6 to August 18, 2025 on Kraken exchange (referred to as Phase 0). During this
+  period, 1,115 trades were executed using a prototype algorithmic system without the
+  governance infrastructure described in this paper.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Capital deployed</td><td>Real (Kraken exchange)</td><td>Live, non-simulated</td></tr>
+    <tr><td>Period</td><td>Jul 6 – Aug 18, 2025</td><td>44 trading days</td></tr>
+    <tr><td>Total trades</td><td>1,115</td><td>Automated execution</td></tr>
+    <tr><td>Net P&amp;L</td><td>−$1,167</td><td>−28.6% of deployed capital</td></tr>
+    <tr><td>Governance checkpoints active</td><td>0</td><td>Pre-OMNIX baseline</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 8. Phase 0 live deployment results (pre-governance baseline).</div>
+
+<p>
+  Phase 0 documents the cost of ungoverned automated decision-making. The 28.6% drawdown
+  in 44 days on live capital represents the direct financial consequence of operating
+  without an inline governance pipeline. This data is presented transparently as the
+  motivating case study for OMNIX's design, not as a performance claim. OMNIX did not
+  exist during Phase 0.
+</p>
+
+<h2>10.2 Learning Baseline (Simulated)</h2>
+
+<p>
+  Following Phase 0, OMNIX was designed, implemented, and calibrated. A Learning Baseline
+  period ran from November 2025 to January 14, 2026, using paper (simulated) trading to
+  calibrate the governance pipeline parameters. 119 simulated trades were executed; all
+  carried no real capital risk. This phase was used to: (1) calibrate coherence thresholds,
+  (2) tune Monte Carlo parameters, (3) validate that the pipeline correctly identified
+  the types of trade conditions that had caused Phase 0 losses.
+</p>
+
+<h2>10.3 Official Track Record (January 15, 2026 – Present)</h2>
+
+<p>
+  As of January 15, 2026, OMNIX entered its Official Track Record phase with fully
+  calibrated governance parameters. During this period, the 8-checkpoint pipeline has
+  operated continuously, evaluating decision candidates against the complete governance
+  contract. The system has maintained zero approved decisions — a property that warrants
+  careful interpretation.
+</p>
+
+<p>
+  Zero approvals is the expected behavior of a governance system operating under
+  conditions that do not satisfy the full governance contract. The OMNIX pipeline requires
+  simultaneous satisfaction of all 8 checkpoints; market conditions since January 2026
+  have not produced signals that clear all checkpoints simultaneously. This is governance
+  working as designed: the system does not force trades; it approves only what meets the
+  complete governance standard.
+</p>
+
+<p>
+  The practical consequence is equally important: since January 15, 2026, OMNIX has
+  sustained zero governance-approved losses on live capital. The capital is protected
+  not because trades are monitored after the fact, but because no trade has cleared
+  the governance standard.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Period</th><th>Capital Type</th><th>Dates</th><th>Decisions Evaluated</th><th>Approved</th><th>Net P&amp;L</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Phase 0</td><td>Real (Kraken)</td><td>Jul–Aug 2025</td><td>1,115</td><td>1,115 (no governance)</td><td>−$1,167</td></tr>
+    <tr><td>Learning Baseline</td><td>Simulated</td><td>Nov 2025 – Jan 14, 2026</td><td>119</td><td>~50% (calibration)</td><td>−$15,199 (simulated)</td></tr>
+    <tr><td>Official Track Record</td><td>Simulated</td><td>Jan 15, 2026 – present</td><td>Ongoing</td><td>0 (governance filter active)</td><td>$0</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 9. OMNIX deployment timeline and performance data. Real capital was only at risk during Phase 0 (pre-governance). All subsequent periods use simulated capital.</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  11. DISCUSSION                                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>11. Discussion</h1>
+
+<h2>11.1 Governance as Infrastructure, Not Oversight</h2>
+
+<p>
+  The prevailing paradigm in AI risk management treats governance as a supervisory layer
+  applied after decisions are made — auditing outcomes, flagging anomalies, reporting
+  to regulators. OMNIX inverts this paradigm: governance is infrastructure applied
+  <em>before</em> decisions are executed. The distinction is not semantic. Post-hoc
+  oversight can identify that a bad decision was made; inline governance can prevent it
+  from being executed. For capital markets applications where millisecond execution
+  determines outcomes, the difference is absolute.
+</p>
+
+<h2>11.2 The Cryptographic Proof Requirement</h2>
+
+<p>
+  A governance system that cannot prove it governed produces the same audit trail as a
+  governance system that was bypassed. Cryptographic receipts are not an optional
+  enhancement to OMNIX — they are a structural requirement for any governance claim
+  to be meaningful. The receipt provides the institutional auditor with a tamper-evident
+  answer to the question: "Did governance actually run before this decision was made?"
+</p>
+
+<p>
+  The post-quantum component of the receipt addresses a specific institutional concern:
+  governance decisions made today will need to be verified — in regulatory proceedings,
+  legal disputes, or fund audits — potentially years from now. The cryptographic
+  security of a classical ECDSA-signed receipt degrades as quantum computing advances;
+  a Dilithium-3-signed receipt maintains its verifiability regardless of future
+  quantum computing capability.
+</p>
+
+<h2>11.3 Limitations</h2>
+
+<p>
+  <em>Calibration dependency.</em> The governance pipeline's effectiveness is a function
+  of correct threshold calibration. Thresholds calibrated on one market regime may be
+  too strict or too permissive in a different regime. OMNIX addresses this through the
+  Non-Markovian Memory Kernel and regime-conditioned parameters, but the calibration
+  dependency cannot be fully eliminated.
+</p>
+
+<p>
+  <em>Latency budget.</em> The 8-checkpoint pipeline introduces decision latency.
+  Monte Carlo simulation with 1,000 iterations is the primary latency contributor.
+  For ultra-high-frequency applications (sub-millisecond execution), the full pipeline
+  is not appropriate; a reduced checkpoint set with pre-computed risk parameters
+  would be required.
+</p>
+
+<p>
+  <em>Track record duration.</em> As of March 2026, the Official Track Record spans
+  60 days. A longer track record across diverse market regimes would strengthen the
+  empirical claims regarding the governance pipeline's calibration quality.
+</p>
+
+<h2>11.4 Future Directions</h2>
+
+<p>
+  Three extensions are planned and formally captured in the ADR backlog:
+  (1) a Cryptographic Estate Discovery module for quantifying quantum exposure across
+  client infrastructure, providing governance-ready inventory for PQC migration planning;
+  (2) integration of the transparency chain with external timestamping authorities
+  for independent temporal attestation; and (3) a public dataset release of
+  anonymized governance receipts for academic reproducibility.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  12. CONCLUSION                                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>12. Conclusion</h1>
+
+<p>
+  This paper has presented OMNIX, a production Decision Governance Infrastructure that
+  addresses the gap between the speed of automated decision-making and the integrity
+  assurance that institutional operators require. The system's key contributions are:
+  an 8-checkpoint inline governance pipeline operating in fail-closed mode; a
+  Non-Markovian Temporal Memory Kernel that incorporates path-dependent historical
+  context; a production implementation of NIST-standardized post-quantum cryptography
+  (Dilithium-3 for signing, Kyber-768 hybrid KEM for key exchange) operational since
+  November 2025; and a publicly verifiable, hash-chained cryptographic receipt system
+  that provides tamper-evident governance proof for every decision.
+</p>
+
+<p>
+  The empirical foundation of OMNIX's design — 1,115 live trades generating a 28.6%
+  drawdown in 44 days without governance — provides concrete quantification of the
+  problem the system addresses. The Official Track Record since January 15, 2026
+  demonstrates the governance pipeline's selectivity in practice: a system with no
+  approved decisions is a system that has prevented every potential loss.
+</p>
+
+<p>
+  OMNIX represents a novel synthesis: the governance infrastructure between autonomous
+  systems and the real-world consequences of their decisions. As automated systems
+  are deployed in higher-stakes domains — financial markets, credit underwriting,
+  insurance risk, regulatory compliance — the need for cryptographically provable,
+  inline decision governance will become a foundational infrastructure requirement
+  rather than an optional enhancement.
+</p>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  REFERENCES                                                   -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>References</h1>
+
+<div class="references">
+  <p class="ref-item">[1] Board of Governors of the Federal Reserve System (2011). <em>SR 11-7: Guidance on Model Risk Management.</em> Federal Reserve Supervision and Regulation Letters.</p>
+
+  <p class="ref-item">[2] European Banking Authority (2023). <em>EBA Guidelines on Internal Models (EBA/GL/2023/11).</em> European Banking Authority.</p>
+
+  <p class="ref-item">[3] European Parliament (2024). <em>Regulation (EU) 2024/1689 on Artificial Intelligence (EU AI Act).</em> Official Journal of the European Union.</p>
+
+  <p class="ref-item">[4] NIST (2024). <em>Module-Lattice-Based Key-Encapsulation Mechanism Standard (FIPS 203) and Module-Lattice-Based Digital Signature Standard (FIPS 204).</em> National Institute of Standards and Technology.</p>
+
+  <p class="ref-item">[5] Mosca, M. (2018). Cybersecurity in an Era with Quantum Computers: Will We Be Ready? <em>IEEE Security &amp; Privacy</em>, 16(5), 38–41.</p>
+
+  <p class="ref-item">[6] Aldridge, I. (2013). <em>High-Frequency Trading: A Practical Guide to Algorithmic Strategies and Trading Systems</em> (2nd ed.). Wiley Finance.</p>
+
+  <p class="ref-item">[7] NIST (2023). <em>Artificial Intelligence Risk Management Framework (AI RMF 1.0).</em> National Institute of Standards and Technology. NIST AI 100-1.</p>
+
+  <p class="ref-item">[8] Laurie, B., Langley, A., Kasper, E., &amp; Messeri, E. (2013). <em>Certificate Transparency.</em> RFC 6962. Internet Engineering Task Force.</p>
+
+  <p class="ref-item">[9] Glasserman, P. (2004). <em>Monte Carlo Methods in Financial Engineering.</em> Springer-Verlag.</p>
+
+  <p class="ref-item">[10] Lo, A. W., &amp; MacKinlay, A. C. (1988). Stock Market Prices Do Not Follow Random Walks: Evidence from a Simple Specification Test. <em>Review of Financial Studies</em>, 1(1), 41–66.</p>
+
+  <p class="ref-item">[11] Nunes, H. (2026). <em>OMNIX: Decision Governance Infrastructure for Automated Financial Systems.</em> SSRN Working Paper 6321298. Under review.</p>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  APPENDIX: ADR SUMMARY                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<h1>Appendix A: Architectural Decision Record (ADR) Summary</h1>
+
+<p>
+  OMNIX maintains 44 Architectural Decision Records documenting every significant
+  governance trade-off made during system design. Selected ADRs of direct relevance
+  to this paper:
+</p>
+
+<table>
+  <thead>
+    <tr><th>ADR</th><th>Title</th><th>Key Decision</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>ADR-004</td><td>Position Sizing Hotfix</td><td>Introduced size_multiplier as governance output (not just approve/block)</td></tr>
+    <tr><td>ADR-007</td><td>Coherence Threshold Calibration</td><td>Set 30% coherence as minimum threshold for pipeline pass</td></tr>
+    <tr><td>ADR-018</td><td>Decision Contradiction Index (DCI)</td><td>DCI ≥ 70 mandates HOLD regardless of individual signal strength</td></tr>
+    <tr><td>ADR-022</td><td>Post-Quantum Cryptography</td><td>Dilithium-3 and Kyber-768 in production; communication rules by audience tier</td></tr>
+    <tr><td>ADR-027</td><td>Decision Governance Infrastructure</td><td>Formally positioned OMNIX as governance infrastructure, not a trading strategy</td></tr>
+    <tr><td>ADR-040</td><td>Public Governance Sandbox</td><td>Opened governance pipeline to public evaluation without authentication</td></tr>
+    <tr><td>ADR-041</td><td>Multi-Agent Governance System</td><td>Three specialized agents with asymmetric block propagation</td></tr>
+    <tr><td>ADR-042</td><td>Hybrid Key Encapsulation</td><td>X25519 + Kyber-768 via HKDF; graceful degradation policy</td></tr>
+    <tr><td>ADR-043</td><td>Crypto-Agility Layer</td><td>Provider registry for algorithm swap without code changes</td></tr>
+    <tr><td>ADR-044</td><td>Quantum-Secure Transparency Chain</td><td>Rolling Merkle root; RFC 3161-style internal timestamps; PostgreSQL-persisted</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table A1. Selected OMNIX Architectural Decision Records. Full ADR library available in the supplementary materials.</div>
+
+<div class="footnote">
+  <strong>Disclosure.</strong> Harold Nunes is the founder and sole author of OMNIX. This paper
+  presents the system as designed and implemented by the author. Phase 0 data represents live
+  capital deployed on Kraken exchange prior to OMNIX implementation. Learning Baseline and
+  Official Track Record data represent simulated (paper) trading. No investment performance
+  claims are made. OMNIX is infrastructure; its governance effectiveness depends on correct
+  deployment and calibration for each specific operational context.
+  <br><br>
+  <strong>Code and data availability.</strong> Supplementary materials including selected governance
+  receipts (anonymized), core algorithm implementations, and the complete ADR library are
+  available as part of this Zenodo deposit.
+  <br><br>
+  <strong>Version.</strong> This document corresponds to OMNIX internal build reference 6.5.4e.
+</div>
+
+</body>
+</html>
