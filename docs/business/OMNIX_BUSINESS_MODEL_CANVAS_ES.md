@@ -225,7 +225,7 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 | Activo | Descripcion |
 |--------|-------------|
 | Motor de Gobernanza de 8 Checkpoints + EGL | Validacion pre-ejecucion multi-capa y gobernanza de salida |
-| 4 Gaps Arquitectónicos (SIV/FTI/RCK/EGL) | Completados marzo 2026 — 27 ADRs, 171 tests |
+| 4 Gaps Arquitectónicos (SIV/FTI/RCK/EGL) | Completados marzo 2026 — 40 ADRs, 171 tests |
 | Framework de Decision Trace | Trail de auditoria completo para cada decision |
 | Motor Shadow Portfolio | 728,868 eventos de operaciones contrafactuales |
 | Orquestacion Multi-IA | Gemini 2.5 Flash + GPT-4o + Claude Sonnet 4 |
@@ -241,7 +241,7 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 - Fundador solo — arquitectura de producto, logica de riesgo e infraestructura (Harold Nunes)
 - Arquitectura lean disenada para escalabilidad; desarrollo asistido por IA reduce burn manteniendo velocidad
 - 2-3 contrataciones clave planificadas (post-funding): Senior Backend (Mes 1-2), DevOps (Mes 2-3), Business Development (Mes 3-4)
-- **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (27 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
+- **Mitigacion de riesgo de persona clave:** Arquitectura hexagonal documentada (40 ADRs, onboarding en 2-3 semanas). Primeras contrataciones reducen dependencia del fundador de 100% a ~30% en Mes 4. Asignacion de IP a la empresa, seguro de persona clave y runbooks operacionales para Mes 6
 
 ### Infraestructura
 

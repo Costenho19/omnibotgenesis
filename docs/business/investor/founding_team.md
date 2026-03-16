@@ -83,7 +83,7 @@ Today, OMNIX has a single-founder dependency. This is acknowledged, taken seriou
 | Protection | Status |
 |-----------|--------|
 | Hexagonal architecture with domain-agnostic patterns | Production |
-| 27 Architectural Decision Records documenting every design choice | Complete |
+| 40 Architectural Decision Records documenting every design choice | Complete |
 | Full traceability matrices and operational documentation | Version-controlled |
 | System runs 24/7 autonomously — zero manual intervention required | Production since Nov 2025 |
 | Senior engineer onboarding time | 2-3 weeks (not months) |

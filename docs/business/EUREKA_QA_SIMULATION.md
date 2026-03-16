@@ -143,7 +143,7 @@
 🎯 **Lo que realmente pregunta:** ¿Hay fuego real aquí o es un proyecto de CV?
 
 ✅ **Respuesta ideal (30 seg):**
-> "Porque construí esto como respuesta a haber visto — de primera mano — cómo sistemas automatizados toman decisiones sin ninguna capa de governance. No viene de un curso o de un paper académico. Viene de operar con capital real, perder dinero real en la fase de calibración, y usar esa experiencia para construir la infraestructura que necesitaba pero no existía. Hay 27 Architecture Decision Records que documentan cada decisión técnica que tomé. Eso no se hace para un demo — se hace cuando construyes algo que importa."
+> "Porque construí esto como respuesta a haber visto — de primera mano — cómo sistemas automatizados toman decisiones sin ninguna capa de governance. No viene de un curso o de un paper académico. Viene de operar con capital real, perder dinero real en la fase de calibración, y usar esa experiencia para construir la infraestructura que necesitaba pero no existía. Hay 40 Architecture Decision Records que documentan cada decisión técnica que tomé. Eso no se hace para un demo — se hace cuando construyes algo que importa."
 
 🪤 **Follow-up trampa:** *"Pero no tienes background en fintech institutional. ¿Por qué confiaría un prop firm en ti?"*
 

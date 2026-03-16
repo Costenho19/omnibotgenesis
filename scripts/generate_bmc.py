@@ -187,7 +187,7 @@ def generate():
         "Governance engine (live, production)",
         "50,688 validated decisions",
         "728,868 shadow evaluations",
-        "27 Architecture Decision Records",
+        "40 Architecture Decision Records",
         "PQC cryptographic stack",
         "Harold Nunes -- Founder & CEO",
     ], bg=LIGHT_BG, header_bg=(0, 90, 160))

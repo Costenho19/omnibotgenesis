@@ -636,7 +636,7 @@ def generate_canvas(mentor_name, output_path):
         "Solo founder \u2014 product architecture, risk logic and infrastructure (Harold Nunes)",
         "Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity",
         "2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)",
-        "Key-person risk mitigation: Documented hexagonal architecture (27 ADRs, onboarding in 2-3 weeks). "
+        "Key-person risk mitigation: Documented hexagonal architecture (40 ADRs, onboarding in 2-3 weeks). "
         "First hires reduce founder dependency from 100% to ~30% by Month 4. "
         "IP assignment to company, key-person insurance and operational runbooks by Month 6",
     ]:
@@ -1098,7 +1098,7 @@ def generate_pitch_deck(mentor_name, output_path):
     elements.append(make_table(hires_data[0], hires_data[1:], [160, 100, 200]))
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
-        "<b>Key-Person Risk Mitigation:</b> 27 ADRs, hexagonal architecture, 2\u20133 week onboarding target. "
+        "<b>Key-Person Risk Mitigation:</b> 40 ADRs, hexagonal architecture, 2\u20133 week onboarding target. "
         "First 3 hires reduce founder dependency from 100% to ~30% by Month 4.",
         s['BodyText2']
     ))

@@ -763,13 +763,13 @@ def build_section_5(styles):
         ['Cryptography', 'CRYSTALS-Dilithium-3 (ML-DSA-65), CRYSTALS-Kyber-768 (ML-KEM-768)'],
         ['Infrastructure', 'Railway (production 24/7), Replit (development)'],
         ['Verification', 'aiohttp async server (port 8000), SHA-256 hash chain'],
-        ['Architecture', 'Hexagonal (ports and adapters), 28 Architecture Decision Records'],
+        ['Architecture', 'Hexagonal (ports and adapters), 40 Architecture Decision Records'],
     ]
     elements.append(make_table(tech_data[0], tech_data[1:], [120, 340]))
 
     elements.append(Paragraph("<b>Key Technical or Execution Risks</b>", styles['SubsectionTitle']))
     risks = [
-        "<b>Key-person dependency:</b> Solo founder. Mitigated by documented hexagonal architecture (27 ADRs, 2\u20133 week onboarding target). First 3 hires planned within Month 1\u20134 post-funding.",
+        "<b>Key-person dependency:</b> Solo founder. Mitigated by documented hexagonal architecture (40 ADRs, 2\u20133 week onboarding target). First 3 hires planned within Month 1\u20134 post-funding.",
         "<b>AI model dependency:</b> Reliance on third-party AI providers. Mitigated by multi-provider failover chain (Gemini \u2192 GPT-4o \u2192 Claude).",
         "<b>Market timing:</b> Enterprise sales cycles are 3\u20136 months. Conservative pipeline assumptions account for this.",
     ]
@@ -932,7 +932,7 @@ def build_section_8(styles):
         ['Veto Accuracy', '100%', '50/50 validated outcomes confirmed correct (cross-referenced against 48h price action)'],
         ['Decision Latency', '<120ms', 'Real-time governance validation'],
         ['Database Tables', '43+', '90% foreign key coverage \u2014 institutional-grade data model'],
-        ['Architecture Decisions', '28 ADRs', 'Documented engineering discipline'],
+        ['Architecture Decisions', '40 ADRs', 'Documented engineering discipline'],
         ['Dashboard Widgets', '14/14', 'Full operational visibility'],
     ]
     elements.append(make_table(traction_data[0], traction_data[1:], [130, 110, 220]))
@@ -1064,7 +1064,7 @@ def build_section_10(styles):
         styles['BodyText2']
     ))
     elements.extend(bullet_list([
-        "<b>Documented architecture:</b> 27 Architecture Decision Records (ADRs), hexagonal architecture with clear module boundaries",
+        "<b>Documented architecture:</b> 40 Architecture Decision Records (ADRs), hexagonal architecture with clear module boundaries",
         "<b>Onboarding target:</b> 2\u20133 week onboarding for new engineers using existing documentation",
         "<b>Dependency reduction:</b> First 3 hires reduce founder dependency from 100% to ~30% by Month 4",
         "<b>IP protection:</b> IP assignment to company entity, key-person insurance, operational runbooks by Month 6",
@@ -1083,7 +1083,7 @@ def build_section_10(styles):
         "OMNIX was built by a founder who understands both the technical complexity of multi-layer "
         "governance systems and the institutional requirements of regulated financial markets. "
         "The AI-augmented development model has enabled solo construction of a system that would "
-        "typically require a 5-person engineering team \u2014 evidenced by 42+ database tables, 27 ADRs, "
+        "typically require a 5-person engineering team \u2014 evidenced by 42+ database tables, 40 ADRs, "
         "728,868 shadow portfolio evaluations, and 4+ months of continuous production operation. Post-funding, "
         "the first hires are designed to eliminate key-person risk and accelerate enterprise sales.",
         styles['BodyText2']
@@ -1241,7 +1241,7 @@ def build_section_13(styles):
             styles['BodyText2']
         ),
         Paragraph(
-            "<b>Mitigation:</b> Documented architecture (27 ADRs), hexagonal module design with clear boundaries, "
+            "<b>Mitigation:</b> Documented architecture (40 ADRs), hexagonal module design with clear boundaries, "
             "2\u20133 week onboarding target. First 3 hires (Month 1\u20134) reduce dependency from 100% to ~30%. "
             "IP assignment, key-person insurance, and operational runbooks by Month 6.",
             styles['BodyText2']

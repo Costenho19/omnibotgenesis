@@ -491,7 +491,7 @@ def generate():
     pdf.bold_label("Harold Nunes -- Founder & CEO")
     pdf.bullet([
         "Designed and built the entire OMNIX governance infrastructure from architecture to production deployment",
-        "27 Architecture Decision Records (ADRs) documenting every design choice",
+        "40 Architecture Decision Records (ADRs) documenting every design choice",
         "171 automated tests passing as of March 2026 -- full system coverage",
         "Implemented NIST-standardized post-quantum cryptography (Dilithium-3 + Kyber-768) independently",
         "Translated institutional risk governance concepts into a production-grade automated system",

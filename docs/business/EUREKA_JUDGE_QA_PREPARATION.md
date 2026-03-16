@@ -93,7 +93,7 @@
 > "Excellent question — and it's exactly what the first $500K resolves. The mitigation plan has 3 layers:
 >
 > **Layer 1 — Documentation & Defensive Architecture (Already Done)**
-> The codebase is built with hexagonal architecture and domain-agnostic patterns — not artisanal code that only I understand. 27 Architectural Decision Records, full traceability matrices, and operational runbooks are version-controlled in the repository. A senior engineer can onboard in 2-3 weeks, not months. And the system already runs 24/7 autonomously — it doesn't require manual intervention to operate.
+> The codebase is built with hexagonal architecture and domain-agnostic patterns — not artisanal code that only I understand. 40 Architectural Decision Records, full traceability matrices, and operational runbooks are version-controlled in the repository. A senior engineer can onboard in 2-3 weeks, not months. And the system already runs 24/7 autonomously — it doesn't require manual intervention to operate.
 >
 > **Layer 2 — First Hires (Months 1-4 Post-Investment)**
 > - Senior Backend Engineer (Month 1-2): absorbs knowledge of the core engine
