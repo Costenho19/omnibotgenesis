@@ -511,3 +511,110 @@ def serve_zenodo_paper():
         return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
     except FileNotFoundError:
         return 'Paper not found.', 404
+
+
+@public_verify_bp.route('/zenodo', methods=['GET'])
+def zenodo_download_hub():
+    """Download hub for all Zenodo deposit files."""
+    html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OMNIX Quantum — Zenodo Files</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #0f172a; color: #e2e8f0; margin: 0; padding: 40px 20px;
+         display: flex; flex-direction: column; align-items: center; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+  p  { color: #94a3b8; font-size: .9rem; margin-bottom: 32px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+          width: 100%; max-width: 560px; margin-bottom: 14px;
+          display: flex; align-items: center; gap: 16px; padding: 18px 20px;
+          text-decoration: none; color: inherit; transition: border-color .2s; }
+  .card:hover { border-color: #3b82f6; }
+  .icon { font-size: 2rem; flex-shrink: 0; }
+  .info { flex: 1; }
+  .info strong { display: block; font-size: 1rem; color: #f1f5f9; margin-bottom: 3px; }
+  .info span { font-size: .8rem; color: #64748b; }
+  .btn { background: #3b82f6; color: #fff; padding: 8px 18px; border-radius: 8px;
+         font-size: .85rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+  .note { font-size: .8rem; color: #64748b; max-width: 560px; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>OMNIX Quantum — Zenodo Deposit Files</h1>
+  <p>Download all files, then upload them to zenodo.org</p>
+
+  <a class="card" href="/paper" target="_blank">
+    <div class="icon">📄</div>
+    <div class="info">
+      <strong>Technical Paper</strong>
+      <span>Open in browser → Ctrl+P → Save as PDF</span>
+    </div>
+    <div class="btn">Open →</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/governance_receipts_dataset.csv">
+    <div class="icon">🗄️</div>
+    <div class="info">
+      <strong>governance_receipts_dataset.csv</strong>
+      <span>72,443 real signed governance receipts · 19 MB</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/core_algorithms.py">
+    <div class="icon">🐍</div>
+    <div class="info">
+      <strong>core_algorithms.py</strong>
+      <span>Reference implementation — Monte Carlo, Hash Chain, Hybrid KEM</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/dataset_description.md">
+    <div class="icon">📋</div>
+    <div class="info">
+      <strong>dataset_description.md</strong>
+      <span>Column-by-column description of the dataset</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <a class="card" href="/zenodo/download/README.md">
+    <div class="icon">📖</div>
+    <div class="info">
+      <strong>README.md</strong>
+      <span>Deposit overview + citation + verification instructions</span>
+    </div>
+    <div class="btn">Download</div>
+  </a>
+
+  <p class="note">After downloading all 5 files, go to zenodo.org → New Upload → drag all files into the upload box.</p>
+</body>
+</html>'''
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
+@public_verify_bp.route('/zenodo/download/<filename>', methods=['GET'])
+def zenodo_download_file(filename):
+    """Serve individual Zenodo deposit files as downloads."""
+    from flask import send_file
+    allowed = {
+        'governance_receipts_dataset.csv',
+        'core_algorithms.py',
+        'dataset_description.md',
+        'README.md',
+    }
+    if filename not in allowed:
+        return 'File not found.', 404
+
+    zenodo_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'docs', 'zenodo'
+    )
+    file_path = os.path.join(zenodo_dir, filename)
+    if not os.path.exists(file_path):
+        return 'File not found.', 404
+
+    return send_file(file_path, as_attachment=True, download_name=filename)
