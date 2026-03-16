@@ -350,7 +350,7 @@ def generate():
         [
             ["Phase 0 -- Real Capital", "Jul-Aug 2025", "Real (Kraken)", "1,115 real trades. Baseline established pre-governance."],
             ["Learning Baseline", "Nov 2025 - Jan 14, 2026", "Paper (simulated)", "119 trades. Risk engine calibrated. Veto system tuned."],
-            ["Official Track Record", "Jan 15, 2026 - present", "Paper (simulated)", "679,388 veto decisions. 0 executions. Capital protected."],
+            ["Official Track Record", "Jan 15, 2026 - present", "Paper (simulated)", "679,388 veto decisions. 0 executions. System in capital-preservation mode -- governance thresholds under calibration."],
         ],
         [45, 42, 30, 57]
     )
@@ -368,10 +368,10 @@ def generate():
 
     # ─── SLIDE 6: MARKET OPPORTUNITY ──────────────────────────────────────────
     pdf.add_page()
-    pdf.slide_title(6, "Market Opportunity", "$5.4B TAM -- compliance-driven demand accelerating")
+    pdf.slide_title(6, "Market Opportunity", "$5.4B governance infrastructure segment -- compliance-driven demand accelerating")
     pdf.metric_row([
         ("18,000", "Target institutional clients"),
-        ("$5.4B", "Total Addressable Market"),
+        ("$5.4B", "Governance infrastructure segment"),
         ("$540M", "Serviceable Addressable Market"),
         ("2025+", "MiCA regulation in force"),
     ])
@@ -432,6 +432,11 @@ def generate():
     # ─── SLIDE 8: COMPETITIVE ADVANTAGE ───────────────────────────────────────
     pdf.add_page()
     pdf.slide_title(8, "Competitive Advantage", "OMNIX vs. existing solutions")
+    pdf.body(
+        "Existing players — Riskalyze, Numerai, QuantConnect, Talos, CoinRoutes — optimize for returns or compliance reporting. "
+        "None operate as a fail-closed governance layer above the execution engine. OMNIX does not compete with them. It sits above them."
+    )
+    pdf.ln(2)
     pdf.table(
         ["Feature", "Retail Bots", "Quant Funds", "Risk Platforms", "OMNIX"],
         [
@@ -486,7 +491,7 @@ def generate():
     pdf.bold_label("Harold Nunes -- Founder & CEO")
     pdf.bullet([
         "Designed and built the entire OMNIX governance infrastructure from architecture to production deployment",
-        "36 Architecture Decision Records (ADRs) documenting every design choice",
+        "27 Architecture Decision Records (ADRs) documenting every design choice",
         "171 automated tests passing as of March 2026 -- full system coverage",
         "Implemented NIST-standardized post-quantum cryptography (Dilithium-3 + Kyber-768) independently",
         "Translated institutional risk governance concepts into a production-grade automated system",
@@ -558,6 +563,15 @@ def generate():
     pdf.set_font("DejaVu", "", 9)
     pdf.set_text_color(200, 220, 255)
     pdf.cell(pdf.w - 36, 8, "OMNIX is building it.", align="C",
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(6)
+    pdf.set_font("DejaVu", "B", 9)
+    pdf.set_text_color(200, 155, 0)
+    pdf.cell(pdf.w - 36, 6, "OMNIX is not a trading system.", align="C",
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font("DejaVu", "", 9)
+    pdf.set_text_color(200, 220, 255)
+    pdf.cell(pdf.w - 36, 6, "OMNIX is the missing governance layer for automated decision systems.", align="C",
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(14)
     pdf.bold_label("Why now:")
