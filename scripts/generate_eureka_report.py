@@ -1207,7 +1207,7 @@ def build_section_12(styles):
         ['Brazil LGPD Art. 20', 'ACTIVE', 'Explainable automated decisions required — banks must justify algorithmic outcomes'],
         ['Brazil PL 2.338/2023', 'Approval expected 2026', 'National AI Law — extends governance requirements to all automated systems'],
         ['GDPR', 'Controls aligned', 'Data protection and PII handling'],
-        ['SOC 2 Principles', 'Aligned', 'Access control, audit logging, encryption'],
+        ['SOC 2 Security Principles', 'Controls aligned', 'Aligned with core SOC 2 security control principles: access control, audit logging, encryption'],
         ['MiFID II', 'Aligned', 'Decision auditability and traceability'],
         ['DORA', 'Aligned', 'Operational resilience and error isolation'],
     ]
@@ -1385,6 +1385,7 @@ def build_section_14(styles):
         '<b>Energy Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-energy" color="#1155CC">https://omnixquantum.net/governance-demo-energy</a>',
         '<b>Biotech Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-biotech" color="#1155CC">https://omnixquantum.net/governance-demo-biotech</a>',
         '<b>LinkedIn:</b> <a href="https://www.linkedin.com/in/harold-nunes" color="#1155CC">www.linkedin.com/in/harold-nunes</a>',
+        '<b>Public Governance Sandbox (Live Demo — No Login):</b> <a href="https://omnixquantum.net/try" color="#1155CC">https://omnixquantum.net/try</a>',
         '<b>SSRN Research Paper (under review):</b> <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298" color="#1155CC">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298</a>',
         '<b>Contact:</b> <a href="mailto:contacto@omnixquantum.net" color="#1155CC">contacto@omnixquantum.net</a>',
     ]
