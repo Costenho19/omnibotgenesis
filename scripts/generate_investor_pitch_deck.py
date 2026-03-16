@@ -66,6 +66,7 @@ class PitchPDF(FPDF):
         self.cell(14, 10, num_label, align="L", new_x=XPos.RIGHT)
         self.cell(0, 10, title.upper(), align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         if subtitle:
+            self.set_y(bar_y + 16)
             self.set_font("DejaVu", "", 8)
             self.set_text_color(*ACCENT2)
             self.cell(0, 5, subtitle, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -87,9 +88,12 @@ class PitchPDF(FPDF):
     def bullet(self, items, size=8.5):
         self.set_font("DejaVu", "", size)
         self.set_text_color(*DARK)
+        indent = 8
+        text_w = self.w - self.l_margin - self.r_margin - indent
         for item in items:
-            self.cell(6, 5.5, "-", align="L", new_x=XPos.RIGHT)
-            self.multi_cell(0, 5.5, item, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.set_x(self.l_margin)
+            self.cell(indent, 5.5, "-", align="L", new_x=XPos.RIGHT)
+            self.multi_cell(text_w, 5.5, item, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.ln(2)
 
     def metric_row(self, items):
