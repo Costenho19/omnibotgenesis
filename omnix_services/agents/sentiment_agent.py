@@ -77,7 +77,8 @@ class SentimentAgent(BaseAgent):
         try:
             from omnix_services.web_search_service.tavily_search import TavilySearchClient
             client = TavilySearchClient()
-            query = f"{symbol} cryptocurrency market sentiment today"
+            clean_symbol = symbol.replace("/USD", "").replace("USDT", "").upper()
+            query = f"{clean_symbol} {clean_symbol} cryptocurrency price outlook news sentiment 2026"
             result = client.search(query, max_results=3)
             return result
         except Exception as e:

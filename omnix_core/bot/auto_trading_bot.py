@@ -3520,15 +3520,27 @@ class AutoTradingBot:
 
             # ─── ADR-041: Multi-Agent Governance Hook ──────────────────────────
             # Additive layer — never blocks pipeline. Default OFF.
+            # Uses ThreadPoolExecutor to run async agents safely from sync context,
+            # avoiding event loop conflicts with Telegram/PTB infrastructure.
             external_agent_consensus = None
             if ENABLE_MULTI_AGENT_GOVERNANCE:
                 try:
                     import asyncio as _asyncio
+                    import concurrent.futures as _futures
                     from omnix_services.agents import AgentOrchestrator, AgentRepository
-                    _orch   = AgentOrchestrator()
-                    _loop   = _asyncio.new_event_loop()
-                    _agent_result = _loop.run_until_complete(_orch.run(symbol=symbol, timeframe="1h"))
-                    _loop.close()
+
+                    def _run_agents_in_thread():
+                        _loop = _asyncio.new_event_loop()
+                        _asyncio.set_event_loop(_loop)
+                        try:
+                            return _loop.run_until_complete(AgentOrchestrator().run(symbol=symbol, timeframe="1h"))
+                        finally:
+                            _loop.close()
+
+                    with _futures.ThreadPoolExecutor(max_workers=1) as _executor:
+                        _future = _executor.submit(_run_agents_in_thread)
+                        _agent_result = _future.result(timeout=20)
+
                     external_agent_consensus = _agent_result
                     AgentRepository().save(_agent_result)
                     logger.info(
@@ -3538,7 +3550,7 @@ class AutoTradingBot:
                     )
                     decision['decision_trace'].append(
                         f"[ADR-041] Agent consensus: {_agent_result.consensus_signal.value} "
-                        f"(score={_agent_result.consensus_score:.3f})"
+                        f"(score={_agent_result.consensus_score:.3f}, conf={_agent_result.consensus_confidence:.1f}%)"
                     )
                 except Exception as _agent_exc:
                     logger.warning(f"[ADR-041] Multi-agent system error (non-blocking): {_agent_exc}")
@@ -3662,6 +3674,33 @@ class AutoTradingBot:
                 decision['v52_analysis']['quantum_signal'] = qm_score
                 decision['v52_analysis']['quantum_signal_label'] = qm_signal
             
+            # 4b. ADR-041: Multi-Agent Consensus (MODIFIER ONLY - no suma a max_score)
+            # Max effect: ±8 pts (conservative additive signal, not a primary driver)
+            if external_agent_consensus is not None:
+                _ac = external_agent_consensus
+                _ac_signal  = _ac.consensus_signal.value
+                _ac_score   = _ac.consensus_score
+                _ac_conf    = _ac.consensus_confidence
+                _ac_degraded = _ac.is_degraded
+
+                if not _ac_degraded and _ac_conf >= 55.0:
+                    if _ac_signal == "BUY" and _ac_score > 0.30:
+                        _boost = round(min(8, _ac_conf * 0.08))
+                        score += _boost
+                        decision['reason'].append(f"🤖 Agentes externos: BUY (score={_ac_score:.2f}) → +{_boost}")
+                        decision['decision_trace'].append(f'ADR041_BOOST: +{_boost} (conf={_ac_conf:.1f}%)')
+                    elif _ac_signal == "SELL" and _ac_score < -0.30:
+                        _penalty = round(min(8, _ac_conf * 0.08))
+                        score -= _penalty
+                        decision['reason'].append(f"🤖 Agentes externos: SELL (score={_ac_score:.2f}) → -{_penalty}")
+                        decision['decision_trace'].append(f'ADR041_PENALTY: -{_penalty} (conf={_ac_conf:.1f}%)')
+                    else:
+                        decision['reason'].append(f"🤖 Agentes externos: HOLD / mixto — sin modificación")
+                else:
+                    decision['decision_trace'].append(
+                        f'ADR041_SKIP: conf={_ac_conf:.1f}% degraded={_ac_degraded}'
+                    )
+
             # 5. Kalman Filter (peso: 15 puntos * kalman_weight)
             kalman_base_weight = 15
             if kalman:

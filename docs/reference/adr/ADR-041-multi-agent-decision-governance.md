@@ -62,7 +62,18 @@ Injected into `auto_trading_bot.py` via feature flag:
 ENABLE_MULTI_AGENT_GOVERNANCE = os.environ.get("ENABLE_MULTI_AGENT_GOVERNANCE", "false").lower() == "true"
 ```
 
-When enabled, `OrchestratorResult` is available in the decision context as `external_agent_consensus`.
+When enabled, `OrchestratorResult` is available as `external_agent_consensus` and applied as a **score modifier**:
+
+| Condition | Effect |
+|-----------|--------|
+| BUY consensus, score > 0.30, confidence ≥ 55% | +up to 8 pts |
+| SELL consensus, score < -0.30, confidence ≥ 55% | -up to 8 pts |
+| HOLD or degraded agents | No modification |
+
+Max ±8 pts against a 105-pt scoring system — advisory, not primary driver.
+
+**Event loop safety**: Agents run in a `ThreadPoolExecutor` thread with their own event loop, avoiding conflicts with Telegram/PTB infrastructure.
+
 When disabled (default), existing pipeline behavior is **100% unchanged**.
 
 ### Persistence

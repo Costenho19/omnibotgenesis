@@ -56,6 +56,10 @@ class RiskAgent(BaseAgent):
         }
 
     def _fetch_db_state(self, symbol: str) -> Optional[Dict]:
+        """
+        Reads portfolio state from paper_trading_trades — the actual trades table.
+        Computes: total P/L, win rate, open positions, today's drawdown.
+        """
         try:
             from omnix_services.database_service.gateway import DatabaseGateway
             gw = DatabaseGateway()
@@ -63,15 +67,19 @@ class RiskAgent(BaseAgent):
                 with conn.cursor() as cur:
                     cur.execute("""
                         SELECT
-                            current_balance,
-                            initial_balance,
-                            total_profit_loss,
-                            max_drawdown_pct,
-                            open_positions_count,
-                            last_regime,
-                            last_updated
-                        FROM bot_state
-                        ORDER BY last_updated DESC
+                            COUNT(*) FILTER (WHERE status = 'closed')                          AS total_closed,
+                            COUNT(*) FILTER (WHERE status = 'open')                            AS open_positions,
+                            COALESCE(SUM(profit_loss) FILTER (WHERE status = 'closed'), 0)    AS total_pnl,
+                            COALESCE(SUM(profit_loss) FILTER (
+                                WHERE status = 'closed'
+                                AND closed_at >= NOW() - INTERVAL '24 hours'
+                            ), 0)                                                              AS daily_pnl,
+                            COUNT(*) FILTER (WHERE status = 'closed' AND profit_loss > 0)     AS winning_trades,
+                            hmm_regime
+                        FROM paper_trading_trades
+                        WHERE created_at >= NOW() - INTERVAL '30 days'
+                        GROUP BY hmm_regime
+                        ORDER BY COUNT(*) DESC
                         LIMIT 1
                     """)
                     row = cur.fetchone()
@@ -159,26 +167,34 @@ class RiskAgent(BaseAgent):
         score = 0.0
         factors = []
         try:
-            current  = float(db.get("current_balance", 0) or 0)
-            initial  = float(db.get("initial_balance", 0) or 0)
-            if initial > 0 and current < initial:
-                drawdown_pct = (initial - current) / initial * 100
-                dd_score = min(1.0, drawdown_pct / MAX_DRAWDOWN_ALLOWED)
-                score += dd_score * 0.5
-                factors.append(f"drawdown={drawdown_pct:.1f}%")
+            daily_pnl    = float(db.get("daily_pnl", 0)    or 0)
+            total_pnl    = float(db.get("total_pnl", 0)    or 0)
+            total_closed = int(db.get("total_closed", 0)   or 0)
+            winning      = int(db.get("winning_trades", 0) or 0)
+            open_pos     = int(db.get("open_positions", 0) or 0)
+            regime       = str(db.get("hmm_regime", "")    or "")
 
-            open_pos = int(db.get("open_positions_count", 0) or 0)
+            if daily_pnl < 0:
+                daily_loss_pct = abs(daily_pnl) / 1000 * 100
+                dd_score = min(1.0, daily_loss_pct / MAX_DRAWDOWN_ALLOWED)
+                score += dd_score * 0.40
+                factors.append(f"daily_pnl=${daily_pnl:.0f}")
+
             if open_pos > 3:
-                pos_score = min(1.0, open_pos / 6)
-                score += pos_score * 0.3
+                score += min(1.0, open_pos / 6) * 0.30
                 factors.append(f"open_positions={open_pos}")
 
-            regime = str(db.get("last_regime", "") or "")
+            if total_closed > 10:
+                win_rate = winning / total_closed
+                if win_rate < 0.35:
+                    score += (0.35 - win_rate) * 0.60
+                    factors.append(f"win_rate={win_rate:.0%}")
+
             if "VOLATILE" in regime.upper():
-                score += 0.2
+                score += 0.20
                 factors.append(f"regime={regime}")
             elif "TRENDING" in regime.upper():
-                score -= 0.1
+                score = max(0.0, score - 0.10)
 
         except Exception as e:
             logger.warning(f"[RiskAgent] DB risk assess error: {e}")
