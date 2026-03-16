@@ -24,3 +24,9 @@ id = "8ZVmY0cynmkOGfwb6Oguw"
 uri = "file://docs/business/pdf/OMNIX_Eureka_Pitch_Final_ES.pdf"
 type = "pdf"
 title = "Pitch Eureka — Español (14 slides, con Terra/LUNA)"
+
+[[outputs]]
+id = "jDr2V_9ubxMfS8-NfrFVs"
+uri = "file://docs/business/pdfs/Report_OMNIX_HaroldNunes_March2026.pdf"
+type = "pdf"
+title = "Reporte Eureka OMNIX — March 2026 (con paper SSRN)"

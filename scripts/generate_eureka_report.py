@@ -668,6 +668,33 @@ def build_section_4(styles):
         styles['SmallNote']
     ))
 
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("<b>Academic Documentation</b>", styles['SubsectionTitle']))
+    elements.append(Paragraph(
+        "In parallel with product development, Harold has submitted a formal research paper documenting the "
+        "OMNIX architecture and production findings to SSRN (Social Science Research Network), the leading "
+        "academic preprint platform operated by Elsevier. The paper is currently under review.",
+        styles['BodyText2']
+    ))
+    elements.append(Spacer(1, 6))
+    ssrn_data = [
+        ['Field', 'Details'],
+        ['Title', 'Cryptographically Auditable Decision Governance for Autonomous Trading Systems: A Production Study OMNIX Quantum'],
+        ['Author', 'Harold Nunes'],
+        ['Platform', 'SSRN — Social Science Research Network (Elsevier)'],
+        ['Abstract ID', '6321298'],
+        ['Submitted', 'February 28, 2026'],
+        ['Status', 'Under Review (PRELIMINARY_UPLOAD)'],
+    ]
+    elements.append(make_table(ssrn_data[0], ssrn_data[1:], [100, 360]))
+    elements.append(Spacer(1, 4))
+    elements.append(Paragraph(
+        "This submission demonstrates that OMNIX is not only a production system but a documented "
+        "academic contribution — positioning Harold as both a builder and a thought leader in the "
+        "AI governance space.",
+        styles['SmallNote']
+    ))
+
     elements.append(PageBreak())
     return elements
 
@@ -1358,6 +1385,7 @@ def build_section_14(styles):
         '<b>Energy Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-energy" color="#1155CC">https://omnixquantum.net/governance-demo-energy</a>',
         '<b>Biotech Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-biotech" color="#1155CC">https://omnixquantum.net/governance-demo-biotech</a>',
         '<b>LinkedIn:</b> <a href="https://www.linkedin.com/in/harold-nunes" color="#1155CC">www.linkedin.com/in/harold-nunes</a>',
+        '<b>SSRN Research Paper (under review):</b> <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298" color="#1155CC">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298</a>',
         '<b>Contact:</b> <a href="mailto:contacto@omnixquantum.net" color="#1155CC">contacto@omnixquantum.net</a>',
     ]
     elements.extend(bullet_list(links, styles))
