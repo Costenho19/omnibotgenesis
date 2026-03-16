@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. Its purpose is to provide robust, error-free decision governance, ensuring capital preservation and enhancing financial integrity in automated decision-making across various sectors. Key capabilities include an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and Regime-Conditioned Kelly sizing.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. Its core purpose is to provide robust, error-free decision governance, ensuring capital preservation and enhancing financial integrity across various automated decision-making sectors. Key capabilities include an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and a Multi-Agent Governance System. The project aims to become a foundational infrastructure for automated decision-making, offering unparalleled reliability and security.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -144,19 +144,10 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter.
-
-Key features include:
--   **AI Risk Guardian**: Manages AI-related risks.
--   **Confidence-Adaptive Entry System (CAES)**: Dynamically adjusts entry based on confidence levels.
--   **Decision Engine**: Incorporates an EMA Regime Signal, Monte Carlo VETO Engine, and RMS Enforcement.
--   **Signal Integrity Validator (SIV)**: Pre-pipeline data quality gate.
--   **Forward Trajectory Implicator (FTI)**: Evaluates decision implications.
--   **Regime-Conditioned Kelly (RCK)**: Kelly inputs segmented by HMM market regime.
--   **Exit Governance Layer (EGL)**: 3-gate exit pipeline with regime-adjusted thresholds, coherence checks, and TCV.
+OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). The AI service adheres to SOLID principles, supporting multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key features include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine with EMA Regime Signal, Monte Carlo VETO Engine, and RMS Enforcement. Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL) with a 3-gate exit pipeline are central to its operation. A Multi-Agent Governance System (ADR-041) uses 3 specialized agents (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) running in parallel via asyncio to produce weighted consensus, controlled by the `ENABLE_MULTI_AGENT_GOVERNANCE` feature flag.
 
 ### Hierarchical Veto Flow
-Entry decisions progress through 8 named checkpoints: SIV CP-0, Monte Carlo VETO CP-1, RMS VETO CP-2, VETO Early Return CP-3, Coherence Engine 6-tier CP-4, Adaptive Coherence Gate CP-5, TCV backward trajectory CP-7, FTI forward implication CP-7b, ECW Gate edge persistence CP-8, then Scoring → Decision. Exit decisions go through the 3-gate EGL pipeline: Regime-Adjusted Thresholds → Exit Coherence Gate → TCV Exit Check. All checkpoints and exit evaluations are fail-safe and generate PQC-signed receipts.
+Entry decisions pass through 8 checkpoints: SIV CP-0, Monte Carlo VETO CP-1, RMS VETO CP-2, VETO Early Return CP-3, Coherence Engine 6-tier CP-4, Adaptive Coherence Gate CP-5, TCV backward trajectory CP-7, FTI forward implication CP-7b, and ECW Gate edge persistence CP-8, leading to Scoring and Decision. Exit decisions are processed via the 3-gate EGL pipeline: Regime-Adjusted Thresholds → Exit Coherence Gate → TCV Exit Check. All checkpoints and exit evaluations are fail-safe and generate PQC-signed receipts.
 
 ### Scoring Logic
 Decision scoring integrates inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with a separate Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.

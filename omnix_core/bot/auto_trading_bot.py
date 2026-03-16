@@ -59,6 +59,13 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+# ─── ADR-041: Multi-Agent Governance Feature Flag ────────────────────────────
+# Default OFF. Enable with ENABLE_MULTI_AGENT_GOVERNANCE=true in Railway env vars.
+# When OFF, existing pipeline behavior is 100% unchanged.
+ENABLE_MULTI_AGENT_GOVERNANCE = (
+    os.environ.get("ENABLE_MULTI_AGENT_GOVERNANCE", "false").lower() == "true"
+)
+
 
 def safe_float(value, default: float = 0.0, param_name: str = None) -> float:
     """
@@ -3510,7 +3517,33 @@ class AutoTradingBot:
             # Si ECW no pasa, el sistema mantiene HOLD pero permite scoring para métricas
             
             logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed, ECW: {ecw_passed}")
-            
+
+            # ─── ADR-041: Multi-Agent Governance Hook ──────────────────────────
+            # Additive layer — never blocks pipeline. Default OFF.
+            external_agent_consensus = None
+            if ENABLE_MULTI_AGENT_GOVERNANCE:
+                try:
+                    import asyncio as _asyncio
+                    from omnix_services.agents import AgentOrchestrator, AgentRepository
+                    _orch   = AgentOrchestrator()
+                    _loop   = _asyncio.new_event_loop()
+                    _agent_result = _loop.run_until_complete(_orch.run(symbol=symbol, timeframe="1h"))
+                    _loop.close()
+                    external_agent_consensus = _agent_result
+                    AgentRepository().save(_agent_result)
+                    logger.info(
+                        f"[ADR-041] Multi-agent consensus: {_agent_result.consensus_signal.value} "
+                        f"score={_agent_result.consensus_score:.3f} conf={_agent_result.consensus_confidence:.1f}% "
+                        f"degraded={_agent_result.is_degraded}"
+                    )
+                    decision['decision_trace'].append(
+                        f"[ADR-041] Agent consensus: {_agent_result.consensus_signal.value} "
+                        f"(score={_agent_result.consensus_score:.3f})"
+                    )
+                except Exception as _agent_exc:
+                    logger.warning(f"[ADR-041] Multi-agent system error (non-blocking): {_agent_exc}")
+            # ────────────────────────────────────────────────────────────────────
+
             score = 0  # Score de confianza (-100 a +100)
             max_score = 0  # Para normalizar
             

@@ -45,11 +45,22 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 **Referencia**: [ADR-033](reference/adr/ADR-033-signal-integrity-validator.md) - Signal Integrity Validator (SIV) — Checkpoint 0. Data quality gate pre-análisis: freshness + completeness + anomaly + cross-source. 46 tests pasando (Mar 2026).  
 **Referencia**: [ADR-034](reference/adr/ADR-034-forward-trajectory-implication.md) - Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV: Regime Transition Risk + Implied Consistency + Signal Momentum. 45 tests pasando (Mar 2026).  
 **Referencia**: [ADR-035](reference/adr/ADR-035-regime-conditioned-kelly.md) - Regime-Conditioned Kelly (RCK). Kelly inputs segmentados por régimen HMM con 3-level fallback chain. 36 tests pasando (Mar 2026).  
-**Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026).
+**Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026).  
+**Referencia**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md) - Multi-Agent Decision Governance. 3 agentes especializados (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) con consenso ponderado paralelo. Feature flag `ENABLE_MULTI_AGENT_GOVERNANCE`. 19 tests pasando (Mar 2026).
 
 ---
 
 ## Cambios Recientes
+
+### ADR-041: Multi-Agent Decision Governance (Mar 16, 2026)
+- **ESTADO**: ✅ COMPLETADO — Sistema multi-agente aditivo implementado
+- **Agentes**: SignalAgent (Kraken+AlphaVantage, 0.45) + RiskAgent (DB+Redis, 0.30) + SentimentAgent (Finnhub+Tavily+FearGreed, 0.25)
+- **Orquestador**: `asyncio.gather`, consenso ponderado, umbral BUY>+0.20 / SELL<-0.20
+- **Integración**: Hook en `auto_trading_bot.py` línea ~3524, detrás de `ENABLE_MULTI_AGENT_GOVERNANCE=false`
+- **DB**: Tabla `agent_orchestrator_runs` (JSONB por agente, trazabilidad completa)
+- **Tests**: 19/19 pasando — cobertura de éxito, timeout, API caída, desacuerdo total, serialización
+- **Diseño**: Arquitecto consultado antes de escribir código — fallback graceful, no bloquea pipeline
+- **ADR**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md)
 
 ### 4 Architectural Gaps — Pipeline Completeness (Mar 5, 2026)
 - **ESTADO**: ✅ COMPLETADO — ADR-033 · ADR-034 · ADR-035 · ADR-036 | 171 nuevos tests pasando
