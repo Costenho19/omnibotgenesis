@@ -254,28 +254,19 @@ def _check_rate_limit(ip: str) -> bool:
     return True
 
 
-# ─── Endpoint ─────────────────────────────────────────────────────────────────
+# ─── Shared DB fetch ──────────────────────────────────────────────────────────
 
-@public_verify_bp.route('/api/public/verify/<receipt_id>', methods=['GET'])
-def verify_receipt(receipt_id: str):
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
-    if not _check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded', 'retry_after': 60}), 429
-
-    if not RECEIPT_ID_RE.match(receipt_id):
-        return jsonify({'found': False, 'error': 'Invalid receipt ID format'}), 400
-
+def _fetch_receipt(receipt_id: str):
+    """Return presentation-ready dict or None if not found / DB error."""
     conn = _get_db_conn()
     if not conn:
-        return jsonify({'found': False, 'error': 'Service temporarily unavailable'}), 503
-
+        return None
     try:
         cur = conn.cursor()
         cur.execute("""
             SELECT receipt_id, timestamp_utc, asset, decision,
                    veto_chain, policy_version, engine_version,
-                   prev_hash, content_hash, signature_algorithm,
-                   domain
+                   prev_hash, content_hash, signature_algorithm, domain
             FROM decision_receipts
             WHERE receipt_id = %s
             LIMIT 1
@@ -289,30 +280,26 @@ def verify_receipt(receipt_id: str):
             conn.close()
         except Exception:
             pass
-        return jsonify({'found': False, 'error': 'Service temporarily unavailable'}), 503
+        return None
 
     if not row:
-        return jsonify({'found': False, 'receipt_id': receipt_id}), 200
+        return {}
 
-    (receipt_id_db, ts_utc, asset, decision,
+    (rid, ts_utc, asset, decision,
      veto_chain_raw, policy_version, engine_version,
-     prev_hash, content_hash, signature_algorithm,
-     domain) = row
+     prev_hash, content_hash, signature_algorithm, domain) = row
 
-    ts_str = ts_utc.isoformat() if hasattr(ts_utc, 'isoformat') else str(ts_utc)
-
+    ts_str      = ts_utc.isoformat() if hasattr(ts_utc, 'isoformat') else str(ts_utc)
     checkpoints = _parse_veto_chain(veto_chain_raw)
     total       = len(checkpoints)
     passed      = sum(1 for c in checkpoints if c['result'] == 'PASS')
     blocked_n   = total - passed
     meta        = _decision_meta(decision or 'UNKNOWN')
-
     railway_url = os.environ.get('RAILWAY_VERIFY_URL', '')
-    independent_url = f"{railway_url}/verify/{receipt_id_db}" if railway_url else None
 
-    return jsonify({
+    return {
         'found':          True,
-        'receipt_id':     receipt_id_db,
+        'receipt_id':     rid,
         'timestamp_utc':  ts_str,
         'asset':          asset or 'UNKNOWN',
         'decision':       (decision or 'UNKNOWN').upper(),
@@ -324,7 +311,7 @@ def verify_receipt(receipt_id: str):
         'checkpoints_total':   total,
         'checkpoints_passed':  passed,
         'checkpoints_blocked': blocked_n,
-        'checkpoints':    checkpoints,
+        'checkpoints':         checkpoints,
         'integrity': {
             'content_hash':             content_hash,
             'prev_hash':                prev_hash or '',
@@ -333,7 +320,179 @@ def verify_receipt(receipt_id: str):
             'independently_verifiable': True,
             'nist_note':                'Signed with NIST-standardized post-quantum algorithms',
         },
-        'policy_version':    policy_version or '6.5.4e',
-        'engine_version':    engine_version or '6.5.4e',
-        'independent_verify_url': independent_url,
-    }), 200
+        'policy_version':         policy_version or '6.5.4e',
+        'engine_version':         engine_version or '6.5.4e',
+        'independent_verify_url': f"{railway_url}/verify/{rid}" if railway_url else None,
+    }
+
+
+# ─── JSON endpoint ────────────────────────────────────────────────────────────
+
+@public_verify_bp.route('/api/public/verify/<receipt_id>', methods=['GET'])
+def verify_receipt(receipt_id: str):
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    if not _check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded', 'retry_after': 60}), 429
+    if not RECEIPT_ID_RE.match(receipt_id):
+        return jsonify({'found': False, 'error': 'Invalid receipt ID format'}), 400
+    data = _fetch_receipt(receipt_id)
+    if data is None:
+        return jsonify({'found': False, 'error': 'Service temporarily unavailable'}), 503
+    if not data:
+        return jsonify({'found': False, 'receipt_id': receipt_id}), 200
+    return jsonify(data), 200
+
+
+# ─── HTML page endpoint ───────────────────────────────────────────────────────
+
+_COLOR_HEX = {'green': '#22c55e', 'red': '#ef4444', 'yellow': '#eab308', 'gray': '#818cf8'}
+_COLOR_BG  = {'green': 'rgba(34,197,94,.10)',  'red': 'rgba(239,68,68,.10)',
+               'yellow': 'rgba(234,179,8,.10)', 'gray': 'rgba(129,140,248,.10)'}
+_COLOR_BD  = {'green': 'rgba(34,197,94,.30)',  'red': 'rgba(239,68,68,.30)',
+               'yellow': 'rgba(234,179,8,.30)', 'gray': 'rgba(129,140,248,.30)'}
+
+
+def _checkpoint_rows(checkpoints: list) -> str:
+    rows = []
+    for cp in checkpoints:
+        if cp['result'] == 'PASS':
+            icon, clr = '✓', '#22c55e'
+        elif cp['result'] == 'BLOCKED':
+            icon, clr = '✗', '#ef4444'
+        elif cp['result'] == 'N/A':
+            icon, clr = '–', '#6b7280'
+        else:
+            icon, clr = '~', '#eab308'
+
+        label = cp['label_en']
+        code  = f'<span style="font-family:monospace;font-size:.7rem;color:#6b7280;margin-right:6px">{cp["code"]}</span>' if cp['code'] else ''
+        metric = ''
+        if cp['metric_label'] and cp['metric_value']:
+            metric = f'<span style="font-size:.72rem;color:#6b7280;margin-left:8px">{cp["metric_label"]}: <b style="color:#9ca3af">{cp["metric_value"]}</b></span>'
+
+        rows.append(f'''
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="color:{clr};font-size:1rem;flex-shrink:0;width:18px;text-align:center">{icon}</span>
+          <span style="font-size:.87rem;color:#e5e7eb">{code}{label}{metric}</span>
+          <span style="margin-left:auto;font-family:monospace;font-size:.7rem;color:{clr};flex-shrink:0">{cp["result"]}</span>
+        </div>''')
+    return ''.join(rows)
+
+
+@public_verify_bp.route('/r/<receipt_id>', methods=['GET'])
+def verify_page_html(receipt_id: str):
+    if not RECEIPT_ID_RE.match(receipt_id):
+        return '<h2 style="font-family:sans-serif;color:#ef4444;padding:2rem">Invalid receipt ID format</h2>', 400
+
+    data = _fetch_receipt(receipt_id)
+
+    if data is None:
+        msg = 'Service temporarily unavailable. Please try again.'
+        body = f'<div style="text-align:center;padding:3rem"><p style="color:#ef4444">{msg}</p></div>'
+    elif not data:
+        body = f'''
+        <div style="text-align:center;padding:3rem">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🔍</div>
+          <h2 style="color:#e5e7eb;margin-bottom:.5rem">Receipt not found</h2>
+          <p style="color:#6b7280;font-family:monospace">{receipt_id}</p>
+          <p style="color:#4b5563;font-size:.85rem;margin-top:1rem">
+            Receipts are generated by the governance engine after every decision.<br>
+            Try the <a href="/try" style="color:#3b82f6">public sandbox</a> to generate one.
+          </p>
+        </div>'''
+    else:
+        col   = data['decision_color']
+        chk   = _checkpoint_rows(data['checkpoints'])
+        ind   = f'<a href="{data["independent_verify_url"]}" target="_blank" style="color:#3b82f6;font-size:.8rem">Open independent ledger ↗</a>' if data.get('independent_verify_url') else ''
+        prev_h = f'<div style="margin-bottom:8px"><span style="font-size:.68rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em">Previous Hash</span><br><span style="font-family:monospace;font-size:.7rem;color:#60a5fa;word-break:break-all">{data["integrity"]["prev_hash"]}</span></div>' if data['integrity']['prev_hash'] else ''
+
+        body = f'''
+        <!-- Decision banner -->
+        <div style="padding:1.4rem;border-radius:10px;background:{_COLOR_BG[col]};border:1px solid {_COLOR_BD[col]};margin-bottom:1.2rem">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:.8rem">
+            <span style="font-size:1.6rem">{data["decision_icon"]}</span>
+            <div>
+              <div style="font-size:1.1rem;font-weight:700;color:{_COLOR_HEX[col]}">{data["decision"]}</div>
+              <div style="font-family:monospace;font-size:.72rem;color:#6b7280">{data["receipt_id"]}</div>
+            </div>
+          </div>
+          <p style="color:#d1d5db;font-size:.9rem;margin:0 0 .4rem">{data["human_summary_en"]}</p>
+          <p style="color:#9ca3af;font-size:.8rem;margin:0;font-style:italic">{data["human_summary_es"]}</p>
+        </div>
+
+        <!-- Key facts -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:1rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:1.2rem">
+          <div><div style="font-size:.65rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Asset</div><div style="font-family:monospace;font-size:.85rem;color:#e5e7eb">{data["asset"]}</div></div>
+          <div><div style="font-size:.65rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Checkpoints</div><div style="font-family:monospace;font-size:.85rem;color:#e5e7eb">{data["checkpoints_passed"]} / {data["checkpoints_total"]} passed</div></div>
+          <div><div style="font-size:.65rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Policy</div><div style="font-family:monospace;font-size:.85rem;color:#e5e7eb">{data["policy_version"]}</div></div>
+          <div><div style="font-size:.65rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Time (UTC)</div><div style="font-size:.75rem;color:#e5e7eb">{data["timestamp_utc"][:19].replace("T"," ")}</div></div>
+        </div>
+
+        <!-- Checkpoints -->
+        <div style="padding:1.2rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:1.2rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+            <span style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;font-weight:600">Safety Checkpoint Pipeline</span>
+            <span style="font-size:.75rem;color:#22c55e">✓ {data["checkpoints_passed"]} passed &nbsp;
+              {"<span style='color:#ef4444'>✗ " + str(data["checkpoints_blocked"]) + " blocked</span>" if data["checkpoints_blocked"] else ""}
+            </span>
+          </div>
+          {chk}
+        </div>
+
+        <!-- Integrity -->
+        <div style="padding:1.2rem;background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:8px;margin-bottom:1.2rem">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:.8rem">
+            <span>🔒</span>
+            <span style="font-size:.7rem;color:#60a5fa;text-transform:uppercase;letter-spacing:.1em;font-weight:600">Cryptographic Integrity</span>
+          </div>
+          <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:.7rem;margin-bottom:.8rem;display:flex;gap:8px;align-items:flex-start">
+            <span style="color:#22c55e">✓</span>
+            <div>
+              <div style="color:#22c55e;font-weight:600;font-size:.85rem;margin-bottom:2px">Tamper-Proof Receipt</div>
+              <div style="color:#9ca3af;font-size:.75rem">Signed with {data["integrity"]["signature_algorithm"]} · {data["integrity"]["nist_note"]}</div>
+            </div>
+          </div>
+          <div style="margin-bottom:8px"><span style="font-size:.68rem;color:#6b7280;text-transform:uppercase;letter-spacing:.1em">Content Hash (SHA-256)</span><br><span style="font-family:monospace;font-size:.7rem;color:#60a5fa;word-break:break-all">{data["integrity"]["content_hash"]}</span></div>
+          {prev_h}
+          <div style="margin-top:.6rem">{ind}</div>
+        </div>
+
+        <p style="text-align:center;font-size:.72rem;color:#4b5563">
+          <a href="/" style="color:#3b82f6">omnixquantum.net</a> &nbsp;·&nbsp;
+          All governance decisions are logged in an append-only hash chain with post-quantum cryptographic signatures.
+        </p>'''
+
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OMNIX — Governance Receipt {receipt_id}</title>
+  <style>
+    *{{box-sizing:border-box;margin:0;padding:0}}
+    body{{background:#0a0e17;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}}
+    a{{color:#3b82f6}}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="border-bottom:1px solid rgba(255,255,255,.06);padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span style="font-size:1.2rem">🛡️</span>
+      <div>
+        <div style="font-size:.85rem;font-weight:700;color:#fff;letter-spacing:.06em">OMNIX QUANTUM</div>
+        <div style="font-size:.6rem;color:#6b7280;letter-spacing:.12em;text-transform:uppercase">Decision Governance Infrastructure</div>
+      </div>
+    </a>
+    <a href="/try" style="font-size:.8rem;color:#3b82f6;text-decoration:none">Try sandbox ↗</a>
+  </div>
+
+  <!-- Content -->
+  <div style="max-width:680px;margin:0 auto;padding:2rem 1.2rem">
+    <h1 style="font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:.4rem">Governance Receipt</h1>
+    <p style="color:#9ca3af;font-size:.85rem;margin-bottom:1.5rem">Independent cryptographic verification of a governance decision.</p>
+    {body}
+  </div>
+</body>
+</html>'''
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
