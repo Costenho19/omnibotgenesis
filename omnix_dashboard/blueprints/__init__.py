@@ -19,6 +19,7 @@ from .governance_reports import governance_reports_bp
 from .governance_sandbox import governance_sandbox_bp
 from .governance_alerts import governance_alerts_bp
 from .public_sandbox import public_sandbox_bp
+from .public_verify import public_verify_bp
 
 __all__ = [
     'views_bp',
@@ -37,4 +38,5 @@ __all__ = [
     'governance_sandbox_bp',
     'governance_alerts_bp',
     'public_sandbox_bp',
+    'public_verify_bp',
 ]

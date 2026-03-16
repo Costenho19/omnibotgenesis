@@ -464,15 +464,24 @@ export default function PublicGovernanceSandbox() {
                           <span className="text-white font-mono text-[10px]">{result.receipt.content_hash?.slice(0, 16)}...</span>
                         </div>
                       </div>
+                      {result.receipt_id && (
+                        <Link
+                          to={`/verify/${result.receipt_id}`}
+                          className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#C9A227] hover:text-white transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          View Full Governance Report
+                        </Link>
+                      )}
                       {result.verification_url && (
                         <a
                           href={result.verification_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-3 flex items-center justify-center gap-1.5 text-xs text-[#C9A227] hover:text-white transition-colors"
+                          className="mt-1.5 flex items-center justify-center gap-1.5 text-xs text-muted hover:text-white transition-colors"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          Verify on Public Server
+                          <ExternalLink className="w-3 h-3" />
+                          Independent ledger verification
                         </a>
                       )}
                     </div>

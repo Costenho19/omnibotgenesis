@@ -58,7 +58,7 @@ def create_app():
         governance_risk_bp, governance_metrics_bp,
         governance_oversight_bp, governance_incidents_bp, governance_reports_bp,
         governance_sandbox_bp, governance_alerts_bp,
-        public_sandbox_bp,
+        public_sandbox_bp, public_verify_bp,
     )
 
     app.register_blueprint(views_bp)
@@ -77,6 +77,7 @@ def create_app():
     app.register_blueprint(governance_sandbox_bp)
     app.register_blueprint(governance_alerts_bp)
     app.register_blueprint(public_sandbox_bp)
+    app.register_blueprint(public_verify_bp)
     
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
