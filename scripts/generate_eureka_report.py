@@ -26,23 +26,23 @@ from reportlab.graphics import renderPDF
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-BRAND_NAVY = HexColor('#0A1628')
-BRAND_BLUE = HexColor('#1E3A5F')
-BRAND_ACCENT = HexColor('#2196F3')
-BRAND_GOLD = HexColor('#C5A55A')
-BRAND_LIGHT = HexColor('#F8F9FA')
-BRAND_DARK_TEXT = HexColor('#1A1A2E')
+BRAND_NAVY = HexColor('#0F0F0F')
+BRAND_BLUE = HexColor('#141414')
+BRAND_ACCENT = HexColor('#C9A837')
+BRAND_GOLD = HexColor('#C9A837')
+BRAND_LIGHT = HexColor('#FAF7EE')
+BRAND_DARK_TEXT = HexColor('#0F0F0F')
 BRAND_GRAY = HexColor('#6B7280')
 BRAND_GREEN = HexColor('#10B981')
 BRAND_RED = HexColor('#EF4444')
-BRAND_LIGHT_BLUE = HexColor('#EBF5FF')
-TABLE_HEADER_BG = HexColor('#1E3A5F')
-TABLE_ALT_ROW = HexColor('#F0F4F8')
-TABLE_BORDER = HexColor('#D1D5DB')
+BRAND_LIGHT_BLUE = HexColor('#F5F0DC')
+TABLE_HEADER_BG = HexColor('#141414')
+TABLE_ALT_ROW = HexColor('#F5F0DC')
+TABLE_BORDER = HexColor('#D1C9A0')
 
 OUTPUT_DIR  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'business', 'pdfs')
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'Report_OMNIX_HaroldNunes_March2026.pdf')
-LOGO_PATH   = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'omnix_web', 'public', 'logo.png')
+LOGO_PATH   = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets', 'omnix_logo.png')
 
 
 def create_styles():

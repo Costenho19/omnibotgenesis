@@ -17,12 +17,14 @@ FONT_DIR = os.path.join(
 )
 FONT_REGULAR  = os.path.join(FONT_DIR, "DejaVuSans.ttf")
 FONT_BOLD     = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
+LOGO_PATH     = os.path.join(BASE_DIR, "assets", "omnix_logo.png")
 
-DARK      = (20, 20, 40)
-ACCENT    = (0, 80, 160)
-ACCENT2   = (0, 120, 200)
-MID_GRAY  = (150, 155, 170)
-LIGHT_BG  = (245, 247, 252)
+DARK      = (15, 15, 15)
+ACCENT    = (20, 20, 20)
+ACCENT2   = (201, 168, 55)
+GOLD      = (201, 168, 55)
+MID_GRAY  = (140, 140, 140)
+LIGHT_BG  = (245, 240, 218)
 WHITE     = (255, 255, 255)
 GREEN     = (30, 140, 70)
 RED_SOFT  = (180, 40, 40)
@@ -81,7 +83,7 @@ class PitchPDF(FPDF):
 
     def bold_label(self, text, size=9):
         self.set_font("DejaVu", "B", size)
-        self.set_text_color(*ACCENT)
+        self.set_text_color(*GOLD)
         self.cell(0, 6, text, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.set_text_color(*DARK)
 
@@ -189,27 +191,32 @@ def generate():
 
     # ─── SLIDE 1: COVER ───────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.ln(8)
+    pdf.ln(6)
+    box_y = pdf.get_y()
     pdf.set_fill_color(*ACCENT)
-    pdf.rect(18, pdf.get_y(), pdf.w - 36, 36, style="F")
+    pdf.rect(18, box_y, pdf.w - 36, 56, style="F")
+    if os.path.exists(LOGO_PATH):
+        logo_w = 30
+        logo_x = (pdf.w - logo_w) / 2
+        pdf.image(LOGO_PATH, x=logo_x, y=box_y + 3, w=logo_w)
     pdf.set_font("DejaVu", "B", 20)
     pdf.set_text_color(*WHITE)
-    pdf.set_xy(18, pdf.get_y() + 5)
-    pdf.cell(pdf.w - 36, 12, "OMNIX", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_xy(18, box_y + 32)
+    pdf.cell(pdf.w - 36, 10, "OMNIX", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("DejaVu", "", 10)
-    pdf.cell(pdf.w - 36, 8, "Decision Governance Infrastructure", align="C",
+    pdf.cell(pdf.w - 36, 7, "Decision Governance Infrastructure", align="C",
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("DejaVu", "", 8)
-    pdf.set_text_color(200, 220, 255)
-    pdf.cell(pdf.w - 36, 7, "for Automated Financial Systems", align="C",
+    pdf.set_text_color(*ACCENT2)
+    pdf.cell(pdf.w - 36, 6, "for Automated Financial Systems", align="C",
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.ln(14)
+    pdf.ln(12)
     pdf.set_font("DejaVu", "B", 9)
-    pdf.set_text_color(*ACCENT)
+    pdf.set_text_color(*GOLD)
     pdf.cell(0, 6, "INVESTOR PRESENTATION  |  PRE-SEED  |  MARCH 2026", align="C",
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
-    pdf.set_draw_color(*ACCENT)
+    pdf.set_draw_color(*GOLD)
     pdf.set_line_width(0.4)
     pdf.line(18, pdf.get_y(), pdf.w - 18, pdf.get_y())
     pdf.ln(5)
@@ -316,18 +323,7 @@ def generate():
         ("CP-7", "Temporal Coherence Validator (TCV)", "Backward trajectory analysis -- validates decision consistency with recent market history"),
         ("CP-8", "Edge Confirmation Window (ECW)", "Requires 2 consecutive cycles of confirmed statistical edge before any execution is permitted"),
     ]
-    pdf.set_font("DejaVu", "", 7.5)
-    pdf.set_text_color(*DARK)
-    for cp, name, desc in checkpoints:
-        y = pdf.get_y()
-        pdf.set_font("DejaVu", "B", 7.5)
-        pdf.set_text_color(*ACCENT)
-        pdf.cell(14, 5, cp, align="L", new_x=XPos.RIGHT)
-        pdf.set_font("DejaVu", "B", 7.5)
-        pdf.set_text_color(*DARK)
-        pdf.cell(52, 5, name, align="L", new_x=XPos.RIGHT)
-        pdf.set_font("DejaVu", "", 7.5)
-        pdf.multi_cell(0, 5, desc, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.table(["", "Checkpoint", "Description"], list(checkpoints), col_widths=[14, 52, 114])
     pdf.ln(2)
     pdf.bold_label("Exit Governance Layer (3 Gates):")
     pdf.bullet([
