@@ -572,7 +572,7 @@ class PDF(FPDF):
         w_r = UW - w_l
         for i, (reg, desc) in enumerate(d["p3_regs"]):
             bg = LIGHT_BG if i % 2 == 0 else WHITE
-            rh = self._row_h(desc, w_r - 4, 8.2, 6, pad=7)
+            rh = self._row_h(desc, w_r - 4, 8.2, 5.5, pad=4)
             self.set_fill_color(*bg)
             row_y = y
             self.rect(LM, row_y, UW, rh, "F")
@@ -582,10 +582,10 @@ class PDF(FPDF):
             self.set_text_color(*NAVY)
             self.cell(w_l, 7, reg)
 
-            self.set_xy(LM + w_l, row_y + 3)
+            self.set_xy(LM + w_l, row_y + 2)
             self.set_font("R", size=8.2)
             self.set_text_color(*DARK)
-            self.multi_cell(w_r - 4, 6, desc)
+            self.multi_cell(w_r - 4, 5.5, desc)
             y += rh + 1
 
         y += 5
@@ -598,7 +598,7 @@ class PDF(FPDF):
         w_r2 = UW - w_l2
         for i, (label, val) in enumerate(d["p3_terms"]):
             bg = LIGHT_BG if i % 2 == 0 else WHITE
-            rh2 = self._row_h(val, w_r2 - 4, 8.2, 6, pad=7)
+            rh2 = self._row_h(val, w_r2 - 4, 8.2, 5.5, pad=4)
             self.set_fill_color(*bg)
             row_y = y
             self.rect(LM, row_y, UW, rh2, "F")
@@ -608,17 +608,17 @@ class PDF(FPDF):
             self.set_text_color(*NAVY)
             self.cell(w_l2, 7, f"{label}:")
 
-            self.set_xy(LM + w_l2, row_y + 3)
+            self.set_xy(LM + w_l2, row_y + 2)
             self.set_font("R", size=8.2)
             self.set_text_color(*DARK)
-            self.multi_cell(w_r2 - 4, 6, val)
+            self.multi_cell(w_r2 - 4, 5.5, val)
             y += rh2 + 1
 
-        y += 5
+        y += 3
 
         # -- CTA box --
         box_h = BMAX - y - 2
-        if box_h < 44: box_h = 44
+        if box_h < 62: box_h = 62
 
         self.set_fill_color(*NAVY)
         self.rect(LM, y, UW, box_h, "F")
