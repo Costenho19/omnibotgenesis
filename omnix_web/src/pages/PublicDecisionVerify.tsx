@@ -64,7 +64,7 @@ function decisionColors(color: string) {
   return                         { bg: 'rgba(99,102,241,0.10)',  border: 'rgba(99,102,241,0.30)',  text: '#818cf8',  pill: 'rgba(99,102,241,0.15)' }
 }
 
-function CheckpointCard({ cp, index }: { cp: Checkpoint; index: number }) {
+function CheckpointCard({ cp, index: _index }: { cp: Checkpoint; index: number }) {
   const isPass    = cp.result === 'PASS'
   const isBlocked = cp.result === 'BLOCKED'
 
