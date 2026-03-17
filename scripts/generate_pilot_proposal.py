@@ -278,9 +278,8 @@ class PDF(FPDF):
         self.set_xy(LM, y)
         self.set_font("B", size=size)
         self.set_text_color(*NAVY)
-        lines = text.count("\n") + 1
         self.multi_cell(UW, lh, text)
-        return y + lines * lh + 3
+        return self.get_y() + 3
 
     def _body(self, y, text, size=9.2, color=DARK, w=None):
         if w is None: w = UW
@@ -311,6 +310,26 @@ class PDF(FPDF):
                     line = word
             if line: lines.append(line)
         return lines or [""]
+
+    def _row_h(self, text, w, size, lh, pad=5):
+        """Calculate the actual height a multi_cell block will occupy."""
+        self.set_font("R", size=size)
+        cpl = max(1, int(w / (size * 0.43)))
+        n = 0
+        for para in text.split("\n"):
+            words = para.split()
+            if not words:
+                n += 1
+                continue
+            line_len = 0
+            for word in words:
+                if line_len + len(word) + (1 if line_len else 0) <= cpl:
+                    line_len += len(word) + (1 if line_len else 0)
+                else:
+                    n += 1
+                    line_len = len(word)
+            n += 1
+        return max(lh + pad, n * lh + pad)
 
     def _rule(self, y, color=GOLD, h=0.4):
         self.set_draw_color(*color)
@@ -553,20 +572,21 @@ class PDF(FPDF):
         w_r = UW - w_l
         for i, (reg, desc) in enumerate(d["p3_regs"]):
             bg = LIGHT_BG if i % 2 == 0 else WHITE
+            rh = self._row_h(desc, w_r - 4, 8.2, 6, pad=7)
             self.set_fill_color(*bg)
             row_y = y
-            self.rect(LM, row_y, UW, 9, "F")
+            self.rect(LM, row_y, UW, rh, "F")
 
-            self.set_xy(LM + 2, row_y + 1)
+            self.set_xy(LM + 2, row_y + (rh - 7) / 2)
             self.set_font("B", size=8.5)
             self.set_text_color(*NAVY)
             self.cell(w_l, 7, reg)
 
-            self.set_xy(LM + w_l, row_y + 1)
+            self.set_xy(LM + w_l, row_y + 3)
             self.set_font("R", size=8.2)
             self.set_text_color(*DARK)
-            self.multi_cell(w_r - 2, 4.5, desc)
-            y += 10
+            self.multi_cell(w_r - 4, 6, desc)
+            y += rh + 1
 
         y += 5
 
@@ -578,20 +598,21 @@ class PDF(FPDF):
         w_r2 = UW - w_l2
         for i, (label, val) in enumerate(d["p3_terms"]):
             bg = LIGHT_BG if i % 2 == 0 else WHITE
+            rh2 = self._row_h(val, w_r2 - 4, 8.2, 6, pad=7)
             self.set_fill_color(*bg)
             row_y = y
-            self.rect(LM, row_y, UW, 9, "F")
+            self.rect(LM, row_y, UW, rh2, "F")
 
-            self.set_xy(LM + 2, row_y + 1)
+            self.set_xy(LM + 2, row_y + (rh2 - 7) / 2)
             self.set_font("B", size=8.5)
             self.set_text_color(*NAVY)
             self.cell(w_l2, 7, f"{label}:")
 
-            self.set_xy(LM + w_l2, row_y + 1)
+            self.set_xy(LM + w_l2, row_y + 3)
             self.set_font("R", size=8.2)
             self.set_text_color(*DARK)
-            self.multi_cell(w_r2 - 2, 4.5, val)
-            y += 10
+            self.multi_cell(w_r2 - 4, 6, val)
+            y += rh2 + 1
 
         y += 5
 
