@@ -42,3 +42,9 @@ id = "OgSQGiYrHVP1cZvNgPqcL"
 uri = "file://docs/business/pdfs/OMNIX_Investor_Pitch_Deck.pdf"
 type = "pdf"
 title = "OMNIX — Pitch Deck Eureka (Actualizado)"
+
+[[outputs]]
+id = "Q-WgAJDDcIbu-kHbmHzQl"
+uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal.pdf"
+type = "pdf"
+title = "OMNIX Pilot Proposal — 2 páginas"

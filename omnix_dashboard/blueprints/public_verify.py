@@ -648,3 +648,16 @@ def zenodo_download_file(filename):
         return 'File not found.', 404
 
     return send_file(file_path, as_attachment=True, download_name=filename)
+
+
+@public_verify_bp.route('/download/pilot', methods=['GET'])
+def download_pilot_proposal():
+    """Serve the OMNIX Pilot Proposal PDF."""
+    from flask import send_file
+    pdf_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'docs', 'business', 'pdfs', 'OMNIX_Pilot_Proposal.pdf'
+    )
+    if not os.path.exists(pdf_path):
+        return 'File not found.', 404
+    return send_file(pdf_path, as_attachment=True, download_name='OMNIX_Pilot_Proposal.pdf')
