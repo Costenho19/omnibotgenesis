@@ -157,7 +157,7 @@ DATA = {
     "sl_props"  : [
         ("Validacion previa a la ejecucion", "Cada decision se evalua antes de confirmarse, no se revisa despues del hecho."),
         ("Auditoria criptografica",           "Cada resultado — aprobado o bloqueado — firmado con PQC y encadenado en hash para verificacion independiente."),
-        ("Agnos al dominio",                  "Para trading, credito, seguros, logistica e IA en salud — cualquier sistema de decision automatizada."),
+        ("Agn\u00f3stico al dominio",             "Para trading, cr\u00e9dito, seguros, log\u00edstica e IA en salud \u2014 cualquier sistema de decisi\u00f3n automatizada."),
         ("Fail-closed por diseno",            "Si el motor no esta disponible, ninguna decision pasa. El sistema se detiene, no evade el control."),
     ],
 
