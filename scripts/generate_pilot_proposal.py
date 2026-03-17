@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
 OMNIX Quantum -- Pilot Program Proposal PDF Generator
-Generates two PDFs: English (EN) and Spanish (ES).
-Professional 2-page layout with logo header.
+Enterprise-grade design. English + Spanish. Exactly 2 pages each.
 """
 import os
 from fpdf import FPDF
@@ -20,276 +19,265 @@ FONT_DIR     = os.path.join(
 FONT_REGULAR = os.path.join(FONT_DIR, "DejaVuSans.ttf")
 FONT_BOLD    = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
 
-# Palette
-NAVY      = (10, 25, 60)
-NAVY_MID  = (20, 45, 100)
-GOLD      = (212, 175, 55)
-GOLD_PALE = (245, 235, 190)
-WHITE     = (255, 255, 255)
-LIGHT_BG  = (245, 247, 254)
-MID_GRAY  = (130, 140, 160)
-GREEN_BG  = (236, 250, 242)
-GREEN_TXT = (0, 105, 58)
-BLUE_BG   = (236, 243, 255)
-BLUE_TXT  = (15, 55, 130)
-DARK      = (22, 28, 50)
-RULE      = (210, 218, 235)
+# ── Palette ───────────────────────────────────────────────────────────────────
+NAVY       = (8,  22,  58)
+NAVY_LIGHT = (18, 42, 100)
+GOLD       = (212, 175, 55)
+GOLD_LIGHT = (245, 232, 170)
+WHITE      = (255, 255, 255)
+OFF_WHITE  = (250, 251, 255)
+LIGHT_BG   = (243, 246, 254)
+BORDER     = (210, 218, 236)
+MID_GRAY   = (115, 128, 155)
+DARK       = (18,  24,  48)
+GREEN_BG   = (234, 250, 241)
+GREEN_TXT  = (0,  108,  60)
+BLUE_BG    = (233, 242, 255)
+BLUE_TXT   = (12,  52, 130)
+RED_SOFT   = (255, 242, 242)
+RED_TXT    = (160,  20,  20)
 
-HEADER_H  = 32   # mm — tall enough for logo + text
-TOP_M     = 40   # mm — content well below header
-
+HEADER_H = 26
+TOP_M    = 34
+LMARGIN  = 18
+RMARGIN  = 18
 
 # ── CONTENT ───────────────────────────────────────────────────────────────────
-
 CONTENT = {
-    "EN": {
-        "header_tagline": "Decision Governance Infrastructure",
-        "header_sub":     "omnixquantum.net   |   contacto@omnixquantum.net   |   Abu Dhabi, UAE",
-        "footer_text":    "Confidential  --  Pilot Program Proposal   |   Harold Nunes, Founder & CEO   |   SSRN 6321298   |   Zenodo DOI: 10.5281/zenodo.19056919",
+"EN": {
+    "footer": "Confidential  --  Pilot Program Proposal   |   Harold Nunes, Founder & CEO   |   SSRN 6321298   |   Zenodo DOI: 10.5281/zenodo.19056919",
+    "contact_line": "omnixquantum.net   |   contacto@omnixquantum.net",
+    "tagline": "Decision Governance Infrastructure",
 
-        "hero_title":     "30-Day Pilot Program",
-        "hero_sub":       "Governance Infrastructure for Automated Decision Systems  --  No Cost",
+    # ── Page 1 ──
+    "problem_label": "THE PROBLEM",
+    "problem_headline": "When automated systems fail,\nthey fail at machine speed.",
+    "problem_body": (
+        "Most governance controls -- audits, compliance reviews, risk alerts -- "
+        "are applied after execution. By the time a human intervenes, "
+        "the automated system has already produced its outcome."
+    ),
+    "case_label1": "Terra Luna",  "case_val1": "$40B lost",  "case_sub1": "in 72 hours, May 2022",
+    "case_label2": "SVB",         "case_val2": "$42B withdrawn", "case_sub2": "in one day, March 2023",
+    "case_label3": "Knight Capital","case_val3": "$440M lost", "case_sub3": "in 45 minutes, Aug 2012",
 
-        "sec_offer":      "What We Are Offering",
-        "offer_body": (
-            "OMNIX Quantum provides a 30-day complimentary pilot of our Decision Governance "
-            "Infrastructure. Your automated decision pipeline connects to our governance engine, "
-            "which validates each decision through an 8-checkpoint veto system before execution "
-            "and generates a cryptographically signed receipt for every outcome.\n\n"
-            "No integration fee. No licensing cost. No commitment required. "
-            "The pilot is designed for organizations that want to evaluate governance "
-            "infrastructure with real data before any procurement decision."
-        ),
+    "solution_label": "THE SOLUTION",
+    "solution_headline": "Governance at the execution boundary -- not after.",
+    "solution_body": (
+        "OMNIX is a Decision Governance Infrastructure that validates every automated "
+        "decision through an 8-checkpoint veto pipeline before it is committed. "
+        "If a decision does not pass, it is blocked. If it passes, it receives a "
+        "cryptographically signed governance receipt -- independently verifiable by any party.\n\n"
+        "This is not an advisory layer. It is a structural control embedded at the "
+        "point of execution. Decisions that should not happen do not happen."
+    ),
 
-        "sec_structure":  "Pilot Structure at a Glance",
-        "col1_title":     "What you provide",
-        "col1_items": [
-            "Your decision signals (API or JSON)",
-            "Your risk thresholds / parameters",
-            "30-min onboarding call",
-        ],
-        "col2_title":     "What you receive",
-        "col2_items": [
-            "Governance receipt per decision",
-            "Full audit trail (PQC-signed)",
-            "Governance report at Day 30",
-        ],
+    "pipeline_label": "THE 8-CHECKPOINT PIPELINE",
+    "pipeline_sub": "Every decision passes all 8 gates before execution -- in real time.",
+    "checkpoints": [
+        ("01", "Signal Integrity Validation",   "Is the input signal coherent and within expected bounds?"),
+        ("02", "Regime Assessment",             "Is the current operational regime appropriate for this action?"),
+        ("03", "Monte Carlo VETO Engine",       "Does the probability distribution of outcomes support execution?"),
+        ("04", "Black Swan Detector",           "Are tail-risk or extreme-event conditions present?"),
+        ("05", "Coherence Engine  (6 tiers)",   "Is there internal consistency across all input signals?"),
+        ("06", "Risk Management System",        "Does the action satisfy all portfolio risk constraints?"),
+        ("07", "Kelly Criterion Sizing",        "Is the proposed position size within calibrated safe bounds?"),
+        ("08", "Final Authorization",           "All gates passed -- governance receipt generated and signed."),
+    ],
+    "receipt_note": (
+        "Every approved decision generates a PQC-signed receipt verifiable at "
+        "omnixquantum.net/r/{receipt_id}"
+    ),
 
-        "sec_pipeline":   "The 8-Checkpoint Governance Pipeline",
-        "pipeline_sub":   "Every decision passes through the full production pipeline in real time:",
-        "checkpoints": [
-            ("1.", "Signal Integrity Validation:",  "Is the input signal coherent and within bounds?"),
-            ("2.", "Regime Assessment:",            "Is the current market/operational regime appropriate?"),
-            ("3.", "Monte Carlo VETO Engine:",      "Does probability distribution support the action?"),
-            ("4.", "Black Swan Detector:",          "Are there tail-risk conditions present?"),
-            ("5.", "Coherence Engine (6 tiers):",   "Is there internal consistency across all signals?"),
-            ("6.", "Risk Management System (RMS):", "Does the action satisfy portfolio risk constraints?"),
-            ("7.", "Kelly Criterion Sizing:",       "Is the proposed position size within safe bounds?"),
-            ("8.", "Final Authorization:",          "All gates passed -- governance receipt generated"),
-        ],
-        "receipt_box": (
-            "Every decision that passes generates a cryptographically signed receipt -- "
-            "independently verifiable at  omnixquantum.net/r/{receipt_id}"
-        ),
+    "sandbox_label":   "TRY IT RIGHT NOW -- NO LOGIN REQUIRED",
+    "sandbox_url":     "omnixquantum.net/try",
+    "sandbox_desc": (
+        "Type any decision scenario in plain language. Our AI converts it into 8 governance "
+        "signals and runs them through the real OMNIX pipeline in under 2 seconds. "
+        "You receive a live, cryptographically signed governance receipt -- the same one "
+        "produced in production."
+    ),
+    "sandbox_cta":     "See the governance engine in action before any conversation.",
 
-        "sec_why":    "Why Governance Infrastructure Matters Now",
-        "why_body": (
-            "Most governance controls in automated systems are applied after execution -- "
-            "audits, compliance reviews, and regulatory checks that arrive after the decision "
-            "has already produced its outcome. When an automated system fails, it fails at "
-            "machine speed.\n\n"
-            "OMNIX moves governance to the execution boundary: decisions are validated before "
-            "they are committed. The result is a structural governance property -- not an "
-            "advisory layer that can be overridden."
-        ),
+    # ── Page 2 ──
+    "evidence_label": "PRODUCTION EVIDENCE",
+    "stats": [
+        ("72,443",  "governance decisions\nprocessed in production"),
+        ("100%",    "post-quantum signed\n(NIST-standardized)"),
+        ("0",       "approved without passing\nall 8 checkpoints"),
+    ],
+    "evidence_note": (
+        "Full dataset: Zenodo DOI 10.5281/zenodo.19056919   "
+        "|   Academic preprint: SSRN 6321298 (under peer review)"
+    ),
 
-        "sec_regs":   "Regulatory Drivers",
-        "regs": [
-            ("EU AI Act (2025+)",      "High-risk AI systems require pre-execution auditability and traceability."),
-            ("MiCA (2024-2025)",       "Crypto service providers must demonstrate operational risk controls."),
-            ("BCB Resolution 538",    "Brazil mandates cryptographic audit trails for automated decisions."),
-            ("ADGM / SEC frameworks", "Governance-by-design is emerging as the baseline for AI in finance."),
-        ],
+    "regs_label": "WHY NOW  --  REGULATORY PRESSURE",
+    "regs": [
+        ("EU AI Act (2025+)",      "High-risk AI systems require pre-execution auditability and full traceability."),
+        ("MiCA (2024-2025)",       "Crypto service providers must demonstrate documented operational risk controls."),
+        ("BCB Resolution 538",    "Brazil mandates cryptographic audit trails for all automated financial decisions."),
+        ("ADGM / SEC frameworks", "Governance-by-design is emerging as the compliance baseline for AI in finance."),
+    ],
 
-        "sec_stats":  "What OMNIX Has Produced in Production",
-        "stats": [
-            ("72,443",  "real governance decisions processed  (Feb 21 -- Mar 16, 2026)"),
-            ("100%",    "post-quantum signed  (Dilithium-3 / ML-DSA-65, NIST-standardized)"),
-            ("SHA-256", "hash chain -- each receipt links to the previous, independently verifiable"),
-            ("0",       "approved decisions without passing all 8 checkpoints"),
-        ],
-        "dataset_box": (
-            "Full dataset publicly available: Zenodo DOI 10.5281/zenodo.19056919   |   "
-            "Academic preprint: SSRN Working Paper 6321298  (under peer review)"
-        ),
+    "offer_label": "THE 30-DAY PILOT  --  NO COST",
+    "offer_intro": "We are onboarding the first pilot partners now. No fee, no commitment.",
+    "terms": [
+        ("What you provide",  "Your decision signals via API or JSON  |  Your risk thresholds  |  30-min onboarding call"),
+        ("What you receive",  "Signed receipt per decision  |  Full audit trail  |  Day-30 governance report"),
+        ("Duration",          "30 days from integration date"),
+        ("Cost",              "Complimentary -- no charge"),
+        ("After the pilot",   "No obligation. If there is a fit, we discuss a commercial arrangement."),
+    ],
 
-        "sec_terms":  "Pilot Terms",
-        "terms": [
-            ("Duration",     "30 days from integration date"),
-            ("Cost",         "Complimentary -- no charge"),
-            ("Commitment",   "No obligation after pilot completion"),
-            ("Data privacy", "Decision signals encrypted at rest (AES-256 / Fernet)"),
-            ("Output",       "Full governance audit trail + Day-30 governance performance report"),
-        ],
+    "cta_label":  "READY TO START?",
+    "cta_body":   "Reach out and we will walk you through the integration in 30 minutes.",
+    "contact": [
+        ("Email",     "contacto@omnixquantum.net"),
+        ("WhatsApp",  "+1 (650) 481-5494"),
+        ("Live demo", "omnixquantum.net/try   (no login required)"),
+        ("LinkedIn",  "linkedin.com/in/harold-nunes"),
+    ],
+},
 
-        "cta_title":   "Let's connect",
-        "cta_body":    "Interested in the pilot? Reach out and we will schedule a time to walk you through the integration in 30 minutes.",
-        "contact": [
-            ("Email",    "contacto@omnixquantum.net"),
-            ("WhatsApp", "+1 (650) 481-5494"),
-            ("Live demo","omnixquantum.net/try   (no login required)"),
-            ("LinkedIn", "linkedin.com/in/harold-nunes-21bb65285"),
-        ],
-    },
+"ES": {
+    "footer": "Confidencial  --  Propuesta Programa Piloto   |   Harold Nunes, Fundador y CEO   |   SSRN 6321298   |   Zenodo DOI: 10.5281/zenodo.19056919",
+    "contact_line": "omnixquantum.net   |   contacto@omnixquantum.net",
+    "tagline": "Infraestructura de Gobernanza de Decisiones",
 
-    "ES": {
-        "header_tagline": "Infraestructura de Gobernanza de Decisiones",
-        "header_sub":     "omnixquantum.net   |   contacto@omnixquantum.net   |   Abu Dhabi, UAE",
-        "footer_text":    "Confidencial  --  Propuesta Programa Piloto   |   Harold Nunes, Fundador y CEO   |   SSRN 6321298   |   Zenodo DOI: 10.5281/zenodo.19056919",
+    "problem_label": "EL PROBLEMA",
+    "problem_headline": "Cuando un sistema automatizado falla,\nfalla a velocidad de maquina.",
+    "problem_body": (
+        "La mayoria de los controles de gobernanza -- auditorias, revisiones de cumplimiento, "
+        "alertas de riesgo -- se aplican despues de la ejecucion. Para cuando un humano "
+        "puede intervenir, el sistema ya produjo su resultado."
+    ),
+    "case_label1": "Terra Luna",  "case_val1": "$40B perdidos",  "case_sub1": "en 72 horas, mayo 2022",
+    "case_label2": "SVB",         "case_val2": "$42B retirados", "case_sub2": "en un dia, marzo 2023",
+    "case_label3": "Knight Capital","case_val3": "$440M perdidos","case_sub3": "en 45 minutos, ago 2012",
 
-        "hero_title":     "Programa Piloto de 30 Dias",
-        "hero_sub":       "Infraestructura de Gobernanza para Sistemas de Decision Automatizados  --  Sin Costo",
+    "solution_label": "LA SOLUCION",
+    "solution_headline": "Gobernanza en la frontera de ejecucion -- no despues.",
+    "solution_body": (
+        "OMNIX es una Infraestructura de Gobernanza de Decisiones que valida cada decision "
+        "automatizada a traves de un pipeline de veto de 8 puntos de control antes de "
+        "ejecutarse. Si una decision no pasa, se bloquea. Si pasa, recibe un recibo de "
+        "gobernanza firmado criptograficamente -- verificable de forma independiente.\n\n"
+        "Esto no es una capa de advertencia. Es un control estructural embebido en el "
+        "punto de ejecucion. Las decisiones que no deben ocurrir, no ocurren."
+    ),
 
-        "sec_offer":      "Que Ofrecemos",
-        "offer_body": (
-            "OMNIX Quantum ofrece un piloto gratuito de 30 dias de nuestra Infraestructura de "
-            "Gobernanza de Decisiones. Tu pipeline de decisiones automatizadas se conecta a "
-            "nuestro motor de gobernanza, que valida cada decision a traves de un sistema de "
-            "veto de 8 puntos de control antes de la ejecucion y genera un recibo firmado "
-            "criptograficamente por cada resultado.\n\n"
-            "Sin costo de integracion. Sin licencias. Sin compromiso posterior. "
-            "El piloto esta disenado para organizaciones que quieren evaluar la infraestructura "
-            "de gobernanza con datos reales antes de tomar una decision de adquisicion."
-        ),
+    "pipeline_label": "EL PIPELINE DE 8 PUNTOS DE CONTROL",
+    "pipeline_sub": "Cada decision pasa los 8 controles antes de ejecutarse -- en tiempo real.",
+    "checkpoints": [
+        ("01", "Validacion de Integridad de Senal",  "La senal de entrada es coherente y esta dentro de limites?"),
+        ("02", "Evaluacion de Regimen",              "El regimen operativo actual es apropiado para esta accion?"),
+        ("03", "Motor de VETO Monte Carlo",          "La distribucion de probabilidad de resultados soporta la ejecucion?"),
+        ("04", "Detector de Cisne Negro",            "Hay condiciones de riesgo extremo o de cola?"),
+        ("05", "Motor de Coherencia  (6 capas)",     "Hay consistencia interna entre todas las senales de entrada?"),
+        ("06", "Sistema de Gestion de Riesgo",       "La accion satisface todas las restricciones de riesgo?"),
+        ("07", "Tamano por Criterio de Kelly",       "El tamano propuesto esta dentro de los limites calibrados?"),
+        ("08", "Autorizacion Final",                 "Todos los controles pasados -- recibo de gobernanza generado."),
+    ],
+    "receipt_note": (
+        "Cada decision aprobada genera un recibo firmado con PQC, verificable en "
+        "omnixquantum.net/r/{receipt_id}"
+    ),
 
-        "sec_structure":  "Estructura del Piloto",
-        "col1_title":     "Lo que aportas",
-        "col1_items": [
-            "Tus senales de decision (API o JSON)",
-            "Tus umbrales de riesgo / parametros",
-            "Llamada de onboarding de 30 min",
-        ],
-        "col2_title":     "Lo que recibes",
-        "col2_items": [
-            "Recibo de gobernanza por decision",
-            "Auditoria completa (firmada PQC)",
-            "Reporte de gobernanza al Dia 30",
-        ],
+    "sandbox_label":   "PRUEBALO AHORA -- SIN LOGIN, SIN REGISTRO",
+    "sandbox_url":     "omnixquantum.net/try",
+    "sandbox_desc": (
+        "Escribe cualquier escenario de decision en lenguaje natural. Nuestra IA lo convierte "
+        "en 8 senales de gobernanza y las pasa por el pipeline REAL de OMNIX en menos de "
+        "2 segundos. Recibes un recibo de gobernanza firmado criptograficamente en vivo -- "
+        "el mismo que se produce en produccion."
+    ),
+    "sandbox_cta":     "Ve el motor de gobernanza en accion antes de cualquier conversacion.",
 
-        "sec_pipeline":   "El Pipeline de Gobernanza de 8 Puntos de Control",
-        "pipeline_sub":   "Cada decision pasa por el pipeline de produccion completo en tiempo real:",
-        "checkpoints": [
-            ("1.", "Validacion de Integridad de Senal:", "La senal de entrada es coherente y esta dentro de limites?"),
-            ("2.", "Evaluacion de Regimen:",             "El regimen operativo actual es apropiado?"),
-            ("3.", "Motor de VETO Monte Carlo:",         "La distribucion de probabilidad soporta la accion?"),
-            ("4.", "Detector de Cisne Negro:",           "Hay condiciones de riesgo de cola presentes?"),
-            ("5.", "Motor de Coherencia (6 capas):",     "Hay consistencia interna entre todas las senales?"),
-            ("6.", "Sistema de Gestion de Riesgo (RMS):","La accion satisface las restricciones de riesgo?"),
-            ("7.", "Tamano por Criterio de Kelly:",      "El tamano de posicion propuesto esta en limites?"),
-            ("8.", "Autorizacion Final:",                "Todos los controles pasados -- recibo de gobernanza generado"),
-        ],
-        "receipt_box": (
-            "Cada decision que pasa genera un recibo firmado criptograficamente -- "
-            "verificable de forma independiente en  omnixquantum.net/r/{receipt_id}"
-        ),
+    "evidence_label": "EVIDENCIA EN PRODUCCION",
+    "stats": [
+        ("72,443",  "decisiones de gobernanza\nprocesadas en produccion"),
+        ("100%",    "firmadas post-cuanticas\n(estandar NIST)"),
+        ("0",       "aprobadas sin pasar\nlos 8 puntos de control"),
+    ],
+    "evidence_note": (
+        "Dataset publico: Zenodo DOI 10.5281/zenodo.19056919   "
+        "|   Preprint: SSRN 6321298 (en revision por pares)"
+    ),
 
-        "sec_why":    "Por Que la Gobernanza Importa Ahora",
-        "why_body": (
-            "La mayoria de los controles de gobernanza en sistemas automatizados se aplican "
-            "despues de la ejecucion: auditorias, revisiones de cumplimiento y verificaciones "
-            "regulatorias que llegan despues de que la decision ya produjo su resultado. "
-            "Cuando un sistema automatizado falla, falla a velocidad de maquina.\n\n"
-            "OMNIX mueve la gobernanza a la frontera de ejecucion: las decisiones se validan "
-            "antes de confirmarse. El resultado es una propiedad estructural de gobernanza, "
-            "no una capa de advertencia que puede ignorarse."
-        ),
+    "regs_label": "POR QUE AHORA  --  PRESION REGULATORIA",
+    "regs": [
+        ("EU AI Act (2025+)",      "Los sistemas de IA de alto riesgo requieren auditabilidad previa a la ejecucion."),
+        ("MiCA (2024-2025)",       "Los proveedores de criptoactivos deben demostrar controles de riesgo operativo."),
+        ("BCB Resolucion 538",    "Brasil exige trazabilidad criptografica para todas las decisiones automatizadas."),
+        ("ADGM / SEC frameworks", "La gobernanza por diseno es el estandar emergente para IA en finanzas."),
+    ],
 
-        "sec_regs":   "Marco Regulatorio",
-        "regs": [
-            ("EU AI Act (2025+)",      "Los sistemas de IA de alto riesgo requieren auditabilidad previa a la ejecucion."),
-            ("MiCA (2024-2025)",       "Los proveedores de criptoactivos deben demostrar controles de riesgo operativo."),
-            ("BCB Resolucion 538",    "Brasil exige trazabilidad criptografica para decisiones financieras automatizadas."),
-            ("ADGM / SEC frameworks", "La gobernanza por diseno es estandar emergente para IA en finanzas."),
-        ],
+    "offer_label": "EL PILOTO DE 30 DIAS  --  SIN COSTO",
+    "offer_intro": "Estamos incorporando los primeros socios piloto ahora. Sin costo, sin compromiso.",
+    "terms": [
+        ("Lo que aportas",   "Senales de decision via API o JSON  |  Tus umbrales de riesgo  |  Llamada de onboarding 30 min"),
+        ("Lo que recibes",   "Recibo firmado por decision  |  Auditoria completa  |  Reporte de gobernanza al Dia 30"),
+        ("Duracion",         "30 dias desde la fecha de integracion"),
+        ("Costo",            "Gratuito -- sin cargo"),
+        ("Despues del piloto","Sin obligacion. Si hay encaje, conversamos sobre un acuerdo comercial."),
+    ],
 
-        "sec_stats":  "Lo Que OMNIX Ha Producido en Produccion",
-        "stats": [
-            ("72,443",  "decisiones de gobernanza reales procesadas  (21 Feb -- 16 Mar 2026)"),
-            ("100%",    "firmadas post-cuanticas  (Dilithium-3 / ML-DSA-65, estandar NIST)"),
-            ("SHA-256", "cadena de hash -- cada recibo enlaza al anterior, verificable independientemente"),
-            ("0",       "decisiones aprobadas sin pasar los 8 puntos de control"),
-        ],
-        "dataset_box": (
-            "Dataset publico: Zenodo DOI 10.5281/zenodo.19056919   |   "
-            "Preprint academico: SSRN Working Paper 6321298  (en revision por pares)"
-        ),
-
-        "sec_terms":  "Terminos del Piloto",
-        "terms": [
-            ("Duracion",    "30 dias desde la fecha de integracion"),
-            ("Costo",       "Gratuito -- sin cargo"),
-            ("Compromiso",  "Sin obligacion al finalizar el piloto"),
-            ("Privacidad",  "Senales cifradas en reposo (AES-256 / Fernet)"),
-            ("Entregables", "Auditoria completa + reporte de gobernanza al Dia 30"),
-        ],
-
-        "cta_title":  "Conectemos",
-        "cta_body":   "Interesado en el piloto? Escribenos y coordinamos una reunion de 30 minutos para guiarte por la integracion.",
-        "contact": [
-            ("Email",    "contacto@omnixquantum.net"),
-            ("WhatsApp", "+1 (650) 481-5494"),
-            ("Demo",     "omnixquantum.net/try   (sin login)"),
-            ("LinkedIn", "linkedin.com/in/harold-nunes-21bb65285"),
-        ],
-    },
+    "cta_label":  "LISTO PARA COMENZAR?",
+    "cta_body":   "Escribenos y coordinamos la integracion en una reunion de 30 minutos.",
+    "contact": [
+        ("Email",    "contacto@omnixquantum.net"),
+        ("WhatsApp", "+1 (650) 481-5494"),
+        ("Demo",     "omnixquantum.net/try   (sin login)"),
+        ("LinkedIn", "linkedin.com/in/harold-nunes"),
+    ],
+},
 }
 
-
 # ── PDF CLASS ─────────────────────────────────────────────────────────────────
-
 class PilotPDF(FPDF):
     def __init__(self, lang="EN"):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.c = CONTENT[lang]
         self.add_font("R", fname=FONT_REGULAR)
         self.add_font("B", fname=FONT_BOLD)
-        self.set_margins(18, TOP_M, 18)
+        self.set_margins(LMARGIN, TOP_M, RMARGIN)
         self.set_auto_page_break(auto=True, margin=22)
+
+    @property
+    def usable_w(self):
+        return self.w - LMARGIN - RMARGIN
 
     def header(self):
         c = self.c
-        # Full navy background
+        # Navy background
         self.set_fill_color(*NAVY)
         self.rect(0, 0, self.w, HEADER_H, style="F")
-        # Gold accent line at bottom
+        # Gold bottom line
         self.set_fill_color(*GOLD)
-        self.rect(0, HEADER_H - 1, self.w, 1, style="F")
+        self.rect(0, HEADER_H - 0.8, self.w, 0.8, style="F")
 
-        # Logo — left side, vertically centered
-        logo_size = HEADER_H - 6
-        logo_x    = 6
-        logo_y    = 3
+        # Logo (only icon, left side) — include full image at constrained height
+        logo_h = HEADER_H - 4
+        logo_x = 5
+        logo_y = 2
         if os.path.exists(LOGO_PATH):
-            self.image(LOGO_PATH, x=logo_x, y=logo_y, h=logo_size)
+            # Use width constraint to show only icon part (logo is ~square icon + text)
+            # Setting w to same as h shows the square portion cleanly
+            self.image(LOGO_PATH, x=logo_x, y=logo_y, w=logo_h, h=logo_h)
 
-        # Right side: company name + tagline + sub
-        text_x = logo_x + logo_size + 4
-        text_w = self.w - text_x - 8
+        # Right side text — no "OMNIX QUANTUM" since logo has it
+        tx = logo_x + logo_h + 5
+        tw = self.w - tx - 6
 
-        self.set_xy(text_x, 7)
-        self.set_font("B", size=13)
+        self.set_xy(tx, 6)
+        self.set_font("B", size=9)
         self.set_text_color(*GOLD)
-        self.cell(text_w, 7, "OMNIX QUANTUM", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.cell(tw, 5, c["tagline"])
 
-        self.set_xy(text_x, 15)
-        self.set_font("R", size=8)
-        self.set_text_color(190, 200, 220)
-        self.cell(text_w, 5, c["header_tagline"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        self.set_xy(text_x, 21)
+        self.set_xy(tx, 13)
         self.set_font("R", size=7)
-        self.set_text_color(150, 165, 190)
-        self.cell(text_w, 4, c["header_sub"])
+        self.set_text_color(160, 175, 205)
+        self.cell(tw, 4, c["contact_line"])
 
     def footer(self):
         c = self.c
@@ -298,245 +286,346 @@ class PilotPDF(FPDF):
         self.line(0, self.h - 11, self.w, self.h - 11)
         self.set_fill_color(*NAVY)
         self.rect(0, self.h - 10.5, self.w, 11, style="F")
-        self.set_y(self.h - 8.5)
-        self.set_font("R", size=6)
+        self.set_y(self.h - 8)
+        self.set_font("R", size=5.8)
         self.set_text_color(*GOLD)
-        self.cell(self.w, 4, c["footer_text"], align="C")
+        self.cell(self.w, 4, c["footer"], align="C")
 
-    # ── layout helpers ────────────────────────────────────────────────────────
+    # ── Drawing Helpers ───────────────────────────────────────────────────────
 
-    def section_bar(self, text):
-        """Gold left bar + bold navy section title."""
-        y = self.get_y()
-        self.set_fill_color(*GOLD)
-        self.rect(self.l_margin, y, 2.5, 8, style="F")
-        self.set_xy(self.l_margin + 5.5, y + 0.5)
-        self.set_font("B", size=10.5)
+    def label_tag(self, text):
+        """Small all-caps gold label tag above a section."""
+        self.set_x(LMARGIN)
+        self.set_font("B", size=7.5)
+        self.set_text_color(*GOLD)
+        self.cell(0, 5, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.ln(1)
+
+    def large_headline(self, text, size=16):
+        self.set_x(LMARGIN)
+        self.set_font("B", size=size)
         self.set_text_color(*NAVY)
-        self.cell(0, 7, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.ln(3)
-
-    def body(self, text, size=9.5, indent=0):
-        self.set_x(self.l_margin + indent)
-        self.set_font("R", size=size)
-        self.set_text_color(*DARK)
-        self.multi_cell(self.w - self.l_margin - self.r_margin - indent, 5.4, text)
+        self.multi_cell(self.usable_w, size * 0.65, text)
         self.ln(2)
 
-    def gold_rule(self):
-        self.set_draw_color(*GOLD)
-        self.set_line_width(0.5)
-        self.line(self.l_margin, self.get_y(), self.w - self.r_margin, self.get_y())
-        self.ln(5)
+    def body_text(self, text, size=9, color=DARK, indent=0):
+        self.set_x(LMARGIN + indent)
+        self.set_font("R", size=size)
+        self.set_text_color(*color)
+        self.multi_cell(self.usable_w - indent, 5.3, text)
+        self.ln(1)
 
-    def light_rule(self, gap=4):
-        self.set_draw_color(*RULE)
-        self.set_line_width(0.2)
-        self.line(self.l_margin, self.get_y(), self.w - self.r_margin, self.get_y())
-        self.ln(gap)
+    def gap(self, h=3):
+        self.ln(h)
 
-    def two_col_table(self, col1_title, col1_items, col2_title, col2_items):
-        usable = self.w - self.l_margin - self.r_margin
-        gap    = 3
-        col_w  = (usable - gap) / 2
-        row_h  = 7
-        x0     = self.l_margin
-        y0     = self.get_y()
-
-        # Header row
-        self.set_fill_color(*NAVY)
-        self.set_xy(x0, y0)
-        self.set_font("B", size=9)
-        self.set_text_color(*WHITE)
-        self.cell(col_w, 9, f"  {col1_title}", fill=True)
-        self.cell(gap,   9, "", fill=False)
-        self.cell(col_w, 9, f"  {col2_title}", fill=True,
-                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        n = max(len(col1_items), len(col2_items))
-        for i in range(n):
-            bg = LIGHT_BG if i % 2 == 0 else WHITE
-            self.set_fill_color(*bg)
-            l = col1_items[i] if i < len(col1_items) else ""
-            r = col2_items[i] if i < len(col2_items) else ""
-            self.set_font("R", size=9)
-            self.set_text_color(*DARK)
-            self.set_x(x0)
-            self.cell(col_w, row_h, f"  {l}", fill=True)
-            self.cell(gap,   row_h, "")
-            self.cell(col_w, row_h, f"  {r}", fill=True,
-                      new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        # Borders
-        height = 9 + n * row_h
-        self.set_draw_color(*RULE)
-        self.set_line_width(0.2)
-        self.rect(x0, y0, col_w, height)
-        self.rect(x0 + col_w + gap, y0, col_w, height)
-        self.ln(5)
-
-    def checkpoint_row(self, num, name, desc):
-        w_no = 7
-        w_nm = 72
-        w_ds = self.w - self.l_margin - self.r_margin - w_no - w_nm
-        h    = 6.5
-        self.set_x(self.l_margin)
-        self.set_font("B", size=9)
-        self.set_text_color(*GOLD)
-        self.cell(w_no, h, num)
-        self.set_text_color(*NAVY)
-        self.cell(w_nm, h, name)
-        self.set_font("R", size=9)
-        self.set_text_color(*DARK)
-        self.cell(w_ds, h, desc, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-    def info_box(self, text, bg, fg):
-        self.set_fill_color(*bg)
-        self.set_font("B", size=9)
-        self.set_text_color(*fg)
-        self.set_x(self.l_margin)
-        self.multi_cell(self.w - self.l_margin - self.r_margin, 6.5,
-                        f"  {text}  ", fill=True)
-        self.ln(3)
-
-    def stat_row(self, val, desc):
-        self.set_x(self.l_margin)
-        self.set_font("B", size=13)
-        self.set_text_color(*NAVY)
-        self.cell(28, 8, val)
-        self.set_font("R", size=9.5)
-        self.set_text_color(*DARK)
-        self.cell(0, 8, desc, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-    def term_row(self, label, val):
-        self.set_x(self.l_margin)
-        self.set_font("B", size=9)
-        self.set_text_color(*NAVY_MID)
-        self.cell(36, 7, f"{label}:")
-        self.set_font("R", size=9)
-        self.set_text_color(*DARK)
-        self.multi_cell(0, 7, val)
-
-    def reg_table(self, regs):
-        for i, (reg, desc) in enumerate(regs):
-            bg = LIGHT_BG if i % 2 == 0 else WHITE
-            self.set_fill_color(*bg)
-            self.set_x(self.l_margin)
-            self.set_font("B", size=8.5)
-            self.set_text_color(*NAVY)
-            self.cell(50, 7, f"  {reg}", fill=True)
-            self.set_font("R", size=8.5)
-            self.set_text_color(*DARK)
-            self.multi_cell(0, 7, f"  {desc}", fill=True)
+    def rule(self, color=BORDER, thickness=0.2):
+        self.set_draw_color(*color)
+        self.set_line_width(thickness)
+        self.line(LMARGIN, self.get_y(), self.w - RMARGIN, self.get_y())
         self.ln(4)
 
-    def cta_box(self, title, body_text, contact):
-        usable = self.w - self.l_margin - self.r_margin
-        box_h  = 14 + len(contact) * 7 + 6
-        box_y  = self.get_y()
+    def gold_rule(self):
+        self.rule(GOLD, 0.4)
 
-        # Background
+    # ── Problem section ───────────────────────────────────────────────────────
+
+    def problem_block(self):
+        c = self.c
+        # Dark full-width hero block
+        bh = 52
+        bx = 0
+        by = self.get_y() - 2
         self.set_fill_color(*NAVY)
-        self.rect(self.l_margin, box_y, usable, box_h, style="F")
+        self.rect(bx, by, self.w, bh, style="F")
         # Gold left stripe
         self.set_fill_color(*GOLD)
-        self.rect(self.l_margin, box_y, 3, box_h, style="F")
-        # Gold top line
-        self.rect(self.l_margin, box_y, usable, 0.8, style="F")
+        self.rect(bx, by, 3.5, bh, style="F")
 
-        # Title
-        self.set_xy(self.l_margin + 7, box_y + 5)
-        self.set_font("B", size=12)
+        # Label
+        self.set_xy(LMARGIN + 2, by + 5)
+        self.set_font("B", size=7.5)
         self.set_text_color(*GOLD)
-        self.cell(0, 7, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.cell(0, 5, c["problem_label"])
+
+        # Headline
+        self.set_xy(LMARGIN + 2, by + 12)
+        self.set_font("B", size=14)
+        self.set_text_color(*WHITE)
+        self.multi_cell(self.usable_w - 4, 8, c["problem_headline"])
 
         # Body
-        self.set_x(self.l_margin + 7)
+        self.set_x(LMARGIN + 2)
         self.set_font("R", size=8.5)
-        self.set_text_color(200, 210, 230)
-        self.multi_cell(usable - 10, 5.5, body_text)
-        self.ln(3)
+        self.set_text_color(185, 198, 225)
+        self.multi_cell(self.usable_w - 4, 5, c["problem_body"])
 
-        # Contact items
-        for label, val in contact:
-            self.set_x(self.l_margin + 7)
+        # Case examples — 3 columns inside the block
+        cases = [
+            (c["case_label1"], c["case_val1"], c["case_sub1"]),
+            (c["case_label2"], c["case_val2"], c["case_sub2"]),
+            (c["case_label3"], c["case_val3"], c["case_sub3"]),
+        ]
+        col_w = self.usable_w / 3
+        case_y = by + bh - 18
+        for i, (lbl, val, sub) in enumerate(cases):
+            cx = LMARGIN + i * col_w + 2
+            # Divider line between cases
+            if i > 0:
+                self.set_draw_color(*NAVY_LIGHT)
+                self.set_line_width(0.2)
+                self.line(LMARGIN + i * col_w, case_y, LMARGIN + i * col_w, by + bh - 2)
+            self.set_xy(cx, case_y)
+            self.set_font("B", size=7)
+            self.set_text_color(*GOLD_LIGHT)
+            self.cell(col_w, 4, lbl)
+            self.set_xy(cx, case_y + 4)
+            self.set_font("B", size=10)
+            self.set_text_color(*WHITE)
+            self.cell(col_w, 6, val)
+            self.set_xy(cx, case_y + 10)
+            self.set_font("R", size=7)
+            self.set_text_color(160, 175, 205)
+            self.cell(col_w, 4, sub)
+
+        self.set_y(by + bh + 4)
+
+    # ── Solution section ──────────────────────────────────────────────────────
+
+    def solution_block(self):
+        c = self.c
+        self.label_tag(c["solution_label"])
+        self.large_headline(c["solution_headline"], size=13)
+        self.body_text(c["solution_body"])
+        self.gap(2)
+
+    # ── Pipeline ─────────────────────────────────────────────────────────────
+
+    def pipeline_block(self):
+        c = self.c
+        self.label_tag(c["pipeline_label"])
+        self.set_x(LMARGIN)
+        self.set_font("R", size=8.5)
+        self.set_text_color(*MID_GRAY)
+        self.cell(0, 5, c["pipeline_sub"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.gap(2)
+
+        w_no = 10
+        w_nm = 65
+        w_ds = self.usable_w - w_no - w_nm
+        row_h = 6.5
+
+        for i, (num, name, desc) in enumerate(c["checkpoints"]):
+            bg = LIGHT_BG if i % 2 == 0 else WHITE
+            self.set_fill_color(*bg)
+            self.set_x(LMARGIN)
+            # Number
+            self.set_font("B", size=8)
+            self.set_text_color(*GOLD)
+            self.cell(w_no, row_h, num, fill=True)
+            # Name
             self.set_font("B", size=8.5)
-            self.set_text_color(*GOLD_PALE)
-            self.cell(24, 6, f"{label}:")
+            self.set_text_color(*NAVY)
+            self.cell(w_nm, row_h, name, fill=True)
+            # Description
+            self.set_font("R", size=8.5)
+            self.set_text_color(*DARK)
+            self.cell(w_ds, row_h, desc, fill=True,
+                      new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        self.gap(3)
+        # Receipt note
+        self.set_fill_color(*BLUE_BG)
+        self.set_x(LMARGIN)
+        self.set_font("R", size=8.5)
+        self.set_text_color(*BLUE_TXT)
+        self.multi_cell(self.usable_w, 5.5, f"  {c['receipt_note']}  ", fill=True)
+        self.gap(2)
+
+    # ── Sandbox callout ───────────────────────────────────────────────────────
+
+    def sandbox_block(self):
+        c = self.c
+        bh = 36
+        by = self.get_y()
+        bx = LMARGIN
+        bw = self.usable_w
+
+        # Dark navy background with gold left stripe
+        self.set_fill_color(*NAVY)
+        self.rect(bx, by, bw, bh, style="F")
+        self.set_fill_color(*GOLD)
+        self.rect(bx, by, 3, bh, style="F")
+        # Subtle top gold rule
+        self.rect(bx, by, bw, 0.8, style="F")
+
+        # Label tag
+        self.set_xy(bx + 7, by + 5)
+        self.set_font("B", size=7.5)
+        self.set_text_color(*GOLD)
+        self.cell(bw - 10, 5, c["sandbox_label"],
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # Big URL
+        self.set_xy(bx + 7, by + 11)
+        self.set_font("B", size=14)
+        self.set_text_color(*WHITE)
+        self.cell(bw - 10, 8, c["sandbox_url"],
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # Description
+        self.set_xy(bx + 7, by + 20)
+        self.set_font("R", size=8)
+        self.set_text_color(185, 198, 225)
+        self.multi_cell(bw - 12, 4.8, c["sandbox_desc"])
+
+        # CTA italic line at bottom
+        self.set_xy(bx + 7, by + bh - 7)
+        self.set_font("B", size=8)
+        self.set_text_color(*GOLD_LIGHT)
+        self.cell(bw - 10, 5, c["sandbox_cta"])
+
+        self.set_y(by + bh + 4)
+
+    # ── Evidence / Stats ──────────────────────────────────────────────────────
+
+    def evidence_block(self):
+        c = self.c
+        self.label_tag(c["evidence_label"])
+        self.gap(1)
+
+        col_w = self.usable_w / 3
+        stat_y = self.get_y()
+        for i, (val, desc) in enumerate(c["stats"]):
+            cx = LMARGIN + i * col_w
+            # Background card
+            self.set_fill_color(*LIGHT_BG)
+            self.rect(cx, stat_y, col_w - 2, 24, style="F")
+            # Gold top bar
+            self.set_fill_color(*GOLD)
+            self.rect(cx, stat_y, col_w - 2, 1.5, style="F")
+            # Value
+            self.set_xy(cx + 4, stat_y + 4)
+            self.set_font("B", size=18)
+            self.set_text_color(*NAVY)
+            self.cell(col_w - 8, 12, val)
+            # Description
+            self.set_xy(cx + 4, stat_y + 14)
+            self.set_font("R", size=7.5)
+            self.set_text_color(*MID_GRAY)
+            self.multi_cell(col_w - 8, 4.5, desc)
+
+        self.set_y(stat_y + 26)
+        # Dataset note
+        self.set_fill_color(*GREEN_BG)
+        self.set_x(LMARGIN)
+        self.set_font("R", size=8)
+        self.set_text_color(*GREEN_TXT)
+        self.multi_cell(self.usable_w, 5.5, f"  {c['evidence_note']}  ", fill=True)
+        self.gap(4)
+        self.rule()
+
+    # ── Regulatory ────────────────────────────────────────────────────────────
+
+    def regs_block(self):
+        c = self.c
+        self.label_tag(c["regs_label"])
+        self.gap(1)
+        w_label = 50
+        w_desc  = self.usable_w - w_label
+        for i, (reg, desc) in enumerate(c["regs"]):
+            bg = LIGHT_BG if i % 2 == 0 else WHITE
+            self.set_fill_color(*bg)
+            self.set_x(LMARGIN)
+            self.set_font("B", size=8.5)
+            self.set_text_color(*NAVY)
+            self.cell(w_label, 7, f"  {reg}", fill=True)
+            self.set_font("R", size=8.5)
+            self.set_text_color(*DARK)
+            self.multi_cell(w_desc, 7, f"  {desc}", fill=True)
+        self.gap(4)
+        self.rule()
+
+    # ── Offer / Terms ─────────────────────────────────────────────────────────
+
+    def offer_block(self):
+        c = self.c
+        self.label_tag(c["offer_label"])
+        self.set_x(LMARGIN)
+        self.set_font("R", size=8.5)
+        self.set_text_color(*MID_GRAY)
+        self.cell(0, 5, c["offer_intro"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.gap(2)
+
+        w_label = 42
+        w_val   = self.usable_w - w_label
+        for i, (label, val) in enumerate(c["terms"]):
+            bg = LIGHT_BG if i % 2 == 0 else WHITE
+            self.set_fill_color(*bg)
+            self.set_x(LMARGIN)
+            self.set_font("B", size=8.5)
+            self.set_text_color(*NAVY)
+            self.cell(w_label, 7, f"  {label}:", fill=True)
+            self.set_font("R", size=8.5)
+            self.set_text_color(*DARK)
+            self.multi_cell(w_val, 7, f"  {val}", fill=True)
+        self.gap(5)
+
+    # ── CTA ───────────────────────────────────────────────────────────────────
+
+    def cta_block(self):
+        c = self.c
+        bh = 30 + len(c["contact"]) * 7
+        by = self.get_y()
+        # Navy block
+        self.set_fill_color(*NAVY)
+        self.rect(LMARGIN, by, self.usable_w, bh, style="F")
+        # Gold left bar
+        self.set_fill_color(*GOLD)
+        self.rect(LMARGIN, by, 3, bh, style="F")
+        # Gold top line
+        self.rect(LMARGIN, by, self.usable_w, 0.8, style="F")
+
+        # Label
+        self.set_xy(LMARGIN + 7, by + 5)
+        self.set_font("B", size=8)
+        self.set_text_color(*GOLD)
+        self.cell(0, 5, c["cta_label"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # Headline
+        self.set_x(LMARGIN + 7)
+        self.set_font("B", size=11)
+        self.set_text_color(*WHITE)
+        self.cell(self.usable_w - 10, 7, c["cta_body"],
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.gap(2)
+
+        # Contact rows
+        for label, val in c["contact"]:
+            self.set_x(LMARGIN + 7)
+            self.set_font("B", size=8.5)
+            self.set_text_color(*GOLD_LIGHT)
+            self.cell(26, 6.5, f"{label}:")
             self.set_font("R", size=8.5)
             self.set_text_color(*WHITE)
-            self.cell(0, 6, val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.cell(0, 6.5, val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    # ── pages ─────────────────────────────────────────────────────────────────
+    # ── Page builders ─────────────────────────────────────────────────────────
 
     def build_page_one(self):
         self.add_page()
-        c = self.c
-
-        # Hero section
-        self.set_font("B", size=24)
-        self.set_text_color(*NAVY)
-        self.cell(0, 12, c["hero_title"], align="C",
-                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.set_font("R", size=10)
-        self.set_text_color(*MID_GRAY)
-        self.cell(0, 6, c["hero_sub"], align="C",
-                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.ln(5)
+        self.problem_block()
+        self.solution_block()
         self.gold_rule()
-
-        # Offer
-        self.section_bar(c["sec_offer"])
-        self.body(c["offer_body"])
-        self.ln(1)
-
-        # Structure
-        self.section_bar(c["sec_structure"])
-        self.two_col_table(
-            c["col1_title"], c["col1_items"],
-            c["col2_title"], c["col2_items"],
-        )
-
-        # Pipeline
-        self.section_bar(c["sec_pipeline"])
-        self.body(c["pipeline_sub"])
-        self.ln(1)
-        for num, name, desc in c["checkpoints"]:
-            self.checkpoint_row(num, name, desc)
-        self.ln(4)
-        self.info_box(c["receipt_box"], bg=BLUE_BG, fg=BLUE_TXT)
+        self.pipeline_block()
+        self.sandbox_block()
 
     def build_page_two(self):
         self.add_page()
-        c = self.c
-        self.ln(1)
-
-        # Why now
-        self.section_bar(c["sec_why"])
-        self.body(c["why_body"])
-        self.ln(1)
-
-        # Regulatory
-        self.section_bar(c["sec_regs"])
-        self.reg_table(c["regs"])
-        self.light_rule()
-
-        # Stats
-        self.section_bar(c["sec_stats"])
-        for val, desc in c["stats"]:
-            self.stat_row(val, desc)
-        self.ln(3)
-        self.info_box(c["dataset_box"], bg=GREEN_BG, fg=GREEN_TXT)
-        self.light_rule()
-
-        # Terms
-        self.section_bar(c["sec_terms"])
-        for label, val in c["terms"]:
-            self.term_row(label, val)
-        self.ln(6)
-
-        # CTA
-        self.cta_box(c["cta_title"], c["cta_body"], c["contact"])
+        self.ln(2)
+        self.evidence_block()
+        self.regs_block()
+        self.offer_block()
+        self.cta_block()
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────

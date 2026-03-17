@@ -53,10 +53,10 @@ title = "OMNIX Pilot Proposal — 2 páginas"
 id = "HX4ZUna11Q8KMZXoIRA7F"
 uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal_EN.pdf"
 type = "pdf"
-title = "OMNIX Pilot Proposal — English"
+title = "OMNIX Pilot Proposal — English (con sandbox)"
 
 [[outputs]]
 id = "tsWz1HN-NbGhgQD73gttM"
 uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal_ES.pdf"
 type = "pdf"
-title = "OMNIX Propuesta Piloto — Espanol"
+title = "OMNIX Propuesta Piloto — Español (con sandbox)"
