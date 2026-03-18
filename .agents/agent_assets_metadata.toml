@@ -11,7 +11,7 @@ title = "OMNIX - Informe Técnico Completo (Dic 2025 - Mar 2026)"
 id = "w370VE341ZHWzvwnZKd9J"
 uri = "file://docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf"
 type = "pdf"
-title = "OMNIX — Forensic Simulation Terra/LUNA Collapse May 2022"
+title = "4. Simulación Forense Terra/LUNA Mayo 2022"
 
 [[outputs]]
 id = "TNC8wU17xjmXTa3iuNnXW"
@@ -29,19 +29,19 @@ title = "Pitch Eureka — Español (14 slides, con Terra/LUNA)"
 id = "jDr2V_9ubxMfS8-NfrFVs"
 uri = "file://docs/business/pdfs/Report_OMNIX_HaroldNunes_March2026.pdf"
 type = "pdf"
-title = "Reporte Eureka OMNIX — March 2026 (con paper SSRN)"
+title = "3. Reporte Harold Nunes — Marzo 2026"
 
 [[outputs]]
 id = "XbWFvuuZXF2-M_oKYwlYK"
 uri = "file://docs/business/pdf/OMNIX_Forensic_SVB_March2023.pdf"
 type = "pdf"
-title = "OMNIX Forensic SVB — Tablas Corregidas"
+title = "5. Simulación Forense SVB Marzo 2023"
 
 [[outputs]]
 id = "OgSQGiYrHVP1cZvNgPqcL"
 uri = "file://docs/business/pdfs/OMNIX_Investor_Pitch_Deck.pdf"
 type = "pdf"
-title = "OMNIX — Pitch Deck Eureka (Actualizado)"
+title = "1. Pitch Deck OMNIX"
 
 [[outputs]]
 id = "Q-WgAJDDcIbu-kHbmHzQl"
@@ -60,3 +60,9 @@ id = "tsWz1HN-NbGhgQD73gttM"
 uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal_ES.pdf"
 type = "pdf"
 title = "Propuesta Piloto ES — WhatsApp actualizado"
+
+[[outputs]]
+id = "_HkhppdCnmh53M40-2zAA"
+uri = "file://docs/business/pdfs/OMNIX_Business_Model_Canvas.pdf"
+type = "pdf"
+title = "2. Business Model Canvas"
