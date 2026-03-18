@@ -128,7 +128,7 @@ _COMPONENT_LABELS: dict = {
 }
 
 _COMP_RE    = re.compile(r'^([A-Z][A-Z0-9_]*)[\(\s:]')
-_CP_CODE_RE = re.compile(r'^(CP-\d+[a-z]?)\s')
+_CP_CODE_RE = re.compile(r'^(CP-\d+[a-z]?)')
 _NUM_RE     = re.compile(r'([\w\s]+)[=:]\s*([-\d.]+%?)')
 
 
