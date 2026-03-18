@@ -368,11 +368,11 @@ def generate():
 
     # ─── SLIDE 6: MARKET OPPORTUNITY ──────────────────────────────────────────
     pdf.add_page()
-    pdf.slide_title(6, "Market Opportunity", "$5.4B governance infrastructure segment -- compliance-driven demand accelerating")
+    pdf.slide_title(6, "Market Opportunity", "$49.7B combined addressable market -- 6 verticals, compliance-driven demand accelerating")
     pdf.metric_row([
         ("18,000", "Target institutional clients"),
-        ("$5.4B", "Governance infrastructure segment"),
-        ("$540M", "Serviceable Addressable Market"),
+        ("$49.7B", "Combined Addressable Market (6 verticals)"),
+        ("$4.97B", "Serviceable Addressable Market"),
         ("2025+", "MiCA regulation in force"),
     ])
     pdf.ln(3)
