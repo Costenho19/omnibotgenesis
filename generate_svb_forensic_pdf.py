@@ -306,7 +306,7 @@ def build_pdf():
          "UST depeg + duration mismatch\nin algorithmic stablecoin",
          "HTM bond portfolio + rising rates\n+ concentrated deposits"],
         ["Probabilistic Assessment",
-         "Momentum still positive\nat T-24h ($18.14)",
+         "Momentum still positive\nat T-24h ($17.93)",
          "Credit ratings still investment-grade\nat T-14d ($287/share)"],
         ["Actual Condition",
          "Forensically inconsistent —\nregime already collapsed",
@@ -315,7 +315,7 @@ def build_pdf():
          "BLOCKED at T-24h\nand T-6h",
          "BLOCKED at T-48h\nbefore FDIC seizure"],
         ["Capital Outcome",
-         "100% preserved\n($1.73 → $0.001 avoided)",
+         "100% preserved\n($1.66 → $0.001 avoided)",
          "100% preserved\n($267 → $0 avoided)"],
     ]
     pattern_tbl = Table(pattern_rows, colWidths=[1.8*inch, 2.1*inch, 2.1*inch])
