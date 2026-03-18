@@ -63,15 +63,32 @@ def _check_rate_limit(ip: str) -> bool:
     return True
 
 
-def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
-    api_key = os.environ.get('GOOGLE_AI_API_KEY')
-    if not api_key:
-        raise RuntimeError("AI service not configured")
-
+def _call_gemini(prompt: str, model_name: str) -> str:
     import google.generativeai as genai
+    api_key = os.environ.get('GOOGLE_AI_API_KEY') or os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        raise RuntimeError("No Gemini API key configured (GOOGLE_AI_API_KEY or GEMINI_API_KEY)")
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel(model_name)
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
+
+def _call_openai(prompt: str) -> str:
+    import openai
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+    client = openai.OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model='gpt-4o-mini',
+        messages=[{'role': 'user', 'content': prompt}],
+        temperature=0.2,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
     lang_instruction = ""
     if language_hint and language_hint in ('en', 'es'):
         lang_instruction = f'\nIMPORTANT: The user requested response language "{language_hint}". Set "language" to "{language_hint}" and write summary/reasoning in {"English" if language_hint == "en" else "Spanish"}.'
@@ -137,8 +154,33 @@ CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST in
 Scenario:
 \"\"\"{scenario_text}\"\"\""""
 
-    response = model.generate_content(prompt)
-    raw_text = response.text.strip()
+    raw_text = None
+    gemini_models = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash-lite',
+        'gemini-2.0-flash',
+        'gemini-pro-latest',
+    ]
+    last_error = None
+
+    for model_name in gemini_models:
+        try:
+            raw_text = _call_gemini(prompt, model_name)
+            logger.info(f"Sandbox: AI responded via {model_name}")
+            break
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Sandbox: {model_name} failed: {e}")
+            continue
+
+    if raw_text is None:
+        try:
+            raw_text = _call_openai(prompt)
+            logger.info("Sandbox: AI responded via openai/gpt-4o-mini (fallback)")
+        except Exception as e:
+            logger.error(f"Sandbox: all AI providers failed. Last Gemini error: {last_error}. OpenAI error: {e}")
+            raise RuntimeError("AI service not available") from last_error
+
     if raw_text.startswith('```'):
         raw_text = raw_text.split('\n', 1)[1] if '\n' in raw_text else raw_text[3:]
         if raw_text.endswith('```'):
@@ -290,6 +332,17 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         'receipt_id': receipt_id,
         'verification_url': f"https://omnibotgenesis-production.up.railway.app/verify/{receipt_id}" if receipt_id else None,
     }
+
+
+def _log_sandbox_interaction(receipt_id, scenario_text, company_name, language,
+                              domain, asset, decision, checkpoints_passed,
+                              checkpoints_blocked, client_ip, user_agent):
+    logger.info(
+        f"Sandbox interaction | receipt={receipt_id} | domain={domain} | "
+        f"asset={asset} | decision={decision} | "
+        f"passed={checkpoints_passed} | blocked={checkpoints_blocked} | "
+        f"lang={language} | ip={client_ip}"
+    )
 
 
 @public_sandbox_bp.route('/api/public/sandbox/evaluate', methods=['POST'])
