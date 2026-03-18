@@ -20,11 +20,11 @@ FONT_BOLD     = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
 LOGO_PATH     = os.path.join(BASE_DIR, "assets", "omnix_logo.png")
 
 DARK      = (15, 15, 15)
-ACCENT    = (20, 20, 20)
+ACCENT    = (10, 22, 40)
 ACCENT2   = (201, 168, 55)
 GOLD      = (201, 168, 55)
 MID_GRAY  = (140, 140, 140)
-LIGHT_BG  = (245, 240, 218)
+LIGHT_BG  = (240, 244, 248)
 WHITE     = (255, 255, 255)
 GREEN     = (30, 140, 70)
 RED_SOFT  = (180, 40, 40)
@@ -226,6 +226,7 @@ def generate():
         ("Stage", "Pre-Seed  |  MVP Live  |  Production-grade system"),
         ("Recognition", "SEMIFINALIST -- Eureka Dubai GCC 2026"),
         ("Contact", "contacto@omnixquantum.net  |  omnixquantum.net"),
+        ("Demo", "omnixquantum.net/try  (live governance sandbox)"),
     ]
     for label, value in info:
         pdf.set_font("DejaVu", "B", 8.5)
@@ -590,6 +591,7 @@ def generate():
         ("Founder", "Harold Nunes -- Founder & CEO, OMNIX Quantum"),
         ("Email", "contacto@omnixquantum.net"),
         ("Web", "omnixquantum.net"),
+        ("Demo", "omnixquantum.net/try  (live governance sandbox -- no login required)"),
         ("Verify", "omnixquantum.net/verify  (public decision receipt verification)"),
         ("Recognition", "SEMIFINALIST -- Eureka Dubai GCC 2026"),
     ]
