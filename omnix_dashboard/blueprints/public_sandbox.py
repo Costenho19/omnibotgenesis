@@ -157,9 +157,10 @@ Scenario:
     raw_text = None
     gemini_models = [
         'gemini-2.5-flash',
-        'gemini-2.0-flash-lite',
         'gemini-2.0-flash',
-        'gemini-pro-latest',
+        'gemini-2.0-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-latest',
     ]
     last_error = None
 
@@ -174,11 +175,16 @@ Scenario:
             continue
 
     if raw_text is None:
-        try:
-            raw_text = _call_openai(prompt)
-            logger.info("Sandbox: AI responded via openai/gpt-4o-mini (fallback)")
-        except Exception as e:
-            logger.error(f"Sandbox: all AI providers failed. Last Gemini error: {last_error}. OpenAI error: {e}")
+        openai_key = os.environ.get('OPENAI_API_KEY')
+        if openai_key:
+            try:
+                raw_text = _call_openai(prompt)
+                logger.info("Sandbox: AI responded via openai/gpt-4o-mini (fallback)")
+            except Exception as e:
+                logger.error(f"Sandbox: OpenAI fallback failed: {e}")
+                raise RuntimeError("AI service not available") from last_error
+        else:
+            logger.error(f"Sandbox: all Gemini models failed, OPENAI_API_KEY not set. Last error: {last_error}")
             raise RuntimeError("AI service not available") from last_error
 
     if raw_text.startswith('```'):
