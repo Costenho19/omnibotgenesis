@@ -129,7 +129,7 @@ DATA = {
     "ct_body"   : "Reach out and we will walk you through the integration in 30 minutes.",
     "ct_items"  : [
         ("Email",     "contacto@omnixquantum.net"),
-        ("WhatsApp",  "+1 (650) 481-5494"),
+        ("WhatsApp",  "+1 (650) 507-8293"),
         ("Live demo", "omnixquantum.net/try   (no login required)"),
         ("LinkedIn",  "linkedin.com/in/harold-nunes"),
     ],
@@ -213,7 +213,7 @@ DATA = {
     "ct_body"   : "Escribenos y coordinamos la integracion en una reunion de 30 minutos.",
     "ct_items"  : [
         ("Email",    "contacto@omnixquantum.net"),
-        ("WhatsApp", "+1 (650) 481-5494"),
+        ("WhatsApp", "+1 (650) 507-8293"),
         ("Demo",     "omnixquantum.net/try   (sin login)"),
         ("LinkedIn", "linkedin.com/in/harold-nunes"),
     ],
