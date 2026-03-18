@@ -25,6 +25,12 @@ RATE_LIMIT_MAX = 5
 
 EXAMPLE_SCENARIOS = [
     {
+        "text": "FTX exchange wants to approve withdrawal of $8B from customer funds to cover trading losses in Alameda Research. Strong brand reputation, celebrity endorsements, high liquidity perception. Hidden: $8B balance sheet hole, commingled customer funds, no independent risk controls.",
+        "lang": "en",
+        "domain": "trading",
+        "label": "FTX Collapse (Preventable)"
+    },
+    {
         "text": "A biotech startup wants to invest $2M in a Phase II clinical trial for a rare disease drug. The FDA has shown interest but competitor trials failed last month.",
         "lang": "en",
         "domain": "biotech"

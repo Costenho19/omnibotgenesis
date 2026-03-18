@@ -45,6 +45,7 @@ interface ExampleScenario {
   text: string
   lang: string
   domain: string
+  label?: string
 }
 
 const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
@@ -250,6 +251,7 @@ export default function PublicGovernanceSandbox() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs px-2 py-0.5 rounded bg-[#C9A227]/10 text-[#C9A227] uppercase">{ex.domain}</span>
                       <span className="text-xs text-muted">{ex.lang === 'es' ? 'Español' : 'English'}</span>
+                      {ex.label && <span className="text-xs font-semibold text-white/80">{ex.label}</span>}
                     </div>
                     <p className="text-sm text-muted line-clamp-2">{ex.text}</p>
                   </button>

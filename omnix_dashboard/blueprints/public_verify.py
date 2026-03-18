@@ -127,11 +127,15 @@ _COMPONENT_LABELS: dict = {
     'EGL':              {'en': 'Exit Governance Layer',            'es': 'Capa de Gobernanza de Salida',        'cp': ''},
 }
 
-_COMP_RE = re.compile(r'^([A-Z][A-Z0-9_]*)[\(\s:]')
-_NUM_RE  = re.compile(r'([\w\s]+)[=:]\s*([-\d.]+%?)')
+_COMP_RE    = re.compile(r'^([A-Z][A-Z0-9_]*)[\(\s:]')
+_CP_CODE_RE = re.compile(r'^(CP-\d+[a-z]?)\s')
+_NUM_RE     = re.compile(r'([\w\s]+)[=:]\s*([-\d.]+%?)')
 
 
 def _extract_component(raw: str) -> str:
+    cp_m = _CP_CODE_RE.match(raw.strip())
+    if cp_m:
+        return cp_m.group(1)
     m = _COMP_RE.match(raw.strip())
     return m.group(1) if m else raw[:20].split(':')[0].split('(')[0].strip()
 
@@ -158,6 +162,10 @@ def _determine_result(raw: str, component: str) -> str:
 
     if 'REMOVED' in comp or 'ELIMINATED' in r:          return 'N/A'
     if 'SIZE_REDUCE' in comp:                            return 'ADJUSTED'
+    if '→ BLOCKED' in r or '-> BLOCKED' in r:           return 'BLOCKED'
+    if '→ PASSED' in r or '-> PASSED' in r:             return 'PASS'
+    if '→ APPROVED' in r or '-> APPROVED' in r:         return 'PASS'
+    if '→ PASS' in r or '-> PASS' in r:                 return 'PASS'
     if '(PASSED)' in r or '>= ' in r and 'PASSED' in r: return 'PASS'
     if 'WARN THRESHOLD' in r or '< ' in r and 'WARN' in r: return 'BLOCKED'
     if 'CONFIRMED' in r and 'ECW' in r:                  return 'PASS'
@@ -193,7 +201,11 @@ def _parse_veto_chain(veto_chain_raw) -> list:
     for raw in veto_chain_raw:
         raw_str = str(raw).strip()[:200]
         comp    = _extract_component(raw_str)
-        meta    = _COMPONENT_LABELS.get(comp, {'en': comp.replace('_', ' ').title(), 'es': comp.replace('_', ' ').title(), 'cp': ''})
+        if comp in _CP_LABELS:
+            cp_info = _CP_LABELS[comp]
+            meta    = {'en': cp_info['en'], 'es': cp_info['es'], 'cp': comp}
+        else:
+            meta = _COMPONENT_LABELS.get(comp, {'en': comp.replace('_', ' ').title(), 'es': comp.replace('_', ' ').title(), 'cp': ''})
         result  = _determine_result(raw_str, comp)
         metric_label, metric_value = _extract_metric(raw_str)
         code    = meta.get('cp') or None
@@ -295,7 +307,7 @@ def _fetch_receipt(receipt_id: str):
     passed      = sum(1 for c in checkpoints if c['result'] == 'PASS')
     blocked_n   = total - passed
     meta        = _decision_meta(decision or 'UNKNOWN')
-    railway_url = os.environ.get('RAILWAY_VERIFY_URL', '')
+    railway_url = os.environ.get('RAILWAY_VERIFY_URL', 'https://omnixquantum.net')
 
     return {
         'found':          True,
