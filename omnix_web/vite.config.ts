@@ -29,6 +29,10 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/api/public/verify': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   }
 })
