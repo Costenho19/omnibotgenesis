@@ -380,7 +380,7 @@ def build_section_1(styles):
     ))
     elements.append(Paragraph(
         "<b>Key Traction:</b> Eureka GCC 2026 Semifinalist. Live public verification system at "
-        "https://omnibotgenesis-production.up.railway.app/verify. Interactive governance demos for credit/lending, "
+        "https://omnixquantum.net/verify. Interactive governance demos for credit/lending, "
         "insurance, energy, and biotech verticals. Institutional website live at https://omnixquantum.net.",
         styles['BodyText2']
     ))
@@ -781,7 +781,7 @@ def build_section_5(styles):
 
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
-        "<b>Demo Links:</b> Public verification: https://omnibotgenesis-production.up.railway.app/verify | "
+        "<b>Demo Links:</b> Public verification: https://omnixquantum.net/verify | "
         "Website: https://omnixquantum.net | Credit governance demo: https://omnixquantum.net/governance-demo | "
         "Insurance demo: https://omnixquantum.net/governance-demo-insurance | "
         "Energy demo: https://omnixquantum.net/governance-demo-energy | "
@@ -944,7 +944,7 @@ def build_section_8(styles):
     elements.append(Paragraph("<b>Competition & Recognition</b>", styles['SubsectionTitle']))
     elements.extend(bullet_list([
         "<b>Eureka GCC 2026:</b> Semifinalist \u2014 competing in Abu Dhabi startup competition",
-        "<b>Public verification:</b> Live at https://omnibotgenesis-production.up.railway.app/verify",
+        "<b>Public verification:</b> Live at https://omnixquantum.net/verify",
         "<b>Institutional website:</b> Live at https://omnixquantum.net with real-time market data",
     ], styles))
 
@@ -1383,7 +1383,7 @@ def build_section_14(styles):
     elements.append(Paragraph("<b>D. Links & Resources</b>", styles['SubsectionTitle']))
     links = [
         '<b>Website:</b> <a href="https://omnixquantum.net" color="#1155CC">https://omnixquantum.net</a>',
-        '<b>Public Verification:</b> <a href="https://omnibotgenesis-production.up.railway.app/verify" color="#1155CC">https://omnibotgenesis-production.up.railway.app/verify</a>',
+        '<b>Public Verification:</b> <a href="https://omnixquantum.net/verify" color="#1155CC">https://omnixquantum.net/verify</a>',
         '<b>Credit Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo" color="#1155CC">https://omnixquantum.net/governance-demo</a>',
         '<b>Insurance Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-insurance" color="#1155CC">https://omnixquantum.net/governance-demo-insurance</a>',
         '<b>Energy Governance Demo:</b> <a href="https://omnixquantum.net/governance-demo-energy" color="#1155CC">https://omnixquantum.net/governance-demo-energy</a>',

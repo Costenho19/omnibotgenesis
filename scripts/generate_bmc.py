@@ -319,7 +319,7 @@ def generate():
         "API per-validation: $0.01-$0.05/call",
         "B2C SaaS: $149-$499/month",
         "White-label engine: $100K+ setup",
-        "TAM $5.4B  |  SAM $540M  |  Break-even Q4 2026",
+        "TAM $49.7B  |  SAM $4.97B  |  Break-even Q4 2026",
     ], bg=LIGHT_BG, header_bg=GREEN_DK)
 
     out = os.path.join(OUTPUT_DIR, "OMNIX_Business_Model_Canvas.pdf")
