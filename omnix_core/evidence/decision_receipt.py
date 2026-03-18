@@ -72,8 +72,8 @@ class DecisionReceiptEngine:
         receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
         timestamp = datetime.now(timezone.utc).isoformat()
 
-        provider_id = self._provider.provider_id() if self._provider else "none"
-        alg_name    = self._provider.algorithm_name() if self._provider else "NONE"
+        provider_id = self._provider.provider_id() if self._provider else "sha256"
+        alg_name    = self._provider.algorithm_name() if self._provider else "SHA-256"
 
         public_payload = {
             'receipt_id':       receipt_id,
@@ -99,6 +99,9 @@ class DecisionReceiptEngine:
                     signature_b64 = base64.b64encode(raw_sig).decode('utf-8')
             except Exception as e:
                 logger.error(f"Failed to sign receipt: {e}")
+
+        if signature_b64 is None and not (self._signing_keys and self._provider):
+            signature_b64 = hashlib.sha256(content_hash.encode('utf-8')).hexdigest()
 
         public_payload['signature']           = signature_b64
         public_payload['signature_algorithm'] = alg_name if signature_b64 else 'NONE'
