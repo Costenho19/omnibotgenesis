@@ -469,7 +469,7 @@ def generate_governance_receipt(data, t6h_idx, collapse_idx):
         "regime_classification": regime_names.get(regime, "UNKNOWN"),
         "failure_reason":   "TEMPORAL_COHERENCE_VIOLATION + SIGNAL_INTEGRITY_FAILURE",
         "manufactured_conf": round(float(data['manufactured_conf'][t6h_idx]), 2),
-        "framework":        "OMNIX Decision Governance Infrastructure v6.5.4e",
+        "framework":        "OMNIX Decision Governance Infrastructure",
         "simulation_note":  "Forensic Reconstruction — Terra/LUNA Collapse May 2022"
     }
 
@@ -594,7 +594,7 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
         ["Asset Under Analysis", "LUNA/USD (Terra Classic)"],
         ["Collapse Event", ts_col.strftime('%B %d, %Y') + " — Total Market Capitalization Loss"],
         ["Analysis Window", ts_t72.strftime('%Y-%m-%d') + " → " + ts_col.strftime('%Y-%m-%d')],
-        ["Framework",      "OMNIX Decision Governance Infrastructure v6.5.4e"],
+        ["Framework",      "OMNIX Decision Governance Infrastructure"],
         ["Methodology",    "8-Checkpoint Fail-Closed Pipeline + 3-Phase VITT Forensic Alignment"],
         ["Classification", "Institutional Research — Forensic Certainty Demonstration"],
         ["Generated",      datetime.now(timezone.utc).strftime('%B %d, %Y at %H:%M UTC')],
