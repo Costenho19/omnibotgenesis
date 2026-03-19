@@ -605,8 +605,7 @@ def public_sandbox_evaluate():
             'error_es': 'La IA no pudo extraer las señales de gobernanza. Intente reformular su escenario.',
         }), 500
     except Exception as e:
-        logger.error(f"Gemini parsing failed: {e}")
-        logger.warning("Sandbox: exception in AI parsing — using rule-based fallback")
+        logger.warning(f"AI unavailable — rule-based fallback activated: {e}")
         ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
     try:
