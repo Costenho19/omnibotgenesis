@@ -9,10 +9,9 @@ interface GateResult {
   name_en: string
   name_es: string
   score: number
-  threshold: number
   result: 'PASS' | 'BLOCKED'
   description: string
-  reasoning: string
+  reasoning?: string
 }
 
 interface ReceiptData {
@@ -408,12 +407,12 @@ export default function PublicGovernanceSandbox() {
                             <RefreshCw className="w-5 h-5 text-blue-400 animate-spin" />
                           ) : isPassed ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-mono text-emerald-400">{gate.score.toFixed(0)} / {gate.threshold}</span>
+                              <span className="text-sm font-mono text-emerald-400">{gate.score?.toFixed(0) ?? '—'}</span>
                               <CheckCircle className="w-5 h-5 text-emerald-400" />
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-mono text-red-400">{gate.score.toFixed(0)} / {gate.threshold}</span>
+                              <span className="text-sm font-mono text-red-400">{gate.score?.toFixed(0) ?? '—'}</span>
                               <XCircle className="w-5 h-5 text-red-400" />
                             </div>
                           )}
@@ -425,7 +424,7 @@ export default function PublicGovernanceSandbox() {
                             className={`h-full rounded-full transition-all duration-700 ${
                               isPassed ? 'bg-emerald-500' : 'bg-red-500'
                             }`}
-                            style={{ width: `${Math.min(100, gate.score)}%` }}
+                            style={{ width: `${Math.min(100, gate.score ?? 0)}%` }}
                           />
                         </div>
                       )}
