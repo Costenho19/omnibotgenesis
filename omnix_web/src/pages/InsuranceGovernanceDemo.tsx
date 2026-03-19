@@ -492,26 +492,10 @@ export default function InsuranceGovernanceDemo() {
                                 cp.status === 'block' ? 'bg-red-500' :
                                 'bg-blue-500'
                               }`}
-                              style={{ width: cp.status === 'evaluating' ? '60%' : `${cp.score}%` }}
+                              style={{ width: cp.status === 'evaluating' ? '60%' : (cp.status === 'pass' || cp.status === 'warn') ? '100%' : '22%' }}
                             />
                           </div>
-                          <span className={`text-sm font-semibold w-16 text-right ${
-                            cp.status === 'pass' ? 'text-emerald-400' :
-                            cp.status === 'warn' ? 'text-amber-400' :
-                            cp.status === 'block' ? 'text-red-400' :
-                            'text-blue-400'
-                          }`}>
-                            {cp.status === 'evaluating' ? '...' : `${cp.score}/100`}
-                          </span>
                         </div>
-
-                        {cp.status !== 'evaluating' && (
-                          <>
-                            <p className="text-sm text-muted">{cp.reasoning}</p>
-                            <p className="text-xs text-[#64748B] font-mono">{cp.detail}</p>
-                            <div className="text-xs text-[#475569]">Threshold: {cp.threshold}/100</div>
-                          </>
-                        )}
                       </div>
                     )}
                   </div>

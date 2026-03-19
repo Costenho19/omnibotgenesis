@@ -570,11 +570,6 @@ export default function BiotechGovernanceDemo() {
                                 {cp.status === 'pass' ? 'PASS' : cp.status === 'warn' ? 'MARGINAL' : 'BLOCKED'}
                               </span>
                             </div>
-                            <span className="text-xs text-[#64748B]">
-                              Score: <span className="text-white font-mono">{cp.score}</span>
-                              <span className="mx-1">{cp.thresholdType === 'min' ? '≥' : '≤'}</span>
-                              <span className="text-white font-mono">{cp.threshold}</span>
-                            </span>
                           </div>
                         ) : (
                           <span className="text-xs text-[#64748B]">Pending</span>
@@ -583,15 +578,13 @@ export default function BiotechGovernanceDemo() {
                     </div>
 
                     {cp.status !== 'pending' && cp.status !== 'evaluating' && (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3">
                         <div className="w-full bg-[#0A1628] rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all duration-1000 ${cp.status === 'pass' ? 'bg-emerald-500' : cp.status === 'warn' ? 'bg-amber-500' : 'bg-red-500'}`}
-                            style={{ width: `${Math.min(100, cp.score)}%` }}
+                            style={{ width: (cp.status === 'pass' || cp.status === 'warn') ? '100%' : '22%' }}
                           />
                         </div>
-                        <p className="text-xs text-muted leading-relaxed">{cp.reasoning}</p>
-                        <p className="text-xs text-[#475569] font-mono bg-[#0A1628]/40 px-3 py-2 rounded">{cp.detail}</p>
                       </div>
                     )}
                   </div>
