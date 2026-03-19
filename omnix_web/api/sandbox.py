@@ -21,6 +21,10 @@ _rate_limit_store: dict = {}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 5
 
+_rate_limit_hourly_store: dict = {}
+RATE_LIMIT_HOURLY_WINDOW = 3600
+RATE_LIMIT_HOURLY_MAX = 20
+
 VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
 
 EXAMPLE_SCENARIOS = [
@@ -143,6 +147,19 @@ def _check_rate_limit(ip: str) -> bool:
     if len(_rate_limit_store[ip]) >= RATE_LIMIT_MAX:
         return False
     _rate_limit_store[ip].append(now)
+    return True
+
+
+def _check_rate_limit_hourly(ip: str) -> bool:
+    now = time.time()
+    if ip not in _rate_limit_hourly_store:
+        _rate_limit_hourly_store[ip] = []
+    _rate_limit_hourly_store[ip] = [
+        t for t in _rate_limit_hourly_store[ip] if now - t < RATE_LIMIT_HOURLY_WINDOW
+    ]
+    if len(_rate_limit_hourly_store[ip]) >= RATE_LIMIT_HOURLY_MAX:
+        return False
+    _rate_limit_hourly_store[ip].append(now)
     return True
 
 
@@ -930,8 +947,13 @@ def _init_sandbox_interactions_table(db_url: str):
                 checkpoints_passed INTEGER,
                 checkpoints_blocked INTEGER,
                 client_ip VARCHAR(100),
-                user_agent VARCHAR(500)
+                user_agent VARCHAR(500),
+                user_email VARCHAR(254)
             )
+        """)
+        cur.execute("""
+            ALTER TABLE sandbox_interactions
+            ADD COLUMN IF NOT EXISTS user_email VARCHAR(254)
         """)
         conn.commit()
         cur.close()
@@ -948,8 +970,9 @@ def _log_sandbox_interaction(db_url: str, **kwargs):
         cur.execute("""
             INSERT INTO sandbox_interactions
                 (receipt_id, scenario_text, company_name, language, domain, asset,
-                 decision, checkpoints_passed, checkpoints_blocked, client_ip, user_agent)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 decision, checkpoints_passed, checkpoints_blocked, client_ip, user_agent,
+                 user_email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             kwargs.get('receipt_id'),
             kwargs.get('scenario_text', '')[:1000],
@@ -962,6 +985,7 @@ def _log_sandbox_interaction(db_url: str, **kwargs):
             kwargs.get('checkpoints_blocked'),
             kwargs.get('client_ip', '')[:100],
             kwargs.get('user_agent', '')[:500],
+            kwargs.get('user_email'),
         ))
         conn.commit()
         cur.close()
@@ -990,6 +1014,12 @@ def register_sandbox_routes(app):
                 'error_es': 'Límite de velocidad excedido. Máximo 5 evaluaciones por minuto.',
             }), 429
 
+        if not _check_rate_limit_hourly(client_ip):
+            return flask_jsonify({
+                'error': 'Hourly limit reached. Maximum 20 evaluations per hour per IP.',
+                'error_es': 'Límite horario alcanzado. Máximo 20 evaluaciones por hora por IP.',
+            }), 429
+
         data = flask_request.get_json(silent=True)
         if not data or not data.get('scenario_text', data.get('scenario')):
             return flask_jsonify({
@@ -1000,6 +1030,7 @@ def register_sandbox_routes(app):
         scenario_text = str(data.get('scenario_text', data.get('scenario', ''))).strip()
         company_name = str(data.get('company_name', '')).strip() or None
         language_hint = str(data.get('language', '')).strip() or None
+        user_email = str(data.get('email', '')).strip()[:254] or None
 
         if len(scenario_text) < 10:
             return flask_jsonify({
@@ -1053,22 +1084,17 @@ def register_sandbox_routes(app):
         else:
             logger.warning("No DATABASE_URL — receipt not stored")
 
-        reasoning = ai_result.get('reasoning', {})
         gate_results_enriched = []
         for gate in governance_result.get('gate_results', []):
             cp_id = gate['checkpoint']
             names = CHECKPOINT_NAMES_I18N.get(cp_id, {'en': gate['name'], 'es': gate['name']})
-            signal_key = gate.get('signal', '')
             gate_results_enriched.append({
                 'checkpoint': cp_id,
                 'name': gate['name'],
                 'name_en': names['en'],
                 'name_es': names['es'],
-                'score': gate['score'],
-                'threshold': gate['threshold'],
                 'result': gate['result'],
                 'description': gate.get('description', ''),
-                'reasoning': reasoning.get(signal_key, ''),
             })
 
         if db_url:
@@ -1085,6 +1111,7 @@ def register_sandbox_routes(app):
                 checkpoints_blocked=governance_result['checkpoints_blocked'],
                 client_ip=client_ip,
                 user_agent=flask_request.headers.get('User-Agent', '')[:500],
+                user_email=user_email,
             )
 
         return flask_jsonify({
