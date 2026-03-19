@@ -146,14 +146,113 @@ def _check_rate_limit(ip: str) -> bool:
     return True
 
 
+def _call_gemini_rest(prompt: str, model_name: str, api_key: str) -> str:
+    import urllib.request
+    import urllib.error
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model_name}:generateContent?key={api_key}"
+    )
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 2048},
+    }).encode("utf-8")
+    req = urllib.request.Request(url, data=payload, method="POST")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Gemini REST HTTP {e.code}: {body[:200]}")
+
+
+def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
+    text_lower = scenario_text.lower()
+    high_risk_terms = [
+        'leverage', 'apalancamiento', 'deuda', 'debt', 'loss', 'pérdida',
+        'fraud', 'fraude', 'unknown', 'desconocido', 'hidden', 'oculto',
+        'volatile', 'inestable', 'uncertain', 'incierto', 'crisis',
+        'default', 'incumplimiento', 'collapse', 'colapso', 'bankruptcy',
+        'quiebra', 'risky', 'peligroso', 'high risk', 'alto riesgo',
+        'unaudited', 'sin auditoría', 'speculative', 'especulativo',
+        'concentration', 'concentración', 'illiquid', 'ilíquido',
+    ]
+    extreme_risk_terms = [
+        'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
+        '25:1', '50:1', '30:1', 'extreme', 'extremo', 'systemic',
+        'sistémico', 'billion', '500m', 'trillion',
+    ]
+    positive_terms = [
+        'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
+        'conservative', 'conservador', 'track record', 'trayectoria', 'profitable',
+        'rentable', 'stable', 'estable', 'transparent', 'transparente',
+        'collateral', 'garantía', 'low risk', 'bajo riesgo', 'diversified',
+        'diversificado', 'insured', 'asegurado', 'established', 'establecido',
+    ]
+    risk_count = sum(1 for t in high_risk_terms if t in text_lower)
+    extreme_count = sum(1 for t in extreme_risk_terms if t in text_lower)
+    positive_count = sum(1 for t in positive_terms if t in text_lower)
+
+    base = 58
+    risk_penalty = min(45, risk_count * 7 + extreme_count * 12)
+    positive_boost = min(25, positive_count * 6)
+    adjusted = max(8, min(88, base - risk_penalty + positive_boost))
+
+    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+
+    def jitter(offset=0, lo=-4, hi=4):
+        pseudo = (seed >> (offset % 16)) & 0xFF
+        spread = pseudo % (hi - lo + 1) + lo
+        return max(5, min(95, adjusted + offset + spread))
+
+    if any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
+        domain = 'trading'
+    elif any(t in text_lower for t in ['loan', 'préstamo', 'bank', 'banco', 'credit', 'crédito', 'lend']):
+        domain = 'credit'
+    elif any(t in text_lower for t in ['crypto', 'bitcoin', 'ethereum', 'token', 'defi', 'blockchain']):
+        domain = 'trading'
+    elif any(t in text_lower for t in ['company', 'empresa', 'acquisition', 'adquisición', 'merger', 'startup']):
+        domain = 'generic'
+    else:
+        domain = 'generic'
+
+    asset_name = company_name or 'Entity Under Review'
+    lang = language_hint or 'es'
+    expl = "Derived from keyword-based risk analysis (AI temporarily unavailable)." if lang == 'en' else "Derivado de análisis de palabras clave de riesgo (IA temporalmente no disponible)."
+
+    signals = {
+        'probability_score': jitter(-5 if risk_count > 2 else 5),
+        'risk_exposure': max(10, min(95, 100 - adjusted + ((seed & 0xF) % 9) - 4)),
+        'signal_coherence': jitter(0),
+        'trend_persistence': jitter(5),
+        'stress_resilience': jitter(-10 if extreme_count > 0 else 0),
+        'logic_consistency': jitter(8),
+        'signal_integrity': jitter(-6 if 'unknown' in text_lower or 'desconocido' in text_lower else 4),
+        'temporal_coherence': jitter(0, lo=-6, hi=6),
+    }
+    signal_explanations = {k: expl for k in signals}
+
+    return {
+        'signals': signals,
+        'domain': domain,
+        'asset': asset_name,
+        'language': lang,
+        'summary': f"Rule-based risk evaluation ({risk_count} risk indicators detected)." if lang == 'en' else f"Evaluación de riesgo por palabras clave ({risk_count} indicadores de riesgo detectados).",
+        'explanation': expl,
+        'reasoning': signal_explanations,
+    }
+
+
 def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
     api_key = os.environ.get('GOOGLE_AI_API_KEY') or os.environ.get('GEMINI_API_KEY')
     if not api_key:
-        raise RuntimeError("AI service not configured")
+        logger.warning("No Gemini API key — using rule-based fallback")
+        return _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    gemini_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 
     lang_instruction = ""
     if language_hint and language_hint in ('en', 'es'):
@@ -220,8 +319,21 @@ CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST in
 Scenario:
 \"\"\"{scenario_text}\"\"\""""
 
-    response = model.generate_content(prompt)
-    raw_text = response.text.strip()
+    last_error = None
+    raw_text = None
+    for model_name in gemini_models:
+        try:
+            raw_text = _call_gemini_rest(prompt, model_name, api_key)
+            break
+        except Exception as exc:
+            last_error = exc
+            logger.warning(f"Gemini REST failed for {model_name}: {exc}")
+            continue
+
+    if raw_text is None:
+        logger.error(f"All Gemini models failed: {last_error} — using rule-based fallback")
+        return _rule_based_signal_extraction(scenario_text, language_hint, company_name)
+
     if raw_text.startswith('```'):
         raw_text = raw_text.split('\n', 1)[1] if '\n' in raw_text else raw_text[3:]
         if raw_text.endswith('```'):
@@ -229,7 +341,11 @@ Scenario:
         if raw_text.startswith('json'):
             raw_text = raw_text[4:].strip()
 
-    parsed = json.loads(raw_text)
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError:
+        logger.error("JSON decode failed — using rule-based fallback")
+        return _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
     required_signals = [
         'probability_score', 'risk_exposure', 'signal_coherence',
@@ -511,17 +627,11 @@ def register_sandbox_routes(app):
         try:
             ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
         except (json.JSONDecodeError, ValueError) as e:
-            logger.error(f"AI signal extraction failed: {e}")
-            return flask_jsonify({
-                'error': 'AI failed to extract governance signals. Please try rephrasing your scenario.',
-                'error_es': 'La IA no pudo extraer las señales de gobernanza. Intente reformular su escenario.',
-            }), 500
+            logger.warning(f"AI parse error — rule-based fallback: {e}")
+            ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
         except Exception as e:
-            logger.error(f"Gemini parsing failed: {e}")
-            return flask_jsonify({
-                'error': 'AI service temporarily unavailable. Please try again.',
-                'error_es': 'Servicio de IA temporalmente no disponible. Intente de nuevo.',
-            }), 503
+            logger.warning(f"Gemini unavailable — rule-based fallback: {e}")
+            ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
         governance_result = _evaluate_governance(ai_result['signals'])
 
