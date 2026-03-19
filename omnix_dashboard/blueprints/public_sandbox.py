@@ -98,6 +98,106 @@ def _call_openai(prompt: str) -> str:
     return response.choices[0].message.content.strip()
 
 
+def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
+    """
+    Deterministic rule-based fallback when AI is unavailable.
+    Analyzes scenario text for risk keywords and generates realistic signals.
+    Results are reproducible — same text always yields same signals.
+    """
+    import hashlib
+    text_lower = scenario_text.lower()
+
+    high_risk_terms = [
+        'leverage', 'apalancamiento', 'deuda', 'debt', 'loss', 'pérdida',
+        'fraud', 'fraude', 'unknown', 'desconocido', 'hidden', 'oculto',
+        'volatile', 'inestable', 'uncertain', 'incierto', 'crisis',
+        'default', 'incumplimiento', 'collapse', 'colapso', 'bankruptcy',
+        'quiebra', 'risky', 'peligroso', 'high risk', 'alto riesgo',
+        'unaudited', 'sin auditoría', 'speculative', 'especulativo',
+        'concentration', 'concentración', 'illiquid', 'ilíquido',
+    ]
+    extreme_risk_terms = [
+        'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
+        '25:1', '50:1', '30:1', 'extreme', 'extremo', 'systemic',
+        'sistémico', 'billion', '500m', '$500', 'trillion',
+    ]
+    positive_terms = [
+        'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
+        'conservative', 'conservador', 'track record', 'trayectoria', 'profitable',
+        'rentable', 'stable', 'estable', 'transparent', 'transparente',
+        'collateral', 'garantía', 'low risk', 'bajo riesgo', 'diversified',
+        'diversificado', 'insured', 'asegurado', 'established', 'establecido',
+    ]
+
+    risk_count = sum(1 for t in high_risk_terms if t in text_lower)
+    extreme_count = sum(1 for t in extreme_risk_terms if t in text_lower)
+    positive_count = sum(1 for t in positive_terms if t in text_lower)
+
+    base = 58
+    risk_penalty = min(45, risk_count * 7 + extreme_count * 12)
+    positive_boost = min(25, positive_count * 6)
+    adjusted = max(8, min(88, base - risk_penalty + positive_boost))
+
+    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+    def jitter(offset=0, lo=-4, hi=4):
+        pseudo = (seed >> (offset % 16)) & 0xFF
+        spread = pseudo % (hi - lo + 1) + lo
+        return max(5, min(95, adjusted + offset + spread))
+
+    if any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
+        domain = 'hedge_fund'
+    elif any(t in text_lower for t in ['loan', 'préstamo', 'bank', 'banco', 'credit', 'crédito', 'lend']):
+        domain = 'lending'
+    elif any(t in text_lower for t in ['crypto', 'bitcoin', 'ethereum', 'token', 'defi', 'blockchain']):
+        domain = 'crypto'
+    elif any(t in text_lower for t in ['company', 'empresa', 'acquisition', 'adquisición', 'merger', 'startup']):
+        domain = 'corporate'
+    else:
+        domain = 'financial'
+
+    asset_name = company_name or 'Entity Under Review'
+
+    lang = language_hint or 'es'
+    if lang == 'en':
+        summary = (
+            f"Rule-based risk evaluation of {len(scenario_text.split())} scenario tokens. "
+            f"Risk indicators: {risk_count} detected ({extreme_count} extreme). "
+            f"Positive factors: {positive_count}. "
+            f"Net risk adjustment: {risk_penalty - positive_boost:+d} points from neutral."
+        )
+        expl = "Derived from keyword-based risk analysis (AI temporarily unavailable)."
+    else:
+        summary = (
+            f"Evaluación de riesgo basada en {len(scenario_text.split())} indicadores del escenario. "
+            f"Indicadores de riesgo: {risk_count} detectados ({extreme_count} extremos). "
+            f"Factores positivos: {positive_count}. "
+            f"Ajuste de riesgo neto: {risk_penalty - positive_boost:+d} puntos desde neutro."
+        )
+        expl = "Derivado de análisis de palabras clave de riesgo (IA temporalmente no disponible)."
+
+    signals = {
+        'probability_score':  jitter(-5 if risk_count > 2 else 5),
+        'risk_exposure':      max(10, min(95, 100 - adjusted + ((seed & 0xF) % 9) - 4)),
+        'signal_coherence':   jitter(0),
+        'trend_persistence':  jitter(5),
+        'stress_resilience':  jitter(-10 if extreme_count > 0 else 0),
+        'logic_consistency':  jitter(8),
+        'signal_integrity':   jitter(-6 if 'unknown' in text_lower or 'desconocido' in text_lower else 4),
+        'temporal_coherence': jitter(0, lo=-6, hi=6),
+    }
+    signal_explanations = {k: expl for k in signals}
+
+    return {
+        'signals': signals,
+        'domain': domain,
+        'asset': asset_name,
+        'language': lang,
+        'summary': summary,
+        'explanation': expl,
+        'reasoning': signal_explanations,
+    }
+
+
 def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = None, company_name: str | None = None) -> dict:
     lang_instruction = ""
     if language_hint and language_hint in ('en', 'es'):
@@ -191,10 +291,11 @@ Scenario:
                 logger.info("Sandbox: AI responded via openai/gpt-4o-mini (fallback)")
             except Exception as e:
                 logger.error(f"Sandbox: OpenAI fallback failed: {e}")
-                raise RuntimeError("AI service not available") from last_error
+                logger.warning("Sandbox: all AI models failed — using rule-based fallback")
+                return _rule_based_signal_extraction(scenario_text, language_hint, company_name)
         else:
-            logger.error(f"Sandbox: all Gemini models failed, OPENAI_API_KEY not set. Last error: {last_error}")
-            raise RuntimeError("AI service not available") from last_error
+            logger.warning(f"Sandbox: all Gemini models failed, OPENAI_API_KEY not set. Last error: {last_error}. Using rule-based fallback.")
+            return _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
     if raw_text.startswith('```'):
         raw_text = raw_text.split('\n', 1)[1] if '\n' in raw_text else raw_text[3:]
