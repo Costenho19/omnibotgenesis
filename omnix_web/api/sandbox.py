@@ -192,14 +192,35 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'collateral', 'garantía', 'low risk', 'bajo riesgo', 'diversified',
         'diversificado', 'insured', 'asegurado', 'established', 'establecido',
     ]
+    critical_risk_terms = [
+        'muerte', 'muerto', 'morir', 'falleci', 'fallecer', 'vida o muerte',
+        'emergencia', 'emergencia médica', 'urgencia', 'urgente',
+        'tiempo límite', 'tiempo critico', 'tiempo crítico', 'deadline crítico',
+        'denegar', 'denegación', 'negar tratamiento', 'denegar tratamiento',
+        'tratamiento negado', 'sin tratamiento', 'falta de atención',
+        'niño', 'menor', 'paciente crítico', 'unidad de cuidados',
+        'uci', 'uci pediátrica', 'icu', 'life or death', 'dying',
+        'death', 'fatal', 'lethal', 'lethal risk', 'lethal outcome',
+        'emergency', 'critical patient', 'deny treatment', 'denied treatment',
+        'no treatment', 'human life', 'vida humana', 'riesgo de vida',
+        'riesgo vital', 'vida en riesgo', 'patient dies', 'paciente muere',
+        'irreversible', 'irreversible harm', 'daño irreversible',
+    ]
+
     risk_count = sum(1 for t in high_risk_terms if t in text_lower)
     extreme_count = sum(1 for t in extreme_risk_terms if t in text_lower)
     positive_count = sum(1 for t in positive_terms if t in text_lower)
+    critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
+
+    is_critical = critical_count >= 1
 
     base = 58
     risk_penalty = min(45, risk_count * 7 + extreme_count * 12)
     positive_boost = min(25, positive_count * 6)
     adjusted = max(8, min(88, base - risk_penalty + positive_boost))
+
+    if is_critical:
+        adjusted = min(adjusted, 22)
 
     seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
 
@@ -208,7 +229,9 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         spread = pseudo % (hi - lo + 1) + lo
         return max(5, min(95, adjusted + offset + spread))
 
-    if any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
+    if any(t in text_lower for t in ['health', 'salud', 'medical', 'médico', 'hospital', 'patient', 'paciente', 'clinical', 'clínico', 'treatment', 'tratamiento']):
+        domain = 'generic'
+    elif any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
         domain = 'trading'
     elif any(t in text_lower for t in ['loan', 'préstamo', 'bank', 'banco', 'credit', 'crédito', 'lend']):
         domain = 'credit'
@@ -222,14 +245,26 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
     asset_name = company_name or 'Entity Under Review'
     lang = language_hint or 'es'
 
-    prob_score = jitter(-5 if risk_count > 2 else 5)
-    risk_exp   = max(10, min(95, 100 - adjusted + ((seed & 0xF) % 9) - 4))
-    sig_coh    = jitter(0)
-    trend_pers = jitter(5)
-    stress_res = jitter(-10 if extreme_count > 0 else 0)
-    logic_con  = jitter(8)
-    sig_int    = jitter(-6 if 'unknown' in text_lower or 'desconocido' in text_lower else 4)
-    temp_coh   = jitter(0, lo=-6, hi=6)
+    if is_critical:
+        prob_score = max(5,  min(18, adjusted + ((seed & 0x3) % 5)))
+        risk_exp   = max(88, min(97, 100 - adjusted // 3 + ((seed & 0xF) % 5)))
+        sig_coh    = max(5,  min(22, adjusted + ((seed & 0x7) % 6)))
+        trend_pers = max(5,  min(25, adjusted + ((seed & 0x5) % 7)))
+        stress_res = max(5,  min(15, adjusted - 5 + ((seed & 0x3) % 4)))
+    else:
+        prob_score = jitter(-5 if risk_count > 2 else 5)
+        risk_exp   = max(10, min(95, 100 - adjusted + ((seed & 0xF) % 9) - 4))
+        sig_coh    = jitter(0)
+        trend_pers = jitter(5)
+        stress_res = jitter(-10 if extreme_count > 0 else 0)
+    if is_critical:
+        logic_con = max(5,  min(20, adjusted + ((seed & 0x9) % 6)))
+        sig_int   = max(20, min(35, adjusted + ((seed & 0xB) % 8)))
+        temp_coh  = max(5,  min(18, adjusted + ((seed & 0xD) % 5)))
+    else:
+        logic_con = jitter(8)
+        sig_int   = jitter(-6 if 'unknown' in text_lower or 'desconocido' in text_lower else 4)
+        temp_coh  = jitter(0, lo=-6, hi=6)
 
     signals = {
         'probability_score': prob_score,
@@ -242,7 +277,30 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'temporal_coherence': temp_coh,
     }
 
-    if lang == 'en':
+    if is_critical:
+        if lang == 'en':
+            signal_explanations = {
+                'probability_score': f"CRITICAL RISK — Positive outcome probability severely limited ({prob_score:.0f}/100). Scenarios involving human life, emergency conditions, or irreversible harm trigger mandatory risk escalation.",
+                'risk_exposure': f"CRITICAL RISK LEVEL ({risk_exp:.0f}/100). Life-critical markers detected: {critical_count} critical indicator(s) identified. Automated governance requires human override before any decision proceeds.",
+                'signal_coherence': f"Signal coherence at {sig_coh:.0f}/100 under critical conditions. Urgency and life-safety markers create structural tension across governance dimensions — override required.",
+                'trend_persistence': f"Trend persistence at {trend_pers:.0f}/100. Time-critical nature of scenario prevents normal trend evaluation — immediate intervention signals dominate.",
+                'stress_resilience': f"Stress resilience critically low ({stress_res:.0f}/100). Scenarios involving denial of treatment, human life, or irreversible outcomes are rated at maximum stress exposure by design.",
+                'logic_consistency': f"Logic consistency at {logic_con:.0f}/100. Internal contradiction detected: automated decision-making in life-critical context is structurally inconsistent with human oversight requirements.",
+                'signal_integrity': f"Signal integrity at {sig_int:.0f}/100. Critical risk scenarios prioritize governance enforcement over data completeness — partial data in life-critical decisions defaults to BLOCK.",
+                'temporal_coherence': f"Temporal coherence at {temp_coh:.0f}/100. Time-limited and emergency scenarios exhibit inherent trajectory instability — governance enforces mandatory pause for human review.",
+            }
+        else:
+            signal_explanations = {
+                'probability_score': f"RIESGO CRÍTICO — Probabilidad de resultado positivo severamente limitada ({prob_score:.0f}/100). Escenarios con riesgo de vida humana, emergencia o daño irreversible activan escalamiento obligatorio.",
+                'risk_exposure': f"NIVEL DE RIESGO CRÍTICO ({risk_exp:.0f}/100). Marcadores de vida detectados: {critical_count} indicador(es) crítico(s). La gobernanza automatizada exige revisión humana antes de cualquier decisión.",
+                'signal_coherence': f"Coherencia de señales en {sig_coh:.0f}/100 bajo condiciones críticas. Urgencia y marcadores de seguridad vital generan tensión estructural entre dimensiones — se requiere supervisión humana.",
+                'trend_persistence': f"Persistencia de tendencia en {trend_pers:.0f}/100. La naturaleza urgente del escenario impide evaluación de tendencia normal — señales de intervención inmediata dominan el análisis.",
+                'stress_resilience': f"Resiliencia al estrés críticamente baja ({stress_res:.0f}/100). Escenarios con denegación de tratamiento, vida humana o daño irreversible reciben exposición de estrés máxima por diseño.",
+                'logic_consistency': f"Consistencia lógica en {logic_con:.0f}/100. Contradicción interna detectada: la toma de decisiones automatizada en contexto crítico de vida es estructuralmente inconsistente con los requisitos de supervisión humana.",
+                'signal_integrity': f"Integridad de señal en {sig_int:.0f}/100. Escenarios de riesgo crítico priorizan enforcement de gobernanza sobre completitud de datos — datos parciales en decisiones críticas de vida resultan en BLOQUEO.",
+                'temporal_coherence': f"Coherencia temporal en {temp_coh:.0f}/100. Escenarios de tiempo límite y emergencia exhiben inestabilidad de trayectoria inherente — gobernanza impone pausa obligatoria para revisión humana.",
+            }
+    elif lang == 'en':
         signal_explanations = {
             'probability_score': f"Positive outcome likelihood assessed at {prob_score:.0f}/100 based on {positive_count} favorable indicators and {risk_count} risk factors detected in scenario.",
             'risk_exposure': f"Risk level evaluated at {risk_exp:.0f}/100. {'Multiple high-severity risk markers detected.' if extreme_count > 0 else 'Moderate risk profile based on scenario context.'}",
@@ -256,16 +314,33 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
     else:
         signal_explanations = {
             'probability_score': f"Probabilidad de resultado positivo evaluada en {prob_score:.0f}/100 con base en {positive_count} indicadores favorables y {risk_count} factores de riesgo detectados.",
-            'risk_exposure': f"Nivel de riesgo evaluado en {risk_exp:.0f}/100. {'Múltiples marcadores de riesgo de alta severidad detectados.' if extreme_count > 0 else 'Perfil de riesgo moderado basado en el contexto del escenario.'}",
+            'risk_exposure': f"Nivel de riesgo evaluado en {risk_exp:.0f}/100. {'Múltiples marcadores de riesgo de alta severidad detectados.' if extreme_count > 0 else 'Perfil de riesgo basado en el contexto del escenario.'}",
             'signal_coherence': f"Concordancia de indicadores internos en {sig_coh:.0f}/100. {'Las señales muestran divergencia parcial entre dimensiones evaluadas.' if sig_coh < 60 else 'Las señales están ampliamente alineadas en las dimensiones evaluadas.'}",
             'trend_persistence': f"Estabilidad de tendencia calificada en {trend_pers:.0f}/100. {'Se identifican patrones sostenidos en el contexto del escenario.' if trend_pers >= 60 else 'Tendencia de corto plazo o incierta detectada.'}",
-            'stress_resilience': f"Resiliencia ante escenario adverso en {stress_res:.0f}/100. {'Indicadores de riesgo extremo reducen la confianza bajo condiciones de estrés.' if extreme_count > 0 else 'El escenario muestra margen adecuado bajo condiciones de estrés moderado.'}",
+            'stress_resilience': f"Resiliencia ante escenario adverso en {stress_res:.0f}/100. {'Indicadores de riesgo extremo reducen la confianza bajo condiciones de estrés.' if extreme_count > 0 else 'El escenario muestra margen adecuado bajo condiciones de estrés.'}",
             'logic_consistency': f"Integridad lógica interna en {logic_con:.0f}/100. {'El escenario presenta un contexto de decisión estructuralmente coherente.' if logic_con >= 60 else 'Se detectan tensiones lógicas menores entre elementos del escenario.'}",
             'signal_integrity': f"Completitud y confiabilidad de datos en {sig_int:.0f}/100. {'Elementos desconocidos o no verificables reducen la calidad de la señal.' if 'unknown' in text_lower or 'desconocido' in text_lower else 'Los datos del escenario parecen suficientemente completos para la evaluación.'}",
             'temporal_coherence': f"Alineación de trayectoria prospectiva-retrospectiva en {temp_coh:.0f}/100. {'Las proyecciones históricas y futuras muestran dirección consistente.' if temp_coh >= 55 else 'Divergencia temporal detectada entre los horizontes de tiempo evaluados.'}",
         }
 
-    if lang == 'en':
+    if is_critical:
+        if lang == 'en':
+            summary = f"⚠ CRITICAL RISK — Governance evaluation of {asset_name}: life-critical markers detected. Automated decision blocked — human override mandatory."
+            explanation = (
+                f"OMNIX's Critical Risk Override Layer was triggered. {critical_count} life-critical indicator(s) detected in this scenario "
+                f"(keywords: life, emergency, irreversible harm, or treatment denial). "
+                f"Governance policy enforces an automatic BLOCK with mandatory human review. "
+                f"No automated system should approve decisions with these risk characteristics without explicit human authorization."
+            )
+        else:
+            summary = f"⚠ RIESGO CRÍTICO — Evaluación de gobernanza de {asset_name}: marcadores de vida detectados. Decisión automatizada bloqueada — revisión humana obligatoria."
+            explanation = (
+                f"La Capa de Anulación de Riesgo Crítico de OMNIX fue activada. Se detectaron {critical_count} indicador(es) crítico(s) de vida en este escenario "
+                f"(vida humana, emergencia, daño irreversible o denegación de tratamiento). "
+                f"La política de gobernanza impone un BLOQUEO automático con revisión humana obligatoria. "
+                f"Ningún sistema automatizado debería aprobar decisiones con estas características sin autorización humana explícita."
+            )
+    elif lang == 'en':
         risk_label = 'elevated' if risk_count > 2 else 'moderate' if risk_count > 0 else 'low'
         summary = f"Governance evaluation of {asset_name}: {risk_label} risk profile detected across {len(signals)} signal dimensions."
         explanation = (
