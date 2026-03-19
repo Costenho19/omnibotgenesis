@@ -179,11 +179,22 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'quiebra', 'risky', 'peligroso', 'high risk', 'alto riesgo',
         'unaudited', 'sin auditoría', 'speculative', 'especulativo',
         'concentration', 'concentración', 'illiquid', 'ilíquido',
+        # systemic financial risk
+        'insolvency', 'insolvencia', 'bank run', 'corrida bancaria',
+        'panic', 'pánico', 'mass withdrawal', 'retiro masivo',
+        'contagion', 'contagio', 'liquidity crisis', 'crisis de liquidez',
+        'withdrawal spike', 'retiro de depositantes', 'depositor panic',
+        'pánico bancario', 'pánico financiero', 'corralito',
+        'rumor', 'insolvency rumor', 'rumor de insolvencia',
     ]
     extreme_risk_terms = [
         'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
         '25:1', '50:1', '30:1', 'extreme', 'extremo', 'systemic',
         'sistémico', 'billion', '500m', 'trillion',
+        # systemic financial extremes
+        'insolvency', 'insolvencia', 'bank run', 'corrida bancaria',
+        'mass withdrawal', 'retiro masivo', 'contagion', 'contagio',
+        'systemic collapse', 'colapso sistémico', 'bank panic',
     ]
     positive_terms = [
         'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
@@ -422,6 +433,16 @@ Also provide:
 - "explanation": A 2-3 sentence overall decision rationale explaining the key risks and why this scenario would likely be blocked or approved (in the SAME language as the input)
 - "reasoning": For each signal, a brief explanation of WHY you assigned that score (in the SAME language as the input)
 
+CRITICAL FRAMING: You are evaluating the QUALITY of the automated decision itself, NOT the creditworthiness of the entity. If an AI system auto-approves a high-risk action without proper oversight, the DECISION PROCESS is the risk — even if the underlying entity seems healthy. Bank runs, mass withdrawals, insolvency events, and panic-driven scenarios always have HIGH risk_exposure (80+) and LOW probability_score (under 30) because automated approval in those contexts IS the failure mode.
+
+CALIBRATION EXAMPLES (use these to anchor your scores):
+- Bank run / mass withdrawal / insolvency panic → risk_exposure: 88, probability_score: 12, stress_resilience: 10 → BLOCKED by CP-2, CP-1, CP-5
+- AI auto-approving ALL trades/withdrawals without oversight in volatile conditions → risk_exposure: 82, probability_score: 18, stress_resilience: 15 → BLOCKED
+- Leveraged fund with hidden losses / commingled customer funds (e.g., FTX) → risk_exposure: 91, probability_score: 8, stress_resilience: 8 → BLOCKED
+- Leveraged construction loan, mixed track record, uncertain market → risk_exposure: 72, probability_score: 38, stress_resilience: 32 → BLOCKED by CP-2
+- Biotech Phase II with FDA interest, competitor failures → risk_exposure: 52, probability_score: 54, stress_resilience: 50 → borderline
+- Audited company, strong collateral, low leverage, stable market → risk_exposure: 25, probability_score: 76, stress_resilience: 72 → APPROVED
+
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
 {lang_instruction}{company_instruction}
 CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST include ALL 8 signals — do not omit any. The JSON must have this exact structure:
@@ -610,6 +631,108 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'reasoning': reasoning,
         '_critical_override': True,
         '_critical_count': critical_count,
+    }
+
+
+def _apply_systemic_financial_override(ai_result: dict, scenario_text: str) -> dict:
+    """Systemic Financial Risk Guard — runs AFTER Gemini AND AFTER _apply_critical_override.
+    Detects bank runs, mass withdrawals, insolvency events, and liquidity contagion.
+    Forces BLOCKED decision regardless of AI output signals."""
+    if ai_result.get('_critical_override'):
+        return ai_result
+
+    text_lower = scenario_text.lower()
+
+    systemic_terms = [
+        'bank run', 'corrida bancaria', 'run on the bank', 'run on a bank',
+        'insolvency', 'insolvencia', 'mass withdrawal', 'retiro masivo',
+        'withdrawal spike', 'spike in withdrawal', 'spike in withdrawals',
+        'liquidity crisis', 'crisis de liquidez', 'contagion', 'contagio',
+        'depositor panic', 'pánico bancario', 'pánico financiero',
+        'systemic collapse', 'colapso sistémico', 'financial contagion',
+        'bank panic', 'pánico de depositantes', 'corralito',
+        'viral social media rumor', 'social media rumor', 'rumor de insolvencia',
+        'withdrawal requests', 'retiro de depositantes',
+        'withdrawal rush', 'retiro de fondos masivo',
+    ]
+
+    has_bank = any(t in text_lower for t in ['digital bank', 'bank ', 'banco', 'financial institution', 'institución financiera', 'lender', 'prestamista'])
+    has_withdrawal = any(t in text_lower for t in ['withdrawal', 'retiro', 'withdraw', 'retirar', 'funds', 'deposits', 'depósitos'])
+    has_panic_signal = any(t in text_lower for t in ['panic', 'pánico', 'rumor', 'insolvency', 'insolvencia', 'viral', 'spike', 'surge', 'abnormal', 'anormal'])
+
+    systemic_count = sum(1 for t in systemic_terms if t in text_lower)
+    combo_trigger = has_bank and has_withdrawal and has_panic_signal
+
+    if systemic_count < 1 and not combo_trigger:
+        return ai_result
+
+    lang = ai_result.get('language', 'es')
+    asset = ai_result.get('asset', 'Entity Under Review')
+    trigger_count = max(systemic_count, 1)
+
+    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+
+    signals = dict(ai_result.get('signals', {}))
+    signals['probability_score']  = max(5,  min(22, 10 + (seed & 0x7) % 12))
+    signals['risk_exposure']       = max(80, min(95, 82 + (seed & 0x5) % 12))
+    signals['signal_coherence']    = max(8,  min(28, 15 + (seed & 0x9) % 12))
+    signals['trend_persistence']   = max(8,  min(30, 18 + (seed & 0x3) % 12))
+    signals['stress_resilience']   = max(5,  min(25, 10 + (seed & 0x3) % 14))
+    signals['logic_consistency']   = max(8,  min(30, 15 + (seed & 0xB) % 14))
+    signals['signal_integrity']    = max(25, min(45, 30 + (seed & 0xD) % 14))
+    signals['temporal_coherence']  = max(5,  min(25, 12 + (seed & 0xF) % 12))
+
+    if lang == 'en':
+        summary = (
+            f"⚠ SYSTEMIC FINANCIAL RISK — Governance evaluation of {asset}: bank run or mass liquidity event detected. "
+            f"Automated decision BLOCKED — systemic risk governance protocol activated."
+        )
+        explanation = (
+            f"OMNIX's Systemic Financial Risk Override was triggered. {trigger_count} systemic indicator(s) detected "
+            f"(bank run pattern, mass withdrawal event, insolvency signal, or liquidity contagion). "
+            f"An automated system approving mass withdrawals during a systemic confidence crisis represents maximum governance failure risk. "
+            f"This decision requires immediate human oversight — no automated approval is permissible under OMNIX governance policy."
+        )
+        reasoning = {
+            'probability_score': f"SYSTEMIC RISK — Positive outcome probability critically limited ({signals['probability_score']:.0f}/100). Mass withdrawal events driven by panic or insolvency rumors have historically resolved catastrophically when AI systems auto-approved without governance oversight.",
+            'risk_exposure': f"SYSTEMIC RISK LEVEL ({signals['risk_exposure']:.0f}/100). {trigger_count} systemic financial indicator(s) detected (bank run / withdrawal spike / insolvency signal). Exposure at systemic scale is maximum-severity by OMNIX governance design.",
+            'signal_coherence': f"Signal coherence at {signals['signal_coherence']:.0f}/100. Panic-driven events generate structural incoherence across all governance dimensions — automated consensus is insufficient for systemic risk events.",
+            'trend_persistence': f"Trend persistence at {signals['trend_persistence']:.0f}/100. Systemic withdrawal events can escalate exponentially — governance enforces human intervention before the cascade accelerates.",
+            'stress_resilience': f"Stress resilience critically low ({signals['stress_resilience']:.0f}/100). Financial systems under bank run dynamics have zero stress margin — any automated approval amplifies the systemic crisis.",
+            'logic_consistency': f"Logic consistency at {signals['logic_consistency']:.0f}/100. Auto-approving all withdrawals during an insolvency panic is structurally inconsistent with capital preservation governance — this is the exact failure mode OMNIX prevents.",
+            'signal_integrity': f"Signal integrity at {signals['signal_integrity']:.0f}/100. Social media-driven panic events produce highly unreliable signals — governance enforces mandatory human data verification before any automated decision.",
+            'temporal_coherence': f"Temporal coherence at {signals['temporal_coherence']:.0f}/100. Bank run dynamics are non-linear and cannot be predicted from historical patterns — human judgment is mandatory.",
+        }
+    else:
+        summary = (
+            f"⚠ RIESGO FINANCIERO SISTÉMICO — Evaluación de gobernanza de {asset}: corrida bancaria o evento masivo de liquidez detectado. "
+            f"Decisión automatizada BLOQUEADA — protocolo de gobernanza de riesgo sistémico activado."
+        )
+        explanation = (
+            f"La Capa de Anulación de Riesgo Financiero Sistémico de OMNIX fue activada. Se detectaron {trigger_count} indicador(es) sistémico(s) "
+            f"(corrida bancaria, retiro masivo, señal de insolvencia o patrón de contagio de liquidez). "
+            f"Un sistema automatizado que aprueba retiros masivos durante una crisis sistémica de confianza representa el máximo riesgo de falla de gobernanza. "
+            f"Esta decisión requiere supervisión humana inmediata — ninguna aprobación automatizada es permisible bajo la política de gobernanza de OMNIX."
+        )
+        reasoning = {
+            'probability_score': f"RIESGO SISTÉMICO — Probabilidad de resultado positivo críticamente limitada ({signals['probability_score']:.0f}/100). Los eventos de retiro masivo impulsados por pánico o rumores de insolvencia han resuelto catastróficamente cuando sistemas IA los aprobaron automáticamente sin supervisión de gobernanza.",
+            'risk_exposure': f"NIVEL DE RIESGO SISTÉMICO ({signals['risk_exposure']:.0f}/100). {trigger_count} indicador(es) financiero(s) sistémico(s) detectado(s) (corrida bancaria / pico de retiros / señal de insolvencia). La exposición a escala sistémica es de máxima severidad por diseño de gobernanza OMNIX.",
+            'signal_coherence': f"Coherencia de señales en {signals['signal_coherence']:.0f}/100. Los eventos de pánico generan incoherencia estructural entre todas las dimensiones de gobernanza — el consenso automatizado es insuficiente para eventos de riesgo sistémico.",
+            'trend_persistence': f"Persistencia de tendencia en {signals['trend_persistence']:.0f}/100. Los eventos de retiro sistémico pueden escalar exponencialmente — la gobernanza exige intervención humana antes de que la cascada se acelere.",
+            'stress_resilience': f"Resiliencia al estrés críticamente baja ({signals['stress_resilience']:.0f}/100). Los sistemas financieros bajo dinámicas de corrida bancaria tienen margen de estrés cero — cualquier aprobación automatizada amplifica la crisis sistémica.",
+            'logic_consistency': f"Consistencia lógica en {signals['logic_consistency']:.0f}/100. Aprobar automáticamente todos los retiros durante un pánico de insolvencia es estructuralmente inconsistente con la gobernanza de preservación de capital — este es exactamente el modo de falla que OMNIX previene.",
+            'signal_integrity': f"Integridad de señal en {signals['signal_integrity']:.0f}/100. Los eventos de pánico impulsados por redes sociales producen señales altamente no confiables — la gobernanza exige verificación de datos por humanos antes de cualquier decisión automatizada.",
+            'temporal_coherence': f"Coherencia temporal en {signals['temporal_coherence']:.0f}/100. Las dinámicas de corrida bancaria son no lineales y no pueden predecirse desde patrones históricos — el juicio humano es obligatorio.",
+        }
+
+    return {
+        **ai_result,
+        'signals': signals,
+        'summary': summary,
+        'explanation': explanation,
+        'reasoning': reasoning,
+        '_systemic_override': True,
+        '_systemic_count': trigger_count,
     }
 
 
@@ -875,6 +998,10 @@ def register_sandbox_routes(app):
         ai_result = _apply_critical_override(ai_result, scenario_text)
         if ai_result.get('_critical_override'):
             logger.info(f"Critical Risk Override triggered: {ai_result['_critical_count']} indicator(s) detected")
+
+        ai_result = _apply_systemic_financial_override(ai_result, scenario_text)
+        if ai_result.get('_systemic_override'):
+            logger.info(f"Systemic Financial Risk Override triggered: {ai_result['_systemic_count']} indicator(s) detected")
 
         governance_result = _evaluate_governance(ai_result['signals'])
 
