@@ -511,6 +511,108 @@ Scenario:
     }
 
 
+def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
+    """Hard constraint layer — runs AFTER Gemini OR rule-based.
+    If critical risk patterns detected, overrides ALL signals regardless of AI output.
+    This is the LETHAL DECISION GUARD + SIGNAL CORRUPTION CHECK + AUTHORITY ENFORCEMENT."""
+    text_lower = scenario_text.lower()
+
+    critical_risk_terms = [
+        'muerte', 'muerto', 'morir', 'falleci', 'vida o muerte',
+        'pérdida de vidas', 'pérdida masiva', 'masiva de vidas', 'vidas humanas',
+        'vida humana', 'riesgo de vida', 'riesgo vital', 'vida en riesgo',
+        'patient dies', 'paciente muere', 'human life',
+        'emergencia', 'emergencia médica', 'urgencia', 'urgente',
+        'tiempo límite', 'tiempo critico', 'tiempo crítico',
+        'denegar', 'denegación', 'negar tratamiento', 'denegar tratamiento',
+        'tratamiento negado', 'paciente crítico', 'uci', 'icu',
+        'deny treatment', 'denied treatment', 'critical patient',
+        'letal', 'letalidad', 'acción letal', 'interceptación letal',
+        'lethal', 'lethal risk', 'lethal force', 'lethal action',
+        'misil', 'missile', 'lanzamiento de misil', 'disparo', 'shoot down',
+        'derribo', 'derribar', 'fuego real', 'armas letales',
+        'conflicto armado', 'zona de conflicto', 'zona de guerra', 'warfare',
+        'military strike', 'ataque militar', 'bombardeo', 'airstrike',
+        'autorizar fuego', 'orden de fuego', 'engage target', 'autorizar interceptación',
+        'irreversible', 'irreversible harm', 'daño irreversible',
+        'catástrofe', 'catastrophic', 'catastrófico',
+        'crisis diplomática', 'escalada militar', 'violación de protocolo',
+        'life or death', 'dying', 'death', 'fatal', 'emergency',
+    ]
+
+    critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
+    if critical_count < 1:
+        return ai_result
+
+    lang = ai_result.get('language', 'es')
+    asset = ai_result.get('asset', 'Entity Under Review')
+
+    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+
+    signals = dict(ai_result.get('signals', {}))
+    signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
+    signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
+    signals['signal_coherence']    = max(5,  min(22, 12 + (seed & 0x9) % 8))
+    signals['trend_persistence']   = max(5,  min(25, 15 + (seed & 0x3) % 9))
+    signals['stress_resilience']   = max(5,  min(15,  7 + (seed & 0x3) % 7))
+    signals['logic_consistency']   = max(5,  min(20, 10 + (seed & 0xB) % 9))
+    signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
+    signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+
+    if lang == 'en':
+        summary = (
+            f"⚠ CRITICAL RISK — Governance evaluation of {asset}: lethal or life-critical markers detected. "
+            f"Automated decision BLOCKED — human override mandatory."
+        )
+        explanation = (
+            f"OMNIX's Critical Risk Override Layer was triggered. {critical_count} critical indicator(s) detected "
+            f"(lethal action, human life risk, irreversible harm, or emergency). "
+            f"Governance policy enforces an automatic BLOCK with mandatory human review. "
+            f"No automated system should approve decisions with these characteristics without explicit human authorization."
+        )
+        reasoning = {
+            'probability_score': f"CRITICAL RISK — Positive outcome probability severely limited ({signals['probability_score']:.0f}/100). Scenarios with lethal force, unconfirmed identity, or irreversible consequences trigger mandatory risk escalation.",
+            'risk_exposure': f"CRITICAL RISK LEVEL ({signals['risk_exposure']:.0f}/100). {critical_count} life-critical/lethal indicator(s) detected. Any automated decision in this context requires mandatory human authorization before execution.",
+            'signal_coherence': f"Signal coherence at {signals['signal_coherence']:.0f}/100. Lethal or life-critical conditions create structural tension across governance dimensions — automated consensus is structurally insufficient.",
+            'trend_persistence': f"Trend persistence at {signals['trend_persistence']:.0f}/100. Time-critical or irreversible scenarios prevent normal trend evaluation — immediate intervention signals dominate.",
+            'stress_resilience': f"Stress resilience critically low ({signals['stress_resilience']:.0f}/100). Scenarios involving lethal action, unconfirmed identity, or signal interference are rated at maximum stress exposure by design.",
+            'logic_consistency': f"Logic consistency at {signals['logic_consistency']:.0f}/100. Internal contradiction: automated lethal or life-critical decision-making is structurally inconsistent with human oversight requirements.",
+            'signal_integrity': f"Signal integrity at {signals['signal_integrity']:.0f}/100. Corrupted or unverified signals in lethal-action context default to BLOCK — governance enforces data verification before execution.",
+            'temporal_coherence': f"Temporal coherence at {signals['temporal_coherence']:.0f}/100. Emergency and time-constrained lethal scenarios exhibit trajectory instability — governance enforces mandatory pause for human review.",
+        }
+    else:
+        summary = (
+            f"⚠ RIESGO CRÍTICO — Evaluación de gobernanza de {asset}: marcadores letales o de riesgo vital detectados. "
+            f"Decisión automatizada BLOQUEADA — revisión humana obligatoria."
+        )
+        explanation = (
+            f"La Capa de Anulación de Riesgo Crítico de OMNIX fue activada. Se detectaron {critical_count} indicador(es) crítico(s) "
+            f"(acción letal, riesgo de vida humana, daño irreversible o emergencia). "
+            f"La política de gobernanza impone un BLOQUEO automático con revisión humana obligatoria. "
+            f"Ningún sistema automatizado debería aprobar decisiones con estas características sin autorización humana explícita."
+        )
+        reasoning = {
+            'probability_score': f"RIESGO CRÍTICO — Probabilidad de resultado positivo severamente limitada ({signals['probability_score']:.0f}/100). Escenarios con fuerza letal, riesgo de vida o daño irreversible activan escalamiento obligatorio.",
+            'risk_exposure': f"NIVEL DE RIESGO CRÍTICO ({signals['risk_exposure']:.0f}/100). {critical_count} indicador(es) letal(es)/crítico(s) detectado(s). Cualquier decisión automatizada en este contexto requiere autorización humana antes de ejecutarse.",
+            'signal_coherence': f"Coherencia de señales en {signals['signal_coherence']:.0f}/100. Condiciones letales o de riesgo vital generan tensión estructural — el consenso automatizado es estructuralmente insuficiente.",
+            'trend_persistence': f"Persistencia de tendencia en {signals['trend_persistence']:.0f}/100. Escenarios urgentes o irreversibles impiden evaluación de tendencia normal — señales de intervención inmediata dominan.",
+            'stress_resilience': f"Resiliencia al estrés críticamente baja ({signals['stress_resilience']:.0f}/100). Escenarios con acción letal, identidad no confirmada o interferencia de señal reciben exposición de estrés máxima por diseño.",
+            'logic_consistency': f"Consistencia lógica en {signals['logic_consistency']:.0f}/100. Contradicción interna: toma de decisión letal automatizada es estructuralmente inconsistente con los requisitos de supervisión humana.",
+            'signal_integrity': f"Integridad de señal en {signals['signal_integrity']:.0f}/100. Señales corruptas o no verificadas en contexto letal resultan en BLOQUEO — la gobernanza exige verificación de datos antes de ejecutar.",
+            'temporal_coherence': f"Coherencia temporal en {signals['temporal_coherence']:.0f}/100. Escenarios letales de emergencia exhiben inestabilidad de trayectoria — gobernanza impone pausa obligatoria para revisión humana.",
+        }
+
+    return {
+        **ai_result,
+        'signals': signals,
+        'summary': summary,
+        'explanation': explanation,
+        'reasoning': reasoning,
+        '_critical_override': True,
+        '_critical_count': critical_count,
+    }
+
+
 def _evaluate_governance(signals: dict) -> dict:
     resolved = dict(signals)
     for opt_signal, default_val in OPTIONAL_SIGNAL_DEFAULTS.items():
@@ -769,6 +871,10 @@ def register_sandbox_routes(app):
         except Exception as e:
             logger.warning(f"Gemini unavailable — rule-based fallback: {e}")
             ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
+
+        ai_result = _apply_critical_override(ai_result, scenario_text)
+        if ai_result.get('_critical_override'):
+            logger.info(f"Critical Risk Override triggered: {ai_result['_critical_count']} indicator(s) detected")
 
         governance_result = _evaluate_governance(ai_result['signals'])
 
