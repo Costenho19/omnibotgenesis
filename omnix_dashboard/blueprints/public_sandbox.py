@@ -599,11 +599,8 @@ def public_sandbox_evaluate():
     try:
         ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
     except (json.JSONDecodeError, ValueError) as e:
-        logger.error(f"AI signal extraction failed: {e}")
-        return jsonify({
-            'error': 'AI failed to extract governance signals. Please try rephrasing your scenario.',
-            'error_es': 'La IA no pudo extraer las señales de gobernanza. Intente reformular su escenario.',
-        }), 500
+        logger.warning(f"AI signal extraction failed — using rule-based fallback: {e}")
+        ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
     except Exception as e:
         logger.warning(f"AI unavailable — rule-based fallback activated: {e}")
         ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
