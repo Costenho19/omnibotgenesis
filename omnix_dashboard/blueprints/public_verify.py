@@ -490,10 +490,10 @@ def verify_page_html(receipt_id: str):
   <!-- Header -->
   <div style="border-bottom:1px solid rgba(255,255,255,.06);padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
     <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
-      <span style="font-size:1.2rem">🛡️</span>
+      <img src="/static/images/omnix_logo.png" alt="OMNIX QUANTUM" style="width:44px;height:44px;object-fit:contain">
       <div>
         <div style="font-size:.85rem;font-weight:700;color:#fff;letter-spacing:.06em">OMNIX QUANTUM</div>
-        <div style="font-size:.6rem;color:#6b7280;letter-spacing:.12em;text-transform:uppercase">Decision Governance Infrastructure</div>
+        <div style="font-size:.6rem;color:#C9A227;letter-spacing:.12em;text-transform:uppercase">Decision Governance Infrastructure</div>
       </div>
     </a>
     <a href="/try" style="font-size:.8rem;color:#3b82f6;text-decoration:none">Try sandbox ↗</a>
