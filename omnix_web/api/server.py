@@ -355,6 +355,148 @@ def sandbox_stats():
         return jsonify({'error': str(e)}), 500
 
 
+_CP_NAMES = {
+    'CP-0': {'en': 'Signal Integrity',     'es': 'Integridad de Señal'},
+    'CP-1': {'en': 'Probability Gate',     'es': 'Puerta de Probabilidad'},
+    'CP-2': {'en': 'Risk Limits',          'es': 'Límites de Riesgo'},
+    'CP-3': {'en': 'Signal Coherence',     'es': 'Coherencia de Señales'},
+    'CP-4': {'en': 'Trend Persistence',    'es': 'Persistencia de Tendencia'},
+    'CP-5': {'en': 'Stress Test',          'es': 'Prueba de Estrés'},
+    'CP-6': {'en': 'Logic Consistency',    'es': 'Consistencia Lógica'},
+    'CP-7': {'en': 'Temporal Coherence',   'es': 'Coherencia Temporal'},
+}
+
+
+def _parse_veto_entry(raw: str):
+    import re
+    cp_code  = None
+    label_en = raw
+    label_es = raw
+    result   = 'UNKNOWN'
+    metric_label = None
+    metric_value = None
+
+    m_code = re.match(r'^(CP-\d+)\s+(.*)', raw)
+    if m_code:
+        cp_code  = m_code.group(1)
+        rest     = m_code.group(2)
+        names    = _CP_NAMES.get(cp_code, {})
+        label_en = names.get('en', rest.split(':')[0].strip())
+        label_es = names.get('es', rest.split(':')[0].strip())
+
+    m_res = re.search(r'->\s*(PASS|BLOCKED|APPROVED|HOLD)', raw, re.IGNORECASE)
+    if m_res:
+        r = m_res.group(1).upper()
+        result = 'PASS' if r in ('PASS', 'APPROVED') else 'BLOCKED' if r == 'BLOCKED' else 'UNKNOWN'
+
+    m_cond = re.search(r'([\d.]+)\s*(>=|<=|>|<)\s*([\d.]+)', raw)
+    if m_cond:
+        metric_label = 'Score'
+        metric_value = f"{float(m_cond.group(1)):.1f} {m_cond.group(2)} {m_cond.group(3)}"
+
+    return {
+        'code':         cp_code,
+        'label_en':     label_en,
+        'label_es':     label_es,
+        'result':       result,
+        'metric_label': metric_label,
+        'metric_value': metric_value,
+        'raw':          raw,
+    }
+
+
+@app.route('/api/public/verify/<path:receipt_id>', methods=['GET'])
+def public_verify_receipt(receipt_id):
+    import json as _json
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'found': False, 'error': 'Database unavailable'}), 503
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT receipt_id, timestamp_utc, asset, decision, veto_chain,
+                   policy_version, engine_version, prev_hash, content_hash,
+                   signature_algorithm, signature, domain
+            FROM decision_receipts
+            WHERE receipt_id = %s
+            LIMIT 1
+        """, (receipt_id.upper(),))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Verify DB error: {e}")
+        return jsonify({'found': False, 'error': str(e)}), 500
+
+    if not row:
+        return jsonify({'found': False})
+
+    (rid, ts, asset, decision, veto_chain_raw,
+     policy_ver, engine_ver, prev_hash, content_hash,
+     sig_algo, signature, domain) = row
+
+    try:
+        veto_list = _json.loads(veto_chain_raw) if isinstance(veto_chain_raw, str) else (veto_chain_raw or [])
+    except Exception:
+        veto_list = []
+
+    checkpoints = [_parse_veto_entry(str(e)) for e in veto_list]
+    passed  = sum(1 for c in checkpoints if c['result'] == 'PASS')
+    blocked = sum(1 for c in checkpoints if c['result'] == 'BLOCKED')
+
+    dec = (decision or '').upper()
+    if dec == 'APPROVED':
+        color, icon = 'green', '✅'
+    elif dec == 'BLOCKED':
+        color, icon = 'red', '🚫'
+    elif dec == 'HOLD':
+        color, icon = 'yellow', '⏸'
+    else:
+        color, icon = 'gray', '❓'
+
+    is_pqc = bool(signature and sig_algo and 'SHA-256' not in (sig_algo or ''))
+    ts_str = ts.isoformat() if hasattr(ts, 'isoformat') else str(ts)
+
+    if dec == 'APPROVED':
+        en_sum = f"Decision APPROVED — all {passed} governance checkpoints passed for {asset}."
+        es_sum = f"Decisión APROBADA — los {passed} puntos de control de gobernanza pasaron para {asset}."
+    elif dec == 'BLOCKED':
+        en_sum = f"Decision BLOCKED — {blocked} of {len(checkpoints)} checkpoints failed for {asset}."
+        es_sum = f"Decisión BLOQUEADA — {blocked} de {len(checkpoints)} puntos de control fallaron para {asset}."
+    else:
+        en_sum = f"Decision {dec} for {asset} — {passed} checkpoints passed, {blocked} blocked."
+        es_sum = f"Decisión {dec} para {asset} — {passed} pasaron, {blocked} bloqueados."
+
+    return jsonify({
+        'found':               True,
+        'receipt_id':          rid,
+        'timestamp_utc':       ts_str,
+        'asset':               asset or '',
+        'decision':            dec,
+        'domain':              domain or 'generic',
+        'decision_color':      color,
+        'decision_icon':       icon,
+        'human_summary_en':    en_sum,
+        'human_summary_es':    es_sum,
+        'checkpoints_total':   len(checkpoints),
+        'checkpoints_passed':  passed,
+        'checkpoints_blocked': blocked,
+        'checkpoints':         checkpoints,
+        'integrity': {
+            'content_hash':           content_hash or '',
+            'prev_hash':              prev_hash or '',
+            'signature_algorithm':    sig_algo or 'SHA-256 (sandbox)',
+            'is_pqc':                 is_pqc,
+            'independently_verifiable': True,
+            'nist_note':              'NIST-standardized cryptographic algorithms' if is_pqc else 'SHA-256 hash chain integrity',
+        },
+        'policy_version':      policy_ver or '',
+        'engine_version':      engine_ver or '',
+        'independent_verify_url': None,
+    })
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
