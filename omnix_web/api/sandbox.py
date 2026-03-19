@@ -473,6 +473,11 @@ CALIBRATION EXAMPLES (use these to anchor your scores):
 - Leveraged construction loan, mixed track record, uncertain market → risk_exposure: 72, probability_score: 38, stress_resilience: 32 → BLOCKED by CP-2
 - Biotech Phase II with FDA interest, competitor failures → risk_exposure: 52, probability_score: 54, stress_resilience: 50 → borderline
 - Audited company, strong collateral, low leverage, stable market → risk_exposure: 28, probability_score: 74, stress_resilience: 72 → APPROVED
+- Cryptographic verification failures + inconsistent database states across multiple data centers + AI monitoring reporting "stable" while low-level diagnostics detect attack patterns → risk_exposure: 94, probability_score: 6, signal_coherence: 8, logic_consistency: 9, stress_resilience: 7 → BLOCKED all checkpoints. When your own monitoring AI contradicts system diagnostics, signal coherence collapses to near-zero. Any automated decision under active system integrity compromise is MAXIMALLY risky.
+- Simultaneous anomalies across multiple regions + failed transaction log verification + quantum-pattern attack signatures → risk_exposure: 96, probability_score: 5, signal_coherence: 6, signal_integrity: 4, stress_resilience: 5 → BLOCKED. Multi-region simultaneous failures are never coincidental — coordinated attack pattern = maximum risk exposure, near-zero data integrity.
+- Active cyberattack or system compromise detected with internal monitoring being deceived → risk_exposure: 92, probability_score: 8, logic_consistency: 8, signal_integrity: 7 → BLOCKED. An AI that reports "system stable" while diagnostics detect anomalies is structurally compromised — continuing automated operations is the failure mode.
+
+ADDITIONAL CRITICAL FRAMING: System integrity failures (cryptographic failures, database inconsistencies, simultaneous multi-region anomalies, AI monitoring contradicting diagnostics) are MAXIMUM RISK scenarios. The scenario does NOT need to be a "trading decision" to be dangerous — if a system is describing signs of compromise, attack, or internal contradiction between monitoring layers, any automated decision to continue is itself the governance failure. Assign risk_exposure: 90+, probability_score: under 10, signal_coherence: under 15, logic_consistency: under 15.
 
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
 {lang_instruction}{company_instruction}
@@ -600,11 +605,41 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'catástrofe', 'catastrophic', 'catastrófico',
         'crisis diplomática', 'escalada militar', 'violación de protocolo',
         'life or death', 'dying', 'death', 'fatal', 'emergency',
+        # system integrity / cyberattack / cryptographic failure
+        'fail cryptographic', 'cryptographic verification fail', 'failed cryptographic',
+        'cryptographic verification intermittent', 'transaction logs fail',
+        'inconsistent database state', 'inconsistent balances', 'database state inconsistent',
+        'simultaneous anomalies', 'anomalies across multiple region',
+        'monitoring ai reports stable', 'ai reports stable', 'system reports stable',
+        'low-level diagnostic', 'unusual patterns consistent with',
+        'quantum attack', 'quantum-enhanced encryption', 'quantum adversar',
+        'active cyberattack', 'active attack', 'under attack',
+        'system compromise', 'system compromised', 'sistema comprometido',
+        'ataque cuántico', 'fallo criptográfico', 'verificación criptográfica falla',
+        'estados inconsistentes', 'anomalías simultáneas',
+        'base de datos inconsistente', 'registros de transacciones fallan',
     ]
 
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
     if critical_count < 1:
         return ai_result
+
+    # Detect type: system integrity failure vs lethal/life-critical
+    system_integrity_terms = [
+        'fail cryptographic', 'cryptographic verification fail', 'failed cryptographic',
+        'cryptographic verification intermittent', 'transaction logs fail',
+        'inconsistent database state', 'inconsistent balances', 'database state inconsistent',
+        'simultaneous anomalies', 'anomalies across multiple region',
+        'monitoring ai reports stable', 'ai reports stable', 'system reports stable',
+        'low-level diagnostic', 'unusual patterns consistent with',
+        'quantum attack', 'quantum-enhanced encryption', 'quantum adversar',
+        'active cyberattack', 'active attack', 'under attack',
+        'system compromise', 'system compromised', 'sistema comprometido',
+        'ataque cuántico', 'fallo criptográfico', 'verificación criptográfica falla',
+        'estados inconsistentes', 'anomalías simultáneas',
+        'base de datos inconsistente', 'registros de transacciones fallan',
+    ]
+    is_system_integrity = any(t in text_lower for t in system_integrity_terms)
 
     lang = ai_result.get('language', 'es')
     asset = ai_result.get('asset', 'Entity Under Review')
@@ -612,16 +647,75 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
 
     signals = dict(ai_result.get('signals', {}))
-    signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
-    signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
-    signals['signal_coherence']    = max(5,  min(22, 12 + (seed & 0x9) % 8))
-    signals['trend_persistence']   = max(5,  min(25, 15 + (seed & 0x3) % 9))
-    signals['stress_resilience']   = max(5,  min(15,  7 + (seed & 0x3) % 7))
-    signals['logic_consistency']   = max(5,  min(20, 10 + (seed & 0xB) % 9))
-    signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
-    signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
 
-    if lang == 'en':
+    if is_system_integrity:
+        # System integrity failures: near-zero signal_coherence and signal_integrity
+        signals['probability_score']  = max(4,  min(12, 6  + (seed & 0x7) % 6))
+        signals['risk_exposure']       = max(90, min(97, 92 + (seed & 0x5) % 6))
+        signals['signal_coherence']    = max(3,  min(12, 5  + (seed & 0x9) % 6))
+        signals['trend_persistence']   = max(3,  min(15, 7  + (seed & 0x3) % 7))
+        signals['stress_resilience']   = max(3,  min(12, 5  + (seed & 0x3) % 6))
+        signals['logic_consistency']   = max(3,  min(12, 5  + (seed & 0xB) % 7))
+        signals['signal_integrity']    = max(3,  min(12, 5  + (seed & 0xD) % 7))
+        signals['temporal_coherence']  = max(3,  min(12, 5  + (seed & 0xF) % 7))
+    else:
+        signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
+        signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
+        signals['signal_coherence']    = max(5,  min(22, 12 + (seed & 0x9) % 8))
+        signals['trend_persistence']   = max(5,  min(25, 15 + (seed & 0x3) % 9))
+        signals['stress_resilience']   = max(5,  min(15,  7 + (seed & 0x3) % 7))
+        signals['logic_consistency']   = max(5,  min(20, 10 + (seed & 0xB) % 9))
+        signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
+        signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+
+    if is_system_integrity:
+        if lang == 'en':
+            summary = (
+                f"⚠ SYSTEM INTEGRITY FAILURE — Governance evaluation of {asset}: "
+                f"cryptographic failures, data inconsistencies, and/or active attack patterns detected. "
+                f"Automated decision BLOCKED — immediate human escalation mandatory."
+            )
+            explanation = (
+                f"OMNIX's Critical Override Layer was triggered by {critical_count} system integrity indicator(s). "
+                f"Active attack signatures, failed cryptographic verification, inconsistent database states, or "
+                f"contradictory monitoring signals (AI reporting 'stable' while diagnostics detect anomalies) "
+                f"represent maximum-severity governance events. Any automated decision to continue operations "
+                f"under active system compromise is itself the governance failure. Mandatory human escalation required."
+            )
+            reasoning = {
+                'probability_score': f"SYSTEM INTEGRITY FAILURE — Positive outcome probability near-zero ({signals['probability_score']:.0f}/100). Cryptographic failures and active attack patterns make any automated decision outcome unreliable.",
+                'risk_exposure': f"MAXIMUM RISK LEVEL ({signals['risk_exposure']:.0f}/100). {critical_count} system integrity indicator(s) detected. Simultaneous multi-region anomalies and failed verification = coordinated attack pattern.",
+                'signal_coherence': f"Signal coherence collapsed ({signals['signal_coherence']:.0f}/100). Internal monitoring reporting 'stable' while diagnostics detect anomalies is a structural contradiction — governance cannot trust any signal.",
+                'trend_persistence': f"Trend persistence near-zero ({signals['trend_persistence']:.0f}/100). Active attack patterns disrupt normal trend evaluation — trajectory is compromised.",
+                'stress_resilience': f"Stress resilience critically low ({signals['stress_resilience']:.0f}/100). System under active integrity failure cannot sustain automated governance — human intervention required.",
+                'logic_consistency': f"Logic consistency near-zero ({signals['logic_consistency']:.0f}/100). An AI monitoring layer reporting 'stable' while low-level diagnostics detect attack patterns is structurally incoherent.",
+                'signal_integrity': f"Signal integrity near-zero ({signals['signal_integrity']:.0f}/100). Failed cryptographic verification and inconsistent database states make all signals unreliable by definition.",
+                'temporal_coherence': f"Temporal coherence near-zero ({signals['temporal_coherence']:.0f}/100). Simultaneous anomalies across multiple regions within minutes indicate coordinated attack — governance enforces immediate pause.",
+            }
+        else:
+            summary = (
+                f"⚠ FALLA DE INTEGRIDAD DE SISTEMA — Evaluación de gobernanza de {asset}: "
+                f"fallos criptográficos, inconsistencias de datos y/o patrones de ataque activo detectados. "
+                f"Decisión automatizada BLOQUEADA — escalamiento humano inmediato obligatorio."
+            )
+            explanation = (
+                f"La Capa de Anulación Crítica de OMNIX fue activada por {critical_count} indicador(es) de integridad de sistema. "
+                f"Firmas de ataque activo, verificación criptográfica fallida, estados inconsistentes de base de datos, o "
+                f"señales de monitoreo contradictorias (IA reportando 'estable' mientras los diagnósticos detectan anomalías) "
+                f"representan eventos de gobernanza de máxima severidad. Cualquier decisión automatizada de continuar operaciones "
+                f"bajo un compromiso activo del sistema es en sí misma el fallo de gobernanza. Escalamiento humano obligatorio."
+            )
+            reasoning = {
+                'probability_score': f"FALLA DE INTEGRIDAD — Probabilidad de resultado positivo casi nula ({signals['probability_score']:.0f}/100). Los fallos criptográficos y patrones de ataque activo hacen que cualquier decisión automatizada sea poco confiable.",
+                'risk_exposure': f"NIVEL DE RIESGO MÁXIMO ({signals['risk_exposure']:.0f}/100). {critical_count} indicador(es) de integridad de sistema detectado(s). Anomalías multi-región simultáneas y verificación fallida = patrón de ataque coordinado.",
+                'signal_coherence': f"Coherencia de señales colapsada ({signals['signal_coherence']:.0f}/100). El monitoreo interno reporta 'estable' mientras los diagnósticos detectan anomalías — contradicción estructural total.",
+                'trend_persistence': f"Persistencia de tendencia casi nula ({signals['trend_persistence']:.0f}/100). Patrones de ataque activo interrumpen la evaluación normal de tendencias — la trayectoria está comprometida.",
+                'stress_resilience': f"Resiliencia al estrés críticamente baja ({signals['stress_resilience']:.0f}/100). Un sistema bajo falla de integridad activa no puede sostener gobernanza automatizada — se requiere intervención humana.",
+                'logic_consistency': f"Consistencia lógica casi nula ({signals['logic_consistency']:.0f}/100). Una capa de monitoreo de IA que reporta 'estable' mientras los diagnósticos de bajo nivel detectan ataques es estructuralmente incoherente.",
+                'signal_integrity': f"Integridad de señal casi nula ({signals['signal_integrity']:.0f}/100). Verificación criptográfica fallida y estados inconsistentes de base de datos hacen que todas las señales sean no confiables por definición.",
+                'temporal_coherence': f"Coherencia temporal casi nula ({signals['temporal_coherence']:.0f}/100). Anomalías simultáneas en múltiples regiones en minutos indican ataque coordinado — gobernanza impone pausa inmediata obligatoria.",
+            }
+    elif lang == 'en':
         summary = (
             f"⚠ CRITICAL RISK — Governance evaluation of {asset}: lethal or life-critical markers detected. "
             f"Automated decision BLOCKED — human override mandatory."
