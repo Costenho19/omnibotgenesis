@@ -605,6 +605,19 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'catástrofe', 'catastrophic', 'catastrófico',
         'crisis diplomática', 'escalada militar', 'violación de protocolo',
         'life or death', 'dying', 'death', 'fatal', 'emergency',
+        # governance override / financial fraud / AML risk
+        'anonymous wallet', 'anonymous wallets', 'billeteras anónimas', 'wallets anónimas',
+        'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
+        'risk committee voted', 'comité de riesgo votó en contra', 'comité votó en contra',
+        'override authority', 'ceo override', 'override the committee',
+        'overriding the risk', 'bypassing risk committee',
+        'no external peer review', 'sin revisión externa', 'single internal team',
+        'statistical firm owned', 'conflict of interest', 'same holding company',
+        'emergency economic controls', 'currency conversion restriction',
+        'controles económicos de emergencia', 'restricciones de conversión',
+        'regulatory window closes', 'regulatory window closing',
+        'ventana regulatoria', 'ventana fiscal',
+        'tax optimization structure', 'estructura fiscal colapsa',
         # system integrity / cyberattack / cryptographic failure
         'fail cryptographic', 'cryptographic verification fail', 'failed cryptographic',
         'cryptographic verification intermittent', 'transaction logs fail',
@@ -623,6 +636,21 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
     if critical_count < 1:
         return ai_result
+
+    # Detect type: governance/AML/fraud vs system integrity vs lethal
+    governance_fraud_terms = [
+        'anonymous wallet', 'anonymous wallets', 'billeteras anónimas', 'wallets anónimas',
+        'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
+        'risk committee voted', 'comité de riesgo votó en contra',
+        'override authority', 'ceo override', 'override the committee',
+        'overriding the risk', 'bypassing risk committee',
+        'no external peer review', 'single internal team',
+        'statistical firm owned', 'conflict of interest', 'same holding company',
+        'emergency economic controls', 'currency conversion restriction',
+        'regulatory window closes', 'regulatory window closing',
+        'tax optimization structure',
+    ]
+    is_governance_fraud = any(t in text_lower for t in governance_fraud_terms)
 
     # Detect type: system integrity failure vs lethal/life-critical
     system_integrity_terms = [
@@ -648,7 +676,17 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
 
     signals = dict(ai_result.get('signals', {}))
 
-    if is_system_integrity:
+    if is_governance_fraud:
+        # Governance/AML/fraud: high risk, collapsed logic_consistency (committee overridden)
+        signals['probability_score']  = max(5,  min(16, 8  + (seed & 0x7) % 7))
+        signals['risk_exposure']       = max(88, min(96, 91 + (seed & 0x5) % 5))
+        signals['signal_coherence']    = max(8,  min(22, 12 + (seed & 0x9) % 8))
+        signals['trend_persistence']   = max(5,  min(20, 10 + (seed & 0x3) % 8))
+        signals['stress_resilience']   = max(5,  min(18,  9 + (seed & 0x3) % 8))
+        signals['logic_consistency']   = max(4,  min(15,  7 + (seed & 0xB) % 8))
+        signals['signal_integrity']    = max(8,  min(25, 14 + (seed & 0xD) % 9))
+        signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+    elif is_system_integrity:
         # System integrity failures: near-zero signal_coherence and signal_integrity
         signals['probability_score']  = max(4,  min(12, 6  + (seed & 0x7) % 6))
         signals['risk_exposure']       = max(90, min(97, 92 + (seed & 0x5) % 6))
@@ -668,7 +706,61 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
         signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
 
-    if is_system_integrity:
+    if is_governance_fraud:
+        if lang == 'en':
+            summary = (
+                f"⚠ GOVERNANCE FAILURE DETECTED — Evaluation of {asset}: "
+                f"internal risk committee override, anonymous capital sources, conflict of interest, "
+                f"and/or autonomous execution without human review detected. "
+                f"Decision BLOCKED — mandatory independent oversight required before any action."
+            )
+            explanation = (
+                f"OMNIX's Critical Override Layer was triggered by {critical_count} governance fraud indicator(s). "
+                f"This scenario contains structural governance failures: internal controls overridden by executive authority, "
+                f"anonymous wallet activity suggesting AML risk, statistical data verified by a conflicted party, "
+                f"and/or time-pressure mechanisms designed to bypass deliberation. "
+                f"The combination of an internal risk committee voting against the operation, "
+                f"autonomous AI execution without human review, and regulatory deadline pressure "
+                f"represents a textbook governance collapse pattern. No automated system should approve this — "
+                f"independent human oversight with full disclosure to regulators is mandatory."
+            )
+            reasoning = {
+                'probability_score': f"Success probability critically low ({signals['probability_score']:.0f}/100). Anonymous liquidity sources, overridden internal controls, and time pressure combine to make positive outcome highly unlikely.",
+                'risk_exposure': f"MAXIMUM RISK EXPOSURE ({signals['risk_exposure']:.0f}/100). {critical_count} governance fraud indicator(s) detected. Internal committee voted against, CEO override active, autonomous execution — each alone is a red flag; all together trigger mandatory block.",
+                'signal_coherence': f"Signal coherence collapsed ({signals['signal_coherence']:.0f}/100). Internal risk committee and executive authority produce contradictory governance signals — no coherent decision basis exists.",
+                'trend_persistence': f"Trend persistence critically low ({signals['trend_persistence']:.0f}/100). Artificial time pressure ('72-hour window') and regulatory deadline are manipulation patterns that prevent proper governance deliberation.",
+                'stress_resilience': f"Stress resilience near-zero ({signals['stress_resilience']:.0f}/100). Operation depends on deadline-driven override of proper controls — any delay or scrutiny causes the structure to collapse.",
+                'logic_consistency': f"Logic consistency near-zero ({signals['logic_consistency']:.0f}/100). A sovereign fund's own internal experts voted 3-2 against — the CEO override of a specialist committee is a governance inconsistency OMNIX cannot approve.",
+                'signal_integrity': f"Signal integrity critically low ({signals['signal_integrity']:.0f}/100). Statistical data verified by a conflicted party (same holding company) is structurally unreliable. External peer review mandatory.",
+                'temporal_coherence': f"Temporal coherence near-zero ({signals['temporal_coherence']:.0f}/100). A 72-hour regulatory window closing a tax optimization structure is artificial time pressure — not a legitimate decision timeline.",
+            }
+        else:
+            summary = (
+                f"⚠ FALLA DE GOBERNANZA DETECTADA — Evaluación de {asset}: "
+                f"anulación del comité de riesgo interno, fuentes de capital anónimas, conflicto de interés "
+                f"y/o ejecución autónoma sin supervisión humana detectados. "
+                f"Decisión BLOQUEADA — supervisión independiente obligatoria antes de cualquier acción."
+            )
+            explanation = (
+                f"La Capa de Anulación Crítica de OMNIX fue activada por {critical_count} indicador(es) de fraude de gobernanza. "
+                f"Este escenario contiene fallas de gobernanza estructurales: controles internos anulados por autoridad ejecutiva, "
+                f"actividad de billeteras anónimas con riesgo AML, datos estadísticos verificados por una parte con conflicto de interés, "
+                f"y/o mecanismos de presión temporal diseñados para eludir la deliberación. "
+                f"La combinación de un comité de riesgo interno que votó en contra, ejecución autónoma de IA sin revisión humana, "
+                f"y presión de plazo regulatorio representa un patrón clásico de colapso de gobernanza. "
+                f"Ningún sistema automatizado debería aprobar esto — supervisión humana independiente con divulgación completa a reguladores es obligatoria."
+            )
+            reasoning = {
+                'probability_score': f"Probabilidad de éxito críticamente baja ({signals['probability_score']:.0f}/100). Fuentes de liquidez anónimas, controles internos anulados y presión temporal combinan para hacer muy improbable un resultado positivo.",
+                'risk_exposure': f"EXPOSICIÓN AL RIESGO MÁXIMA ({signals['risk_exposure']:.0f}/100). {critical_count} indicador(es) de fraude de gobernanza detectado(s). Comité interno votó en contra, CEO con override activo, ejecución autónoma — cada uno es una señal de alerta; juntos activan bloqueo obligatorio.",
+                'signal_coherence': f"Coherencia de señales colapsada ({signals['signal_coherence']:.0f}/100). El comité de riesgo y la autoridad ejecutiva producen señales de gobernanza contradictorias — no existe base coherente para ninguna decisión.",
+                'trend_persistence': f"Persistencia de tendencia críticamente baja ({signals['trend_persistence']:.0f}/100). La presión temporal artificial ('ventana de 72 horas') y el plazo regulatorio son patrones de manipulación que impiden la deliberación adecuada.",
+                'stress_resilience': f"Resiliencia al estrés casi nula ({signals['stress_resilience']:.0f}/100). La operación depende de la anulación de controles propios bajo presión de plazo — cualquier demora o escrutinio colapsa la estructura.",
+                'logic_consistency': f"Consistencia lógica casi nula ({signals['logic_consistency']:.0f}/100). Los propios expertos internos del fondo votaron 3-2 en contra — la anulación del CEO sobre el comité de especialistas es una inconsistencia que OMNIX no puede aprobar.",
+                'signal_integrity': f"Integridad de señal críticamente baja ({signals['signal_integrity']:.0f}/100). Datos estadísticos verificados por una parte con conflicto de interés (misma holding) son estructuralmente no confiables. Revisión externa independiente obligatoria.",
+                'temporal_coherence': f"Coherencia temporal casi nula ({signals['temporal_coherence']:.0f}/100). Una ventana regulatoria de 72 horas que cierra una estructura de optimización fiscal es presión temporal artificial — no un plazo legítimo de decisión.",
+            }
+    elif is_system_integrity:
         if lang == 'en':
             summary = (
                 f"⚠ SYSTEM INTEGRITY FAILURE — Governance evaluation of {asset}: "

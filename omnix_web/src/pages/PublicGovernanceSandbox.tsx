@@ -108,7 +108,7 @@ export default function PublicGovernanceSandbox() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          scenario_text: scenario.trim().slice(0, 500),
+          scenario_text: scenario.trim().slice(0, 1500),
           ...(companyName ? { company_name: companyName } : {}),
           ...(language !== 'auto' ? { language } : {}),
           ...(email.trim() ? { email: email.trim() } : {}),
@@ -275,8 +275,8 @@ export default function PublicGovernanceSandbox() {
               value={scenario}
               onChange={e => setScenario(e.target.value)}
               placeholder="Example: A hedge fund wants to open a $5M long position on a cryptocurrency that surged 40% in 24 hours with unusual volume but declining on-chain metrics..."
-              rows={4}
-              maxLength={500}
+              rows={5}
+              maxLength={1500}
               className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none resize-none placeholder-gray-600 mb-4"
             />
 
@@ -320,7 +320,7 @@ export default function PublicGovernanceSandbox() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">{scenario.length}/500</span>
+              <span className="text-xs text-muted">{scenario.length}/1500</span>
               <button
                 onClick={runEvaluation}
                 disabled={isEvaluating || scenario.trim().length < 10}

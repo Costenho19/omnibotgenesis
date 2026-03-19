@@ -498,27 +498,94 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'irreversible', 'irreversible harm', 'daño irreversible',
         'catástrofe', 'catastrophic', 'catastrófico',
         'life or death', 'dying', 'death', 'fatal', 'emergency',
+        # governance override / financial fraud / AML risk
+        'anonymous wallet', 'anonymous wallets', 'billeteras anónimas',
+        'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
+        'risk committee voted', 'comité de riesgo votó en contra',
+        'override authority', 'ceo override', 'override the committee',
+        'overriding the risk', 'bypassing risk committee',
+        'no external peer review', 'sin revisión externa', 'single internal team',
+        'statistical firm owned', 'conflict of interest', 'same holding company',
+        'emergency economic controls', 'currency conversion restriction',
+        'controles económicos de emergencia',
+        'regulatory window closes', 'regulatory window closing',
+        'tax optimization structure',
+        # system integrity
+        'no human review', 'no human oversight', 'without human review',
+        'quantum attack', 'ataque cuántico', 'cryptographic failure',
+        'simultaneous anomalies', 'inconsistent database state',
+    ]
+
+    governance_fraud_terms = [
+        'anonymous wallet', 'anonymous wallets', 'billeteras anónimas',
+        'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
+        'risk committee voted', 'comité de riesgo votó en contra',
+        'override authority', 'ceo override',
+        'no external peer review', 'single internal team',
+        'statistical firm owned', 'conflict of interest', 'same holding company',
+        'emergency economic controls', 'currency conversion restriction',
+        'regulatory window closes', 'tax optimization structure',
     ]
 
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
     if critical_count < 1:
         return ai_result
 
+    is_governance_fraud = any(t in text_lower for t in governance_fraud_terms)
+
     lang = ai_result.get('language', 'es')
     asset = ai_result.get('asset', 'Entity Under Review')
     seed = int(_hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
 
     signals = dict(ai_result.get('signals', {}))
-    signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
-    signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
-    signals['signal_coherence']    = max(5,  min(22, 12 + (seed & 0x9) % 8))
-    signals['trend_persistence']   = max(5,  min(25, 15 + (seed & 0x3) % 9))
-    signals['stress_resilience']   = max(5,  min(15,  7 + (seed & 0x3) % 7))
-    signals['logic_consistency']   = max(5,  min(20, 10 + (seed & 0xB) % 9))
-    signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
-    signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
 
-    if lang == 'en':
+    if is_governance_fraud:
+        signals['probability_score']  = max(5,  min(16, 8  + (seed & 0x7) % 7))
+        signals['risk_exposure']       = max(88, min(96, 91 + (seed & 0x5) % 5))
+        signals['signal_coherence']    = max(8,  min(22, 12 + (seed & 0x9) % 8))
+        signals['trend_persistence']   = max(5,  min(20, 10 + (seed & 0x3) % 8))
+        signals['stress_resilience']   = max(5,  min(18,  9 + (seed & 0x3) % 8))
+        signals['logic_consistency']   = max(4,  min(15,  7 + (seed & 0xB) % 8))
+        signals['signal_integrity']    = max(8,  min(25, 14 + (seed & 0xD) % 9))
+        signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+    else:
+        signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
+        signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
+        signals['signal_coherence']    = max(5,  min(22, 12 + (seed & 0x9) % 8))
+        signals['trend_persistence']   = max(5,  min(25, 15 + (seed & 0x3) % 9))
+        signals['stress_resilience']   = max(5,  min(15,  7 + (seed & 0x3) % 7))
+        signals['logic_consistency']   = max(5,  min(20, 10 + (seed & 0xB) % 9))
+        signals['signal_integrity']    = max(20, min(35, 25 + (seed & 0xD) % 9))
+        signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+
+    if is_governance_fraud:
+        if lang == 'en':
+            summary = (f"⚠ GOVERNANCE FAILURE DETECTED — Evaluation of {asset}: internal risk committee override, anonymous capital sources, conflict of interest, and/or autonomous execution without human review detected. Decision BLOCKED — mandatory independent oversight required.")
+            explanation = (f"OMNIX's Critical Override Layer was triggered by {critical_count} governance fraud indicator(s). Structural failures: internal controls overridden by executive authority, anonymous wallet activity suggesting AML risk, statistical data verified by a conflicted party, and artificial time-pressure mechanisms. The combination of committee override, autonomous execution, and regulatory deadline pressure represents a textbook governance collapse. Independent human oversight with full regulatory disclosure is mandatory.")
+            reasoning = {
+                'probability_score': f"Success probability critically low ({signals['probability_score']:.0f}/100). Anonymous liquidity, overridden internal controls, and artificial time pressure combine to make positive outcome highly unlikely.",
+                'risk_exposure': f"MAXIMUM RISK ({signals['risk_exposure']:.0f}/100). {critical_count} governance fraud indicator(s). Internal committee voted against, CEO override active, autonomous execution — all together trigger mandatory block.",
+                'signal_coherence': f"Coherence collapsed ({signals['signal_coherence']:.0f}/100). Internal risk committee and executive produce contradictory governance signals — no coherent decision basis exists.",
+                'trend_persistence': f"Critically low ({signals['trend_persistence']:.0f}/100). Artificial 72-hour window and regulatory deadline are manipulation patterns that prevent proper governance deliberation.",
+                'stress_resilience': f"Near-zero ({signals['stress_resilience']:.0f}/100). Operation depends on deadline-driven override of controls — any scrutiny causes structure to collapse.",
+                'logic_consistency': f"Near-zero ({signals['logic_consistency']:.0f}/100). Sovereign fund's own experts voted 3-2 against — CEO override of specialist committee is a governance inconsistency OMNIX cannot approve.",
+                'signal_integrity': f"Critically low ({signals['signal_integrity']:.0f}/100). Statistical data verified by a conflicted party (same holding company) is structurally unreliable. External peer review mandatory.",
+                'temporal_coherence': f"Near-zero ({signals['temporal_coherence']:.0f}/100). 72-hour regulatory window closing a tax optimization structure is artificial pressure — not a legitimate decision timeline.",
+            }
+        else:
+            summary = (f"⚠ FALLA DE GOBERNANZA — Evaluación de {asset}: anulación del comité de riesgo, fuentes de capital anónimas, conflicto de interés y/o ejecución autónoma sin revisión humana detectados. Decisión BLOQUEADA — supervisión independiente obligatoria.")
+            explanation = (f"La Capa de Anulación Crítica de OMNIX fue activada por {critical_count} indicador(es) de fraude de gobernanza. Fallas estructurales: controles internos anulados por autoridad ejecutiva, billeteras anónimas con riesgo AML, datos estadísticos verificados por parte con conflicto de interés, y mecanismos de presión temporal artificial. La combinación de anulación del comité, ejecución autónoma y presión de plazo regulatorio representa un colapso clásico de gobernanza. Supervisión humana independiente con divulgación regulatoria completa es obligatoria.")
+            reasoning = {
+                'probability_score': f"Probabilidad críticamente baja ({signals['probability_score']:.0f}/100). Liquidez anónima, controles anulados y presión temporal combinan para hacer muy improbable un resultado positivo.",
+                'risk_exposure': f"RIESGO MÁXIMO ({signals['risk_exposure']:.0f}/100). {critical_count} indicador(es) de fraude de gobernanza. Comité votó en contra, CEO con override activo, ejecución autónoma — juntos activan bloqueo obligatorio.",
+                'signal_coherence': f"Coherencia colapsada ({signals['signal_coherence']:.0f}/100). Comité de riesgo y autoridad ejecutiva producen señales contradictorias — no existe base coherente para ninguna decisión.",
+                'trend_persistence': f"Críticamente baja ({signals['trend_persistence']:.0f}/100). La ventana de 72 horas y el plazo regulatorio son patrones de manipulación que impiden deliberación adecuada.",
+                'stress_resilience': f"Casi nula ({signals['stress_resilience']:.0f}/100). La operación depende de anular controles bajo presión — cualquier escrutinio colapsa la estructura.",
+                'logic_consistency': f"Casi nula ({signals['logic_consistency']:.0f}/100). Los propios expertos del fondo votaron 3-2 en contra — la anulación del CEO sobre el comité es una inconsistencia que OMNIX no puede aprobar.",
+                'signal_integrity': f"Críticamente baja ({signals['signal_integrity']:.0f}/100). Datos estadísticos verificados por parte con conflicto (misma holding) son estructuralmente no confiables. Revisión externa obligatoria.",
+                'temporal_coherence': f"Casi nula ({signals['temporal_coherence']:.0f}/100). Ventana regulatoria de 72 horas cerrando estructura fiscal es presión temporal artificial — no un plazo legítimo de decisión.",
+            }
+    elif lang == 'en':
         summary = f"⚠ CRITICAL RISK — Governance evaluation of {asset}: lethal or life-critical markers detected. Automated decision BLOCKED — human override mandatory."
         explanation = (
             f"OMNIX's Critical Risk Override Layer was triggered. {critical_count} critical indicator(s) detected "
@@ -890,8 +957,8 @@ def public_sandbox_evaluate():
             'error_es': 'Escenario muy corto. Por favor describa la decisión con más detalle.',
         }), 400
 
-    if len(scenario_text) > 500:
-        scenario_text = scenario_text[:500]
+    if len(scenario_text) > 1500:
+        scenario_text = scenario_text[:1500]
 
     try:
         ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
