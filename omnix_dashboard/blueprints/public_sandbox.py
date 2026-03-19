@@ -70,18 +70,32 @@ def _check_rate_limit(ip: str) -> bool:
 
 
 def _call_gemini(prompt: str, model_name: str) -> str:
-    import google.generativeai as genai
-    from google.api_core import exceptions as gapi_exc
+    import urllib.request
+    import urllib.error
+    import json as _json
+
     api_key = os.environ.get('GOOGLE_AI_API_KEY') or os.environ.get('GEMINI_API_KEY')
     if not api_key:
         raise RuntimeError("No Gemini API key configured (GOOGLE_AI_API_KEY or GEMINI_API_KEY)")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name)
-    response = model.generate_content(
-        prompt,
-        request_options={'timeout': 90},
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model_name}:generateContent?key={api_key}"
     )
-    return response.text.strip()
+    payload = _json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 2048},
+    }).encode("utf-8")
+
+    req = urllib.request.Request(url, data=payload, method="POST")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            result = _json.loads(resp.read().decode("utf-8"))
+        return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Gemini API HTTP {e.code}: {body[:200]}")
 
 
 def _call_openai(prompt: str) -> str:
