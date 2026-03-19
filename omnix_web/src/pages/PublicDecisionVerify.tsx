@@ -197,18 +197,21 @@ export default function PublicDecisionVerify() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       {/* ── Header ── */}
-      <div style={{ borderBottom: '1px solid rgba(201,162,39,0.15)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(5,13,24,0.95)', backdropFilter: 'blur(12px)' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="OMNIX QUANTUM" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-          <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '0.06em' }}>OMNIX QUANTUM</div>
-            <div style={{ fontSize: '0.58rem', color: '#C9A227', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Decision Governance Infrastructure</div>
-          </div>
-        </Link>
-        <Link to="/try" style={{ fontSize: '0.8rem', color: '#C9A227', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid rgba(201,162,39,0.3)', borderRadius: '6px' }}>
-          Try the sandbox <ExternalLink size={12} />
-        </Link>
-      </div>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 no-underline">
+            <img src="/logo.png" alt="OMNIX QUANTUM" className="w-10 h-10 object-contain" />
+            <div>
+              <div className="text-base font-bold text-white tracking-tight">OMNIX QUANTUM</div>
+              <div className="text-[10px] text-[#C9A227] uppercase tracking-widest">Decision Governance Infrastructure</div>
+            </div>
+          </Link>
+          <Link to="/try" className="flex items-center gap-1 text-sm text-[#C9A227] border border-[#C9A227]/30 px-3 py-1.5 rounded no-underline hover:bg-[#C9A227]/10 transition-colors">
+            Try the sandbox <ExternalLink size={12} />
+          </Link>
+        </div>
+      </nav>
+      <div style={{ height: '64px' }} />
 
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
 
