@@ -21,7 +21,7 @@ _rate_limit_store: dict = {}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 5
 
-VERIFICATION_BASE_URL = "https://omnibotgenesis-production.up.railway.app/verify"
+VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
 
 EXAMPLE_SCENARIOS = [
     {

@@ -414,14 +414,15 @@ def public_verify_receipt(receipt_id):
 
     try:
         cur = conn.cursor()
+        rid_upper = receipt_id.upper()
         cur.execute("""
             SELECT receipt_id, timestamp_utc, asset, decision, veto_chain,
                    policy_version, engine_version, prev_hash, content_hash,
                    signature_algorithm, signature, domain
             FROM decision_receipts
-            WHERE receipt_id = %s
+            WHERE receipt_id = %s OR content_hash = %s
             LIMIT 1
-        """, (receipt_id.upper(),))
+        """, (rid_upper, receipt_id))
         row = cur.fetchone()
         cur.close()
         conn.close()
