@@ -9,7 +9,7 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["test -d dist/assets && echo 'Pre-built dist found, skipping npm build' || npm run build"]
 
 [start]
 cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
