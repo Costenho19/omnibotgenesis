@@ -592,10 +592,8 @@ def public_sandbox_evaluate():
         }), 500
     except Exception as e:
         logger.error(f"Gemini parsing failed: {e}")
-        return jsonify({
-            'error': 'AI service temporarily unavailable. Please try again.',
-            'error_es': 'Servicio de IA temporalmente no disponible. Intente de nuevo.',
-        }), 503
+        logger.warning("Sandbox: exception in AI parsing — using rule-based fallback")
+        ai_result = _rule_based_signal_extraction(scenario_text, language_hint, company_name)
 
     try:
         pipeline_result = _run_governance_pipeline(
