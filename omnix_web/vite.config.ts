@@ -28,6 +28,8 @@ export default defineConfig({
       '/api/public/sandbox': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+        proxyTimeout: 120000,
+        timeout: 120000,
       },
       '/api/public/verify': {
         target: 'http://localhost:5000',

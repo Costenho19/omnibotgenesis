@@ -71,12 +71,16 @@ def _check_rate_limit(ip: str) -> bool:
 
 def _call_gemini(prompt: str, model_name: str) -> str:
     import google.generativeai as genai
+    from google.api_core import exceptions as gapi_exc
     api_key = os.environ.get('GOOGLE_AI_API_KEY') or os.environ.get('GEMINI_API_KEY')
     if not api_key:
         raise RuntimeError("No Gemini API key configured (GOOGLE_AI_API_KEY or GEMINI_API_KEY)")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name)
-    response = model.generate_content(prompt)
+    response = model.generate_content(
+        prompt,
+        request_options={'timeout': 90},
+    )
     return response.text.strip()
 
 
