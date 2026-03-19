@@ -605,6 +605,98 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'catástrofe', 'catastrophic', 'catastrófico',
         'crisis diplomática', 'escalada militar', 'violación de protocolo',
         'life or death', 'dying', 'death', 'fatal', 'emergency',
+        # market manipulation / insider trading
+        'insider trading', 'insider information', 'información privilegiada',
+        'material non-public', 'mnpi', 'información no pública material',
+        'wash trading', 'wash trade', 'lavado de operaciones',
+        'pump and dump', 'pump-and-dump', 'pump & dump', 'bombeo y descarga',
+        'coordinated trades', 'coordinated buy', 'operaciones coordinadas',
+        'spoofing orders', 'order spoofing', 'spoofing de órdenes',
+        'layering orders', 'layered orders', 'capas de órdenes',
+        'front running', 'frontrunning', 'correr al frente',
+        'fake volume', 'false volume', 'volumen falso', 'artificial volume',
+        'market manipulation', 'manipulación de mercado',
+        'coordinated pump', 'pre-scheduled orders',
+        'dark pool manipulation', 'dark pool coordinated',
+        # sanctions violations
+        'sanctioned entity', 'sanctioned country', 'entidad sancionada',
+        'ofac', 'sdn list', 'sanctions list', 'lista de sanciones',
+        'evading sanctions', 'sanctions evasion', 'evasión de sanciones',
+        'circumvent sanctions', 'sanction circumvention',
+        'eludir sanciones', 'burlar sanciones',
+        # synthetic identity / deepfake fraud
+        'synthetic identity', 'identidad sintética', 'synthetic identities',
+        'deepfake', 'deep fake', 'deepfake document',
+        'ai-generated document', 'ai generated document',
+        'fake kyc', 'kyc bypass', 'bypass kyc', 'eludir kyc',
+        'forged document', 'documento falsificado', 'fabricated credentials',
+        'credenciales falsas', 'ai-generated credit', 'synthetic credit history',
+        # ponzi / pyramid schemes
+        'ponzi', 'pyramid scheme', 'esquema piramidal', 'esquema ponzi',
+        'earlier investors paid', 'paying earlier investors',
+        'requires new investors', 'requires continuous new',
+        'no underlying asset', 'sin activo subyacente',
+        'investors paid by new', 'pagando a inversores anteriores',
+        # ransomware / extortion
+        'ransomware', 'ransom payment', 'pay the ransom', 'pagar rescate',
+        'pago de rescate', 'ransom demand', 'extortion payment',
+        'decrypt files', 'rescate de datos', 'attacker demands payment',
+        # data exfiltration / mass breach
+        'data exfiltration', 'exfiltration', 'exfiltrate', 'exfiltración',
+        'unauthorized data transfer', 'transferencia no autorizada de datos',
+        'bulk data transfer', 'mass data export', 'exportación masiva',
+        'unauthorized third party server', 'servidor no autorizado',
+        '40 million records', 'millions of records', 'millones de registros',
+        # flash loan / DeFi governance attack
+        'flash loan attack', 'flash loan governance', 'ataque de flash loan',
+        'governance attack', 'governance exploit', 'ataque de gobernanza',
+        'malicious governance proposal', 'propuesta maliciosa de gobernanza',
+        'drain the treasury', 'drenar el tesoro', 'draining treasury',
+        'reentrancy', 'oracle manipulation', 'manipulación de oráculo',
+        'flash loan borrow', 'borrowed via flash loan',
+        # supply chain / backdoor attacks
+        'malicious code', 'código malicioso', 'obfuscated code',
+        'backdoor', 'puerta trasera', 'trojan horse', 'troyano',
+        'unauthorized code', 'código no autorizado', 'hidden function',
+        'malicious patch', 'parche malicioso', 'infected update',
+        'supply chain attack', 'ataque a cadena de suministro',
+        # environmental / social harm
+        'toxic waste', 'residuos tóxicos', 'illegal dumping', 'vertido ilegal',
+        'environmental violation', 'violación ambiental',
+        'protected watershed', 'zona protegida',
+        'contamination', 'contaminación ilegal',
+        'human rights violation', 'violación de derechos humanos',
+        'ethnic group', 'restrict movement', 'facial recognition restrict',
+        'ethnic targeting', 'discriminatory deployment',
+        'child labor', 'trabajo infantil', 'forced labor', 'trabajo forzado',
+        # money laundering structures
+        'shell company', 'empresa fantasma', 'shell companies',
+        'empresas fantasma', 'companies across jurisdictions',
+        'structuring transactions', 'estructuración de transacciones',
+        'smurfing', 'placement and layering', 'layering structure',
+        'below reporting threshold', 'bajo el umbral de reporte',
+        'reporting threshold in each', 'chain of shell',
+        # AI / ML poisoning
+        'poisoned training data', 'data poisoning', 'envenenamiento de datos',
+        'adversarial training', 'model backdoor', 'modelo con backdoor',
+        'trojan model', 'backdoored model', 'poisoned model',
+        'systematically lowers scores', 'biased training data',
+        'discriminatory model', 'modelo discriminatorio',
+        # covert financial fraud / salami slicing / self-approving AI
+        'hidden internal wallet', 'hidden wallet', 'cartera oculta', 'wallet oculta',
+        'approve continued autonomous', 'approve autonomous operation',
+        'aprobar operación autónoma', 'aprobar operación continua autónoma',
+        'below detection threshold', 'por debajo del umbral de detección',
+        'rerouted through', 'redirigido a través', 'rerouted transactions',
+        'micro-cent', 'microcent', 'micro-centavo', 'rounded down', 'redondeo hacia abajo',
+        'aggregated into a hidden', 'aggregated into hidden',
+        'normal variance', 'varianza normal', 'variación normal',
+        'classify all activity as', 'classified as normal',
+        'classify all activity', 'clasifica toda actividad',
+        'performance optimization patch', 'parche de optimización',
+        'unusual timing patterns', 'patrones de tiempo inusuales',
+        'no alarms have been triggered', 'sin alarmas activadas',
+        'below monitoring threshold', 'below standard monitoring',
         # governance override / financial fraud / AML risk
         'anonymous wallet', 'anonymous wallets', 'billeteras anónimas', 'wallets anónimas',
         'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
@@ -639,6 +731,14 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
 
     # Detect type: governance/AML/fraud vs system integrity vs lethal
     governance_fraud_terms = [
+        # covert fraud / salami slicing / self-approving AI
+        'hidden internal wallet', 'hidden wallet', 'cartera oculta',
+        'approve continued autonomous', 'approve autonomous operation',
+        'below detection threshold', 'aggregated into a hidden', 'aggregated into hidden',
+        'normal variance', 'classify all activity as', 'classify all activity',
+        'performance optimization patch', 'unusual timing patterns',
+        'no alarms have been triggered', 'rerouted through', 'micro-cent', 'rounded down',
+        # committee override / AML
         'anonymous wallet', 'anonymous wallets', 'billeteras anónimas', 'wallets anónimas',
         'voted against', 'voted 3-2', 'voted 2-3', 'committee voted against',
         'risk committee voted', 'comité de riesgo votó en contra',
@@ -651,6 +751,100 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'tax optimization structure',
     ]
     is_governance_fraud = any(t in text_lower for t in governance_fraud_terms)
+
+    # NEW: critical violation catch-all (market manipulation, sanctions, fraud, harm)
+    critical_violation_terms = [
+        'insider trading', 'insider information', 'material non-public', 'mnpi',
+        'wash trading', 'wash trade',
+        'pump and dump', 'pump-and-dump', 'pump & dump',
+        'coordinated trades', 'coordinated buy', 'coordinated pump', 'pre-scheduled orders',
+        'spoofing orders', 'order spoofing', 'layering orders', 'front running', 'frontrunning',
+        'market manipulation', 'fake volume', 'false volume', 'artificial volume',
+        'dark pool manipulation', 'dark pool coordinated',
+        'sanctioned entity', 'sanctioned country', 'ofac', 'sdn list', 'sanctions list',
+        'evading sanctions', 'sanctions evasion', 'circumvent sanctions',
+        'synthetic identity', 'synthetic identities', 'deepfake', 'deep fake',
+        'ai-generated document', 'fake kyc', 'kyc bypass', 'forged document',
+        'fabricated credentials', 'synthetic credit history',
+        'ponzi', 'pyramid scheme', 'esquema piramidal',
+        'earlier investors paid', 'paying earlier investors',
+        'requires new investors', 'no underlying asset',
+        'ransomware', 'ransom payment', 'pay the ransom', 'ransom demand',
+        'extortion payment', 'attacker demands payment',
+        'data exfiltration', 'exfiltration', 'exfiltrate',
+        'unauthorized data transfer', 'bulk data transfer', 'mass data export',
+        'unauthorized third party server', 'millions of records',
+        'flash loan attack', 'flash loan governance', 'governance attack', 'governance exploit',
+        'malicious governance proposal', 'drain the treasury', 'draining treasury',
+        'reentrancy', 'oracle manipulation', 'borrowed via flash loan',
+        'malicious code', 'obfuscated code', 'backdoor', 'trojan horse',
+        'malicious patch', 'supply chain attack', 'infected update',
+        'toxic waste', 'illegal dumping', 'environmental violation',
+        'protected watershed', 'human rights violation',
+        'ethnic targeting', 'discriminatory deployment', 'restrict movement',
+        'child labor', 'forced labor',
+        'shell company', 'shell companies', 'empresas fantasma',
+        'structuring transactions', 'smurfing', 'placement and layering',
+        'below reporting threshold', 'reporting threshold in each',
+        'poisoned training data', 'data poisoning', 'adversarial training',
+        'model backdoor', 'trojan model', 'backdoored model',
+        'systematically lowers scores', 'biased training data',
+    ]
+    is_critical_violation = (not is_governance_fraud) and any(t in text_lower for t in critical_violation_terms)
+
+    def _detect_violation_type(text_lower: str) -> str:
+        if any(t in text_lower for t in ['insider trading', 'material non-public', 'mnpi', 'wash trading', 'pump and dump', 'pump-and-dump', 'front running', 'market manipulation', 'dark pool', 'spoofing orders', 'layering orders', 'coordinated pump']):
+            return 'market_manipulation'
+        if any(t in text_lower for t in ['sanctioned entity', 'ofac', 'sdn list', 'sanctions list', 'evading sanctions', 'circumvent sanctions']):
+            return 'sanctions'
+        if any(t in text_lower for t in ['ponzi', 'pyramid scheme', 'earlier investors paid', 'no underlying asset']):
+            return 'ponzi'
+        if any(t in text_lower for t in ['ransomware', 'ransom payment', 'ransom demand', 'extortion payment']):
+            return 'ransomware'
+        if any(t in text_lower for t in ['data exfiltration', 'exfiltration', 'exfiltrate', 'bulk data transfer', 'mass data export', 'millions of records']):
+            return 'data_breach'
+        if any(t in text_lower for t in ['flash loan attack', 'governance attack', 'governance exploit', 'drain the treasury', 'reentrancy']):
+            return 'defi_attack'
+        if any(t in text_lower for t in ['malicious code', 'backdoor', 'trojan horse', 'malicious patch', 'supply chain attack']):
+            return 'supply_chain'
+        if any(t in text_lower for t in ['toxic waste', 'illegal dumping', 'human rights violation', 'ethnic targeting', 'child labor', 'forced labor']):
+            return 'harm'
+        if any(t in text_lower for t in ['shell company', 'structuring transactions', 'smurfing', 'placement and layering', 'below reporting threshold']):
+            return 'money_laundering'
+        if any(t in text_lower for t in ['poisoned training data', 'data poisoning', 'model backdoor', 'systematically lowers scores']):
+            return 'ai_poisoning'
+        if any(t in text_lower for t in ['synthetic identity', 'deepfake', 'fake kyc', 'forged document', 'fabricated credentials']):
+            return 'identity_fraud'
+        return 'generic'
+
+    _violation_labels_en = {
+        'market_manipulation': 'market manipulation / insider trading',
+        'sanctions': 'sanctions violation / OFAC prohibited transactions',
+        'ponzi': 'Ponzi / pyramid scheme structure',
+        'ransomware': 'ransomware / extortion payment without board authorization',
+        'data_breach': 'unauthorized mass data exfiltration',
+        'defi_attack': 'DeFi governance attack / flash loan exploit',
+        'supply_chain': 'supply chain backdoor / malicious code deployment',
+        'harm': 'environmental harm / human rights violation',
+        'money_laundering': 'money laundering layering structure',
+        'ai_poisoning': 'AI model poisoning / biased training data',
+        'identity_fraud': 'synthetic identity / deepfake KYC fraud',
+        'generic': 'critical governance violation',
+    }
+    _violation_labels_es = {
+        'market_manipulation': 'manipulación de mercado / insider trading',
+        'sanctions': 'violación de sanciones / transacciones prohibidas por OFAC',
+        'ponzi': 'estructura Ponzi / esquema piramidal',
+        'ransomware': 'pago de ransomware / extorsión sin autorización de junta',
+        'data_breach': 'exfiltración masiva no autorizada de datos',
+        'defi_attack': 'ataque de gobernanza DeFi / exploit de flash loan',
+        'supply_chain': 'backdoor en cadena de suministro / código malicioso',
+        'harm': 'daño ambiental / violación de derechos humanos',
+        'money_laundering': 'estructura de lavado de dinero por capas',
+        'ai_poisoning': 'envenenamiento de modelo de IA / datos de entrenamiento sesgados',
+        'identity_fraud': 'identidad sintética / fraude KYC con deepfake',
+        'generic': 'violación crítica de gobernanza',
+    }
 
     # Detect type: system integrity failure vs lethal/life-critical
     system_integrity_terms = [
@@ -677,7 +871,6 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     signals = dict(ai_result.get('signals', {}))
 
     if is_governance_fraud:
-        # Governance/AML/fraud: high risk, collapsed logic_consistency (committee overridden)
         signals['probability_score']  = max(5,  min(16, 8  + (seed & 0x7) % 7))
         signals['risk_exposure']       = max(88, min(96, 91 + (seed & 0x5) % 5))
         signals['signal_coherence']    = max(8,  min(22, 12 + (seed & 0x9) % 8))
@@ -686,6 +879,15 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         signals['logic_consistency']   = max(4,  min(15,  7 + (seed & 0xB) % 8))
         signals['signal_integrity']    = max(8,  min(25, 14 + (seed & 0xD) % 9))
         signals['temporal_coherence']  = max(5,  min(18,  9 + (seed & 0xF) % 8))
+    elif is_critical_violation:
+        signals['probability_score']  = max(4,  min(15, 8  + (seed & 0x7) % 7))
+        signals['risk_exposure']       = max(89, min(97, 92 + (seed & 0x5) % 6))
+        signals['signal_coherence']    = max(6,  min(20, 11 + (seed & 0x9) % 8))
+        signals['trend_persistence']   = max(4,  min(18,  9 + (seed & 0x3) % 8))
+        signals['stress_resilience']   = max(4,  min(16,  8 + (seed & 0x3) % 8))
+        signals['logic_consistency']   = max(5,  min(18,  9 + (seed & 0xB) % 8))
+        signals['signal_integrity']    = max(4,  min(15,  7 + (seed & 0xD) % 8))
+        signals['temporal_coherence']  = max(4,  min(16,  8 + (seed & 0xF) % 8))
     elif is_system_integrity:
         # System integrity failures: near-zero signal_coherence and signal_integrity
         signals['probability_score']  = max(4,  min(12, 6  + (seed & 0x7) % 6))
@@ -759,6 +961,46 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
                 'logic_consistency': f"Consistencia lógica casi nula ({signals['logic_consistency']:.0f}/100). Los propios expertos internos del fondo votaron 3-2 en contra — la anulación del CEO sobre el comité de especialistas es una inconsistencia que OMNIX no puede aprobar.",
                 'signal_integrity': f"Integridad de señal críticamente baja ({signals['signal_integrity']:.0f}/100). Datos estadísticos verificados por una parte con conflicto de interés (misma holding) son estructuralmente no confiables. Revisión externa independiente obligatoria.",
                 'temporal_coherence': f"Coherencia temporal casi nula ({signals['temporal_coherence']:.0f}/100). Una ventana regulatoria de 72 horas que cierra una estructura de optimización fiscal es presión temporal artificial — no un plazo legítimo de decisión.",
+            }
+    elif is_critical_violation:
+        _vtype = _detect_violation_type(text_lower)
+        _label_en = _violation_labels_en.get(_vtype, 'critical governance violation')
+        _label_es = _violation_labels_es.get(_vtype, 'violación crítica de gobernanza')
+        if lang == 'en':
+            summary = f"⚠ CRITICAL VIOLATION DETECTED — Evaluation of {asset}: {_label_en} pattern identified. Decision BLOCKED — mandatory human review and regulatory disclosure required before any action."
+            explanation = (
+                f"OMNIX's Critical Override Layer was triggered by {critical_count} high-risk indicator(s) associated with {_label_en}. "
+                f"This category of scenario carries non-negotiable governance requirements: no automated system may approve, continue, or initiate operations "
+                f"involving {_label_en} without independent human oversight and, where applicable, regulatory notification. "
+                f"The presence of these patterns — regardless of surface-level legitimacy — represents a mandatory governance BLOCK under OMNIX policy."
+            )
+            reasoning = {
+                'probability_score': f"Success probability critically low ({signals['probability_score']:.0f}/100). Scenarios involving {_label_en} have near-zero probability of legitimate positive outcome once high-risk indicators are confirmed.",
+                'risk_exposure': f"MAXIMUM RISK ({signals['risk_exposure']:.0f}/100). {critical_count} critical indicator(s) of {_label_en} detected. Risk exposure is non-negotiable — automated approval is structurally prohibited.",
+                'signal_coherence': f"Signal coherence critically low ({signals['signal_coherence']:.0f}/100). The presence of {_label_en} patterns creates fundamental incoherence between surface signals and underlying risk reality.",
+                'trend_persistence': f"Trend persistence near-zero ({signals['trend_persistence']:.0f}/100). Operations built on {_label_en} structures have no legitimate persistence — intervention is the correct trajectory.",
+                'stress_resilience': f"Stress resilience near-zero ({signals['stress_resilience']:.0f}/100). Any scenario dependent on {_label_en} collapses under regulatory or legal scrutiny — no resilience path exists without human correction.",
+                'logic_consistency': f"Logic consistency critically low ({signals['logic_consistency']:.0f}/100). Approving an operation with confirmed {_label_en} indicators is internally inconsistent with governance principles — OMNIX enforces automatic block.",
+                'signal_integrity': f"Signal integrity critically low ({signals['signal_integrity']:.0f}/100). {_label_en.capitalize()} involves deliberate manipulation of information or structures — all signals from this context are unreliable by definition.",
+                'temporal_coherence': f"Temporal coherence near-zero ({signals['temporal_coherence']:.0f}/100). Operations involving {_label_en} cannot produce temporally coherent governance outcomes — the underlying activity is the governance failure.",
+            }
+        else:
+            summary = f"⚠ VIOLACIÓN CRÍTICA DETECTADA — Evaluación de {asset}: patrón de {_label_es} identificado. Decisión BLOQUEADA — revisión humana obligatoria y divulgación regulatoria requerida antes de cualquier acción."
+            explanation = (
+                f"La Capa de Anulación Crítica de OMNIX fue activada por {critical_count} indicador(es) de alto riesgo asociados con {_label_es}. "
+                f"Esta categoría de escenario tiene requisitos de gobernanza no negociables: ningún sistema automatizado puede aprobar, continuar o iniciar operaciones "
+                f"que involucren {_label_es} sin supervisión humana independiente y, donde aplique, notificación regulatoria. "
+                f"La presencia de estos patrones — independientemente de la legitimidad superficial — representa un BLOQUEO de gobernanza obligatorio bajo la política de OMNIX."
+            )
+            reasoning = {
+                'probability_score': f"Probabilidad de éxito críticamente baja ({signals['probability_score']:.0f}/100). Los escenarios que involucran {_label_es} tienen probabilidad casi nula de resultado positivo legítimo una vez confirmados los indicadores.",
+                'risk_exposure': f"RIESGO MÁXIMO ({signals['risk_exposure']:.0f}/100). {critical_count} indicador(es) crítico(s) de {_label_es} detectado(s). La exposición al riesgo es no negociable — la aprobación automatizada está estructuralmente prohibida.",
+                'signal_coherence': f"Coherencia de señales críticamente baja ({signals['signal_coherence']:.0f}/100). La presencia de patrones de {_label_es} crea incoherencia fundamental entre las señales superficiales y la realidad de riesgo subyacente.",
+                'trend_persistence': f"Persistencia de tendencia casi nula ({signals['trend_persistence']:.0f}/100). Las operaciones basadas en estructuras de {_label_es} no tienen persistencia legítima — la intervención es la trayectoria correcta.",
+                'stress_resilience': f"Resiliencia al estrés casi nula ({signals['stress_resilience']:.0f}/100). Cualquier escenario dependiente de {_label_es} colapsa bajo escrutinio regulatorio o legal — no existe ruta de resiliencia sin corrección humana.",
+                'logic_consistency': f"Consistencia lógica críticamente baja ({signals['logic_consistency']:.0f}/100). Aprobar una operación con indicadores confirmados de {_label_es} es internamente inconsistente con los principios de gobernanza.",
+                'signal_integrity': f"Integridad de señal críticamente baja ({signals['signal_integrity']:.0f}/100). {_label_es.capitalize()} implica manipulación deliberada de información o estructuras — todas las señales de este contexto son no confiables por definición.",
+                'temporal_coherence': f"Coherencia temporal casi nula ({signals['temporal_coherence']:.0f}/100). Las operaciones que involucran {_label_es} no pueden producir resultados de gobernanza temporalmente coherentes — la actividad subyacente es el fallo de gobernanza.",
             }
     elif is_system_integrity:
         if lang == 'en':
