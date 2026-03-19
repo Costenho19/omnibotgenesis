@@ -280,7 +280,13 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         )
         DecisionReceiptEngine = _rmod.DecisionReceiptEngine
         receipt_engine = DecisionReceiptEngine()
-        prev_hash = receipt_engine.get_last_hash()
+
+        try:
+            prev_hash = receipt_engine.get_last_hash()
+        except Exception as db_err:
+            logger.warning(f"DB unavailable for prev_hash, using None: {db_err}")
+            prev_hash = None
+
         receipt = receipt_engine.generate_receipt(
             decision={
                 'decision': result['decision'],
@@ -291,9 +297,16 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         )
         receipt['client_id'] = 'PUBLIC'
         receipt['domain'] = 'public_sandbox'
-        stored = receipt_engine.store_receipt(receipt)
-        if not stored:
-            raise RuntimeError("Receipt storage returned False")
+
+        try:
+            stored = receipt_engine.store_receipt(receipt)
+            if not stored:
+                logger.warning("Receipt storage returned False — ephemeral receipt issued")
+            else:
+                logger.info(f"Public sandbox receipt stored: {receipt['receipt_id']}")
+        except Exception as store_err:
+            logger.warning(f"DB unavailable for receipt storage — ephemeral receipt issued: {store_err}")
+
         receipt_id = receipt['receipt_id']
         receipt_data = {
             'receipt_id': receipt['receipt_id'],
@@ -302,9 +315,8 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
             'signature_algorithm': receipt['signature_algorithm'],
             'pqc_signed': receipt['signature'] is not None,
         }
-        logger.info(f"Public sandbox receipt stored: {receipt_id}")
     except Exception as e:
-        logger.error(f"Receipt generation/storage failed (fail-closed): {e}")
+        logger.error(f"Receipt generation failed: {e}")
         raise RuntimeError(f"Receipt generation failed: {e}")
 
     checkpoint_names = {
