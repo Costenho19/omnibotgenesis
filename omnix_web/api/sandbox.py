@@ -1093,7 +1093,6 @@ def register_sandbox_routes(app):
                 'name': gate['name'],
                 'name_en': names['en'],
                 'name_es': names['es'],
-                'score': gate['score'],
                 'result': gate['result'],
                 'description': gate.get('description', ''),
             })

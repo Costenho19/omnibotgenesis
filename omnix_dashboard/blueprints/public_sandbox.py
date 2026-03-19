@@ -750,17 +750,13 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
     for gate in result.get('gate_results', []):
         cp_id = gate['checkpoint']
         names = checkpoint_names.get(cp_id, {'en': gate['name'], 'es': gate['name']})
-        signal_key = gate.get('signal', '')
         gate_results_enriched.append({
             'checkpoint': cp_id,
             'name': gate['name'],
             'name_en': names['en'],
             'name_es': names['es'],
-            'score': gate['score'],
-            'threshold': gate['threshold'],
             'result': gate['result'],
             'description': gate.get('description', ''),
-            'reasoning': reasoning.get(signal_key, ''),
         })
 
     real_world_impact = _compute_real_world_impact(signals, scenario_text, result['decision'])

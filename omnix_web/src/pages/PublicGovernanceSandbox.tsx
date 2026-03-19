@@ -8,10 +8,8 @@ interface GateResult {
   name: string
   name_en: string
   name_es: string
-  score: number
   result: 'PASS' | 'BLOCKED'
   description: string
-  reasoning?: string
 }
 
 interface ReceiptData {
@@ -395,9 +393,6 @@ export default function PublicGovernanceSandbox() {
                                 {result.language === 'es' ? gate.name_es : gate.name_en}
                               </span>
                             </div>
-                            {status !== 'pending' && gate.reasoning && (
-                              <p className="text-xs text-muted mt-1 max-w-xl">{gate.reasoning}</p>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -406,15 +401,9 @@ export default function PublicGovernanceSandbox() {
                           ) : status === 'animating' ? (
                             <RefreshCw className="w-5 h-5 text-blue-400 animate-spin" />
                           ) : isPassed ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-mono text-emerald-400">{gate.score?.toFixed(0) ?? '—'}</span>
-                              <CheckCircle className="w-5 h-5 text-emerald-400" />
-                            </div>
+                            <CheckCircle className="w-5 h-5 text-emerald-400" />
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-mono text-red-400">{gate.score?.toFixed(0) ?? '—'}</span>
-                              <XCircle className="w-5 h-5 text-red-400" />
-                            </div>
+                            <XCircle className="w-5 h-5 text-red-400" />
                           )}
                         </div>
                       </div>
@@ -424,7 +413,7 @@ export default function PublicGovernanceSandbox() {
                             className={`h-full rounded-full transition-all duration-700 ${
                               isPassed ? 'bg-emerald-500' : 'bg-red-500'
                             }`}
-                            style={{ width: `${Math.min(100, gate.score ?? 0)}%` }}
+                            style={{ width: isPassed ? '100%' : '22%' }}
                           />
                         </div>
                       )}
