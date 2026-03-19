@@ -448,6 +448,8 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
             'reasoning': reasoning.get(signal_key, ''),
         })
 
+    real_world_impact = _compute_real_world_impact(signals, scenario_text, result['decision'])
+
     return {
         'decision': result['decision'],
         'asset': asset,
@@ -456,9 +458,84 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         'checkpoints_passed': result['checkpoints_passed'],
         'checkpoints_blocked': result['checkpoints_blocked'],
         'gate_results': gate_results_enriched,
+        'real_world_impact': real_world_impact,
         'receipt': receipt_data,
         'receipt_id': receipt_id,
         'verification_url': f"https://omnibotgenesis-production.up.railway.app/verify/{receipt_id}" if receipt_id else None,
+    }
+
+
+def _extract_capital_amount(text: str) -> float:
+    """Extract capital/asset amount from scenario text. Default $5M if not found."""
+    import re
+    patterns = [
+        (r'\$\s*([\d,]+(?:\.\d+)?)\s*(?:billion|B)\b', 1_000_000_000),
+        (r'\$\s*([\d,]+(?:\.\d+)?)\s*(?:million|M)\b', 1_000_000),
+        (r'([\d,]+(?:\.\d+)?)\s*(?:billion|B)\s*(?:USD|dollar|dolar)', 1_000_000_000),
+        (r'([\d,]+(?:\.\d+)?)\s*(?:million|M)\s*(?:USD|dollar|dolar)', 1_000_000),
+        (r'\$\s*([\d,]{4,})', 1),
+    ]
+    for pattern, multiplier in patterns:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            try:
+                return float(m.group(1).replace(',', '')) * multiplier
+            except ValueError:
+                continue
+    return 5_000_000
+
+
+def _compute_real_world_impact(signals: dict, scenario_text: str, decision: str) -> dict:
+    """Compute Real-World Impact block from governance signals."""
+    risk_exposure    = float(signals.get('risk_exposure', 50))
+    stress_resilience = float(signals.get('stress_resilience', 50))
+    probability_score = float(signals.get('probability_score', 50))
+
+    if risk_exposure >= 78:
+        loss_low, loss_high = 30, 58
+    elif risk_exposure >= 62:
+        loss_low, loss_high = 18, 42
+    elif risk_exposure >= 48:
+        loss_low, loss_high = 10, 26
+    else:
+        loss_low, loss_high = 3, 15
+
+    if stress_resilience < 30:
+        liquidity_risk = 'CRITICAL'
+    elif stress_resilience < 48:
+        liquidity_risk = 'HIGH'
+    elif stress_resilience < 65:
+        liquidity_risk = 'MEDIUM'
+    else:
+        liquidity_risk = 'LOW'
+
+    if risk_exposure >= 72:
+        lev_low, lev_high = 3.0, 7.0
+    elif risk_exposure >= 55:
+        lev_low, lev_high = 2.0, 5.0
+    elif risk_exposure >= 40:
+        lev_low, lev_high = 1.5, 3.0
+    else:
+        lev_low, lev_high = 1.0, 2.0
+
+    regulatory_breach = risk_exposure > 65 or probability_score < 35
+
+    capital = _extract_capital_amount(scenario_text)
+    loss_factor = (risk_exposure / 100) * 0.78
+    estimated_loss_avoided = int(capital * loss_factor)
+
+    prevented = decision in ('BLOCKED', 'HOLD')
+
+    return {
+        'potential_loss_pct_low': loss_low,
+        'potential_loss_pct_high': loss_high,
+        'liquidity_trap_risk': liquidity_risk,
+        'leverage_amplification_low': round(lev_low, 1),
+        'leverage_amplification_high': round(lev_high, 1),
+        'regulatory_breach': regulatory_breach,
+        'capital_at_risk': int(capital),
+        'estimated_loss_avoided': estimated_loss_avoided,
+        'execution_prevented': prevented,
     }
 
 

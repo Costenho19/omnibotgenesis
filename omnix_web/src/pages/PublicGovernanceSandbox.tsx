@@ -23,6 +23,18 @@ interface ReceiptData {
   pqc_signed: boolean
 }
 
+interface RealWorldImpact {
+  potential_loss_pct_low: number
+  potential_loss_pct_high: number
+  liquidity_trap_risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  leverage_amplification_low: number
+  leverage_amplification_high: number
+  regulatory_breach: boolean
+  capital_at_risk: number
+  estimated_loss_avoided: number
+  execution_prevented: boolean
+}
+
 interface EvaluationResult {
   success: boolean
   scenario_summary: string
@@ -36,6 +48,7 @@ interface EvaluationResult {
   checkpoints_passed: number
   checkpoints_blocked: number
   gate_results: GateResult[]
+  real_world_impact: RealWorldImpact | null
   receipt: ReceiptData | null
   receipt_id: string | null
   verification_url: string | null
@@ -437,6 +450,88 @@ export default function PublicGovernanceSandbox() {
                     <p className="text-sm text-gray-300 max-w-lg mx-auto mb-4 leading-relaxed italic">
                       {result.explanation}
                     </p>
+                  )}
+
+                  {result.real_world_impact && (
+                    <div className="mt-6 text-left max-w-lg mx-auto">
+                      <div className={`rounded-xl border p-5 ${
+                        result.real_world_impact.execution_prevented
+                          ? 'bg-red-950/40 border-red-500/40'
+                          : 'bg-emerald-950/30 border-emerald-500/30'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <AlertTriangle className={`w-4 h-4 ${result.real_world_impact.execution_prevented ? 'text-red-400' : 'text-emerald-400'}`} />
+                          <span className="text-sm font-bold tracking-wider text-white uppercase">
+                            Real-World Impact
+                          </span>
+                          {result.real_world_impact.execution_prevented && (
+                            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 tracking-widest">
+                              PREVENTED
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-gray-400 mb-3 italic">
+                          Estimated consequence if executed without OMNIX:
+                        </p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                            <span className="text-xs text-gray-400">Potential loss</span>
+                            <span className="text-sm font-bold text-red-400">
+                              {result.real_world_impact.potential_loss_pct_low}%–{result.real_world_impact.potential_loss_pct_high}% of capital
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                            <span className="text-xs text-gray-400">Liquidity trap risk</span>
+                            <span className={`text-sm font-bold ${
+                              result.real_world_impact.liquidity_trap_risk === 'CRITICAL' ? 'text-red-400' :
+                              result.real_world_impact.liquidity_trap_risk === 'HIGH' ? 'text-orange-400' :
+                              result.real_world_impact.liquidity_trap_risk === 'MEDIUM' ? 'text-yellow-400' :
+                              'text-emerald-400'
+                            }`}>
+                              {result.real_world_impact.liquidity_trap_risk}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                            <span className="text-xs text-gray-400">Leverage amplification</span>
+                            <span className="text-sm font-bold text-orange-400">
+                              {result.real_world_impact.leverage_amplification_low}x–{result.real_world_impact.leverage_amplification_high}x downside
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between py-1.5">
+                            <span className="text-xs text-gray-400">Regulatory breach</span>
+                            <span className={`text-sm font-bold ${result.real_world_impact.regulatory_breach ? 'text-red-400' : 'text-emerald-400'}`}>
+                              {result.real_world_impact.regulatory_breach ? 'Internal limits violated' : 'Within bounds'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={`rounded-lg p-4 ${
+                          result.real_world_impact.execution_prevented
+                            ? 'bg-emerald-950/60 border border-emerald-500/30'
+                            : 'bg-blue-950/40 border border-blue-500/20'
+                        }`}>
+                          <p className="text-xs font-semibold text-emerald-400 mb-2 tracking-wide uppercase">
+                            OMNIX Intervention
+                          </p>
+                          <p className="text-xs text-gray-300 mb-2">
+                            {result.real_world_impact.execution_prevented
+                              ? '→ Execution prevented BEFORE market exposure'
+                              : '→ Decision approved within risk parameters'
+                            }
+                          </p>
+                          {result.real_world_impact.execution_prevented && (
+                            <p className="text-base font-bold text-emerald-300">
+                              Estimated loss avoided:{' '}
+                              <span className="text-emerald-400">
+                                ${result.real_world_impact.estimated_loss_avoided.toLocaleString('en-US')}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   {result.receipt && (
