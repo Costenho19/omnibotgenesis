@@ -193,18 +193,33 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'diversificado', 'insured', 'asegurado', 'established', 'establecido',
     ]
     critical_risk_terms = [
+        # vida / muerte
         'muerte', 'muerto', 'morir', 'falleci', 'fallecer', 'vida o muerte',
+        'pérdida de vidas', 'pérdida masiva', 'masiva de vidas', 'vidas humanas',
+        'vida humana', 'riesgo de vida', 'riesgo vital', 'vida en riesgo',
+        'patient dies', 'paciente muere', 'human life',
+        # emergencia / urgencia médica
         'emergencia', 'emergencia médica', 'urgencia', 'urgente',
         'tiempo límite', 'tiempo critico', 'tiempo crítico', 'deadline crítico',
         'denegar', 'denegación', 'negar tratamiento', 'denegar tratamiento',
         'tratamiento negado', 'sin tratamiento', 'falta de atención',
         'niño', 'menor', 'paciente crítico', 'unidad de cuidados',
-        'uci', 'uci pediátrica', 'icu', 'life or death', 'dying',
-        'death', 'fatal', 'lethal', 'lethal risk', 'lethal outcome',
-        'emergency', 'critical patient', 'deny treatment', 'denied treatment',
-        'no treatment', 'human life', 'vida humana', 'riesgo de vida',
-        'riesgo vital', 'vida en riesgo', 'patient dies', 'paciente muere',
+        'uci', 'uci pediátrica', 'icu', 'critical patient',
+        'deny treatment', 'denied treatment', 'no treatment',
+        # acción letal / armas / conflicto armado
+        'letal', 'letalidad', 'acción letal', 'interceptación letal',
+        'lethal', 'lethal risk', 'lethal outcome', 'lethal force',
+        'misil', 'missile', 'lanzamiento de misil', 'disparo', 'shoot down',
+        'derribo', 'derribar', 'fuego real', 'arma', 'armas letales',
+        'conflicto armado', 'zona de conflicto', 'zona de guerra', 'warfare',
+        'military strike', 'ataque militar', 'bombardeo', 'airstrike',
+        'autorizar fuego', 'orden de fuego', 'engage target',
+        # daño irreversible / catástrofe
         'irreversible', 'irreversible harm', 'daño irreversible',
+        'catástrofe', 'catastrophic', 'catastrófico',
+        'crisis diplomática', 'escalada militar', 'violación de protocolo',
+        # fallback inglés
+        'life or death', 'dying', 'death', 'fatal', 'emergency',
     ]
 
     risk_count = sum(1 for t in high_risk_terms if t in text_lower)
