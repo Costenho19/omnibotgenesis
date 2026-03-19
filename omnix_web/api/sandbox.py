@@ -187,6 +187,17 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'pánico bancario', 'pánico financiero', 'corralito',
         'rumor', 'insolvency rumor', 'rumor de insolvencia',
         'systemic risk', 'riesgo sistémico',
+        # falta de supervisión humana / modelos no probados
+        'no human review', 'no human oversight', 'without human review',
+        'without human oversight', 'sin revisión humana', 'sin supervisión humana',
+        'no human trader', 'sin revisor humano',
+        'never been tested', 'never tested', 'untested', 'no probado', 'nunca probado',
+        'not tested', 'not validated', 'sin validar',
+        'execute immediately', 'ejecutar inmediatamente', 'ejecución automática',
+        'automated execution', 'ejecución sin revisión',
+        # apuestas / gambling de alto capital
+        'bet', 'apuesta', 'betting', 'apuestas', 'gamble', 'gambling',
+        'wager', 'sports bet', 'apuesta deportiva',
     ]
     extreme_risk_terms = [
         'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
@@ -441,6 +452,7 @@ CALIBRATION EXAMPLES (use these to anchor your scores):
 - Bank run / mass withdrawal / insolvency panic → risk_exposure: 88, probability_score: 15, stress_resilience: 12 → BLOCKED by CP-2, CP-1, CP-5
 - AI auto-approving ALL trades/withdrawals without oversight in volatile conditions → risk_exposure: 82, probability_score: 18, stress_resilience: 15 → BLOCKED
 - Leveraged fund with hidden losses / commingled customer funds (e.g., FTX) → risk_exposure: 91, probability_score: 8, stress_resilience: 8 → BLOCKED
+- Automated sports betting $500K+ with no human review, model never tested in this context → risk_exposure: 78, probability_score: 22, stress_resilience: 20 → BLOCKED by CP-2, CP-1
 - Leveraged construction loan, mixed track record, uncertain market → risk_exposure: 72, probability_score: 38, stress_resilience: 32 → BLOCKED by CP-2
 - Biotech Phase II with FDA interest, competitor failures → risk_exposure: 52, probability_score: 54, stress_resilience: 50 → borderline
 - Audited company, strong collateral, low leverage, stable market → risk_exposure: 28, probability_score: 74, stress_resilience: 72 → APPROVED
