@@ -72,6 +72,7 @@ export default function PublicGovernanceSandbox() {
   const { metrics: liveMetrics, formatNumberFull } = useLiveMetrics()
   const [scenario, setScenario] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [email, setEmail] = useState('')
   const [language, setLanguage] = useState<'auto' | 'en' | 'es'>('auto')
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [result, setResult] = useState<EvaluationResult | null>(null)
@@ -113,6 +114,7 @@ export default function PublicGovernanceSandbox() {
           scenario_text: scenario.trim().slice(0, 500),
           ...(companyName ? { company_name: companyName } : {}),
           ...(language !== 'auto' ? { language } : {}),
+          ...(email.trim() ? { email: email.trim() } : {}),
         }),
       })
 
@@ -281,7 +283,7 @@ export default function PublicGovernanceSandbox() {
               className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none resize-none placeholder-gray-600 mb-4"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="text-xs text-muted mb-1 block">Company / Entity Name (optional)</label>
                 <input
@@ -290,6 +292,17 @@ export default function PublicGovernanceSandbox() {
                   onChange={e => setCompanyName(e.target.value)}
                   placeholder="e.g. Acme Capital"
                   maxLength={100}
+                  className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-2.5 text-white text-sm focus:border-[#C9A227] focus:outline-none placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted mb-1 block">Email (optional)</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="e.g. you@company.com"
+                  maxLength={254}
                   className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-2.5 text-white text-sm focus:border-[#C9A227] focus:outline-none placeholder-gray-600"
                 />
               </div>
