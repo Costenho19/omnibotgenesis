@@ -296,7 +296,7 @@ export default function PublicGovernanceSandbox() {
                 />
               </div>
               <div>
-                <label className="text-xs text-muted mb-1 block">Email (optional)</label>
+                <label className="text-xs text-muted mb-1 block">Email — we'll follow up with your governance report</label>
                 <input
                   type="email"
                   value={email}
