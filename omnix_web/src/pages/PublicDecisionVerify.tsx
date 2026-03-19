@@ -197,15 +197,15 @@ export default function PublicDecisionVerify() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       {/* ── Header ── */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ borderBottom: '1px solid rgba(201,162,39,0.15)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(5,13,24,0.95)', backdropFilter: 'blur(12px)' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <Shield size={20} color="#3b82f6" />
+          <img src="/logo.png" alt="OMNIX QUANTUM" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', letterSpacing: '0.06em' }}>OMNIX QUANTUM</div>
-            <div style={{ fontSize: '0.6rem', color: '#6b7280', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Decision Governance Infrastructure</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '0.06em' }}>OMNIX QUANTUM</div>
+            <div style={{ fontSize: '0.58rem', color: '#C9A227', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Decision Governance Infrastructure</div>
           </div>
         </Link>
-        <Link to="/try" style={{ fontSize: '0.8rem', color: '#3b82f6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <Link to="/try" style={{ fontSize: '0.8rem', color: '#C9A227', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid rgba(201,162,39,0.3)', borderRadius: '6px' }}>
           Try the sandbox <ExternalLink size={12} />
         </Link>
       </div>
