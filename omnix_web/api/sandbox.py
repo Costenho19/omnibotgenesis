@@ -186,6 +186,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'withdrawal spike', 'retiro de depositantes', 'depositor panic',
         'pánico bancario', 'pánico financiero', 'corralito',
         'rumor', 'insolvency rumor', 'rumor de insolvencia',
+        'systemic risk', 'riesgo sistémico',
     ]
     extreme_risk_terms = [
         'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
@@ -195,6 +196,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'insolvency', 'insolvencia', 'bank run', 'corrida bancaria',
         'mass withdrawal', 'retiro masivo', 'contagion', 'contagio',
         'systemic collapse', 'colapso sistémico', 'bank panic',
+        'systemic risk', 'riesgo sistémico',
     ]
     positive_terms = [
         'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
@@ -436,12 +438,12 @@ Also provide:
 CRITICAL FRAMING: You are evaluating the QUALITY of the automated decision itself, NOT the creditworthiness of the entity. If an AI system auto-approves a high-risk action without proper oversight, the DECISION PROCESS is the risk — even if the underlying entity seems healthy. Bank runs, mass withdrawals, insolvency events, and panic-driven scenarios always have HIGH risk_exposure (80+) and LOW probability_score (under 30) because automated approval in those contexts IS the failure mode.
 
 CALIBRATION EXAMPLES (use these to anchor your scores):
-- Bank run / mass withdrawal / insolvency panic → risk_exposure: 88, probability_score: 12, stress_resilience: 10 → BLOCKED by CP-2, CP-1, CP-5
+- Bank run / mass withdrawal / insolvency panic → risk_exposure: 88, probability_score: 15, stress_resilience: 12 → BLOCKED by CP-2, CP-1, CP-5
 - AI auto-approving ALL trades/withdrawals without oversight in volatile conditions → risk_exposure: 82, probability_score: 18, stress_resilience: 15 → BLOCKED
 - Leveraged fund with hidden losses / commingled customer funds (e.g., FTX) → risk_exposure: 91, probability_score: 8, stress_resilience: 8 → BLOCKED
 - Leveraged construction loan, mixed track record, uncertain market → risk_exposure: 72, probability_score: 38, stress_resilience: 32 → BLOCKED by CP-2
 - Biotech Phase II with FDA interest, competitor failures → risk_exposure: 52, probability_score: 54, stress_resilience: 50 → borderline
-- Audited company, strong collateral, low leverage, stable market → risk_exposure: 25, probability_score: 76, stress_resilience: 72 → APPROVED
+- Audited company, strong collateral, low leverage, stable market → risk_exposure: 28, probability_score: 74, stress_resilience: 72 → APPROVED
 
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
 {lang_instruction}{company_instruction}
