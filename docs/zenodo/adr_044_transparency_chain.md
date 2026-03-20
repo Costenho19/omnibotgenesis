@@ -34,7 +34,7 @@ Every receipt is linked to the previous one via a rolling SHA-256 accumulator. M
 
 Every receipt can be independently verified at:
 
-**`https://omnixquantum.net/r/{receipt_id}`**
+**`https://omnixquantum.net/verify/{receipt_id}`**
 
 No credentials required. No internal data exposed.
 
@@ -58,7 +58,7 @@ Each receipt in the dataset contains:
 
 ## Chain Integrity
 
-The dataset included in this deposit (72,443 receipts) forms a contiguous hash chain. Any researcher can verify that:
+The dataset included in this deposit (82,569 receipts) forms a contiguous hash chain. Any researcher can verify that:
 
 1. No receipt was modified after creation (hash chain continuity)
 2. Every receipt carries a Dilithium-3 signature

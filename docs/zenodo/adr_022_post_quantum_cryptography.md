@@ -32,7 +32,7 @@ Two NIST-standardized algorithms are deployed:
 
 ## Security Level
 
-Both algorithms operate at NIST Level 3 (~192-bit classical security equivalent), protecting against classical and quantum attacks alike.
+Both algorithms are NIST-standardized and provide high security against classical and quantum attacks alike.
 
 The architecture is configurable to Dilithium-5 (ML-DSA-87) for high-assurance deployments via a deployment parameter — no code changes required.
 

@@ -679,11 +679,12 @@
 
 <p>
   The Coherence Engine produces a composite <em>coherence score</em> (0–100%) representing
-  the weighted agreement across all six tiers. Decisions with coherence below a calibrated
-  minimum threshold (default: 30%) are blocked as WARN_THRESHOLD — a hard constraint
+  the weighted agreement across all six tiers. Decisions with coherence below a
+  deployment-configured minimum are blocked as WARN_THRESHOLD — a hard constraint
   regardless of individual signal strength. A Decision Contradiction Index (DCI) is
-  computed as a secondary output: DCI ≥ 70 mandates a HOLD decision, indicating that
-  internal signal divergence is too high for confident directional commitment.
+  computed as a secondary output: DCI at or above the deployment-configured ceiling
+  mandates a HOLD decision, indicating that internal signal divergence is too high
+  for confident directional commitment.
 </p>
 
 <h2>4.5 CP-6: Edge Confirmation Window (ECW)</h2>
@@ -1303,8 +1304,8 @@ new_root = SHA256(prev_root || SHA256(receipt_payload))
   </thead>
   <tbody>
     <tr><td>ADR-004</td><td>Position Sizing Hotfix</td><td>Introduced size_multiplier as governance output (not just approve/block)</td></tr>
-    <tr><td>ADR-007</td><td>Coherence Threshold Calibration</td><td>Set 30% coherence as minimum threshold for pipeline pass</td></tr>
-    <tr><td>ADR-018</td><td>Decision Contradiction Index (DCI)</td><td>DCI ≥ 70 mandates HOLD regardless of individual signal strength</td></tr>
+    <tr><td>ADR-007</td><td>Coherence Threshold Calibration</td><td>Established a deployment-configured coherence minimum as hard constraint for pipeline pass</td></tr>
+    <tr><td>ADR-018</td><td>Decision Contradiction Index (DCI)</td><td>DCI at or above the deployment-configured ceiling mandates HOLD regardless of individual signal strength</td></tr>
     <tr><td>ADR-022</td><td>Post-Quantum Cryptography</td><td>Dilithium-3 and Kyber-768 in production; communication rules by audience tier</td></tr>
     <tr><td>ADR-027</td><td>Decision Governance Infrastructure</td><td>Formally positioned OMNIX as governance infrastructure, not a trading strategy</td></tr>
     <tr><td>ADR-040</td><td>Public Governance Sandbox</td><td>Opened governance pipeline to public evaluation without authentication</td></tr>

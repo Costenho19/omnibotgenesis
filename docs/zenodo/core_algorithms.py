@@ -15,6 +15,16 @@ provided for academic reproducibility alongside the Zenodo publication:
 These implementations are simplified for clarity and readability.
 They do not constitute the full production system.
 
+GOVERNANCE THRESHOLDS NOTE
+--------------------------
+Exact governance calibration thresholds (Monte Carlo parameters,
+coherence minimums, DCI ceiling, ECW criteria, and position sizing
+multipliers) are deployment-specific and are not disclosed in this
+reference implementation. The structural logic — how thresholds are
+applied and how decisions propagate — is fully shown. Researchers
+wishing to reproduce the system behavior can calibrate their own
+thresholds against the published dataset.
+
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 """
 
@@ -126,8 +136,8 @@ class MonteCarloResult:
 def monte_carlo_veto(
     signal_vector: dict,
     n_iterations: int = 1000,
-    min_win_rate: float = 0.50,
-    max_drawdown_threshold: float = 0.15,
+    min_win_rate: float = None,         # deployment-configured
+    max_drawdown_threshold: float = None,  # deployment-configured
 ) -> MonteCarloResult:
     """
     Monte Carlo VETO Engine — Checkpoint CP-1.
@@ -140,14 +150,25 @@ def monte_carlo_veto(
     - PASS:         All criteria satisfied
 
     Args:
-        signal_vector:   Normalized 8-signal governance vector (all in [0, 1]).
-        n_iterations:    Number of Monte Carlo simulations.
-        min_win_rate:    Minimum win rate for full position sizing.
-        max_drawdown_threshold: Maximum acceptable simulated drawdown.
+        signal_vector:            Normalized 8-signal governance vector (all in [0, 1]).
+        n_iterations:             Number of Monte Carlo simulations.
+        min_win_rate:             Minimum win rate for full position sizing.
+                                  (Deployment-specific threshold, not disclosed.)
+        max_drawdown_threshold:   Maximum acceptable simulated drawdown.
+                                  (Deployment-specific threshold, not disclosed.)
 
     Returns:
         MonteCarloResult with decision and size_multiplier.
+
+    NOTE: Exact production threshold values are deployment-specific and not
+    included in this reference implementation. See paper Section 3.2.
     """
+    if min_win_rate is None or max_drawdown_threshold is None:
+        raise ValueError(
+            "Governance thresholds are deployment-specific. "
+            "Supply min_win_rate and max_drawdown_threshold to run this reference."
+        )
+
     momentum = signal_vector.get('market_momentum', 0.5)
     volatility = signal_vector.get('volatility_risk', 0.5)
     confidence = signal_vector.get('confidence_level', 0.5)
@@ -213,17 +234,21 @@ def compute_dci(signal_vector: dict) -> float:
     """
     Decision Contradiction Index (DCI) — ADR-018.
 
-    Quantifies internal signal divergence. High DCI (≥ 70) mandates a HOLD
+    Quantifies internal signal divergence. High DCI mandates a HOLD
     regardless of individual signal strength, because contradictory signals
     indicate the system cannot form a confident directional commitment.
 
     DCI = standard deviation of directional signals × 100
 
+    A DCI at or above the deployment-configured ceiling triggers a mandatory
+    HOLD. The exact ceiling is deployment-specific and not disclosed here.
+    See paper Section 3.3 for behavioral description.
+
     Args:
         signal_vector: Normalized 8-signal governance vector.
 
     Returns:
-        DCI score in [0, 100]. DCI ≥ 70 → HOLD.
+        DCI score in [0, 100].
     """
     directional_signals = [
         signal_vector.get('market_momentum', 0.5),
@@ -308,7 +333,7 @@ class CheckpointResult:
     metrics: dict = field(default_factory=dict)
 
 
-def governance_pipeline(signal_vector: dict) -> dict:
+def governance_pipeline(signal_vector: dict, config: dict = None) -> dict:
     """
     Simplified reference implementation of the OMNIX 8-checkpoint governance pipeline.
 
@@ -316,12 +341,34 @@ def governance_pipeline(signal_vector: dict) -> dict:
     timeout enforcement, and PostgreSQL-persisted state. This reference implementation
     shows the pipeline logic and fail-closed behavior.
 
+    Governance thresholds are supplied via the `config` dict. Production values
+    are deployment-specific and not disclosed in this reference. Researchers can
+    calibrate their own thresholds against the published dataset (DOI: 10.5281/zenodo.19056919).
+
     Args:
         signal_vector: Normalized 8-signal dict (all values in [0, 1]).
+        config:        Governance configuration dict with deployment thresholds.
+                       Required keys:
+                         - 'dci_ceiling'           (float) DCI score above which HOLD is forced
+                         - 'coherence_minimum'      (float, 0–1) minimum coherence to pass CP-3/4/5
+                         - 'rms_drawdown_limit'     (float, 0–1) maximum drawdown for RMS checkpoint
+                         - 'mc_min_win_rate'        (float, 0–1) minimum win rate for Monte Carlo
+                         - 'mc_max_drawdown'        (float, 0–1) maximum drawdown for Monte Carlo
+                         - 'ecw_min_risk_reward'    (float, 0–1) minimum risk/reward for ECW
+                         - 'ecw_min_win_rate'       (float, 0–1) minimum win rate for ECW
+                         - 'tcv_min_time_horizon'   (float, 0–1) minimum time horizon for TCV
+                         - 'fti_min_liquidity'      (float, 0–1) minimum liquidity score for FTI
 
     Returns:
         Pipeline result dict with decision, checkpoint trace, and DCI.
     """
+    if config is None:
+        raise ValueError(
+            "Governance thresholds must be supplied via `config`. "
+            "Production values are deployment-specific. "
+            "See paper Section 3 for behavioral description."
+        )
+
     results = []
 
     # CP-0: Signal Integrity Validation
@@ -333,7 +380,11 @@ def governance_pipeline(signal_vector: dict) -> dict:
         return _build_result("BLOCKED", results, signal_vector)
 
     # CP-1: Monte Carlo VETO
-    mc = monte_carlo_veto(signal_vector)
+    mc = monte_carlo_veto(
+        signal_vector,
+        min_win_rate=config['mc_min_win_rate'],
+        max_drawdown_threshold=config['mc_max_drawdown'],
+    )
     mc_pass = mc.decision != "VETO"
     results.append(CheckpointResult("MC(CP-1)", mc_pass, mc.decision,
                                     {"expected_return": round(mc.expected_return, 4),
@@ -343,9 +394,8 @@ def governance_pipeline(signal_vector: dict) -> dict:
         return _build_result("BLOCKED", results, signal_vector)
 
     # CP-2: Risk Management System
-    drawdown_limit = 0.20
     current_drawdown = signal_vector.get('volatility_risk', 0) * 0.3
-    rms_pass = current_drawdown <= drawdown_limit
+    rms_pass = current_drawdown <= config['rms_drawdown_limit']
     results.append(CheckpointResult("RMS(CP-2)", rms_pass, "PASS" if rms_pass else "BLOCKED",
                                     {"drawdown": round(current_drawdown, 4)}))
     if not rms_pass:
@@ -354,18 +404,20 @@ def governance_pipeline(signal_vector: dict) -> dict:
     # CP-3/4/5: Coherence Engine
     coherence = signal_vector.get('coherence_score', 0.5)
     coherence_pct = coherence * 100
-    coherence_pass = coherence_pct >= 30.0   # ADR-007: 30% minimum
+    coherence_pass = coherence >= config['coherence_minimum']
     dci = compute_dci(signal_vector)
-    coherence_decision = "PASS" if coherence_pass and dci < 70 else "BLOCKED"
-    results.append(CheckpointResult("COHERENCE(CP-3/4/5)", coherence_pass and dci < 70,
+    dci_ceiling = config['dci_ceiling']
+    coherence_decision = "PASS" if coherence_pass and dci < dci_ceiling else "BLOCKED"
+    results.append(CheckpointResult("COHERENCE(CP-3/4/5)", coherence_pass and dci < dci_ceiling,
                                     coherence_decision,
                                     {"coherence_pct": round(coherence_pct, 1), "dci": dci}))
     if coherence_decision == "BLOCKED":
-        return _build_result("HOLD" if dci >= 70 else "BLOCKED", results, signal_vector)
+        return _build_result("HOLD" if dci >= dci_ceiling else "BLOCKED", results, signal_vector)
 
     # CP-6: Edge Confirmation Window
     risk_reward = signal_vector.get('risk_reward_ratio', 0.5)
-    ecw_pass = risk_reward >= 0.6 and mc.win_rate >= 0.52
+    ecw_pass = (risk_reward >= config['ecw_min_risk_reward']
+                and mc.win_rate >= config['ecw_min_win_rate'])
     results.append(CheckpointResult("ECW(CP-6)", ecw_pass, "PASS" if ecw_pass else "WAITING",
                                     {"risk_reward": round(risk_reward, 4)}))
     if not ecw_pass:
@@ -373,7 +425,7 @@ def governance_pipeline(signal_vector: dict) -> dict:
 
     # CP-7: Temporal Coherence Validation
     time_horizon = signal_vector.get('time_horizon', 0.5)
-    tcv_pass = time_horizon >= 0.4
+    tcv_pass = time_horizon >= config['tcv_min_time_horizon']
     results.append(CheckpointResult("TCV(CP-7)", tcv_pass, "PASS" if tcv_pass else "BLOCKED",
                                     {"time_horizon": time_horizon}))
     if not tcv_pass:
@@ -381,7 +433,7 @@ def governance_pipeline(signal_vector: dict) -> dict:
 
     # CP-7b: Forward Trajectory Implication
     liquidity = signal_vector.get('liquidity_score', 0.5)
-    fti_pass = liquidity >= 0.5
+    fti_pass = liquidity >= config['fti_min_liquidity']
     results.append(CheckpointResult("FTI(CP-7b)", fti_pass, "PASS" if fti_pass else "NONE",
                                     {"liquidity": liquidity}))
     if not fti_pass:
@@ -426,8 +478,22 @@ if __name__ == "__main__":
         "confidence_level": 0.65,
     }
 
+    # Example config — researcher must calibrate their own thresholds.
+    # Production OMNIX values are deployment-specific and not disclosed.
+    example_config = {
+        "dci_ceiling":          80.0,   # example only
+        "coherence_minimum":    0.35,   # example only
+        "rms_drawdown_limit":   0.25,   # example only
+        "mc_min_win_rate":      0.48,   # example only
+        "mc_max_drawdown":      0.18,   # example only
+        "ecw_min_risk_reward":  0.55,   # example only
+        "ecw_min_win_rate":     0.50,   # example only
+        "tcv_min_time_horizon": 0.35,   # example only
+        "fti_min_liquidity":    0.45,   # example only
+    }
+
     print("=== OMNIX 8-Checkpoint Governance Pipeline ===\n")
-    result = governance_pipeline(test_signal)
+    result = governance_pipeline(test_signal, config=example_config)
     print(json.dumps(result, indent=2))
 
     print("\n=== Hash Chain Verification ===")
