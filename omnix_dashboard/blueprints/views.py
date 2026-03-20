@@ -5,7 +5,7 @@ Public React SPA routes served via catch-all.
 """
 
 import os
-from flask import Blueprint, render_template, send_from_directory, redirect
+from flask import Blueprint, render_template, send_from_directory, redirect, jsonify, request
 from omnix_dashboard.utils.database import init_database
 
 views_bp = Blueprint('views', __name__)
@@ -31,7 +31,24 @@ def classic_dashboard():
 
 @views_bp.route('/')
 def index():
-    """Root: redirect to internal dashboard."""
+    """Root: return API info for automated scanners; redirect humans to dashboard."""
+    ua = request.headers.get('User-Agent', '')
+    remote = request.remote_addr or ''
+    # Replit's internal proxy and health checkers hit / — return JSON so the
+    # preview pane doesn't auto-switch to this port (port 5000 is internal API,
+    # not the public web interface at port 3000).
+    is_automated = (
+        remote.startswith('172.31.')
+        or 'python-requests' in ua.lower()
+        or 'go-http' in ua.lower()
+        or ua == ''
+    )
+    if is_automated:
+        return jsonify({
+            'service': 'OMNIX Internal API',
+            'port': 5000,
+            'note': 'Internal governance API. Public web at port 3000.'
+        })
     return redirect('/terminal')
 
 
