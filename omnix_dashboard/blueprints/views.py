@@ -31,25 +31,19 @@ def classic_dashboard():
 
 @views_bp.route('/')
 def index():
-    """Root: return API info for automated scanners; redirect humans to dashboard."""
+    """Root: redirect browsers to terminal; return JSON for automated health checks."""
     ua = request.headers.get('User-Agent', '')
-    remote = request.remote_addr or ''
-    # Replit's internal proxy and health checkers hit / — return JSON so the
-    # preview pane doesn't auto-switch to this port (port 5000 is internal API,
-    # not the public web interface at port 3000).
-    is_automated = (
-        remote.startswith('172.31.')
-        or 'python-requests' in ua.lower()
-        or 'go-http' in ua.lower()
-        or ua == ''
-    )
-    if is_automated:
-        return jsonify({
-            'service': 'OMNIX Internal API',
-            'port': 5000,
-            'note': 'Internal governance API. Public web at port 3000.'
-        })
-    return redirect('/terminal')
+    accept = request.headers.get('Accept', '')
+    # If the request accepts HTML (real browser), redirect to dashboard.
+    # If it's a health check / scanner with no HTML preference, return JSON.
+    is_browser = 'text/html' in accept or 'Mozilla' in ua
+    if is_browser:
+        return redirect('/terminal')
+    return jsonify({
+        'service': 'OMNIX Internal API',
+        'port': 5000,
+        'note': 'Internal governance API. Public web at port 3000.'
+    })
 
 
 @views_bp.route('/<path:path>')
