@@ -4,8 +4,10 @@ HTML page routes (/, /terminal, /classic)
 Public React SPA routes served via catch-all.
 """
 
+import io
 import os
-from flask import Blueprint, render_template, send_from_directory, redirect, jsonify, request
+import zipfile
+from flask import Blueprint, render_template, send_from_directory, redirect, jsonify, request, send_file
 from omnix_dashboard.utils.database import init_database
 
 views_bp = Blueprint('views', __name__)
@@ -27,6 +29,29 @@ def classic_dashboard():
     """Classic dashboard page (internal)"""
     init_database()
     return render_template('dashboard.html')
+
+
+ZENODO_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'zenodo')
+)
+
+
+@views_bp.route('/download/zenodo-package')
+def download_zenodo_package():
+    """Serve all zenodo files as a single ZIP for easy download."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for fname in os.listdir(ZENODO_DIR):
+            fpath = os.path.join(ZENODO_DIR, fname)
+            if os.path.isfile(fpath):
+                zf.write(fpath, fname)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name='omnix_zenodo_package.zip'
+    )
 
 
 @views_bp.route('/')
