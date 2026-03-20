@@ -14,9 +14,9 @@ const calcUptimeDays = () =>
   Math.floor((Date.now() - TRACK_RECORD_START.getTime()) / 86400000) + 1
 
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 746903,
-  pqc_signed_receipts: 63024,
-  decisions_blocked: 910,
+  evaluation_cycles: 766741,
+  pqc_signed_receipts: 82518,
+  decisions_blocked: 9317,
   capital_preserved_pct: 98.42,
   verticals_demo: 4,
   system_uptime_days: calcUptimeDays(),

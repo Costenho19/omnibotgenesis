@@ -59,9 +59,9 @@ export default function InstitutionalPage() {
   const { metrics: liveMetrics } = useLiveMetrics(30000)
   
   const [metrics, setMetrics] = useState<SystemMetrics>({
-    evaluationCycles: 746903,
-    vetosExecuted: 910,
-    capitalPreserved: 98.42,
+    evaluationCycles: 0,
+    vetosExecuted: 0,
+    capitalPreserved: 0,
     systemUptime: '99.9%',
     lastUpdate: new Date().toISOString()
   })

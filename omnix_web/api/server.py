@@ -37,11 +37,13 @@ def get_live_metrics():
                 'success': True,
                 'live': False,
                 'metrics': {
-                    'evaluation_cycles': 681728,
-                    'pqc_signed_receipts': 20610,
-                    'capital_preserved_pct': 98.5,
+                    'evaluation_cycles': 766741,
+                    'pqc_signed_receipts': 82518,
+                    'decisions_blocked': 9317,
+                    'exit_receipts': 78,
+                    'capital_preserved_pct': 98.42,
                     'verticals_demo': 4,
-                    'system_uptime_days': 88,
+                    'system_uptime_days': 112,
                 },
                 'last_updated': datetime.now(timezone.utc).isoformat()
             })
@@ -49,21 +51,32 @@ def get_live_metrics():
         cur = conn.cursor()
 
         cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
-        eval_cycles = cur.fetchone()[0] or 681728
+        eval_cycles = cur.fetchone()[0] or 0
 
         cur.execute("SELECT COUNT(*) FROM decision_receipts")
-        receipts = cur.fetchone()[0] or 20610
+        receipts = cur.fetchone()[0] or 0
 
         cur.execute("""
-            SELECT current_balance, initial_balance
-            FROM paper_trading_balances
-            ORDER BY timestamp DESC LIMIT 1
+            SELECT COUNT(*) FROM decision_receipts
+            WHERE decision IN ('BLOCK', 'BLOCKED')
         """)
-        balance_row = cur.fetchone()
-        if balance_row and balance_row[1] and balance_row[1] > 0:
-            capital_preserved = round((balance_row[0] / balance_row[1]) * 100, 1)
-        else:
-            capital_preserved = 98.5
+        decisions_blocked = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT COUNT(*) FROM exit_governance_receipts
+        """)
+        exit_receipts = cur.fetchone()[0] or 0
+
+        try:
+            cur.execute("""
+                SELECT COALESCE(SUM(profit_loss), 0)
+                FROM paper_trading_trades WHERE status = 'closed'
+            """)
+            pnl_row = cur.fetchone()
+            total_pnl = float(pnl_row[0] or 0)
+            capital_preserved = round(max(0, (1_000_000 + total_pnl) / 1_000_000 * 100), 2)
+        except Exception:
+            capital_preserved = 98.42
 
         earliest_dates = []
         for table in ('shadow_trade_events', 'decision_receipts'):
@@ -93,6 +106,8 @@ def get_live_metrics():
             'metrics': {
                 'evaluation_cycles': eval_cycles,
                 'pqc_signed_receipts': receipts,
+                'decisions_blocked': decisions_blocked,
+                'exit_receipts': exit_receipts,
                 'capital_preserved_pct': capital_preserved,
                 'verticals_demo': 4,
                 'system_uptime_days': uptime_days,
@@ -106,11 +121,13 @@ def get_live_metrics():
             'success': True,
             'live': False,
             'metrics': {
-                'evaluation_cycles': 681728,
-                'pqc_signed_receipts': 20610,
-                'capital_preserved_pct': 98.5,
+                'evaluation_cycles': 766741,
+                'pqc_signed_receipts': 82518,
+                'decisions_blocked': 9317,
+                'exit_receipts': 78,
+                'capital_preserved_pct': 98.42,
                 'verticals_demo': 4,
-                'system_uptime_days': 88,
+                'system_uptime_days': 112,
             },
             'last_updated': datetime.now(timezone.utc).isoformat()
         })
@@ -122,8 +139,10 @@ def get_metrics():
         conn = get_db_connection()
         if not conn:
             return jsonify({
-                'evaluationCycles': 681728,
-                'capitalPreserved': 98.5,
+                'evaluationCycles': 766741,
+                'pqcSignedReceipts': 82518,
+                'decisionsBlocked': 9317,
+                'capitalPreserved': 98.42,
                 'systemUptime': '99.9%',
                 'lastUpdate': datetime.now().isoformat()
             })
@@ -131,24 +150,29 @@ def get_metrics():
         cur = conn.cursor()
 
         cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
-        eval_cycles = cur.fetchone()[0] or 681728
+        eval_cycles = cur.fetchone()[0] or 0
 
-        cur.execute("""
-            SELECT current_balance, initial_balance
-            FROM paper_trading_balances
-            ORDER BY timestamp DESC LIMIT 1
-        """)
-        balance_row = cur.fetchone()
-        if balance_row and balance_row[1] and balance_row[1] > 0:
-            capital_preserved = round((balance_row[0] / balance_row[1]) * 100, 1)
-        else:
-            capital_preserved = 98.5
+        cur.execute("SELECT COUNT(*) FROM decision_receipts")
+        pqc_receipts = cur.fetchone()[0] or 0
+
+        cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE decision IN ('BLOCK','BLOCKED')")
+        decisions_blocked = cur.fetchone()[0] or 0
+
+        try:
+            cur.execute("SELECT COALESCE(SUM(profit_loss), 0) FROM paper_trading_trades WHERE status = 'closed'")
+            pnl_row = cur.fetchone()
+            total_pnl = float(pnl_row[0] or 0)
+            capital_preserved = round(max(0, (1_000_000 + total_pnl) / 1_000_000 * 100), 2)
+        except Exception:
+            capital_preserved = 98.42
 
         cur.close()
         conn.close()
 
         return jsonify({
             'evaluationCycles': eval_cycles,
+            'pqcSignedReceipts': pqc_receipts,
+            'decisionsBlocked': decisions_blocked,
             'capitalPreserved': capital_preserved,
             'systemUptime': '99.9%',
             'lastUpdate': datetime.now().isoformat()
@@ -156,8 +180,10 @@ def get_metrics():
     except Exception as e:
         print(f"Error fetching metrics: {e}")
         return jsonify({
-            'evaluationCycles': 681728,
-            'capitalPreserved': 98.5,
+            'evaluationCycles': 766741,
+            'pqcSignedReceipts': 82518,
+            'decisionsBlocked': 9317,
+            'capitalPreserved': 98.42,
             'systemUptime': '99.9%',
             'lastUpdate': datetime.now().isoformat()
         })

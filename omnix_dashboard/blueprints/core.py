@@ -2567,11 +2567,12 @@ def api_live_metrics():
         'success': True,
         'live': False,
         'metrics': {
-            'evaluation_cycles': 670000,
-            'pqc_signed_receipts': 16000,
-            'capital_preserved_pct': 98.5,
+            'evaluation_cycles': 766741,
+            'pqc_signed_receipts': 82518,
+            'decisions_blocked': 9317,
+            'capital_preserved_pct': 98.42,
             'verticals_demo': 4,
-            'system_uptime_days': 0,
+            'system_uptime_days': 112,
         },
         'source': 'fallback',
         'last_updated': datetime.now().isoformat()
