@@ -737,7 +737,10 @@ export default function InstitutionalPage() {
             <section className="mb-20">
               <div className="text-center mb-12">
                 <p className="section-title">Comparison</p>
-                <h2 className="text-3xl font-bold text-white">OMNIX vs Traditional Automated Decision Systems</h2>
+                <h2 className="text-3xl font-bold text-white mb-4">OMNIX vs Traditional Automated Decision Systems</h2>
+                <p className="text-[#C9A227]/70 italic text-base max-w-2xl mx-auto">
+                  "OMNIX doesn't just follow rules. It understands when and why they should apply."
+                </p>
               </div>
               <div className="glass-card overflow-hidden">
                 <table className="w-full">

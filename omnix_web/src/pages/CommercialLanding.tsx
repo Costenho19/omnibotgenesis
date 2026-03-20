@@ -74,8 +74,11 @@ export default function CommercialLanding() {
             Stop Costly Mistakes <br />
             <span className="gold-gradient">Before They Happen</span>
           </h1>
-          <p className="text-2xl text-muted max-w-3xl mx-auto mb-12 leading-relaxed">
+          <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
             OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. First validated in digital asset trading. Future verticals (Year 2-3+): robotics, biotech, supply chain, lending, and insurance.
+          </p>
+          <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-12 pl-4 border-l-2 border-[#C9A227]/40">
+            "OMNIX doesn't just follow rules. It understands when and why they should apply."
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link to="/try" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
@@ -191,6 +194,10 @@ export default function CommercialLanding() {
             <div className="flex items-start gap-4 p-4 bg-[#0A1628]/60 rounded-xl border border-[#C9A227]/20">
               <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
               <p className="text-muted"><span className="text-white font-medium">No false promises.</span> We don't guarantee outcomes. We help prevent costly mistakes.</p>
+            </div>
+            <div className="flex items-start gap-4 p-4 bg-[#C9A227]/5 rounded-xl border border-[#C9A227]/30">
+              <CheckCircle className="w-6 h-6 text-[#C9A227] flex-shrink-0 mt-0.5" />
+              <p className="text-muted"><span className="text-[#C9A227] font-medium">Understands context, not just conditions.</span> Other systems follow rules. OMNIX understands when and why they should apply — with full context, memory, and cryptographic proof.</p>
             </div>
           </div>
         </section>

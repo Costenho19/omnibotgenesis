@@ -224,8 +224,11 @@ export default function PublicGovernanceSandbox() {
             Type any high-stakes scenario in plain English or Spanish. OMNIX's AI interprets it, runs it through
             the real 8-checkpoint governance pipeline, and generates a cryptographically signed, publicly verifiable receipt.
           </p>
-          <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
+          <p className="text-sm text-[#64748B] max-w-2xl mx-auto mb-4">
             Same engine validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles. No login required.
+          </p>
+          <p className="text-sm italic text-[#C9A227]/60 max-w-xl mx-auto">
+            "OMNIX doesn't just follow rules. It understands when and why they should apply."
           </p>
         </section>
 
