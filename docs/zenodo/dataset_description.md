@@ -1,8 +1,8 @@
 # Dataset Description: OMNIX Governance Receipts
 
 **File**: `governance_receipts_dataset.csv`  
-**Records**: 72,443  
-**Period**: February 21, 2026 – March 16, 2026  
+**Records**: 82,569  
+**Period**: February 21, 2026 – March 20, 2026  
 **Source**: OMNIX Decision Governance Infrastructure — live operational data
 
 ---
@@ -26,13 +26,13 @@
 
 ## Decision Semantics
 
-### HOLD (95.8% of decisions)
+### HOLD (88.6% of decisions)
 The governance pipeline evaluated the candidate decision and determined that current market conditions do not satisfy the full approval criteria. This is the expected behavior under uncertain or suboptimal signal conditions. A HOLD is not a failure — it is the system correctly abstaining from a decision it cannot confidently govern.
 
-### BLOCK (4.1% of decisions)
-One or more checkpoints in the 8-checkpoint pipeline produced a hard failure. Common causes: Monte Carlo expected return below zero, coherence score below the 30% threshold, RMS drawdown limit exceeded, or Black Swan risk above ceiling.
+### BLOCK + BLOCKED (11.3% of decisions)
+One or more checkpoints in the 8-checkpoint pipeline produced a hard failure. `BLOCK` is the current label; `BLOCKED` is a legacy equivalent retained for historical continuity. Common causes: Monte Carlo expected return below zero, coherence score below threshold, RMS drawdown limit exceeded, or Black Swan risk above ceiling.
 
-### APPROVED (0.02% of decisions)
+### APPROVED (0.05% of decisions)
 All 8 checkpoints passed simultaneously. The decision was authorized for execution. The rarity of this outcome reflects the system's high selectivity — requiring simultaneous satisfaction of all governance constraints.
 
 ---
@@ -57,4 +57,4 @@ To verify chain integrity, see the Python snippet in `README.md`.
 - Receipts with `prev_hash = NULL` represent chain segments where the preceding receipt is not included in this export (e.g., beginning of a new chain segment after system restart)
 - The dataset includes all governance decisions from the official Track Record period (January 15, 2026 – present) plus the tail of the Learning Baseline period
 - No decisions have been filtered or excluded from this export
-- Signature verification requires access to the Dilithium-3 public key, available via the public verification server at `https://omnixquantum.net/api/verify/{receipt_id}`
+- Signature verification requires access to the Dilithium-3 public key, available via the public verification server at `https://omnixquantum.net/verify/{receipt_id}`

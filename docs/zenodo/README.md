@@ -24,16 +24,16 @@
 
 ## Dataset Summary
 
-The `governance_receipts_dataset.csv` file contains **72,443 real governance decisions** produced by the OMNIX Quantum 8-checkpoint pipeline between February 21, 2026 and March 16, 2026.
+The `governance_receipts_dataset.csv` file contains **82,569 real governance decisions** produced by the OMNIX Quantum 8-checkpoint pipeline between February 21, 2026 and March 20, 2026.
 
 ### Decision Distribution
 
 | Decision | Count | Percentage |
 |----------|-------|-----------|
-| HOLD | 69,421 | 95.8% |
-| BLOCK | 2,987 | 4.1% |
-| APPROVED | 14 | 0.02% |
-| BLOCKED | 21 | 0.03% |
+| HOLD | 73,166 | 88.6% |
+| BLOCK | 9,280 | 11.2% |
+| BLOCKED | 84 | 0.10% |
+| APPROVED | 38 | 0.05% |
 
 ### Key Properties
 
@@ -69,10 +69,10 @@ print(f"Chain breaks: {chain_broken}")
 
 Any receipt in this dataset can be independently verified at:
 
-**https://omnixquantum.net/r/{receipt_id}**
+**https://omnixquantum.net/verify/{receipt_id}**
 
 Example:
-- `https://omnixquantum.net/r/OMNIX-EBC5A5719789`
+- `https://omnixquantum.net/verify/OMNIX-EBC5A5719789`
 
 The verification page shows the complete checkpoint pipeline result, cryptographic integrity status, and Dilithium-3 signature information — without requiring any credentials or system access.
 
