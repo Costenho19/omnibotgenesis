@@ -570,7 +570,7 @@ def zenodo_download_hub():
     <div class="icon">🗄️</div>
     <div class="info">
       <strong>governance_receipts_dataset.csv</strong>
-      <span>72,443 real signed governance receipts · 19 MB</span>
+      <span>82,569 real signed governance receipts · 22 MB</span>
     </div>
     <div class="btn">Download</div>
   </a>
@@ -629,7 +629,7 @@ def zenodo_download_hub():
     <div class="btn">Download</div>
   </a>
 
-  <p class="note">Publicado en Zenodo el 16 de marzo de 2026 · DOI: 10.5281/zenodo.19056919</p>
+  <p class="note">Actualizado el 20 de marzo de 2026 · DOI: 10.5281/zenodo.19056919</p>
 </body>
 </html>'''
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
