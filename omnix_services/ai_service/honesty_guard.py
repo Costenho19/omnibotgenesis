@@ -629,3 +629,121 @@ def get_metrics_if_asked(user_message: str, language: str = 'es') -> Optional[st
     if formatter.should_show_metrics(user_message):
         return formatter.format_metrics_honestly(language)
     return None
+
+
+# ---------------------------------------------------------------------------
+# GOVERNANCE LIVE METRICS — consulta BD en tiempo real para el prompt del bot
+# ---------------------------------------------------------------------------
+
+class GovernanceLiveMetrics:
+    """
+    Consulta PostgreSQL en tiempo real para obtener las métricas reales del sistema.
+    Se inyecta siempre en el prompt del bot, reemplazando los valores hardcodeados.
+    Cache de 5 minutos para no sobrecargar la BD en cada mensaje.
+    """
+
+    _instance: Optional['GovernanceLiveMetrics'] = None
+    _CACHE_TTL = 300  # segundos
+
+    def __init__(self):
+        self._cache: Optional[Dict[str, Any]] = None
+        self._cache_ts: Optional[datetime] = None
+
+    @classmethod
+    def get_instance(cls) -> 'GovernanceLiveMetrics':
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def _fetch(self) -> Dict[str, Any]:
+        """Consulta la BD y devuelve métricas de gobernanza reales."""
+        try:
+            import psycopg2
+            database_url = os.environ.get('DATABASE_URL')
+            if not database_url:
+                return {}
+
+            conn = psycopg2.connect(database_url)
+            cur = conn.cursor()
+
+            # 1. Total recibos PQC
+            cur.execute("SELECT COUNT(*) FROM decision_receipts;")
+            pqc_receipts = cur.fetchone()[0]
+
+            # 2. Ciclos de gobernanza (shadow_trade_events)
+            cur.execute("SELECT COUNT(*) FROM shadow_trade_events;")
+            eval_cycles = cur.fetchone()[0]
+
+            # 3. Decisiones bloqueadas (BLOCK + BLOCKED)
+            cur.execute("""
+                SELECT COUNT(*) FROM decision_receipts
+                WHERE decision IN ('BLOCK', 'BLOCKED');
+            """)
+            blocked = cur.fetchone()[0]
+
+            # 4. Capital preservation desde paper_trading_balances
+            cur.execute("""
+                SELECT balance_usd FROM paper_trading_balances
+                ORDER BY updated_at DESC LIMIT 1;
+            """)
+            row = cur.fetchone()
+            initial_capital = 1_000_000.0
+            current_balance = float(row[0]) if row else initial_capital
+            capital_pct = (current_balance / initial_capital) * 100
+
+            cur.close()
+            conn.close()
+
+            return {
+                'pqc_receipts': pqc_receipts,
+                'eval_cycles': eval_cycles,
+                'blocked': blocked,
+                'current_balance': current_balance,
+                'capital_pct': round(capital_pct, 2),
+                'fetched_at': datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'),
+            }
+
+        except Exception as e:
+            logger.warning(f"GovernanceLiveMetrics DB error: {e}")
+            return {}
+
+    def get_metrics(self, force: bool = False) -> Dict[str, Any]:
+        """Devuelve métricas con caché de 5 min."""
+        now = datetime.now()
+        if (not force and self._cache is not None and self._cache_ts is not None
+                and (now - self._cache_ts).total_seconds() < self._CACHE_TTL):
+            return self._cache
+        self._cache = self._fetch()
+        self._cache_ts = now
+        return self._cache
+
+    def build_prompt_block(self) -> str:
+        """
+        Genera el bloque de métricas reales para inyectar en el prompt.
+        Si la BD no está disponible, devuelve string vacío (el prompt usa los fallbacks).
+        """
+        m = self.get_metrics()
+        if not m:
+            return ""
+
+        return f"""
+## GOVERNANCE METRICS — DATOS EN VIVO DE LA BASE DE DATOS (actualizado: {m['fetched_at']})
+> INSTRUCCIÓN CRÍTICA: Usa ESTOS números en todas tus respuestas. Ignora cualquier número anterior en el prompt.
+
+**PQC receipts firmados (Dilithium-3):** {m['pqc_receipts']:,} — verificables en omnixquantum.net/verify
+**Ciclos de gobernanza totales:** {m['eval_cycles']:,}
+**Decisiones bloqueadas (BLOCK/BLOCKED):** {m['blocked']:,}
+**Capital actual:** ${m['current_balance']:,.2f} de $1,000,000.00 inicial
+**Capital preservation:** {m['capital_pct']}%
+"""
+
+
+_governance_live_metrics = GovernanceLiveMetrics.get_instance()
+
+
+def get_governance_metrics_injection() -> str:
+    """
+    Función de conveniencia para obtener el bloque de métricas reales.
+    Se llama desde build_complete_prompt en prompt_templates.py.
+    """
+    return _governance_live_metrics.build_prompt_block()

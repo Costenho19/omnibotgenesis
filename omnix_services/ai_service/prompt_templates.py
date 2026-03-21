@@ -26,7 +26,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 try:
-    from omnix_services.ai_service.honesty_guard import get_honesty_prompt_injection, get_honesty_context
+    from omnix_services.ai_service.honesty_guard import (
+        get_honesty_prompt_injection,
+        get_honesty_context,
+        get_governance_metrics_injection,
+    )
     HONESTY_GUARD_AVAILABLE = True
     logger.info("✅ HonestyGuard loaded successfully")
 except ImportError as e:
@@ -34,6 +38,7 @@ except ImportError as e:
     logger.warning(f"⚠️ HonestyGuard not available: {e}")
     def get_honesty_prompt_injection(language: str = 'es', user_message: str = '') -> str: return ""
     def get_honesty_context(language: str = 'es', user_message: str = '') -> dict: return {'context_active': False}
+    def get_governance_metrics_injection() -> str: return ""
 
 def load_system_state_manifest() -> Dict[str, Any]:
     """Load the system state manifest for AI self-knowledge."""
@@ -1472,6 +1477,17 @@ Maintain professional tone appropriate for {lang_name}-speaking institutional in
         
         system_state = get_system_state_prompt()
         
+        # --- Métricas de gobernanza en tiempo real desde la BD ---
+        live_metrics_block = ""
+        if HONESTY_GUARD_AVAILABLE:
+            try:
+                live_metrics_block = get_governance_metrics_injection()
+                if live_metrics_block:
+                    logger.debug("📊 GovernanceLiveMetrics: bloque inyectado en el prompt")
+            except Exception as e:
+                logger.warning(f"⚠️ GovernanceLiveMetrics injection failed: {e}")
+
+        # --- HonestyGuard: solo para consultas de rendimiento ---
         honesty_injection = ""
         if HONESTY_GUARD_AVAILABLE:
             try:
@@ -1487,6 +1503,10 @@ Maintain professional tone appropriate for {lang_name}-speaking institutional in
             system_state,
             self.get_language_directive(detected_lang)
         ]
+
+        # Siempre inyectar métricas en vivo (sobreescriben los hardcodeados del MASTER_PROMPT)
+        if live_metrics_block:
+            prompt_parts.append(live_metrics_block)
         
         if honesty_injection:
             prompt_parts.append(honesty_injection)
