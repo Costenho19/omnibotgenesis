@@ -10,7 +10,7 @@ Learning Baseline (Nov 2025 - Jan 14, 2026):
 - 119 trades ejecutados, 695 señales vetadas, -$15,198.73 P&L
 Track Record Oficial (Jan 15, 2026 - presente):
 - 0 trades ejecutados, 47,507+ señales vetadas (primeros 12 días)
-- 670,000+ ciclos de gobernanza totales, 98.5% capital preservado
+- 766,741 ciclos de gobernanza totales, 98.42% capital preservado
 
 Autor: OMNIX Development Team
 Fecha: January 10, 2026

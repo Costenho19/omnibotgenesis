@@ -9,10 +9,10 @@
 
 | Métrica | Valor | Notas |
 |---------|-------|-------|
-| PQC-Signed Receipts | 16,000+ | Dilithium-3, 100% coverage |
-| Evaluation Cycles | 670,000+ | Motor 24/7 desde Jan 2026 |
-| Shadow Trade Events | 670,000+ | Análisis contrafactual de vetos |
-| Capital Preserved | 98.5% | Durante BTC -7.37% volatilidad |
+| PQC-Signed Receipts | 82,569 | Dilithium-3, 100% coverage |
+| Evaluation Cycles | 766,741 | Motor 24/7 desde Jan 2026 |
+| Shadow Trade Events | 766,741 | Análisis contrafactual de vetos |
+| Capital Preserved | 98.42% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
 ### Cambios Recientes (Mar 15, 2026) — Public Governance Sandbox (/try)
@@ -138,7 +138,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Métrica | Valor | Nota |
 |---------|-------|------|
 | Balance | $984,801.27 | Capital real |
-| Capital Preservation | 98.5% | Histórico verificable |
+| Capital Preservation | 98.42% | Histórico verificable |
 | Trades Oficiales | 0 | Crece desde Day 1 |
 | Data Quality (REAL) | 0% → 100% | Con nuevos trades |
 | Veto System | Activo | 6-tier + MC + RMS |
@@ -183,7 +183,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 | Endpoints | `/verify`, `/api/verify/{id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics` |
 | Seguridad | Rate limit 30/min, zero internal data exposure |
 | Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
-| Ciclos documentados | 670,000+ evaluation cycles (internal dataset, not externally audited) |
+| Ciclos documentados | 766,741 evaluation cycles (internal dataset, not externally audited) |
 | Auto-refresh | 30s interval, lista se actualiza sin recargar |
 | Timestamps | Hora exacta UTC + tiempo relativo (ej: "23:55:39 UTC (2m ago)") |
 | Contador total | "Showing 10 of N total receipts" visible en header |
@@ -255,7 +255,7 @@ LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
 
 | Componente | Estado |
 |------------|--------|
-| `shadow_trade_events` | 670,000+ eventos capturados |
+| `shadow_trade_events` | 766,741 eventos capturados |
 | `shadow_trade_outcomes` | 50 procesados (100% accuracy) |
 | Runner | Fix timezone aplicado, funcional |
 | Runbook | `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md` |
