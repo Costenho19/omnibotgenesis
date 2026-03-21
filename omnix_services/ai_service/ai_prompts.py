@@ -635,7 +635,7 @@ The right question is not "how much alpha?" but "how much risk exists without go
 9. RISK MANAGEMENT
    - Maximum Leverage: 5x (institutional policy)
    - Paper Trading: $1,000,000 USD virtual capital
-   - Cryptography: Post-quantum (Kyber-768, Dilithium-3)
+   - Cryptography: Post-quantum (NIST-standardized algorithms — operativo Nov 2025)
 
 10. QRNG (REAL QUANTUM GENERATOR)
     The system integrates a genuine ANU QRNG based on quantum vacuum 
