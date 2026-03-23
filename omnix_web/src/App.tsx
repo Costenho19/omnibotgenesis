@@ -7,6 +7,8 @@ import EnergyGovernanceDemo from './pages/EnergyGovernanceDemo'
 import BiotechGovernanceDemo from './pages/BiotechGovernanceDemo'
 import PublicGovernanceSandbox from './pages/PublicGovernanceSandbox'
 import PublicDecisionVerify from './pages/PublicDecisionVerify'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
         <Route path="/try" element={<PublicGovernanceSandbox />} />
         <Route path="/verify" element={<PublicDecisionVerify />} />
         <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terminal" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

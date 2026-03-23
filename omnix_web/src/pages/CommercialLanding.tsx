@@ -378,6 +378,12 @@ export default function CommercialLanding() {
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
               Contact
             </a>
+            <Link to="/terms" className="text-muted hover:text-white text-sm transition-colors">
+              Terms
+            </Link>
+            <Link to="/privacy" className="text-muted hover:text-white text-sm transition-colors">
+              Privacy
+            </Link>
           </div>
         </div>
       </footer>
