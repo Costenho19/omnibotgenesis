@@ -213,42 +213,117 @@ export default function PublicGovernanceSandbox() {
   const emailReceipt = () => {
     if (!result) return
     const verifyUrl = result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`
-    const subject = `OMNIX Governance Receipt — ${result.receipt_id}`
-    const impact = result.real_world_impact?.execution_prevented
-      ? `\nEstimated loss avoided: $${result.real_world_impact.estimated_loss_avoided?.toLocaleString('en-US')}`
+    const isEs = result.language === 'es'
+    const isApproved = result.decision === 'APPROVED'
+    const decisionIcon = isApproved ? '✅' : '🚫'
+    const subject = `${decisionIcon} OMNIX Governance Report — ${result.decision} | ${result.receipt_id}`
+
+    const passed = result.gate_results?.filter((g: GateResult) => g.result === 'PASS') || []
+    const blocked = result.gate_results?.filter((g: GateResult) => g.result !== 'PASS') || []
+
+    const checkpointLines = result.gate_results?.map((g: GateResult) => {
+      const icon = g.result === 'PASS' ? '✅ PASS' : '❌ FAIL'
+      const name = g.name_en || g.name
+      const desc = g.description ? `\n       → ${g.description}` : ''
+      return `  ${icon}  ${g.checkpoint}  ${name}${desc}`
+    }).join('\n') || ''
+
+    const impactSection = result.real_world_impact ? (() => {
+      const rwi = result.real_world_impact
+      const lines = [
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        isEs ? `⚠️  IMPACTO EN EL MUNDO REAL` : `⚠️  REAL-WORLD IMPACT ANALYSIS`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        ``,
+        isEs
+          ? `  ¿Qué hubiera pasado sin OMNIX?`
+          : `  What would have happened without OMNIX?`,
+        ``,
+        `  📉 ${isEs ? 'Pérdida potencial de capital' : 'Potential capital loss'}:  ${rwi.potential_loss_pct_low}% – ${rwi.potential_loss_pct_high}%`,
+        `  💧 ${isEs ? 'Riesgo de trampa de liquidez' : 'Liquidity trap risk'}:     ${rwi.liquidity_trap_risk}`,
+        `  📊 ${isEs ? 'Amplificación por apalancamiento' : 'Leverage amplification'}:  ${rwi.leverage_amplification_low}x – ${rwi.leverage_amplification_high}x downside`,
+        `  ⚖️  ${isEs ? 'Incumplimiento regulatorio' : 'Regulatory breach'}:       ${rwi.regulatory_breach ? (isEs ? 'SÍ — límites internos violados' : 'YES — internal limits violated') : (isEs ? 'No' : 'No')}`,
+      ]
+      if (rwi.execution_prevented && rwi.estimated_loss_avoided > 0) {
+        lines.push(``)
+        lines.push(`  🛡️  ${isEs ? 'OMNIX bloqueó la ejecución ANTES de la exposición al mercado.' : 'OMNIX blocked execution BEFORE market exposure.'}`)
+        lines.push(`  💰 ${isEs ? 'Pérdida estimada evitada' : 'Estimated loss avoided'}:  $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`)
+      } else if (!rwi.execution_prevented) {
+        lines.push(``)
+        lines.push(`  ✅ ${isEs ? 'La decisión fue aprobada dentro de los parámetros de riesgo.' : 'Decision approved within risk parameters.'}`)
+      }
+      return lines.join('\n')
+    })() : ''
+
+    const scenarioText = scenario?.trim()
+      ? `\n${isEs ? 'ESCENARIO EVALUADO' : 'EVALUATED SCENARIO'}\n${'─'.repeat(40)}\n${scenario.trim()}\n`
       : ''
-    const checkpointLines = result.gate_results?.map((g: GateResult) =>
-      `  ${g.result === 'PASS' ? '✓' : '✗'} ${g.checkpoint} — ${g.name_en || g.name}`
-    ).join('\n') || ''
+
+    const summaryText = result.scenario_summary
+      ? `\n${isEs ? 'RESUMEN DEL ESCENARIO (por IA)' : 'SCENARIO SUMMARY (by AI)'}\n${'─'.repeat(40)}\n${result.scenario_summary}\n`
+      : ''
+
     const body = [
-      `OMNIX GOVERNANCE RECEIPT`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `╔══════════════════════════════════════════╗`,
+      `║     OMNIX GOVERNANCE DECISION REPORT     ║`,
+      `╚══════════════════════════════════════════╝`,
       ``,
-      `Receipt ID:  ${result.receipt_id}`,
-      `Decision:    ${result.decision}`,
-      `Result:      ${result.checkpoints_passed}/${result.checkpoints_total} checkpoints passed`,
-      impact,
+      `  ${isEs ? 'DECISIÓN' : 'DECISION'}:    ${decisionIcon} ${result.decision}`,
+      `  ${isEs ? 'ID DE RECIBO' : 'RECEIPT ID'}:  ${result.receipt_id}`,
+      `  ${isEs ? 'CHECKPOINTS' : 'CHECKPOINTS'}: ${result.checkpoints_passed}/${result.checkpoints_total} ${isEs ? 'aprobados' : 'passed'}${result.checkpoints_blocked > 0 ? `, ${result.checkpoints_blocked} ${isEs ? 'bloqueados' : 'blocked'}` : ''}`,
+      `  ${isEs ? 'DOMINIO' : 'DOMAIN'}:      ${result.domain || '—'}`,
       ``,
-      `CHECKPOINT PIPELINE`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      checkpointLines,
+      scenarioText,
+      summaryText,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      isEs ? `🔍  ANÁLISIS DE GOBERNANZA` : `🔍  GOVERNANCE ANALYSIS`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
-      `GOVERNANCE SUMMARY`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       result.explanation || '',
       ``,
-      `CRYPTOGRAPHIC INTEGRITY`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `Signature: ${result.receipt?.signature_algorithm || 'Dilithium-3'}`,
-      `Hash:      ${result.receipt?.content_hash?.slice(0, 32)}...`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      isEs ? `🔒  PIPELINE DE 8 CHECKPOINTS` : `🔒  8-CHECKPOINT PIPELINE`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
-      `Verify this receipt independently:`,
-      verifyUrl,
+      isEs
+        ? `  ${passed.length} de ${result.checkpoints_total} checkpoints aprobados — ${blocked.length > 0 ? `${blocked.length} detectaron riesgos` : 'ningún riesgo detectado'}`
+        : `  ${passed.length} of ${result.checkpoints_total} checkpoints passed — ${blocked.length > 0 ? `${blocked.length} detected risks` : 'no risks detected'}`,
       ``,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `OMNIX Decision Governance Infrastructure`,
-      `omnixquantum.net  |  contacto@omnixquantum.net`,
+      checkpointLines,
+      impactSection,
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      isEs ? `🔐  INTEGRIDAD CRIPTOGRÁFICA` : `🔐  CRYPTOGRAPHIC INTEGRITY`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      ``,
+      `  ${isEs ? 'Algoritmo de firma' : 'Signature algorithm'}:  ${result.receipt?.signature_algorithm || 'Dilithium-3 (post-quantum)'}`,
+      `  ${isEs ? 'Hash del contenido' : 'Content hash'}:         ${result.receipt?.content_hash?.slice(0, 24)}...`,
+      `  ${isEs ? 'Firmado PQC' : 'PQC signed'}:            ${result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'}`,
+      ``,
+      isEs
+        ? `  Este recibo está almacenado en PostgreSQL y es verificable públicamente:`
+        : `  This receipt is stored in PostgreSQL and publicly verifiable:`,
+      `  ${verifyUrl}`,
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      isEs ? `ℹ️  ¿QUÉ ES OMNIX?` : `ℹ️  WHAT IS OMNIX?`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      ``,
+      isEs
+        ? `  OMNIX es una infraestructura de gobernanza de decisiones diseñada para\n  prevenir errores en sistemas automatizados de alto riesgo.\n\n  Cada decisión pasa por 8 checkpoints independientes antes de ejecutarse,\n  generando un recibo criptográfico verificable públicamente.\n\n  Más de 775,000 ciclos de evaluación en producción.`
+        : `  OMNIX is a decision governance infrastructure designed to prevent errors\n  in high-stakes automated systems.\n\n  Every decision passes through 8 independent checkpoints before execution,\n  generating a cryptographically signed, publicly verifiable receipt.\n\n  Over 775,000 evaluation cycles in production.`,
+      ``,
+      `  🌐 omnixquantum.net`,
+      `  📧 contacto@omnixquantum.net`,
+      `  🔬 ${isEs ? 'Prueba el sandbox en' : 'Try the sandbox at'}: omnixquantum.net/try`,
+      ``,
+      `──────────────────────────────────────────`,
+      `  OMNIX Decision Governance Infrastructure`,
+      isEs ? `  Este reporte fue generado automáticamente.` : `  This report was generated automatically.`,
+      `──────────────────────────────────────────`,
     ].join('\n')
+
     const to = email.trim() ? email.trim() : ''
     window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
