@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react'
+import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown, Download, Mail } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 interface GateResult {
@@ -170,6 +170,87 @@ export default function PublicGovernanceSandbox() {
       : `Just tried OMNIX Decision Governance — ${result?.checkpoints_total} checkpoints evaluated my scenario and the decision was ${result?.decision}. Signed verifiable receipt: ${verifyUrl}\n\nTry it: `
     const url = 'https://omnixquantum.net/try'
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank')
+  }
+
+  const downloadReceipt = () => {
+    if (!result) return
+    const report = {
+      generated_by: 'OMNIX Decision Governance Infrastructure',
+      generated_at: new Date().toISOString(),
+      receipt_id: result.receipt_id,
+      decision: result.decision,
+      checkpoints_passed: result.checkpoints_passed,
+      checkpoints_total: result.checkpoints_total,
+      checkpoints_blocked: result.checkpoints_blocked,
+      explanation: result.explanation,
+      scenario_submitted: scenario,
+      pipeline: result.gate_results?.map((g: GateResult) => ({
+        checkpoint: g.checkpoint,
+        name: g.name_en || g.name,
+        result: g.result,
+      })),
+      real_world_impact: result.real_world_impact || null,
+      receipt: {
+        id: result.receipt_id,
+        signature_algorithm: result.receipt?.signature_algorithm,
+        content_hash: result.receipt?.content_hash,
+        pqc_signed: result.receipt?.pqc_signed,
+      },
+      verification_url: result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`,
+      contact: 'contacto@omnixquantum.net',
+    }
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `OMNIX-Receipt-${result.receipt_id}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const emailReceipt = () => {
+    if (!result) return
+    const verifyUrl = result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`
+    const subject = `OMNIX Governance Receipt — ${result.receipt_id}`
+    const impact = result.real_world_impact?.execution_prevented
+      ? `\nEstimated loss avoided: $${result.real_world_impact.estimated_loss_avoided?.toLocaleString('en-US')}`
+      : ''
+    const checkpointLines = result.gate_results?.map((g: GateResult) =>
+      `  ${g.result === 'PASS' ? '✓' : '✗'} ${g.checkpoint} — ${g.name_en || g.name}`
+    ).join('\n') || ''
+    const body = [
+      `OMNIX GOVERNANCE RECEIPT`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      ``,
+      `Receipt ID:  ${result.receipt_id}`,
+      `Decision:    ${result.decision}`,
+      `Result:      ${result.checkpoints_passed}/${result.checkpoints_total} checkpoints passed`,
+      impact,
+      ``,
+      `CHECKPOINT PIPELINE`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      checkpointLines,
+      ``,
+      `GOVERNANCE SUMMARY`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      result.explanation || '',
+      ``,
+      `CRYPTOGRAPHIC INTEGRITY`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `Signature: ${result.receipt?.signature_algorithm || 'Dilithium-3'}`,
+      `Hash:      ${result.receipt?.content_hash?.slice(0, 32)}...`,
+      ``,
+      `Verify this receipt independently:`,
+      verifyUrl,
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `OMNIX Decision Governance Infrastructure`,
+      `omnixquantum.net  |  contacto@omnixquantum.net`,
+    ].join('\n')
+    const to = email.trim() ? email.trim() : ''
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
 
   const useExample = (ex: ExampleScenario) => {
@@ -588,7 +669,23 @@ export default function PublicGovernanceSandbox() {
                     </div>
                   )}
 
-                  <div className="mt-6 flex items-center justify-center gap-4">
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      onClick={downloadReceipt}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-sm border border-emerald-500/20"
+                      title="Download full receipt as JSON"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download Receipt
+                    </button>
+                    <button
+                      onClick={emailReceipt}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors text-sm border border-violet-500/20"
+                      title={email.trim() ? `Send to ${email}` : 'Send receipt to your email'}
+                    >
+                      <Mail className="w-4 h-4" />
+                      {email.trim() ? `Email to ${email.split('@')[0]}` : 'Email Receipt'}
+                    </button>
                     <button
                       onClick={shareOnLinkedIn}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/30 transition-colors text-sm"
@@ -601,7 +698,7 @@ export default function PublicGovernanceSandbox() {
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#C9A227]/10 text-[#C9A227] hover:bg-[#C9A227]/20 transition-colors text-sm"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      Try Another Scenario
+                      Try Another
                     </button>
                   </div>
                 </div>
