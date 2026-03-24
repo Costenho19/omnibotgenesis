@@ -73,6 +73,11 @@
 | Optimizan entradas | Optimiza contencion disciplinada |
 | 1 control de riesgo | 8 checkpoints de entrada + 3 gates de salida |
 | Operar primero, gestionar riesgo despues | Bloquear primero, operar solo con edge confirmado |
+| Sin alineacion con finanzas islamicas | Sharia Screening integrado (AAOIFI Standard 62) — en produccion |
+
+**VENTAJA GCC / FINANZAS ISLAMICAS:**
+
+OMNIX tiene un motor de Sharia Screening integrado y activo en produccion, basado en AAOIFI Standard 62. Cada decision de gobernanza incluye verificacion automatica de cumplimiento Sharia. Los activos clasificados como Haram son bloqueados antes de ejecucion: Maysir (especulacion pura — meme coins), Riba (instrumentos con interes), Gharar (incertidumbre excesiva). 40+ activos evaluados. Fuentes academicas citadas por activo: AAOIFI Standard 62, Mufti Taqi Usmani 2018, Shariyah Review Bureau. Esto no es un item de roadmap — esta funcionando hoy.
 
 **RESULTADO PARA EL CLIENTE (De Data de Validacion):**
 

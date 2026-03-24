@@ -76,6 +76,7 @@
 | 1 risk check | 6 independent checkpoints |
 | Act first, manage risk after | Block first, act only with confirmed edge |
 | Single domain | Domain-agnostic governance architecture |
+| No Islamic finance alignment | Built-in Sharia Screening (AAOIFI Standard 62) — live in production |
 
 **CUSTOMER OUTCOME (From First Vertical — Digital Asset Trading):**
 
@@ -86,6 +87,10 @@
 | Full auditability | 670,000+ decision cycles logged |
 | Cryptographic integrity | 16,000+ PQC-signed governance receipts |
 | System reliability | 95%+ uptime, ~120ms execution latency |
+
+**GCC / ISLAMIC FINANCE ADVANTAGE:**
+
+OMNIX has a built-in Sharia Screening Engine (live in production) based on AAOIFI Standard 62. Every governance decision includes automatic Sharia compliance check. Assets classified as Haram are blocked before execution — Maysir (pure speculation), Riba (interest), Gharar (excessive uncertainty). 40+ assets evaluated. Scholarly sources cited per asset (AAOIFI Standard 62, Mufti Taqi Usmani 2018, Shariyah Review Bureau). This is not a roadmap item — it is running today.
 
 **MULTI-VERTICAL APPLICABILITY:**
 

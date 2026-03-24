@@ -255,12 +255,19 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 
 ### Q14: Does OMNIX offer Sharia-compliant trading?
 
-**A:** Yes. We have:
+**A:** Yes. OMNIX has a built-in Sharia Screening Engine running in production. Specifically:
 
-- 40+ crypto assets evaluated for Sharia compliance
-- Automatic classification by leverage, liquidity, exposure
-- `/sharia [crypto]` command for real-time verification
+- **40+ crypto assets evaluated** across 12 categories (PoW, PoS, Stablecoins, DeFi, Meme coins, Islamic Native Coins, NFTs, Gaming tokens, and more)
+- **Based on AAOIFI Sharia Standard 62** — the global reference standard for Islamic digital assets
+- **Three categories automatically blocked**: Maysir (pure speculation — meme coins), Riba (interest-bearing instruments), Gharar (excessive uncertainty in contracts)
+- **Scholarly sources cited per asset**: AAOIFI Standard 62, Mufti Taqi Usmani 2018, Shariyah Review Bureau
+- **Real-time screening**: every governance decision includes a Sharia compliance check before execution
+- `/sharia [crypto]` command for on-demand verification
 - Auditable records synchronized with Risk Guardian
+
+**Examples**: Bitcoin → Halal confirmed (high confidence, AAOIFI Standard 62). Dogecoin, Shiba Inu → Haram blocked (Maysir — pure speculation without utility). Ethereum → Questionable (PoS staking may constitute Riba — scholar debate ongoing).
+
+**What we do NOT claim**: Formal Sharia board certification. That is a separate external process. OMNIX provides structural Sharia-aligned governance screening based on AAOIFI standards — accurate and defensible for GCC institutional investors.
 
 ---
 

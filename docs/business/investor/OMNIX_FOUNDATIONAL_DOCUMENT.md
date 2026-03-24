@@ -77,9 +77,14 @@ OMNIX está organizado en capas modulares con arquitectura hexagonal (V7.0 en pr
 - **Deployment**: Railway (producción 24/7), Replit (desarrollo)
 
 ### 2.5 Capa Ética (Sharia & Auditoría)
-- Filtro Halal automático (40+ criptoactivos evaluados)
+- **Sharia Screening Engine en producción** — basado en AAOIFI Standard 62
+- Filtro Halal automático (40+ criptoactivos evaluados en 12 categorías)
+- **Bloqueo automático de activos Haram**: Maysir (especulación pura — meme coins), Riba (instrumentos con interés), Gharar (incertidumbre excesiva)
+- Fuentes académicas citadas por activo: AAOIFI Standard 62, Mufti Taqi Usmani 2018, Shariyah Review Bureau
+- Ejemplos: Bitcoin → Halal confirmado (alta confianza). Dogecoin → Haram bloqueado (Maysir)
 - Registro auditable de cada operación
 - Checksums criptográficos inmutables
+- **Nota**: Motor de screening interno basado en estándares AAOIFI. No es certificación formal de junta Sharia (proceso externo separado).
 
 ---
 

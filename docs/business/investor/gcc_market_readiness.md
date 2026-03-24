@@ -161,12 +161,26 @@ Designed for:
 
 ### 5.3 Islamic Finance Considerations
 
+> **ACTUALIZACIÓN**: El motor de Sharia Screening está en producción. Los ítems de abajo reflejan el estado real del sistema.
+
 | Feature | Status |
 |---------|--------|
-| **Sharia Compliance Review** | Planned for Q2 2026 |
-| **Interest-Free Options** | Architecturally possible |
-| **Halal Investment Screening** | Roadmap item |
+| **Sharia Screening Engine** | ✅ Live in Production |
+| **40+ Assets Evaluated** | ✅ Implemented — AAOIFI Standard 62 |
+| **Halal Investment Screening** | ✅ Implemented — automatic on every decision |
+| **Automatic Haram Blocking** | ✅ Maysir (speculation), Riba (interest), Gharar (uncertainty) |
+| **Scholarly Sources Referenced** | AAOIFI Standard 62, Mufti Taqi Usmani 2018, Shariyah Review Bureau |
+| **Formal Sharia Board Certification** | Planned — post-seed (external, paid process) |
 | **Sukuk Integration** | Future consideration |
+
+**What the engine does today:**
+- Every governance decision includes a Sharia compliance check
+- Assets classified as Haram are automatically blocked before execution
+- Three categories blocked by design: Maysir (pure speculation, e.g. meme coins), Riba (interest-bearing instruments), Gharar (excessive uncertainty)
+- Returns confidence level (high/medium/low) and cites scholarly sources for each asset
+- Bitcoin: Halal confirmed (high confidence). Dogecoin, Shiba Inu: Haram blocked (Maysir).
+
+**What we do NOT claim:** Formal Sharia certification by an external Sharia board. That process is separate and external. What OMNIX has is structural Sharia-aligned governance screening based on AAOIFI standards — a defensible and accurate description for institutional GCC investors.
 
 ---
 
