@@ -172,42 +172,196 @@ export default function PublicGovernanceSandbox() {
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank')
   }
 
-  const downloadReceipt = () => {
+  const downloadPDF = async () => {
     if (!result) return
-    const report = {
-      generated_by: 'OMNIX Decision Governance Infrastructure',
-      generated_at: new Date().toISOString(),
-      receipt_id: result.receipt_id,
-      decision: result.decision,
-      checkpoints_passed: result.checkpoints_passed,
-      checkpoints_total: result.checkpoints_total,
-      checkpoints_blocked: result.checkpoints_blocked,
-      explanation: result.explanation,
-      scenario_submitted: scenario,
-      pipeline: result.gate_results?.map((g: GateResult) => ({
-        checkpoint: g.checkpoint,
-        name: g.name_en || g.name,
-        result: g.result,
-      })),
-      real_world_impact: result.real_world_impact || null,
-      receipt: {
-        id: result.receipt_id,
-        signature_algorithm: result.receipt?.signature_algorithm,
-        content_hash: result.receipt?.content_hash,
-        pqc_signed: result.receipt?.pqc_signed,
-      },
-      verification_url: result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`,
-      contact: 'contacto@omnixquantum.net',
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const W = 210
+    const M = 15
+    const CW = W - 2 * M
+    const isApproved = result.decision === 'APPROVED'
+    const isEs = result.language === 'es'
+    const verifyUrl = result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`
+    let y = 0
+
+    // ── HEADER ──────────────────────────────────────────────
+    doc.setFillColor(5, 13, 24)
+    doc.rect(0, 0, W, 32, 'F')
+    doc.setTextColor(201, 162, 39)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(20)
+    doc.text('OMNIX', M, 13)
+    doc.setTextColor(180, 180, 180)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text('DECISION GOVERNANCE INFRASTRUCTURE', M, 19)
+    doc.setTextColor(100, 100, 100)
+    doc.setFontSize(6.5)
+    doc.text('omnixquantum.net  |  contacto@omnixquantum.net', M, 25)
+    doc.setTextColor(130, 130, 130)
+    doc.setFont('courier', 'normal')
+    doc.setFontSize(6.5)
+    doc.text(result.receipt_id || '', W - M, 13, { align: 'right' })
+    doc.setFont('helvetica', 'normal')
+    doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), W - M, 19, { align: 'right' })
+    y = 32
+
+    // ── DECISION BANNER ─────────────────────────────────────
+    if (isApproved) {
+      doc.setFillColor(6, 78, 59)
+      doc.rect(0, y, W, 20, 'F')
+      doc.setTextColor(52, 211, 153)
+    } else {
+      doc.setFillColor(69, 10, 10)
+      doc.rect(0, y, W, 20, 'F')
+      doc.setTextColor(252, 100, 100)
     }
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `OMNIX-Receipt-${result.receipt_id}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(20)
+    doc.text(result.decision, W / 2, y + 9, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(isApproved ? 110 : 220, isApproved ? 200 : 120, isApproved ? 150 : 120)
+    doc.text(
+      `${result.checkpoints_passed}/${result.checkpoints_total} ${isEs ? 'checkpoints aprobados' : 'checkpoints passed'}${result.checkpoints_blocked > 0 ? `  —  ${result.checkpoints_blocked} ${isEs ? 'bloqueados' : 'blocked'}` : ''}`,
+      W / 2, y + 15.5, { align: 'center' }
+    )
+    y += 25
+
+    const sectionHeader = (title: string) => {
+      doc.setFillColor(235, 236, 245)
+      doc.rect(M, y, CW, 6.5, 'F')
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(30, 30, 60)
+      doc.text(title, M + 2.5, y + 4.5)
+      y += 9
+    }
+
+    const checkPage = (needed = 20) => {
+      if (y + needed > 278) { doc.addPage(); y = 15 }
+    }
+
+    // ── GOVERNANCE ANALYSIS ──────────────────────────────────
+    sectionHeader(isEs ? 'ANÁLISIS DE GOBERNANZA' : 'GOVERNANCE ANALYSIS')
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.setTextColor(40, 40, 40)
+    const explLines = doc.splitTextToSize(result.explanation || '', CW - 2)
+    doc.text(explLines, M + 1, y)
+    y += explLines.length * 4.8 + 7
+
+    // ── EVALUATED SCENARIO ───────────────────────────────────
+    if (scenario?.trim()) {
+      checkPage(20)
+      sectionHeader(isEs ? 'ESCENARIO EVALUADO' : 'EVALUATED SCENARIO')
+      doc.setFont('helvetica', 'italic')
+      doc.setFontSize(8)
+      doc.setTextColor(70, 70, 90)
+      const scLines = doc.splitTextToSize(`"${scenario.trim()}"`, CW - 4)
+      doc.text(scLines, M + 2, y)
+      y += scLines.length * 4.5 + 7
+    }
+
+    // ── 8-CHECKPOINT PIPELINE ────────────────────────────────
+    checkPage(30)
+    sectionHeader(isEs ? 'PIPELINE DE 8 CHECKPOINTS' : '8-CHECKPOINT PIPELINE')
+    result.gate_results?.forEach((g: GateResult) => {
+      checkPage(10)
+      const passed = g.result === 'PASS'
+      doc.setFillColor(passed ? 240 : 255, passed ? 253 : 242, passed ? 244 : 242)
+      doc.rect(M, y - 1, CW, 7.5, 'F')
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(7.5)
+      doc.setTextColor(passed ? 5 : 153, passed ? 150 : 27, passed ? 58 : 27)
+      doc.text(passed ? 'PASS' : 'FAIL', M + 2, y + 4)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(7.5)
+      doc.setTextColor(60, 60, 90)
+      doc.text(g.checkpoint, M + 16, y + 4)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(30, 30, 30)
+      doc.text(g.name_en || g.name, M + 28, y + 4)
+      y += 8
+      if (g.description) {
+        doc.setFont('helvetica', 'italic')
+        doc.setFontSize(7)
+        doc.setTextColor(100, 100, 120)
+        const dLines = doc.splitTextToSize(g.description, CW - 22)
+        doc.text(dLines, M + 20, y)
+        y += dLines.length * 3.5 + 1.5
+      }
+    })
+    y += 4
+
+    // ── REAL-WORLD IMPACT ────────────────────────────────────
+    if (result.real_world_impact) {
+      const rwi = result.real_world_impact
+      checkPage(45)
+      sectionHeader(isEs ? 'IMPACTO EN EL MUNDO REAL' : 'REAL-WORLD IMPACT ANALYSIS')
+      doc.setFontSize(8)
+      const rows: [string, string][] = [
+        [isEs ? 'Pérdida potencial de capital' : 'Potential capital loss', `${rwi.potential_loss_pct_low}% – ${rwi.potential_loss_pct_high}%`],
+        [isEs ? 'Riesgo de trampa de liquidez' : 'Liquidity trap risk', rwi.liquidity_trap_risk],
+        [isEs ? 'Amplificación por apalancamiento' : 'Leverage amplification', `${rwi.leverage_amplification_low}x – ${rwi.leverage_amplification_high}x`],
+        [isEs ? 'Incumplimiento regulatorio' : 'Regulatory breach', rwi.regulatory_breach ? (isEs ? 'Sí' : 'Yes') : 'No'],
+      ]
+      rows.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(80, 80, 100)
+        doc.text(label + ':', M + 2, y)
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(20, 20, 20)
+        doc.text(value, M + 90, y)
+        y += 5.5
+      })
+      if (rwi.execution_prevented && rwi.estimated_loss_avoided > 0) {
+        y += 2
+        doc.setFillColor(6, 78, 59)
+        doc.rect(M, y, CW, 11, 'F')
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(52, 211, 153)
+        doc.text(
+          isEs ? `Pérdida estimada evitada: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}` : `Estimated loss avoided: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`,
+          W / 2, y + 7, { align: 'center' }
+        )
+        y += 15
+      } else {
+        y += 3
+      }
+    }
+
+    // ── CRYPTOGRAPHIC INTEGRITY ──────────────────────────────
+    checkPage(35)
+    sectionHeader(isEs ? 'INTEGRIDAD CRIPTOGRÁFICA' : 'CRYPTOGRAPHIC INTEGRITY')
+    const cryptoRows: [string, string][] = [
+      [isEs ? 'Algoritmo de firma' : 'Signature algorithm', result.receipt?.signature_algorithm || 'Dilithium-3'],
+      [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'],
+      [isEs ? 'Hash del contenido' : 'Content hash', (result.receipt?.content_hash || '').slice(0, 32) + '...'],
+    ]
+    cryptoRows.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(80, 80, 100)
+      doc.text(label + ':', M + 2, y)
+      doc.setFont('courier', 'normal'); doc.setFontSize(7.5); doc.setTextColor(30, 30, 30)
+      doc.text(value, M + 60, y)
+      y += 5.5
+    })
+    y += 4
+    doc.setFillColor(5, 13, 24)
+    doc.rect(M, y, CW, 13, 'F')
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(201, 162, 39)
+    doc.text(isEs ? 'Verificar este recibo de forma independiente:' : 'Verify this receipt independently:', M + 3, y + 5)
+    doc.setFont('courier', 'normal'); doc.setFontSize(7); doc.setTextColor(160, 170, 220)
+    doc.text(verifyUrl, M + 3, y + 10)
+    y += 17
+
+    // ── FOOTER ───────────────────────────────────────────────
+    const footerY = 287
+    doc.setDrawColor(201, 162, 39)
+    doc.setLineWidth(0.3)
+    doc.line(M, footerY, W - M, footerY)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(120, 120, 120)
+    doc.text('OMNIX Decision Governance Infrastructure  |  omnixquantum.net  |  contacto@omnixquantum.net', W / 2, footerY + 4, { align: 'center' })
+    doc.text(isEs ? `Generado: ${new Date().toLocaleString()}` : `Generated: ${new Date().toLocaleString()}`, W / 2, footerY + 8, { align: 'center' })
+
+    doc.save(`OMNIX-Receipt-${result.receipt_id}.pdf`)
   }
 
   const emailReceipt = () => {
@@ -746,12 +900,12 @@ export default function PublicGovernanceSandbox() {
 
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                     <button
-                      onClick={downloadReceipt}
+                      onClick={downloadPDF}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-sm border border-emerald-500/20"
-                      title="Download full receipt as JSON"
+                      title="Download governance report as PDF"
                     >
                       <Download className="w-4 h-4" />
-                      Download Receipt
+                      Download PDF
                     </button>
                     <button
                       onClick={emailReceipt}
