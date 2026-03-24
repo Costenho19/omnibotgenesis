@@ -72,3 +72,9 @@ id = "JlPbZemnBvMMznluCuQ5y"
 uri = "file://OMNIX_Institutional_Report_SAMPLE.pdf"
 type = "pdf"
 title = "OMNIX Institutional Report — CP-6 visible y explicado"
+
+[[outputs]]
+id = "nf3HUrrAleHPP0KNwhWbB"
+uri = "file://OMNIX_System_Performance_Report_REAL.pdf"
+type = "pdf"
+title = "OMNIX — System Performance Report (Datos REALES)"
