@@ -298,7 +298,7 @@ export default function PublicGovernanceSandbox() {
     if (result.real_world_impact) {
       const rwi = result.real_world_impact
       checkPage(45)
-      sectionHeader(isEs ? 'IMPACTO EN EL MUNDO REAL' : 'REAL-WORLD IMPACT ANALYSIS')
+      sectionHeader(isEs ? 'IMPACTO ILUSTRATIVO (ESCENARIO HIPOTÉTICO)' : 'ILLUSTRATIVE IMPACT — HYPOTHETICAL SCENARIO')
       doc.setFontSize(8)
       const rows: [string, string][] = [
         [isEs ? 'Pérdida potencial de capital' : 'Potential capital loss', `${rwi.potential_loss_pct_low}% – ${rwi.potential_loss_pct_high}%`],
@@ -315,14 +315,19 @@ export default function PublicGovernanceSandbox() {
       })
       if (rwi.execution_prevented && rwi.estimated_loss_avoided > 0) {
         y += 2
-        doc.setFillColor(6, 78, 59)
-        doc.rect(M, y, CW, 11, 'F')
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(52, 211, 153)
+        doc.setFillColor(92, 70, 10)
+        doc.rect(M, y, CW, 16, 'F')
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(251, 191, 36)
         doc.text(
-          isEs ? `Pérdida estimada evitada: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}` : `Estimated loss avoided: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`,
-          W / 2, y + 7, { align: 'center' }
+          isEs ? `Pérdida ilustrativa evitada: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}` : `Illustrative loss avoided: $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`,
+          W / 2, y + 6, { align: 'center' }
         )
-        y += 15
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(6.5); doc.setTextColor(200, 170, 80)
+        doc.text(
+          isEs ? 'Estimación ilustrativa. No es una proyección financiera.' : 'Illustrative estimate based on hypothetical scenario inputs. Not a financial projection.',
+          W / 2, y + 12, { align: 'center' }
+        )
+        y += 20
       } else {
         y += 3
       }
@@ -387,12 +392,12 @@ export default function PublicGovernanceSandbox() {
       const lines = [
         ``,
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        isEs ? `⚠️  IMPACTO EN EL MUNDO REAL` : `⚠️  REAL-WORLD IMPACT ANALYSIS`,
+        isEs ? `⚠️  IMPACTO ILUSTRATIVO — ESCENARIO HIPOTÉTICO` : `⚠️  ILLUSTRATIVE IMPACT — HYPOTHETICAL SCENARIO`,
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
         ``,
         isEs
-          ? `  ¿Qué hubiera pasado sin OMNIX?`
-          : `  What would have happened without OMNIX?`,
+          ? `  ⚠️ Estimación ilustrativa — cifras generadas del texto hipotético, no de datos reales de mercado.`
+          : `  ⚠️ Illustrative only — figures derived from hypothetical scenario text, not live market data or real capital.`,
         ``,
         `  📉 ${isEs ? 'Pérdida potencial de capital' : 'Potential capital loss'}:  ${rwi.potential_loss_pct_low}% – ${rwi.potential_loss_pct_high}%`,
         `  💧 ${isEs ? 'Riesgo de trampa de liquidez' : 'Liquidity trap risk'}:     ${rwi.liquidity_trap_risk}`,
@@ -401,8 +406,9 @@ export default function PublicGovernanceSandbox() {
       ]
       if (rwi.execution_prevented && rwi.estimated_loss_avoided > 0) {
         lines.push(``)
-        lines.push(`  🛡️  ${isEs ? 'OMNIX bloqueó la ejecución ANTES de la exposición al mercado.' : 'OMNIX blocked execution BEFORE market exposure.'}`)
-        lines.push(`  💰 ${isEs ? 'Pérdida estimada evitada' : 'Estimated loss avoided'}:  $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`)
+        lines.push(`  🛡️  ${isEs ? 'El pipeline de gobernanza hubiera bloqueado la ejecución.' : 'Governance pipeline would block execution before market exposure.'}`)
+        lines.push(`  💰 ${isEs ? 'Pérdida ilustrativa evitada' : 'Illustrative loss avoided'}:  $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`)
+        lines.push(`  ⚠️  ${isEs ? 'Estimación ilustrativa. No es una proyección financiera.' : 'Illustrative estimate based on hypothetical scenario inputs. Not a financial projection.'}`)
       } else if (!rwi.execution_prevented) {
         lines.push(``)
         lines.push(`  ✅ ${isEs ? 'La decisión fue aprobada dentro de los parámetros de riesgo.' : 'Decision approved within risk parameters.'}`)
@@ -768,31 +774,34 @@ export default function PublicGovernanceSandbox() {
 
                   {result.real_world_impact && (
                     <div className="mt-6 text-left max-w-lg mx-auto">
-                      <div className={`rounded-xl border p-5 ${
-                        result.real_world_impact.execution_prevented
-                          ? 'bg-red-950/40 border-red-500/40'
-                          : 'bg-emerald-950/30 border-emerald-500/30'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-4">
-                          <AlertTriangle className={`w-4 h-4 ${result.real_world_impact.execution_prevented ? 'text-red-400' : 'text-emerald-400'}`} />
+                      <div className="rounded-xl border p-5 bg-amber-950/20 border-amber-500/30">
+
+                        {/* Header */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <AlertTriangle className="w-4 h-4 text-amber-400" />
                           <span className="text-sm font-bold tracking-wider text-white uppercase">
-                            Real-World Impact
+                            Illustrative Impact
                           </span>
-                          {result.real_world_impact.execution_prevented && (
-                            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 tracking-widest">
-                              PREVENTED
-                            </span>
-                          )}
+                          <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 tracking-widest uppercase">
+                            Hypothetical Scenario
+                          </span>
+                        </div>
+
+                        {/* Disclaimer top */}
+                        <div className="mb-4 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-500/20">
+                          <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                            <span className="font-semibold">Illustrative only.</span> These figures are generated from your hypothetical scenario text — not from live market data or real capital. Not a financial projection or investment advice.
+                          </p>
                         </div>
 
                         <p className="text-xs text-gray-400 mb-3 italic">
-                          Estimated consequence if executed without OMNIX:
+                          Estimated consequence if this scenario were executed without governance:
                         </p>
 
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center justify-between py-1.5 border-b border-white/5">
                             <span className="text-xs text-gray-400">Potential loss</span>
-                            <span className="text-sm font-bold text-red-400">
+                            <span className="text-sm font-bold text-amber-400">
                               {result.real_world_impact.potential_loss_pct_low}%–{result.real_world_impact.potential_loss_pct_high}% of capital
                             </span>
                           </div>
@@ -821,27 +830,28 @@ export default function PublicGovernanceSandbox() {
                           </div>
                         </div>
 
-                        <div className={`rounded-lg p-4 ${
-                          result.real_world_impact.execution_prevented
-                            ? 'bg-emerald-950/60 border border-emerald-500/30'
-                            : 'bg-blue-950/40 border border-blue-500/20'
-                        }`}>
-                          <p className="text-xs font-semibold text-emerald-400 mb-2 tracking-wide uppercase">
-                            OMNIX Intervention
+                        <div className="rounded-lg p-4 bg-slate-900/60 border border-slate-600/30">
+                          <p className="text-xs font-semibold text-slate-300 mb-2 tracking-wide uppercase">
+                            Governance Outcome
                           </p>
                           <p className="text-xs text-gray-300 mb-2">
                             {result.real_world_impact.execution_prevented
-                              ? '→ Execution prevented BEFORE market exposure'
-                              : '→ Decision approved within risk parameters'
+                              ? '→ Governance pipeline would block execution before market exposure'
+                              : '→ Scenario passes governance parameters'
                             }
                           </p>
                           {result.real_world_impact.execution_prevented && (
-                            <p className="text-base font-bold text-emerald-300">
-                              Estimated loss avoided:{' '}
-                              <span className="text-emerald-400">
-                                ${result.real_world_impact.estimated_loss_avoided.toLocaleString('en-US')}
-                              </span>
-                            </p>
+                            <>
+                              <p className="text-base font-bold text-slate-200">
+                                Illustrative loss avoided:{' '}
+                                <span className="text-amber-400">
+                                  ${result.real_world_impact.estimated_loss_avoided.toLocaleString('en-US')}
+                                </span>
+                              </p>
+                              <p className="text-[10px] text-gray-500 mt-1.5 italic">
+                                Illustrative estimate based on hypothetical scenario inputs. Not a financial projection.
+                              </p>
+                            </>
                           )}
                         </div>
                       </div>
