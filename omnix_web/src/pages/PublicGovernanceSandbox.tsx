@@ -186,25 +186,40 @@ export default function PublicGovernanceSandbox() {
 
     // ── HEADER ──────────────────────────────────────────────
     doc.setFillColor(5, 13, 24)
-    doc.rect(0, 0, W, 32, 'F')
-    doc.setTextColor(201, 162, 39)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(20)
-    doc.text('OMNIX', M, 13)
+    doc.rect(0, 0, W, 34, 'F')
+
+    // Logo OMNIX (569x379 px → ratio 1.502)
+    const logoW = 28; const logoH = logoW / 1.502
+    try {
+      const logoResp = await fetch('/omnix_logo.png')
+      const logoBlob = await logoResp.blob()
+      const logoDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(logoBlob)
+      })
+      doc.addImage(logoDataUrl, 'PNG', M, (34 - logoH) / 2, logoW, logoH)
+    } catch {
+      // fallback: texto si el logo no carga
+      doc.setTextColor(201, 162, 39); doc.setFont('helvetica', 'bold'); doc.setFontSize(20)
+      doc.text('OMNIX', M, 15)
+    }
+
+    const textX = M + logoW + 5
     doc.setTextColor(180, 180, 180)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8)
-    doc.text('DECISION GOVERNANCE INFRASTRUCTURE', M, 19)
+    doc.text('DECISION GOVERNANCE INFRASTRUCTURE', textX, 14)
     doc.setTextColor(100, 100, 100)
     doc.setFontSize(6.5)
-    doc.text('omnixquantum.net  |  contacto@omnixquantum.net', M, 25)
+    doc.text('omnixquantum.net  |  contacto@omnixquantum.net', textX, 20)
     doc.setTextColor(130, 130, 130)
     doc.setFont('courier', 'normal')
     doc.setFontSize(6.5)
-    doc.text(result.receipt_id || '', W - M, 13, { align: 'right' })
+    doc.text(result.receipt_id || '', W - M, 14, { align: 'right' })
     doc.setFont('helvetica', 'normal')
-    doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), W - M, 19, { align: 'right' })
-    y = 32
+    doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), W - M, 20, { align: 'right' })
+    y = 34
 
     // ── DECISION BANNER ─────────────────────────────────────
     if (isApproved) {
