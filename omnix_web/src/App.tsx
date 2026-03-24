@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ClientReportDownload from './pages/ClientReportDownload'
 import CommercialLanding from './pages/CommercialLanding'
 import InstitutionalPage from './pages/InstitutionalPage'
 import CreditGovernanceDemo from './pages/CreditGovernanceDemo'
@@ -24,6 +25,7 @@ function App() {
         <Route path="/try" element={<PublicGovernanceSandbox />} />
         <Route path="/verify" element={<PublicDecisionVerify />} />
         <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />
+        <Route path="/my-report" element={<ClientReportDownload />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terminal" element={<Navigate to="/" replace />} />
