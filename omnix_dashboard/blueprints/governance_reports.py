@@ -390,15 +390,19 @@ def _build_pdf_bytes(client: dict, period_label: str,
          Paragraph('Decisions\nBlocked',sMetL),     Paragraph('Est. Exposure\nProtected',sMetL)],
     ], colWidths=[(W-ML-MR)/4]*4)
     kpi.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,-1),NAVY_LIGHT),
-        ('BACKGROUND',(2,0),(2,1),colors.HexColor('#1A0A0A')),
-        ('BACKGROUND',(3,0),(3,1),colors.HexColor('#0A1A0A')),
-        ('BOX',(0,0),(0,1),0.5,colors.HexColor('#304060')),
-        ('BOX',(1,0),(1,1),0.5,colors.HexColor('#304060')),
-        ('BOX',(2,0),(2,1),0.5,colors.HexColor('#4A1010')),
-        ('BOX',(3,0),(3,1),0.5,colors.HexColor('#104A10')),
-        ('TEXTCOLOR',(2,0),(2,0),RED), ('TEXTCOLOR',(3,0),(3,0),GREEN),
-        ('TOPPADDING',(0,0),(-1,-1),8), ('BOTTOMPADDING',(0,0),(-1,-1),8),
+        ('BACKGROUND',(0,0),(-1,-1),WHITE),
+        ('BOX',(0,0),(0,1),1,colors.HexColor('#D0D8E8')),
+        ('BOX',(1,0),(1,1),1,colors.HexColor('#D0D8E8')),
+        ('BOX',(2,0),(2,1),1,colors.HexColor('#FFCCCC')),
+        ('BOX',(3,0),(3,1),1,colors.HexColor('#CCEECC')),
+        ('LINEBELOW',(0,0),(0,0),3,GOLD),
+        ('LINEBELOW',(1,0),(1,0),3,GREEN),
+        ('LINEBELOW',(2,0),(2,0),3,RED),
+        ('LINEBELOW',(3,0),(3,0),3,GREEN),
+        ('TEXTCOLOR',(0,0),(0,0),NAVY), ('TEXTCOLOR',(1,0),(1,0),GREEN),
+        ('TEXTCOLOR',(2,0),(2,0),RED),  ('TEXTCOLOR',(3,0),(3,0),GREEN),
+        ('TOPPADDING',(0,0),(-1,-1),10), ('BOTTOMPADDING',(0,0),(-1,-1),10),
+        ('LEFTPADDING',(0,0),(-1,-1),6), ('RIGHTPADDING',(0,0),(-1,-1),6),
         ('ALIGN',(0,0),(-1,-1),'CENTER'), ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
     ]))
     story.append(kpi)
@@ -550,13 +554,12 @@ def download_report_pdf():
         cur.execute("""
             SELECT
                 COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE decision = 'APPROVED') AS approved,
-                COUNT(*) FILTER (WHERE decision = 'BLOCKED')  AS blocked,
-                COUNT(*) FILTER (WHERE decision = 'HOLD')     AS hold
-            FROM governance_receipts
-            WHERE client_id = %s
-              AND created_at BETWEEN %s AND %s
-        """, (client['client_id'], from_dt, to_dt + ' 23:59:59'))
+                COUNT(*) FILTER (WHERE decision IN ('APPROVED','APPROVE')) AS approved,
+                COUNT(*) FILTER (WHERE decision IN ('BLOCKED','BLOCK'))    AS blocked,
+                COUNT(*) FILTER (WHERE decision = 'HOLD')                  AS hold
+            FROM decision_receipts
+            WHERE created_at BETWEEN %s AND %s
+        """, (from_dt, to_dt + ' 23:59:59'))
         row = cur.fetchone()
         cur.close(); conn.close()
         if row and row['total'] and int(row['total']) > 0:
