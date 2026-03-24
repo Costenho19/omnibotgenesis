@@ -1,9 +1,9 @@
 # OMNIX — Arquitectura
 
 **Internal Build Reference**: 6.5.4e  
-**Actualizado**: 5 de Marzo 2026  
-**Estado**: Producción 24/7 — 8-checkpoint trading pipeline (SIV CP-0, TCV CP-7, FTI CP-7b)  
-**Último Cambio**: 4 Architectural Gaps implemented — ADR-033/034/035/036 (Mar 5, 2026)
+**Actualizado**: 24 de Marzo 2026  
+**Estado**: Producción 24/7 — 8-checkpoint trading pipeline (SIV CP-0, TCV CP-7, FTI CP-7b) + EBIP  
+**Último Cambio**: Execution Boundary Integrity Protocol (EBIP) — ADR-045 (Mar 24, 2026)
 
 ---
 
@@ -360,6 +360,7 @@ class AdaptiveGateDecision:
 | **ForwardTrajectoryImplicator** | `omnix_core/temporal/forward_trajectory.py` | **Checkpoint 7b (FTI, ADR-034)** — forward implication gate (Mar 2026) |
 | **RegimeConditionedKelly** | `omnix_core/sizing/regime_conditioned_kelly.py` | **ADR-035** — regime-segmented Kelly inputs with 3-level fallback (Mar 2026) |
 | **ExitGovernanceEngine** | `omnix_core/governance/exit_governance.py` | **ADR-036** — 3-gate exit pipeline + PQC-signed receipts (Mar 2026) |
+| **ExecutionBoundaryIntegrityProtocol** | `omnix_services/governance_service/execution_integrity.py` | **ADR-045** — 4-component pre/post-evaluation integrity layer (Mar 2026) |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
@@ -695,6 +696,25 @@ Modern prompt engineering architecture with language-neutral base prompts:
 - `language_code='auto'` as DB default
 - `trading_terms` dictionaries for intent detection only (not language restriction)
 - TTS audio generated in detected response language
+
+---
+
+## Execution Boundary Integrity Protocol — ADR-045 (Mar 24, 2026)
+
+Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gobernanza.
+
+| Componente | Clase | Función |
+|------------|-------|---------|
+| **ACV** | `AdmissibilityConsistencyValidator` | Detecta señales internamente contradictorias antes de que corran los checkpoints |
+| **ECP** | `ExecutionCommitmentProtocol` | Commitment criptográfico a los criterios ANTES de evaluar — prueba que los criterios no cambiaron |
+| **NPM** | `NavigationPatternMonitor` | Monitorea distribución de decisiones — detecta concentración y path-dependency |
+| **CP** | `ConcentrationPredictor` | Predice riesgo de concentración ANTES de que emerja |
+
+**Tablas DB**: `navigation_patterns`, `admissibility_violations`  
+**API**: `GET /api/governance/execution-integrity` (sin auth — lectura pública)  
+**Ubicación**: `omnix_services/governance_service/execution_integrity.py`  
+
+**Diseño fail-safe**: EBIP falla de forma silenciosa — nunca bloquea el pipeline principal.
 
 ---
 
