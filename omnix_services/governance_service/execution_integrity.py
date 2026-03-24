@@ -164,10 +164,13 @@ class AdmissibilityConsistencyValidator:
         {
             "name": "ALL_SIGNALS_EXTREME",
             "description": "All signals at extremes simultaneously — statistically implausible, possible data error",
-            "condition": lambda s: all(
-                v > 90 or v < 10
-                for k, v in s.items()
-                if k in ["probability_score", "risk_exposure", "signal_coherence", "trend_persistence"]
+            "condition": lambda s: (
+                len([k for k in ["probability_score", "risk_exposure", "signal_coherence", "trend_persistence"] if k in s]) >= 2
+                and all(
+                    v > 90 or v < 10
+                    for k, v in s.items()
+                    if k in ["probability_score", "risk_exposure", "signal_coherence", "trend_persistence"]
+                )
             ),
             "severity": "HIGH",
         },
@@ -376,49 +379,37 @@ class NavigationPatternMonitor:
         try:
             with conn.cursor() as cur:
                 cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=window_hours)
+
                 cur.execute("""
                     SELECT
-                        COUNT(*) as total,
-                        SUM(approved_count) as approved,
-                        SUM(blocked_count) as blocked,
-                        SUM(hold_count) as hold,
-                        SUM(consistency_violations) as violations,
-                        dominant_checkpoint,
-                        COUNT(dominant_checkpoint) as cp_count
+                        COUNT(*) as row_count,
+                        COALESCE(SUM(approved_count), 0) as approved,
+                        COALESCE(SUM(blocked_count), 0) as blocked,
+                        COALESCE(SUM(hold_count), 0) as hold,
+                        COALESCE(SUM(consistency_violations), 0) as violations
                     FROM navigation_patterns
                     WHERE created_at >= %s
+                """, (cutoff,))
+                agg = cur.fetchone()
+                if not agg or not agg[0]:
+                    return self._fallback_health()
+
+                total = int(agg[0] or 0)
+                approved = int(agg[1] or 0)
+                blocked = int(agg[2] or 0)
+                hold = int(agg[3] or 0)
+                violations = int(agg[4] or 0)
+
+                cur.execute("""
+                    SELECT dominant_checkpoint
+                    FROM navigation_patterns
+                    WHERE created_at >= %s AND dominant_checkpoint != ''
                     GROUP BY dominant_checkpoint
-                    ORDER BY cp_count DESC
+                    ORDER BY COUNT(*) DESC
                     LIMIT 1
                 """, (cutoff,))
-                row = cur.fetchone()
-                if not row or not row[0]:
-                    cur.execute("""
-                        SELECT
-                            SUM(total_decisions) as total,
-                            SUM(approved_count) as approved,
-                            SUM(blocked_count) as blocked,
-                            SUM(hold_count) as hold,
-                            SUM(consistency_violations) as violations
-                        FROM navigation_patterns
-                        WHERE created_at >= %s
-                    """, (cutoff,))
-                    row2 = cur.fetchone()
-                    if not row2 or not row2[0]:
-                        return self._fallback_health()
-                    total = int(row2[0] or 0)
-                    approved = int(row2[1] or 0)
-                    blocked = int(row2[2] or 0)
-                    hold = int(row2[3] or 0)
-                    violations = int(row2[4] or 0)
-                    dominant_cp = "N/A"
-                else:
-                    total = int(row[0] or 0)
-                    approved = int(row[1] or 0)
-                    blocked = int(row[2] or 0)
-                    hold = int(row[3] or 0)
-                    violations = int(row[4] or 0)
-                    dominant_cp = row[5] or "N/A"
+                cp_row = cur.fetchone()
+                dominant_cp = cp_row[0] if cp_row else "N/A"
 
                 if total == 0:
                     return self._fallback_health()
