@@ -1,7 +1,7 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 27 de Febrero 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE**  
+**Fecha**: 24 de Marzo 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE**  
 **Versión interna (dev)**: V6.5.4e  
 **TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
 
@@ -14,6 +14,17 @@
 | Shadow Trade Events | 766,741 | Análisis contrafactual de vetos |
 | Capital Preserved | 98.42% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
+
+### Cambios Recientes (Mar 24, 2026) — Execution Boundary Integrity Protocol (EBIP)
+
+- **Mar 24**: **EBIP LIVE — ADR-045 implementado**. Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gobernanza:
+  - **ACV (AdmissibilityConsistencyValidator)**: Detecta combinaciones de señales internamente contradictorias ANTES de que corran los checkpoints. 5 reglas de contradicción (HIGH_PROBABILITY_HIGH_RISK, HIGH_COHERENCE_LOW_PERSISTENCE, HIGH_RESILIENCE_HIGH_EXPOSURE, LOW_LOGIC_HIGH_APPROVAL_SIGNALS, ALL_SIGNALS_EXTREME). Output: `consistency_score` (0–100), `is_consistent` boolean. Violaciones HIGH persistidas en `admissibility_violations`.
+  - **ECP (ExecutionCommitmentProtocol)**: Commitment criptográfico a los criterios de evaluación ANTES de correr el pipeline. Schema: `nonce + signals_hash + criteria_hash + timestamp_ns → SHA-256 → commitment_hash`. Detección de tampering verificada (señales alteradas = commitment inválido). Aproxima ZKP commitment semantics sin infraestructura ZKP completa.
+  - **NPM (NavigationPatternMonitor)**: Monitorea la distribución de decisiones sobre ventanas temporales. Detecta concentración y path-dependency DENTRO del espacio admisible — los patrones que admissibility sola no puede gobernar. Alert levels: NOMINAL / WATCH / CAUTION / CRITICAL. Persiste en `navigation_patterns`.
+  - **CP (ConcentrationPredictor)**: Predice riesgo de concentración ANTES de que emerja. Trend analysis sobre últimas N ventanas. Output: LOW / MEDIUM / HIGH / CRITICAL + confidence %.
+  - **API pública**: `GET /api/governance/execution-integrity` (sin auth).
+  - **Tablas nuevas**: `navigation_patterns`, `admissibility_violations` (creadas automáticamente).
+  - **Fail-safe**: EBIP nunca bloquea el pipeline principal — falla silenciosamente.
 
 ### Cambios Recientes (Mar 15, 2026) — Public Governance Sandbox (/try)
 
