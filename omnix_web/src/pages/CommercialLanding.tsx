@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'

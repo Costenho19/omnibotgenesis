@@ -35,6 +35,10 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/api/governance': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   }
 })
