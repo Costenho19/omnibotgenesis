@@ -67,6 +67,7 @@ export default function CommercialLanding() {
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
+            <Link to="/my-report" className="nav-link">Client Portal</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
         </div>
@@ -423,6 +424,9 @@ export default function CommercialLanding() {
             </Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details
+            </Link>
+            <Link to="/my-report" className="text-muted hover:text-white text-sm transition-colors">
+              Client Portal
             </Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
               Contact
