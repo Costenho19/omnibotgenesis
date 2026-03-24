@@ -15,6 +15,13 @@
 | Capital Preserved | 98.42% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
+### Cambios Recientes (Mar 24, 2026) — Semana 1 Eureka Demo Features
+
+- **Mar 24 (Semana 1)**: **3 features premium para demo Eureka Dubai GCC 2026 implementados y desplegados**:
+  1. **EBIP Dashboard Widget** — Nuevo widget en Performance Dashboard Flask (IIFE, SVG ring gauge, 4-component grid ACV/ECP/NPM/CP, navigation distribution bars, alert level pulse). Endpoint: `GET /api/governance/execution-integrity`. CSS + JS: `executionintegrity.js/css`.
+  2. **EBIP Score en Receipts** — Página pública `/verify/:receiptId` ahora muestra sección "Execution Boundary Integrity" con score, alert level, concentration risk, y estado de los 4 componentes al momento de la verificación. Backend: `_fetch_ebip_snapshot()` en `public_verify.py`.
+  3. **Contador en vivo en Homepage** — Sección "Live Production Data" mejorada: badge LIVE pulsante con animación CSS, `@keyframes omnixStatReveal` con stagger para cada número, **5ª métrica: Execution Integrity Score /100** (violeta, etiquetado ADR-045), indicador live dots. Hook `useLiveMetrics.ts` actualizado con `ebip_score` + `animKey`.
+
 ### Cambios Recientes (Mar 24, 2026) — Execution Boundary Integrity Protocol (EBIP)
 
 - **Mar 24**: **EBIP LIVE — ADR-045 implementado**. Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gobernanza:
