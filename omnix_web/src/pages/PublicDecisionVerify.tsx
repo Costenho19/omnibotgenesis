@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Shield, CheckCircle, XCircle, Clock, ExternalLink, Copy, ArrowLeft, Lock, AlertTriangle, Search } from 'lucide-react'
+import { Shield, CheckCircle, XCircle, Clock, ExternalLink, Copy, ArrowLeft, Lock, AlertTriangle, Search, Activity } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
 
@@ -23,6 +23,16 @@ interface IntegrityBlock {
   nist_note: string
 }
 
+interface EbipSnapshot {
+  overall_score: number
+  alert_level: string
+  concentration_risk: string
+  violations_24h: number
+  components_active: number
+  ebip_version: string
+  status_at: string
+}
+
 interface VerifyData {
   found: boolean
   receipt_id: string
@@ -42,6 +52,7 @@ interface VerifyData {
   policy_version: string
   engine_version: string
   independent_verify_url: string | null
+  ebip_at_verification: EbipSnapshot | null
 }
 
 function formatTimestamp(ts: string): string {
@@ -336,6 +347,69 @@ export default function PublicDecisionVerify() {
                   {data.checkpoints.map((cp, i) => (
                     <CheckpointCard key={i} cp={cp} index={i} />
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── EBIP Integrity at Verification Time ── */}
+            {data.ebip_at_verification && (
+              <div style={{
+                padding: '1.25rem', background: 'rgba(139,92,246,0.05)',
+                border: '1px solid rgba(139,92,246,0.20)', borderRadius: '10px', marginBottom: '1.5rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                  <Activity size={14} color="#a78bfa" />
+                  <span style={{ fontSize: '0.75rem', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                    Execution Boundary Integrity
+                  </span>
+                  <span style={{
+                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em',
+                    fontFamily: 'monospace', color: '#6b7280', marginLeft: 'auto',
+                  }}>ADR-045 · EBIP v{data.ebip_at_verification.ebip_version}</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '12px' }}>
+                  {[
+                    { code: 'ACV', label: 'Consistency Validator', ok: data.ebip_at_verification.violations_24h === 0 },
+                    { code: 'ECP', label: 'Commitment Protocol', ok: true },
+                    { code: 'NPM', label: 'Navigation Monitor', ok: data.ebip_at_verification.alert_level === 'NOMINAL' || data.ebip_at_verification.alert_level === 'WATCH' },
+                    { code: 'CP',  label: 'Concentration Predictor', ok: data.ebip_at_verification.concentration_risk === 'LOW' || data.ebip_at_verification.concentration_risk === 'INSUFFICIENT_DATA' },
+                  ].map(c => (
+                    <div key={c.code} style={{
+                      padding: '8px', background: 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${c.ok ? 'rgba(139,92,246,0.2)' : 'rgba(251,191,36,0.25)'}`,
+                      borderRadius: '6px', textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', fontWeight: 700, color: c.ok ? '#a78bfa' : '#fbbf24', marginBottom: '3px' }}>
+                        {c.ok ? '✓' : '⚠'} {c.code}
+                      </div>
+                      <div style={{ fontSize: '0.58rem', color: '#6b7280', lineHeight: 1.3 }}>{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Integrity Score</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'monospace', color: data.ebip_at_verification.overall_score >= 90 ? '#a78bfa' : data.ebip_at_verification.overall_score >= 70 ? '#fbbf24' : '#ef4444' }}>
+                      {data.ebip_at_verification.overall_score} <span style={{ fontSize: '0.7rem', color: '#4b5563' }}>/ 100</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Alert Level</div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, fontFamily: 'monospace', color: data.ebip_at_verification.alert_level === 'NOMINAL' ? '#a78bfa' : '#fbbf24' }}>
+                      {data.ebip_at_verification.alert_level}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Concentration Risk</div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, fontFamily: 'monospace', color: '#9ca3af' }}>
+                      {data.ebip_at_verification.concentration_risk.replace('_', ' ')}
+                    </div>
+                  </div>
+                  <div style={{ marginLeft: 'auto', fontSize: '0.6rem', color: '#4b5563', fontFamily: 'monospace' }}>
+                    {data.ebip_at_verification.components_active} components active
+                  </div>
                 </div>
               </div>
             )}

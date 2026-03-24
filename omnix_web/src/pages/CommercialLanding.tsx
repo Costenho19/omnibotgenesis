@@ -3,13 +3,17 @@ import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2 
 import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
+const liveStatStyle = (animKey: number): React.CSSProperties => ({
+  animation: animKey > 0 ? 'omnixStatReveal 0.6s ease both' : 'none',
+})
+
 const REFERRAL_OPTIONS = [
   'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
   'LinkedIn', 'Google', 'Recomendación', 'Otro'
 ]
 
 export default function CommercialLanding() {
-  const { metrics, isLive, formatNumber, formatNumberFull } = useLiveMetrics()
+  const { metrics, isLive, formatNumber, formatNumberFull, animKey } = useLiveMetrics()
   const [formData, setFormData] = useState({
     name: '', company: '', email: '', referral_source: '', message: ''
   })
@@ -150,31 +154,76 @@ export default function CommercialLanding() {
           </div>
         </section>
 
+        <style>{`
+          @keyframes omnixStatReveal {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes omnixPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+            50%       { opacity: 0.8; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+          }
+          .omnix-live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: omnixPulse 2s infinite;
+          }
+        `}</style>
+
         <section className="mb-24">
           <div className="glass-card p-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-2">Live Production Data</h2>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h2 className="text-3xl font-bold text-white">Live Production Data</h2>
+              {isLive && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
+                  <span className="omnix-live-dot" />
+                  LIVE
+                </span>
+              )}
+            </div>
             <p className="text-sm text-center text-muted mb-8">Internal dataset, not externally audited</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
+
+            <div key={animKey} className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center mb-6">
+              <div style={liveStatStyle(animKey)}>
                 <div className="text-3xl font-bold gold-text">{formatNumberFull(metrics.evaluation_cycles)}</div>
                 <div className="text-sm text-muted mt-1">Evaluation Cycles</div>
               </div>
-              <div>
+              <div style={{ ...liveStatStyle(animKey), animationDelay: '0.08s' }}>
                 <div className="text-3xl font-bold text-emerald-400">{formatNumber(metrics.pqc_signed_receipts)}</div>
                 <div className="text-sm text-muted mt-1">PQC-Signed Receipts</div>
               </div>
-              <div>
+              <div style={{ ...liveStatStyle(animKey), animationDelay: '0.16s' }}>
                 <div className="text-3xl font-bold text-white">{metrics.capital_preserved_pct}%</div>
                 <div className="text-sm text-muted mt-1">Capital Preserved</div>
               </div>
-              <div>
+              <div style={{ ...liveStatStyle(animKey), animationDelay: '0.24s' }}>
                 <div className="text-3xl font-bold gold-text">{metrics.verticals_demo}</div>
                 <div className="text-sm text-muted mt-1">Vertical Demos</div>
               </div>
+              <div style={{ ...liveStatStyle(animKey), animationDelay: '0.32s' }} className="md:col-span-2">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="text-3xl font-bold text-violet-400">{metrics.ebip_score}</div>
+                  <div className="text-lg font-bold text-muted/60">/ 100</div>
+                </div>
+                <div className="text-sm text-muted mt-1">Execution Integrity Score</div>
+                <div className="text-xs text-muted/40 mt-0.5">EBIP · ADR-045</div>
+              </div>
             </div>
-            <p className="text-xs text-center text-muted/60 mt-6">
-              {isLive ? '🟢 Live from PostgreSQL' : '⏳ Loading...'} — Running 24/7 since November 2025{metrics.system_uptime_days > 0 ? ` (${metrics.system_uptime_days} days)` : ''}
-            </p>
+
+            <div className="flex items-center justify-center gap-2 text-xs text-muted/60">
+              {isLive ? (
+                <>
+                  <span className="omnix-live-dot" style={{ width: '6px', height: '6px' }} />
+                  <span>Live from PostgreSQL</span>
+                </>
+              ) : (
+                <span>⏳ Connecting...</span>
+              )}
+              <span className="text-muted/30">·</span>
+              <span>Running 24/7 since November 2025{metrics.system_uptime_days > 0 ? ` (${metrics.system_uptime_days} days)` : ''}</span>
+            </div>
           </div>
         </section>
 

@@ -17,6 +17,12 @@ import os
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
 
+try:
+    from omnix_services.governance_service.execution_integrity import get_ebip as _get_ebip
+    _EBIP_AVAILABLE = True
+except Exception:
+    _EBIP_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 public_verify_bp = Blueprint('public_verify', __name__)
@@ -256,6 +262,29 @@ def _get_db_conn():
         return None
 
 
+def _fetch_ebip_snapshot() -> dict | None:
+    """Return a minimal EBIP status snapshot for inclusion in verify response. Never throws."""
+    if not _EBIP_AVAILABLE:
+        return None
+    try:
+        ebip = _get_ebip()
+        status = ebip.get_system_integrity_status()
+        nav = status.get('navigation_health', {})
+        cp = status.get('concentration_prediction', {})
+        return {
+            'overall_score': round(status.get('overall_execution_integrity', 100), 1),
+            'alert_level': nav.get('alert_level', 'NOMINAL'),
+            'concentration_risk': cp.get('predicted_risk', 'LOW'),
+            'violations_24h': status.get('recent_consistency_violations_24h', 0),
+            'components_active': 4,
+            'ebip_version': status.get('ebip_version', '1.0'),
+            'status_at': status.get('status_at', ''),
+        }
+    except Exception as e:
+        logger.debug(f"[PublicVerify] EBIP snapshot skipped: {e}")
+        return None
+
+
 def _check_rate_limit(ip: str) -> bool:
     now = time.time()
     _rate_limit_store.setdefault(ip, [])
@@ -335,6 +364,7 @@ def _fetch_receipt(receipt_id: str):
         'policy_version':         policy_version or '6.5.4e',
         'engine_version':         engine_version or '6.5.4e',
         'independent_verify_url': f"{railway_url}/verify/{rid}" if railway_url else None,
+        'ebip_at_verification':   _fetch_ebip_snapshot(),
     }
 
 

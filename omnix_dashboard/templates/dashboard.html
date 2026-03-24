@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/riskguardian.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/adaptive.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/benchmarks.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/executionintegrity.css') }}">
 {% endblock %}
 
 {% block body_class %}antialiased{% endblock %}
@@ -306,6 +307,12 @@
             </div>
         </div>
 
+        <div class="glass-card p-4 mb-6">
+            <div id="execution-integrity-widget">
+                <div class="text-slate-600 text-xs text-center py-6 uppercase tracking-wider">Loading Execution Integrity...</div>
+            </div>
+        </div>
+
         <div class="glass-card overflow-hidden">
             <div class="flex items-center justify-between p-4 border-b border-slate-800">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Trading Activity</h2>
@@ -355,5 +362,6 @@
 <script src="{{ url_for('static', filename='js/components/adaptive.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/benchmarks.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/snapshots.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/executionintegrity.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
 {% endblock %}

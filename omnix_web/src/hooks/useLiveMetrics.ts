@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export interface LiveMetrics {
   evaluation_cycles: number
@@ -7,6 +7,7 @@ export interface LiveMetrics {
   capital_preserved_pct: number
   verticals_demo: number
   system_uptime_days: number
+  ebip_score: number
 }
 
 const TRACK_RECORD_START = new Date('2026-01-15T00:00:00Z')
@@ -20,10 +21,12 @@ const FALLBACK_METRICS: LiveMetrics = {
   capital_preserved_pct: 98.42,
   verticals_demo: 4,
   system_uptime_days: calcUptimeDays(),
+  ebip_score: 100,
 }
 
 const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'
 const LOCAL_API = import.meta.env.VITE_API_BASE || ''
+const FLASK_API = import.meta.env.VITE_FLASK_API_URL || ''
 
 const NO_CACHE_OPTS: RequestInit = {
   cache: 'no-store',
@@ -35,9 +38,27 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [animKey, setAnimKey] = useState(0)
+  const wasLiveRef = useRef(false)
 
   useEffect(() => {
     let mounted = true
+
+    const fetchEbipScore = async (): Promise<number> => {
+      try {
+        const url = FLASK_API
+          ? `${FLASK_API}/api/governance/execution-integrity`
+          : `${LOCAL_API}/api/governance/execution-integrity`
+        const res = await fetch(url, NO_CACHE_OPTS)
+        if (res.ok) {
+          const d = await res.json()
+          if (d.execution_integrity?.overall_execution_integrity != null) {
+            return Math.round(d.execution_integrity.overall_execution_integrity)
+          }
+        }
+      } catch {}
+      return FALLBACK_METRICS.ebip_score
+    }
 
     const fetchFromRailway = async (): Promise<boolean> => {
       try {
@@ -47,6 +68,7 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
           const data = await response.json()
           if (mounted && data.governance_summary) {
             const gs = data.governance_summary
+            const ebip = await fetchEbipScore()
             setMetrics({
               evaluation_cycles: gs.total_evaluation_cycles || FALLBACK_METRICS.evaluation_cycles,
               pqc_signed_receipts: gs.total_receipts || FALLBACK_METRICS.pqc_signed_receipts,
@@ -54,9 +76,14 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
               capital_preserved_pct: gs.capital_preserved_pct ?? FALLBACK_METRICS.capital_preserved_pct,
               verticals_demo: gs.verticals_demo ?? FALLBACK_METRICS.verticals_demo,
               system_uptime_days: gs.system_uptime_days ?? FALLBACK_METRICS.system_uptime_days,
+              ebip_score: ebip,
             })
             setIsLive(true)
             setLastUpdated(new Date().toISOString())
+            if (!wasLiveRef.current) {
+              wasLiveRef.current = true
+              setAnimKey(k => k + 1)
+            }
             return true
           }
         }
@@ -71,9 +98,14 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
         if (response.ok) {
           const data = await response.json()
           if (mounted && data.success && data.metrics && data.live) {
-            setMetrics(data.metrics)
+            const ebip = await fetchEbipScore()
+            setMetrics({ ...data.metrics, ebip_score: ebip })
             setIsLive(true)
             setLastUpdated(data.last_updated)
+            if (!wasLiveRef.current) {
+              wasLiveRef.current = true
+              setAnimKey(k => k + 1)
+            }
             return true
           }
         }
@@ -115,5 +147,6 @@ export function useLiveMetrics(refreshIntervalMs = 60000) {
     lastUpdated,
     formatNumber,
     formatNumberFull,
+    animKey,
   }
 }

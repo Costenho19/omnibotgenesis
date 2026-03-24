@@ -270,7 +270,8 @@ const DashboardApp = (function() {
             { name: 'news', fn: () => OmnixNews.update('news-feed', 'news-source') },
             { name: 'system', fn: fetchSystemStatus },
             { name: 'riskguardian', fn: async () => { if (window.RiskGuardian) await RiskGuardian.refresh(); } },
-            { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } }
+            { name: 'adaptive', fn: async () => { if (window.AdaptiveEngine) await AdaptiveEngine.refresh(); } },
+            { name: 'executionintegrity', fn: async () => { if (window.ExecutionIntegrityWidget) await ExecutionIntegrityWidget.refresh(); } }
         ];
     }
 
@@ -296,6 +297,10 @@ const DashboardApp = (function() {
         
         if (window.BenchmarkOverlay) {
             BenchmarkOverlay.init('equity-chart', 'equity-panel-header');
+        }
+
+        if (window.ExecutionIntegrityWidget) {
+            ExecutionIntegrityWidget.init('execution-integrity-widget');
         }
 
         OmnixCommon.startAutoRefresh(refreshAllData, 10000);
