@@ -66,3 +66,9 @@ id = "_HkhppdCnmh53M40-2zAA"
 uri = "file://docs/business/pdfs/OMNIX_Business_Model_Canvas.pdf"
 type = "pdf"
 title = "2. Business Model Canvas"
+
+[[outputs]]
+id = "JlPbZemnBvMMznluCuQ5y"
+uri = "file://OMNIX_Institutional_Report_SAMPLE.pdf"
+type = "pdf"
+title = "OMNIX Institutional Governance Report — Muestra (Meridian Capital LLC)"
