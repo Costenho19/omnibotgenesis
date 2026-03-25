@@ -3266,9 +3266,9 @@ class AutoTradingBot:
                         return decision
                     elif not _sharia_result.pass_through:
                         logger.info(
-                            f"☪️ [CP-6] SHARIA_PASS: {symbol} "
-                            f"| score={_sharia_result.sharia_score:.0f}/100 "
-                            f"| threshold={_sharia_gharar_threshold:.0f}"
+                            f"☪️ [CP-6] SHARIA_PASS: {_sharia_result.violation or 'NONE'} "
+                            f"({_sharia_result.gharar_score:.0f} <= {_sharia_gharar_threshold:.0f}) "
+                            f"| asset={symbol} | score={_sharia_result.sharia_score:.0f}"
                         )
                     else:
                         logger.debug(f"☪️ [CP-6] SHARIA skipped (disabled) | {symbol}")
