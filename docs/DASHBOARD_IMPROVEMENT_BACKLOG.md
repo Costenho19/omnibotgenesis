@@ -369,7 +369,25 @@ All critical, high-priority, and nice-to-have features have been delivered.
 - **Reglas Sharia:** Screening halal/haram, sin riba, sin gharar excesivo, ratio de deuda ≤ 33%
 - **Output:** Recibo PQC con sello de cumplimiento Sharia verificable públicamente
 - **Mercado objetivo:** Fondos islámicos UAE, Arabia Saudita, Qatar
-- **Status:** PENDIENTE — prioridad pre-Eureka Dubai
+- **Status:** ✅ IMPLEMENTADO — Mar 25, 2026 (ADR-046 / CP-6)
+
+#### MOD-019: AML Compliance Gate
+- **Descripción:** Screening anti-lavado: monedas de privacidad, mixer tokens, volumen anómalo, patrones de structuring
+- **Implementación:** CP-9 — `omnix_core/governance/aml_gate.py`. Activar: `AML_GATE_ENABLED=true`
+- **Regulación:** FATF Rec.15, FinCEN, UAE Central Bank AML/CFT Framework
+- **Status:** ✅ IMPLEMENTADO — Mar 25, 2026 (ADR-047 / CP-9)
+
+#### MOD-020: Fraud Detection Gate
+- **Descripción:** Detección de manipulación de mercado: DCI extremo, divergencia técnica/sentimiento, reversiones rápidas
+- **Implementación:** CP-10 — `omnix_core/governance/fraud_gate.py`. Activar: `FRAUD_GATE_ENABLED=true`
+- **Regulación:** EU AI Act Art. 6, MiFID II, SEC Rule 10b-5
+- **Status:** ✅ IMPLEMENTADO — Mar 25, 2026 (ADR-048 / CP-10)
+
+#### MOD-021: Jurisdiction Compliance Gate
+- **Descripción:** Validación jurisdiccional: activos prohibidos y tipos de operación por país (UAE, EU, US, GCC)
+- **Implementación:** CP-11 — `omnix_core/governance/jurisdiction_gate.py`. Activar: `JURISDICTION_GATE_ENABLED=true` + `JURISDICTION=UAE`
+- **Regulación:** UAE VARA, EU MiCA, FinCEN/SEC, OFAC sanctions
+- **Status:** ✅ IMPLEMENTADO — Mar 25, 2026 (ADR-049 / CP-11)
 
 ---
 

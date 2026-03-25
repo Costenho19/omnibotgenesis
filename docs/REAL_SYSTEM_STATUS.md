@@ -55,6 +55,17 @@
     3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
   - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
 
+### Cambios Recientes (Mar 25, 2026) — Compliance Gates CP-9/10/11
+
+- **Mar 25**: **Compliance Gates CP-9, CP-10, CP-11 IMPLEMENTADOS — ADR-047/048/049**. Pipeline extendido a 11 checkpoints:
+  - **CP-9 AML Gate** (`aml_gate.py`): Screening anti-lavado: monedas de privacidad (XMR, ZEC, DASH, GRIN, BEAM), mixer tokens (TORN, RAIL), volumen anómalo (>$500K), frecuencia structuring (>10/24h). Activar: `AML_GATE_ENABLED=true`. Alineado FATF Rec.15, FinCEN, UAE Central Bank AML/CFT.
+  - **CP-10 Fraud Gate** (`fraud_gate.py`): Detección de manipulación: DCI ≥ 85 → VETO duro (EXTREME_DCI), divergencia técnica/sentimiento ≥ 60 → VETO duro (SIGNAL_DIVERGENCE), reversiones rápidas → penalización. Activar: `FRAUD_GATE_ENABLED=true`. Alineado EU AI Act Art. 6, MiFID II, SEC Rule 10b-5.
+  - **CP-11 Jurisdiction Gate** (`jurisdiction_gate.py`): Valida activo + tipo de operación contra framework jurisdiccional. UAE: XMR/ZEC/DASH/GRIN/BEAM prohibidos + no leverage/derivatives. EU: MiCA (solo XMR/GRIN/BEAM restringidos). US: FinCEN/SEC. GCC: UAE-aligned. Activar: `JURISDICTION_GATE_ENABLED=true` + `JURISDICTION=UAE`. Sanctions OFAC siempre activos.
+  - Todos deshabilitados por defecto — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+  - Logging estructurado: `[CP-9] AML_VETO/PASS`, `[CP-10] FRAUD_VETO/PASS`, `[CP-11] JURISDICTION_VETO/PASS`.
+  - Bloque de compliance en receipt PQC: `aml_compliance`, `fraud_compliance`, `jurisdiction_compliance` — dentro del payload firmado con Dilithium-3.
+  - 10/10 tests unitarios pasados. ADR-047, ADR-048, ADR-049 creados.
+
 ### Cambios Recientes (Mar 25, 2026) — CP-6 Sharia Governance Gate
 
 - **Mar 25**: **CP-6 Sharia Governance Gate IMPLEMENTADO — ADR-046**. Pipeline de 8 checkpoints ahora completo (CP-0 a CP-8). Nuevo módulo `omnix_core/governance/sharia_gate.py` insertado entre CP-5 (Adaptive Coherence) y CP-7 (TCV). Validaciones: screening halal/haram, veto duro por gharar excesivo (default threshold=70), control ratio de deuda (≤33%). Fail-safe: deshabilitado por defecto (`SHARIA_GATE_ENABLED=false`); excepciones → pass-through. Activación via env var por despliegue. Columnas añadidas a `b2b_clients`: `sharia_enabled`, `gharar_threshold`, `debt_ratio_max`. 5/5 unit tests pasados. ADR-046 creado. Dirigido al mercado del Golfo (fondos islámicos UAE, Arabia Saudita, Qatar). No impacto en clientes existentes ni en Railway.

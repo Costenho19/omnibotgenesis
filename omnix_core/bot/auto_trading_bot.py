@@ -278,6 +278,44 @@ except Exception:
     SHARIA_GATE_AVAILABLE = False
     logger.warning("⚠️ Sharia Gate no disponible - CP-6 pass-through")
 
+# Import AML Gate — ADR-047 / CP-9
+try:
+    from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig, load_aml_config_from_env
+    AML_GATE_AVAILABLE = True
+    logger.info("🏦 AML Governance Gate (ADR-047 / CP-9) disponible")
+except Exception:
+    AMLGate = None
+    AMLGateConfig = None
+    load_aml_config_from_env = None
+    AML_GATE_AVAILABLE = False
+    logger.warning("⚠️ AML Gate no disponible - CP-9 pass-through")
+
+# Import Fraud Gate — ADR-048 / CP-10
+try:
+    from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig, load_fraud_config_from_env
+    FRAUD_GATE_AVAILABLE = True
+    logger.info("🕵️ Fraud Governance Gate (ADR-048 / CP-10) disponible")
+except Exception:
+    FraudGate = None
+    FraudGateConfig = None
+    load_fraud_config_from_env = None
+    FRAUD_GATE_AVAILABLE = False
+    logger.warning("⚠️ Fraud Gate no disponible - CP-10 pass-through")
+
+# Import Jurisdiction Gate — ADR-049 / CP-11
+try:
+    from omnix_core.governance.jurisdiction_gate import (
+        JurisdictionGate, JurisdictionGateConfig, load_jurisdiction_config_from_env
+    )
+    JURISDICTION_GATE_AVAILABLE = True
+    logger.info("🌐 Jurisdiction Governance Gate (ADR-049 / CP-11) disponible")
+except Exception:
+    JurisdictionGate = None
+    JurisdictionGateConfig = None
+    load_jurisdiction_config_from_env = None
+    JURISDICTION_GATE_AVAILABLE = False
+    logger.warning("⚠️ Jurisdiction Gate no disponible - CP-11 pass-through")
+
 # Import Quantum Enhancements (V5.3 ULTRA - QRNG + QAOA)
 try:
     from quantum_enhancements import global_qaoa, get_quantum_stats
@@ -710,6 +748,40 @@ class AutoTradingBot:
                     'score': decision.get('sharia_score', 100.0),
                     'violation': decision.get('veto_reason', '') if not decision.get('sharia_admissible') else '',
                     'threshold': float(os.environ.get('SHARIA_GHARAR_THRESHOLD', '70.0')),
+                    'asset': decision.get('symbol', 'UNKNOWN'),
+                }
+
+            if 'aml_admissible' in decision:
+                receipt_input['aml_compliance'] = {
+                    'check': 'enabled' if not decision.get('aml_pass_through') else 'skipped',
+                    'result': 'skipped' if decision.get('aml_pass_through') else (
+                        'passed' if decision.get('aml_admissible') else 'failed'
+                    ),
+                    'score': decision.get('aml_score', 100.0),
+                    'violation': decision.get('veto_reason', '') if not decision.get('aml_admissible') else '',
+                    'asset': decision.get('symbol', 'UNKNOWN'),
+                }
+
+            if 'fraud_admissible' in decision:
+                receipt_input['fraud_compliance'] = {
+                    'check': 'enabled' if not decision.get('fraud_pass_through') else 'skipped',
+                    'result': 'skipped' if decision.get('fraud_pass_through') else (
+                        'passed' if decision.get('fraud_admissible') else 'failed'
+                    ),
+                    'integrity_score': decision.get('fraud_integrity_score', 100.0),
+                    'violation': decision.get('veto_reason', '') if not decision.get('fraud_admissible') else '',
+                    'asset': decision.get('symbol', 'UNKNOWN'),
+                }
+
+            if 'jurisdiction_admissible' in decision:
+                receipt_input['jurisdiction_compliance'] = {
+                    'check': 'enabled' if not decision.get('jurisdiction_pass_through') else 'skipped',
+                    'result': 'skipped' if decision.get('jurisdiction_pass_through') else (
+                        'passed' if decision.get('jurisdiction_admissible') else 'failed'
+                    ),
+                    'jurisdiction': decision.get('jurisdiction', os.environ.get('JURISDICTION', 'GLOBAL')),
+                    'compliance_score': decision.get('jurisdiction_compliance_score', 100.0),
+                    'violation': decision.get('veto_reason', '') if not decision.get('jurisdiction_admissible') else '',
                     'asset': decision.get('symbol', 'UNKNOWN'),
                 }
 
@@ -3604,8 +3676,177 @@ class AutoTradingBot:
             
             # ECW no bloquea (no early return), pero influye en should_trade final
             # Si ECW no pasa, el sistema mantiene HOLD pero permite scoring para métricas
-            
+
             logger.debug(f"[EXEC_PATH] Proceeding to scoring for {symbol} - Coherence Gate passed, ECW: {ecw_passed}")
+
+            # ========== ADR-047: AML GOVERNANCE GATE — CHECKPOINT 9 ==========
+            # Screens for Anti-Money Laundering risk: privacy coins, mixer tokens,
+            # anomalous volume, and structuring patterns. FATF/FinCEN/UAE Central Bank aligned.
+            # Fail-safe: exceptions → pass-through. Default: DISABLED.
+            if AML_GATE_AVAILABLE and AMLGate is not None:
+                try:
+                    _aml_cfg = load_aml_config_from_env()
+                    _aml_gate = AMLGate(_aml_cfg)
+                    _aml_result = _aml_gate.evaluate(
+                        symbol=symbol,
+                        proposed_action=decision.get('action', 'HOLD'),
+                        volume_usd=decision.get('estimated_value_usd', 0.0),
+                        trade_frequency_24h=0,
+                    )
+                    decision['aml_admissible'] = _aml_result.admissible
+                    decision['aml_score'] = _aml_result.aml_score
+                    decision['aml_pass_through'] = _aml_result.pass_through
+                    decision['decision_trace'].append(f"CP-9 AML: {_aml_result.reason}")
+
+                    if not _aml_result.admissible and not _aml_result.pass_through:
+                        decision['action'] = 'BLOCKED'
+                        decision['should_trade'] = False
+                        decision['confidence'] = 0.0
+                        decision['vetoed'] = True
+                        decision['veto_reason'] = 'AML_GATE_REJECTED'
+                        decision['veto_chain'].append('AML_GATE')
+                        decision['reason'].append(f"🚫 CP-9 AML VETO: {_aml_result.reason}")
+                        self._log_veto(
+                            veto_type='AML_GATE',
+                            symbol=symbol,
+                            blocked_capital=self._get_estimated_blocked_capital(),
+                            reason=_aml_result.reason,
+                            metadata={
+                                'aml_score': _aml_result.aml_score,
+                                'violation': _aml_result.violation,
+                                'risk_score': _aml_result.risk_score,
+                            },
+                        )
+                        logger.warning(
+                            f"🏦 [CP-9] AML_VETO: {_aml_result.violation} "
+                            f"| asset={symbol} | aml_score={_aml_result.aml_score:.0f}"
+                        )
+                        return decision
+                    elif not _aml_result.pass_through:
+                        logger.info(
+                            f"🏦 [CP-9] AML_PASS: {_aml_result.violation or 'NONE'} "
+                            f"| asset={symbol} | score={_aml_result.aml_score:.0f}/100"
+                        )
+                    else:
+                        logger.debug(f"🏦 [CP-9] AML skipped (disabled) | {symbol}")
+                except Exception as _aml_exc:
+                    logger.warning(f"⚠️ [CP-9 AML] Exception for {symbol}: {_aml_exc} → pass-through")
+
+            # ========== ADR-048: FRAUD DETECTION GATE — CHECKPOINT 10 ==========
+            # Detects market manipulation patterns: extreme DCI, signal divergence,
+            # contradictory simultaneous signals, rapid reversals.
+            # EU AI Act Art. 6 aligned. Fail-safe: exceptions → pass-through. Default: DISABLED.
+            if FRAUD_GATE_AVAILABLE and FraudGate is not None:
+                try:
+                    _fraud_cfg = load_fraud_config_from_env()
+                    _fraud_gate = FraudGate(_fraud_cfg)
+                    _dci = decision.get('decision_contradiction_index', 0.0)
+                    _tech_score = decision.get('score', 50.0)
+                    _sent_score = 50.0
+                    if 'v52_analysis' in decision:
+                        _sent_score = decision['v52_analysis'].get('sentiment_score', 50.0)
+                    _fraud_result = _fraud_gate.evaluate(
+                        symbol=symbol,
+                        proposed_action=decision.get('action', 'HOLD'),
+                        dci_score=_dci,
+                        technical_score=_tech_score,
+                        sentiment_score=_sent_score,
+                        recent_reversals=0,
+                    )
+                    decision['fraud_admissible'] = _fraud_result.admissible
+                    decision['fraud_integrity_score'] = _fraud_result.integrity_score
+                    decision['fraud_pass_through'] = _fraud_result.pass_through
+                    decision['decision_trace'].append(f"CP-10 FRAUD: {_fraud_result.reason}")
+
+                    if not _fraud_result.admissible and not _fraud_result.pass_through:
+                        decision['action'] = 'BLOCKED'
+                        decision['should_trade'] = False
+                        decision['confidence'] = 0.0
+                        decision['vetoed'] = True
+                        decision['veto_reason'] = 'FRAUD_GATE_REJECTED'
+                        decision['veto_chain'].append('FRAUD_GATE')
+                        decision['reason'].append(f"🚫 CP-10 FRAUD VETO: {_fraud_result.reason}")
+                        self._log_veto(
+                            veto_type='FRAUD_GATE',
+                            symbol=symbol,
+                            blocked_capital=self._get_estimated_blocked_capital(),
+                            reason=_fraud_result.reason,
+                            metadata={
+                                'integrity_score': _fraud_result.integrity_score,
+                                'violation': _fraud_result.violation,
+                                'fraud_score': _fraud_result.fraud_score,
+                            },
+                        )
+                        logger.warning(
+                            f"🕵️ [CP-10] FRAUD_VETO: {_fraud_result.violation} "
+                            f"| asset={symbol} | integrity={_fraud_result.integrity_score:.0f}"
+                        )
+                        return decision
+                    elif not _fraud_result.pass_through:
+                        logger.info(
+                            f"🕵️ [CP-10] FRAUD_PASS: {_fraud_result.violation or 'NONE'} "
+                            f"| asset={symbol} | integrity={_fraud_result.integrity_score:.0f}/100"
+                        )
+                    else:
+                        logger.debug(f"🕵️ [CP-10] FRAUD skipped (disabled) | {symbol}")
+                except Exception as _fraud_exc:
+                    logger.warning(f"⚠️ [CP-10 FRAUD] Exception for {symbol}: {_fraud_exc} → pass-through")
+
+            # ========== ADR-049: JURISDICTION COMPLIANCE GATE — CHECKPOINT 11 ==========
+            # Validates asset and operation type against jurisdictional regulatory framework.
+            # Supports UAE (VARA), EU (MiCA), US (FinCEN/SEC), GCC. Default: DISABLED.
+            if JURISDICTION_GATE_AVAILABLE and JurisdictionGate is not None:
+                try:
+                    _juris_cfg = load_jurisdiction_config_from_env()
+                    _juris_gate = JurisdictionGate(_juris_cfg)
+                    _juris_result = _juris_gate.evaluate(
+                        symbol=symbol,
+                        proposed_action=decision.get('action', 'HOLD'),
+                        operation_type='spot',
+                    )
+                    decision['jurisdiction_admissible'] = _juris_result.admissible
+                    decision['jurisdiction_compliance_score'] = _juris_result.compliance_score
+                    decision['jurisdiction_pass_through'] = _juris_result.pass_through
+                    decision['decision_trace'].append(
+                        f"CP-11 JURISDICTION [{_juris_result.jurisdiction}]: {_juris_result.reason}"
+                    )
+
+                    if not _juris_result.admissible and not _juris_result.pass_through:
+                        decision['action'] = 'BLOCKED'
+                        decision['should_trade'] = False
+                        decision['confidence'] = 0.0
+                        decision['vetoed'] = True
+                        decision['veto_reason'] = 'JURISDICTION_GATE_REJECTED'
+                        decision['veto_chain'].append('JURISDICTION_GATE')
+                        decision['reason'].append(
+                            f"🚫 CP-11 JURISDICTION VETO [{_juris_result.jurisdiction}]: {_juris_result.reason}"
+                        )
+                        self._log_veto(
+                            veto_type='JURISDICTION_GATE',
+                            symbol=symbol,
+                            blocked_capital=self._get_estimated_blocked_capital(),
+                            reason=_juris_result.reason,
+                            metadata={
+                                'jurisdiction': _juris_result.jurisdiction,
+                                'violation': _juris_result.violation,
+                                'compliance_score': _juris_result.compliance_score,
+                            },
+                        )
+                        logger.warning(
+                            f"🌐 [CP-11] JURISDICTION_VETO: {_juris_result.violation} "
+                            f"| asset={symbol} | jurisdiction={_juris_result.jurisdiction}"
+                        )
+                        return decision
+                    elif not _juris_result.pass_through:
+                        logger.info(
+                            f"🌐 [CP-11] JURISDICTION_PASS: {_juris_result.violation or 'NONE'} "
+                            f"| asset={symbol} | jurisdiction={_juris_result.jurisdiction} "
+                            f"| score={_juris_result.compliance_score:.0f}/100"
+                        )
+                    else:
+                        logger.debug(f"🌐 [CP-11] JURISDICTION skipped (disabled) | {symbol}")
+                except Exception as _juris_exc:
+                    logger.warning(f"⚠️ [CP-11 JURISDICTION] Exception for {symbol}: {_juris_exc} → pass-through")
 
             # ─── ADR-041: Multi-Agent Governance Hook ──────────────────────────
             # Additive layer — never blocks pipeline. Default OFF.

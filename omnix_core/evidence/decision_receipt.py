@@ -90,6 +90,15 @@ class DecisionReceiptEngine:
         if 'sharia_compliance' in decision:
             public_payload['sharia_compliance'] = decision['sharia_compliance']
 
+        if 'aml_compliance' in decision:
+            public_payload['aml_compliance'] = decision['aml_compliance']
+
+        if 'fraud_compliance' in decision:
+            public_payload['fraud_compliance'] = decision['fraud_compliance']
+
+        if 'jurisdiction_compliance' in decision:
+            public_payload['jurisdiction_compliance'] = decision['jurisdiction_compliance']
+
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 

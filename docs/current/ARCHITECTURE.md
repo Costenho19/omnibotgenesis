@@ -361,6 +361,10 @@ class AdaptiveGateDecision:
 | **RegimeConditionedKelly** | `omnix_core/sizing/regime_conditioned_kelly.py` | **ADR-035** — regime-segmented Kelly inputs with 3-level fallback (Mar 2026) |
 | **ExitGovernanceEngine** | `omnix_core/governance/exit_governance.py` | **ADR-036** — 3-gate exit pipeline + PQC-signed receipts (Mar 2026) |
 | **ExecutionBoundaryIntegrityProtocol** | `omnix_services/governance_service/execution_integrity.py` | **ADR-045** — 4-component pre/post-evaluation integrity layer (Mar 2026) |
+| **ShariaGate** | `omnix_core/governance/sharia_gate.py` | **CP-6 (ADR-046)** — Islamic finance compliance gate: halal/haram, gharar, debt ratio (Mar 2026) |
+| **AMLGate** | `omnix_core/governance/aml_gate.py` | **CP-9 (ADR-047)** — Anti-Money Laundering gate: privacy coins, volume, structuring (Mar 2026) |
+| **FraudGate** | `omnix_core/governance/fraud_gate.py` | **CP-10 (ADR-048)** — Fraud/manipulation detection: DCI, signal divergence, reversals (Mar 2026) |
+| **JurisdictionGate** | `omnix_core/governance/jurisdiction_gate.py` | **CP-11 (ADR-049)** — Jurisdictional compliance: UAE/EU/US/GCC asset & operation rules (Mar 2026) |
 | Non-Markovian Kernel | `omnix_core/strategies/non_markovian_kernel.py` | Memoria temporal |
 | Risk Guardian V5.4 | `omnix_services/monitoring/risk_guardian.py` | Protección overtrading |
 
