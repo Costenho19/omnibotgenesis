@@ -87,6 +87,9 @@ class DecisionReceiptEngine:
             'signing_provider': provider_id,
         }
 
+        if 'sharia_compliance' in decision:
+            public_payload['sharia_compliance'] = decision['sharia_compliance']
+
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 

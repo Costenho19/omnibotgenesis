@@ -700,6 +700,19 @@ class AutoTradingBot:
                 'policy_version': os.environ.get('OMNIX_VERSION', '6.5.4e'),
             }
 
+            if 'sharia_admissible' in decision:
+                _sharia_check = 'skipped' if decision.get('sharia_pass_through') else (
+                    'passed' if decision.get('sharia_admissible') else 'failed'
+                )
+                receipt_input['sharia_compliance'] = {
+                    'check': 'enabled' if not decision.get('sharia_pass_through') else 'skipped',
+                    'result': _sharia_check,
+                    'score': decision.get('sharia_score', 100.0),
+                    'violation': decision.get('veto_reason', '') if not decision.get('sharia_admissible') else '',
+                    'threshold': float(os.environ.get('SHARIA_GHARAR_THRESHOLD', '70.0')),
+                    'asset': decision.get('symbol', 'UNKNOWN'),
+                }
+
             prev_hash = self.receipt_engine.get_last_hash()
             receipt = self.receipt_engine.generate_receipt(receipt_input, prev_hash)
             stored = self.receipt_engine.store_receipt(receipt)
@@ -3246,14 +3259,19 @@ class AutoTradingBot:
                             },
                         )
                         logger.warning(
-                            f"☪️ [SHARIA_VETO] {symbol} | score={_sharia_result.sharia_score:.0f} "
-                            f"violation={_sharia_result.violation}"
+                            f"☪️ [CP-6] SHARIA_VETO: {_sharia_result.violation} "
+                            f"({_sharia_result.gharar_score:.0f} > {_sharia_gharar_threshold:.0f}) "
+                            f"| asset={symbol} | score={_sharia_result.sharia_score:.0f}"
                         )
                         return decision
-                    else:
-                        logger.debug(
-                            f"☪️ [CP-6] {symbol} | {_sharia_result.reason}"
+                    elif not _sharia_result.pass_through:
+                        logger.info(
+                            f"☪️ [CP-6] SHARIA_PASS: {symbol} "
+                            f"| score={_sharia_result.sharia_score:.0f}/100 "
+                            f"| threshold={_sharia_gharar_threshold:.0f}"
                         )
+                    else:
+                        logger.debug(f"☪️ [CP-6] SHARIA skipped (disabled) | {symbol}")
                 except Exception as _sharia_exc:
                     logger.warning(f"⚠️ [CP-6 SHARIA] Exception for {symbol}: {_sharia_exc} → pass-through")
 
