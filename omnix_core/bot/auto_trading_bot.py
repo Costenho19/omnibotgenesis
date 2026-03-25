@@ -3799,10 +3799,12 @@ class AutoTradingBot:
                 try:
                     _juris_cfg = load_jurisdiction_config_from_env()
                     _juris_gate = JurisdictionGate(_juris_cfg)
+                    import os as _juris_os
+                    _op_type = _juris_os.environ.get('JURISDICTION_OP_TYPE', 'spot').lower()
                     _juris_result = _juris_gate.evaluate(
                         symbol=symbol,
                         proposed_action=decision.get('action', 'HOLD'),
-                        operation_type='spot',
+                        operation_type=_op_type,
                     )
                     decision['jurisdiction_admissible'] = _juris_result.admissible
                     decision['jurisdiction_compliance_score'] = _juris_result.compliance_score

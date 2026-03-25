@@ -11,9 +11,28 @@ ADR-037: Per-Client Configurable Thresholds
 """
 
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger("OMNIX.Governance")
+
+try:
+    from omnix_core.governance.aml_gate import AMLGate, load_aml_config_from_env
+    _AML_AVAILABLE = True
+except Exception:
+    _AML_AVAILABLE = False
+
+try:
+    from omnix_core.governance.fraud_gate import FraudGate, load_fraud_config_from_env
+    _FRAUD_AVAILABLE = True
+except Exception:
+    _FRAUD_AVAILABLE = False
+
+try:
+    from omnix_core.governance.jurisdiction_gate import JurisdictionGate, load_jurisdiction_config_from_env
+    _JURISDICTION_AVAILABLE = True
+except Exception:
+    _JURISDICTION_AVAILABLE = False
 
 # Safety floors: absolute min/max each client is allowed to set per checkpoint.
 # Prevents clients from disabling governance by setting trivially permissive thresholds.
@@ -169,6 +188,7 @@ class GovernanceEvaluationEngine:
         asset: str = "UNKNOWN",
         domain: str = "generic",
         metadata: dict[str, Any] | None = None,
+        compliance_config: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Run the 8-checkpoint evaluation pipeline on normalized signals.
@@ -245,8 +265,109 @@ class GovernanceEvaluationEngine:
 
         decision = "BLOCKED" if overall_blocked else "APPROVED"
 
+        compliance_blocks: dict[str, Any] = {}
+        cfg = compliance_config or {}
+
+        if not overall_blocked:
+            action_for_gates = "BUY" if decision == "APPROVED" else "HOLD"
+
+            if _AML_AVAILABLE and cfg.get("aml_enabled",
+                    os.environ.get("AML_GATE_ENABLED", "false").lower() == "true"):
+                try:
+                    aml_cfg = load_aml_config_from_env()
+                    aml_cfg.enabled = True
+                    aml_result = AMLGate(aml_cfg).evaluate(asset, action_for_gates)
+                    compliance_blocks["aml_compliance"] = {
+                        "check": "enabled",
+                        "result": "passed" if aml_result.admissible else "failed",
+                        "score": aml_result.aml_score,
+                        "violation": aml_result.violation,
+                        "asset": asset,
+                    }
+                    if not aml_result.admissible:
+                        decision = "BLOCKED"
+                        overall_blocked = True
+                        decision_trace.append(f"CP-9 AML_VETO: {aml_result.reason}")
+                        veto_chain.append({"checkpoint_id": "CP-9", "checkpoint_name": "AML Gate",
+                                           "result": "VETO", "violation": aml_result.violation})
+                        logger.warning(f"🏦 [CP-9] AML_VETO: {aml_result.violation} | asset={asset}")
+                    else:
+                        decision_trace.append(f"CP-9 AML_PASS: score={aml_result.aml_score:.0f}/100")
+                except Exception as e:
+                    logger.warning(f"⚠️ [CP-9 AML] B2B exception for {asset}: {e} → pass-through")
+
+            if _FRAUD_AVAILABLE and cfg.get("fraud_enabled",
+                    os.environ.get("FRAUD_GATE_ENABLED", "false").lower() == "true"):
+                try:
+                    fraud_cfg = load_fraud_config_from_env()
+                    fraud_cfg.enabled = True
+                    dci = resolved_signals.get("logic_consistency", 50.0)
+                    fraud_dci = max(0.0, 100.0 - dci)
+                    fraud_result = FraudGate(fraud_cfg).evaluate(
+                        asset, action_for_gates,
+                        dci_score=fraud_dci,
+                        technical_score=resolved_signals.get("probability_score", 50.0),
+                        sentiment_score=resolved_signals.get("signal_coherence", 50.0),
+                    )
+                    compliance_blocks["fraud_compliance"] = {
+                        "check": "enabled",
+                        "result": "passed" if fraud_result.admissible else "failed",
+                        "integrity_score": fraud_result.integrity_score,
+                        "violation": fraud_result.violation,
+                        "asset": asset,
+                    }
+                    if not fraud_result.admissible:
+                        decision = "BLOCKED"
+                        overall_blocked = True
+                        decision_trace.append(f"CP-10 FRAUD_VETO: {fraud_result.reason}")
+                        veto_chain.append({"checkpoint_id": "CP-10", "checkpoint_name": "Fraud Gate",
+                                           "result": "VETO", "violation": fraud_result.violation})
+                        logger.warning(f"🕵️ [CP-10] FRAUD_VETO: {fraud_result.violation} | asset={asset}")
+                    else:
+                        decision_trace.append(f"CP-10 FRAUD_PASS: integrity={fraud_result.integrity_score:.0f}/100")
+                except Exception as e:
+                    logger.warning(f"⚠️ [CP-10 FRAUD] B2B exception for {asset}: {e} → pass-through")
+
+            if _JURISDICTION_AVAILABLE and cfg.get("jurisdiction_enabled",
+                    os.environ.get("JURISDICTION_GATE_ENABLED", "false").lower() == "true"):
+                try:
+                    from omnix_core.governance.jurisdiction_gate import JurisdictionGateConfig
+                    _j = load_jurisdiction_config_from_env()
+                    juris_cfg = JurisdictionGateConfig(
+                        enabled=True,
+                        jurisdiction=cfg.get("jurisdiction",
+                                             os.environ.get("JURISDICTION", _j.jurisdiction or "GLOBAL")),
+                        operation_type=cfg.get("operation_type",
+                                               os.environ.get("JURISDICTION_OP_TYPE", "spot")),
+                        block_sanctioned_assets=cfg.get("jurisdiction_block_sanctioned", True),
+                    )
+                    op_type = juris_cfg.operation_type.lower()
+                    juris_result = JurisdictionGate(juris_cfg).evaluate(asset, action_for_gates, op_type)
+                    compliance_blocks["jurisdiction_compliance"] = {
+                        "check": "enabled",
+                        "result": "passed" if juris_result.admissible else "failed",
+                        "jurisdiction": juris_result.jurisdiction,
+                        "compliance_score": juris_result.compliance_score,
+                        "violation": juris_result.violation,
+                        "asset": asset,
+                    }
+                    if not juris_result.admissible:
+                        decision = "BLOCKED"
+                        overall_blocked = True
+                        decision_trace.append(f"CP-11 JURISDICTION_VETO: {juris_result.reason}")
+                        veto_chain.append({"checkpoint_id": "CP-11",
+                                           "checkpoint_name": f"Jurisdiction Gate ({juris_result.jurisdiction})",
+                                           "result": "VETO", "violation": juris_result.violation})
+                        logger.warning(f"🌐 [CP-11] JURISDICTION_VETO: {juris_result.violation} | asset={asset}")
+                    else:
+                        decision_trace.append(
+                            f"CP-11 JURISDICTION_PASS: {juris_result.jurisdiction} | score={juris_result.compliance_score:.0f}/100"
+                        )
+                except Exception as e:
+                    logger.warning(f"⚠️ [CP-11 JURISDICTION] B2B exception for {asset}: {e} → pass-through")
+
         all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
-        return {
+        result: dict[str, Any] = {
             "decision": decision,
             "asset": asset,
             "domain": domain,
@@ -259,6 +380,9 @@ class GovernanceEvaluationEngine:
             "checkpoints_passed": sum(1 for g in gate_results if g["result"] == "PASS"),
             "checkpoints_blocked": sum(1 for g in gate_results if g["result"] == "BLOCKED"),
         }
+        if compliance_blocks:
+            result["compliance"] = compliance_blocks
+        return result
 
     @staticmethod
     def validate_signals(signals: dict) -> tuple[bool, str]:

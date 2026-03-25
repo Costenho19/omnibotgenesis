@@ -152,18 +152,31 @@ class AMLGate:
                 aml_score=100.0,
             )
 
-        if self.config.block_privacy_coins and (
-            base_symbol in self._high_risk or full_symbol in self._high_risk
-        ):
+        base_in_privacy = base_symbol in HIGH_RISK_AML_ASSETS or full_symbol in HIGH_RISK_AML_ASSETS
+        base_in_mixer = base_symbol in AML_MIXER_TOKENS or full_symbol in AML_MIXER_TOKENS
+
+        if self.config.block_privacy_coins and base_in_privacy and not base_in_mixer:
             return AMLVetoResult(
                 admissible=False,
                 pass_through=False,
                 reason=(
-                    f"CP-9 AML VETO: {symbol} is a high-risk AML asset "
-                    f"(privacy coin or mixer token)"
+                    f"CP-9 AML VETO: {symbol} is a high-risk AML asset (privacy coin)"
                 ),
                 asset=symbol,
-                violation="HIGH_RISK_AML_ASSET",
+                violation="HIGH_RISK_AML_ASSET_PRIVACY_COIN",
+                risk_score=100.0,
+                aml_score=0.0,
+            )
+
+        if self.config.block_mixer_tokens and base_in_mixer:
+            return AMLVetoResult(
+                admissible=False,
+                pass_through=False,
+                reason=(
+                    f"CP-9 AML VETO: {symbol} is a mixer/tumbler token (prohibited under AML)"
+                ),
+                asset=symbol,
+                violation="HIGH_RISK_AML_ASSET_MIXER",
                 risk_score=100.0,
                 aml_score=0.0,
             )
