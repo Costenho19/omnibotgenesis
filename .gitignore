@@ -102,3 +102,9 @@ PROMETHEUS_*.md
 STOCK_*.md
 SUBIR_*.md
 ESTRUCTURA_*.md
+
+# PDFs generados en root — regenerables
+/*.pdf
+
+# Output completo — archivos generados, no código
+output/
