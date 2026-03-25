@@ -511,6 +511,7 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
     │     ├── [CP-3]  VETO Early Return                           │
     │     ├── [CP-4]  Coherence Engine → 6-tier veto              │
     │     ├── [CP-5]  Adaptive Coherence Gate (ADR-007)           │
+    │     ├── [CP-6]  Sharia Governance Gate (ADR-046) [opt-in]   │
     │     ├── [CP-7]  TCV → backward trajectory (ADR-032)         │
     │     ├── [CP-7b] FTI → forward implication (ADR-034)         │
     │     ├── [CP-8]  ECW Gate → edge persistence (ADR-019)       │
@@ -533,9 +534,10 @@ Antes de V6.5.4d, los comandos `/pausar` y `/reanudar` solo actualizaban la DB p
 > **Nota de numeración CP-X**: Los números de checkpoint reflejan el orden de introducción
 > arquitectural (por ADR), no posición secuencial. CP-7 fue el séptimo gate introducido
 > (ADR-032, TCV, Mar 2026). CP-0 (SIV, ADR-033) fue insertado al frente del pipeline
-> posteriormente. CP-6 no está asignado — no es un gap funcional, sino un número no
-> utilizado entre los gates históricos (CP-5 Adaptive Coherence Gate, ADR-007, Jan 2026)
-> y el gate nuevo (CP-7 TCV, ADR-032, Mar 2026).
+> posteriormente. CP-6 fue asignado en Mar 2026 al **Sharia Governance Gate** (ADR-046)
+> — posicionado entre CP-5 (Adaptive Coherence Gate) y CP-7 (TCV). Habilitado por variable
+> de entorno `SHARIA_GATE_ENABLED`. Por defecto deshabilitado (pass-through) para todos
+> los clientes existentes. El pipeline de checkpoints CP-0 a CP-8 ahora está completo.
 
 ### Flujo del Event Bridge
 

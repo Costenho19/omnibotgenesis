@@ -296,6 +296,30 @@
 
 ---
 
+## DOMINIO 12: Governance Checkpoints — Pipeline Entries (Post-Feb 2026)
+
+> **Nota**: Este dominio registra los checkpoints del pipeline de trading bot añadidos después del snapshot inicial (Dic 2025). Los CPs anteriores están cubiertos en Dominio 4 (Risk) y Dominio 1 (Strategies).
+
+### Fase de Migración: **FASE POST-MVP**
+
+| # | Componente | Ubicación Legacy | ADR | Estado | Activación | Prioridad |
+|---|------------|------------------|-----|--------|------------|-----------|
+| 12.1 | TCV — Temporal Coherence Validator (CP-7) | `omnix_core/temporal/coherence_validator.py` | ADR-032 | ✅ LIVE | Siempre activo | ✅ CORE |
+| 12.2 | FTI — Forward Trajectory Implicator (CP-7b) | `omnix_core/temporal/forward_trajectory.py` | ADR-034 | ✅ LIVE | Siempre activo | ✅ CORE |
+| 12.3 | SIV — Signal Integrity Validator (CP-0) | `omnix_core/data/signal_integrity_validator.py` | ADR-033 | ✅ LIVE | Siempre activo | ✅ CORE |
+| 12.4 | Sharia Governance Gate (CP-6) | `omnix_core/governance/sharia_gate.py` | ADR-046 | ✅ IMPLEMENTED | `SHARIA_GATE_ENABLED=true` | ✅ STRATEGIC |
+
+**Cobertura Dominio 12**: 4/4 componentes ✅ (Mar 2026)
+
+**CP-6 Notas:**
+- Default: deshabilitado (pass-through). Zero impacto en clientes existentes.
+- Activación: `SHARIA_GATE_ENABLED=true` en env vars del despliegue.
+- Mercado objetivo: fondos islámicos UAE, Saudi Arabia, Qatar.
+- Halal whitelist: BTC, ETH, SOL, ADA, DOT, AVAX, LINK, MATIC y pares USD/USDT.
+- Vetos: HARAM_ASSET (hard), GHARAR_EXCESIVO (hard, >70 DCI), deuda excesiva (score).
+
+---
+
 ## FUNCIONALIDADES HUÉRFANAS O SIN COBERTURA
 
 ### Revisión de cobertura: ❌ NINGUNA

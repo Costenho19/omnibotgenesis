@@ -55,6 +55,12 @@
     3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
   - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
 
+### Cambios Recientes (Mar 25, 2026) — CP-6 Sharia Governance Gate
+
+- **Mar 25**: **CP-6 Sharia Governance Gate IMPLEMENTADO — ADR-046**. Pipeline de 8 checkpoints ahora completo (CP-0 a CP-8). Nuevo módulo `omnix_core/governance/sharia_gate.py` insertado entre CP-5 (Adaptive Coherence) y CP-7 (TCV). Validaciones: screening halal/haram, veto duro por gharar excesivo (default threshold=70), control ratio de deuda (≤33%). Fail-safe: deshabilitado por defecto (`SHARIA_GATE_ENABLED=false`); excepciones → pass-through. Activación via env var por despliegue. Columnas añadidas a `b2b_clients`: `sharia_enabled`, `gharar_threshold`, `debt_ratio_max`. 5/5 unit tests pasados. ADR-046 creado. Dirigido al mercado del Golfo (fondos islámicos UAE, Arabia Saudita, Qatar). No impacto en clientes existentes ni en Railway.
+
+---
+
 ### Cambios Recientes (Mar 11, 2026) — Per-Client Configurable Thresholds
 
 - **Mar 11**: **Per-client configurable thresholds LIVE — ADR-037 implementado**. `client_thresholds` PostgreSQL table creada (row-per-checkpoint, UNIQUE(client_id, checkpoint_id), CHECK 0–100, ON DELETE CASCADE). `CHECKPOINT_SAFETY_FLOORS` definidos en `external_evaluator.py` (CP-1 min 30, CP-2 min 40, CP-3 min 30, CP-4 min 25, CP-5 min 20, CP-6 min 20). Helper `_load_client_checkpoint_overrides()` carga umbrales por cliente con fallback fail-closed a CHECKPOINT_DEFAULTS. Endpoint `POST /api/governance/evaluate` ahora usa umbrales por cliente. 3 nuevos endpoints admin: `GET/PUT/DELETE /api/governance/admin/clients/<id>/thresholds`. Campo `thresholds_source: "default" | "client_custom"` añadido a cada receipt response. ADR-028 Constraints actualizado: deferred item marcado como IMPLEMENTED. Tabla 43 en PostgreSQL (previamente 42+). Archivos: `omnix_core/governance/external_evaluator.py`, `omnix_dashboard/blueprints/governance.py`, `docs/reference/adr/ADR-037-per-client-configurable-thresholds.md`.

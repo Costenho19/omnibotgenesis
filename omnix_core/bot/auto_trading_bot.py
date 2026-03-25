@@ -3204,7 +3204,13 @@ class AutoTradingBot:
             # Fail-safe: exceptions → pass-through. Only active when client sharia_enabled=True.
             if SHARIA_GATE_AVAILABLE and ShariaGate is not None:
                 try:
-                    _sharia_config = ShariaGateConfig(enabled=False)
+                    import os as _os
+                    _sharia_enabled = _os.environ.get('SHARIA_GATE_ENABLED', 'false').lower() == 'true'
+                    _sharia_gharar_threshold = float(_os.environ.get('SHARIA_GHARAR_THRESHOLD', '70.0'))
+                    _sharia_config = ShariaGateConfig(
+                        enabled=_sharia_enabled,
+                        gharar_threshold=_sharia_gharar_threshold,
+                    )
                     _sharia_gate = ShariaGate(_sharia_config)
                     _gharar_score = decision.get('decision_contradiction_index', 0.0)
                     _sharia_result = _sharia_gate.evaluate(
