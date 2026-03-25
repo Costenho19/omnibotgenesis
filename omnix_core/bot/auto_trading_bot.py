@@ -267,6 +267,17 @@ except Exception:
     EGL_AVAILABLE = False
     logger.warning("⚠️ Exit Governance Engine no disponible - exits usan lógica naive")
 
+# Import Sharia Gate — ADR-046 / CP-6
+try:
+    from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+    SHARIA_GATE_AVAILABLE = True
+    logger.info("☪️ Sharia Governance Gate (ADR-046 / CP-6) disponible")
+except Exception:
+    ShariaGate = None
+    ShariaGateConfig = None
+    SHARIA_GATE_AVAILABLE = False
+    logger.warning("⚠️ Sharia Gate no disponible - CP-6 pass-through")
+
 # Import Quantum Enhancements (V5.3 ULTRA - QRNG + QAOA)
 try:
     from quantum_enhancements import global_qaoa, get_quantum_stats
@@ -3185,6 +3196,60 @@ class AutoTradingBot:
                     )
                 )
                 return decision
+
+            # ========== ADR-046: SHARIA GOVERNANCE GATE — CHECKPOINT 6 ==========
+            # Validates the proposed decision against Islamic finance (Sharia) principles.
+            # When enabled per client: screens asset halal/haram, checks gharar threshold,
+            # and validates debt ratio. Default: DISABLED (pass-through for all existing clients).
+            # Fail-safe: exceptions → pass-through. Only active when client sharia_enabled=True.
+            if SHARIA_GATE_AVAILABLE and ShariaGate is not None:
+                try:
+                    _sharia_config = ShariaGateConfig(enabled=False)
+                    _sharia_gate = ShariaGate(_sharia_config)
+                    _gharar_score = decision.get('decision_contradiction_index', 0.0)
+                    _sharia_result = _sharia_gate.evaluate(
+                        symbol=symbol,
+                        proposed_action=decision.get('action', 'HOLD'),
+                        gharar_score=_gharar_score,
+                    )
+                    decision['sharia_admissible'] = _sharia_result.admissible
+                    decision['sharia_score'] = _sharia_result.sharia_score
+                    decision['sharia_pass_through'] = _sharia_result.pass_through
+                    decision['decision_trace'].append(
+                        f"CP-6 SHARIA: {_sharia_result.reason}"
+                    )
+                    if not _sharia_result.admissible and not _sharia_result.pass_through:
+                        decision['action'] = 'BLOCKED'
+                        decision['should_trade'] = False
+                        decision['confidence'] = 0.0
+                        decision['vetoed'] = True
+                        decision['veto_reason'] = 'SHARIA_GATE_REJECTED'
+                        decision['veto_chain'].append('SHARIA_GATE')
+                        decision['reason'].append(
+                            f"🚫 CP-6 SHARIA VETO: {_sharia_result.reason}"
+                        )
+                        self._log_veto(
+                            veto_type='SHARIA_GATE',
+                            symbol=symbol,
+                            blocked_capital=self._get_estimated_blocked_capital(),
+                            reason=_sharia_result.reason,
+                            metadata={
+                                'sharia_score': _sharia_result.sharia_score,
+                                'violation': _sharia_result.violation,
+                                'gharar_score': _sharia_result.gharar_score,
+                            },
+                        )
+                        logger.warning(
+                            f"☪️ [SHARIA_VETO] {symbol} | score={_sharia_result.sharia_score:.0f} "
+                            f"violation={_sharia_result.violation}"
+                        )
+                        return decision
+                    else:
+                        logger.debug(
+                            f"☪️ [CP-6] {symbol} | {_sharia_result.reason}"
+                        )
+                except Exception as _sharia_exc:
+                    logger.warning(f"⚠️ [CP-6 SHARIA] Exception for {symbol}: {_sharia_exc} → pass-through")
 
             # ========== ADR-032: TEMPORAL COHERENCE VALIDATION (TCV) — CHECKPOINT 7 ==========
             # Evaluates temporal admissibility: does this decision cohere with recent trajectory?
