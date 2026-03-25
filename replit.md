@@ -147,7 +147,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It integrates multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key features include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, and RMS Enforcement. Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL) are central. A Multi-Agent Governance System (ADR-041) utilizes 3 specialized agents for weighted consensus. Hybrid Cryptography (X25519 + Kyber-768 via HKDF) and a Crypto-Agility Layer are implemented, alongside Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
 
 ### Hierarchical Veto Flow
-Entry decisions undergo an 8-checkpoint pipeline: Monte Carlo VETO, RMS VETO, 6-tier Coherence Engine, Adaptive Coherence Gate, Sharia Governance Gate (opt-in), Temporal Coherence Validation, Forward Trajectory Implication, and Edge Confirmation Window. Exit decisions follow a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate fail-safe.
+Entry decisions undergo an 8-checkpoint pipeline. Exit decisions follow a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate fail-safe.
 
 ### Scoring Logic
 Decision scoring combines inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with an additional Veto/Penalty layer from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
