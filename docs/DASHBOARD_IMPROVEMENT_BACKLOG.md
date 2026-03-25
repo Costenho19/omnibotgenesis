@@ -350,3 +350,101 @@ All critical, high-priority, and nice-to-have features have been delivered.
 - All fixes must maintain ADR-002 (Honest Framing)
 - All metrics must follow ADR-005 (Dual Win Rate Framework)
 - Dashboard target score: 9.5/10 (current: 7.5/10)
+
+---
+
+## GOVERNANCE MODULES ROADMAP (Mar 2026)
+
+**Contexto:** Módulos de gobernanza identificados como expansión natural de OMNIX hacia dominios no-financieros y cumplimiento regulatorio global. Documentados aquí para demostrar capacidad de escalabilidad ante inversores.
+
+**Fuente:** Sesión estratégica Harold Nunes — 25 Mar 2026
+
+---
+
+### PRIORIDAD ALTA — Construir antes de Eureka Dubai
+
+#### MOD-009: Regulatory-Aware Decision Engine (Sharia Gate)
+- **Descripción:** Valida decisiones contra marcos regulatorios específicos por cliente: AML, impuestos, jurisdicción, y cumplimiento Sharia para mercados del Golfo
+- **Implementación:** CP-6 configurable como "Sharia Governance Gate"
+- **Reglas Sharia:** Screening halal/haram, sin riba, sin gharar excesivo, ratio de deuda ≤ 33%
+- **Output:** Recibo PQC con sello de cumplimiento Sharia verificable públicamente
+- **Mercado objetivo:** Fondos islámicos UAE, Arabia Saudita, Qatar
+- **Status:** PENDIENTE — prioridad pre-Eureka Dubai
+
+---
+
+### PRIORIDAD MEDIA — Siguientes 90 días
+
+#### MOD-010: Breach Containment Engine
+- **Descripción:** Modifica el comportamiento del pipeline bajo condición de ciberataque detectado. Bloquea decisiones automáticamente si el entorno de ejecución está comprometido.
+- **Status:** BACKLOG
+
+#### MOD-014: Unified Decision Control Layer
+- **Descripción:** API externa que coordina todos los pilares de gobernanza y bloquea si cualquiera falla. Versión formalizada del pipeline actual para consumo B2B.
+- **Status:** BACKLOG
+
+#### MOD-013: Multi-Domain Risk Governance
+- **Descripción:** Unifica riesgo financiero, técnico, legal y humano en un único score de gobernanza. Permite a clientes no-financieros usar OMNIX como capa de control.
+- **Status:** BACKLOG
+
+---
+
+### PRIORIDAD BAJA — Visión a largo plazo (6-18 meses)
+
+#### MOD-001: Tail Risk Veto Engine
+- Bloquea eventos no previstos / Black swans
+- Ya implementado parcialmente como Black Swan Detector — formalizar como módulo separado
+
+#### MOD-002: Stability Illusion Detector
+- Detecta falsa sensación de seguridad en entornos "demasiado perfectos"
+- Penaliza señales de baja volatilidad artificial
+
+#### MOD-003: Survival Core™
+- Prioriza supervivencia del sistema sobre crecimiento
+- Bloquea decisiones que ponen en riesgo la continuidad operacional
+
+#### MOD-004: Regime Shift Sentinel
+- Detecta cambios de régimen de mercado/entorno
+- Ya implementado parcialmente como HMM Regime — formalizar
+
+#### MOD-005: Behavioral Risk Engine
+- Detecta cambios en comportamiento humano o patrones anómalos de uso
+- Evita decisiones basadas en datos desactualizados por cambio de comportamiento
+
+#### MOD-006: Uncertainty Governance Engine
+- Actúa bajo información incompleta: bloquea, retrasa, o exige validación humana
+- Ya implementado parcialmente como DCI (Decision Contradiction Index)
+
+#### MOD-008: Dependency Risk Engine
+- Detecta dependencias críticas: AWS, clientes concentrados, proveedores únicos
+- Evita puntos únicos de fallo en la cadena de decisión
+
+#### MOD-011: Pressure Point Detection Engine
+- Detecta el punto donde el sistema se rompe bajo carga extrema
+- Protege el checkpoint más vulnerable del pipeline
+
+#### MOD-012: Safe Speed Execution Layer
+- Permite velocidad de ejecución sin errores fatales
+- Balance dinámico entre rapidez y nivel de control
+
+#### MOD-015: Proof-of-Execution Governance
+- Valida ejecución en tiempo real, no confía en documentos post-hoc
+- Extensión natural de los recibos PQC actuales
+
+#### MOD-016: Impact-Only Governance Layer
+- Ignora probabilidad, prioriza impacto absoluto
+- Complemento al modelo de Kelly actual
+
+#### MOD-017: Response-Time Governance
+- Decide dinámicamente qué tan rápido actuar y con qué nivel de control
+- Ajusta latencia del pipeline según urgencia del contexto
+
+#### MOD-018: Adaptive Rebuild Engine
+- Permite reconstrucción estructural tras crisis
+- Evolución del sistema sin pérdida de integridad histórica
+
+---
+
+### Mensaje para inversores — Escalabilidad demostrable
+
+> "OMNIX no es un producto de trading. Es infraestructura de gobernanza de decisiones. Cada módulo en este roadmap representa una vertical nueva donde el mismo pipeline de 8 checkpoints, los mismos recibos PQC, y la misma arquitectura fail-closed pueden desplegarse sin rediseño. Sharia compliance, AML, EU AI Act, ISO 42001 — todos son configuraciones del mismo motor."
