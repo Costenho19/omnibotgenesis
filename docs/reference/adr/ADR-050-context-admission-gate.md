@@ -135,6 +135,39 @@ Result: During a Black Thursday-type event (vol=92, liquidity=8, macro=90), OMNI
 
 ---
 
+## Database Schema
+
+The `session_admission_events` table persists every CAG evaluation for audit and calibration:
+
+```sql
+CREATE TABLE session_admission_events (
+    event_id         VARCHAR(64) PRIMARY KEY,
+    session_id       VARCHAR(64),            -- shared across all pairs in one cycle
+    admitted         BOOLEAN NOT NULL,
+    admission_score  REAL,
+    violation        VARCHAR(256),
+    global_volatility REAL,
+    cross_pair_correlation REAL,
+    liquidity_score  REAL,
+    macro_risk       REAL,
+    cag_config       JSONB,
+    gate_checks      JSONB,
+    receipt_id       VARCHAR(64),
+    user_id          VARCHAR(64),
+    symbol           VARCHAR(32),
+    parameters_snapshot JSONB,
+    correlation_score REAL,
+    macro_risk_score  REAL,
+    decision         VARCHAR(32),
+    reason_code      VARCHAR(128),
+    created_at       TIMESTAMPTZ DEFAULT NOW()  -- canonical timestamp column
+);
+```
+
+> **Column naming note:** The timestamp column is `created_at` (TIMESTAMPTZ with DEFAULT NOW()),
+> not `timestamp`. This follows PostgreSQL conventions and avoids collision with the reserved
+> keyword `TIMESTAMP`. All downstream queries should use `created_at`.
+
 ## Consequences
 
 ### Positive

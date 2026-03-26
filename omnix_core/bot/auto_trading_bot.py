@@ -1039,131 +1039,14 @@ class AutoTradingBot:
                 )
                 return False
 
-            logger.debug(
-                f"✅ [CAG] SESSION ADMITTED | session_id={session_id} | "
+            logger.info(
+                f"✅ [CAG] SESSION_ADMITTED | session_id={session_id} | "
                 f"score={cag_result.admission_score:.0f}/100"
             )
             return True
 
         except Exception as exc:
             logger.warning(f"⚠️ [CAG] _run_cag_session_check exception → pass-through: {exc}")
-            return True
-
-    def _run_cag_cycle_check(self, symbol: str = "UNKNOWN", user_id: str = "") -> bool:
-        """
-        ADR-050: Context Admission Gate — cycle-level pre-admission check.
-
-        Evaluates global market conditions BEFORE _analyze_market() is called.
-        If CAG blocks, no signal is fetched and no executable state is formed.
-
-        Returns:
-            True  → session ADMITTED  — pipeline may continue
-            False → session BLOCKED   — caller must skip _analyze_market()
-
-        Fail-safe: any exception → returns True (pass-through, pipeline continues).
-        """
-        if not CAG_AVAILABLE or ContextAdmissionGate is None:
-            return True
-
-        try:
-            cag_enabled = os.environ.get("CAG_ENABLED", "false").lower() == "true"
-            if not cag_enabled:
-                return True
-
-            cag_cfg = load_cag_config_from_env()
-            gate = ContextAdmissionGate(cag_cfg)
-
-            # Context parameters derived from existing in-cycle bot state (no new API calls).
-            market_params = self._get_cag_market_params(symbol=symbol)
-            cag_result = gate.evaluate(
-                global_volatility=market_params["global_volatility"],
-                cross_pair_correlation=market_params["cross_pair_correlation"],
-                liquidity_score=market_params["liquidity_score"],
-                macro_risk=market_params["macro_risk"],
-            )
-
-            # Persist to session_admission_events (fail-safe)
-            import uuid
-            event_id = f"CAG-{uuid.uuid4().hex[:16].upper()}"
-            receipt_id_str = ""
-
-            # Generate PQC-signed SESSION_BLOCKED receipt when gate blocks
-            if not cag_result.admitted and not cag_result.pass_through:
-                try:
-                    if self.receipt_engine:
-                        _os = os
-                        receipt_input = {
-                            "symbol": symbol,
-                            "decision": "BLOCK",
-                            "decision_trace": [f"CAG SESSION_BLOCKED: {cag_result.violation}"],
-                            "policy_version": _os.environ.get("OMNIX_VERSION", "6.5.4e"),
-                            "context_admission": {
-                                "check": "enabled",
-                                "result": "blocked",
-                                "admission_score": cag_result.admission_score,
-                                "violation": cag_result.violation,
-                                "veto_type": "CONTEXT_ADMISSION_BLOCKED",
-                                "parameters": {
-                                    "global_volatility": cag_result.global_volatility,
-                                    "cross_pair_correlation": cag_result.cross_pair_correlation,
-                                    "liquidity_score": cag_result.liquidity_score,
-                                    "macro_risk": cag_result.macro_risk,
-                                },
-                                "gate_checks": cag_result.gate_checks,
-                            },
-                        }
-                        prev_hash = self.receipt_engine.get_last_hash()
-                        receipt = self.receipt_engine.generate_receipt(receipt_input, prev_hash)
-                        stored = self.receipt_engine.store_receipt(receipt)
-                        if stored:
-                            receipt_id_str = receipt.get("receipt_id", "")
-                            logger.info(
-                                f"🔏 [CAG] SESSION_BLOCKED receipt: {receipt_id_str} | "
-                                f"symbol={symbol} | violation={cag_result.violation}"
-                            )
-                except Exception as receipt_exc:
-                    logger.warning(f"⚠️ [CAG] Receipt generation failed (non-critical): {receipt_exc}")
-
-            # Persist admission event to DB (fail-safe)
-            try:
-                if hasattr(self, "db_service") and self.db_service:
-                    self.db_service.log_session_admission_event(
-                        event_id=event_id,
-                        admitted=cag_result.admitted,
-                        admission_score=cag_result.admission_score,
-                        violation=cag_result.violation,
-                        global_volatility=cag_result.global_volatility,
-                        cross_pair_correlation=cag_result.cross_pair_correlation,
-                        liquidity_score=cag_result.liquidity_score,
-                        macro_risk=cag_result.macro_risk,
-                        cag_config={
-                            "volatility_threshold": cag_cfg.global_volatility_threshold,
-                            "correlation_threshold": cag_cfg.cross_pair_correlation_threshold,
-                            "liquidity_minimum": cag_cfg.liquidity_score_minimum,
-                            "macro_risk_ceiling": cag_cfg.macro_risk_ceiling,
-                        },
-                        gate_checks=cag_result.gate_checks,
-                        receipt_id=receipt_id_str,
-                        user_id=str(user_id),
-                        symbol=symbol,
-                    )
-            except Exception as db_exc:
-                logger.debug(f"[CAG] DB persist failed (non-critical): {db_exc}")
-
-            if not cag_result.admitted and not cag_result.pass_through:
-                logger.warning(
-                    f"🚫 [CAG] CYCLE BLOCKED for {symbol}: {cag_result.violation} | "
-                    f"score={cag_result.admission_score:.0f}/100 | receipt={receipt_id_str}"
-                )
-                return False
-
-            logger.debug(
-                f"✅ [CAG] CYCLE ADMITTED for {symbol} | score={cag_result.admission_score:.0f}/100"
-            )
-            return True
-
-        except Exception as exc:
-            logger.warning(f"⚠️ [CAG] _run_cag_cycle_check exception → pass-through: {exc}")
             return True
 
     def _get_estimated_blocked_capital(self) -> float:
