@@ -127,10 +127,36 @@ except ImportError:
     MIN_SPREAD_BPS = 25  # ADR-004 fallback
     logger.warning("⚠️ Trading Profiles no disponible - usando configuración hardcoded")
 
+# ADR-051: Dual Trading Mode — CORE (conservative) / ACTIVE (calibrated)
+# TRADING_MODE=CORE (default): thresholds institucionales estrictos
+# TRADING_MODE=ACTIVE: thresholds calibrados para mercados con edge marginal
+TRADING_MODE = os.getenv('TRADING_MODE', 'CORE').upper()
+if TRADING_MODE not in ('CORE', 'ACTIVE'):
+    logger.warning(f"⚠️ TRADING_MODE='{TRADING_MODE}' no reconocido — usando CORE")
+    TRADING_MODE = 'CORE'
+
+# ADR-051: Perfiles de thresholds por modo
+_ACTIVE_MODE_DEFAULTS = {
+    'ecw_mc_wr_min': 48,     # CORE=50%, ACTIVE=48%
+    'ecw_mc_er_min': 0.001,  # CORE=0, ACTIVE=0.001 (edge positivo mínimo real)
+    'ecw_cycles': 2,          # CORE=3, ACTIVE=2 ciclos consecutivos
+    'bs_high_blocks_ecw': False,  # CORE=True (reset), ACTIVE=False (reduce size)
+    'coherence_veto_normal': 40.0,  # CORE=45%, ACTIVE=40%
+}
+_CORE_MODE_DEFAULTS = {
+    'ecw_mc_wr_min': 50,
+    'ecw_mc_er_min': 0.0,
+    'ecw_cycles': 3,
+    'bs_high_blocks_ecw': True,
+    'coherence_veto_normal': 45.0,
+}
+ACTIVE_PROFILE = _ACTIVE_MODE_DEFAULTS if TRADING_MODE == 'ACTIVE' else _CORE_MODE_DEFAULTS
+logger.info(f"🎛️ TRADING_MODE={TRADING_MODE} | ECW WR>={ACTIVE_PROFILE['ecw_mc_wr_min']}% ER>{ACTIVE_PROFILE['ecw_mc_er_min']} CYCLES={ACTIVE_PROFILE['ecw_cycles']} BS_HIGH_BLOCKS={ACTIVE_PROFILE['bs_high_blocks_ecw']}")
+
 # ADR-019 v1.1: Log ECW thresholds at startup for auditability
-ECW_MC_WR_MIN = int(os.getenv('ECW_MC_WR_MIN', '50'))
-ECW_MC_ER_MIN = float(os.getenv('ECW_MC_ER_MIN', '0'))
-ECW_CYCLES_REQUIRED = int(os.getenv('ECW_CYCLES_REQUIRED', '3'))
+ECW_MC_WR_MIN = int(os.getenv('ECW_MC_WR_MIN', str(ACTIVE_PROFILE['ecw_mc_wr_min'])))
+ECW_MC_ER_MIN = float(os.getenv('ECW_MC_ER_MIN', str(ACTIVE_PROFILE['ecw_mc_er_min'])))
+ECW_CYCLES_REQUIRED = int(os.getenv('ECW_CYCLES_REQUIRED', str(ACTIVE_PROFILE['ecw_cycles'])))
 ECW_CONFIG_VERSION = "1.2" if ECW_CYCLES_REQUIRED == 2 else ("1.1" if ECW_MC_WR_MIN == 50 else "1.0")
 logger.info(f"📊 ECW CONFIG v{ECW_CONFIG_VERSION}: MC_WR_MIN={ECW_MC_WR_MIN}%, MC_ER_MIN={ECW_MC_ER_MIN}%, CYCLES={ECW_CYCLES_REQUIRED}")
 
@@ -3791,17 +3817,21 @@ class AutoTradingBot:
             
             try:
                 # Configuración ECW - ENV-configurable para rollback sin redeploy (ADR-019 v1.1)
-                # ECW_MC_WR_MIN: Default 50% (reducido de 52% el 29 Ene 2026)
-                # Cambio documentado para permitir más trades en mercados con edge marginal
-                ecw_mc_wr_min = int(os.getenv('ECW_MC_WR_MIN', '50'))
-                ecw_mc_er_min = float(os.getenv('ECW_MC_ER_MIN', '0'))
-                ecw_cycles = int(os.getenv('ECW_CYCLES_REQUIRED', '3'))
+                # ADR-051: Los defaults dependen del TRADING_MODE activo (CORE/ACTIVE)
+                # ACTIVE usa: WR>=48%, ER>0.001, 2 ciclos, BS HIGH = reduce size (no reset)
+                ecw_mc_wr_min = int(os.getenv('ECW_MC_WR_MIN', str(ACTIVE_PROFILE['ecw_mc_wr_min'])))
+                ecw_mc_er_min = float(os.getenv('ECW_MC_ER_MIN', str(ACTIVE_PROFILE['ecw_mc_er_min'])))
+                ecw_cycles = int(os.getenv('ECW_CYCLES_REQUIRED', str(ACTIVE_PROFILE['ecw_cycles'])))
+                # ADR-051: En ACTIVE mode, BLACK_SWAN_HIGH reduce posición pero NO resetea ECW
+                ecw_bs_high_blocks = ACTIVE_PROFILE['bs_high_blocks_ecw']
                 
                 ecw_cfg = {
-                    'mc_wr_min': ecw_mc_wr_min,      # MC win rate min % (ENV: ECW_MC_WR_MIN, default 50)
-                    'mc_er_min': ecw_mc_er_min,      # MC expected return min % (ENV: ECW_MC_ER_MIN, default 0)
-                    'consecutive_required': ecw_cycles,  # Cycles required (ENV: ECW_CYCLES_REQUIRED, default 3)
-                    'black_swan_max': ['NONE', 'LOW', 'MEDIUM']  # Permitidos
+                    'mc_wr_min': ecw_mc_wr_min,      # MC win rate min % (ENV: ECW_MC_WR_MIN)
+                    'mc_er_min': ecw_mc_er_min,      # MC expected return min % (ENV: ECW_MC_ER_MIN)
+                    'consecutive_required': ecw_cycles,  # Cycles required (ENV: ECW_CYCLES_REQUIRED)
+                    'black_swan_max': ['NONE', 'LOW', 'MEDIUM'],  # Para CORE y ACTIVE (HIGH es tratado aparte)
+                    'bs_high_blocks': ecw_bs_high_blocks,  # ADR-051: True=CORE (reset), False=ACTIVE (reduce size)
+                    'trading_mode': TRADING_MODE,  # ADR-051: para audit trail
                 }
                 
                 # Obtener métricas actuales - scale from 0-1 to 0-100 for comparison
@@ -3826,7 +3856,16 @@ class AutoTradingBot:
                 # Verificar condiciones ECW
                 wr_ok = mc_wr >= ecw_cfg['mc_wr_min']
                 er_ok = mc_er > ecw_cfg['mc_er_min']
-                bs_ok = bs_level.upper() in ecw_cfg['black_swan_max']
+                bs_is_high = bs_level.upper() == 'HIGH'
+                # ADR-051: En ACTIVE mode, BS HIGH no bloquea el ECW (reduce posición en su lugar)
+                # En CORE mode, BS HIGH resetea el ECW counter como antes
+                if bs_is_high and not ecw_cfg['bs_high_blocks']:
+                    # ACTIVE mode: HIGH se tolera en ECW, se aplica reducción de posición más adelante
+                    bs_ok = True
+                    decision.setdefault('v52_analysis', {})['ecw_bs_high_active_mode'] = True
+                    logger.info(f"🛡️ [ECW/ACTIVE] {symbol} | BS=HIGH → No resetea ECW, se aplicará reducción de posición (ADR-051)")
+                else:
+                    bs_ok = bs_level.upper() in ecw_cfg['black_swan_max']
                 all_conditions_met = wr_ok and er_ok and bs_ok
                 
                 # Obtener/actualizar contador en Redis (o memoria si Redis no disponible)
@@ -3921,13 +3960,22 @@ class AutoTradingBot:
                 ecw_reason = f"ECW: {ecw_counter}/{ecw_cfg['consecutive_required']} cycles ({condition_details})"
                 
                 # Guardar estado ECW en decision - ADR-019 Enhanced with ecw_progress
-                # ADR-019 v1.1: Include config version for track record integrity auditing
-                ecw_config_version = "1.1" if ecw_cfg['mc_wr_min'] == 50 else "1.0"
+                # ADR-051: config version incluye trading_mode para audit trail
+                if TRADING_MODE == 'ACTIVE':
+                    ecw_config_version = "2.0-ACTIVE"
+                elif ecw_cfg['mc_wr_min'] == 50 and ecw_cfg['consecutive_required'] == 2:
+                    ecw_config_version = "1.2"
+                elif ecw_cfg['mc_wr_min'] == 50:
+                    ecw_config_version = "1.1"
+                else:
+                    ecw_config_version = "1.0"
                 decision['v52_analysis']['ecw_config_version'] = ecw_config_version
                 decision['v52_analysis']['ecw_thresholds'] = {
                     'mc_wr_min': ecw_cfg['mc_wr_min'],
                     'mc_er_min': ecw_cfg['mc_er_min'],
-                    'cycles_required': ecw_cfg['consecutive_required']
+                    'cycles_required': ecw_cfg['consecutive_required'],
+                    'trading_mode': TRADING_MODE,  # ADR-051: audit trail
+                    'bs_high_blocks': ecw_cfg['bs_high_blocks'],  # ADR-051: CORE=True, ACTIVE=False
                 }
                 decision['v52_analysis']['ecw_counter'] = ecw_counter
                 decision['v52_analysis']['ecw_required'] = ecw_cfg['consecutive_required']
@@ -4730,6 +4778,24 @@ class AutoTradingBot:
             # ==========================================================================
             
             # ==========================================================================
+            # ADR-051: BLACK SWAN HIGH CAP (ACTIVE MODE)
+            # En ACTIVE mode, BS=HIGH no bloquea ECW pero sí limita tamaño al 0.5% del balance.
+            # En CORE mode este bloque no aplica (BS=HIGH ya resetea ECW antes de llegar aquí).
+            # ==========================================================================
+            if (decision.get('should_trade') and decision.get('amount_usd') and
+                    TRADING_MODE == 'ACTIVE' and
+                    decision.get('v52_analysis', {}).get('ecw_bs_high_active_mode', False)):
+                balance_for_bs_cap = self._get_balance()
+                bs_high_max_usd = balance_for_bs_cap * 0.005  # 0.5% del balance — cap de precaución
+                if decision['amount_usd'] > bs_high_max_usd:
+                    original_bs_size = decision['amount_usd']
+                    decision['amount_usd'] = max(bs_high_max_usd, 1.0)  # mínimo $1 para no romper la ejecución
+                    decision['reason'].append(f"🦢 BS=HIGH CAP (ACTIVE): ${original_bs_size:.2f} → ${decision['amount_usd']:.2f} (0.5% balance — ADR-051)")
+                    decision['decision_trace'].append(f"BS_HIGH_ACTIVE_SIZE_CAP: {original_bs_size:.2f} → {decision['amount_usd']:.2f}")
+                    logger.info(f"🦢 [ADR-051] {symbol} | BS=HIGH ACTIVE CAP: ${original_bs_size:.2f} → ${decision['amount_usd']:.2f} (0.5% balance)")
+            # ==========================================================================
+            
+            # ==========================================================================
             # ADR-019: EDGE CONFIRMATION WINDOW (ECW) ENFORCEMENT
             # Si ECW no pasó, bloquear trade con razón ECW_WAITING
             # Esto da una "puerta de salida dinámica" al HOLD permanente
@@ -4807,8 +4873,10 @@ class AutoTradingBot:
                     
                     # Obtener umbrales del perfil o usar defaults (INSTITUTIONAL)
                     # FIX Dec 27, 2025: Usar safe_float() para prevenir errores str vs int
+                    # ADR-051: ACTIVE mode reduce veto_normal a 40% (más oportunidades con coherencia moderada)
                     veto_critical = safe_float(p.coherence_veto_critical if p else 30.0, 30.0)
-                    veto_normal = safe_float(p.coherence_veto_normal if p else 45.0, 45.0)
+                    _profile_veto_normal = safe_float(p.coherence_veto_normal if p else 45.0, 45.0)
+                    veto_normal = ACTIVE_PROFILE['coherence_veto_normal'] if TRADING_MODE == 'ACTIVE' else _profile_veto_normal
                     coherence_warning = safe_float(p.coherence_warning if p else 60.0, 60.0)
                     coherence_good = safe_float(p.coherence_good if p else 80.0, 80.0)
                     

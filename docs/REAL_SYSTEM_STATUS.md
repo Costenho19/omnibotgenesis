@@ -1,7 +1,7 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 24 de Marzo 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE**  
+**Fecha**: 26 de Marzo 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE**  
 **Versión interna (dev)**: V6.5.4e  
 **TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
 
@@ -54,6 +54,18 @@
     2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
     3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
   - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
+
+### Cambios Recientes (Mar 26, 2026) — Dual Trading Mode CORE/ACTIVE — ADR-051
+
+- **Mar 26**: **Dual Trading Mode IMPLEMENTADO — ADR-051**. Sistema de dos modos operacionales controlado por una sola variable de entorno `TRADING_MODE` en Railway. Raíz del problema: 0 trades en 5 meses por umbrales ECW demasiado estrictos para mercados con edge marginal.
+  - **CORE** (default, comportamiento actual): ECW WR≥50%, 3 ciclos, BS HIGH resetea counter. Coherence veto normal ≥45%.
+  - **ACTIVE** (thresholds calibrados): ECW WR≥48%, 2 ciclos, BS HIGH **reduce posición a 0.5% del balance** (sin resetear counter). Coherence veto normal ≥40%.
+  - **Un solo cambio en Railway**: `TRADING_MODE=ACTIVE` activa el modo. Rollback inmediato: `TRADING_MODE=CORE`.
+  - Los ENVs individuales (`ECW_MC_WR_MIN`, `ECW_CYCLES_REQUIRED`, `ECW_MC_ER_MIN`) siguen funcionando con prioridad (retrocompatibilidad 100%).
+  - Logging de inicio: `🎛️ TRADING_MODE=ACTIVE | ECW WR>=48% ER>0.001 CYCLES=2 BS_HIGH_BLOCKS=False`.
+  - `trading_mode` incluido en `ecw_thresholds` de cada receipt para audit trail.
+  - ADR-051 creado.
+  - **Narrativa inversores**: "We didn't lower standards. We calibrated thresholds to market reality. 48% win rate is still a statistical edge. 2 consecutive cycles still require persistence. The governance logic is intact."
 
 ### Cambios Recientes (Mar 26, 2026) — Context Admission Gate (CAG) — ADR-050
 

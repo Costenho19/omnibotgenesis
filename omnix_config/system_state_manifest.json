@@ -168,19 +168,42 @@
     "edge_confirmation_window": {
       "status": "ENFORCEMENT",
       "description": "Requiere persistencia del edge antes de permitir trades",
-      "thresholds": {
+      "trading_mode": "Controlado por ENV TRADING_MODE=CORE|ACTIVE (ADR-051)",
+      "thresholds_CORE": {
         "mc_wr_min": 50,
         "mc_er_min": 0,
+        "consecutive_cycles_required": 3,
+        "black_swan_max": "MEDIUM",
+        "bs_high": "Resetea counter ECW"
+      },
+      "thresholds_ACTIVE": {
+        "mc_wr_min": 48,
+        "mc_er_min": 0.001,
         "consecutive_cycles_required": 2,
-        "black_swan_max": "MEDIUM"
+        "black_swan_max": "MEDIUM",
+        "bs_high": "Permite trade, reduce posicion a 0.5% balance"
       },
       "behavior": {
-        "counter_increments": "When MC_WR >= 50%, MC_ER > 0, Black Swan <= MEDIUM",
-        "counter_resets": "When any condition fails",
+        "counter_increments": "When MC_WR >= mc_wr_min, MC_ER > mc_er_min, Black Swan condition met",
+        "counter_resets": "When any condition fails (CORE: BS=HIGH resetea; ACTIVE: BS=HIGH no resetea)",
         "trade_allowed": "When counter >= consecutive_cycles_required"
       },
-      "adr": "ADR-019",
-      "investor_explanation": "No operamos en el primer ciclo positivo. Esperamos confirmación de 2 ciclos consecutivos con edge estadístico (WR >= 50%, ER > 0%) y sin riesgo severo. Esto transforma 'preservación de capital' en 'paciencia de capital'."
+      "adr": "ADR-019, ADR-051",
+      "investor_explanation": "No operamos en el primer ciclo positivo. En modo ACTIVE esperamos 2 ciclos consecutivos con edge estadístico (WR >= 48%, ER > 0%) — 48% sigue siendo un edge positivo en mercados cripto. Esto transforma 'preservación de capital' en 'paciencia de capital calibrada'."
+    },
+    "dual_trading_mode": {
+      "adr": "ADR-051",
+      "status": "IMPLEMENTED",
+      "env_var": "TRADING_MODE",
+      "modes": {
+        "CORE": "Thresholds institucionales estrictos (default). WR>=50%, 3 ciclos, BS HIGH bloquea.",
+        "ACTIVE": "Thresholds calibrados para mercados con edge marginal. WR>=48%, 2 ciclos, BS HIGH reduce posición."
+      },
+      "switch": "Un solo cambio de ENV en Railway activa el modo. Rollback inmediato sin redeploy.",
+      "coherence_veto_normal": {
+        "CORE": "45% (profile default)",
+        "ACTIVE": "40% (relajado para coherencia moderada)"
+      }
     },
     "temporal_coherence_validation": {
       "status": "ACTIVE",
