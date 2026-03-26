@@ -66,6 +66,7 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
+            <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <Link to="/my-report" className="nav-link">Client Portal</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
@@ -86,9 +87,12 @@ export default function CommercialLanding() {
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <Link to="/try" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
-              Try OMNIX Live
+            <Link to="/demo" className="text-lg px-8 py-4 flex items-center gap-2 font-bold rounded-lg" style={{background:'linear-gradient(135deg,#C9A227,#A68B1F)', color:'#050D18'}}>
+              Watch 5-Min Demo
               <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link to="/try" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+              Try OMNIX Live
             </Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               <Phone className="w-5 h-5" />
