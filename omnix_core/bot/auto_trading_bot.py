@@ -812,48 +812,123 @@ class AutoTradingBot:
         except Exception as e:
             logger.warning(f"Receipt generation failed (non-critical): {e}")
 
+    def _update_cag_signals_cache(self, analysis: dict) -> None:
+        """
+        ADR-050: Cache key market signals from a completed analysis cycle so the
+        NEXT CAG session check can use real, price-derived inputs without making
+        any new API calls.
+
+        Stored on self._cag_signals_cache.  Called AFTER _analyze_market() so
+        values reflect the last-known market state at the start of the new cycle.
+
+        Signals extracted (all already computed in-pipeline, zero new requests):
+          - black_swan_prob: crash probability from Monte Carlo Black Swan engine (0–1)
+          - hmm_regime:      HMM market regime string ('BULL', 'BEAR', 'RANGING', …)
+          - hmm_confidence:  confidence of the regime classification (0–1)
+          - current_price:   last observed price for the active pair (float)
+        """
+        if not analysis:
+            return
+        try:
+            black_swan = analysis.get('black_swan', {}) or {}
+            hmm = analysis.get('hmm_regime', {}) or {}
+            v52 = analysis.get('v52_analysis', {}) or {}
+            if not isinstance(black_swan, dict):
+                black_swan = {}
+            if not isinstance(hmm, dict):
+                hmm = {'regime': str(hmm)}
+
+            bsp = black_swan.get('crash_probability', None)
+            if bsp is None:
+                bsp = v52.get('black_swan_prob', None)
+            bsp = float(bsp) if bsp is not None else None
+
+            hmm_regime_str = (
+                hmm.get('regime')
+                or v52.get('market_regime')
+                or v52.get('hmm_regime')
+                or 'UNKNOWN'
+            )
+            hmm_conf = float(hmm.get('confidence', 0.5) or 0.5)
+            price = float(analysis.get('current_price') or 0.0)
+
+            cache: dict = getattr(self, '_cag_signals_cache', {})
+            if bsp is not None:
+                cache['black_swan_prob'] = bsp
+            cache['hmm_regime'] = str(hmm_regime_str).upper()
+            cache['hmm_confidence'] = hmm_conf
+            if price > 0:
+                cache['current_price'] = price
+            self._cag_signals_cache = cache
+        except Exception:
+            pass
+
     def _get_cag_market_params(self, symbol: str = "UNKNOWN") -> dict:
         """
-        ADR-050: Compute CAG input parameters from existing in-cycle bot state.
-        No new API calls — derives values from config, open positions, and session metrics.
-        Falls back to env vars as operator override, then to safe defaults.
+        ADR-050: Compute CAG input parameters from REAL cached market signals
+        (populated by _update_cag_signals_cache() after each analysis cycle).
+        Falls back to operator env overrides, then to conservative safe defaults.
+        No new API calls are made.
+
+        Mapping of real market signals → CAG parameters:
+          global_volatility        ← black_swan crash_probability (scaled 0–100)
+                                     Higher crash probability = market is more volatile/stressed
+          cross_pair_correlation   ← HMM regime (BEAR = high co-movement) + number of pairs
+                                     Crypto markets co-move most in bear regimes
+          liquidity_score          ← Execution context: real mode caps at 85, paper at 100
+                                     (zero new calls; reflects real execution constraints)
+          macro_risk               ← black_swan crash_probability × 100 with regime overlay
+                                     Direct composite macro stress signal from pipeline
         """
+        cache: dict = getattr(self, '_cag_signals_cache', {})
+
         # ── 1. global_volatility ────────────────────────────────────────────
-        # Use operator env override first; otherwise proxy from bot session state.
-        # Future: hook into ATR/HV from _analyze_market cache.
+        # Operator env var takes precedence (circuit-breaker override).
         global_volatility = float(os.environ.get("CAG_GLOBAL_VOLATILITY", "-1"))
         if global_volatility < 0:
-            # Proxy: use max_position_size_pct as a normalized risk signal
-            # High risk tolerance with many pairs → moderate volatility proxy
-            num_pairs = len(getattr(self, 'config', {}).get('trading_pairs', ['BTC/USD']))
-            risk_pct = float(getattr(self, 'config', {}).get('max_position_size_pct', 5.0) or 5.0)
-            global_volatility = min(70.0, risk_pct * 3.0 + (num_pairs - 1) * 2.0)
+            bsp = cache.get('black_swan_prob')
+            if bsp is not None:
+                # black_swan_prob is 0.0–1.0; scale to 0–100 for volatility index
+                global_volatility = min(100.0, float(bsp) * 100.0)
+            else:
+                global_volatility = 30.0  # conservative default: moderate, not blocking
 
         # ── 2. cross_pair_correlation ───────────────────────────────────────
-        # Computed from active trading pairs: more pairs in crypto → higher correlation.
+        # HMM regime drives base correlation; number of active pairs scales it up.
         cross_pair_correlation = float(os.environ.get("CAG_CROSS_PAIR_CORRELATION", "-1"))
         if cross_pair_correlation < 0:
+            hmm_regime = cache.get('hmm_regime', 'UNKNOWN')
             trading_pairs = getattr(self, 'config', {}).get('trading_pairs', ['BTC/USD'])
             num_pairs = len(trading_pairs) if isinstance(trading_pairs, list) else 1
-            # 1 pair → ~10% correlation risk; 5+ pairs → ~70% (crypto co-movement)
-            cross_pair_correlation = min(85.0, 10.0 + (num_pairs - 1) * 14.0)
+            # Regime base: BEAR=65 (co-movement peaks in selloffs), BULL=40, else=25
+            regime_base = {'BEAR': 65.0, 'BULL': 40.0, 'RANGING': 25.0}.get(
+                str(hmm_regime).upper().split()[0], 30.0
+            )
+            # Each additional pair adds ~4% correlation risk (crypto co-movement)
+            cross_pair_correlation = min(90.0, regime_base + (num_pairs - 1) * 4.0)
 
         # ── 3. liquidity_score ──────────────────────────────────────────────
-        # Paper mode → maximum liquidity (no real execution constraints).
-        # Real mode → 80 default (Kraken generally liquid for major pairs).
+        # Paper mode → 100 (no real execution constraints).
+        # Real mode → 85 (Kraken major pairs are generally liquid; slight discount for spread).
+        # Env var overrides operator-injected liquidity data (e.g., exchange outage signal).
         liquidity_score = float(os.environ.get("CAG_LIQUIDITY_SCORE", "-1"))
         if liquidity_score < 0:
             paper_mode = getattr(self, 'config', {}).get('paper_mode', True)
-            liquidity_score = 100.0 if paper_mode else 80.0
+            liquidity_score = 100.0 if paper_mode else 85.0
 
         # ── 4. macro_risk ────────────────────────────────────────────────────
-        # Use env var override; else estimate from stop_loss_pct (tighter SL = lower risk).
+        # Primary: black_swan crash probability from Monte Carlo engine, scaled 0–100.
+        # Regime overlay: BEAR regime adds +10 to macro risk (systematic stress).
         macro_risk = float(os.environ.get("CAG_MACRO_RISK", "-1"))
         if macro_risk < 0:
-            sl_pct = float(getattr(self, 'config', {}).get('stop_loss_pct', 3.0) or 3.0)
-            # Low SL% (tight) → conservative → low macro risk proxy
-            # High SL% (loose) → aggressive → higher macro risk proxy
-            macro_risk = min(60.0, sl_pct * 5.0)
+            bsp = cache.get('black_swan_prob')
+            if bsp is not None:
+                base_risk = min(100.0, float(bsp) * 100.0)
+                # Regime overlay: bear regime elevates macro risk
+                regime_overlay = 10.0 if cache.get('hmm_regime', '').upper().startswith('BEAR') else 0.0
+                macro_risk = min(100.0, base_risk + regime_overlay)
+            else:
+                macro_risk = 20.0  # conservative default: not blocking
 
         return {
             "global_volatility": round(global_volatility, 2),
@@ -2075,7 +2150,11 @@ class AutoTradingBot:
 
                 # Análisis completo
                 analysis = self._analyze_market()
-                
+
+                # ADR-050: Cache market signals for NEXT CAG session check.
+                # Called after analysis so the next cycle uses real price-derived inputs.
+                self._update_cag_signals_cache(analysis)
+
                 if not analysis:
                     continue
                 
@@ -2837,7 +2916,11 @@ class AutoTradingBot:
 
                 # Análisis completo
                 analysis = self._analyze_market()
-                
+
+                # ADR-050: Cache market signals for NEXT CAG session check.
+                # Called after analysis so the next cycle uses real price-derived inputs.
+                self._update_cag_signals_cache(analysis)
+
                 # V6.5: Log detallado del análisis
                 if analysis:
                     should_trade = analysis.get('should_trade', False)

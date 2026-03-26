@@ -737,8 +737,8 @@ class TestCAGMarketParams:
 
         assert params["liquidity_score"] == 100.0
 
-    def test_real_mode_gives_liquidity_80(self):
-        """Real mode → liquidity_score = 80.0."""
+    def test_real_mode_gives_liquidity_85(self):
+        """Real mode → liquidity_score = 85.0 (Kraken major pairs, slight spread discount)."""
         import os
         from unittest.mock import patch
 
@@ -746,7 +746,82 @@ class TestCAGMarketParams:
         with patch.dict(os.environ, {"CAG_LIQUIDITY_SCORE": "-1"}):
             params = bot._get_cag_market_params("BTC/USD")
 
-        assert params["liquidity_score"] == 80.0
+        assert params["liquidity_score"] == 85.0
+
+    def test_cag_params_use_cached_black_swan_prob(self):
+        """When _cag_signals_cache has black_swan_prob, global_volatility reflects it."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        bot._cag_signals_cache = {"black_swan_prob": 0.70, "hmm_regime": "BEAR"}
+
+        with patch.dict(os.environ, {"CAG_GLOBAL_VOLATILITY": "-1", "CAG_MACRO_RISK": "-1"}):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        # black_swan_prob=0.70 → global_volatility = 70.0
+        assert params["global_volatility"] == 70.0
+        # macro_risk = 70.0 (bsp*100) + 10.0 (BEAR overlay) = 80.0
+        assert params["macro_risk"] == 80.0
+
+    def test_cag_params_bear_regime_raises_correlation(self):
+        """BEAR regime in cache produces higher cross_pair_correlation than BULL."""
+        import os
+        from unittest.mock import patch
+
+        bot_bear = self._make_bot()
+        bot_bear._cag_signals_cache = {"black_swan_prob": 0.2, "hmm_regime": "BEAR"}
+
+        bot_bull = self._make_bot()
+        bot_bull._cag_signals_cache = {"black_swan_prob": 0.2, "hmm_regime": "BULL"}
+
+        with patch.dict(os.environ, {
+            "CAG_CROSS_PAIR_CORRELATION": "-1",
+            "CAG_GLOBAL_VOLATILITY": "-1",
+            "CAG_MACRO_RISK": "-1",
+        }):
+            p_bear = bot_bear._get_cag_market_params("BTC/USD")
+            p_bull = bot_bull._get_cag_market_params("BTC/USD")
+
+        assert p_bear["cross_pair_correlation"] > p_bull["cross_pair_correlation"]
+
+    def test_cag_params_no_cache_gives_conservative_defaults(self):
+        """When _cag_signals_cache is empty, params use conservative safe defaults."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        bot._cag_signals_cache = {}  # empty cache
+
+        with patch.dict(os.environ, {
+            "CAG_GLOBAL_VOLATILITY": "-1",
+            "CAG_CROSS_PAIR_CORRELATION": "-1",
+            "CAG_LIQUIDITY_SCORE": "-1",
+            "CAG_MACRO_RISK": "-1",
+        }):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        # Without cache, defaults should be conservative (not blocking)
+        assert params["global_volatility"] == 30.0
+        assert params["macro_risk"] == 20.0
+
+    def test_update_cag_signals_cache_extracts_real_signals(self):
+        """_update_cag_signals_cache stores black_swan_prob and hmm_regime from analysis."""
+        bot = self._make_bot()
+        bot._cag_signals_cache = {}
+
+        analysis = {
+            "black_swan": {"crash_probability": 0.35},
+            "hmm_regime": {"regime": "BEAR", "confidence": 0.8},
+            "current_price": 45000.0,
+            "v52_analysis": {},
+        }
+        bot._update_cag_signals_cache(analysis)
+
+        assert bot._cag_signals_cache["black_swan_prob"] == 0.35
+        assert bot._cag_signals_cache["hmm_regime"] == "BEAR"
+        assert bot._cag_signals_cache["hmm_confidence"] == 0.8
+        assert bot._cag_signals_cache["current_price"] == 45000.0
 
     def test_env_override_takes_precedence(self):
         """Operator env var override takes precedence over computed values."""
