@@ -34,6 +34,12 @@ try:
 except Exception:
     _JURISDICTION_AVAILABLE = False
 
+try:
+    from omnix_core.governance.context_admission_gate import ContextAdmissionGate, load_cag_config_from_env
+    _CAG_AVAILABLE = True
+except Exception:
+    _CAG_AVAILABLE = False
+
 # Safety floors: absolute min/max each client is allowed to set per checkpoint.
 # Prevents clients from disabling governance by setting trivially permissive thresholds.
 # operator 'gte' checkpoints: threshold cannot be below min (would make it too easy to pass)
@@ -213,6 +219,90 @@ class GovernanceEvaluationEngine:
         veto_chain = []
         decision_trace = []
         overall_blocked = False
+        cfg = compliance_config or {}
+
+        # ── CAG: Context Admission Gate — session-level pre-admission ──────────
+        # Runs BEFORE any signal enters the checkpoint pipeline.
+        # If CAG blocks, no executable state is formed — pipeline never starts.
+        context_admission_block: dict[str, Any] | None = None
+        if _CAG_AVAILABLE:
+            try:
+                cag_enabled = cfg.get("cag_enabled",
+                    os.environ.get("CAG_ENABLED", "false").lower() == "true")
+                if cag_enabled:
+                    from omnix_core.governance.context_admission_gate import CAGConfig
+                    cag_cfg = CAGConfig(
+                        enabled=True,
+                        global_volatility_threshold=float(cfg.get(
+                            "cag_volatility_threshold",
+                            os.environ.get("CAG_VOLATILITY_THRESHOLD", "80.0"))),
+                        cross_pair_correlation_threshold=float(cfg.get(
+                            "cag_correlation_threshold",
+                            os.environ.get("CAG_CORRELATION_THRESHOLD", "90.0"))),
+                        liquidity_score_minimum=float(cfg.get(
+                            "cag_liquidity_minimum",
+                            os.environ.get("CAG_LIQUIDITY_MINIMUM", "20.0"))),
+                        macro_risk_ceiling=float(cfg.get(
+                            "cag_macro_risk_ceiling",
+                            os.environ.get("CAG_MACRO_RISK_CEILING", "85.0"))),
+                        block_on_any_violation=str(cfg.get(
+                            "cag_block_on_any_violation",
+                            os.environ.get("CAG_BLOCK_ON_ANY_VIOLATION", "true"))).lower() == "true",
+                    )
+                    cag_result = ContextAdmissionGate(cag_cfg).evaluate(
+                        global_volatility=float(cfg.get("cag_global_volatility", 0.0)),
+                        cross_pair_correlation=float(cfg.get("cag_cross_pair_correlation", 0.0)),
+                        liquidity_score=float(cfg.get("cag_liquidity_score", 100.0)),
+                        macro_risk=float(cfg.get("cag_macro_risk", 0.0)),
+                    )
+                    context_admission_block = {
+                        "check": "enabled",
+                        "result": "admitted" if cag_result.admitted else "blocked",
+                        "admission_score": cag_result.admission_score,
+                        "violation": cag_result.violation,
+                        "parameters": {
+                            "global_volatility": cag_result.global_volatility,
+                            "cross_pair_correlation": cag_result.cross_pair_correlation,
+                            "liquidity_score": cag_result.liquidity_score,
+                            "macro_risk": cag_result.macro_risk,
+                        },
+                        "gate_checks": cag_result.gate_checks,
+                    }
+                    if not cag_result.admitted and not cag_result.pass_through:
+                        decision_trace.append(f"CAG SESSION_BLOCKED: {cag_result.violation}")
+                        veto_chain.append({
+                            "checkpoint_id": "CAG",
+                            "checkpoint_name": "Context Admission Gate",
+                            "result": "SESSION_BLOCKED",
+                            "violation": cag_result.violation,
+                        })
+                        logger.warning(
+                            f"🚫 [CAG] SESSION_BLOCKED: {cag_result.violation} | "
+                            f"asset={asset} | score={cag_result.admission_score:.0f}/100"
+                        )
+                        all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                        result: dict[str, Any] = {
+                            "decision": "BLOCKED",
+                            "asset": asset,
+                            "domain": domain,
+                            "gate_results": [],
+                            "veto_chain": veto_chain,
+                            "scores": {s: signals.get(s, 0.0) for s in all_signals},
+                            "decision_trace": decision_trace,
+                            "metadata": metadata,
+                            "checkpoints_total": len(self.checkpoints),
+                            "checkpoints_passed": 0,
+                            "checkpoints_blocked": 0,
+                            "context_admission": context_admission_block,
+                        }
+                        return result
+                    else:
+                        decision_trace.append(
+                            f"CAG SESSION_ADMITTED: score={cag_result.admission_score:.0f}/100"
+                        )
+            except Exception as e:
+                logger.warning(f"⚠️ [CAG] Exception in B2B evaluate: {e} → pass-through")
+        # ─────────────────────────────────────────────────────────────────────
 
         resolved_signals = dict(signals)
         for opt_signal, default_val in OPTIONAL_SIGNAL_DEFAULTS.items():
@@ -266,7 +356,6 @@ class GovernanceEvaluationEngine:
         decision = "BLOCKED" if overall_blocked else "APPROVED"
 
         compliance_blocks: dict[str, Any] = {}
-        cfg = compliance_config or {}
 
         if not overall_blocked:
             action_for_gates = "BUY" if decision == "APPROVED" else "HOLD"
@@ -382,6 +471,8 @@ class GovernanceEvaluationEngine:
         }
         if compliance_blocks:
             result["compliance"] = compliance_blocks
+        if context_admission_block is not None:
+            result["context_admission"] = context_admission_block
         return result
 
     @staticmethod

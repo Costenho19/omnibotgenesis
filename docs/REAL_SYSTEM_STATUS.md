@@ -55,6 +55,20 @@
     3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
   - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
 
+### Cambios Recientes (Mar 26, 2026) — Context Admission Gate (CAG) — ADR-050
+
+- **Mar 26**: **Context Admission Gate IMPLEMENTADO — ADR-050**. Gate de pre-admisión a nivel de sesión que evalúa condiciones GLOBALES de mercado ANTES de que cualquier señal entre al pipeline de 8 checkpoints. Si CAG bloquea, no se forma ningún estado ejecutable — el pipeline nunca comienza. 4 parámetros independientes:
+  - **global_volatility_threshold** (default: 80): Índice de volatilidad compuesta — debe ser MENOR al umbral. Violación: `GLOBAL_VOLATILITY_EXCEEDED`.
+  - **cross_pair_correlation_threshold** (default: 90): Correlación entre pares — inestabilidad de régimen. Violación: `CORRELATION_REGIME_INSTABILITY`.
+  - **liquidity_score_minimum** (default: 20): Score de liquidez mínimo requerido. Violación: `INSUFFICIENT_LIQUIDITY`.
+  - **macro_risk_ceiling** (default: 85): Riesgo macro compuesto — debe ser MENOR al techo. Violación: `MACRO_RISK_CEILING_BREACHED`.
+  - Deshabilitado por defecto (`CAG_ENABLED=false`) — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+  - Integrado en `GovernanceEvaluationEngine.evaluate()` ANTES del loop de checkpoints, via `compliance_config`.
+  - Logging: `[CAG] SESSION_BLOCKED` / `[CAG] SESSION_ADMITTED` / `[CAG] SESSION_ADMITTED_WITH_WARNINGS`.
+  - Bloque `context_admission` en respuesta del evaluador: `admission_score`, `violation`, 4 `parameters`, `gate_checks[]`.
+  - 30/30 tests unitarios pasados. ADR-050 creado.
+  - **Narrativa inversores**: "When market conditions become structurally inadmissible, OMNIX doesn't just block individual signals. It blocks the entire evaluation session before it starts. The receipt doesn't say 'we decided to wait.' It says 'no executable state was ever formed.'"
+
 ### Cambios Recientes (Mar 25, 2026) — Compliance Gates CP-9/10/11
 
 - **Mar 25**: **Compliance Gates CP-9, CP-10, CP-11 IMPLEMENTADOS — ADR-047/048/049**. Pipeline extendido a 11 checkpoints:
