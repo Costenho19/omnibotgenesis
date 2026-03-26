@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, particularly in digital asset trading. Its core purpose is to provide reliable, error-free decision governance to preserve capital and enhance financial integrity. Key capabilities include an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and a Multi-Agent Governance System. The project aims to establish itself as a foundational and secure infrastructure for automated decision-making, ensuring financial integrity and capital preservation.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, especially in digital asset trading. Its main goal is to provide reliable, error-free decision governance to protect capital and enhance financial integrity. Key features include an 8-checkpoint entry and 3-gate exit governance pipeline, post-quantum cryptography, real-time market analysis, Non-Markovian Temporal Memory, a 6-tier Coherence Engine, Monte Carlo validation, Black Swan detection, and a Multi-Agent Governance System. The project aims to be a foundational and secure infrastructure for automated decision-making, ensuring financial integrity and capital preservation.
 
 ## User Preferences
 **Communication**: Simple, everyday language (Spanish primary).
@@ -145,6 +145,8 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 
 ### Core Components and Design Patterns
 OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It integrates multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key features include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, and RMS Enforcement. Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL) are central. A Multi-Agent Governance System (ADR-041) utilizes 3 specialized agents for weighted consensus. Hybrid Cryptography (X25519 + Kyber-768 via HKDF) and a Crypto-Agility Layer are implemented, alongside Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
+
+**Context Admission Gate (CAG — ADR-050):** Session-level pre-admission gate. Evaluates 4 global market condition parameters BEFORE any signal enters the 8-checkpoint pipeline: `global_volatility_threshold` (80), `cross_pair_correlation_threshold` (90), `liquidity_score_minimum` (20), `macro_risk_ceiling` (85). `CAG_ENABLED=false` by default. Fail-safe. Module: `omnix_core/governance/context_admission_gate.py`.
 
 ### Hierarchical Veto Flow
 Entry decisions undergo an 8-checkpoint pipeline. Exit decisions follow a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate fail-safe.
