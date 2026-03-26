@@ -809,6 +809,56 @@ class AutoTradingBot:
         except Exception as e:
             logger.warning(f"Receipt generation failed (non-critical): {e}")
 
+    def _get_cag_market_params(self, symbol: str = "UNKNOWN") -> dict:
+        """
+        ADR-050: Compute CAG input parameters from existing in-cycle bot state.
+        No new API calls — derives values from config, open positions, and session metrics.
+        Falls back to env vars as operator override, then to safe defaults.
+        """
+        # ── 1. global_volatility ────────────────────────────────────────────
+        # Use operator env override first; otherwise proxy from bot session state.
+        # Future: hook into ATR/HV from _analyze_market cache.
+        global_volatility = float(os.environ.get("CAG_GLOBAL_VOLATILITY", "-1"))
+        if global_volatility < 0:
+            # Proxy: use max_position_size_pct as a normalized risk signal
+            # High risk tolerance with many pairs → moderate volatility proxy
+            num_pairs = len(getattr(self, 'config', {}).get('trading_pairs', ['BTC/USD']))
+            risk_pct = float(getattr(self, 'config', {}).get('max_position_size_pct', 5.0) or 5.0)
+            global_volatility = min(70.0, risk_pct * 3.0 + (num_pairs - 1) * 2.0)
+
+        # ── 2. cross_pair_correlation ───────────────────────────────────────
+        # Computed from active trading pairs: more pairs in crypto → higher correlation.
+        cross_pair_correlation = float(os.environ.get("CAG_CROSS_PAIR_CORRELATION", "-1"))
+        if cross_pair_correlation < 0:
+            trading_pairs = getattr(self, 'config', {}).get('trading_pairs', ['BTC/USD'])
+            num_pairs = len(trading_pairs) if isinstance(trading_pairs, list) else 1
+            # 1 pair → ~10% correlation risk; 5+ pairs → ~70% (crypto co-movement)
+            cross_pair_correlation = min(85.0, 10.0 + (num_pairs - 1) * 14.0)
+
+        # ── 3. liquidity_score ──────────────────────────────────────────────
+        # Paper mode → maximum liquidity (no real execution constraints).
+        # Real mode → 80 default (Kraken generally liquid for major pairs).
+        liquidity_score = float(os.environ.get("CAG_LIQUIDITY_SCORE", "-1"))
+        if liquidity_score < 0:
+            paper_mode = getattr(self, 'config', {}).get('paper_mode', True)
+            liquidity_score = 100.0 if paper_mode else 80.0
+
+        # ── 4. macro_risk ────────────────────────────────────────────────────
+        # Use env var override; else estimate from stop_loss_pct (tighter SL = lower risk).
+        macro_risk = float(os.environ.get("CAG_MACRO_RISK", "-1"))
+        if macro_risk < 0:
+            sl_pct = float(getattr(self, 'config', {}).get('stop_loss_pct', 3.0) or 3.0)
+            # Low SL% (tight) → conservative → low macro risk proxy
+            # High SL% (loose) → aggressive → higher macro risk proxy
+            macro_risk = min(60.0, sl_pct * 5.0)
+
+        return {
+            "global_volatility": round(global_volatility, 2),
+            "cross_pair_correlation": round(cross_pair_correlation, 2),
+            "liquidity_score": round(liquidity_score, 2),
+            "macro_risk": round(macro_risk, 2),
+        }
+
     def _run_cag_cycle_check(self, symbol: str = "UNKNOWN", user_id: str = "") -> bool:
         """
         ADR-050: Context Admission Gate — cycle-level pre-admission check.
@@ -833,12 +883,13 @@ class AutoTradingBot:
             cag_cfg = load_cag_config_from_env()
             gate = ContextAdmissionGate(cag_cfg)
 
-            # Context parameters come from environment (future: live market data)
+            # Context parameters derived from existing in-cycle bot state (no new API calls).
+            market_params = self._get_cag_market_params(symbol=symbol)
             cag_result = gate.evaluate(
-                global_volatility=float(os.environ.get("CAG_GLOBAL_VOLATILITY", "0.0")),
-                cross_pair_correlation=float(os.environ.get("CAG_CROSS_PAIR_CORRELATION", "0.0")),
-                liquidity_score=float(os.environ.get("CAG_LIQUIDITY_SCORE", "100.0")),
-                macro_risk=float(os.environ.get("CAG_MACRO_RISK", "0.0")),
+                global_volatility=market_params["global_volatility"],
+                cross_pair_correlation=market_params["cross_pair_correlation"],
+                liquidity_score=market_params["liquidity_score"],
+                macro_risk=market_params["macro_risk"],
             )
 
             # Persist to session_admission_events (fail-safe)

@@ -2588,14 +2588,20 @@ class DatabaseServiceEnterprise:
                 CREATE TABLE IF NOT EXISTS session_admission_events (
                     id BIGSERIAL PRIMARY KEY,
                     event_id TEXT UNIQUE NOT NULL,
+                    session_id TEXT DEFAULT '',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     admitted BOOLEAN NOT NULL,
+                    decision TEXT DEFAULT '',
                     admission_score NUMERIC(6,2) NOT NULL DEFAULT 100.0,
                     violation TEXT DEFAULT '',
+                    reason_code TEXT DEFAULT '',
                     global_volatility NUMERIC(6,2) DEFAULT 0.0,
                     cross_pair_correlation NUMERIC(6,2) DEFAULT 0.0,
+                    correlation_score NUMERIC(6,2) DEFAULT 0.0,
                     liquidity_score NUMERIC(6,2) DEFAULT 100.0,
                     macro_risk NUMERIC(6,2) DEFAULT 0.0,
+                    macro_risk_score NUMERIC(6,2) DEFAULT 0.0,
+                    parameters_snapshot JSONB DEFAULT '{}',
                     cag_config JSONB DEFAULT '{}',
                     gate_checks JSONB DEFAULT '[]',
                     receipt_id TEXT DEFAULT '',
@@ -2677,6 +2683,7 @@ class DatabaseServiceEnterprise:
         receipt_id: str = "",
         user_id: str = "",
         symbol: str = "",
+        session_id: str = "",
     ) -> bool:
         """
         Persist a CAG session admission event to session_admission_events.
@@ -2689,6 +2696,15 @@ class DatabaseServiceEnterprise:
 
         import json
 
+        decision_str = "ADMITTED" if admitted else "BLOCKED"
+        reason_code = violation or ""
+        parameters_snapshot = {
+            "global_volatility": round(global_volatility, 2),
+            "cross_pair_correlation": round(cross_pair_correlation, 2),
+            "liquidity_score": round(liquidity_score, 2),
+            "macro_risk": round(macro_risk, 2),
+        }
+
         try:
             conn = self._get_connection()
             if not conn:
@@ -2698,21 +2714,30 @@ class DatabaseServiceEnterprise:
             cursor.execute(
                 """
                 INSERT INTO session_admission_events
-                    (event_id, admitted, admission_score, violation,
-                     global_volatility, cross_pair_correlation, liquidity_score, macro_risk,
-                     cag_config, gate_checks, receipt_id, user_id, symbol)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (event_id, session_id, admitted, decision, admission_score,
+                     violation, reason_code,
+                     global_volatility, cross_pair_correlation, correlation_score,
+                     liquidity_score, macro_risk, macro_risk_score,
+                     parameters_snapshot, cag_config, gate_checks,
+                     receipt_id, user_id, symbol)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (event_id) DO NOTHING
                 """,
                 (
                     event_id,
+                    session_id or event_id,
                     admitted,
+                    decision_str,
                     round(admission_score, 2),
-                    violation or "",
+                    reason_code,
+                    reason_code,
                     round(global_volatility, 2),
+                    round(cross_pair_correlation, 2),
                     round(cross_pair_correlation, 2),
                     round(liquidity_score, 2),
                     round(macro_risk, 2),
+                    round(macro_risk, 2),
+                    json.dumps(parameters_snapshot),
                     json.dumps(cag_config or {}),
                     json.dumps(gate_checks or []),
                     receipt_id or "",
@@ -2723,10 +2748,9 @@ class DatabaseServiceEnterprise:
             conn.commit()
             cursor.close()
             conn.close()
-            status = "ADMITTED" if admitted else "BLOCKED"
             logger.info(
                 f"🔒 [CAG] session_admission_events persisted: {event_id} | "
-                f"{status} | score={admission_score:.0f}/100"
+                f"{decision_str} | score={admission_score:.0f}/100"
             )
             return True
 

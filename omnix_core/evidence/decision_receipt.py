@@ -99,6 +99,12 @@ class DecisionReceiptEngine:
         if 'jurisdiction_compliance' in decision:
             public_payload['jurisdiction_compliance'] = decision['jurisdiction_compliance']
 
+        if 'context_admission' in decision:
+            public_payload['context_admission'] = decision['context_admission']
+            ca = decision['context_admission']
+            if isinstance(ca, dict) and ca.get('veto_type'):
+                public_payload['veto_type'] = ca['veto_type']
+
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 

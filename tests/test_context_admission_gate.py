@@ -558,7 +558,6 @@ class TestCAGDatabaseMethod:
     def test_method_signature_accepts_all_fields(self):
         """Method accepts all expected keyword parameters without TypeError."""
         from omnix_services.database_service.database_service import DatabaseServiceEnterprise
-        from unittest.mock import patch
         import inspect
 
         sig = inspect.signature(DatabaseServiceEnterprise.log_session_admission_event)
@@ -567,5 +566,211 @@ class TestCAGDatabaseMethod:
             "event_id", "admitted", "admission_score", "violation",
             "global_volatility", "cross_pair_correlation", "liquidity_score", "macro_risk",
             "cag_config", "gate_checks", "receipt_id", "user_id", "symbol",
+            "session_id",
         }
         assert required.issubset(params)
+
+    def test_method_signature_has_compat_columns(self):
+        """DB method has compatibility columns: session_id (mapped to decision, reason_code, etc)."""
+        from omnix_services.database_service.database_service import DatabaseServiceEnterprise
+        import inspect
+
+        sig = inspect.signature(DatabaseServiceEnterprise.log_session_admission_event)
+        params = set(sig.parameters.keys())
+        assert "session_id" in params
+
+
+class TestCAGReceiptEngine:
+    """
+    Tests for context_admission inclusion in DecisionReceiptEngine.
+    """
+
+    def test_context_admission_included_in_receipt_payload(self):
+        """context_admission block is included in the generated receipt when present."""
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        from unittest.mock import patch, MagicMock
+
+        engine = DecisionReceiptEngine.__new__(DecisionReceiptEngine)
+        engine.db_url = None
+        engine._signing_keys = None
+        engine._provider = None
+
+        with patch.object(engine, '_append_to_transparency_chain'):
+            receipt = engine.generate_receipt({
+                "symbol": "BTC/USD",
+                "decision": "BLOCK",
+                "decision_trace": ["CAG SESSION_BLOCKED: volatility_threshold"],
+                "context_admission": {
+                    "check": "enabled",
+                    "result": "blocked",
+                    "admission_score": 20.0,
+                    "violation": "volatility_threshold",
+                    "veto_type": "CONTEXT_ADMISSION_BLOCKED",
+                    "parameters": {
+                        "global_volatility": 99.0,
+                        "cross_pair_correlation": 10.0,
+                        "liquidity_score": 90.0,
+                        "macro_risk": 10.0,
+                    },
+                    "gate_checks": [],
+                },
+            })
+
+        assert "context_admission" in receipt
+        assert receipt["context_admission"]["veto_type"] == "CONTEXT_ADMISSION_BLOCKED"
+
+    def test_veto_type_is_first_class_field_in_receipt(self):
+        """veto_type=CONTEXT_ADMISSION_BLOCKED appears as a first-class receipt field."""
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        from unittest.mock import patch
+
+        engine = DecisionReceiptEngine.__new__(DecisionReceiptEngine)
+        engine.db_url = None
+        engine._signing_keys = None
+        engine._provider = None
+
+        with patch.object(engine, '_append_to_transparency_chain'):
+            receipt = engine.generate_receipt({
+                "symbol": "ETH/USD",
+                "decision": "BLOCK",
+                "context_admission": {
+                    "veto_type": "CONTEXT_ADMISSION_BLOCKED",
+                    "admission_score": 15.0,
+                },
+            })
+
+        assert receipt.get("veto_type") == "CONTEXT_ADMISSION_BLOCKED"
+
+    def test_receipt_content_hash_includes_context_admission(self):
+        """content_hash changes when context_admission changes — it's included in signing."""
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        from unittest.mock import patch
+
+        engine = DecisionReceiptEngine.__new__(DecisionReceiptEngine)
+        engine.db_url = None
+        engine._signing_keys = None
+        engine._provider = None
+
+        base = {"symbol": "BTC/USD", "decision": "BLOCK"}
+        with_ca = {**base, "context_admission": {"veto_type": "CONTEXT_ADMISSION_BLOCKED"}}
+
+        with patch.object(engine, '_append_to_transparency_chain'):
+            r1 = engine.generate_receipt(base)
+            r2 = engine.generate_receipt(with_ca)
+
+        assert r1["content_hash"] != r2["content_hash"]
+
+
+class TestCAGMarketParams:
+    """
+    Tests for _get_cag_market_params — computed from bot session state.
+    """
+
+    def _make_bot(self, config_overrides=None):
+        from unittest.mock import MagicMock
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+
+        with __import__('unittest.mock', fromlist=['patch']).patch.object(
+            AutoTradingBot, "__init__", lambda self, *a, **kw: None
+        ):
+            bot = AutoTradingBot.__new__(AutoTradingBot)
+            bot.config = {
+                "trading_pairs": ["BTC/USD"],
+                "max_position_size_pct": 5.0,
+                "paper_mode": True,
+                "stop_loss_pct": 3.0,
+            }
+            if config_overrides:
+                bot.config.update(config_overrides)
+            return bot
+
+    def test_returns_dict_with_four_keys(self):
+        """_get_cag_market_params returns dict with 4 expected keys."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        with patch.dict(os.environ, {
+            "CAG_GLOBAL_VOLATILITY": "-1",
+            "CAG_CROSS_PAIR_CORRELATION": "-1",
+            "CAG_LIQUIDITY_SCORE": "-1",
+            "CAG_MACRO_RISK": "-1",
+        }):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        assert set(params.keys()) == {
+            "global_volatility", "cross_pair_correlation",
+            "liquidity_score", "macro_risk",
+        }
+
+    def test_paper_mode_gives_liquidity_100(self):
+        """Paper mode → liquidity_score = 100.0 (no real execution constraints)."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot({"paper_mode": True})
+        with patch.dict(os.environ, {"CAG_LIQUIDITY_SCORE": "-1"}):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        assert params["liquidity_score"] == 100.0
+
+    def test_real_mode_gives_liquidity_80(self):
+        """Real mode → liquidity_score = 80.0."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot({"paper_mode": False})
+        with patch.dict(os.environ, {"CAG_LIQUIDITY_SCORE": "-1"}):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        assert params["liquidity_score"] == 80.0
+
+    def test_env_override_takes_precedence(self):
+        """Operator env var override takes precedence over computed values."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        with patch.dict(os.environ, {
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "50.0",
+            "CAG_LIQUIDITY_SCORE": "30.0",
+            "CAG_MACRO_RISK": "75.0",
+        }):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        assert params["global_volatility"] == 99.0
+        assert params["cross_pair_correlation"] == 50.0
+        assert params["liquidity_score"] == 30.0
+        assert params["macro_risk"] == 75.0
+
+    def test_more_pairs_increases_correlation_score(self):
+        """More trading pairs → higher cross_pair_correlation (crypto co-movement)."""
+        import os
+        from unittest.mock import patch
+
+        bot1 = self._make_bot({"trading_pairs": ["BTC/USD"]})
+        bot5 = self._make_bot({"trading_pairs": ["BTC/USD", "ETH/USD", "XRP/USD", "SOL/USD", "ADA/USD"]})
+
+        with patch.dict(os.environ, {"CAG_CROSS_PAIR_CORRELATION": "-1"}):
+            p1 = bot1._get_cag_market_params("BTC/USD")
+            p5 = bot5._get_cag_market_params("BTC/USD")
+
+        assert p5["cross_pair_correlation"] > p1["cross_pair_correlation"]
+
+    def test_all_values_are_non_negative(self):
+        """All returned CAG parameter values are >= 0."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        with patch.dict(os.environ, {
+            "CAG_GLOBAL_VOLATILITY": "-1",
+            "CAG_CROSS_PAIR_CORRELATION": "-1",
+            "CAG_LIQUIDITY_SCORE": "-1",
+            "CAG_MACRO_RISK": "-1",
+        }):
+            params = bot._get_cag_market_params("BTC/USD")
+
+        for key, val in params.items():
+            assert val >= 0.0, f"{key} should be >= 0, got {val}"
