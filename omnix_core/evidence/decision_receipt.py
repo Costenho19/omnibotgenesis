@@ -267,6 +267,15 @@ class ReceiptVerifier:
         if payload_for_hash['signing_provider'] is None:
             del payload_for_hash['signing_provider']
 
+        for optional_block in (
+            'sharia_compliance', 'aml_compliance', 'fraud_compliance',
+            'jurisdiction_compliance', 'context_admission',
+        ):
+            if optional_block in receipt:
+                payload_for_hash[optional_block] = receipt[optional_block]
+        if 'veto_type' in receipt:
+            payload_for_hash['veto_type'] = receipt['veto_type']
+
         canonical = json.dumps(payload_for_hash, sort_keys=True, ensure_ascii=True)
         computed_hash = hashlib.sha256(canonical.encode('utf-8')).hexdigest()
         result['hash_valid']    = (computed_hash == receipt.get('content_hash'))

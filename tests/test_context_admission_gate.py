@@ -326,7 +326,8 @@ class TestCAGFullSessionScenarios:
 
 class TestCAGBotIntegration:
     """
-    Tests for _run_cag_cycle_check integration in AutoTradingBot.
+    Tests for _run_cag_session_check (ADR-050 session-level gate) in AutoTradingBot.
+    CAG is called ONCE per trading cycle, BEFORE the symbol loop.
     All DB and receipt calls are mocked — no real connections needed.
     """
 
@@ -345,7 +346,14 @@ class TestCAGBotIntegration:
                 return_value={"receipt_id": "REC-TESTCAG-001"}
             )
             bot.receipt_engine.store_receipt = MagicMock(return_value=True)
+            bot.config = {"trading_pair": "MULTI"}
             return bot
+
+    def test_cag_session_check_method_exists(self):
+        """_run_cag_session_check method exists on AutoTradingBot."""
+        bot = self._make_bot()
+        assert hasattr(bot, "_run_cag_session_check")
+        assert callable(bot._run_cag_session_check)
 
     def test_cag_disabled_env_returns_true(self):
         """When CAG_ENABLED is not set (default=false), returns True (pass-through)."""
@@ -355,12 +363,12 @@ class TestCAGBotIntegration:
         bot = self._make_bot()
 
         with patch.dict(os.environ, {"CAG_ENABLED": "false"}):
-            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="user1")
+            result = bot._run_cag_session_check(user_id="user1", session_id="SES-TEST-001")
 
         assert result is True
 
     def test_cag_enabled_all_safe_returns_true(self):
-        """CAG_ENABLED=true, all params safe → admitted → returns True."""
+        """CAG_ENABLED=true, all params safe → SESSION ADMITTED → returns True."""
         import os
         from unittest.mock import patch
 
@@ -373,12 +381,12 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            result = bot._run_cag_cycle_check(symbol="ETH/USD", user_id="user1")
+            result = bot._run_cag_session_check(user_id="user1", session_id="SES-TEST-002")
 
         assert result is True
 
     def test_cag_enabled_high_volatility_returns_false(self):
-        """CAG_ENABLED=true, volatility=99 → BLOCKED → returns False."""
+        """CAG_ENABLED=true, volatility=99 → SESSION BLOCKED → returns False."""
         import os
         from unittest.mock import patch
 
@@ -391,12 +399,12 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="user2")
+            result = bot._run_cag_session_check(user_id="user2", session_id="SES-TEST-003")
 
         assert result is False
 
     def test_cag_blocked_triggers_receipt_generation(self):
-        """When CAG blocks, receipt_engine.generate_receipt is called."""
+        """When session is blocked, receipt_engine.generate_receipt is called."""
         import os
         from unittest.mock import patch
 
@@ -409,7 +417,7 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+            bot._run_cag_session_check(user_id="", session_id="SES-TEST-004")
 
         bot.receipt_engine.generate_receipt.assert_called_once()
 
@@ -427,15 +435,36 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+            bot._run_cag_session_check(user_id="", session_id="SES-TEST-005")
 
         call_args = bot.receipt_engine.generate_receipt.call_args
         receipt_input = call_args[0][0]
         assert receipt_input["decision"] == "BLOCK"
         assert "CONTEXT_ADMISSION_BLOCKED" in str(receipt_input)
 
+    def test_cag_blocked_receipt_has_session_id(self):
+        """Receipt context_admission block contains the session_id."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        test_session_id = "SES-RECEIPT-TEST-006"
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            bot._run_cag_session_check(user_id="", session_id=test_session_id)
+
+        call_args = bot.receipt_engine.generate_receipt.call_args
+        receipt_input = call_args[0][0]
+        assert test_session_id in str(receipt_input)
+
     def test_cag_blocked_persists_to_db(self):
-        """When CAG blocks, log_session_admission_event is called on db_service."""
+        """When session is blocked, log_session_admission_event is called on db_service."""
         import os
         from unittest.mock import patch
 
@@ -448,16 +477,16 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            bot._run_cag_cycle_check(symbol="XBT/USD", user_id="user7")
+            bot._run_cag_session_check(user_id="user7", session_id="SES-TEST-007")
 
         bot.db_service.log_session_admission_event.assert_called_once()
         kwargs = bot.db_service.log_session_admission_event.call_args[1]
         assert kwargs["admitted"] is False
-        assert kwargs["symbol"] == "XBT/USD"
+        assert kwargs["symbol"] == "SESSION"
         assert kwargs["user_id"] == "user7"
 
     def test_cag_admitted_no_receipt_generated(self):
-        """When CAG admits, receipt_engine is NOT called."""
+        """When session is admitted, receipt_engine is NOT called."""
         import os
         from unittest.mock import patch
 
@@ -470,27 +499,22 @@ class TestCAGBotIntegration:
             "CAG_LIQUIDITY_SCORE": "90.0",
             "CAG_MACRO_RISK": "10.0",
         }):
-            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+            result = bot._run_cag_session_check(user_id="", session_id="SES-TEST-008")
 
         assert result is True
         bot.receipt_engine.generate_receipt.assert_not_called()
 
     def test_cag_fail_safe_exception_returns_true(self):
-        """If CAG evaluate raises, method returns True (fail-safe pass-through)."""
+        """If cag_evaluate_session raises, method returns True (fail-safe pass-through)."""
         import os
-        from unittest.mock import patch, MagicMock
-        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        from unittest.mock import patch
 
         bot = self._make_bot()
 
-        # Force exception inside evaluate
-        with patch("omnix_core.bot.auto_trading_bot.ContextAdmissionGate") as MockGate:
-            instance = MagicMock()
-            instance.evaluate.side_effect = RuntimeError("simulated hardware failure")
-            MockGate.return_value = instance
-
+        with patch("omnix_core.bot.auto_trading_bot.cag_evaluate_session",
+                   side_effect=RuntimeError("simulated hardware failure")):
             with patch.dict(os.environ, {"CAG_ENABLED": "true"}):
-                result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+                result = bot._run_cag_session_check(user_id="", session_id="SES-TEST-009")
 
         assert result is True
 
@@ -506,9 +530,8 @@ class TestCAGBotIntegration:
             "CAG_ENABLED": "true",
             "CAG_GLOBAL_VOLATILITY": "99.0",
         }):
-            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+            result = bot._run_cag_session_check(user_id="", session_id="SES-TEST-010")
 
-        # Should return False (blocked) or True (fail-safe), but never crash
         assert isinstance(result, bool)
 
     def test_cag_no_receipt_engine_does_not_crash(self):
@@ -523,7 +546,7 @@ class TestCAGBotIntegration:
             "CAG_ENABLED": "true",
             "CAG_GLOBAL_VOLATILITY": "99.0",
         }):
-            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+            result = bot._run_cag_session_check(user_id="", session_id="SES-TEST-011")
 
         assert isinstance(result, bool)
 
@@ -774,3 +797,115 @@ class TestCAGMarketParams:
 
         for key, val in params.items():
             assert val >= 0.0, f"{key} should be >= 0, got {val}"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ADR-050: evaluate_session() + SessionAdmissionResult — module-level API tests
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestEvaluateSessionAPI:
+    """
+    ADR-050: Tests for the module-level evaluate_session() function and
+    SessionAdmissionResult type alias. These verify the public contract used by
+    the bot and external_evaluator.
+    """
+
+    def test_evaluate_session_exists_and_callable(self):
+        """evaluate_session is importable from context_admission_gate."""
+        from omnix_core.governance.context_admission_gate import evaluate_session
+        assert callable(evaluate_session)
+
+    def test_session_admission_result_exists(self):
+        """SessionAdmissionResult is importable and is an alias for CAGResult."""
+        from omnix_core.governance.context_admission_gate import (
+            SessionAdmissionResult, CAGResult
+        )
+        assert SessionAdmissionResult is CAGResult
+
+    def test_evaluate_session_disabled_config_admits(self):
+        """With disabled config, evaluate_session admits the session (pass-through)."""
+        from omnix_core.governance.context_admission_gate import (
+            evaluate_session, CAGConfig, SessionAdmissionResult
+        )
+        result = evaluate_session(
+            global_volatility=99.0,
+            cross_pair_correlation=99.0,
+            liquidity_score=1.0,
+            macro_risk=99.0,
+            session_id="SES-UNIT-001",
+            config=CAGConfig(enabled=False),
+        )
+        assert isinstance(result, SessionAdmissionResult)
+        assert result.admitted is True
+        assert result.pass_through is True
+
+    def test_evaluate_session_enabled_safe_params_admits(self):
+        """With enabled config and safe params, evaluate_session admits."""
+        from omnix_core.governance.context_admission_gate import (
+            evaluate_session, CAGConfig, SessionAdmissionResult
+        )
+        cfg = CAGConfig(
+            enabled=True,
+            global_volatility_threshold=80.0,
+            cross_pair_correlation_threshold=90.0,
+            liquidity_score_minimum=20.0,
+            macro_risk_ceiling=85.0,
+        )
+        result = evaluate_session(
+            global_volatility=10.0,
+            cross_pair_correlation=15.0,
+            liquidity_score=90.0,
+            macro_risk=10.0,
+            session_id="SES-UNIT-002",
+            config=cfg,
+        )
+        assert isinstance(result, SessionAdmissionResult)
+        assert result.admitted is True
+
+    def test_evaluate_session_enabled_high_volatility_blocks(self):
+        """With enabled config and high volatility, evaluate_session blocks."""
+        from omnix_core.governance.context_admission_gate import (
+            evaluate_session, CAGConfig, SessionAdmissionResult
+        )
+        cfg = CAGConfig(
+            enabled=True,
+            global_volatility_threshold=80.0,
+            cross_pair_correlation_threshold=90.0,
+            liquidity_score_minimum=20.0,
+            macro_risk_ceiling=85.0,
+        )
+        result = evaluate_session(
+            global_volatility=99.0,
+            cross_pair_correlation=15.0,
+            liquidity_score=90.0,
+            macro_risk=10.0,
+            session_id="SES-UNIT-003",
+            config=cfg,
+        )
+        assert isinstance(result, SessionAdmissionResult)
+        assert result.admitted is False
+        assert result.pass_through is False
+
+    def test_evaluate_session_accepts_session_id_param(self):
+        """evaluate_session accepts session_id keyword argument without error."""
+        from omnix_core.governance.context_admission_gate import evaluate_session, CAGConfig
+        result = evaluate_session(
+            global_volatility=0.0,
+            cross_pair_correlation=0.0,
+            liquidity_score=100.0,
+            macro_risk=0.0,
+            session_id="SES-UNIT-CUSTOM-IDXYZ",
+            config=CAGConfig(enabled=False),
+        )
+        assert result is not None
+
+    def test_evaluate_session_fail_safe_on_bad_config(self):
+        """evaluate_session returns pass-through result on config/exception path."""
+        from omnix_core.governance.context_admission_gate import evaluate_session, SessionAdmissionResult
+        from unittest.mock import patch
+        with patch("omnix_core.governance.context_admission_gate.ContextAdmissionGate",
+                   side_effect=RuntimeError("boom")):
+            result = evaluate_session(session_id="SES-UNIT-ERR-001")
+        assert isinstance(result, SessionAdmissionResult)
+        assert result.admitted is True
+        assert result.pass_through is True

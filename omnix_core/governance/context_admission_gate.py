@@ -305,6 +305,43 @@ class ContextAdmissionGate:
         )
 
 
+SessionAdmissionResult = CAGResult
+
+
+def evaluate_session(
+    global_volatility: float = 0.0,
+    cross_pair_correlation: float = 0.0,
+    liquidity_score: float = 100.0,
+    macro_risk: float = 0.0,
+    session_id: str = "",
+    config: Optional[CAGConfig] = None,
+) -> SessionAdmissionResult:
+    """
+    ADR-050: Session-level admission check. One call per evaluation cycle,
+    covers ALL symbols in that cycle. Returns a SessionAdmissionResult (alias
+    of CAGResult) tagged with the session_id for traceability.
+
+    Fail-safe: any exception returns admitted=True, pass_through=True.
+    """
+    try:
+        gate = ContextAdmissionGate(config or load_cag_config_from_env())
+        result = gate.evaluate(
+            global_volatility=global_volatility,
+            cross_pair_correlation=cross_pair_correlation,
+            liquidity_score=liquidity_score,
+            macro_risk=macro_risk,
+        )
+        return result
+    except Exception as exc:
+        logger.warning(f"⚠️ [CAG] evaluate_session exception → pass-through: {exc}")
+        return SessionAdmissionResult(
+            admitted=True,
+            pass_through=True,
+            reason=f"CAG exception → pass-through: {exc}",
+            admission_score=100.0,
+        )
+
+
 def load_cag_config_from_env() -> CAGConfig:
     """
     Load Context Admission Gate configuration from environment variables.

@@ -318,7 +318,8 @@ except Exception:
 
 try:
     from omnix_core.governance.context_admission_gate import (
-        ContextAdmissionGate, CAGConfig, load_cag_config_from_env
+        ContextAdmissionGate, CAGConfig, load_cag_config_from_env,
+        SessionAdmissionResult, evaluate_session as cag_evaluate_session,
     )
     CAG_AVAILABLE = True
     logger.info("🔒 Context Admission Gate (ADR-050) disponible")
@@ -326,6 +327,8 @@ except Exception:
     ContextAdmissionGate = None
     CAGConfig = None
     load_cag_config_from_env = None
+    SessionAdmissionResult = None
+    cag_evaluate_session = None
     CAG_AVAILABLE = False
     logger.warning("⚠️ Context Admission Gate no disponible - pass-through")
 
@@ -858,6 +861,118 @@ class AutoTradingBot:
             "liquidity_score": round(liquidity_score, 2),
             "macro_risk": round(macro_risk, 2),
         }
+
+    def _run_cag_session_check(self, user_id: str = "", session_id: str = "") -> bool:
+        """
+        ADR-050: Context Admission Gate — TRUE session-level check.
+
+        Called ONCE per trading cycle, BEFORE iterating over any symbol.
+        Blocks the ENTIRE evaluation window when systemic risk conditions
+        make the market environment structurally inadmissible.
+
+        Returns:
+            True  → session ADMITTED  — all symbols may be analyzed
+            False → session BLOCKED   — no symbol enters the pipeline
+
+        Fail-safe: any exception → True (pass-through, pipeline continues).
+        """
+        if not CAG_AVAILABLE or cag_evaluate_session is None:
+            return True
+
+        try:
+            cag_enabled = os.environ.get("CAG_ENABLED", "false").lower() == "true"
+            if not cag_enabled:
+                return True
+
+            market_params = self._get_cag_market_params(
+                symbol=self.config.get('trading_pair', 'MULTI') if hasattr(self, 'config') else 'MULTI'
+            )
+            cag_result = cag_evaluate_session(
+                global_volatility=market_params["global_volatility"],
+                cross_pair_correlation=market_params["cross_pair_correlation"],
+                liquidity_score=market_params["liquidity_score"],
+                macro_risk=market_params["macro_risk"],
+                session_id=session_id,
+                config=load_cag_config_from_env(),
+            )
+            cag_cfg = load_cag_config_from_env()
+
+            import uuid
+            event_id = session_id or f"CAG-{uuid.uuid4().hex[:16].upper()}"
+            receipt_id_str = ""
+
+            if not cag_result.admitted and not cag_result.pass_through:
+                try:
+                    if self.receipt_engine:
+                        receipt_input = {
+                            "symbol": "SESSION",
+                            "decision": "BLOCK",
+                            "decision_trace": [f"CAG SESSION_BLOCKED: {cag_result.violation}"],
+                            "policy_version": os.environ.get("OMNIX_VERSION", "6.5.4e"),
+                            "context_admission": {
+                                "check": "enabled",
+                                "result": "blocked",
+                                "session_id": session_id,
+                                "admission_score": cag_result.admission_score,
+                                "violation": cag_result.violation,
+                                "veto_type": "CONTEXT_ADMISSION_BLOCKED",
+                                "parameters": market_params,
+                                "gate_checks": cag_result.gate_checks,
+                            },
+                        }
+                        prev_hash = self.receipt_engine.get_last_hash()
+                        receipt = self.receipt_engine.generate_receipt(receipt_input, prev_hash)
+                        if self.receipt_engine.store_receipt(receipt):
+                            receipt_id_str = receipt.get("receipt_id", "")
+                            logger.info(
+                                f"🔏 [CAG] SESSION_BLOCKED receipt: {receipt_id_str} | "
+                                f"session_id={session_id} | violation={cag_result.violation}"
+                            )
+                except Exception as receipt_exc:
+                    logger.warning(f"⚠️ [CAG] Session receipt failed (non-critical): {receipt_exc}")
+
+            try:
+                if hasattr(self, "db_service") and self.db_service:
+                    self.db_service.log_session_admission_event(
+                        event_id=event_id,
+                        session_id=session_id,
+                        admitted=cag_result.admitted,
+                        admission_score=cag_result.admission_score,
+                        violation=cag_result.violation,
+                        global_volatility=cag_result.global_volatility,
+                        cross_pair_correlation=cag_result.cross_pair_correlation,
+                        liquidity_score=cag_result.liquidity_score,
+                        macro_risk=cag_result.macro_risk,
+                        cag_config={
+                            "volatility_threshold": cag_cfg.global_volatility_threshold,
+                            "correlation_threshold": cag_cfg.cross_pair_correlation_threshold,
+                            "liquidity_minimum": cag_cfg.liquidity_score_minimum,
+                            "macro_risk_ceiling": cag_cfg.macro_risk_ceiling,
+                        },
+                        gate_checks=cag_result.gate_checks,
+                        receipt_id=receipt_id_str,
+                        user_id=str(user_id),
+                        symbol="SESSION",
+                    )
+            except Exception as db_exc:
+                logger.debug(f"[CAG] DB persist failed (non-critical): {db_exc}")
+
+            if not cag_result.admitted and not cag_result.pass_through:
+                logger.warning(
+                    f"🚫 [CAG] SESSION BLOCKED | session_id={session_id} | user={user_id} | "
+                    f"violation={cag_result.violation} | score={cag_result.admission_score:.0f}/100"
+                )
+                return False
+
+            logger.debug(
+                f"✅ [CAG] SESSION ADMITTED | session_id={session_id} | "
+                f"score={cag_result.admission_score:.0f}/100"
+            )
+            return True
+
+        except Exception as exc:
+            logger.warning(f"⚠️ [CAG] _run_cag_session_check exception → pass-through: {exc}")
+            return True
 
     def _run_cag_cycle_check(self, symbol: str = "UNKNOWN", user_id: str = "") -> bool:
         """
@@ -1933,6 +2048,20 @@ class AutoTradingBot:
             # 3. Obtener configuración de pares (usar sesión o config global como fallback)
             trading_pairs = getattr(session, 'trading_pairs', None) or self.config.get('trading_pairs', ['BTC/USD'])
             
+            # ── ADR-050: Context Admission Gate — SESSION-LEVEL check ────────
+            # Una sola evaluación por ciclo, antes de iterar CUALQUIER par.
+            # Si la sesión es bloqueada: ningún símbolo entra al pipeline.
+            # "No executable state was ever formed."
+            import uuid as _uuid
+            _cag_session_id = f"SES-{_uuid.uuid4().hex[:12].upper()}"
+            if not self._run_cag_session_check(user_id=str(user_id), session_id=_cag_session_id):
+                logger.info(
+                    f"🚫 [CAG] SESIÓN BLOQUEADA para user={user_id} | "
+                    f"session_id={_cag_session_id} — saltando todos los pares"
+                )
+                return
+            # ─────────────────────────────────────────────────────────────────
+
             # 4. Escanear pares configurados
             session_updated = False
             for current_pair in trading_pairs:
@@ -1943,14 +2072,6 @@ class AutoTradingBot:
                 # Verificar si el símbolo está permitido
                 if is_symbol_allowed and not is_symbol_allowed(current_pair, self.trading_profile):
                     continue
-
-                # ── ADR-050: Context Admission Gate — pre-análisis ────────────
-                # Evalúa condiciones globales ANTES de _analyze_market().
-                # Si bloquea: no se forma ningún estado ejecutable.
-                if not self._run_cag_cycle_check(symbol=current_pair, user_id=str(user_id)):
-                    logger.info(f"🚫 [CAG] Ciclo bloqueado para {current_pair} | user={user_id}")
-                    continue
-                # ─────────────────────────────────────────────────────────────
 
                 # Análisis completo
                 analysis = self._analyze_market()
@@ -2691,6 +2812,20 @@ class AutoTradingBot:
                     pair_index = (pair_index + 1) % len(trading_pairs)
                     logger.info(f"🔍 Escaneando {current_pair} ({pair_index+1}/{len(trading_pairs)})")
                 
+                # ── ADR-050: Context Admission Gate — SESSION-LEVEL check ────────
+                # Una sola evaluación por ciclo de trading loop, antes de cualquier
+                # análisis de pares. Si bloquea: se salta TODA la iteración del ciclo.
+                import uuid as _uuid_loop
+                _cag_sid = f"SES-{_uuid_loop.uuid4().hex[:12].upper()}"
+                if not self._run_cag_session_check(user_id="", session_id=_cag_sid):
+                    logger.info(
+                        f"🚫 [CAG] CICLO BLOQUEADO | session_id={_cag_sid} "
+                        f"— saltando análisis de todos los pares"
+                    )
+                    time.sleep(self.config.get('check_interval_seconds', 60))
+                    continue
+                # ─────────────────────────────────────────────────────────────
+
                 # ========== V6.5.4c FIX: VERIFICAR EXCLUSIÓN ANTES DE ANÁLISIS ==========
                 # Evita gastar recursos analizando pares que están EXCLUIDOS
                 current_symbol = self.config.get('trading_pair', 'BTC/USD')
@@ -2699,15 +2834,6 @@ class AutoTradingBot:
                     time.sleep(1)  # Pequeña pausa para no saturar logs
                     continue  # Saltar al siguiente par
                 # ========== FIN FIX EXCLUSIÓN ==========
-
-                # ── ADR-050: Context Admission Gate — pre-análisis ────────────
-                # Evalúa condiciones globales ANTES de _analyze_market().
-                # Si bloquea: no se forma ningún estado ejecutable ("No executable state was ever formed").
-                if not self._run_cag_cycle_check(symbol=current_symbol, user_id=""):
-                    logger.info(f"🚫 [CAG] Ciclo bloqueado para {current_symbol} — saltando _analyze_market()")
-                    time.sleep(1)
-                    continue
-                # ─────────────────────────────────────────────────────────────
 
                 # Análisis completo
                 analysis = self._analyze_market()
