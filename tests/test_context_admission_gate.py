@@ -318,3 +318,254 @@ class TestCAGFullSessionScenarios:
         gate = self._gate()
         r = gate.evaluate(liquidity_score=72.0)
         assert r.liquidity_score == 72.0
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ADR-050 INTEGRATION TESTS: Bot loop integration, receipt, DB, fail-safe
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestCAGBotIntegration:
+    """
+    Tests for _run_cag_cycle_check integration in AutoTradingBot.
+    All DB and receipt calls are mocked — no real connections needed.
+    """
+
+    def _make_bot(self):
+        """Return a minimal AutoTradingBot instance with mocked subsystems."""
+        from unittest.mock import MagicMock, patch
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+
+        with patch.object(AutoTradingBot, "__init__", lambda self, *a, **kw: None):
+            bot = AutoTradingBot.__new__(AutoTradingBot)
+            bot.db_service = MagicMock()
+            bot.db_service.log_session_admission_event = MagicMock(return_value=True)
+            bot.receipt_engine = MagicMock()
+            bot.receipt_engine.get_last_hash = MagicMock(return_value="00" * 32)
+            bot.receipt_engine.generate_receipt = MagicMock(
+                return_value={"receipt_id": "REC-TESTCAG-001"}
+            )
+            bot.receipt_engine.store_receipt = MagicMock(return_value=True)
+            return bot
+
+    def test_cag_disabled_env_returns_true(self):
+        """When CAG_ENABLED is not set (default=false), returns True (pass-through)."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {"CAG_ENABLED": "false"}):
+            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="user1")
+
+        assert result is True
+
+    def test_cag_enabled_all_safe_returns_true(self):
+        """CAG_ENABLED=true, all params safe → admitted → returns True."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "10.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            result = bot._run_cag_cycle_check(symbol="ETH/USD", user_id="user1")
+
+        assert result is True
+
+    def test_cag_enabled_high_volatility_returns_false(self):
+        """CAG_ENABLED=true, volatility=99 → BLOCKED → returns False."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="user2")
+
+        assert result is False
+
+    def test_cag_blocked_triggers_receipt_generation(self):
+        """When CAG blocks, receipt_engine.generate_receipt is called."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        bot.receipt_engine.generate_receipt.assert_called_once()
+
+    def test_cag_blocked_receipt_has_correct_decision(self):
+        """Receipt input contains decision='BLOCK' and veto_type=CONTEXT_ADMISSION_BLOCKED."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        call_args = bot.receipt_engine.generate_receipt.call_args
+        receipt_input = call_args[0][0]
+        assert receipt_input["decision"] == "BLOCK"
+        assert "CONTEXT_ADMISSION_BLOCKED" in str(receipt_input)
+
+    def test_cag_blocked_persists_to_db(self):
+        """When CAG blocks, log_session_admission_event is called on db_service."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            bot._run_cag_cycle_check(symbol="XBT/USD", user_id="user7")
+
+        bot.db_service.log_session_admission_event.assert_called_once()
+        kwargs = bot.db_service.log_session_admission_event.call_args[1]
+        assert kwargs["admitted"] is False
+        assert kwargs["symbol"] == "XBT/USD"
+        assert kwargs["user_id"] == "user7"
+
+    def test_cag_admitted_no_receipt_generated(self):
+        """When CAG admits, receipt_engine is NOT called."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "10.0",
+            "CAG_CROSS_PAIR_CORRELATION": "10.0",
+            "CAG_LIQUIDITY_SCORE": "90.0",
+            "CAG_MACRO_RISK": "10.0",
+        }):
+            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        assert result is True
+        bot.receipt_engine.generate_receipt.assert_not_called()
+
+    def test_cag_fail_safe_exception_returns_true(self):
+        """If CAG evaluate raises, method returns True (fail-safe pass-through)."""
+        import os
+        from unittest.mock import patch, MagicMock
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+
+        bot = self._make_bot()
+
+        # Force exception inside evaluate
+        with patch("omnix_core.bot.auto_trading_bot.ContextAdmissionGate") as MockGate:
+            instance = MagicMock()
+            instance.evaluate.side_effect = RuntimeError("simulated hardware failure")
+            MockGate.return_value = instance
+
+            with patch.dict(os.environ, {"CAG_ENABLED": "true"}):
+                result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        assert result is True
+
+    def test_cag_no_db_service_does_not_crash(self):
+        """If db_service is None, method still runs without crashing."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        bot.db_service = None
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+        }):
+            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        # Should return False (blocked) or True (fail-safe), but never crash
+        assert isinstance(result, bool)
+
+    def test_cag_no_receipt_engine_does_not_crash(self):
+        """If receipt_engine is None/falsy, method still runs without crashing."""
+        import os
+        from unittest.mock import patch
+
+        bot = self._make_bot()
+        bot.receipt_engine = None
+
+        with patch.dict(os.environ, {
+            "CAG_ENABLED": "true",
+            "CAG_GLOBAL_VOLATILITY": "99.0",
+        }):
+            result = bot._run_cag_cycle_check(symbol="BTC/USD", user_id="")
+
+        assert isinstance(result, bool)
+
+
+class TestCAGDatabaseMethod:
+    """
+    Tests for DatabaseServiceEnterprise.log_session_admission_event.
+    """
+
+    def test_method_exists_on_db_service(self):
+        """log_session_admission_event method is present in DatabaseServiceEnterprise."""
+        from omnix_services.database_service.database_service import DatabaseServiceEnterprise
+        assert hasattr(DatabaseServiceEnterprise, "log_session_admission_event")
+
+    def test_method_returns_false_when_not_connected(self):
+        """Returns False gracefully when DB is not connected."""
+        from omnix_services.database_service.database_service import DatabaseServiceEnterprise
+        from unittest.mock import patch
+
+        with patch.object(DatabaseServiceEnterprise, "__init__", lambda self: None):
+            svc = DatabaseServiceEnterprise.__new__(DatabaseServiceEnterprise)
+            svc.connected = False
+
+        result = svc.log_session_admission_event(
+            event_id="EVT-TEST-001",
+            admitted=False,
+            admission_score=20.0,
+            violation="volatility_threshold",
+        )
+        assert result is False
+
+    def test_method_signature_accepts_all_fields(self):
+        """Method accepts all expected keyword parameters without TypeError."""
+        from omnix_services.database_service.database_service import DatabaseServiceEnterprise
+        from unittest.mock import patch
+        import inspect
+
+        sig = inspect.signature(DatabaseServiceEnterprise.log_session_admission_event)
+        params = set(sig.parameters.keys())
+        required = {
+            "event_id", "admitted", "admission_score", "violation",
+            "global_volatility", "cross_pair_correlation", "liquidity_score", "macro_risk",
+            "cag_config", "gate_checks", "receipt_id", "user_id", "symbol",
+        }
+        assert required.issubset(params)

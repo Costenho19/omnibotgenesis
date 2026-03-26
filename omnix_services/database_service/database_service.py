@@ -2582,11 +2582,37 @@ class DatabaseServiceEnterprise:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_cal_metrics_regime ON calibration_metrics(regime)')
             
             logger.info("✅ Adaptive Parameter Engine Tables creadas (adaptive_parameters, calibration_events, calibration_metrics)")
+
+            # ── ADR-050: Context Admission Gate — session_admission_events ──────
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS session_admission_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    event_id TEXT UNIQUE NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    admitted BOOLEAN NOT NULL,
+                    admission_score NUMERIC(6,2) NOT NULL DEFAULT 100.0,
+                    violation TEXT DEFAULT '',
+                    global_volatility NUMERIC(6,2) DEFAULT 0.0,
+                    cross_pair_correlation NUMERIC(6,2) DEFAULT 0.0,
+                    liquidity_score NUMERIC(6,2) DEFAULT 100.0,
+                    macro_risk NUMERIC(6,2) DEFAULT 0.0,
+                    cag_config JSONB DEFAULT '{}',
+                    gate_checks JSONB DEFAULT '[]',
+                    receipt_id TEXT DEFAULT '',
+                    user_id TEXT DEFAULT '',
+                    symbol TEXT DEFAULT ''
+                )
+            ''')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_session_admission_created ON session_admission_events(created_at DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_session_admission_admitted ON session_admission_events(admitted)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_session_admission_violation ON session_admission_events(violation) WHERE violation != \'\'')
+            logger.info("✅ CAG Table creada: session_admission_events (ADR-050)")
+            # ──────────────────────────────────────────────────────────────────
             
             conn.commit()
             cursor.close()
             conn.close()
-            logger.info("✅ PostgreSQL: 23 tablas inicializadas (Core + Paper Trading + Cerebro + Community Intelligence + Signal Contribution + Risk Guardian)")
+            logger.info("✅ PostgreSQL: 24 tablas inicializadas (Core + Paper Trading + Cerebro + Community Intelligence + Signal Contribution + Risk Guardian + CAG)")
             
         except Exception as e:
             logger.error(f"Error inicializando tablas: {e}")
@@ -2635,7 +2661,79 @@ class DatabaseServiceEnterprise:
         except Exception as e:
             logger.error(f"Error guardando balance: {e}")
             return False
-    
+
+    def log_session_admission_event(
+        self,
+        event_id: str,
+        admitted: bool,
+        admission_score: float,
+        violation: str = "",
+        global_volatility: float = 0.0,
+        cross_pair_correlation: float = 0.0,
+        liquidity_score: float = 100.0,
+        macro_risk: float = 0.0,
+        cag_config: dict = None,
+        gate_checks: list = None,
+        receipt_id: str = "",
+        user_id: str = "",
+        symbol: str = "",
+    ) -> bool:
+        """
+        Persist a CAG session admission event to session_admission_events.
+        ADR-050: Context Admission Gate — fail-safe, non-critical.
+
+        Returns True if stored, False on error (pipeline continues regardless).
+        """
+        if not self.connected:
+            return False
+
+        import json
+
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO session_admission_events
+                    (event_id, admitted, admission_score, violation,
+                     global_volatility, cross_pair_correlation, liquidity_score, macro_risk,
+                     cag_config, gate_checks, receipt_id, user_id, symbol)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (event_id) DO NOTHING
+                """,
+                (
+                    event_id,
+                    admitted,
+                    round(admission_score, 2),
+                    violation or "",
+                    round(global_volatility, 2),
+                    round(cross_pair_correlation, 2),
+                    round(liquidity_score, 2),
+                    round(macro_risk, 2),
+                    json.dumps(cag_config or {}),
+                    json.dumps(gate_checks or []),
+                    receipt_id or "",
+                    user_id or "",
+                    symbol or "",
+                ),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            status = "ADMITTED" if admitted else "BLOCKED"
+            logger.info(
+                f"🔒 [CAG] session_admission_events persisted: {event_id} | "
+                f"{status} | score={admission_score:.0f}/100"
+            )
+            return True
+
+        except Exception as e:
+            logger.warning(f"⚠️ [CAG] log_session_admission_event failed (non-critical): {e}")
+            return False
+
     def get_balance_history(self, user_id: str, days: int = 30) -> List[Dict]:
         """
         Obtener historial de balance
