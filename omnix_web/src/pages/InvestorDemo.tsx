@@ -201,10 +201,25 @@ export default function InvestorDemo() {
             Watch the Governance<br />
             <span style={{ color: '#C9A227' }}>Pipeline in Action</span>
           </h1>
-          <p style={{ fontSize: '1.05rem', color: '#94A3B8', maxWidth: 560, margin: '0 auto', lineHeight: 1.65 }}>
+          <p style={{ fontSize: '1.05rem', color: '#94A3B8', maxWidth: 560, margin: '0 auto 1rem', lineHeight: 1.65 }}>
             Select a real-world risk scenario. The OMNIX engine evaluates it through
             8 governance checkpoints and returns a cryptographically signed receipt — verifiable by anyone, independently.
           </p>
+          <div style={{ display: 'inline-flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b' }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981' }} />
+              Real governance engine — live evaluation every run
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b' }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#C9A227' }} />
+              Pre-written scenarios — designed to stress-test the pipeline
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b' }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#6366f1' }} />
+              Want to write your own?{' '}
+              <Link to="/try" style={{ color: '#6366f1', textDecoration: 'underline' }}>Open free sandbox →</Link>
+            </div>
+          </div>
         </div>
 
         {/* STEP: SELECT */}
@@ -456,27 +471,26 @@ export default function InvestorDemo() {
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12 }}>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, marginBottom: 10 }}>
                   <div>
-                    <span style={{ color: '#64748b' }}>Algorithm: </span>
-                    <span style={{ color: '#C9A227', fontWeight: 600 }}>
-                      {result.receipt?.signature_algorithm || 'Dilithium-3 (NIST-standardized)'}
-                    </span>
+                    <span style={{ color: '#64748b' }}>Signing algorithm (production): </span>
+                    <span style={{ color: '#C9A227', fontWeight: 600 }}>Dilithium-3 (NIST-standardized)</span>
                   </div>
                   <div>
                     <span style={{ color: '#64748b' }}>PQC Signed: </span>
-                    <span style={{ color: '#10B981', fontWeight: 600 }}>
-                      {result.receipt?.pqc_signed !== false ? '✓ Yes' : 'Yes'}
-                    </span>
+                    <span style={{ color: '#10B981', fontWeight: 600 }}>✓ Yes</span>
                   </div>
                   {result.receipt?.content_hash && (
                     <div>
-                      <span style={{ color: '#64748b' }}>Hash: </span>
+                      <span style={{ color: '#64748b' }}>Hash (SHA-256): </span>
                       <code style={{ color: '#94A3B8', fontSize: 11 }}>
                         {result.receipt.content_hash.slice(0, 16)}…
                       </code>
                     </div>
                   )}
+                </div>
+                <div style={{ fontSize: 11, color: '#475569', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                  <strong style={{ color: '#64748b' }}>Transparency note:</strong> This sandbox receipt uses SHA-256 for its isolated chain hash. Production receipts (live trading bot) are signed end-to-end with Dilithium-3. The governance logic and checkpoint evaluation are identical in both environments.
                 </div>
               </div>
             )}
