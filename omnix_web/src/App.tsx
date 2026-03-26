@@ -8,6 +8,7 @@ import EnergyGovernanceDemo from './pages/EnergyGovernanceDemo'
 import BiotechGovernanceDemo from './pages/BiotechGovernanceDemo'
 import PublicGovernanceSandbox from './pages/PublicGovernanceSandbox'
 import PublicDecisionVerify from './pages/PublicDecisionVerify'
+import InvestorDemo from './pages/InvestorDemo'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/" element={<CommercialLanding />} />
         <Route path="/institutional" element={<InstitutionalPage />} />
+        <Route path="/demo" element={<InvestorDemo />} />
         <Route path="/governance-demo" element={<CreditGovernanceDemo />} />
         <Route path="/governance-demo-insurance" element={<InsuranceGovernanceDemo />} />
         <Route path="/governance-demo-energy" element={<EnergyGovernanceDemo />} />
