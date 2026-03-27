@@ -262,7 +262,19 @@ def get_sectors():
             GROUP BY sector
             ORDER BY total DESC
         """)
-        return jsonify({"status": "ok", "sectors": rows})
+        typed = [
+            {
+                "sector": r["sector"],
+                "total": int(r["total"]),
+                "approved": int(r["approved"]),
+                "blocked": int(r["blocked"]),
+                "approval_rate": float(r["approval_rate"] or 0),
+                "total_amount_aed": float(r["total_amount_aed"] or 0),
+                "avg_probability": float(r["avg_probability"] or 0),
+            }
+            for r in rows
+        ]
+        return jsonify({"status": "ok", "sectors": typed})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
