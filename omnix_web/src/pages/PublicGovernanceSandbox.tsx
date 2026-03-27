@@ -60,6 +60,15 @@ interface ExampleScenario {
 
 const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
 
+const publicAlgorithmLabel = (alg?: string): string => {
+  if (!alg) return 'NIST-standardized post-quantum signature'
+  const a = alg.toLowerCase()
+  if (a.includes('dilithium') || a.includes('kyber') || a.includes('ml-kem') || a.includes('ml-dsa')) {
+    return 'NIST-standardized post-quantum signature'
+  }
+  return alg
+}
+
 const CHECKPOINT_ICONS: Record<string, string> = {
   'CP-0': '🔍', 'CP-1': '📊', 'CP-2': '⚠️', 'CP-3': '🔗',
   'CP-4': '📈', 'CP-5': '🛡️', 'CP-6': '🧠', 'CP-7': '⏳',
@@ -352,7 +361,7 @@ export default function PublicGovernanceSandbox() {
     checkPage(35)
     sectionHeader(isEs ? 'INTEGRIDAD CRIPTOGRÁFICA' : 'CRYPTOGRAPHIC INTEGRITY')
     const cryptoRows: [string, string][] = [
-      [isEs ? 'Algoritmo de firma' : 'Signature algorithm', result.receipt?.signature_algorithm || 'Dilithium-3'],
+      [isEs ? 'Algoritmo de firma' : 'Signature algorithm', publicAlgorithmLabel(result.receipt?.signature_algorithm)],
       [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'],
       [isEs ? 'Hash del contenido' : 'Content hash', (result.receipt?.content_hash || '').slice(0, 32) + '...'],
     ]
@@ -472,7 +481,7 @@ export default function PublicGovernanceSandbox() {
       isEs ? `🔐  INTEGRIDAD CRIPTOGRÁFICA` : `🔐  CRYPTOGRAPHIC INTEGRITY`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
-      `  ${isEs ? 'Algoritmo de firma' : 'Signature algorithm'}:  ${result.receipt?.signature_algorithm || 'Dilithium-3 (post-quantum)'}`,
+      `  ${isEs ? 'Algoritmo de firma' : 'Signature algorithm'}:  ${publicAlgorithmLabel(result.receipt?.signature_algorithm)}`,
       `  ${isEs ? 'Hash del contenido' : 'Content hash'}:         ${result.receipt?.content_hash?.slice(0, 24)}...`,
       `  ${isEs ? 'Firmado PQC' : 'PQC signed'}:            ${result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'}`,
       ``,
@@ -545,21 +554,24 @@ export default function PublicGovernanceSandbox() {
         <section className="text-center mb-12 animate-fade-in-up">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/20 mb-6">
             <Sparkles className="w-4 h-4 text-[#C9A227]" />
-            <span className="text-sm text-[#C9A227] font-medium">Public Governance Sandbox</span>
+            <span className="text-sm text-[#C9A227] font-medium">Live Governance Pipeline</span>
           </div>
           <h1 className="heading-xl text-white mb-6">
-            Describe Any Decision.<br />
-            <span className="gold-gradient">Watch 8 Checkpoints Judge It.</span>
+            Watch the Governance Pipeline<br />
+            <span className="gold-gradient">in Action.</span>
           </h1>
-          <p className="text-xl text-muted max-w-3xl mx-auto mb-2 leading-relaxed">
-            Type any high-stakes scenario in plain English or Spanish. OMNIX's AI interprets it, runs it through
-            the real 8-checkpoint governance pipeline, and generates a cryptographically signed, publicly verifiable receipt.
+          <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
+            Select a real-world risk scenario. OMNIX evaluates it through its governance pipeline
+            and determines one thing: should this decision be allowed to execute — or not?
           </p>
-          <p className="text-sm text-[#64748B] max-w-2xl mx-auto mb-4">
-            Same engine validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles. No login required.
+          <p className="text-base font-semibold text-white/80 max-w-2xl mx-auto mb-3">
+            OMNIX does not optimize decisions. It prevents invalid ones from ever executing.
           </p>
-          <p className="text-sm italic text-[#C9A227]/60 max-w-xl mx-auto">
-            "OMNIX doesn't just follow rules. It understands when and why they should apply."
+          <p className="text-sm text-[#64748B] max-w-2xl mx-auto mb-1">
+            Every result is returned as a cryptographically signed receipt, independently verifiable by anyone.
+          </p>
+          <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
+            {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles in production. No login required.
           </p>
         </section>
 
@@ -775,12 +787,34 @@ export default function PublicGovernanceSandbox() {
                   <h2 className={`text-3xl font-bold mb-2 ${
                     result.decision === 'APPROVED' ? 'text-emerald-400' : 'text-red-400'
                   }`}>
-                    {result.decision}
+                    {result.decision === 'BLOCKED' ? '🛡️ EXECUTION BLOCKED' : '✅ EXECUTION APPROVED'}
                   </h2>
-                  <p className="text-muted mb-2">
-                    {result.checkpoints_passed}/{result.checkpoints_total} checkpoints passed
-                    {result.checkpoints_blocked > 0 && ` — ${result.checkpoints_blocked} blocked`}
+                  <p className="text-muted mb-1">
+                    {result.checkpoints_passed} checkpoints passed
+                    {result.checkpoints_blocked > 0 && ` · ${result.checkpoints_blocked} blocked`}
+                    {` · ${result.checkpoints_total} total evaluations`}
                   </p>
+                  {result.decision === 'BLOCKED' && (
+                    <p className="text-xs text-red-300/60 mb-3">
+                      Final outcome: inadmissible decision state
+                    </p>
+                  )}
+                  {result.decision === 'BLOCKED' && (
+                    <div className="mt-2 mb-4 space-y-1">
+                      <p className="text-sm text-red-300/80">
+                        This decision was stopped before execution.
+                      </p>
+                      <p className="text-xs text-red-300/50">
+                        The system detected structural inconsistency in the signal.
+                      </p>
+                      <p className="text-sm font-semibold text-white/90 mt-2">
+                        No capital was committed. No risk was taken.
+                      </p>
+                      <p className="text-xs text-[#C9A227] font-medium italic">
+                        This is how capital loss is prevented — before it happens.
+                      </p>
+                    </div>
+                  )}
                   {result.explanation && (
                     <p className="text-sm text-gray-300 max-w-lg mx-auto mb-4 leading-relaxed italic">
                       {result.explanation}
@@ -893,7 +927,7 @@ export default function PublicGovernanceSandbox() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted">Signature</span>
-                          <span className="text-emerald-400">{result.receipt.signature_algorithm}</span>
+                          <span className="text-emerald-400">{publicAlgorithmLabel(result.receipt.signature_algorithm)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted">Hash</span>
