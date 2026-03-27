@@ -7,7 +7,7 @@ import {
   ArrowUpRight, ArrowDownRight, Layers, FileCheck
 } from 'lucide-react'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
 const REFRESH_INTERVAL = 30_000
 
 interface Metrics {

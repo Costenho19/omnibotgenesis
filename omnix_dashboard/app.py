@@ -38,15 +38,17 @@ def create_app():
     ALLOWED_ORIGINS = os.environ.get('DASHBOARD_ALLOWED_ORIGINS', '').split(',')
     if not ALLOWED_ORIGINS or ALLOWED_ORIGINS == ['']:
         ALLOWED_ORIGINS = [
-            'https://*.railway.app',
-            'https://*.up.railway.app', 
-            'https://*.replit.dev',
-            'https://*.repl.co'
+            r'https://.*\.railway\.app',
+            r'https://.*\.up\.railway\.app',
+            r'https://.*\.replit\.dev',
+            r'https://.*\.replit\.app',
+            r'https://.*\.repl\.co',
+            r'https://.*\.worf\.replit\.dev',
         ]
         if not IS_RAILWAY:
             ALLOWED_ORIGINS.extend(['http://localhost:5000', 'http://127.0.0.1:5000', 'http://localhost:3000', 'http://127.0.0.1:3000'])
         ALLOWED_ORIGINS.extend(['https://www.omnixquantum.net', 'https://omnixquantum.net'])
-    CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
+    CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True, allow_headers=['Content-Type', 'Authorization'])
     
     DASHBOARD_API_KEY = os.environ.get('DASHBOARD_API_KEY')
     if IS_RAILWAY and not DASHBOARD_API_KEY:
