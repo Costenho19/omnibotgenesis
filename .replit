@@ -110,9 +110,10 @@ localPort = 9099
 externalPort = 3002
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "autoscale"
 build = ["bash", "-c", "cd omnix_web && npm run build"]
 publicDir = "omnix_web/dist"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--workers=2", "--timeout=120", "wsgi:app"]
 
 [agent]
 expertMode = true
