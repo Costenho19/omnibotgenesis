@@ -83,11 +83,11 @@ def create_app():
 
     # Ensure credit tables exist BEFORE any request arrives (Railway fresh DB fix)
     try:
-        import os, psycopg2
+        import psycopg2 as _psycopg2
         _db_url = os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.credit.credit_simulator import _ensure_tables
-            _credit_conn = psycopg2.connect(_db_url)
+            _credit_conn = _psycopg2.connect(_db_url)
             _ensure_tables(_credit_conn)
             _credit_conn.close()
     except Exception as _tbl_err:
