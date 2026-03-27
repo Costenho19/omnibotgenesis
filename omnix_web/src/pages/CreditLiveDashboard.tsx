@@ -7,7 +7,7 @@ import {
   ArrowUpRight, ArrowDownRight, Layers, FileCheck
 } from 'lucide-react'
 
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:5000`
+const API_BASE = ''
 const REFRESH_INTERVAL = 30_000
 
 interface Metrics {
