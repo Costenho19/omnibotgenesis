@@ -77,8 +77,12 @@ def catch_all(path):
     Serve static assets from React dist (CSS, JS, images, logo, etc.).
     For unknown SPA routes (e.g. /credit, /try, /verify), serve React index.html
     so React Router handles navigation client-side.
-    Internal Flask routes (/terminal, /classic, /api/*) are matched before this.
+    NEVER return HTML for /api/* routes — return 404 JSON so frontend shows real errors.
     """
+    # API routes that reach here = blueprint not registered — return JSON 404, not HTML
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found', 'path': f'/{path}'}), 404
+
     file_path = os.path.join(REACT_DIST, path)
     if os.path.isfile(file_path):
         return send_from_directory(REACT_DIST, path)
