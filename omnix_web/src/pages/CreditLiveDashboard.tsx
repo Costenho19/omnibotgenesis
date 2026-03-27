@@ -224,8 +224,8 @@ export default function CreditLiveDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/" className="text-white/30 hover:text-white/60 transition-colors">
-                <Shield size={20} className="text-amber-400" />
+              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <img src="/logo.png" alt="OMNIX" className="w-9 h-9 object-contain" />
               </Link>
               <div className="w-px h-5 bg-white/10" />
               <div>
