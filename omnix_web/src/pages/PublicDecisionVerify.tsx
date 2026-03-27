@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Shield, CheckCircle, XCircle, Clock, ExternalLink, Copy, ArrowLeft, Lock, AlertTriangle, Search, Activity } from 'lucide-react'
 
-const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
+import { API_BASE } from '../lib/apiBase'
 
 interface Checkpoint {
   code: string | null

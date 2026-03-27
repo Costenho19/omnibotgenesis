@@ -6,7 +6,7 @@ import {
   ChevronRight, Clock, Copy, Check
 } from 'lucide-react'
 
-const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
+import { API_BASE } from '../lib/apiBase'
 
 interface GateResult {
   checkpoint: string

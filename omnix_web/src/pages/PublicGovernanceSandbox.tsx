@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown, Download, Mail } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
+import { API_BASE } from '../lib/apiBase'
 
 interface GateResult {
   checkpoint: string
@@ -57,8 +58,6 @@ interface ExampleScenario {
   domain: string
   label?: string
 }
-
-const API_BASE = import.meta.env.VITE_FLASK_API_URL || ''
 
 const publicAlgorithmLabel = (alg?: string): string => {
   if (!alg) return 'NIST-standardized post-quantum signature'
