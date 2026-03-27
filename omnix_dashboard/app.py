@@ -119,6 +119,33 @@ def strip_server_header(response):
     return response
 
 
+@app.errorhandler(404)
+def not_found(e):
+    from flask import request, jsonify, send_from_directory
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'endpoint not found', 'path': request.path}), 404
+    import os as _os
+    react_dist = _os.path.normpath(_os.path.join(_os.path.dirname(__file__), '..', 'omnix_web', 'dist'))
+    return send_from_directory(react_dist, 'index.html')
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    from flask import request, jsonify
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'internal server error', 'detail': str(e)}), 500
+    return jsonify({'error': 'server error'}), 500
+
+
+@app.errorhandler(Exception)
+def unhandled_exception(e):
+    from flask import request, jsonify
+    logger.error(f"Unhandled exception on {request.path}: {e}", exc_info=True)
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'unexpected error', 'detail': str(e)}), 500
+    return jsonify({'error': 'server error'}), 500
+
+
 if __name__ == '__main__':
     from .utils.database import get_database_url, init_database, DB_AVAILABLE, DB_ERROR_MESSAGE
     
