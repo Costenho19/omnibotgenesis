@@ -60,6 +60,7 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
+    from omnix_dashboard.blueprints import credit_bp
 
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
@@ -78,7 +79,16 @@ def create_app():
     app.register_blueprint(governance_alerts_bp)
     app.register_blueprint(public_sandbox_bp)
     app.register_blueprint(public_verify_bp)
-    
+    app.register_blueprint(credit_bp)
+
+    # Start Islamic Credit Governance simulation engine in background
+    try:
+        from omnix_core.credit.credit_simulator import start_credit_simulation_background
+        start_credit_simulation_background()
+        logger.info("✅ [Credit] Islamic Credit Governance engine started (24/7 simulation)")
+    except Exception as _credit_err:
+        logger.warning(f"[Credit] Simulation engine startup skipped: {_credit_err}")
+
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
     

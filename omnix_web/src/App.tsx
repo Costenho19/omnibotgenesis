@@ -9,6 +9,7 @@ import BiotechGovernanceDemo from './pages/BiotechGovernanceDemo'
 import PublicGovernanceSandbox from './pages/PublicGovernanceSandbox'
 import PublicDecisionVerify from './pages/PublicDecisionVerify'
 import InvestorDemo from './pages/InvestorDemo'
+import CreditLiveDashboard from './pages/CreditLiveDashboard'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
@@ -27,6 +28,7 @@ function App() {
         <Route path="/try" element={<PublicGovernanceSandbox />} />
         <Route path="/verify" element={<PublicDecisionVerify />} />
         <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />
+        <Route path="/credit" element={<CreditLiveDashboard />} />
         <Route path="/my-report" element={<ClientReportDownload />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
