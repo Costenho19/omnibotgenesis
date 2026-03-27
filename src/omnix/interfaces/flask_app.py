@@ -86,18 +86,56 @@ def _register_blueprints(app: Flask) -> None:
     """Register all dashboard blueprints."""
     try:
         from omnix_dashboard.blueprints import (
-            views_bp, core_bp, market_bp, 
-            intelligence_bp, system_bp, snapshots_bp
+            views_bp, core_bp, market_bp,
+            intelligence_bp, system_bp, snapshots_bp,
+            verification_bp, governance_bp, governance_risk_bp,
+            governance_metrics_bp, governance_oversight_bp,
+            governance_incidents_bp, governance_reports_bp,
+            governance_sandbox_bp, governance_alerts_bp,
+            public_sandbox_bp, public_verify_bp, credit_bp
         )
-        
+
         app.register_blueprint(views_bp)
         app.register_blueprint(core_bp)
         app.register_blueprint(market_bp)
         app.register_blueprint(intelligence_bp)
         app.register_blueprint(system_bp)
         app.register_blueprint(snapshots_bp)
-        
-        logger.info("Registered 6 dashboard blueprints")
+        app.register_blueprint(verification_bp)
+        app.register_blueprint(governance_bp)
+        app.register_blueprint(governance_risk_bp)
+        app.register_blueprint(governance_metrics_bp)
+        app.register_blueprint(governance_oversight_bp)
+        app.register_blueprint(governance_incidents_bp)
+        app.register_blueprint(governance_reports_bp)
+        app.register_blueprint(governance_sandbox_bp)
+        app.register_blueprint(governance_alerts_bp)
+        app.register_blueprint(public_sandbox_bp)
+        app.register_blueprint(public_verify_bp)
+        app.register_blueprint(credit_bp)
+
+        # Ensure credit tables exist at startup (Railway fresh DB fix)
+        try:
+            import psycopg2 as _psycopg2
+            import os as _os
+            _db_url = _os.environ.get("DATABASE_URL")
+            if _db_url:
+                from omnix_core.credit.credit_simulator import _ensure_tables
+                _c = _psycopg2.connect(_db_url)
+                _ensure_tables(_c)
+                _c.close()
+        except Exception as _e:
+            logger.warning(f"[Credit] Table init skipped: {_e}")
+
+        # Start credit simulation engine
+        try:
+            from omnix_core.credit.credit_simulator import start_credit_simulation_background
+            start_credit_simulation_background()
+            logger.info("✅ [Credit] Islamic Credit Governance engine started")
+        except Exception as _e:
+            logger.warning(f"[Credit] Simulation engine skipped: {_e}")
+
+        logger.info("Registered 18 dashboard blueprints")
     except ImportError as e:
         logger.warning(f"Could not register dashboard blueprints: {e}")
 
