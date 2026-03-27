@@ -81,6 +81,18 @@ def create_app():
     app.register_blueprint(public_verify_bp)
     app.register_blueprint(credit_bp)
 
+    # Ensure credit tables exist BEFORE any request arrives (Railway fresh DB fix)
+    try:
+        import os, psycopg2
+        _db_url = os.environ.get("DATABASE_URL")
+        if _db_url:
+            from omnix_core.credit.credit_simulator import _ensure_tables
+            _credit_conn = psycopg2.connect(_db_url)
+            _ensure_tables(_credit_conn)
+            _credit_conn.close()
+    except Exception as _tbl_err:
+        logger.warning(f"[Credit] Table init skipped: {_tbl_err}")
+
     # Start Islamic Credit Governance simulation engine in background
     try:
         from omnix_core.credit.credit_simulator import start_credit_simulation_background
