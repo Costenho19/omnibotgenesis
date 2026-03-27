@@ -8,11 +8,21 @@ used internally by the OMNIX trading engine.
 ADR-028: External Signal Evaluation API
 ADR-026: Multi-Vertical Governance Architecture (Domain Adapter Pattern)
 ADR-037: Per-Client Configurable Thresholds
+ADR-053: Trajectory Invariant Enforcement (TIE) — post-pipeline gate
 """
 
 import logging
 import os
 from typing import Any
+
+try:
+    from omnix_core.governance.trajectory_invariant_engine import (
+        TrajectoryInvariantEngine,
+        TIEResult,
+    )
+    _TIE_AVAILABLE = True
+except Exception:
+    _TIE_AVAILABLE = False
 
 logger = logging.getLogger("OMNIX.Governance")
 
@@ -455,6 +465,46 @@ class GovernanceEvaluationEngine:
                 except Exception as e:
                     logger.warning(f"⚠️ [CP-11 JURISDICTION] B2B exception for {asset}: {e} → pass-through")
 
+        # ── ADR-053: Trajectory Invariant Enforcement (TIE) ─────────────────────
+        # Runs AFTER all checkpoints — only on APPROVED decisions.
+        # May convert APPROVED → HOLD if trajectory invariants are violated.
+        # Fail-safe: exceptions → pass-through, never blocks pipeline.
+        tie_block: dict | None = None
+        if (
+            _TIE_AVAILABLE
+            and decision == "APPROVED"
+            and os.environ.get("TIE_ENABLED", "true").lower() != "false"
+        ):
+            try:
+                tie_db_conn = (compliance_config or {}).get("tie_db_conn") if compliance_config else None
+                tie_engine = TrajectoryInvariantEngine(db_conn=tie_db_conn)
+                tie_result = tie_engine.evaluate(
+                    current_signals=resolved_signals,
+                    asset=asset,
+                    domain=domain,
+                    current_decision=decision,
+                    receipt_id=(metadata or {}).get("receipt_id"),
+                )
+                tie_block = TrajectoryInvariantEngine.result_to_dict(tie_result)
+                if tie_result.trajectory_decision == "HOLD":
+                    decision = "HOLD"
+                    overall_blocked = True
+                    decision_trace.append(
+                        f"TIE_HOLD: {', '.join(v.invariant_id for v in tie_result.violations)}"
+                    )
+                    veto_chain.append({
+                        "checkpoint_id": "TIE",
+                        "checkpoint_name": "Trajectory Invariant Engine",
+                        "result": "HOLD",
+                        "violations": [v.invariant_id for v in tie_result.violations],
+                    })
+                    logger.warning(
+                        f"🔄 [TIE] APPROVED→HOLD for {asset} ({domain}) | "
+                        f"Invariants: {[v.invariant_id for v in tie_result.violations]}"
+                    )
+            except Exception as _tie_exc:
+                logger.debug(f"[TIE] Pass-through for {asset}: {_tie_exc}")
+
         all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
         result: dict[str, Any] = {
             "decision": decision,
@@ -473,6 +523,8 @@ class GovernanceEvaluationEngine:
             result["compliance"] = compliance_blocks
         if context_admission_block is not None:
             result["context_admission"] = context_admission_block
+        if tie_block is not None:
+            result["trajectory_analysis"] = tie_block
         return result
 
     @staticmethod

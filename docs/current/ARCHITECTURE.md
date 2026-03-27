@@ -1,40 +1,53 @@
 # OMNIX — Arquitectura
 
 **Internal Build Reference**: 6.5.4e  
-**Actualizado**: 24 de Marzo 2026  
-**Estado**: Producción 24/7 — 8-checkpoint trading pipeline (SIV CP-0, TCV CP-7, FTI CP-7b) + EBIP  
-**Último Cambio**: Execution Boundary Integrity Protocol (EBIP) — ADR-045 (Mar 24, 2026)
+**Actualizado**: 27 de Marzo 2026  
+**Estado**: Producción 24/7 — 8-checkpoint pipeline + EBIP + TIE + Islamic Credit Vertical (ADR-052/053)  
+**Último Cambio**: Trajectory Invariant Enforcement (TIE) — ADR-053 (Mar 27, 2026)
 
 ---
 
 ## Visión General
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX — Decision Governance Infrastructure     │
-├─────────────────────────────────────────────────────────────────┤
-│  INTERFACES                                                      │
-│  ├── Telegram Bot (enterprise_bot.py)                           │
-│  ├── Flask Dashboard (puerto 5000)                              │
-│  ├── Verification Server (puerto 8000, aiohttp)                 │
-│  └── Streamlit Dashboard (puerto 8080)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  CORE ENGINES                                                    │
-│  ├── AutoTradingBot V6.5.4e - Multi-crypto scanner              │
-│  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto + TCV (7th)       │
-│  ├── Non-Markovian Kernel V6.5 - Memoria temporal               │
-│  └── Risk Guardian V5.4 - Protección drawdown                   │
-├─────────────────────────────────────────────────────────────────┤
-│  DATA LAYER                                                      │
-│  ├── PostgreSQL (42 tablas, 90% FK coverage)                    │
-│  ├── Redis (cache + state management)                           │
-│  └── DatabaseGateway (connection pool)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  EXTERNAL APIs                                                   │
-│  ├── Kraken - Crypto data + ejecución                           │
-│  ├── Gemini 2.5 Flash - AI primario                             │
-│  └── Tavily - Web search                                        │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    OMNIX — Decision Governance Infrastructure         │
+├─────────────────────────────────────────────────────────────────────┤
+│  INTERFACES                                                          │
+│  ├── Telegram Bot (enterprise_bot.py)                               │
+│  ├── Flask Dashboard (puerto 5000) — B2B API + Demos                │
+│  ├── React Web (puerto 3000) — Landing + /try sandbox + /verify     │
+│  └── Verification Server (puerto 8000, aiohttp)                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  GOVERNANCE PIPELINE (domain-agnostic, multi-vertical)              │
+│                                                                      │
+│  Signals → CAG (ADR-050) → EBIP·ACV (ADR-045) → 8 Checkpoints      │
+│         → TIE (ADR-053) → PQC Receipt (Dilithium-3)                 │
+│                                                                      │
+│  Verticals:                                                          │
+│  ├── Trading (ADR-028) — BTC/ETH/AVAX/USD 24/7                     │
+│  └── Islamic Credit (ADR-052) — UAE SME/Individual/Corporate 24/7   │
+├─────────────────────────────────────────────────────────────────────┤
+│  CORE ENGINES                                                        │
+│  ├── AutoTradingBot V6.5.4e - Multi-crypto scanner                  │
+│  ├── CoherenceEngine V6.5 ULTRA - 6-tier veto + TCV (7th)           │
+│  ├── Non-Markovian Kernel V6.5 - Memoria temporal                   │
+│  ├── TrajectoryInvariantEngine (TIE) - Bounded evolution (ADR-053)  │
+│  └── Risk Guardian V5.4 - Protección drawdown                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  DATA LAYER                                                          │
+│  ├── PostgreSQL (44+ tablas, 90% FK coverage)                       │
+│  │   ├── trajectory_states (TIE history per asset/domain)           │
+│  │   ├── credit_applications (Islamic Credit vertical)              │
+│  │   └── credit_cycle_metrics (cycle aggregates)                    │
+│  ├── Redis (cache + state management)                               │
+│  └── DatabaseGateway (connection pool)                              │
+├─────────────────────────────────────────────────────────────────────┤
+│  EXTERNAL APIs                                                       │
+│  ├── Kraken - Crypto data + ejecución                               │
+│  ├── Gemini 2.5 Flash - AI primario                                 │
+│  └── Tavily - Web search                                            │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

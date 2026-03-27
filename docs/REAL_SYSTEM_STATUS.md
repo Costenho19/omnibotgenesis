@@ -1,7 +1,7 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 26 de Marzo 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE**  
+**Fecha**: 27 de Marzo 2026  
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE** | **TIE LIVE (ADR-053)** | **Islamic Credit 24/7 LIVE (ADR-052)**  
 **Versión interna (dev)**: V6.5.4e  
 **TAM Multi-Vertical**: $49.7B+ (6 verticales: trading [NOW], supply chain [Year 2-3], lending [Year 2-3], insurance [Year 3+], energy [Year 3+], robotics/autonomous systems [Year 3+])
 
@@ -54,6 +54,31 @@
     2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
     3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
   - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
+
+### Cambios Recientes (Mar 27, 2026) — TIE + Islamic Credit Vertical — ADR-052/053
+
+- **Mar 27**: **Trajectory Invariant Enforcement (TIE) IMPLEMENTADO — ADR-053**. Motor post-pipeline que enforces bounded evolution sobre el espacio de decisiones. Concepto de Rigel Randolph: no solo verificar estado S_t, sino que la trayectoria S_0 → S_t → S_t+n permanezca en el espacio admisible.
+  - **Posición en pipeline**: `8 Checkpoints → TIE → APPROVED | HOLD`. Solo opera sobre APPROVED; nunca modifica BLOCKED.
+  - **5 Invariantes**:
+    - **I-1 RISK_MONOTONIC_ASCENT**: risk_exposure > 70 Y subiendo 5 decisiones consecutivas → HOLD
+    - **I-2 PROBABILITY_DEAD_ZONE**: probability_score < 35 por 4 decisiones consecutivas → HOLD
+    - **I-3 COHERENCE_STRUCTURAL_DECAY**: signal_coherence < 40 por 3 decisiones consecutivas → HOLD
+    - **I-4 TRAJECTORY_VOLATILITY**: σ(probability_score) > 32 sobre últimas 8 decisiones → WARNING
+    - **I-5 GLOBAL_REGIME_COLLAPSE**: 3+ activos simultáneamente en dead zone → HOLD (cross-asset)
+  - **Storage**: tabla `trajectory_states` (rolling 20 estados por asset/domain, auto-pruning)
+  - **Response**: campo `trajectory_analysis` en toda respuesta del evaluador con `trajectory_score` (0-100), violations, warnings
+  - **Fail-safe**: excepciones → pass-through (nunca rompe el pipeline principal)
+  - **Diferencia vs EBIP**: EBIP monitorea distribución de decisiones (nunca bloquea). TIE enforces invariantes de trayectoria (puede emitir HOLD).
+  - **ADR-053 creado**.
+
+- **Mar 27**: **Islamic Credit Governance OPERATIVO — ADR-052**. Motor de crédito islámico UAE 24/7 confirmado corriendo:
+  - Ciclos cada 5 min, 3-8 aplicaciones/ciclo calibradas al mercado UAE/GCC
+  - Tipos: SME 60%, Individual 30%, Corporate 10%
+  - Financiamiento: Murabaha 60%, Ijara 20%, Musharaka 15%, Diminishing 5%
+  - Sectores: tech, real_estate, healthcare, retail, F&B, manufacturing, logistics
+  - Datos en DB: `credit_applications` + `credit_cycle_metrics`
+  - Sharia Gate: sector halal, no Riba, Gharar ≤ 65, DSR ≤ 40%, asset backing ≥ 50%
+  - Dashboard premium en `/credit` (React + Flask API `/api/credit/*`)
 
 ### Cambios Recientes (Mar 26, 2026) — Dual Trading Mode CORE/ACTIVE — ADR-051
 

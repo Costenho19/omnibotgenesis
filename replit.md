@@ -146,10 +146,14 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ### Core Components and Design Patterns
 OMNIX utilizes a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It integrates multiple AI providers with AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key features include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, and RMS Enforcement. Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL) are central. A Multi-Agent Governance System uses 3 specialized agents for weighted consensus. Hybrid Cryptography (X25519 + Kyber-768 via HKDF) and a Crypto-Agility Layer are implemented, alongside Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
 
-**Context Admission Gate (CAG):** A session-level pre-admission gate that evaluates 4 global market condition parameters before any signal enters the 8-checkpoint pipeline.
+**Context Admission Gate (CAG) — ADR-050:** A session-level pre-admission gate that evaluates 4 global market condition parameters before any signal enters the 8-checkpoint pipeline.
+
+**Trajectory Invariant Enforcement (TIE) — ADR-053:** Post-pipeline gate (after 8 checkpoints) that enforces bounded evolution over the decision space.
+
+**Islamic Credit Governance Vertical — ADR-052:** Second OMNIX vertical. Runs 24/7 evaluating simulated Islamic finance credit applications.
 
 ### Hierarchical Veto Flow
-Entry decisions pass through an 8-checkpoint pipeline, while exit decisions follow a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate in a fail-safe manner.
+Entry decisions pass through the full pipeline: CAG (pre-admission) → EBIP·ACV (input consistency) → 8-checkpoint pipeline → TIE (trajectory invariants) → PQC Receipt. Exit decisions follow a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate in a fail-closed manner.
 
 ### Scoring Logic
 Decision scoring combines inputs from EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, with additional veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
@@ -164,7 +168,7 @@ The DCI quantifies internal signal divergence to explain HOLD decisions; a high 
 The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Calibration Progress, and Recommended Actions. Dashboards are built using Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It uses RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. Custom checkpoint thresholds are stored in PostgreSQL, with fail-closed fallback to defaults. Client payloads are encrypted at rest using Fernet.
+This B2B endpoint allows external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It uses RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
 
 ### Governance Compliance Modules
 Five additive governance modules extend the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
@@ -173,7 +177,7 @@ Five additive governance modules extend the External Governance API, aligning wi
 A standalone `aiohttp` web server provides public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
 
 ### Public Governance Sandbox (/try)
-A public, no-auth sandbox (React + Flask) allows Gemini AI to interpret free-form scenarios into 8 governance signals, run them through the REAL 8-checkpoint pipeline, and store a PQC-signed receipt. The receipt CTA links to the local `/verify/:receiptId` page for a human-readable governance report.
+A public, no-auth sandbox (React + Flask) allows Gemini AI to interpret free-form scenarios into 8 governance signals, run them through the REAL 8-checkpoint pipeline, and store a PQC-signed receipt.
 
 ### Public Decision Verification Page (/verify/:receiptId)
 A human-readable React page displays any governance decision in plain English and Spanish, showing: decision status banner (APPROVED/BLOCKED/HOLD), 8 checkpoint pipeline visualization, cryptographic integrity block, and independent verification CTA. It is powered by a Flask API (`GET /api/public/verify/<receipt_id>`) and is rate-limited (30 req/min) without requiring authentication.
