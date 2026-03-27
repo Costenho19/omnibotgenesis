@@ -180,7 +180,12 @@ export default function CreditLiveDashboard() {
           setMetrics(d.metrics)
           setMacro(d.macro)
           setActivity(d.activity_24h)
+          setError(null)
+        } else {
+          setError(`Engine returned error: ${d.message || 'unknown error'}`)
         }
+      } else {
+        setError(`API unavailable (HTTP ${metricsRes.status}) — engine may be initializing, retry in 30s`)
       }
       if (appsRes.ok) {
         const d = await appsRes.json()
@@ -192,9 +197,8 @@ export default function CreditLiveDashboard() {
       }
 
       setLastRefresh(new Date())
-      setError(null)
     } catch (e) {
-      setError('Unable to connect to governance engine')
+      setError('Unable to connect to governance engine — check network or try again')
     } finally {
       setLoading(false)
       setRefreshing(false)
