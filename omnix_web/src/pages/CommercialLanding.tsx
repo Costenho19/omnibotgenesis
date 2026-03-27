@@ -66,9 +66,12 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
+            <Link to="/credit" className="nav-link flex items-center gap-1.5">
+              <span className="omnix-live-dot" style={{width:'6px',height:'6px',marginRight:0}} />
+              Islamic Credit
+            </Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <Link to="/my-report" className="nav-link">Client Portal</Link>
             <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
         </div>
@@ -81,7 +84,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. First validated in digital asset trading. Future verticals (Year 2-3+): robotics, biotech, supply chain, lending, and insurance.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. Currently operating in digital asset trading and Islamic finance credit. Next verticals (Year 2-3+): robotics, biotech, supply chain, and insurance.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-12 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -228,6 +231,49 @@ export default function CommercialLanding() {
               )}
               <span className="text-muted/30">·</span>
               <span>Running 24/7 since November 2025{metrics.system_uptime_days > 0 ? ` (${metrics.system_uptime_days} days)` : ''}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-white mb-3">Two Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same governance pipeline. Different industries. Both operating 24/7.</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="glass-card p-8 border border-emerald-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
+                  <span className="omnix-live-dot" style={{width:'6px',height:'6px',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Digital Asset Trading</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance layer for automated crypto trading. Every entry decision passes through 8 checkpoints + Trajectory Invariant Enforcement before execution.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-[#C9A227]">119+</div><div className="text-xs text-muted">Decisions governed</div></div>
+                <div><div className="text-xl font-bold text-emerald-400">100%</div><div className="text-xs text-muted">PQC-signed receipts</div></div>
+              </div>
+              <Link to="/try" className="text-[#C9A227] text-sm hover:text-white transition-colors flex items-center gap-1">
+                Try the governance sandbox <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="glass-card p-8 border border-violet-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#a78bfa',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Islamic Credit — UAE</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 8 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-violet-400">AED 278M+</div><div className="text-xs text-muted">Financing evaluated</div></div>
+                <div><div className="text-xl font-bold text-violet-400">43+</div><div className="text-xs text-muted">Applications processed</div></div>
+              </div>
+              <Link to="/credit" className="text-violet-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live credit engine <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </section>
@@ -413,6 +459,9 @@ export default function CommercialLanding() {
           <div className="flex items-center gap-6">
             <Link to="/try" className="text-[#C9A227] hover:text-white text-sm transition-colors font-medium">
               Try OMNIX
+            </Link>
+            <Link to="/credit" className="text-violet-400 hover:text-white text-sm transition-colors font-medium">
+              Islamic Credit Live
             </Link>
             <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">
               Credit Demo
