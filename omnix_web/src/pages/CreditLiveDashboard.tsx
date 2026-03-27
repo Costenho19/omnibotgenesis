@@ -168,6 +168,13 @@ export default function CreditLiveDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
+  const safeJson = async (res: Response): Promise<unknown | null> => {
+    const text = await res.text()
+    if (!text || !text.trim()) return null
+    try { return JSON.parse(text) }
+    catch { return { _raw: text.slice(0, 120), _parseError: true } }
+  }
+
   const fetchAll = useCallback(async () => {
     setRefreshing(true)
     try {
@@ -177,31 +184,38 @@ export default function CreditLiveDashboard() {
         fetch(`${API_BASE}/api/credit/sectors`),
       ])
 
-      if (metricsRes.ok) {
-        const d = await metricsRes.json()
+      const metricsData = await safeJson(metricsRes) as Record<string, unknown> | null
+      if (metricsData && (metricsData as Record<string, unknown>)._parseError) {
+        setError(`Server response not JSON (HTTP ${metricsRes.status}) — engine initializing`)
+      } else if (metricsRes.ok && metricsData) {
+        const d = metricsData as Record<string, unknown>
         if (d.status === 'ok') {
-          setMetrics(d.metrics)
-          setMacro(d.macro)
-          setActivity(d.activity_24h)
+          setMetrics(d.metrics as Metrics)
+          setMacro(d.macro as MacroData)
+          setActivity(d.activity_24h as Activity24h)
           setError(null)
         } else {
-          setError(`Engine returned error: ${d.message || 'unknown error'}`)
+          setError(`Engine error: ${(d.message as string) || (d.error as string) || 'unknown'}`)
         }
-      } else {
-        setError(`API unavailable (HTTP ${metricsRes.status}) — engine may be initializing, retry in 30s`)
+      } else if (!metricsRes.ok) {
+        const detail = metricsData ? ((metricsData as Record<string, unknown>).error || (metricsData as Record<string, unknown>).detail || '') : ''
+        setError(`API unavailable (HTTP ${metricsRes.status})${detail ? ` — ${detail}` : ' — engine initializing'}`)
       }
-      if (appsRes.ok) {
-        const d = await appsRes.json()
-        if (d.status === 'ok') setApplications(d.applications)
+
+      const appsData = await safeJson(appsRes) as Record<string, unknown> | null
+      if (appsRes.ok && appsData && !(appsData as Record<string, unknown>)._parseError) {
+        const d = appsData as Record<string, unknown>
+        if (d.status === 'ok') setApplications(d.applications as Application[])
       }
-      if (sectorsRes.ok) {
-        const d = await sectorsRes.json()
-        if (d.status === 'ok') setSectors(d.sectors)
+      const sectorsData = await safeJson(sectorsRes) as Record<string, unknown> | null
+      if (sectorsRes.ok && sectorsData && !(sectorsData as Record<string, unknown>)._parseError) {
+        const d = sectorsData as Record<string, unknown>
+        if (d.status === 'ok') setSectors(d.sectors as SectorData[])
       }
 
       setLastRefresh(new Date())
     } catch (e) {
-      setError('Unable to connect to governance engine — check network or try again')
+      setError(`Connection failed — ${e instanceof Error ? e.message : 'network error'}`)
     } finally {
       setLoading(false)
       setRefreshing(false)
