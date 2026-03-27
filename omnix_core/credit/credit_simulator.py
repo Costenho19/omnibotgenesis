@@ -453,6 +453,89 @@ async def run_credit_simulation_cycle(cycle_num: int, conn) -> list:
     return results
 
 
+def _ensure_tables(conn) -> None:
+    """
+    Create credit tables if they don't exist (idempotent).
+    Runs on startup so Railway/any fresh DB works automatically.
+    """
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS credit_applications (
+                id SERIAL PRIMARY KEY,
+                application_id VARCHAR(64) UNIQUE NOT NULL,
+                submitted_at TIMESTAMPTZ DEFAULT NOW(),
+                evaluated_at TIMESTAMPTZ,
+                applicant_type VARCHAR(32),
+                applicant_id VARCHAR(64),
+                sector VARCHAR(64),
+                country VARCHAR(64),
+                requested_amount NUMERIC,
+                currency VARCHAR(8) DEFAULT 'AED',
+                tenor_months INTEGER,
+                financing_type VARCHAR(64),
+                purpose TEXT,
+                credit_score INTEGER,
+                debt_service_ratio NUMERIC,
+                asset_backing_ratio NUMERIC,
+                collateral_type VARCHAR(64),
+                annual_revenue NUMERIC,
+                existing_obligations NUMERIC,
+                is_halal_sector BOOLEAN,
+                sharia_compliant BOOLEAN,
+                gharar_score NUMERIC,
+                riba_free BOOLEAN,
+                signal_probability_score NUMERIC,
+                signal_risk_exposure NUMERIC,
+                signal_coherence NUMERIC,
+                signal_trend_persistence NUMERIC,
+                signal_stress_resilience NUMERIC,
+                signal_logic_consistency NUMERIC,
+                signal_integrity NUMERIC,
+                signal_temporal_coherence NUMERIC,
+                macro_credit_index NUMERIC,
+                macro_volatility NUMERIC,
+                macro_stress_level VARCHAR(32),
+                fed_funds_rate NUMERIC,
+                decision VARCHAR(16),
+                receipt_id VARCHAR(128),
+                blocked_at_checkpoint VARCHAR(16),
+                block_reason TEXT,
+                checkpoints_passed INTEGER,
+                checkpoints_total INTEGER,
+                decision_confidence NUMERIC,
+                outcome VARCHAR(32),
+                outcome_recorded_at TIMESTAMPTZ,
+                simulation_run BOOLEAN DEFAULT TRUE,
+                data_source VARCHAR(32) DEFAULT 'SIMULATION',
+                notes TEXT
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS credit_cycle_metrics (
+                id SERIAL PRIMARY KEY,
+                recorded_at TIMESTAMPTZ DEFAULT NOW(),
+                cycle_number INTEGER,
+                applications_evaluated INTEGER,
+                total_applications_cumulative INTEGER,
+                approved INTEGER,
+                blocked INTEGER,
+                hold_count INTEGER,
+                approval_rate NUMERIC,
+                total_amount_evaluated NUMERIC,
+                total_amount_approved NUMERIC,
+                total_amount_blocked NUMERIC,
+                capital_protected NUMERIC,
+                sharia_compliant_rate NUMERIC,
+                sharia_blocks INTEGER,
+                macro_credit_index NUMERIC,
+                macro_stress_level VARCHAR(32),
+                engine_version VARCHAR(32)
+            )
+        """)
+        conn.commit()
+    logger.info("[CreditSim] ✅ Tables verified/created (credit_applications, credit_cycle_metrics)")
+
+
 async def run_credit_simulation_engine():
     """
     Main 24/7 simulation engine.
@@ -469,6 +552,7 @@ async def run_credit_simulation_engine():
     try:
         conn = psycopg2.connect(os.environ["DATABASE_URL"])
         logger.info("[CreditSim] ✅ PostgreSQL connected")
+        _ensure_tables(conn)
 
         # Run initial cycle immediately
         while True:
