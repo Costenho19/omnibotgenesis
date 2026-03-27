@@ -126,10 +126,10 @@ function DecisionBadge({ decision }: { decision: string }) {
 
 
 function KPICard({
-  label, value, sub, icon: Icon, trend, color = 'text-amber-400'
+  label, value, sub, icon: Icon, trend, color = 'text-amber-400', isLoading = false
 }: {
   label: string; value: string; sub?: string; icon: React.ElementType;
-  trend?: 'up' | 'down' | 'neutral'; color?: string
+  trend?: 'up' | 'down' | 'neutral'; color?: string; isLoading?: boolean
 }) {
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 hover:border-amber-400/30 transition-all">
@@ -147,7 +147,10 @@ function KPICard({
           </div>
         )}
       </div>
-      <div className={`text-2xl font-bold mb-1 ${color}`}>{value}</div>
+      {isLoading
+        ? <div className="h-8 w-24 rounded-md bg-white/10 animate-pulse mb-1" />
+        : <div className={`text-2xl font-bold mb-1 ${color}`}>{value}</div>
+      }
       <div className="text-xs text-white/50 font-medium">{label}</div>
       {sub && <div className="text-xs text-white/30 mt-1">{sub}</div>}
     </div>
@@ -320,61 +323,69 @@ export default function CreditLiveDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPICard
               label="Total Applications"
-              value={loading ? '—' : (metrics?.total_applications ?? 0).toLocaleString()}
+              value={(metrics?.total_applications ?? 0).toLocaleString()}
               sub={`${activity?.applications ?? 0} in last 24h`}
               icon={FileCheck}
               color="text-amber-400"
+              isLoading={loading}
             />
             <KPICard
               label="Approval Rate"
-              value={loading ? '—' : `${metrics?.approval_rate?.toFixed(1) ?? 0}%`}
+              value={`${metrics?.approval_rate?.toFixed(1) ?? 0}%`}
               sub={`${metrics?.total_approved ?? 0} approved`}
               icon={CheckCircle}
               color="text-emerald-400"
+              isLoading={loading}
             />
             <KPICard
               label="Capital Protected"
-              value={loading ? '—' : formatAED(metrics?.capital_protected_estimate_aed ?? 0)}
+              value={formatAED(metrics?.capital_protected_estimate_aed ?? 0)}
               sub="Est. default risk avoided"
               icon={Lock}
               color="text-blue-400"
+              isLoading={loading}
             />
             <KPICard
               label="Sharia Compliance"
-              value={loading ? '—' : `${metrics?.sharia_compliance_rate?.toFixed(1) ?? 100}%`}
+              value={`${metrics?.sharia_compliance_rate?.toFixed(1) ?? 100}%`}
               sub="Islamic finance screening"
               icon={Landmark}
               color="text-purple-400"
+              isLoading={loading}
             />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             <KPICard
               label="Amount Evaluated"
-              value={loading ? '—' : formatAED(metrics?.total_amount_evaluated_aed ?? 0)}
+              value={formatAED(metrics?.total_amount_evaluated_aed ?? 0)}
               sub="Total financing reviewed"
               icon={DollarSign}
               color="text-amber-400"
+              isLoading={loading}
             />
             <KPICard
               label="Amount Approved"
-              value={loading ? '—' : formatAED(metrics?.total_amount_approved_aed ?? 0)}
+              value={formatAED(metrics?.total_amount_approved_aed ?? 0)}
               sub="Financing authorized"
               icon={TrendingUp}
               color="text-emerald-400"
+              isLoading={loading}
             />
             <KPICard
               label="Amount Blocked"
-              value={loading ? '—' : formatAED(metrics?.total_amount_blocked_aed ?? 0)}
+              value={formatAED(metrics?.total_amount_blocked_aed ?? 0)}
               sub="High-risk financing vetoed"
               icon={TrendingDown}
               color="text-red-400"
+              isLoading={loading}
             />
             <KPICard
               label="Simulation Cycles"
-              value={loading ? '—' : (metrics?.simulation_cycles ?? 0).toLocaleString()}
+              value={(metrics?.simulation_cycles ?? 0).toLocaleString()}
               sub="Every 5 min, 24/7"
               icon={Activity}
               color="text-cyan-400"
+              isLoading={loading}
             />
           </div>
         </div>
