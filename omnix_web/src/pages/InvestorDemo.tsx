@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, CheckCircle, XCircle, ArrowRight, ExternalLink,
+  CheckCircle, XCircle, ArrowRight, ExternalLink,
   Play, RotateCcw, Lock, Zap, TrendingDown, Package, CreditCard,
   ChevronRight, Clock, Copy, Check
 } from 'lucide-react'
