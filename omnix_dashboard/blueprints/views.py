@@ -56,30 +56,35 @@ def download_zenodo_package():
 
 @views_bp.route('/')
 def index():
-    """Root: redirect browsers to terminal; return JSON for automated health checks."""
-    ua = request.headers.get('User-Agent', '')
+    """Root: serve React SPA landing page. JSON for automated health checks."""
     accept = request.headers.get('Accept', '')
-    # If the request accepts HTML (real browser), redirect to dashboard.
-    # If it's a health check / scanner with no HTML preference, return JSON.
+    ua = request.headers.get('User-Agent', '')
     is_browser = 'text/html' in accept or 'Mozilla' in ua
     if is_browser:
+        react_index = os.path.join(REACT_DIST, 'index.html')
+        if os.path.isfile(react_index):
+            return send_from_directory(REACT_DIST, 'index.html')
         return redirect('/terminal')
     return jsonify({
-        'service': 'OMNIX Internal API',
-        'port': 5000,
-        'note': 'Internal governance API. Public web at port 3000.'
+        'service': 'OMNIX Decision Governance',
+        'status': 'operational',
     })
 
 
 @views_bp.route('/<path:path>')
 def catch_all(path):
     """
-    Serve static assets from React dist (CSS, JS, images).
-    Any unknown path falls back to terminal dashboard.
+    Serve static assets from React dist (CSS, JS, images, logo, etc.).
+    For unknown SPA routes (e.g. /credit, /try, /verify), serve React index.html
+    so React Router handles navigation client-side.
     Internal Flask routes (/terminal, /classic, /api/*) are matched before this.
     """
     file_path = os.path.join(REACT_DIST, path)
     if os.path.isfile(file_path):
         return send_from_directory(REACT_DIST, path)
+
+    react_index = os.path.join(REACT_DIST, 'index.html')
+    if os.path.isfile(react_index):
+        return send_from_directory(REACT_DIST, 'index.html')
 
     return render_template('terminal.html')
