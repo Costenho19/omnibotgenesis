@@ -8,6 +8,7 @@ import EnergyGovernanceDemo from './pages/EnergyGovernanceDemo'
 import BiotechGovernanceDemo from './pages/BiotechGovernanceDemo'
 import PublicGovernanceSandbox from './pages/PublicGovernanceSandbox'
 import PublicDecisionVerify from './pages/PublicDecisionVerify'
+import CreditLiveDashboard from './pages/CreditLiveDashboard'
 import InvestorDemo from './pages/InvestorDemo'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
@@ -24,6 +25,7 @@ function App() {
         <Route path="/governance-demo-insurance" element={<InsuranceGovernanceDemo />} />
         <Route path="/governance-demo-energy" element={<EnergyGovernanceDemo />} />
         <Route path="/governance-demo-biotech" element={<BiotechGovernanceDemo />} />
+        <Route path="/credit" element={<CreditLiveDashboard />} />
         <Route path="/try" element={<PublicGovernanceSandbox />} />
         <Route path="/verify" element={<PublicDecisionVerify />} />
         <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />
