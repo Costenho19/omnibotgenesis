@@ -66,6 +66,7 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
+            <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.85rem'}}>Islamic Credit</Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
