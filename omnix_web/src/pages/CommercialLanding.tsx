@@ -72,7 +72,7 @@ export default function CommercialLanding() {
             </Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
+            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
         </div>
       </nav>
@@ -97,7 +97,7 @@ export default function CommercialLanding() {
             <Link to="/try" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               Try OMNIX Live
             </Link>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               <Phone className="w-5 h-5" />
               Talk to Us
             </a>
@@ -431,9 +431,9 @@ export default function CommercialLanding() {
               <Phone className="w-4 h-4" />
               Phone: +1 (650) 507-8293
             </a>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-[#10b981] hover:text-white transition-colors flex items-center gap-2">
+            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-[#10b981] hover:text-white transition-colors flex items-center gap-2">
               <span className="text-lg">💬</span>
-              WhatsApp: +1 (650) 481-5494
+              WhatsApp: +1 (650) 507-8293
             </a>
           </div>
         </section>
@@ -481,7 +481,7 @@ export default function CommercialLanding() {
             <Link to="/my-report" className="text-muted hover:text-white text-sm transition-colors">
               Client Portal
             </Link>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
+            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">
               Contact
             </a>
             <Link to="/terms" className="text-muted hover:text-white text-sm transition-colors">

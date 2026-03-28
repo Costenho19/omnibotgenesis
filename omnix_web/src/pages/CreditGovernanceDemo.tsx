@@ -259,7 +259,7 @@ export default function CreditGovernanceDemo() {
             <Link to="/governance-demo-energy" className="nav-link">Energy Demo</Link>
             <Link to="/governance-demo-biotech" className="nav-link">Biotech Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="https://wa.me/16504815494?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
+            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
           </div>
         </div>
       </nav>
@@ -656,7 +656,7 @@ export default function CreditGovernanceDemo() {
               <div className="text-xs text-muted">Verticals</div>
             </div>
           </div>
-          <a href="https://wa.me/16504815494?text=Hi%2C%20I%20saw%20the%20governance%20demo%20and%20I%27m%20interested" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
+          <a href="https://wa.me/16505078293?text=Hi%2C%20I%20saw%20the%20governance%20demo%20and%20I%27m%20interested" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
             Talk to Us About Multi-Vertical Governance
             <ArrowRight className="w-4 h-4" />
           </a>
@@ -683,7 +683,7 @@ export default function CreditGovernanceDemo() {
             <Link to="/" className="text-muted hover:text-white text-sm transition-colors">Home</Link>
             <Link to="/governance-demo-energy" className="text-muted hover:text-white text-sm transition-colors">Energy Demo</Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">Technical Details</Link>
-            <a href="https://wa.me/16504815494" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">Contact</a>
+            <a href="https://wa.me/16505078293" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">Contact</a>
           </div>
         </div>
       </footer>
