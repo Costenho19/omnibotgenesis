@@ -66,10 +66,6 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
-            <Link to="/credit" className="nav-link flex items-center gap-1.5">
-              <span className="omnix-live-dot" style={{width:'6px',height:'6px',marginRight:0}} />
-              Islamic Credit
-            </Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
@@ -271,9 +267,6 @@ export default function CommercialLanding() {
                 <div><div className="text-xl font-bold text-violet-400">AED 278M+</div><div className="text-xs text-muted">Financing evaluated</div></div>
                 <div><div className="text-xl font-bold text-violet-400">43+</div><div className="text-xs text-muted">Applications processed</div></div>
               </div>
-              <Link to="/credit" className="text-violet-400 text-sm hover:text-white transition-colors flex items-center gap-1">
-                View live credit engine <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </div>
         </section>
@@ -459,9 +452,6 @@ export default function CommercialLanding() {
           <div className="flex items-center gap-6">
             <Link to="/try" className="text-[#C9A227] hover:text-white text-sm transition-colors font-medium">
               Try OMNIX
-            </Link>
-            <Link to="/credit" className="text-violet-400 hover:text-white text-sm transition-colors font-medium">
-              Islamic Credit Live
             </Link>
             <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">
               Credit Demo
