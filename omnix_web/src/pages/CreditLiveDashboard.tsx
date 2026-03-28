@@ -179,9 +179,9 @@ export default function CreditLiveDashboard() {
     setRefreshing(true)
     try {
       const [metricsRes, appsRes, sectorsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/credit/metrics.json`),
-        fetch(`${API_BASE}/api/credit/applications.json`),
-        fetch(`${API_BASE}/api/credit/sectors.json`),
+        fetch(`${API_BASE}/api/credit/metrics`),
+        fetch(`${API_BASE}/api/credit/applications?limit=25`),
+        fetch(`${API_BASE}/api/credit/sectors`),
       ])
 
       const metricsData = await safeJson(metricsRes) as Record<string, unknown> | null
