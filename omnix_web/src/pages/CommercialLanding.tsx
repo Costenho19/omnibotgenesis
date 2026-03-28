@@ -254,6 +254,20 @@ export default function CommercialLanding() {
                 Try the governance sandbox <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+            <div className="glass-card p-8 border border-violet-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#a78bfa',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Islamic Credit — UAE</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 8 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div><div className="text-xl font-bold text-violet-400">3,700+</div><div className="text-xs text-muted">Applications evaluated</div></div>
+                <div><div className="text-xl font-bold text-violet-400">AED 11B+</div><div className="text-xs text-muted">Financing governed</div></div>
+              </div>
+            </div>
           </div>
         </section>
 
