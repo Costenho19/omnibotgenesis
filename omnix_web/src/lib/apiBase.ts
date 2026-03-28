@@ -1,15 +1,10 @@
 /**
  * OMNIX API Base URL resolver
  *
- * Selects the correct Flask API base URL depending on the runtime environment:
- *
- * - Dev (Vite):          ''  → Vite proxy forwards /api/* to localhost:5000
- * - Railway / custom:    ''  → same-origin, gunicorn serves /api/* directly
- * - Replit published:    https://<dev-domain>  → bypasses CDN, hits Flask directly
- *
- * The Replit CDN (publicDir) intercepts same-origin /api/* calls in the published app
- * and returns index.html instead of JSON. Calling the workspace dev-domain directly
- * is cross-origin and bypasses the CDN entirely.
+ * Strategy:
+ * - localhost          → '' (Vite proxy handles /api/*)
+ * - omnixquantum.net  → '' (Railway Flask, same-origin)
+ * - Everything else   → direct workspace Flask URL (bypasses Replit CDN)
  */
 
 const REPLIT_FLASK_URL =
@@ -18,10 +13,17 @@ const REPLIT_FLASK_URL =
 function resolveApiBase(): string {
   if (typeof window === 'undefined') return ''
   const host = window.location.hostname
-  if (host.endsWith('.replit.app') || host.endsWith('.repl.co')) {
-    return REPLIT_FLASK_URL
+  if (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === 'omnixquantum.net' ||
+    host === 'www.omnixquantum.net' ||
+    host.endsWith('.railway.app') ||
+    host.endsWith('.up.railway.app')
+  ) {
+    return ''
   }
-  return ''
+  return REPLIT_FLASK_URL
 }
 
 export const API_BASE = resolveApiBase()
