@@ -571,7 +571,6 @@ export default function InvestorDemo() {
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 12, color: '#334155' }}>
             <span style={{ color: '#C9A227', fontWeight: 700 }}>OMNIX</span> Decision Governance Infrastructure
-            {' · '}Eureka Dubai GCC 2026 Semifinalist
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             <Link to="/" style={{ fontSize: 12, color: '#334155', textDecoration: 'none' }}>Home</Link>
