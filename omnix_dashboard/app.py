@@ -64,6 +64,8 @@ def create_app():
     )
     from omnix_dashboard.blueprints import credit_bp
 
+    # credit_bp FIRST — ensures /api/credit/* routes take priority over views_bp catch-all
+    app.register_blueprint(credit_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -81,7 +83,6 @@ def create_app():
     app.register_blueprint(governance_alerts_bp)
     app.register_blueprint(public_sandbox_bp)
     app.register_blueprint(public_verify_bp)
-    app.register_blueprint(credit_bp)
 
     # Ensure credit tables exist BEFORE any request arrives (Railway fresh DB fix)
     try:
@@ -113,6 +114,34 @@ def create_app():
 
 
 app = create_app()
+
+
+# ─── Credit API direct routes (top-level, bypass blueprint routing conflicts) ───
+@app.route('/api/credit/metrics')
+@app.route('/api/credit/metrics.json')
+def _credit_metrics_direct():
+    from omnix_dashboard.blueprints.credit_governance import get_metrics
+    return get_metrics()
+
+
+@app.route('/api/credit/applications')
+@app.route('/api/credit/applications.json')
+def _credit_applications_direct():
+    from omnix_dashboard.blueprints.credit_governance import get_applications
+    return get_applications()
+
+
+@app.route('/api/credit/sectors')
+@app.route('/api/credit/sectors.json')
+def _credit_sectors_direct():
+    from omnix_dashboard.blueprints.credit_governance import get_sectors
+    return get_sectors()
+
+
+@app.route('/api/credit/health')
+def _credit_health_direct():
+    from omnix_dashboard.blueprints.credit_governance import get_health
+    return get_health()
 
 
 @app.after_request

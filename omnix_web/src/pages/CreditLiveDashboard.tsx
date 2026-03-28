@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Shield, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle,
@@ -9,6 +9,7 @@ import {
 
 import { API_BASE } from '../lib/apiBase'
 const REFRESH_INTERVAL = 30_000
+const RETRY_INTERVAL = 5_000
 
 interface Metrics {
   total_applications: number
@@ -194,6 +195,7 @@ export default function CreditLiveDashboard() {
           setMacro(d.macro as MacroData)
           setActivity(d.activity_24h as Activity24h)
           setError(null)
+          dataLoaded.current = true
         } else {
           setError(`Engine error: ${(d.message as string) || (d.error as string) || 'unknown'}`)
         }
@@ -222,10 +224,34 @@ export default function CreditLiveDashboard() {
     }
   }, [])
 
+  const dataLoaded = useRef(false)
+
   useEffect(() => {
-    fetchAll()
-    const interval = setInterval(fetchAll, REFRESH_INTERVAL)
-    return () => clearInterval(interval)
+    let retryTimer: ReturnType<typeof setInterval> | null = null
+    let mainInterval: ReturnType<typeof setInterval> | null = null
+
+    const doFetch = async () => {
+      await fetchAll()
+    }
+
+    doFetch()
+
+    // Fast retry every 5s until data is loaded (handles cold start)
+    retryTimer = setInterval(async () => {
+      if (!dataLoaded.current) {
+        await fetchAll()
+      } else {
+        if (retryTimer) clearInterval(retryTimer)
+      }
+    }, RETRY_INTERVAL)
+
+    // Normal refresh every 30s
+    mainInterval = setInterval(fetchAll, REFRESH_INTERVAL)
+
+    return () => {
+      if (retryTimer) clearInterval(retryTimer)
+      if (mainInterval) clearInterval(mainInterval)
+    }
   }, [fetchAll])
 
 

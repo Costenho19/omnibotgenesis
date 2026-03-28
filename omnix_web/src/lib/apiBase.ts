@@ -1,9 +1,9 @@
 /**
  * OMNIX API Base URL resolver
  *
- * Always same-origin. In the published Replit app, the CDN serves
- * pre-built static JSON snapshots placed in public/api/credit/*.
- * In Railway and localhost, Flask handles /api/* directly.
+ * Always same-origin. Flask handles all /api/* routes directly
+ * whether in development (port 5000) or production (gunicorn).
+ * React Vite proxy forwards /api/* to Flask:5000 in dev mode.
  */
 
 export const API_BASE = ''
