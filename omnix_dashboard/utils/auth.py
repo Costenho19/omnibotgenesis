@@ -354,7 +354,9 @@ def init_security(app: Flask) -> None:
             "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: https:; "
-            "connect-src 'self' https://api.coingecko.com https://api.alternative.me https://finnhub.io; "
+            "connect-src 'self' https://api.coingecko.com https://api.alternative.me https://finnhub.io "
+            "https://*.worf.replit.dev https://*.replit.dev https://*.replit.app https://*.railway.app "
+            "https://omnixquantum.net; "
             "frame-ancestors 'self'"
         )
         
