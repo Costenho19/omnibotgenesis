@@ -80,7 +80,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. Currently operating in digital asset trading and Islamic finance credit. Next verticals (Year 2-3+): robotics, biotech, supply chain, and insurance.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. Currently operating in digital asset trading governance. Next verticals: credit, insurance, biotech, and supply chain.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-12 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -253,20 +253,6 @@ export default function CommercialLanding() {
               <Link to="/try" className="text-[#C9A227] text-sm hover:text-white transition-colors flex items-center gap-1">
                 Try the governance sandbox <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-            </div>
-            <div className="glass-card p-8 border border-violet-400/20">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full">
-                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#a78bfa',display:'inline-block',marginRight:0}} />
-                  LIVE
-                </span>
-                <span className="text-white font-bold text-lg">Islamic Credit — UAE</span>
-              </div>
-              <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 8 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
-              <div className="grid grid-cols-2 gap-4 mb-5">
-                <div><div className="text-xl font-bold text-violet-400">AED 278M+</div><div className="text-xs text-muted">Financing evaluated</div></div>
-                <div><div className="text-xl font-bold text-violet-400">43+</div><div className="text-xs text-muted">Applications processed</div></div>
-              </div>
             </div>
           </div>
         </section>
