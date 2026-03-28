@@ -56,6 +56,7 @@ def _queryOne(sql: str, params=None) -> dict | None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 @credit_bp.route("/metrics")
+@credit_bp.route("/metrics.json")
 def get_metrics():
     """
     Returns comprehensive KPI metrics for the Credit Governance vertical.
@@ -182,6 +183,7 @@ def get_metrics():
 # ──────────────────────────────────────────────────────────────────────────────
 
 @credit_bp.route("/applications")
+@credit_bp.route("/applications.json")
 def get_applications():
     """Recent credit applications with governance decisions."""
     try:
@@ -245,6 +247,7 @@ def get_applications():
 # ──────────────────────────────────────────────────────────────────────────────
 
 @credit_bp.route("/sectors")
+@credit_bp.route("/sectors.json")
 def get_sectors():
     """Governance decisions broken down by sector."""
     try:
