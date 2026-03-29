@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent errors in high-stakes automated decision-making, particularly in digital asset trading. Its core purpose is to provide reliable decision governance to protect capital and enhance financial integrity, establishing a secure foundation for automated systems. The project aims to become a leading infrastructure for automated decision-making across various high-stakes domains, emphasizing high reliability and resilience, with a business vision to safeguard automated financial operations and expand into other critical sectors.
+OMNIX is a domain-agnostic Decision Governance Infrastructure that governs high-stakes automated decisions across multiple domains. As of March 29, 2026, OMNIX operates four simultaneous governance engines 24/7: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, and robotics pre-execution safety. The same 11-checkpoint pipeline + CAG + TIE governs every domain. Every decision receives a post-quantum cryptographically signed receipt (Dilithium-3 + Merkle chain). 57 Architecture Decision Records. TAM $137B+. Seeking $500K pre-seed at $3M pre-money.
 
 ## User Preferences
 ### Communication

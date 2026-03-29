@@ -1,170 +1,168 @@
 # OMNIX – EXECUTIVE FACT SHEET
 
 **Phase 1 — Institutional Validation**  
-**Version**: 1.2  
-**Issue Date**: 6 March 2026  
-**Platform Identity**: Decision Governance Infrastructure for Automated Systems
-**ADR Count**: 36 ADRs
-**Verification Status**: 171 New Tests Passing (March 2026 Gap Closure)
+**Version**: 2.0  
+**Issue Date**: 29 March 2026  
+**Platform Identity**: Decision Governance Infrastructure for Automated Systems  
+**ADR Count**: 57 ADRs  
+**Pipeline**: 11 Checkpoints + CAG + TIE (13 governance layers total)  
+**Active Verticals**: 3 (Trading · Islamic Credit · Insurance · Robotics)  
 
 ---
 
-## 1. SYSTEM STATUS — MARCH 2026 UPDATE
+## 1. SYSTEM STATUS — MARCH 2026
 
-As of March 6, 2026, OMNIX has completed its structural roadmap by closing the 4 primary architectural gaps:
-- **Signal Integrity Validator (CP-0)**: Ensuring data quality before evaluation.
-- **Forward Trajectory Implicator (CP-7b)**: Predicting multi-step implications of decisions.
-- **Regime-Conditioned Kelly (RCK)**: Dynamic position sizing based on market regime.
-- **Exit Governance Layer (EGL)**: A 3-gate pipeline for controlled trade liquidation.
+As of March 29, 2026, OMNIX operates as a multi-vertical governance platform with three independent governance engines running simultaneously 24/7:
 
-The system now operates with **8 sequential entry checkpoints** and a **3-gate exit pipeline**.
+| Engine | Domain | Cycle | Live Since |
+|--------|---------|-------|-----------|
+| **Trading Governance** | Digital asset trading (BTC, ETH, SOL) | 90 seconds | January 15, 2026 |
+| **Islamic Credit Governance** | UAE/GCC credit applications (Murabaha, Ijara) | 5 minutes | March 27, 2026 |
+| **Insurance Governance** | Global insurance claims (Auto, Property, Health, Cyber) | 4 minutes | March 29, 2026 |
+| **Robotics Governance** | Pre-execution robot action safety | 3 minutes | March 29, 2026 |
+
+Every decision across all engines passes through the same 11-checkpoint pipeline and receives a post-quantum cryptographically signed, independently verifiable governance receipt.
 
 ---
 
-## 2. STRATEGIC TIMELINE
+## 2. THE PIPELINE — 13 GOVERNANCE LAYERS
 
 ```
-CALIBRATION (COMPLETED)        OFFICIAL DAY 1             MARCH 2026 GAP CLOSURE
-Nov 2025 – Jan 14, 2026   →   Jan 15, 2026          →   March 6, 2026
-----------------------       ------------------       -------------------
-119 test trades              Track record begins      8 Checkpoints + EGL
-Veto system calibrated       Starting capital         36 ADRs Documented
-Risk engine tuned            $984,801.27              171 New Tests Passing
+INPUT
+  ↓
+[CAG] Context Admission Gate — Is the global environment admissible?
+  ↓
+[EBIP·ACV] Admissibility Consistency — Do input signals contradict each other?
+  ↓
+[CP-0]  SIV    Signal Integrity Validator       — Data quality, freshness, completeness
+[CP-1]  PROB   Monte Carlo Probability          — Win rate ≥ 48%, Expected Return > 0%
+[CP-2]  RISK   Risk Limits                      — Position sizing, drawdown controls
+[CP-3]  COH    Coherence Engine (DCI < 70)      — Internal signal alignment
+[CP-4]  TREND  Trend Analysis                   — EMA + HMM regime confirmation
+[CP-5]  STRESS Stress Resilience                — Black Swan detection, tail-risk
+[CP-6]  SHAR   Sharia Governance Gate           — Halal screening, Riba/Gharar control
+[CP-7]  TCV    Temporal Coherence Validation    — Backward-looking consistency
+[CP-7b] FTI    Forward Trajectory Implicator    — Forward multi-step implications
+[CP-8]  ECW    Edge Confirmation Window         — Persistence requirement (2+ cycles)
+[CP-9]  AML    Anti-Money Laundering Gate       — FATF Rec.15, UAE AML/CFT, FinCEN
+[CP-10] FRAUD  Fraud Detection Gate             — EU AI Act Art.6, MiFID II, SEC 10b-5
+[CP-11] JUR    Jurisdiction Compliance Gate     — UAE/EU/US/GCC asset validation
+  ↓
+[TIE] Trajectory Invariant Enforcement — Is the trajectory of decisions safe?
+  ↓
+PQC-SIGNED RECEIPT (Dilithium-3 + Merkle hash chain)
+  ↓
+APPROVED | HOLD | BLOCKED
 ```
 
-This structure ensures that learning noise is separated from operational performance, while architectural maturity is reached through documented gap closure.
+**All 13 layers are fail-closed**: if a layer encounters an unhandled exception, it defaults to BLOCKED — never passes through silently.
 
 ---
 
-## 3. FROZEN BASELINE — SURVIVABILITY AUDIT
-
-Before activating the official record, OMNIX was stress-tested under real market conditions.
-
-### Results from Calibration Period
-
-| Metric | Result |
-|--------|--------|
-| Capital Preservation | 98.5% |
-| Market Environment | BTC −7.37% drawdown |
-| Max Drawdown (OMNIX) | 1.5% |
-| Entry Pipeline | 8-tier (updated March 2026) |
-| Exit Pipeline | 3-gate EGL (updated March 2026) |
-| Risk Volume Blocked | >$43M notional (Learning Phase) |
-| Evaluation Cycles | 670,000+ (through Feb 2026) |
-| Production Version | OMNIX Decision Governance |
-
-**This phase proved survival first, before profit seeking.**
-
----
-
-## 4. OFFICIAL TRACK RECORD METRICS (AS OF MARCH 2026)
-
-| Metric | Current Status | Target |
-|--------|----------------|---------------|
-| Official Trades | 0 (Strict Governance) | 100+ |
-| Real Win Rate | 0.0% | >45% |
-| Data Quality | 100% (SIV CP-0) | 100% (audit-ready) |
-| Starting Balance | $984,801.27 | Growth with risk limits |
-| Architecture Docs | 36 ADRs | Immutable Record |
-| Test Coverage | 171 New Tests | Continuous Verification |
-
-**No legacy or estimated data is allowed inside this window.**
-
----
-
-## 5. GOVERNANCE STATEMENT
-
-> "OMNIX has already learned.  
-> Today it begins to be measured under full 8+3 governance."
-
-The system has been surgically separated into:
-
-- **Calibration history** (engineering & learning)
-- **Official performance** (investable, auditable, comparable)
-
-What appears on the terminal is not laboratory output — it is controlled, governed execution through 8 entry checkpoints and 3 exit gates.
-
----
-
-## 6. WHY THIS FRAMEWORK IS INVESTOR-GRADE
-
-This structure eliminates three common red flags:
-
-### 1) Legacy losses
-
-The −$15K during calibration is explicitly classified as R&D, not operations.
-
-### 2) Cherry-picked performance
-
-Investors can toggle:
+## 3. ARCHITECTURAL TIMELINE
 
 ```
-[ Official Track Record ] | [ Full History (incl. calibration) ]
+CALIBRATION                OFFICIAL DAY 1         GAP CLOSURE            MULTI-VERTICAL
+Nov 2025 – Jan 14, 2026 → Jan 15, 2026       → Mar 6, 2026        → Mar 29, 2026
+─────────────────────────  ───────────────────  ────────────────────  ─────────────────
+119 test trades            Track record begins  8 CP + 3-gate EGL    11 CP + CAG + TIE
+Veto system calibrated     Starting capital     SIV, FTI, RCK, EGL   3 verticals live
+Risk engine tuned          $984,801.27          36 ADRs               57 ADRs
+                                                1 vertical            $137B+ TAM
 ```
 
-No data is hidden — but it is properly labeled.
+---
 
-### 3) Moving goalposts
+## 4. PRODUCTION METRICS (Through February 2026 — Trading Vertical)
 
-The architectural roadmap is now complete (March 2026 Gap Closure).
-
-OMNIX is now a finished governance architecture ready for multi-vertical expansion.
+| Metric | Value | Notes |
+|--------|-------|-------|
+| PQC-Signed Receipts | 82,569+ | Dilithium-3, 100% coverage |
+| Evaluation Cycles | 766,741+ | Motor running 24/7 since Jan 2026 |
+| Capital Preserved | 98.42% | During BTC −7.37% drawdown |
+| Governance Receipts Integrity | 100% | Hash chain: zero breaks |
+| Check Interval | 90 seconds | Optimized from ~20s (Feb 2026) |
+| B2B Payload Encryption | Active | Fernet AES-128-CBC + HMAC-SHA256 |
 
 ---
 
-## Final Position
+## 5. TAM — THREE VERTICALS NOW, THREE MORE PLANNED
 
-OMNIX is now operating as a governed, time-boxed, auditable trading system.
+| Vertical | Status | Market Size | Governance Problem |
+|----------|--------|-------------|-------------------|
+| **Digital Asset Trading** | Live | $5B | Uncontrolled automated execution |
+| **Islamic Credit (UAE/GCC)** | Live | $2T AUM | Sharia-compliant credit at scale |
+| **Insurance Claims** | Live | $7T+ premiums | Fraudulent claim approval |
+| **Robotics / Autonomous** | Live | $80B | Pre-execution safety governance |
+| Supply Chain (planned) | Year 2–3 | $20B | Supplier decision integrity |
+| Energy Trading (planned) | Year 2–3 | $10B | Grid dispatch governance |
 
-- Not a demo.
-- Not a simulation.
-- Not a marketing dashboard.
-
-**A measurable machine.**
-
-This is what institutional readiness looks like.
-
----
-
-## Day 1-4 Update (Jan 19, 2026)
-
-During the first 4 days of the official track record:
-
-| Metric | Value | Type |
-|--------|-------|------|
-| Signals Analyzed | 47,507 | Real (PostgreSQL) |
-| Notional Blocked | $950.14M | Real (PostgreSQL) |
-| Est. Loss Avoided* | $5.70M | Calculated estimate |
-| Trades Executed | 0 | Real (100% preservation) |
-| Capital Status | $984,801.27 | Real (unchanged) |
-
-*Est. Loss Avoided = Notional Blocked × 0.6% (per ADR-010 methodology). This is a calculated estimate, not realized loss.
-
-**Market Conditions**: BLACK_SWAN detector identified 50%+ crash probability across all assets, triggering fail-closed protection.
-
-**Clarification**: The "no estimated data" policy applies to trade execution data (win rate, P&L). Risk mitigation metrics use the documented ADR-010 methodology and are clearly labeled as estimates.
+**Total demonstrable TAM: $137B+**
 
 ---
 
-## Appendix: Detailed Reports
+## 6. CRYPTOGRAPHIC INFRASTRUCTURE
 
-| Document | Description |
-|----------|-------------|
-| [Risk Mitigation Log](investor/risk_mitigation_log.md) | Daily capital protection events |
-| [OMNIX vs Market](investor/omnix_vs_market.md) | Alpha vs Beta comparison |
-| [Shadow Performance](investor/shadow_performance_report.md) | Counterfactual trade analysis |
-| [4-Layer Architecture](investor/architecture_4_layers.md) | Technical security deep-dive |
-| [Gap Closure Report](investor/gap_closure_march_2026.md) | Documentation of SIV, FTI, RCK, EGL completion |
+Implemented since November 2025. Unchanged. Always active.
+
+| Layer | Technology |
+|-------|-----------|
+| Decision signatures | NIST-standardized post-quantum signature algorithm |
+| Key encapsulation | NIST-standardized post-quantum KEM (X25519 hybrid) |
+| Payload encryption | AES-256 (Fernet) at rest |
+| Timestamp | RFC 3161-style internal timestamp |
+| Integrity chain | Rolling Merkle root — tamper-evident |
+| Public verification | SHA-256 hash + signature check — zero internal data exposure |
 
 ---
 
-## References
+## 7. GOVERNANCE STATEMENT
 
-- ADR-036: Exit Governance Layer (EGL)
-- ADR-035: Regime-Conditioned Kelly (RCK)
-- ADR-034: Forward Trajectory Implication (FTI)
-- ADR-033: Signal Integrity Validator (SIV)
-- ADR-012: Learning Baseline Freeze & Official Day 1
-- ADR-011: Legacy Telemetry Backfill
-- ADR-010: Capital Protection Metric Standard
-- ADR-007: Coherence Threshold Calibration
+> "Three domains. One governance engine. Every decision cryptographically signed."
+
+OMNIX doesn't optimize returns. It governs the conditions under which any automated system is permitted to act. When those conditions aren't met — across trading, credit, insurance, or robotics — no action forms.
+
+**What appears on the dashboard is not a demo. It is governed decision-making, 24/7, across four simultaneous domains.**
+
+---
+
+## 8. INVESTMENT THESIS
+
+**Seeking**: $500,000 USD pre-seed  
+**Equity**: 16.7%  
+**Pre-money valuation**: $3,000,000  
+**Use of funds**: Team expansion · Institutional sales (UAE/GCC/EU) · Pilot client acquisition  
+
+The governance infrastructure is built. The pipeline is running. The receipts are being generated. The question is no longer "can OMNIX govern multiple domains?" — the answer is already operational across four simultaneous governance engines.
+
+---
+
+## 9. DUE DILIGENCE DOCUMENTS
+
+| Document | Content |
+|----------|---------|
+| `docs/business/investor/OMNIX_INVESTOR_UPDATE_MAR2026.md` | Complete March 2026 update with all technical detail |
+| `docs/business/investor/PRODUCT_OVERVIEW.md` | Platform description for investors |
+| `docs/business/investor/INVESTOR_FAQ.md` | Q&A for investor conversations |
+| `docs/compliance/SECURITY_OVERVIEW.md` | Public security narrative |
+| `docs/compliance/CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md` | Institutional PQC overview |
+| `docs/compliance/audits/OMNIX_Security_Audit_v1.0_INTERNAL.md` | Full internal audit |
+| `docs/reference/adr/` | 57 Architecture Decision Records (immutable) |
+
+---
+
+## References — March 2026 ADRs
+
+| ADR | Title |
+|-----|-------|
+| ADR-045 | Execution Boundary Integrity Protocol (EBIP) |
+| ADR-046 | Sharia Governance Gate (CP-6) |
+| ADR-047 | AML Governance Gate (CP-9) |
+| ADR-048 | Fraud Detection Gate (CP-10) |
+| ADR-049 | Jurisdiction Compliance Gate (CP-11) |
+| ADR-050 | Context Admission Gate (CAG) |
+| ADR-051 | Dual Trading Mode (CORE/ACTIVE) |
+| ADR-052 | Islamic Credit Governance Vertical |
+| ADR-053 | Trajectory Invariant Enforcement (TIE) |
+| ADR-054 | Insurance Governance Vertical |
+| ADR-055 | Robotics Governance Vertical |

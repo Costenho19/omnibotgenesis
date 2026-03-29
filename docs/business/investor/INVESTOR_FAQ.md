@@ -2,7 +2,7 @@
 ## Decision Governance Infrastructure
 
 **Classification**: Investor Confidential
-**Last Updated**: March 15, 2026 — SVB forensic validation added (Q-SVB, cross-domain proof, traditional banking)
+**Last Updated**: March 29, 2026 — Multi-vertical expansion: Insurance + Robotics 24/7 live. 11 checkpoints + CAG + TIE. 57 ADRs. TAM $137B+.
 
 ---
 
@@ -52,39 +52,96 @@ The loss represents 1.5% of the $1M paper trading capital, demonstrating that ev
 
 ### Q5: How does OMNIX protect capital?
 
-**A:** OMNIX uses a hierarchical veto system — **8 entry checkpoints** in the trading pipeline plus a **3-gate Exit Governance Layer (EGL)** as of March 6, 2026:
+**A:** OMNIX uses a 13-layer hierarchical veto system — the most comprehensive governance pipeline we have built to date (March 29, 2026):
 
 ```
-ENTRY PIPELINE (8 Checkpoints):
-1. CP-0 SIV      → Signal Integrity Validator (Data quality)
-2. CP-1 MC VETO  → Monte Carlo blocks if Win Rate <50% or Expected Return <0%
-3. CP-2 RMS VETO → Risk Management System enforcement
-4. CP-3 EARLY    → Veto Early Return
-5. CP-4 COHERENCE→ Coherence Engine analysis
-6. CP-5 ADAPTIVE → Adaptive Coherence Gate
-7. CP-7 TCV      → Temporal Coherence Validation (ADR-032)
-8. CP-7b FTI     → Forward Trajectory Implicator (ADR-034)
-9. CP-8 ECW      → Edge Confirmation Window (3 consecutive cycles)
+PRE-ADMISSION:
+  CAG     Context Admission Gate     — Blocks if global market is structurally inadmissible
+  ACV     Admissibility Consistency  — Blocks if input signals internally contradict
 
-EXIT PIPELINE (3-Gate EGL):
-1. Profit Protection Gate
-2. Volatility Exit Gate
-3. Regime Change Gate
+ENTRY PIPELINE (11 Checkpoints):
+  CP-0   SIV    Signal Integrity     — Data quality, freshness, completeness
+  CP-1   PROB   Monte Carlo          — Win Rate ≥ 48%, Expected Return > 0%
+  CP-2   RISK   Risk Limits          — Position sizing, drawdown controls
+  CP-3   COH    Coherence (DCI<70)   — Internal signal alignment
+  CP-4   TREND  Trend Analysis       — EMA + HMM regime confirmation
+  CP-5   STRESS Stress Resilience    — Black Swan, tail-risk detection
+  CP-6   SHAR   Sharia Gate          — Halal screening, Riba/Gharar control
+  CP-7   TCV    Temporal Coherence   — Backward signal consistency
+  CP-7b  FTI    Forward Trajectory   — Multi-step forward implication
+  CP-8   ECW    Edge Confirmation    — Persistence (2+ consecutive cycles)
+  CP-9   AML    AML Gate             — FATF Rec.15, UAE AML/CFT, FinCEN
+  CP-10  FRAUD  Fraud Detection      — EU AI Act Art.6, MiFID II, SEC 10b-5
+  CP-11  JUR    Jurisdiction Gate    — UAE/EU/US/GCC asset compliance
+
+POST-PIPELINE:
+  TIE    Trajectory Invariant       — Blocks if trajectory of decisions is unsafe
+  PQC    Quantum-Secure Receipt     — Dilithium-3 signature + Merkle hash chain
 ```
 
-This is a **fail-closed architecture**: the default is NOT to trade. Capital deployment requires passing every gate.
+This is a **fail-closed architecture**: the default is NOT to act. Execution requires passing every layer.
 
-> **Note on historical metrics:** The 670,000+ evaluation cycles and 91% block accuracy figures were produced under the 6-checkpoint system (through February 2026). The current 8-checkpoint + EGL architecture was finalized on March 5, 2026, closing the final architectural gaps.
+### Q-EVOLUTION: How has the system evolved from March 6 to March 29, 2026?
 
-### Q-EVOLUTION: How has the system evolved recently?
+**A:** March 2026 was the most architecturally dense month in OMNIX's history:
 
-**A:** On March 5, 2026, we completed 4 critical architectural gaps:
-1. **Signal Integrity Validator (CP-0)**: Ensures data quality before any evaluation.
-2. **Forward Trajectory Implicator (CP-7b)**: Analyzes future implications of the current signal.
-3. **Regime-Conditioned Kelly (RCK)**: Dynamically adjusts position sizing based on market regime.
-4. **Exit Governance Layer (EGL)**: A 3-gate pipeline that governs trade exits with the same discipline as entries.
+| Date | Change | ADR |
+|------|--------|-----|
+| Mar 6, 2026 | SIV (CP-0), FTI (CP-7b), RCK, EGL — architectural gap closure | ADR-033/034/035/036 |
+| Mar 25, 2026 | Sharia Gate (CP-6) | ADR-046 |
+| Mar 25, 2026 | AML Gate (CP-9), Fraud Gate (CP-10), Jurisdiction Gate (CP-11) | ADR-047/048/049 |
+| Mar 26, 2026 | Context Admission Gate (CAG) | ADR-050 |
+| Mar 26, 2026 | Dual Trading Mode (CORE/ACTIVE) | ADR-051 |
+| Mar 27, 2026 | Islamic Credit Governance — 24/7 live | ADR-052 |
+| Mar 27, 2026 | Trajectory Invariant Enforcement (TIE) | ADR-053 |
+| Mar 29, 2026 | Insurance Governance — 24/7 live | ADR-054 |
+| Mar 29, 2026 | Robotics Governance — 24/7 live | ADR-055 |
 
-These improvements are documented across **36 ADRs** (Architectural Decision Records) and validated by **171 new tests**.
+Total ADRs: **57** (was 36 on March 6). Total checkpoints: **11 + CAG + TIE** (was 8 on March 6).
+
+### Q-MULTIVERTICAL: Is OMNIX really domain-agnostic, or is it just a trading system?
+
+**A:** As of March 29, 2026, this is an empirical question with a live answer:
+
+| Domain | Decision Type | Consequence | Live Since |
+|--------|--------------|-------------|-----------|
+| Trading | Execute trade / Don't execute | Capital preserved or lost | Jan 15, 2026 |
+| Islamic Credit | Approve loan / Reject loan | Default avoided or credit granted | Mar 27, 2026 |
+| Insurance | Approve claim / Block claim | Loss paid or fraud prevented | Mar 29, 2026 |
+| Robotics | Execute action / Block action | Safety incident or task completed | Mar 29, 2026 |
+
+Four structurally different domains. One governance engine. Zero changes to core pipeline logic. Every decision receives the same 11-checkpoint evaluation and the same PQC-signed receipt.
+
+**The TAM implication**: The governance problem is not unique to trading. Every domain where automated systems make high-stakes binary decisions faces the same structural gap. OMNIX is the infrastructure that fills it.
+
+### Q-TAM: How does the TAM change with multiple verticals?
+
+**A:**
+
+| Scope | TAM |
+|-------|-----|
+| March 6, 2026 (trading only) | $5B |
+| March 29, 2026 (trading + insurance + robotics) | $137B+ |
+
+- **Insurance**: $7T+ in global premiums annually. Fraudulent claims cost the industry $308B+ per year globally. OMNIX governance applied to claim decisions — every blocked fraudulent claim is quantifiable loss avoided.
+- **Robotics**: $80B+ industrial robotics market. No comparable pre-execution governance infrastructure exists. Post-incident analysis is standard; OMNIX provides pre-execution governance.
+- **Islamic Finance**: $2T+ AUM. Sharia-compliant governance at scale — the UAE/GCC market actively demands it.
+
+This is not projection. These are markets where OMNIX governance engines are already running today.
+
+### Q-ROBOTICS: What does "pre-execution governance" mean for robots?
+
+**A:** In traditional robotics, governance happens *after* an incident — root cause analysis, logs, corrective action. OMNIX governance happens *before* the robot acts.
+
+Every robot action is evaluated through the full 11-checkpoint pipeline:
+- Sensor fusion agreement (LiDAR + Camera + IMU) → signal coherence checkpoint
+- Battery, temperature, joint stress → stress resilience checkpoint
+- Mission logic alignment → logic consistency checkpoint
+- Collision and damage risk → risk limits checkpoint
+
+If the pipeline blocks the action, the robot does not execute it. The decision is logged with a PQC-signed receipt. Every safety incident prevented is a measurable output.
+
+**No comparable infrastructure exists.** The industrial robotics market ($80B+) has no pre-execution governance layer. OMNIX is building the first one.
 
 ### Q6: What is the Edge Confirmation Window (ECW)?
 

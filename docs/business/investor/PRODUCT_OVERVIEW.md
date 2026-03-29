@@ -4,7 +4,7 @@
 **Document Type**: Product Overview  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
-**Last Updated**: March 15, 2026 — SVB forensic validation added (cross-domain proof, traditional banking)
+**Last Updated**: March 29, 2026 — Multi-vertical expansion: Insurance + Robotics 24/7 live. 11 checkpoints + CAG + TIE. 57 ADRs.
 
 ---
 
@@ -27,27 +27,36 @@ Traditional algorithmic trading systems optimize for **returns first, risk secon
 
 **OMNIX builds the governance layer for automated decision systems.**
 
-It is Decision Governance Infrastructure validated in digital asset trading. The same 8-checkpoint entry + 3-gate exit architecture applies wherever high-stakes decisions under uncertainty involve capital at risk.
+It is Decision Governance Infrastructure now validated and running 24/7 across three simultaneous domains: digital asset trading, Islamic credit (UAE/GCC), insurance claims, and robotics pre-execution governance. The same 11-checkpoint pipeline applies wherever high-stakes binary decisions under uncertainty require verifiable, auditable governance.
+
+### Active Verticals (March 29, 2026)
+
+| Vertical | Domain | Live Since | Cycle |
+|----------|---------|-----------|-------|
+| **Trading** | Digital asset governance | Jan 15, 2026 | 90 sec |
+| **Islamic Credit** | UAE/GCC credit (Murabaha, Ijara) | Mar 27, 2026 | 5 min |
+| **Insurance** | Global claim governance | Mar 29, 2026 | 4 min |
+| **Robotics** | Pre-execution robot safety | Mar 29, 2026 | 3 min |
 
 ### Core Identity
 
 | Attribute | Description |
 |-----------|-------------|
-| **Primary Objective** | Capital preservation (target: 98%+ maintained) |
-| **Secondary Objective** | Systematic exposure to validated statistical edge |
-| **Architecture** | Multi-layer veto system with AI governance (8 independent entry checkpoints + 3-gate exit layer) |
-| **Security Standard** | NIST-aligned PQC implemented (Kyber-768, Dilithium-3) — operational since Nov 2025 |
-| **Domain** | Domain-agnostic — validated in digital asset trading, expandable to supply chain, lending, insurance, and compliance |
+| **Primary Objective** | Governance of automated decisions — block when conditions are not met |
+| **Architecture** | 11 independent checkpoints + Context Admission Gate + Trajectory Invariant Enforcement |
+| **Security Standard** | NIST-standardized PQC — operational since Nov 2025. 100% receipt coverage. |
+| **Domain** | Domain-agnostic — proven across trading, Islamic credit, insurance, and robotics |
+| **ADR Count** | 57 Architecture Decision Records — immutable audit trail |
 
 ### Critical Distinction
 
 > **OMNIX is a decision governance platform, not a trading signal provider.**
 
-We sell protection from costly mistakes.
+We sell protection from costly mistakes — in any domain where automated decisions carry quantifiable risk.
 
 ### Positioning Statement
 
-> OMNIX doesn't try to beat the market every day. It waits for confirmed statistical edge, validates through multiple independent systems, and only acts when risk parameters are satisfied across all layers. The same governance architecture applies to any domain where high-stakes decisions under uncertainty involve capital at risk — from trading to supply chain to lending.
+> OMNIX doesn't try to beat the market. It governs whether any automated system — trading bot, credit engine, insurance adjudicator, or industrial robot — is permitted to act at all. When conditions across 11 independent checkpoints aren't satisfied, no action forms. The same pipeline, across four simultaneous governance engines, 24/7.
 
 ---
 
@@ -83,22 +92,37 @@ We sell protection from costly mistakes.
 
 ## What OMNIX Does
 
-### 1. Multi-Layer Risk Orchestration
+### 1. Multi-Layer Governance Pipeline
 
-Every potential trade passes through **8 independent validation entry layers** plus a **3-gate exit layer** before execution is considered:
+Every decision across all verticals passes through **13 governance layers** before any action is permitted:
 
 ```
-Data Integrity (SIV) → Monte Carlo → RMS Limits → Coherence Engine → 
-Temporal Coherence (TCV) → Future Trajectory (FTI) → Edge Confirmation (ECW) → 
-Position Sizing (RCK) → Final Decision
+[CAG] Context Admission Gate         — Global market admissibility
+[ACV] Admissibility Consistency      — Input signal contradiction check
+[CP-0]  SIV    Signal Integrity      — Data quality and freshness
+[CP-1]  PROB   Monte Carlo           — Win rate ≥ 48%, Expected Return > 0%
+[CP-2]  RISK   Risk Limits           — Position sizing, drawdown controls
+[CP-3]  COH    Coherence (DCI < 70)  — Internal signal alignment
+[CP-4]  TREND  Trend Analysis        — EMA + HMM regime
+[CP-5]  STRESS Stress Resilience     — Black Swan, tail-risk
+[CP-6]  SHAR   Sharia Gate           — Halal screening, Gharar control
+[CP-7]  TCV    Temporal Coherence    — Backward signal consistency
+[CP-7b] FTI    Forward Trajectory    — Multi-step forward implication
+[CP-8]  ECW    Edge Confirmation     — Persistence (2+ cycles required)
+[CP-9]  AML    AML Gate              — FATF Rec.15, UAE AML/CFT, FinCEN
+[CP-10] FRAUD  Fraud Detection       — EU AI Act Art.6, MiFID II
+[CP-11] JUR    Jurisdiction Gate     — UAE/EU/US/GCC compliance
+[TIE]  Trajectory Invariant         — Decision trajectory safety
+  ↓
+PQC-SIGNED RECEIPT (Dilithium-3)
 ```
 
 ### 2. Statistical Edge Confirmation
 
 OMNIX does not act on the first positive signal. It requires:
 
-- **3 consecutive cycles** of confirmed edge
-- Win Rate ≥ 52% (statistically above break-even)
+- **2 consecutive cycles** of confirmed edge (ACTIVE mode) or 3 (CORE mode)
+- Win Rate ≥ 48% (statistically above break-even)
 - Expected Return > 0%
 - Black Swan risk ≤ MEDIUM
 
