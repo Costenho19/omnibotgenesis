@@ -491,7 +491,6 @@ export default function InvestorCommandCenter() {
             {[
               { label: 'Public Sandbox', path: '/try', color: '#6366f1' },
               { label: 'Verify a Receipt', path: '/verify', color: '#10B981' },
-              { label: 'Live Demo', path: '/demo', color: '#C9A227' },
             ].map(link => (
               <Link
                 key={link.path}
