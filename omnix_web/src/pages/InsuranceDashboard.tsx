@@ -182,7 +182,7 @@ export default function InsuranceDashboard() {
       <div className="border-b border-white/[0.06] bg-[#080B10]/95 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/assets/omnix_logo.png" alt="OMNIX" className="h-7 w-auto opacity-90" />
+            <img src="/omnix_logo.png" alt="OMNIX" className="h-7 w-auto opacity-90" />
             <div className="w-px h-5 bg-white/10" />
             <div>
               <div className="flex items-center gap-2">

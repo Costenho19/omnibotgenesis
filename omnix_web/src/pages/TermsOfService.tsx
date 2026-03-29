@@ -5,8 +5,7 @@ export default function TermsOfService() {
 
         <div style={{ marginBottom: '48px' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 24 }}>
-            <img src="/logo.png" alt="OMNIX" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-            <span style={{ fontWeight: 700, color: '#C9A227', fontSize: 16 }}>OMNIX QUANTUM</span>
+            <img src="/omnix_logo.png" alt="OMNIX QUANTUM" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
           </a>
           <a href="/" style={{ color: '#6366f1', textDecoration: 'none', fontSize: '14px' }}>← Back to OMNIX</a>
           <h1 style={{ fontSize: '36px', fontWeight: '700', marginTop: '24px', marginBottom: '8px', color: '#fff' }}>Terms of Service</h1>

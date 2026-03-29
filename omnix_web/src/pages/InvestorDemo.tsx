@@ -178,8 +178,7 @@ export default function InvestorDemo() {
       {/* NAV */}
       <nav style={{ borderBottom: '1px solid rgba(201,162,39,0.15)', padding: '0 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo.png" alt="OMNIX" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-          <span style={{ fontWeight: 700, color: '#C9A227', fontSize: 16, letterSpacing: '0.05em' }}>OMNIX</span>
+          <img src="/omnix_logo.png" alt="OMNIX" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <span style={{ fontSize: 12, color: '#64748b' }}>Live Governance Engine</span>

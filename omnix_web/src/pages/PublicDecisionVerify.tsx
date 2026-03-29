@@ -211,11 +211,7 @@ export default function PublicDecisionVerify() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 no-underline">
-            <img src="/logo.png" alt="OMNIX QUANTUM" className="w-10 h-10 object-contain" />
-            <div>
-              <div className="text-base font-bold text-white tracking-tight">OMNIX QUANTUM</div>
-              <div className="text-[10px] text-[#C9A227] uppercase tracking-widest">Decision Governance Infrastructure</div>
-            </div>
+            <img src="/omnix_logo.png" alt="OMNIX QUANTUM" className="h-10 w-auto object-contain" />
           </Link>
           <Link to="/try" className="flex items-center gap-1 text-sm text-[#C9A227] border border-[#C9A227]/30 px-3 py-1.5 rounded no-underline hover:bg-[#C9A227]/10 transition-colors">
             Try the sandbox <ExternalLink size={12} />

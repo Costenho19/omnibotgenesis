@@ -348,9 +348,7 @@ export default function InvestorCommandCenter() {
             <ArrowLeft size={14} />
           </Link>
           <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
-          <img src="/logo.png" alt="OMNIX" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span style={{ fontWeight: 700, color: '#C9A227', fontSize: 14, letterSpacing: '0.05em' }}>OMNIX</span>
-          <span style={{ fontSize: 12, color: '#475569' }}>· Decision Governance Infrastructure</span>
+          <img src="/omnix_logo.png" alt="OMNIX" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {isLive && (
