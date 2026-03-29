@@ -1,10 +1,12 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, especially in digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making with high reliability and resilience.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, with a primary focus on digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making with high reliability and resilience. The project aims to be a leading infrastructure for automated decision-making applicable across various high-stakes domains.
 
 ## User Preferences
-**Communication**: Simple, everyday language (Spanish primary).
+
+### Communication
+Simple, everyday language (Spanish primary).
 
 ### Deployment Policy (CRITICAL)
 | Environment | Purpose | Status |
