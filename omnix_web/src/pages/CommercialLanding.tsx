@@ -67,6 +67,8 @@ export default function CommercialLanding() {
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
             <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.85rem'}}>Islamic Credit</Link>
+            <Link to="/insurance" className="nav-link font-semibold" style={{color:'#60a5fa', fontSize:'0.85rem'}}>Insurance</Link>
+            <Link to="/robotics" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.85rem'}}>Robotics</Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
@@ -269,6 +271,42 @@ export default function CommercialLanding() {
                 <div><div className="text-xl font-bold text-violet-400">AED 15B+</div><div className="text-xs text-muted">Financing governed</div></div>
               </div>
               <Link to="/credit" className="text-violet-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-blue-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#60a5fa',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Insurance — Global</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance engine for insurance claim decisions. Fraud detection gate + 11 checkpoints screening Auto, Property, Cyber, and Liability claims across NA, EU, APAC, and MEA markets.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-blue-400">Multi-region</div><div className="text-xs text-muted">NA · EU · APAC · MEA</div></div>
+                <div><div className="text-xl font-bold text-blue-400">6 types</div><div className="text-xs text-muted">Auto · Property · Cyber · Life</div></div>
+              </div>
+              <Link to="/insurance" className="text-blue-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-emerald-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#34d399',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Robotics — Autonomous Systems</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Pre-execution governance for robot actions. Every action evaluated through 11 checkpoints before it runs — sensor fusion validation, collision risk, mechanical margin, and mission logic consistency.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-emerald-400">6 industries</div><div className="text-xs text-muted">Auto · Pharma · Logistics · Food</div></div>
+                <div><div className="text-xl font-bold text-emerald-400">5 robot types</div><div className="text-xs text-muted">Arm · AMR · Cobot · Drone · AGV</div></div>
+              </div>
+              <Link to="/robotics" className="text-emerald-400 text-sm hover:text-white transition-colors flex items-center gap-1">
                 View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

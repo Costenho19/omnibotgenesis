@@ -62,10 +62,12 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
-    from omnix_dashboard.blueprints import credit_bp
+    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp
 
-    # credit_bp FIRST — ensures /api/credit/* routes take priority over views_bp catch-all
+    # domain vertical blueprints FIRST — ensure /api/* routes take priority over views_bp catch-all
     app.register_blueprint(credit_bp)
+    app.register_blueprint(insurance_bp)
+    app.register_blueprint(robotics_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -103,6 +105,22 @@ def create_app():
         logger.info("✅ [Credit] Islamic Credit Governance engine started (24/7 simulation)")
     except Exception as _credit_err:
         logger.warning(f"[Credit] Simulation engine startup skipped: {_credit_err}")
+
+    # Start Insurance Governance simulation engine in background
+    try:
+        from omnix_core.insurance.insurance_simulator import start_background_simulator as _ins_start
+        _ins_start()
+        logger.info("✅ [Insurance] Insurance Governance engine started (24/7 simulation)")
+    except Exception as _ins_err:
+        logger.warning(f"[Insurance] Simulation engine startup skipped: {_ins_err}")
+
+    # Start Robotics Governance simulation engine in background
+    try:
+        from omnix_core.robotics.robotics_simulator import start_background_simulator as _rbt_start
+        _rbt_start()
+        logger.info("✅ [Robotics] Robotics Governance engine started (24/7 simulation)")
+    except Exception as _rbt_err:
+        logger.warning(f"[Robotics] Simulation engine startup skipped: {_rbt_err}")
 
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
@@ -142,6 +160,87 @@ def _credit_sectors_direct():
 def _credit_health_direct():
     from omnix_dashboard.blueprints.credit_governance import get_health
     return get_health()
+
+
+# ─── Insurance API direct routes ─────────────────────────────────────────────
+@app.route('/api/insurance/metrics')
+@app.route('/api/insurance/metrics.json')
+def _insurance_metrics_direct():
+    from omnix_dashboard.blueprints.insurance_governance import get_metrics
+    return get_metrics()
+
+@app.route('/api/insurance/claims')
+def _insurance_claims_direct():
+    from omnix_dashboard.blueprints.insurance_governance import get_claims
+    return get_claims()
+
+@app.route('/api/insurance/by-type')
+def _insurance_by_type_direct():
+    from omnix_dashboard.blueprints.insurance_governance import get_by_type
+    return get_by_type()
+
+@app.route('/api/insurance/by-region')
+def _insurance_by_region_direct():
+    from omnix_dashboard.blueprints.insurance_governance import get_by_region
+    return get_by_region()
+
+@app.route('/api/insurance/timeline')
+def _insurance_timeline_direct():
+    from omnix_dashboard.blueprints.insurance_governance import get_timeline
+    return get_timeline()
+
+@app.route('/api/insurance/health')
+def _insurance_health_direct():
+    from omnix_dashboard.blueprints.insurance_governance import health
+    return health()
+
+@app.route('/api/insurance/evaluate', methods=['POST'])
+def _insurance_evaluate_direct():
+    from omnix_dashboard.blueprints.insurance_governance import manual_evaluate
+    return manual_evaluate()
+
+
+# ─── Robotics API direct routes ───────────────────────────────────────────────
+@app.route('/api/robotics/metrics')
+@app.route('/api/robotics/metrics.json')
+def _robotics_metrics_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_metrics
+    return get_metrics()
+
+@app.route('/api/robotics/actions')
+def _robotics_actions_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_actions
+    return get_actions()
+
+@app.route('/api/robotics/by-industry')
+def _robotics_by_industry_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_by_industry
+    return get_by_industry()
+
+@app.route('/api/robotics/by-robot')
+def _robotics_by_robot_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_by_robot
+    return get_by_robot()
+
+@app.route('/api/robotics/fleet')
+def _robotics_fleet_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_fleet
+    return get_fleet()
+
+@app.route('/api/robotics/timeline')
+def _robotics_timeline_direct():
+    from omnix_dashboard.blueprints.robotics_governance import get_timeline
+    return get_timeline()
+
+@app.route('/api/robotics/health')
+def _robotics_health_direct():
+    from omnix_dashboard.blueprints.robotics_governance import health
+    return health()
+
+@app.route('/api/robotics/evaluate', methods=['POST'])
+def _robotics_evaluate_direct():
+    from omnix_dashboard.blueprints.robotics_governance import manual_evaluate
+    return manual_evaluate()
 
 
 @app.after_request

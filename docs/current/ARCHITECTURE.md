@@ -2,8 +2,8 @@
 
 **Internal Build Reference**: 6.5.4e  
 **Actualizado**: 27 de Marzo 2026  
-**Estado**: Producción 24/7 — 8-checkpoint pipeline + EBIP + TIE + Islamic Credit Vertical (ADR-052/053)  
-**Último Cambio**: Trajectory Invariant Enforcement (TIE) — ADR-053 (Mar 27, 2026)
+**Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 3 Verticals (ADR-052/053/054/055)  
+**Último Cambio**: Insurance Governance (ADR-054) + Robotics Governance (ADR-055) — Mar 29, 2026
 
 ---
 

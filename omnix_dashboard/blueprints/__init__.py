@@ -21,6 +21,8 @@ from .governance_alerts import governance_alerts_bp
 from .public_sandbox import public_sandbox_bp
 from .public_verify import public_verify_bp
 from .credit_governance import credit_bp
+from .insurance_governance import insurance_bp
+from .robotics_governance import robotics_bp
 
 __all__ = [
     'views_bp',
@@ -41,4 +43,6 @@ __all__ = [
     'public_sandbox_bp',
     'public_verify_bp',
     'credit_bp',
+    'insurance_bp',
+    'robotics_bp',
 ]
