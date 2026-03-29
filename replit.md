@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, with a primary focus on digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making with high reliability and resilience. The project aims to be a leading infrastructure for automated decision-making applicable across various high-stakes domains.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, primarily focusing on digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making. The project aims to be a leading infrastructure for automated decision-making applicable across various high-stakes domains, ensuring high reliability and resilience.
 
 ## User Preferences
 
@@ -148,7 +148,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ### Core Components and Design Patterns
 OMNIX employs a hexagonal architecture, integrating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It features AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key components include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System uses 3 specialized agents for weighted consensus. The system implements Hybrid Cryptography (X25519 + Kyber-768 via HKDF) and a Crypto-Agility Layer, alongside Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
 
-**Key Gates and Vertical Controls:**
+### Key Gates and Vertical Controls
 -   **Context Admission Gate (CAG — ADR-050):** Session-level pre-admission gate evaluating 4 global market conditions.
 -   **Trajectory Invariant Enforcement (TIE — ADR-053):** Post-pipeline gate enforcing bounded evolution over the decision space.
 -   **AML Governance Gate (CP-9 — ADR-047):** Screens for privacy coins, mixer tokens, anomalous volume, and structuring patterns, aligned with FATF Rec.15, FinCEN, and UAE Central Bank.
