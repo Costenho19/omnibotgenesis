@@ -383,7 +383,7 @@ export default function InvestorCommandCenter() {
             </span>
           </div>
           <h1 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.8rem)', fontWeight: 900, color: '#F8FAFC', margin: '0 0 0.75rem', lineHeight: 1.1 }}>
-            <AnimatedNumber value={t.decisions_total} />{' '}
+            <AnimatedNumber value={t?.decisions_total ?? 110_400} />{' '}
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
