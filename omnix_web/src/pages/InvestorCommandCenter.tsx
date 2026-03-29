@@ -294,7 +294,6 @@ export default function InvestorCommandCenter() {
     try {
       const res = await fetch(`${API_BASE}/api/metrics/live?_t=${Date.now()}`, {
         cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
       })
       if (!res.ok) return
       const json: LiveMetricsResponse = await res.json()

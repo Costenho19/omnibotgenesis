@@ -30,7 +30,6 @@ const FLASK_API = import.meta.env.VITE_FLASK_API_URL || ''
 
 const NO_CACHE_OPTS: RequestInit = {
   cache: 'no-store',
-  headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
 }
 
 export function useLiveMetrics(refreshIntervalMs = 10000) {
