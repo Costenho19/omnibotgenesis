@@ -101,9 +101,9 @@ def _query_trading(today_start: datetime) -> dict:
             """
             SELECT
                 COUNT(*) AS total,
-                SUM(CASE WHEN decision = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
-                SUM(CASE WHEN decision = 'BLOCKED'  THEN 1 ELSE 0 END) AS blocked,
-                SUM(CASE WHEN decision = 'HOLD'     THEN 1 ELSE 0 END) AS hold
+                SUM(CASE WHEN decision IN ('APPROVED', 'APPROVE') THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN decision IN ('BLOCKED', 'BLOCK')    THEN 1 ELSE 0 END) AS blocked,
+                SUM(CASE WHEN decision = 'HOLD'                   THEN 1 ELSE 0 END) AS hold
             FROM decision_receipts
             """
         )

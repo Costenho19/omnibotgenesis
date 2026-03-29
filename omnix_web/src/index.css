@@ -211,3 +211,8 @@ body {
   color: #64748B;
   line-height: 1.6;
 }
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.35); }
+}

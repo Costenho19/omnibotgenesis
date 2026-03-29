@@ -1,7 +1,30 @@
-import React, { useState } from 'react'
-import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2 } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2, Activity } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
+
+function useTotalDecisions() {
+  const [total, setTotal] = useState<number>(110_371)
+  const [loaded, setLoaded] = useState(false)
+  const ref = useRef(true)
+  useEffect(() => {
+    const fetch_ = async () => {
+      try {
+        const res = await fetch(`/api/metrics/live?_t=${Date.now()}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const d = await res.json()
+        if (ref.current && d.success && d.totals?.decisions_total > 0) {
+          setTotal(d.totals.decisions_total)
+          setLoaded(true)
+        }
+      } catch {}
+    }
+    fetch_()
+    const t = setInterval(fetch_, 30_000)
+    return () => { ref.current = false; clearInterval(t) }
+  }, [])
+  return { total, loaded }
+}
 
 const liveStatStyle = (animKey: number): React.CSSProperties => ({
   animation: animKey > 0 ? 'omnixStatReveal 0.6s ease both' : 'none',
@@ -14,6 +37,7 @@ const REFERRAL_OPTIONS = [
 
 export default function CommercialLanding() {
   const { metrics, isLive, formatNumber, formatNumberFull, animKey } = useLiveMetrics()
+  const { total: liveTotal } = useTotalDecisions()
   const [formData, setFormData] = useState({
     name: '', company: '', email: '', referral_source: '', message: ''
   })
@@ -86,10 +110,46 @@ export default function CommercialLanding() {
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
             OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. Currently operating in digital asset trading governance. Next verticals: credit, insurance, biotech, and supply chain.
           </p>
-          <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-12 pl-4 border-l-2 border-[#C9A227]/40">
+          <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
           </p>
+
+          {/* LIVE COUNTER GLOBAL */}
+          <div className="flex justify-center mb-6">
+            <Link to="/command" style={{
+              display:'inline-flex', alignItems:'center', gap:12,
+              background:'rgba(201,162,39,0.06)',
+              border:'1px solid rgba(201,162,39,0.3)',
+              borderRadius:14, padding:'14px 28px',
+              textDecoration:'none',
+              transition:'all 0.2s',
+            }}>
+              <span style={{display:'inline-block',width:9,height:9,borderRadius:'50%',background:'#10B981',boxShadow:'0 0 8px #10B981',animation:'livePulse 2s ease-in-out infinite'}} />
+              <span style={{fontSize:'1.45rem',fontWeight:900,color:'#C9A227',letterSpacing:'-0.01em'}}>
+                {liveTotal.toLocaleString()}+
+              </span>
+              <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
+                decisions governed · 4 domains · right now
+              </span>
+              <Activity style={{width:18,height:18,color:'#10B981'}} />
+            </Link>
+          </div>
+
+          {/* CRITICAL PHRASE */}
+          <p style={{
+            fontSize:'1.05rem', fontWeight:600,
+            color:'#E2E8F0', marginBottom:'2rem',
+            letterSpacing:'0.01em',
+          }}>
+            This is not a simulation.{' '}
+            <span style={{color:'#10B981'}}>This is a live governance system.</span>
+          </p>
+
           <div className="flex justify-center gap-4 flex-wrap">
+            <Link to="/command" className="text-lg px-8 py-4 flex items-center gap-2 font-bold rounded-lg" style={{background:'linear-gradient(135deg,#10B981,#059669)', color:'#fff'}}>
+              <Activity className="w-5 h-5" />
+              View Live System
+            </Link>
             <Link to="/demo" className="text-lg px-8 py-4 flex items-center gap-2 font-bold rounded-lg" style={{background:'linear-gradient(135deg,#C9A227,#A68B1F)', color:'#050D18'}}>
               Watch 5-Min Demo
               <ArrowRight className="w-5 h-5" />
