@@ -313,12 +313,21 @@ export default function CreditLiveDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        {/* Error Banner */}
+        {/* Access Notice Banner */}
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-400/10 border border-red-400/30 text-red-400 text-sm">
-            <AlertTriangle size={16} />
-            <span>{error}</span>
-            <span className="text-red-400/60 ml-auto text-xs">Engine may be starting up — auto-retrying</span>
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-400/8 border border-amber-400/25 text-amber-300/80 text-sm">
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-400/70" />
+            <div className="flex-1 min-w-0">
+              <span className="font-medium text-amber-200/90">Islamic Credit Governance — Restricted Access</span>
+              <p className="text-amber-300/60 text-xs mt-1 leading-relaxed">
+                This vertical is currently in private testing and not yet open for public access.
+                Full launch planned following our institutional pilot phase.
+                For early access or institutional inquiries, contact{' '}
+                <a href="mailto:contacto@omnixquantum.net" className="underline underline-offset-2 hover:text-amber-200/80 transition-colors">
+                  contacto@omnixquantum.net
+                </a>
+              </p>
+            </div>
           </div>
         )}
 
