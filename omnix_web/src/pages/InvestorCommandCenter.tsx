@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
-const REFRESH_MS = 30_000
+const REFRESH_MS = 10_000
 
 interface VerticalData {
   label: string
