@@ -4,7 +4,6 @@
 OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, primarily focusing on digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making. The project aims to be a leading infrastructure for automated decision-making applicable across various high-stakes domains, ensuring high reliability and resilience.
 
 ## User Preferences
-
 ### Communication
 Simple, everyday language (Spanish primary).
 
