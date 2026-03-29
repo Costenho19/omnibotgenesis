@@ -334,7 +334,7 @@ export default function BiotechGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             The same governance engine that has processed {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles
             in digital asset trading — applied to clinical trial advancement decisions.
-            Real data from ClinicalTrials.gov. Real PQC-signed receipts. All verticals run through the same 8-checkpoint fail-closed governance engine.
+            Real data from ClinicalTrials.gov. Real PQC-signed receipts. All verticals run through the same 11-checkpoint fail-closed governance engine.
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Three pre-validated scenarios use real NCT trial data. Or configure your own parameters below.
@@ -664,7 +664,7 @@ export default function BiotechGovernanceDemo() {
               <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">Architecture — Domain Adapter Pattern</h3>
               <p className="text-sm text-muted leading-relaxed mb-4">
                 The core governance engine is domain-agnostic. It accepts 8 normalized signals (0–100)
-                and applies the same fail-closed 8-checkpoint evaluation, regardless of domain.
+                and applies the same fail-closed 11-checkpoint evaluation, regardless of domain.
                 The <strong className="text-white">Domain Adapter</strong> translates domain-specific data
                 (clinical signals, AE reports, enrollment data) into those 8 normalized inputs.
               </p>

@@ -298,7 +298,7 @@ export default function EnergyGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's governance architecture
             applies to energy trading decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
-            evaluation cycles in digital asset trading (internal dataset). All verticals run through the same 8-checkpoint fail-closed governance engine.
+            evaluation cycles in digital asset trading (internal dataset). All verticals run through the same 11-checkpoint fail-closed governance engine.
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust energy trade parameters and run the governance evaluation to see each checkpoint assess the risk in real time.
@@ -650,7 +650,7 @@ export default function EnergyGovernanceDemo() {
           <h2 className="text-2xl font-bold text-white mb-4">Four Verticals. One Governance Engine.</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
             OMNIX demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
-            Each uses the same 8-checkpoint fail-closed governance architecture with domain-specific signals.
+            Each uses the same 11-checkpoint fail-closed governance architecture with domain-specific signals.
             The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>
           <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
@@ -681,7 +681,7 @@ export default function EnergyGovernanceDemo() {
           <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
             This is a governance architecture demonstration. The energy evaluation shown uses simplified market models
             for illustrative purposes. Production energy governance would integrate with real-time grid data (CAISO, ERCOT, PJM),
-            weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 8-checkpoint architecture is
+            weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 11-checkpoint architecture is
             validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
             See ADR-026 for technical architecture details.
           </p>

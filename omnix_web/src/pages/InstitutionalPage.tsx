@@ -218,8 +218,8 @@ export default function InstitutionalPage() {
                 <span className="gold-gradient">Prevents Costly Mistakes</span>
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
-                A governance control architecture for automated decision systems. Our 8-checkpoint fail-closed engine 
-                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading (8 checkpoints: 6 core validated through Feb 2026 + CP-0 Signal Integrity + CP-7 Temporal Coherence added March 2026). Future verticals (Year 2-3+): robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.
+                A governance control architecture for automated decision systems. Our 11-checkpoint fail-closed engine 
+                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading (11 checkpoints: CP-0 SIV + CP-1–CP-5 core + CP-6 Sharia + CP-7 TCV + CP-7b FTI + CP-8 ECW + CP-9 AML + CP-10 Fraud Detection + CP-11 Jurisdiction). Future verticals (Year 2-3+): robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.
               </p>
               <div className="flex justify-center gap-4">
                 <button className="btn-primary flex items-center gap-2">
@@ -310,7 +310,7 @@ export default function InstitutionalPage() {
                   <h3 className="text-2xl font-semibold text-white mb-6">Fail-Closed by Design</h3>
                   <p className="text-muted mb-6 leading-relaxed">
                     Unlike fail-open systems that execute first and ask questions later, OMNIX blocks ALL actions by default. 
-                    Every decision must pass through 8 independent validation checkpoints before execution is allowed.
+                    Every decision must pass through 11 independent validation checkpoints before execution is allowed.
                   </p>
                   <div className="flex items-center gap-3 p-4 bg-[#0A1628]/60 rounded-xl border border-emerald-500/30">
                     <CheckCircle className="w-6 h-6 text-emerald-500" />
@@ -326,7 +326,7 @@ export default function InstitutionalPage() {
               <div className="text-center mb-12">
                 <p className="section-title">System Architecture</p>
                 <h2 className="text-3xl font-bold text-white">How OMNIX Governs Your Decisions</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">Every decision passes through a rigorous 8-checkpoint validation pipeline. If ANY checkpoint vetoes, execution is blocked.</p>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">Every decision passes through a rigorous 11-checkpoint validation pipeline. If ANY checkpoint vetoes, execution is blocked.</p>
               </div>
               
               <div className="grid md:grid-cols-4 gap-6">
@@ -413,7 +413,7 @@ export default function InstitutionalPage() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white mb-2">Terra/LUNA Forensic Reconstruction</h3>
-                    <p className="text-muted leading-relaxed">3-phase governance simulation using OMNIX's 8-checkpoint fail-closed pipeline against the largest stablecoin collapse in history. Every checkpoint score, every governance decision, and the final cryptographic receipt — documented with real market data.</p>
+                    <p className="text-muted leading-relaxed">3-phase governance simulation using OMNIX's 11-checkpoint fail-closed pipeline against the largest stablecoin collapse in history. Every checkpoint score, every governance decision, and the final cryptographic receipt — documented with real market data.</p>
                   </div>
                 </div>
 
@@ -563,7 +563,7 @@ export default function InstitutionalPage() {
                     </div>
                   </div>
                   <p className="text-muted text-sm leading-relaxed mb-4">
-                    Add institutional-grade governance validation to your existing signals. OMNIX receives your decision signals, validates them through our 8-checkpoint pipeline, and returns approve/block decisions in &lt;50ms.
+                    Add institutional-grade governance validation to your existing signals. OMNIX receives your decision signals, validates them through our 11-checkpoint pipeline, and returns approve/block decisions in &lt;50ms.
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="gold-text font-medium">API Integration</span>
@@ -802,7 +802,7 @@ export default function InstitutionalPage() {
               <div className="max-w-4xl mx-auto space-y-4">
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">Is OMNIX a trading bot?</h4>
-                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 8 independent checkpoints. Digital asset trading is the first validated vertical. The same architecture is designed to expand (Year 2-3+) into robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.</p>
+                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 11 independent checkpoints. Digital asset trading is the first validated vertical. The same architecture is designed to expand (Year 2-3+) into robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How does OMNIX integrate with existing systems?</h4>

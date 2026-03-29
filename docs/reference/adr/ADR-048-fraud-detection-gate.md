@@ -1,7 +1,8 @@
 # ADR-048: Fraud Detection Gate (CP-10)
 
-**Status:** ACCEPTED  
+**Status:** IMPLEMENTED  
 **Date:** March 25, 2026  
+**Implemented:** March 29, 2026  
 **Author:** Harold Nunes  
 **Module:** `omnix_core/governance/fraud_gate.py`
 

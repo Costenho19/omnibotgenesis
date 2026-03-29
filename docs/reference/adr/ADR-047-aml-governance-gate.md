@@ -1,7 +1,8 @@
 # ADR-047: AML Governance Gate (CP-9)
 
-**Status:** ACCEPTED  
+**Status:** IMPLEMENTED  
 **Date:** March 25, 2026  
+**Implemented:** March 29, 2026  
 **Author:** Harold Nunes  
 **Module:** `omnix_core/governance/aml_gate.py`
 

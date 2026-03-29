@@ -286,9 +286,9 @@ export default function PublicGovernanceSandbox() {
       y += scLines.length * 4.5 + 7
     }
 
-    // ── 8-CHECKPOINT PIPELINE ────────────────────────────────
+    // ── 11-CHECKPOINT PIPELINE ───────────────────────────────
     checkPage(30)
-    sectionHeader(isEs ? 'PIPELINE DE 8 CHECKPOINTS' : '8-CHECKPOINT PIPELINE')
+    sectionHeader(isEs ? 'PIPELINE DE 11 CHECKPOINTS' : '11-CHECKPOINT PIPELINE')
     result.gate_results?.forEach((g: GateResult) => {
       checkPage(10)
       const passed = g.result === 'PASS'
@@ -466,7 +466,7 @@ export default function PublicGovernanceSandbox() {
       result.explanation || '',
       ``,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      isEs ? `🔒  PIPELINE DE 8 CHECKPOINTS` : `🔒  8-CHECKPOINT PIPELINE`,
+      isEs ? `🔒  PIPELINE DE 11 CHECKPOINTS` : `🔒  11-CHECKPOINT PIPELINE`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
       isEs
@@ -494,8 +494,8 @@ export default function PublicGovernanceSandbox() {
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
       isEs
-        ? `  OMNIX es una infraestructura de gobernanza de decisiones diseñada para\n  prevenir errores en sistemas automatizados de alto riesgo.\n\n  Cada decisión pasa por 8 checkpoints independientes antes de ejecutarse,\n  generando un recibo criptográfico verificable públicamente.\n\n  Más de 775,000 ciclos de evaluación en producción.`
-        : `  OMNIX is a decision governance infrastructure designed to prevent errors\n  in high-stakes automated systems.\n\n  Every decision passes through 8 independent checkpoints before execution,\n  generating a cryptographically signed, publicly verifiable receipt.\n\n  Over 775,000 evaluation cycles in production.`,
+        ? `  OMNIX es una infraestructura de gobernanza de decisiones diseñada para\n  prevenir errores en sistemas automatizados de alto riesgo.\n\n  Cada decisión pasa por 11 checkpoints independientes antes de ejecutarse\n  — incluyendo validación AML, detección de fraude y cumplimiento jurisdiccional —\n  generando un recibo criptográfico verificable públicamente.\n\n  Más de 775,000 ciclos de evaluación en producción.`
+        : `  OMNIX is a decision governance infrastructure designed to prevent errors\n  in high-stakes automated systems.\n\n  Every decision passes through 11 independent checkpoints before execution\n  — including AML screening, fraud detection and jurisdiction compliance —\n  generating a cryptographically signed, publicly verifiable receipt.\n\n  Over 775,000 evaluation cycles in production.`,
       ``,
       `  🌐 omnixquantum.net`,
       `  📧 contacto@omnixquantum.net`,
@@ -1007,7 +1007,7 @@ export default function PublicGovernanceSandbox() {
                 <div className="p-4 rounded-lg bg-[#0A1628]/40">
                   <Shield className="w-6 h-6 text-[#C9A227] mx-auto mb-3" />
                   <h4 className="text-sm font-medium text-white mb-1">Real Pipeline</h4>
-                  <p className="text-xs text-muted">Same 8-checkpoint engine running 24/7 in production — not a simulation</p>
+                  <p className="text-xs text-muted">Same 11-checkpoint engine running 24/7 in production — not a simulation</p>
                 </div>
                 <div className="p-4 rounded-lg bg-[#0A1628]/40">
                   <ExternalLink className="w-6 h-6 text-[#C9A227] mx-auto mb-3" />

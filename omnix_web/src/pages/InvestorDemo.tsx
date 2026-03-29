@@ -304,7 +304,7 @@ export default function InvestorDemo() {
         {step === 'running' && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Evaluating scenario through 8 checkpoints...</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Evaluating scenario through 11 checkpoints...</div>
               <div style={{ fontSize: 11, color: '#C9A227' }}>
                 <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
                 {elapsed}s elapsed

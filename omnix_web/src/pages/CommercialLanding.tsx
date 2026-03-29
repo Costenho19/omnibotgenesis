@@ -109,7 +109,7 @@ export default function CommercialLanding() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">Decision Governance</h3>
               <p className="text-muted leading-relaxed">
-                Every high-stakes decision is validated through 8 independent checkpoints before execution.
+                Every high-stakes decision is validated through 11 independent checkpoints before execution.
               </p>
             </div>
 
@@ -145,7 +145,7 @@ export default function CommercialLanding() {
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">2</div>
-                <p className="text-white font-medium">OMNIX validates it through 8 checkpoints</p>
+                <p className="text-white font-medium">OMNIX validates it through 11 checkpoints</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-[#C9A227] text-[#0A1628] font-bold text-xl flex items-center justify-center mx-auto mb-4">3</div>
@@ -246,7 +246,7 @@ export default function CommercialLanding() {
                 </span>
                 <span className="text-white font-bold text-lg">Digital Asset Trading</span>
               </div>
-              <p className="text-muted text-sm mb-5">Governance layer for automated crypto trading. Every entry decision passes through 8 checkpoints + Trajectory Invariant Enforcement before execution.</p>
+              <p className="text-muted text-sm mb-5">Governance layer for automated crypto trading. Every entry decision passes through 11 checkpoints + Trajectory Invariant Enforcement before execution.</p>
               <div className="grid grid-cols-2 gap-4 mb-5">
                 <div><div className="text-xl font-bold text-[#C9A227]">119+</div><div className="text-xs text-muted">Decisions governed</div></div>
                 <div><div className="text-xl font-bold text-emerald-400">100%</div><div className="text-xs text-muted">PQC-signed receipts</div></div>
@@ -263,7 +263,7 @@ export default function CommercialLanding() {
                 </span>
                 <span className="text-white font-bold text-lg">Islamic Credit — UAE</span>
               </div>
-              <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 8 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
+              <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 11 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
               <div className="grid grid-cols-2 gap-4 mb-5">
                 <div><div className="text-xl font-bold text-violet-400">3,700+</div><div className="text-xs text-muted">Applications evaluated</div></div>
                 <div><div className="text-xl font-bold text-violet-400">AED 15B+</div><div className="text-xs text-muted">Financing governed</div></div>

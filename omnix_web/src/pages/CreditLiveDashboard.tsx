@@ -649,7 +649,7 @@ export default function CreditLiveDashboard() {
               This engine generates synthetic Islamic finance applications calibrated to UAE/GCC market
               parameters (credit scores, DSR ratios, collateral types, financing amounts). Macroeconomic
               signals (Federal Funds Rate, credit spreads) are sourced from real APIs. The governance
-              pipeline, all 8 checkpoints, and every PQC-signed receipt are fully real and production-grade.
+              pipeline, all 11 checkpoints, and every PQC-signed receipt are fully real and production-grade.
             </p>
             <p className="text-xs text-white/30 leading-relaxed">
               This vertical demonstrates how the same OMNIX Decision Governance Infrastructure adapts

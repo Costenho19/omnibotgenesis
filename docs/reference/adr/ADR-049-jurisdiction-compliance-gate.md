@@ -1,7 +1,8 @@
 # ADR-049: Jurisdiction Compliance Gate (CP-11)
 
-**Status:** ACCEPTED  
+**Status:** IMPLEMENTED  
 **Date:** March 25, 2026  
+**Implemented:** March 29, 2026  
 **Author:** Harold Nunes  
 **Module:** `omnix_core/governance/jurisdiction_gate.py`
 
