@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 function useTotalDecisions() {
-  const [total, setTotal] = useState<number>(110_371)
+  const [total, setTotal] = useState<number>(113_349)
   const [loaded, setLoaded] = useState(false)
   const ref = useRef(true)
   useEffect(() => {
@@ -20,7 +20,7 @@ function useTotalDecisions() {
       } catch {}
     }
     fetch_()
-    const t = setInterval(fetch_, 30_000)
+    const t = setInterval(fetch_, 10_000)
     return () => { ref.current = false; clearInterval(t) }
   }, [])
   return { total, loaded }

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
-const REFRESH_INTERVAL = 30_000
+const REFRESH_INTERVAL = 10_000
 const RETRY_INTERVAL = 6_000
 
 interface Metrics {

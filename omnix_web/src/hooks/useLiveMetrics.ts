@@ -15,9 +15,9 @@ const calcUptimeDays = () =>
   Math.floor((Date.now() - TRACK_RECORD_START.getTime()) / 86400000) + 1
 
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 766741,
-  pqc_signed_receipts: 82518,
-  decisions_blocked: 9317,
+  evaluation_cycles: 791_103,
+  pqc_signed_receipts: 106_367,
+  decisions_blocked: 10_224,
   capital_preserved_pct: 98.42,
   verticals_demo: 4,
   system_uptime_days: calcUptimeDays(),
@@ -33,7 +33,7 @@ const NO_CACHE_OPTS: RequestInit = {
   headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
 }
 
-export function useLiveMetrics(refreshIntervalMs = 60000) {
+export function useLiveMetrics(refreshIntervalMs = 10000) {
   const [metrics, setMetrics] = useState<LiveMetrics>(FALLBACK_METRICS)
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(true)
