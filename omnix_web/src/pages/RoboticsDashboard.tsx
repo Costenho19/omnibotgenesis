@@ -291,14 +291,14 @@ export default function RoboticsDashboard() {
             {
               icon: <Radio size={18} className="text-[#C9A227]" />,
               label: 'Avg Sensor Confidence', sub: 'LiDAR + Camera + IMU',
-              value: loading ? '—' : `${(m?.avg_sensor_confidence ?? 0).toFixed(1)}%`,
+              value: loading ? '—' : `${Number(m?.avg_sensor_confidence ?? 0).toFixed(1)}%`,
               valueClass: 'text-[#C9A227]',
             },
             {
               icon: <AlertTriangle size={18} className="text-red-400" />,
               label: 'Avg Collision Risk', sub: `${m?.active_robots ?? 0} active robots`,
-              value: loading ? '—' : `${(m?.avg_collision_risk ?? 0).toFixed(1)}`,
-              valueClass: (m?.avg_collision_risk ?? 0) > 40 ? 'text-red-400' : 'text-white',
+              value: loading ? '—' : `${Number(m?.avg_collision_risk ?? 0).toFixed(1)}`,
+              valueClass: Number(m?.avg_collision_risk ?? 0) > 40 ? 'text-red-400' : 'text-white',
             },
           ].map((card, i) => (
             <div key={i} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-5">
@@ -316,9 +316,9 @@ export default function RoboticsDashboard() {
 
         {/* Secondary metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricPill label="Actions Approved" value={`${((m?.approval_rate ?? 0) * 100).toFixed(1)}%`} color="text-emerald-400" />
+          <MetricPill label="Actions Approved" value={`${(Number(m?.approval_rate ?? 0) * 100).toFixed(1)}%`} color="text-emerald-400" />
           <MetricPill label="Actions Blocked" value={fmt2(m?.actions_blocked ?? 0)} color="text-red-400" />
-          <MetricPill label="Avg Decision Score" value={`${(m?.avg_decision_score ?? 0).toFixed(1)}/100`} color="text-[#C9A227]" />
+          <MetricPill label="Avg Decision Score" value={`${Number(m?.avg_decision_score ?? 0).toFixed(1)}/100`} color="text-[#C9A227]" />
           <MetricPill label="Simulation Cycles" value={fmt2(m?.simulation_cycles ?? 0)} color="text-blue-400" />
         </div>
 
@@ -342,13 +342,13 @@ export default function RoboticsDashboard() {
                       <span className="text-white/25">{ind.total}</span>
                     </div>
                     <div className="flex items-center gap-3 text-white/40">
-                      <span className="text-emerald-400/80">{(ind.approval_rate * 100).toFixed(0)}% pass</span>
+                      <span className="text-emerald-400/80">{(Number(ind.approval_rate ?? 0) * 100).toFixed(0)}% pass</span>
                       <span className="text-amber-400/70">{ind.safety_prevented} prevented</span>
                     </div>
                   </div>
                   <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${ind.approval_rate * 100}%`, backgroundColor: INDUSTRY_COLORS[ind.industry] ?? '#666', opacity: 0.7 }} />
+                      style={{ width: `${Number(ind.approval_rate ?? 0) * 100}%`, backgroundColor: INDUSTRY_COLORS[ind.industry] ?? '#666', opacity: 0.7 }} />
                   </div>
                 </div>
               ))}
@@ -374,11 +374,11 @@ export default function RoboticsDashboard() {
                     </div>
                     <div className="h-1 bg-white/[0.04] rounded-full overflow-hidden">
                       <div className="h-full bg-blue-500/60 rounded-full"
-                        style={{ width: `${r.approval_rate * 100}%` }} />
+                        style={{ width: `${Number(r.approval_rate ?? 0) * 100}%` }} />
                     </div>
                   </div>
                   <div className="text-right text-xs">
-                    <div className="text-emerald-400/80">{(r.approval_rate * 100).toFixed(0)}%</div>
+                    <div className="text-emerald-400/80">{(Number(r.approval_rate ?? 0) * 100).toFixed(0)}%</div>
                     <div className="text-white/25">pass</div>
                   </div>
                 </div>
@@ -418,19 +418,19 @@ export default function RoboticsDashboard() {
                   <div className="grid grid-cols-2 gap-1 text-[10px]">
                     <div className="flex items-center gap-1 text-white/40">
                       <Radio size={9} />
-                      <span>{robot.sensor_confidence?.toFixed(0) ?? '—'}%</span>
+                      <span>{Number(robot.sensor_confidence ?? 0).toFixed(0)}%</span>
                     </div>
                     <div className="flex items-center gap-1 text-white/40">
                       <Battery size={9} />
-                      <span className={robot.battery_pct < 20 ? 'text-red-400' : ''}>{robot.battery_pct?.toFixed(0) ?? '—'}%</span>
+                      <span className={Number(robot.battery_pct ?? 0) < 20 ? 'text-red-400' : ''}>{Number(robot.battery_pct ?? 0).toFixed(0)}%</span>
                     </div>
                     <div className="flex items-center gap-1 text-white/40">
                       <Thermometer size={9} />
-                      <span className={robot.temperature_c > 75 ? 'text-amber-400' : ''}>{robot.temperature_c?.toFixed(0) ?? '—'}°C</span>
+                      <span className={Number(robot.temperature_c ?? 0) > 75 ? 'text-amber-400' : ''}>{Number(robot.temperature_c ?? 0).toFixed(0)}°C</span>
                     </div>
                     <div className="flex items-center gap-1 text-white/40">
                       <Shield size={9} />
-                      <span>{robot.collision_risk?.toFixed(0) ?? '—'}</span>
+                      <span>{Number(robot.collision_risk ?? 0).toFixed(0)}</span>
                     </div>
                   </div>
                   <div className="mt-2 pt-2 border-t border-white/[0.04]">
@@ -525,18 +525,18 @@ export default function RoboticsDashboard() {
                     </td>
                     <td className="px-4 py-3 text-white/50 text-[10px]">{a.action_type?.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-3">
-                      <span className={a.sensor_confidence < 50 ? 'text-amber-400' : 'text-white/60'}>
-                        {a.sensor_confidence?.toFixed(0) ?? '—'}%
+                      <span className={Number(a.sensor_confidence ?? 0) < 50 ? 'text-amber-400' : 'text-white/60'}>
+                        {Number(a.sensor_confidence ?? 0).toFixed(0)}%
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={a.collision_risk > 65 ? 'text-red-400' : a.collision_risk > 40 ? 'text-amber-400' : 'text-emerald-400'}>
-                        {a.collision_risk?.toFixed(1) ?? '—'}
+                      <span className={Number(a.collision_risk ?? 0) > 65 ? 'text-red-400' : Number(a.collision_risk ?? 0) > 40 ? 'text-amber-400' : 'text-emerald-400'}>
+                        {Number(a.collision_risk ?? 0).toFixed(1)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={a.battery_pct < 20 ? 'text-red-400' : 'text-white/50'}>
-                        {a.battery_pct?.toFixed(0) ?? '—'}%
+                      <span className={Number(a.battery_pct ?? 0) < 20 ? 'text-red-400' : 'text-white/50'}>
+                        {Number(a.battery_pct ?? 0).toFixed(0)}%
                       </span>
                     </td>
                     <td className="px-4 py-3"><DecisionBadge decision={a.decision} /></td>
