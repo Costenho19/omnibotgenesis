@@ -12,6 +12,7 @@ import CreditLiveDashboard from './pages/CreditLiveDashboard'
 import InsuranceDashboard from './pages/InsuranceDashboard'
 import RoboticsDashboard from './pages/RoboticsDashboard'
 import InvestorDemo from './pages/InvestorDemo'
+import InvestorCommandCenter from './pages/InvestorCommandCenter'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
@@ -23,6 +24,7 @@ function App() {
         <Route path="/" element={<CommercialLanding />} />
         <Route path="/institutional" element={<InstitutionalPage />} />
         <Route path="/demo" element={<InvestorDemo />} />
+        <Route path="/command" element={<InvestorCommandCenter />} />
         <Route path="/governance-demo" element={<CreditGovernanceDemo />} />
         <Route path="/governance-demo-insurance" element={<InsuranceGovernanceDemo />} />
         <Route path="/governance-demo-energy" element={<EnergyGovernanceDemo />} />

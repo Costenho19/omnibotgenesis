@@ -63,8 +63,10 @@ def create_app():
         public_sandbox_bp, public_verify_bp,
     )
     from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp
+    from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
 
     # domain vertical blueprints FIRST — ensure /api/* routes take priority over views_bp catch-all
+    app.register_blueprint(live_metrics_bp)
     app.register_blueprint(credit_bp)
     app.register_blueprint(insurance_bp)
     app.register_blueprint(robotics_bp)

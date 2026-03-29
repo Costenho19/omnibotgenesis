@@ -69,6 +69,7 @@ export default function CommercialLanding() {
             <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.85rem'}}>Islamic Credit</Link>
             <Link to="/insurance" className="nav-link font-semibold" style={{color:'#60a5fa', fontSize:'0.85rem'}}>Insurance</Link>
             <Link to="/robotics" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.85rem'}}>Robotics</Link>
+            <Link to="/command" className="nav-link font-semibold" style={{color:'#10B981', background:'rgba(16,185,129,0.08)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(16,185,129,0.25)', fontSize:'0.82rem'}}>⚡ Live Data</Link>
             <Link to="/demo" className="nav-link font-semibold" style={{color:'#C9A227', background:'rgba(201,162,39,0.1)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(201,162,39,0.3)'}}>5-Min Demo</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>

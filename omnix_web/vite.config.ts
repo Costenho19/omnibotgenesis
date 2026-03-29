@@ -43,6 +43,18 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/api/metrics': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/api/insurance': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/api/robotics': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   }
 })
