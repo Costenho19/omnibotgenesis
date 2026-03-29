@@ -30,7 +30,7 @@ from typing import Optional
 
 logger = logging.getLogger("OMNIX.Robotics.Simulator")
 
-CYCLE_INTERVAL = 180.0       # 3 minutes between cycles
+CYCLE_INTERVAL = 300.0       # 5 minutes between cycles
 BATCH_SIZE_MIN = 6
 BATCH_SIZE_MAX = 15
 

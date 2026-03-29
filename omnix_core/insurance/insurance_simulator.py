@@ -30,7 +30,7 @@ from typing import Optional
 
 logger = logging.getLogger("OMNIX.Insurance.Simulator")
 
-CYCLE_INTERVAL = 240.0       # 4 minutes between cycles
+CYCLE_INTERVAL = 300.0       # 5 minutes between cycles
 BATCH_SIZE_MIN = 4
 BATCH_SIZE_MAX = 10
 
