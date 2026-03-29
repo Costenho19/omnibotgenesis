@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to prevent high-stakes decision-making errors in automated systems, primarily focusing on digital asset trading. Its core purpose is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making. The project aims to be a leading infrastructure for automated decision-making applicable across various high-stakes domains, ensuring high reliability and resilience.
+OMNIX is a domain-agnostic Decision Governance Infrastructure aimed at preventing high-stakes decision-making errors in automated systems, especially in digital asset trading. Its primary goal is to provide reliable, error-free decision governance to protect capital and enhance financial integrity, establishing a secure and foundational infrastructure for automated decision-making. The project aspires to be a leading infrastructure for automated decision-making across various high-stakes domains, ensuring high reliability and resilience.
 
 ## User Preferences
 ### Communication
@@ -150,8 +150,8 @@ OMNIX employs a hexagonal architecture, integrating an AutoTradingBot, Non-Marko
 ### Key Gates and Vertical Controls
 -   **Context Admission Gate (CAG — ADR-050):** Session-level pre-admission gate evaluating 4 global market conditions.
 -   **Trajectory Invariant Enforcement (TIE — ADR-053):** Post-pipeline gate enforcing bounded evolution over the decision space.
--   **AML Governance Gate (CP-9 — ADR-047):** Screens for privacy coins, mixer tokens, anomalous volume, and structuring patterns, aligned with FATF Rec.15, FinCEN, and UAE Central Bank.
--   **Fraud Detection Gate (CP-10 — ADR-048):** Detects market manipulation with hard vetoes on extreme DCI and technical/sentiment divergence, aligned with EU AI Act Art. 6, MiFID II, and SEC Rule 10b-5.
+-   **AML Governance Gate (CP-9 — ADR-047):** Screens for privacy coins, mixer tokens, anomalous volume, and structuring patterns.
+-   **Fraud Detection Gate (CP-10 — ADR-048):** Detects market manipulation with hard vetoes on extreme DCI and technical/sentiment divergence.
 -   **Jurisdiction Compliance Gate (CP-11 — ADR-049):** Validates regulatory compliance for various jurisdictions including UAE (VARA), EU (MiCA), US (FinCEN/SEC), GCC, and Global, with OFAC sanctions screening.
 -   **Islamic Credit Governance Vertical — ADR-052:** Evaluates simulated Islamic finance credit applications.
 
