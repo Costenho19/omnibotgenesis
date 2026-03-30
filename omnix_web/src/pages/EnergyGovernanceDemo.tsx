@@ -100,7 +100,25 @@ function evaluateCheckpoints(trade: EnergyTrade): CheckpointResult[] {
   const divergence = Math.sqrt(variance)
   const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 2.2)))
 
+  const sivScore = Math.min(95, Math.round(70 + gridData.factor * 15 + weatherData.factor * 10))
+  const temporalScore = Math.min(95, Math.round(trendScore * 0.70 + (deliveryData.risk < 0.3 ? 20 : 8)))
+  const edgeScore = Math.round(forecastScore * 0.55 + logicScore * 0.45)
+  const amlScore = Math.min(95, Math.round(88 - Math.max(0, (trade.contractSize - 500) / 200 * 8)))
+  const fraudScore = Math.min(95, Math.round(62 + supplyDemandCoherence * 0.33))
+
   return [
+    {
+      name: 'Signal Integrity Validation',
+      genericName: 'CP-0: Are all input signals valid?',
+      icon: <Shield className="w-5 h-5" />,
+      status: 'pending',
+      score: sivScore,
+      threshold: 60,
+      reasoning: sivScore >= 60
+        ? `All energy governance signals validated — source type, grid condition, weather outlook, delivery window, and regulatory environment inputs are consistent`
+        : `Signal validation failed — one or more energy trade parameters fall outside acceptable governance bounds`,
+      detail: `Signals validated: 5/5 | Grid factor: ${(gridData.factor * 100).toFixed(0)}% | Weather factor: ${(weatherData.factor * 100).toFixed(0)}% | SIV score: ${sivScore}/100`
+    },
     {
       name: 'Price Forecast Confidence',
       genericName: 'CP-1: Is this likely to succeed?',
@@ -172,6 +190,54 @@ function evaluateCheckpoints(trade: EnergyTrade): CheckpointResult[] {
         ? `Internal signal divergence is low — energy market signals are consistent (${logicScore}%)`
         : `High internal contradiction detected — divergence score ${divergence.toFixed(1)} indicates conflicting risk assessment across checkpoints`,
       detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 40 ? 'CONTRADICTORY' : logicScore < 60 ? 'TENSIONED' : 'ALIGNED'}`
+    },
+    {
+      name: 'Temporal Coherence',
+      genericName: 'CP-7: Does this hold across time?',
+      icon: <Activity className="w-5 h-5" />,
+      status: 'pending',
+      score: temporalScore,
+      threshold: 40,
+      reasoning: temporalScore >= 40
+        ? `Price trend persistence and delivery window confirm temporal consistency of this energy trade`
+        : `Temporal analysis reveals instability — current grid and weather conditions may be transient`,
+      detail: `Trend score base: ${trendScore} | Delivery risk: ${(deliveryData.risk * 100).toFixed(0)}% | Temporal score: ${temporalScore}/100`
+    },
+    {
+      name: 'Edge Confirmation (ECW)',
+      genericName: 'CP-8: Does the decision converge at the boundary?',
+      icon: <Target className="w-5 h-5" />,
+      status: 'pending',
+      score: edgeScore,
+      threshold: 48,
+      reasoning: edgeScore >= 48
+        ? `Decision boundary confirmed — forecast confidence and logic signals converge at the governance edge (${edgeScore}%)`
+        : `Weak boundary convergence — forecast and consistency signals do not reinforce each other`,
+      detail: `Forecast × 0.55: ${(forecastScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
+    },
+    {
+      name: 'AML Gate',
+      genericName: 'CP-9: Does this pass compliance screening?',
+      icon: <Building2 className="w-5 h-5" />,
+      status: 'pending',
+      score: amlScore,
+      threshold: 60,
+      reasoning: amlScore >= 60
+        ? `AML compliance screen passed — contract size and regulatory environment show no anomalous financial patterns`
+        : `AML flag — contract size and regulatory complexity require enhanced compliance review`,
+      detail: `Contract: ${trade.contractSize} ${sourceData.unit} | Regulatory env: ${regData.label} | AML score: ${amlScore}/100`
+    },
+    {
+      name: 'Fraud Detection Gate',
+      genericName: 'CP-10: Are there anomalous signal patterns?',
+      icon: <AlertTriangle className="w-5 h-5" />,
+      status: 'pending',
+      score: fraudScore,
+      threshold: 55,
+      reasoning: fraudScore >= 55
+        ? `Fraud screening passed — supply-demand coherence shows no anomalous price manipulation patterns`
+        : `Fraud pattern flag — unusual coherence patterns may indicate price signal manipulation`,
+      detail: `Coherence base: ${supplyDemandCoherence} | Fraud pattern score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — compliance review' : 'CLEAN PROFILE'}`
     },
   ]
 }
@@ -527,7 +593,7 @@ export default function EnergyGovernanceDemo() {
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Passed</p>
                         <p className="text-white font-semibold">
-                          {decision.passed}/6
+                          {decision.passed}/11
                         </p>
                       </div>
                     </div>

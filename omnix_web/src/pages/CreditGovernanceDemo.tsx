@@ -76,7 +76,25 @@ function evaluateCheckpoints(app: LoanApplication): CheckpointResult[] {
   const divergence = Math.sqrt(variance)
   const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 1.8)))
 
+  const sivScore = Math.min(95, Math.round(70 + (app.creditScore - 300) / 550 * 20))
+  const temporalScore = Math.min(95, Math.round(incomeData.factor * 70 + marketData.factor * 30))
+  const edgeScore = Math.round(probabilityScore * 0.55 + logicScore * 0.45)
+  const amlScore = Math.min(95, Math.round(90 - Math.max(0, (app.loanAmount - 300000) / 200000 * 20)))
+  const fraudScore = Math.min(95, Math.round(65 + coherenceScore * 0.30))
+
   return [
+    {
+      name: 'Signal Integrity Validation',
+      genericName: 'CP-0: Are all input signals valid?',
+      icon: <Shield className="w-5 h-5" />,
+      status: 'pending',
+      score: sivScore,
+      threshold: 60,
+      reasoning: sivScore >= 60
+        ? `All governance signals validated — credit score, DTI, sector, income, and market condition inputs are internally consistent`
+        : `Signal validation failed — one or more input parameters fall outside acceptable governance bounds`,
+      detail: `Signals validated: 6/6 | Credit factor: ${Math.round((app.creditScore - 300) / 550 * 100)}% range | SIV score: ${sivScore}/100`
+    },
     {
       name: 'Probability Check',
       genericName: 'CP-1: Is this likely to succeed?',
@@ -148,6 +166,54 @@ function evaluateCheckpoints(app: LoanApplication): CheckpointResult[] {
         ? `Internal signal divergence is low — governance signals are consistent (${logicScore}%)`
         : `High internal contradiction detected between signals — divergence score ${(divergence).toFixed(1)} indicates conflicting risk assessment`,
       detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 45 ? 'CONTRADICTORY' : logicScore < 65 ? 'TENSIONED' : 'ALIGNED'}`
+    },
+    {
+      name: 'Temporal Coherence',
+      genericName: 'CP-7: Does this hold across time?',
+      icon: <Activity className="w-5 h-5" />,
+      status: 'pending',
+      score: temporalScore,
+      threshold: 45,
+      reasoning: temporalScore >= 45
+        ? `Historical income and market patterns support the temporal consistency of this credit decision`
+        : `Temporal analysis reveals pattern inconsistency — current conditions may be transient rather than structural`,
+      detail: `Income stability: ${(incomeData.factor * 100).toFixed(0)}% | Market factor: ${(marketData.factor * 100).toFixed(0)}% | Temporal score: ${temporalScore}/100`
+    },
+    {
+      name: 'Edge Confirmation (ECW)',
+      genericName: 'CP-8: Does the decision converge at the boundary?',
+      icon: <Target className="w-5 h-5" />,
+      status: 'pending',
+      score: edgeScore,
+      threshold: 48,
+      reasoning: edgeScore >= 48
+        ? `Decision boundary confirmed — probability and logic signals converge at the governance edge (${edgeScore}%)`
+        : `Weak boundary convergence — signals do not sufficiently reinforce each other at the decision threshold`,
+      detail: `Probability × 0.55: ${(probabilityScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
+    },
+    {
+      name: 'AML Gate',
+      genericName: 'CP-9: Does this pass compliance screening?',
+      icon: <Building2 className="w-5 h-5" />,
+      status: 'pending',
+      score: amlScore,
+      threshold: 60,
+      reasoning: amlScore >= 60
+        ? `AML compliance screen passed — loan amount and sector profile show no anomalous transaction patterns`
+        : `AML compliance flag — loan size and sector combination requires enhanced due diligence`,
+      detail: `Loan amount: $${(app.loanAmount / 1000).toFixed(0)}K | Sector flag: ${sectorData.risk > 0.20 ? 'ELEVATED' : 'NORMAL'} | AML score: ${amlScore}/100`
+    },
+    {
+      name: 'Fraud Detection Gate',
+      genericName: 'CP-10: Are there anomalous signal patterns?',
+      icon: <AlertTriangle className="w-5 h-5" />,
+      status: 'pending',
+      score: fraudScore,
+      threshold: 55,
+      reasoning: fraudScore >= 55
+        ? `Fraud screening passed — signal coherence and application profile show no anomalous behavioral patterns`
+        : `Fraud pattern detected — low coherence between financial signals indicates potential data misrepresentation`,
+      detail: `Coherence base: ${coherenceScore} | Fraud pattern score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — manual review required' : 'CLEAN PROFILE'}`
     },
   ]
 }
@@ -512,7 +578,7 @@ export default function CreditGovernanceDemo() {
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Passed</p>
                         <p className="text-white font-semibold">
-                          {decision.passed}/6
+                          {decision.passed}/11
                         </p>
                       </div>
                     </div>

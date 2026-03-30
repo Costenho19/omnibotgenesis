@@ -430,7 +430,7 @@ async def run_credit_simulation_cycle(cycle_num: int, conn) -> list:
             logger.info(
                 f"[CreditSim] Cycle {cycle_num} | {app.application_id} | "
                 f"{app.applicant_type} | {app.sector} | {amount_aed} | "
-                f"{approved} | CP_passed={result.get('checkpoints_passed', 0)}/8"
+                f"{approved} | CP_passed={result.get('checkpoints_passed', 0)}/{result.get('checkpoints_total', 11)}"
             )
 
     await save_cycle_metrics(cycle_num, results, macro, conn)

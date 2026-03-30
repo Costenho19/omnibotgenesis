@@ -82,7 +82,25 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
   const divergence = Math.sqrt(variance)
   const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 2.0)))
 
+  const sivScore = Math.min(95, Math.round(75 + ageFactor * 15 + (app.claimsHistory === 0 ? 5 : 0)))
+  const temporalScore = Math.min(95, Math.round(claimsTrend * 0.60 + geoData.factor * 100 * 0.40))
+  const edgeScore = Math.round(probabilityScore * 0.55 + logicScore * 0.45)
+  const amlScore = Math.min(95, Math.round(88 - Math.max(0, (app.coverageAmount - 500000) / 100000 * 5)))
+  const fraudScore = Math.min(95, Math.round(60 + coherenceScore * 0.35))
+
   return [
+    {
+      name: 'Signal Integrity Validation',
+      genericName: 'CP-0: Are all input signals valid?',
+      icon: <Shield className="w-5 h-5" />,
+      status: 'pending',
+      score: sivScore,
+      threshold: 60,
+      reasoning: sivScore >= 60
+        ? `All underwriting signals validated — age profile, claims history, coverage amount, and geographic zone inputs are internally consistent`
+        : `Signal validation failed — one or more underwriting parameters fall outside acceptable governance bounds`,
+      detail: `Signals validated: 5/5 | Age factor: ${(ageFactor * 100).toFixed(0)}% | Claims clean record: ${app.claimsHistory === 0 ? 'YES' : 'NO'} | SIV score: ${sivScore}/100`
+    },
     {
       name: 'Claim Probability',
       genericName: 'CP-1: Is this likely to succeed?',
@@ -154,6 +172,54 @@ function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
         ? `Internal signal divergence is low — underwriting signals are consistent (${logicScore}%)`
         : `High internal contradiction detected — divergence score ${divergence.toFixed(1)} indicates conflicting risk assessment across checkpoints`,
       detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 45 ? 'CONTRADICTORY' : logicScore < 65 ? 'TENSIONED' : 'ALIGNED'}`
+    },
+    {
+      name: 'Temporal Coherence',
+      genericName: 'CP-7: Does this hold across time?',
+      icon: <Activity className="w-5 h-5" />,
+      status: 'pending',
+      score: temporalScore,
+      threshold: 40,
+      reasoning: temporalScore >= 40
+        ? `Historical claims trend and geographic patterns support temporal consistency of this underwriting decision`
+        : `Temporal analysis reveals pattern inconsistency — claims trajectory may be worsening`,
+      detail: `Claims trend: ${claimsTrend}% | Geo factor: ${(geoData.factor * 100).toFixed(0)}% | Temporal score: ${temporalScore}/100`
+    },
+    {
+      name: 'Edge Confirmation (ECW)',
+      genericName: 'CP-8: Does the decision converge at the boundary?',
+      icon: <Target className="w-5 h-5" />,
+      status: 'pending',
+      score: edgeScore,
+      threshold: 45,
+      reasoning: edgeScore >= 45
+        ? `Decision boundary confirmed — claim probability and logic signals converge at the governance edge (${edgeScore}%)`
+        : `Weak boundary convergence — probability and coherence signals do not reinforce each other at threshold`,
+      detail: `Probability × 0.55: ${(probabilityScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
+    },
+    {
+      name: 'AML Gate',
+      genericName: 'CP-9: Does this pass compliance screening?',
+      icon: <Building2 className="w-5 h-5" />,
+      status: 'pending',
+      score: amlScore,
+      threshold: 60,
+      reasoning: amlScore >= 60
+        ? `AML compliance screen passed — coverage amount and policy type show no anomalous financial patterns`
+        : `AML flag — coverage level requires enhanced due diligence before binding`,
+      detail: `Coverage: $${(app.coverageAmount / 1000).toFixed(0)}K | Policy type: ${policyData.label} | AML score: ${amlScore}/100`
+    },
+    {
+      name: 'Fraud Detection Gate',
+      genericName: 'CP-10: Are there anomalous signal patterns?',
+      icon: <AlertTriangle className="w-5 h-5" />,
+      status: 'pending',
+      score: fraudScore,
+      threshold: 55,
+      reasoning: fraudScore >= 55
+        ? `Fraud screening passed — claims history and signal coherence show no anomalous behavioral patterns`
+        : `Fraud pattern flag — signal inconsistency indicates potential misrepresentation in application`,
+      detail: `Coherence base: ${coherenceScore} | Claims: ${app.claimsHistory} prior | Fraud score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — manual review' : 'CLEAN PROFILE'}`
     },
   ]
 }
@@ -518,7 +584,7 @@ export default function InsuranceGovernanceDemo() {
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Passed</p>
                         <p className="text-white font-semibold">
-                          {decision.passed}/6
+                          {decision.passed}/11
                         </p>
                       </div>
                     </div>

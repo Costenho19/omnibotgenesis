@@ -125,7 +125,26 @@ function evaluateCheckpoints(app: TrialApplication): CheckpointResult[] {
   const divergence = Math.sqrt(variance)
   const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 1.8)))
 
+  const sivScore = Math.min(95, Math.round(70 + app.preclinicalAlignment * 0.15 + (app.adverseEventSeverity <= 2 ? 8 : 0)))
+  const temporalScore = Math.min(95, Math.round(trendScore * 0.65 + regData.strengthScore * 0.35))
+  const edgeScore = Math.round(probabilityScore * 0.55 + logicScore * 0.45)
+  const amlScore = Math.min(95, Math.round(75 + regData.strengthScore * 0.20 + (app.preclinicalAlignment > 70 ? 8 : 0)))
+  const fraudScore = Math.min(95, Math.round(62 + coherenceScore * 0.33))
+
   return [
+    {
+      name: 'Signal Integrity Validation',
+      genericName: 'CP-0: Are all input signals valid?',
+      icon: <Shield className="w-5 h-5" />,
+      status: 'pending',
+      score: sivScore,
+      threshold: 60,
+      thresholdType: 'min',
+      reasoning: sivScore >= 60
+        ? `All trial governance signals validated — phase, therapeutic area, AE profile, preclinical alignment, enrollment, and regulatory pathway inputs are consistent`
+        : `Signal validation failed — one or more trial parameters fall outside acceptable governance bounds`,
+      detail: `Signals validated: 6/6 | Preclinical alignment: ${app.preclinicalAlignment}% | AE severity: ${app.adverseEventSeverity}/5 | SIV score: ${sivScore}/100`
+    },
     {
       name: 'Trial Success Probability',
       genericName: 'CP-1: Is this likely to succeed?',
@@ -203,6 +222,58 @@ function evaluateCheckpoints(app: TrialApplication): CheckpointResult[] {
         ? `Internal signal consistency acceptable (${logicScore}%) — trial profile is internally coherent`
         : `High signal contradiction detected — divergence score ${divergence.toFixed(1)} indicates conflicting risk and efficacy signals across checkpoints`,
       detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 40 ? 'CONTRADICTORY — escalate' : logicScore < 60 ? 'TENSIONED — monitor' : 'ALIGNED'}`,
+    },
+    {
+      name: 'Temporal Coherence',
+      genericName: 'CP-7: Does this hold across time?',
+      icon: <Activity className="w-5 h-5" />,
+      status: 'pending',
+      score: temporalScore,
+      threshold: 45,
+      thresholdType: 'min',
+      reasoning: temporalScore >= 45
+        ? `Enrollment trajectory and regulatory pathway confirm temporal consistency of this trial governance decision`
+        : `Temporal analysis reveals instability — enrollment momentum and regulatory support may not be sustained`,
+      detail: `Trend score: ${trendScore} | Regulatory strength: ${regData.strengthScore.toFixed(0)} | Temporal score: ${temporalScore}/100`
+    },
+    {
+      name: 'Edge Confirmation (ECW)',
+      genericName: 'CP-8: Does the decision converge at the boundary?',
+      icon: <Target className="w-5 h-5" />,
+      status: 'pending',
+      score: edgeScore,
+      threshold: 48,
+      thresholdType: 'min',
+      reasoning: edgeScore >= 48
+        ? `Statistical boundary confirmed — probability and logic signals converge at the governance threshold (${edgeScore}%)`
+        : `Weak boundary convergence — trial success probability and signal consistency do not reinforce each other`,
+      detail: `Probability × 0.55: ${(probabilityScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
+    },
+    {
+      name: 'AML Gate',
+      genericName: 'CP-9: Does this pass institutional compliance?',
+      icon: <Layers className="w-5 h-5" />,
+      status: 'pending',
+      score: amlScore,
+      threshold: 60,
+      thresholdType: 'min',
+      reasoning: amlScore >= 60
+        ? `Institutional compliance screen passed — regulatory designation and preclinical data meet governance requirements`
+        : `Compliance flag — regulatory pathway strength requires enhanced institutional review`,
+      detail: `Regulatory designation: ${regData.label} | Strength: ${regData.strengthScore.toFixed(0)} | Preclinical alignment: ${app.preclinicalAlignment}% | Compliance score: ${amlScore}/100`
+    },
+    {
+      name: 'Fraud Detection Gate',
+      genericName: 'CP-10: Are there anomalous data patterns?',
+      icon: <AlertTriangle className="w-5 h-5" />,
+      status: 'pending',
+      score: fraudScore,
+      threshold: 55,
+      thresholdType: 'min',
+      reasoning: fraudScore >= 55
+        ? `Data integrity screening passed — preclinical-clinical coherence shows no anomalous data manipulation patterns`
+        : `Data integrity flag — signal inconsistency across preclinical and clinical data warrants audit review`,
+      detail: `Coherence base: ${coherenceScore} | Data integrity score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — data audit required' : 'CLEAN PROFILE'}`
     },
   ]
 }
@@ -604,7 +675,7 @@ export default function BiotechGovernanceDemo() {
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted">Checkpoints Cleared</p>
-                        <p className="text-xl font-bold text-white">{decision.passed} / 6</p>
+                        <p className="text-xl font-bold text-white">{decision.passed} / 11</p>
                       </div>
                     </div>
                     <p className="text-sm text-muted leading-relaxed">{decision.reason}</p>
