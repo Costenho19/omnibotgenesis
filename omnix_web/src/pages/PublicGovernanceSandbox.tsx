@@ -118,7 +118,7 @@ export default function PublicGovernanceSandbox() {
         body: JSON.stringify({
           scenario_text: scenario.trim().slice(0, 1500),
           ...(companyName ? { company_name: companyName } : {}),
-          ...(language !== 'auto' ? { language } : {}),
+          language: language === 'auto' ? 'en' : language,
           ...(email.trim() ? { email: email.trim() } : {}),
         }),
       })

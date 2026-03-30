@@ -235,7 +235,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         domain = 'generic'
 
     asset_name = company_name or 'Entity Under Review'
-    lang = language_hint or 'es'
+    lang = language_hint or 'en'
 
     if is_critical:
         prob_score = max(5,  min(18, adjusted + ((seed & 0x3) % 5)))
@@ -632,7 +632,7 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     is_governance_fraud = any(t in text_lower for t in governance_fraud_terms)
     is_critical_violation = (not is_governance_fraud) and any(t in text_lower for t in critical_violation_terms)
 
-    lang = ai_result.get('language', 'es')
+    lang = ai_result.get('language', 'en')
     asset = ai_result.get('asset', 'Entity Under Review')
     seed = int(_hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
 
@@ -784,7 +784,7 @@ def _apply_systemic_financial_override(ai_result: dict, scenario_text: str) -> d
     if systemic_count < 1 and not combo_trigger:
         return ai_result
 
-    lang = ai_result.get('language', 'es')
+    lang = ai_result.get('language', 'en')
     asset = ai_result.get('asset', 'Entity Under Review')
     trigger_count = max(systemic_count, 1)
     seed = int(_hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
