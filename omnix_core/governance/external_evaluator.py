@@ -1,8 +1,8 @@
 """
-OMNIX GovernanceEvaluationEngine — Domain-agnostic 8-checkpoint signal evaluator.
+OMNIX GovernanceEvaluationEngine — Domain-agnostic 11-checkpoint signal evaluator.
 
 Accepts normalized governance signals from any domain (trading, credit, supply chain,
-insurance, etc.) and runs them through the same fail-closed 8-checkpoint pipeline
+insurance, etc.) and runs them through the same fail-closed 11-checkpoint pipeline
 used internally by the OMNIX trading engine.
 
 ADR-028: External Signal Evaluation API
@@ -64,6 +64,9 @@ CHECKPOINT_SAFETY_FLOORS: dict[str, dict[str, float]] = {
     "CP-5": {"min": 20.0, "max": 80.0},
     "CP-6": {"min": 20.0, "max": 80.0},
     "CP-7": {"min": 30.0, "max": 85.0},
+    "CP-8": {"min": 30.0, "max": 85.0},
+    "CP-9": {"min": 20.0, "max": 80.0},
+    "CP-10": {"min": 20.0, "max": 80.0},
 }
 
 # Required signals — must always be present in client payloads
@@ -171,12 +174,39 @@ CHECKPOINT_DEFAULTS = [
         "optional": True,
         "description": "Forward-backward trajectory agreement. Evaluates whether the decision holds consistency across time horizons.",
     },
+    {
+        "id": "CP-8",
+        "name": "Edge Confirmation (ECW)",
+        "signal": "signal_coherence",
+        "operator": "gte",
+        "threshold": 48,
+        "optional": False,
+        "description": "Edge convergence check. Confirms that signal agreement holds at the decision boundary — a secondary coherence gate applied after trajectory evaluation.",
+    },
+    {
+        "id": "CP-9",
+        "name": "AML Gate",
+        "signal": "logic_consistency",
+        "operator": "gte",
+        "threshold": 38,
+        "optional": False,
+        "description": "Anti-money laundering pattern gate. Uses internal logic consistency as a structural proxy for AML compliance screening.",
+    },
+    {
+        "id": "CP-10",
+        "name": "Fraud Detection Gate",
+        "signal": "signal_integrity",
+        "operator": "gte",
+        "threshold": 50,
+        "optional": True,
+        "description": "Fraud pattern detection gate. Validates signal integrity under adversarial assumptions — a pass-through when signal_integrity is not supplied.",
+    },
 ]
 
 
 class GovernanceEvaluationEngine:
     """
-    Domain-agnostic 8-checkpoint governance evaluator.
+    Domain-agnostic 11-checkpoint governance evaluator.
 
     Takes normalized governance signals (0-100 scale, domain-independent)
     and evaluates them through a fail-closed checkpoint pipeline. Any gate
@@ -207,7 +237,7 @@ class GovernanceEvaluationEngine:
         compliance_config: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
-        Run the 8-checkpoint evaluation pipeline on normalized signals.
+        Run the 11-checkpoint evaluation pipeline on normalized signals.
 
         Returns:
             {
