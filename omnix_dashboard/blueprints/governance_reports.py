@@ -378,7 +378,7 @@ def _build_pdf_bytes(client: dict, period_label: str,
         f'Of these, <b>{approved:,} ({pct_app}) were approved</b>, '
         f'<b>{blocked:,} ({pct_blk}) were blocked</b>, and '
         f'<b>{hold:,} ({pct_hld}) returned a HOLD</b> recommendation. '
-        f'No evaluation bypassed the 8-checkpoint pipeline. '
+        f'No evaluation bypassed the 11-checkpoint pipeline. '
         f'Every decision carries a cryptographic signature and is independently verifiable.',
         sBody))
     story.append(Spacer(1, 3*mm))

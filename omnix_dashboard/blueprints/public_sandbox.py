@@ -1,6 +1,6 @@
 """
 Public Governance Sandbox — "Try OMNIX"
-No authentication required. Rate limited. Real 8-checkpoint pipeline.
+No authentication required. Rate limited. Real 11-checkpoint pipeline.
 Gemini AI interprets free-form scenarios into governance signals.
 Receipts stored in decision_receipts (domain='public_sandbox') and verifiable
 at the public Railway verification server.
@@ -275,7 +275,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         risk_label = 'elevated' if risk_count > 2 else 'moderate' if risk_count > 0 else 'low'
         summary = f"Governance evaluation of {asset_name}: {risk_label} risk profile detected across {len(signals)} signal dimensions."
         expl = (
-            f"The scenario was processed through OMNIX's 8-checkpoint governance pipeline. "
+            f"The scenario was processed through OMNIX's 11-checkpoint governance pipeline. "
             f"{risk_count} risk indicator{'s' if risk_count != 1 else ''} and {positive_count} positive indicator{'s' if positive_count != 1 else ''} were identified. "
             f"{'High-severity markers detected — stress resilience and probability scores reflect elevated caution.' if extreme_count > 0 else 'Signal analysis shows the scenario falls within evaluable governance parameters.'}"
         )
@@ -293,7 +293,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         risk_label = 'elevado' if risk_count > 2 else 'moderado' if risk_count > 0 else 'bajo'
         summary = f"Evaluación de gobernanza de {asset_name}: perfil de riesgo {risk_label} detectado en {len(signals)} dimensiones de señal."
         expl = (
-            f"El escenario fue procesado a través del pipeline de gobernanza de 8 puntos de control de OMNIX. "
+            f"El escenario fue procesado a través del pipeline de gobernanza de 11 puntos de control de OMNIX. "
             f"Se identificaron {risk_count} indicador{'es' if risk_count != 1 else ''} de riesgo y {positive_count} indicador{'es' if positive_count != 1 else ''} positivo{'s' if positive_count != 1 else ''}. "
             f"{'Marcadores de alta severidad detectados — la resiliencia al estrés y la probabilidad reflejan cautela elevada.' if extreme_count > 0 else 'El análisis de señales muestra que el escenario está dentro de los parámetros de gobernanza evaluables.'}"
         )

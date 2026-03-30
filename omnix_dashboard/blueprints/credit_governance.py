@@ -370,7 +370,7 @@ def manual_evaluate():
             "application_id": app.application_id,
             "decision": result["final_decision"],
             "checkpoints_passed": result.get("checkpoints_passed", 0),
-            "checkpoints_total": result.get("checkpoints_total", 8),
+            "checkpoints_total": result.get("checkpoints_total", 11),
             "receipt_id": result.get("receipt_id"),
             "block_reason": result.get("block_reason"),
             "blocked_at": result.get("blocked_at"),

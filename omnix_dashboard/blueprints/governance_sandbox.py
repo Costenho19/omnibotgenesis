@@ -583,7 +583,7 @@ def sandbox_evaluate():
         "veto_chain": veto_chain,
         "decision_trace": evaluation.get("decision_trace", {}),
         "governance": {
-            "pipeline": "8-checkpoint entry governance (sandbox — identical to production)",
+            "pipeline": "11-checkpoint entry governance (sandbox — identical to production)",
             "note": "This evaluation is isolated. It does NOT appear on the public verification chain.",
             "production_endpoint": "POST /api/governance/evaluate",
         },

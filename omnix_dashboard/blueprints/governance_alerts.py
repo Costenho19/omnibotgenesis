@@ -766,7 +766,7 @@ def test_alert():
         "decision": "HOLD",
         "decision_score": 82.5,
         "checkpoints_passed": 5,
-        "checkpoints_total": 8,
+        "checkpoints_total": 11,
         "checkpoints_blocked": 3,
         "blocked_checkpoints": ["CP-3", "CP-4", "CP-5"],
         "receipt_id": "OMNIX-TEST-00000000",
