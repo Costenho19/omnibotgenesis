@@ -941,14 +941,17 @@ def _run_governance_pipeline(signals: dict, asset: str, domain: str, scenario_te
         raise RuntimeError(f"Receipt generation failed: {e}")
 
     checkpoint_names = {
-        'CP-0': {'en': 'Signal Integrity', 'es': 'Integridad de Señal'},
-        'CP-1': {'en': 'Probability Gate', 'es': 'Puerta de Probabilidad'},
-        'CP-2': {'en': 'Risk Limits', 'es': 'Límites de Riesgo'},
-        'CP-3': {'en': 'Signal Coherence', 'es': 'Coherencia de Señales'},
-        'CP-4': {'en': 'Trend Persistence', 'es': 'Persistencia de Tendencia'},
-        'CP-5': {'en': 'Stress Test', 'es': 'Prueba de Estrés'},
-        'CP-6': {'en': 'Logic Consistency', 'es': 'Consistencia Lógica'},
-        'CP-7': {'en': 'Temporal Coherence', 'es': 'Coherencia Temporal'},
+        'CP-0':  {'en': 'Signal Integrity',      'es': 'Integridad de Señal'},
+        'CP-1':  {'en': 'Probability Gate',       'es': 'Puerta de Probabilidad'},
+        'CP-2':  {'en': 'Risk Limits',            'es': 'Límites de Riesgo'},
+        'CP-3':  {'en': 'Signal Coherence',       'es': 'Coherencia de Señales'},
+        'CP-4':  {'en': 'Trend Persistence',      'es': 'Persistencia de Tendencia'},
+        'CP-5':  {'en': 'Stress Test',            'es': 'Prueba de Estrés'},
+        'CP-6':  {'en': 'Logic Consistency',      'es': 'Consistencia Lógica'},
+        'CP-7':  {'en': 'Temporal Coherence',     'es': 'Coherencia Temporal'},
+        'CP-8':  {'en': 'Edge Confirmation',      'es': 'Confirmación de Borde'},
+        'CP-9':  {'en': 'AML Gate',               'es': 'Puerta AML'},
+        'CP-10': {'en': 'Fraud Detection Gate',   'es': 'Puerta de Detección de Fraude'},
     }
 
     gate_results_enriched = []

@@ -620,5 +620,5 @@ class GovernanceEvaluationEngine:
             "fail_closed": True,
             "pqc_signed": True,
             "pqc_algorithm": "Dilithium-3 (ML-DSA-65)",
-            "checkpoints_total": 8,
+            "checkpoints_total": 11,
         }
