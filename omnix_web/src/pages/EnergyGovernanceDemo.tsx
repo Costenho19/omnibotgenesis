@@ -418,7 +418,7 @@ export default function EnergyGovernanceDemo() {
                 <div className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-6">
                   <Zap className="w-10 h-10 text-orange-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">8-Checkpoint Energy Governance Engine</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">11-Checkpoint Energy Governance Engine</h3>
                 <p className="text-muted max-w-md mx-auto mb-8">
                   Configure energy trade parameters and click "Run Energy Governance" to see each checkpoint evaluate the risk in real time.
                 </p>
@@ -534,7 +534,7 @@ export default function EnergyGovernanceDemo() {
                     <p className="text-muted text-sm">{decision.reason}</p>
                     <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
                       <p className="text-xs text-[#64748B]">
-                        Decision Trace ID: GOV-NRG-{Date.now().toString(36).toUpperCase()} | Architecture: 8-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
+                        Decision Trace ID: GOV-NRG-{Date.now().toString(36).toUpperCase()} | Architecture: 11-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
                       </p>
                     </div>
                   </div>

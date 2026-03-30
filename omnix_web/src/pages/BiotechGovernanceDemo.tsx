@@ -504,7 +504,7 @@ export default function BiotechGovernanceDemo() {
                 <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
                   <Microscope className="w-10 h-10 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">8-Checkpoint Clinical Governance Engine</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">11-Checkpoint Clinical Governance Engine</h3>
                 <p className="text-muted max-w-md mx-auto mb-8">
                   Select a real validated scenario above or configure a custom trial profile. Click "Run Governance Evaluation" to see each checkpoint evaluate in real time.
                 </p>
@@ -642,7 +642,7 @@ export default function BiotechGovernanceDemo() {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">8-Checkpoint Signal Mapping</h3>
+              <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">11-Checkpoint Signal Mapping</h3>
               <div className="space-y-3">
                 {[
                   { cp: 'CP-1', trading: 'Expected win probability', biotech: 'Trial success probability (phase + area historical rate)' },

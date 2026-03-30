@@ -442,11 +442,11 @@ export default function CreditLiveDashboard() {
         {/* 2-column: Pipeline Visual + Sector Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* 8-Checkpoint Pipeline */}
+          {/* 11-Checkpoint Pipeline */}
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-semibold text-white">8-Checkpoint Pipeline</h3>
+                <h3 className="font-semibold text-white">11-Checkpoint Pipeline</h3>
                 <p className="text-xs text-white/40 mt-0.5">Same engine as trading vertical</p>
               </div>
               <div className="flex items-center gap-2">
