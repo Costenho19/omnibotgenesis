@@ -170,7 +170,7 @@ def _query_credit(today_start: datetime) -> dict:
         today = int(cur.fetchone()[0] or 0)
 
         cur.execute(
-            "SELECT receipt_id FROM credit_applications WHERE receipt_id IS NOT NULL ORDER BY id DESC LIMIT 1"
+            "SELECT COALESCE(receipt_id, application_id) FROM credit_applications ORDER BY id DESC LIMIT 1"
         )
         r = cur.fetchone()
         latest_receipt = r[0] if r else None

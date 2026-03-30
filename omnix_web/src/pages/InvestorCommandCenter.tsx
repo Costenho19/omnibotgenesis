@@ -111,7 +111,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
       label: 'Islamic Credit (UAE/GCC)', market_size: '$2T AUM', live_since: '2026-03-27',
       cycle_sec: 300, color: '#a78bfa', icon: '🕌',
       decisions: 6_035, approved: 2_826, blocked: 3_209, hold: 0,
-      decisions_today: 1_847, latest_receipt_id: null, status: 'LIVE',
+      decisions_today: 1_847, latest_receipt_id: 'ICF-1774828466-04CB10CD', status: 'LIVE',
     },
     insurance: {
       label: 'Global Insurance Claims', market_size: '$7T+ Premiums', live_since: '2026-03-29',
